@@ -222,7 +222,7 @@ export const CompoundEmbedFixture = () => (
   <ReferenceLibrary>
     <Div p="4r" maxW="120r" display="flex" flexDirection="column" gap="4r">
       <Field data-testid="field-host-datefield" width="100%">
-        <DateField data-testid="compound-datefield" value="2026-09-10" onChange={() => {}} />
+        <DateField data-testid="compound-datefield" value="2026-09-10" locale="en-US" onChange={() => {}} />
       </Field>
 
       <Combobox value="" onChange={() => {}}>
@@ -232,15 +232,15 @@ export const CompoundEmbedFixture = () => (
       </Combobox>
 
       <NumberField data-testid="host-numberfield-group" value={10} locale="en-US" onChange={() => {}}>
-        <NumberField.Decrement data-testid="compound-number-dec" />
+        <NumberField.Decrement aria-label="Decrement" data-testid="compound-number-dec" />
         <NumberField.Input data-testid="compound-number-input" />
-        <NumberField.Increment data-testid="compound-number-inc" />
+        <NumberField.Increment aria-label="Increment" data-testid="compound-number-inc" />
       </NumberField>
 
       <NumberField data-testid="comp-numberfield-group" value={42} locale="en-US" onChange={() => {}}>
-        <NumberField.Decrement data-testid="comp-number-dec" />
+        <NumberField.Decrement aria-label="Decrement" data-testid="comp-number-dec" />
         <NumberField.Input data-testid="comp-number-input" />
-        <NumberField.Increment data-testid="comp-number-inc" />
+        <NumberField.Increment aria-label="Increment" data-testid="comp-number-inc" />
       </NumberField>
 
       <Field data-testid="comp-double-bezel-wrapper" width="100%">
@@ -301,6 +301,7 @@ export const SurfaceRecipeFixture = () => {
           <DateField
             data-testid="surf-2-datefield"
             value="2026-09-10"
+            locale="en-US"
             onChange={() => {}}
             aria-invalid={surfState === 'invalid' ? 'true' : undefined}
             disabled={surfState === 'disabled'}
@@ -339,12 +340,12 @@ export const SurfaceRecipeFixture = () => {
           data-invalid={surfState === 'invalid' ? '' : undefined}
           data-status={surfState === 'warning' ? 'warning' : undefined}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input
             aria-invalid={surfState === 'invalid' ? 'true' : undefined}
             readOnly={surfState === 'readonly'}
           />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       </Div>
     </ReferenceLibrary>

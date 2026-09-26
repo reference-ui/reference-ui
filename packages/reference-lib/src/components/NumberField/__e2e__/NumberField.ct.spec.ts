@@ -357,17 +357,46 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    await mount('components/NumberField/NumberField/StepperFixture')
+    // PATCHES §6: freeze-name proof — label/labelledby variants with exact
+    // authored names under two locales, native button semantics, stepping
+    // control, no tab stop. Resolving aria-controls + explicit/generated IDs
+    // stay with PATCHES §4 (NF-DOM-07 same-commit retargeting).
+    await mount('components/NumberField/NumberField/NamedStepperFixture')
 
-    const input = page.getByTestId('number-field-input')
-    const btnInc = page.getByTestId('btn-increment')
-    const btnDec = page.getByTestId('btn-decrement')
+    const inputEn = page.getByTestId('named-en-input')
+    const btnIncEn = page.getByTestId('named-en-inc')
+    const btnDecEn = page.getByTestId('named-en-dec')
+    const inputDe = page.getByTestId('named-de-input')
+    const btnIncDe = page.getByTestId('named-de-inc')
+    const btnDecDe = page.getByTestId('named-de-dec')
 
-    await expect(btnInc).toHaveAttribute('tabindex', '-1')
-    await expect(btnDec).toHaveAttribute('tabindex', '-1')
+    // Exact authored names on both variants; identical under de-DE —
+    // locale changes never translate or replace authored names.
+    await expect(btnDecEn).toHaveAttribute('aria-label', 'Decrease quantity')
+    await expect(btnIncEn).toHaveAttribute('aria-labelledby', 'named-en-inc-label')
+    await expect(btnIncEn).toHaveAccessibleName('Increase quantity')
+    await expect(btnDecDe).toHaveAttribute('aria-label', 'Decrease quantity')
+    await expect(btnIncDe).toHaveAttribute('aria-labelledby', 'named-de-inc-label')
+    await expect(btnIncDe).toHaveAccessibleName('Increase quantity')
+    await expect(page.getByTestId('named-en-field').getByRole('button', { name: 'Decrease quantity' })).toBeVisible()
+    await expect(page.getByTestId('named-de-field').getByRole('button', { name: 'Increase quantity' })).toBeVisible()
+
+    // Native button role/type, no tab stop.
+    for (const btn of [btnIncEn, btnDecEn, btnIncDe, btnDecDe]) {
+      await expect(btn).toHaveAttribute('tabindex', '-1')
+      await expect(btn).toHaveAttribute('type', 'button')
+    }
+
+    // Named steppers control the real Input.
+    await btnIncEn.click()
+    await expect(inputEn).toHaveValue('43')
+    await btnDecEn.click()
+    await expect(inputEn).toHaveValue('42')
+    await btnIncDe.click()
+    await expect(inputDe).toHaveValue('43')
 
     // Tab reaches the single Input stop, then leaves past the steppers.
-    await input.evaluate(node => {
+    await inputEn.evaluate(node => {
       const btn = document.createElement('button')
       btn.id = '__test_tab_shim__'
       btn.textContent = 'shim'
@@ -375,12 +404,39 @@ test.describe('NumberField CT', () => {
       btn.focus()
     })
     await page.keyboard.press('Tab')
-    await expect(input).toBeFocused()
+    await expect(inputEn).toBeFocused()
     await page.keyboard.press('Tab')
-    await expect(input).not.toBeFocused()
-    await expect(btnInc).not.toBeFocused()
-    await expect(btnDec).not.toBeFocused()
+    await expect(inputEn).not.toBeFocused()
+    await expect(btnIncEn).not.toBeFocused()
+    await expect(btnDecEn).not.toBeFocused()
     await page.locator('#__test_tab_shim__').evaluate(btn => btn?.remove()).catch(() => {})
+  })
+
+  test('NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text', async ({
+    mount,
+    page,
+  }) => {
+    // PATCHES §6: one descriptive dev diagnostic per offender (absent
+    // naming + unresolving labelledby); neither renders nor activates.
+    const errors: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push(msg.text())
+    })
+    await mount('components/NumberField/NumberField/UnnamedStepperFixture')
+
+    const diags = () => errors.filter(t => t.includes('Reference UI: NumberField'))
+    // Polling gates on the layout effects that deliver the diagnostics.
+    await expect.poll(() => diags().length, { timeout: 5000 }).toBe(2)
+
+    const field = page.getByTestId('unnamed-field')
+    await expect(field).toBeVisible()
+    await expect(page.getByTestId('unnamed-dec')).toHaveCount(0)
+    await expect(page.getByTestId('unnamed-inc')).toHaveCount(0)
+    await expect(field.getByRole('button')).toHaveCount(0)
+    await expect(page.getByTestId('unnamed-input')).toHaveValue('42')
+
+    expect(diags().some(t => /Decrement.*requires a nonempty/.test(t))).toBe(true)
+    expect(diags().some(t => /Increment.*does not resolve/.test(t))).toBe(true)
   })
 
   test('NF-STEP-09: Secondary and auxiliary pointer buttons never start stepping', async ({

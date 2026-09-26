@@ -3,7 +3,11 @@ import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRoot } from 'react-dom/client'
-import { NumberField } from './NumberField'
+import {
+  NumberField,
+  type NumberFieldDecrementProps,
+  type NumberFieldIncrementProps,
+} from './NumberField'
 
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -42,9 +46,9 @@ describe('NumberField numeric defaults', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={0} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -134,9 +138,9 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -175,9 +179,9 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -209,9 +213,9 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -243,7 +247,7 @@ describe('NumberField managed authority', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={42} locale="en-US" role="form" data-testid="nf-root">
-          <NumberField.Decrement type="submit" tabIndex={0} />
+          <NumberField.Decrement aria-label="Decrement" type="submit" tabIndex={0} />
           <NumberField.Input
             type="number"
             role="button"
@@ -252,7 +256,7 @@ describe('NumberField managed authority', () => {
             inputMode="numeric"
             disabled={false}
           />
-          <NumberField.Increment type="submit" tabIndex={0} />
+          <NumberField.Increment aria-label="Increment" type="submit" tabIndex={0} />
         </NumberField>
       )
     })
@@ -290,9 +294,9 @@ describe('NumberField managed authority', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input onChange={e => void userEdits.push(e.target.value)} />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -319,7 +323,7 @@ describe('NumberField managed authority', () => {
     function App() {
       return (
         <NumberField ref={rootRef} value={5} locale="en-US" data-testid="nf-root" className="consumer-root">
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input
             ref={inputRef}
             aria-label="Quantity"
@@ -363,9 +367,9 @@ describe('NumberField steppers', () => {
     function App() {
       return (
         <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement disabled />
+          <NumberField.Decrement aria-label="Decrement" disabled />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -401,9 +405,9 @@ describe('NumberField steppers', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -426,13 +430,13 @@ describe('NumberField keyboard', () => {
     function App() {
       return (
         <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input
             onKeyDown={e => {
               if (e.key === 'ArrowUp') e.preventDefault()
             }}
           />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -457,9 +461,9 @@ describe('NumberField keyboard', () => {
     await React.act(async () => {
       d.root.render(
         <NumberField value={10} locale="en-US" disabled onChange={v => void seenDisabled.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -534,9 +538,9 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
           setValue(v)
         }}
       >
-        <NumberField.Decrement />
+        <NumberField.Decrement aria-label="Decrement" />
         <NumberField.Input />
-        <NumberField.Increment disabled={extra?.incDisabled} />
+        <NumberField.Increment aria-label="Increment" disabled={extra?.incDisabled} />
       </NumberField>
     )
   }
@@ -1038,7 +1042,7 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
             current = v
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
         </NumberField>
       )
@@ -1217,9 +1221,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     }
@@ -1255,9 +1259,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       m.root.render(
         <NumberField value={0} locale="en-US" min={0} max={10} onChange={v => void seenMin.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1280,9 +1284,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={0} locale="en-US" min={0} max={100} onChange={v => void seen.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1304,9 +1308,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       a.root.render(
         <NumberField value={50} locale="en-US" min={0} max={100} onChange={v => void seenAway.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1328,9 +1332,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       b.root.render(
         <NumberField value={100} locale="en-US" min={0} max={100} onChange={v => void seenMax.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1352,9 +1356,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1375,9 +1379,9 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       n.root.render(
         <NumberField value={null} locale="en-US" onChange={v => void seenNull.push(v)}>
-          <NumberField.Decrement />
+          <NumberField.Decrement aria-label="Decrement" />
           <NumberField.Input />
-          <NumberField.Increment />
+          <NumberField.Increment aria-label="Increment" />
         </NumberField>
       )
     })
@@ -1400,9 +1404,9 @@ describe('NumberField environments', () => {
   it('NF-ENV-01: Server markup should carry spinbutton semantics for hydration', () => {
     const html = renderToString(
       <NumberField value={42} locale="en-US" min={0} max={100}>
-        <NumberField.Decrement />
+        <NumberField.Decrement aria-label="Decrement" />
         <NumberField.Input />
-        <NumberField.Increment />
+        <NumberField.Increment aria-label="Increment" />
       </NumberField>
     )
     expect(html).toContain('role="spinbutton"')
@@ -1425,9 +1429,9 @@ describe('NumberField environments', () => {
               setValue(v)
             }}
           >
-            <NumberField.Decrement />
+            <NumberField.Decrement aria-label="Decrement" />
             <NumberField.Input />
-            <NumberField.Increment />
+            <NumberField.Increment aria-label="Increment" />
           </NumberField>
         </React.StrictMode>
       )
@@ -1442,5 +1446,161 @@ describe('NumberField environments', () => {
     })
     expect(seen).toEqual([11])
     await cleanup(container, root)
+  })
+})
+
+describe('NumberField required stepper names', () => {
+  it('NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text', async () => {
+    // PATCHES §6: bypass types with absent/blank labels and empty/missing
+    // labelledby targets; each offender diagnoses once, renders nothing,
+    // and never activates; a valid authored name recovers the part.
+    const errors: string[] = []
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      const diags = () => errors.filter(t => t.includes('Reference UI: NumberField'))
+      const noNameDec = {} as unknown as NumberFieldDecrementProps
+      const noNameInc = {} as unknown as NumberFieldIncrementProps
+
+      // Absent naming on both steppers: no buttons, no invented label,
+      // no callback, one diagnostic per part.
+      {
+        const seen: Array<number | null> = []
+        const { container, root } = mount()
+        await React.act(async () => {
+          root.render(
+            <NumberField value={42} locale="en-US" onChange={v => void seen.push(v)}>
+              <NumberField.Decrement {...noNameDec} />
+              <NumberField.Input />
+              <NumberField.Increment {...noNameInc} />
+            </NumberField>
+          )
+        })
+        expect(container.querySelector('button')).toBeNull()
+        expect(container.querySelector('input')?.value).toBe('42')
+        expect(seen).toEqual([])
+        expect(diags()).toHaveLength(2)
+        expect(diags()[0]).toMatch(/Decrement.*requires a nonempty/)
+        expect(diags()[1]).toMatch(/Increment.*requires a nonempty/)
+        await cleanup(container, root)
+      }
+
+      // Blank labels and blank/empty labelledby fail the same way.
+      for (const bad of [
+        { 'aria-label': '' },
+        { 'aria-label': '   ' },
+        { 'aria-labelledby': '' },
+        { 'aria-labelledby': '   ' },
+      ]) {
+        const before = diags().length
+        const { container, root } = mount()
+        await React.act(async () => {
+          root.render(
+            <NumberField value={1} locale="en-US">
+              <NumberField.Decrement {...(bad as NumberFieldDecrementProps)} />
+              <NumberField.Input />
+            </NumberField>
+          )
+        })
+        expect(container.querySelector('button')).toBeNull()
+        expect(diags()).toHaveLength(before + 1)
+        expect(diags()[diags().length - 1]).toMatch(/Decrement.*requires a nonempty/)
+        await cleanup(container, root)
+      }
+
+      // Missing labelledby target: unresolved, no invented label.
+      {
+        const before = diags().length
+        const { container, root } = mount()
+        await React.act(async () => {
+          root.render(
+            <NumberField value={1} locale="en-US">
+              <NumberField.Input />
+              <NumberField.Increment aria-labelledby="nf-dom09-missing" />
+            </NumberField>
+          )
+        })
+        expect(container.querySelector('button')).toBeNull()
+        expect(diags()).toHaveLength(before + 1)
+        expect(diags()[diags().length - 1]).toMatch(/Increment.*does not resolve/)
+        await cleanup(container, root)
+      }
+
+      // Existing-but-empty target resolves to an empty name: still fails.
+      {
+        const before = diags().length
+        const { container, root } = mount()
+        await React.act(async () => {
+          root.render(
+            <div>
+              <span id="nf-dom09-empty" />
+              <NumberField value={1} locale="en-US">
+                <NumberField.Input />
+                <NumberField.Increment aria-labelledby="nf-dom09-empty" />
+              </NumberField>
+            </div>
+          )
+        })
+        expect(container.querySelector('button')).toBeNull()
+        expect(diags()).toHaveLength(before + 1)
+        await cleanup(container, root)
+      }
+
+      // Valid labelledby renders with no diagnostic.
+      {
+        const before = diags().length
+        const { container, root } = mount()
+        await React.act(async () => {
+          root.render(
+            <div>
+              <span id="nf-dom09-label">Less</span>
+              <NumberField value={1} locale="en-US">
+                <NumberField.Decrement aria-labelledby="nf-dom09-label" />
+                <NumberField.Input />
+              </NumberField>
+            </div>
+          )
+        })
+        expect(container.querySelector('button')).not.toBeNull()
+        expect(diags()).toHaveLength(before)
+        await cleanup(container, root)
+      }
+
+      // Recovery: a valid authored name renders and activates the part.
+      {
+        const seen: Array<number | null> = []
+        const { container, root } = mount()
+        const before = diags().length
+        await React.act(async () => {
+          root.render(
+            <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
+              <NumberField.Input />
+              <NumberField.Increment {...noNameInc} />
+            </NumberField>
+          )
+        })
+        expect(container.querySelector('button')).toBeNull()
+        expect(diags()).toHaveLength(before + 1)
+        await React.act(async () => {
+          root.render(
+            <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
+              <NumberField.Input />
+              <NumberField.Increment aria-label="More" />
+            </NumberField>
+          )
+        })
+        const inc = container.querySelector('button[aria-label="More"]') as HTMLButtonElement
+        expect(inc).not.toBeNull()
+        await React.act(async () => {
+          inc.click()
+        })
+        expect(seen).toEqual([11])
+        expect(diags()).toHaveLength(before + 1)
+        await cleanup(container, root)
+      }
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

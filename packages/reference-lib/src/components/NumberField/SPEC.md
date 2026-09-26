@@ -39,9 +39,9 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | :--- | :--- |
 | Engine | Prototype spinbutton + live `Number()` clamp. |
 | Production | **No.** |
-| Named `[x]` | 36 / 148 |
-| Playwright | 17 CT (5 pre-existing snapshot + 12 assertion-only landing) |
-| Vitest | 27 contract IDs (24 tests: 22 behavior + 2 type) + FEATURES #2 trio |
+| Named `[x]` | 38 / 148 |
+| Playwright | 18 CT (5 pre-existing snapshot + 13 assertion-only landing) |
+| Vitest | 29 contract IDs (26 tests: 23 behavior + 3 type) + FEATURES #2 trio |
 | API | FEATURES #1 landed 2026-09-26: required controlled `value` + required `locale`, no `defaultValue`, no env default; FEATURES #2 landed (any-no-change suppression). |
 
 ### Gaps & incoherence
@@ -67,8 +67,8 @@ smallStep/largeStep.
 
 ### Case index
 
-- `[x]` `NF-TYPE-01`, `NF-TYPE-02`, `NF-TYPE-03`, `NF-DOM-05`,
-  `NF-DOM-06`, `NF-MATH-01`, `NF-MATH-02`, `NF-MATH-07`, `NF-MATH-08`,
+- `[x]` `NF-TYPE-01`, `NF-TYPE-02`, `NF-TYPE-03`, `NF-TYPE-04`, `NF-DOM-05`,
+  `NF-DOM-06`, `NF-DOM-09`, `NF-MATH-01`, `NF-MATH-02`, `NF-MATH-07`, `NF-MATH-08`,
   `NF-MATH-14`, `NF-EDIT-04`, `NF-EDIT-13`, `NF-EDIT-19`, `NF-KEY-01`,
   `NF-KEY-02`, `NF-KEY-03`, `NF-KEY-04`, `NF-KEY-05`, `NF-KEY-07`,
   `NF-STEP-01`, `NF-STEP-02`, `NF-STEP-03`, `NF-STEP-04`, `NF-STEP-05`,
@@ -86,7 +86,11 @@ smallStep/largeStep.
   with one request per step (`NF-STEP-12` adapted — no dirty candidate
   until PATCHES §1); `NF-STEP-13` without the readOnly branch (lands
   with PATCHES §5); matrix timing proof at `NF-STEP-04`/`05` still
-  pending outside this package.)
+  pending outside this package. PATCHES §6 landed 2026-09-26 in the
+  FEATURES §1 major bump: required stepper names (`NF-TYPE-04` type
+  boundary, `NF-DOM-09` runtime unit + CT, `NF-STEP-01` rewritten to
+  freeze-name meaning; resolving aria-controls + explicit/generated IDs
+  stay with §4 / `NF-DOM-07`.)
 - `[~]` `NF-DOM-01` — title exists, asserts spinbutton (rewrite)
 - `[ ]` remaining `NF-TYPE-*`, `NF-DOM-*`, `NF-PARSE-*`, `NF-FORMAT-*`,
   remaining `NF-MATH-*` / `NF-EDIT-*`, `NF-COMMIT-*`, remaining `NF-KEY-*`

@@ -26,7 +26,6 @@ import { Slider } from './Slider'
 import { Splitter } from './Splitter'
 import { Switch } from './Switch'
 import { Tabs } from './Tabs'
-import { lineTab, lineTabList, tabPanel } from './Tabs/Tabs.recipes'
 import { Toast, toast } from './Toast'
 import { Tooltip } from './Tooltip'
 import { Tree } from './Tree'
@@ -157,9 +156,9 @@ function FormInputsRow({
             alignItems="center"
             gap="1.5r"
           >
-            <NumberField.Decrement />
+            <NumberField.Decrement aria-label="Decrement" />
             <NumberField.Input />
-            <NumberField.Increment />
+            <NumberField.Increment aria-label="Increment" />
           </NumberField>
         </DemoCell>
 
@@ -405,24 +404,18 @@ function DisclosureRow() {
 
         <DemoCell label="Tabs">
           <Tabs value={tabsValue} onChange={setTabsValue}>
-            <Tabs.List {...lineTabList()}>
-              <Tabs.Tab value="tab1" {...lineTab({ selected: tabsValue === 'tab1' })}>
-                Overview
-              </Tabs.Tab>
-              <Tabs.Tab value="tab2" {...lineTab({ selected: tabsValue === 'tab2' })}>
-                Tokens
-              </Tabs.Tab>
-              <Tabs.Tab value="tab3" {...lineTab({ selected: tabsValue === 'tab3' })}>
-                Props
-              </Tabs.Tab>
+            <Tabs.List>
+              <Tabs.Tab value="tab1">Overview</Tabs.Tab>
+              <Tabs.Tab value="tab2">Tokens</Tabs.Tab>
+              <Tabs.Tab value="tab3">Props</Tabs.Tab>
             </Tabs.List>
-            <Tabs.Panel value="tab1" {...tabPanel()}>
+            <Tabs.Panel value="tab1">
               <Span fontSize="3r">Overview tab panel using semantic design tokens.</Span>
             </Tabs.Panel>
-            <Tabs.Panel value="tab2" {...tabPanel()}>
+            <Tabs.Panel value="tab2">
               <Span fontSize="3r">Tokens tab panel styled with rhythm units.</Span>
             </Tabs.Panel>
-            <Tabs.Panel value="tab3" {...tabPanel()}>
+            <Tabs.Panel value="tab3">
               <Span fontSize="3r">Props extending PrimitiveProps for type safety.</Span>
             </Tabs.Panel>
           </Tabs>
@@ -500,7 +493,7 @@ function SelectionRow({
         </DemoCell>
 
         <DemoCell label="DateField & Calendar">
-          <DateField value={dateVal} onChange={setDateVal}>
+          <DateField value={dateVal} locale="en-US" onChange={setDateVal}>
             <Field>
               <DateField.Input />
               <DateField.Trigger />
@@ -523,6 +516,7 @@ function SelectionRow({
 }
 
 function DataLayoutRow() {
+  const [splitterSizes, setSplitterSizes] = React.useState([40, 60])
   return (
     <SectionCard
       title="Data & Layout"
@@ -558,12 +552,12 @@ function DataLayoutRow() {
 
         <DemoCell label="Splitter">
           <Div height="30r" border="1px solid" borderColor="ui.field.border" borderRadius="md" overflow="hidden">
-            <Splitter defaultValue={[40, 60]} height="100%">
-              <Splitter.Panel index={0} p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+            <Splitter value={splitterSizes} onChange={setSplitterSizes} height="100%">
+              <Splitter.Panel p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">Panel 1 (Resizable)</Span>
               </Splitter.Panel>
-              <Splitter.Handle index={0} />
-              <Splitter.Panel index={1} p="3r" bg="ui.field.background" color="design.text.base">
+              <Splitter.Handle />
+              <Splitter.Panel p="3r" bg="ui.field.background" color="design.text.base">
                 <Span fontSize="3r" fontWeight="500">Panel 2 (Resizable)</Span>
               </Splitter.Panel>
             </Splitter>

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
-import { NumberField } from './index'
+import { NumberField, type NumberFieldDecrementProps } from './index'
 
 export const StepperFixture = () => {
   const [value, setValue] = React.useState<number | null>(42)
@@ -19,9 +19,9 @@ export const StepperFixture = () => {
             max={100}
             step={1}
           >
-            <NumberField.Decrement data-testid="btn-decrement" />
+            <NumberField.Decrement aria-label="Decrement" data-testid="btn-decrement" />
             <NumberField.Input data-testid="number-field-input" />
-            <NumberField.Increment data-testid="btn-increment" />
+            <NumberField.Increment aria-label="Increment" data-testid="btn-increment" />
           </NumberField>
         </Div>
 
@@ -37,9 +37,9 @@ export const DisabledFixture = () => (
   <ReferenceLibrary>
     <Div p="4r" maxW="80r">
       <NumberField value={7} locale="en-US" disabled min={0} max={100} data-testid="disabled-number-field">
-        <NumberField.Decrement />
+        <NumberField.Decrement aria-label="Decrement" />
         <NumberField.Input />
-        <NumberField.Increment />
+        <NumberField.Increment aria-label="Increment" />
       </NumberField>
     </Div>
   </ReferenceLibrary>
@@ -58,9 +58,9 @@ export const DecimalFixture = () => {
           onChange={setValue}
           step={0.1}
         >
-          <NumberField.Decrement data-testid="decimal-btn-decrement" />
+          <NumberField.Decrement aria-label="Decrement" data-testid="decimal-btn-decrement" />
           <NumberField.Input data-testid="decimal-number-field-input" />
-          <NumberField.Increment data-testid="decimal-btn-increment" />
+          <NumberField.Increment aria-label="Increment" data-testid="decimal-btn-increment" />
         </NumberField>
       </Div>
     </ReferenceLibrary>
@@ -74,11 +74,67 @@ export const UnboundedFixture = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r">
         <NumberField data-testid="unbounded-number-field" value={value} locale="en-US" onChange={setValue}>
-          <NumberField.Decrement data-testid="unbounded-btn-decrement" />
+          <NumberField.Decrement aria-label="Decrement" data-testid="unbounded-btn-decrement" />
           <NumberField.Input data-testid="unbounded-number-field-input" />
-          <NumberField.Increment data-testid="unbounded-btn-increment" />
+          <NumberField.Increment aria-label="Increment" data-testid="unbounded-btn-increment" />
         </NumberField>
       </Div>
     </ReferenceLibrary>
   )
 }
+
+// PATCHES §6 (NF-STEP-01): label + labelledby variants under two locales
+// with identical authored names — locale changes never translate names.
+export const NamedStepperFixture = () => {
+  const [valueEn, setValueEn] = React.useState<number | null>(42)
+  const [valueDe, setValueDe] = React.useState<number | null>(42)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <span id="named-en-inc-label">Increase quantity</span>
+        <NumberField
+          data-testid="named-en-field"
+          value={valueEn}
+          locale="en-US"
+          onChange={setValueEn}
+          min={0}
+          max={100}
+        >
+          <NumberField.Decrement data-testid="named-en-dec" aria-label="Decrease quantity" />
+          <NumberField.Input data-testid="named-en-input" />
+          <NumberField.Increment data-testid="named-en-inc" aria-labelledby="named-en-inc-label" />
+        </NumberField>
+        <span id="named-de-inc-label">Increase quantity</span>
+        <NumberField
+          data-testid="named-de-field"
+          value={valueDe}
+          locale="de-DE"
+          onChange={setValueDe}
+          min={0}
+          max={100}
+        >
+          <NumberField.Decrement data-testid="named-de-dec" aria-label="Decrease quantity" />
+          <NumberField.Input data-testid="named-de-input" />
+          <NumberField.Increment data-testid="named-de-inc" aria-labelledby="named-de-inc-label" />
+        </NumberField>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// PATCHES §6 (NF-DOM-09): type-bypassed unnamed steppers — absent naming
+// on Decrement, an unresolving labelledby on Increment.
+const unnamedDecProps = {} as unknown as NumberFieldDecrementProps
+
+export const UnnamedStepperFixture = () => (
+  <ReferenceLibrary>
+    <Div p="4r" maxW="80r">
+      <NumberField data-testid="unnamed-field" value={42} locale="en-US" min={0} max={100}>
+        <NumberField.Decrement data-testid="unnamed-dec" {...unnamedDecProps} />
+        <NumberField.Input data-testid="unnamed-input" />
+        <NumberField.Increment data-testid="unnamed-inc" aria-labelledby="unnamed-missing-target" />
+      </NumberField>
+    </Div>
+  </ReferenceLibrary>
+)

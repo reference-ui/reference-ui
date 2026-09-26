@@ -89,4 +89,48 @@ describe('NumberField type contract', () => {
     // churn); at runtime each part owns them (conflicting casts stripped,
     // managed values win). aria-label stays consumer-overridable by design.
   })
+
+  it('NF-TYPE-04: Each stepper should require an authored accessible-name prop at the type boundary', () => {
+    // PATCHES §6: nonempty-shaped label, labelledby, and both together
+    // compile on both steppers; runtime emptiness is diagnosed separately.
+    const labelOnly: NumberFieldIncrementProps = { 'aria-label': 'Increase' }
+    const byOnly: NumberFieldIncrementProps = { 'aria-labelledby': 'inc-label' }
+    const both: NumberFieldIncrementProps = { 'aria-label': 'Increase', 'aria-labelledby': 'inc-label' }
+    const decLabel: NumberFieldDecrementProps = { 'aria-label': 'Decrease' }
+    const decBy: NumberFieldDecrementProps = { 'aria-labelledby': 'dec-label' }
+    const decBoth: NumberFieldDecrementProps = { 'aria-label': 'Decrease', 'aria-labelledby': 'dec-label' }
+    expect([labelOnly, byOnly, both, decLabel, decBy, decBoth].length).toBe(6)
+
+    // Native button handlers/children survive alongside the name requirement.
+    const full: NumberFieldIncrementProps = {
+      'aria-label': 'Increase',
+      onClick: () => {},
+      onPointerDown: () => {},
+      disabled: true,
+      children: '+',
+    }
+    const named = (
+      <NumberField value={null} locale="en-US">
+        <NumberField.Decrement aria-label="Decrease" />
+        <NumberField.Input />
+        <NumberField.Increment aria-label="Increase" onClick={() => {}}>
+          +
+        </NumberField.Increment>
+      </NumberField>
+    )
+    expect(full.disabled).toBe(true)
+    expect(React.isValidElement(named)).toBe(true)
+
+    // @ts-expect-error - neither accessible-name prop
+    const _neither: NumberFieldIncrementProps = {}
+    expect(_neither).toBeDefined()
+
+    // @ts-expect-error - other props do not satisfy the name requirement
+    const _neitherDec: NumberFieldDecrementProps = { disabled: true }
+    expect(_neitherDec).toBeDefined()
+
+    // @ts-expect-error - JSX without an accessible-name prop fails
+    const _unnamed = <NumberField.Increment />
+    expect(_unnamed).toBeDefined()
+  })
 })

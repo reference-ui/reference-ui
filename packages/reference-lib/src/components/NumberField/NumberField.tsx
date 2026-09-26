@@ -417,7 +417,92 @@ function useStepperRepeat(options: {
   }
 }
 
-export type NumberFieldIncrementProps = PrimitiveProps<'button'>
+// PATCHES §6 / freeze decision 12: each stepper requires an authored
+// nonempty accessible-name prop — the aria-label | aria-labelledby union
+// (nonempty). Shape mirrors NumberField.md NumberFieldStepperName; runtime
+// emptiness is diagnosed separately per NF-TYPE-04.
+export type NumberFieldStepperName =
+  | { 'aria-label': string; 'aria-labelledby'?: string }
+  | { 'aria-label'?: string; 'aria-labelledby': string }
+
+export type NumberFieldIncrementProps = Omit<PrimitiveProps<'button'>, 'aria-label' | 'aria-labelledby'> &
+  NumberFieldStepperName
+
+// Dev-only diagnostic writer (Combobox/Splitter globalProcess pattern:
+// the package declares no node types, so process comes via globalThis).
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+function numberFieldDevDiagnostic(message: string) {
+  if (globalProcess?.env?.NODE_ENV === 'production') return
+  console.error(`Reference UI: NumberField ${message}`)
+}
+
+// Layout effect where a window exists, passive effect under SSR (avoids the
+// server useLayoutEffect warning for labelledby verification).
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect
+
+function stepperNameText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
+
+function stepperNameIds(labelledbyText: string): string[] {
+  const trimmed = labelledbyText.trim()
+  return trimmed === '' ? [] : trimmed.split(/\s+/)
+}
+
+// PATCHES §6 runtime: missing, empty, or unresolved stepper naming fails
+// with a descriptive dev diagnostic; the offender renders nothing and so
+// neither registers nor activates (no registration system exists until §4).
+// Labelledby targets only exist in committed DOM, so verification runs in a
+// layout effect: the first paint assumes named (SSR/hydration-safe) and an
+// unresolved name hides pre-paint. Targets must be committed with the
+// stepper — a later-mounting target with unchanged props does not re-verify.
+// Effective-name semantics follow the
+// platform: a present labelledby overrides aria-label, so it must resolve
+// to a nonempty name even when a label is also authored.
+function useStepperName(kind: 'Increment' | 'Decrement', ariaLabel: unknown, ariaLabelledby: unknown): boolean {
+  const labelValid = stepperNameText(ariaLabel).trim() !== ''
+  const labelledbyText = stepperNameText(ariaLabelledby)
+  const usesLabelledby = stepperNameIds(labelledbyText).length > 0
+  const [labelledbyValid, setLabelledbyValid] = React.useState<boolean | null>(null)
+  const loggedRef = React.useRef(false)
+
+  useIsomorphicLayoutEffect(() => {
+    if (!usesLabelledby || typeof document === 'undefined') return
+    const ids = stepperNameIds(labelledbyText)
+    const elements = ids.map(id => document.getElementById(id))
+    const name = elements
+      .map(el => (el === null ? '' : el.getAttribute('aria-label') || el.textContent || ''))
+      .join(' ')
+    setLabelledbyValid(elements.every(el => el !== null) && name.trim() !== '')
+  }, [usesLabelledby, labelledbyText])
+
+  let named = true
+  let reason = ''
+  if (usesLabelledby) {
+    if (labelledbyValid === false) {
+      named = false
+      reason =
+        `${kind} has an "aria-labelledby" that does not resolve to a nonempty accessible name ` +
+        `("${labelledbyText}") — the stepper was not rendered and will not activate.`
+    }
+  } else if (!labelValid) {
+    named = false
+    reason =
+      `${kind} requires a nonempty authored "aria-label" or a resolving "aria-labelledby" — ` +
+      `no English fallback exists, so the stepper was not rendered and will not activate.`
+  }
+
+  useIsomorphicLayoutEffect(() => {
+    if (named || loggedRef.current) return
+    loggedRef.current = true
+    numberFieldDevDiagnostic(reason)
+  }, [named, reason])
+
+  return named
+}
 
 export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFieldIncrementProps>(
   function NumberFieldIncrement(
@@ -436,6 +521,8 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
       type: _managedType,
       tabIndex: _managedTabIndex,
       'data-pressed': _managedPressed,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledby,
       disabled: authoredDisabled,
       ...props
     },
@@ -444,11 +531,16 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
     const context = React.useContext(NumberFieldContext)
 
     // Capability follows root state or authored disabled (NF-STEP-11);
-    // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
-    // remains consumer-overridable via the trailing spread.
+    // structural type/tabIndex stay managed (NF-TYPE-03); the accessible
+    // name is required, validated, and passed through explicitly.
     const isDisabled = context?.disabled || authoredDisabled || false
     const value = context?.value ?? null
     const max = context?.max
+
+    // Required-name gate (PATCHES §6): hooks run unconditionally so
+    // named↔unnamed transitions never change the hook count; the null
+    // return below is the "neither registers nor activates" branch.
+    const named = useStepperName('Increment', ariaLabel, ariaLabelledby)
 
     // Press-and-hold stepping (PATCHES §7): consumer handlers chain first
     // inside the hook, so authored pointer props can never clobber the
@@ -470,12 +562,15 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
       },
     })
 
+    if (!named) return null
+
     return (
       <Button
         ref={ref}
         type="button"
         tabIndex={-1}
-        aria-label="Increment"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
         disabled={isDisabled}
         data-pressed={repeat.pressed ? '' : undefined}
         onClick={repeat.handleClick}
@@ -524,7 +619,8 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
   }
 )
 
-export type NumberFieldDecrementProps = PrimitiveProps<'button'>
+export type NumberFieldDecrementProps = Omit<PrimitiveProps<'button'>, 'aria-label' | 'aria-labelledby'> &
+  NumberFieldStepperName
 
 export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFieldDecrementProps>(
   function NumberFieldDecrement(
@@ -543,6 +639,8 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
       type: _managedType,
       tabIndex: _managedTabIndex,
       'data-pressed': _managedPressed,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledby,
       disabled: authoredDisabled,
       ...props
     },
@@ -551,11 +649,16 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
     const context = React.useContext(NumberFieldContext)
 
     // Capability follows root state or authored disabled (NF-STEP-11);
-    // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
-    // remains consumer-overridable via the trailing spread.
+    // structural type/tabIndex stay managed (NF-TYPE-03); the accessible
+    // name is required, validated, and passed through explicitly.
     const isDisabled = context?.disabled || authoredDisabled || false
     const value = context?.value ?? null
     const min = context?.min
+
+    // Required-name gate (PATCHES §6): hooks run unconditionally so
+    // named↔unnamed transitions never change the hook count; the null
+    // return below is the "neither registers nor activates" branch.
+    const named = useStepperName('Decrement', ariaLabel, ariaLabelledby)
 
     // Press-and-hold stepping (PATCHES §7): consumer handlers chain first
     // inside the hook, so authored pointer props can never clobber the
@@ -577,12 +680,15 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
       },
     })
 
+    if (!named) return null
+
     return (
       <Button
         ref={ref}
         type="button"
         tabIndex={-1}
-        aria-label="Decrement"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
         disabled={isDisabled}
         data-pressed={repeat.pressed ? '' : undefined}
         onClick={repeat.handleClick}
@@ -806,9 +912,12 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         >
           {children ?? (
             <>
-              <NumberFieldDecrement />
+              {/* Default-authored English names satisfy the PATCHES §6
+                  required-name boundary; consumer-authored steppers must
+                  carry their own aria-label | aria-labelledby. */}
+              <NumberFieldDecrement aria-label="Decrement" />
               <NumberFieldInput />
-              <NumberFieldIncrement />
+              <NumberFieldIncrement aria-label="Increment" />
             </>
           )}
         </Div>
