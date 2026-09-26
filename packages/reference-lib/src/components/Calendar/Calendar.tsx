@@ -52,6 +52,8 @@ interface CalendarContextValue {
   currentMonth: { year: number; month: number }
   locale: string
   disabled: boolean
+  /** Effective ISO today: valid `today` prop, else current UTC date. */
+  today: ISODate
   viewMode: 'day' | 'month'
   toggleViewMode: () => void
   selectMonth: (monthIndex: number) => void
@@ -245,6 +247,7 @@ export function CalendarGrid({
     isRangeStart,
     isRangeEnd,
     disabled,
+    today,
     viewMode,
   } = context
 
@@ -336,6 +339,17 @@ export function CalendarGrid({
 
   const weekDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
+  // Deterministic initial tab target: selected in-month date, else today when
+  // it renders in this pane, else the first in-month day — so a
+  // selection-less pane keeps exactly one tab stop (CA-STATE-03). No per-day
+  // disabled state exists yet (FEATURES #6), so every in-month day is enabled.
+  const renderedDays = weeks.flatMap((week) =>
+    week.filter((cell) => cell.inMonth).map((cell) => cell.dateStr)
+  )
+  const tabTarget =
+    renderedDays.find((dateStr) => isDateSelected(dateStr)) ??
+    (renderedDays.includes(today) ? today : renderedDays[0])
+
   return (
     <Table
       role="grid"
@@ -392,7 +406,7 @@ export function CalendarGrid({
                   <Button
                     type="button"
                     role="gridcell"
-                    tabIndex={selected ? 0 : -1}
+                    tabIndex={cell.dateStr === tabTarget ? 0 : -1}
                     aria-selected={selected}
                     aria-label={cell.dateStr}
                     data-date={cell.dateStr}
@@ -487,6 +501,15 @@ export function Calendar({
 
   const [internalMonth, setInternalMonth] = React.useState(() => parseMonth(monthProp))
   const currentMonth = monthProp ? parseMonth(monthProp) : internalMonth
+
+  // Effective today for the grid tab target: valid `today` prop, else the
+  // same current-UTC-date default the pane seed uses.
+  const effectiveToday = React.useMemo<ISODate>(() => {
+    if (today && isValidISODate(today)) return today
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`
+  }, [today])
 
   const toggleViewMode = React.useCallback(() => {
     setViewMode(v => (v === 'day' ? 'month' : 'day'))
@@ -617,6 +640,7 @@ export function Calendar({
       currentMonth,
       locale,
       disabled,
+      today: effectiveToday,
       viewMode,
       toggleViewMode,
       selectMonth,
@@ -634,6 +658,7 @@ export function Calendar({
       currentMonth,
       locale,
       disabled,
+      effectiveToday,
       viewMode,
       toggleViewMode,
       selectMonth,

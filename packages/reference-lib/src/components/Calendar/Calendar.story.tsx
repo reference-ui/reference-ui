@@ -82,6 +82,30 @@ export const LeapFebruary = () => {
   )
 }
 
+export const NoSelectionTodayElsewhere = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="elsewhere-fixture-root">
+        <Calendar
+          data-testid="test-elsewhere-calendar"
+          month="2024-02"
+          today="2024-03-10"
+          value={date}
+          onChange={setDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="elsewhere-prev" />
+            <Calendar.Heading data-testid="elsewhere-heading" />
+            <Calendar.NextButton data-testid="elsewhere-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="elsewhere-grid" />
+        </Calendar>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const DecemberNav = () => {
   const [date, setDate] = React.useState<string | null>(null)
   return (

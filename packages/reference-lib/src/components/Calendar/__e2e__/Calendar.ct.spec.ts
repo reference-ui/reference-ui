@@ -76,6 +76,46 @@ test.describe('Calendar CT', () => {
     )
   })
 
+  test('CA-STATE-03: selected date keeps the sole day tab stop', async ({ mount, page }) => {
+    await mount('components/Calendar/Calendar/SingleDate')
+
+    await expect(page.locator('button[data-date][tabindex="0"]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2026-08-15"]')).toHaveAttribute('tabindex', '0')
+  })
+
+  test('CA-STATE-03: selection-less pane tabs into today without stealing focus', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DecemberNav')
+
+    const targets = page.locator('button[data-date][tabindex="0"]')
+    await expect(targets).toHaveCount(1)
+    await expect(targets).toHaveAttribute('data-date', '2026-12-15')
+    // No automatic focus steal on mount.
+    await expect(page.locator('button[data-date="2026-12-15"]')).not.toBeFocused()
+
+    // Native Tab from the last header control enters the grid at today.
+    await page.getByTestId('dec-next').focus()
+    await page.keyboard.press('Tab')
+    await expect(page.locator('button[data-date="2026-12-15"]')).toBeFocused()
+  })
+
+  test('CA-STATE-03: selection-less pane with today elsewhere tabs into the first of the month', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/NoSelectionTodayElsewhere')
+
+    const targets = page.locator('button[data-date][tabindex="0"]')
+    await expect(targets).toHaveCount(1)
+    await expect(targets).toHaveAttribute('data-date', '2024-02-01')
+
+    await page.getByTestId('elsewhere-next').focus()
+    await page.keyboard.press('Tab')
+    await expect(page.locator('button[data-date="2024-02-01"]')).toBeFocused()
+  })
+
   test('navigates across the year boundary from a today-seeded pane', async ({ mount, page }) => {
     await mount('components/Calendar/Calendar/DecemberNav')
 

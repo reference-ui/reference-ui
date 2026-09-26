@@ -62,6 +62,30 @@ describe('Calendar contract', () => {
     expect(a).toContain('data-selected=""')
   })
 
+  it('CA-STATE-03 (adapted): deterministic initial tab target — selected, else today, else first in-month day', () => {
+    // Per-day disabled state does not exist yet (FEATURES #6), so the
+    // disabled-skipping preference is unpinnable; every in-month day is
+    // enabled and exactly one carries tabindex=0.
+    const tabTargets = (html: string) => html.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []
+    const renderGrid = (props: CalendarProps) =>
+      renderToString(<Calendar month="2024-02" locale="en-US" {...props} />)
+
+    const selected = renderGrid({ today: '2024-02-15', value: '2024-02-20' })
+    const selectedTargets = tabTargets(selected)
+    expect(selectedTargets).toHaveLength(1)
+    expect(selectedTargets[0]).toContain('data-date="2024-02-20"')
+
+    const noSelection = renderGrid({ today: '2024-02-15', value: null })
+    const noSelectionTargets = tabTargets(noSelection)
+    expect(noSelectionTargets).toHaveLength(1)
+    expect(noSelectionTargets[0]).toContain('data-date="2024-02-15"')
+
+    const todayElsewhere = renderGrid({ today: '2024-03-10', value: null })
+    const elsewhereTargets = tabTargets(todayElsewhere)
+    expect(elsewhereTargets).toHaveLength(1)
+    expect(elsewhereTargets[0]).toContain('data-date="2024-02-01"')
+  })
+
   it('uncontrolled API retained (quarantine controlled-only freeze NOT ported)', () => {
     const uncontrolled: CalendarProps = { defaultValue: '2024-04-10' }
     expect(uncontrolled.defaultValue).toBe('2024-04-10')
