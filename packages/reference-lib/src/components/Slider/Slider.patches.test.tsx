@@ -206,21 +206,26 @@ describe('Slider PATCHES pins', () => {
   it('SD-KEY-04: snaps Page steps to the grid with one callback per keydown', async () => {
     mockRects()
     const log: unknown[] = []
-    await renderUi(
-      <Slider defaultValue={48} min={0} max={100} step={6} onChange={next => void log.push(next)}>
-        <Slider.Track id="track">
-          <Slider.Range />
-          <Slider.Thumb id="thumb" aria-label="T" />
-        </Slider.Track>
-      </Slider>
-    )
+    const renderCtl = (v: SliderValue) =>
+      renderUi(
+        <Slider value={v} min={0} max={100} step={6} onChange={next => void log.push(next)}>
+          <Slider.Track id="track">
+            <Slider.Range />
+            <Slider.Thumb id="thumb" aria-label="T" />
+          </Slider.Track>
+        </Slider>
+      )
+    await renderCtl(48)
+    const accept = () => renderCtl(log[log.length - 1] as SliderValue)
     // Page step for 0..100,step=6 is 12: 48 -> 60 -> 72 -> 60.
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'PageUp' }))
     })
+    await accept()
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'PageUp', repeat: true }))
     })
+    await accept()
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'PageDown' }))
     })
@@ -231,34 +236,41 @@ describe('Slider PATCHES pins', () => {
     mockRects()
     const log: unknown[] = []
     const ends: unknown[] = []
-    await renderUi(
-      <Slider
-        defaultValue={20}
-        min={0}
-        max={100}
-        step={1}
-        onChange={next => void log.push(next)}
-        onChangeEnd={next => void ends.push(next)}
-      >
-        <Slider.Track id="track">
-          <Slider.Range />
-          <Slider.Thumb id="thumb" aria-label="T" />
-        </Slider.Track>
-      </Slider>
-    )
+    const renderCtl = (v: SliderValue) =>
+      renderUi(
+        <Slider
+          value={v}
+          min={0}
+          max={100}
+          step={1}
+          onChange={next => void log.push(next)}
+          onChangeEnd={next => void ends.push(next)}
+        >
+          <Slider.Track id="track">
+            <Slider.Range />
+            <Slider.Thumb id="thumb" aria-label="T" />
+          </Slider.Track>
+        </Slider>
+      )
+    await renderCtl(20)
+    const accept = () => renderCtl(log[log.length - 1] as SliderValue)
     // Separate acts: real keydowns are separate tasks with a flush between.
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'ArrowRight' }))
     })
+    await accept()
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'ArrowRight', repeat: true }))
     })
+    await accept()
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'ArrowRight', repeat: true }))
     })
+    await accept()
     React.act(() => {
       thumb().dispatchEvent(keyEvent('keydown', { key: 'ArrowRight', repeat: true }))
     })
+    await accept()
     expect(log).toEqual([21, 22, 23, 24])
     expect(ends).toEqual([])
     React.act(() => {
@@ -279,7 +291,7 @@ describe('Slider PATCHES pins', () => {
     const ends: unknown[] = []
     await renderUi(
       <Slider
-        defaultValue={0}
+        value={0}
         min={0}
         max={100}
         step={1}
@@ -402,8 +414,8 @@ describe('Slider PATCHES pins', () => {
         >
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={0} id="thumb-0" aria-label="Min" />
-            {count === 2 && <Slider.Thumb index={1} id="thumb-1" aria-label="Max" />}
+            <Slider.Thumb id="thumb-0" aria-label="Min" />
+            {count === 2 && <Slider.Thumb id="thumb-1" aria-label="Max" />}
           </Slider.Track>
         </Slider>
       )
@@ -585,8 +597,8 @@ describe('Slider PATCHES pins', () => {
         <Slider value={20} min={0} max={100} step={1} onChange={next => void log.push(next)}>
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={0} id="thumb-0" aria-label="A" />
-            <Slider.Thumb index={1} id="thumb-1" aria-label="B" />
+            <Slider.Thumb id="thumb-0" aria-label="A" />
+            <Slider.Thumb id="thumb-1" aria-label="B" />
           </Slider.Track>
         </Slider>
       )
@@ -610,7 +622,7 @@ describe('Slider PATCHES pins', () => {
         <Slider value={[20, 80]} min={0} max={100} step={1} onChange={next => void log.push(next)}>
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={0} id="thumb-0" aria-label="A" />
+            <Slider.Thumb id="thumb-0" aria-label="A" />
           </Slider.Track>
         </Slider>
       )
@@ -654,10 +666,10 @@ describe('Slider PATCHES pins', () => {
           <Slider value={20}>
             <Slider.Track id="track-a">
               <Slider.Range />
-              <Slider.Thumb index={0} aria-label="A" />
+              <Slider.Thumb aria-label="A" />
             </Slider.Track>
             <Slider.Track id="track-b">
-              <Slider.Thumb index={0} aria-label="B" />
+              <Slider.Thumb aria-label="B" />
             </Slider.Track>
           </Slider>
         </Boundary>
@@ -672,7 +684,7 @@ describe('Slider PATCHES pins', () => {
             <Slider.Track id="track">
               <Slider.Range />
               <Slider.Range />
-              <Slider.Thumb index={0} aria-label="A" />
+              <Slider.Thumb aria-label="A" />
             </Slider.Track>
           </Slider>
         </Boundary>
@@ -685,7 +697,7 @@ describe('Slider PATCHES pins', () => {
     }
   })
 
-  it('SD-DOM-12: missing Track and out-of-sequence thumbs fail before any capture', async () => {
+  it('SD-DOM-12: missing Track fails before any capture', async () => {
     mockRects()
     const silence = quietConsole()
     try {
@@ -693,7 +705,7 @@ describe('Slider PATCHES pins', () => {
       // Thumb with no Track anywhere: key interaction throws the anatomy error.
       await renderUi(
         <Slider value={20} min={0} max={100} step={1} onChange={next => void log.push(next)}>
-          <Slider.Thumb index={0} id="thumb" aria-label="A" />
+          <Slider.Thumb id="thumb" aria-label="A" />
         </Slider>
       )
       const errs = captureWindowErrors()
@@ -709,23 +721,21 @@ describe('Slider PATCHES pins', () => {
       })
       expect(log).toEqual([])
 
-      // Thumb outside the value-matched sequence: interaction throws.
+      // Auto identity: the single Thumb binds values[0], so the same
+      // interaction requests normally instead of mismatching.
       await renderUi(
         <Slider value={20} min={0} max={100} step={1} onChange={next => void log.push(next)}>
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={5} id="thumb" aria-label="A" />
+            <Slider.Thumb id="thumb" aria-label="A" />
           </Slider.Track>
         </Slider>
       )
-      expect(thumb().getAttribute('aria-valuenow')).not.toBe('NaN')
-      const errs2 = captureWindowErrors()
+      expect(thumb().getAttribute('aria-valuenow')).toBe('20')
       React.act(() => {
         thumb().dispatchEvent(keyEvent('keydown', { key: 'ArrowRight' }))
       })
-      errs2.release()
-      expectWindowError(errs2.messages, /Value-to-Thumb count mismatch/)
-      expect(log).toEqual([])
+      expect(log).toEqual([21])
     } finally {
       silence.mockRestore()
     }
@@ -750,8 +760,8 @@ describe('Slider PATCHES pins', () => {
             >
               <Slider.Track id="track">
                 <Slider.Range />
-                <Slider.Thumb index={0} id="thumb-0" aria-label="Min" />
-                <Slider.Thumb index={1} id="thumb-1" aria-label="Max" />
+                <Slider.Thumb id="thumb-0" aria-label="Min" />
+                <Slider.Thumb id="thumb-1" aria-label="Max" />
               </Slider.Track>
             </Slider>
           </Boundary>
@@ -780,8 +790,8 @@ describe('Slider PATCHES pins', () => {
           >
             <Slider.Track id="track">
               <Slider.Range />
-              <Slider.Thumb index={0} id="thumb-0" aria-label="Min" />
-              <Slider.Thumb index={1} id="thumb-1" aria-label="Max" />
+              <Slider.Thumb id="thumb-0" aria-label="Min" />
+              <Slider.Thumb id="thumb-1" aria-label="Max" />
             </Slider.Track>
           </Slider>
         </Boundary>
@@ -904,7 +914,7 @@ describe('Slider PATCHES pins', () => {
           <Slider.Track id="track">
             <Slider.Range />
             {Array.isArray(v) &&
-              v.map((_, i) => <Slider.Thumb key={i} index={i} id={`thumb-${i}`} aria-label={`T${i}`} />)}
+              v.map((_, i) => <Slider.Thumb key={i} id={`thumb-${i}`} aria-label={`T${i}`} />)}
           </Slider.Track>
         </Slider>
       )
@@ -964,7 +974,7 @@ describe('Slider PATCHES pins', () => {
       <Slider value={30}>
         <Slider.Track id="track">
           <Slider.Range />
-          <Slider.Thumb index={0} aria-label="T" />
+          <Slider.Thumb aria-label="T" />
         </Slider.Track>
       </Slider>
     )
@@ -977,8 +987,8 @@ describe('Slider PATCHES pins', () => {
       <Slider value={[20, 70]}>
         <Slider.Track id="track">
           <Slider.Range />
-          <Slider.Thumb index={0} aria-label="Min" />
-          <Slider.Thumb index={1} aria-label="Max" />
+          <Slider.Thumb aria-label="Min" />
+          <Slider.Thumb aria-label="Max" />
         </Slider.Track>
       </Slider>
     )
@@ -992,7 +1002,7 @@ describe('Slider PATCHES pins', () => {
         <Slider value={30}>
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={0} aria-label="T" />
+            <Slider.Thumb aria-label="T" />
           </Slider.Track>
         </Slider>
       </div>
@@ -1008,8 +1018,8 @@ describe('Slider PATCHES pins', () => {
         <Slider value={[20, 70]}>
           <Slider.Track id="track">
             <Slider.Range />
-            <Slider.Thumb index={0} aria-label="Min" />
-            <Slider.Thumb index={1} aria-label="Max" />
+            <Slider.Thumb aria-label="Min" />
+            <Slider.Thumb aria-label="Max" />
           </Slider.Track>
         </Slider>
       </div>
@@ -1023,7 +1033,7 @@ describe('Slider PATCHES pins', () => {
       <Slider value={30} orientation="vertical">
         <Slider.Track id="track">
           <Slider.Range />
-          <Slider.Thumb index={0} aria-label="T" />
+          <Slider.Thumb aria-label="T" />
         </Slider.Track>
       </Slider>
     )

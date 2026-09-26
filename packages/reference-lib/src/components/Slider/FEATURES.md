@@ -3,6 +3,21 @@
 Each item below needs a product, UX, or API decision before anyone writes
 code. HQ picks a direction; then the item becomes implementable.
 
+## Status (2026-09-26, features-triage + FEATURES crew)
+
+- #1 controlled-only value — IMPLEMENT-NOW, LANDED (`value` required,
+  `defaultValue`/internal state stripped; all in-repo consumers migrated).
+- #2 thumb identity — decided AUTO mount-order, LANDED (`index` prop
+  stripped, silent `index = 0` default dead).
+- #3 modified-key policy — decided STRIP, LANDED (all modified arrows
+  pass through; Page keys own large steps).
+- #4 dragging data hooks — decided Root + active Thumb `data-dragging`
+  with `data-active` coexisting, LANDED.
+- #5 single-thumb default name — HOLD-FOR-HQ (catalog unlabeled-control
+  policy; untouched).
+- #6 thumb target size — decided invisible hit-area, LANDED (`::before`
+  grows the cross axis to 24px; painted fader cap untouched).
+
 ## 1. Controlled-only `value` (from DECISIONS candidate #1)
 
 **What it does:** Removes uncontrolled mode entirely — every interaction

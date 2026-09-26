@@ -33,26 +33,30 @@ describe('Slider contract', () => {
     expectTypeOf(validProps.minStepsBetweenThumbs).toEqualTypeOf<number | undefined>()
     expectTypeOf(validProps.orientation).toEqualTypeOf<'horizontal' | 'vertical' | undefined>()
     expectTypeOf(validProps.disabled).toEqualTypeOf<boolean | undefined>()
-    expectTypeOf(validProps.value).toEqualTypeOf<SliderValue | undefined>()
+    expectTypeOf(validProps.value).toEqualTypeOf<SliderValue>()
 
-    // Uncontrolled mode is retained on this branch (quarantine's controlled-only
-    // freeze is deliberately not ported): value stays optional and defaultValue compiles.
-    const uncontrolledProps: SliderProps = { defaultValue: [20, 80] }
-    expect(uncontrolledProps.defaultValue).toEqual([20, 80])
-    const emptyProps: SliderProps = {}
-    expect(emptyProps.value).toBeUndefined()
+    // Controlled-only: value is required and defaultValue does not exist.
+    // @ts-expect-error - value is required
+    const _missingValue: SliderProps = {}
+    // @ts-expect-error - defaultValue was stripped (controlled-only)
+    const _defaultValue: SliderProps = { value: 0, defaultValue: 0 }
+    void _missingValue
+    void _defaultValue
 
     // Generic inference keeps scalar and range handlers distinct.
     expectTypeOf<SliderProps<number>['onChange']>().toEqualTypeOf<((value: number) => void) | undefined>()
     expectTypeOf<SliderProps<number[]>['onChange']>().toEqualTypeOf<((value: number[]) => void) | undefined>()
 
-    // 2. Valid compilation of Slider.Thumb with StyleProps
+    // 2. Valid compilation of Slider.Thumb with StyleProps (auto identity:
+    // no index prop)
     const validThumbProps: SliderThumbProps = {
-      index: 0,
       width: '2r',
       bg: 'ui.progress.bar.foreground',
     }
-    expect(validThumbProps.index).toBe(0)
+    expect(validThumbProps.width).toBe('2r')
+    // @ts-expect-error - index was stripped (auto mount-order identity)
+    const _thumbIndex: SliderThumbProps = { index: 0 }
+    void _thumbIndex
 
     // 3. Compile element with Slider and its sub-parts
     const element = (
@@ -103,8 +107,8 @@ describe('Slider contract', () => {
       <Slider value={[20, 70]} min={0} max={100}>
         <Slider.Track>
           <Slider.Range />
-          <Slider.Thumb index={0} aria-label="Min" />
-          <Slider.Thumb index={1} aria-label="Max" />
+          <Slider.Thumb aria-label="Min" />
+          <Slider.Thumb aria-label="Max" />
         </Slider.Track>
       </Slider>
     )

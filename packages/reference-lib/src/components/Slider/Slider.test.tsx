@@ -28,7 +28,7 @@ describe('Slider component geometry and DSP fader cap parity', () => {
   it('renders horizontal slider with rounded rectangle thumb wider in travel direction', async () => {
     await React.act(async () => {
       root.render(
-        <Slider defaultValue={[50]} orientation="horizontal" id="h-slider">
+        <Slider value={[50]} orientation="horizontal" id="h-slider">
           <Slider.Track id="h-track">
             <Slider.Range id="h-range" />
           </Slider.Track>
@@ -54,7 +54,7 @@ describe('Slider component geometry and DSP fader cap parity', () => {
   it('renders vertical slider with 6px thin track, bottom-to-top range fill, and taller vertical thumb', async () => {
     await React.act(async () => {
       root.render(
-        <Slider defaultValue={[40]} orientation="vertical" id="v-slider">
+        <Slider value={[40]} orientation="vertical" id="v-slider">
           <Slider.Track id="v-track">
             <Slider.Range id="v-range" />
           </Slider.Track>

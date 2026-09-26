@@ -1233,6 +1233,57 @@ test.describe('Slider PATCHES pins', () => {
     await expect(page.getByTestId('shadow-changes')).toHaveText('[[21,80]]')
   })
 
+  test('FEATURES #6: invisible hit-area reaches 24px without repainting the cap', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Slider/Slider/LoggedFixture', { initial: 50, width: 100 })
+    const thumb = page.getByTestId('logged-thumb-0')
+    const box = await thumb.boundingBox()
+    expect(box).not.toBeNull()
+    // Painted DSP fader cap is untouched: 24 wide, 16 tall.
+    expect(box!.width).toBeCloseTo(24, 0)
+    expect(box!.height).toBeCloseTo(16, 0)
+    const before = await thumb.evaluate(el => {
+      const cs = window.getComputedStyle(el, '::before')
+      return { content: cs.content, width: cs.width, height: cs.height }
+    })
+    expect(before.content).toBe('""')
+    expect(before.width).toBe('24px')
+    expect(before.height).toBe('24px')
+
+    await mount('components/Slider/Slider/LoggedFixture', {
+      initial: 50,
+      orientation: 'vertical',
+      height: 100,
+    })
+    const vthumb = page.getByTestId('logged-thumb-0')
+    const vbox = await vthumb.boundingBox()
+    expect(vbox).not.toBeNull()
+    expect(vbox!.width).toBeCloseTo(16, 0)
+    expect(vbox!.height).toBeCloseTo(24, 0)
+    const vbefore = await vthumb.evaluate(el => {
+      const cs = window.getComputedStyle(el, '::before')
+      return { content: cs.content, width: cs.width, height: cs.height }
+    })
+    expect(vbefore.content).toBe('""')
+    expect(vbefore.width).toBe('24px')
+    expect(vbefore.height).toBe('24px')
+  })
+
+  test('SD-KEY-07: Shift+Arrow passes through in a real engine', async ({ mount, page }) => {
+    await mount('components/Slider/Slider/LoggedFixture', { initial: 20, width: 100 })
+    const thumb = page.getByTestId('logged-thumb-0')
+    const changes = page.getByTestId('logged-changes')
+    await thumb.focus()
+    await page.keyboard.press('Shift+ArrowRight')
+    await page.keyboard.press('Shift+ArrowLeft')
+    await expect(changes).toHaveText('[]')
+    await expect(thumb).toHaveAttribute('aria-valuenow', '20')
+    await page.keyboard.press('ArrowRight')
+    await expect(changes).toHaveText('[21]')
+  })
+
   test('SD-DOM-12 and SD-CTRL-07: diagnose malformed anatomy and arrays in the browser', async ({
     mount,
     page,

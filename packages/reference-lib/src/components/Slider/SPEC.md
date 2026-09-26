@@ -39,9 +39,9 @@ Visual polish is not this gate. Invented `SD-FOCUS-*` titles are not catalog.
 | :--- | :--- |
 | Engine | Owned-pointer session engine. RTL/vertical axis + keymaps, grab offset, track-press tie rule, once-per-session ends, render/anatomy/count diagnostics. |
 | Production | **No.** Remaining KEY/CTRL/DOM/DYNAMIC/COMP cases not yet pinned; matrix re-target still open. |
-| Named `[x]` | 47 / 73 (all colocated; see Case index) |
-| Playwright | 32 CT (`Slider.ct.spec.ts`, react17/18/19 green, 9 frozen baselines unmodified) + `env04` cross-engine smoke (chromium/firefox/webkit green) |
-| Vitest | 38 colocated (2 geometry + 13 math + 2 contract + 21 patches) |
+| Named `[x]` | 48 / 73 (all colocated; see Case index) |
+| Playwright | 34 CT (`Slider.ct.spec.ts`, react17/18/19 green, 9 frozen baselines unmodified) + `env04` cross-engine smoke (chromium/firefox/webkit green) |
+| Vitest | 42 colocated (2 geometry + 13 math + 2 contract + 21 patches + 4 features) |
 
 ### Landing notes (2026-09-25)
 
@@ -77,9 +77,27 @@ Visual polish is not this gate. Invented `SD-FOCUS-*` titles are not catalog.
   preserve fixture state, which once made a clamp pin pass vacuously
   (caught in review, fixed, noted here so it stays fixed).
 
+### FEATURES notes (2026-09-26)
+
+- Implemented `FEATURES.md` #1–#4 + #6 (#5 held for HQ): required
+  controlled `value` (uncontrolled paths stripped); auto mount-order
+  thumb identity (claim order + DOM-order rank reconciliation, `index`
+  prop stripped); modified-key strip (Page keys own large steps);
+  `data-dragging` on Root + active Thumb (`data-active` coexists);
+  invisible cross-axis `::before` hit-area to 24px (painted fader cap
+  untouched). Visuals frozen (9 CT baselines unmodified); no `useId`
+  (React 17 CT green).
+- Identity characteristic (shared with Radix Collection): a pure
+  key-reorder with an identical values array does not refresh ranks
+  until the next render; every reorder paired with a value change (the
+  SD-DYNAMIC-01 shape) rebinds by DOM position on that render.
+- In-repo migration: `Slider.book.tsx`, `Slider.story.tsx`,
+  `Showcase.book.tsx`, colocated tests. No `matrix/` consumers.
+
 ### Gaps & incoherence
 
-- `value?` + `defaultValue`. Freeze requires controlled `value`.
+- ~~`value?` + `defaultValue`. Freeze requires controlled `value`.~~
+  Resolved by FEATURES #1 (2026-09-26).
 - Owns Thumb `transform` and theme sizes while also setting CSS vars —
   fights “never overwrite transforms”.
 - `onChange?: (value: any)` loosens freeze typing.
@@ -109,9 +127,12 @@ is a parsed scalar, not a controlled array).
   `SD-COMP-01`, `SD-COMP-03`, `SD-A11Y-01` (preconditions + platform
   AX tree; axe-style checker unavailable in repo — see PATCHES notes),
   `SD-ENV-02`, `SD-ENV-03`, `SD-ENV-04`
+- `[x]` FEATURES (2026-09-26): `SD-KEY-07` (colocated unit +
+  CT real-engine legs)
 - `[ ]` `SD-DOM-01` – `SD-DOM-04`, `SD-DOM-07`, `SD-DOM-09` –
   `SD-DOM-11`, `SD-CTRL-01` – `SD-CTRL-04`, `SD-CTRL-06`,
-  `SD-CTRL-08`, `SD-KEY-01`, `SD-KEY-05` – `SD-KEY-09`,
+  `SD-CTRL-08`, `SD-KEY-01`, `SD-KEY-05`, `SD-KEY-06`,
+  `SD-KEY-08`, `SD-KEY-09`,
   `SD-POINTER-11`, `SD-POINTER-12`, `SD-POINTER-14`,
   `SD-DYNAMIC-01`, `SD-DYNAMIC-04`, `SD-COMP-02` (no matrix slider
   spec exists on this branch; old `SD-DOM-01`–`03` proof lapsed with

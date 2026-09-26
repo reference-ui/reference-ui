@@ -24,8 +24,8 @@ export default {
         <Slider value={val} onChange={setVal} min={0} max={100} step={5}>
           <Slider.Track>
             <Slider.Range />
-            <Slider.Thumb index={0} />
-            <Slider.Thumb index={1} />
+            <Slider.Thumb />
+            <Slider.Thumb />
           </Slider.Track>
         </Slider>
         <Span fontSize="3r" color="design.text.light">

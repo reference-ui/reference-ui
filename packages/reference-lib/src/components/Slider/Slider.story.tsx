@@ -51,8 +51,8 @@ export const RangeSliderFixture = () => {
           >
             <Slider.Track data-testid="range-track">
               <Slider.Range data-testid="range-range" />
-              <Slider.Thumb index={0} data-testid="range-thumb-0" />
-              <Slider.Thumb index={1} data-testid="range-thumb-1" />
+              <Slider.Thumb data-testid="range-thumb-0" />
+              <Slider.Thumb data-testid="range-thumb-1" />
             </Slider.Track>
           </Slider>
           <Span fontSize="3r" color="design.text.light" data-testid="range-value-display">
@@ -123,7 +123,6 @@ export const LoggedFixture = (props: LoggedFixtureProps) => {
               {Array.from({ length: thumbCount }, (_, i) => (
                 <Slider.Thumb
                   key={i}
-                  index={i}
                   data-testid={`logged-thumb-${i}`}
                   aria-label={labels?.[i] ?? `T${i}`}
                 />
@@ -238,7 +237,7 @@ export const CardinalityFixture = () => {
             <Slider.Track data-testid="cardinality-track">
               <Slider.Range data-testid="cardinality-range" />
               {value.map((_, i) => (
-                <Slider.Thumb key={i} index={i} data-testid={`cardinality-thumb-${i}`} aria-label={`T${i}`} />
+                <Slider.Thumb key={i} data-testid={`cardinality-thumb-${i}`} aria-label={`T${i}`} />
               ))}
             </Slider.Track>
           </Slider>
@@ -299,8 +298,8 @@ export const A11yFixture = () => (
         <Slider value={[20, 70]} onChange={() => {}}>
           <Slider.Track>
             <Slider.Range />
-            <Slider.Thumb index={0} data-testid="a11y-range-0" aria-label="Min price" />
-            <Slider.Thumb index={1} data-testid="a11y-range-1" aria-label="Max price" />
+            <Slider.Thumb data-testid="a11y-range-0" aria-label="Min price" />
+            <Slider.Thumb data-testid="a11y-range-1" aria-label="Max price" />
           </Slider.Track>
         </Slider>
         <Slider value={50} onChange={() => {}} disabled>
@@ -417,8 +416,8 @@ export const ShadowFixture = (props: { dirOnHost?: boolean }) => {
             >
               <Slider.Track data-testid="shadow-track">
                 <Slider.Range data-testid="shadow-range" />
-                <Slider.Thumb index={0} data-testid="shadow-thumb-0" aria-label="ShadowMin" />
-                <Slider.Thumb index={1} data-testid="shadow-thumb-1" aria-label="ShadowMax" />
+                <Slider.Thumb data-testid="shadow-thumb-0" aria-label="ShadowMin" />
+                <Slider.Thumb data-testid="shadow-thumb-1" aria-label="ShadowMax" />
               </Slider.Track>
             </Slider>,
             portalTarget
@@ -466,7 +465,7 @@ export const DiagFixture = () => {
               <Slider value={20} onChange={() => setChanges(c => c + 1)}>
                 <Slider.Track>
                   <Slider.Range />
-                  <Slider.Thumb index={0} aria-label="T" />
+                  <Slider.Thumb aria-label="T" />
                 </Slider.Track>
               </Slider>
             )}
@@ -474,10 +473,10 @@ export const DiagFixture = () => {
               <Slider value={20}>
                 <Slider.Track>
                   <Slider.Range />
-                  <Slider.Thumb index={0} aria-label="T" />
+                  <Slider.Thumb aria-label="T" />
                 </Slider.Track>
                 <Slider.Track>
-                  <Slider.Thumb index={0} aria-label="T2" />
+                  <Slider.Thumb aria-label="T2" />
                 </Slider.Track>
               </Slider>
             )}
@@ -486,7 +485,7 @@ export const DiagFixture = () => {
                 <Slider.Track>
                   <Slider.Range />
                   <Slider.Range />
-                  <Slider.Thumb index={0} aria-label="T" />
+                  <Slider.Thumb aria-label="T" />
                 </Slider.Track>
               </Slider>
             )}
@@ -494,8 +493,8 @@ export const DiagFixture = () => {
               <Slider value={[40, 60]} min={0} max={100} step={10} minStepsBetweenThumbs={3}>
                 <Slider.Track>
                   <Slider.Range />
-                  <Slider.Thumb index={0} aria-label="Min" />
-                  <Slider.Thumb index={1} aria-label="Max" />
+                  <Slider.Thumb aria-label="Min" />
+                  <Slider.Thumb aria-label="Max" />
                 </Slider.Track>
               </Slider>
             )}

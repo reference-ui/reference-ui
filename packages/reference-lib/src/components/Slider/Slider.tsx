@@ -22,8 +22,7 @@ export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
 
 export type SliderProps<T extends SliderValue = SliderValue> = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
-  value?: T
-  defaultValue?: T
+  value: T
   min?: number
   max?: number
   step?: number
@@ -49,7 +48,9 @@ interface SliderContextValue {
   trackRef: React.RefObject<HTMLDivElement | null>
   registerTrack: (node: HTMLDivElement | null) => void
   registerRange: (node: HTMLDivElement | null) => void
-  registerThumb: (index: number, node: HTMLDivElement | null) => void
+  claimThumbId: () => number
+  registerThumb: (id: number, node: HTMLDivElement | null) => void
+  getThumbIndex: (id: number) => number
   startPointerDrag: (
     e: React.PointerEvent<HTMLDivElement>,
     targetIndex: number,
@@ -267,13 +268,24 @@ export const SliderRange = React.forwardRef<HTMLDivElement, SliderRangeProps>(
 )
 
 export type SliderThumbProps = PrimitiveProps<'div'> & {
-  index?: number
   valueText?: string
   formatValue?: (value: number) => string
 }
 
+// Invisible WCAG 2.5.8 hit-area: the painted DSP fader cap stays 24x16
+// (cross axis grows to 24 via the pseudo element, which paints nothing).
+const thumbHitAreaHorizontal = {
+  content: '""',
+  position: 'absolute',
+  inset: '-4px 0',
+} as const
+const thumbHitAreaVertical = {
+  content: '""',
+  position: 'absolute',
+  inset: '0 -4px',
+} as const
+
 export function SliderThumb({
-  index = 0,
   valueText,
   formatValue,
   className,
@@ -298,7 +310,9 @@ export function SliderThumb({
     draggingIndex,
     focusVisibleIndex,
     activeThumbIndex,
+    claimThumbId,
     registerThumb,
+    getThumbIndex,
     startPointerDrag,
     handleThumbKeyDown,
     handleThumbKeyUp,
@@ -306,6 +320,10 @@ export function SliderThumb({
     handleThumbBlur,
     setFocusVisibleIndex,
   } = context
+  // Auto mount-order identity: the claim order is the DOM order on first
+  // paint and SSR; getThumbIndex reconciles to DOM order after commit.
+  const [mountId] = React.useState(claimThumbId)
+  const index = getThumbIndex(mountId)
   const [localFocusVisible, setLocalFocusVisible] = React.useState(false)
   const isFocusVisibleManaged =
     focusVisibleIndex !== undefined
@@ -332,9 +350,9 @@ export function SliderThumb({
 
   const setThumbRef = React.useCallback(
     (node: HTMLDivElement | null) => {
-      registerThumb(index, node)
+      registerThumb(mountId, node)
     },
-    [registerThumb, index]
+    [registerThumb, mountId]
   )
 
   // Out-of-range thumbs render global bounds so no ARIA attribute ever
@@ -432,6 +450,7 @@ export function SliderThumb({
       data-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
       data-active={isActive ? '' : undefined}
+      data-dragging={isDragging ? '' : undefined}
       data-focus-visible={!isActive && isFocusVisibleManaged ? '' : undefined}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
@@ -450,6 +469,7 @@ export function SliderThumb({
       touchAction="none"
       transition="box-shadow 200ms ease, transform 200ms ease"
       _focusVisible={focusRing}
+      _before={isHorizontal ? thumbHitAreaHorizontal : thumbHitAreaVertical}
       className={className}
       style={{
         zIndex,
@@ -485,12 +505,29 @@ function countMismatchMessage(valueLength: number, thumbCount: number): string {
   )
 }
 
+// Mount ids in DOM order; disconnected or incomparable nodes keep
+// registration order so identity never depends on layout availability.
+function sortThumbIdsByDomOrder(registry: Map<number, HTMLDivElement>): number[] {
+  const entries = [...registry.entries()]
+  try {
+    entries.sort(([, a], [, b]) => {
+      if (a === b) return 0
+      const pos = a.compareDocumentPosition(b)
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+      if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+      return 0
+    })
+  } catch {
+    // Conservatively keep registration order.
+  }
+  return entries.map(([id]) => id)
+}
+
 export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
   function Slider(
     {
       children,
       value: valueProp,
-      defaultValue = 0,
       min = 0,
       max = 100,
       step = 1,
@@ -506,9 +543,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     },
     ref
   ) {
-    const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<SliderValue>(defaultValue)
-    const currentValue = isControlled ? valueProp : internalValue
+    const currentValue = valueProp
 
     // Fail fast on malformed configuration before any ARIA or CSS publishes.
     validateSliderConfig({
@@ -527,7 +562,31 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
     const rootRef = React.useRef<HTMLDivElement | null>(null)
     const trackRef = React.useRef<HTMLDivElement | null>(null)
+    // Thumb registry keyed by mount id (claim order = mount order); the
+    // version rerenders Thumbs when membership changes so DOM-order ranks
+    // refresh after mount/unmount/reorder commits.
     const thumbNodesRef = React.useRef<Map<number, HTMLDivElement>>(new Map())
+    const nextThumbIdRef = React.useRef(0)
+    const firstThumbIdRef = React.useRef<number | null>(null)
+    const [thumbRegistryVersion, setThumbRegistryVersion] = React.useState(0)
+
+    const claimThumbId = React.useCallback(() => {
+      const id = nextThumbIdRef.current
+      nextThumbIdRef.current += 1
+      if (firstThumbIdRef.current === null) {
+        firstThumbIdRef.current = id
+      }
+      return id
+    }, [])
+
+    const getThumbIndex = React.useCallback((id: number): number => {
+      const ordered = sortThumbIdsByDomOrder(thumbNodesRef.current)
+      const rank = ordered.indexOf(id)
+      if (rank !== -1) return rank
+      // Unregistered (first paint, SSR, StrictMode remount): claim order is
+      // the DOM order, so the offset from the first claim is the index.
+      return id - (firstThumbIdRef.current ?? id)
+    }, [])
 
     const registeredTrackNodeRef = React.useRef<HTMLDivElement | null>(null)
     const registerTrack = React.useCallback((node: HTMLDivElement | null) => {
@@ -568,9 +627,6 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     const hasChangedInKeySessionRef = React.useRef(false)
     const activeKeyRef = React.useRef<string | null>(null)
 
-    const isControlledRef = React.useRef(isControlled)
-    isControlledRef.current = isControlled
-
     const latestPropsRef = React.useRef({
       min,
       max,
@@ -605,18 +661,25 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     }, [])
 
     const registerThumb = React.useCallback(
-      (index: number, node: HTMLDivElement | null) => {
+      (id: number, node: HTMLDivElement | null) => {
         if (node) {
-          thumbNodesRef.current.set(index, node)
+          if (thumbNodesRef.current.get(id) !== node) {
+            thumbNodesRef.current.set(id, node)
+            setThumbRegistryVersion(v => v + 1)
+          }
         } else {
-          thumbNodesRef.current.delete(index)
-          // Removing the dragged thumb invalidates its session: no end report.
-          if (index === activeDragIndexRef.current) {
+          // Resolve before delete: removing the dragged thumb invalidates
+          // its session with no end report.
+          const removedIndex = getThumbIndex(id)
+          if (thumbNodesRef.current.delete(id)) {
+            setThumbRegistryVersion(v => v + 1)
+          }
+          if (removedIndex === activeDragIndexRef.current) {
             cancelPointerSession()
           }
         }
       },
-      [cancelPointerSession]
+      [cancelPointerSession, getThumbIndex]
     )
 
     // Inherited direction: an explicit dir ancestor wins, otherwise the
@@ -675,9 +738,6 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       const nextValues = [...curValues]
       nextValues[index] = clamped
       const emitted: SliderValue = curIsRange ? nextValues : clamped
-      if (!isControlledRef.current) {
-        setInternalValue(emitted)
-      }
       lastRequestedValueRef.current = emitted
       curOnChange?.(emitted)
       return true
@@ -734,6 +794,12 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       [computePointerPercent, requestThumbValue, cancelPointerSession]
     )
 
+    const getThumbNode = React.useCallback((index: number): HTMLDivElement | undefined => {
+      const ordered = sortThumbIdsByDomOrder(thumbNodesRef.current)
+      const id = ordered[index]
+      return id === undefined ? undefined : thumbNodesRef.current.get(id)
+    }, [])
+
     const handlePointerUp = React.useCallback(
       (e: PointerEvent) => {
         if (activePointerIdRef.current === null || e.pointerId !== activePointerIdRef.current) {
@@ -751,10 +817,10 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         }
 
         if (dragIndex !== null) {
-          thumbNodesRef.current.get(dragIndex)?.focus()
+          getThumbNode(dragIndex)?.focus()
         }
       },
-      [cancelPointerSession]
+      [cancelPointerSession, getThumbNode]
     )
 
     const handlePointerCancel = React.useCallback(
@@ -827,7 +893,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         setFocusVisibleIndex(null)
         hasChangedInSessionRef.current = false
 
-        const thumbNode = thumbNodesRef.current.get(targetIndex)
+        const thumbNode = getThumbNode(targetIndex)
         if (thumbNode && document.activeElement !== thumbNode) {
           thumbNode.focus()
         }
@@ -864,7 +930,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           }
         }
 
-        thumbNodesRef.current.get(targetIndex)?.focus()
+        getThumbNode(targetIndex)?.focus()
       },
       [
         disabled,
@@ -875,13 +941,16 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         isRtl,
         computePointerPercent,
         requestThumbValue,
+        getThumbNode,
       ]
     )
 
     const handleThumbKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLDivElement>, index: number) => {
         if (disabled) return
-        if (e.ctrlKey || e.altKey || e.metaKey) return
+        // Modified keys pass through untouched: Page keys own large steps,
+        // and the application keeps every modified shortcut (SD-KEY-07).
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return
 
         const {
           min: curMin,
@@ -925,21 +994,6 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
             targetVal = stepValue(curVal, 1, curMin, curMax, curStep)
           else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft')
             targetVal = stepValue(curVal, -1, curMin, curMax, curStep)
-        }
-
-        // Shift+Arrow paging is retained while FEATURES #3 is undecided; the
-        // key session still keys on e.key, so a modifier release alone can
-        // never end it.
-        if (targetVal !== null && e.shiftKey) {
-          const direction: 1 | -1 =
-            e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : -1
-          const rtlFlip = isHoriz && isRtl && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') ? -1 : 1
-          targetVal = snapValueToStep(
-            curVal + direction * rtlFlip * pageStep,
-            curMin,
-            curMax,
-            curStep
-          )
         }
 
         if (e.key === 'PageUp') {
@@ -1025,7 +1079,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         trackRef,
         registerTrack,
         registerRange,
+        claimThumbId,
         registerThumb,
+        getThumbIndex,
         startPointerDrag,
         handleThumbKeyDown,
         handleThumbKeyUp,
@@ -1047,7 +1103,10 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         activeThumbIndex,
         registerTrack,
         registerRange,
+        claimThumbId,
         registerThumb,
+        getThumbIndex,
+        thumbRegistryVersion,
         startPointerDrag,
         handleThumbKeyDown,
         handleThumbKeyUp,
@@ -1077,6 +1136,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           data-reference-slider=""
           data-orientation={orientation}
           data-disabled={disabled ? '' : undefined}
+          data-dragging={draggingIndex !== null ? '' : undefined}
           position="relative"
           display="flex"
           flexDirection={isHorizontal ? 'row' : 'column'}
@@ -1096,7 +1156,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
             <SliderTrack>
               <SliderRange />
               {values.map((_, i) => (
-                <SliderThumb key={i} index={i} />
+                <SliderThumb key={i} />
               ))}
             </SliderTrack>
           )}

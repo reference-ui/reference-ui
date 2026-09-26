@@ -21,7 +21,7 @@ product, or naming call needed — implement and prove.
 ### 4. `onChangeEnd` once-per-changed-session semantics (from DECISIONS candidate #5)
 - **What:** `onChangeEnd` fires exactly once with the last requested candidate after a changed pointer release or the matching keyup of a changed key session; canceled sessions, programmatic updates, and bound no-ops emit nothing.
 - **Acceptance:** SD-END-01 (once, after final request, before capture cleanup) and SD-END-03 (seven cancel paths silent) green as browser cases; SD-END-02/04 tail green.
-- **Source:** Quarantine `0b1388d87` `Slider.tsx` session refs (`hasChangedInSessionRef`, `activeKeyRef`, end-on-matching-keyup). Note: if FEATURES.md #3 blesses Shift+Arrow paging, a modifier-aware session key must be defined.
+- **Source:** Quarantine `0b1388d87` `Slider.tsx` session refs (`hasChangedInSessionRef`, `activeKeyRef`, end-on-matching-keyup). Note: if FEATURES.md #3 blesses Shift+Arrow paging, a modifier-aware session key must be defined. (Moot: FEATURES #3 decided strip, 2026-09-26.)
 
 ### 5. Runtime diagnostics wiring (from DECISIONS candidate #6)
 - **What:** Call the landed (currently unwired) `validateSliderConfig` kernel at render and throw on malformed anatomy (zero/duplicate Track, duplicate Range) and value↔Thumb count mismatches, before any ARIA or CSS publishes.
