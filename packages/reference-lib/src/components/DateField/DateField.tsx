@@ -2,8 +2,8 @@ import * as React from 'react'
 import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
 import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
-import { Field } from '../Field'
 import { CalendarTodayIcon } from '@reference-ui/icons'
+import { createSlotRootContext } from '../Slot'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: ISODate | null
@@ -17,144 +17,100 @@ export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' 
   form?: string
 }
 
+const {
+  Provider: DateFieldSlotProvider,
+  useSlotRegistration,
+  useSlot,
+} = createSlotRootContext<{ ref?: React.Ref<any> }>()
+
 interface DateFieldContextValue {
   value: ISODate | null
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   locale: string
   disabled: boolean
+  required: boolean
+  pickerId: string
+  inputRef: React.RefObject<HTMLInputElement | null>
   handleDateSelect: (date: ISODate | null) => void
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  handleInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  handleInputClick: () => void
+  rootInputProps: {
+    placeholder?: string
+    className?: string
+    style?: React.CSSProperties
+    id?: string
+    readOnly?: boolean
+    autoComplete?: string
+    autoCorrect?: string
+    spellCheck?: boolean
+    onInput?: (e: React.FormEvent<HTMLInputElement>) => void
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+    onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void
+    onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void
+    onClick?: (e: React.MouseEvent<HTMLInputElement>) => void
+  }
 }
 
 const DateFieldContext = React.createContext<DateFieldContextValue | null>(null)
 
+function mergeClassNames(...classes: Array<string | undefined | null | false>): string | undefined {
+  const merged = classes.filter(Boolean).join(' ')
+  return merged ? merged : undefined
+}
+
+function mergeStyles(
+  ...styles: Array<React.CSSProperties | undefined>
+): React.CSSProperties | undefined {
+  const merged: React.CSSProperties = {}
+  for (const s of styles) {
+    if (s) Object.assign(merged, s)
+  }
+  return Object.keys(merged).length > 0 ? merged : undefined
+}
+
 export type DateFieldInputProps = PrimitiveProps<'input'>
 
-export function DateFieldInput({
-  className,
-  style,
-  onKeyDown,
-  ...props
-}: DateFieldInputProps) {
-  const context = React.useContext(DateFieldContext)
-  if (!context) return null
-
-  const { value, isOpen, setIsOpen, disabled, handleInputChange } = context
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    onKeyDown?.(e)
-    if (e.defaultPrevented || disabled) return
-
-    if (e.altKey && (e.key === 'ArrowDown' || e.key === 'Down')) {
-      e.preventDefault()
-      setIsOpen(true)
-    } else if (e.key === 'Escape' && isOpen) {
-      e.preventDefault()
-      setIsOpen(false)
-    }
+export const DateFieldInput = React.forwardRef<HTMLInputElement, DateFieldInputProps>(
+  function DateFieldInput(props, forwardedRef) {
+    useSlotRegistration({
+      slotId: 'input',
+      element: <input {...(props as any)} />,
+      meta: { ref: forwardedRef },
+    })
+    return null
   }
-
-  return (
-    <Input
-      type="text"
-      role="combobox"
-      aria-expanded={isOpen}
-      aria-haspopup="dialog"
-      aria-autocomplete="none"
-      disabled={disabled}
-      value={value ?? ''}
-      onChange={handleInputChange}
-      onClick={() => setIsOpen(true)}
-      onKeyDown={handleKeyDown}
-      data-reference-date-input=""
-      className={className}
-      style={style}
-      {...props}
-    />
-  )
-}
+)
 DateFieldInput.displayName = 'DateFieldInput'
-;(DateFieldInput as any).__refPart = 'DateFieldInput'
 
 export type DateFieldTriggerProps = React.ComponentPropsWithoutRef<typeof Overlay.Trigger>
 
-export function DateFieldTrigger({
-  children,
-  className,
-  style,
-  ...props
-}: DateFieldTriggerProps) {
-  return (
-    <Overlay.Trigger
-      aria-haspopup="dialog"
-      type="button"
-      tabIndex={-1}
-      bg="transparent"
-      border="none"
-      p="0"
-      width="6r"
-      height="6r"
-      minWidth="6r"
-      marginInlineEnd="-2r"
-      display="inline-flex"
-      alignItems="center"
-      justifyContent="center"
-      cursor="pointer"
-      color="design.text.base"
-      _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
-      borderRadius="sm"
-      data-reference-date-trigger=""
-      className={className}
-      style={style}
-      {...props}
-    >
-      {children ?? <CalendarTodayIcon />}
-    </Overlay.Trigger>
-  )
-}
+export const DateFieldTrigger = React.forwardRef<HTMLButtonElement, DateFieldTriggerProps>(
+  function DateFieldTrigger(props, forwardedRef) {
+    useSlotRegistration({
+      slotId: 'trigger',
+      element: <button {...(props as any)} />,
+      meta: { ref: forwardedRef },
+    })
+    return null
+  }
+)
 DateFieldTrigger.displayName = 'DateFieldTrigger'
-;(DateFieldTrigger as any).__refPart = 'DateFieldTrigger'
 
 export type DateFieldPickerProps = OverlayContentProps
 
-export function DateFieldPicker({
-  children,
-  placement = 'bottom-start',
-  className,
-  style,
-  ...props
-}: DateFieldPickerProps) {
-  const context = React.useContext(DateFieldContext)
-
-  return (
-    <Overlay.Content
-      role="dialog"
-      placement={placement}
-      bg="ui.dialog.background"
-      color="ui.dialog.foreground"
-      borderRadius="md"
-      boxShadow="0 4px 16px rgba(0,0,0,0.15)"
-      border="1px solid"
-      borderColor="ui.dialog.border"
-      p="2r"
-      data-reference-date-picker=""
-      className={className}
-      style={style}
-      {...props}
-    >
-      {children ?? (
-        <Calendar
-          value={context?.value}
-          locale={context?.locale}
-          onChange={(nextVal) => context?.handleDateSelect(nextVal)}
-        />
-      )}
-    </Overlay.Content>
-  )
-}
+export const DateFieldPicker = React.forwardRef<HTMLDivElement, DateFieldPickerProps>(
+  function DateFieldPicker(props, forwardedRef) {
+    useSlotRegistration({
+      slotId: 'picker',
+      element: <div {...(props as any)} />,
+      meta: { ref: forwardedRef },
+    })
+    return null
+  }
+)
 DateFieldPicker.displayName = 'DateFieldPicker'
-;(DateFieldPicker as any).__refPart = 'DateFieldPicker'
 
 export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof Calendar>) {
   const context = React.useContext(DateFieldContext)
@@ -168,53 +124,261 @@ export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof C
   )
 }
 DateFieldCalendar.displayName = 'DateFieldCalendar'
-;(DateFieldCalendar as any).__refPart = 'DateFieldCalendar'
 
-function isFieldElement(child: React.ReactNode): boolean {
-  if (!React.isValidElement(child)) return false
+function DateFieldLayout() {
+  const context = React.useContext(DateFieldContext)
+  const inputSlot = useSlot('input')
+  const triggerSlot = useSlot('trigger')
+  const pickerSlot = useSlot('picker')
+  if (!context) return null
+
+  const isPickerPresent = Boolean(pickerSlot)
+
+  const {
+    value,
+    isOpen,
+    disabled,
+    required,
+    pickerId,
+    inputRef,
+    handleInputChange,
+    handleInputKeyDown,
+    handleInputClick,
+    rootInputProps,
+  } = context
+
+  // Part-Resolution Law for the input:
+  // merge(inputDefaults, rootInputProps, explicitInputProps, managedMachineProps).
+  const explicitProps = (inputSlot?.element.props as Record<string, any> | undefined) ?? {}
+  const explicitRef = inputSlot?.meta?.ref as React.Ref<HTMLInputElement> | undefined
+
+  const composedInputRef = (node: HTMLInputElement | null) => {
+    inputRef.current = node
+    if (typeof explicitRef === 'function') {
+      explicitRef(node)
+    } else if (explicitRef && typeof explicitRef === 'object') {
+      ;(explicitRef as React.RefObject<HTMLInputElement | null>).current = node
+    }
+  }
+
+  const inputId = explicitProps.id ?? rootInputProps.id
+  const placeholder = explicitProps.placeholder ?? rootInputProps.placeholder
+  const className = mergeClassNames(rootInputProps.className, explicitProps.className)
+  const style = mergeStyles(rootInputProps.style, explicitProps.style)
+  const isDisabled = explicitProps.disabled ?? disabled
+  const isReadOnly = explicitProps.readOnly ?? rootInputProps.readOnly
+  const isRequired = explicitProps.required ?? required
+
+  const onInputComposed = (e: React.FormEvent<HTMLInputElement>) => {
+    explicitProps.onInput?.(e)
+    rootInputProps.onInput?.(e)
+  }
+
+  const onChangeComposed = (e: React.ChangeEvent<HTMLInputElement>) => {
+    explicitProps.onChange?.(e)
+    handleInputChange(e)
+  }
+
+  const onKeyDownComposed = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    explicitProps.onKeyDown?.(e)
+    rootInputProps.onKeyDown?.(e)
+    if (!e.defaultPrevented && !isDisabled) {
+      handleInputKeyDown(e)
+    }
+  }
+
+  const onFocusComposed = (e: React.FocusEvent<HTMLInputElement>) => {
+    explicitProps.onFocus?.(e)
+    rootInputProps.onFocus?.(e)
+  }
+
+  const onBlurComposed = (e: React.FocusEvent<HTMLInputElement>) => {
+    explicitProps.onBlur?.(e)
+    rootInputProps.onBlur?.(e)
+  }
+
+  const onClickComposed = (e: React.MouseEvent<HTMLInputElement>) => {
+    explicitProps.onClick?.(e)
+    rootInputProps.onClick?.(e)
+    if (!e.defaultPrevented && !isDisabled) {
+      handleInputClick()
+    }
+  }
+
+  const {
+    className: _explicitClassName,
+    style: _explicitStyle,
+    placeholder: _explicitPlaceholder,
+    id: _explicitId,
+    onInput: _explicitOnInput,
+    onChange: _explicitOnChange,
+    onKeyDown: _explicitOnKeyDown,
+    onFocus: _explicitOnFocus,
+    onBlur: _explicitOnBlur,
+    onClick: _explicitOnClick,
+    value: _explicitValue,
+    defaultValue: _explicitDefaultValue,
+    disabled: _explicitDisabled,
+    readOnly: _explicitReadOnly,
+    required: _explicitRequired,
+    autoComplete: _explicitAutoComplete,
+    autoCorrect: _explicitAutoCorrect,
+    spellCheck: _explicitSpellCheck,
+    inputMode: _explicitInputMode,
+    role: _explicitRole,
+    type: _explicitType,
+    children: _explicitChildren,
+    ...restExplicitProps
+  } = explicitProps
+
+  const inputNode = (
+    <Input
+      {...restExplicitProps}
+      ref={composedInputRef}
+      id={inputId}
+      type="text"
+      role={isPickerPresent ? 'combobox' : undefined}
+      aria-haspopup={isPickerPresent ? 'dialog' : undefined}
+      aria-expanded={isPickerPresent ? isOpen : undefined}
+      aria-controls={isPickerPresent ? pickerId : undefined}
+      aria-autocomplete={isPickerPresent ? 'none' : undefined}
+      data-reference-date-input=""
+      inputMode="text"
+      autoComplete={explicitProps.autoComplete ?? rootInputProps.autoComplete ?? 'off'}
+      autoCorrect={explicitProps.autoCorrect ?? rootInputProps.autoCorrect ?? 'off'}
+      spellCheck={explicitProps.spellCheck ?? rootInputProps.spellCheck ?? false}
+      disabled={isDisabled}
+      readOnly={isReadOnly}
+      required={isRequired}
+      placeholder={placeholder}
+      value={value ?? ''}
+      onInput={onInputComposed}
+      onChange={onChangeComposed}
+      onKeyDown={onKeyDownComposed}
+      onFocus={onFocusComposed}
+      onBlur={onBlurComposed}
+      onClick={onClickComposed}
+      className={className}
+      style={style}
+    />
+  )
+
+  // Trigger: explicit part unfolds the synthesized default. Clicking toggles
+  // (via Overlay.Trigger) while focus stays on (or returns to) the input.
+  let triggerNode: React.ReactNode = null
+  if (triggerSlot || isPickerPresent) {
+    const trigProps = (triggerSlot?.element.props as Record<string, any> | undefined) ?? {}
+    const trigRef = triggerSlot?.meta?.ref as React.Ref<HTMLButtonElement> | undefined
+    const isTriggerDisabled = trigProps.disabled ?? disabled
+
+    const onTriggerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      trigProps.onClick?.(e)
+      if (!e.defaultPrevented && !isTriggerDisabled) {
+        inputRef.current?.focus()
+      }
+    }
+
+    const {
+      onClick: _trigOnClick,
+      disabled: _trigDisabled,
+      tabIndex: _trigTabIndex,
+      children: _trigChildren,
+      ...restTrigProps
+    } = trigProps
+
+    triggerNode = (
+      <Overlay.Trigger
+        aria-haspopup="dialog"
+        type="button"
+        tabIndex={trigProps.tabIndex ?? -1}
+        bg="transparent"
+        border="none"
+        p="0"
+        width="6r"
+        height="6r"
+        minWidth="6r"
+        marginInlineEnd="-2r"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        cursor="pointer"
+        color="design.text.base"
+        _hover={{ bg: 'gray.800', color: 'ui.field.foreground' }}
+        borderRadius="sm"
+        {...(restTrigProps as any)}
+        ref={(node: HTMLButtonElement | null) => {
+          if (typeof trigRef === 'function') {
+            trigRef(node)
+          } else if (trigRef && typeof trigRef === 'object') {
+            ;(trigRef as React.RefObject<HTMLButtonElement | null>).current = node
+          }
+        }}
+        disabled={isTriggerDisabled}
+        data-reference-date-trigger=""
+        onClick={onTriggerClick}
+      >
+        {trigProps.children ?? <CalendarTodayIcon />}
+      </Overlay.Trigger>
+    )
+  }
+
   return (
-    child.type === Field ||
-    (child.type as any)?.displayName === 'Field' ||
-    Boolean((child.props as any)?.['data-reference-field'])
+    <>
+      {inputNode}
+      {triggerNode}
+    </>
   )
 }
 
-function isInputPart(child: React.ReactNode): boolean {
-  if (!React.isValidElement(child)) return false
-  return (
-    child.type === DateFieldInput ||
-    child.type === DateField.Input ||
-    (child.type as any)?.displayName === 'DateFieldInput' ||
-    (child.type as any)?.displayName === 'DateField.Input' ||
-    (child.type as any)?.__refPart === 'DateFieldInput' ||
-    Boolean((child.props as any)?.['data-reference-date-input']) ||
-    (child.props as any)?.role === 'combobox' ||
-    child.type === 'input' ||
-    child.type === Input
-  )
-}
+function DateFieldPickerLayer() {
+  const context = React.useContext(DateFieldContext)
+  const pickerSlot = useSlot('picker')
+  if (!context || !pickerSlot) return null
 
-function isTriggerPart(child: React.ReactNode): boolean {
-  if (!React.isValidElement(child)) return false
-  return (
-    child.type === DateFieldTrigger ||
-    child.type === DateField.Trigger ||
-    (child.type as any)?.displayName === 'DateFieldTrigger' ||
-    (child.type as any)?.displayName === 'DateField.Trigger' ||
-    (child.type as any)?.__refPart === 'DateFieldTrigger' ||
-    Boolean((child.props as any)?.['data-reference-date-trigger'])
-  )
-}
+  const { value, locale, pickerId, handleDateSelect } = context
 
-function isPickerPart(child: React.ReactNode): boolean {
-  if (!React.isValidElement(child)) return false
+  const pickerProps = (pickerSlot.element.props as Record<string, any> | undefined) ?? {}
+  const pickerRef = pickerSlot.meta?.ref as React.Ref<HTMLDivElement> | undefined
+  const placement = pickerProps.placement ?? 'bottom-start'
+
+  const {
+    id: _pickerId,
+    role: _pickerRole,
+    placement: _pickerPlacement,
+    children: _pickerChildren,
+    ...restPickerProps
+  } = pickerProps
+
   return (
-    child.type === DateFieldPicker ||
-    child.type === DateField.Picker ||
-    (child.type as any)?.displayName === 'DateFieldPicker' ||
-    (child.type as any)?.displayName === 'DateField.Picker' ||
-    (child.type as any)?.__refPart === 'DateFieldPicker' ||
-    Boolean((child.props as any)?.['data-reference-date-picker'])
+    <Overlay.Content
+      role="dialog"
+      placement={placement}
+      bg="ui.dialog.background"
+      color="ui.dialog.foreground"
+      borderRadius="md"
+      boxShadow="0 4px 16px rgba(0,0,0,0.15)"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      p="2r"
+      {...(restPickerProps as any)}
+      id={pickerId}
+      data-reference-date-picker=""
+      ref={(node: HTMLDivElement | null) => {
+        if (typeof pickerRef === 'function') {
+          pickerRef(node)
+        } else if (pickerRef && typeof pickerRef === 'object') {
+          ;(pickerRef as React.RefObject<HTMLDivElement | null>).current = node
+        }
+      }}
+    >
+      {pickerProps.children ?? (
+        <Calendar
+          value={value}
+          locale={locale}
+          onChange={(nextVal) => handleDateSelect(nextVal)}
+        />
+      )}
+    </Overlay.Content>
   )
 }
 
@@ -229,6 +393,8 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       min,
       max,
       disabled = false,
+      readOnly = false,
+      required = false,
       name,
       form,
       placeholder,
@@ -243,6 +409,12 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     const value = isControlled ? valueProp : internalValue
 
     const [isOpen, setIsOpen] = React.useState(false)
+
+    const reactId = React.useId()
+    const [pickerId] = React.useState(() => `datefield-picker-${reactId.replace(/:/g, '')}`)
+
+    const fieldRef = React.useRef<HTMLDivElement | null>(null)
+    const inputRef = React.useRef<HTMLInputElement | null>(null)
 
     const handleDateSelect = React.useCallback(
       (nextDate: ISODate | null) => {
@@ -266,6 +438,45 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       [isControlled, onChange]
     )
 
+    const handleInputKeyDown = React.useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.defaultPrevented || disabled) return
+
+        if (e.altKey && (e.key === 'ArrowDown' || e.key === 'Down')) {
+          e.preventDefault()
+          setIsOpen(true)
+        } else if (e.key === 'Escape' && isOpen) {
+          e.preventDefault()
+          setIsOpen(false)
+        }
+      },
+      [disabled, isOpen]
+    )
+
+    const handleInputClick = React.useCallback(() => {
+      if (disabled) return
+      setIsOpen(true)
+    }, [disabled])
+
+    const rootInputProps = React.useMemo<DateFieldContextValue['rootInputProps']>(
+      () => ({
+        placeholder,
+        className,
+        style,
+        id: (props as Record<string, any>).id,
+        readOnly,
+        autoComplete: (props as Record<string, any>).autoComplete,
+        autoCorrect: (props as Record<string, any>).autoCorrect,
+        spellCheck: (props as Record<string, any>).spellCheck,
+        onInput: (props as Record<string, any>).onInput,
+        onKeyDown: (props as Record<string, any>).onKeyDown,
+        onFocus: (props as Record<string, any>).onFocus,
+        onBlur: (props as Record<string, any>).onBlur,
+        onClick: (props as Record<string, any>).onClick,
+      }),
+      [placeholder, className, style, props, readOnly]
+    )
+
     const contextValue = React.useMemo<DateFieldContextValue>(
       () => ({
         value,
@@ -273,19 +484,58 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         setIsOpen,
         locale,
         disabled,
+        required,
+        pickerId,
+        inputRef,
         handleDateSelect,
         handleInputChange,
+        handleInputKeyDown,
+        handleInputClick,
+        rootInputProps,
       }),
-      [value, isOpen, setIsOpen, locale, disabled, handleDateSelect, handleInputChange]
+      [
+        value,
+        isOpen,
+        locale,
+        disabled,
+        required,
+        pickerId,
+        inputRef,
+        handleDateSelect,
+        handleInputChange,
+        handleInputKeyDown,
+        handleInputClick,
+        rootInputProps,
+      ]
     )
+
+    const composedFieldRef = (node: HTMLDivElement | null) => {
+      fieldRef.current = node
+      if (typeof ref === 'function') {
+        ref(node as any)
+      } else if (ref && typeof ref === 'object') {
+        ;(ref as any).current = node
+      }
+    }
+
+    const composedChildlessRef = (node: HTMLInputElement | null) => {
+      inputRef.current = node
+      if (typeof ref === 'function') {
+        ref(node as any)
+      } else if (ref && typeof ref === 'object') {
+        ;(ref as any).current = node
+      }
+    }
 
     if (!children) {
       return (
         <>
           <Input
-            ref={ref}
+            ref={composedChildlessRef}
             type="text"
             disabled={disabled}
+            readOnly={readOnly}
+            required={required}
             value={value ?? ''}
             onChange={handleInputChange}
             placeholder={placeholder}
@@ -300,79 +550,43 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       )
     }
 
-    const fieldRef = React.useRef<HTMLDivElement | null>(null)
-    const composedFieldRef = (node: HTMLDivElement | null) => {
-      fieldRef.current = node
-      if (typeof ref === 'function') {
-        ref(node as any)
-      } else if (ref && typeof ref === 'object') {
-        ;(ref as any).current = node
-      }
-    }
+    const {
+      id: _wrapperId,
+      onInput: _wrapperOnInput,
+      onKeyDown: _wrapperOnKeyDown,
+      onFocus: _wrapperOnFocus,
+      onBlur: _wrapperOnBlur,
+      onClick: _wrapperOnClick,
+      autoComplete: _wrapperAutoComplete,
+      autoCorrect: _wrapperAutoCorrect,
+      spellCheck: _wrapperSpellCheck,
+      ...wrapperProps
+    } = props
 
-    const childArray = React.Children.toArray(children)
-    const hasField = childArray.some(isFieldElement)
-
-    if (hasField) {
-      return (
+    return (
+      <DateFieldSlotProvider>
         <DateFieldContext.Provider value={contextValue}>
-          <Overlay open={isOpen} onOpenChange={setIsOpen} isolation={false}>
-            {children}
+          <Overlay open={isOpen} onOpenChange={setIsOpen} anchor={fieldRef} isolation={false}>
+            <Div
+              ref={composedFieldRef}
+              data-reference-field=""
+              display="inline-flex"
+              alignItems="center"
+              width="100%"
+              className={className}
+              style={style}
+              {...wrapperProps}
+            >
+              {children}
+              <DateFieldLayout />
+            </Div>
+            <DateFieldPickerLayer />
             {name && !disabled && (
               <input type="hidden" name={name} value={value ?? ''} form={form} />
             )}
           </Overlay>
         </DateFieldContext.Provider>
-      )
-    }
-
-    const inputChildren: React.ReactNode[] = []
-    const triggerChildren: React.ReactNode[] = []
-    const pickerChildren: React.ReactNode[] = []
-    const otherChildren: React.ReactNode[] = []
-
-    for (const child of childArray) {
-      if (isInputPart(child)) {
-        inputChildren.push(child)
-      } else if (isTriggerPart(child)) {
-        triggerChildren.push(child)
-      } else if (isPickerPart(child)) {
-        pickerChildren.push(child)
-      } else {
-        otherChildren.push(child)
-      }
-    }
-
-    const hasAuthoredInput = inputChildren.length > 0
-    const hasAuthoredTrigger = triggerChildren.length > 0
-    const hasAuthoredPicker = pickerChildren.length > 0
-
-    return (
-      <DateFieldContext.Provider value={contextValue}>
-        <Overlay open={isOpen} onOpenChange={setIsOpen} anchor={fieldRef} isolation={false}>
-          <Div
-            ref={composedFieldRef}
-            data-reference-field=""
-            display="inline-flex"
-            alignItems="center"
-            width="100%"
-            className={className}
-            style={style}
-          >
-            {hasAuthoredInput ? inputChildren : <DateFieldInput placeholder={placeholder} />}
-            {hasAuthoredTrigger ? (
-              triggerChildren
-            ) : hasAuthoredPicker && !hasAuthoredInput ? (
-              <DateFieldTrigger />
-            ) : null}
-            {otherChildren}
-          </Div>
-          {pickerChildren}
-          {name && !disabled && (
-            <input type="hidden" name={name} value={value ?? ''} form={form} />
-          )}
-        </Overlay>
-      </DateFieldContext.Provider>
+      </DateFieldSlotProvider>
     )
   }
 ) as React.ForwardRefExoticComponent<DateFieldProps & React.RefAttributes<HTMLInputElement>> & {
@@ -386,4 +600,3 @@ DateField.Input = DateFieldInput
 DateField.Trigger = DateFieldTrigger
 DateField.Picker = DateFieldPicker
 DateField.Calendar = DateFieldCalendar
-

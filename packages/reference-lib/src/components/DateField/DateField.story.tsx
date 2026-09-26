@@ -117,6 +117,68 @@ export const FoldedPickerFixture = () => {
   )
 }
 
+export const PartResolutionFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2026-08-15')
+  const [inputEvents, setInputEvents] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="merge-fixture-root">
+        <DateField
+          value={value}
+          onChange={setValue}
+          placeholder="Root"
+          className="root-cls"
+          onInput={() => setInputEvents((c) => c + 1)}
+        >
+          <DateField.Input
+            placeholder="Explicit"
+            className="child-cls"
+            value="2000-01-01"
+            role="spinbutton"
+            data-testid="merge-input"
+          />
+          <DateField.Picker data-testid="merge-picker" />
+        </DateField>
+        <Span fontSize="3r" color="design.text.light" data-testid="merge-input-events">
+          InputEvents: {inputEvents}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const RequiredFixture = () => {
+  const [childlessValue, setChildlessValue] = React.useState<string | null>(null)
+  const [compoundValue, setCompoundValue] = React.useState<string | null>(null)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="required-fixture-root">
+        <DateField
+          id="req-childless"
+          value={childlessValue}
+          onChange={setChildlessValue}
+          required
+          data-testid="req-childless"
+        />
+        <DateField value={compoundValue} onChange={setCompoundValue} required>
+          <DateField.Input data-testid="req-compound-input" />
+          <DateField.Picker data-testid="req-compound-picker" />
+        </DateField>
+        <Div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button type="button" data-testid="btn-set-req-childless" onClick={() => setChildlessValue('2024-02-01')}>
+            Set childless
+          </button>
+          <button type="button" data-testid="btn-set-req-compound" onClick={() => setCompoundValue('2024-02-01')}>
+            Set compound
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const FormFixture = () => {
   const [value, setValue] = React.useState<string | null>('2024-02-01')
   const [payload, setPayload] = React.useState('')

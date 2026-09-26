@@ -139,6 +139,27 @@ test.describe('DateField quarantine re-targets', () => {
     await expect(page.getByTestId('folded-value-display')).toHaveText('Folded Value: 2026-08-25')
   })
 
+  test('DF-DOM-03: part-resolution merge law for root and explicit props', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/PartResolutionFixture')
+
+    const root = page.getByTestId('merge-fixture-root')
+    const input = page.getByTestId('merge-input')
+
+    await expect(input).toHaveAttribute('placeholder', 'Explicit')
+    await expect(input).toHaveClass(/root-cls/)
+    await expect(input).toHaveClass(/child-cls/)
+    await expect(input).toHaveValue('2026-08-15')
+    await expect(input).toHaveAttribute('role', 'combobox')
+
+    await expect(root.locator('div[data-reference-field]')).toHaveClass(/root-cls/)
+
+    await input.fill('2026-09-01')
+    await expect(page.getByTestId('merge-input-events')).toHaveText('InputEvents: 1')
+  })
+
   test('DF-DOM-04: hidden input serializes only when name is supplied', async ({ mount, page }) => {
     await mount('components/DateField/DateField/ChildlessFixture')
 
@@ -233,6 +254,7 @@ test.describe('DateField quarantine re-targets', () => {
     await expect(input).toHaveAttribute('aria-haspopup', 'dialog')
     await expect(input).toHaveAttribute('aria-expanded', 'false')
     await expect(input).toHaveAttribute('aria-autocomplete', 'none')
+    await expect(input).toHaveAttribute('aria-controls', /.+/)
 
     await input.focus()
     await expect(picker).toHaveCount(0)
@@ -240,6 +262,9 @@ test.describe('DateField quarantine re-targets', () => {
     await page.keyboard.press('Alt+ArrowDown')
     await expect(picker).toBeVisible()
     await expect(input).toHaveAttribute('aria-expanded', 'true')
+    const controlsId = await input.getAttribute('aria-controls')
+    expect(controlsId).toBeTruthy()
+    await expect(picker).toHaveAttribute('id', controlsId as string)
 
     await page.keyboard.press('Escape')
     await expect(picker).toHaveCount(0)
@@ -257,6 +282,7 @@ test.describe('DateField quarantine re-targets', () => {
   test('DF-CAL-03: trigger is an auxiliary tabIndex -1 toggle', async ({ mount, page }) => {
     await mount('components/DateField/DateField/CompoundFixture')
 
+    const input = page.getByTestId('date-field-input')
     const trigger = page.getByTestId('date-field-trigger')
     const picker = page.getByTestId('date-field-picker')
 
@@ -265,9 +291,11 @@ test.describe('DateField quarantine re-targets', () => {
 
     await trigger.click()
     await expect(picker).toBeVisible()
+    await expect(input).toBeFocused()
 
     await trigger.click()
     await expect(picker).toHaveCount(0)
+    await expect(input).toBeFocused()
   })
 
   test('DF-FRM-01: submit sends canonical ISO, not display text', async ({ mount, page }) => {
@@ -283,6 +311,38 @@ test.describe('DateField quarantine re-targets', () => {
     await page.getByTestId('btn-clear-form-value').click()
     await page.getByTestId('form-submit-btn').click()
     await expect(page.getByTestId('form-submitted-payload')).toContainText('"birthday":""')
+  })
+
+  test('DF-FRM-04: required empty field reports platform valueMissing on both hosts', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/RequiredFixture')
+
+    const childless = page.getByTestId('req-childless')
+    const compound = page.getByTestId('req-compound-input')
+
+    await expect(childless).toHaveAttribute('required', '')
+    await expect(compound).toHaveAttribute('required', '')
+
+    expect(await childless.evaluate((el) => (el as HTMLInputElement).validity.valueMissing)).toBe(
+      true
+    )
+    expect(await compound.evaluate((el) => (el as HTMLInputElement).validity.valueMissing)).toBe(
+      true
+    )
+
+    await page.getByTestId('btn-set-req-childless').click()
+    await page.getByTestId('btn-set-req-compound').click()
+
+    expect(await childless.evaluate((el) => (el as HTMLInputElement).validity.valueMissing)).toBe(
+      false
+    )
+    expect(await compound.evaluate((el) => (el as HTMLInputElement).validity.valueMissing)).toBe(
+      false
+    )
+    expect(await childless.evaluate((el) => (el as HTMLInputElement).validity.valid)).toBe(true)
+    expect(await compound.evaluate((el) => (el as HTMLInputElement).validity.valid)).toBe(true)
   })
 
   test('DF-COMP-02: birthday serializes through htmlFor labeling and canonical form data', async ({

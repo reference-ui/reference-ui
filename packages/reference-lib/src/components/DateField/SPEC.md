@@ -55,8 +55,8 @@ unit tests proving the kit, and 12 CT re-targets proving current behavior.
 
 | | |
 | :--- | :--- |
-| Named `[x]` | 12 / 64 (CT re-targets against current ISO display) |
-| CT | 15 titles green (3 pre-existing + 12 `DF-*`); 8 frozen snapshots unmodified |
+| Named `[x]` | 14 / 64 (CT re-targets against current ISO display) |
+| CT | 17 titles green (3 pre-existing + 14 `DF-*`); 8 frozen snapshots unmodified |
 | Vitest | 23 parse-kit contract tests (carry no `DF-*` IDs per TESTS.md `[unit]` law) |
 
 ### Gaps & incoherence
@@ -66,9 +66,10 @@ unit tests proving the kit, and 12 CT re-targets proving current behavior.
 - No locale `formatToParts` parse/format; input shows the ISO string.
 - No caret-aware stepping (`selectionStart` unused).
 - `onChange` fed raw text; no ISO gate; no dirty/`data-editing` session.
-- Child sniffing (`displayName`, `__refPart`, `role === 'combobox'`) instead
-  of Slot / Part-Resolution Law.
-- Combobox attrs partial; no form/submit/reset contract.
+- ~~Child sniffing instead of Slot / Part-Resolution Law~~ — landed
+  (PATCHES #3): parts register into Slot ids, host merges per the Law.
+- Combobox attrs complete incl. `aria-controls` link (PATCHES #9);
+  `required` passthrough landed (PATCHES #6); submit/reset still open.
 - `DF-DOM-02` / `03` / `DF-CAL-01` titles exist as popup smokes. They do not
   prove dual-host, locale grammar, or caret stepping.
 
@@ -87,31 +88,34 @@ windows; min/max clamp.
 - `[x]` `DF-DOM-01` — childless resolves to one text input; ref targets it
 - `[x]` `DF-DOM-02` — folded picker renders bezel + synthesized input/trigger;
   day select commits and dismisses
+- `[x]` `DF-DOM-03` — Part-Resolution Law: explicit placeholder wins,
+  root/explicit classes merge, authored `onInput` executes, managed
+  value/role authoritative
 - `[x]` `DF-DOM-04` — hidden input only with `name`; carries ISO or `""`
 - `[x]` `DF-DOM-05` — display follows controlled prop; `onChange` silent;
   no `data-editing` (asserted against ISO display, not locale text)
 - `[x]` `DF-KEY-05` — ArrowUp/Down no-op on null (no stepping exists; honest
   no-op proof, not a stepping proof)
 - `[x]` `DF-KEY-06` — ArrowUp/Down no-op when disabled or read-only
-- `[x]` `DF-CAL-01` — APG attrs (`role`, `aria-haspopup`, `aria-expanded`,
-  `aria-autocomplete`) + deliberate activation + day commit/dismiss.
-  Scoped: `aria-controls` absent (quarantine e2e never asserted it either)
-- `[x]` `DF-CAL-03` — trigger `tabIndex={-1}`, `type="button"`, toggles picker.
-  Scoped: input-focus retention not asserted (Overlay focus domain)
+- `[x]` `DF-CAL-01` — full APG attrs (`role`, `aria-haspopup`,
+  `aria-expanded`, `aria-autocomplete`, `aria-controls` linked to the
+  picker id) + deliberate activation + day commit/dismiss
+- `[x]` `DF-CAL-03` — trigger `tabIndex={-1}`, `type="button"`, toggles
+  picker, focus stays on (returns to) the text input
 - `[x]` `DF-FRM-01` — submit sends canonical ISO via hidden input
 - `[x]` `DF-FRM-02` — submit sends `""` for controlled null
+- `[x]` `DF-FRM-04` — `required` reaches the visible input on both hosts;
+  empty required reports platform `valueMissing`; no `setCustomValidity`
 - `[x]` `DF-COMP-02` — `htmlFor` label focuses; submit sends `2000-01-15`-style
   canonical ISO (Field-crew handoff, proven with `2024-02-01`)
 - `[x]` `DF-ENV-03` — `onChange` payloads are `string` (never `Date`); current
   component echoes raw text, never `null` from typing
-- `[ ]` `DF-DOM-03` — Part-Resolution Law not implemented (sniffing remains)
 - `[ ]` `DF-FMT-*`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-*`, `DF-KEY-01/02/03/04/07`,
   `DF-CAL-02`, `DF-CAL-04`, `DF-RANGE-*`, `DF-FRM-03`, `DF-FRM-05`, `DF-ENV-02`,
   `DF-COMP-01`, `DF-COMP-03`, `DF-COMP-05`, `DF-COMP-06` — need the
   controlled-locale rewrite (dirty sessions, locale display, stepping, Range);
   forbidden in this mission. Pure-kit coverage for the FMT/EDT/KEY/BND logic
   exists in `parse.test.ts` (no `DF-*` IDs claimed).
-- `[ ]` `DF-FRM-04` — untested (`required` passthrough not exercised)
 - `[ ]` `DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition; needs the
   Overlay-crew shadow-portal contract before a DateField test can be honest
 - `[ ]` `DF-MAN-01`, `DF-MAN-02` — manual release gates
