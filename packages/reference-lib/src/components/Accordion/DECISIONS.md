@@ -51,28 +51,9 @@ quarantine stability wins, freeze visuals`).
   passes; the dev runtime throw covers the same mistakes without breaking
   anyone.
 
-### 2. Accordion-side Find (`beforematch` / `hiddenUntilFound`) — verdict: DEFERRED
+### 2. Accordion-side Find (`beforematch` / `hiddenUntilFound`) — verdict: DEFERRED → moved
 
-- **Source:** quarantine commit `569d00567`, SPEC.md Find-axis row
-  ("items inherit Collapsible `hiddenUntilFound`; `beforematch` expands
-  the matched item (single may swap)") marked Resolved as Q-parity; no
-  case ID — no TESTS.md case covers Find.
-- **API sketch:** no new Accordion props. Items inherit
-  `hiddenUntilFound` from their item Collapsible; a `beforematch` event
-  on a closed item's Content expands that item (in single mode the match
-  may swap the open item). All implementation lives in Collapsible;
-  Accordion only honors the resulting open state through existing policy.
-- **Why not landed:** Collapsible-owned, and quarantine shipped no
-  Accordion-side implementation to port (verified: zero Find code in the
-  Q Accordion diff). The Collapsible crew deferred `hiddenUntilFound` /
-  `beforematch` itself as follow-up, so there is nothing to inherit yet.
-- **Revisit when:** Collapsible lands `hiddenUntilFound` passthrough +
-  `beforematch` expansion; then add Accordion Find cases (single-swap and
-  multiple-add) and prove browser find-in-page opens a closed item.
-- **Open questions:** in single mode, should a matched item *swap* the
-  open item (SPEC's current words) or is stealing the open item from the
-  user's context surprising — should Find expansion be opt-in per
-  Accordion?
+Moved to [FEATURES.md](./FEATURES.md) (§1) — it needs a single-mode swap-vs-opt-in design call before anything can be pinned.
 
 ## Suspected gaps (no quarantine source)
 
@@ -127,7 +108,7 @@ quarantine stability wins, freeze visuals`).
 
 ## Walkthrough notes for HQ
 
-- Most important #1: discriminated types DECLINED — flat union props keep the tree green. Feel it: open the Collapsible `AccordionNest` story and `Showcase.book.tsx` (`defaultValue="item-1"` honored, zero edits there); both would be red under discriminants.
-- Most important #2: Find DEFERRED to Collapsible — browser find-in-page on a closed Accordion item expands nothing yet. Feel it: open Book `SingleExpansion`, close all items, Ctrl/Cmd+F for hidden answer text; no item opens until Collapsible lands `beforematch`.
-- Most important #3: always-collapsible single, no pin-open prop. Feel it: in Book `SingleExpansion`, click the open item — it closes (`null` request). There is deliberately no way to forbid that; controlled parents that want pin-open ignore the `null`.
-- Secondary: try keyboard traversal in the `KeyTraversal` / `KeyDisabled` stories (arrows skip disabled, Home/End hit enabled boundaries, Tab still visits every header) — that hardening, not new API, is what quarantine bought.
+- Most important #1: discriminated types DECLINED (stays in this file) — flat union props keep the tree green. Feel it: open the Collapsible `AccordionNest` story and `Showcase.book.tsx` (`defaultValue="item-1"` honored, zero edits there); both would be red under discriminants.
+- Most important #2: Find DEFERRED → moved to [FEATURES.md](./FEATURES.md) (§1). Feel it: open Book `SingleExpansion`, close all items, Ctrl/Cmd+F for hidden answer text; no item opens until Collapsible lands `beforematch` — then weigh in on the single-swap vs opt-in question recorded there.
+- Most important #3: always-collapsible single, no pin-open prop (DECLINED, stays in this file). Feel it: in Book `SingleExpansion`, click the open item — it closes (`null` request). There is deliberately no way to forbid that; controlled parents that want pin-open ignore the `null`.
+- Secondary: try keyboard traversal in the `KeyTraversal` / `KeyDisabled` stories (arrows skip disabled, Home/End hit enabled boundaries, Tab still visits every header) — that hardening, not new API, is what quarantine bought. Mechanical follow-ups, if any appear, live in [PATCHES.md](./PATCHES.md) (empty at split time).
