@@ -27,3 +27,9 @@ below are independent of the compiler.
 | File | Scope | Issue |
 | --- | --- | --- |
 | [RECIPE_CLASSNAME_REQUIRED.md](./RECIPE_CLASSNAME_REQUIRED.md) | NEO recipe + RS extractor | Should `RecipeConfig.className` be required? (open investigation) |
+
+## Lib style collector
+
+| File | Scope | Issue |
+| --- | --- | --- |
+| [TABS_RECIPE_COLLECTION.md](./TABS_RECIPE_COLLECTION.md) | Lib collector + CT daemon CSS | Recipe styles uncollected under churn — bug or artifact? (open) |

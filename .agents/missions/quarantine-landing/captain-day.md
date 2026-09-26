@@ -412,6 +412,19 @@ docs/BUGS/TABS_RECIPE_COLLECTION.md + README row (open, needs
 quiet-tree experiment). Stance amended. Running: Slider-F,
 3 purge crews, Tabs-uncontrolled.
 
+Tick 68: DateField purge COMPLETE — verified (30/30 + 22/22) and
+committed. INCIDENT: cancelled Accordion purge raced the cancel
+(8 purge files AFTER my first revert) — crew now result_ready
+(dead); reverted again, verified clean. Lesson: after a cancel,
+re-check dirt at the NEXT tick, not just immediately. Mission
+record committed (stance exception + bug file + logs). Running:
+Slider-F, Tree/Combobox purges, Tabs-uncontrolled.
+
+Tick 69: Tabs-uncontrolled COMPLETE (dual-mode restored, Accordion
+shape) — verified firsthand (34/34 + 10/10) and committed. Note:
+docs/BUGS is really docs/bugs/ on disk (case-fold); README row
+recommitted. Running: Slider-F, Tree/Combobox purges.
+
 Tick 59: Accordion-F verify-BLOCKED as predicted (Collapsible #1
 held, primitive absent; tree clean ✓). No dispatchable work left
 except Tree-F (waiting on Portal-F for #2; #1 circular-held) —
