@@ -46,6 +46,17 @@ in an open ShadowRoot.
 
 **Maintainer take:** Good to add only as a lib-wide shadow strategy; a Tree-only fix would fork the event model.
 
+**LANDED (2026-09-26, Tree-FEATURES crew):** the lib-wide strategy is the
+Portal-owned event contract (Portal FEATURES #1: React attaches listeners
+per portal container on mount and switch — no shim, no per-consumer fork).
+Tree rides it with owning-root reads only: traversal was already `rootEl`-scoped
+(`querySelectorAll`/`closest`/`contains` — no `document.activeElement`
+assumption existed), and the single `document`-global read (the RTL
+`document.dir` fallback) became a shadow-host-chain walk (`resolveIsRtl`,
+light-DOM identical). Proven by a real `TR-ENV-03` CT (open-ShadowRoot
+mount: vertical/horizontal/Home/End/typeahead parity, owning-root focus
+asserts, RTL-through-host-chain). No Tree event fork added.
+
 ## 3. Slot / part registration replacing `Children.forEach` sniffing (from DECISIONS gap #1, OPEN)
 
 **What it does:** Internal architecture change with zero behavioral
@@ -63,6 +74,25 @@ pattern other components already use, so Tree follows a proven shape
 instead of inventing one.
 
 **Maintainer take:** Good to add once a proven shared Slot pattern exists; not worth inventing one for Tree alone.
+
+**CREW FINDING — VERIFY-BLOCKED (2026-09-26, Tree-FEATURES crew):** the three
+requirements are jointly unsatisfiable against the shipped Slot kernel, so
+this item needs an HQ call, not more crew effort:
+- `useSlotRegistration` registers in `useLayoutEffect` (`Slot.ts`), which
+  never runs under `renderToString` — and React renders parents before
+  children, so no registration (effect- or render-phase) can inform
+  `Tree.Item`'s render-time branch/leaf decision without children
+  inspection.
+- Proven with the real kernel (temporary colocated test, since removed): a
+  `useSlot`-reading parent with a registering Group child emits leaf-path
+  SSR HTML — no `aria-expanded`, no row wrapper.
+- But `TR-ENV-01` pins branch-path SSR HTML (`aria-expanded="true"` in
+  `renderToString` output) and this item demands zero behavioral delta plus
+  hydration proof. Replacing the scan necessarily degrades SSR output and
+  adds a post-hydration leaf→branch DOM restructure.
+HQ picks: (a) keep the render-time scan (SPEC work-order item 6 closed as
+won't-do), or (b) accept degraded SSR branch HTML + a `TR-ENV-01` rewrite
+as the item's real cost. No Tree source changed for this item.
 
 ## 4. Shared `RovingFocus` for roving (from DECISIONS gap #2, OPEN)
 

@@ -21,9 +21,12 @@ suite, freeze visuals`, verified via `git log`).
 
 Moved to [FEATURES.md](./FEATURES.md) entry 1: needs Combobox-owned bridge design (`data-active` semantics, adapter shape, commit authority).
 
-### 2. Shadow-root focus discovery and traversal — verdict: DEFERRED
+### 2. Shadow-root focus discovery and traversal — verdict: LANDED (2026-09-26)
 
 Moved to [FEATURES.md](./FEATURES.md) entry 2: needs a lib-wide shadow/event strategy, not a Tree-only fix.
+Landed on the Portal-owned event contract (no Tree event fork): owning-root
+reads only (`resolveIsRtl` host-chain walk; traversal already `rootEl`-scoped),
+proven by a real `TR-ENV-03` CT. See FEATURES.md entry 2.
 
 ### 3. Exported `TreeHierarchyModel` (hierarchy unit model) — verdict: DECLINED
 

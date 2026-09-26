@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tree } from './index'
@@ -523,6 +524,85 @@ export const MultiLevel = () => {
             </Tree.Item>
           </Tree>
         </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+const ShadowTreeInner = ({ idPrefix }: { idPrefix: string }) => {
+  const [value, setValue] = React.useState<string | null>(null)
+  const [expanded, setExpanded] = React.useState<string[]>(['shadow-docs'])
+
+  return (
+    <div>
+      <Tree
+        data-testid={`${idPrefix}-tree`}
+        value={value}
+        onChange={setValue}
+        expanded={expanded}
+        onExpandedChange={setExpanded}
+      >
+        <Tree.Item value="shadow-docs" data-testid={`${idPrefix}-item-docs`}>
+          <Tree.Expander data-testid={`${idPrefix}-expander-docs`} aria-label="Toggle Documents" />
+          <span>Documents</span>
+          <Tree.Group data-testid={`${idPrefix}-group-docs`}>
+            <Tree.Item value="shadow-resume" data-testid={`${idPrefix}-item-resume`}>
+              <span>Resume.pdf</span>
+            </Tree.Item>
+            <Tree.Item value="shadow-budget" data-testid={`${idPrefix}-item-budget`}>
+              <span>Budget.xlsx</span>
+            </Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+        <Tree.Item value="shadow-readme" data-testid={`${idPrefix}-item-readme`}>
+          <span>README.md</span>
+        </Tree.Item>
+        <Tree.Item value="shadow-notes" data-testid={`${idPrefix}-item-notes`}>
+          <span>Notes.txt</span>
+        </Tree.Item>
+      </Tree>
+      <p data-testid={`${idPrefix}-value-display`}>Selected: {value ?? 'None'}</p>
+      <p data-testid={`${idPrefix}-expanded-display`}>Expanded: {expanded.join(', ')}</p>
+    </div>
+  )
+}
+
+const ShadowHost = ({ testId, idPrefix }: { testId: string; idPrefix: string }) => {
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    if (host.shadowRoot) {
+      setShadow(host.shadowRoot)
+      return
+    }
+    setShadow(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  return (
+    <>
+      <div ref={hostRef} data-testid={testId} />
+      {shadow ? createPortal(<ShadowTreeInner idPrefix={idPrefix} />, shadow) : null}
+    </>
+  )
+}
+
+export const Shadow = () => {
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tree-fixture-root" maxW="120r">
+        <section>
+          <h2>Shadow Tree (LTR document)</h2>
+          <ShadowHost testId="tree-shadow-host" idPrefix="tree-shadow" />
+        </section>
+        <section>
+          <h2>Shadow Tree under light-DOM RTL ancestor</h2>
+          <div dir="rtl" data-testid="tree-shadow-rtl-wrapper">
+            <ShadowHost testId="tree-shadow-rtl-host" idPrefix="tree-shadow-rtl" />
+          </div>
+        </section>
       </Div>
     </ReferenceLibrary>
   )

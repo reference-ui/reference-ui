@@ -39,8 +39,8 @@ file-explorer scope.
 | :--- | :--- |
 | Engine | Hardened APG tree (landing). |
 | Production | **No** — see Landing note (uncontrolled preserved; CB/model cases open). |
-| Named `[x]` | 54 / 64 |
-| Playwright | 52 |
+| Named `[x]` | 55 / 64 |
+| Playwright | 53 |
 | Vitest | 3 |
 
 ### Landing note (quarantine-landing, 2026-09-25)
@@ -118,11 +118,11 @@ freeze catalog above, per recon:
   `TR-TYPE-05`
 - `[x]` `TR-DYNAMIC-03`, `TR-DYNAMIC-04`, `TR-DYNAMIC-05`,
   `TR-DYNAMIC-06`
-- `[x]` `TR-ENV-01`, `TR-ENV-02` (unit)
+- `[x]` `TR-ENV-01`, `TR-ENV-02` (unit), `TR-ENV-03` (CT, shadow)
 - `[x]` `TR-A11Y-01`
 - `[x]` `TR-COMP-01`, `TR-COMP-02`
 - `[ ]` `TR-DYNAMIC-01`, `TR-DYNAMIC-02`, `TR-CB-01`, `TR-CB-02`,
-  `TR-CB-03`, `TR-CB-04`, `TR-CB-05`, `TR-CB-06`, `TR-ENV-03`,
+  `TR-CB-03`, `TR-CB-04`, `TR-CB-05`, `TR-CB-06`,
   `TR-COMP-03` (not ported, see Landing note)
 
 ### Work order

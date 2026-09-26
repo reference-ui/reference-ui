@@ -84,6 +84,27 @@ function extractTypeaheadText(el: HTMLElement): string {
   return text.replace(/^(?:(?![0-9])[\p{Emoji}\p{Punctuation}\s])+/u, '')
 }
 
+// Direction resolution crosses shadow boundaries (TR-ENV-03): closest('[dir]')
+// stops at a shadow root, so climb through hosts until the document.
+// Light-DOM behavior is unchanged: the first closest() hit wins, and the
+// document.dir fallback runs only when no [dir] exists anywhere above.
+function resolveIsRtl(rootEl: HTMLElement): boolean {
+  let node: Element | null = rootEl
+  while (node) {
+    const dirEl = node.closest('[dir]')
+    if (dirEl) {
+      return (dirEl as HTMLElement).dir === 'rtl'
+    }
+    const host: unknown = (node.getRootNode() as ShadowRoot).host
+    if (host instanceof Element) {
+      node = host
+    } else {
+      break
+    }
+  }
+  return typeof document !== 'undefined' && document.dir === 'rtl'
+}
+
 function isGroupChild(child: React.ReactNode): boolean {
   return (
     React.isValidElement(child) &&
@@ -770,9 +791,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         const currentIndex = visibleItems.findIndex((el) => el.id === id || el === itemEl)
         if (currentIndex === -1) return
 
-        const isRtl =
-          (rootEl.closest('[dir]') as HTMLElement)?.dir === 'rtl' ||
-          (typeof document !== 'undefined' && document.dir === 'rtl')
+        const isRtl = resolveIsRtl(rootEl)
         const expandKey = isRtl ? 'ArrowLeft' : 'ArrowRight'
         const collapseKey = isRtl ? 'ArrowRight' : 'ArrowLeft'
 
