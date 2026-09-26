@@ -458,12 +458,12 @@ export function validatePanelConstraints(
       }
     }
     if (typeof c.min === 'string') {
-      if (!/^(\d+(\.\d+)?)(px|r|rem|em|%)$/.test(c.min.trim())) {
+      if (!isMeasuredLength(c.min)) {
         return { valid: false, error: `Panel at index ${i} has invalid measured min length: ${c.min}` }
       }
     }
     if (typeof c.max === 'string') {
-      if (!/^(\d+(\.\d+)?)(px|r|rem|em|%)$/.test(c.max.trim())) {
+      if (!isMeasuredLength(c.max)) {
         return { valid: false, error: `Panel at index ${i} has invalid measured max length: ${c.max}` }
       }
     }
@@ -546,7 +546,155 @@ export function resolveConstraintToPercentage(
   if (availableGroupSize <= 0) return defaultValue
 
   const px = parseCssLengthToPx(trimmed, element)
-  if (px == null) return defaultValue
+  if (px == null || px < 0) return defaultValue
 
   return formatLayoutNumber((px / availableGroupSize) * 100)
+}
+
+// FEATURES #3/#9 seam: the measured-length grammar the validator and the
+// resolver agree on. Unitless zero is valid CSS and resolves to 0; units are
+// case-insensitive like the resolver; anything else is a parse failure the
+// component answers with a dev diagnostic plus the default bound.
+export function isMeasuredLength(value: string): boolean {
+  const trimmed = value.trim()
+  if (/^0(\.0+)?$/.test(trimmed)) return true
+  return /^(\d+(\.\d+)?)(px|r|rem|em|%)$/i.test(trimmed)
+}
+
+export type SplitterStructurePart = 'panel' | 'handle'
+
+// FEATURES #9: strict structural validation over merged document order.
+// Pure (the caller merges registrations by document position), so the
+// message wording is unit-pinned and the component only decides severity.
+// Message wording is a DRAFT for the HQ wording check (FEATURES #6).
+export function validateSplitterStructure(
+  sequence: SplitterStructurePart[],
+  valueLength: number
+): { valid: boolean; error?: string } {
+  const panelCount = sequence.filter((part) => part === 'panel').length
+  const handleCount = sequence.length - panelCount
+
+  if (panelCount === 0) {
+    return {
+      valid: false,
+      error:
+        'Invalid structure: a Splitter needs at least two Panels, but none are mounted. ' +
+        'Render Panel (Handle Panel)+ with a matching value array.',
+    }
+  }
+  if (panelCount === 1) {
+    return {
+      valid: false,
+      error:
+        'Invalid structure: a Splitter needs at least two Panels, but only one is mounted. ' +
+        'One-Panel trees are not supported — "the rest of the page" is another Panel.',
+    }
+  }
+  if (valueLength !== panelCount) {
+    return {
+      valid: false,
+      error:
+        `Invalid structure: value has ${valueLength} ${valueLength === 1 ? 'entry' : 'entries'} ` +
+        `but ${panelCount} Panels are mounted. Update Panels and value entries atomically in the same render.`,
+    }
+  }
+  if (handleCount !== panelCount - 1) {
+    return {
+      valid: false,
+      error:
+        `Invalid structure: ${panelCount} Panels need exactly ${panelCount - 1} ` +
+        `${panelCount - 1 === 1 ? 'Handle' : 'Handles'}, but ${handleCount} ` +
+        `${handleCount === 1 ? 'is' : 'are'} mounted. Handles sit between Panels: Panel (Handle Panel)+.`,
+    }
+  }
+  for (let i = 0; i < sequence.length; i++) {
+    const expected: SplitterStructurePart = i % 2 === 0 ? 'panel' : 'handle'
+    if (sequence[i] !== expected) {
+      return {
+        valid: false,
+        error:
+          'Invalid structure: Panels and Handles must strictly alternate from Panel to Panel, ' +
+          `but mounted order is "${sequence.join(' → ')}".`,
+      }
+    }
+  }
+  return { valid: true }
+}
+
+// FEATURES #7: a Handle is blocked when no full-range delta in either
+// direction moves the layout — definitionally the same solver the gesture
+// would run, so aria-disabled always matches actual infeasibility.
+export function isHandleBlocked({
+  layout,
+  panelConstraints,
+  handleIndex,
+}: {
+  layout: number[]
+  panelConstraints: PanelConstraints[]
+  handleIndex: number
+}): boolean {
+  if (handleIndex < 0 || handleIndex >= layout.length - 1) return true
+  if (layout.length !== panelConstraints.length) return true
+  const pivotIndices: [number, number] = [handleIndex, handleIndex + 1]
+  for (const delta of [100, -100]) {
+    const candidate = adjustLayoutByDelta({
+      delta,
+      initialLayout: layout,
+      panelConstraints,
+      pivotIndices,
+      prevLayout: layout,
+      trigger: 'mouse-or-touch',
+    })
+    if (candidate.some((entry, i) => !layoutNumbersEqual(entry, layout[i] ?? 0))) {
+      return false
+    }
+  }
+  return true
+}
+
+// FEATURES #8: the drag/convert denominator — available group size, i.e. the
+// Panel-axis sum with Handles excluded. Measured as the container content
+// box minus each Handle's flex footprint (border box plus axis margins, so
+// negative-margin overlap counts as the space it really takes). In the
+// no-overlap model this equals the panel-box sum exactly (516 − 16 = 500);
+// reading panel boxes directly would inherit engine-dependent sub-pixel
+// rounding instead. Zero when unmeasurable: callers defer, never divide.
+export function measureAvailableGroupSize({
+  container,
+  handles,
+  orientation,
+}: {
+  container: HTMLElement | null
+  handles: Array<HTMLElement | null>
+  orientation: 'horizontal' | 'vertical'
+}): number {
+  if (!container || typeof getComputedStyle === 'undefined') return 0
+  const horizontal = orientation === 'horizontal'
+  const toPx = (value: string): number => {
+    const n = parseFloat(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  const rect = container.getBoundingClientRect()
+  const style = getComputedStyle(container)
+  const box = horizontal
+    ? rect.width -
+      toPx(style.borderLeftWidth) -
+      toPx(style.borderRightWidth) -
+      toPx(style.paddingLeft) -
+      toPx(style.paddingRight)
+    : rect.height -
+      toPx(style.borderTopWidth) -
+      toPx(style.borderBottomWidth) -
+      toPx(style.paddingTop) -
+      toPx(style.paddingBottom)
+  let footprints = 0
+  for (const handle of handles) {
+    if (!handle) continue
+    const handleStyle = getComputedStyle(handle)
+    footprints += horizontal
+      ? handle.offsetWidth + toPx(handleStyle.marginLeft) + toPx(handleStyle.marginRight)
+      : handle.offsetHeight + toPx(handleStyle.marginTop) + toPx(handleStyle.marginBottom)
+  }
+  const available = box - footprints
+  return available > 0 ? available : 0
 }

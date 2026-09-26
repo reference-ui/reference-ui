@@ -35,7 +35,7 @@ describe('Splitter contract', () => {
     expectTypeOf(validProps.orientation).toEqualTypeOf<'horizontal' | 'vertical' | undefined>()
 
     // 2. Valid compilation of Panel with numeric or CSS-string constraints
-    // (strings resolve with FEATURES #3; numbers drive the solver today).
+    // (numbers drive the solver live; strings resolve post-mount).
     const validPanelProps: SplitterPanelProps = {
       min: 20,
       max: '320px',
@@ -128,22 +128,58 @@ describe('Splitter contract', () => {
   })
 
   it('SP-ENV-01: Splitter should server-render safe fallback geometry and separator ARIA when order cannot be measured', () => {
-    const html = renderToString(
-      <Splitter value={[40, 60]}>
-        <Splitter.Panel>Left</Splitter.Panel>
-        <Splitter.Handle aria-label="Resize panels" />
-        <Splitter.Panel>Right</Splitter.Panel>
-      </Splitter>
-    )
-    // Order is unknown without a DOM: Panels render the 50 fallback and the
-    // separator renders the safe range. Client layout effects correct both
-    // before paint, so server and first client frame agree.
-    expect(html).toContain('role="separator"')
-    expect(html).toContain('aria-valuenow="50"')
-    expect(html).toContain('aria-valuemin="0"')
-    expect(html).toContain('aria-valuemax="100"')
-    expect(html).toContain('flex-basis:50%')
-    expect(html).not.toContain('data-disabled')
+    const errors: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      const html = renderToString(
+        <Splitter value={[40, 60]}>
+          <Splitter.Panel>Left</Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
+        </Splitter>
+      )
+      // Order is unknown without a DOM: Panels render the 50 fallback and the
+      // separator renders the safe range. Client layout effects correct both
+      // before paint, so server and first client frame agree.
+      expect(html).toContain('role="separator"')
+      expect(html).toContain('aria-valuenow="50"')
+      expect(html).toContain('aria-valuemin="0"')
+      expect(html).toContain('aria-valuemax="100"')
+      expect(html).toContain('--reference-splitter-panel-size:50%')
+      expect(html).toContain('--reference-splitter-1:40%')
+      expect(html).toContain('--reference-splitter-2:60%')
+      expect(html).not.toContain('flex-basis')
+      expect(html).not.toContain('data-disabled')
+      expect(errors).toEqual([])
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
+  it('SP-ENV-01: Splitter should server-render measured strings unconstrained without warnings or layout reads', () => {
+    const errors: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      // FEATURES #3: SSR emits unconstrained — resolution waits for mount.
+      const html = renderToString(
+        <Splitter value={[40, 60]}>
+          <Splitter.Panel min="120px" max="10rem">
+            Left
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
+        </Splitter>
+      )
+      expect(html).toContain('--reference-splitter-panel-size:50%')
+      expect(html).toContain('aria-valuenow="50"')
+      expect(errors).toEqual([])
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 
   describe('SP-ENV-01: registration resolves order and constraints on the client', () => {
@@ -179,19 +215,29 @@ describe('Splitter contract', () => {
         </Splitter>
       )
       const panels = el.querySelectorAll('[data-reference-splitter-panel]')
-      expect((panels[0] as HTMLElement)?.style.flexBasis).toBe('40%')
-      expect((panels[1] as HTMLElement)?.style.flexBasis).toBe('60%')
+      expect(
+        (panels[0] as HTMLElement)?.style.getPropertyValue('--reference-splitter-panel-size')
+      ).toBe('40%')
+      expect(
+        (panels[1] as HTMLElement)?.style.getPropertyValue('--reference-splitter-panel-size')
+      ).toBe('60%')
+      expect((panels[0] as HTMLElement)?.style.flex).toContain('var(--reference-splitter-panel-size)')
+      const root = el.querySelector('[data-reference-splitter]') as HTMLElement
+      expect(root?.style.getPropertyValue('--reference-splitter-1')).toBe('40%')
+      expect(root?.style.getPropertyValue('--reference-splitter-2')).toBe('60%')
       const handle = el.querySelector('[role="separator"]')
       expect(handle?.getAttribute('aria-valuenow')).toBe('40')
       expect(handle?.getAttribute('aria-valuemin')).toBe('20')
       expect(handle?.getAttribute('aria-valuemax')).toBe('95')
     })
 
-    it('falls back to default bounds with a diagnostic for measured strings until FEATURES #3', () => {
+    it('defers valid measured strings silently to default bounds when unmeasurable', () => {
       const errors: string[] = []
       vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
         errors.push(args.map(String).join(' '))
       })
+      // happy-dom reports zero sizes: valid strings wait for measurement,
+      // the solver still receives numerics (no NaN), and nothing warns.
       const el = mount(
         <Splitter value={[40, 60]}>
           <Splitter.Panel min="120px" max="450px">
@@ -201,12 +247,32 @@ describe('Splitter contract', () => {
           <Splitter.Panel>Right</Splitter.Panel>
         </Splitter>
       )
-      // Solver still receives numerics (no NaN): the 5% default floor stands in.
       const handle = el.querySelector('[role="separator"]')
       expect(handle?.getAttribute('aria-valuenow')).toBe('40')
       expect(handle?.getAttribute('aria-valuemin')).toBe('5')
       expect(handle?.getAttribute('aria-valuemax')).toBe('95')
-      expect(errors.some((line) => line.includes('FEATURES #3'))).toBe(true)
+      expect(errors).toEqual([])
+    })
+
+    it('warns with a property-specific diagnostic and ignores unparsable measured strings', () => {
+      const errors: string[] = []
+      vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+        errors.push(args.map(String).join(' '))
+      })
+      const el = mount(
+        <Splitter value={[40, 60]}>
+          <Splitter.Panel min="bogus" max="450px">
+            Left
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
+        </Splitter>
+      )
+      // Parse failure: dev diagnostic plus the default bound, never NaN.
+      expect(errors.some((line) => line.includes('invalid measured min length'))).toBe(true)
+      const handle = el.querySelector('[role="separator"]')
+      expect(handle?.getAttribute('aria-valuemin')).toBe('5')
+      expect(handle?.getAttribute('aria-valuemax')).toBe('95')
     })
   })
 })

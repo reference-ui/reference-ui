@@ -32,15 +32,15 @@ Visual polish is not this gate. No grid mode. No `SplitterThumb` dots.
 | Hot path | `--reference-splitter-panel-size` (and indexed vars); ARIA off the 60fps path |
 | Keys | 1% / 10%, Home/End, Enter collapse/restore |
 
-### Status (2026-09-10; PATCHES items 1–4, 6–7 landed 2026-09-26; FEATURES cluster A #1/#2/#10/#12 landed 2026-09-26)
+### Status (2026-09-10; PATCHES items 1–4, 6–7 landed 2026-09-26; FEATURES cluster A #1/#2/#10/#12 and cluster B #3–#9 landed 2026-09-26)
 
 | | |
 | :--- | :--- |
 | Engine | Constraint solver wired; keyboard + drag + collapse-snap proven. |
-| Production | **Partial.** Controlled-only v1 API landed (required `value`, `min`/`max`, DOM order, no Root `disabled`); engine deltas (#3–#9) open for cluster B. |
-| Named `[x]` | 47 / 83 |
-| Playwright CT | 37 |
-| Vitest | 18 |
+| Production | Controlled v1 API + engine (#3 measured constraints, #4 CSS-var geometry, #5 session frame budget, #6 id-keyed collapse memory, #7 focusable-but-inert Handles, #8 Panel-axis-sum denominator, #9 structural throw). HOLD #11 untouched. |
+| Named `[x]` | 72 / 83 |
+| Playwright CT | 64 |
+| Vitest | 31 |
 
 ### Gaps & incoherence
 
@@ -54,18 +54,31 @@ Resolved by the quarantine-landing salvage (solver port + minimal wire):
   exact no-ops are now silent, and a moved drag closes with exactly one
   `onChangeEnd`.
 
-Still open (cluster B owns the engine items):
+Still open (out of cluster B scope; no matrix home on branch for the env/composition proofs):
 
-- Panel `min`/`max` accept `number | string`; strings fall back to the
-  default bound with a dev diagnostic until measured resolution lands
-  (FEATURES #3 seam: `toSolverConstraints` in `Splitter.tsx`).
-- Writes `flexBasis: ${size}%` instead of `--reference-splitter-panel-size`
-  / `--reference-splitter-N`.
-- Drag commits React per move (`SP-PERF-*` hot path untouched).
+- `SP-DOM-04` / `SP-DOM-06` / `SP-DOM-07` / `SP-DOM-10` / `SP-DOM-11`,
+  `SP-CTRL-03`, `SP-KEY-01` / `SP-KEY-03` titles, `SP-ENV-02` / `SP-ENV-03` /
+  `SP-ENV-04`.
 - `SplitterThumb` chrome retained. Pointer robustness, keyboard sessions,
   Enter collapse/restore, RTL wiring, reduced-motion guard, and the a11y
-  sweep landed via PATCHES (matrix-only env/composition proofs excluded —
-  no matrix home on branch).
+  sweep landed via PATCHES.
+- FEATURES #11 HELD untouched.
+
+Landed by FEATURES cluster B (2026-09-26; `pnpm agentct Splitter`: 64 CT + 31 unit green, 7 visual baselines unmodified):
+
+- Measured `min`/`max` strings resolve post-mount against the Panel-axis
+  sum (SSR/unmeasured defers silently; parse failure warns once and
+  ignores) — FEATURES #3, #8.
+- Geometry publishes `--reference-splitter-panel-size` /
+  `--reference-splitter-N` with `flex: 1 1 var(...)`; sessions rewrite the
+  same vars through refs with zero React commits per move, frozen
+  separator ARIA, and a single `onChangeEnd` — FEATURES #4, #5.
+- Collapse memory keyed by stable Panel id across reorder/remove/insert/
+  reinsert; DOM order re-syncs every commit — FEATURES #6.
+- Disabled/infeasible Handles stay `tabIndex={0}` + `aria-disabled`,
+  consuming no resize input — FEATURES #7.
+- Malformed trees throw fail-fast (boundary-catchable) instead of
+  dev-warning — FEATURES #9.
 
 Landed by FEATURES cluster A (2026-09-26):
 
@@ -89,25 +102,28 @@ re-render-every-move as the model; auto-save; `defaultSize`.
 ### Case index
 
 - `[x]` `SP-TYPE-01` (re-targeted to the v1 controlled API), `SP-DOM-01`,
-  `SP-DOM-02`, `SP-DOM-03`, `SP-DOM-05`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-06`,
-  `SP-END-01`, `SP-END-02`, `SP-END-03`, `SP-END-04`, `SP-KEY-02`, `SP-KEY-04`,
-  `SP-KEY-05`, `SP-KEY-07`, `SP-KEY-08`, `SP-DRAG-01`, `SP-DRAG-02`, `SP-DRAG-04`,
-  `SP-DRAG-05` (first slice), `SP-DRAG-06`, `SP-DRAG-07`, `SP-DRAG-08`,
-  `SP-DRAG-09`, `SP-DRAG-10`, `SP-DRAG-11` (first slice), `SP-DRAG-12`,
-  `SP-COLLAPSE-01`, `SP-COLLAPSE-02`, `SP-COLLAPSE-03`, `SP-COLLAPSE-04`,
-  `SP-COLLAPSE-07`, `SP-COLLAPSE-08`, `SP-COMP-01`, `SP-A11Y-01` (explicit-assertion
-  sweep; full green awaits FEATURES per-Handle disable), `SP-ENV-01` (SSR)
-- `[ ]` remaining `SP-DOM-*`, remaining `SP-CTRL-*`, `SP-DRAG-03`,
-  remaining `SP-KEY-*`, remaining `SP-COLLAPSE-*`, `SP-DYNAMIC-*`,
-  remaining `SP-ENV-*`, `SP-PERF-*`, remaining `SP-COMP-*`
+  `SP-DOM-02`, `SP-DOM-03`, `SP-DOM-05`, `SP-DOM-08`, `SP-DOM-09`, `SP-DOM-12`,
+  `SP-DOM-13`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-01`, `SP-CTRL-02`,
+  `SP-CTRL-04`, `SP-CTRL-05`, `SP-CTRL-06`, `SP-END-01`, `SP-END-02`,
+  `SP-END-03`, `SP-END-04`, `SP-KEY-02`, `SP-KEY-04`, `SP-KEY-05`, `SP-KEY-06`,
+  `SP-KEY-07`, `SP-KEY-08`, `SP-DRAG-01`, `SP-DRAG-02`, `SP-DRAG-03`,
+  `SP-DRAG-04`, `SP-DRAG-05` (first slice), `SP-DRAG-06`, `SP-DRAG-07`,
+  `SP-DRAG-08`, `SP-DRAG-09`, `SP-DRAG-10`, `SP-DRAG-11` (first slice),
+  `SP-DRAG-12`, `SP-COLLAPSE-01`, `SP-COLLAPSE-02`, `SP-COLLAPSE-03`,
+  `SP-COLLAPSE-04`, `SP-COLLAPSE-05`, `SP-COLLAPSE-06`, `SP-COLLAPSE-07`,
+  `SP-COLLAPSE-08`, `SP-DYNAMIC-01`, `SP-DYNAMIC-02`, `SP-DYNAMIC-03`,
+  `SP-PERF-01`–`SP-PERF-07`, `SP-COMP-01`, `SP-COMP-02`, `SP-COMP-03`,
+  `SP-COMP-04`, `SP-A11Y-01` (explicit-assertion sweep), `SP-ENV-01` (SSR)
+- `[ ]` `SP-DOM-04`, `SP-DOM-06`, `SP-DOM-07`, `SP-DOM-10`, `SP-DOM-11`,
+  `SP-CTRL-03`, `SP-KEY-01`, `SP-KEY-03`, `SP-ENV-02`, `SP-ENV-03`, `SP-ENV-04`
 
 ### Work order
 
 1. Align public API (`min` / `max`, required `value`, drop `defaultValue` /
    `index`) — DONE by cluster A (Thumb retained per DECISIONS).
-2. Port percentage solver + idle constraint conversion (`SP-MATH-*`).
-3. Pointer session: origin capture, ref CSS vars, ARIA off the hot path.
-4. Collapse/Enter + keyboard matrix; then `SP-PERF` frame-budget tests.
+2. Port percentage solver + idle constraint conversion (`SP-MATH-*`) — DONE.
+3. Pointer session: origin capture, ref CSS vars, ARIA off the hot path — DONE by cluster B.
+4. Collapse/Enter + keyboard matrix; then `SP-PERF` frame-budget tests — DONE by cluster B.
 
 ### Won't do
 

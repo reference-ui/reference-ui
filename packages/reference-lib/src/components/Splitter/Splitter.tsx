@@ -3,10 +3,15 @@ import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/r
 import {
   adjustLayoutByDelta,
   calculateSeparatorAriaValues,
+  isHandleBlocked as probeHandleBlocked,
   layoutNumbersEqual,
+  measureAvailableGroupSize,
+  resolveConstraintToPercentage,
   validateLayout,
   validatePanelConstraints,
+  validateSplitterStructure,
   type PanelConstraints,
+  type SplitterStructurePart,
 } from './splitter-math'
 import { SPLITTER_STYLES } from './splitterStyles'
 
@@ -16,6 +21,16 @@ export type SplitterOrientation = 'horizontal' | 'vertical'
 // clamps to >= 5% under drag/keys. Pinned by the SP-DOM-03 CT slices.
 const DEFAULT_PANEL_MIN_SIZE = 5
 const DEFAULT_PANEL_MAX_SIZE = 100
+
+// FEATURES #4: the frozen geometry contract. Panels size from their own
+// variable; Root publishes indexed variables in Panel order for consumer
+// CSS. The kernel never writes inline flex-basis/width or grid-template-*
+// as a competing signal.
+const PANEL_SIZE_VAR = '--reference-splitter-panel-size'
+const PANEL_FLEX = `1 1 var(${PANEL_SIZE_VAR})`
+function rootSizeVar(panelIndex: number): string {
+  return `--reference-splitter-${panelIndex + 1}`
+}
 
 // Pre-registration Handle ARIA: order is unknown on the server and on the
 // first client render, so separators render this safe range until layout
@@ -33,35 +48,66 @@ function warnSplitter(message: string) {
   console.error(`[Reference UI Splitter] ${message}`)
 }
 
-// Numeric solver input from DOM-ordered Panel registrations. Numbers pass
-// through; measured strings fall back to the default bound with a dev
-// diagnostic until FEATURES #3 wires pointerdown/idle resolution (the
-// cluster-B seam: replace the string branches, keep the signature).
-function toSolverConstraints(panels: RegisteredPanel[]): PanelConstraints[] {
+// FEATURES #3: numeric solver input from DOM-ordered Panel registrations.
+// Numbers are live every render; measured strings resolve post-mount at
+// pointerdown capture and on idle resize, and land here through `measured`.
+// Unresolved strings (SSR, zero size) and parse failures silently take the
+// default bound — the dev diagnostic for genuinely invalid input comes from
+// the raw-prop validatePanelConstraints check, not this hot function.
+interface MeasuredEntry {
+  min: number | null
+  max: number | null
+}
+
+function sanitizeBoundNumber(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback
+}
+
+function toSolverConstraints(
+  panels: RegisteredPanel[],
+  measured: ReadonlyMap<string, MeasuredEntry>
+): PanelConstraints[] {
   return panels.map((panel) => {
-    let minSize = DEFAULT_PANEL_MIN_SIZE
-    let maxSize = DEFAULT_PANEL_MAX_SIZE
-    if (typeof panel.min === 'number') {
-      minSize = panel.min
-    } else if (panel.min !== undefined) {
-      warnSplitter(
-        `Panel "${panel.id}" uses a measured min ("${panel.min}"); string constraints resolve with FEATURES #3 — falling back to the ${DEFAULT_PANEL_MIN_SIZE}% floor.`
-      )
-    }
-    if (typeof panel.max === 'number') {
-      maxSize = panel.max
-    } else if (panel.max !== undefined) {
-      warnSplitter(
-        `Panel "${panel.id}" uses a measured max ("${panel.max}"); string constraints resolve with FEATURES #3 — falling back to ${DEFAULT_PANEL_MAX_SIZE}%.`
-      )
-    }
+    const entry = measured.get(panel.key)
+    const minSize =
+      typeof panel.min === 'number'
+        ? sanitizeBoundNumber(panel.min, DEFAULT_PANEL_MIN_SIZE)
+        : (entry?.min ?? DEFAULT_PANEL_MIN_SIZE)
+    const maxSize =
+      typeof panel.max === 'number'
+        ? sanitizeBoundNumber(panel.max, DEFAULT_PANEL_MAX_SIZE)
+        : (entry?.max ?? DEFAULT_PANEL_MAX_SIZE)
     return {
       minSize,
       maxSize,
       collapsible: panel.collapsible,
-      collapsedSize: panel.collapsedSize,
+      collapsedSize: sanitizeBoundNumber(panel.collapsedSize, 0),
     }
   })
+}
+
+// One string bound resolved against the captured available size, or null
+// when the prop is not a string (the live-number path owns those).
+function resolveMeasuredBound(
+  raw: number | string | undefined,
+  element: HTMLDivElement | null,
+  availableGroupSize: number,
+  fallback: number
+): number | null {
+  if (typeof raw !== 'string') return null
+  return resolveConstraintToPercentage(raw, availableGroupSize, element, fallback)
+}
+
+function measuredEntriesEqual(
+  a: ReadonlyMap<string, MeasuredEntry>,
+  b: ReadonlyMap<string, MeasuredEntry>
+): boolean {
+  if (a.size !== b.size) return false
+  for (const [key, entry] of a) {
+    const other = b.get(key)
+    if (!other || other.min !== entry.min || other.max !== entry.max) return false
+  }
+  return true
 }
 
 const useIsomorphicLayoutEffect =
@@ -104,6 +150,7 @@ interface RegisteredPanel {
 interface RegisteredHandle {
   key: string
   element: HTMLDivElement | null
+  disabled: boolean
 }
 
 interface SplitterContextValue {
@@ -120,6 +167,7 @@ interface SplitterContextValue {
   registerPanel: (panel: RegisteredPanel) => () => void
   registerHandle: (handle: RegisteredHandle) => () => void
   getSeparatorAria: (handleIndex: number) => SplitterSeparatorAria
+  isHandleBlocked: (handleIndex: number, explicitDisabled: boolean) => boolean
   cancelOwnedSession: (handleIndex: number) => void
   cancelKeyboardSession: (handleIndex: number) => void
   onHandlePointerDown: (handleIndex: number, e: React.PointerEvent<HTMLDivElement>) => void
@@ -178,6 +226,16 @@ export function SplitterPanel({
 
   const isCollapsed = collapsible && layoutNumbersEqual(size, collapsedSize)
 
+  // FEATURES #4: the kernel owns flex on the layout axis, so the owned
+  // declarations come after consumer style. Pointer sessions rewrite the
+  // same variable through the element ref; React only rewrites it when the
+  // controlled value actually changes.
+  const geometryStyle = {
+    ...style,
+    flex: PANEL_FLEX,
+    [PANEL_SIZE_VAR]: `${size}%`,
+  } as React.CSSProperties
+
   return (
     <Div
       ref={panelRef}
@@ -185,15 +243,11 @@ export function SplitterPanel({
       data-reference-splitter-panel=""
       data-collapsed={isCollapsed ? '' : undefined}
       data-resizing={context?.isResizing ? '' : undefined}
-      flex={`0 0 ${size}%`}
       minWidth={orientation === 'horizontal' ? 0 : undefined}
       minHeight={orientation === 'vertical' ? 0 : undefined}
       overflow="auto"
       className={className}
-      style={{
-        flexBasis: `${size}%`,
-        ...style,
-      }}
+      style={geometryStyle}
       {...props}
     >
       {children}
@@ -336,6 +390,9 @@ export function SplitterHandle({
   const [handleKey] = React.useState(autoHandleKey)
   const handleIndex = context.getHandleIndex(handleKey)
   const separatorAria = context.getSeparatorAria(handleIndex)
+  // FEATURES #7 (focusable-but-inert): explicit `disabled` and computed
+  // infeasibility both block action; neither removes the tab stop.
+  const isBlocked = context.isHandleBlocked(handleIndex, disabled)
   const primaryPanelId = context.getPanelId(context.primaryPanelIndex(handleIndex))
   const isDragging = isResizing && resizingHandleIndex === handleIndex
 
@@ -346,8 +403,8 @@ export function SplitterHandle({
   const registerHandle = context.registerHandle
   useIsomorphicLayoutEffect(() => {
     if (!registerHandle) return
-    return registerHandle({ key: handleKey, element: handleRef.current })
-  }, [registerHandle, handleKey])
+    return registerHandle({ key: handleKey, element: handleRef.current, disabled })
+  }, [registerHandle, handleKey, disabled])
 
   const cancelOwnedSession = context.cancelOwnedSession
   const cancelKeyboardSession = context.cancelKeyboardSession
@@ -383,7 +440,7 @@ export function SplitterHandle({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
-    if (e.defaultPrevented || isDisabled) return
+    if (e.defaultPrevented || isBlocked) return
     context.onHandleKeyDown(handleIndex, e)
   }
 
@@ -409,9 +466,9 @@ export function SplitterHandle({
 
   const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     onFocus?.(e)
-    if (!isDisabled) {
-      setIsFocused(true)
-    }
+    // Focusable-but-inert: a blocked Handle still shows focus — keyboard
+    // users must see where they are. Only action is gated.
+    setIsFocused(true)
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
@@ -422,7 +479,7 @@ export function SplitterHandle({
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerDown?.(e)
-    if (e.defaultPrevented || isDisabled) return
+    if (e.defaultPrevented || isBlocked) return
     context.onHandlePointerDown(handleIndex, e)
   }
 
@@ -491,11 +548,12 @@ export function SplitterHandle({
       <Div
         ref={handleRef}
         role="separator"
-        tabIndex={isDisabled ? -1 : 0}
+        tabIndex={0}
         aria-valuenow={Math.round(separatorAria.valueNow)}
         aria-valuemin={separatorAria.valueMin}
         aria-valuemax={separatorAria.valueMax}
         aria-controls={primaryPanelId || undefined}
+        aria-disabled={isBlocked ? true : undefined}
         aria-orientation={isHorizontal ? 'vertical' : 'horizontal'}
         data-reference-splitter-handle=""
         data-disabled={isDisabled ? '' : undefined}
@@ -523,7 +581,7 @@ export function SplitterHandle({
         margin={isHorizontal ? '0 -4px' : '-4px 0'}
         zIndex={1}
         bg="transparent"
-        cursor={isDisabled ? 'default' : isHorizontal ? 'col-resize' : 'row-resize'}
+        cursor={isBlocked ? 'default' : isHorizontal ? 'col-resize' : 'row-resize'}
         touchAction="none"
         userSelect="none"
         outline="none"
@@ -628,29 +686,47 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       []
     )
 
-    const panelConstraints = toSolverConstraints(panelsRef.current)
+    // FEATURES #3: measured strings resolve outside render (idle effect,
+    // ResizeObserver, pointerdown capture) into this ref; the version bump
+    // below is the only render trigger, and only when values change.
+    const measuredRef = React.useRef(new Map<string, MeasuredEntry>())
+    const [measuredVersion, setMeasuredVersion] = React.useState(0)
+    void measuredVersion
+    const panelConstraints = toSolverConstraints(panelsRef.current, measuredRef.current)
 
     if (globalProcess?.env?.NODE_ENV !== 'production') {
-      const layoutCheck = validateLayout(
-        value,
-        panelsRef.current.length > 0 ? panelsRef.current.length : undefined
-      )
+      // Count mismatches throw structurally (FEATURES #9); this warns only
+      // for malformed entries and off-100 totals.
+      const layoutCheck = validateLayout(value)
       if (!layoutCheck.valid && layoutCheck.error) warnSplitter(layoutCheck.error)
+      // Raw props, so invalid measured strings warn with a
+      // property-specific diagnostic while the solver ignores them.
       const constraintCheck = validatePanelConstraints(
-        panelConstraints.map((c) => ({
-          min: c.minSize,
-          max: c.maxSize,
-          collapsible: c.collapsible,
-          collapsedSize: c.collapsedSize,
+        panelsRef.current.map((panel) => ({
+          id: panel.id,
+          min: panel.min,
+          max: panel.max,
+          collapsible: panel.collapsible,
+          collapsedSize: panel.collapsedSize,
         }))
       )
       if (!constraintCheck.valid && constraintCheck.error) warnSplitter(constraintCheck.error)
     }
 
-    // Sessions outlive renders: callbacks, constraints, and value stay live
-    // through this ref so mid-gesture swaps apply to the captured origin.
-    const latestRef = React.useRef({ value, panelConstraints, onChange, onChangeEnd })
-    latestRef.current = { value, panelConstraints, onChange, onChangeEnd }
+    // Sessions outlive renders: callbacks and value stay live through this
+    // ref so mid-gesture swaps apply to the captured origin. Numeric
+    // constraints stay live through panelsRef; measured strings stay
+    // captured (SP-CTRL-05 vs SP-PERF-06).
+    const latestRef = React.useRef({ value, onChange, onChangeEnd })
+    latestRef.current = { value, onChange, onChangeEnd }
+
+    // FEATURES #5: while a pointer session is active, separator ARIA and
+    // blocked flags are frozen at their pointerdown values — no per-move
+    // ARIA writes even when the parent accepts every candidate.
+    const sessionFreezeRef = React.useRef<{
+      aria: SplitterSeparatorAria[]
+      blocked: boolean[]
+    } | null>(null)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const getPanelId = React.useCallback(
@@ -689,6 +765,10 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
     const getSeparatorAria = React.useCallback(
       (handleIndex: number) => {
+        const frozen = sessionFreezeRef.current
+        if (frozen && handleIndex >= 0 && handleIndex < frozen.aria.length) {
+          return frozen.aria[handleIndex] ?? UNREGISTERED_SEPARATOR_ARIA
+        }
         if (
           handleIndex < 0 ||
           handleIndex >= value.length - 1 ||
@@ -706,16 +786,61 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       [value, panelConstraints, primaryPanelIndex]
     )
 
-    // Restore memory, keyed by array position: every accepted expanded size
-    // overwrites, so Enter restores the newest feasible expanded size.
-    const rememberedSizesRef = React.useRef(new Map<number, number>())
+    // FEATURES #7: explicit disabled plus solver-probed infeasibility.
+    // Unregistered Handles (SSR, first render) report only their explicit
+    // flag so server and client agree before measurement exists.
+    const isHandleBlocked = React.useCallback(
+      (handleIndex: number, explicitDisabled: boolean) => {
+        const frozen = sessionFreezeRef.current
+        if (frozen && handleIndex >= 0 && handleIndex < frozen.blocked.length) {
+          return frozen.blocked[handleIndex] ?? true
+        }
+        if (
+          handleIndex < 0 ||
+          handlesRef.current.length !== value.length - 1 ||
+          panelConstraints.length !== value.length
+        ) {
+          return explicitDisabled
+        }
+        if (explicitDisabled || handlesRef.current[handleIndex]?.disabled) return true
+        return probeHandleBlocked({
+          layout: value,
+          panelConstraints,
+          handleIndex,
+        })
+      },
+      [value, panelConstraints]
+    )
+
+    // FEATURES #6: restore memory keyed by stable Panel id, never array
+    // position — reorder keeps, remove isolates, reinsert must recover. Every
+    // accepted expanded size overwrites, so Enter restores the newest
+    // feasible expanded size. Entries survive unregister (recovery needs
+    // them); ids are per-instance strings, so the map stays tiny.
+    const rememberedSizesRef = React.useRef(new Map<string, number>())
+    // DOM order is the source of truth for array position: a
+    // key-preserving reorder moves parts without (un)registering, so the
+    // registries must re-sort on every commit — before the positional reads
+    // below — or a transient commit pairs sizes with the wrong Panel ids.
+    // Sorts in place (cheap, idempotent); only an actual order change
+    // re-renders, pre-paint, so the transient render never shows.
+    useIsomorphicLayoutEffect(() => {
+      const orderKey = () =>
+        `${panelsRef.current.map((part) => part.key).join(',')}|${handlesRef.current.map((part) => part.key).join(',')}`
+      const before = orderKey()
+      sortParts()
+      if (orderKey() !== before) setPartsRevision((revision) => revision + 1)
+    })
     useIsomorphicLayoutEffect(() => {
       value.forEach((size, panelIndex) => {
-        const constraints = panelConstraints[panelIndex]
-        if (!constraints?.collapsible) return
-        const collapsedSize = constraints.collapsedSize ?? 0
+        const panel = panelsRef.current[panelIndex]
+        if (!panel?.collapsible) return
+        // Entry-owned fields: they travel with the Panel id, so this read
+        // stays correct even when render-time positional tables lag the
+        // just-synced registry by one commit.
+        const collapsedSize = sanitizeBoundNumber(panel.collapsedSize, 0)
         if (!layoutNumbersEqual(size, collapsedSize) && size > collapsedSize) {
-          rememberedSizesRef.current.set(panelIndex, size)
+          rememberedSizesRef.current.set(panel.id, size)
         }
       })
     })
@@ -735,6 +860,10 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
     const onHandleKeyDown = React.useCallback(
       (handleIndex: number, e: React.KeyboardEvent<HTMLDivElement>) => {
         if (handleIndex < 0 || handleIndex >= value.length - 1) return
+        // Blocked Handles consume nothing: no preventDefault, no callback.
+        if (isHandleBlocked(handleIndex, handlesRef.current[handleIndex]?.disabled ?? false)) {
+          return
+        }
         if (e.ctrlKey || e.metaKey || e.altKey) return
 
         const isHorizontal = orientation === 'horizontal'
@@ -769,17 +898,18 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         } else if (e.key === 'Enter') {
           const primary = primaryPanelIndex(handleIndex)
           const constraints = panelConstraints[primary]
-          if (constraints?.collapsible) {
+          const primaryId = panelsRef.current[primary]?.id
+          if (constraints?.collapsible && primaryId !== undefined) {
             handled = true
             const currentSize = value[primary] ?? 50
             const collapsedSize = constraints.collapsedSize ?? 0
             const minSize = constraints.minSize ?? 0
             let targetSize: number
             if (layoutNumbersEqual(currentSize, collapsedSize)) {
-              const remembered = rememberedSizesRef.current.get(primary)
+              const remembered = rememberedSizesRef.current.get(primaryId)
               targetSize = Math.max(minSize, remembered ?? minSize)
             } else {
-              rememberedSizesRef.current.set(primary, currentSize)
+              rememberedSizesRef.current.set(primaryId, currentSize)
               targetSize = collapsedSize
             }
             delta = isRtl ? currentSize - targetSize : targetSize - currentSize
@@ -804,7 +934,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         keyboardSessionRef.current = { handleIndex, hasInteracted: true, lastLayout: nextLayout }
         onChange?.(nextLayout)
       },
-      [isRtl, onChange, orientation, panelConstraints, primaryPanelIndex, value]
+      [isHandleBlocked, isRtl, onChange, orientation, panelConstraints, primaryPanelIndex, value]
     )
 
     const onHandleKeyUp = React.useCallback(() => {
@@ -812,6 +942,64 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         keyboardSessionRef.current.hasInteracted = false
         latestRef.current.onChangeEnd?.(keyboardSessionRef.current.lastLayout)
       }
+    }, [])
+
+    // FEATURES #3/#8: the idle measurement path. Numbers never enter the
+    // table (they stay live); strings resolve against the measured
+    // available size. Retries while unmeasurable; never divides by zero.
+    const measureAvailable = React.useCallback(() => {
+      return measureAvailableGroupSize({
+        container: containerRef.current,
+        handles: handlesRef.current.map((handle) => handle.element),
+        orientation,
+      })
+    }, [orientation])
+
+    const resolveMeasuredTable = React.useCallback((available: number) => {
+      const next = new Map<string, MeasuredEntry>()
+      for (const panel of panelsRef.current) {
+        next.set(panel.key, {
+          min: resolveMeasuredBound(
+            panel.min,
+            panel.element,
+            available,
+            DEFAULT_PANEL_MIN_SIZE
+          ),
+          max: resolveMeasuredBound(
+            panel.max,
+            panel.element,
+            available,
+            DEFAULT_PANEL_MAX_SIZE
+          ),
+        })
+      }
+      return next
+    }, [])
+
+    const publishMeasuredTable = React.useCallback((next: Map<string, MeasuredEntry>) => {
+      if (measuredEntriesEqual(measuredRef.current, next)) return
+      measuredRef.current = next
+      setMeasuredVersion((version) => version + 1)
+    }, [])
+
+    // FEATURES #4: synchronous geometry write through element refs — the
+    // per-move visual authority. Stale indexed Root variables are removed
+    // when the Panel count shrinks.
+    const geometryVarCountRef = React.useRef(0)
+    const writeGeometryVars = React.useCallback((layout: number[]) => {
+      panelsRef.current.forEach((panel, panelIndex) => {
+        panel.element?.style.setProperty(PANEL_SIZE_VAR, `${layout[panelIndex] ?? 0}%`)
+      })
+      const root = containerRef.current
+      if (root) {
+        layout.forEach((size, panelIndex) => {
+          root.style.setProperty(rootSizeVar(panelIndex), `${size}%`)
+        })
+        for (let i = layout.length; i < geometryVarCountRef.current; i++) {
+          root.style.removeProperty(rootSizeVar(i))
+        }
+      }
+      geometryVarCountRef.current = layout.length
     }, [])
 
     const [isResizing, setIsResizing] = React.useState(false)
@@ -834,12 +1022,47 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       }
     }, [])
 
+    // FEATURES #3 idle path: re-resolve when the registration/constraint
+    // shape changes (mount, insert/remove/reorder, min/max edits). Skipped
+    // while a session owns the table, and silent while unmeasurable.
+    const lastResolvedSignatureRef = React.useRef('')
+    useIsomorphicLayoutEffect(() => {
+      if (activeSessionRef.current) return
+      const signature = panelsRef.current
+        .map((panel) => `${panel.key}|${String(panel.min)}|${String(panel.max)}`)
+        .join(';')
+      if (signature === lastResolvedSignatureRef.current) return
+      const available = measureAvailable()
+      if (available <= 0) return
+      publishMeasuredTable(resolveMeasuredTable(available))
+      lastResolvedSignatureRef.current = signature
+    })
+
+    // FEATURES #3 idle resize: available-size changes re-resolve measured
+    // constraints and ARIA bounds without touching value or callbacks.
+    // Never runs while the pointer is down; the gesture keeps its capture.
+    React.useEffect(() => {
+      const root = containerRef.current
+      if (!root || typeof ResizeObserver === 'undefined') return
+      const observer = new ResizeObserver(() => {
+        if (activeSessionRef.current) return
+        const available = measureAvailable()
+        if (available <= 0) return
+        publishMeasuredTable(resolveMeasuredTable(available))
+      })
+      observer.observe(root)
+      return () => observer.disconnect()
+    }, [measureAvailable, publishMeasuredTable, resolveMeasuredTable])
+
     const onHandlePointerDown = React.useCallback(
       (handleIndex: number, e: React.PointerEvent<HTMLDivElement>) => {
         if (e.button !== 0) return
         if (e.isPrimary === false) return
         if (activeSessionRef.current !== null) return
         if (handleIndex < 0 || handleIndex >= value.length - 1) return
+        if (isHandleBlocked(handleIndex, handlesRef.current[handleIndex]?.disabled ?? false)) {
+          return
+        }
 
         const containerEl = containerRef.current
         if (!containerEl) return
@@ -847,9 +1070,53 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         updateDir()
         const isHorizontal = orientation === 'horizontal'
         const sessionIsRtl = readDirection(containerEl) === 'rtl' && isHorizontal
-        const rect = containerEl.getBoundingClientRect()
-        const containerSize = isHorizontal ? rect.width : rect.height
-        if (containerSize <= 0) return
+        // FEATURES #5/#8: one capture — origin pointer/layout, available
+        // group size (Panel-axis sum), and the percentage constraint table.
+        const sessionAvailable = measureAvailable()
+        if (sessionAvailable <= 0) return
+        const sessionMeasured = resolveMeasuredTable(sessionAvailable)
+        publishMeasuredTable(sessionMeasured)
+        const sessionConstraintsForMove = (): PanelConstraints[] =>
+          panelsRef.current.map((panel) => {
+            const captured = sessionMeasured.get(panel.key)
+            return {
+              minSize:
+                typeof panel.min === 'number'
+                  ? sanitizeBoundNumber(panel.min, DEFAULT_PANEL_MIN_SIZE)
+                  : (captured?.min ?? DEFAULT_PANEL_MIN_SIZE),
+              maxSize:
+                typeof panel.max === 'number'
+                  ? sanitizeBoundNumber(panel.max, DEFAULT_PANEL_MAX_SIZE)
+                  : (captured?.max ?? DEFAULT_PANEL_MAX_SIZE),
+              collapsible: panel.collapsible,
+              collapsedSize: sanitizeBoundNumber(panel.collapsedSize, 0),
+            }
+          })
+        const sessionConstraints = sessionConstraintsForMove()
+        // Freeze separator ARIA and blocked flags for the gesture: no
+        // per-move ARIA writes even when the parent accepts everything.
+        sessionFreezeRef.current = {
+          aria: value.slice(0, value.length - 1).map((_, frozenIndex) => {
+            const frozen = calculateSeparatorAriaValues({
+              layout: value,
+              panelConstraints: sessionConstraints,
+              panelIndex: sessionIsRtl ? frozenIndex + 1 : frozenIndex,
+            })
+            return {
+              valueNow: frozen.valueNow,
+              valueMin: frozen.valueMin,
+              valueMax: frozen.valueMax,
+            }
+          }),
+          blocked: value.slice(0, value.length - 1).map((_, frozenIndex) => {
+            if (handlesRef.current[frozenIndex]?.disabled) return true
+            return probeHandleBlocked({
+              layout: value,
+              panelConstraints: sessionConstraints,
+              handleIndex: frozenIndex,
+            })
+          }),
+        }
 
         const handleEl = e.currentTarget
         const pointerId = e.pointerId
@@ -895,7 +1162,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           const nextLayout = adjustLayoutByDelta({
             delta: deltaPercent,
             initialLayout: originLayout,
-            panelConstraints: latest.panelConstraints,
+            panelConstraints: sessionConstraintsForMove(),
             pivotIndices: [handleIndex, handleIndex + 1],
             prevLayout: latest.value,
             trigger: 'mouse-or-touch',
@@ -911,6 +1178,9 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           if (unchanged) return
           lastRequested = nextLayout
           emittedAny = true
+          // The move turn writes geometry synchronously through refs, then
+          // requests; no commit, layout read, conversion, or ARIA here.
+          writeGeometryVars(nextLayout)
           latest.onChange?.(nextLayout)
         }
 
@@ -918,6 +1188,10 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           if (settled) return
           settled = true
           activeSessionRef.current = null
+          sessionFreezeRef.current = null
+          // Visual authority returns to the controlled value: a rejecting
+          // parent snaps back without waiting for a commit.
+          writeGeometryVars(latestRef.current.value)
 
           ownerWindow?.removeEventListener('pointermove', onPointerMove)
           ownerWindow?.removeEventListener('pointerup', onPointerUp)
@@ -957,7 +1231,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           const directed = sessionIsRtl
             ? originPointer - currentPointer
             : currentPointer - originPointer
-          return (directed / containerSize) * 100
+          return (directed / sessionAvailable) * 100
         }
 
         const onPointerMove = (moveEv: PointerEvent) => {
@@ -1004,7 +1278,16 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
         activeSessionRef.current = { handleIndex, pointerId, cancel: () => cleanup('cancel') }
       },
-      [orientation, updateDir, value]
+      [
+        isHandleBlocked,
+        measureAvailable,
+        orientation,
+        publishMeasuredTable,
+        resolveMeasuredTable,
+        updateDir,
+        value,
+        writeGeometryVars,
+      ]
     )
 
     const handleRef = React.useCallback(
@@ -1018,6 +1301,40 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       },
       [forwardedRef]
     )
+
+    // FEATURES #9: strict structural errors throw fail-fast. Validation runs
+    // in a layout effect — after the children's registration effects, so an
+    // atomic insert/remove/reorder commit validates in its final shape —
+    // and the recorded error throws during the next render, before paint,
+    // with no separator ARIA, capture, or listeners left behind. Terminal
+    // for that mount: recovery is an error boundary plus a tree fix.
+    const [structureError, setStructureError] = React.useState<string | null>(null)
+    useIsomorphicLayoutEffect(() => {
+      const merged: Array<{ kind: SplitterStructurePart; element: HTMLDivElement | null }> = [
+        ...panelsRef.current.map((panel) => ({
+          kind: 'panel' as const,
+          element: panel.element,
+        })),
+        ...handlesRef.current.map((handle) => ({
+          kind: 'handle' as const,
+          element: handle.element,
+        })),
+      ]
+      merged.sort((a, b) => {
+        if (!a.element || !b.element) return 0
+        const pos = a.element.compareDocumentPosition(b.element)
+        return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+      })
+      const check = validateSplitterStructure(
+        merged.map((part) => part.kind),
+        value.length
+      )
+      const next = check.valid ? null : (check.error ?? 'Invalid Splitter structure.')
+      setStructureError((prev) => (prev === next ? prev : next))
+    })
+    if (structureError) {
+      throw new Error(`[Reference UI Splitter] ${structureError}`)
+    }
 
     const contextValue = React.useMemo<SplitterContextValue>(() => {
       // Re-publish after every (un)registration so parts re-read DOM order.
@@ -1036,6 +1353,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         registerPanel,
         registerHandle,
         getSeparatorAria,
+        isHandleBlocked,
         cancelOwnedSession,
         cancelKeyboardSession,
         onHandlePointerDown,
@@ -1056,6 +1374,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       registerPanel,
       registerHandle,
       getSeparatorAria,
+      isHandleBlocked,
       cancelOwnedSession,
       cancelKeyboardSession,
       onHandlePointerDown,
@@ -1063,6 +1382,13 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       onHandleKeyUp,
       partsRevision,
     ])
+
+    // FEATURES #4: indexed size signals in Panel order. Owned, so they
+    // come after consumer style; unrelated custom properties pass through.
+    const rootStyle = {
+      ...style,
+      ...Object.fromEntries(value.map((size, panelIndex) => [rootSizeVar(panelIndex), `${size}%`])),
+    } as React.CSSProperties
 
     return (
       <SplitterContext.Provider value={contextValue}>
@@ -1077,7 +1403,7 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           height="100%"
           overflow="hidden"
           className={className}
-          style={style}
+          style={rootStyle}
           {...props}
         >
           <style>{SPLITTER_STYLES}</style>

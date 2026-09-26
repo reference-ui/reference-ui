@@ -671,7 +671,9 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
       (document.querySelector('[data-testid="lifecycle-toggle-disabled"]') as HTMLElement).click()
     )
 
-    // Removing the handle mid-drag cancels too.
+    // Removing the handle mid-drag is a structural error (FEATURES #9):
+    // the boundary reports the diagnostic, the session still cleans up once
+    // with no end, and restoring the handle recovers the group.
     const b = await handleCenter(page, 'lifecycle-handle-0')
     await page.mouse.move(b.x, b.y)
     await page.mouse.down()
@@ -679,12 +681,24 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.evaluate(() =>
       (document.querySelector('[data-testid="lifecycle-toggle-handle"]') as HTMLElement).click()
     )
-    expect(await settled()).toEqual({ resizing: false, userSelect: '', cursor: '' })
+    await expect(page.getByTestId('lifecycle-structure-error')).toContainText(
+      'need exactly 1 Handle, but 0 are mounted'
+    )
+    // The boundary unmounted the crashed tree, so the root (and its
+    // data-resizing) is gone; the document lock is what must be clean.
+    expect(await settled()).toEqual({ resizing: undefined, userSelect: '', cursor: '' })
     await page.mouse.up()
     await expect(page.getByTestId('lifecycle-change-end-count')).toHaveText('0')
     await page.evaluate(() =>
       (document.querySelector('[data-testid="lifecycle-toggle-handle"]') as HTMLElement).click()
     )
+    await expect(page.getByTestId('lifecycle-handle-0')).toBeVisible()
+    const recovered = await handleCenter(page, 'lifecycle-handle-0')
+    await page.mouse.move(recovered.x, recovered.y)
+    await page.mouse.down()
+    await page.mouse.move(recovered.x + 40, recovered.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('lifecycle-change-end-count')).toHaveText('1')
 
     // Unmounting the root releases the document lock without crashing.
     const c = await handleCenter(page, 'lifecycle-handle-0')
@@ -704,7 +718,8 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.evaluate(() =>
       (document.querySelector('[data-testid="lifecycle-toggle-mounted"]') as HTMLElement).click()
     )
-    await expect(page.getByTestId('lifecycle-change-end-count')).toHaveText('0')
+    // Still 1 from the recovery drag: the unmounted gesture added no end.
+    await expect(page.getByTestId('lifecycle-change-end-count')).toHaveText('1')
   })
 
   test('SP-DRAG-10: Only the first pointer owns the group', async ({ mount, page }) => {
@@ -1409,6 +1424,7 @@ test.describe('Splitter PATCHES item 7: accessibility sweep', () => {
             max: Number(el.getAttribute('aria-valuemax')),
             controlsInGroup: !!target && root.contains(target),
             disabled: el.getAttribute('data-disabled'),
+            ariaDisabled: el.getAttribute('aria-disabled'),
             tabIndex: el.tabIndex,
           })
         }
@@ -1427,14 +1443,1250 @@ test.describe('Splitter PATCHES item 7: accessibility sweep', () => {
       expect(row.now as number).toBeLessThanOrEqual(row.max as number)
       expect(row.controlsInGroup).toBe(true)
     }
+    // FEATURES #7 (focusable-but-inert): the explicitly disabled Handle
+    // keeps its tab stop and reports aria-disabled; feasible Handles have
+    // neither hook.
     const mixedDisabled = sweep.rows.find((r) => r.testId === 'a11y-mixed-handle-1')!
     expect(mixedDisabled.disabled).toBe('')
-    expect(mixedDisabled.tabIndex).toBe(-1)
+    expect(mixedDisabled.tabIndex).toBe(0)
+    expect(mixedDisabled.ariaDisabled).toBe('true')
     for (const row of sweep.rows) {
       if (row.testId === 'a11y-mixed-handle-1') continue
       expect(row.tabIndex).toBe(0)
       expect(row.disabled).toBeNull()
+      expect(row.ariaDisabled).toBeNull()
     }
     expect(sweep.collapsedHook).toBe(true)
+  })
+})
+
+test.describe('Splitter FEATURES #9: strict structural errors', () => {
+  test('SP-DOM-02: Malformed trees throw descriptive anatomy errors with no resize surface left behind', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/StructureErrors')
+
+    // Each variant reports its own defect through the boundary.
+    await expect(page.getByTestId('structure-error-leading-handle')).toContainText(
+      'need exactly 1 Handle, but 2 are mounted'
+    )
+    await expect(page.getByTestId('structure-error-trailing-handle')).toContainText(
+      'need exactly 1 Handle, but 2 are mounted'
+    )
+    await expect(page.getByTestId('structure-error-consecutive-handles')).toContainText(
+      'need exactly 1 Handle, but 2 are mounted'
+    )
+    await expect(page.getByTestId('structure-error-consecutive-panels')).toContainText(
+      'need exactly 1 Handle, but 0 are mounted'
+    )
+    await expect(page.getByTestId('structure-error-one-panel')).toContainText(
+      'only one is mounted'
+    )
+    await expect(page.getByTestId('structure-error-value-short')).toContainText(
+      'value has 1 entry but 2 Panels are mounted'
+    )
+    await expect(page.getByTestId('structure-error-value-long')).toContainText(
+      'value has 3 entries but 2 Panels are mounted'
+    )
+    await expect(page.getByTestId('structure-error-misordered')).toContainText(
+      'strictly alternate'
+    )
+    await expect(page.getByTestId('structure-error-misordered')).toContainText(
+      'panel → panel → handle'
+    )
+
+    // Nothing remains: no separator ARIA, no capture, no document lock.
+    await expect(page.locator('[role="separator"]')).toHaveCount(0)
+    await expect(page.locator('[data-resizing]')).toHaveCount(0)
+    const styles = await page.evaluate(() => ({
+      userSelect: document.body.style.userSelect,
+      cursor: document.body.style.cursor,
+    }))
+    expect(styles).toEqual({ userSelect: '', cursor: '' })
+  })
+})
+
+test.describe('Splitter FEATURES #4: CSS-variable geometry contract', () => {
+  test('SP-DOM-09: Panels publish percentages and Root publishes indexed sizes, updated atomically', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Basic')
+
+    const vars = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="test-splitter"]') as HTMLElement
+        const panels = [...root.querySelectorAll('[data-reference-splitter-panel]')] as HTMLElement[]
+        return {
+          panel: panels.map((p) => p.style.getPropertyValue('--reference-splitter-panel-size')),
+          root1: root.style.getPropertyValue('--reference-splitter-1'),
+          root2: root.style.getPropertyValue('--reference-splitter-2'),
+          panelClass: panels[0]?.getAttribute('class') ?? '',
+        }
+      })
+
+    expect(await vars()).toMatchObject({ panel: ['40%', '60%'], root1: '40%', root2: '60%' })
+    const before = (await vars()).panelClass
+
+    // One key rerenders Panel vars, Root vars, and Handle ARIA together.
+    await page.getByTestId('splitter-handle-0').focus()
+    await page.keyboard.press('ArrowRight')
+    expect(await vars()).toMatchObject({ panel: ['41%', '59%'], root1: '41%', root2: '59%' })
+    await expect(page.getByTestId('splitter-handle-0')).toHaveAttribute('aria-valuenow', '41')
+    // Consumer styling is untouched by the kernel-owned rewrite.
+    expect((await vars()).panelClass).toBe(before)
+  })
+
+  test('SP-DOM-12: Root indexed signals follow Panel order while Panel vars travel with their Panel', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+
+    const vars = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="test-splitter-dynamic"]') as HTMLElement
+        const byId = (id: string) =>
+          (document.querySelector(`[data-testid="dynamic-panel-${id}"]`) as HTMLElement)?.style.getPropertyValue(
+            '--reference-splitter-panel-size'
+          )
+        return {
+          root1: root.style.getPropertyValue('--reference-splitter-1'),
+          root2: root.style.getPropertyValue('--reference-splitter-2'),
+          root3: root.style.getPropertyValue('--reference-splitter-3'),
+          a: byId('a'),
+          b: byId('b'),
+          c: byId('c'),
+        }
+      })
+
+    expect(await vars()).toMatchObject({
+      root1: '30%',
+      root2: '35%',
+      root3: '35%',
+      a: '30%',
+      b: '35%',
+      c: '35%',
+    })
+
+    // Collapse A, then atomically reorder to B/A/C with matching values.
+    await page.getByTestId('dynamic-handle-0').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('dynamic-last-request')).toHaveText('5,60,35')
+    await page.getByTestId('dynamic-op-reorder').click()
+
+    // Indexed Root signals follow the new order; A's own var travels with A.
+    expect(await vars()).toMatchObject({
+      root1: '60%',
+      root2: '5%',
+      root3: '35%',
+      a: '5%',
+      b: '60%',
+      c: '35%',
+    })
+  })
+
+  test('SP-DOM-13: Panels size from the variable with owned flex; Handles stay fixed', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Basic')
+
+    const horizontal = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="test-splitter"]') as HTMLElement
+      const panel = document.querySelector('[data-testid="splitter-panel-0"]') as HTMLElement
+      const handle = document.querySelector('[data-testid="splitter-handle-0"]') as HTMLElement
+      const cs = (el: HTMLElement) => getComputedStyle(el)
+      return {
+        rootDisplay: cs(root).display,
+        rootDirection: cs(root).flexDirection,
+        grow: cs(panel).flexGrow,
+        shrink: cs(panel).flexShrink,
+        basis: cs(panel).flexBasis,
+        minWidth: cs(panel).minWidth,
+        handleGrow: cs(handle).flexGrow,
+        handleShrink: cs(handle).flexShrink,
+        handleBasis: cs(handle).flexBasis,
+        inlineFlex: panel.style.flex,
+      }
+    })
+    expect(horizontal.rootDisplay).toBe('flex')
+    expect(horizontal.rootDirection).toBe('row')
+    expect(horizontal.grow).toBe('1')
+    expect(horizontal.shrink).toBe('1')
+    // flex-basis is the resolved 40% variable (percentages stay percentages
+    // in computed style; layout resolves them against the flex container).
+    expect(horizontal.basis).toBe('40%')
+    expect(horizontal.minWidth).toBe('0px')
+    expect(horizontal.handleGrow).toBe('0')
+    expect(horizontal.handleShrink).toBe('0')
+    expect(horizontal.handleBasis).toBe('auto')
+    expect(horizontal.inlineFlex).toContain('var(--reference-splitter-panel-size)')
+
+    await mount('components/Splitter/Splitter/Vertical')
+    const vertical = await page.evaluate(() => {
+      const panel = document.querySelector(
+        '[data-testid="splitter-vertical-root"] [data-reference-splitter-panel]'
+      ) as HTMLElement
+      return {
+        direction: getComputedStyle(panel.parentElement as HTMLElement).flexDirection,
+        minHeight: getComputedStyle(panel).minHeight,
+      }
+    })
+    expect(vertical.direction).toBe('column')
+    expect(vertical.minHeight).toBe('0px')
+  })
+})
+
+test.describe('Splitter FEATURES #7: Handle determinism', () => {
+  test('SP-DOM-08: Feasible Handles tab in DOM order; explicit and infeasible Handles are aria-disabled but focusable', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Blocked')
+    const first = page.getByTestId('blocked-handle-0')
+    const second = page.getByTestId('blocked-handle-1')
+
+    // Both feasible: tab stops in DOM order, no disabled semantics.
+    await expect(first).toHaveAttribute('tabindex', '0')
+    await expect(second).toHaveAttribute('tabindex', '0')
+    await expect(first).not.toHaveAttribute('aria-disabled', 'true')
+    await expect(second).not.toHaveAttribute('aria-disabled', 'true')
+    await first.focus()
+    await page.keyboard.press('Tab')
+    const order = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+    expect(order).toBe('blocked-handle-1')
+
+    // Disable one explicitly; pin the other's neighbors so no delta is feasible.
+    await page.getByTestId('blocked-toggle-disabled').click()
+    await page.getByTestId('blocked-toggle-pinned').click()
+
+    // Focusable-but-inert: tab stops stay, action reports aria-disabled.
+    await expect(first).toHaveAttribute('tabindex', '0')
+    await expect(second).toHaveAttribute('tabindex', '0')
+    await expect(first).toHaveAttribute('aria-disabled', 'true')
+    await expect(second).toHaveAttribute('aria-disabled', 'true')
+    await expect(first).toHaveAttribute('data-disabled', '')
+    await expect(second).not.toHaveAttribute('data-disabled', '')
+
+    // Neither requests resize on drag.
+    const at = await handleCenter(page, 'blocked-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 60, at.y, { steps: 4 })
+    await page.mouse.up()
+    const at2 = await handleCenter(page, 'blocked-handle-1')
+    await page.mouse.move(at2.x, at2.y)
+    await page.mouse.down()
+    await page.mouse.move(at2.x - 60, at2.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('blocked-change-count')).toHaveText('0')
+    await expect(page.getByTestId('blocked-value-display')).toHaveText('Layout: 20% / 30% / 50%')
+
+    // Tab order stays pinned in DOM order.
+    await first.focus()
+    await page.keyboard.press('Tab')
+    const pinned = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+    expect(pinned).toBe('blocked-handle-1')
+  })
+
+  test('SP-KEY-06: Disabled and blocked Handles consume no resize key', async ({ mount, page }) => {
+    await mount('components/Splitter/Splitter/Blocked')
+    await page.getByTestId('blocked-toggle-disabled').click()
+    await page.getByTestId('blocked-toggle-pinned').click()
+
+    for (const testId of ['blocked-handle-0', 'blocked-handle-1']) {
+      await page.getByTestId(testId).focus()
+      for (const key of ['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter']) {
+        const unprevented = await dispatchKey(page, testId, 'keydown', { key })
+        expect(unprevented).toBe(true)
+      }
+      await dispatchKey(page, testId, 'keyup', { key: 'ArrowRight' })
+      // Focus never leaves; nothing changed.
+      const focused = await page.evaluate(
+        (id) => document.activeElement?.getAttribute('data-testid') === id,
+        testId
+      )
+      expect(focused).toBe(true)
+    }
+    await expect(page.getByTestId('blocked-change-count')).toHaveText('0')
+    await expect(page.getByTestId('blocked-change-end-count')).toHaveText('0')
+    await expect(page.getByTestId('blocked-value-display')).toHaveText('Layout: 20% / 30% / 50%')
+    await expect(page.getByTestId('blocked-handle-0')).toHaveAttribute('aria-valuenow', '20')
+    await expect(page.getByTestId('blocked-handle-1')).toHaveAttribute('aria-valuenow', '30')
+  })
+})
+
+test.describe('Splitter FEATURES #3/#8: measured constraints over the Panel-axis sum', () => {
+  test('SP-DYNAMIC-02: Idle resize re-resolves measured bounds and ARIA without touching value or callbacks', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Measured')
+    const handle = page.getByTestId('measured-handle-0')
+
+    // 500px of Panel space: 120px is 24, 450px is 90 — the 1px Handle is
+    // excluded from the denominator (501 would read 23.952/89.82).
+    await expect(handle).toHaveAttribute('aria-valuenow', '40')
+    await expect(handle).toHaveAttribute('aria-valuemin', '24')
+    await expect(handle).toHaveAttribute('aria-valuemax', '90')
+
+    await page.getByTestId('measured-toggle-width').click()
+
+    // 1000px now: bounds halve, hooks stay, nothing is requested.
+    await expect(handle).toHaveAttribute('aria-valuemin', '12')
+    await expect(handle).toHaveAttribute('aria-valuemax', '45')
+    await expect(handle).toHaveAttribute('aria-valuenow', '40')
+    await expect(page.getByTestId('measured-value-display')).toHaveText('Layout: 40% / 60%')
+    await expect(page.getByTestId('measured-change-count')).toHaveText('0')
+    await expect(page.getByTestId('measured-change-end-count')).toHaveText('0')
+    const hooks = await page.evaluate(() => {
+      const panels = [
+        ...document.querySelectorAll('[data-testid="test-splitter-measured"] [data-reference-splitter-panel]'),
+      ] as HTMLElement[]
+      return panels.map((p) => p.style.getPropertyValue('--reference-splitter-panel-size'))
+    })
+    expect(hooks).toEqual(['40%', '60%'])
+  })
+
+  test('SP-COMP-02: Vertical editor/console honors measured console min on drag, keys, and bounds', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/MeasuredVertical')
+    const handle = page.getByTestId('measured-v-handle-0')
+    const display = page.getByTestId('measured-v-value-display')
+
+    // Console min 120px of 500px Panel space caps the editor at 76.
+    await expect(handle).toHaveAttribute('aria-valuenow', '70')
+    await expect(handle).toHaveAttribute('aria-valuemin', '40')
+    await expect(handle).toHaveAttribute('aria-valuemax', '76')
+    await expect(handle).toHaveAttribute('aria-orientation', 'horizontal')
+    const controls = await handle.getAttribute('aria-controls')
+    expect(controls).toBe(await page.getByTestId('measured-v-panel-0').getAttribute('id'))
+    const direction = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector('[data-testid="test-splitter-measured-v"]') as HTMLElement)
+          .flexDirection
+    )
+    expect(direction).toBe('column')
+
+    // Shift+Arrow clamps at the measured bound through the same solver.
+    await handle.focus()
+    await page.keyboard.press('Shift+ArrowDown')
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('76,24')
+    await expect(display).toHaveText('Layout: 76% / 24%')
+
+    await page.keyboard.press('Home')
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('40,60')
+    await page.keyboard.press('End')
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('76,24')
+
+    // Drag clamps at the same measured bound with the row cursor and no
+    // selection leak.
+    const at = await handleCenter(page, 'measured-v-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x, at.y + 120, { steps: 6 })
+    const during = await page.evaluate(() => ({
+      cursor: document.body.style.cursor,
+      userSelect: document.body.style.userSelect,
+    }))
+    expect(during).toEqual({ cursor: 'row-resize', userSelect: 'none' })
+    await page.mouse.up()
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('76,24')
+    const after = await page.evaluate(() => ({
+      cursor: document.body.style.cursor,
+      selection: window.getSelection()?.toString() ?? '',
+    }))
+    expect(after).toEqual({ cursor: '', selection: '' })
+  })
+
+  test('SP-DRAG-03: Vertical drag maps to the Panel above identically in LTR and RTL', async ({
+    mount,
+    page,
+  }) => {
+    // Same-story mounts reconcile onto one root and keep state, so each
+    // run unmounts first for a fresh [70,30].
+    const run1 = await mount('components/Splitter/Splitter/MeasuredVertical')
+    const down = await handleCenter(page, 'measured-v-handle-0')
+    await page.mouse.move(down.x, down.y)
+    await page.mouse.down()
+    await page.mouse.move(down.x, down.y + 50, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('76,24')
+    await run1.unmount()
+
+    const run2 = await mount('components/Splitter/Splitter/MeasuredVertical')
+    const up = await handleCenter(page, 'measured-v-handle-0')
+    await page.mouse.move(up.x, up.y)
+    await page.mouse.down()
+    await page.mouse.move(up.x, up.y - 50, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('measured-v-last-request')).toHaveText('60,40')
+    await run2.unmount()
+
+    // RTL changes nothing vertically: same mapping, above Panel primary.
+    await mount('components/Splitter/Splitter/MeasuredVertical')
+    await page.evaluate(() => {
+      document.dir = 'rtl'
+    })
+    try {
+      const rtl = await handleCenter(page, 'measured-v-handle-0')
+      await page.mouse.move(rtl.x, rtl.y)
+      await page.mouse.down()
+      await page.mouse.move(rtl.x, rtl.y + 50, { steps: 4 })
+      await page.mouse.up()
+      await expect(page.getByTestId('measured-v-last-request')).toHaveText('76,24')
+      await expect(page.getByTestId('measured-v-handle-0')).toHaveAttribute(
+        'aria-orientation',
+        'horizontal'
+      )
+      const controls = await page.getByTestId('measured-v-handle-0').getAttribute('aria-controls')
+      expect(controls).toBe(await page.getByTestId('measured-v-panel-0').getAttribute('id'))
+    } finally {
+      await page.evaluate(() => {
+        document.dir = ''
+      })
+    }
+  })
+})
+
+test.describe('Splitter FEATURES #6: collapse memory and dynamic panels', () => {
+  test('SP-COLLAPSE-05: Programmatic value changes cross the collapse boundary silently', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+    const handle = page.getByTestId('dynamic-handle-0')
+    await handle.focus()
+
+    // Programmatic clicks (no focus steal) so focus retention is meaningful.
+    const toggleProgrammatic = () =>
+      page.evaluate(() =>
+        (document.querySelector('[data-testid="dynamic-op-programmatic"]') as HTMLElement).click()
+      )
+    await toggleProgrammatic()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 5% / 60% / 35%')
+    await expect(page.getByTestId('dynamic-panel-a')).toHaveAttribute('data-collapsed', '')
+    await expect(handle).toHaveAttribute('aria-valuenow', '5')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('0')
+    await expect(page.getByTestId('dynamic-change-end-count')).toHaveText('0')
+    const focused = await page.evaluate(
+      () => document.activeElement?.getAttribute('data-testid') === 'dynamic-handle-0'
+    )
+    expect(focused).toBe(true)
+
+    await toggleProgrammatic()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 30% / 35% / 35%')
+    await expect(page.getByTestId('dynamic-panel-a')).not.toHaveAttribute('data-collapsed', '')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('0')
+  })
+
+  test('SP-COLLAPSE-06: Restore memory keys to stable Panel IDs across reorder, remove, insert, and reinsert', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+    const requests = page.getByTestId('dynamic-last-request')
+
+    // Collapse A from 30: memory records 30 under A's stable id.
+    await page.getByTestId('dynamic-handle-0').focus()
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('5,60,35')
+
+    // Atomic reorder to B/A/C: sizes follow position, memory follows A.
+    await page.getByTestId('dynamic-op-reorder').click()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 60% / 5% / 35%')
+    await expect(page.getByTestId('dynamic-panel-a')).toHaveText('A (5%)')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('1')
+    await page.getByTestId('dynamic-handle-1').focus()
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('60,30,10')
+
+    // Remove A: B and C keep their own sizes; A's memory stays isolated.
+    await page.getByTestId('dynamic-op-remove-a').click()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 70% / 30%')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('2')
+
+    // Insert D: collapsing and restoring D uses D's own memory, never A's 30.
+    await page.getByTestId('dynamic-op-insert-d').click()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 60% / 20% / 20%')
+    await page.getByTestId('dynamic-handle-1').focus()
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('60,5,35')
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('60,20,20')
+
+    // Reinsert A with its stable id: MUST recover A's remembered 30.
+    await page.getByTestId('dynamic-op-reinsert-a').click()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 5% / 60% / 20% / 15%')
+    await page.getByTestId('dynamic-handle-0').focus()
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('30,35,20,15')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('5')
+    await expect(page.getByTestId('dynamic-panel-a')).not.toHaveAttribute('data-collapsed', '')
+  })
+
+  test('SP-DYNAMIC-01: Atomic insert, remove, and reorder keep IDs, ARIA, and callbacks consistent', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+
+    await page.getByTestId('dynamic-handle-0').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('dynamic-last-request')).toHaveText('5,60,35')
+
+    await page.getByTestId('dynamic-op-reorder').click()
+    // Handle adjacency and ARIA rebuild around the new order: handle 1 now
+    // drives A, the collapsed primary.
+    const controls = await page.getByTestId('dynamic-handle-1').getAttribute('aria-controls')
+    expect(controls).toBe('dynamic-panel-id-a')
+    await expect(page.getByTestId('dynamic-handle-1')).toHaveAttribute('aria-valuenow', '5')
+    await expect(page.getByTestId('dynamic-handle-0')).toHaveAttribute('aria-valuenow', '60')
+    // No unsolicited callback: only the Enter requested.
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('1')
+    await expect(page.getByTestId('dynamic-change-end-count')).toHaveText('1')
+
+    await page.getByTestId('dynamic-op-remove-a').click()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 70% / 30%')
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('1')
+    // The surviving boundary still resizes: one request, one end.
+    await page.getByTestId('dynamic-handle-0').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('dynamic-last-request')).toHaveText('71,29')
+    await expect(page.getByTestId('dynamic-change-end-count')).toHaveText('2')
+  })
+
+  test('SP-DYNAMIC-03: Transiently invalid trees fail locally with a diagnostic, then restore cleanly', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+
+    // Hide the middle Panel while its Handles stay: consecutive Handles,
+    // plus 3 value entries over 2 Panels. The validator reports the
+    // value/Panel count mismatch first; either way the tree fails locally.
+    await page.getByTestId('dynamic-op-hide-b').click()
+    await expect(page.getByTestId('dynamic-structure-error')).toContainText(
+      'value has 3 entries but 2 Panels are mounted'
+    )
+    // No capture, cursor, listener, or ARIA survives the failure.
+    await expect(page.locator('[data-testid="splitter-dynamic-root"] [role="separator"]')).toHaveCount(0)
+    const failed = await page.evaluate(() => ({
+      resizing: document.querySelectorAll('[data-resizing]').length,
+      userSelect: document.body.style.userSelect,
+      cursor: document.body.style.cursor,
+    }))
+    expect(failed).toEqual({ resizing: 0, userSelect: '', cursor: '' })
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('0')
+
+    // Restore: the next drag uses current geometry once.
+    await page.getByTestId('dynamic-op-hide-b').click()
+    await expect(page.getByTestId('dynamic-handle-0')).toBeVisible()
+    const at = await handleCenter(page, 'dynamic-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 40, at.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 40% / 25% / 35%')
+    await expect(page.getByTestId('dynamic-change-end-count')).toHaveText('1')
+  })
+
+  test('SP-COLLAPSE-04: A pointer drag away from collapsed size refreshes restore memory', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/CollapsibleDemo')
+    const handle = page.getByTestId('collapsible-handle-0')
+    const requests = page.getByTestId('collapsible-last-request')
+
+    await handle.focus()
+    for (let i = 0; i < 20; i++) {
+      await page.keyboard.press('ArrowLeft')
+    }
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.getByTestId('collapsible-value-display')).toHaveText('Layout: 5% / 95%')
+
+    // Drag away from collapsed: hooks clear and memory takes the drag size.
+    const at = await handleCenter(page, 'collapsible-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 100, at.y, { steps: 5 })
+    await page.mouse.up()
+    await expect(page.getByTestId('collapsible-panel-0')).not.toHaveAttribute('data-collapsed', '')
+    const dragged = await requests.innerText()
+    expect(dragged).not.toBe('40,60')
+
+    // Collapse, then restore: the newest accepted expanded size returns.
+    await handle.focus()
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText('5,95')
+    await page.keyboard.press('Enter')
+    await expect(requests).toHaveText(dragged)
+  })
+})
+
+test.describe('Splitter FEATURES #5: pointer-session frame budget', () => {
+  test('SP-PERF-01: Pointermove commits no React on Panel descendants and never toggles resizing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/PerfRejected')
+    const center = await handleCenter(page, 'perf-handle-0')
+    await recordNextPointerId(page, 'perf-handle-0')
+
+    await page.mouse.move(center.x, center.y)
+    await page.mouse.down()
+    await expect(page.getByTestId('test-splitter-perf')).toHaveAttribute('data-resizing', '')
+    // Settle the pointerdown commit, then record descendant commit counts and
+    // arm a resizing-attribute mutation observer.
+    await page.waitForTimeout(150)
+    await page.evaluate(() => {
+      const w = window as unknown as { __spResizingToggles?: number }
+      w.__spResizingToggles = 0
+      const root = document.querySelector('[data-testid="test-splitter-perf"]') as HTMLElement
+      new MutationObserver((records) => {
+        w.__spResizingToggles = (w.__spResizingToggles ?? 0) + records.length
+      }).observe(root, { attributes: true, attributeFilter: ['data-resizing'] })
+    })
+    const before = await page.evaluate(
+      () => ({ ...(window as unknown as { __spCommits: Record<string, number> }).__spCommits })
+    )
+    const pointerId = await lastPointerId(page)
+
+    // 30 moves that each change the candidate; the parent never setStates.
+    await page.evaluate(
+      ({ pointerId, center }) => {
+        for (let step = 1; step <= 30; step++) {
+          window.dispatchEvent(
+            new PointerEvent('pointermove', {
+              pointerId,
+              buttons: 1,
+              clientX: center.x + step * 4,
+              clientY: center.y,
+              bubbles: true,
+              cancelable: true,
+            })
+          )
+        }
+      },
+      { pointerId, center }
+    )
+    await page.waitForTimeout(100)
+    const after = await page.evaluate(
+      () => ({ ...(window as unknown as { __spCommits: Record<string, number> }).__spCommits })
+    )
+    expect(after).toEqual(before)
+    const toggles = await page.evaluate(
+      () => (window as unknown as { __spResizingToggles: number }).__spResizingToggles
+    )
+    expect(toggles).toBe(0)
+    // Every move still requested (rejected): the loop ran, commits did not.
+    const requests = await page.evaluate(
+      () => (window as unknown as { __spRequests: string[] }).__spRequests.length
+    )
+    expect(requests).toBe(30)
+
+    await page.mouse.up()
+  })
+
+  test('SP-PERF-02: Pointermove reads no layout after the session captures geometry', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Constrained')
+    const center = await handleCenter(page, 'constrained-handle-0')
+    await recordNextPointerId(page, 'constrained-handle-0')
+
+    await page.mouse.move(center.x, center.y)
+    await page.mouse.down()
+    await expect(page.getByTestId('test-splitter-constrained')).toHaveAttribute('data-resizing', '')
+    const pointerId = await lastPointerId(page)
+
+    // Spy the layout-read surface from here: moves must add zero calls.
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __spReads: Record<string, number>
+        __spOrig: Record<string, unknown>
+      }
+      w.__spReads = { rect: 0, computed: 0, offsetWidth: 0, offsetHeight: 0 }
+      w.__spOrig = {}
+      const origRect = Element.prototype.getBoundingClientRect
+      w.__spOrig.rect = origRect
+      Element.prototype.getBoundingClientRect = function (...args: []) {
+        w.__spReads.rect += 1
+        return (origRect as (...a: []) => DOMRect).apply(this, args)
+      }
+      const origComputed = window.getComputedStyle
+      w.__spOrig.computed = origComputed
+      window.getComputedStyle = ((...args: [Element]) => {
+        w.__spReads.computed += 1
+        return (origComputed as (...a: [Element]) => CSSStyleDeclaration)(...args)
+      }) as typeof window.getComputedStyle
+      for (const key of ['offsetWidth', 'offsetHeight'] as const) {
+        let proto: object | null = HTMLElement.prototype
+        while (proto && !Object.getOwnPropertyDescriptor(proto, key)) {
+          proto = Object.getPrototypeOf(proto)
+        }
+        if (!proto) continue
+        const desc = Object.getOwnPropertyDescriptor(proto, key) as PropertyDescriptor
+        w.__spOrig[key] = desc
+        Object.defineProperty(proto, key, {
+          configurable: true,
+          enumerable: desc.enumerable,
+          get(this: HTMLElement) {
+            w.__spReads[key] += 1
+            return (desc.get as () => number).call(this)
+          },
+        })
+      }
+    })
+
+    // Absolute-coordinate moves: the test itself reads no layout either.
+    await page.evaluate(
+      ({ pointerId, center }) => {
+        for (let step = 1; step <= 20; step++) {
+          window.dispatchEvent(
+            new PointerEvent('pointermove', {
+              pointerId,
+              buttons: 1,
+              clientX: center.x + step * 4,
+              clientY: center.y,
+              bubbles: true,
+              cancelable: true,
+            })
+          )
+        }
+      },
+      { pointerId, center }
+    )
+    const reads = await page.evaluate(
+      () => (window as unknown as { __spReads: Record<string, number> }).__spReads
+    )
+    expect(reads).toEqual({ rect: 0, computed: 0, offsetWidth: 0, offsetHeight: 0 })
+
+    await page.mouse.up()
+  })
+
+  test('SP-PERF-03: Separator ARIA stays frozen during an accepted drag, then matches the last candidate', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Constrained')
+    const handle = page.getByTestId('constrained-handle-0')
+    await expect(handle).toHaveAttribute('aria-valuenow', '40')
+    await expect(handle).toHaveAttribute('aria-valuemin', '20')
+    await expect(handle).toHaveAttribute('aria-valuemax', '60')
+
+    const center = await handleCenter(page, 'constrained-handle-0')
+    await page.mouse.move(center.x, center.y)
+    await page.mouse.down()
+    await page.mouse.move(center.x + 20, center.y, { steps: 2 })
+    await page.mouse.move(center.x + 40, center.y, { steps: 2 })
+    await page.mouse.move(center.x + 60, center.y, { steps: 2 })
+    // Three distinct accepted candidates; ARIA never moved mid-gesture.
+    await expect(page.getByTestId('change-count')).not.toHaveText('0')
+    const frozen = await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="constrained-handle-0"]') as HTMLElement
+      return {
+        now: el.getAttribute('aria-valuenow'),
+        min: el.getAttribute('aria-valuemin'),
+        max: el.getAttribute('aria-valuemax'),
+      }
+    })
+    expect(frozen).toEqual({ now: '40', min: '20', max: '60' })
+
+    await page.mouse.up()
+    await expect(handle).toHaveAttribute('aria-valuenow', '55')
+    await expect(handle).toHaveAttribute('aria-valuemin', '20')
+    await expect(handle).toHaveAttribute('aria-valuemax', '60')
+  })
+
+  test('SP-PERF-04: Changed moves write CSS size signals synchronously, ahead of the delayed value', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/DelayedEcho')
+    const center = await handleCenter(page, 'delayed-handle-0')
+    await recordNextPointerId(page, 'delayed-handle-0')
+
+    await page.mouse.move(center.x, center.y)
+    await page.mouse.down()
+    const pointerId = await lastPointerId(page)
+
+    // Dispatch and read inside one turn: the ref write lands before rAF.
+    const seen = await page.evaluate(
+      ({ pointerId, center }) => {
+        window.dispatchEvent(
+          new PointerEvent('pointermove', {
+            pointerId,
+            buttons: 1,
+            clientX: center.x + 50,
+            clientY: center.y,
+            bubbles: true,
+            cancelable: true,
+          })
+        )
+        const root = document.querySelector('[data-testid="test-splitter-delayed"]') as HTMLElement
+        const panels = [...root.querySelectorAll('[data-reference-splitter-panel]')] as HTMLElement[]
+        return {
+          panel0: panels[0]?.style.getPropertyValue('--reference-splitter-panel-size'),
+          panel1: panels[1]?.style.getPropertyValue('--reference-splitter-panel-size'),
+          root1: root.style.getPropertyValue('--reference-splitter-1'),
+          display: document.querySelector('[data-testid="delayed-value-display"]')?.textContent,
+        }
+      },
+      { pointerId, center }
+    )
+    expect(seen).toMatchObject({ panel0: '52.531%', panel1: '47.469%', root1: '52.531%' })
+    expect(seen.display).toContain('Layout: 40% / 60%')
+
+    // Lift where the gesture finished: release re-solves at the lift point,
+    // so lifting at the untouched origin would end at [40,60].
+    await page.mouse.move(center.x + 50, center.y)
+    await page.mouse.up()
+    await expect(page.getByTestId('delayed-ends')).toHaveText('52.531,47.469')
+  })
+
+  test('SP-PERF-05: No requestAnimationFrame polling while idle or to produce drag frames', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Constrained')
+    await page.evaluate(() => {
+      const w = window as unknown as { __spRaf: number; __spOrigRaf: typeof requestAnimationFrame }
+      w.__spRaf = 0
+      w.__spOrigRaf = window.requestAnimationFrame
+      window.requestAnimationFrame = ((...args: [FrameRequestCallback]) => {
+        w.__spRaf += 1
+        return (w.__spOrigRaf as (...a: [FrameRequestCallback]) => number)(...args)
+      }) as typeof requestAnimationFrame
+    })
+
+    await page.waitForTimeout(300)
+    const center = await handleCenter(page, 'constrained-handle-0')
+    await page.mouse.move(center.x, center.y)
+    await page.mouse.down()
+    await page.mouse.move(center.x + 40, center.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 50% / 50%')
+
+    const calls = await page.evaluate(
+      () => (window as unknown as { __spRaf: number }).__spRaf
+    )
+    expect(calls).toBe(0)
+  })
+
+  test('SP-PERF-06: Measured constraints resolve at pointerdown; mid-gesture root changes wait for the next session', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/MeasuredR')
+    const handle = page.getByTestId('measuredr-handle-0')
+
+    // 12r at the pinned 4px root is 48px of 400px: exactly 12.
+    await expect(handle).toHaveAttribute('aria-valuenow', '40')
+    await expect(handle).toHaveAttribute('aria-valuemin', '12')
+    await expect(handle).toHaveAttribute('aria-valuemax', '40')
+
+    // Hold a synthetic drag so the mouse stays free for the mid-gesture swap.
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointerdown',
+      { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1 }
+    )
+    await page.getByTestId('measuredr-toggle-spacing').click()
+    // 12r would now be 96px (24 points), but the session keeps its capture.
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointermove',
+      { pointerId: 7, buttons: 1, dx: -200 },
+      'window'
+    )
+    await expect(page.getByTestId('measuredr-last-request')).toHaveText('12,88')
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointerup',
+      { pointerId: 7, buttons: 0, dx: -200 },
+      'window'
+    )
+    await expect(page.getByTestId('measuredr-change-end-count')).toHaveText('1')
+
+    // The next session captures the new 8px root: min is 24.
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointerdown',
+      { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1 }
+    )
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointermove',
+      { pointerId: 7, buttons: 1, dx: -200 },
+      'window'
+    )
+    await expect(page.getByTestId('measuredr-last-request')).toHaveText('24,76')
+    await dispatchPointer(
+      page,
+      'measuredr-handle-0',
+      'pointerup',
+      { pointerId: 7, buttons: 0, dx: -200 },
+      'window'
+    )
+    await expect(handle).toHaveAttribute('aria-valuemin', '24')
+  })
+
+  test('SP-PERF-07: Document session resources exist only while a pointer session is active', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Nested')
+
+    // Idle stray moves reach no listener: nothing requests anywhere.
+    await page.evaluate(() => {
+      window.dispatchEvent(
+        new PointerEvent('pointermove', {
+          pointerId: 7,
+          buttons: 1,
+          clientX: 400,
+          clientY: 240,
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+      window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true }))
+    })
+    await expect(page.getByTestId('nested-inner-ends')).toHaveText('0')
+    await expect(page.getByTestId('nested-outer-ends')).toHaveText('0')
+    await expect(page.getByTestId('nested-sibling-ends')).toHaveText('0')
+
+    // During the inner drag, only the inner instance holds document resources.
+    const inner = await handleCenter(page, 'nested-inner-handle-0')
+    await page.mouse.move(inner.x, inner.y)
+    await page.mouse.down()
+    await page.mouse.move(inner.x, inner.y + 24, { steps: 3 })
+    const during = await page.evaluate(() => ({
+      inner: document.querySelector('[data-testid="nested-inner"]')?.hasAttribute('data-resizing'),
+      outer: document.querySelector('[data-testid="nested-outer"]')?.hasAttribute('data-resizing'),
+      sibling: document.querySelector('[data-testid="nested-sibling"]')?.hasAttribute('data-resizing'),
+      cursor: document.body.style.cursor,
+      userSelect: document.body.style.userSelect,
+    }))
+    expect(during).toEqual({
+      inner: true,
+      outer: false,
+      sibling: false,
+      cursor: 'row-resize',
+      userSelect: 'none',
+    })
+    await page.mouse.up()
+
+    // After release the document is clean and stray moves are inert again.
+    const after = await page.evaluate(() => ({
+      resizing: document.querySelectorAll('[data-resizing]').length,
+      cursor: document.body.style.cursor,
+      userSelect: document.body.style.userSelect,
+    }))
+    expect(after).toEqual({ resizing: 0, cursor: '', userSelect: '' })
+    await page.evaluate(() => {
+      window.dispatchEvent(
+        new PointerEvent('pointermove', {
+          pointerId: 7,
+          buttons: 1,
+          clientX: 400,
+          clientY: 240,
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+    })
+    await expect(page.getByTestId('nested-inner-ends')).toHaveText('1')
+    await expect(page.getByTestId('nested-outer-ends')).toHaveText('0')
+    await expect(page.getByTestId('nested-sibling-ends')).toHaveText('0')
+  })
+})
+
+test.describe('Splitter controlled sessions and compositions', () => {
+  test('SP-CTRL-01: Pointer and keyboard resize each request one complete normalized array', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Sidebar')
+
+    const at = await handleCenter(page, 'sidebar-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 40, at.y, { steps: 4 })
+    await page.mouse.up()
+    const dragRequest = (await page.getByTestId('sidebar-last-request').innerText())
+      .split(',')
+      .map(Number)
+    expect(dragRequest).toHaveLength(2)
+    expect(dragRequest.every((entry) => Number.isFinite(entry) && entry >= 0)).toBe(true)
+    expect(dragRequest[0]! + dragRequest[1]!).toBeCloseTo(100, 3)
+
+    await page.getByTestId('sidebar-handle-0').focus()
+    await page.keyboard.press('ArrowLeft')
+    const keyRequest = (await page.getByTestId('sidebar-last-request').innerText())
+      .split(',')
+      .map(Number)
+    expect(keyRequest).toHaveLength(2)
+    expect(keyRequest.every((entry) => Number.isFinite(entry) && entry >= 0)).toBe(true)
+    expect(keyRequest[0]! + keyRequest[1]!).toBeCloseTo(100, 3)
+  })
+
+  test('SP-CTRL-02: Rejected gestures follow the solver on CSS signals, then snap back to value', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Rejecting')
+
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointerdown',
+      { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1 }
+    )
+    // Move endpoint in absolute coords: the move resizes Panels (the Handle
+    // travels with them), so dx-relative addressing would double-count.
+    const origin = await page.getByTestId('rejecting-handle-0').boundingBox()
+    const endX = (origin?.x ?? 0) + (origin?.width ?? 0) / 2 + 50
+    const endY = (origin?.y ?? 0) + (origin?.height ?? 0) / 2
+    // 50px of 399px Panel space: the request is exactly [52.531, 47.469].
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointermove',
+      { pointerId: 7, buttons: 1, xy: { x: endX, y: endY } },
+      'window'
+    )
+    await expect(page.getByTestId('rejecting-requests')).toHaveText('A:[52.531,47.469]')
+    const during = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="test-splitter-rejecting"]') as HTMLElement
+      const panels = [...root.querySelectorAll('[data-reference-splitter-panel]')] as HTMLElement[]
+      const handle = document.querySelector('[data-testid="rejecting-handle-0"]') as HTMLElement
+      return {
+        panel0: panels[0]?.style.getPropertyValue('--reference-splitter-panel-size'),
+        panel1: panels[1]?.style.getPropertyValue('--reference-splitter-panel-size'),
+        now: handle.getAttribute('aria-valuenow'),
+      }
+    })
+    expect(during).toEqual({ panel0: '52.531%', panel1: '47.469%', now: '40' })
+
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointerup',
+      { pointerId: 7, buttons: 0, xy: { x: endX, y: endY } },
+      'window'
+    )
+    await expect(page.getByTestId('rejecting-ends')).toHaveText('A:[52.531,47.469]')
+    const snapped = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="test-splitter-rejecting"]') as HTMLElement
+      const panels = [...root.querySelectorAll('[data-reference-splitter-panel]')] as HTMLElement[]
+      const handle = document.querySelector('[data-testid="rejecting-handle-0"]') as HTMLElement
+      return {
+        panel0: panels[0]?.style.getPropertyValue('--reference-splitter-panel-size'),
+        panel1: panels[1]?.style.getPropertyValue('--reference-splitter-panel-size'),
+        root1: root.style.getPropertyValue('--reference-splitter-1'),
+        now: handle.getAttribute('aria-valuenow'),
+      }
+    })
+    expect(snapped).toEqual({ panel0: '40%', panel1: '60%', root1: '40%', now: '40' })
+  })
+
+  test('SP-CTRL-04: Constrained no-ops request nothing and keep focus, ARIA, and hooks', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Constrained')
+    const handle = page.getByTestId('constrained-handle-0')
+    const changes = page.getByTestId('change-count')
+
+    await handle.focus()
+    await page.keyboard.press('End')
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 60% / 40%')
+    // The setup key ends its own session; the no-op drag below must add none.
+    const before = await changes.innerText()
+    const beforeEnd = await page.getByTestId('change-end-count').innerText()
+
+    // Drag farther past the bound: silent, stable, still resizing-styled.
+    const at = await handleCenter(page, 'constrained-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 80, at.y, { steps: 4 })
+    const during = await page.evaluate(() => ({
+      cursor: document.body.style.cursor,
+      resizing: document
+        .querySelector('[data-testid="test-splitter-constrained"]')
+        ?.hasAttribute('data-resizing'),
+    }))
+    expect(during).toEqual({ cursor: 'col-resize', resizing: true })
+    await page.mouse.up()
+
+    await expect(changes).toHaveText(before)
+    await expect(page.getByTestId('change-end-count')).toHaveText(beforeEnd)
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 60% / 40%')
+    await expect(handle).toHaveAttribute('aria-valuenow', '60')
+    const focused = await page.evaluate(
+      () => document.activeElement?.getAttribute('data-testid') === 'constrained-handle-0'
+    )
+    expect(focused).toBe(true)
+  })
+
+  test('SP-CTRL-05: Mid-drag echoes never rebase the origin while live numerics and handlers apply', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Rejecting')
+    const origin = await handleCenter(page, 'rejecting-handle-0')
+
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointerdown',
+      { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, buttons: 1, xy: origin }
+    )
+    // Absolute coordinates: the echo moves the Handle, the origin must not.
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointermove',
+      { pointerId: 7, buttons: 1, xy: { x: origin.x + 20, y: origin.y } },
+      'window'
+    )
+    await expect(page.getByTestId('rejecting-requests')).toHaveText('A:[45.013,54.987]')
+
+    await page.getByTestId('rejecting-echo').click()
+    await page.getByTestId('rejecting-swap-constraints').click()
+    await page.getByTestId('rejecting-swap-handler').click()
+    await expect(page.getByTestId('rejecting-handler')).toHaveText('B')
+
+    // Solved from origin [40,60] + 50px under the NEW max: clamps to 50.
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointermove',
+      { pointerId: 7, buttons: 1, xy: { x: origin.x + 50, y: origin.y } },
+      'window'
+    )
+    await expect(page.getByTestId('rejecting-requests')).toHaveText(
+      'A:[45.013,54.987] | B:[50,50]'
+    )
+    const vars = await page.evaluate(() => {
+      const panels = [
+        ...document.querySelectorAll(
+          '[data-testid="test-splitter-rejecting"] [data-reference-splitter-panel]'
+        ),
+      ] as HTMLElement[]
+      return panels.map((p) => p.style.getPropertyValue('--reference-splitter-panel-size'))
+    })
+    expect(vars).toEqual(['50%', '50%'])
+
+    await dispatchPointer(
+      page,
+      'rejecting-handle-0',
+      'pointerup',
+      { pointerId: 7, buttons: 0, xy: { x: origin.x + 50, y: origin.y } },
+      'window'
+    )
+    await expect(page.getByTestId('rejecting-ends')).toHaveText('B:[50,50]')
+  })
+
+  test('SP-COMP-03: Nested flex partitions isolate callbacks, ARIA, hooks, and outer commits', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Nested')
+    await page.waitForTimeout(150)
+    const outerBefore = await page.evaluate(
+      () => (window as unknown as { __spCommits: Record<string, number> }).__spCommits['nested-outer-panel-0']
+    )
+
+    const inner = await handleCenter(page, 'nested-inner-handle-0')
+    await page.mouse.move(inner.x, inner.y)
+    await page.mouse.down()
+    await page.mouse.move(inner.x, inner.y + 48, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('nested-inner-display')).toHaveText('Inner: 70% / 30%')
+    await expect(page.getByTestId('nested-outer-display')).toHaveText('Outer: 40% / 60%')
+    await expect(page.getByTestId('nested-inner-ends')).toHaveText('1')
+    await expect(page.getByTestId('nested-outer-ends')).toHaveText('0')
+
+    // Inner moves never committed the outer tree's memoized descendants.
+    await page.waitForTimeout(100)
+    const outerAfter = await page.evaluate(
+      () => (window as unknown as { __spCommits: Record<string, number> }).__spCommits['nested-outer-panel-0']
+    )
+    expect(outerAfter).toBe(outerBefore)
+
+    const outer = await handleCenter(page, 'nested-outer-handle-0')
+    await page.mouse.move(outer.x, outer.y)
+    await page.mouse.down()
+    await page.mouse.move(outer.x + 40, outer.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('nested-outer-display')).toHaveText('Outer: 50% / 50%')
+    await expect(page.getByTestId('nested-inner-display')).toHaveText('Inner: 70% / 30%')
+    await expect(page.getByTestId('nested-outer-ends')).toHaveText('1')
+    await expect(page.getByTestId('nested-inner-ends')).toHaveText('1')
+    // No document gesture survives the sequence.
+    const clean = await page.evaluate(() => ({
+      resizing: document.querySelectorAll('[data-resizing]').length,
+      cursor: document.body.style.cursor,
+      userSelect: document.body.style.userSelect,
+    }))
+    expect(clean).toEqual({ resizing: 0, cursor: '', userSelect: '' })
+  })
+
+  test('SP-COMP-04: An inner CSS grid reflows with its Panel while Splitter writes no grid signal', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/InnerGrid')
+
+    const measure = () =>
+      page.evaluate(() => {
+        const grid = document.querySelector('[data-testid="innergrid-grid"]') as HTMLElement
+        const cell0 = document.querySelector('[data-testid="innergrid-cell-0"]') as HTMLElement
+        const cell1 = document.querySelector('[data-testid="innergrid-cell-1"]') as HTMLElement
+        const root = document.querySelector('[data-testid="test-splitter-innergrid"]') as HTMLElement
+        const panel = document.querySelector('[data-testid="innergrid-panel-1"]') as HTMLElement
+        return {
+          gridWidth: grid.getBoundingClientRect().width,
+          cell0: cell0.getBoundingClientRect().width,
+          cell1: cell1.getBoundingClientRect().width,
+          panelWidth: panel.clientWidth,
+          rootStyle: root.getAttribute('style') ?? '',
+          panelStyle: panel.getAttribute('style') ?? '',
+        }
+      })
+
+    const before = await measure()
+    expect(before.rootStyle).not.toContain('grid-template')
+    expect(before.panelStyle).not.toContain('grid-template')
+
+    const at = await handleCenter(page, 'innergrid-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x - 80, at.y, { steps: 5 })
+    await page.mouse.up()
+    await expect(page.getByTestId('innergrid-value-display')).toHaveText('Layout: 20% / 80%')
+
+    const after = await measure()
+    // Both tracks scale with the Panel and keep their 1:2 ratio; the grid's
+    // used width matches the Panel; Splitter wrote no grid signal.
+    expect(after.cell0).toBeGreaterThan(before.cell0 + 10)
+    expect(after.cell1).toBeGreaterThan(before.cell1 + 10)
+    expect(after.cell1 / after.cell0).toBeCloseTo(2, 0)
+    expect(Math.abs(after.gridWidth - after.panelWidth)).toBeLessThanOrEqual(1)
+    expect(after.rootStyle).not.toContain('grid-template')
+    expect(after.panelStyle).not.toContain('grid-template')
   })
 })

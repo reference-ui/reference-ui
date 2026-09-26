@@ -5,10 +5,13 @@ import { describe, expect, it } from 'vitest'
 import {
   adjustLayoutByDelta,
   calculateSeparatorAriaValues,
+  isHandleBlocked,
+  isMeasuredLength,
   resolveConstraintToPercentage,
   validateLayout,
   validatePanelConstraints,
   validatePanelSize,
+  validateSplitterStructure,
 } from './splitter-math'
 
 describe('Splitter math contract', () => {
@@ -349,6 +352,136 @@ describe('Splitter math contract', () => {
         prevLayout: move2,
       })
       expect(move3).toEqual([50, 50])
+    })
+  })
+
+  describe('SP-DOM-02: structural validator (unit slice of the browser case)', () => {
+    it('accepts Panel (Handle Panel)+ with a matching value length', () => {
+      expect(validateSplitterStructure(['panel', 'handle', 'panel'], 2).valid).toBe(true)
+      expect(
+        validateSplitterStructure(['panel', 'handle', 'panel', 'handle', 'panel'], 3).valid
+      ).toBe(true)
+    })
+
+    it('rejects empty and one-Panel trees', () => {
+      const empty = validateSplitterStructure([], 0)
+      expect(empty.valid).toBe(false)
+      expect(empty.error).toContain('at least two Panels')
+      const one = validateSplitterStructure(['panel'], 1)
+      expect(one.valid).toBe(false)
+      expect(one.error).toContain('only one is mounted')
+    })
+
+    it('rejects value length mismatches with an atomic-update diagnostic', () => {
+      const short = validateSplitterStructure(['panel', 'handle', 'panel'], 1)
+      expect(short.valid).toBe(false)
+      expect(short.error).toContain('value has 1 entry but 2 Panels are mounted')
+      expect(short.error).toContain('atomically')
+      const long = validateSplitterStructure(['panel', 'handle', 'panel'], 3)
+      expect(long.valid).toBe(false)
+      expect(long.error).toContain('value has 3 entries but 2 Panels are mounted')
+    })
+
+    it('rejects leading, trailing, and consecutive Handles', () => {
+      for (const sequence of [
+        ['handle', 'panel', 'handle', 'panel'],
+        ['panel', 'handle', 'panel', 'handle'],
+        ['panel', 'handle', 'handle', 'panel'],
+      ] as Array<Array<'panel' | 'handle'>>) {
+        const check = validateSplitterStructure(sequence, 2)
+        expect(check.valid).toBe(false)
+        expect(check.error).toContain('Invalid structure')
+      }
+      // Consecutive Handles trip the count rule with the exact numbers.
+      const doubled = validateSplitterStructure(['panel', 'handle', 'handle', 'panel'], 2)
+      expect(doubled.error).toContain('need exactly 1 Handle, but 2 are mounted')
+    })
+
+    it('rejects consecutive Panels and names the mounted order', () => {
+      const check = validateSplitterStructure(['panel', 'panel'], 2)
+      expect(check.valid).toBe(false)
+      expect(check.error).toContain('need exactly 1 Handle, but 0 are mounted')
+      // Right counts but wrong order (leading Handle) names the sequence.
+      const leading = validateSplitterStructure(['handle', 'panel', 'panel'], 2)
+      expect(leading.valid).toBe(false)
+      expect(leading.error).toContain('strictly alternate')
+      expect(leading.error).toContain('handle → panel → panel')
+    })
+  })
+
+  describe('SP-DOM-08: Handle feasibility probe (unit slice of the browser case)', () => {
+    it('reports feasible when either direction moves the layout', () => {
+      const open = [
+        { minSize: 5, maxSize: 100 },
+        { minSize: 5, maxSize: 100 },
+      ]
+      expect(isHandleBlocked({ layout: [40, 60], panelConstraints: open, handleIndex: 0 })).toBe(
+        false
+      )
+      // One pinned boundary still leaves the other direction: panel 0
+      // sits at its min but can grow.
+      const halfPinned = [
+        { minSize: 40, maxSize: 100 },
+        { minSize: 5, maxSize: 100 },
+      ]
+      expect(
+        isHandleBlocked({ layout: [40, 60], panelConstraints: halfPinned, handleIndex: 0 })
+      ).toBe(false)
+    })
+
+    it('reports blocked when both adjacent Panels are pinned at bounds', () => {
+      const pinned = [
+        { minSize: 40, maxSize: 40 },
+        { minSize: 60, maxSize: 60 },
+      ]
+      expect(isHandleBlocked({ layout: [40, 60], panelConstraints: pinned, handleIndex: 0 })).toBe(
+        true
+      )
+    })
+
+    it('reports feasible when a big drag could still collapse a collapsible Panel', () => {
+      const collapsibleAtMin = [
+        { minSize: 20, maxSize: 100, collapsible: true, collapsedSize: 5 },
+        { minSize: 5, maxSize: 100 },
+      ]
+      expect(
+        isHandleBlocked({ layout: [20, 80], panelConstraints: collapsibleAtMin, handleIndex: 0 })
+      ).toBe(false)
+    })
+
+    it('reports blocked for out-of-range Handles and mismatched tables', () => {
+      const open = [
+        { minSize: 5, maxSize: 100 },
+        { minSize: 5, maxSize: 100 },
+      ]
+      expect(isHandleBlocked({ layout: [40, 60], panelConstraints: open, handleIndex: -1 })).toBe(
+        true
+      )
+      expect(isHandleBlocked({ layout: [40, 60], panelConstraints: open, handleIndex: 1 })).toBe(
+        true
+      )
+      expect(isHandleBlocked({ layout: [40, 60], panelConstraints: [open[0]!], handleIndex: 0 })).toBe(
+        true
+      )
+    })
+  })
+
+  describe('FEATURES #3: measured-length grammar alignment', () => {
+    it('accepts what the resolver accepts, including unitless zero', () => {
+      for (const valid of ['120px', '10rem', '2em', '12r', '20%', '0', '0.0', '12PX', ' 120px ']) {
+        expect(isMeasuredLength(valid)).toBe(true)
+      }
+      expect(resolveConstraintToPercentage('0', 500, null, 5)).toBe(0)
+      expect(resolveConstraintToPercentage('12PX', 400, null, 5)).toBe(3)
+    })
+
+    it('rejects malformed and negative lengths, which the component ignores', () => {
+      for (const invalid of ['invalid-css', 'abc', '12', '-5px', '10pt', '']) {
+        expect(isMeasuredLength(invalid)).toBe(false)
+        expect(validatePanelConstraints([{ min: invalid }]).valid).toBe(false)
+      }
+      // Negative lengths resolve to the fallback instead of poisoning the solver.
+      expect(resolveConstraintToPercentage('-5px', 500, null, 5)).toBe(5)
     })
   })
 
