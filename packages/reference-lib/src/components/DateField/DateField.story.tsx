@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { DateField } from './index'
@@ -254,6 +255,92 @@ export const FormFixture = () => {
         </form>
         <Span fontSize="3r" color="design.text.light" data-testid="form-submitted-payload">
           Payload: {payload || 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ShadowFormFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2024-02-01')
+  const [payload, setPayload] = React.useState('')
+  const [changes, setChanges] = React.useState(0)
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadowRoot, setShadowRoot] = React.useState<ShadowRoot | null>(null)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host || host.shadowRoot) return
+    setShadowRoot(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="shadow-form-fixture-root">
+        <div ref={hostRef} data-testid="shadow-form-host" />
+        {shadowRoot &&
+          createPortal(
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const data = new FormData(e.currentTarget)
+                setPayload(JSON.stringify({ birthday: data.get('birthday') }))
+              }}
+            >
+              <DateField
+                locale="en-US"
+                name="birthday"
+                value={value}
+                onChange={(next) => {
+                  setChanges((c) => c + 1)
+                  setValue(next)
+                }}
+                data-testid="shadow-form-input"
+              />
+              <button type="submit" data-testid="shadow-form-submit">
+                Submit
+              </button>
+            </form>,
+            shadowRoot
+          )}
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-form-value">
+          Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-form-changes">
+          Changes: {changes}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-form-payload">
+          Payload: {payload || 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ShadowPickerFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2026-08-15')
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadowRoot, setShadowRoot] = React.useState<ShadowRoot | null>(null)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host || host.shadowRoot) return
+    setShadowRoot(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="shadow-picker-fixture-root">
+        <div ref={hostRef} data-testid="shadow-picker-host" />
+        {shadowRoot &&
+          createPortal(
+            <DateField locale="en-US" value={value} onChange={setValue}>
+              <DateField.Picker data-testid="shadow-picker" />
+            </DateField>,
+            shadowRoot
+          )}
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-picker-value">
+          Value: {value ?? 'None'}
         </Span>
       </Div>
     </ReferenceLibrary>

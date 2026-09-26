@@ -32,7 +32,7 @@ export default {
           <DateField.Input />
           <DateField.Trigger />
           <DateField.Picker>
-            <Calendar value={value} onChange={setValue}>
+            <Calendar locale="en-US" value={value} onChange={setValue}>
               <Calendar.Header>
                 <Calendar.PrevButton />
                 <Calendar.Heading />

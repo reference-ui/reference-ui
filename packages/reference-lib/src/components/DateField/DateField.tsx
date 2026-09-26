@@ -120,15 +120,16 @@ DateFieldPicker.displayName = 'DateFieldPicker'
 
 export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof Calendar>) {
   const context = React.useContext(DateFieldContext)
-  // isDateUnavailable stays DateField-side: Calendar has no such prop yet (Calendar #6),
-  // so passing it would leak a function onto the grid DOM node.
+  // Context isDateUnavailable stays DateField-side until DateField
+  // PATCHES #4 wires the bound alias; a caller-provided predicate spreads
+  // through `rest` onto the Calendar #6 prop and works today.
   // Single-spread object: Calendar props are a mode-keyed union, so
-  // caller `value`/`onChange` merge explicitly and everything else spreads
-  // through. Caller props still override context, as before.
-  const { value: callerValue, onChange: callerOnChange, ...rest } = props
+  // caller `value`/`onChange`/`locale` merge explicitly and everything
+  // else spreads through. Caller props still override context, as before.
+  const { value: callerValue, onChange: callerOnChange, locale: callerLocale, ...rest } = props
   const calendarProps = {
     value: callerValue ?? context?.value ?? null,
-    locale: context?.locale,
+    locale: callerLocale ?? context?.locale,
     min: context?.min,
     max: context?.max,
     onChange: callerOnChange ?? ((nextVal: ISODate) => context?.handleDateSelect(nextVal)),

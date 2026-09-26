@@ -74,6 +74,18 @@ no visual delta (all 8 frozen snapshots pass unmodified).
 | CT | 20 titles green (3 pre-existing + 15 `DF-*` + 2 FEATURES proofs); 8 frozen snapshots unmodified |
 | Vitest | 28 tests (25 parse-kit + 3 `renderToString` component proofs carrying `DF-FMT-06` / `DF-BND-04`) |
 
+### PATCHES #7 shadow remainder (2026-09-26, shadow-remainder crew)
+
+Overlay FEATURES #1 (automatic `getRootNode` shadow destination rule)
+shipped in-tree, unblocking PATCHES #7. Landed test-only per "zero
+DateField design": two shadow fixtures + two honest CT proofs, no
+`DateField.tsx` change, no new snapshots.
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 19 / 64 |
+| CT | 22 titles green (3 pre-existing + 17 `DF-*` + 2 FEATURES proofs); 8 frozen snapshots unmodified |
+
 ### Gaps & incoherence
 
 - `defaultValue` (uncontrolled) still exists. Freeze: required `value` + `locale`;
@@ -134,6 +146,14 @@ windows; min/max clamp.
 - `[x]` `DF-BND-02` — programmatic out-of-range value displays with managed
   `aria-invalid` / `data-invalid` (asserted against ISO display, not locale
   text; `invalid`-prop union completes with the PATCHES #6 trio follow-up)
+- `[x]` `DF-ENV-01` — childless named field inside an open ShadowRoot:
+  shadow tree owns the inputs, typing publishes `onChange` (scoped
+  events), same-tree submit serializes canonical ISO via the hidden input
+- `[x]` `DF-COMP-04` — folded picker inside an open ShadowRoot: focus
+  alone does not open, `Alt+ArrowDown` opens, the picker portals into the
+  owning shadow root (never `document.body`) via the Overlay automatic
+  destination rule, Escape closes, trigger toggle + day commit bubble to
+  light-DOM state and dismiss
 - `[ ]` `DF-FMT-01..05`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-01`, `DF-BND-03`,
   `DF-KEY-01/02/03/04/07`,
   `DF-CAL-02`, `DF-CAL-04`, `DF-RANGE-*`, `DF-FRM-03`, `DF-FRM-05`, `DF-ENV-02`,
@@ -141,8 +161,9 @@ windows; min/max clamp.
   controlled-locale rewrite (dirty sessions, locale display, stepping, Range);
   forbidden in this mission. Pure-kit coverage for the FMT/EDT/KEY/BND logic
   exists in `parse.test.ts` (no `DF-*` IDs claimed).
-- `[ ]` `DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition; needs the
-  Overlay-crew shadow-portal contract before a DateField test can be honest
+- ~~`DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition~~ — landed
+  (PATCHES #7): the Overlay-crew shadow-portal contract (Overlay FEATURES
+  #1, automatic rule) shipped and both proofs are green
 - `[ ]` `DF-MAN-01`, `DF-MAN-02` — manual release gates
 
 ### Work order

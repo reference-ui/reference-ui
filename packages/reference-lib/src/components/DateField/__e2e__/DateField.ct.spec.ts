@@ -404,20 +404,24 @@ test.describe('DateField quarantine re-targets', () => {
     await trigger.click()
     await expect(picker).toBeVisible()
 
-    // Below min: rejected, no commit, no dismiss, no clamp.
-    await page.locator('button[data-date="2026-08-05"]').click()
+    // Below min: disabled-unclickable (Calendar #6) — no commit, no dismiss.
+    await expect(page.locator('button[data-date="2026-08-05"]')).toBeDisabled()
+    await page.locator('button[data-date="2026-08-05"]').click({ force: true })
     await expect(display).toHaveText('Value: 2026-08-15')
     await expect(changes).toHaveText('Changes: 0')
     await expect(input).toHaveValue('2026-08-15')
     await expect(picker).toBeVisible()
 
-    // Above max: rejected the same way.
-    await page.locator('button[data-date="2026-08-25"]').click()
+    // Above max: disabled-unclickable the same way.
+    await expect(page.locator('button[data-date="2026-08-25"]')).toBeDisabled()
+    await page.locator('button[data-date="2026-08-25"]').click({ force: true })
     await expect(display).toHaveText('Value: 2026-08-15')
     await expect(changes).toHaveText('Changes: 0')
     await expect(picker).toBeVisible()
 
-    // Marked unavailable: rejected the same way.
+    // Marked unavailable: day stays enabled (context isDateUnavailable reaches
+    // Calendar only via PATCHES #4, still blocked) — DateField-side rejection
+    // refuses the commit without dismiss.
     await page.locator('button[data-date="2026-08-12"]').click()
     await expect(display).toHaveText('Value: 2026-08-15')
     await expect(changes).toHaveText('Changes: 0')
@@ -474,5 +478,80 @@ test.describe('DateField quarantine re-targets', () => {
 
     await input.fill('')
     await expect(page.getByTestId('childless-changelog-type')).toHaveText('LastType: string')
+  })
+
+  test('DF-ENV-01: DateField associates form and events inside an open ShadowRoot', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/ShadowFormFixture')
+
+    await expect(page.getByTestId('shadow-form-host')).toBeVisible()
+
+    // Quarantine parity: the shadow tree owns the field's inputs.
+    const shadowInputCount = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-form-host"]')
+      return host?.shadowRoot ? host.shadowRoot.querySelectorAll('input').length : 0
+    })
+    expect(shadowInputCount).toBeGreaterThan(0)
+
+    // Scoped events: typing inside the shadow tree publishes onChange.
+    const input = page.getByTestId('shadow-form-input')
+    await expect(input).toBeVisible()
+    await input.fill('2024-05-15')
+    await expect(page.getByTestId('shadow-form-changes')).toHaveText('Changes: 1')
+    await expect(page.getByTestId('shadow-form-value')).toHaveText('Value: 2024-05-15')
+
+    // Same-tree form work: submit serializes canonical ISO through the
+    // shadow-hosted hidden input.
+    await page.getByTestId('shadow-form-submit').click()
+    await expect(page.getByTestId('shadow-form-payload')).toContainText('"birthday":"2024-05-15"')
+  })
+
+  test('DF-COMP-04: DateField picker composes inside an open ShadowRoot', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/DateField/DateField/ShadowPickerFixture')
+
+    await expect(page.getByTestId('shadow-picker-host')).toBeVisible()
+
+    const input = page.locator('[data-reference-date-input]')
+    const trigger = page.locator('button[data-reference-date-trigger]')
+    const picker = page.getByTestId('shadow-picker')
+
+    await expect(input).toBeVisible()
+    await expect(trigger).toBeVisible()
+
+    // Deliberate activation holds in shadow: focus alone does not open.
+    await input.focus()
+    await expect(picker).toHaveCount(0)
+
+    // Keyboard open, then the picker portals into the owning shadow root —
+    // the Overlay automatic destination rule — never document.body.
+    await page.keyboard.press('Alt+ArrowDown')
+    await expect(picker).toBeVisible()
+    const dest = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-picker-host"]') as HTMLElement
+      return {
+        inShadow: Boolean(host.shadowRoot?.querySelector('[data-testid="shadow-picker"]')),
+        inBody: Boolean(document.body.querySelector(':scope > [data-testid="shadow-picker"]')),
+      }
+    })
+    expect(dest.inShadow).toBe(true)
+    expect(dest.inBody).toBe(false)
+
+    // Keyboard dismiss.
+    await page.keyboard.press('Escape')
+    await expect(picker).toHaveCount(0)
+
+    // Trigger toggle opens; day commit bubbles through the shadow boundary
+    // to light-DOM state and dismisses.
+    await trigger.click()
+    await expect(picker).toBeVisible()
+    await page.locator('button[data-date="2026-08-25"]').click()
+    await expect(picker).toHaveCount(0)
+    await expect(page.getByTestId('shadow-picker-value')).toHaveText('Value: 2026-08-25')
+    await expect(input).toHaveValue('2026-08-25')
   })
 })
