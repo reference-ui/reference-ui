@@ -33,15 +33,15 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | Form | hidden canonical when `name` set; no `setCustomValidity` for constraints |
 | Step | one lattice; Shift = `10 * step`; no wheel |
 
-### Status (2026-09-10; proofs updated 2026-09-25)
+### Status (2026-09-10; proofs updated 2026-09-26)
 
 | | |
 | :--- | :--- |
 | Engine | Prototype spinbutton + live `Number()` clamp. |
 | Production | **No.** |
-| Named `[x]` | 24 / 148 |
-| Playwright | 16 CT (5 pre-existing snapshot + 11 assertion-only landing) |
-| Vitest | 16 contract IDs (15 tests: 13 behavior + 2 type) |
+| Named `[x]` | 36 / 148 |
+| Playwright | 17 CT (5 pre-existing snapshot + 12 assertion-only landing) |
+| Vitest | 27 contract IDs (24 tests: 22 behavior + 2 type) |
 
 ### Gaps & incoherence
 
@@ -70,16 +70,24 @@ smallStep/largeStep.
 
 - `[x]` `NF-TYPE-01`, `NF-TYPE-02`, `NF-TYPE-03`, `NF-DOM-05`,
   `NF-DOM-06`, `NF-MATH-01`, `NF-MATH-02`, `NF-MATH-07`, `NF-MATH-08`,
-  `NF-MATH-14`, `NF-EDIT-04`, `NF-EDIT-13`, `NF-KEY-01`, `NF-KEY-02`,
-  `NF-KEY-03`, `NF-KEY-04`, `NF-KEY-05`, `NF-KEY-07`, `NF-STEP-01`,
-  `NF-STEP-02`, `NF-STEP-09`, `NF-STEP-11`, `NF-ENV-01`, `NF-ENV-05`
+  `NF-MATH-14`, `NF-EDIT-04`, `NF-EDIT-13`, `NF-EDIT-19`, `NF-KEY-01`,
+  `NF-KEY-02`, `NF-KEY-03`, `NF-KEY-04`, `NF-KEY-05`, `NF-KEY-07`,
+  `NF-STEP-01`, `NF-STEP-02`, `NF-STEP-03`, `NF-STEP-04`, `NF-STEP-05`,
+  `NF-STEP-06`, `NF-STEP-07`, `NF-STEP-08`, `NF-STEP-09`, `NF-STEP-10`,
+  `NF-STEP-11`, `NF-STEP-12`, `NF-STEP-13`, `NF-STEP-14`, `NF-STEP-15`,
+  `NF-ENV-01`, `NF-ENV-05`
   (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
   to the current spinbutton + uncontrolled engine: spinbutton kept per
   frozen visuals; `defaultValue` + optional `locale` preserved per recon
   exhibit 1; ±Infinity bounds legal as unbounded sentinels; lattice /
   snap / dirty-session / Intl meanings NOT ported. `NF-STEP-02` native
   click only; `NF-STEP-11` root + authored disabled only; `NF-ENV-05`
-  StrictMode-on-19 only.)
+  StrictMode-on-19 only. PATCHES §7 landed 2026-09-26 as standalone
+  hold-repeat on the live-clamp engine: steppers step the current value
+  with one request per step (`NF-STEP-12` adapted — no dirty candidate
+  until PATCHES §1); `NF-STEP-13` without the readOnly branch (lands
+  with PATCHES §5); matrix timing proof at `NF-STEP-04`/`05` still
+  pending outside this package.)
 - `[~]` `NF-DOM-01` — title exists, asserts spinbutton (rewrite)
 - `[ ]` remaining `NF-TYPE-*`, `NF-DOM-*`, `NF-PARSE-*`, `NF-FORMAT-*`,
   remaining `NF-MATH-*` / `NF-EDIT-*`, `NF-COMMIT-*`, remaining `NF-KEY-*`

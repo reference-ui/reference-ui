@@ -9,7 +9,7 @@ export default {
       <Div display="flex" flexDirection="column" gap="3r">
         <NumberField value={value} onChange={setValue} min={0} max={100} step={1}>
           <NumberField.Decrement />
-          <NumberField.Input />
+          <NumberField.Input aria-label="Quantity" />
           <NumberField.Increment />
         </NumberField>
         <Span fontSize="3r" color="design.text.light">Value: {value ?? 'empty'}</Span>
@@ -32,7 +32,7 @@ export default {
   Disabled: () => (
     <NumberField value={7} disabled min={0} max={100}>
       <NumberField.Decrement />
-      <NumberField.Input />
+      <NumberField.Input aria-label="Quantity" />
       <NumberField.Increment />
     </NumberField>
   ),

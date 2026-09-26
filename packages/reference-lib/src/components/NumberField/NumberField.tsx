@@ -140,6 +140,284 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
   }
 )
 
+// Hold-repeat constants (PATCHES §7 / freeze decision 14): an unprevented
+// primary pointerdown steps immediately, the first repeat fires at exactly
+// 400ms, then every 60ms; touch/pen movement beyond 8 CSS px cancels.
+const REPEAT_START_DELAY = 400
+const REPEAT_TICK_DELAY = 60
+const TOUCH_CANCEL_DISTANCE_SQ = 8 * 8
+
+function isTouchLikePointerType(pointerType: string): boolean {
+  return pointerType === 'touch' || pointerType === 'pen'
+}
+
+interface StepperRepeatSession {
+  pointerId: number
+  pointerType: string
+  factor: number
+  startX: number
+  startY: number
+  delayTimer: ReturnType<typeof setTimeout> | null
+  intervalTimer: ReturnType<typeof setInterval> | null
+  ownerWindow: Window | null
+  onOwnerBlur: (() => void) | null
+}
+
+type StepperRepeatEndReason = 'release' | 'leave' | 'cancel'
+
+interface StepperRepeatUserHandlers {
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  onPointerDown?: React.PointerEventHandler<HTMLButtonElement>
+  onPointerUp?: React.PointerEventHandler<HTMLButtonElement>
+  onPointerMove?: React.PointerEventHandler<HTMLButtonElement>
+  onPointerEnter?: React.PointerEventHandler<HTMLButtonElement>
+  onPointerLeave?: React.PointerEventHandler<HTMLButtonElement>
+  onPointerCancel?: React.PointerEventHandler<HTMLButtonElement>
+  onLostPointerCapture?: React.PointerEventHandler<HTMLButtonElement>
+}
+
+// Shared press-and-hold machine for both steppers (NF-STEP-02..08/10/12..15,
+// re-targeted to the live-clamp engine: steppers step the current value with
+// one request per step — there is no dirty candidate until PATCHES §1).
+// No explicit pointer capture: leave must end the session (NF-STEP-07).
+function useStepperRepeat(options: {
+  action: ((factor: number) => void) | undefined
+  focusInput: (() => void) | undefined
+  disabled: boolean
+  atBound: boolean
+  user: StepperRepeatUserHandlers
+}) {
+  const { action, focusInput, disabled, atBound, user } = options
+  const [pressed, setPressed] = React.useState(false)
+  const sessionRef = React.useRef<StepperRepeatSession | null>(null)
+  const suppressClickRef = React.useRef(false)
+  const reentryArmedRef = React.useRef(false)
+  const disarmReentryRef = React.useRef<(() => void) | null>(null)
+  // Timer ticks must step from the latest committed value, so they read
+  // through a ref mirror refreshed every render (context callbacks rebind).
+  const actionRef = React.useRef(action)
+  actionRef.current = action
+
+  const clearSessionTimers = React.useCallback(() => {
+    const session = sessionRef.current
+    if (!session) return
+    if (session.delayTimer !== null) {
+      clearTimeout(session.delayTimer)
+      session.delayTimer = null
+    }
+    if (session.intervalTimer !== null) {
+      clearInterval(session.intervalTimer)
+      session.intervalTimer = null
+    }
+    if (session.ownerWindow && session.onOwnerBlur) {
+      session.ownerWindow.removeEventListener('blur', session.onOwnerBlur)
+      session.onOwnerBlur = null
+    }
+  }, [])
+
+  const endSession = React.useCallback(
+    (reason: StepperRepeatEndReason) => {
+      const session = sessionRef.current
+      if (!session) return
+      clearSessionTimers()
+      sessionRef.current = null
+      setPressed(false)
+      // Only leave disarms: the pointer is off the button so no compatibility
+      // click can follow. Release/cancel arm suppression for the click the
+      // browser may still deliver (NF-STEP-03/06/15).
+      suppressClickRef.current = reason !== 'leave'
+      disarmReentryRef.current?.()
+      disarmReentryRef.current = null
+      if (reason !== 'leave') {
+        reentryArmedRef.current = false
+        return
+      }
+      // Leave arms pressed re-entry (NF-STEP-08). Any release anywhere
+      // disarms, so drags starting on other elements never step.
+      reentryArmedRef.current = true
+      const win = session.ownerWindow
+      if (win) {
+        const disarm = () => {
+          reentryArmedRef.current = false
+          disarmReentryRef.current = null
+        }
+        disarmReentryRef.current = () => win.removeEventListener('pointerup', disarm)
+        win.addEventListener('pointerup', disarm, { once: true })
+      }
+    },
+    [clearSessionTimers]
+  )
+
+  const startSession = (e: React.PointerEvent<HTMLButtonElement>, factor: number) => {
+    // Silent replace: clear any previous session's timers/listeners without
+    // touching pressed or suppression (pressed re-entry, NF-STEP-08).
+    clearSessionTimers()
+    disarmReentryRef.current?.()
+    disarmReentryRef.current = null
+    reentryArmedRef.current = false
+    const ownerWindow = e.currentTarget.ownerDocument?.defaultView ?? null
+    const session: StepperRepeatSession = {
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
+      factor,
+      startX: e.clientX,
+      startY: e.clientY,
+      delayTimer: null,
+      intervalTimer: null,
+      ownerWindow,
+      onOwnerBlur: null,
+    }
+    sessionRef.current = session
+    suppressClickRef.current = true
+    setPressed(true)
+    if (ownerWindow) {
+      const onOwnerBlur = () => endSession('cancel')
+      session.onOwnerBlur = onOwnerBlur
+      ownerWindow.addEventListener('blur', onOwnerBlur)
+    }
+    // Immediate step (NF-STEP-03); the initiating modifier is retained for
+    // the whole hold because ticks reuse the stored factor.
+    actionRef.current?.(factor)
+    // Mouse activation focuses or retains Input; touch/pen must not force
+    // focus and pop the software keyboard (NF-STEP-10).
+    if (!isTouchLikePointerType(e.pointerType)) {
+      focusInput?.()
+    }
+    session.delayTimer = setTimeout(() => {
+      if (sessionRef.current !== session) return
+      actionRef.current?.(session.factor)
+      session.intervalTimer = setInterval(() => {
+        if (sessionRef.current !== session) return
+        actionRef.current?.(session.factor)
+      }, REPEAT_TICK_DELAY)
+    }, REPEAT_START_DELAY)
+  }
+
+  // Unmount/part removal ends the session with no stale callback (NF-STEP-14).
+  React.useEffect(() => {
+    return () => {
+      clearSessionTimers()
+      sessionRef.current = null
+      disarmReentryRef.current?.()
+      disarmReentryRef.current = null
+    }
+  }, [clearSessionTimers])
+
+  // Disable, part-disable, or reaching the bound ends an active hold
+  // immediately with no late callback (NF-STEP-13, adapted: this engine has
+  // no readOnly prop — that branch lands with PATCHES §5).
+  React.useEffect(() => {
+    if (sessionRef.current && (disabled || atBound)) {
+      endSession('cancel')
+    }
+  }, [disabled, atBound, endSession])
+
+  const handlePointerDown: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerDown?.(e)
+    // A fresh physical press voids any pending compat-click expectation.
+    suppressClickRef.current = false
+    reentryArmedRef.current = false
+    disarmReentryRef.current?.()
+    disarmReentryRef.current = null
+    // Secondary/auxiliary buttons stay native, never step (NF-STEP-09).
+    if (e.button !== 0) return
+    if (disabled || e.defaultPrevented || !action) return
+    if (!e.isPrimary) {
+      // A second pointer while held is the pinch branch: cancel the active
+      // session, never start another (NF-STEP-15).
+      if (sessionRef.current) endSession('cancel')
+      return
+    }
+    e.preventDefault()
+    startSession(e, e.shiftKey ? 10 : 1)
+  }
+
+  const handlePointerMove: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerMove?.(e)
+    const session = sessionRef.current
+    if (!session || e.pointerId !== session.pointerId) return
+    // Only touch/pen movement cancels; mouse uses leave (NF-STEP-15).
+    if (!isTouchLikePointerType(session.pointerType)) return
+    const dx = session.startX - e.clientX
+    const dy = session.startY - e.clientY
+    // Squared comparison: exactly 8px retains, beyond 8px cancels.
+    if (dx * dx + dy * dy > TOUCH_CANCEL_DISTANCE_SQ) {
+      endSession('cancel')
+    }
+  }
+
+  const endMatchingSession = (e: React.PointerEvent<HTMLButtonElement>, reason: StepperRepeatEndReason) => {
+    const session = sessionRef.current
+    if (!session || e.pointerId !== session.pointerId) return
+    endSession(reason)
+  }
+
+  const handlePointerUp: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerUp?.(e)
+    endMatchingSession(e, 'release')
+  }
+
+  const handlePointerCancel: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerCancel?.(e)
+    endMatchingSession(e, 'cancel')
+  }
+
+  const handleLostPointerCapture: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onLostPointerCapture?.(e)
+    endMatchingSession(e, 'cancel')
+  }
+
+  const handlePointerLeave: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerLeave?.(e)
+    endMatchingSession(e, 'leave')
+  }
+
+  const handlePointerEnter: React.PointerEventHandler<HTMLButtonElement> = e => {
+    user.onPointerEnter?.(e)
+    if (sessionRef.current) return
+    if ((e.buttons & 1) === 0) {
+      // Button-less hover disarms stale re-entry (release outside the window).
+      reentryArmedRef.current = false
+      return
+    }
+    if (!reentryArmedRef.current) return
+    if (disabled || !action) return
+    if (!e.isPrimary) return
+    // Pressed re-entry steps immediately with a fresh 400ms delay; it never
+    // resumes the old 60ms cadence (NF-STEP-08).
+    startSession(e, e.shiftKey ? 10 : 1)
+  }
+
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = e => {
+    user.onClick?.(e)
+    // Compatibility click after an owned pointer session never duplicates
+    // the pointerdown step (NF-STEP-03/10).
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false
+      return
+    }
+    if (e.button !== 0) return
+    if (disabled || e.defaultPrevented || !action) return
+    // Keyboard, AT, and programmatic activation without an owned pointerdown
+    // performs exactly one step (NF-STEP-02); Shift selects the fixed coarse
+    // delta while Alt never creates another amount.
+    action(e.shiftKey ? 10 : 1)
+    focusInput?.()
+  }
+
+  return {
+    pressed,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerLeave,
+    handlePointerEnter,
+    handlePointerCancel,
+    handleLostPointerCapture,
+    handleClick,
+  }
+}
+
 export type NumberFieldIncrementProps = PrimitiveProps<'button'>
 
 export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFieldIncrementProps>(
@@ -150,8 +428,15 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
       style,
       onClick,
       onPointerDown,
+      onPointerUp,
+      onPointerMove,
+      onPointerEnter,
+      onPointerLeave,
+      onPointerCancel,
+      onLostPointerCapture,
       type: _managedType,
       tabIndex: _managedTabIndex,
+      'data-pressed': _managedPressed,
       disabled: authoredDisabled,
       ...props
     },
@@ -163,25 +448,28 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
     // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
     // remains consumer-overridable via the trailing spread.
     const isDisabled = context?.disabled || authoredDisabled || false
+    const value = context?.value ?? null
+    const max = context?.max
 
-    const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-      onPointerDown?.(e)
-      // Secondary/auxiliary buttons stay native, never step (NF-STEP-09).
-      if (e.button !== 0) return
-      if (!e.defaultPrevented && !isDisabled) {
-        e.preventDefault()
-        context?.focusInput()
-      }
-    }
-
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-      onClick?.(e)
-      if (e.button !== 0) return
-      if (!e.defaultPrevented && !isDisabled) {
-        context?.increment()
-        context?.focusInput()
-      }
-    }
+    // Press-and-hold stepping (PATCHES §7): consumer handlers chain first
+    // inside the hook, so authored pointer props can never clobber the
+    // session machine via the trailing spread.
+    const repeat = useStepperRepeat({
+      action: context ? context.increment : undefined,
+      focusInput: context?.focusInput,
+      disabled: isDisabled,
+      atBound: value !== null && max !== undefined && value >= max,
+      user: {
+        onClick,
+        onPointerDown,
+        onPointerUp,
+        onPointerMove,
+        onPointerEnter,
+        onPointerLeave,
+        onPointerCancel,
+        onLostPointerCapture,
+      },
+    })
 
     return (
       <Button
@@ -190,8 +478,15 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
         tabIndex={-1}
         aria-label="Increment"
         disabled={isDisabled}
-        onClick={handleClick}
-        onPointerDown={handlePointerDown}
+        data-pressed={repeat.pressed ? '' : undefined}
+        onClick={repeat.handleClick}
+        onPointerDown={repeat.handlePointerDown}
+        onPointerUp={repeat.handlePointerUp}
+        onPointerMove={repeat.handlePointerMove}
+        onPointerEnter={repeat.handlePointerEnter}
+        onPointerLeave={repeat.handlePointerLeave}
+        onPointerCancel={repeat.handlePointerCancel}
+        onLostPointerCapture={repeat.handleLostPointerCapture}
         height="100%"
         aspectRatio="1 / 1"
         p="0"
@@ -240,8 +535,15 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
       style,
       onClick,
       onPointerDown,
+      onPointerUp,
+      onPointerMove,
+      onPointerEnter,
+      onPointerLeave,
+      onPointerCancel,
+      onLostPointerCapture,
       type: _managedType,
       tabIndex: _managedTabIndex,
+      'data-pressed': _managedPressed,
       disabled: authoredDisabled,
       ...props
     },
@@ -253,25 +555,28 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
     // structural type/tabIndex stay managed (NF-TYPE-03) while aria-label
     // remains consumer-overridable via the trailing spread.
     const isDisabled = context?.disabled || authoredDisabled || false
+    const value = context?.value ?? null
+    const min = context?.min
 
-    const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-      onPointerDown?.(e)
-      // Secondary/auxiliary buttons stay native, never step (NF-STEP-09).
-      if (e.button !== 0) return
-      if (!e.defaultPrevented && !isDisabled) {
-        e.preventDefault()
-        context?.focusInput()
-      }
-    }
-
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-      onClick?.(e)
-      if (e.button !== 0) return
-      if (!e.defaultPrevented && !isDisabled) {
-        context?.decrement()
-        context?.focusInput()
-      }
-    }
+    // Press-and-hold stepping (PATCHES §7): consumer handlers chain first
+    // inside the hook, so authored pointer props can never clobber the
+    // session machine via the trailing spread.
+    const repeat = useStepperRepeat({
+      action: context ? context.decrement : undefined,
+      focusInput: context?.focusInput,
+      disabled: isDisabled,
+      atBound: value !== null && min !== undefined && value <= min,
+      user: {
+        onClick,
+        onPointerDown,
+        onPointerUp,
+        onPointerMove,
+        onPointerEnter,
+        onPointerLeave,
+        onPointerCancel,
+        onLostPointerCapture,
+      },
+    })
 
     return (
       <Button
@@ -280,8 +585,15 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
         tabIndex={-1}
         aria-label="Decrement"
         disabled={isDisabled}
-        onClick={handleClick}
-        onPointerDown={handlePointerDown}
+        data-pressed={repeat.pressed ? '' : undefined}
+        onClick={repeat.handleClick}
+        onPointerUp={repeat.handlePointerUp}
+        onPointerDown={repeat.handlePointerDown}
+        onPointerMove={repeat.handlePointerMove}
+        onPointerEnter={repeat.handlePointerEnter}
+        onPointerLeave={repeat.handlePointerLeave}
+        onPointerCancel={repeat.handlePointerCancel}
+        onLostPointerCapture={repeat.handleLostPointerCapture}
         height="100%"
         aspectRatio="1 / 1"
         p="0"

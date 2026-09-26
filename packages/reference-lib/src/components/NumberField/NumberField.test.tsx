@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRoot } from 'react-dom/client'
 import { NumberField } from './NumberField'
 
@@ -428,6 +428,730 @@ describe('NumberField keyboard', () => {
     })
     expect(seenDisabled).toEqual([])
     await cleanup(d.container, d.root)
+  })
+})
+
+describe('NumberField hold-repeat (PATCHES §7)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function press(btn: HTMLButtonElement, init?: PointerEventInit) {
+    btn.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        clientX: 10,
+        clientY: 10,
+        ...init,
+      })
+    )
+  }
+
+  function release(btn: HTMLButtonElement, init?: PointerEventInit) {
+    btn.dispatchEvent(
+      new PointerEvent('pointerup', {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        buttons: 0,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        clientX: 10,
+        clientY: 10,
+        ...init,
+      })
+    )
+  }
+
+  function compatClick(btn: HTMLButtonElement, init?: MouseEventInit) {
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ...init }))
+  }
+
+  function holdRender(
+    root: ReturnType<typeof createRoot>,
+    seen: Array<number | null>,
+    setValue: (v: number | null) => void,
+    value: number | null,
+    extra?: { max?: number; disabled?: boolean; incDisabled?: boolean }
+  ) {
+    return root.render(
+      <NumberField
+        value={value}
+        max={extra?.max}
+        disabled={extra?.disabled}
+        onChange={v => {
+          seen.push(v)
+          setValue(v)
+        }}
+      >
+        <NumberField.Decrement />
+        <NumberField.Input />
+        <NumberField.Increment disabled={extra?.incDisabled} />
+      </NumberField>
+    )
+  }
+
+  it('NF-STEP-03: Primary pointerdown should step immediately without a compatibility-click duplicate', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const setValue = (v: number | null) => {
+      current = v
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(root, seen, setValue, current)
+    })
+    const rerender = () =>
+      React.act(async () => {
+        holdRender(root, seen, setValue, current)
+      })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    const input = container.querySelector('input') as HTMLInputElement
+
+    await React.act(async () => {
+      press(inc)
+    })
+    expect(seen).toEqual([11])
+    expect(inc.getAttribute('data-pressed')).toBe('')
+    // Mouse activation focuses the Input (NF-STEP-03 focus policy).
+    expect(document.activeElement).toBe(input)
+    await rerender()
+    await React.act(async () => {
+      release(inc)
+    })
+    expect(inc.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      compatClick(inc)
+    })
+    expect(seen).toEqual([11])
+
+    // Shift press uses the coarse delta and retains it; release still clean.
+    await React.act(async () => {
+      press(inc, { shiftKey: true })
+    })
+    await rerender()
+    expect(seen).toEqual([11, 21])
+    await React.act(async () => {
+      release(inc)
+      compatClick(inc)
+    })
+    expect(seen).toEqual([11, 21])
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-04 / NF-STEP-05 / NF-STEP-12: Repeats should fire at exactly 400ms then every 60ms, one request per step', async () => {
+    // NF-STEP-12 landing adaptation: no dirty candidate exists until
+    // PATCHES §1, so "without an intermediate commit" pins as exactly one
+    // callback per tick from the current value.
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const setValue = (v: number | null) => {
+      current = v
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(root, seen, setValue, current)
+    })
+    const rerender = () =>
+      React.act(async () => {
+        holdRender(root, seen, setValue, current)
+      })
+    const tick = (ms: number) =>
+      React.act(async () => {
+        vi.advanceTimersByTime(ms)
+      })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+
+    await React.act(async () => {
+      press(inc)
+    })
+    await rerender()
+    expect(seen).toEqual([11])
+
+    await tick(399)
+    await rerender()
+    expect(seen).toEqual([11])
+    await tick(1)
+    await rerender()
+    expect(seen).toEqual([11, 12])
+
+    await tick(59)
+    await rerender()
+    expect(seen).toEqual([11, 12])
+    await tick(1)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13])
+    await tick(60)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14])
+    await tick(60)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14, 15])
+
+    await React.act(async () => {
+      release(inc)
+      compatClick(inc)
+    })
+    await tick(1000)
+    expect(seen).toEqual([11, 12, 13, 14, 15])
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-06: Pointer cancel and lost capture should terminate repeat independently', async () => {
+    vi.useFakeTimers()
+    for (const endType of ['pointercancel', 'lostpointercapture'] as const) {
+      const seen: Array<number | null> = []
+      let current: number | null = 10
+      const { container, root } = mount()
+      await React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current
+        )
+      })
+      const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+      await React.act(async () => {
+        press(inc)
+      })
+      await React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current
+        )
+      })
+      expect(seen).toEqual([11])
+      await React.act(async () => {
+        vi.advanceTimersByTime(400)
+      })
+      await React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current
+        )
+      })
+      expect(seen).toEqual([11, 12])
+      await React.act(async () => {
+        inc.dispatchEvent(
+          new PointerEvent(endType, {
+            bubbles: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+          })
+        )
+      })
+      expect(inc.getAttribute('data-pressed')).toBeNull()
+      await React.act(async () => {
+        compatClick(inc)
+      })
+      expect(seen).toEqual([11, 12])
+      await React.act(async () => {
+        vi.advanceTimersByTime(1000)
+      })
+      expect(seen).toEqual([11, 12])
+      await cleanup(container, root)
+    }
+  })
+
+  it('NF-STEP-07: Pointer leave should end the repeat session rather than pause it', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    await React.act(async () => {
+      press(inc)
+    })
+    expect(seen).toEqual([11])
+    await React.act(async () => {
+      // React derives onPointerLeave from pointerout (EnterLeave plugin),
+      // so the harness dispatches pointerout with an outside relatedTarget.
+      inc.dispatchEvent(
+        new PointerEvent('pointerout', {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true,
+          relatedTarget: document.body,
+        })
+      )
+    })
+    expect(inc.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    // No outside callback after leave: the hold is over, not paused.
+    expect(seen).toEqual([11])
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-08: Pressed re-entry should step immediately and start a fresh 400ms delay', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    const rerender = () =>
+      React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current
+        )
+      })
+    const tick = (ms: number) =>
+      React.act(async () => {
+        vi.advanceTimersByTime(ms)
+      })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    // React derives onPointerLeave/Enter from pointerout/pointerover.
+    const leave = () =>
+      inc.dispatchEvent(
+        new PointerEvent('pointerout', {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true,
+          relatedTarget: document.body,
+        })
+      )
+    const enter = (buttons: number) =>
+      inc.dispatchEvent(
+        new PointerEvent('pointerover', {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'mouse',
+          isPrimary: true,
+          buttons,
+          button: 0,
+          relatedTarget: document.body,
+        })
+      )
+
+    await React.act(async () => {
+      press(inc)
+    })
+    await rerender()
+    expect(seen).toEqual([11])
+    // Let the first hold run past its 400ms repeat, then leave.
+    await tick(400)
+    await rerender()
+    expect(seen).toEqual([11, 12])
+    await tick(60)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13])
+    await React.act(async () => {
+      leave()
+    })
+    // Button-less hover disarms stale re-entry: no step.
+    await React.act(async () => {
+      enter(0)
+    })
+    expect(seen).toEqual([11, 12, 13])
+
+    // Leave again (no session: leave is a no-op), re-press, leave, re-enter pressed.
+    await React.act(async () => {
+      press(inc)
+    })
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14])
+    await React.act(async () => {
+      leave()
+    })
+    await React.act(async () => {
+      enter(1)
+    })
+    await rerender()
+    // Immediate step on pressed re-entry, fresh 400ms delay (not the old 60ms cadence).
+    expect(seen).toEqual([11, 12, 13, 14, 15])
+    await tick(399)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14, 15])
+    await tick(1)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14, 15, 16])
+    await tick(59)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14, 15, 16])
+    await tick(1)
+    await rerender()
+    expect(seen).toEqual([11, 12, 13, 14, 15, 16, 17])
+    await React.act(async () => {
+      release(inc)
+    })
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-10: A stationary quick touch activation should produce one step without forced focus', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      press(inc, { pointerType: 'touch' })
+    })
+    expect(seen).toEqual([11])
+    // NumberField itself issues no focus call for touch/pen (software
+    // keyboard outcomes stay exclusively NF-MANUAL-03).
+    expect(document.activeElement).not.toBe(input)
+    await React.act(async () => {
+      release(inc, { pointerType: 'touch' })
+      compatClick(inc)
+    })
+    expect(seen).toEqual([11])
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([11])
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-13: State changes and bounds should terminate active repeat as independent cleanup branches', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 9
+    const { container, root } = mount()
+    const renderAt = (extra?: { max?: number; disabled?: boolean; incDisabled?: boolean }) =>
+      React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current,
+          extra
+        )
+      })
+    // This engine has no readOnly prop — that branch lands with PATCHES §5.
+    await renderAt({ max: 10 })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+
+    // Branch 1: stepping onto the bound ends the hold immediately.
+    await React.act(async () => {
+      press(inc)
+    })
+    expect(seen).toEqual([10])
+    await renderAt({ max: 10 })
+    expect(inc.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([10])
+
+    // Branch 2: root disable mid-hold ends the session with no late callback.
+    current = 5
+    await renderAt({})
+    const inc2 = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    await React.act(async () => {
+      press(inc2)
+    })
+    expect(seen).toEqual([10, 6])
+    await renderAt({ disabled: true })
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([10, 6])
+
+    // Branch 3: disabling the pressed part mid-hold ends the session.
+    current = 5
+    await renderAt({})
+    const inc3 = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    await React.act(async () => {
+      press(inc3)
+    })
+    expect(seen).toEqual([10, 6, 6])
+    await renderAt({ incDisabled: true })
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([10, 6, 6])
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-14: Removal, unmount, and owner-window blur should terminate active repeat', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+
+    // Branch 1: owner-window blur ends the session with no stale callback.
+    await React.act(async () => {
+      press(inc)
+    })
+    expect(seen).toEqual([11])
+    await React.act(async () => {
+      window.dispatchEvent(new Event('blur'))
+    })
+    expect(inc.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([11])
+
+    // Branch 2: pressed-part removal ends the session with no stale callback.
+    // Echo the branch-1 request first so branch 2 steps from 11.
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    await React.act(async () => {
+      press(inc)
+    })
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    expect(seen).toEqual([11, 12])
+    await React.act(async () => {
+      root.render(
+        <NumberField
+          value={current}
+          onChange={v => {
+            seen.push(v)
+            current = v
+          }}
+        >
+          <NumberField.Decrement />
+          <NumberField.Input />
+        </NumberField>
+      )
+    })
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([11, 12])
+    await cleanup(container, root)
+
+    // Branch 3: root unmount ends the session with no stale callback.
+    const second = mount()
+    const seen2: Array<number | null> = []
+    let current2: number | null = 10
+    await React.act(async () => {
+      holdRender(
+        second.root,
+        seen2,
+        v => {
+          current2 = v
+        },
+        current2
+      )
+    })
+    const incB = second.container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    await React.act(async () => {
+      press(incB)
+    })
+    expect(seen2).toEqual([11])
+    await cleanup(second.container, second.root)
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen2).toEqual([11])
+  })
+
+  it('NF-STEP-15: Touch movement, scroll intent, and pinch should cancel repeat without suppressing the gesture', async () => {
+    vi.useFakeTimers()
+    const seen: Array<number | null> = []
+    let current: number | null = 10
+    const { container, root } = mount()
+    await React.act(async () => {
+      holdRender(
+        root,
+        seen,
+        v => {
+          current = v
+        },
+        current
+      )
+    })
+    const rerender = () =>
+      React.act(async () => {
+        holdRender(
+          root,
+          seen,
+          v => {
+            current = v
+          },
+          current
+        )
+      })
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    const moveTouch = (clientX: number, clientY: number) =>
+      inc.dispatchEvent(
+        new PointerEvent('pointermove', {
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: 'touch',
+          isPrimary: true,
+          buttons: 1,
+          clientX,
+          clientY,
+        })
+      )
+
+    await React.act(async () => {
+      press(inc, { pointerType: 'touch', clientX: 10, clientY: 10 })
+    })
+    expect(seen).toEqual([11])
+    // Exactly 8 CSS px retains the session; movement stays uncanceled.
+    let retained = false
+    await React.act(async () => {
+      retained = moveTouch(18, 10)
+    })
+    expect(retained).toBe(true)
+    expect(inc.getAttribute('data-pressed')).toBe('')
+    // Echo the immediate request so the repeat steps from the current base.
+    await rerender()
+    await React.act(async () => {
+      vi.advanceTimersByTime(400)
+    })
+    await rerender()
+    expect(seen).toEqual([11, 12])
+
+    // Beyond 8 CSS px cancels with no further request; gesture uncanceled.
+    let canceledMove = false
+    await React.act(async () => {
+      canceledMove = moveTouch(19, 10)
+    })
+    expect(canceledMove).toBe(true)
+    expect(inc.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seen).toEqual([11, 12])
+    await React.act(async () => {
+      compatClick(inc)
+    })
+    expect(seen).toEqual([11, 12])
+    await cleanup(container, root)
+
+    // Pinch: a second pointer while held cancels the session, never starts another.
+    const pinch = mount()
+    const seenPinch: Array<number | null> = []
+    let currentPinch: number | null = 10
+    await React.act(async () => {
+      holdRender(
+        pinch.root,
+        seenPinch,
+        v => {
+          currentPinch = v
+        },
+        currentPinch
+      )
+    })
+    const incP = pinch.container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    await React.act(async () => {
+      press(incP, { pointerType: 'touch' })
+    })
+    expect(seenPinch).toEqual([11])
+    await React.act(async () => {
+      incP.dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          buttons: 3,
+          pointerId: 2,
+          pointerType: 'touch',
+          isPrimary: false,
+          clientX: 30,
+          clientY: 30,
+        })
+      )
+    })
+    expect(incP.getAttribute('data-pressed')).toBeNull()
+    await React.act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(seenPinch).toEqual([11])
+    await React.act(async () => {
+      compatClick(incP)
+    })
+    expect(seenPinch).toEqual([11])
+    await cleanup(pinch.container, pinch.root)
   })
 })
 
