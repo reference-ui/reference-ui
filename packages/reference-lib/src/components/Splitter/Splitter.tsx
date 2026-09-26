@@ -1,7 +1,56 @@
 import * as React from 'react'
 import { Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import {
+  adjustLayoutByDelta,
+  calculateSeparatorAriaValues,
+  layoutNumbersEqual,
+  validateLayout,
+  validatePanelConstraints,
+  type PanelConstraints,
+} from './splitter-math'
 
 export type SplitterOrientation = 'horizontal' | 'vertical'
+
+// Shipped resize floor: panels clamp to >= 5% unless the author sets minSize.
+// Quarantine defaults this floor to 0; 5 preserves the current branch behavior.
+const DEFAULT_PANEL_MIN_SIZE = 5
+const DEFAULT_PANEL_MAX_SIZE = 100
+
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+function warnSplitter(message: string) {
+  if (globalProcess?.env?.NODE_ENV === 'production') return
+  console.error(`[Reference UI Splitter] ${message}`)
+}
+
+// Collect per-Panel resize constraints from the element tree. Descends through
+// fragments/wrappers but stops at nested Splitter roots (they own their Panels)
+// and never descends into Panel content. Missing indices fall back to defaults,
+// so an unrecognized tree behaves exactly as before.
+function collectPanelConstraints(children: React.ReactNode): Map<number, PanelConstraints> {
+  const found = new Map<number, PanelConstraints>()
+  const visit = (node: React.ReactNode): void => {
+    React.Children.forEach(node, (child) => {
+      if (!React.isValidElement(child)) return
+      const type = child.type as unknown
+      if (type === SplitterPanel) {
+        const props = child.props as SplitterPanelProps
+        found.set(props.index ?? 0, {
+          minSize: props.minSize ?? DEFAULT_PANEL_MIN_SIZE,
+          maxSize: props.maxSize ?? DEFAULT_PANEL_MAX_SIZE,
+          collapsible: props.collapsible,
+          collapsedSize: props.collapsedSize ?? 0,
+        })
+        return
+      }
+      if (type === Splitter) return
+      const props = child.props as { children?: React.ReactNode } | undefined
+      if (props && typeof type !== 'string') visit(props.children)
+    })
+  }
+  visit(children)
+  return found
+}
 
 export type SplitterProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
   orientation?: SplitterOrientation
@@ -17,8 +66,14 @@ interface SplitterContextValue {
   value: number[]
   disabled: boolean
   containerRef: React.RefObject<HTMLDivElement | null>
+  panelConstraints: PanelConstraints[]
   adjustHandle: (handleIndex: number, deltaPercent: number) => void
-  setHandleSizes: (handleIndex: number, nextLeft: number, nextRight: number, isFinal?: boolean) => void
+  resizeFromOrigin: (
+    handleIndex: number,
+    originLayout: number[],
+    deltaPercent: number,
+    isFinal?: boolean
+  ) => void
 }
 
 const SplitterContext = React.createContext<SplitterContextValue | null>(null)
@@ -183,9 +238,20 @@ export function SplitterHandle({
   const context = React.useContext(SplitterContext)
   if (!context) return null
 
-  const { orientation, value, disabled: groupDisabled, adjustHandle, setHandleSizes } = context
+  const {
+    orientation,
+    value,
+    disabled: groupDisabled,
+    panelConstraints,
+    adjustHandle,
+    resizeFromOrigin,
+  } = context
   const isDisabled = disabledProp ?? groupDisabled
-  const currentVal = value[index] ?? 50
+  const separatorAria = calculateSeparatorAriaValues({
+    layout: value,
+    panelConstraints,
+    panelIndex: index,
+  })
   const isHorizontal = orientation === 'horizontal'
 
   const [isDragging, setIsDragging] = React.useState(false)
@@ -195,8 +261,7 @@ export function SplitterHandle({
   const dragStartRef = React.useRef<{
     pointerPos: number
     containerSize: number
-    startLeft: number
-    startRight: number
+    originLayout: number[]
   } | null>(null)
 
   React.useEffect(() => {
@@ -205,29 +270,22 @@ export function SplitterHandle({
     const handleWindowPointerMove = (e: PointerEvent) => {
       if (!dragStartRef.current || isDisabled) return
 
-      const { pointerPos, containerSize, startLeft, startRight } = dragStartRef.current
+      const { pointerPos, containerSize, originLayout } = dragStartRef.current
       const currentPos = isHorizontal ? e.clientX : e.clientY
       const deltaPixels = currentPos - pointerPos
       const deltaPercent = (deltaPixels / containerSize) * 100
 
-      const total = startLeft + startRight
-      let nextLeft = Math.max(5, Math.min(total - 5, startLeft + deltaPercent))
-      let nextRight = total - nextLeft
-
-      setHandleSizes(index, nextLeft, nextRight, false)
+      resizeFromOrigin(index, originLayout, deltaPercent, false)
     }
 
     const handleWindowPointerUp = (e: PointerEvent) => {
       if (dragStartRef.current) {
-        const { pointerPos, containerSize, startLeft, startRight } = dragStartRef.current
+        const { pointerPos, containerSize, originLayout } = dragStartRef.current
         const currentPos = isHorizontal ? e.clientX : e.clientY
         const deltaPixels = currentPos - pointerPos
         const deltaPercent = (deltaPixels / containerSize) * 100
 
-        const total = startLeft + startRight
-        let nextLeft = Math.max(5, Math.min(total - 5, startLeft + deltaPercent))
-        let nextRight = total - nextLeft
-        setHandleSizes(index, nextLeft, nextRight, true)
+        resizeFromOrigin(index, originLayout, deltaPercent, true)
       }
 
       dragStartRef.current = null
@@ -253,7 +311,7 @@ export function SplitterHandle({
       window.removeEventListener('pointerup', handleWindowPointerUp)
       window.removeEventListener('pointercancel', handleWindowPointerUp)
     }
-  }, [isDragging, isDisabled, isHorizontal, index, setHandleSizes])
+  }, [isDragging, isDisabled, isHorizontal, index, resizeFromOrigin])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
@@ -281,12 +339,10 @@ export function SplitterHandle({
 
     if (e.key === 'Home') {
       e.preventDefault()
-      const total = (value[index] ?? 50) + (value[index + 1] ?? 50)
-      setHandleSizes(index, 5, total - 5, true)
+      adjustHandle(index, -(value[index] ?? 50))
     } else if (e.key === 'End') {
       e.preventDefault()
-      const total = (value[index] ?? 50) + (value[index + 1] ?? 50)
-      setHandleSizes(index, total - 5, 5, true)
+      adjustHandle(index, value[index + 1] ?? 50)
     }
   }
 
@@ -335,8 +391,7 @@ export function SplitterHandle({
     dragStartRef.current = {
       pointerPos: isHorizontal ? e.clientX : e.clientY,
       containerSize,
-      startLeft: value[index] ?? 50,
-      startRight: value[index + 1] ?? 50,
+      originLayout: [...value],
     }
   }
 
@@ -344,31 +399,23 @@ export function SplitterHandle({
     onPointerMove?.(e)
     if (!dragStartRef.current || isDisabled) return
 
-    const { pointerPos, containerSize, startLeft, startRight } = dragStartRef.current
+    const { pointerPos, containerSize, originLayout } = dragStartRef.current
     const currentPos = isHorizontal ? e.clientX : e.clientY
     const deltaPixels = currentPos - pointerPos
     const deltaPercent = (deltaPixels / containerSize) * 100
 
-    const total = startLeft + startRight
-    let nextLeft = Math.max(5, Math.min(total - 5, startLeft + deltaPercent))
-    let nextRight = total - nextLeft
-
-    setHandleSizes(index, nextLeft, nextRight, false)
+    resizeFromOrigin(index, originLayout, deltaPercent, false)
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerUp?.(e)
     if (dragStartRef.current) {
-      const { pointerPos, containerSize, startLeft, startRight } = dragStartRef.current
+      const { pointerPos, containerSize, originLayout } = dragStartRef.current
       const currentPos = isHorizontal ? e.clientX : e.clientY
       const deltaPixels = currentPos - pointerPos
       const deltaPercent = (deltaPixels / containerSize) * 100
 
-      const total = startLeft + startRight
-      let nextLeft = Math.max(5, Math.min(total - 5, startLeft + deltaPercent))
-      let nextRight = total - nextLeft
-
-      setHandleSizes(index, nextLeft, nextRight, true)
+      resizeFromOrigin(index, originLayout, deltaPercent, true)
     }
 
     dragStartRef.current = null
@@ -447,9 +494,9 @@ export function SplitterHandle({
         ref={handleRef}
         role="separator"
         tabIndex={isDisabled ? -1 : 0}
-        aria-valuenow={Math.round(currentVal)}
-        aria-valuemin={0}
-        aria-valuemax={100}
+        aria-valuenow={Math.round(separatorAria.valueNow)}
+        aria-valuemin={separatorAria.valueMin}
+        aria-valuemax={separatorAria.valueMax}
         aria-orientation={orientation}
         data-reference-splitter-handle=""
         data-disabled={isDisabled ? '' : undefined}
@@ -513,6 +560,32 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
 
     const containerRef = React.useRef<HTMLDivElement | null>(null)
 
+    const collectedConstraints = collectPanelConstraints(children)
+    const panelConstraints: PanelConstraints[] = value.map(
+      (_, panelIndex) =>
+        collectedConstraints.get(panelIndex) ?? {
+          minSize: DEFAULT_PANEL_MIN_SIZE,
+          maxSize: DEFAULT_PANEL_MAX_SIZE,
+        }
+    )
+
+    if (globalProcess?.env?.NODE_ENV !== 'production') {
+      const layoutCheck = validateLayout(
+        value,
+        collectedConstraints.size > 0 ? collectedConstraints.size : undefined
+      )
+      if (!layoutCheck.valid && layoutCheck.error) warnSplitter(layoutCheck.error)
+      const constraintCheck = validatePanelConstraints(
+        panelConstraints.map((c) => ({
+          min: c.minSize,
+          max: c.maxSize,
+          collapsible: c.collapsible,
+          collapsedSize: c.collapsedSize,
+        }))
+      )
+      if (!constraintCheck.valid && constraintCheck.error) warnSplitter(constraintCheck.error)
+    }
+
     const handleRef = React.useCallback(
       (node: HTMLDivElement | null) => {
         containerRef.current = node
@@ -525,37 +598,8 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
       [forwardedRef]
     )
 
-    const adjustHandle = React.useCallback(
-      (handleIndex: number, deltaPercent: number) => {
-        if (handleIndex < 0 || handleIndex >= value.length - 1) return
-
-        const leftSize = value[handleIndex]!
-        const rightSize = value[handleIndex + 1]!
-
-        let nextLeft = Math.max(5, Math.min(leftSize + rightSize - 5, leftSize + deltaPercent))
-        let nextRight = leftSize + rightSize - nextLeft
-
-        const nextValues = [...value]
-        nextValues[handleIndex] = nextLeft
-        nextValues[handleIndex + 1] = nextRight
-
-        if (!isControlled) {
-          setInternalValue(nextValues)
-        }
-        onChange?.(nextValues)
-        onChangeEnd?.(nextValues)
-      },
-      [value, isControlled, onChange, onChangeEnd]
-    )
-
-    const setHandleSizes = React.useCallback(
-      (handleIndex: number, nextLeft: number, nextRight: number, isFinal = false) => {
-        if (handleIndex < 0 || handleIndex >= value.length - 1) return
-
-        const nextValues = [...value]
-        nextValues[handleIndex] = nextLeft
-        nextValues[handleIndex + 1] = nextRight
-
+    const commitLayout = React.useCallback(
+      (nextValues: number[], isFinal: boolean) => {
         if (!isControlled) {
           setInternalValue(nextValues)
         }
@@ -564,7 +608,66 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           onChangeEnd?.(nextValues)
         }
       },
-      [value, isControlled, onChange, onChangeEnd]
+      [isControlled, onChange, onChangeEnd]
+    )
+
+    const adjustHandle = React.useCallback(
+      (handleIndex: number, deltaPercent: number) => {
+        if (handleIndex < 0 || handleIndex >= value.length - 1) return
+
+        const nextValues = adjustLayoutByDelta({
+          delta: deltaPercent,
+          initialLayout: value,
+          panelConstraints,
+          pivotIndices: [handleIndex, handleIndex + 1],
+          prevLayout: value,
+          trigger: 'keyboard',
+        })
+        // The solver returns the previous layout by reference when nothing
+        // could move: an exact no-op fires no callbacks.
+        if (nextValues === value) return
+        commitLayout(nextValues, true)
+      },
+      [value, panelConstraints, commitLayout]
+    )
+
+    const resizeFromOrigin = React.useCallback(
+      (handleIndex: number, originLayout: number[], deltaPercent: number, isFinal = false) => {
+        if (handleIndex < 0 || handleIndex >= value.length - 1) return
+
+        const nextValues = adjustLayoutByDelta({
+          delta: deltaPercent,
+          initialLayout: originLayout,
+          panelConstraints,
+          pivotIndices: [handleIndex, handleIndex + 1],
+          prevLayout: value,
+          trigger: 'mouse-or-touch',
+        })
+        // A zero-delta solve returns the origin copy, which is element-equal
+        // but not reference-equal: compare element-wise so a press without
+        // movement fires no callbacks. The final event of a session that did
+        // move still closes with onChangeEnd even though the last move already
+        // committed the final layout.
+        const unchangedVsCurrent =
+          nextValues === value ||
+          (nextValues.length === value.length &&
+            nextValues.every((entry, entryIndex) =>
+              layoutNumbersEqual(entry, value[entryIndex] ?? 0)
+            ))
+        if (unchangedVsCurrent) {
+          if (isFinal) {
+            const sessionMoved =
+              originLayout.length !== value.length ||
+              originLayout.some(
+                (entry, entryIndex) => !layoutNumbersEqual(entry, value[entryIndex] ?? 0)
+              )
+            if (sessionMoved) onChangeEnd?.(value)
+          }
+          return
+        }
+        commitLayout(nextValues, isFinal)
+      },
+      [value, panelConstraints, commitLayout, onChangeEnd]
     )
 
     const contextValue = React.useMemo<SplitterContextValue>(
@@ -573,10 +676,11 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
         value,
         disabled,
         containerRef,
+        panelConstraints,
         adjustHandle,
-        setHandleSizes,
+        resizeFromOrigin,
       }),
-      [orientation, value, disabled, adjustHandle, setHandleSizes]
+      [orientation, value, disabled, panelConstraints, adjustHandle, resizeFromOrigin]
     )
 
     return (

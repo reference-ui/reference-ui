@@ -3,8 +3,8 @@
 Current freeze, cases, and proof. Design narrative: [Splitter.md](./Splitter.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
-Playwright: `matrix/lib/tests/e2e/splitter.spec.ts`
-Unit: `matrix/lib/tests/unit/splitter.test.ts` (missing)
+Playwright: `__e2e__/Splitter.ct.spec.ts` (colocated CT; `matrix/lib/tests/e2e/splitter.spec.ts` does not exist on this branch)
+Unit: `splitter-math.test.ts` + `Splitter.contract.test.tsx` (colocated; `matrix/lib/tests/unit/splitter.test.ts` does not exist on this branch)
 Page: `/splitter`
 
 ## Legend
@@ -36,23 +36,35 @@ Visual polish is not this gate. No grid mode. No `SplitterThumb` dots.
 
 | | |
 | :--- | :--- |
-| Engine | Prototype. Keyboard smoke only. |
-| Production | **No.** |
-| Named `[x]` | 1 / 83 (`SP-DOM-01`) |
-| Playwright | 1 |
-| Vitest | 0 |
+| Engine | Constraint solver wired; keyboard + drag + collapse-snap proven. |
+| Production | **Partial.** Uncontrolled retained; freeze API deltas open. |
+| Named `[x]` | 24 / 83 |
+| Playwright CT | 8 |
+| Vitest | 16 |
 
 ### Gaps & incoherence
 
+Resolved by the quarantine-landing salvage (solver port + minimal wire):
+
+- Panel `minSize` / `maxSize` / `collapsible` / `collapsedSize` were dead
+  props; they now drive keyboard, drag, Home/End, and collapse snapping.
+- Handle `aria-valuemin/max` hardcoded 0/100; now honest feasible bounds
+  (`calculateSeparatorAriaValues`).
+- `onChange` / `onChangeEnd` fired on no-op resizes and press-without-move;
+  exact no-ops are now silent, and a moved drag closes with exactly one
+  `onChangeEnd`.
+
+Still open (quarantine behavior deliberately not ported):
+
 - `defaultValue`, optional `value`. Freeze: required controlled `value`.
 - Panel props `minSize` / `maxSize` / `index` vs freeze `min` / `max` + DOM
-  order registration.
+  order registration. Numeric constraints only; no CSS-length `min`/`max`.
 - Writes `flexBasis: ${size}%` instead of `--reference-splitter-panel-size`
   / `--reference-splitter-N`.
-- Drag calls `setInternalValue` / `onChange` per move — React commit on the
-  hot path (`SP-PERF-*`).
-- Extra `SplitterThumb` chrome; Handle `aria-valuemin/max` hardcoded 0/100.
-- Collapse / Enter / CSS-length constraints largely absent.
+- Drag commits React per move (`SP-PERF-*` hot path untouched).
+- `SplitterThumb` chrome retained; no RTL direction wiring (`SP-KEY-05`);
+  no Enter collapse (`SP-COLLAPSE-01..03`); default min floor stays 5%,
+  not the freeze 0.
 
 ### Vendor
 
@@ -66,10 +78,14 @@ re-render-every-move as the model; auto-save; `defaultSize`.
 
 ### Case index
 
-- `[x]` `SP-DOM-01`
-- `[ ]` `SP-TYPE-01`, remaining `SP-DOM-*`, `SP-A11Y-01`, `SP-MATH-*`,
-  `SP-CTRL-*`, `SP-END-*`, `SP-DRAG-*`, `SP-KEY-*`, `SP-COLLAPSE-*`,
-  `SP-DYNAMIC-*`, `SP-ENV-*`, `SP-PERF-*`, `SP-COMP-*`
+- `[x]` `SP-TYPE-01` (re-targeted to the current uncontrolled API), `SP-DOM-01`,
+  `SP-DOM-02`, `SP-DOM-03`, `SP-MATH-01`–`SP-MATH-12`, `SP-CTRL-06`,
+  `SP-END-01`, `SP-END-03`, `SP-KEY-04`, `SP-COLLAPSE-04`, `SP-COLLAPSE-07`,
+  `SP-COLLAPSE-08`, `SP-ENV-01` (SSR)
+- `[ ]` remaining `SP-DOM-*`, `SP-A11Y-01`, remaining `SP-CTRL-*`,
+  `SP-END-02`, `SP-END-04`, `SP-DRAG-*`, remaining `SP-KEY-*`, remaining
+  `SP-COLLAPSE-*`, `SP-DYNAMIC-*`, remaining `SP-ENV-*`, `SP-PERF-*`,
+  `SP-COMP-*`
 
 ### Work order
 
