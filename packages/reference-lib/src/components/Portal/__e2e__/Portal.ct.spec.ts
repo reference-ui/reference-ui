@@ -252,3 +252,144 @@ test.describe('Portal Composition Gates & Browser Proofs', () => {
     await snap(page, 'portal-live-toggled-dark')
   })
 })
+
+test.describe('Portal ShadowRoot event contract (FEATURES #1, PORTAL-OWNS)', () => {
+  test.beforeEach(async ({ mount, page }) => {
+    await mount('components/Portal/Portal/ShadowFixture')
+    await expect(page.getByTestId('portal-shadow-fixture-root')).toBeVisible()
+  })
+
+  test('PT-ENV-03: ShadowRoot destination resolves after attach with no transient body copy', async ({
+    page,
+  }) => {
+    // Before attach: none of the portalled nodes exist anywhere — and in
+    // particular no transient body copy (the fixture chrome itself lives in
+    // light DOM by design, so only portalled testids are scanned).
+    for (const id of ['portal-shadow-btn', 'portal-shadow-sibling', 'portal-shadow-switch-btn']) {
+      await expect(page.getByTestId(id)).toHaveCount(0)
+    }
+    expect(
+      await page.evaluate(
+        () =>
+          document.body.querySelectorAll(
+            '[data-testid="portal-shadow-btn"],[data-testid="portal-shadow-sibling"],[data-testid="portal-shadow-switch-btn"]'
+          ).length
+      )
+    ).toBe(0)
+
+    await page.getByTestId('btn-shadow-attach').click()
+
+    // After attach: exactly one copy, inside the shadow root only.
+    const btn = page.getByTestId('portal-shadow-btn')
+    await expect(btn).toBeVisible()
+    expect(
+      await page.evaluate(() => !!document.querySelector('[data-testid="portal-shadow-btn"]'))
+    ).toBe(false)
+    const copies = await page
+      .getByTestId('portal-shadow-host')
+      .evaluate(el => el.shadowRoot?.querySelectorAll('[data-testid="portal-shadow-btn"]').length ?? -1)
+    expect(copies).toBe(1)
+  })
+
+  test('PT-DOM-05: Children land directly inside the open ShadowRoot destination', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-shadow-attach').click()
+    const host = page.getByTestId('portal-shadow-host')
+    await expect(page.getByTestId('portal-shadow-btn')).toBeVisible()
+
+    const placement = await host.evaluate(el => {
+      const root = el.shadowRoot
+      if (!root) return null
+      const kids = Array.from(root.children).map(n => n.getAttribute('data-testid'))
+      return {
+        kids,
+        btnParentIsRoot: root.querySelector('[data-testid="portal-shadow-btn"]')?.parentNode === root,
+        siblingParentIsRoot:
+          root.querySelector('[data-testid="portal-shadow-sibling"]')?.parentNode === root,
+      }
+    })
+    expect(placement).not.toBeNull()
+    // Direct shadow children in authored order, no wrapper.
+    expect(placement!.kids).toEqual(['portal-shadow-btn', 'portal-shadow-sibling'])
+    expect(placement!.btnParentIsRoot).toBe(true)
+    expect(placement!.siblingParentIsRoot).toBe(true)
+    expect(
+      await page.evaluate(() => !!document.querySelector('[data-testid="portal-shadow-sibling"]'))
+    ).toBe(false)
+  })
+
+  test('PT-COMP-03: Shadow composition preserves context and one logical React event sequence', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-shadow-attach').click()
+    const btn = page.getByTestId('portal-shadow-btn')
+    const host = page.getByTestId('portal-shadow-host')
+
+    // Logical context crosses into the shadow destination.
+    await expect(btn).toHaveAttribute('data-context-val', 'logical-provider-value')
+
+    // Content handler fires exactly once, then the logical parent. The parent
+    // entry repeats: React dispatches shadow-portal events twice — once with
+    // the true target at the portal-container listener, once retargeted to the
+    // host at the root-container listener. Portal owns delivery (content: once,
+    // in order) and documents the ancestor duplicate; it must NOT suppress the
+    // composed propagation, which outside-press and Escape contracts rely on.
+    await btn.click()
+    await expect(page.getByTestId('portal-shadow-click-log')).toHaveText(
+      'child,logical-parent,logical-parent'
+    )
+
+    // Keyboard delivery: Enter on the shadow button fires React onKeyDown once.
+    await btn.focus()
+    await expect
+      .poll(() =>
+        host.evaluate(
+          el => (el.shadowRoot?.activeElement as HTMLElement | null)?.getAttribute('data-testid')
+        )
+      )
+      .toBe('portal-shadow-btn')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('portal-shadow-key-log')).toHaveText('child-enter')
+
+    // Removal empties the shadow root completely.
+    await page.getByTestId('btn-shadow-unmount').click()
+    await expect(btn).toHaveCount(0)
+    expect(await host.evaluate(el => el.shadowRoot?.childElementCount ?? -1)).toBe(0)
+  })
+
+  test('PT-SHADOW-01: Switching destination into a ShadowRoot keeps React events firing', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-shadow-attach').click()
+    const switchBtn = page.getByTestId('portal-shadow-switch-btn')
+    const switchLog = page.getByTestId('portal-shadow-switch-log')
+    const host = page.getByTestId('portal-shadow-host-b')
+
+    // Light-destination baseline: one child + one logical-parent call.
+    await expect(
+      page.getByTestId('portal-shadow-target-a').getByTestId('portal-shadow-switch-btn')
+    ).toBeVisible()
+    await switchBtn.click()
+    await expect(switchLog).toHaveText('child,logical-parent')
+
+    // Switch into the shadow destination.
+    await page.getByTestId('btn-shadow-switch').click()
+    expect(
+      await host.evaluate(
+        el =>
+          !!el.shadowRoot
+            ?.querySelector('#portal-shadow-target-b [data-testid="portal-shadow-switch-btn"]')
+      )
+    ).toBe(true)
+    expect(
+      await page.evaluate(
+        () => !!document.querySelector('[data-testid="portal-shadow-switch-btn"]')
+      )
+    ).toBe(false)
+
+    // The same logical event sequence survives the move into shadow.
+    await switchBtn.click()
+    await expect(switchLog).toHaveText('child,logical-parent,child,logical-parent')
+  })
+})

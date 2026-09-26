@@ -270,3 +270,162 @@ function SwitchablePortal({ destination }: { destination: 'A' | 'B' }) {
 }
 
 export const Fixture = PortalFixture
+
+function ShadowChildWithContext({
+  testId,
+  onChildClick,
+  onChildKeyDown,
+}: {
+  testId: string
+  onChildClick: () => void
+  onChildKeyDown: () => void
+}) {
+  const contextVal = React.useContext(TestContext)
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      data-context-val={contextVal}
+      onClick={onChildClick}
+      onKeyDown={e => {
+        if (e.key === 'Enter') onChildKeyDown()
+      }}
+    >
+      Shadow Button ({contextVal})
+    </button>
+  )
+}
+
+export function ShadowPortalFixture() {
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const hostBRef = React.useRef<HTMLDivElement | null>(null)
+  const [attached, setAttached] = React.useState(false)
+  const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)
+  const [shadowB, setShadowB] = React.useState<ShadowRoot | null>(null)
+  const [clickLog, setClickLog] = React.useState<string[]>([])
+  const [keyLog, setKeyLog] = React.useState<string[]>([])
+  const [switchLog, setSwitchLog] = React.useState<string[]>([])
+  const [toShadow, setToShadow] = React.useState(false)
+  const [removed, setRemoved] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!attached) return
+    const host = hostRef.current
+    if (!host) return
+    if (!host.shadowRoot) host.attachShadow({ mode: 'open' })
+    setShadow(host.shadowRoot)
+    // Host B is foreign-owned shadow DOM (web component / microfrontend): its
+    // target div is raw DOM, so no React portal ever mounts into root B. The
+    // switch test therefore isolates whether Portal re-establishes React event
+    // delivery when a destination change is the first portal into a root.
+    const hostB = hostBRef.current
+    if (hostB) {
+      if (!hostB.shadowRoot) hostB.attachShadow({ mode: 'open' })
+      const rootB = hostB.shadowRoot as ShadowRoot
+      if (!rootB.querySelector('#portal-shadow-target-b')) {
+        const dest = document.createElement('div')
+        dest.id = 'portal-shadow-target-b'
+        dest.setAttribute('data-testid', 'portal-shadow-target-b')
+        rootB.appendChild(dest)
+      }
+      setShadowB(rootB)
+    }
+  }, [attached])
+
+  const shadowReady = attached && shadow !== null && !removed
+
+  return (
+    <TestContext.Provider value="logical-provider-value">
+      <div
+        data-testid="portal-shadow-fixture-root"
+        onClick={() => setClickLog(prev => [...prev, 'logical-parent'])}
+        style={{ padding: 16 }}
+      >
+        <h1>Portal Shadow Fixture</h1>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button
+            type="button"
+            data-testid="btn-shadow-attach"
+            onClick={e => {
+              e.stopPropagation()
+              setAttached(true)
+            }}
+          >
+            Attach Shadow
+          </button>
+          <button
+            type="button"
+            data-testid="btn-shadow-unmount"
+            onClick={e => {
+              e.stopPropagation()
+              setRemoved(true)
+            }}
+          >
+            Remove Shadow Portals
+          </button>
+        </div>
+
+        <div ref={hostRef} data-testid="portal-shadow-host" />
+        <div ref={hostBRef} data-testid="portal-shadow-host-b" />
+        <div
+          id="portal-shadow-target-a"
+          data-testid="portal-shadow-target-a"
+          style={{ border: '1px solid orange', padding: '8px', marginTop: '8px' }}
+        />
+
+        {shadowReady && shadow ? (
+          <>
+            <Portal container={shadow}>
+              <ShadowChildWithContext
+                testId="portal-shadow-btn"
+                onChildClick={() => setClickLog(prev => [...prev, 'child'])}
+                onChildKeyDown={() => setKeyLog(prev => [...prev, 'child-enter'])}
+              />
+              <div data-testid="portal-shadow-sibling">Shadow Sibling</div>
+            </Portal>
+            <div
+              data-testid="portal-shadow-switch-scope"
+              onClick={() => setSwitchLog(prev => [...prev, 'logical-parent'])}
+            >
+              <button
+                type="button"
+                data-testid="btn-shadow-switch"
+                onClick={e => {
+                  e.stopPropagation()
+                  setToShadow(true)
+                }}
+              >
+                Switch To Shadow
+              </button>
+              <Portal
+                container={() =>
+                  toShadow
+                    ? ((shadowB?.querySelector(
+                        '#portal-shadow-target-b'
+                      ) as PortalContainer | null) ?? null)
+                    : (document.getElementById(
+                        'portal-shadow-target-a'
+                      ) as PortalContainer | null)
+                }
+              >
+                <button
+                  type="button"
+                  data-testid="portal-shadow-switch-btn"
+                  onClick={() => setSwitchLog(prev => [...prev, 'child'])}
+                >
+                  Switchable Button
+                </button>
+              </Portal>
+            </div>
+          </>
+        ) : null}
+
+        <div data-testid="portal-shadow-click-log">{clickLog.join(',') || 'none'}</div>
+        <div data-testid="portal-shadow-key-log">{keyLog.join(',') || 'none'}</div>
+        <div data-testid="portal-shadow-switch-log">{switchLog.join(',') || 'none'}</div>
+      </div>
+    </TestContext.Provider>
+  )
+}
+
+export const ShadowFixture = ShadowPortalFixture

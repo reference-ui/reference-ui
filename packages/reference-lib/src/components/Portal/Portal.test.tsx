@@ -94,6 +94,98 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
     expect(portalNested?.getAttribute('data-color-mode')).toBe('dark')
   })
 
+  it('PT-REACT-05: switching containers performs one subtree replacement (state resets, effects rerun)', async () => {
+    const targetA = document.createElement('div')
+    targetA.id = 'portal-unit-target-a'
+    const targetB = document.createElement('div')
+    targetB.id = 'portal-unit-target-b'
+    document.body.appendChild(targetA)
+    document.body.appendChild(targetB)
+
+    let mounts = 0
+    function StatefulChild() {
+      const [count, setCount] = React.useState(0)
+      React.useEffect(() => {
+        mounts += 1
+      }, [])
+      return (
+        <button
+          type="button"
+          id="portal-unit-stateful-child"
+          data-count={count}
+          onClick={() => setCount(c => c + 1)}
+        >
+          count
+        </button>
+      )
+    }
+
+    try {
+      await React.act(async () => {
+        root.render(
+          <Portal container={targetA}>
+            <StatefulChild />
+          </Portal>
+        )
+      })
+      // Settle the mount gate + container resolution effects.
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      const before = document.getElementById('portal-unit-stateful-child')
+      expect(before?.parentElement).toBe(targetA)
+      expect(mounts).toBe(1)
+
+      await React.act(async () => {
+        before?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      expect(document.getElementById('portal-unit-stateful-child')?.getAttribute('data-count')).toBe(
+        '1'
+      )
+
+      // Switch destination: the documented replacement drops child state.
+      await React.act(async () => {
+        root.render(
+          <Portal container={targetB}>
+            <StatefulChild />
+          </Portal>
+        )
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      const after = document.getElementById('portal-unit-stateful-child')
+      expect(after?.parentElement).toBe(targetB)
+      expect(targetA.querySelector('#portal-unit-stateful-child')).toBeNull()
+      expect(mounts).toBe(2)
+      expect(after?.getAttribute('data-count')).toBe('0')
+
+      // Same-container rerenders preserve the mounted subtree (PT-CONTAINER-06).
+      await React.act(async () => {
+        after?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      await React.act(async () => {
+        root.render(
+          <Portal container={targetB}>
+            <StatefulChild />
+          </Portal>
+        )
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+      expect(mounts).toBe(2)
+      expect(document.getElementById('portal-unit-stateful-child')?.getAttribute('data-count')).toBe(
+        '1'
+      )
+    } finally {
+      targetA.remove()
+      targetB.remove()
+    }
+  })
+
   it('FAILURE MODE 2: primitive reads DOM active theme from documentElement when React context is unset', async () => {
     // External theme toggle sets attribute directly on documentElement
     document.documentElement.setAttribute('data-color-mode', 'dark')

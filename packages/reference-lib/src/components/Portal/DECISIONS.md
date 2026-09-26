@@ -7,12 +7,17 @@ One line: relocates children elsewhere in the DOM, no wrapper.
 
 ## Landed (context, 2-4 lines)
 
-Nothing landed: Portal had NO quarantine freeze commit and NO landing crew —
-there is no crew log and no landing commit. `git log 7aea45265..components-quarantine
+Nothing landed from quarantine: Portal had NO quarantine freeze commit and NO
+landing crew — `git log 7aea45265..components-quarantine
 -- packages/reference-lib/src/components/Portal/` is empty, and
 `.agents/missions/quarantine-landing/objective-B-overlay.md` confirms Portal/
-untouched with an empty diffstat. Current behavior is the reference-system
-SPEC as documented in `Portal.md` / `TESTS.md`.
+untouched with an empty diffstat.
+
+FEATURES #1 (shadow-portal event contract) landed under PORTAL-OWNS: no shim —
+React 17/18/19 per-portal-container delegation plus remount-on-container-change
+already deliver the full contract, proven by Portal-owned `ShadowFixture` CT
+(`PT-DOM-05`, `PT-ENV-03`, `PT-COMP-03`, `PT-SHADOW-01`) on all three majors.
+The ancestor double-dispatch artifact is documented in FEATURES.md.
 
 ## Candidate features (quarantine-sourced)
 
@@ -21,8 +26,8 @@ quarantine-sourced candidate APIs to decide.
 
 ## Suspected gaps (no quarantine source)
 
-Moved to FEATURES.md — the one OPEN gap (shadow-portal event contract,
-gap #1) needs a design call.
+None open — gap #1 (shadow-portal event contract) is decided PORTAL-OWNS and
+landed; see FEATURES.md.
 
 ## Non-decisions (rejected outright)
 
@@ -34,8 +39,9 @@ gap #1) needs a design call.
 
 ## Walkthrough notes for HQ
 
-- Open design work lives in FEATURES.md (1 item: shadow-portal event
-  contract) — decide ownership before any shadow consumer ships.
+- FEATURES #1 (shadow-portal event contract) is landed under PORTAL-OWNS
+  with no API change: React per-portal-container delegation is the mechanism,
+  Portal-owned `ShadowFixture` CT is the proof (React 17/18/19).
 - No mechanical patches pending — PATCHES.md confirms the honest none.
 - The no-wrapper model is settled (non-decision): open the Portal story in
   Book, inspect the DOM, children land directly in the destination body node.

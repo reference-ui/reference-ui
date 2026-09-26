@@ -67,6 +67,21 @@ Radix Portal always wraps in `Primitive.div` unless `asChild`. An extra node bre
 
 **Leave** Radix’s host-node props (`className` on the portal wrapper). There is no wrapper to style.
 
+### Shadow DOM events
+
+A `ShadowRoot` (or an element inside one) is a first-class destination:
+children land directly in the shadow tree with no wrapper. React attaches its
+delegated listeners to every portal container, so pointer and keyboard events
+on shadow-portal content dispatch with the true target — content handlers fire
+exactly once and logical context crosses the boundary. Changing the container
+remounts the portal subtree (no state promise), which re-attaches listeners on
+the new destination, including a previously untouched foreign root.
+
+Known artifact: React ancestors at/above the shadow host observe each
+shadow-portal event twice (true-target dispatch plus a host-retargeted root
+dispatch). Keep common-ancestor handlers idempotent; never suppress the
+composed propagation — outside-press and dismissal depend on it.
+
 ### Theme and layer scope
 
 Portalled subtrees cross DOM boundaries, which severs CSS inheritance of scoped `[data-layer]` and theme selectors from DOM ancestors, but preserves React logical context (`ColorModeContext`).

@@ -174,6 +174,13 @@ Portal owns relocation only. It renders no host node.
   remove the composition. Assert direct shadow children in authored order,
   one logical React event sequence, no light-DOM wrapper, and full shadow
   cleanup.
+- [x] `PT-SHADOW-01` `[reference]` `[shadow]` —
+  **Portal should keep React events firing when a destination change is the first portal into a ShadowRoot.**
+  Render interactive content into a light destination, then switch the
+  container to a div inside a foreign-owned ShadowRoot that no React portal
+  has ever mounted into. Assert the same child-then-logical-parent click
+  sequence before and after the move (via the documented PT-REACT-05
+  replacement, which re-attaches React's container listeners).
 
 `Overlay.Portal` and `Popover.Portal` each get one pass-through integration
 case in their owner's spec. They do not copy this matrix.
