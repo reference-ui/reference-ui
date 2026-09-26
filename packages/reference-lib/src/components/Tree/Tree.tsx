@@ -1,5 +1,98 @@
 import * as React from 'react'
 import { Div, Button, type PrimitiveProps } from '@reference-ui/react'
+import { TypeaheadModel } from '../RovingFocus/typeahead'
+
+// Deterministic expanded-array emission (TR-EXPAND-06): known branches follow
+// current document order, unknown application values keep incoming order.
+export function getDeterministicExpanded(
+  currentExpanded: string[],
+  branchValue: string,
+  allKnownBranches: string[],
+  isExpanding: boolean
+): string[] {
+  if (isExpanding) {
+    const knownInTree = allKnownBranches.filter(
+      (val) => val === branchValue || currentExpanded.includes(val)
+    )
+    if (!knownInTree.includes(branchValue)) {
+      knownInTree.push(branchValue)
+    }
+    const unknownValues: string[] = []
+    for (const val of currentExpanded) {
+      if (val !== branchValue && !allKnownBranches.includes(val) && !unknownValues.includes(val)) {
+        unknownValues.push(val)
+      }
+    }
+    return [...knownInTree, ...unknownValues]
+  } else {
+    const remainingKnown = allKnownBranches.filter(
+      (val) => val !== branchValue && currentExpanded.includes(val)
+    )
+    const unknownValues: string[] = []
+    for (const val of currentExpanded) {
+      if (val !== branchValue && !allKnownBranches.includes(val) && !unknownValues.includes(val)) {
+        unknownValues.push(val)
+      }
+    }
+    return [...remainingKnown, ...unknownValues]
+  }
+}
+
+// Sibling set metadata (TR-DOM-05): counts direct treeitem children only, so
+// authored decorative nodes never corrupt posinset/setsize.
+function updateContainerTreeitemPositions(container: HTMLElement | null) {
+  if (!container) return
+  const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > [role="treeitem"]'))
+  const total = items.length
+  items.forEach((item, idx) => {
+    item.setAttribute('aria-posinset', String(idx + 1))
+    item.setAttribute('aria-setsize', String(total))
+  })
+}
+
+function useComposedRefs<T>(
+  ...refs: Array<React.ForwardedRef<T> | React.Ref<T> | React.MutableRefObject<T | null> | null | undefined>
+) {
+  return React.useCallback(
+    (node: T | null) => {
+      refs.forEach((ref) => {
+        if (!ref) return
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (typeof ref === 'object' && 'current' in ref) {
+          ;(ref as React.MutableRefObject<T | null>).current = node
+        }
+      })
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    refs
+  )
+}
+
+// Typeahead label extraction (TR-TYPE-04/05): explicit textValue wins; otherwise
+// row text without expander/group/hidden content and leading decoration.
+// Digits are content, not decoration: \p{Emoji} matches ASCII 0-9, so they are
+// carved out — otherwise "0 backups" would search as "backups".
+function extractTypeaheadText(el: HTMLElement): string {
+  const explicitText = el.getAttribute('data-text-value')
+  let text = explicitText ?? ''
+  if (!explicitText) {
+    const clone = el.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('button, [role="group"], [aria-hidden="true"]').forEach((n) => n.remove())
+    text = (clone.textContent ?? '').trim()
+  }
+  return text.replace(/^(?:(?![0-9])[\p{Emoji}\p{Punctuation}\s])+/u, '')
+}
+
+function isGroupChild(child: React.ReactNode): boolean {
+  return (
+    React.isValidElement(child) &&
+    (child.type === TreeGroup ||
+      (child.type as any)?.displayName === 'TreeGroup' ||
+      (child.props as any)?.role === 'group' ||
+      (child.props as any)?.['data-testid']?.includes('group'))
+  )
+}
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   value?: string | null
@@ -16,11 +109,13 @@ interface TreeContextValue {
   expanded: string[]
   disabled: boolean
   focusedId: string | null
-  setFocusedId: (id: string) => void
+  setFocusedId: (id: string | null) => void
   isItemSelected: (id: string) => boolean
   isItemExpanded: (id: string) => boolean
   selectItem: (id: string) => void
   toggleExpanded: (id: string) => void
+  registerItemInstance: (id: string) => () => void
+  registerBranchOrder: (id: string, el: HTMLElement | null) => () => void
   handleItemKeyDown: (
     e: React.KeyboardEvent<HTMLDivElement>,
     id: string,
@@ -37,6 +132,7 @@ interface TreeItemContextValue {
   isBranch: boolean
   isExpanded: boolean
   level: number
+  groupId: string
 }
 
 const TreeItemContext = React.createContext<TreeItemContextValue | null>(null)
@@ -50,32 +146,73 @@ export type TreeItemProps = PrimitiveProps<'div'> & {
   textValue?: string
 }
 
-export function TreeItem({
-  id: idProp,
-  value: valueProp,
-  disabled = false,
-  isBranch = false,
-  textValue,
-  children,
-  onClick,
-  onKeyDown,
-  onFocus,
-  className,
-  style,
-  ...props
-}: TreeItemProps) {
-  const generatedId = React.useId()
-  const id = (valueProp ?? idProp ?? generatedId) as string
-  const tree = React.useContext(TreeContext)
-  const level = React.useContext(TreeLevelContext) ?? 1
-  const isSelected = tree ? tree.isItemSelected(id) : false
-  const isExpanded = tree ? tree.isItemExpanded(id) : false
-  const isDisabled = disabled || (tree?.disabled ?? false)
+export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
+  function TreeItem(
+    {
+      id: idProp,
+      value: valueProp,
+      disabled = false,
+      isBranch: isBranchProp = false,
+      textValue,
+      children,
+      onClick,
+      onKeyDown,
+      onFocus,
+      className,
+      style,
+      ...props
+    },
+    ref
+  ) {
+    const generatedId = React.useId()
+    const id = (valueProp ?? idProp ?? generatedId) as string
+    const tree = React.useContext(TreeContext)
+    const level = React.useContext(TreeLevelContext) ?? 1
+    // Branch semantics follow authored structure: an explicit prop or a nested
+    // Group child (TR-DOM-03). Render-time scan keeps SSR deterministic.
+    const hasGroupChild = React.useMemo(() => {
+      let found = false
+      React.Children.forEach(children, (child) => {
+        if (!found && isGroupChild(child)) found = true
+      })
+      return found
+    }, [children])
+    const isBranch = isBranchProp || hasGroupChild
+    const generatedGroupId = React.useId()
+    const groupId = idProp ? `${idProp}-group` : `tree-group-${generatedGroupId}`
+    const isSelected = tree ? tree.isItemSelected(id) : false
+    const isExpanded = tree ? tree.isItemExpanded(id) : false
+    const isDisabled = disabled || (tree?.disabled ?? false)
 
-  const isCurrentFocus = tree?.focusedId === id
-  const tabIndex = isDisabled ? -1 : isCurrentFocus ? 0 : -1
+    const isCurrentFocus = tree?.focusedId === id
+    const tabIndex = isDisabled ? -1 : isCurrentFocus ? 0 : -1
 
-  const itemRef = React.useRef<HTMLDivElement | null>(null)
+    const itemRef = React.useRef<HTMLDivElement | null>(null)
+    const composedRef = useComposedRefs(ref, itemRef)
+
+    // Reject duplicate item identities before focus/selection goes ambiguous (TR-DOM-08)
+    const registerItemInstance = tree?.registerItemInstance
+    React.useEffect(() => {
+      if (registerItemInstance) {
+        return registerItemInstance(id)
+      }
+    }, [registerItemInstance, id])
+
+    // Sibling set metadata stays current as items mount/unmount (TR-DOM-05)
+    React.useLayoutEffect(() => {
+      const el = itemRef.current
+      if (!el) return
+      const container = el.parentElement?.closest<HTMLElement>('[role="group"], [role="tree"]')
+      updateContainerTreeitemPositions(container ?? null)
+    })
+
+    // Branch order registration for deterministic expansion payloads (TR-EXPAND-06)
+    const registerBranchOrder = tree?.registerBranchOrder
+    React.useLayoutEffect(() => {
+      if (registerBranchOrder && isBranch) {
+        return registerBranchOrder(id, itemRef.current)
+      }
+    }, [registerBranchOrder, isBranch, id])
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // If click originated from a button (e.g. Expander), let it handle without selecting
@@ -105,18 +242,13 @@ export function TreeItem({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Editable and interactive descendants keep their own keys (TR-KEY-10)
     if (e.target !== e.currentTarget) return
     onKeyDown?.(e)
     if (e.defaultPrevented || isDisabled || !tree) return
 
-    // Do not hijack typing or navigation if inside an input or textarea
-    const target = e.target as HTMLElement
-    if (
-      target !== e.currentTarget &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable)
-    ) {
+    // Modified keys are not Tree commands (TR-KEY-11)
+    if (e.altKey || e.ctrlKey || e.metaKey) {
       return
     }
 
@@ -128,13 +260,7 @@ export function TreeItem({
     const groupContent: React.ReactNode[] = []
 
     React.Children.forEach(children, (child) => {
-      if (
-        React.isValidElement(child) &&
-        (child.type === TreeGroup ||
-          (child.type as any)?.displayName === 'TreeGroup' ||
-          (child.props as any)?.role === 'group' ||
-          (child.props as any)?.['data-testid']?.includes('group'))
-      ) {
+      if (isGroupChild(child)) {
         groupContent.push(child)
       } else {
         rowContent.push(child)
@@ -142,9 +268,9 @@ export function TreeItem({
     })
 
     return (
-      <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level }}>
+      <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level, groupId }}>
         <Div
-          ref={itemRef}
+          ref={composedRef}
           role="treeitem"
           id={id}
           tabIndex={tabIndex}
@@ -152,6 +278,8 @@ export function TreeItem({
           aria-expanded={isExpanded}
           aria-disabled={isDisabled ? 'true' : undefined}
           aria-level={level}
+          aria-posinset={1}
+          aria-setsize={1}
           data-state={isSelected ? 'selected' : 'unselected'}
           data-selected={isSelected ? '' : undefined}
           data-expanded={isExpanded ? '' : undefined}
@@ -207,15 +335,17 @@ export function TreeItem({
   }
 
   return (
-    <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level }}>
+    <TreeItemContext.Provider value={{ id, isBranch, isExpanded, level, groupId }}>
       <Div
-        ref={itemRef}
+        ref={composedRef}
         role="treeitem"
         id={id}
         tabIndex={tabIndex}
         aria-selected={isSelected}
         aria-disabled={isDisabled ? 'true' : undefined}
         aria-level={level}
+        aria-posinset={1}
+        aria-setsize={1}
         data-state={isSelected ? 'selected' : 'unselected'}
         data-selected={isSelected ? '' : undefined}
         data-disabled={isDisabled ? '' : undefined}
@@ -258,47 +388,64 @@ export function TreeItem({
       </Div>
     </TreeItemContext.Provider>
   )
-}
+  }
+)
+TreeItem.displayName = 'TreeItem'
 
 export type TreeGroupProps = PrimitiveProps<'div'>
 
-export function TreeGroup({
-  children,
-  className,
-  style,
-  ...props
-}: TreeGroupProps) {
-  const itemContext = React.useContext(TreeItemContext)
-  const tree = React.useContext(TreeContext)
+export const TreeGroup = React.forwardRef<HTMLDivElement, TreeGroupProps>(
+  function TreeGroup({ children, id: idProp, className, style, ...props }, ref) {
+    const itemContext = React.useContext(TreeItemContext)
+    const tree = React.useContext(TreeContext)
+    const groupRef = React.useRef<HTMLDivElement | null>(null)
+    const composedRef = useComposedRefs(ref, groupRef)
 
-  // If inside a branch item, only render when that branch is expanded
-  const isParentExpanded = itemContext?.isBranch
-    ? tree?.isItemExpanded(itemContext.id) ?? true
-    : true
+    // If inside a branch item, only render when that branch is expanded
+    const isParentExpanded = itemContext?.isBranch
+      ? tree?.isItemExpanded(itemContext.id) ?? true
+      : true
 
-  if (!isParentExpanded) {
-    return null
+    const nextLevel = (itemContext?.level ?? 1) + 1
+    const groupId = idProp ?? itemContext?.groupId
+
+    // Sibling set metadata stays current as children mount/unmount (TR-DOM-05)
+    React.useLayoutEffect(() => {
+      if (!isParentExpanded) return
+      const container = groupRef.current
+      if (!container) return
+      updateContainerTreeitemPositions(container)
+      const observer = new MutationObserver(() => {
+        updateContainerTreeitemPositions(container)
+      })
+      observer.observe(container, { childList: true })
+      return () => observer.disconnect()
+    }, [isParentExpanded])
+
+    if (!isParentExpanded) {
+      return null
+    }
+
+    return (
+      <TreeLevelContext.Provider value={nextLevel}>
+        <Div
+          ref={composedRef}
+          role="group"
+          id={groupId}
+          pl="7.5r"
+          display="flex"
+          flexDirection="column"
+          gap="0.5r"
+          className={className}
+          style={style}
+          {...props}
+        >
+          {children}
+        </Div>
+      </TreeLevelContext.Provider>
+    )
   }
-
-  const nextLevel = (itemContext?.level ?? 1) + 1
-
-  return (
-    <TreeLevelContext.Provider value={nextLevel}>
-      <Div
-        role="group"
-        pl="7.5r"
-        display="flex"
-        flexDirection="column"
-        gap="0.5r"
-        className={className}
-        style={style}
-        {...props}
-      >
-        {children}
-      </Div>
-    </TreeLevelContext.Provider>
-  )
-}
+)
 TreeGroup.displayName = 'TreeGroup'
 
 export type TreeExpanderProps = PrimitiveProps<'button'> & {
@@ -307,43 +454,55 @@ export type TreeExpanderProps = PrimitiveProps<'button'> & {
   itemId?: string
 }
 
-export function TreeExpander({
-  expanded: expandedProp,
-  onToggle,
-  itemId: itemIdProp,
-  children,
-  className,
-  style,
-  onClick,
-  ...props
-}: TreeExpanderProps) {
-  const tree = React.useContext(TreeContext)
-  const itemContext = React.useContext(TreeItemContext)
-  const itemId = itemIdProp ?? itemContext?.id ?? ''
+export const TreeExpander = React.forwardRef<HTMLButtonElement, TreeExpanderProps>(
+  function TreeExpander(
+    {
+      expanded: expandedProp,
+      onToggle,
+      itemId: itemIdProp,
+      children,
+      className,
+      style,
+      onClick,
+      ...props
+    },
+    ref
+  ) {
+    const tree = React.useContext(TreeContext)
+    const itemContext = React.useContext(TreeItemContext)
+    const itemId = itemIdProp ?? itemContext?.id ?? ''
 
-  // Stateless if `expanded` is explicitly passed; otherwise falls back to context
-  const isExpanded =
-    expandedProp !== undefined
-      ? expandedProp
-      : tree?.isItemExpanded(itemId) ?? itemContext?.isExpanded ?? false
+    // Stateless if `expanded` is explicitly passed; otherwise falls back to context
+    const isExpanded =
+      expandedProp !== undefined
+        ? expandedProp
+        : tree?.isItemExpanded(itemId) ?? itemContext?.isExpanded ?? false
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation()
-    onClick?.(e)
-    onToggle?.()
-    if (!e.defaultPrevented && itemId && tree && expandedProp === undefined) {
-      tree.toggleExpanded(itemId)
+    const groupId = itemContext?.groupId
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      onClick?.(e)
+      onToggle?.()
+      if (!e.defaultPrevented && itemId && tree && expandedProp === undefined) {
+        // A disabled branch never requests expansion (TR-EXPAND-09)
+        const itemEl = e.currentTarget.closest('[role="treeitem"]')
+        if (itemEl?.getAttribute('aria-disabled') === 'true') {
+          return
+        }
+        tree.toggleExpanded(itemId)
+      }
     }
-  }
 
-  return (
-    <Button
-      type="button"
-      tabIndex={-1}
-      aria-label={isExpanded ? 'Collapse' : 'Expand'}
-      aria-expanded={isExpanded}
-      aria-hidden="true"
-      onClick={handleClick}
+    return (
+      <Button
+        ref={ref}
+        type="button"
+        tabIndex={-1}
+        aria-label={isExpanded ? 'Collapse' : 'Expand'}
+        aria-expanded={isExpanded}
+        aria-controls={groupId}
+        onClick={handleClick}
       border="none"
       bg="transparent"
       color="inherit"
@@ -382,9 +541,11 @@ export function TreeExpander({
           <polyline points="9 18 15 12 9 6" />
         </svg>
       )}
-    </Button>
-  )
-}
+      </Button>
+    )
+  }
+)
+TreeExpander.displayName = 'TreeExpander'
 
 export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
   function Tree(
@@ -414,8 +575,32 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     const [focusedId, setFocusedId] = React.useState<string | null>(null)
     const rootRef = React.useRef<HTMLDivElement | null>(null)
 
-    const typeaheadBufferRef = React.useRef<string>('')
-    const typeaheadTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    // Live identity registry for duplicate detection (TR-DOM-08)
+    const liveInstancesRef = React.useRef<Set<string>>(new Set())
+    const registerItemInstance = React.useCallback((id: string) => {
+      if (liveInstancesRef.current.has(id)) {
+        throw new Error(`Tree items must have unique values. Duplicate found: "${id}".`)
+      }
+      liveInstancesRef.current.add(id)
+      return () => {
+        liveInstancesRef.current.delete(id)
+      }
+    }, [])
+
+    // Branch order tracking for deterministic expansion payloads (TR-EXPAND-06)
+    const branchesMapRef = React.useRef<Map<string, HTMLElement | null>>(new Map())
+    const registerBranchOrder = React.useCallback((id: string, el: HTMLElement | null) => {
+      branchesMapRef.current.set(id, el)
+      return () => {
+        branchesMapRef.current.delete(id)
+      }
+    }, [])
+
+    // Shared RovingFocus typeahead session over the visible set (TR-TYPE-04)
+    const typeaheadModelRef = React.useRef<TypeaheadModel | null>(null)
+    if (typeaheadModelRef.current === null) {
+      typeaheadModelRef.current = new TypeaheadModel({ timeoutMs: 500 })
+    }
 
     const isItemSelected = React.useCallback(
       (id: string) => value === id,
@@ -429,22 +614,27 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
 
     const selectItem = React.useCallback(
       (id: string) => {
+        // Single selection is idempotent, not a toggle (TR-SELECT-03)
+        if (value === id) {
+          return
+        }
         if (!isControlledValue) {
           setInternalValue(id)
         }
         onChange?.(id)
       },
-      [isControlledValue, onChange]
+      [isControlledValue, onChange, value]
     )
 
     const toggleExpanded = React.useCallback(
       (id: string) => {
+        const isCurrentlyExpanded = expanded.includes(id)
         // If about to collapse id and currently focused item is a descendant, move focus to branch first
-        if (expanded.includes(id)) {
+        if (isCurrentlyExpanded) {
           const rootEl = rootRef.current
           if (rootEl && focusedId && focusedId !== id) {
-            const branchEl = rootEl.querySelector<HTMLElement>(`[id="${id}"]`)
-            const focusedEl = rootEl.querySelector<HTMLElement>(`[id="${focusedId}"]`)
+            const branchEl = rootEl.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`)
+            const focusedEl = rootEl.querySelector<HTMLElement>(`[id="${CSS.escape(focusedId)}"]`)
             if (branchEl && focusedEl && branchEl.contains(focusedEl)) {
               setFocusedId(id)
               branchEl.focus()
@@ -452,9 +642,17 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
           }
         }
 
-        const next = expanded.includes(id)
-          ? expanded.filter((item) => item !== id)
-          : [...expanded, id]
+        const orderedBranches = Array.from(branchesMapRef.current.entries())
+          .filter(([, el]) => el && el.isConnected)
+          .sort(([, a], [, b]) => {
+            const pos = a!.compareDocumentPosition(b!)
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+            if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+            return 0
+          })
+          .map(([val]) => val)
+
+        const next = getDeterministicExpanded(expanded, id, orderedBranches, !isCurrentlyExpanded)
         if (!isControlledExpanded) {
           setInternalExpanded(next)
         }
@@ -482,41 +680,78 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       }
     }, [focusedId, value, expanded])
 
-    const handleTypeahead = React.useCallback(
-      (char: string, currentIndex: number, visibleItems: HTMLElement[]) => {
-        if (typeaheadTimerRef.current) {
-          clearTimeout(typeaheadTimerRef.current)
+    // Top-level sibling set metadata (TR-DOM-05)
+    React.useLayoutEffect(() => {
+      const container = rootRef.current
+      if (!container) return
+      updateContainerTreeitemPositions(container)
+      const observer = new MutationObserver(() => {
+        updateContainerTreeitemPositions(container)
+      })
+      observer.observe(container, { childList: true })
+      return () => observer.disconnect()
+    }, [])
+
+    // Focus recovery when the focused item is removed (TR-DYNAMIC-03)
+    const prevVisibleValuesRef = React.useRef<string[]>([])
+    React.useLayoutEffect(() => {
+      const rootEl = rootRef.current
+      if (!rootEl) return
+
+      const visibleItems = Array.from(
+        rootEl.querySelectorAll<HTMLElement>('[role="treeitem"]:not([aria-disabled="true"])')
+      )
+      const currentValues = visibleItems.map((el) => el.id)
+
+      if (focusedId !== null && !currentValues.includes(focusedId)) {
+        const oldIndex = prevVisibleValuesRef.current.indexOf(focusedId)
+        let candidate: HTMLElement | null = null
+
+        if (visibleItems.length > 0) {
+          if (oldIndex !== -1 && oldIndex < visibleItems.length) {
+            candidate = visibleItems[oldIndex]
+          } else {
+            candidate = visibleItems[visibleItems.length - 1]
+          }
         }
-        typeaheadTimerRef.current = setTimeout(() => {
-          typeaheadBufferRef.current = ''
-        }, 500)
 
-        typeaheadBufferRef.current += char
-        const query = typeaheadBufferRef.current
-
-        const searchOrder = [
-          ...visibleItems.slice(currentIndex + 1),
-          ...visibleItems.slice(0, currentIndex + 1),
-        ]
-
-        const match = searchOrder.find((el) => {
-          const text = (
-            el.getAttribute('data-text-value') ||
-            el.textContent ||
-            ''
-          )
-            .trim()
-            .toLowerCase()
-          return text.startsWith(query)
-        })
-
-        if (match) {
-          setFocusedId(match.id)
-          match.focus()
+        if (candidate) {
+          setFocusedId(candidate.id)
+          candidate.focus()
+        } else {
+          setFocusedId(null)
+          rootEl.setAttribute('tabindex', '-1')
+          rootEl.focus()
         }
-      },
-      []
-    )
+      }
+
+      prevVisibleValuesRef.current = currentValues
+    })
+
+    const typeaheadSearch = React.useCallback((char: string, currentId: string) => {
+      const rootEl = rootRef.current
+      if (!rootEl) return
+
+      const visibleItems = Array.from(
+        rootEl.querySelectorAll<HTMLElement>('[role="treeitem"]:not([aria-disabled="true"])')
+      )
+      if (visibleItems.length === 0) return
+
+      const items = visibleItems.map((el) => ({
+        id: el.id,
+        text: extractTypeaheadText(el),
+        disabled: el.getAttribute('aria-disabled') === 'true',
+      }))
+
+      const matchId = typeaheadModelRef.current?.handleKey(char, currentId, items)
+      if (matchId && matchId !== currentId) {
+        const matchEl = visibleItems.find((el) => el.id === matchId)
+        if (matchEl) {
+          setFocusedId(matchId)
+          matchEl.focus()
+        }
+      }
+    }, [])
 
     const handleItemKeyDown = React.useCallback(
       (
@@ -535,7 +770,9 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         const currentIndex = visibleItems.findIndex((el) => el.id === id || el === itemEl)
         if (currentIndex === -1) return
 
-        const isRtl = typeof document !== 'undefined' && document.dir === 'rtl'
+        const isRtl =
+          (rootEl.closest('[dir]') as HTMLElement)?.dir === 'rtl' ||
+          (typeof document !== 'undefined' && document.dir === 'rtl')
         const expandKey = isRtl ? 'ArrowLeft' : 'ArrowRight'
         const collapseKey = isRtl ? 'ArrowRight' : 'ArrowLeft'
 
@@ -625,23 +862,34 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             break
           }
 
-          case 'Enter':
-          case ' ': {
+          case 'Enter': {
             e.preventDefault()
             selectItem(id)
             break
           }
 
-          default: {
-            if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && e.key !== ' ') {
+          case ' ': {
+            // Space extends an active typeahead buffer, else selects (TR-TYPE-04)
+            if (typeaheadModelRef.current?.hasBuffer()) {
               e.preventDefault()
-              handleTypeahead(e.key.toLowerCase(), currentIndex, visibleItems)
+              typeaheadSearch(' ', id)
+            } else {
+              e.preventDefault()
+              selectItem(id)
+            }
+            break
+          }
+
+          default: {
+            if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+              e.preventDefault()
+              typeaheadSearch(e.key, id)
             }
             break
           }
         }
       },
-      [toggleExpanded, selectItem, handleTypeahead]
+      [toggleExpanded, selectItem, typeaheadSearch]
     )
 
     const contextValue = React.useMemo<TreeContextValue>(
@@ -655,6 +903,8 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         isItemExpanded,
         selectItem,
         toggleExpanded,
+        registerItemInstance,
+        registerBranchOrder,
         handleItemKeyDown,
       }),
       [
@@ -666,6 +916,8 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         isItemExpanded,
         selectItem,
         toggleExpanded,
+        registerItemInstance,
+        registerBranchOrder,
         handleItemKeyDown,
       ]
     )
