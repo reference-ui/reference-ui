@@ -34,7 +34,7 @@ Visual polish is not this gate. No filtering helpers.
 | Defaults | `autocomplete="list"`, `allowCustomValue=false`, `closeOnBlur=true` |
 | Popup | Overlay layer; `virtualFocus?` for custom grids |
 | Async | `loading?` → listbox `aria-busy`; empty / "no results" spoken via `announce()`, no private live region |
-| Commit | root `onChange` is the sole commit |
+| Commit | root `onChange` is the sole commit; recommitting the identical value is silent (B-36, Listbox single parity) |
 
 ### Status (2026-09-25, quarantine-landing reconciliation)
 

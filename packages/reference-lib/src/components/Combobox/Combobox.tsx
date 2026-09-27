@@ -1477,7 +1477,11 @@ export function Combobox({
       // Two-authority conflict (#5, CB-ADAPTER-08): no adapter
       // receives a commit until exactly one authority remains.
       if (collectionConflict) return
-      onChange(nextVal)
+      // B-36: re-committing the identical value is silent (Listbox single
+      // LB-SINGLE-05 parity) — text sync and dismiss still run.
+      if (nextVal !== value) {
+        onChange(nextVal)
+      }
       if (nextVal !== null && !isControlledInput && !selectOnly) {
         const selectedOpt = optionsMapRef.current.get(nextVal)
         const labelText = selectedOpt?.textValue ?? nextVal
@@ -1485,7 +1489,7 @@ export function Combobox({
       }
       setIsOpen(false)
     },
-    [isControlledInput, selectOnly, onChange, handleInputChange, setIsOpen, collectionConflict]
+    [isControlledInput, selectOnly, value, onChange, handleInputChange, setIsOpen, collectionConflict]
   )
 
   // Outside press (#3): Overlay dismisses non-inert layers synchronously

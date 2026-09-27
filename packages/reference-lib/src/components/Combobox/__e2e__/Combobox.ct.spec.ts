@@ -618,9 +618,12 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     // Second Enter commits the active option (not a toggle): one scalar
     // commit plus dismissal, no synthetic click duplicate, no text callback.
+    // B-36: identical recommit is silent, so the commit moves to charlie.
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('select-opt-charlie'))
     await page.keyboard.press('Enter')
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(await readLog(page, 'select-log')).toEqual(['open', 'change:bravo', 'dismiss'])
+    expect(await readLog(page, 'select-log')).toEqual(['open', 'change:charlie', 'dismiss'])
   })
 
   test('CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses', async ({
@@ -1689,5 +1692,113 @@ test.describe('Combobox cluster B CT', () => {
     await input.click()
     await expect(input).toHaveAttribute('aria-expanded', 'false')
     expect(await logOf(page, 'fb-log')).toContain('open')
+  })
+})
+
+test.describe('Combobox playtest CT', () => {
+  test('B-20: escape restores committed text over stale input', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectedLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    await page.keyboard.type('zzz')
+    await expect(input).toHaveValue('Bravozzz')
+
+    await page.keyboard.press('Escape')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('Bravo')
+  })
+
+  test('B-20: blur restores committed text over stale input', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectedLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    await page.keyboard.type('zzz')
+    await expect(input).toHaveValue('Bravozzz')
+
+    await page.getByTestId('log-clear').focus()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('Bravo')
+  })
+
+  test('B-21: tabbing into the input never opens the popup', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TabOrder')
+    const input = page.getByTestId('tab-input')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await page.getByTestId('tab-before').focus()
+    await page.keyboard.press('Tab')
+    await expect(input).toBeFocused()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('tab-popover')).toHaveCount(0)
+  })
+
+  test('B-22: combobox in a dialog closes on blur and never breaks the trap', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/DialogCombo')
+    await page.getByTestId('dlgcombo-open').click()
+    const dialog = page.getByTestId('dlgcombo-dialog')
+    await expect(dialog).toBeVisible()
+
+    // Popup closes on Tab out of the room input, like outside dialogs.
+    const room = page.getByTestId('dlgcombo-room-input')
+    await room.click()
+    await expect(page.getByTestId('dlgcombo-room-borealis')).toBeVisible()
+    await page.keyboard.press('Tab')
+    await expect(room).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('dlgcombo-seats-input')).toBeFocused()
+
+    // Tab on to Cancel, then Tab from Cancel wraps inside the dialog —
+    // never into a list option. (Clicking Cancel would activate it and
+    // close the dialog; the trap repro Tabs through.)
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('dlgcombo-cancel')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('dlgcombo-title-input')).toBeFocused()
+    const activeRole = await page.evaluate(
+      () => (document.activeElement as HTMLElement | null)?.getAttribute('role')
+    )
+    expect(activeRole).not.toBe('option')
+  })
+
+  test('B-36: recommitting the identical value emits no onChange', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectedLog')
+    const input = page.getByTestId('log-input')
+
+    // Pointer path: clicking the already-selected option closes silently.
+    // (No log-clear clicks: pressing the outside button would itself
+    // dismiss the popup. The committed value never changes, so the whole
+    // log must stay free of change: entries.)
+    await input.click()
+    await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    await page.getByTestId('log-opt-bravo').click()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    let log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual([])
+    expect(log).toContain('dismiss')
+
+    // Keyboard path: arrows back onto the committed value + Enter.
+    await input.click()
+    await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowUp')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual([])
   })
 })

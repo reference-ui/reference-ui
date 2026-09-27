@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import { Div, Span, Button } from '@reference-ui/react'
+import { Div, Span, Button, Input } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Combobox } from './index'
 import type { ComboboxAutocomplete, ComboboxGridAdapter, VirtualFocusItem } from './index'
@@ -2116,6 +2116,133 @@ export const FilterBothLog = () => {
         <Button data-testid="fb-clear" onClick={() => setLog([])}>
           Clear log
         </Button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+const dialogRooms = [
+  { value: 'borealis', label: 'Borealis' },
+  { value: 'cinder', label: 'Cinder' },
+  { value: 'dune', label: 'Dune' },
+]
+
+export const DialogCombo = () => {
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [comboOpen, setComboOpen] = React.useState(false)
+  const [title, setTitle] = React.useState('Dialog booking')
+  const [roomId, setRoomId] = React.useState<string | null>(null)
+  const [roomInput, setRoomInput] = React.useState('')
+  const [seats, setSeats] = React.useState('2')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="dlgcombo-root">
+        <Button data-testid="dlgcombo-open" onClick={() => setDialogOpen(true)}>
+          Open dialog
+        </Button>
+        <Overlay open={dialogOpen} onDismiss={() => setDialogOpen(false)}>
+          <Overlay.Backdrop
+            data-testid="dlgcombo-backdrop"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+          />
+          <Overlay.Content
+            data-testid="dlgcombo-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dlgcombo-title"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            <Div
+              data-testid="dlgcombo-card"
+              bg="ui.dialog.background"
+              color="ui.dialog.foreground"
+              borderRadius="md"
+              p="4r"
+              style={{ pointerEvents: 'auto', width: 320 }}
+            >
+              <Span id="dlgcombo-title" fontSize="4r" fontWeight="600">
+                New booking (dialog)
+              </Span>
+              <Div mt="3r">
+                <Span fontSize="3r">Title</Span>
+                <Input
+                  data-testid="dlgcombo-title-input"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                />
+              </Div>
+              <Div mt="3r">
+                <Span fontSize="3r">Room</Span>
+                <Combobox
+                  open={comboOpen}
+                  onOpen={() => {
+                    push('open')
+                    setComboOpen(true)
+                  }}
+                  onDismiss={() => {
+                    push('dismiss')
+                    setComboOpen(false)
+                  }}
+                  value={roomId}
+                  onChange={v => {
+                    push(`change:${v}`)
+                    setRoomId(v)
+                  }}
+                  inputValue={roomInput}
+                  onInputValueChange={v => {
+                    push(`input:${v}`)
+                    setRoomInput(v)
+                  }}
+                >
+                  <Combobox.Input
+                    data-testid="dlgcombo-room-input"
+                    placeholder="Pick a room…"
+                  />
+                  <Combobox.Popover data-testid="dlgcombo-room-popover">
+                    <Listbox>
+                      {dialogRooms.map(r => (
+                        <Listbox.Option
+                          key={r.value}
+                          value={r.value}
+                          data-testid={`dlgcombo-room-${r.value}`}
+                        >
+                          {r.label}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox>
+                  </Combobox.Popover>
+                </Combobox>
+              </Div>
+              <Div mt="3r">
+                <Span fontSize="3r">Seats</Span>
+                <Input
+                  data-testid="dlgcombo-seats-input"
+                  value={seats}
+                  onChange={e => setSeats(e.target.value)}
+                />
+              </Div>
+              <Div mt="4r" display="flex" gap="2r">
+                <Button
+                  data-testid="dlgcombo-cancel"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </Div>
+            </Div>
+          </Overlay.Content>
+        </Overlay>
+        <Div data-testid="dlgcombo-log">{JSON.stringify(log)}</Div>
       </Div>
     </ReferenceLibrary>
   )

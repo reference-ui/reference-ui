@@ -1886,9 +1886,14 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     expect(calls).toEqual(['open'])
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
 
+    // B-36: recommitting the identical value is silent, so the commit
+    // moves to charlie first — the exactly-once assertion stays on a
+    // changed value.
+    await pressKey(trigger, 'ArrowDown')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
     const commitPrevented = await pressKey(trigger, 'Enter')
     expect(commitPrevented).toBe(true)
-    expect(calls).toEqual(['open', 'change:bravo', 'dismiss'])
+    expect(calls).toEqual(['open', 'change:charlie', 'dismiss'])
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
     await unmount(container, root)
 
@@ -1906,8 +1911,11 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     calls.length = 0
     await pressKey(trigger2, ' ')
     expect(calls).toEqual(['open'])
+    // B-36: identical recommit is silent — move to bravo before Space.
+    await pressKey(trigger2, 'ArrowDown')
+    expect(trigger2.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
     await pressKey(trigger2, ' ')
-    expect(calls).toEqual(['open', 'change:alpha', 'dismiss'])
+    expect(calls).toEqual(['open', 'change:bravo', 'dismiss'])
     await unmount(second.container, second.root)
   })
 
