@@ -7,10 +7,9 @@ export type TabsVariant = 'line' | 'pill'
 
 export interface TabsProps {
   children?: React.ReactNode
-  /** Controlled value. Omitted = uncontrolled (self-managed from defaultValue). */
+  /** Optional value. Omitted = uncontrolled (self-managed from the first tab). */
   value?: string
-  /** Uncontrolled initial value. Ignored once controlled. */
-  defaultValue?: string | null
+  /** Optional notification; fires on user-driven selection changes in both modes. */
   onChange?: (value: string) => void
   orientation?: TabsOrientation
   activation?: TabsActivation
@@ -69,23 +68,20 @@ const TabsContext = React.createContext<TabsContextValue | null>(null)
 export function Tabs({
   children,
   value: valueProp,
-  defaultValue,
   onChange,
   orientation = 'horizontal',
   activation = 'automatic',
   variant = 'line',
 }: TabsProps) {
-  // Dual-mode selection (HQ EOD 2026-09-26 reversal of FEATURES #1):
-  // value !== undefined → controlled; else self-managed from
-  // defaultValue (Accordion shape: isControlled + internalValue
-  // precedent). A null/missing default normalizes to '' so no tab
-  // matches and nothing is selected; the roving repair still parks
-  // the stop on first-enabled.
+  // Optional value (HQ EOD 2026-09-26 optional-value exception to the
+  // no-uncontrolled-seed stance, superseding the FEATURES #1 reversal):
+  // value !== undefined → controlled; else self-managed from the
+  // natural zero — the first enabled tab. There is no seeding API.
+  // internalValue null = never seeded and never user-set; the seed
+  // effect below pins it to first-enabled once tabs register.
   const isControlled = valueProp !== undefined
-  const [internalValue, setInternalValue] = React.useState<string>(
-    () => defaultValue ?? ''
-  )
-  const value = isControlled ? valueProp : internalValue
+  const [internalValue, setInternalValue] = React.useState<string | null>(null)
+  const value = isControlled ? valueProp : (internalValue ?? '')
 
   // Stable SSR-safe identity (TB-DOM-07, TB-ENV-01): useId keeps
   // server/client markup identical, unlike a module counter. Pinned in
@@ -251,6 +247,17 @@ export function Tabs({
     },
     [getOrderedEnabledTabs, getOrderedTabs]
   )
+
+  // Natural-zero seed (optional value): an uncontrolled Tabs with no
+  // user selection yet starts on the first enabled tab. Seeding is a
+  // mount repair, not a transition — no onChange fires. Retries across
+  // registry bumps until a seed sticks; user selections (non-null
+  // internalValue) are never reseeded.
+  React.useEffect(() => {
+    if (isControlled || internalValue !== null) return
+    const first = getOrderedEnabledTabs()[0]
+    if (first !== undefined) setInternalValue(first)
+  }, [isControlled, internalValue, registryVersion, getOrderedEnabledTabs])
 
   // Last panel to hold focus (FEATURES #4): set on focus-enter, never
   // cleared on blur — removal drops focus synchronously during commit, so

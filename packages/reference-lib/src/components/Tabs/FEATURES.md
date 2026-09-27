@@ -7,17 +7,18 @@ verdicts, this file keeps the proposals.
 
 ## 1. Required controlled value; API freeze removals (from DECISIONS candidate #1)
 
-**REVERSED in part (HQ EOD 2026-09-26):** Tabs keeps uncontrolled
-support — users don't always want to control tabs. `value` is optional
-again and `defaultValue?: string | null` is restored (dual-mode per the
-Accordion shape: `value !== undefined` → controlled, else self-managed;
-`onChange` notifies in both). Root-`disabled` removal, `variant`
-retention, `keepMounted`, rescue, handoff, stop policy, and the link
-recipe all stand — only the required-`value` cut is undone.
+**SUPERSEDED (HQ EOD 2026-09-26 optional-value exception):** Tabs keeps
+uncontrolled support — users don't always want to control tabs — but
+with NO seeding prop anywhere: `value` is simply optional, and omitting
+it means self-managed from the first tab (`value !== undefined` →
+controlled, else self-managed; `onChange` notifies in both).
+Root-`disabled` removal, `variant` retention, `keepMounted`, rescue,
+handoff, stop policy, and the link recipe all stand — only the
+required-`value` cut is undone.
 
-**What it did:** Made `value` required-controlled and deleted
-`defaultValue`, `variant` (`line`/`pill`), and root `disabled`; line/pill
-visuals move to Book, not the kernel.
+**What it did:** Made `value` required-controlled and deleted the
+uncontrolled seeding prop, `variant` (`line`/`pill`), and root
+`disabled`; line/pill visuals move to Book, not the kernel.
 
 **API (as landed, before the reversal):**
 
@@ -25,7 +26,7 @@ visuals move to Book, not the kernel.
 // value becomes required; undefined throws
 // `requires a controlled `value` prop`
 <Tabs value={value} onChange={setValue}>…</Tabs>
-// defaultValue, variant, and root disabled are removed entirely
+// seeding prop, variant, and root disabled are removed entirely
 ```
 
 **Maintainer take:** Right direction for a major, but only after Book owns line/pill stories so current `variant="pill"` consumers have a migration path.

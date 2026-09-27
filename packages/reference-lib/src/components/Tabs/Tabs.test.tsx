@@ -20,7 +20,7 @@ function tabIndexOf(id: string) {
   return document.getElementById(id)?.getAttribute('tabindex')
 }
 
-describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', () => {
+describe('Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -38,11 +38,11 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     container.remove()
   })
 
-  it('uncontrolled: defaultValue seeds selection and clicks self-manage', async () => {
+  it('uncontrolled: omitted value self-manages from the first tab', async () => {
     const log: string[] = []
     await React.act(async () => {
       root.render(
-        <Tabs defaultValue="general" onChange={(next: string) => log.push(next)}>
+        <Tabs onChange={(next: string) => log.push(next)}>
           <Tabs.List>
             <Tabs.Tab id="t-general" value="general">
               General
@@ -66,6 +66,8 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     ).toBe('true')
     expect(document.getElementById('p-general')?.hidden).toBe(false)
     expect(document.getElementById('p-billing')?.hidden).toBe(true)
+    // Seeding the natural zero is a mount repair, not a transition.
+    expect(log).toEqual([])
 
     await React.act(async () => {
       click(document.getElementById('t-billing')!)
@@ -82,12 +84,12 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     expect(log).toEqual(['billing'])
   })
 
-  it('uncontrolled: omitted value and defaultValue select nothing and never throw', async () => {
+  it('uncontrolled: omitted value seeds first-enabled past a disabled lead tab', async () => {
     await React.act(async () => {
       root.render(
         <Tabs>
           <Tabs.List>
-            <Tabs.Tab id="t-general" value="general">
+            <Tabs.Tab id="t-general" value="general" disabled>
               General
             </Tabs.Tab>
             <Tabs.Tab id="t-billing" value="billing">
@@ -105,30 +107,19 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     })
 
     expect(
-      document.getElementById('t-general')?.getAttribute('aria-selected')
-    ).toBe('false')
-    expect(
-      document.getElementById('t-billing')?.getAttribute('aria-selected')
-    ).toBe('false')
-    expect(document.getElementById('p-general')?.hidden).toBe(true)
-    // The roving repair still parks the stop on first-enabled.
-    expect(tabIndexOf('t-general')).toBe('0')
-
-    // First click self-selects from the empty state.
-    await React.act(async () => {
-      click(document.getElementById('t-billing')!)
-    })
-    expect(
       document.getElementById('t-billing')?.getAttribute('aria-selected')
     ).toBe('true')
     expect(document.getElementById('p-billing')?.hidden).toBe(false)
+    expect(document.getElementById('p-general')?.hidden).toBe(true)
+    // The roving stop parks on the seeded tab.
+    expect(tabIndexOf('t-billing')).toBe('0')
   })
 
   it('uncontrolled: automatic arrows self-select through the same funnel', async () => {
     const log: string[] = []
     await React.act(async () => {
       root.render(
-        <Tabs defaultValue="general" onChange={(next: string) => log.push(next)}>
+        <Tabs onChange={(next: string) => log.push(next)}>
           <Tabs.List>
             <Tabs.Tab id="t-general" value="general">
               General
@@ -160,29 +151,50 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     expect(log).toEqual(['billing'])
   })
 
-  it('uncontrolled: null defaultValue selects nothing and never throws', async () => {
+  it('uncontrolled: user selection sticks across re-renders, never reseeded', async () => {
+    const log: string[] = []
+    const renderTree = () => (
+      <Tabs onChange={(next: string) => log.push(next)}>
+        <Tabs.List>
+          <Tabs.Tab id="t-general" value="general">
+            General
+          </Tabs.Tab>
+          <Tabs.Tab id="t-billing" value="billing">
+            Billing
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel id="p-general" value="general">
+          G
+        </Tabs.Panel>
+        <Tabs.Panel id="p-billing" value="billing">
+          B
+        </Tabs.Panel>
+      </Tabs>
+    )
     await React.act(async () => {
-      root.render(
-        <Tabs defaultValue={null}>
-          <Tabs.List>
-            <Tabs.Tab id="t-general" value="general">
-              General
-            </Tabs.Tab>
-          </Tabs.List>
-          <Tabs.Panel value="general">G</Tabs.Panel>
-        </Tabs>
-      )
+      root.render(renderTree())
     })
-
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
     expect(
-      document.getElementById('t-general')?.getAttribute('aria-selected')
-    ).toBe('false')
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+
+    await React.act(async () => {
+      root.render(renderTree())
+    })
+    expect(
+      document.getElementById('t-billing')?.getAttribute('aria-selected')
+    ).toBe('true')
+    expect(document.getElementById('p-billing')?.hidden).toBe(false)
+    expect(log).toEqual(['billing'])
   })
 
-  it('controlled value takes precedence over defaultValue', async () => {
+  it('controlled: value selects exactly that tab', async () => {
     await React.act(async () => {
       root.render(
-        <Tabs value="billing" defaultValue="general">
+        <Tabs value="billing">
           <Tabs.List>
             <Tabs.Tab id="t-general" value="general">
               General
@@ -206,6 +218,13 @@ describe('Tabs dual-mode proofs (HQ EOD 2026-09-26 reversal of FEATURES #1)', ()
     ).toBe('true')
     expect(document.getElementById('p-billing')?.hidden).toBe(false)
     expect(document.getElementById('p-general')?.hidden).toBe(true)
+  })
+
+  it('types: no seeding prop exists on TabsProps', () => {
+    type TabsPropsOf = React.ComponentProps<typeof Tabs>
+    // @ts-expect-error - seeding props were deleted (optional value, no seeding API)
+    const _invalid: TabsPropsOf = { defaultValue: 'general' }
+    expect(_invalid).toBeDefined()
   })
 
   it('renders tabs with 3px indicator on active tab and table-border baseline on list', async () => {

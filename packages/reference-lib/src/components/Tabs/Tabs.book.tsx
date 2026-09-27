@@ -2,8 +2,9 @@ import * as React from 'react'
 import { A, Div, Span } from '@reference-ui/react'
 import { Tabs } from './index'
 
-// Dual-mode (HQ EOD 2026-09-26 reversed FEATURES #1: `value` optional,
-// `defaultValue` restored); the Book stories stay controlled throughout.
+// Optional value (HQ EOD 2026-09-26 optional-value exception: `value`
+// optional, omitted = self-managed from the first tab, no seeding
+// prop); the Book stories stay controlled throughout.
 // `variant` stays in the kernel — the stylesheet collector cannot
 // reliably deliver Book-side token styles, so the pill look has no
 // other collectible home.
