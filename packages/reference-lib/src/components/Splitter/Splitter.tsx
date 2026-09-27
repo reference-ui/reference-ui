@@ -179,18 +179,32 @@ const SplitterContext = React.createContext<SplitterContextValue | null>(null)
 
 export type SplitterPanelProps = Omit<
   PrimitiveProps<'div'>,
-  'flexGrow' | 'flexShrink' | 'flexBasis' | 'flex'
+  'flexGrow' | 'flexShrink' | 'flexBasis' | 'flex' | 'minSize' | 'maxSize'
 > & {
   min?: number | string
   max?: number | string
+  /**
+   * Legacy alias of `min` (pre-rename API). Still drives the solver; `min`
+   * wins when both are set. Never reaches `css()` or the DOM (B-28: the
+   * names collide with the CSS `min-size`/`max-size` style props, so the
+   * constraint meaning owns them on this component).
+   */
+  minSize?: number | string
+  /**
+   * Legacy alias of `max` (pre-rename API). Still drives the solver; `max`
+   * wins when both are set. Never reaches `css()` or the DOM.
+   */
+  maxSize?: number | string
   collapsible?: boolean
   collapsedSize?: number
 }
 
 export function SplitterPanel({
   children,
-  min,
-  max,
+  min: minProp,
+  max: maxProp,
+  minSize: legacyMinSize,
+  maxSize: legacyMaxSize,
   id: idProp,
   collapsible = false,
   collapsedSize = 0,
@@ -198,6 +212,12 @@ export function SplitterPanel({
   style,
   ...props
 }: SplitterPanelProps) {
+  // B-28: legacy aliases resolve into the solver inputs; the deleted
+  // `index` prop is stripped so stale call sites can't leak it to the DOM.
+  const min = minProp ?? legacyMinSize
+  const max = maxProp ?? legacyMaxSize
+  const { index: _index, ...rest } = props as typeof props & { index?: unknown }
+  void _index
   const context = React.useContext(SplitterContext)
   const orientation = context?.orientation ?? 'horizontal'
 
@@ -248,7 +268,7 @@ export function SplitterPanel({
       overflow="auto"
       className={className}
       style={geometryStyle}
-      {...props}
+      {...rest}
     >
       {children}
     </Div>
@@ -306,7 +326,6 @@ export function SplitterThumb({
       flexDirection={isHorizontal ? 'column' : 'row'}
       alignItems="center"
       justifyContent="center"
-      gap={`${dotGap}px`}
       position="absolute"
       top="50%"
       left="50%"
@@ -315,6 +334,9 @@ export function SplitterThumb({
       pointerEvents="none"
       transition="opacity 150ms ease, border-color 150ms ease"
       style={{
+        // H-1: gap is computed, so it rides inline — never a dynamic
+        // template through css(), whose value space can't be extracted.
+        gap: `${dotGap}px`,
         transform: 'translate(-50%, -50%)',
         width: isHorizontal ? 10 : computedLength,
         height: isHorizontal ? computedLength : 10,
@@ -543,6 +565,11 @@ export function SplitterHandle({
     )
   }
 
+  // B-28: strip the deleted `index` prop so stale call sites can't leak
+  // it onto the DOM. Still a type error by design (see SP-TYPE-01).
+  const { index: _handleIndex, ...rest } = props as typeof props & { index?: unknown }
+  void _handleIndex
+
   return (
     <SplitterHandleContext.Provider value={handleContextValue}>
       <Div
@@ -588,7 +615,7 @@ export function SplitterHandle({
         _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '1px' }}
         className={className}
         style={style}
-        {...props}
+        {...rest}
       >
         {renderContent()}
       </Div>

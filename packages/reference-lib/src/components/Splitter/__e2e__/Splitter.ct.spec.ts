@@ -177,6 +177,54 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     expect(errors.filter(t => /collapsible|collapsedSize|minSize|maxSize/.test(t))).toEqual([])
   })
 
+  test('B-28 REOPENED: legacy minSize/maxSize/index never leak to css() or the DOM', async ({
+    mount,
+    page,
+  }) => {
+    // Pre-rename call sites (minSize/maxSize/index, as in consumer code) must
+    // not reach css() ("no compiled class for minSize: 10") or the DOM. The
+    // aliases still drive the solver; index is stripped and ignored.
+    const errors: string[] = []
+    const warnings: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push(msg.text())
+      if (msg.type() === 'warning') warnings.push(msg.text())
+    })
+    page.on('pageerror', err => errors.push(String(err)))
+
+    await mount('components/Splitter/Splitter/LegacyProps')
+    await expect(page.getByTestId('legacy-panel-0')).toBeVisible()
+
+    // Solver aliasing: minSize=10 / maxSize=90 bind the separator range.
+    const handle = page.getByTestId('legacy-handle-0')
+    await expect(handle).toHaveAttribute('aria-valuemin', '10')
+    await expect(handle).toHaveAttribute('aria-valuemax', '90')
+
+    // Zero DOM leak on Panels and the Handle.
+    const leakedAttrs = await page.evaluate(() => {
+      const names = ['minsize', 'maxsize', 'index', 'collapsible', 'collapsedsize']
+      const hits: string[] = []
+      for (const node of document.querySelectorAll(
+        '[data-reference-splitter-panel], [data-reference-splitter-handle]'
+      )) {
+        for (const name of names) {
+          if (node.hasAttribute(name)) {
+            hits.push(`${(node as HTMLElement).dataset.testid ?? '?'}[${name}]`)
+          }
+        }
+      }
+      return hits
+    })
+    expect(leakedAttrs).toEqual([])
+
+    // Zero miss-spam for the legacy names. Targeted (not blanket
+    // zero-warnings): the H-6 dev-race can warn for values whose rules exist,
+    // so only the leak signature fails here.
+    const leak = /minSize|maxSize|collapsible|collapsedSize/
+    expect(errors.filter(t => leak.test(t))).toEqual([])
+    expect(warnings.filter(t => leak.test(t))).toEqual([])
+  })
+
   test('W-35: bad panel layout dev-warns and never silently collapses', async ({ mount, page }) => {
     // B-11 instance shape: entries sum to 60, not 100. Dev warns naming
     // component, prop, value, and range; both panels stay measurable —

@@ -338,5 +338,63 @@ describe('Splitter contract', () => {
       expect(handle?.getAttribute('aria-valuemin')).toBe('5')
       expect(handle?.getAttribute('aria-valuemax')).toBe('95')
     })
+
+    it('B-28 REOPENED: legacy minSize/maxSize/index never leak to css() or the DOM', () => {
+      // Pre-rename call sites still pass minSize/maxSize/index. The names
+      // collide with the CSS min-size/max-size style props, so without the
+      // destructure they flow ...props → Div → css() ("no compiled class
+      // for minSize: 10") or land on the DOM as unknown attributes.
+      const errors: string[] = []
+      const warnings: string[] = []
+      vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+        errors.push(args.map(String).join(' '))
+      })
+      vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '))
+      })
+      // `index` is a deleted prop (a type error by design) — the spread
+      // keeps the fixture compiling while proving the runtime strips it.
+      const el = mount(
+        <Splitter value={[40, 60]}>
+          <Splitter.Panel minSize={10} maxSize={90} {...{ index: 0 }}>
+            Left
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" {...{ index: 0 }} />
+          <Splitter.Panel {...{ index: 1 }}>Right</Splitter.Panel>
+        </Splitter>
+      )
+      // Legacy aliases still drive the solver: minSize=10/maxSize=90 bind
+      // the separator range.
+      const handle = el.querySelector('[role="separator"]')
+      expect(handle?.getAttribute('aria-valuemin')).toBe('10')
+      expect(handle?.getAttribute('aria-valuemax')).toBe('90')
+      // Zero DOM leak on Panels and the Handle.
+      for (const node of el.querySelectorAll(
+        '[data-reference-splitter-panel], [role="separator"]'
+      )) {
+        for (const name of ['minsize', 'maxsize', 'index']) {
+          expect(node.hasAttribute(name)).toBe(false)
+        }
+      }
+      // Zero css() miss-spam for the legacy names.
+      const leak = /minSize|maxSize|collapsible|collapsedSize/
+      expect(errors.filter((line) => leak.test(line))).toEqual([])
+      expect(warnings.filter((line) => leak.test(line))).toEqual([])
+    })
+
+    it('B-28 REOPENED: min/max win over legacy minSize/maxSize when both are set', () => {
+      const el = mount(
+        <Splitter value={[40, 60]}>
+          <Splitter.Panel min={20} max={60} minSize={10} maxSize={90}>
+            Left
+          </Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
+        </Splitter>
+      )
+      const handle = el.querySelector('[role="separator"]')
+      expect(handle?.getAttribute('aria-valuemin')).toBe('20')
+      expect(handle?.getAttribute('aria-valuemax')).toBe('60')
+    })
   })
 })
