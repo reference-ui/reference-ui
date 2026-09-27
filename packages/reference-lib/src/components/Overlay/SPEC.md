@@ -389,18 +389,21 @@ Engine + named Playwright coverage. Do not rewrite these tests. If a Must case n
 - [x] `OV-ESC-03` — Latest callback after rerender.
 - [x] `OV-ESC-04` — Nested: first Escape is child-only; next is parent.
 - [x] `OV-ESC-06` — AlertDialog via prevented `onEscape`; Overlay does not read `role`.
+- [x] `OV-ESC-08` — `onEscape` receives the real `KeyboardEvent` (constructor pinned).
 - [x] `OV-OUT-01` — Backdrop primary sequence: `onOutsidePress` then `onDismiss`.
 - [x] `OV-OUT-02` — Inside Content: no dismiss.
 - [x] `OV-OUT-03` — `onOutsidePress.preventDefault()` skips `onDismiss`.
 - [x] `OV-OUT-05` — Non-primary / pen barrel: no dismiss (frozen vs current Radix).
 - [x] `OV-OUT-08` — Backdrop that `stopPropagation`s click still dismisses.
 - [x] `OV-OUT-09` — `composedPath`: inner shadow is inside; sibling shadow is outside.
+- [x] `OV-OUT-12` — `onOutsidePress` / `onInteractOutside` receive the real `PointerEvent`, ordered before `onDismiss`.
 - [x] `OV-LAYER-01` — Portalled child popup is inside the parent (branch + shard).
 - [x] `OV-LAYER-02` — Press in parent, outside child: child only.
 - [x] `OV-LAYER-03` — One physical outside event → topmost child only (not Radix close-both).
 - [x] `OV-LAYER-04` — Deferred modal parent does not close from the child's outside touch.
 - [x] `OV-LAYER-05` — Child dismiss clears parent's pending outside interaction.
 - [x] `OV-LAYER-06` — Parent close cascades deepest-first; recently-removed child cannot outside-dismiss an ancestor.
+- [x] `OV-LAYER-11` — Composition accounting: one layer entry per coordinator/Content pair; nested popover-in-dialog branches via `parentId` (roots stay 1); stack empties on close.
 - [x] `OV-POINTER-01` — Background pointer activation blocked while modal.
 - [x] `OV-POINTER-02` — Consumer `pointer-events` restored byte-for-byte.
 - [x] `OV-POINTER-03` — Nested modals: refcount until final Presence exit.
@@ -719,6 +722,13 @@ Same-document kernel leftovers plus iframe / two-root / Shadow / SSR / RTL. Prov
   containment, inside/outside composed pointer paths, nested inert traversal,
   and internal-versus-background scrolling. Assert each public behavior matches
   ordinary document portals and cleanup leaves no host or document residue.
+- [x] `OV-ENV-05` `[reference]` `[shadow]` —
+  **Overlay should portal into the trigger's ShadowRoot when no container
+  is given.**
+  Render a Trigger inside an open ShadowRoot with no `Overlay.Portal`
+  part. Assert Content lands in that root (not `document.body`) and
+  light-DOM outside press plus Escape dismiss with the standard
+  granular-before-high-level order.
 
 
 ### Geometry / edge leftovers
@@ -762,3 +772,7 @@ Same-document kernel leftovers plus iframe / two-root / Shadow / SSR / RTL. Prov
   Overlay with isolation `scroll` always owns an active scroll lock through
   Presence exit, so there is no second public switch that can desynchronize
   isolation.
+- Closed-content observability: unmount-when-closed is absolute and
+  Overlay exposes no closed-content metadata or registry (FEATURES #4,
+  decided non-goal). Coordinators answer from authored children plus
+  collection metadata above the mount.

@@ -18,6 +18,7 @@ import { usePointerLock } from '../isolation/pointer-events'
 import { useOverlayPosition } from '../geometry/use-position'
 import type { OverlayContentGeometry } from '../types'
 import { nextAfter, tabbables } from './tab-cycle'
+import { resolvePortalContainer } from './portal-container'
 export type OverlayContentProps = PrimitiveProps<'div'> & OverlayContentGeometry
 
 export function OverlayContent({
@@ -184,5 +185,5 @@ export function OverlayContent({
     locked
   ) : null
 
-  return <Portal container={context.portalContainer}>{presentable}</Portal>
+  return <Portal container={resolvePortalContainer(context)}>{presentable}</Portal>
 }

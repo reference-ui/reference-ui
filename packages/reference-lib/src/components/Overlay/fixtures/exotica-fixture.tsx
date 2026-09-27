@@ -121,6 +121,11 @@ export function ExoticaFixture() {
   const env03HostRef = React.useRef<HTMLDivElement | null>(null)
   const [env03Dest, setEnv03Dest] = React.useState<HTMLElement | null>(null)
 
+  const [env05Open, setEnv05Open] = React.useState(false)
+  const env05HostRef = React.useRef<HTMLDivElement | null>(null)
+  const [env05Root, setEnv05Root] = React.useState<ShadowRoot | null>(null)
+  const [env05Log, setEnv05Log] = React.useState<string[]>([])
+
   const [pos10Open, setPos10Open] = React.useState(false)
   const pos10AnchorRef = React.useRef<HTMLButtonElement | null>(null)
   const pos10RtlRef = React.useRef<HTMLDivElement | null>(null)
@@ -195,6 +200,12 @@ export function ExoticaFixture() {
     dest.setAttribute('data-testid', 'env03-shadow-dest')
     shadow.appendChild(dest)
     setEnv03Dest(dest)
+  }, [])
+
+  React.useEffect(() => {
+    const host = env05HostRef.current
+    if (!host || host.shadowRoot) return
+    setEnv05Root(host.attachShadow({ mode: 'open' }))
   }, [])
 
   React.useEffect(() => {
@@ -953,6 +964,50 @@ export function ExoticaFixture() {
                 Shadow pos
               </Overlay.Content>
             </Overlay.Portal>
+          </Overlay>
+        )}
+      </section>
+
+      <section data-testid="section-ov-env-05" style={{ marginBottom: 24 }}>
+        <h3>OV-ENV-05 automatic shadow destination</h3>
+        <div ref={env05HostRef} data-testid="env05-host" />
+        <button type="button" data-testid="btn-env-05-light-outside">
+          Env05 light outside
+        </button>
+        <pre data-testid="env-05-log">{env05Log.join(',')}</pre>
+        {env05Root && (
+          <Overlay
+            open={env05Open}
+            onOpenChange={setEnv05Open}
+            onEscape={() => setEnv05Log(l => [...l, 'escape'])}
+            onOutsidePress={() => setEnv05Log(l => [...l, 'outside'])}
+            onDismiss={() => {
+              setEnv05Log(l => [...l, 'dismiss'])
+              setEnv05Open(false)
+            }}
+          >
+            {createPortal(
+              <Overlay.Trigger data-testid="btn-open-env-05">
+                Open ENV-05
+              </Overlay.Trigger>,
+              env05Root
+            )}
+            <Overlay.Content
+              data-testid="env-05-content"
+              role="dialog"
+              style={{
+                position: 'fixed',
+                top: '30%',
+                left: '30%',
+                background: '#fff',
+                padding: 16,
+                zIndex: 1001,
+              }}
+            >
+              <button type="button" data-testid="btn-close-env-05" onClick={() => setEnv05Open(false)}>
+                Close
+              </button>
+            </Overlay.Content>
           </Overlay>
         )}
       </section>

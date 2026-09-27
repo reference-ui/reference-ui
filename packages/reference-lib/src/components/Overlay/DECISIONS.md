@@ -14,6 +14,22 @@ unit 30/30 on unmodified baselines, plus nested UX SIGN-OFF.
 Log: `.agents/missions/quarantine-landing/objective-B-overlay.md`;
 record commit `931feb84c` (verified via `git log`).
 
+## Landed (features campaign 2026-09-26)
+
+1. Shadow destination rule — AUTOMATIC: omitted container follows
+   `trigger.getRootNode()` into a ShadowRoot; explicit wins.
+   `parts/portal-container.ts` + `OV-ENV-05`.
+2. Layer/dismissal accounting — coordinator-logs + prose/CT audit: one
+   entry per pair, branch via `parentId`, one sequence per modality.
+   `Overlay.md` + `OV-LAYER-11`. No dev diagnostic.
+3. Dismiss vocabulary — canonical real-events-everywhere; no new verb
+   without a consumer. `Overlay.md` + `OV-ESC-08` / `OV-OUT-12`.
+4. Closed-content observability — NON-GOAL (b): unmount-when-closed
+   absolute; coordinators read authored children + metadata
+   (Combobox `authored.ts`). `Overlay.md` + SPEC Out of scope.
+5. Trigger-toggle focus retention — still HOLD-FOR-HQ (untouched).
+6. Tab-bridge reject semantics — still HOLD-FOR-HQ (untouched).
+
 ## Candidate features (quarantine-sourced)
 
 None — quarantine surfaced no Overlay API or functionality. The entire

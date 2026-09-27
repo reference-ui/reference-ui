@@ -4,7 +4,17 @@ Every open/deferred Overlay item needs an HQ product/design call before any
 test could pin it. Source: `DECISIONS.md` suspected gaps #1–#6 (5 OPEN,
 1 DEFERRED). Mechanical list: `PATCHES.md` (empty — zero test-pinnable gaps).
 
-### 1. Documented shadow destination rule for overlay consumers (from DECISIONS gap #1, OPEN)
+### 1. Documented shadow destination rule for overlay consumers (from DECISIONS gap #1, OPEN) — LANDED 2026-09-26
+
+**Decision: AUTOMATIC.** Omitted `Overlay.Portal container` follows the
+trigger: `trigger.getRootNode()` when it is a ShadowRoot, else Portal's
+`document.body` fallback; explicit `container` (including `null`) always
+wins. Implemented in `parts/portal-container.ts`, wired into Content +
+Backdrop, unit-tested, documented in `Overlay.md` ("Shadow destination
+rule"), proven end to end by `OV-ENV-05`. Shadow+modal keeps the full
+`OV-ENV-03` contract. Unblocks `DF-COMP-04`, `MN-ENV-03`,
+`CB-ENV-03`/`CB-COMP-04`; Menu PATCHES #3 + DateField PATCHES #7
+remainders go to micro-crews.
 
 **What it does:** Tells overlay consumers where to portal when the trigger
 lives in a ShadowRoot, and who owns composed-path dismissal there. The
@@ -21,7 +31,15 @@ destination consumer-authored (`container={shadowRoot}`) or automatic
 
 **Maintainer take:** Good to add — the kernel is proven and four sibling cases are parked on the rule, so writing it unblocks real consumers.
 
-### 2. Layer/dismissal accounting audit for composed consumers (from DECISIONS gap #2, OPEN)
+### 2. Layer/dismissal accounting audit for composed consumers (from DECISIONS gap #2, OPEN) — LANDED 2026-09-26
+
+**Decision: coordinator-logs + prose/CT audit.** One layer entry per
+coordinator/Content pair, logged by the coordinator's own Overlay root;
+nested popover-in-dialog registers as branch (`parentId`), not a second
+root; one granular-before-high-level sequence per modality. Contract
+published in `Overlay.md` ("Composition accounting"), audited live by
+`OV-LAYER-11` (`fixtures/accounting-fixture.tsx` store readout). No dev
+diagnostic for double registration — explicitly deferred until it bites.
 
 **What it does:** Publishes the composition accounting contract so a wrapped
 `Overlay.Content` (Combobox popover, Menu content via Popover policy) shares
@@ -38,7 +56,17 @@ asserted per modality.
 
 **Maintainer take:** Good to add — kernel halves are frozen, so blessing the consumer-facing accounting shape turns folklore into an assertable contract.
 
-### 3. Granular dismiss-handler vocabulary as the shared contract (from DECISIONS gap #3, OPEN)
+### 3. Granular dismiss-handler vocabulary as the shared contract (from DECISIONS gap #3, OPEN) — LANDED 2026-09-26
+
+**Decision: real-events-everywhere.** The proven `OV-ESC`/`OV-OUT`
+shape is canonical: `onEscape(KeyboardEvent)` /
+`onOutsidePress(PointerEvent)` + `onInteractOutside` run first,
+`onDismiss()` follows unless `preventDefault()` — real DOM events, same
+ordering, same semantics on every path. Blessed in `Overlay.md`
+("Dismiss vocabulary"); real-event constructors pinned by `OV-ESC-08` /
+`OV-OUT-12`. No new dismiss verb without a named consumer (so no
+revert-text-but-stay-open verb: no consumer named it). Unblocks Combobox
+candidate #7 either way.
 
 **What it does:** Blesses Overlay's existing dismiss vocabulary as the
 canonical shape Popover/Combobox/Menu reuse for their own granular handlers,
@@ -55,7 +83,14 @@ need a distinct verb.
 
 **Maintainer take:** Good to add — declaring the proven vocabulary canonical costs nothing and stops per-component event inventions.
 
-### 4. Closed-content observability for coordinators (from DECISIONS gap #4, OPEN)
+### 4. Closed-content observability for coordinators (from DECISIONS gap #4, OPEN) — LANDED 2026-09-26
+
+**Decision: NON-GOAL (b).** Unmount-when-closed stays absolute; Overlay
+exposes no closed-content metadata or registry. Coordinators answer
+from authored children plus collection metadata above the mount —
+Combobox's `authored.ts` scan is the conforming consumer half. Recorded
+in `Overlay.md` ("Closed content") and SPEC "Out of scope"; pinned by
+`OV-DOM-01` / `OV-DOM-05` (no new CT — the pin already exists).
 
 **What it does:** Answers "can a coordinator know popover content exists
 without mounting it" for Combobox `CB-OPEN-03` (edit opens only with content)

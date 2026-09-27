@@ -145,7 +145,8 @@ Overlay portals Backdrop, Content, and Arrow internally by default.
 own the overlay content. Trigger never portals.
 
 Portaled Backdrop and Content render under `document.body`, outside the
-DOM layer ancestor. Through the Portal Color Mode Protocol ([`LIB_PORTAL_COLOR_MODE.md`](../../../../../docs/FEATURES/LIB_PORTAL_COLOR_MODE.md)),
+DOM layer ancestor — unless the shadow destination rule applies (below).
+Through the Portal Color Mode Protocol ([`LIB_PORTAL_COLOR_MODE.md`](../../../../../docs/FEATURES/LIB_PORTAL_COLOR_MODE.md)),
 `Portal` resets `LayerScopeContext` to `false` and propagates `DocumentContext`,
 allowing the standard primitive hosts (`Div`) of Backdrop and Content to re-emit
 `data-layer` and `data-panda-theme` from logical React context so token-aware StyleProps
@@ -158,6 +159,18 @@ such as `ui.dialog.background` resolve correctly in dark and light mode without 
   <Overlay.Content>{children}</Overlay.Content>
 </Overlay>
 ```
+
+### Shadow destination rule
+
+An explicit `container` always wins — including `null`, which keeps
+Portal's default-to-body meaning. When `container` is omitted, the
+destination follows the trigger: a trigger living in a ShadowRoot
+portals Backdrop and Content into that root (`trigger.getRootNode()`);
+otherwise Portal falls back to `document.body`. Popover and Menu
+inherit the rule by forwarding an omitted container as `undefined`.
+Composed inside/outside dismissal in the shadow destination follows
+`OV-OUT-09`; shadow+modal keeps the full `OV-ENV-03` contract; the
+automatic default itself is proven by `OV-ENV-05`.
 
 ---
 
@@ -333,6 +346,42 @@ popup does not dismiss the parent. If a press is outside both parent and
 child, that physical event is consumed by the topmost child only;
 parent closure is a separate controlled action, never a replay of the
 same event. Closing a parent cascades to nested layers.
+
+### Composition accounting
+
+One layer entry per coordinator/Content pair, logged by the
+coordinator's own Overlay root — a wrapped `Overlay.Content` (Combobox
+popover, Menu content via Popover policy) never shares or duplicates
+its coordinator's entry. A nested popover-in-dialog registers as a
+branch (`parentId` linkage), not a second root layer. Each modality
+yields one granular-before-high-level sequence
+(`onEscape`→`onDismiss`, `onOutsidePress`→`onInteractOutside`→`onDismiss`).
+Audited live by `OV-LAYER-11`. There is deliberately no dev diagnostic
+for double registration — if double-registration bites in practice, a
+diagnostic can be added then.
+
+### Dismiss vocabulary (canonical)
+
+`onEscape(event: KeyboardEvent)` runs first; `onDismiss()` fires unless
+`preventDefault()` was called. `onOutsidePress(event: PointerEvent)`
+and `onInteractOutside(event)` run first on outside interaction;
+dismiss follows unless prevented. The events are always the real DOM
+events — never synthetic lookalikes — with the same ordering and the
+same `preventDefault` semantics on every path (document listeners and
+Backdrop alike). Popover, Combobox, and Menu reuse this vocabulary for
+their own granular handlers instead of inventing event types; no new
+dismiss verb ships without a named consumer. Proven by `OV-ESC-01/02`,
+`OV-OUT-01/03`, and the real-event constructors pinned in
+`OV-ESC-08` / `OV-OUT-12`.
+
+### Closed content (non-goal)
+
+Unmount-when-closed is absolute: a closed overlay mounts nothing, and
+Overlay exposes no closed-content metadata or registry — there is
+nothing to query. Coordinators answer "does content exist" from
+authored children plus collection metadata above the mount (the
+conforming consumer shape is Combobox's authored-children scan).
+Pinned by `OV-DOM-01` / `OV-DOM-05`.
 
 ---
 

@@ -7,6 +7,7 @@ import { overlayStackStore, isTopLiveLayer, useOverlayZIndex, isRecentlyRemoved,
 import { assignRef } from '../shared/refs'
 import { isPrimaryPointer, markEventConsumed, isEventConsumed } from '../shared/events'
 import { usePointerLock } from '../isolation/pointer-events'
+import { resolvePortalContainer } from './portal-container'
 
 export type OverlayBackdropProps = PrimitiveProps<'div'>
 
@@ -88,5 +89,5 @@ export function OverlayBackdrop({
     </Presence>
   )
 
-  return <Portal container={context.portalContainer}>{node}</Portal>
+  return <Portal container={resolvePortalContainer(context)}>{node}</Portal>
 }
