@@ -494,6 +494,13 @@ Tree state.
   violations plus exact tree/treeitem/group names, levels, positions,
   expansion, selection, and controls; automation supplements the keyboard and
   focus proofs.
+- [x] `TR-CSS-01` `[reference]` `[browser]` —
+  **Tree branch focus ring should resolve to a real token with no template placeholder.**
+  Mount the Basic fixture and scan the injected stylesheets for the branch
+  `:focus-visible > [data-slot="row"]` rule. Assert the rule exists, declares
+  `outline-color`, and contains no `{...}` theme placeholder (H-2: a literal
+  `{colors…}` in a component-level `css()` value ships verbatim and is
+  unresolvable at runtime).
 
 ## Composition gates
 

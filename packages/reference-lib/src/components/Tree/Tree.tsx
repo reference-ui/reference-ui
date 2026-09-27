@@ -334,7 +334,7 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
           css={{
             '&:focus-visible > [data-slot="row"]': {
               outline: '2px solid',
-              outlineColor: 'var(--colors-ui-focus-ring, {colors.ui.focus.ring})',
+              outlineColor: 'ui.focus.ring',
               outlineOffset: '-1px',
             },
           }}
