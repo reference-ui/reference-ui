@@ -141,6 +141,42 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     await expect(handle).toHaveAttribute('aria-valuenow', '40')
   })
 
+  test('B-28: Panel constraint props never leak onto the DOM', async ({ mount, page }) => {
+    // min/max/collapsible/collapsedSize are solver inputs, not DOM
+    // attributes: no React unknown-prop errors, no css() miss-spam.
+    const errors: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push(msg.text())
+    })
+    page.on('pageerror', err => errors.push(String(err)))
+    const leakedAttrs = () =>
+      page.evaluate(() => {
+        const names = ['min', 'max', 'minsize', 'maxsize', 'collapsible', 'collapsedsize']
+        const hits: string[] = []
+        for (const panel of document.querySelectorAll('[data-reference-splitter-panel]')) {
+          for (const name of names) {
+            if (panel.hasAttribute(name)) {
+              hits.push(`${(panel as HTMLElement).dataset.testid ?? '?'}[${name}]`)
+            }
+          }
+        }
+        return hits
+      })
+
+    // CollapsibleDemo covers min + collapsible + collapsedSize.
+    const demo = await mount('components/Splitter/Splitter/CollapsibleDemo')
+    await expect(page.getByTestId('collapsible-panel-0')).toBeVisible()
+    expect(await leakedAttrs()).toEqual([])
+    await demo.unmount()
+
+    // Constrained covers min + max.
+    await mount('components/Splitter/Splitter/Constrained')
+    await expect(page.getByTestId('constrained-panel-0')).toBeVisible()
+    expect(await leakedAttrs()).toEqual([])
+
+    expect(errors.filter(t => /collapsible|collapsedSize|minSize|maxSize/.test(t))).toEqual([])
+  })
+
   test('SP-DOM-03: Unconstrained panels clamp to the 5% default floor (FEATURES #10)', async ({
     mount,
     page,
