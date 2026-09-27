@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { finiteGsapTweens } from '../../motion/gsap'
+import { getElementRef } from './elementRef'
 
 export interface PresenceProps {
   children?: React.ReactElement | null | false
@@ -282,6 +283,9 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
         if (coordinator && coordinator.isCoordinatorActive()) {
           isOwnAnimationDoneRef.current = true
           coordinator.reportPartFinished(presenceId)
+          if (parentPresence) {
+            parentPresence.registerDescendant(presenceId)
+          }
           setState('unmountSuspended')
           return
         }
@@ -292,7 +296,13 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
         return
       }
 
-      // Suspend unmount while transitions/animations/GSAP tweens complete
+      // Suspend unmount while transitions/animations/GSAP tweens complete.
+      // The parent waits only for descendants that are actually exiting: a
+      // born-closed instance never suspends, so it never registers and can no
+      // longer strand the parent's exit (B-01).
+      if (parentPresence) {
+        parentPresence.registerDescendant(presenceId)
+      }
       setState('unmountSuspended')
     }
   }, [present, presenceId, parentPresence, coordinator])
@@ -323,10 +333,12 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
     })
   }, [coordinator, parentPresence, presenceId])
 
-  // Register with parent presence on mount
+  // Release an exit-start registration if this instance is removed mid-exit
+  // (PR-NEST-03). Registration itself happens at exit-start above, never on
+  // mount: born-closed descendants have no exit to report, so registering
+  // them would strand the parent forever (B-01).
   React.useEffect(() => {
     if (parentPresence) {
-      parentPresence.registerDescendant(presenceId)
       return () => {
         parentPresence.unregisterDescendant(presenceId)
       }
@@ -554,20 +566,6 @@ function useStableComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<
       }
     }
   }, [])
-}
-
-function getElementRef(element: React.ReactElement<any>): React.Ref<any> | undefined {
-  let getter = Object.getOwnPropertyDescriptor(element.props, 'ref')?.get
-  let mayWarn = getter && 'isReactWarning' in getter && (getter as any).isReactWarning
-  if (mayWarn) {
-    return (element as any).ref
-  }
-  getter = Object.getOwnPropertyDescriptor(element, 'ref')?.get
-  mayWarn = getter && 'isReactWarning' in getter && (getter as any).isReactWarning
-  if (mayWarn) {
-    return element.props.ref
-  }
-  return element.props.ref || (element as any).ref
 }
 
 export function Presence({ children, present }: PresenceProps) {

@@ -104,4 +104,46 @@ test.describe('Presence', () => {
     await expect(child).toHaveCount(0, { timeout: 2000 })
     await snap(page, 'nested-removed')
   })
+
+  test('PR-NEST-05: Exits a parent with an animated exit when a nested Presence was born closed', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Presence/Presence/PresenceNestedBornClosedFixture')
+    const parent = page.getByTestId('bornclosed-parent')
+
+    await expect(parent).toBeVisible()
+    await expect(page.getByTestId('bornclosed-child')).toHaveCount(0)
+
+    await page.getByTestId('btn-toggle-bornclosed-parent').click()
+    await expect(parent).toHaveAttribute('data-state', 'closed')
+
+    // The never-opened nested child must not strand the 150ms parent exit.
+    await expect(parent).toHaveCount(0, { timeout: 2000 })
+    await snap(page, 'bornclosed-removed')
+  })
+
+  test('PR-NEST-06: Coordinates a nested child that opens and closes during the parent exit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Presence/Presence/PresenceNestedBornClosedFixture')
+    const parent = page.getByTestId('bornclosed-parent')
+    const child = page.getByTestId('bornclosed-child')
+
+    await expect(parent).toBeVisible()
+
+    // Start the parent exit, then open and close the born-closed child mid-exit.
+    await page.getByTestId('btn-toggle-bornclosed-parent').click()
+    await expect(parent).toHaveAttribute('data-state', 'closed')
+    await page.getByTestId('btn-toggle-bornclosed-child').click()
+    await expect(child).toBeVisible()
+    await page.getByTestId('btn-toggle-bornclosed-child').click()
+    await expect(child).toHaveAttribute('data-state', 'closed')
+
+    // Both settle once the longer child exit completes.
+    await expect(parent).toHaveCount(0, { timeout: 3000 })
+    await expect(child).toHaveCount(0, { timeout: 3000 })
+    await snap(page, 'bornclosed-coordinated-removed')
+  })
 })

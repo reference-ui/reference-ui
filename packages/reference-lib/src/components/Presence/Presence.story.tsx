@@ -192,3 +192,84 @@ export function PresenceFixture() {
     </div>
   )
 }
+
+export function PresenceNestedBornClosedFixture() {
+  const [parentPresent, setParentPresent] = React.useState(true)
+  const [childPresent, setChildPresent] = React.useState(false)
+
+  return (
+    <div
+      data-testid="bornclosed-fixture-root"
+      style={{
+        padding: '24px',
+        fontFamily: 'sans-serif',
+        maxWidth: '700px',
+      }}
+    >
+      <style>{`
+        .bornclosed-parent {
+          padding: 16px;
+          background: #f3e8ff;
+          border: 1px solid #a855f7;
+          border-radius: 6px;
+          transition: opacity 150ms ease;
+          opacity: 1;
+        }
+        .bornclosed-parent[data-state="closed"] {
+          opacity: 0;
+        }
+
+        .bornclosed-child {
+          margin-top: 8px;
+          padding: 10px;
+          background: #ede9fe;
+          border: 1px dashed #8b5cf6;
+          border-radius: 4px;
+          transition: transform 350ms ease;
+          transform: scale(1);
+        }
+        .bornclosed-child[data-state="closed"] {
+          transform: scale(0.8);
+        }
+      `}</style>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+        <button
+          type="button"
+          data-testid="btn-toggle-bornclosed-parent"
+          onClick={() => setParentPresent(p => !p)}
+          style={{ padding: '6px 12px', cursor: 'pointer' }}
+        >
+          Toggle Born-Closed Parent
+        </button>
+        <button
+          type="button"
+          data-testid="btn-toggle-bornclosed-child"
+          onClick={() => setChildPresent(p => !p)}
+          style={{ padding: '6px 12px', cursor: 'pointer' }}
+        >
+          Toggle Born-Closed Child
+        </button>
+      </div>
+
+      <Presence present={parentPresent}>
+        <div
+          data-testid="bornclosed-parent"
+          className="bornclosed-parent"
+          data-state={parentPresent ? 'open' : 'closed'}
+        >
+          Parent Content
+          <Presence present={childPresent}>
+            <div
+              data-testid="bornclosed-child"
+              className="bornclosed-child"
+              data-state={childPresent ? 'open' : 'closed'}
+            >
+              Child Content
+            </div>
+          </Presence>
+        </div>
+      </Presence>
+    </div>
+  )
+}

@@ -274,6 +274,17 @@ before Presence decides when to remove the child.
   unmount. Assert one effective descendant wait, no premature parent removal,
   one final subtree cleanup, and no duplicate listener, ref, or late-update
   warning in React 17, 18, or 19.
+- [x] `PR-NEST-05` `[convergence]` `[browser:all]` —
+  **Presence should complete a parent's animated exit when a nested descendant was born closed.**
+  Mount a nested pair with the child `present={false}` from birth (the
+  closed-overlay shape), then close the parent's 150ms transition. Assert the
+  parent removes on its own effect completion without waiting for a descendant
+  exit that never started, and no late removal or warning follows.
+- [x] `PR-NEST-06` `[convergence]` `[browser:all]` —
+  **Presence should coordinate a nested child that opens and closes during the parent's exit.**
+  Start a 150ms parent exit, open the born-closed child mid-exit, then close
+  its 350ms transition. Assert both nodes remain until the child's longer exit
+  completes, the parent removes exactly once afterward, and refs clean up.
 
 ### Refs, React, and SSR
 
@@ -300,6 +311,12 @@ before Presence decides when to remove the child.
   an animated removal under React 17, 18, and 19, and record calls. Assert one
   attachment and exactly the version-appropriate cleanup callback or `null`
   notification, never both twice.
+- [x] `PR-REF-05` `[reference]` `[react:all]` —
+  **Presence should read the child ref without invoking React's version-specific warning getters.**
+  Exercise the shared ref reader with synthetic elements exposing only a ref
+  accessor, real elements with and without refs, and mounted/SSR children.
+  Assert the consumer ref is returned, no getter is ever invoked, and no
+  `element.ref` warning is logged on any major.
 - [x] `PR-ENV-01` `[reference]` `[ssr]` —
   **Presence should hydrate matching child markup when `present` is true on the server and client.**
   Server-render a marked present child, hydrate it with the same props, and
