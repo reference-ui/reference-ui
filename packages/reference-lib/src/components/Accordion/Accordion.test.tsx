@@ -5,7 +5,7 @@ import { act } from 'react'
 import { renderToString } from 'react-dom/server'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { describe, expect, it, vi } from 'vitest'
-import { Accordion } from './Accordion'
+import { Accordion, type AccordionProps } from './Accordion'
 import { Collapsible } from '../Collapsible'
 
 describe('Accordion Unit Contract', () => {
@@ -1035,14 +1035,14 @@ describe('Accordion Unit Contract', () => {
     container.remove()
   })
 
-  it('Uncontrolled single defaultValue should open initially and toggle via internal state', async () => {
+  it('Omitted single value should self-manage from the null zero state', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
     const requests: any[] = []
     await act(async () => {
       root.render(
-        <Accordion expansion="single" defaultValue="a" onChange={(val) => requests.push(val)}>
+        <Accordion expansion="single" onChange={(val) => requests.push(val)}>
           <Collapsible id="a">
             <Collapsible.Trigger data-testid="trigger-a">A</Collapsible.Trigger>
             <Collapsible.Content data-testid="content-a">Panel A</Collapsible.Content>
@@ -1055,32 +1055,44 @@ describe('Accordion Unit Contract', () => {
       )
     })
     const triggerA = container.querySelector('[data-testid="trigger-a"]') as HTMLButtonElement
-    const triggerB2 = container.querySelector('[data-testid="trigger-b"]') as HTMLButtonElement
+    const triggerB = container.querySelector('[data-testid="trigger-b"]') as HTMLButtonElement
+    // Natural zero: all collapsed
+    expect(triggerA.getAttribute('aria-expanded')).toBe('false')
+    expect(triggerB.getAttribute('aria-expanded')).toBe('false')
+    expect(container.querySelector('[data-testid="content-a"]')).toBeNull()
+    expect(container.querySelector('[data-testid="content-b"]')).toBeNull()
+    // Open A via internal state
+    await act(async () => {
+      triggerA.click()
+    })
+    expect(requests).toEqual(['a'])
     expect(triggerA.getAttribute('aria-expanded')).toBe('true')
     expect(container.querySelector('[data-testid="content-a"]')).not.toBeNull()
+    // Swap to B via internal state
     await act(async () => {
-      triggerB2.click()
+      triggerB.click()
     })
-    expect(requests).toEqual(['b'])
+    expect(requests).toEqual(['a', 'b'])
     expect(triggerA.getAttribute('aria-expanded')).toBe('false')
-    expect(triggerB2.getAttribute('aria-expanded')).toBe('true')
+    expect(triggerB.getAttribute('aria-expanded')).toBe('true')
+    // Collapse B back to the zero state
     await act(async () => {
-      triggerB2.click()
+      triggerB.click()
     })
-    expect(requests).toEqual(['b', null])
-    expect(triggerB2.getAttribute('aria-expanded')).toBe('false')
+    expect(requests).toEqual(['a', 'b', null])
+    expect(triggerB.getAttribute('aria-expanded')).toBe('false')
     root.unmount()
     container.remove()
   })
 
-  it('Uncontrolled multiple defaultValue should open initially and toggle via internal state', async () => {
+  it('Omitted multiple value should self-manage from the empty-array zero state', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
     const requests: any[] = []
     await act(async () => {
       root.render(
-        <Accordion expansion="multiple" defaultValue={['a']} onChange={(val) => requests.push(val)}>
+        <Accordion expansion="multiple" onChange={(val) => requests.push(val)}>
           <Collapsible id="a">
             <Collapsible.Trigger data-testid="trigger-a">A</Collapsible.Trigger>
           </Collapsible>
@@ -1092,20 +1104,33 @@ describe('Accordion Unit Contract', () => {
     })
     const triggerA = container.querySelector('[data-testid="trigger-a"]') as HTMLButtonElement
     const triggerB = container.querySelector('[data-testid="trigger-b"]') as HTMLButtonElement
+    // Natural zero: all collapsed
+    expect(triggerA.getAttribute('aria-expanded')).toBe('false')
+    expect(triggerB.getAttribute('aria-expanded')).toBe('false')
+    await act(async () => {
+      triggerA.click()
+    })
+    expect(requests).toEqual([['a']])
     expect(triggerA.getAttribute('aria-expanded')).toBe('true')
     await act(async () => {
       triggerB.click()
     })
-    expect(requests).toEqual([['a', 'b']])
+    expect(requests).toEqual([['a'], ['a', 'b']])
     expect(triggerA.getAttribute('aria-expanded')).toBe('true')
     expect(triggerB.getAttribute('aria-expanded')).toBe('true')
     await act(async () => {
       triggerA.click()
     })
-    expect(requests).toEqual([['a', 'b'], ['b']])
+    expect(requests).toEqual([['a'], ['a', 'b'], ['b']])
     expect(triggerA.getAttribute('aria-expanded')).toBe('false')
     expect(triggerB.getAttribute('aria-expanded')).toBe('true')
     root.unmount()
     container.remove()
+  })
+
+  it('AccordionProps has no defaultValue (optional-value freeze)', () => {
+    // @ts-expect-error - defaultValue was deleted; value is simply optional
+    const _deleted: AccordionProps = { defaultValue: 'a' }
+    void _deleted
   })
 })

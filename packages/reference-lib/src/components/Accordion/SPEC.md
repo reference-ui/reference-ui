@@ -20,16 +20,16 @@ TESTS.md checkboxes mean **specified**, not proven.
 **API and TESTS.md are the contract.** Policy over nested Collapsibles.
 Headers remain native Tab stops — **do not** put Accordion on RovingFocus.
 
-Visual polish is not this gate. `defaultValue` + internal store restored
-(landing rework 2026-09-25 amends the freeze). No extra Item/Trigger
-product API unless freeze is amended.
+Visual polish is not this gate. Optional-value freeze (2026-09-26):
+`value?` omitted means self-managed from the natural zero; no seeding
+prop. No extra Item/Trigger product API unless freeze is amended.
 
 ### Surface
 
 | Axis | Freeze |
 | :--- | :--- |
 | Root | `div`; nested `Collapsible` with `id` |
-| Value | controlled value or uncontrolled `defaultValue`; `expansion` single \| multiple; single may request `null` |
+| Value | optional `value` (omitted = self-managed from `null` single / `[]` multiple); `expansion` single \| multiple; single may request `null` |
 | Keyboard | `headers` \| `none` (+ `arrows` alias of headers); optional header traversal, not roving `tabIndex` |
 | Presence | each item is a Collapsible |
 | Find | items inherit Collapsible `hiddenUntilFound`; `beforematch` expands the matched item (single may swap) |
@@ -42,7 +42,7 @@ product API unless freeze is amended.
 | Production | **Yes.** |
 | Named `[x]` | 41 / 41 |
 | Playwright | 18 (+ 2 legacy smoke) |
-| Vitest | 25 (23 case-titled + 2 uncontrolled pins) |
+| Vitest | 26 (23 case-titled + 2 omitted-value pins + 1 freeze pin) |
 
 ### Landing note (quarantine-landing, 2026-09-25)
 
@@ -56,14 +56,14 @@ Deliberate positions, per recon and LANDING.md (visuals frozen):
 
 - Controlled-only + discriminated single/multiple types were first
   ported, then REJECTED at review: landing rules require the base
-  uncontrolled mode (`defaultValue` + internal store) to survive, and
+  uncontrolled mode (seeding prop + internal store) to survive, and
   the discriminated types broke the committed tree
   (`Collapsible.story.tsx` `AccordionNest`). Rework (same date)
-  restores flat base-compatible props (`value` / `defaultValue` /
+  restores flat base-compatible props (`value` / seeding /
   `onChange` over `AccordionValue`), keeps every hardening item
   (diagnostics, MULTI-04 canonicalization, keyboard/nesting hardening,
   composeRefs), and restores `keyboard: 'arrows'` as a headers alias.
-  Book + `Multiple` story reverted to base `defaultValue` (identical
+  Book + `Multiple` story reverted to the base seeding prop (identical
   renders, zero visual delta).
 - `hiddenUntilFound` / `beforematch` (Find axis): Q has no
   Accordion-side implementation and neither does this port — items
@@ -75,13 +75,28 @@ Deliberate positions, per recon and LANDING.md (visuals frozen):
 Handoff: none. The `Collapsible.story.tsx` `AccordionNest` tsc break
 dissolved from the Accordion side via flat union props (file never
 touched, per mission rule). Committed `Showcase.book.tsx`
-`defaultValue="item-1"` usage is honored again with zero edits there.
+seeding usage is honored again with zero edits there.
+
+### Optional-value note (features campaign, 2026-09-26)
+
+HQ exception (`docs/MISSIONS/API-STANCE.md`): Accordion is
+OPTIONAL-VALUE, not dual-mode. The seeding prop is deleted catalog-wide
+with in-repo migration — `value` is simply optional, and omitting it
+means self-managed from the natural zero state (`null` single, `[]`
+multiple). `onChange` notifies in both modes. Every in-repo consumer
+migrated in the same change (Book `SingleExpansion` /
+`MultipleExpansion`, `Multiple` story, `Showcase.book.tsx`
+`DisclosureRow` → controlled `value`; unit pins rewritten to
+omitted-value). Zero visual change: the 13 pre-existing snapshot
+baselines stay green unmodified.
 
 ### Gaps & incoherence
 
-- `defaultValue` + internal store. Freeze: controlled-only. (Resolved —
+- Internal store + seeding prop. Freeze: controlled-only. (Resolved —
   reworked 2026-09-25: uncontrolled restored per landing rules;
-  controlled-only NOT landed.)
+  controlled-only NOT landed. Superseded 2026-09-26 by the
+  optional-value freeze: seeding prop deleted, omitted `value`
+  self-manages.)
 - Extra `keyboard: 'arrows'` and public `Accordion.Item` / `.Trigger` /
   `.Content` aliases vs freeze “nested Collapsible”. (Resolved —
   `'arrows'` restored as a headers alias for base-API compatibility;

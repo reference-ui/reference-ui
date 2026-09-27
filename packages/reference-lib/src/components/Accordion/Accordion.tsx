@@ -16,13 +16,12 @@ export type AccordionKeyboard = 'headers' | 'none' | 'arrows'
 export type AccordionValue = string | string[] | null
 
 export interface AccordionProps
-  extends Omit<ReferencePartProps<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+  extends Omit<ReferencePartProps<'div'>, 'onChange' | 'value'> {
   children?: React.ReactNode
   expansion?: AccordionExpansion
-  /** Controlled value. Single uses string|null, multiple uses string[]. Omitted = uncontrolled. */
+  /** Optional value. Single uses string|null, multiple uses string[]. Omitted = self-managed from the natural zero state (null single, [] multiple). */
   value?: AccordionValue
-  /** Uncontrolled initial value (same per-expansion shapes). Ignored once controlled. */
-  defaultValue?: AccordionValue
+  /** Optional notification, emitted in both controlled and self-managed modes. */
   onChange?: (value: AccordionValue) => void
   disabled?: boolean
   /** 'arrows' is accepted as an alias of 'headers' (base-API compatibility). */
@@ -192,7 +191,6 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
       children,
       expansion = 'single',
       value: valueProp,
-      defaultValue,
       onChange,
       disabled = false,
       keyboard = 'headers',
@@ -211,19 +209,9 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
           console.error(err)
           throw new Error(err)
         }
-        if (defaultValue !== undefined && defaultValue !== null && typeof defaultValue !== 'string') {
-          const err = `[Reference UI Accordion] Incompatible mode/defaultValue pair: expansion="single" requires a string or null defaultValue, received ${typeof defaultValue}.`
-          console.error(err)
-          throw new Error(err)
-        }
       } else if (expansion === 'multiple') {
         if (valueProp !== undefined && !Array.isArray(valueProp)) {
           const err = `[Reference UI Accordion] Incompatible mode/value pair: expansion="multiple" requires an array value, received ${typeof valueProp}.`
-          console.error(err)
-          throw new Error(err)
-        }
-        if (defaultValue !== undefined && !Array.isArray(defaultValue)) {
-          const err = `[Reference UI Accordion] Incompatible mode/defaultValue pair: expansion="multiple" requires an array defaultValue, received ${typeof defaultValue}.`
           console.error(err)
           throw new Error(err)
         }
@@ -238,12 +226,11 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
     const rootRef = React.useRef<HTMLDivElement | null>(null)
     const composedRef = React.useMemo(() => composeRefs(rootRef, forwardedRef), [forwardedRef])
 
-    // Uncontrolled store (base-API): omitted value expands via internal state.
+    // Self-managed store: omitted value expands via internal state from the natural zero.
     const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<AccordionValue>(() => {
-      if (defaultValue !== undefined) return defaultValue
-      return expansion === 'single' ? null : []
-    })
+    const [internalValue, setInternalValue] = React.useState<AccordionValue>(() =>
+      expansion === 'single' ? null : []
+    )
     const currentValue = isControlled ? valueProp : internalValue
 
     const isItemOpen = React.useCallback(

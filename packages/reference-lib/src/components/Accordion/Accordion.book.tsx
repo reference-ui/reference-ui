@@ -5,9 +5,11 @@ import { Collapsible } from '../Collapsible'
 import { dividerContent, dividerTrigger } from '../disclosureChrome'
 
 export default {
-  SingleExpansion: () => (
+  SingleExpansion: () => {
+    const [value, setValue] = React.useState<string | null>('item-1')
+    return (
     <Div maxW="100r" display="flex" flexDirection="column">
-      <Accordion expansion="single" defaultValue="item-1" display="flex" flexDirection="column">
+      <Accordion expansion="single" value={value} onChange={(v) => setValue(v as string | null)} display="flex" flexDirection="column">
         <Collapsible id="item-1">
           <Collapsible.Trigger {...dividerTrigger}>What is Reference UI?</Collapsible.Trigger>
           <Collapsible.Content {...dividerContent}>
@@ -34,10 +36,13 @@ export default {
         </Collapsible>
       </Accordion>
     </Div>
-  ),
-  MultipleExpansion: () => (
+    )
+  },
+  MultipleExpansion: () => {
+    const [value, setValue] = React.useState<string[]>(['a', 'b'])
+    return (
     <Div maxW="100r">
-      <Accordion expansion="multiple" defaultValue={['a', 'b']} display="flex" flexDirection="column">
+      <Accordion expansion="multiple" value={value} onChange={(v) => setValue(v as string[])} display="flex" flexDirection="column">
         <Collapsible id="a">
           <Collapsible.Trigger {...dividerTrigger}>Section A</Collapsible.Trigger>
           <Collapsible.Content {...dividerContent}>
@@ -56,5 +61,6 @@ export default {
         </Collapsible>
       </Accordion>
     </Div>
-  ),
+    )
+  },
 }

@@ -17,9 +17,10 @@ order for deterministic controlled state.
 ## Freeze defaults
 
 `expansion` and `keyboard` are optional with the documented omitted
-behavior: single expansion and APG header traversal enabled. Omitted
-`value` means uncontrolled state: single starts `null`, multiple starts
-`[]`, and `defaultValue` seeds the internal store. Applications can opt
+behavior: single expansion and APG header traversal enabled. `value`
+is optional: omitted means self-managed state from the natural zero
+(single starts `null`, multiple starts `[]`); there is no seeding
+prop. `onChange` notifies in both modes. Applications can opt
 out of traversal with `keyboard="none"`.
 
 ## Source evidence

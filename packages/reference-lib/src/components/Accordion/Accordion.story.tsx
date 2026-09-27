@@ -58,12 +58,15 @@ export const Single = () => {
 }
 
 export const Multiple = () => {
+  const [value, setValue] = React.useState<string[]>(['item-1', 'item-2'])
+
   return (
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" maxW="100r" data-testid="accordion-multiple-root">
         <Accordion
           expansion="multiple"
-          defaultValue={['item-1', 'item-2']}
+          value={value}
+          onChange={(v) => setValue(v as string[])}
           display="flex"
           flexDirection="column"
         >
