@@ -447,6 +447,20 @@ crews) — contention theory CONFIRMED — and committed. CAMPAIGN
 COMPLETE: all PATCHES/FEATURES/purge crews done, tree clean, zero
 running. Next: doom cycles (standing objective 6) on HQ's word.
 
+Tick 73: HQ refined the exception — NO defaultValue props anywhere;
+Accordion + Tabs are OPTIONAL-VALUE (omit = self-manage from zero).
+Dispatched optional-value crews (152/153); Tabs restoration
+superseded; stance amended. Running: Accordion-opt, Tabs-opt.
+
+Tick 74: BOTH optional-value crews COMPLETE — Accordion (20/20 +
+26/26) + Tabs (10/10 + 35/35) verified firsthand and committed +
+Showcase.book migrations (3/3). Catalog defaultValue audit: ZERO
+library value props remain — only Omit bans, never-guards,
+@ts-expect-error freeze pins, native input/textarea usages, and
+comments. Renamed Splitter's local param (defaultValue →
+fallbackValue), Slider re-verified 34/34 + 42/42. Zero crews
+running. Awaiting HQ: doom start + sibling-default* ruling.
+
 Tick 59: Accordion-F verify-BLOCKED as predicted (Collapsible #1
 held, primitive absent; tree clean ✓). No dispatchable work left
 except Tree-F (waiting on Portal-F for #2; #1 circular-held) —

@@ -45,8 +45,11 @@ now, but once we release there will be."
   Slider-F carries #1). Sibling uncontrolled props (defaultOpen,
   defaultChecked, defaultInputValue, defaultView, ...) AWAIT HQ
   call — reported, not started.
-- EXCEPTION (HQ EOD 2026-09-26): Accordion + Tabs KEEP uncontrolled
-  support (defaultValue dual-mode) — users don't always want to
-  control these. Accordion purge cancelled + reverted; Tabs
-  defaultValue restoration dispatched (value optional, onChange
-  notification).
+- EXCEPTION (HQ EOD 2026-09-26, refined): Accordion + Tabs are
+  OPTIONAL-VALUE, not dual-mode. There are NO defaultValue props
+  anywhere in the library — `value` is simply optional, and
+  omitting it means self-managed from the component's natural zero
+  state (minor difference, important: no seeding API, no default*
+  vocabulary). Accordion purge cancelled + reverted, optional-value
+  crew dispatched; Tabs defaultValue restoration SUPERSEDED by
+  optional-value crew (value optional, onChange notification).
