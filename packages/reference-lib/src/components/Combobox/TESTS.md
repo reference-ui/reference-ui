@@ -402,6 +402,13 @@ Autocomplete, or CommandPalette primitives.
   change, `onInputValueChange` and `onChange` remain silent, controlled
   `inputValue` stays at the user's prefix, and Combobox.Popover remains open; callbacks
   distinguish preview from authored state.
+- [x] `CB-MODE-08` `[reference]` `[browser]` —
+  **Combobox autocomplete inline should complete the suffix with suffix-only selection.**
+  Render `autocomplete="inline"`, type controlled prefix `Al`, and make
+  `Alpha` active. Assert `aria-autocomplete="inline"`, displayed `Alpha`
+  with selection range `[2,5]`, the next native edit replaces only that
+  suffix, and no value commit occurs; `inline` shares `both` completion
+  mechanics while announcing no list contract.
 
 ### Commit, revert, Tab, and blur
 

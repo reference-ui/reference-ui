@@ -87,7 +87,7 @@ navigation metadata:
 ## Proposed API
 
 ```ts
-type ComboboxAutocomplete = "none" | "list" | "both"
+type ComboboxAutocomplete = "none" | "inline" | "list" | "both"
 
 type VirtualFocusNavigationKey =
   | "ArrowUp"
@@ -221,9 +221,9 @@ APG Combobox: the user edits in the text field. The list is `aria-activedescenda
 
 **Lift** all three. Downshift is the clearest prop-getter story for “input owns focus.”
 
-### Autocomplete `none` | `list` | `both`
+### Autocomplete `none` | `inline` | `list` | `both`
 
-Maps to `aria-autocomplete` and whether the input is filled as the user arrows. Aria hardcodes `'list'` and TODOs `both`. Zag `inputBehavior`: `none` / `autohighlight` / `autocomplete` → `list` / `both`.
+Maps to `aria-autocomplete` and whether the input is filled as the user arrows. Aria hardcodes `'list'` and TODOs `both`. Zag `inputBehavior`: `none` / `autohighlight` / `autocomplete` → `list` / `both`. `inline` and `both` share completion mechanics (complete the active label, select only the suggested suffix, restore the prefix when active clears); the token tells AT whether a list is also presented.
 
 **Lift** Zag's complete mode matrix. The `both` behavior is a required contract
 case rather than an implementation TODO inherited from Aria.

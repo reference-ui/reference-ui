@@ -57,16 +57,23 @@ function LogCombobox({
   initialValue = null,
   initialInput = '',
   autocomplete,
+  filter = false,
+  allowCustomValue = false,
 }: {
   initialValue?: string | null
   initialInput?: string
   autocomplete?: ComboboxAutocomplete
+  filter?: boolean
+  allowCustomValue?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState<string | null>(initialValue)
   const [inputValue, setInputValue] = React.useState(initialInput)
   const [log, setLog] = React.useState<string[]>([])
   const push = (entry: string) => setLog(prev => [...prev, entry])
+  const options = filter
+    ? logOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
+    : logOptions
 
   return (
     <ReferenceLibrary>
@@ -86,7 +93,8 @@ function LogCombobox({
             onChange={v => {
               push(`change:${v}`)
               setValue(v)
-              setInputValue(logOptions.find(o => o.value === v)?.label ?? '')
+              // Custom values round-trip as their own display text (W-24).
+              setInputValue(logOptions.find(o => o.value === v)?.label ?? v ?? '')
             }}
             inputValue={inputValue}
             onInputValueChange={v => {
@@ -94,13 +102,14 @@ function LogCombobox({
               setInputValue(v)
             }}
             autocomplete={autocomplete}
+            allowCustomValue={allowCustomValue}
           >
             <Field>
               <Combobox.Input data-testid="log-input" placeholder="Search..." />
             </Field>
             <Combobox.Popover data-testid="log-popover">
               <Listbox>
-                {logOptions.map(opt => (
+                {options.map(opt => (
                   <Listbox.Option
                     key={opt.value}
                     value={opt.value}
@@ -130,6 +139,16 @@ function LogCombobox({
 export const ControlledLog = () => <LogCombobox />
 
 export const SelectedLog = () => <LogCombobox initialValue="bravo" initialInput="Bravo" />
+
+export const InlineLog = () => <LogCombobox autocomplete="inline" />
+
+export const CustomLog = () => (
+  <LogCombobox initialValue="bravo" initialInput="Bravo" filter allowCustomValue />
+)
+
+export const NoCustomLog = () => (
+  <LogCombobox initialValue="bravo" initialInput="Bravo" filter />
+)
 
 export const SelectOnlyStory = () => {
   const [open, setOpen] = React.useState(false)
@@ -900,6 +919,9 @@ export const ModeSwitchLog = () => {
         </Div>
         <Button data-testid="mode-set-none" onClick={() => setMode('none')}>
           none
+        </Button>
+        <Button data-testid="mode-set-inline" onClick={() => setMode('inline')}>
+          inline
         </Button>
         <Button data-testid="mode-set-list" onClick={() => setMode('list')}>
           list
@@ -2127,7 +2149,7 @@ const dialogRooms = [
   { value: 'dune', label: 'Dune' },
 ]
 
-export const DialogCombo = () => {
+function DialogComboInner({ closeOnBlur }: { closeOnBlur?: boolean }) {
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [comboOpen, setComboOpen] = React.useState(false)
   const [title, setTitle] = React.useState('Dialog booking')
@@ -2203,6 +2225,7 @@ export const DialogCombo = () => {
                     push(`input:${v}`)
                     setRoomInput(v)
                   }}
+                  closeOnBlur={closeOnBlur}
                 >
                   <Combobox.Input
                     data-testid="dlgcombo-room-input"
@@ -2247,3 +2270,7 @@ export const DialogCombo = () => {
     </ReferenceLibrary>
   )
 }
+
+export const DialogCombo = () => <DialogComboInner />
+
+export const DialogComboPersist = () => <DialogComboInner closeOnBlur={false} />

@@ -4,9 +4,9 @@ Current freeze, cases, and proof. Design narrative: [Combobox.md](./Combobox.md)
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/combobox.spec.ts`
-Colocated: `Combobox.test.tsx` (77 tests; case IDs throughout)
+Colocated: `Combobox.test.tsx` (84 tests; case IDs throughout)
 CT: `__e2e__/Combobox.ct.spec.ts` + `__e2e__/Combobox.touch.ct.spec.ts`
-(65 specs, React 17/18/19 + snapshots)
+(77 specs, React 17/18/19 + snapshots)
 Page: `/combobox`
 
 ## Legend
@@ -41,10 +41,10 @@ Visual polish is not this gate. No filtering helpers.
 | | |
 | :--- | :--- |
 | Engine | Hardened prototype. Mounted-only active IDs, native Home/End/PageUp/PageDown, Escape revert, IME guards, dev anatomy diagnostics. |
-| Production | **No** (freeze features still out: modes, custom values, adapters). |
-| Named `[x]` | 58 / 96 in-dir (+ 5 `[~]` honest partials; matrix layer out of scope) |
-| CT | 36 specs (2 pre-existing on frozen snapshots + 34 new, 1 new baseline) |
-| Vitest | 56 tests, all ID'd (5 pre-existing, 1 re-targeted to catalog) |
+| Production | **No** (freeze features still out: `loading`/async, Tree bridge). |
+| Named `[x]` | 62 / 97 in-dir (+ 5 `[~]` honest partials; matrix layer out of scope) |
+| CT | 77 specs (74 + 3 touch; W-24 adds MODE-08, CUSTOM-01/02, COMMIT-02, dialog blur) |
+| Vitest | 84 tests (ID'd case pins plus pure-helper support) |
 
 ### Gaps & incoherence
 
@@ -52,12 +52,14 @@ Visual polish is not this gate. No filtering helpers.
   2026-09-26 under the HQ no-defaultValue stance; the API freeze test pins
   the controlled contract). Sibling `defaultInputValue` / `defaultOpen`
   stay until the HQ call on sibling uncontrolled props.
-- No `autocomplete` matrix, `allowCustomValue`, `loading`,
-  `virtualFocus` / `VirtualItem` / grid adapter, Tree bridge, `onEscape`.
+- No `loading` or Tree bridge (navigation). `autocomplete` modes,
+  `allowCustomValue`, `virtualFocus` / `VirtualItem` / grid adapter, and
+  `onEscape` are landed.
 - No async contract: `loading?` → `aria-busy` on the listbox and an empty /
   "no results" string routed through `announce()`, not a private live region.
-- Enter commits any mounted active option even when the text is unmatched
-  (needs #2 custom-value decision semantics); Tab is source-gated.
+- Enter with no mounted active option resolves the session (#2 custom-value
+  semantics: custom commit when allowed, else revert + dismiss); Tab is
+  source-gated with the same resolution fallback.
 - The pre-existing CT `displays checkmark indicator...` stays a frozen
   visual guard with no catalog ID (rehomed, not dropped).
 
@@ -89,9 +91,10 @@ Proven in-dir (`Combobox.test.tsx` Vitest + `__e2e__` CT):
 - `[x]` `CB-NAV-01`, `CB-NAV-02`, `CB-NAV-03`, `CB-NAV-04`, `CB-NAV-05`,
   `CB-NAV-06`, `CB-NAV-07`, `CB-NAV-08`
 - `[x]` `CB-MODE-01`, `CB-MODE-02`, `CB-MODE-03`, `CB-MODE-04`, `CB-MODE-05`,
-  `CB-MODE-06`, `CB-MODE-07`
-- `[x]` `CB-COMMIT-01`, `CB-COMMIT-03`, `CB-COMMIT-04`, `CB-COMMIT-05`,
-  `CB-COMMIT-06`, `CB-COMMIT-07`, `CB-COMMIT-08`, `CB-COMMIT-09`
+  `CB-MODE-06`, `CB-MODE-07`, `CB-MODE-08`
+- `[x]` `CB-COMMIT-01`, `CB-COMMIT-02`, `CB-COMMIT-03`, `CB-COMMIT-04`,
+  `CB-COMMIT-05`, `CB-COMMIT-06`, `CB-COMMIT-07`, `CB-COMMIT-08`, `CB-COMMIT-09`
+- `[x]` `CB-CUSTOM-01`, `CB-CUSTOM-02`
 - `[x]` `CB-REVERT-01`, `CB-REVERT-02`, `CB-REVERT-03`, `CB-REVERT-04`,
   `CB-REVERT-05`, `CB-REVERT-06`, `CB-REVERT-07`
 - `[x]` `CB-SELECT-01`, `CB-SELECT-02`, `CB-SELECT-03`, `CB-SELECT-04`,
@@ -111,11 +114,10 @@ Cross-owned proofs (handoff cases, Combobox side): `LB-CB-01`, `LB-CB-03`
 valid shape, `LB-CB-04` (+ highlight snapshot), `FI-COMP-04` commit/remove
 flows. `LB-CB-02` (windowed) needs `virtualFocus` — not proven.
 
-Not proven (need freeze features outside this mission): `CB-COMMIT-02`,
-`CB-CUSTOM-*`, `CB-VIRT-*` (verify-blocked: Listbox upward registry),
-`CB-TREE-01` (verify-blocked: circular Tree/Combobox contract),
-`CB-CLOSE-03`, `CB-ENV-03`, `CB-ENV-04`, `CB-COMP-01` (needs VIRT),
-`CB-COMP-03` (needs Tree bridge).
+Not proven (need freeze features outside this mission): `CB-VIRT-*`
+(verify-blocked: Listbox upward registry), `CB-TREE-01` (verify-blocked:
+circular Tree/Combobox contract), `CB-CLOSE-03`, `CB-ENV-03`, `CB-ENV-04`,
+`CB-COMP-01` (needs VIRT), `CB-COMP-03` (needs Tree bridge).
 
 ### Work order
 
@@ -123,7 +125,7 @@ Not proven (need freeze features outside this mission): `CB-COMMIT-02`,
 2. Focus-in-field + activedescendant over Listbox (Listbox first).
 3. Commit / Escape revert + blur policy.
 4. Select-only Trigger.
-5. `autocomplete` none/list/both.
+5. `autocomplete` none/inline/list/both (landed, W-24).
 6. `loading` → `aria-busy` + `announce()` empty/no-results messaging.
 7. `virtualFocus` + Tree; then ID’d e2e.
 

@@ -15,8 +15,13 @@ export interface ComboboxOptionEntry {
   index?: number
 }
 
-/** Inline-completion policy (#1). Mirrors `aria-autocomplete` on the Input. */
-export type ComboboxAutocomplete = 'none' | 'list' | 'both'
+/**
+ * Inline-completion policy (#1, W-24). Mirrors `aria-autocomplete` on the
+ * Input verbatim (`inline` is a valid ARIA 1.2 token). `inline` and `both`
+ * share completion mechanics (complete + select remainder); the token tells
+ * AT whether a list is also presented.
+ */
+export type ComboboxAutocomplete = 'none' | 'inline' | 'list' | 'both'
 
 export type VirtualFocusNavigationKey =
   | 'ArrowUp'
@@ -73,6 +78,11 @@ export interface ComboboxContextValue {
   closeOnBlur: boolean
   /** Inline-completion policy (#1, default `list`). */
   autocomplete: ComboboxAutocomplete
+  /**
+   * Custom-value policy (#2, W-24, Ark-exact name). `true` commits exact
+   * unmatched text as the value on Enter/Tab/blur; `false` reverts.
+   */
+  allowCustomValue: boolean
   /** Granular cancelable Escape hook (#7, Overlay #3 vocabulary). */
   onEscape?: (event: KeyboardEvent) => void
   /**
@@ -160,6 +170,13 @@ export interface ComboboxContextValue {
   registerFocusSource: (type: 'input' | 'trigger') => () => void
   registerPopover: (id?: string) => () => void
   revertToCommittedText: () => void
+  /**
+   * Unmatched-text session resolution (#2, W-24). With `allowCustomValue`
+   * commits exact text (empty maps to `null`); otherwise restores committed
+   * text. Silent when the text already matches the committed value.
+   * Select-only and two-authority conflicts resolve to no-ops.
+   */
+  resolveUnmatchedText: () => void
 }
 
 export const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)

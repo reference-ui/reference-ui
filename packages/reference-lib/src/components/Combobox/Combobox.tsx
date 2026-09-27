@@ -28,7 +28,7 @@ import {
   scanHasPopoverContent,
   type AuthoredCollectionRefs,
 } from './authored'
-import { completionForPrefix } from './autocomplete'
+import { completesInline, completionForPrefix } from './autocomplete'
 import {
   currentVirtualIndex,
   directionForElement,
@@ -137,12 +137,23 @@ export interface ComboboxProps {
   closeOnBlur?: boolean
   /**
    * Inline-completion policy (#1, default `"list"`). Mirrors
-   * `aria-autocomplete` on the Input; `"both"` completes the active
-   * option's label inline with suffix-only selection, restoring the
-   * typed prefix when active clears. Never emits text callbacks for
-   * preview navigation. Inert for select-only Triggers (no text).
+   * `aria-autocomplete` on the Input; `"inline"` and `"both"` complete
+   * the active option's label inline with suffix-only selection,
+   * restoring the typed prefix when active clears. Never emits text
+   * callbacks for preview navigation. Inert for select-only Triggers
+   * (no text).
    */
   autocomplete?: ComboboxAutocomplete
+  /**
+   * Custom-value policy (#2, W-24, Ark-exact name, default `false`).
+   * `true` commits exact unmatched text as the value on Enter, Tab, and
+   * blur/outside-press (empty text maps to `null`); the string is never
+   * normalized. `false` restores the committed text on those paths with
+   * no value callback. An active option always wins over custom text.
+   * Escape always reverts, regardless of this policy. Inert for
+   * select-only Triggers (no text).
+   */
+  allowCustomValue?: boolean
   /**
    * Granular cancelable Escape hook (#7, Overlay #3 vocabulary). Fires
    * with the real native KeyboardEvent before revert and dismiss;
@@ -234,15 +245,15 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
     if (registerFocusSource) return registerFocusSource('input')
   }, [registerFocusSource])
 
-  // #1: inline completion for autocomplete="both". The DISPLAY value
-  // (not the controlled text) carries the active label: React itself
+  // #1: inline completion for autocomplete="inline"/"both". The DISPLAY
+  // value (not the controlled text) carries the active label: React itself
   // sets the DOM from the prop, so no imperative write exists for a
   // version-specific controlled-input tracker to restore (17 parity).
   // Preview navigation never emits text callbacks (CB-MODE-07) —
   // prop-driven value sets dispatch no change events.
   const completed =
     context != null &&
-    context.autocomplete === 'both' &&
+    completesInline(context.autocomplete) &&
     context.isOpen &&
     !isComposing
       ? completionForPrefix(context.inputValue, context.activeOptionText)
@@ -394,19 +405,34 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
         context.navigateVirtual(e.key)
       }
     } else if (e.key === 'Enter') {
-      if (isOpen && mountedActiveValue != null) {
+      // Open Enter always resolves the session, so the key is always
+      // handled while open (RAC "prevent default on Enter if isOpen",
+      // CB-COMMIT-08): active commits, else custom commits when allowed
+      // (CB-CUSTOM-01) or the committed text is restored (CB-COMMIT-02).
+      // Closed Enter stays native (form submit). Zag's custom branch
+      // skips prevention only because Zag tolerates rather than commits
+      // custom text there — ours commits, so the form must not also fire.
+      if (!isOpen) {
+        // Native: fall through with no preventDefault.
+      } else if (mountedActiveValue != null) {
         e.preventDefault()
         context.handleSelect(mountedActiveValue)
+      } else {
+        e.preventDefault()
+        context.resolveUnmatchedText()
+        context.setActiveValue(null)
+        setIsOpen(false)
       }
     } else if (e.key === 'Tab') {
       // Native traversal is never prevented. With no keyboard-eligible
-      // active option the session reverts and closes instead of committing
+      // active option the session resolves (custom commit when allowed,
+      // else revert) and closes instead of committing an option
       // (CB-COMMIT-05); closed popups leave Tab entirely native (CB-COMMIT-09).
       if (isOpen) {
         if (keyboardActiveValue != null) {
           context.handleSelect(keyboardActiveValue)
         } else {
-          context.revertToCommittedText()
+          context.resolveUnmatchedText()
           context.setActiveValue(null)
           setIsOpen(false)
         }
@@ -954,6 +980,7 @@ export function Combobox({
   disabled = false,
   closeOnBlur = true,
   autocomplete = 'list',
+  allowCustomValue = false,
   onEscape,
 }: ComboboxProps) {
   // Controlled-only: value + onChange are required; there is no uncontrolled branch.
@@ -1458,19 +1485,59 @@ export function Combobox({
     [isControlledInput, notifyInput, getOrderedOptions, setActiveValue, searchVirtual, collectionConflict, isOpen]
   )
 
+  // Committed display label (#1 composition): the mounted option's
+  // textValue, else the label cache (survives filtering unmounts), else
+  // the raw value. Shared by revert and custom-value matching so the two
+  // paths agree on what "already committed" means.
+  const getCommittedLabel = React.useCallback((): string => {
+    if (value == null) return ''
+    return (
+      optionsMapRef.current.get(value)?.textValue ??
+      labelCacheRef.current.get(value) ??
+      String(value)
+    )
+  }, [value])
+
   const revertToCommittedText = React.useCallback(() => {
     // #13: select-only has no text authority — revert is a no-op there.
     if (selectOnly) return
-    const committedLabel =
-      value != null
-        ? (optionsMapRef.current.get(value)?.textValue ??
-          labelCacheRef.current.get(value) ??
-          String(value))
-        : ''
+    const committedLabel = getCommittedLabel()
     if (inputValue !== committedLabel) {
       handleInputChange(committedLabel)
     }
-  }, [selectOnly, value, inputValue, handleInputChange])
+  }, [selectOnly, inputValue, handleInputChange, getCommittedLabel])
+
+  // Unmatched-text session resolution (#2, W-24, CB-CUSTOM-01/02). With
+  // `allowCustomValue`, exact input text commits as the value (empty maps
+  // to `null`, never normalized); otherwise the committed text is
+  // restored. Silent when the text already matches the committed value
+  // (Zag `isCustomValue`: inputValue !== valueAsString). No text
+  // callback on the custom path — the input already shows the text.
+  const resolveUnmatchedText = React.useCallback(() => {
+    // #13: select-only has no text authority.
+    if (selectOnly) return
+    if (!allowCustomValue) {
+      revertToCommittedText()
+      return
+    }
+    // Two-authority conflict (#5, CB-ADAPTER-08): commits stay inert.
+    if (collectionConflict) return
+    if (inputValue === getCommittedLabel()) return
+    // B-36: re-committing the identical value is silent — dismiss still runs.
+    const nextVal = inputValue === '' ? null : inputValue
+    if (nextVal !== value) {
+      onChange(nextVal)
+    }
+  }, [
+    selectOnly,
+    allowCustomValue,
+    collectionConflict,
+    inputValue,
+    getCommittedLabel,
+    value,
+    onChange,
+    revertToCommittedText,
+  ])
 
   const handleSelect = React.useCallback(
     (nextVal: string | null) => {
@@ -1498,8 +1565,8 @@ export function Combobox({
   // Overlay's own inside/outside accounting (no duplicate geometry).
   const handleOutsidePress = React.useCallback(() => {
     if (!closeOnBlur) return
-    revertToCommittedText()
-  }, [closeOnBlur, revertToCommittedText])
+    resolveUnmatchedText()
+  }, [closeOnBlur, resolveUnmatchedText])
 
   const handleSourceBlur = React.useCallback(
     (relatedTarget: EventTarget | null) => {
@@ -1512,22 +1579,24 @@ export function Combobox({
       ) {
         return
       }
-      // Focus left the combobox while open: editable restores committed
-      // text, both shapes clear active, and close is requested unless
-      // already requested. Covers keyboard and programmatic focus exits;
-      // pointer exits revert earlier in handleOutsidePress (while the
-      // registry is still mounted) so order stays revert-before-dismiss.
-      // Blur after unmount must NOT revert: the registry is empty and the
-      // raw-value fallback would fabricate a phantom text request.
+      // Focus left the combobox while open: editable resolves unmatched
+      // text (custom commit when allowed, else committed-text restore),
+      // both shapes clear active, and close is requested unless already
+      // requested. Covers keyboard and programmatic focus exits, inside
+      // dialogs or out (CB-CLOSE-02 branch, B-22); pointer exits resolve
+      // earlier in handleOutsidePress (while the registry is still
+      // mounted) so order stays resolve-before-dismiss. Blur after
+      // unmount must NOT resolve: the registry is empty and the raw-value
+      // fallback would fabricate a phantom text request.
       if (isOpen) {
-        revertToCommittedText()
+        resolveUnmatchedText()
         activeSourceRef.current = null
         setActiveSourceState(null)
         setActiveValueState(null)
       }
       setIsOpen(false)
     },
-    [closeOnBlur, isOpen, popoverId, revertToCommittedText, setIsOpen]
+    [closeOnBlur, isOpen, popoverId, resolveUnmatchedText, setIsOpen]
   )
 
   // VirtualItem mount registration (#5): validates range + value
@@ -1626,6 +1695,7 @@ export function Combobox({
       selectOnly,
       closeOnBlur,
       autocomplete,
+      allowCustomValue,
       onEscape,
       hasPopoverContent,
       virtualAdapter,
@@ -1656,6 +1726,7 @@ export function Combobox({
       registerFocusSource,
       registerPopover,
       revertToCommittedText,
+      resolveUnmatchedText,
     }),
     [
       value,
@@ -1665,6 +1736,7 @@ export function Combobox({
       selectOnly,
       closeOnBlur,
       autocomplete,
+      allowCustomValue,
       onEscape,
       hasPopoverContent,
       virtualAdapter,
@@ -1694,6 +1766,7 @@ export function Combobox({
       registerFocusSource,
       registerPopover,
       revertToCommittedText,
+      resolveUnmatchedText,
     ]
   )
 

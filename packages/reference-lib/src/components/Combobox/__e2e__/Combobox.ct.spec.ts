@@ -1170,6 +1170,15 @@ test.describe('Combobox cluster B CT', () => {
     await expect(input).toHaveAttribute('aria-autocomplete', 'both')
     expect(await inputState(input)).toEqual({ value: 'Alpha', start: 2, end: 5 })
 
+    // Inline completes like both; switching back to list clears again.
+    await clickNoFocus(page, 'mode-set-inline')
+    await expect(input).toHaveAttribute('aria-autocomplete', 'inline')
+    expect(await inputState(input)).toEqual({ value: 'Alpha', start: 2, end: 5 })
+
+    await clickNoFocus(page, 'mode-set-list')
+    await expect(input).toHaveAttribute('aria-autocomplete', 'list')
+    expect(await inputState(input)).toEqual({ value: 'Al', start: 2, end: 2 })
+
     expect(await logOf(page, 'mode-log')).toEqual(typedLog)
     expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
       'mode-input'
@@ -1191,6 +1200,24 @@ test.describe('Combobox cluster B CT', () => {
     await input.press('ArrowDown')
     expect(await page.getByTestId('log-counts').textContent()).toBe(before)
     await expect(input).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('CB-MODE-08: inline completes the suffix; typing replaces only the suffix', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/InlineLog')
+    const input = page.getByTestId('log-input')
+    await expect(input).toHaveAttribute('aria-autocomplete', 'inline')
+
+    await input.focus()
+    await input.pressSequentially('Al')
+    await expect(input).toHaveValue('Alpha')
+    expect(await inputState(input)).toEqual({ value: 'Alpha', start: 2, end: 5 })
+
+    await input.press('p')
+    expect(await logOf(page, 'log-counts')).toEqual(['input:A', 'open', 'input:Al', 'input:Alp'])
+    await expect(input).toHaveValue('Alpha')
   })
 
   test('CB-OPEN-03 populated: one edit requests one open with content', async ({
@@ -1262,6 +1289,7 @@ test.describe('Combobox cluster B CT', () => {
   }) => {
     for (const [story, mode] of [
       ['NoneLog', 'none'],
+      ['InlineLog', 'inline'],
       ['ControlledLog', 'list'],
       ['BothLog', 'both'],
     ] as const) {
@@ -1800,5 +1828,154 @@ test.describe('Combobox playtest CT', () => {
     await expect(input).toHaveAttribute('aria-expanded', 'false')
     log = await readLog(page, 'log-counts')
     expect(log.filter(e => e.startsWith('change:'))).toEqual([])
+  })
+
+  test('CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/CustomLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    await input.fill('Zen Den')
+    await expect(page.getByTestId('log-opt-alpha')).toHaveCount(0)
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('Zen Den')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:Zen Den',
+      'change:Zen Den',
+      'dismiss',
+    ])
+  })
+
+  test('CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/NoCustomLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await input.fill('Zen Den')
+    await expect(page.getByTestId('log-opt-alpha')).toHaveCount(0)
+
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('Bravo')
+    const log = await readLog(page, 'log-counts')
+    expect(log.filter(e => e.startsWith('change:'))).toEqual([])
+    expect(log).toEqual(['open', 'input:Zen Den', 'input:Bravo', 'dismiss'])
+  })
+
+  test('CB-CUSTOM-02: blur commits custom text', async ({ mount, page }) => {
+    await mount('components/Combobox/Combobox/CustomLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await input.fill('New value')
+    await page.getByTestId('log-clear').focus()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('New value')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:New value',
+      'change:New value',
+      'dismiss',
+    ])
+  })
+
+  test('CB-CUSTOM-02 empty: blur maps empty custom text to null', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/CustomLog')
+    const input = page.getByTestId('log-input')
+    await input.click()
+    await input.fill('')
+    await page.getByTestId('log-clear').focus()
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:',
+      'change:null',
+      'dismiss',
+    ])
+  })
+
+  test('W-24: unmatched pointer blur inside a dialog reverts, closes, and keeps the trap', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/DialogCombo')
+    await page.getByTestId('dlgcombo-open').click()
+    const dialog = page.getByTestId('dlgcombo-dialog')
+    await expect(dialog).toBeVisible()
+
+    // Pointer blur onto another dialog field: unmatched text reverts and
+    // the popup closes, while the dialog stays open.
+    const room = page.getByTestId('dlgcombo-room-input')
+    await room.click()
+    await expect(page.getByTestId('dlgcombo-room-borealis')).toBeVisible()
+    await page.keyboard.type('zzz')
+    await expect(room).toHaveValue('zzz')
+    await page.getByTestId('dlgcombo-title-input').click()
+    await expect(room).toHaveAttribute('aria-expanded', 'false')
+    await expect(room).toHaveValue('')
+    await expect(page.getByTestId('dlgcombo-title-input')).toBeFocused()
+    await expect(dialog).toBeVisible()
+    expect(await readLog(page, 'dlgcombo-log')).toEqual([
+      'open',
+      'input:z',
+      'input:zz',
+      'input:zzz',
+      'input:',
+      'dismiss',
+    ])
+
+    // Backward trap wrap still lands inside the dialog, never in the list.
+    await page.keyboard.press('Shift+Tab')
+    await expect(page.getByTestId('dlgcombo-cancel')).toBeFocused()
+    const activeRole = await page.evaluate(
+      () => (document.activeElement as HTMLElement | null)?.getAttribute('role')
+    )
+    expect(activeRole).not.toBe('option')
+  })
+
+  test('W-24: closeOnBlur=false inside a dialog preserves open text and the trap', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/DialogComboPersist')
+    await page.getByTestId('dlgcombo-open').click()
+    await expect(page.getByTestId('dlgcombo-dialog')).toBeVisible()
+
+    const room = page.getByTestId('dlgcombo-room-input')
+    await room.click()
+    await page.keyboard.type('zzz')
+    await page.getByTestId('dlgcombo-seats-input').focus()
+    await expect(page.getByTestId('dlgcombo-seats-input')).toBeFocused()
+    await expect(room).toHaveAttribute('aria-expanded', 'true')
+    await expect(room).toHaveValue('zzz')
+    expect(await readLog(page, 'dlgcombo-log')).toEqual([
+      'open',
+      'input:z',
+      'input:zz',
+      'input:zzz',
+    ])
+
+    // Tab traversal with the popup open wraps inside the dialog.
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('dlgcombo-cancel')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('dlgcombo-title-input')).toBeFocused()
+    await expect(room).toHaveAttribute('aria-expanded', 'true')
+    const activeRole = await page.evaluate(
+      () => (document.activeElement as HTMLElement | null)?.getAttribute('role')
+    )
+    expect(activeRole).not.toBe('option')
   })
 })

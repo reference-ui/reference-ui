@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server'
 import { Combobox } from './index'
 import { Listbox } from '../Listbox'
 import { Field } from '../Field'
+import { completesInline } from './autocomplete'
 
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -1158,11 +1159,18 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     expect(optionOf('bravo')).toBeNull()
     expect(input.hasAttribute('aria-activedescendant')).toBe(false)
 
-    // Enter with only a stale active value: native, commits nothing, focus kept.
-    const prevented = await pressKey(input, 'Enter')
-    expect(prevented).toBe(false)
+    // A genuinely native editing key stays native: no prevent, no commit,
+    // focus kept. (Enter is not in that class while open — CB-COMMIT-02
+    // specifies open Enter with no mounted active as revert + dismiss.)
+    const nativePrevented = await pressKey(input, 'Backspace')
+    expect(nativePrevented).toBe(false)
     expect(onChange).not.toHaveBeenCalled()
     expect(document.activeElement).toBe(input)
+
+    // Enter resolves the session without targeting the removed value.
+    const enterPrevented = await pressKey(input, 'Enter')
+    expect(enterPrevented).toBe(true)
+    expect(onChange).not.toHaveBeenCalled()
     await unmount(container, root)
   })
 
@@ -2634,6 +2642,251 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
       optionOf('alpha')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
     expect(calls).toEqual([])
+    await unmount(container, root)
+  })
+})
+
+describe('Combobox W-24: inline mode + custom values', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('completesInline gates inline completion to inline and both modes', () => {
+    expect(completesInline('none')).toBe(false)
+    expect(completesInline('list')).toBe(false)
+    expect(completesInline('inline')).toBe(true)
+    expect(completesInline('both')).toBe(true)
+  })
+
+  it('CB-MODE-08: inline completes the suffix with zero text callbacks', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        value={null}
+        inputValue="Al"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        defaultOpen
+        autocomplete="inline"
+      >
+        <Combobox.Input aria-label="inline" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+            <Listbox.Option value="alpine">Alpine</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    expect(calls).toEqual([])
+    expect(input.value).toBe('Alpha')
+    expect(input.selectionStart).toBe(2)
+    expect(input.selectionEnd).toBe(5)
+    expect(input.getAttribute('aria-autocomplete')).toBe('inline')
+    await unmount(container, root)
+  })
+
+  it('CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed', async () => {
+    const calls: string[] = []
+    const renderCustom = (empty: boolean) => (
+      <Combobox
+        value="bravo"
+        defaultInputValue="Bravo"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom" />
+        <Combobox.Popover>
+          <Listbox>{empty ? [] : <Listbox.Option value="bravo">Bravo</Listbox.Option>}</Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const { container, root } = await mount(renderCustom(false))
+    const input = inputOf(container)
+    await React.act(async () => {
+      typeText(input, 'zEn dEn')
+    })
+    // The app filters the match away; the committed active goes stale.
+    await React.act(async () => {
+      root.render(renderCustom(true))
+    })
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+    const prevented = await pressKey(input, 'Enter')
+    expect(prevented).toBe(true)
+    expect(calls).toEqual(['input:zEn dEn', 'change:zEn dEn', 'dismiss'])
+    expect(input.value).toBe('zEn dEn')
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value', async () => {
+    const calls: string[] = []
+    const renderNoCustom = (empty: boolean) => (
+      <Combobox
+        value="bravo"
+        defaultInputValue="Bravo"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+      >
+        <Combobox.Input aria-label="no-custom" />
+        <Combobox.Popover>
+          <Listbox>{empty ? [] : <Listbox.Option value="bravo">Bravo</Listbox.Option>}</Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const { container, root } = await mount(renderNoCustom(false))
+    const input = inputOf(container)
+    await React.act(async () => {
+      typeText(input, 'zzz')
+    })
+    await React.act(async () => {
+      root.render(renderNoCustom(true))
+    })
+    const prevented = await pressKey(input, 'Enter')
+    expect(prevented).toBe(true)
+    expect(calls).toEqual(['input:zzz', 'input:Bravo', 'dismiss'])
+    expect(input.value).toBe('Bravo')
+    expect(input.getAttribute('aria-expanded')).toBe('false')
+    await unmount(container, root)
+  })
+
+  it('CB-CUSTOM-02: blur commits custom text, maps empty to null, and stays silent when committed', async () => {
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+
+    // Unmatched text commits exactly.
+    const calls: string[] = []
+    const first = await mount(
+      <Combobox
+        value="bravo"
+        defaultInputValue="New value"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom-blur" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="bravo">Bravo</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    await blurSource(inputOf(first.container), outside)
+    expect(calls).toEqual(['change:New value', 'dismiss'])
+    await unmount(first.container, first.root)
+
+    // Empty text maps to null.
+    const emptyCalls: string[] = []
+    const second = await mount(
+      <Combobox
+        value="bravo"
+        defaultInputValue=""
+        onChange={v => emptyCalls.push(`change:${v}`)}
+        onDismiss={() => emptyCalls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom-blur-empty" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="bravo">Bravo</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    await blurSource(inputOf(second.container), outside)
+    expect(emptyCalls).toEqual(['change:null', 'dismiss'])
+    await unmount(second.container, second.root)
+
+    // Already-committed text stays silent apart from dismissal.
+    const silentCalls: string[] = []
+    const third = await mount(
+      <Combobox
+        value="bravo"
+        defaultInputValue="Bravo"
+        onChange={v => silentCalls.push(`change:${v}`)}
+        onDismiss={() => silentCalls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom-blur-committed" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="bravo">Bravo</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    await blurSource(inputOf(third.container), outside)
+    expect(silentCalls).toEqual(['dismiss'])
+    await unmount(third.container, third.root)
+    outside.remove()
+  })
+
+  it('W-24 custom Tab: Tab with unmatched text commits the custom value and stays native', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        value={null}
+        defaultInputValue="Zen Den"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom-tab" />
+        <Combobox.Popover>
+          <Listbox>{[]}</Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    const prevented = await pressKey(input, 'Tab')
+    expect(prevented).toBe(false)
+    expect(calls).toEqual(['change:Zen Den', 'dismiss'])
+    expect(input.value).toBe('Zen Den')
+    await unmount(container, root)
+  })
+
+  it('W-24 custom Escape: Escape reverts unmatched text even when custom values are allowed', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        value="bravo"
+        defaultInputValue="Zen Den"
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onChange={v => calls.push(`change:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+        allowCustomValue
+      >
+        <Combobox.Input aria-label="custom-escape" />
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="bravo">Bravo</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'Escape')
+    expect(calls).toEqual(['input:Bravo', 'dismiss'])
+    expect(input.value).toBe('Bravo')
     await unmount(container, root)
   })
 })
