@@ -119,4 +119,47 @@ describe('Slider contract', () => {
     expect(rangeHtml).toContain('--reference-slider-thumb-position:20%')
     expect(rangeHtml).toContain('--reference-slider-thumb-position:70%')
   })
+
+  it('B-29: Slider should clamp ARIA to the feasible window when the controlled value is out of range', () => {
+    // Overflow: visual sits at 100% and ARIA agrees (was: aria-valuenow=999).
+    const overflowHtml = renderToString(
+      <Slider value={999} min={0} max={24}>
+        <Slider.Track>
+          <Slider.Range />
+          <Slider.Thumb aria-label="Overflow" />
+        </Slider.Track>
+      </Slider>
+    )
+    expect(overflowHtml).toContain('aria-valuenow="24"')
+    expect(overflowHtml).toContain('aria-valuemin="0"')
+    expect(overflowHtml).toContain('aria-valuemax="24"')
+    expect(overflowHtml).not.toContain('aria-valuenow="999"')
+    expect(overflowHtml).toContain('--reference-slider-thumb-position:100%')
+
+    // Underflow mirrors.
+    const underflowHtml = renderToString(
+      <Slider value={-40} min={0} max={24}>
+        <Slider.Track>
+          <Slider.Range />
+          <Slider.Thumb aria-label="Underflow" />
+        </Slider.Track>
+      </Slider>
+    )
+    expect(underflowHtml).toContain('aria-valuenow="0"')
+    expect(underflowHtml).toContain('--reference-slider-thumb-position:0%')
+
+    // Range overflow clamps every thumb into the global window.
+    const rangeHtml = renderToString(
+      <Slider value={[999, 1000]} min={0} max={24}>
+        <Slider.Track>
+          <Slider.Range />
+          <Slider.Thumb aria-label="Min" />
+          <Slider.Thumb aria-label="Max" />
+        </Slider.Track>
+      </Slider>
+    )
+    expect(rangeHtml).not.toContain('aria-valuenow="999"')
+    expect(rangeHtml).not.toContain('aria-valuenow="1000"')
+    expect(rangeHtml.match(/aria-valuenow="24"/g)).toHaveLength(2)
+  })
 })

@@ -32,6 +32,34 @@ test.describe('Slider CT', () => {
     await expect(display).toHaveText('Current value: 30')
   })
 
+  test('B-29: out-of-range controlled value clamps ARIA like the visual', async ({
+    mount,
+    page,
+  }) => {
+    // Playtest repro: value 999 with max 24 rendered the thumb at 100%
+    // while aria-valuenow lied 999. Both now agree on 24.
+    const overflow = await mount('components/Slider/Slider/LoggedFixture', { initial: 999, min: 0, max: 24 })
+
+    const thumb = page.getByTestId('logged-thumb-0')
+    await expect(thumb).toHaveAttribute('aria-valuemin', '0')
+    await expect(thumb).toHaveAttribute('aria-valuemax', '24')
+    await expect(thumb).toHaveAttribute('aria-valuenow', '24')
+
+    const position = await thumb.evaluate(el =>
+      el.style.getPropertyValue('--reference-slider-thumb-position')
+    )
+    expect(position).toBe('100%')
+    await overflow.unmount()
+
+    // Underflow mirrors: 0 exposed, thumb at the start.
+    await mount('components/Slider/Slider/LoggedFixture', { initial: -40, min: 0, max: 24 })
+    await expect(thumb).toHaveAttribute('aria-valuenow', '0')
+    const underPosition = await thumb.evaluate(el =>
+      el.style.getPropertyValue('--reference-slider-thumb-position')
+    )
+    expect(underPosition).toBe('0%')
+  })
+
   test('updates slider value via pointer dragging and track clicking', async ({
     mount,
     page,

@@ -361,8 +361,12 @@ export function SliderThumb({
   const thumbBounds = inRange
     ? getThumbBounds(values, index, min, max, context.step, context.minStepsBetweenThumbs)
     : { min, max }
-  const thumbMin = thumbBounds.min
-  const thumbMax = thumbBounds.max
+  // B-29: the render path clamps ARIA to the feasible window, exactly like
+  // the visual position — a controlled value=999/max=24 exposes 24, never
+  // a now/min/max triple AT would reject.
+  const thumbMin = Math.max(min, Math.min(max, thumbBounds.min))
+  const thumbMax = Math.max(min, Math.min(max, thumbBounds.max))
+  const ariaNow = Math.max(thumbMin, Math.min(thumbMax, val))
 
   // The most recently active thumb paints on top so a direct stack press hits
   // the tie-rule winner; with no active thumb the lower index paints above.
@@ -431,7 +435,7 @@ export function SliderThumb({
     (props['aria-valuenow'] !== undefined
       ? undefined
       : formatValue
-      ? formatValue(val)
+      ? formatValue(ariaNow)
       : undefined)
 
   return (
@@ -442,7 +446,7 @@ export function SliderThumb({
       aria-label={props['aria-label'] ?? defaultAriaLabel}
       aria-valuemin={thumbMin}
       aria-valuemax={thumbMax}
-      aria-valuenow={val}
+      aria-valuenow={ariaNow}
       aria-valuetext={ariaValueText}
       aria-orientation={orientation}
       aria-disabled={disabled ? true : undefined}
