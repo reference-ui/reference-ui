@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Div, Span, Button } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
-import { Calendar, type DateRangeValue, type ISOMonth } from './index'
+import { Calendar, type DateRangeValue, type ISOMonth, type ISOYear } from './index'
 
 export const SingleDate = () => {
   const [date, setDate] = React.useState<string | null>('2026-08-15')
@@ -166,9 +166,13 @@ export const MonthMachine = () => {
           <Calendar.Header>
             <Calendar.PrevButton data-testid="month-prev" />
             <Calendar.Heading data-testid="month-heading" />
+            <Calendar.Month data-testid="month-drill" />
+            <Calendar.Year data-testid="month-year-drill" />
             <Calendar.NextButton data-testid="month-next" />
           </Calendar.Header>
           <Calendar.Grid data-testid="month-grid" />
+          <Calendar.Months data-testid="month-months" />
+          <Calendar.Years data-testid="month-years" />
         </Calendar>
         <Span fontSize="3r" color="design.text.light" data-testid="month-requests">
           {requests.join(',') || 'none'}
@@ -501,9 +505,13 @@ export const RtlGrid = () => {
           <Calendar.Header>
             <Calendar.PrevButton data-testid="rtl-prev" />
             <Calendar.Heading data-testid="rtl-heading" />
+            <Calendar.Month data-testid="rtl-month" />
+            <Calendar.Year data-testid="rtl-year" />
             <Calendar.NextButton data-testid="rtl-next" />
           </Calendar.Header>
           <Calendar.Grid data-testid="rtl-grid" />
+          <Calendar.Months data-testid="rtl-months" />
+          <Calendar.Years data-testid="rtl-years" />
         </Calendar>
         <Span fontSize="3r" color="design.text.light" data-testid="rtl-changes">
           {changes.join(',') || 'none'}
@@ -511,6 +519,311 @@ export const RtlGrid = () => {
         <Span fontSize="3r" color="design.text.light" data-testid="rtl-month-reqs">
           {monthReqs.join(',') || 'none'}
         </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const FoldedViews = () => {
+  const [date, setDate] = React.useState<string | null>('2024-04-10')
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="views-fixture-root">
+        <Calendar
+          locale="en-GB"
+          data-testid="test-views-calendar"
+          month="2024-04"
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+          min="2024-03-15"
+          max="2024-10-02"
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="views-value">
+          {date ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="views-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="views-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ControlledViews = () => {
+  const [month, setMonth] = React.useState<ISOMonth>('2024-04')
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  const [date, setDate] = React.useState<string | null>('2024-04-10')
+  const [changes, setChanges] = React.useState<string[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="cviews-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-cviews-calendar"
+          month={month}
+          today="2024-04-15"
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="cviews-value">
+          {date ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="cviews-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="cviews-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button
+            type="button"
+            data-testid="cviews-accept"
+            onClick={() =>
+              setMonthReqs((prev) => {
+                const last = prev[prev.length - 1]
+                if (last) setMonth(last)
+                return []
+              })
+            }
+          >
+            Accept
+          </Button>
+          <Button type="button" data-testid="cviews-reject" onClick={() => setMonthReqs([])}>
+            Reject
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const MonthMode = () => {
+  const [value, setValue] = React.useState<ISOMonth | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [pane, setPane] = React.useState<ISOMonth>('2024-04')
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  const [blockJune, setBlockJune] = React.useState(false)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="mmonth-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-mmonth-calendar"
+          mode="month"
+          month={pane}
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+          isDateUnavailable={blockJune ? (d) => d >= '2024-06-01' && d <= '2024-06-30' : undefined}
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="mmonth-value">
+          {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="mmonth-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="mmonth-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button
+            type="button"
+            data-testid="mmonth-accept"
+            onClick={() =>
+              setMonthReqs((prev) => {
+                const last = prev[prev.length - 1]
+                if (last) setPane(last)
+                return []
+              })
+            }
+          >
+            Accept
+          </Button>
+          <Button type="button" data-testid="mmonth-block-june" onClick={() => setBlockJune((b) => !b)}>
+            {blockJune ? 'unblock-june' : 'block-june'}
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const YearMode = () => {
+  const [value, setValue] = React.useState<ISOYear | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  const [blockYear, setBlockYear] = React.useState(false)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="ymode-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-ymode-calendar"
+          mode="year"
+          month="2024-04"
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+          isDateUnavailable={blockYear ? (d) => d >= '2025-01-01' && d <= '2025-12-31' : undefined}
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="ymode-value">
+          {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="ymode-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button type="button" data-testid="ymode-block-2025" onClick={() => setBlockYear((b) => !b)}>
+            {blockYear ? 'unblock-2025' : 'block-2025'}
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const RangeViews = () => {
+  const [range, setRange] = React.useState<DateRangeValue>({
+    start: '2024-03-20',
+    end: '2024-06-02',
+  })
+  const [changes, setChanges] = React.useState<string[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="rviews-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-rviews-calendar"
+          mode="range"
+          month="2024-04"
+          value={range}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, `${next.start}:${next.end}`])
+            setRange(next)
+          }}
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="rviews-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button
+            type="button"
+            data-testid="rviews-3yr"
+            onClick={() => setRange({ start: '2023-05-01', end: '2025-08-01' })}
+          >
+            3yr range
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const BareHeadingViews = () => {
+  const [veto, setVeto] = React.useState(false)
+  const [month, setMonth] = React.useState<ISOMonth>('2024-04')
+  const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="bare-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-bare-calendar"
+          month={month}
+          value={null}
+          onMonthChange={(next) => setMonthReqs((prev) => [...prev, next])}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="bare-prev" />
+            <Calendar.Heading data-testid="bare-heading" />
+            <Calendar.Month
+              data-testid="bare-month"
+              onClick={veto ? (e) => e.preventDefault() : undefined}
+            />
+            <Calendar.Year data-testid="bare-year" />
+            <Calendar.NextButton data-testid="bare-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="bare-grid" />
+          <Calendar.Months data-testid="bare-months" />
+          <Calendar.Years data-testid="bare-years" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="bare-month-reqs">
+          {monthReqs.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button
+            type="button"
+            data-testid="bare-accept"
+            onClick={() =>
+              setMonthReqs((prev) => {
+                const last = prev[prev.length - 1]
+                if (last) setMonth(last)
+                return []
+              })
+            }
+          >
+            Accept
+          </Button>
+          <Button type="button" data-testid="bare-veto" onClick={() => setVeto((v) => !v)}>
+            {veto ? 'veto-on' : 'veto-off'}
+          </Button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ModeSwitch = () => {
+  const [mode, setMode] = React.useState<'day' | 'month' | 'year' | 'range'>('day')
+  const [changes, setChanges] = React.useState<string[]>([])
+  // One instance, dynamic mode prop (null value is legal in every branch);
+  // the cast keeps the discriminated union happy — runtime is what's proven.
+  const calendarProps = {
+    locale: 'en-US',
+    'data-testid': 'test-mswitch-calendar',
+    ...(mode === 'day' ? {} : { mode }),
+    month: '2024-04',
+    value: null,
+    onChange: (next: unknown) => setChanges((prev) => [...prev, JSON.stringify(next)]),
+  } as unknown as React.ComponentProps<typeof Calendar>
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="mswitch-fixture-root">
+        <Calendar {...calendarProps} />
+        <Span fontSize="3r" color="design.text.light" data-testid="mswitch-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+        <Div display="flex" gap="2r">
+          <Button type="button" data-testid="mswitch-day" onClick={() => setMode('day')}>
+            day
+          </Button>
+          <Button type="button" data-testid="mswitch-month" onClick={() => setMode('month')}>
+            month
+          </Button>
+          <Button type="button" data-testid="mswitch-year" onClick={() => setMode('year')}>
+            year
+          </Button>
+          <Button type="button" data-testid="mswitch-range" onClick={() => setMode('range')}>
+            range
+          </Button>
+        </Div>
       </Div>
     </ReferenceLibrary>
   )

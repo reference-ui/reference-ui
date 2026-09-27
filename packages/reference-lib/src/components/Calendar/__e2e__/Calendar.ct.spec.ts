@@ -129,7 +129,7 @@ test.describe('Calendar CT', () => {
     await expect(page.locator('button[data-date="2024-02-01"]')).toBeFocused()
   })
 
-  test('CA-SINGLE-01/02/05 uniform-request: every activation requests its ISO once; rejection leaves selection', async ({
+  test('CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent (B-36); rejection leaves selection', async ({
     mount,
     page,
   }) => {
@@ -145,17 +145,36 @@ test.describe('Calendar CT', () => {
     await expect(log).toHaveText('2024-04-10')
     await expect(day10).toHaveAttribute('data-selected', '')
 
-    // Re-activating the selected date re-requests it (uniform-request;
-    // triage overrides the old CA-SINGLE-03 no-emit read).
-    await day10.click()
-    await expect(log).toHaveText('2024-04-10,2024-04-10')
+    // Enter and Space each request the focused unselected date exactly
+    // once (native button timing, no synthetic double-fire).
+    await day12.focus()
+    await page.keyboard.press('Enter')
+    await expect(log).toHaveText('2024-04-10,2024-04-12')
+    await expect(day12).toHaveAttribute('data-selected', '')
+    await page.getByTestId('emit-toggle-accept').click() // reject: value stays 12th
+    await day10.focus()
+    await page.keyboard.press('Space')
+    await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10')
+    await expect(day12).toHaveAttribute('data-selected', '')
+    await page.getByTestId('emit-toggle-accept').click() // accept again
+
+    // Re-activating the already-selected date emits nothing — no request,
+    // no null, not a toggle (B-36 restores CA-SINGLE-03's no-emit read).
+    await day12.click()
+    await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10')
+    await day12.focus()
+    await page.keyboard.press('Enter')
+    await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10')
+    await page.keyboard.press('Space')
+    await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10')
+    await expect(day12).toHaveAttribute('data-selected', '')
 
     // Parent rejection: the request logs but selection stays put.
     await page.getByTestId('emit-toggle-accept').click()
-    await day12.click()
-    await expect(log).toHaveText('2024-04-10,2024-04-10,2024-04-12')
-    await expect(day10).toHaveAttribute('data-selected', '')
-    await expect(day12).not.toHaveAttribute('data-selected', '')
+    await day10.click()
+    await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10,2024-04-10')
+    await expect(day12).toHaveAttribute('data-selected', '')
+    await expect(day10).not.toHaveAttribute('data-selected', '')
   })
 
   test('CA-MONTH-02/05: controlled nav requests the adjacent month once with no optimistic render', async ({
@@ -696,5 +715,600 @@ test.describe('Calendar CT', () => {
     await expect(page.locator('button[data-date="2024-10-01"]')).not.toBeFocused()
     await expect(page.locator('button[data-date][tabindex="0"]')).toHaveCount(0)
     await expect(page.getByTestId('out-changes')).toHaveText('none')
+  })
+})
+
+test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
+  test('CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/FoldedViews')
+
+    const calendar = page.getByTestId('test-views-calendar')
+    await expect(calendar).toHaveAttribute('data-mode', 'day')
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+
+    const header = calendar.locator('[data-reference-calendar-header]')
+    await expect(header.getByRole('button', { name: 'March 2024' })).toBeVisible()
+    await expect(header.getByRole('button', { name: 'May 2024' })).toBeVisible()
+    const monthBtn = calendar.locator('[data-reference-calendar-month]')
+    const yearBtn = calendar.locator('[data-reference-calendar-year]')
+    await expect(monthBtn).toHaveText('April')
+    await expect(monthBtn).toHaveAttribute('aria-pressed', 'false')
+    await expect(yearBtn).toHaveText('2024')
+    await expect(yearBtn).toHaveAttribute('aria-pressed', 'false')
+
+    // Day Grid is the sole collection in the accessibility tree.
+    await expect(calendar.locator('[role="grid"]')).toBeVisible()
+    await expect(calendar.locator('[data-reference-calendar-months]')).toBeHidden()
+    await expect(calendar.locator('[data-reference-calendar-years]')).toBeHidden()
+  })
+
+  test('CA-VIEW-02: Month toggles the private month view; consumer preventDefault cancels it', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/FoldedViews')
+
+    const calendar = page.getByTestId('test-views-calendar')
+    const monthBtn = calendar.locator('[data-reference-calendar-month]')
+
+    await monthBtn.click()
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await expect(monthBtn).toHaveAttribute('aria-pressed', 'true')
+    await expect(calendar.locator('[data-reference-calendar-months]')).toBeVisible()
+    await expect(calendar.locator('[role="grid"]')).toBeHidden()
+    await expect(calendar.locator('[data-reference-calendar-years]')).toBeHidden()
+    await expect(page.getByTestId('views-changes')).toHaveText('none')
+    await expect(page.getByTestId('views-month-reqs')).toHaveText('none')
+
+    await monthBtn.click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(monthBtn).toHaveAttribute('aria-pressed', 'false')
+    await expect(calendar.locator('[role="grid"]')).toBeVisible()
+
+    // Consumer onClick runs first; preventDefault() cancels the toggle.
+    await mount('components/Calendar/Calendar/BareHeadingViews')
+    const bare = page.getByTestId('test-bare-calendar')
+    await page.getByTestId('bare-veto').click()
+    await page.getByTestId('bare-month').click()
+    await expect(bare).toHaveAttribute('data-view', 'day')
+    await page.getByTestId('bare-veto').click()
+    await page.getByTestId('bare-month').click()
+    await expect(bare).toHaveAttribute('data-view', 'month')
+  })
+
+  test('CA-VIEW-03: Year toggles the private year view and the day grid stands down', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/FoldedViews')
+
+    const calendar = page.getByTestId('test-views-calendar')
+    const yearBtn = calendar.locator('[data-reference-calendar-year]')
+    const monthBtn = calendar.locator('[data-reference-calendar-month]')
+
+    await yearBtn.click()
+    await expect(calendar).toHaveAttribute('data-view', 'year')
+    await expect(yearBtn).toHaveAttribute('aria-pressed', 'true')
+    await expect(monthBtn).toHaveAttribute('aria-pressed', 'false')
+    await expect(calendar.locator('[data-reference-calendar-years]')).toBeVisible()
+    await expect(calendar.locator('[role="grid"]')).toBeHidden()
+    await expect(calendar.locator('[data-reference-calendar-months]')).toBeHidden()
+
+    // Day-grid keyboard is not active while the year view is shown: arrows
+    // from the header move nothing and request nothing.
+    await yearBtn.focus()
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByTestId('views-changes')).toHaveText('none')
+    await expect(page.getByTestId('views-month-reqs')).toHaveText('none')
+
+    await yearBtn.click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(yearBtn).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  test('CA-VIEW-04: Months renders twelve locale cells with whole-month min/max disabling', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/FoldedViews')
+
+    const calendar = page.getByTestId('test-views-calendar')
+    await calendar.locator('[data-reference-calendar-month]').click()
+
+    const cells = calendar.locator('button[data-reference-calendar-month-cell]')
+    await expect(cells).toHaveCount(12)
+    await expect(calendar.locator('button[data-month="2024-01"]')).toHaveText('Jan')
+    await expect(calendar.locator('button[data-month="2024-12"]')).toHaveText('Dec')
+
+    // Partial months stay enabled; whole months outside stay disabled.
+    await expect(calendar.locator('button[data-month="2024-03"]')).toBeEnabled()
+    await expect(calendar.locator('button[data-month="2024-10"]')).toBeEnabled()
+    for (const whole of ['2024-01', '2024-02', '2024-11', '2024-12']) {
+      const cell = calendar.locator(`button[data-month="${whole}"]`)
+      await expect(cell).toBeDisabled()
+      await expect(cell).toHaveAttribute('aria-disabled', 'true')
+    }
+    await expect(calendar.locator('button[data-month="2024-04"]')).toHaveAttribute(
+      'data-current',
+      ''
+    )
+    // The day table stands down: hidden, out of the accessibility tree.
+    await expect(calendar.locator('[role="grid"]')).toBeHidden()
+  })
+
+  test('CA-VIEW-05/CA-MODE-01: an enabled month cell navigates and returns to day view only after the month is accepted', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    await expect(calendar).toHaveAttribute('data-mode', 'day')
+    await calendar.locator('[data-reference-calendar-month]').click()
+
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('2024-06')
+    await expect(page.getByTestId('cviews-changes')).toHaveText('none')
+    // Navigation only: the view waits for the controlled month.
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+
+    await page.getByTestId('cviews-accept').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(calendar.locator('button[data-date="2024-06-01"]')).toBeVisible()
+    await expect(page.getByTestId('cviews-value')).toHaveText('2024-04-10')
+    await expect(page.getByTestId('cviews-changes')).toHaveText('none')
+
+    // A disabled month cell emits nothing in any callback.
+    await mount('components/Calendar/Calendar/FoldedViews')
+    const bounded = page.getByTestId('test-views-calendar')
+    await bounded.locator('[data-reference-calendar-month]').click()
+    await bounded.locator('button[data-month="2024-01"]').click({ force: true })
+    await expect(page.getByTestId('views-month-reqs')).toHaveText('none')
+    await expect(page.getByTestId('views-changes')).toHaveText('none')
+    await expect(bounded).toHaveAttribute('data-view', 'month')
+  })
+
+  test('CA-VIEW-06: Years windows ten either side unbounded, clamps at the domain edges, min-through-max when bounded', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    await calendar.locator('[data-reference-calendar-year]').click()
+    const cells = calendar.locator('button[data-reference-calendar-year-cell]')
+    await expect(cells).toHaveCount(21)
+    await expect(calendar.locator('button[data-year="2014"]')).toHaveText('2014')
+    await expect(calendar.locator('button[data-year="2034"]')).toHaveText('2034')
+    await expect(calendar.locator('button[data-year="2024"]')).toHaveAttribute(
+      'data-current',
+      ''
+    )
+
+    // Domain edges clamp to a full in-domain run (the pane move returns
+    // home, so each edge re-opens the year view).
+    await mount('components/Calendar/Calendar/MonthMachine')
+    const edge = page.getByTestId('test-month-calendar')
+    await page.getByTestId('month-min').click()
+    await page.getByTestId('month-year-drill').click()
+    await expect(edge.locator('button[data-year="0001"]')).toBeVisible()
+    await expect(edge.locator('button[data-year="0021"]')).toBeVisible()
+    await expect(edge.locator('button[data-reference-calendar-year-cell]')).toHaveCount(21)
+    await page.getByTestId('month-max').click()
+    await page.getByTestId('month-year-drill').click()
+    await expect(edge.locator('button[data-year="9999"]')).toBeVisible()
+    await expect(edge.locator('button[data-year="9979"]')).toBeVisible()
+
+    // Bounded: min-through-max years only; the 2024 pane year is absent.
+    await mount('components/Calendar/Calendar/FoldedViews')
+    const bounded = page.getByTestId('test-views-calendar')
+    await bounded.locator('[data-reference-calendar-year]').click()
+    await expect(
+      bounded.locator('button[data-reference-calendar-year-cell]')
+    ).toHaveCount(1)
+    await expect(bounded.locator('button[data-year="2024"]')).toBeVisible()
+  })
+
+  test('CA-VIEW-07: an enabled year cell navigates preserving the month number', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await calendar.locator('button[data-year="2020"]').click()
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('2020-04')
+    await expect(calendar).toHaveAttribute('data-view', 'year')
+
+    await page.getByTestId('cviews-accept').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(calendar.locator('button[data-date="2020-04-01"]')).toBeVisible()
+
+    // February stays February across the year jump.
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await calendar.locator('button[data-month="2020-02"]').click()
+    await page.getByTestId('cviews-accept').click()
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await calendar.locator('button[data-year="2023"]').click()
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('2023-02')
+  })
+
+  test('CA-VIEW-08: Previous/Next are native-disabled and silent in month and year view', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    const prev = calendar.locator('[data-reference-calendar-header] > button').first()
+    const next = calendar.locator('[data-reference-calendar-header] > button').last()
+
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(prev).toBeDisabled()
+    await expect(next).toBeDisabled()
+    // Synthetic dispatch bypasses native suppression; the view guards
+    // keep the request seams silent anyway.
+    await prev.dispatchEvent('click')
+    await next.dispatchEvent('click')
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('none')
+    await expect(page.getByTestId('cviews-changes')).toHaveText('none')
+
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await expect(prev).toBeDisabled()
+    await expect(next).toBeDisabled()
+    await prev.dispatchEvent('click')
+    await next.dispatchEvent('click')
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('none')
+
+    // Back in day view the directions re-enable per target coverage.
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await expect(prev).toBeEnabled()
+    await expect(next).toBeEnabled()
+  })
+
+  test('CA-VIEW-08: a completed range survives a view round-trip with no invented completion', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeViews')
+
+    const calendar = page.getByTestId('test-rviews-calendar')
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    // The completed interval still paints on rendered in-pane days, and no
+    // completion was invented: the endpoints live outside the April pane,
+    // so in-range paint plus callback silence is the round-trip proof.
+    await expect(calendar.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+    await expect(calendar.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.getByTestId('rviews-changes')).toHaveText('none')
+  })
+
+  test('CA-VIEW-09: month and year cells paint range start, end, and in-range without preview', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeViews')
+
+    const calendar = page.getByTestId('test-rviews-calendar')
+    await calendar.locator('[data-reference-calendar-month]').click()
+
+    const march = calendar.locator('button[data-month="2024-03"]')
+    const april = calendar.locator('button[data-month="2024-04"]')
+    const may = calendar.locator('button[data-month="2024-05"]')
+    const june = calendar.locator('button[data-month="2024-06"]')
+    await expect(march).toHaveAttribute('data-range-start', '')
+    await expect(june).toHaveAttribute('data-range-end', '')
+    await expect(april).toHaveAttribute('data-in-range', '')
+    await expect(may).toHaveAttribute('data-in-range', '')
+    await expect(april).toHaveAttribute('data-selected', '')
+
+    // Hovering a month cell invents no preview attributes.
+    const before = await april.getAttribute('data-in-range')
+    await june.hover()
+    await expect(april).toHaveAttribute('data-in-range', before ?? '')
+    await expect(page.getByTestId('rviews-changes')).toHaveText('none')
+
+    // Year view of a 2023–2025 range marks those years the same way.
+    await page.getByTestId('rviews-3yr').click()
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await expect(calendar.locator('button[data-year="2023"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(calendar.locator('button[data-year="2025"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(calendar.locator('button[data-year="2024"]')).toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+  })
+
+  test('CA-VIEW-10: month and year grids move focus in a three-column field without selecting', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    await calendar.locator('[data-reference-calendar-month]').click()
+
+    // One tab stop in the month collection, on current April.
+    await expect(calendar.locator('button[data-month][tabindex="0"]')).toHaveCount(1)
+    await expect(calendar.locator('button[data-month][tabindex="0"]')).toHaveAttribute(
+      'data-month',
+      '2024-04'
+    )
+
+    // Each arrow from April: Right→May, Left→March, Down→July, Up→January.
+    await calendar.locator('button[data-month="2024-04"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(calendar.locator('button[data-month="2024-05"]')).toBeFocused()
+    await calendar.locator('button[data-month="2024-04"]').focus()
+    await page.keyboard.press('ArrowLeft')
+    await expect(calendar.locator('button[data-month="2024-03"]')).toBeFocused()
+    await calendar.locator('button[data-month="2024-04"]').focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(calendar.locator('button[data-month="2024-07"]')).toBeFocused()
+    await calendar.locator('button[data-month="2024-04"]').focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(calendar.locator('button[data-month="2024-01"]')).toBeFocused()
+    await expect(page.getByTestId('cviews-changes')).toHaveText('none')
+
+    // Enter on June navigates (CA-VIEW-05), never selects.
+    await calendar.locator('button[data-month="2024-06"]').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('cviews-month-reqs')).toHaveText('2024-06')
+    await expect(page.getByTestId('cviews-changes')).toHaveText('none')
+
+    // Shorter vector on Years.
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await calendar.locator('button[data-year="2024"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(calendar.locator('button[data-year="2025"]')).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(calendar.locator('button[data-year="2028"]')).toBeFocused()
+
+    // Inherited RTL reverses only the horizontal arrows.
+    await mount('components/Calendar/Calendar/RtlGrid')
+    const rtl = page.getByTestId('test-rtl-calendar')
+    await page.getByTestId('rtl-month').click()
+    await rtl.locator('button[data-month="2024-04"]').focus()
+    await page.keyboard.press('ArrowLeft')
+    await expect(rtl.locator('button[data-month="2024-05"]')).toBeFocused()
+    await page.keyboard.press('ArrowRight')
+    await expect(rtl.locator('button[data-month="2024-04"]')).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(rtl.locator('button[data-month="2024-07"]')).toBeFocused()
+  })
+
+  test('CA-VIEW-11: view and month announce through one live Heading without a global announcer', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/BareHeadingViews')
+
+    const calendar = page.getByTestId('test-bare-calendar')
+    const heading = page.getByTestId('bare-heading')
+    await expect(heading).toHaveAttribute('aria-live', 'polite')
+    await expect(heading).toHaveAttribute('aria-atomic', 'true')
+    await expect(heading).toHaveText('April 2024')
+
+    // Entering month view mutates the Heading to the year exactly once.
+    await page.evaluate(() => {
+      const node = document.querySelector('[data-testid="bare-heading"]')!
+      ;(window as unknown as { __headingMutations: number }).__headingMutations = 0
+      new MutationObserver((records) => {
+        const w = window as unknown as { __headingMutations: number }
+        for (const record of records) {
+          if (record.type === 'characterData') w.__headingMutations += 1
+          for (const added of record.addedNodes) {
+            if (added.nodeType === Node.TEXT_NODE) w.__headingMutations += 1
+          }
+        }
+      }).observe(node, { characterData: true, childList: true, subtree: true })
+    })
+    await page.getByTestId('bare-month').click()
+    await expect(heading).toHaveText('2024')
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __headingMutations: number }).__headingMutations
+      )
+    ).toBe(1)
+
+    // Activating June and accepting the month announces June 2024 once.
+    await page.evaluate(() => {
+      ;(window as unknown as { __headingMutations: number }).__headingMutations = 0
+    })
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await page.getByTestId('bare-accept').click()
+    await expect(heading).toHaveText('June 2024')
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __headingMutations: number }).__headingMutations
+      )
+    ).toBe(1)
+
+    // The day Grid still names itself from the Heading; Month/Year keep
+    // their locale names.
+    const headingId = await heading.getAttribute('id')
+    await expect(page.getByTestId('bare-grid')).toHaveAttribute('aria-labelledby', headingId!)
+    await expect(page.getByTestId('bare-month')).toHaveAccessibleName('June')
+    await expect(page.getByTestId('bare-year')).toHaveAccessibleName('2024')
+  })
+
+  test('CA-VIEW-11: the folded Heading keeps its live region across view toggles', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ControlledViews')
+
+    const calendar = page.getByTestId('test-cviews-calendar')
+    const heading = calendar.locator('[data-reference-calendar-heading]')
+    await expect(heading).toHaveAttribute('aria-live', 'polite')
+    await expect(heading).toHaveAttribute('aria-atomic', 'true')
+
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(heading).toHaveAttribute('aria-live', 'polite')
+    await expect(calendar.locator('[data-reference-calendar-month]')).toHaveAccessibleName(
+      'April'
+    )
+    await expect(calendar.locator('[data-reference-calendar-year]')).toHaveAccessibleName(
+      '2024'
+    )
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar.locator('[role="grid"]')).toBeVisible()
+  })
+
+  test('CA-VIEW-12: mode changes reset the private view to the home collection without stealing focus', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ModeSwitch')
+
+    const calendar = page.getByTestId('test-mswitch-calendar')
+    await expect(calendar).toHaveAttribute('data-mode', 'day')
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+
+    // Focus stays outside on the mode button; the switch resets the view.
+    await page.getByTestId('mswitch-month').focus()
+    await page.getByTestId('mswitch-month').click()
+    await expect(calendar).toHaveAttribute('data-mode', 'month')
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await expect(calendar.locator('[data-reference-calendar-months]')).toBeVisible()
+    await expect(calendar.locator('[role="grid"]')).toHaveCount(0)
+    await expect(page.getByTestId('mswitch-month')).toBeFocused()
+    await expect(page.getByTestId('mswitch-changes')).toHaveText('none')
+
+    await page.getByTestId('mswitch-year').click()
+    await expect(calendar).toHaveAttribute('data-mode', 'year')
+    await expect(calendar).toHaveAttribute('data-view', 'year')
+    await expect(calendar.locator('[data-reference-calendar-years]')).toBeVisible()
+    await expect(calendar.locator('[data-reference-calendar-months]')).toHaveCount(0)
+
+    await page.getByTestId('mswitch-range').click()
+    await expect(calendar).toHaveAttribute('data-mode', 'range')
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(calendar.locator('[role="grid"]')).toBeVisible()
+
+    await page.getByTestId('mswitch-day').click()
+    await expect(calendar).toHaveAttribute('data-mode', 'day')
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+  })
+
+  test('CA-MODE-02: month mode publishes YYYY-MM; Year drill-down navigates without selecting', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/MonthMode')
+
+    const calendar = page.getByTestId('test-mmonth-calendar')
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await expect(calendar.locator('[role="grid"]')).toHaveCount(0)
+
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await expect(page.getByTestId('mmonth-changes')).toHaveText('2024-06')
+    await expect(page.getByTestId('mmonth-value')).toHaveText('2024-06')
+    await expect(calendar.locator('button[data-month="2024-06"]')).toHaveAttribute(
+      'data-selected',
+      ''
+    )
+
+    // Re-activating the selected month is silent (B-36 in month mode).
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await expect(page.getByTestId('mmonth-changes')).toHaveText('2024-06')
+
+    // Year drill-down is navigation: requests 2020-04, selects nothing.
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await calendar.locator('button[data-year="2020"]').click()
+    await expect(page.getByTestId('mmonth-month-reqs')).toHaveText('2020-04')
+    await expect(page.getByTestId('mmonth-changes')).toHaveText('2024-06')
+    await page.getByTestId('mmonth-accept').click()
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await expect(calendar.locator('button[data-month="2020-04"]')).toBeVisible()
+  })
+
+  test('CA-MODE-03: year mode publishes YYYY and Month/Year never reveal a day table', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/YearMode')
+
+    const calendar = page.getByTestId('test-ymode-calendar')
+    await expect(calendar).toHaveAttribute('data-view', 'year')
+    await expect(calendar.locator('[role="grid"]')).toHaveCount(0)
+    await expect(calendar.locator('[data-reference-calendar-months]')).toHaveCount(0)
+
+    await calendar.locator('button[data-year="2026"]').click()
+    await expect(page.getByTestId('ymode-changes')).toHaveText('2026')
+    await expect(page.getByTestId('ymode-value')).toHaveText('2026')
+
+    // Re-activating the selected year is silent (B-36 in year mode).
+    await calendar.locator('button[data-year="2026"]').click()
+    await expect(page.getByTestId('ymode-changes')).toHaveText('2026')
+
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar.locator('[role="grid"]')).toHaveCount(0)
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await expect(calendar).toHaveAttribute('data-view', 'year')
+    await expect(calendar.locator('[role="grid"]')).toHaveCount(0)
+  })
+
+  test('CA-VIEW-13 (second fixture): a custom header without Month/Year has no drill-down and stays in day view', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/SingleDate')
+
+    const calendar = page.getByTestId('test-calendar')
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(calendar.locator('[data-reference-calendar-month]')).toHaveCount(0)
+    await expect(calendar.locator('[data-reference-calendar-year]')).toHaveCount(0)
+    await expect(calendar.locator('[role="grid"]')).toBeVisible()
+    // The first CA-VIEW-13 fixture (custom Days renderer + defaulted
+    // Header/Months/Years) needs HOLD #5 Day parts and stays unproven.
+  })
+
+  test('CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/MonthMode')
+
+    const calendar = page.getByTestId('test-mmonth-calendar')
+    await expect(calendar.locator('button[data-month="2024-06"]')).toBeEnabled()
+
+    await page.getByTestId('mmonth-block-june').dispatchEvent('click')
+    const june = calendar.locator('button[data-month="2024-06"]')
+    await expect(june).toBeDisabled()
+    await june.click({ force: true })
+    await expect(page.getByTestId('mmonth-changes')).toHaveText('none')
+    await expect(calendar.locator('button[data-month="2024-07"]')).toBeEnabled()
+
+    await mount('components/Calendar/Calendar/YearMode')
+    const years = page.getByTestId('test-ymode-calendar')
+    await expect(years.locator('button[data-year="2025"]')).toBeEnabled()
+    await page.getByTestId('ymode-block-2025').dispatchEvent('click')
+    const y2025 = years.locator('button[data-year="2025"]')
+    await expect(y2025).toBeDisabled()
+    await y2025.click({ force: true })
+    await expect(page.getByTestId('ymode-changes')).toHaveText('none')
+    await expect(years.locator('button[data-year="2024"]')).toBeEnabled()
   })
 })

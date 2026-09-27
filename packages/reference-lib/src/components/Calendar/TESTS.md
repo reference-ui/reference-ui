@@ -777,11 +777,15 @@ controller stays in the DateField module.
   remains empty, the same gridcell stays selected, focus may stay on its day
   button, and no null request is produced; single Calendar selection is not a
   toggle.
-  > TRIAGE AMENDMENT (FEATURES #13, decided uniform-request — SUPERSEDES
-  > the no-emit read above): every activation requests its ISO once, so
-  > re-activating the selected date DOES emit one request. The surviving
-  > half of this case is "no null request, not a toggle". Pinned by the
-  > CA-SINGLE uniform-request CT (cluster A 2026-09-26).
+  > PLAYTEST REVERSAL (B-36, 2026-09-27 — SUPERSEDES the FEATURES #13
+  > uniform-request triage below it): re-activating the already-selected
+  > value emits nothing in day, range, month, or year mode. Redundant
+  > identical-value `onChange` emissions re-fire downstream effects for
+  > no change; the mission contract outranks the component triage note.
+  > Flagged for HQ (deliberate design reversal of a triaged decision).
+  > SUPERSEDED TRIAGE (FEATURES #13, uniform-request — no longer in
+  > force): every activation requested its ISO once, so re-activating the
+  > selected date DID emit one request.
 - [x] `CA-SINGLE-04` `[reference]` `[browser]` —
   **Calendar should prevent every input modality from selecting a blocked
   date.** Test one date below `min`, one above `max`, and one returned by

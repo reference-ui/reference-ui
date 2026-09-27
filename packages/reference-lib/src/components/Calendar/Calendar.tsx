@@ -14,6 +14,7 @@ import {
   addCalendarDays,
   formatISODate,
   formatISOMonth,
+  formatISOYear,
   getDayOfWeek,
   getDaysInMonth,
   isValidISODate,
@@ -30,6 +31,9 @@ import { getWeekStart, getWeekdayHeaders, validateLocale, type WeekdayHeader } f
 import { buildMonthGrid, type GridDay, type MonthGrid } from './grid'
 
 export type CalendarMode = 'day' | 'range' | 'month' | 'year'
+/** Calendar-private interaction state (FEATURES #10): which collection is
+ * shown. Never a controlled prop — the application does not branch on it. */
+export type CalendarView = 'day' | 'month' | 'year'
 export type ISODate = string // YYYY-MM-DD
 export interface DateRangeValue {
   start: ISODate
@@ -182,6 +186,10 @@ function validateCalendarProps(props: CalendarProps): string | null {
 
 interface CalendarContextValue {
   mode: CalendarMode
+  /** Private view (FEATURES #10): the shown collection. Day/range home
+   * is `day`; month/year modes home to their own collection. */
+  view: CalendarView
+  setView: (view: CalendarView) => void
   value: CalendarValue
   currentMonth: { year: number; month: number }
   locale: string
@@ -212,6 +220,18 @@ interface CalendarContextValue {
   goToNextMonth: () => void
   requestMonthChange: (month: ISOMonth) => void
   selectDate: (dateStr: ISODate) => void
+  /** Month activation (FEATURES #10): selection in month mode (publishes
+   * `YYYY-MM`), navigation otherwise. No-op when the month is disabled. */
+  selectMonth: (month: ISOMonth) => void
+  /** Year activation (FEATURES #10): selection in year mode (publishes
+   * `YYYY`), month-preserving navigation otherwise. No-op when disabled. */
+  selectYear: (year: ISOYear) => void
+  /** A month is disabled exactly when every day of it is blocked
+   * (min/max/unavailable); partial months stay enabled (CA-VIEW-04,
+   * CA-MODE-05). */
+  isMonthDisabled: (month: ISOMonth) => boolean
+  /** A year is disabled exactly when every month of it is disabled. */
+  isYearDisabled: (year: ISOYear) => boolean
   isDateSelected: (dateStr: ISODate) => boolean
   isDateInRange: (dateStr: ISODate) => boolean
   isRangeStart: (dateStr: ISODate) => boolean
@@ -236,6 +256,48 @@ function formatMonthYear(locale: string, year: number, month0: number): string {
     timeZone: 'UTC',
     calendar: 'gregory',
   })
+}
+
+/** Locale year name ("2024") for the month/year Heading views. Same
+ * Gregorian forcing and year-0..99 correction as formatMonthYear. */
+function formatYear(locale: string, year: number): string {
+  const date = new Date(Date.UTC(2000, 0, 1))
+  date.setUTCFullYear(year)
+  return date.toLocaleDateString(locale, {
+    year: 'numeric',
+    timeZone: 'UTC',
+    calendar: 'gregory',
+  })
+}
+
+/** Locale short month name ("Jun") for a month cell. */
+function formatShortMonth(locale: string, year: number, month0: number): string {
+  const date = new Date(Date.UTC(2000, month0, 1))
+  date.setUTCFullYear(year)
+  return date.toLocaleDateString(locale, {
+    month: 'short',
+    timeZone: 'UTC',
+    calendar: 'gregory',
+  })
+}
+
+/** Locale long month name ("June") for the Month drill-down button. */
+function formatLongMonth(locale: string, year: number, month0: number): string {
+  const date = new Date(Date.UTC(2000, month0, 1))
+  date.setUTCFullYear(year)
+  return date.toLocaleDateString(locale, {
+    month: 'long',
+    timeZone: 'UTC',
+    calendar: 'gregory',
+  })
+}
+
+/** Home collection per mode (FEATURES #10): day/range drill from the day
+ * grid; month/year modes live in their own collection. */
+function getHomeView(mode: CalendarMode): CalendarView {
+  if (mode === 'month') return 'month'
+  if (mode === 'year') return 'year'
+  return 'day'
 }
 
 /** Adjacent month, or null when the step would leave 0001–9999. */
@@ -286,6 +348,7 @@ export function CalendarHeader({
 export type CalendarHeadingProps = PrimitiveProps<'div'>
 
 export function CalendarHeading({
+  children,
   className,
   style,
   ...props
@@ -296,11 +359,15 @@ export function CalendarHeading({
   // Locale-formatted div + the stable polite atomic announcement source
   // (FEATURES #11): one text mutation per accepted month, no global
   // announcer. Sync text — never effect-written — so mount produces no
-  // redundant post-mount mutation (CA-GRID-12). The prototype heading
-  // drill-down toggle is gone with the button host; Month/Year parts own
-  // view when FEATURES #10 lands.
-  const { currentMonth, locale, headingId } = context
-  const monthName = formatMonthYear(locale, currentMonth.year, currentMonth.month)
+  // redundant post-mount mutation (CA-GRID-12). Explicit children (the
+  // default Month/Year drill-down buttons) replace the text; otherwise
+  // the text names the shown collection — month + year in day view, the
+  // year alone in month/year view (CA-VIEW-11).
+  const { currentMonth, locale, headingId, view } = context
+  const text =
+    view === 'day'
+      ? formatMonthYear(locale, currentMonth.year, currentMonth.month)
+      : formatYear(locale, currentMonth.year)
 
   return (
     <Div
@@ -313,12 +380,108 @@ export function CalendarHeading({
       fontWeight="600"
       m="0"
       color="design.text.base"
+      display={children !== undefined ? 'inline-flex' : undefined}
+      alignItems={children !== undefined ? 'center' : undefined}
+      gap={children !== undefined ? '1r' : undefined}
       className={className}
       style={style}
       {...props}
     >
-      {monthName}
+      {children ?? text}
     </Div>
+  )
+}
+
+export type CalendarMonthProps = PrimitiveProps<'button'>
+
+export function CalendarMonth({
+  children,
+  className,
+  style,
+  onClick,
+  ...props
+}: CalendarMonthProps) {
+  const context = React.useContext(CalendarContext)
+  if (!context) return null
+  const { currentMonth, locale, view, setView, mode } = context
+  const isPressed = view === 'month'
+  const monthName = formatLongMonth(locale, currentMonth.year, currentMonth.month)
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (!e.defaultPrevented) {
+      // Toggle the private month view; in month mode the home collection
+      // is month, so there is nothing to toggle back to (CA-VIEW-02).
+      setView(isPressed ? (mode === 'month' ? 'month' : 'day') : 'month')
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      data-reference-calendar-month=""
+      aria-pressed={isPressed}
+      aria-label={monthName}
+      onClick={handleClick}
+      bg="transparent"
+      border="none"
+      p="1r"
+      borderRadius="sm"
+      fontSize="4r"
+      fontWeight="600"
+      color="design.text.base"
+      cursor="pointer"
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children ?? monthName}
+    </Button>
+  )
+}
+
+export type CalendarYearProps = PrimitiveProps<'button'>
+
+export function CalendarYear({
+  children,
+  className,
+  style,
+  onClick,
+  ...props
+}: CalendarYearProps) {
+  const context = React.useContext(CalendarContext)
+  if (!context) return null
+  const { currentMonth, view, setView, mode } = context
+  const isPressed = view === 'year'
+  const yearText = String(currentMonth.year)
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(e)
+    if (!e.defaultPrevented) {
+      setView(isPressed ? (mode === 'year' ? 'year' : 'day') : 'year')
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      data-reference-calendar-year=""
+      aria-pressed={isPressed}
+      onClick={handleClick}
+      bg="transparent"
+      border="none"
+      p="1r"
+      borderRadius="sm"
+      fontSize="4r"
+      fontWeight="600"
+      color="design.text.base"
+      cursor="pointer"
+      className={className}
+      style={style}
+      {...props}
+    >
+      {children ?? yearText}
+    </Button>
   )
 }
 
@@ -332,7 +495,9 @@ export function CalendarPrevButton({
   ...props
 }: CalendarPrevButtonProps) {
   const context = React.useContext(CalendarContext)
-  const navDisabled = context?.prevDisabled ?? false
+  // Month stepping is a day-view gesture: in month/year view Previous is
+  // native-disabled and silent (CA-VIEW-08).
+  const navDisabled = (context?.prevDisabled ?? false) || (context ? context.view !== 'day' : false)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
@@ -378,7 +543,9 @@ export function CalendarNextButton({
   ...props
 }: CalendarNextButtonProps) {
   const context = React.useContext(CalendarContext)
-  const navDisabled = context?.nextDisabled ?? false
+  // Month stepping is a day-view gesture: in month/year view Next is
+  // native-disabled and silent (CA-VIEW-08).
+  const navDisabled = (context?.nextDisabled ?? false) || (context ? context.view !== 'day' : false)
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
@@ -431,6 +598,7 @@ export function CalendarGrid({
   if (!context) return null
 
   const {
+    view,
     currentMonth,
     headers,
     grid,
@@ -785,7 +953,10 @@ export function CalendarGrid({
       width="100%"
       textAlign="center"
       className={className}
-      style={style}
+      // One collection is ever shown: display:none drops the day table
+      // from the accessibility tree and tab order in month/year view
+      // (CA-VIEW-01/04) while keeping grid state across toggles.
+      style={{ display: view === 'day' ? undefined : 'none', ...style }}
       {...props}
     >
       <Thead>
@@ -837,7 +1008,10 @@ export function CalendarGrid({
                   <Button
                     type="button"
                     id={`${idPrefix}-${cell.date}`}
-                    tabIndex={isFocused ? 0 : -1}
+                    // The roving target is tabbable only in its own view:
+                    // a display:none collection is never a tab stop, so
+                    // exactly one tab stop exists per shown collection.
+                    tabIndex={isFocused && view === 'day' ? 0 : -1}
                     disabled={disabled}
                     aria-disabled={disabled ? 'true' : undefined}
                     aria-selected={selected}
@@ -884,6 +1058,550 @@ export function CalendarGrid({
         ))}
       </Tbody>
     </Table>
+  )
+}
+
+/** Horizontal arrow delta in a 3-column collection (CA-VIEW-10):
+ * inherited RTL reverses only the visual horizontal keys; vertical
+ * keys never reverse. Null when the key is not a collection move. */
+function collectionKeyDelta(key: string, rtl: boolean): number | null {
+  if (key === 'ArrowLeft') return rtl ? 1 : -1
+  if (key === 'ArrowRight') return rtl ? -1 : 1
+  if (key === 'ArrowUp') return -3
+  if (key === 'ArrowDown') return 3
+  return null
+}
+
+interface MonthCellData {
+  month: ISOMonth
+  label: string
+  current: boolean
+  selected: boolean
+  disabled: boolean
+  rangeStart: boolean
+  rangeEnd: boolean
+  inRange: boolean
+}
+
+/** Range paint for one month cell (CA-VIEW-09): completed ranges mark
+ * start/end/in-range inclusively, a pending start marks itself alone,
+ * and hovering never invents day-grid preview attributes (there is no
+ * preview machine on this branch, so the "without preview" half holds
+ * trivially). */
+function monthRangePaint(
+  month: ISOMonth,
+  value: CalendarValue
+): { selected: boolean; rangeStart: boolean; rangeEnd: boolean; inRange: boolean } {
+  const empty = { selected: false, rangeStart: false, rangeEnd: false, inRange: false }
+  if (!value || typeof value !== 'object' || !('start' in value)) return empty
+  const range = value as DateRangeValue
+  if (!isValidISODate(range.start)) return empty
+  const startM = range.start.slice(0, 7)
+  if (range.end != null && isValidISODate(range.end)) {
+    const endM = range.end.slice(0, 7)
+    const inRange = month >= startM && month <= endM
+    return {
+      selected: inRange,
+      rangeStart: month === startM,
+      rangeEnd: month === endM,
+      inRange,
+    }
+  }
+  const isStart = month === startM
+  return { selected: isStart, rangeStart: isStart, rangeEnd: false, inRange: false }
+}
+
+export type CalendarMonthsProps = Omit<PrimitiveProps<'div'>, 'children'> & {
+  ref?: React.Ref<HTMLDivElement>
+}
+
+export function CalendarMonths({
+  className,
+  style,
+  ref: consumerRef,
+  onKeyDown: consumerOnKeyDown,
+  ...props
+}: CalendarMonthsProps) {
+  const context = React.useContext(CalendarContext)
+  if (!context) return null
+  const { view, currentMonth, locale, mode, value, selectMonth, isMonthDisabled } = context
+
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const setContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node
+      if (typeof consumerRef === 'function') {
+        consumerRef(node)
+      } else if (consumerRef && typeof consumerRef === 'object') {
+        ;(consumerRef as React.RefObject<HTMLDivElement | null>).current = node
+      }
+    },
+    [consumerRef]
+  )
+
+  const year = currentMonth.year
+  const showingMonth = formatISOMonth(year, currentMonth.month + 1)
+
+  const months = React.useMemo<MonthCellData[]>(() => {
+    const cells: MonthCellData[] = []
+    for (let m = 1; m <= 12; m++) {
+      const monthStr = formatISOMonth(year, m)
+      const paint =
+        mode === 'month'
+          ? {
+              selected: value === monthStr,
+              rangeStart: false,
+              rangeEnd: false,
+              inRange: false,
+            }
+          : mode === 'range'
+            ? monthRangePaint(monthStr, value)
+            : { selected: false, rangeStart: false, rangeEnd: false, inRange: false }
+      cells.push({
+        month: monthStr,
+        label: formatShortMonth(locale, year, m - 1),
+        current: monthStr === showingMonth,
+        selected: paint.selected,
+        disabled: isMonthDisabled(monthStr),
+        rangeStart: paint.rangeStart,
+        rangeEnd: paint.rangeEnd,
+        inRange: paint.inRange,
+      })
+    }
+    return cells
+  }, [year, showingMonth, locale, mode, value, isMonthDisabled])
+
+  // Roving target: enabled selection, else the enabled current month,
+  // else the first enabled month. Null when the whole year is blocked —
+  // no artificial tab stop.
+  const computePreferredMonth = React.useCallback((): ISOMonth | null => {
+    const enabledSelected = months.find((cell) => !cell.disabled && cell.selected)
+    if (enabledSelected) return enabledSelected.month
+    const current = months.find((cell) => cell.current && !cell.disabled)
+    if (current) return current.month
+    return months.find((cell) => !cell.disabled)?.month ?? null
+  }, [months])
+
+  const [focusedMonth, setFocusedMonth] = React.useState<ISOMonth | null>(computePreferredMonth)
+
+  const nearestEnabledMonth = React.useCallback(
+    (origin: ISOMonth): ISOMonth | null => {
+      const originIndex = months.findIndex((cell) => cell.month === origin)
+      const scan = (from: number, step: 1 | -1): ISOMonth | null => {
+        for (let i = from; i >= 0 && i < months.length; i += step) {
+          if (!months[i].disabled) return months[i].month
+        }
+        return null
+      }
+      if (originIndex >= 0) {
+        return scan(originIndex + 1, 1) ?? scan(originIndex - 1, -1)
+      }
+      return scan(0, 1)
+    },
+    [months]
+  )
+
+  const isMonthRendered = (month: ISOMonth) => parseISOMonth(month).year === year
+
+  const focusInContainer = () => {
+    const root = containerRef.current?.getRootNode() as Document | ShadowRoot | null
+    const active = root?.activeElement
+    return !!active && !!containerRef.current?.contains(active)
+  }
+  const focusMonth = (month: ISOMonth) => {
+    containerRef.current
+      ?.querySelector<HTMLButtonElement>(`button[data-month="${month}"]`)
+      ?.focus()
+  }
+
+  React.useEffect(() => {
+    if (
+      focusedMonth &&
+      isMonthRendered(focusedMonth) &&
+      !isMonthDisabled(focusedMonth)
+    ) {
+      return
+    }
+    const next =
+      focusedMonth && isMonthRendered(focusedMonth)
+        ? nearestEnabledMonth(focusedMonth)
+        : computePreferredMonth()
+    if (next !== focusedMonth) {
+      setFocusedMonth(next)
+      if (next && focusInContainer()) focusMonth(next)
+    }
+  })
+
+  const handleMonthsKeyDown = (event: React.KeyboardEvent) => {
+    if (event.defaultPrevented) return // consumer Months onKeyDown ran first
+    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return
+    const target = event.target as HTMLElement | null
+    const cell = target?.closest?.('button[data-month]') ?? null
+    if (!cell || !containerRef.current?.contains(cell)) return
+    // Activation is native button click (Enter/Space untouched, the
+    // CA-SINGLE-02 day-grid rule — no synthetic double-fire). Arrows move
+    // focus in the 3-column field without selecting (CA-VIEW-10).
+    const dirTarget =
+      target?.closest?.('[dir]')?.getAttribute('dir') ??
+      event.currentTarget.ownerDocument?.documentElement?.getAttribute('dir')
+    const delta = collectionKeyDelta(event.key, dirTarget === 'rtl')
+    if (delta === null) return
+    const origin = cell.getAttribute('data-month') as ISOMonth
+    const nextM = parseISOMonth(origin).month + delta
+    if (nextM < 1 || nextM > 12) return
+    event.preventDefault()
+    const next = formatISOMonth(year, nextM)
+    setFocusedMonth(next)
+    // A disabled target keeps native focus where it is (focus() on a
+    // disabled button is a no-op); activation stays guarded regardless.
+    focusMonth(next)
+  }
+
+  const handleMonthClick = (cell: MonthCellData) => {
+    if (cell.disabled) return
+    setFocusedMonth(cell.month) // the roving target follows activation
+    selectMonth(cell.month)
+  }
+
+  return (
+    <Div
+      ref={setContainerRef}
+      data-reference-calendar-months=""
+      gridTemplateColumns="repeat(3, 1fr)"
+      gap="2r"
+      p="2r"
+      onKeyDown={(event) => {
+        consumerOnKeyDown?.(event)
+        handleMonthsKeyDown(event)
+      }}
+      className={className}
+      style={{ display: view === 'month' ? undefined : 'none', ...style }}
+      {...props}
+    >
+      {months.map((cell) => {
+        const isFocused = focusedMonth === cell.month
+        return (
+          <Button
+            key={cell.month}
+            type="button"
+            data-reference-calendar-month-cell=""
+            data-month={cell.month}
+            tabIndex={isFocused && view === 'month' ? 0 : -1}
+            disabled={cell.disabled}
+            aria-disabled={cell.disabled ? 'true' : undefined}
+            data-current={cell.current ? '' : undefined}
+            data-selected={cell.selected ? '' : undefined}
+            data-disabled={cell.disabled ? '' : undefined}
+            data-range-start={cell.rangeStart ? '' : undefined}
+            data-range-end={cell.rangeEnd ? '' : undefined}
+            data-in-range={cell.inRange ? '' : undefined}
+            data-focused={isFocused ? '' : undefined}
+            onClick={() => handleMonthClick(cell)}
+            p="2r"
+            borderRadius="sm"
+            border="none"
+            bg={cell.selected ? 'ui.button.background' : 'transparent'}
+            color={
+              cell.selected
+                ? 'ui.button.foreground'
+                : cell.disabled
+                  ? 'design.text.light'
+                  : 'design.text.base'
+            }
+            fontSize="3r"
+            fontWeight={cell.selected || cell.current ? '600' : '400'}
+            textDecoration={cell.current ? 'underline' : undefined}
+            textUnderlineOffset={cell.current ? '0.15em' : undefined}
+            cursor={cell.disabled ? 'not-allowed' : 'pointer'}
+            outline="none"
+            _hover={!cell.selected && !cell.disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+          >
+            {cell.label}
+          </Button>
+        )
+      })}
+    </Div>
+  )
+}
+
+interface YearCellData {
+  year: ISOYear
+  yearNum: number
+  current: boolean
+  selected: boolean
+  disabled: boolean
+  rangeStart: boolean
+  rangeEnd: boolean
+  inRange: boolean
+}
+
+/** Range paint for one year cell (CA-VIEW-09), mirroring monthRangePaint
+ * over the year unit. */
+function yearRangePaint(
+  yearNum: number,
+  value: CalendarValue
+): { selected: boolean; rangeStart: boolean; rangeEnd: boolean; inRange: boolean } {
+  const empty = { selected: false, rangeStart: false, rangeEnd: false, inRange: false }
+  if (!value || typeof value !== 'object' || !('start' in value)) return empty
+  const range = value as DateRangeValue
+  if (!isValidISODate(range.start)) return empty
+  const startY = parseISODate(range.start).year
+  if (range.end != null && isValidISODate(range.end)) {
+    const endY = parseISODate(range.end).year
+    const inRange = yearNum >= startY && yearNum <= endY
+    return {
+      selected: inRange,
+      rangeStart: yearNum === startY,
+      rangeEnd: yearNum === endY,
+      inRange,
+    }
+  }
+  const isStart = yearNum === startY
+  return { selected: isStart, rangeStart: isStart, rangeEnd: false, inRange: false }
+}
+
+export type CalendarYearsProps = Omit<PrimitiveProps<'div'>, 'children'> & {
+  ref?: React.Ref<HTMLDivElement>
+}
+
+export function CalendarYears({
+  className,
+  style,
+  ref: consumerRef,
+  onKeyDown: consumerOnKeyDown,
+  ...props
+}: CalendarYearsProps) {
+  const context = React.useContext(CalendarContext)
+  if (!context) return null
+  const { view, currentMonth, mode, value, min, max, selectYear, isYearDisabled } = context
+
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const setContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node
+      if (typeof consumerRef === 'function') {
+        consumerRef(node)
+      } else if (consumerRef && typeof consumerRef === 'object') {
+        ;(consumerRef as React.RefObject<HTMLDivElement | null>).current = node
+      }
+    },
+    [consumerRef]
+  )
+
+  const year = currentMonth.year
+
+  // Year window (CA-VIEW-06): ten either side of the shown year unbounded
+  // (clamped to keep 21 in-domain at 0001/9999); min-through-max years
+  // when both bounds exist; a 21-year run reaching from the single bound
+  // toward the shown year otherwise.
+  const years = React.useMemo<YearCellData[]>(() => {
+    let startYear = year - 10
+    let endYear = year + 10
+    if (min || max) {
+      if (min && max) {
+        startYear = parseISODate(min).year
+        endYear = parseISODate(max).year
+      } else if (min) {
+        startYear = parseISODate(min).year
+        endYear = Math.max(startYear + 20, year + 10)
+      } else if (max) {
+        endYear = parseISODate(max).year
+        startYear = Math.min(endYear - 20, year - 10)
+      }
+    } else {
+      if (startYear < 1) {
+        startYear = 1
+        endYear = Math.min(9999, 21)
+      } else if (endYear > 9999) {
+        endYear = 9999
+        startYear = Math.max(1, 9999 - 20)
+      }
+    }
+    startYear = Math.max(1, startYear)
+    endYear = Math.min(9999, endYear)
+    const cells: YearCellData[] = []
+    for (let y = startYear; y <= endYear; y++) {
+      const yearStr = formatISOYear(y)
+      const paint =
+        mode === 'year'
+          ? {
+              selected: value === yearStr,
+              rangeStart: false,
+              rangeEnd: false,
+              inRange: false,
+            }
+          : mode === 'range'
+            ? yearRangePaint(y, value)
+            : { selected: false, rangeStart: false, rangeEnd: false, inRange: false }
+      cells.push({
+        year: yearStr,
+        yearNum: y,
+        current: y === year,
+        selected: paint.selected,
+        disabled: isYearDisabled(yearStr),
+        rangeStart: paint.rangeStart,
+        rangeEnd: paint.rangeEnd,
+        inRange: paint.inRange,
+      })
+    }
+    return cells
+  }, [year, min, max, mode, value, isYearDisabled])
+
+  // The current in-range year scrolls into view when the collection opens.
+  React.useEffect(() => {
+    if (view === 'year' && containerRef.current) {
+      containerRef.current
+        .querySelector<HTMLElement>(`[data-reference-calendar-year-cell][data-year="${formatISOYear(year)}"]`)
+        ?.scrollIntoView?.({ block: 'nearest' })
+    }
+  }, [view, year])
+
+  const computePreferredYear = React.useCallback((): ISOYear | null => {
+    const enabledSelected = years.find((cell) => !cell.disabled && cell.selected)
+    if (enabledSelected) return enabledSelected.year
+    const current = years.find((cell) => cell.current && !cell.disabled)
+    if (current) return current.year
+    return years.find((cell) => !cell.disabled)?.year ?? null
+  }, [years])
+
+  const [focusedYear, setFocusedYear] = React.useState<ISOYear | null>(computePreferredYear)
+
+  const renderedYears = React.useMemo(() => new Set(years.map((cell) => cell.year)), [years])
+
+  const nearestEnabledYear = React.useCallback(
+    (origin: ISOYear): ISOYear | null => {
+      const originIndex = years.findIndex((cell) => cell.year === origin)
+      const scan = (from: number, step: 1 | -1): ISOYear | null => {
+        for (let i = from; i >= 0 && i < years.length; i += step) {
+          if (!years[i].disabled) return years[i].year
+        }
+        return null
+      }
+      if (originIndex >= 0) {
+        return scan(originIndex + 1, 1) ?? scan(originIndex - 1, -1)
+      }
+      return scan(0, 1)
+    },
+    [years]
+  )
+
+  const focusInContainer = () => {
+    const root = containerRef.current?.getRootNode() as Document | ShadowRoot | null
+    const active = root?.activeElement
+    return !!active && !!containerRef.current?.contains(active)
+  }
+  const focusYear = (yearStr: ISOYear) => {
+    containerRef.current
+      ?.querySelector<HTMLButtonElement>(`button[data-year="${yearStr}"]`)
+      ?.focus()
+  }
+
+  React.useEffect(() => {
+    if (focusedYear && renderedYears.has(focusedYear) && !isYearDisabled(focusedYear)) {
+      return
+    }
+    const next =
+      focusedYear && renderedYears.has(focusedYear)
+        ? nearestEnabledYear(focusedYear)
+        : computePreferredYear()
+    if (next !== focusedYear) {
+      setFocusedYear(next)
+      if (next && focusInContainer()) focusYear(next)
+    }
+  })
+
+  const handleYearsKeyDown = (event: React.KeyboardEvent) => {
+    if (event.defaultPrevented) return // consumer Years onKeyDown ran first
+    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return
+    const target = event.target as HTMLElement | null
+    const cell = target?.closest?.('button[data-year]') ?? null
+    if (!cell || !containerRef.current?.contains(cell)) return
+    // Activation is native button click (Enter/Space untouched). Arrows
+    // move focus in the 3-column field without selecting (CA-VIEW-10);
+    // the target must exist in the window or the gesture is a no-op.
+    const dirTarget =
+      target?.closest?.('[dir]')?.getAttribute('dir') ??
+      event.currentTarget.ownerDocument?.documentElement?.getAttribute('dir')
+    const delta = collectionKeyDelta(event.key, dirTarget === 'rtl')
+    if (delta === null) return
+    const origin = parseInt(cell.getAttribute('data-year') as string, 10)
+    const candidate = origin + delta
+    if (candidate < 1 || candidate > 9999) return
+    const next = formatISOYear(candidate)
+    if (!renderedYears.has(next)) return
+    event.preventDefault()
+    setFocusedYear(next)
+    focusYear(next)
+  }
+
+  const handleYearClick = (cell: YearCellData) => {
+    if (cell.disabled) return
+    setFocusedYear(cell.year) // the roving target follows activation
+    selectYear(cell.year)
+  }
+
+  return (
+    <Div
+      ref={setContainerRef}
+      data-reference-calendar-years=""
+      gridTemplateColumns="repeat(3, 1fr)"
+      gap="2r"
+      p="2r"
+      maxH="60r"
+      overflowY="auto"
+      onKeyDown={(event) => {
+        consumerOnKeyDown?.(event)
+        handleYearsKeyDown(event)
+      }}
+      className={className}
+      style={{ display: view === 'year' ? undefined : 'none', ...style }}
+      {...props}
+    >
+      {years.map((cell) => {
+        const isFocused = focusedYear === cell.year
+        return (
+          <Button
+            key={cell.year}
+            type="button"
+            data-reference-calendar-year-cell=""
+            data-year={cell.year}
+            tabIndex={isFocused && view === 'year' ? 0 : -1}
+            disabled={cell.disabled}
+            aria-disabled={cell.disabled ? 'true' : undefined}
+            data-current={cell.current ? '' : undefined}
+            data-selected={cell.selected ? '' : undefined}
+            data-disabled={cell.disabled ? '' : undefined}
+            data-range-start={cell.rangeStart ? '' : undefined}
+            data-range-end={cell.rangeEnd ? '' : undefined}
+            data-in-range={cell.inRange ? '' : undefined}
+            data-focused={isFocused ? '' : undefined}
+            onClick={() => handleYearClick(cell)}
+            p="2r"
+            borderRadius="sm"
+            border="none"
+            bg={cell.selected ? 'ui.button.background' : 'transparent'}
+            color={
+              cell.selected
+                ? 'ui.button.foreground'
+                : cell.disabled
+                  ? 'design.text.light'
+                  : 'design.text.base'
+            }
+            fontSize="3r"
+            fontWeight={cell.selected || cell.current ? '600' : '400'}
+            textDecoration={cell.current ? 'underline' : undefined}
+            textUnderlineOffset={cell.current ? '0.15em' : undefined}
+            cursor={cell.disabled ? 'not-allowed' : 'pointer'}
+            outline="none"
+            _hover={!cell.selected && !cell.disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+          >
+            {cell.yearNum}
+          </Button>
+        )
+      })}
+    </Div>
   )
 }
 
@@ -980,6 +1698,17 @@ export function Calendar(calendarProps: CalendarProps) {
     )
   }, [followedMonth])
 
+  // Private view (FEATURES #10): the mode's home collection, reset when
+  // the mode changes (CA-VIEW-12), returned home when the pane commits a
+  // new month — controlled or internal alike (CA-VIEW-05/07). View
+  // toggles never touch the pane, so this effect only answers month and
+  // mode edges.
+  const [view, setView] = React.useState<CalendarView>(() => getHomeView(mode))
+  const showingMonthStr = formatISOMonth(currentMonth.year, currentMonth.month + 1)
+  React.useEffect(() => {
+    setView(getHomeView(mode))
+  }, [showingMonthStr, mode])
+
   // Today marker (FEATURES #8): explicit `today` renders synchronously
   // (SSR-deterministic); an omitted `today` marks the client-local date
   // only after mount, so SSR and first hydration render no marker and
@@ -1003,6 +1732,41 @@ export function Calendar(calendarProps: CalendarProps) {
       return isDateUnavailable?.(dateStr) ?? false
     },
     [min, max, isDateUnavailable]
+  )
+
+  // Month/year non-interactive states (FEATURES #10): a unit is disabled
+  // exactly when every day of it is blocked, so partial months stay
+  // enabled (CA-VIEW-04) and a unit flips only when its last day does
+  // (CA-MODE-05). Whole units outside the bound months short-circuit
+  // without scanning days; the predicate scan is inherent to the
+  // CA-MODE-05 contract and memoized at the collection level.
+  const isMonthDisabled = React.useCallback(
+    (monthStr: ISOMonth) => {
+      if (min !== undefined && monthStr < min.slice(0, 7)) return true
+      if (max !== undefined && monthStr > max.slice(0, 7)) return true
+      const { year: y, month: m } = parseISOMonth(monthStr)
+      if (y < 1 || y > 9999) return true
+      const days = getDaysInMonth(y, m)
+      for (let day = 1; day <= days; day++) {
+        if (!isDateDisabled(formatISODate(y, m, day))) return false
+      }
+      return true
+    },
+    [min, max, isDateDisabled]
+  )
+
+  const isYearDisabled = React.useCallback(
+    (yearStr: ISOYear) => {
+      const y = Number(yearStr)
+      if (!Number.isInteger(y) || y < 1 || y > 9999) return true
+      if (min !== undefined && y < parseISODate(min).year) return true
+      if (max !== undefined && y > parseISODate(max).year) return true
+      for (let m = 1; m <= 12; m++) {
+        if (!isMonthDisabled(formatISOMonth(y, m))) return false
+      }
+      return true
+    },
+    [min, max, isMonthDisabled]
   )
 
   // A nav direction disables exactly when its target month holds no
@@ -1070,14 +1834,16 @@ export function Calendar(calendarProps: CalendarProps) {
   )
 
   const goToPrevMonth = React.useCallback(() => {
-    if (prevDisabled || !prevTarget) return
+    // The buttons already disable off the day view; the guard here keeps
+    // synthetic dispatch silent too (CA-VIEW-08).
+    if (prevDisabled || !prevTarget || view !== 'day') return
     requestMonthChange(formatISOMonth(prevTarget.year, prevTarget.month + 1))
-  }, [prevDisabled, prevTarget, requestMonthChange])
+  }, [prevDisabled, prevTarget, requestMonthChange, view])
 
   const goToNextMonth = React.useCallback(() => {
-    if (nextDisabled || !nextTarget) return
+    if (nextDisabled || !nextTarget || view !== 'day') return
     requestMonthChange(formatISOMonth(nextTarget.year, nextTarget.month + 1))
-  }, [nextDisabled, nextTarget, requestMonthChange])
+  }, [nextDisabled, nextTarget, requestMonthChange, view])
 
   const isDateSelected = React.useCallback(
     (dateStr: ISODate) => {
@@ -1129,22 +1895,27 @@ export function Calendar(calendarProps: CalendarProps) {
   )
 
   // The destructured union `onChange` is one signature per branch; the
-  // runtime branch below always pairs the mode with its own payload, so a
-  // single internal emitter keeps the call sites total.
-  const emitChange = onChange as ((value: ISODate | DateRangeValue) => void) | undefined
+  // runtime branches below always pair the mode with its own payload, so
+  // a single internal emitter keeps the call sites total.
+  const emitChange = onChange as
+    | ((value: ISODate | DateRangeValue | ISOMonth | ISOYear) => void)
+    | undefined
 
   const selectDate = React.useCallback(
     (dateStr: ISODate) => {
       // Blocked dates never emit, in any modality (FEATURES #6,
-      // CA-SINGLE-04). Request-only control otherwise: every activation
-      // requests its payload once (FEATURES #13 uniform-request —
-      // re-activating the selected date re-requests it; there is no
-      // no-op-vs-toggle branch). The parent owns selection; rejection
-      // leaves it unchanged, programmatic value changes apply silently
-      // with no focus move.
+      // CA-SINGLE-04). Request-only control otherwise — with one guard:
+      // re-activating the already-selected value is not a change and
+      // emits nothing (B-36 identical-value suppression, restoring
+      // CA-SINGLE-03's no-emit read over the FEATURES #13 uniform-request
+      // triage). No null request, not a toggle. The parent owns
+      // selection; rejection leaves it unchanged, programmatic value
+      // changes apply silently with no focus move.
       if (isDateDisabled(dateStr)) return
       if (mode === 'day') {
-        emitChange?.(dateStr)
+        if (dateStr !== value) {
+          emitChange?.(dateStr)
+        }
       } else if (mode === 'range') {
         let nextRange: DateRangeValue
         const curr = value as DateRangeValue | null
@@ -1155,10 +1926,51 @@ export function Calendar(calendarProps: CalendarProps) {
         } else {
           nextRange = { start: curr.start, end: dateStr }
         }
-        emitChange?.(nextRange)
+        if (
+          !curr ||
+          nextRange.start !== curr.start ||
+          (nextRange.end ?? null) !== (curr.end ?? null)
+        ) {
+          emitChange?.(nextRange)
+        }
       }
     },
     [mode, value, emitChange, isDateDisabled]
+  )
+
+  const selectMonth = React.useCallback(
+    (monthStr: ISOMonth) => {
+      // Blocked months never emit, in any modality. Month mode selects
+      // (publishing YYYY-MM with the B-36 identical guard); day/range
+      // modes navigate — the view returns home when the pane commits
+      // (CA-VIEW-05).
+      if (isMonthDisabled(monthStr)) return
+      if (mode === 'month') {
+        if (monthStr !== value) {
+          emitChange?.(monthStr)
+        }
+      } else {
+        requestMonthChange(monthStr)
+      }
+    },
+    [mode, value, emitChange, isMonthDisabled, requestMonthChange]
+  )
+
+  const selectYear = React.useCallback(
+    (yearStr: ISOYear) => {
+      // Blocked years never emit, in any modality. Year mode selects
+      // (publishing YYYY with the B-36 identical guard); other modes
+      // navigate preserving the month number (CA-VIEW-07).
+      if (isYearDisabled(yearStr)) return
+      if (mode === 'year') {
+        if (yearStr !== value) {
+          emitChange?.(yearStr)
+        }
+      } else {
+        requestMonthChange(formatISOMonth(Number(yearStr), currentMonth.month + 1))
+      }
+    },
+    [mode, value, emitChange, isYearDisabled, requestMonthChange, currentMonth]
   )
 
   // Locale-derived render data (FEATURES #3): CLDR week start, ordered
@@ -1194,6 +2006,8 @@ export function Calendar(calendarProps: CalendarProps) {
   const contextValue = React.useMemo<CalendarContextValue>(
     () => ({
       mode,
+      view,
+      setView,
       value: value as CalendarValue,
       currentMonth,
       locale,
@@ -1213,6 +2027,10 @@ export function Calendar(calendarProps: CalendarProps) {
       goToNextMonth,
       requestMonthChange,
       selectDate,
+      selectMonth,
+      selectYear,
+      isMonthDisabled,
+      isYearDisabled,
       isDateSelected,
       isDateInRange,
       isRangeStart,
@@ -1221,6 +2039,8 @@ export function Calendar(calendarProps: CalendarProps) {
     }),
     [
       mode,
+      view,
+      setView,
       value,
       currentMonth,
       locale,
@@ -1238,6 +2058,10 @@ export function Calendar(calendarProps: CalendarProps) {
       goToNextMonth,
       requestMonthChange,
       selectDate,
+      selectMonth,
+      selectYear,
+      isMonthDisabled,
+      isYearDisabled,
       isDateSelected,
       isDateInRange,
       isRangeStart,
@@ -1255,6 +2079,8 @@ export function Calendar(calendarProps: CalendarProps) {
     <CalendarContext.Provider value={contextValue}>
       <Div
         data-reference-calendar=""
+        data-mode={mode}
+        data-view={view}
         width="65r"
         userSelect="none"
         className={className}
@@ -1265,10 +2091,15 @@ export function Calendar(calendarProps: CalendarProps) {
           <>
             <CalendarHeader>
               <CalendarPrevButton />
-              <CalendarHeading />
+              <CalendarHeading>
+                <CalendarMonth />
+                <CalendarYear />
+              </CalendarHeading>
               <CalendarNextButton />
             </CalendarHeader>
-            <CalendarGrid />
+            {(mode === 'day' || mode === 'range') && <CalendarGrid />}
+            {mode !== 'year' && <CalendarMonths />}
+            <CalendarYears />
           </>
         )}
       </Div>
@@ -1280,4 +2111,8 @@ Calendar.Header = CalendarHeader
 Calendar.Heading = CalendarHeading
 Calendar.PrevButton = CalendarPrevButton
 Calendar.NextButton = CalendarNextButton
+Calendar.Month = CalendarMonth
+Calendar.Year = CalendarYear
 Calendar.Grid = CalendarGrid
+Calendar.Months = CalendarMonths
+Calendar.Years = CalendarYears

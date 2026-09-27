@@ -45,6 +45,25 @@ Visual polish is not this gate.
 | Playwright CT | 32 tests react19 + react18 green (7 frozen snaps pass unmodified within 2% tolerance; 11 cluster-A + 21 cluster-B behavioral) |
 | Vitest | 56 (`iso.test.ts`, `week-grid.test.ts` 9, `Calendar.contract.test.tsx` 40) |
 
+### Playtest (2026-09-27, date crew)
+
+Landed FEATURES #10 (B-23): private view machine (`data-mode` /
+`data-view`), Month/Year drill-down buttons, Months/Years collections
+with roving tabindex + 3-column arrows + RTL, whole-unit min/max +
+`isDateUnavailable` disabling, range paint, month `YYYY-MM` / year
+`YYYY` publishing, and navigation-vs-selection per mode. Landed B-36
+Calendar facet: identical-value suppression in every mode (restores
+CA-SINGLE-03's no-emit read over the FEATURES #13 uniform-request
+triage — deliberate reversal, flagged for HQ). B-17/B-18/Calendar-B-24
+verified already-fixed in `src` (FEATURES #3/#6/#7 proofs green; the
+playtest observed stale `dist`).
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 78 / 132 |
+| Playwright CT | 50 titles green (32 pre-existing + 18 view/mode proofs); 7 frozen snaps pass unmodified |
+| Vitest | 63 (56 pre-existing + 7 view/mode contract proofs) |
+
 ### Gaps & incoherence
 
 - ~~`defaultValue`, `onChange?: (value: any)` retained~~ → LANDED
@@ -68,8 +87,14 @@ Visual polish is not this gate.
   single disable state + nav coverage, 2D keys + skip + pending focus,
   post-mount local today marker, div Heading live-atomic + target-month
   nav names + grid labelling.
-- Still missing: range Tab-commit preview (HOLD #9), month/year product
-  modes (HOLD #10), Day renderer parts (HOLD #5).
+- Still missing: range Tab-commit preview (HOLD #9), Day renderer
+  parts (HOLD #5).
+- ~~Month/year product modes (HOLD #10)~~ → LANDED (playtest FEATURES
+  #10, 2026-09-27): private view, Month/Year parts, Months/Years
+  collections, month/year publishing. No hasAuthored part-defaulting
+  (CA-VIEW-13 first fixture stays `[ ]` with HOLD #5): explicit
+  children still replace all defaults, per the current-branch
+  `children ?? defaults` rule.
 - Part naming drift vs Calendar.md — kept (quarantine renames NOT ported).
 - `CA-ISO-01` is now the ISO gate (unit); the old click-smoke title lives on
   as CT coverage without the ID.
@@ -98,8 +123,10 @@ as public values; ±100y Date min/max defaults.
   empty state + omitted-value diagnostic), `CA-MONTH-01`, `CA-MONTH-02`,
   `CA-MONTH-04` (domain bounds cluster A + min/max/unavailable target
   coverage cluster B), `CA-MONTH-05`, `CA-MONTH-09`, `CA-MONTH-10`,
-  `CA-SINGLE-01`, `CA-SINGLE-02`, `CA-SINGLE-05` (uniform-request read
-  per triage — overrides the old `CA-SINGLE-03` no-emit text, see TESTS.md)
+  `CA-SINGLE-01`, `CA-SINGLE-02`, `CA-SINGLE-03` (B-36 playtest
+  reversal 2026-09-27: no-emit on identical re-activation in every mode —
+  supersedes the FEATURES #13 uniform-request triage, flagged for HQ),
+  `CA-SINGLE-05`
 - `[x]` `CA-LOC-04`, `CA-LOC-05`, `CA-LOC-06`, `CA-LOC-07` (locale
   headers/names/RTL/switch, FEATURES #3/#11 cluster B), `CA-GRID-05`,
   `CA-GRID-06`, `CA-GRID-07`, `CA-GRID-09`, `CA-GRID-12` (outside days,
@@ -112,9 +139,19 @@ as public values; ±100y Date min/max defaults.
   `CA-SINGLE-04`, `CA-SINGLE-07`, `CA-DYNAMIC-02` (FEATURES #4/#6/#7/#8
   cluster B; `CA-KEY-06`-style bound termination covered inside the
   `CA-KEY-01/05` bounds leg, `CA-KEY-09` waits on HOLD #5 Day parts)
+- `[x]` `CA-VIEW-01`, `CA-VIEW-02`, `CA-VIEW-03`, `CA-VIEW-04`,
+  `CA-VIEW-05`, `CA-VIEW-06`, `CA-VIEW-07`, `CA-VIEW-08` (nav-disable +
+  silence + range round-trip; the "pending range preview" clause is
+  vacuous — no preview machine on this branch, HOLD #9), `CA-VIEW-09`,
+  `CA-VIEW-10`, `CA-VIEW-11` (bare-Heading mutation counts + folded
+  live-region integrity), `CA-VIEW-12`, `CA-VIEW-13` (second fixture
+  only — custom header without drill-down stays home; the custom-Days
+  + defaulted-parts fixture needs HOLD #5 Day parts), `CA-MODE-01`,
+  `CA-MODE-02`, `CA-MODE-03`, `CA-MODE-05` (playtest FEATURES #10,
+  2026-09-27)
 - `[ ]` `CA-DAY-13`, `CA-DAY-14` (Weekdays/Days/Day parts — NOT ported),
   remaining `CA-DAY-*`, `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`,
-  `CA-SINGLE-*`, `CA-RANGE-*`, `CA-VIEW-*`, `CA-MODE-*`, `CA-CHROME-*`,
+  `CA-SINGLE-*`, `CA-RANGE-*`, `CA-CHROME-*`,
   `CA-DYNAMIC-*`, `CA-ENV-*`, `CA-A11Y-01`, `CA-COMP-*`
 
 ### Work order
