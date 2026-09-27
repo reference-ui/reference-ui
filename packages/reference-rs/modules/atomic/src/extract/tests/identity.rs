@@ -13,7 +13,7 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rustc_hash::FxHashMap;
 
-use super::identity::IdentityGraph;
+use crate::extract::identity::IdentityGraph;
 
 fn graph(sources: &[(&str, &str)]) -> IdentityGraph<'static> {
     let owned: Vec<(String, String)> = sources

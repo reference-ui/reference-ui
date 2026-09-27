@@ -163,6 +163,78 @@ fn test_untraced_tag_is_skipped_when_a_host_is_known() {
     assert!(res.diagnostics.is_empty());
 }
 
+fn compile_with_hosts(code: &str, hosts: &[&str]) -> crate::CompileResult {
+    let req = CompileRequest {
+        files: Some(vec![VirtualSource {
+            path: "test.tsx".to_string(),
+            content: code.to_string(),
+        }]),
+        jsx_hosts: Some(hosts.iter().map(|host| host.to_string()).collect()),
+        base_system: crate::BaseSystem::lib_fixture().clone(),
+        logs: Some(vec!["proof".to_string()]),
+        ..Default::default()
+    };
+    compile(&req).expect("compile succeeds")
+}
+
+#[test]
+fn test_shadowed_member_root_is_not_an_extract_site() {
+    // A locally bound `Tabs` rebinds `<Tabs.Panel>` away from the traced
+    // host, so the use site must stay silent instead of collecting onto
+    // the wrong component.
+    let res = compile_with_hosts(
+        r#"
+        import { Tabs } from './tabs';
+        function Other() { return null; }
+        export function App() {
+            const Tabs = Other;
+            return <Tabs.Panel mt="2r" value="a" />;
+        }
+        "#,
+        &["Tabs.Panel"],
+    );
+    assert!(res.wants.is_empty());
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_namespace_spelled_member_collects_against_dotted_host() {
+    // Member tags match dotted hosts literally: a namespace import that
+    // keeps the `Tabs` spelling collects exactly like the named import.
+    let res = compile_with_hosts(
+        r#"
+        import * as Tabs from './tabs';
+        export function App() {
+            return <Tabs.Panel mt="2r" value="a" />;
+        }
+        "#,
+        &["Tabs.Panel"],
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_renamed_namespace_member_stays_silent() {
+    // Deferred boundary: atomic matches member tags literally and does no
+    // import-aware remap, so `<UI.Panel>` never resolves to `Tabs.Panel`.
+    // Silent and diagnostic-free, never misattributed.
+    let res = compile_with_hosts(
+        r#"
+        import * as UI from './tabs';
+        export function App() {
+            return <UI.Panel mt="2r" value="a" />;
+        }
+        "#,
+        &["Tabs.Panel"],
+    );
+    assert!(res.wants.is_empty());
+    assert!(res.diagnostics.is_empty());
+}
+
 #[test]
 fn test_jsx_host_union_matches_merged_set() {
     // The borrowed host union answers exactly the merged set's queries:
