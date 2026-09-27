@@ -78,7 +78,15 @@ export function Collapsible({
   const skipEnterRef = React.useRef(isOpen)
   const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
-  const notify = onChange ?? onOpenChange
+  // B-12: both change handlers fire, non-breaking — either alone behaves
+  // exactly as before (onChange first, preserving the old ?? winner order).
+  const notify = React.useCallback(
+    (nextOpen: boolean) => {
+      onChange?.(nextOpen)
+      onOpenChange?.(nextOpen)
+    },
+    [onChange, onOpenChange]
+  )
 
   const setIsOpen = React.useCallback(
     (nextOpen: boolean) => {
@@ -89,7 +97,7 @@ export function Collapsible({
       if (!isControlled) {
         setInternalOpen(nextOpen)
       }
-      notify?.(nextOpen)
+      notify(nextOpen)
     },
     [isAccordionItem, accordion, id, isControlled, notify]
   )

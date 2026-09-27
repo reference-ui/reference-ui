@@ -1048,4 +1048,61 @@ describe('Collapsible Unit Contract', () => {
     })
     container.remove()
   })
+
+  it('B-12: Collapsible should fire both onChange and onOpenChange when both are passed', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    const order: string[] = []
+    await React.act(async () => {
+      root.render(
+        <Collapsible
+          open={false}
+          onChange={val => void order.push(`onChange(${val})`)}
+          onOpenChange={val => void order.push(`onOpenChange(${val})`)}
+        >
+          <Collapsible.Trigger data-testid="both-trigger">Toggle</Collapsible.Trigger>
+          <Collapsible.Content>Content</Collapsible.Content>
+        </Collapsible>
+      )
+    })
+
+    const trigger = container.querySelector('[data-testid="both-trigger"]') as HTMLButtonElement
+    React.act(() => {
+      trigger.click()
+    })
+
+    // Non-breaking: onChange keeps its old position, onOpenChange is no
+    // longer silently dropped.
+    expect(order).toEqual(['onChange(true)', 'onOpenChange(true)'])
+
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+
+    // Either handler alone behaves exactly as before.
+    const solo = document.createElement('div')
+    document.body.appendChild(solo)
+    const soloRoot = createRoot(solo)
+    const soloRequests: boolean[] = []
+    await React.act(async () => {
+      soloRoot.render(
+        <Collapsible open={false} onOpenChange={val => void soloRequests.push(val)}>
+          <Collapsible.Trigger data-testid="solo-trigger">Toggle</Collapsible.Trigger>
+          <Collapsible.Content>Content</Collapsible.Content>
+        </Collapsible>
+      )
+    })
+    const soloTrigger = solo.querySelector('[data-testid="solo-trigger"]') as HTMLButtonElement
+    React.act(() => {
+      soloTrigger.click()
+    })
+    expect(soloRequests).toEqual([true])
+    await React.act(async () => {
+      soloRoot.unmount()
+    })
+    solo.remove()
+  })
 })
