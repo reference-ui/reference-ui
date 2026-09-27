@@ -322,6 +322,18 @@ Tree state.
   Assert the consumer handler runs first, prevented Tree movement emits no
   callback, unsupported combinations retain native `defaultPrevented=false`,
   and focus/state remain stable.
+- [x] `TR-KEY-12` `[reference]` `[browser]` `[rtl]` —
+  **Tree asterisk key should expand per APG across closed branch, open branch, and leaf.**
+  Focus a closed branch and press `*`: it expands with focus unmoved. Focus an
+  open branch and press `*`: every closed sibling branch expands in a single
+  deterministic `onExpandedChange` emission. Collapse all, focus a leaf, press
+  `*`: only the first closed sibling branch expands. Repeat closed/open under
+  `dir=rtl` and assert identical behavior; disabled sibling branches are skipped.
+- [x] `TR-KEY-13` `[reference]` `[browser]` —
+  **Tree asterisk key should never enter the typeahead buffer.**
+  Collapse all, focus a leaf, and press `*`, `c`, `h` back-to-back (inside one
+  buffer window). Assert the leaf's first closed sibling branch expanded and
+  focus landed on the `ch` typeahead match — proving `*` left the buffer empty.
 
 ### Visible-only typeahead
 

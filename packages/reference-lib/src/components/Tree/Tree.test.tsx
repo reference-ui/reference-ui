@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { Tree, getDeterministicExpanded } from './Tree'
+import { Tree, getBatchExpanded, getDeterministicExpanded } from './Tree'
 
 describe('Tree Unit Proofs', () => {
   it('TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order', () => {
@@ -79,6 +79,25 @@ describe('Tree Unit Proofs', () => {
         </Tree>
       )
     ).toThrow('Tree "value" is required')
+  })
+
+  it('W-17: getBatchExpanded should fold deterministic emission over a sibling set in document order', () => {
+    const allKnownBranches = ['a', 'b', 'c']
+
+    // Request order does not leak into the payload: document order wins
+    expect(getBatchExpanded(['a'], ['c', 'b'], allKnownBranches)).toEqual(['a', 'b', 'c'])
+
+    // Already-expanded ids are skipped; unknown values keep trailing order
+    expect(getBatchExpanded(['unknown-1', 'a'], ['a', 'b'], allKnownBranches)).toEqual([
+      'a',
+      'b',
+      'unknown-1',
+    ])
+  })
+
+  it('W-17: getBatchExpanded should be a stable no-op for an empty sibling set', () => {
+    const current = ['a']
+    expect(getBatchExpanded(current, [], ['a', 'b'])).toBe(current)
   })
 
   it('TR-API-02: Tree should fail fast when onChange is omitted (no silent-frozen controlled)', () => {

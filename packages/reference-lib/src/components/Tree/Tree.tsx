@@ -38,6 +38,22 @@ export function getDeterministicExpanded(
   }
 }
 
+// Batch expansion (W-17): fold single-branch deterministic emission over ids
+// in the given order, so one onExpandedChange carries the whole set instead
+// of N stale-closure toggles. Already-expanded ids are skipped.
+export function getBatchExpanded(
+  currentExpanded: string[],
+  idsToExpand: string[],
+  allKnownBranches: string[]
+): string[] {
+  let next = currentExpanded
+  for (const id of idsToExpand) {
+    if (next.includes(id)) continue
+    next = getDeterministicExpanded(next, id, allKnownBranches, true)
+  }
+  return next
+}
+
 // Sibling set metadata (TR-DOM-05): counts direct treeitem children only, so
 // authored decorative nodes never corrupt posinset/setsize.
 function updateContainerTreeitemPositions(container: HTMLElement | null) {
@@ -652,6 +668,19 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       [onChange, value]
     )
 
+    // Live branches in current document order for deterministic payloads
+    const getOrderedBranches = React.useCallback(() => {
+      return Array.from(branchesMapRef.current.entries())
+        .filter(([, el]) => el && el.isConnected)
+        .sort(([, a], [, b]) => {
+          const pos = a!.compareDocumentPosition(b!)
+          if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+          if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+          return 0
+        })
+        .map(([val]) => val)
+    }, [])
+
     const toggleExpanded = React.useCallback(
       (id: string) => {
         const isCurrentlyExpanded = expanded.includes(id)
@@ -668,23 +697,27 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
           }
         }
 
-        const orderedBranches = Array.from(branchesMapRef.current.entries())
-          .filter(([, el]) => el && el.isConnected)
-          .sort(([, a], [, b]) => {
-            const pos = a!.compareDocumentPosition(b!)
-            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
-            if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
-            return 0
-          })
-          .map(([val]) => val)
-
-        const next = getDeterministicExpanded(expanded, id, orderedBranches, !isCurrentlyExpanded)
+        const next = getDeterministicExpanded(expanded, id, getOrderedBranches(), !isCurrentlyExpanded)
         if (!isControlledExpanded) {
           setInternalExpanded(next)
         }
         onExpandedChange?.(next)
       },
-      [expanded, isControlledExpanded, onExpandedChange, focusedId]
+      [expanded, isControlledExpanded, onExpandedChange, focusedId, getOrderedBranches]
+    )
+
+    // Batch expansion (W-17): one deterministic emission for a whole sibling
+    // set. Callers skip the call when there is nothing new to expand, so a
+    // no-op asterisk never emits a redundant onExpandedChange.
+    const expandItems = React.useCallback(
+      (ids: string[]) => {
+        const next = getBatchExpanded(expanded, ids, getOrderedBranches())
+        if (!isControlledExpanded) {
+          setInternalExpanded(next)
+        }
+        onExpandedChange?.(next)
+      },
+      [expanded, isControlledExpanded, onExpandedChange, getOrderedBranches]
     )
 
     // Ensure initial or recovered roving focus tab stop (tabIndex=0)
@@ -904,6 +937,41 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
             break
           }
 
+          case '*': {
+            // APG asterisk (W-17): closed branch expands itself; open branch
+            // expands every closed sibling branch; leaf expands the first
+            // closed sibling branch. Focus never moves, and * never enters
+            // the typeahead buffer. Direction-independent (RTL unaffected).
+            e.preventDefault()
+            const container = itemEl.parentElement?.closest<HTMLElement>(
+              '[role="group"], [role="tree"]'
+            )
+            const siblings = container
+              ? Array.from(
+                  container.querySelectorAll<HTMLElement>(':scope > [role="treeitem"]')
+                )
+              : []
+            // Branches own aria-expanded; leaves never render it (TR-DOM-03).
+            // Disabled branches stay expansion-controlled (TR-EXPAND-09).
+            const isClosedBranch = (el: HTMLElement) =>
+              el.getAttribute('aria-expanded') === 'false' &&
+              el.getAttribute('aria-disabled') !== 'true'
+            if (!isBranch) {
+              const first = siblings.find(isClosedBranch)
+              if (first) {
+                expandItems([first.id])
+              }
+            } else if (!isExpanded) {
+              expandItems([id])
+            } else {
+              const toExpand = siblings.filter(isClosedBranch).map((el) => el.id)
+              if (toExpand.length > 0) {
+                expandItems(toExpand)
+              }
+            }
+            break
+          }
+
           default: {
             if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
               e.preventDefault()
@@ -913,7 +981,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
           }
         }
       },
-      [toggleExpanded, selectItem, typeaheadSearch]
+      [toggleExpanded, expandItems, selectItem, typeaheadSearch]
     )
 
     const contextValue = React.useMemo<TreeContextValue>(
