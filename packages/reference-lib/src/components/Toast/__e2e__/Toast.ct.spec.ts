@@ -683,7 +683,7 @@ test.describe('Toast Gate 7', () => {
     await snap(page, 'gate7-custom-resting')
   })
 
-  test('TO-RIVAL-CLOSE: The close control should be an overlapping corner button, off unless asked', async ({
+  test('TO-RIVAL-CLOSE: The close control should be an inline trailing button fully inside the card, off unless asked', async ({
     mount,
     page,
   }) => {
@@ -703,8 +703,13 @@ test.describe('Toast Gate 7', () => {
     expect(closeBox && cardBox).toBeTruthy()
     expect(Math.round(closeBox!.width)).toBe(20)
     expect(Math.round(closeBox!.height)).toBe(20)
-    expect(closeBox!.x).toBeLessThan(cardBox!.x + 8)
-    expect(closeBox!.y).toBeLessThan(cardBox!.y + 8)
+    // B-37: fully inside the card — never straddling the corner (1px rounding slop).
+    expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
+    expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
+    expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
+    expect(closeBox!.y + closeBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1)
+    // Trailing end of the row (LTR: right half).
+    expect(closeBox!.x + closeBox!.width / 2).toBeGreaterThan(cardBox!.x + cardBox!.width / 2)
     await page.waitForTimeout(300)
     await snap(page, 'gate7-close-button')
 
@@ -861,10 +866,16 @@ test('TO-RIVAL-DIR: dir should flip chrome and the meaning of start and end', as
   await page.getByTestId('btn-close').click()
   const close = page.locator('[data-reference-toast-close]')
   const root = page.locator('[data-reference-toast-root]')
+  await expect(close).toBeVisible()
   const closeBox = await close.boundingBox()
   const cardBox = await root.boundingBox()
   expect(closeBox && cardBox).toBeTruthy()
-  expect(closeBox!.x + closeBox!.width).toBeGreaterThan(cardBox!.x + cardBox!.width - 12)
+  // B-37: fully inside the card in RTL too, at the trailing (inline-end) side.
+  expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
+  expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
+  expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
+  expect(closeBox!.y + closeBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1)
+  expect(closeBox!.x + closeBox!.width / 2).toBeLessThan(cardBox!.x + cardBox!.width / 2)
   await page.waitForTimeout(300)
   await snap(page, 'gate7-rtl-layout')
 })

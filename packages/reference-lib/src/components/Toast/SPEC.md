@@ -247,7 +247,7 @@ None in this file. Android TalkBack stays FocusLock. `[react:all]` /
 - [x] `TO-DEF-DEFAULT` `[reference]` `[browser]` —
   **Toast should render a default notification with title, description, and close button.**
   Calling `toast('Title', {description, closeButton: true})` renders a styled card with
-  semantic role, title, description, and corner close button. Activating the close button
+  semantic role, title, description, and close button. Activating the close button
   dismisses the toast immediately.
 - [x] `TO-DEF-CUSTOM` `[reference]` `[browser]` —
   **Toast should render arbitrary application components via `toast.custom()`.**
@@ -904,11 +904,11 @@ Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
   when the type has one, padding 16px, radius 8px, soft shadow. Custom JSX
   from `toast.custom` is not wrapped in that chrome.
 - [x] `TO-RIVAL-CLOSE` `[reference]` `[browser]` —
-  **The close control should be an overlapping corner button, off unless asked.**
+  **The close control should be an inline trailing button fully inside the card, off unless asked.**
   Toaster `closeButton` defaults false. A toast with `closeButton: true` shows
-  a 20px circular button sitting on the leading top corner, not an icon inside
-  the padding. Hover and focus-visible styles are visible. Activating it
-  dismisses.
+  a 20px circular button at the trailing end of the card row, fully inside the
+  card bounds (B-37: never straddling the corner). Hover and focus-visible
+  styles are visible. Activating it dismisses.
 - [x] `TO-RIVAL-ACTION` `[reference]` `[browser]` —
   **Action and cancel should be compact trailing buttons, and close unless prevented.**
   Action is a 24px-tall filled pill. Cancel is the same size on a muted
@@ -945,8 +945,9 @@ Feel constants to hit, taken from Sonner’s motion, not its stylesheet:
   drop the horizontal translate.
 - [x] `TO-RIVAL-DIR` `[reference]` `[browser]` —
   **`dir` should flip chrome and the meaning of start and end.**
-  `dir: "rtl"` moves the close button to the opposite corner, mirrors icon and
-  action alignment, and treats `start` swipe as toward the inline-start edge.
+  `dir: "rtl"` moves the close button to the trailing (inline-end) side, mirrors
+  icon and action alignment, and treats `start` swipe as toward the
+  inline-start edge.
 
 ### Drop-in options
 
