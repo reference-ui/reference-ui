@@ -18,10 +18,16 @@ Applications style against `data-state`. They do not wrap Overlay in Presence, s
 interface PresenceProps {
   children?: React.ReactElement | null | false
   present: boolean
+  onExitComplete?: () => void
 }
 ```
 
 Presence renders no extra node.
+
+`onExitComplete` fires exactly once when content unmounts after a completed
+exit — never on interrupted exits or initial mount (Motion
+`<AnimatePresence onExitComplete>` prior art). A parent with nested
+descendants fires after every registered descendant exit finishes.
 
 ---
 

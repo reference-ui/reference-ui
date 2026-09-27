@@ -286,6 +286,43 @@ before Presence decides when to remove the child.
   its 350ms transition. Assert both nodes remain until the child's longer exit
   completes, the parent removes exactly once afterward, and refs clean up.
 
+### Exit completion callback
+
+- [x] `PR-EXIT-01` `[reference]` `[browser]` —
+  **Presence should fire onExitComplete exactly once after a completed transition exit.**
+  Close a child with a finite two-property transition, then observe the
+  callback count past removal. Assert one fire after unmount and no second
+  fire from trailing end events.
+- [x] `PR-EXIT-02` `[reference]` `[browser]` —
+  **Presence should fire onExitComplete when an exit completes instantly.**
+  Close a child with no CSS effect. Assert same-commit removal and one fire.
+- [x] `PR-EXIT-03` `[reference]` `[browser:all]` —
+  **Presence should not fire onExitComplete for an interrupted exit.**
+  Start a finite exit, reopen before completion, and settle past the exit
+  duration. Assert the child stays mounted with zero fires; then close again
+  and assert exactly one fire for the completed exit.
+- [x] `PR-EXIT-04` `[reference]` `[browser]` —
+  **Presence should not fire onExitComplete on initial mount.**
+  Mount open, instant, interrupt, wedge, and coordinated fixtures. Assert all
+  callback counts are zero with no interaction.
+- [x] `PR-EXIT-05` `[reference]` `[browser:all]` —
+  **Presence should fire onExitComplete through a born-closed nested wedge.**
+  Close a 150ms parent containing a never-opened nested Presence (the B-01
+  closed-overlay shape). Assert the parent removes on its own effect and its
+  callback fires once, while the never-exited child callback stays silent.
+- [x] `PR-EXIT-06` `[reference]` `[browser:all]` —
+  **Presence should fire onExitComplete once per instance when nested exits coordinate.**
+  Close a 150ms parent and its 350ms child together. Assert both remove after
+  the longer exit and each callback fires exactly once.
+- [x] `PR-EXIT-07` `[reference]` `[react:all]` —
+  **Presence should fire onExitComplete exactly once per completed instant exit.**
+  In a DOM unit host with no CSS effects: stay present across rerenders (zero
+  fires), close (one fire), reopen (still one), close again (two fires).
+- [x] `PR-EXIT-08` `[reference]` `[react:all]` —
+  **Presence should not fire onExitComplete on initial mount.**
+  Mount born-closed and born-open instances in a DOM unit host. Assert zero
+  fires for each.
+
 ### Refs, React, and SSR
 
 - [x] `PR-REF-01` `[vendor]` `[react:all]` —

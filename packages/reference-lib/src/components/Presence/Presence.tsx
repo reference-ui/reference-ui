@@ -5,6 +5,8 @@ import { getElementRef } from './elementRef'
 export interface PresenceProps {
   children?: React.ReactElement | null | false
   present: boolean
+  /** Fires exactly once when content unmounts after a completed exit. Never on interrupted exits or initial mount. */
+  onExitComplete?: () => void
 }
 
 type PresenceState = 'mounted' | 'unmountSuspended' | 'unmounted'
@@ -124,8 +126,17 @@ function parseDuration(str: string): number {
   return trimmed.endsWith('ms') ? val : val * 1000
 }
 
-export function usePresence(present: boolean, options?: { hasChild?: boolean }) {
+export interface UsePresenceOptions {
+  hasChild?: boolean
+  onExitComplete?: () => void
+}
+
+export function usePresence(present: boolean, options?: UsePresenceOptions) {
   const hasChild = options?.hasChild ?? true
+  const onExitCompleteRef = React.useRef(options?.onExitComplete)
+  onExitCompleteRef.current = options?.onExitComplete
+  const exitIdRef = React.useRef(0)
+  const firedExitIdRef = React.useRef(0)
   const [node, setNode] = React.useState<HTMLElement | null>(null)
   const nodeRef = React.useRef<HTMLElement | null>(null)
   const [state, setState] = React.useState<PresenceState>(
@@ -143,6 +154,21 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
   }
   const presenceId = presenceIdRef.current
 
+  // W-09: complete a live exit exactly once. Centralized so every completion
+  // path (event, WAAPI, GSAP, fallback, descendant release, coordinator
+  // release, instant) reports through one guard. Fires synchronously: a
+  // nested child can complete in the same commit its parent removes the
+  // subtree, and a post-commit effect on the deleted fiber would never run.
+  const finishExit = React.useCallback(() => {
+    if (exitIdRef.current <= firedExitIdRef.current) return
+    firedExitIdRef.current = exitIdRef.current
+    setState('unmounted')
+    onExitCompleteRef.current?.()
+    if (parentPresence) {
+      parentPresence.onDescendantExitComplete(presenceId)
+    }
+  }, [parentPresence, presenceId])
+
   // Update node ref synchronously
   const refCallback = React.useCallback((element: HTMLElement | null) => {
     nodeRef.current = element
@@ -156,7 +182,9 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
     prevPresentRef.current = present
 
     if (present) {
-      // Transitioning to present or staying present
+      // Returning to present cancels the pending exit: an interrupted exit
+      // never reports completion (W-09).
+      firedExitIdRef.current = exitIdRef.current
       setState('mounted')
       if (el) {
         try {
@@ -174,11 +202,9 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
 
     // Transitioning from present to not present
     if (prevPresent && !present) {
+      exitIdRef.current += 1
       if (typeof window === 'undefined' || !hasChild) {
-        setState('unmounted')
-        if (parentPresence) {
-          parentPresence.onDescendantExitComplete(presenceId)
-        }
+        finishExit()
         return
       }
 
@@ -191,19 +217,13 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
 
       // Check document visibility
       if (document.visibilityState === 'hidden') {
-        setState('unmounted')
-        if (parentPresence) {
-          parentPresence.onDescendantExitComplete(presenceId)
-        }
+        finishExit()
         return
       }
 
       const styles = window.getComputedStyle(el)
       if (styles.display === 'none') {
-        setState('unmounted')
-        if (parentPresence) {
-          parentPresence.onDescendantExitComplete(presenceId)
-        }
+        finishExit()
         return
       }
 
@@ -289,10 +309,7 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
           setState('unmountSuspended')
           return
         }
-        setState('unmounted')
-        if (parentPresence) {
-          parentPresence.onDescendantExitComplete(presenceId)
-        }
+        finishExit()
         return
       }
 
@@ -305,7 +322,7 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
       }
       setState('unmountSuspended')
     }
-  }, [present, presenceId, parentPresence, coordinator])
+  }, [present, presenceId, parentPresence, coordinator, finishExit])
 
   const stateRef = React.useRef(state)
   stateRef.current = state
@@ -325,13 +342,10 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
     if (!coordinator) return
     return coordinator.subscribeToAllComplete(() => {
       if (stateRef.current === 'unmountSuspended') {
-        setState('unmounted')
-        if (parentPresence) {
-          parentPresence.onDescendantExitComplete(presenceId)
-        }
+        finishExit()
       }
     })
-  }, [coordinator, parentPresence, presenceId])
+  }, [coordinator, parentPresence, presenceId, finishExit])
 
   // Release an exit-start registration if this instance is removed mid-exit
   // (PR-NEST-03). Registration itself happens at exit-start above, never on
@@ -360,7 +374,6 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
       return
     }
 
-    let isCompleted = false
     let isCancelled = false
     let fillModeTimeoutId: number | undefined
 
@@ -390,7 +403,6 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
         return
       }
       isOwnAnimationDoneRef.current = true
-      if (isCompleted) return
       if (pendingDescendantsRef.current.size > 0) {
         // Wait for descendants to finish
         return
@@ -399,11 +411,7 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
         coordinator.reportPartFinished(presenceId)
         return
       }
-      isCompleted = true
-      setState('unmounted')
-      if (parentPresence) {
-        parentPresence.onDescendantExitComplete(presenceId)
-      }
+      finishExit()
     }
 
     const onAnimationEnd = (event: AnimationEvent) => {
@@ -483,7 +491,7 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
       el.removeEventListener('transitionend', onTransitionEnd)
       el.removeEventListener('transitioncancel', onTransitionCancel)
     }
-  }, [state, presenceId, parentPresence])
+  }, [state, presenceId, parentPresence, finishExit])
 
   const contextValue = React.useMemo<PresenceContextValue>(() => {
     return {
@@ -497,10 +505,7 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
           isOwnAnimationDoneRef.current &&
           pendingDescendantsRef.current.size === 0
         ) {
-          setState('unmounted')
-          if (parentPresence) {
-            parentPresence.onDescendantExitComplete(presenceId)
-          }
+          finishExit()
         }
       },
       onDescendantExitComplete: (id: string) => {
@@ -510,14 +515,11 @@ export function usePresence(present: boolean, options?: { hasChild?: boolean }) 
           isOwnAnimationDoneRef.current &&
           pendingDescendantsRef.current.size === 0
         ) {
-          setState('unmounted')
-          if (parentPresence) {
-            parentPresence.onDescendantExitComplete(presenceId)
-          }
+          finishExit()
         }
       },
     }
-  }, [presenceId, parentPresence])
+  }, [presenceId, parentPresence, finishExit])
 
   const isPresent = state === 'mounted' || state === 'unmountSuspended'
 
@@ -568,7 +570,7 @@ function useStableComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<
   }, [])
 }
 
-export function Presence({ children, present }: PresenceProps) {
+export function Presence({ children, present, onExitComplete }: PresenceProps) {
   // PR-DOM-06: Reject text or non-element children early if nonempty
   if (children !== null && children !== false && children !== undefined) {
     if (React.isValidElement(children) && children.type === React.Fragment) {
@@ -596,7 +598,10 @@ export function Presence({ children, present }: PresenceProps) {
       (!(children.props as any)?.children ||
         React.Children.count((children.props as any).children) === 0))
 
-  const { isPresent, ref, contextValue } = usePresence(present, { hasChild: !isChildEmpty })
+  const { isPresent, ref, contextValue } = usePresence(present, {
+    hasChild: !isChildEmpty,
+    onExitComplete,
+  })
 
   const child =
     React.isValidElement(children) && children.type !== React.Fragment

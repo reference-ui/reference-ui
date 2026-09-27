@@ -333,4 +333,98 @@ describe('Presence Component Unit Contract', () => {
     })
     container.remove()
   })
+
+  it('PR-EXIT-07: Presence should fire onExitComplete exactly once per completed instant exit', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+    const onExitComplete = vi.fn()
+
+    await React.act(async () => {
+      root.render(
+        <Presence present={true} onExitComplete={onExitComplete}>
+          <div data-testid="exit-child">Content</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).not.toHaveBeenCalled()
+
+    await React.act(async () => {
+      root.render(
+        <Presence present={true} onExitComplete={onExitComplete}>
+          <div data-testid="exit-child">Content</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).not.toHaveBeenCalled()
+
+    await React.act(async () => {
+      root.render(
+        <Presence present={false} onExitComplete={onExitComplete}>
+          <div data-testid="exit-child">Content</div>
+        </Presence>
+      )
+    })
+    expect(container.querySelector('[data-testid="exit-child"]')).toBeNull()
+    expect(onExitComplete).toHaveBeenCalledTimes(1)
+
+    await React.act(async () => {
+      root.render(
+        <Presence present={true} onExitComplete={onExitComplete}>
+          <div data-testid="exit-child">Content</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).toHaveBeenCalledTimes(1)
+
+    await React.act(async () => {
+      root.render(
+        <Presence present={false} onExitComplete={onExitComplete}>
+          <div data-testid="exit-child">Content</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).toHaveBeenCalledTimes(2)
+
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  it('PR-EXIT-08: Presence should not fire onExitComplete on initial mount', async () => {
+    const onExitComplete = vi.fn()
+
+    const closed = document.createElement('div')
+    document.body.appendChild(closed)
+    const closedRoot = createRoot(closed)
+    await React.act(async () => {
+      closedRoot.render(
+        <Presence present={false} onExitComplete={onExitComplete}>
+          <div>Born closed</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).not.toHaveBeenCalled()
+    await React.act(async () => {
+      closedRoot.unmount()
+    })
+    closed.remove()
+
+    const open = document.createElement('div')
+    document.body.appendChild(open)
+    const openRoot = createRoot(open)
+    await React.act(async () => {
+      openRoot.render(
+        <Presence present={true} onExitComplete={onExitComplete}>
+          <div>Born open</div>
+        </Presence>
+      )
+    })
+    expect(onExitComplete).not.toHaveBeenCalled()
+    await React.act(async () => {
+      openRoot.unmount()
+    })
+    open.remove()
+  })
 })

@@ -39,9 +39,9 @@ API, no extra host node.
 | :--- | :--- |
 | Engine | Hardened. Multi-effect exit machine + stable refs + child validation (colocated-proven). |
 | Production | **No.** (browser matrix still pending) |
-| Named `[x]` | 20 / 51 (7 CT specs + 18 colocated unit its) |
-| Playwright | 7 (CT, React 19) |
-| Vitest | 18 colocated (`PR-DOM-06`–`08`, `PR-REF-01`–`05`, `PR-ENV-01`–`03`, `PR-NEST-04`) + 3 matrix (`PR-DOM-01`–`03`) |
+| Named `[x]` | 28 / 59 (13 CT specs + 20 colocated unit its) |
+| Playwright | 13 (CT, React 19) |
+| Vitest | 20 colocated (`PR-DOM-06`–`08`, `PR-REF-01`–`05`, `PR-ENV-01`–`03`, `PR-NEST-04`, `PR-EXIT-07`–`08`) + 3 matrix (`PR-DOM-01`–`03`) |
 
 ### Gaps & incoherence
 
@@ -69,6 +69,8 @@ nesting as contrast.
 - `[x]` `PR-REF-01`, `PR-REF-02`, `PR-REF-03`, `PR-REF-04`, `PR-REF-05` (colocated unit)
 - `[x]` `PR-ENV-01`, `PR-ENV-02`, `PR-ENV-03` (colocated unit)
 - `[x]` `PR-NEST-04` (colocated unit, StrictMode)
+- `[x]` `PR-EXIT-01`, `PR-EXIT-02`, `PR-EXIT-03`, `PR-EXIT-04`, `PR-EXIT-05`, `PR-EXIT-06` (CT e2e)
+- `[x]` `PR-EXIT-07`, `PR-EXIT-08` (colocated unit)
 - `[~]` `PR-DOM-02`, `PR-DOM-03` — unit titles only; catalog is `[browser]`
 - `[ ]` remaining `PR-DOM-04`, `PR-DOM-05`, `PR-INSTANT-02`–`07`,
   `PR-TRANSITION-02`–`06`, `PR-ANIMATION-02`–`07`, `PR-RACE-01`,
