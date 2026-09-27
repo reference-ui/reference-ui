@@ -21,6 +21,13 @@ import {
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
 
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+function warnSlider(message: string) {
+  if (globalProcess?.env?.NODE_ENV === 'production') return
+  console.error(`[Reference UI Slider] ${message}`)
+}
+
 export type SliderProps<T extends SliderValue = SliderValue> = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
   value: T
   min?: number
@@ -563,6 +570,20 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       if (Array.isArray(currentValue)) return [...currentValue]
       return [typeof currentValue === 'number' ? currentValue : min]
     }, [currentValue, min])
+
+    // W-35 clamp-or-warn: an out-of-range controlled value clamps (render +
+    // ARIA agree — see the B-29 ariaNow clamp in SliderThumb) AND dev-warns
+    // naming component, prop, value, and valid range. Clamp-silently matches
+    // Radix/RAC/native; the dev warning is our addition.
+    if (globalProcess?.env?.NODE_ENV !== 'production') {
+      values.forEach((entry, entryIndex) => {
+        if (entry < min || entry > max) {
+          warnSlider(
+            `value${isRange ? ` at index ${entryIndex}` : ''} (${entry}) is outside [${min}, ${max}]; rendering and ARIA are clamped to the range.`
+          )
+        }
+      })
+    }
 
     const rootRef = React.useRef<HTMLDivElement | null>(null)
     const trackRef = React.useRef<HTMLDivElement | null>(null)

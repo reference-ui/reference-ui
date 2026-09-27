@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, expectTypeOf, it } from 'vitest'
+import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import {
   Slider,
   type SliderProps,
@@ -121,6 +121,10 @@ describe('Slider contract', () => {
   })
 
   it('B-29: Slider should clamp ARIA to the feasible window when the controlled value is out of range', () => {
+    // The W-35 dev warning fires on these renders; the warning itself is
+    // pinned by the W-35 test below, so silence it here.
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
     // Overflow: visual sits at 100% and ARIA agrees (was: aria-valuenow=999).
     const overflowHtml = renderToString(
       <Slider value={999} min={0} max={24}>
@@ -161,5 +165,76 @@ describe('Slider contract', () => {
     expect(rangeHtml).not.toContain('aria-valuenow="999"')
     expect(rangeHtml).not.toContain('aria-valuenow="1000"')
     expect(rangeHtml.match(/aria-valuenow="24"/g)).toHaveLength(2)
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
+  it('W-35: Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range', () => {
+    const errors: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      // Overflow warns with all four parts: component, prop, value, range.
+      renderToString(
+        <Slider value={999} min={0} max={24}>
+          <Slider.Track>
+            <Slider.Range />
+            <Slider.Thumb aria-label="Overflow" />
+          </Slider.Track>
+        </Slider>
+      )
+      expect(
+        errors.some(
+          (line) =>
+            line.includes('Slider') &&
+            line.includes('value') &&
+            line.includes('999') &&
+            line.includes('[0, 24]')
+        )
+      ).toBe(true)
+
+      // Underflow mirrors.
+      errors.length = 0
+      renderToString(
+        <Slider value={-40} min={0} max={24}>
+          <Slider.Track>
+            <Slider.Range />
+            <Slider.Thumb aria-label="Underflow" />
+          </Slider.Track>
+        </Slider>
+      )
+      expect(errors.some((line) => line.includes('-40') && line.includes('[0, 24]'))).toBe(true)
+
+      // Range overflow names the offending index.
+      errors.length = 0
+      renderToString(
+        <Slider value={[5, 1000]} min={0} max={24}>
+          <Slider.Track>
+            <Slider.Range />
+            <Slider.Thumb aria-label="Min" />
+            <Slider.Thumb aria-label="Max" />
+          </Slider.Track>
+        </Slider>
+      )
+      expect(
+        errors.some((line) => line.includes('index 1') && line.includes('1000'))
+      ).toBe(true)
+
+      // In-range values stay silent.
+      errors.length = 0
+      renderToString(
+        <Slider value={12} min={0} max={24}>
+          <Slider.Track>
+            <Slider.Range />
+            <Slider.Thumb aria-label="In range" />
+          </Slider.Track>
+        </Slider>
+      )
+      expect(errors).toEqual([])
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 })

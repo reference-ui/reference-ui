@@ -60,6 +60,31 @@ test.describe('Slider CT', () => {
     expect(underPosition).toBe('0%')
   })
 
+  test('W-35: out-of-range controlled value dev-warns naming component, prop, value, and range', async ({
+    mount,
+    page,
+  }) => {
+    // Clamp (B-29) plus the dev warning: the browser console names all four
+    // parts while render and ARIA agree on the clamped 24.
+    const errors: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push(msg.text())
+    })
+    await mount('components/Slider/Slider/LoggedFixture', { initial: 999, min: 0, max: 24 })
+
+    const thumb = page.getByTestId('logged-thumb-0')
+    await expect(thumb).toHaveAttribute('aria-valuenow', '24')
+    expect(
+      errors.some(
+        t =>
+          t.includes('Slider') &&
+          t.includes('value') &&
+          t.includes('999') &&
+          t.includes('[0, 24]')
+      )
+    ).toBe(true)
+  })
+
   test('updates slider value via pointer dragging and track clicking', async ({
     mount,
     page,
