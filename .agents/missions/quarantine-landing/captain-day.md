@@ -425,6 +425,28 @@ shape) — verified firsthand (34/34 + 10/10) and committed. Note:
 docs/BUGS is really docs/bugs/ on disk (case-fold); README row
 recommitted. Running: Slider-F, Tree/Combobox purges.
 
+Tick 70: Tree purge COMPLETE — verified (5/5 + 53/53) and committed
+(dir only). ENTANGLEMENT: Showcase.book + Icon.book hold INTERLEAVED
+migrations (Tree treeValue + Combobox comboVal + Slider Thumb
+index) from 3 crews — NOT committed; commit when the LAST writer
+lands (track here). Combobox-dir Tree-consumer edits (if any) are
+owned by the flying Combobox purge. Running: Slider-F, Combobox
+purge. (+ parked: Overlay commit.)
+
+Tick 71: Combobox purge COMPLETE — verified (77/77 + 65/65) and
+committed (dir only; entangled books still with Slider-F). Purge
+sweep DONE (Tree/DateField/Combobox landed, Accordion excepted,
+Tabs restored). Running: Slider-F ONLY. (+ parked: Overlay commit;
+entangled Showcase.book + Icon.book.)
+
+Tick 72: Slider-F was STUCK-but-COMPLETE (log COMPLETE 3h, no
+report) — verified firsthand (42/42 + 34/34), committed Slider +
+entangled books (Showcase 3/3, Icon unit 0 baseline), retired the
+run. Overlay gate went 119/119 + 34/34 in the TRUE lull (zero
+crews) — contention theory CONFIRMED — and committed. CAMPAIGN
+COMPLETE: all PATCHES/FEATURES/purge crews done, tree clean, zero
+running. Next: doom cycles (standing objective 6) on HQ's word.
+
 Tick 59: Accordion-F verify-BLOCKED as predicted (Collapsible #1
 held, primitive absent; tree clean ✓). No dispatchable work left
 except Tree-F (waiting on Portal-F for #2; #1 circular-held) —
