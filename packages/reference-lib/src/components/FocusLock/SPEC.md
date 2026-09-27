@@ -383,6 +383,11 @@ scroll, or Presence duration.
   `types.test.ts` asserts `children` is a single React element / `null` /
   `false`, and `initialFocus` / `restoreFocus` are `FocusTarget | boolean`.
   StyleProps / `ReferenceSlotPartProps` are Won't do — FocusLock has no host.
+- [x] `FL-REF-01` `[reference]` `[unit]` —
+  **FocusLock should read the child ref without invoking React's version-specific warning getters.**
+  Server-render ref-carrying and ref-less children through the shared
+  descriptor-only ref reader. Assert the authored markup is preserved and no
+  `element.ref` warning is logged on any major.
 
 ### Transparent container
 

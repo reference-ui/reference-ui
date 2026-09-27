@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { isNodeInside } from '../Overlay/shared/events'
+import { getElementRef } from '../Presence/elementRef'
 import {
   findFocusableProximity,
   getTabbableCandidates,
@@ -518,8 +519,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
     }
 
     const child = children as React.ReactElement<{ ref?: React.Ref<HTMLElement> }>
-    latestChildRef.current =
-      (child as { ref?: React.Ref<HTMLElement> }).ref ?? child.props?.ref
+    latestChildRef.current = getElementRef(child) as React.Ref<HTMLElement> | undefined
 
     return React.cloneElement(child, {
       ref: composedRef,
