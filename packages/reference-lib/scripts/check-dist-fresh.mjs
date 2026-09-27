@@ -33,6 +33,15 @@ const REQUIRED_OUTPUTS = [
 // snapshots) never affect dist, so they must not stale the gate.
 const TRACKED_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.json'])
 
+// Test-only files never ship: tsup does not bundle them and `ref sync`
+// extracts nothing from them, so they must not stale the gate. Story and
+// book files (*.story.tsx, *.book.tsx) are NOT excluded — their literals
+// compile into shipped CSS (precedent: Tree.story.tsx `120r`).
+function isTestOnly(full, name) {
+  if (full.split('/').includes('__e2e__')) return true
+  return name.includes('.test.') || name.includes('.spec.')
+}
+
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue
@@ -41,6 +50,7 @@ async function* walk(dir) {
       yield* walk(full)
       continue
     }
+    if (isTestOnly(full, entry.name)) continue
     if (TRACKED_EXTENSIONS.has(entry.name.slice(entry.name.lastIndexOf('.')))) yield full
   }
 }
