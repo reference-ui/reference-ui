@@ -70,7 +70,9 @@ numeric value domain:
 ## Proposed API
 
 ```ts
-type NumberFieldCommitBehavior = "snap" | "validate"
+type NumberFieldCommitBehavior = "snap" | "validate" | "none"
+
+type NumberFieldInvalidCommitReason = "off-step" | "out-of-range"
 
 interface NumberFieldProps
   extends Omit<ReferencePartProps<"div">, "onChange" | "defaultValue"> {
@@ -82,6 +84,7 @@ interface NumberFieldProps
   max?: number
   step?: number
   commitBehavior?: NumberFieldCommitBehavior
+  onInvalidCommit?: (attempted: number, reason: NumberFieldInvalidCommitReason) => void
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
@@ -172,9 +175,10 @@ type NumberFieldDecrementProps =
 ```
 
 There is no `NumberField.Root`, `defaultValue`, uncontrolled mode, controlled
-text prop, raw-text callback, commit callback, parser/formatter function,
+text prop, raw-text callback, parser/formatter function,
 configurable fine/coarse step, wheel option, or polymorphic `as` prop.
-`NumberField.onChange` is the only numeric request authority. Input retains
+`NumberField.onChange` is the only numeric request authority; `onInvalidCommit`
+only reports rejected validate-mode attempts and never requests a value. Input retains
 native edit, clipboard, composition, selection, focus, keyboard, and wheel
 handlers so applications can observe text and native wheel behavior without
 creating another store.
@@ -192,7 +196,10 @@ results before publishing DOM state or callbacks.
 - `min` and `max` are absent. Supplied bounds must be finite and `min <= max`.
 - `step` defaults to `0.01` for `style: "percent"` and `1` otherwise. It must
   be finite and greater than zero.
-- `commitBehavior` defaults to `"snap"`.
+- `commitBehavior` defaults to `"none"` (historic clamp-only behavior).
+  `"snap"` coerces typed commits to the nearest step within min/max with
+  round-half-up ties; `"validate"` rejects off-step and out-of-range commits
+  (revert + `onInvalidCommit`, no `onChange`).
 - `disabled`, `readOnly`, `required`, and `invalid` default to `false`.
 - Increment and Decrement are optional. Each renders
   `button[type=button][tabindex=-1]` and requires a nonempty authored

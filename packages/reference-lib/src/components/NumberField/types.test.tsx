@@ -2,9 +2,11 @@ import * as React from 'react'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
   NumberField,
+  type NumberFieldCommitBehavior,
   type NumberFieldDecrementProps,
   type NumberFieldIncrementProps,
   type NumberFieldInputProps,
+  type NumberFieldInvalidCommitReason,
   type NumberFieldProps,
 } from './NumberField'
 
@@ -132,5 +134,50 @@ describe('NumberField type contract', () => {
     // @ts-expect-error - JSX without an accessible-name prop fails
     const _unnamed = <NumberField.Increment />
     expect(_unnamed).toBeDefined()
+  })
+
+  it('W-02/W-25: NumberField should type commitBehavior, formatOptions, and onInvalidCommit', () => {
+    const commitProps: NumberFieldProps = {
+      value: 2.5,
+      locale: 'en-US',
+      commitBehavior: 'snap',
+      formatOptions: { style: 'currency', currency: 'USD' },
+      onInvalidCommit: (attempted: number, reason: NumberFieldInvalidCommitReason) => {
+        void attempted
+        void reason
+      },
+    }
+    expect(commitProps.commitBehavior).toBe('snap')
+
+    const validate: NumberFieldCommitBehavior = 'validate'
+    const none: NumberFieldCommitBehavior = 'none'
+    expect([validate, none].length).toBe(2)
+
+    expectTypeOf<NumberFieldProps['commitBehavior']>().toEqualTypeOf<
+      NumberFieldCommitBehavior | undefined
+    >()
+    expectTypeOf<NumberFieldProps['formatOptions']>().toEqualTypeOf<
+      Intl.NumberFormatOptions | undefined
+    >()
+    expectTypeOf<NumberFieldProps['onInvalidCommit']>().toEqualTypeOf<
+      ((attempted: number, reason: NumberFieldInvalidCommitReason) => void) | undefined
+    >()
+
+    const element = (
+      <NumberField {...commitProps}>
+        <NumberField.Decrement aria-label="Decrease" />
+        <NumberField.Input aria-label="Price" />
+        <NumberField.Increment aria-label="Increase" />
+      </NumberField>
+    )
+    expect(React.isValidElement(element)).toBe(true)
+
+    // @ts-expect-error - unknown commit behavior rejected
+    const _badBehavior: NumberFieldProps = { value: null, locale: 'en-US', commitBehavior: 'clamp' }
+    expect(_badBehavior).toBeDefined()
+
+    // @ts-expect-error - formatOptions must be Intl-shaped
+    const _badFormat: NumberFieldProps = { value: null, locale: 'en-US', formatOptions: 'USD' }
+    expect(_badFormat).toBeDefined()
   })
 })

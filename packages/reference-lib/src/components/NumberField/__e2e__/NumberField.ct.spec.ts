@@ -607,6 +607,100 @@ test.describe('NumberField CT', () => {
     await expect(display).toHaveText('Numeric Value: 42')
   })
 
+  test('W-02: snap commitBehavior coerces typed 2.5 to 3 with one onChange', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/SnapFixture')
+
+    const input = page.getByTestId('snap-input')
+    const display = page.getByTestId('snap-display')
+    const log = page.getByTestId('snap-log')
+
+    await input.click()
+    await input.pressSequentially('2.5', { delay: 20 })
+    await expect(input).toHaveValue('2.5')
+    await expect(display).toHaveText('Snap Value: None')
+    await expect(log).toHaveText('requests: 0')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('3')
+    await expect(display).toHaveText('Snap Value: 3')
+    await expect(log).toHaveText('requests: 1')
+  })
+
+  test('W-02: validate commitBehavior reverts bad commits and reports them', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/ValidateFixture')
+
+    const input = page.getByTestId('validate-input')
+    const display = page.getByTestId('validate-display')
+    const log = page.getByTestId('validate-log')
+
+    await expect(input).toHaveValue('5')
+    await input.fill('2.5')
+    await expect(display).toHaveText('Validate Value: 5')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('5')
+    await expect(display).toHaveText('Validate Value: 5')
+    await expect(log).toHaveText('invalid: 2.5:off-step')
+
+    await input.fill('25')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('5')
+    await expect(display).toHaveText('Validate Value: 5')
+    await expect(log).toHaveText('invalid: 2.5:off-step, 25:out-of-range')
+
+    await input.fill('7')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('7')
+    await expect(display).toHaveText('Validate Value: 7')
+    await expect(log).toHaveText('invalid: 2.5:off-step, 25:out-of-range')
+  })
+
+  test('W-25: currency formatOptions display formatted text, commit plain numbers', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CurrencyFixture')
+
+    const input = page.getByTestId('currency-input')
+    const display = page.getByTestId('currency-display')
+
+    await expect(input).toHaveValue('$1,234.50')
+    await expect(display).toHaveText('Currency Value: 1234.5')
+
+    // Typing never fights the formatter: raw keystrokes stay verbatim and
+    // unpublished until commit.
+    await input.fill('')
+    await input.pressSequentially('99.99', { delay: 20 })
+    await expect(input).toHaveValue('99.99')
+    await expect(display).toHaveText('Currency Value: 1234.5')
+    await page.keyboard.press('Enter')
+    await expect(display).toHaveText('Currency Value: 99.99')
+    await expect(input).toHaveValue('$99.99')
+  })
+
+  test('W-25: percent formatOptions scale typed input to plain fractions', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/PercentFixture')
+
+    const input = page.getByTestId('percent-input')
+    const display = page.getByTestId('percent-display')
+
+    await expect(input).toHaveValue('12%')
+    await expect(display).toHaveText('Percent Value: 0.12')
+
+    await input.fill('25')
+    await expect(display).toHaveText('Percent Value: 0.12')
+    await page.keyboard.press('Enter')
+    await expect(display).toHaveText('Percent Value: 0.25')
+    await expect(input).toHaveValue('25%')
+  })
+
   test('controlled unbounded field steps from echoed state (FEATURES #1: no uncontrolled mode)', async ({
     mount,
     page,

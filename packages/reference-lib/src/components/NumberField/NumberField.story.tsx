@@ -162,6 +162,140 @@ export const BoundedDecimalFixture = () => {
   )
 }
 
+// W-02: snap commit — type 2.5 at step 1, commit once to 3.
+export const SnapFixture = () => {
+  const [value, setValue] = React.useState<number | null>(null)
+  const [requests, setRequests] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ margin: '16px 0', width: 220 }}>
+          <NumberField
+            data-testid="snap-field"
+            value={value}
+            locale="en-US"
+            commitBehavior="snap"
+            onChange={v => {
+              setRequests(c => c + 1)
+              setValue(v)
+            }}
+            step={1}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input data-testid="snap-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        </Div>
+
+        <Span fontSize="3r" color="design.text.light" data-testid="snap-display">
+          Snap Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="snap-log">
+          requests: {requests}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// W-02: validate commit — off-step and out-of-range attempts revert and log.
+export const ValidateFixture = () => {
+  const [value, setValue] = React.useState<number | null>(5)
+  const [invalidLog, setInvalidLog] = React.useState<string[]>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ margin: '16px 0', width: 220 }}>
+          <NumberField
+            data-testid="validate-field"
+            value={value}
+            locale="en-US"
+            commitBehavior="validate"
+            onChange={setValue}
+            onInvalidCommit={(attempted, reason) =>
+              setInvalidLog(log => [...log, `${attempted}:${reason}`])
+            }
+            min={1}
+            max={10}
+            step={1}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input data-testid="validate-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        </Div>
+
+        <Span fontSize="3r" color="design.text.light" data-testid="validate-display">
+          Validate Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="validate-log">
+          invalid: {invalidLog.length > 0 ? invalidLog.join(', ') : 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// W-25: currency display with plain-number commits.
+export const CurrencyFixture = () => {
+  const [value, setValue] = React.useState<number | null>(1234.5)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ margin: '16px 0', width: 220 }}>
+          <NumberField
+            data-testid="currency-field"
+            value={value}
+            locale="en-US"
+            formatOptions={{ style: 'currency', currency: 'USD' }}
+            onChange={setValue}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input data-testid="currency-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        </Div>
+
+        <Span fontSize="3r" color="design.text.light" data-testid="currency-display">
+          Currency Value: {value !== null ? value : 'None'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// W-25: percent display with scaled plain-number commits.
+export const PercentFixture = () => {
+  const [value, setValue] = React.useState<number | null>(0.12)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ margin: '16px 0', width: 220 }}>
+          <NumberField
+            data-testid="percent-field"
+            value={value}
+            locale="en-US"
+            formatOptions={{ style: 'percent' }}
+            onChange={setValue}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input data-testid="percent-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        </Div>
+
+        <Span fontSize="3r" color="design.text.light" data-testid="percent-display">
+          Percent Value: {value !== null ? value : 'None'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 // PATCHES §6 (NF-DOM-09): type-bypassed unnamed steppers — absent naming
 // on Decrement, an unresolving labelledby on Increment.
 const unnamedDecProps = {} as unknown as NumberFieldDecrementProps

@@ -1863,3 +1863,970 @@ describe('NumberField required stepper names', () => {
     }
   })
 })
+
+describe('NumberField commitBehavior (W-02)', () => {
+  function snapApp(seen: Array<number | null>, invalid: Array<[number, string]>, extra?: Record<string, unknown>) {
+    return function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={1}
+          commitBehavior="snap"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+          onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
+          {...extra}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+  }
+
+  it('W-02 snap: typing 2.5 with step 1 commits 3 with a single onChange', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(React.createElement(snapApp(seen, invalid)))
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    for (const text of ['2', '2.', '2.5']) {
+      await React.act(async () => {
+        setNativeValue(input, text)
+      })
+      expect(input.value).toBe(text)
+      expect(seen).toEqual([])
+    }
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([3])
+    expect(invalid).toEqual([])
+    expect(input.value).toBe('3')
+    await cleanup(container, root)
+  })
+
+  it('W-02 snap: midpoint ties round half up, including negatives', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(React.createElement(snapApp(seen, invalid)))
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '-2.5')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    // Round-half-up: -2.5 rises toward +Infinity (-2), unlike sign-based or
+    // away-from-zero ties (-3). Signed-off W-02 acceptance.
+    expect(seen).toEqual([-2])
+    expect(input.value).toBe('-2')
+    await cleanup(container, root)
+  })
+
+  it('W-02 snap: out-of-range commits coerce to the lattice within bounds', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={0}
+          max={10}
+          step={3}
+          commitBehavior="snap"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+          onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    // Beyond-max coerces to the top lattice point (React Aria lattice-clamp).
+    await React.act(async () => {
+      setNativeValue(input, '13')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([9])
+    expect(invalid).toEqual([])
+    await cleanup(container, root)
+
+    // An exact off-lattice max snaps down the same way (differs from the
+    // TESTS.md endpoint-preservation freeze — mission log flags it for HQ).
+    const seenMax: Array<number | null> = []
+    const m = mount()
+    function MaxApp() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={0}
+          max={10}
+          step={3}
+          commitBehavior="snap"
+          onChange={v => {
+            seenMax.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      m.root.render(<MaxApp />)
+    })
+    const maxInput = m.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(maxInput, '10')
+    })
+    await React.act(async () => {
+      pressKey(maxInput, 'Enter')
+    })
+    expect(seenMax).toEqual([9])
+    expect(maxInput.value).toBe('9')
+    await cleanup(m.container, m.root)
+  })
+
+  it('W-02 snap: fractional steps snap to the nearest lattice point', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={0.25}
+          commitBehavior="snap"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(input, '0.3')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([0.25])
+    await cleanup(container, root)
+
+    // Half-up tie on a fractional lattice: 0.25 rises to 0.5 at step 0.5.
+    const seenTie: Array<number | null> = []
+    const t = mount()
+    function TieApp() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={0.5}
+          commitBehavior="snap"
+          onChange={v => {
+            seenTie.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      t.root.render(<TieApp />)
+    })
+    const tieInput = t.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(tieInput, '0.25')
+    })
+    await React.act(async () => {
+      pressKey(tieInput, 'Enter')
+    })
+    expect(seenTie).toEqual([0.5])
+    await cleanup(t.container, t.root)
+  })
+
+  it('W-02 snap: the lattice anchors at a finite min (React Aria)', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={1}
+          step={3}
+          commitBehavior="snap"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    // Min-anchored lattice {1, 4, 7, ...}: 5.5 is a tie, half-up to 7. A
+    // zero-anchored lattice would snap to 6 instead.
+    await React.act(async () => {
+      setNativeValue(input, '5.5')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([7])
+    await cleanup(container, root)
+  })
+
+  it('W-02 snap: no-change commits emit nothing; invalid text reverts silently', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField
+          value={3}
+          locale="en-US"
+          step={1}
+          commitBehavior="snap"
+          onChange={v => void seen.push(v)}
+          onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '3')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([])
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, 'garbage')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(invalid).toEqual([])
+    expect(input.value).toBe('3')
+    await cleanup(container, root)
+  })
+
+  it('W-02 snap: authored display precision applies to the committed number', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={0.1}
+          commitBehavior="snap"
+          formatOptions={{ maximumFractionDigits: 0 }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    // Snap keeps 2.5 on the 0.1 lattice; the display round-trip (React Aria
+    // commit parity) then publishes the displayed 3.
+    await React.act(async () => {
+      setNativeValue(input, '2.5')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([3])
+    expect(input.value).toBe('3')
+    await cleanup(container, root)
+  })
+
+  function validateApp(
+    seen: Array<number | null>,
+    invalid: Array<[number, string]>,
+    extra?: Record<string, unknown>
+  ) {
+    return function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={1}
+          commitBehavior="validate"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+          onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
+          {...extra}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+  }
+
+  it('W-02 validate: off-step commits revert with onInvalidCommit and no onChange', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(React.createElement(validateApp(seen, invalid)))
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(input, '2.5')
+    })
+    expect(input.value).toBe('2.5')
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(invalid).toEqual([[2.5, 'off-step']])
+    expect(seen).toEqual([])
+    expect(input.value).toBe('5')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('W-02 validate: out-of-range commits report out-of-range, winning over step', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(React.createElement(validateApp(seen, invalid, { min: 1, max: 10 })))
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    for (const [text, attempted] of [
+      ['25', 25],
+      ['-5', -5],
+      // Both off-step and out-of-range: range wins.
+      ['25.5', 25.5],
+    ] as const) {
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, text)
+      })
+      await React.act(async () => {
+        input.blur()
+      })
+      expect(input.value).toBe('5')
+    }
+    expect(invalid).toEqual([
+      [25, 'out-of-range'],
+      [-5, 'out-of-range'],
+      [25.5, 'out-of-range'],
+    ])
+    expect(seen).toEqual([])
+    await cleanup(container, root)
+  })
+
+  it('W-02 validate: on-step in-range commits publish plainly', async () => {
+    const seen: Array<number | null> = []
+    const invalid: Array<[number, string]> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(React.createElement(validateApp(seen, invalid, { min: 1, max: 10 })))
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(input, '7')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([7])
+    expect(invalid).toEqual([])
+    expect(input.value).toBe('7')
+    await cleanup(container, root)
+  })
+
+  it('W-02 validate: rejection without onInvalidCommit stays silent', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          step={1}
+          commitBehavior="validate"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '2.5')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('5')
+    await cleanup(container, root)
+  })
+
+  it('W-02 none (default): off-step values commit with clamp-only behavior', async () => {
+    // Omitted commitBehavior and explicit 'none' both preserve 2.5 —
+    // today's behavior, unchanged.
+    for (const commitBehavior of [undefined, 'none'] as const) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      function App() {
+        const [value, setValue] = React.useState<number | null>(null)
+        return (
+          <NumberField
+            value={value}
+            locale="en-US"
+            step={1}
+            commitBehavior={commitBehavior}
+            onChange={v => {
+              seen.push(v)
+              setValue(v)
+            }}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        )
+      }
+      await React.act(async () => {
+        root.render(<App />)
+      })
+      const input = container.querySelector('input') as HTMLInputElement
+      await React.act(async () => {
+        setNativeValue(input, '2.5')
+      })
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(seen).toEqual([2.5])
+      expect(input.value).toBe('2.5')
+      await cleanup(container, root)
+    }
+  })
+
+  it('W-02: an unknown commitBehavior throws at render', () => {
+    expect(() =>
+      renderToString(
+        <NumberField value={0} locale="en-US" commitBehavior={'clamp' as unknown as 'none'} />
+      )
+    ).toThrow(/"commitBehavior" must be "snap", "validate", or "none"/)
+    expect(() =>
+      renderToString(<NumberField value={0} locale="en-US" commitBehavior="snap" />)
+    ).not.toThrow()
+  })
+})
+
+describe('NumberField formatOptions (W-25)', () => {
+  it('W-25: currency display formats clean state while commits stay plain numbers', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(1234.5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('$1,234.50')
+    await React.act(async () => {
+      setNativeValue(input, '99.99')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([99.99])
+    expect(input.value).toBe('$99.99')
+    await cleanup(container, root)
+  })
+
+  it('W-25: typing never fights the formatter — drafts stay verbatim until commit', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(1234.5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    // Partial keystrokes render exactly as typed — no mid-typing reformat.
+    await React.act(async () => {
+      input.focus()
+    })
+    for (const text of ['1', '12']) {
+      await React.act(async () => {
+        setNativeValue(input, text)
+      })
+      expect(input.value).toBe(text)
+      expect(seen).toEqual([])
+    }
+    expect(input.getAttribute('data-editing')).toBe('')
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([12])
+    expect(input.value).toBe('$12.00')
+    // A partial edit of formatted text commits its numeric meaning; an
+    // unchanged meaning emits nothing and restores the formatted display.
+    await React.act(async () => {
+      setNativeValue(input, '$1,234.5')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([12, 1234.5])
+    await React.act(async () => {
+      setNativeValue(input, '$1,234.50')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([12, 1234.5])
+    expect(input.value).toBe('$1,234.50')
+    await cleanup(container, root)
+  })
+
+  it('W-25: percent display scales both ways; percent marks reject elsewhere', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(0.12)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'percent' }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('12%')
+    await React.act(async () => {
+      setNativeValue(input, '25')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([0.25])
+    expect(input.value).toBe('25%')
+    await React.act(async () => {
+      setNativeValue(input, '25%')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([0.25])
+    expect(input.value).toBe('25%')
+    await React.act(async () => {
+      setNativeValue(input, '25‰')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([0.25, 0.025])
+    await cleanup(container, root)
+
+    // A percent mark outside percent style is not grammar: revert, no request.
+    const seenDecimal: Array<number | null> = []
+    const d = mount()
+    await React.act(async () => {
+      d.root.render(
+        <NumberField value={5} locale="en-US" onChange={v => void seenDecimal.push(v)}>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const decimalInput = d.container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      setNativeValue(decimalInput, '50%')
+    })
+    await React.act(async () => {
+      pressKey(decimalInput, 'Enter')
+    })
+    expect(seenDecimal).toEqual([])
+    expect(decimalInput.value).toBe('5')
+    await cleanup(d.container, d.root)
+  })
+
+  it('W-25: percent fields step hundredths by default', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(0.12)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'percent' }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([0.13])
+    expect(input.value).toBe('13%')
+    await cleanup(container, root)
+  })
+
+  it('W-25: de-DE honors locale punctuation; foreign placement reverts', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(1234.56)
+      return (
+        <NumberField
+          value={value}
+          locale="de-DE"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('1.234,56')
+    await React.act(async () => {
+      setNativeValue(input, '2,5')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([2.5])
+    expect(input.value).toBe('2,5')
+    // US-placed punctuation under de-DE is rejected, never reinterpreted
+    // ("2.5" must not become 25).
+    await React.act(async () => {
+      setNativeValue(input, '2.5')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([2.5])
+    expect(input.value).toBe('2,5')
+    await cleanup(container, root)
+  })
+
+  it('W-25: grouped drafts parse and step from their numeric meaning', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '1,000')
+    })
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([1001])
+    expect(input.value).toBe('1,001')
+    await cleanup(container, root)
+  })
+
+  it('W-25: null renders empty under any format; clearing commits null', async () => {
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={null} locale="en-US" formatOptions={{ style: 'currency', currency: 'USD' }}>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('')
+    await cleanup(container, root)
+
+    const seen: Array<number | null> = []
+    const c = mount()
+    function App() {
+      const [value, setValue] = React.useState<number | null>(99.99)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      c.root.render(<App />)
+    })
+    const clearing = c.container.querySelector('input') as HTMLInputElement
+    expect(clearing.value).toBe('$99.99')
+    await React.act(async () => {
+      setNativeValue(clearing, '')
+    })
+    await React.act(async () => {
+      pressKey(clearing, 'Enter')
+    })
+    expect(seen).toEqual([null])
+    expect(clearing.value).toBe('')
+    await cleanup(c.container, c.root)
+  })
+
+  it('W-25: focus and blur without editing never reparse rounded display text', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField
+          value={2.5}
+          locale="en-US"
+          formatOptions={{ maximumFractionDigits: 0 }}
+          onChange={v => void seen.push(v)}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    expect(input.value).toBe('3')
+    await React.act(async () => {
+      input.focus()
+    })
+    expect(input.value).toBe('3')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('3')
+    await cleanup(container, root)
+  })
+
+  it('W-25: an effective format change replaces a dirty draft; equal options preserve it', async () => {
+    const { container, root } = mount()
+    function App({ formatOptions }: { formatOptions?: Intl.NumberFormatOptions }) {
+      return (
+        <NumberField value={5} locale="en-US" formatOptions={formatOptions}>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    await React.act(async () => {
+      root.render(<App formatOptions={{ style: 'decimal' }} />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '9')
+    })
+    expect(input.getAttribute('data-editing')).toBe('')
+    // Referentially new but effectively equal options: session survives.
+    await React.act(async () => {
+      root.render(<App formatOptions={{ style: 'decimal' }} />)
+    })
+    expect(input.value).toBe('9')
+    expect(input.getAttribute('data-editing')).toBe('')
+    // Effective change: the draft is replaced from controlled state.
+    await React.act(async () => {
+      root.render(<App formatOptions={{ style: 'currency', currency: 'EUR' }} />)
+    })
+    expect(input.value).toBe('€5.00')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('W-25: an invalid locale or formatOptions pair fails fast naming the props', () => {
+    expect(() =>
+      renderToString(
+        <NumberField value={0} locale="en-US" formatOptions={{ style: 'currency' }} />
+      )
+    ).toThrow(/"locale"\/\"formatOptions" are not a valid Intl.NumberFormat pair/)
+    expect(() => renderToString(<NumberField value={0} locale="en_US" />)).toThrow(
+      /"locale"\/\"formatOptions" are not a valid Intl.NumberFormat pair/
+    )
+    expect(() =>
+      renderToString(
+        <NumberField
+          value={0}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+        />
+      )
+    ).not.toThrow()
+  })
+})
