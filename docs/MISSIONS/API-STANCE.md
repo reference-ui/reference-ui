@@ -31,6 +31,11 @@ now, but once we release there will be."
   HELD, weird-use-case smell.
 - Tabs `keepMounted` — approved OPT-IN ONLY, never default
   (2026-09-26).
+- Tabs `variant` — PERMANENT kernel API (2026-09-27). No headless
+  split: Tabs stays a complete styled component, structure and
+  classNames frozen; customization grows through the variant axis
+  (authors add their own variant or override one). The FEATURES #1
+  Book-migration framing for `variant` is retired.
 
 ## Campaign directive 2026-09-26 (HQ out for the day)
 
@@ -53,3 +58,11 @@ now, but once we release there will be."
   vocabulary). Accordion purge cancelled + reverted, optional-value
   crew dispatched; Tabs defaultValue restoration SUPERSEDED by
   optional-value crew (value optional, onChange notification).
+- VARIANTS PHILOSOPHY (HQ EOD 2026-09-26, corrects triage):
+  prepackaged variants STAY — headless-only is useless for AI and
+  beginners. Tabs keeps line/pill prepackaged; users must be able
+  to TOTALLY customize variant definitions AND change/add variant
+  names. The strip crew was cancelled. MECHANISM (HQ): variant is
+  a SYSTEM-level prop extended with normal css()/recipe() — users
+  build MyTabs with their own typed variant + recipe. No parallel
+  variants API. This sets the lib-wide pattern.

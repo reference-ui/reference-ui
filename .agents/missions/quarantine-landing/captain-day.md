@@ -461,6 +461,26 @@ comments. Renamed Splitter's local param (defaultValue →
 fallbackValue), Slider re-verified 34/34 + 42/42. Zero crews
 running. Awaiting HQ: doom start + sibling-default* ruling.
 
+Tick 76: HQ VARIANTS PHILOSOPHY (corrects triage): prepackaged
+variants stay; users can totally customize definitions + change
+names. Strip crew (154) CANCELLED clean (plan only, zero Tabs
+dirt). Stance + bug file updated (strip superseded; fix needs a
+new lightweight field proof). Mechanism question put to HQ; crew
+dispatches on answer. Running: zero.
+
+Tick 77: HQ answered "none of the above" + gave the shape: variant
+is SYSTEM-level, extended via normal css()/recipe(); users build
+typed MyTabs + recipe. No parallel API. Dispatched system-variant
+crew (155; doubles as the styletrace field proof). Stance + bug
+file updated. Running: Tabs-system.
+
+Tick 75: Styletrace agent FIXED the collector (a5e86f4e9 member-form
+compounds via alias hosts + 94bd4b6f3, on-branch). Captain's load
+theory partially withdrawn (timing yes, missing-classes no). Tabs
+post-fix sanity green (35/35 + 10/10). Re-dispatched the deferred
+Tabs variant-strip (154) as the field test; bug file updated
+(root-caused + fixed, close on strip-green). Running: Tabs-strip.
+
 Tick 59: Accordion-F verify-BLOCKED as predicted (Collapsible #1
 held, primitive absent; tree clean ✓). No dispatchable work left
 except Tree-F (waiting on Portal-F for #2; #1 circular-held) —

@@ -94,6 +94,16 @@ Never pass `--update-snapshots` during this loop. Snapshot writes are a separate
 
 The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT uses the daemon's gallery on `http://localhost:3101`. A global `beforeEach` resets `window.scrollTo(0, 0)` so large fixtures cannot leak scroll into the next test. Do not kill port 3101 between agentct jobs; the daemon owns that process. Use `pnpm agentct stop` when you want it gone.
 
+> [!CAUTION]
+> **Styles staleness (proven 2026-09-27, B-08):** `agentct` e2e does NOT
+> regenerate the stylesheet — after ANY edit that affects styles (recipe,
+> `css()`, style prop, token), run `pnpm --dir packages/reference-lib sync`
+> FIRST and confirm your rule in
+> `packages/reference-lib/.reference-ui/react/styles.css` before trusting
+> e2e. Without the sync, e2e verifies stale CSS and a visual fix shows a
+> false green (observed: 11/11 pass on pre-fix CSS, intended snapshot red
+> only after sync).
+
 ### React runtimes (no pipeline)
 
 Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **not**. `--react` points the CT Vite gallery at isolated `@ct-runtime/react-*` packages under `packages/reference-lib/playwright/runtimes`:

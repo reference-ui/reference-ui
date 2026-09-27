@@ -2,8 +2,10 @@
 
 **Severity:** Unknown (no breakage at HEAD; investigation record)
 **Area:** Lib style collector + CT daemon CSS (`styles.css` generation)
-**Status:** Open, recorded 2026-09-26 (day campaign, Tabs-F v4). Needs the
-quiet-tree experiment below before any conclusion.
+**Status:** CLOSED 2026-09-27. Root-caused, fixed, field-proven
+(stations + end-to-end probe on production `Tabs.tsx`); the strip
+re-attempt is off — HQ retired the headless direction and `variant`
+stays in the kernel by design.
 **Scope**: lib style collection for Book-side recipe shapes.
 
 ## Observed
@@ -48,21 +50,33 @@ unreliability. The daemon-timing split further confounds file-vs-test
 comparisons. Nothing here is proven; (2) the Panel-shaped gap is the
 most suspicious thread because it reproduced within single states.
 
-## What closes this
+## Resolution (2026-09-26)
 
-A quiet-tree experiment crew (ZERO sibling writers for the whole
-run): for each shape — inline-on-primitive, inline-on-custom,
-const-spread-on-custom, function-returned — assert collect / no-collect
-deterministically across repeated syncs, and daemon-vs-file agreement.
-If a shape fails deterministically quiet, file the collector bug with
-the repro; if everything holds quiet, close as load artifact and note
-the daemon-timing trap for future campaigns.
+A second agent root-caused it to styletrace: member-form compound
+styles via alias hosts were not collected — exactly the recipe shape
+the Tabs crew was emitting. Fixed in `a5e86f4e9` ("styletrace+atomic:
+collect member-form compound styles via alias hosts") with `94bd4b6f3`
+(atomic extract split) on top, both on this branch. The captain's
+contamination caveat is PARTIALLY WITHDRAWN: concurrent load explains
+the timing variance and flip-flop, but NOT the missing classes — HQ's
+instinct was right, something was truly hiding there.
 
-## Why it matters if real
+## What closed this
 
-HQ's no-V2 contract pushes visual presets toward Book recipes over
-kernel props (the Tabs `variant` strip was the first attempt). If
-recipe-shaped styles genuinely don't collect outside the kernel, that
-direction is blocked until the collector story is fixed — and the
-Tabs `variant` retention (accepted deviation, reversible) becomes
-permanent instead.
+Field proof landed without the strip: `ATM-SITE-87` plus the
+styletrace `member_alias` fixtures pin member-form collection, and a
+post-fix probe compiled production `Tabs.tsx` with a Book-shaped
+`<Tabs.Panel {...panelLook}>` consumer — the spread collects
+(`tracedJsxHosts` carries `Tabs.Panel`, `Tabs.Tab`, …; kept at
+`/tmp/tabs-probe/`). The strip re-attempt stays cancelled per HQ
+(variants philosophy in `API-STANCE.md`). If recipe classes go
+missing again, append the exact missing utilities + the recipe shape
+and reopen against styletrace.
+
+## Why it mattered (framing retired)
+
+HQ's no-V2 contract once pushed visual presets toward Book recipes
+over kernel props (the Tabs `variant` strip was the first attempt).
+That direction is closed: `variant` retention is permanent kernel
+design, not a fallback. The fix stays load-bearing regardless —
+userland variant overrides ride the same member-form collection.
