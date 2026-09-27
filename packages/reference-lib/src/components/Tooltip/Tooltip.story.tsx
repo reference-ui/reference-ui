@@ -54,6 +54,25 @@ export const KeyboardFocus = () => (
   </ReferenceLibrary>
 )
 
+export const SpanInDefaultContent = () => (
+  <ReferenceLibrary>
+    <Div p="6r" colorMode="light" display="flex" justifyContent="center" style={{ paddingTop: 120 }}>
+      <Tooltip openDelay={0} closeDelay={0}>
+        <Tooltip.Trigger>
+          <button type="button" data-testid="btn-span-tip">
+            Span tip trigger
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Content data-testid="tooltip-span-content" placement="top">
+          <Span fontSize="3r" data-testid="tooltip-span-text">
+            Helpful tooltip information
+          </Span>
+        </Tooltip.Content>
+      </Tooltip>
+    </Div>
+  </ReferenceLibrary>
+)
+
 const tipStyle: React.CSSProperties = {
   background: '#333',
   color: '#fff',
