@@ -86,15 +86,37 @@ DateField design": two shadow fixtures + two honest CT proofs, no
 | Named `[x]` | 19 / 64 |
 | CT | 22 titles green (3 pre-existing + 17 `DF-*` + 2 FEATURES proofs); 8 frozen snapshots unmodified |
 
+### Playtest PATCHES #1 engine (2026-09-27, date crew)
+
+Landed the controlled-locale text engine: dirty buffer + ISO-gated
+live/commit paths, locale `formatLocalDate` display, min/max +
+`isDateUnavailable` rejection without clamp, managed invalid
+(programmatic constraint + failed boundary), `data-editing` /
+`data-empty`, composition suspension. Closes B-15 (validation),
+B-16 typing path (picker path was already gated), and the DateField
+facet of B-24 (locale display + parse). Out of scope, still open:
+stepping (PATCHES #2), submit/reset observers (PATCHES #5), the
+`invalid`-prop union (SPEC follow-up), Range, `DF-CAL-04`, `DF-ENV-02`.
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 45 / 64 |
+| CT | 44 titles green (22 pre-existing re-targeted to locale display + 22 engine proofs); 8 frozen snapshots pass unmodified within 2% tolerance (text-only delta — baselines still show pre-fix ISO text, flagged for HQ) |
+| Vitest | 30 tests (25 parse-kit + 5 component proofs incl. locale-display asserts) |
+
 ### Gaps & incoherence
 
 - ~~`defaultValue` (uncontrolled) still exists~~ — landed (HQ controlled-only
   rule, `docs/MISSIONS/API-STANCE.md`): `defaultValue` deleted, `value` +
   `onChange` + `locale` required and throwing; in-repo consumers migrated.
 - **No `DateField.Range` / Start / End.**
-- No locale `formatToParts` parse/format; input shows the ISO string.
-- No caret-aware stepping (`selectionStart` unused).
-- `onChange` fed raw text; no ISO gate; no dirty/`data-editing` session.
+- ~~No locale `formatToParts` parse/format; input shows the ISO string~~ —
+  landed (playtest PATCHES #1, 2026-09-27): locale display + parse,
+  dirty session, ISO-gated `onChange`, `data-editing`.
+- No caret-aware stepping (`selectionStart` unused) — PATCHES #2, open.
+- ~~`onChange` fed raw text; no ISO gate~~ — landed (same): invalid,
+  impossible, and out-of-constraints text never publishes; commit
+  reverts with managed invalid.
 - ~~Child sniffing instead of Slot / Part-Resolution Law~~ — landed
   (PATCHES #3): parts register into Slot ids, host merges per the Law.
 - Combobox attrs complete incl. `aria-controls` link (PATCHES #9);
@@ -154,13 +176,16 @@ windows; min/max clamp.
   owning shadow root (never `document.body`) via the Overlay automatic
   destination rule, Escape closes, trigger toggle + day commit bubble to
   light-DOM state and dismiss
-- `[ ]` `DF-FMT-01..05`, `DF-EDT-*`, `DF-CMT-*`, `DF-BND-01`, `DF-BND-03`,
-  `DF-KEY-01/02/03/04/07`,
-  `DF-CAL-02`, `DF-CAL-04`, `DF-RANGE-*`, `DF-FRM-03`, `DF-FRM-05`, `DF-ENV-02`,
-  `DF-COMP-01`, `DF-COMP-03`, `DF-COMP-05`, `DF-COMP-06` — need the
-  controlled-locale rewrite (dirty sessions, locale display, stepping, Range);
-  forbidden in this mission. Pure-kit coverage for the FMT/EDT/KEY/BND logic
-  exists in `parse.test.ts` (no `DF-*` IDs claimed).
+- `[x]` `DF-FMT-01`, `DF-FMT-02`, `DF-FMT-03`, `DF-FMT-04`,
+  `DF-FMT-05`, `DF-EDT-01`, `DF-EDT-02`, `DF-EDT-03`, `DF-EDT-04`,
+  `DF-EDT-05`, `DF-EDT-06`, `DF-EDT-07`, `DF-EDT-08`, `DF-EDT-09`,
+  `DF-CMT-01`, `DF-CMT-02`, `DF-CMT-03`, `DF-CMT-04`, `DF-CMT-05`,
+  `DF-CMT-06`, `DF-CMT-07`, `DF-BND-01`, `DF-BND-03`, `DF-CAL-02`,
+  `DF-COMP-01`, `DF-COMP-03` (playtest PATCHES #1 engine, 2026-09-27)
+- `[ ]` `DF-KEY-01/02/03/04/07` (stepping — PATCHES #2, still open),
+  `DF-CAL-04` (PATCHES #4), `DF-RANGE-*` (FEATURES #2),
+  `DF-FRM-03`, `DF-FRM-05` (submit/reset — PATCHES #5), `DF-ENV-02`
+  (PATCHES #8), `DF-COMP-05`, `DF-COMP-06` (Range composition)
 - ~~`DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition~~ — landed
   (PATCHES #7): the Overlay-crew shadow-portal contract (Overlay FEATURES
   #1, automatic rule) shipped and both proofs are green

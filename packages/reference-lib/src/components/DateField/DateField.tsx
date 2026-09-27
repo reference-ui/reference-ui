@@ -5,7 +5,12 @@ import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
 import { isValidISODate, type ISODate as CanonicalISODate } from '../Calendar/iso'
 import { CalendarTodayIcon } from '@reference-ui/icons'
 import { createSlotRootContext } from '../Slot'
-import { assertValidDateBounds, isDateWithinConstraints } from './parse'
+import {
+  assertValidDateBounds,
+  formatLocalDate,
+  isDateWithinConstraints,
+  parseLocalDate,
+} from './parse'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
   value: ISODate | null
@@ -33,14 +38,20 @@ interface DateFieldContextValue {
   min?: ISODate
   max?: ISODate
   constraintInvalid: boolean
+  failedBoundary: boolean
   disabled: boolean
   required: boolean
   pickerId: string
   inputRef: React.RefObject<HTMLInputElement | null>
+  buffer: string
+  isDirty: boolean
   handleDateSelect: (date: ISODate | null) => void
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  handleInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
-  handleInputClick: () => void
+  handleInput: (e: React.ChangeEvent<HTMLInputElement>) => void
+  handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  handleBlur: (e: React.FocusEvent<HTMLInputElement>) => void
+  handleClick: () => void
+  handleCompositionStart: () => void
+  handleCompositionEnd: () => void
   rootInputProps: {
     placeholder?: string
     className?: string
@@ -55,6 +66,8 @@ interface DateFieldContextValue {
     onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void
     onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void
     onClick?: (e: React.MouseEvent<HTMLInputElement>) => void
+    onCompositionStart?: (e: React.CompositionEvent<HTMLInputElement>) => void
+    onCompositionEnd?: (e: React.CompositionEvent<HTMLInputElement>) => void
   }
 }
 
@@ -149,17 +162,38 @@ function DateFieldLayout() {
 
   const {
     value,
+    locale,
     isOpen,
     constraintInvalid,
+    failedBoundary,
     disabled,
     required,
     pickerId,
     inputRef,
-    handleInputChange,
-    handleInputKeyDown,
-    handleInputClick,
+    buffer,
+    isDirty,
+    handleInput,
+    handleKeyDown,
+    handleBlur,
+    handleClick,
+    handleCompositionStart,
+    handleCompositionEnd,
     rootInputProps,
   } = context
+
+  // Engine display (PATCHES #1): the dirty buffer while editing, else the
+  // locale-formatted controlled value. A non-canonical programmatic value
+  // is author error outside the engine's gate — it passes through verbatim
+  // exactly as before, never crashing the formatter.
+  const displayText = isDirty
+    ? buffer
+    : value == null
+      ? ''
+      : isValidISODate(value)
+        ? formatLocalDate(value, locale)
+        : value
+  const isInvalid = constraintInvalid || failedBoundary
+  const isEmpty = isDirty ? buffer === '' : value === null
 
   // Part-Resolution Law for the input:
   // merge(inputDefaults, rootInputProps, explicitInputProps, managedMachineProps).
@@ -190,14 +224,14 @@ function DateFieldLayout() {
 
   const onChangeComposed = (e: React.ChangeEvent<HTMLInputElement>) => {
     explicitProps.onChange?.(e)
-    handleInputChange(e)
+    handleInput(e)
   }
 
   const onKeyDownComposed = (e: React.KeyboardEvent<HTMLInputElement>) => {
     explicitProps.onKeyDown?.(e)
     rootInputProps.onKeyDown?.(e)
     if (!e.defaultPrevented && !isDisabled) {
-      handleInputKeyDown(e)
+      handleKeyDown(e)
     }
   }
 
@@ -209,20 +243,38 @@ function DateFieldLayout() {
   const onBlurComposed = (e: React.FocusEvent<HTMLInputElement>) => {
     explicitProps.onBlur?.(e)
     rootInputProps.onBlur?.(e)
+    // Authored blur handlers run first: preventDefault() cancels the commit
+    // boundary and the dirty buffer stays intact while unfocused (DF-CMT-03).
+    if (!e.defaultPrevented && !isDisabled) {
+      handleBlur(e)
+    }
   }
 
   const onClickComposed = (e: React.MouseEvent<HTMLInputElement>) => {
     explicitProps.onClick?.(e)
     rootInputProps.onClick?.(e)
     if (!e.defaultPrevented && !isDisabled) {
-      handleInputClick()
+      handleClick()
     }
   }
 
+  const onCompositionStartComposed = (e: React.CompositionEvent<HTMLInputElement>) => {
+    explicitProps.onCompositionStart?.(e)
+    rootInputProps.onCompositionStart?.(e)
+    handleCompositionStart()
+  }
+
+  const onCompositionEndComposed = (e: React.CompositionEvent<HTMLInputElement>) => {
+    explicitProps.onCompositionEnd?.(e)
+    rootInputProps.onCompositionEnd?.(e)
+    handleCompositionEnd()
+  }
+
   const explicitAriaInvalid = explicitProps['aria-invalid']
-  // Managed constraint-invalid always wins (aria-invalid is a managed prop);
-  // otherwise the authored value passes through untouched.
-  const ariaInvalid = constraintInvalid ? true : explicitAriaInvalid
+  // Managed invalid (programmatic constraint failure or a failed commit
+  // boundary) always wins (aria-invalid is a managed prop); otherwise the
+  // authored value passes through untouched.
+  const ariaInvalid = isInvalid ? true : explicitAriaInvalid
 
   const {
     className: _explicitClassName,
@@ -236,6 +288,8 @@ function DateFieldLayout() {
     onFocus: _explicitOnFocus,
     onBlur: _explicitOnBlur,
     onClick: _explicitOnClick,
+    onCompositionStart: _explicitOnCompositionStart,
+    onCompositionEnd: _explicitOnCompositionEnd,
     value: _explicitValue,
     defaultValue: _explicitDefaultValue,
     disabled: _explicitDisabled,
@@ -263,7 +317,9 @@ function DateFieldLayout() {
       aria-controls={isPickerPresent ? pickerId : undefined}
       aria-autocomplete={isPickerPresent ? 'none' : undefined}
       aria-invalid={ariaInvalid}
-      data-invalid={constraintInvalid ? 'true' : undefined}
+      data-invalid={isInvalid ? 'true' : undefined}
+      data-editing={isDirty ? 'true' : undefined}
+      data-empty={isEmpty ? 'true' : undefined}
       data-reference-date-input=""
       inputMode="text"
       autoComplete={explicitProps.autoComplete ?? rootInputProps.autoComplete ?? 'off'}
@@ -273,13 +329,15 @@ function DateFieldLayout() {
       readOnly={isReadOnly}
       required={isRequired}
       placeholder={placeholder}
-      value={value ?? ''}
+      value={displayText}
       onInput={onInputComposed}
       onChange={onChangeComposed}
       onKeyDown={onKeyDownComposed}
       onFocus={onFocusComposed}
       onBlur={onBlurComposed}
       onClick={onClickComposed}
+      onCompositionStart={onCompositionStartComposed}
+      onCompositionEnd={onCompositionEndComposed}
       className={className}
       style={style}
     />
@@ -455,11 +513,93 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
 
     const [isOpen, setIsOpen] = React.useState(false)
 
+    // Dirty edit session (PATCHES #1): the transient text buffer plus its
+    // flag. A user edit starts the session even when the resulting string
+    // equals formatted controlled text — data-editing reflects the flag,
+    // not string inequality.
+    const [buffer, setBuffer] = React.useState<string>(() =>
+      value != null && isValidISODate(value) ? formatLocalDate(value, locale) : (value ?? '')
+    )
+    const [isDirty, setIsDirty] = React.useState(false)
+    const [hasFailedBoundary, setHasFailedBoundary] = React.useState(false)
+    const isComposingRef = React.useRef(false)
+
     const reactId = React.useId()
     const [pickerId] = React.useState(() => `datefield-picker-${reactId.replace(/:/g, '')}`)
 
     const fieldRef = React.useRef<HTMLDivElement | null>(null)
     const inputRef = React.useRef<HTMLInputElement | null>(null)
+
+    // Live value / locale synchronization (DF-CMT-04/05/06): a programmatic
+    // change replaces the buffer from latest controlled state — except an
+    // accepted live echo (dirty buffer parses to the new value), which
+    // preserves the buffer. A change during composition invalidates that
+    // session, so a stale compositionend is ignored (DF-CMT-07). Reads the
+    // render's buffer/isDirty: the effect runs only on value/locale edges.
+    React.useEffect(() => {
+      if (isComposingRef.current) {
+        isComposingRef.current = false
+      }
+      if (isDirty) {
+        const parsed = parseLocalDate(buffer, locale)
+        if (parsed.valid && parsed.iso === value) {
+          return
+        }
+      }
+      setBuffer(
+        value != null && isValidISODate(value) ? formatLocalDate(value, locale) : (value ?? '')
+      )
+      setIsDirty(false)
+      setHasFailedBoundary(false)
+    }, [value, locale])
+
+    // Commit boundary (blur / Enter): a complete in-constraints candidate
+    // requests once when it differs from the prop and reformats; empty
+    // requests null once; incomplete, impossible, or out-of-constraints
+    // text reverts to formatted controlled state and fails the boundary,
+    // which surfaces managed invalid until the next resolution. Never
+    // clamps, never publishes garbage (B-15), never publishes past
+    // min/max/unavailable (B-16).
+    const commit = React.useCallback(() => {
+      if (isComposingRef.current) return
+      if (!isDirty) return
+
+      const res = parseLocalDate(buffer, locale)
+      if (res.valid && res.iso) {
+        if (
+          isDateWithinConstraints(
+            res.iso,
+            min as CanonicalISODate,
+            max as CanonicalISODate,
+            isDateUnavailable
+          )
+        ) {
+          if (res.iso !== value) {
+            onChange(res.iso)
+          }
+          setBuffer(formatLocalDate(res.iso, locale))
+          setIsDirty(false)
+          setHasFailedBoundary(false)
+          return
+        }
+      }
+
+      if (res.valid && res.iso === null) {
+        if (value !== null) {
+          onChange(null)
+        }
+        setBuffer('')
+        setIsDirty(false)
+        setHasFailedBoundary(false)
+        return
+      }
+
+      setBuffer(
+        value != null && isValidISODate(value) ? formatLocalDate(value, locale) : (value ?? '')
+      )
+      setIsDirty(false)
+      setHasFailedBoundary(true)
+    }, [buffer, locale, value, min, max, isDateUnavailable, onChange, isDirty])
 
     const handleDateSelect = React.useCallback(
       (nextDate: ISODate | null) => {
@@ -477,24 +617,65 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
           return
         }
         onChange(nextDate)
+        // Picker selection is a programmatic value echo: it reformats the
+        // input and ends any dirty session (DF-CMT-05 shape).
+        setBuffer(
+          nextDate != null && isValidISODate(nextDate)
+            ? formatLocalDate(nextDate, locale)
+            : (nextDate ?? '')
+        )
+        setIsDirty(false)
+        setHasFailedBoundary(false)
         setIsOpen(false)
       },
-      [onChange, min, max, isDateUnavailable]
+      [onChange, locale, min, max, isDateUnavailable]
     )
 
-    const handleInputChange = React.useCallback(
+    // Live typing path: every keystroke joins the dirty buffer; only a
+    // complete valid in-constraints date requests, and only when it
+    // differs from the prop. Partial, impossible, and out-of-constraints
+    // text stays visible and silent.
+    const handleInput = React.useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value
-        onChange(val)
+        if (disabled || readOnly) return
+        const nextText = e.target.value
+        setIsDirty(true)
+        setBuffer(nextText)
+
+        if (isComposingRef.current) return
+
+        const res = parseLocalDate(nextText, locale)
+        if (res.valid && res.iso === null) {
+          if (value !== null) {
+            onChange(null)
+          }
+        } else if (res.valid && res.iso) {
+          if (
+            res.iso !== value &&
+            isDateWithinConstraints(
+              res.iso,
+              min as CanonicalISODate,
+              max as CanonicalISODate,
+              isDateUnavailable
+            )
+          ) {
+            onChange(res.iso)
+          }
+        }
       },
-      [onChange]
+      [disabled, readOnly, locale, value, min, max, isDateUnavailable, onChange]
     )
 
-    const handleInputKeyDown = React.useCallback(
+    const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.defaultPrevented || disabled) return
 
-        if (e.altKey && (e.key === 'ArrowDown' || e.key === 'Down')) {
+        // Enter is a commit boundary (DF-CMT-01). ArrowUp/Down stepping is
+        // PATCHES #2, out of scope: those keys stay native no-ops here
+        // (DF-KEY-05/06 pin the no-op).
+        if (e.key === 'Enter') {
+          commit()
+        } else if (e.altKey && (e.key === 'ArrowDown' || e.key === 'Down')) {
           e.preventDefault()
           setIsOpen(true)
         } else if (e.key === 'Escape' && isOpen) {
@@ -502,13 +683,34 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
           setIsOpen(false)
         }
       },
-      [disabled, isOpen]
+      [disabled, isOpen, commit]
     )
 
-    const handleInputClick = React.useCallback(() => {
+    const handleBlur = React.useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        if (e.defaultPrevented) return
+        commit()
+      },
+      [commit]
+    )
+
+    const handleClick = React.useCallback(() => {
       if (disabled) return
       setIsOpen(true)
     }, [disabled])
+
+    // Composition suspends parsing and commit; the native input event
+    // carrying the finalized text runs the live path, so compositionend
+    // only clears the flag — and a flag already cleared by a programmatic
+    // value/locale replace marks the end stale and ignored (DF-CMT-07).
+    const handleCompositionStart = React.useCallback(() => {
+      isComposingRef.current = true
+    }, [])
+
+    const handleCompositionEnd = React.useCallback(() => {
+      if (!isComposingRef.current) return
+      isComposingRef.current = false
+    }, [])
 
     const rootInputProps = React.useMemo<DateFieldContextValue['rootInputProps']>(
       () => ({
@@ -525,6 +727,8 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         onFocus: (props as Record<string, any>).onFocus,
         onBlur: (props as Record<string, any>).onBlur,
         onClick: (props as Record<string, any>).onClick,
+        onCompositionStart: (props as Record<string, any>).onCompositionStart,
+        onCompositionEnd: (props as Record<string, any>).onCompositionEnd,
       }),
       [placeholder, className, style, props, readOnly]
     )
@@ -538,14 +742,20 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         min,
         max,
         constraintInvalid,
+        failedBoundary: hasFailedBoundary,
         disabled,
         required,
         pickerId,
         inputRef,
+        buffer,
+        isDirty,
         handleDateSelect,
-        handleInputChange,
-        handleInputKeyDown,
-        handleInputClick,
+        handleInput,
+        handleKeyDown,
+        handleBlur,
+        handleClick,
+        handleCompositionStart,
+        handleCompositionEnd,
         rootInputProps,
       }),
       [
@@ -555,14 +765,20 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         min,
         max,
         constraintInvalid,
+        hasFailedBoundary,
         disabled,
         required,
         pickerId,
         inputRef,
+        buffer,
+        isDirty,
         handleDateSelect,
-        handleInputChange,
-        handleInputKeyDown,
-        handleInputClick,
+        handleInput,
+        handleKeyDown,
+        handleBlur,
+        handleClick,
+        handleCompositionStart,
+        handleCompositionEnd,
         rootInputProps,
       ]
     )
@@ -586,23 +802,61 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     }
 
     if (!children) {
-      const childlessAriaInvalid = (props as Record<string, any>)['aria-invalid']
+      const childlessProps = props as Record<string, any>
+      const childlessAriaInvalid = childlessProps['aria-invalid']
+      // Same engine display/invalid/empty as the compound host.
+      const childlessDisplay = isDirty
+        ? buffer
+        : value == null
+          ? ''
+          : isValidISODate(value)
+            ? formatLocalDate(value, locale)
+            : value
+      const childlessInvalid = constraintInvalid || hasFailedBoundary
+      const childlessEmpty = isDirty ? buffer === '' : value === null
       return (
         <>
           <Input
             ref={composedChildlessRef}
+            {...props}
             type="text"
             disabled={disabled}
             readOnly={readOnly}
             required={required}
-            value={value ?? ''}
-            onChange={handleInputChange}
+            value={childlessDisplay}
+            onInput={childlessProps.onInput}
+            onChange={(e) => {
+              childlessProps.onChange?.(e)
+              handleInput(e)
+            }}
+            onKeyDown={(e) => {
+              childlessProps.onKeyDown?.(e)
+              if (!e.defaultPrevented && !disabled) handleKeyDown(e)
+            }}
+            onFocus={childlessProps.onFocus}
+            onBlur={(e) => {
+              childlessProps.onBlur?.(e)
+              if (!e.defaultPrevented && !disabled) handleBlur(e)
+            }}
+            onClick={(e) => {
+              childlessProps.onClick?.(e)
+              if (!e.defaultPrevented && !disabled) handleClick()
+            }}
+            onCompositionStart={(e) => {
+              childlessProps.onCompositionStart?.(e)
+              handleCompositionStart()
+            }}
+            onCompositionEnd={(e) => {
+              childlessProps.onCompositionEnd?.(e)
+              handleCompositionEnd()
+            }}
             placeholder={placeholder}
             className={className}
             style={style}
-            {...props}
-            aria-invalid={constraintInvalid ? true : childlessAriaInvalid}
-            data-invalid={constraintInvalid ? 'true' : undefined}
+            aria-invalid={childlessInvalid ? true : childlessAriaInvalid}
+            data-invalid={childlessInvalid ? 'true' : undefined}
+            data-editing={isDirty ? 'true' : undefined}
+            data-empty={childlessEmpty ? 'true' : undefined}
           />
           {name && !disabled && (
             <input type="hidden" name={name} value={value ?? ''} form={form} />
@@ -618,6 +872,8 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       onFocus: _wrapperOnFocus,
       onBlur: _wrapperOnBlur,
       onClick: _wrapperOnClick,
+      onCompositionStart: _wrapperOnCompositionStart,
+      onCompositionEnd: _wrapperOnCompositionEnd,
       autoComplete: _wrapperAutoComplete,
       autoCorrect: _wrapperAutoCorrect,
       spellCheck: _wrapperSpellCheck,

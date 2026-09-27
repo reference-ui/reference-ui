@@ -261,6 +261,97 @@ export const FormFixture = () => {
   )
 }
 
+export const EngineFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2024-02-01')
+  const [locale, setLocale] = React.useState('en-GB')
+  const [changes, setChanges] = React.useState<Array<string | null>>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="engine-fixture-root">
+        <DateField
+          locale={locale}
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+        >
+          <DateField.Input data-testid="engine-input" />
+          <DateField.Trigger data-testid="engine-trigger" />
+          <DateField.Picker data-testid="engine-picker" />
+        </DateField>
+        <Span fontSize="3r" color="design.text.light" data-testid="engine-value-display">
+          Engine Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="engine-changes">
+          Changes: {changes.length}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="engine-last">
+          Last: {changes.length ? JSON.stringify(changes[changes.length - 1]) : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="engine-locale">
+          Locale: {locale}
+        </Span>
+        <Div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+          <button type="button" data-testid="btn-engine-set-jun15" onClick={() => setValue('2024-06-15')}>
+            Set 2024-06-15
+          </button>
+          <button type="button" data-testid="btn-engine-set-null" onClick={() => setValue(null)}>
+            Set null
+          </button>
+          <button type="button" data-testid="btn-engine-locale-gb" onClick={() => setLocale('en-GB')}>
+            en-GB
+          </button>
+          <button type="button" data-testid="btn-engine-locale-us" onClick={() => setLocale('en-US')}>
+            en-US
+          </button>
+          <button type="button" data-testid="btn-engine-locale-de" onClick={() => setLocale('de-DE')}>
+            de-DE
+          </button>
+          <button type="button" data-testid="btn-engine-locale-se" onClick={() => setLocale('sv-SE')}>
+            sv-SE
+          </button>
+          <button type="button" data-testid="btn-engine-locale-jp" onClick={() => setLocale('ja-JP')}>
+            ja-JP
+          </button>
+          <button type="button" data-testid="btn-engine-locale-eg" onClick={() => setLocale('ar-EG')}>
+            ar-EG
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const BlurVetoFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2024-04-01')
+  const [changes, setChanges] = React.useState<Array<string | null>>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="veto-fixture-root">
+        <DateField
+          locale="en-GB"
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+          onBlur={(e) => e.preventDefault()}
+          data-testid="veto-input"
+        />
+        <Span fontSize="3r" color="design.text.light" data-testid="veto-value-display">
+          Veto Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="veto-changes">
+          Changes: {changes.length}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const ShadowFormFixture = () => {
   const [value, setValue] = React.useState<string | null>('2024-02-01')
   const [payload, setPayload] = React.useState('')

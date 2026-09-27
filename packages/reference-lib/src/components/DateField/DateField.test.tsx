@@ -39,7 +39,9 @@ describe('DateField required locale (FEATURES #1)', () => {
     const second = renderToString(
       <DateField value="2024-02-01" onChange={() => {}} locale="en-GB" />
     )
-    expect(first).toContain('2024-02-01')
+    // B-24 fix: the visible input shows locale grammar, never raw ISO.
+    expect(first).toContain('01/02/2024')
+    expect(first).not.toContain('2024-02-01')
     expect(second).toBe(first)
   })
 })
@@ -90,7 +92,7 @@ describe('DateField required value + onChange (controlled-only)', () => {
     // Explicit null from a JS consumer throws the same way.
     expect(() =>
       renderToString(
-        <DateField value={null} onChange={null as unknown as (v: null) => void} locale="en-GB" />
+        <DateField value={null} onChange={null as unknown as (value: string | null) => void} locale="en-GB" />
       )
     ).toThrow('[reference-ui] DateField requires an explicit onChange prop.')
 
@@ -173,7 +175,7 @@ describe('DateField constraint bounds (FEATURES #3)', () => {
         max="2024-06-30"
       />
     )
-    expect(invalidHtml).toContain('2024-05-31')
+    expect(invalidHtml).toContain('31/05/2024')
     expect(invalidHtml).toContain('aria-invalid="true"')
     expect(invalidHtml).toContain('data-invalid="true"')
 
