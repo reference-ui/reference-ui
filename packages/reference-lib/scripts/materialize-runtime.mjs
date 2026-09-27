@@ -22,6 +22,11 @@ const runtimeRewrites = [
   ['@reference-ui/styled/css', '../styled/css/index.js'],
   ['@reference-ui/styled/jsx', '../styled/jsx/index.js'],
   ['@reference-ui/styled/patterns/box', '../styled/patterns/box.js'],
+  // B-13: the generated react.d.mts references the BARE specifier twice
+  // (import + `export type *`). It must be rewritten last so subpath entries
+  // above win. Target is the extensionful index so every moduleResolution
+  // mode lands on styled/index.d.ts.
+  ['@reference-ui/styled', '../styled/index.js'],
 ]
 
 const bundleRewrites = [

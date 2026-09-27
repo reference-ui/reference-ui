@@ -19,6 +19,11 @@
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.mjs"
+    },
+    "./styles.css": "./dist/runtime/reference-ui/react/styles.css",
+    "./primitives": {
+      "types": "./dist/runtime/reference-ui/react/react.d.mts",
+      "import": "./dist/runtime/reference-ui/react/react.mjs"
     }
   },
   "files": [
@@ -36,6 +41,8 @@
     "book": "node ./book/ensure-port.mjs && vite --config book/vite.config.ts",
     "book:build": "vite build --config book/vite.config.ts",
     "prepack": "pnpm run build",
+    "check:dist": "node scripts/check-dist-fresh.mjs",
+    "smoke": "node scripts/consumer-smoke/run.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ct": "playwright test -c playwright/playwright.config.ts",
@@ -48,11 +55,14 @@
   "dependencies": {
     "@reference-ui/icons": "0.0.43",
     "gsap": "^3.15.0",
-    "react": "^19.2.4",
     "zustand": "^5.0.15"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
+    "react": "^19.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
