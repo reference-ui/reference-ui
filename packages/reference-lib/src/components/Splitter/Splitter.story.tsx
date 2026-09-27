@@ -7,6 +7,62 @@ import { Splitter } from './index'
 // fractional under the Panel-axis-sum denominator); exact request arrays are
 // proven through raw *-last-request logs, never these lines.
 
+// W-35 clamp-or-warn: a bad panel layout (entries sum to 60, not 100).
+// Dev-warns with the diagnostic; both panels still mount with declared
+// sizes — never the B-11 silent 13px collapse.
+export const BadLayout = () => {
+  const [value, setValue] = React.useState<number[]>([30, 30])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="badlayout-fixture-root">
+        <Div
+          width="100r"
+          height="50r"
+          border="1px solid"
+          borderColor="ui.field.border"
+          borderRadius="md"
+          overflow="hidden"
+          mb="4r"
+        >
+          <Splitter
+            data-testid="badlayout-splitter"
+            value={value}
+            onChange={setValue}
+            height="100%"
+          >
+            <Splitter.Panel
+              data-testid="badlayout-panel-0"
+              p="3r"
+              bg="ui.table.row.mutedBackground"
+              color="design.text.base"
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Left Pane ({Math.round(value[0] ?? 0)}%)
+              </Span>
+            </Splitter.Panel>
+            <Splitter.Handle data-testid="badlayout-handle-0" aria-label="Resize panels" />
+            <Splitter.Panel
+              data-testid="badlayout-panel-1"
+              p="3r"
+              bg="ui.field.background"
+              color="design.text.base"
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Right Pane ({Math.round(value[1] ?? 0)}%)
+              </Span>
+            </Splitter.Panel>
+          </Splitter>
+        </Div>
+
+        <Span data-testid="badlayout-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {Math.round(value[0] ?? 0)}% / {Math.round(value[1] ?? 0)}%
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const Basic = () => {
   const [value, setValue] = React.useState<number[]>([40, 60])
 

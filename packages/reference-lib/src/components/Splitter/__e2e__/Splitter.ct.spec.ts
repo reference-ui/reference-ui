@@ -177,6 +177,38 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     expect(errors.filter(t => /collapsible|collapsedSize|minSize|maxSize/.test(t))).toEqual([])
   })
 
+  test('W-35: bad panel layout dev-warns and never silently collapses', async ({ mount, page }) => {
+    // B-11 instance shape: entries sum to 60, not 100. Dev warns naming
+    // component, prop, value, and range; both panels stay measurable —
+    // never the silent ~13px collapse dist shipped.
+    const errors: string[] = []
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push(msg.text())
+    })
+    page.on('pageerror', err => errors.push(String(err)))
+    await mount('components/Splitter/Splitter/BadLayout')
+
+    await expect(page.getByTestId('badlayout-panel-0')).toBeVisible()
+    await expect(page.getByTestId('badlayout-panel-1')).toBeVisible()
+    expect(
+      errors.some(
+        t =>
+          t.includes('Splitter') &&
+          t.includes('value') &&
+          t.includes('60.00%') &&
+          t.includes('100%')
+      )
+    ).toBe(true)
+
+    const widths = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-reference-splitter-panel]')].map(
+        el => (el as HTMLElement).getBoundingClientRect().width
+      )
+    )
+    expect(widths).toHaveLength(2)
+    expect(widths.every(w => w > 13)).toBe(true)
+  })
+
   test('SP-DOM-03: Unconstrained panels clamp to the 5% default floor (FEATURES #10)', async ({
     mount,
     page,

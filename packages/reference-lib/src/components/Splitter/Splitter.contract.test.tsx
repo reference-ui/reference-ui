@@ -188,7 +188,11 @@ describe('Splitter contract', () => {
 
     afterEach(() => {
       if (root) {
-        act(() => root!.unmount())
+        try {
+          act(() => root!.unmount())
+        } catch {
+          // Roots left errored by throw-pinning tests have nothing to unmount.
+        }
         root = null
       }
       container?.remove()
@@ -252,6 +256,66 @@ describe('Splitter contract', () => {
       expect(handle?.getAttribute('aria-valuemin')).toBe('5')
       expect(handle?.getAttribute('aria-valuemax')).toBe('95')
       expect(errors).toEqual([])
+    })
+
+    it('W-35: off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing', () => {
+      const errors: string[] = []
+      vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+        errors.push(args.map(String).join(' '))
+      })
+      // B-11 shape (entries that do not sum to 100): loud in dev, and both
+      // panels still mount with their declared sizes — never a silent 13px
+      // collapse.
+      const el = mount(
+        <Splitter value={[30, 30]}>
+          <Splitter.Panel>Left</Splitter.Panel>
+          <Splitter.Handle aria-label="Resize panels" />
+          <Splitter.Panel>Right</Splitter.Panel>
+        </Splitter>
+      )
+      expect(
+        errors.some(
+          (line) =>
+            line.includes('Splitter') &&
+            line.includes('value') &&
+            line.includes('60.00%') &&
+            line.includes('100%')
+        )
+      ).toBe(true)
+      const panels = el.querySelectorAll('[data-reference-splitter-panel]')
+      expect(panels.length).toBe(2)
+      expect(
+        (panels[0] as HTMLElement)?.style.getPropertyValue('--reference-splitter-panel-size')
+      ).toBe('30%')
+      expect(
+        (panels[1] as HTMLElement)?.style.getPropertyValue('--reference-splitter-panel-size')
+      ).toBe('30%')
+    })
+
+    it('W-35: value/Panel count mismatch dev-warns and throws (never a silent collapse)', () => {
+      const errors: string[] = []
+      vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+        errors.push(args.map(String).join(' '))
+      })
+      // The exact B-11 instance: 3 value entries on 2 Panels. FEATURES #9
+      // throws; W-35 adds the dev warning carrying the same diagnostic.
+      expect(() =>
+        mount(
+          <Splitter value={[10, 10, 80]}>
+            <Splitter.Panel>Left</Splitter.Panel>
+            <Splitter.Handle aria-label="Resize panels" />
+            <Splitter.Panel>Right</Splitter.Panel>
+          </Splitter>
+        )
+      ).toThrow(/value has 3 entries but 2 Panels are mounted/)
+      expect(
+        errors.some(
+          (line) =>
+            line.includes('Splitter') &&
+            line.includes('value has 3 entries') &&
+            line.includes('2 Panels')
+        )
+      ).toBe(true)
     })
 
     it('warns with a property-specific diagnostic and ignores unparsable measured strings', () => {
