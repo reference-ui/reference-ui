@@ -390,6 +390,7 @@ function FloatingUIRow({
 
 function DisclosureRow() {
   const [tabsValue, setTabsValue] = React.useState('tab1')
+  const [accordionValue, setAccordionValue] = React.useState<string | null>('item-1')
   return (
     <SectionCard
       title="Disclosure & Tabs"
@@ -408,7 +409,7 @@ function DisclosureRow() {
             </Collapsible.Content>
           </Collapsible>
 
-          <Accordion expansion="single" defaultValue="item-1" display="flex" flexDirection="column">
+          <Accordion expansion="single" value={accordionValue} onChange={(v) => setAccordionValue(v as string | null)} display="flex" flexDirection="column">
             <Collapsible id="item-1">
               <Collapsible.Trigger {...disclosureTrigger}>
                 Accordion Item 1

@@ -532,21 +532,21 @@ export function resolveConstraintToPercentage(
   constraint: number | string | undefined,
   availableGroupSize: number,
   element?: HTMLElement | null,
-  defaultValue = 0
+  fallbackValue = 0
 ): number {
-  if (constraint === undefined) return defaultValue
+  if (constraint === undefined) return fallbackValue
   if (typeof constraint === 'number') return constraint
 
   const trimmed = constraint.trim()
   if (trimmed.endsWith('%')) {
     const pct = parseFloat(trimmed)
-    return Number.isFinite(pct) ? pct : defaultValue
+    return Number.isFinite(pct) ? pct : fallbackValue
   }
 
-  if (availableGroupSize <= 0) return defaultValue
+  if (availableGroupSize <= 0) return fallbackValue
 
   const px = parseCssLengthToPx(trimmed, element)
-  if (px == null || px < 0) return defaultValue
+  if (px == null || px < 0) return fallbackValue
 
   return formatLayoutNumber((px / availableGroupSize) * 100)
 }
