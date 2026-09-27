@@ -1,8 +1,9 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { Div, Span } from '@reference-ui/react'
+import { Div, Span, css } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tabs } from './index'
+import { MyTabsList, MyTabsTab } from './MyTabs'
 
 export const Horizontal = () => {
   const [value, setValue] = React.useState('account')
@@ -330,6 +331,75 @@ export const Handoff = () => {
               <Span fontSize="3.5r">{v} content.</Span>
             </Tabs.Panel>
           ))}
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const MyTabs = () => {
+  const [value, setValue] = React.useState('overview')
+  const [lineValue, setLineValue] = React.useState('alpha')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-mytabs-root" maxW="100r">
+        {/* Custom typed variant: userland recipes, kernel composition. */}
+        <Tabs value={value} onChange={setValue}>
+          <MyTabsList data-testid="tabs-mytabs-list">
+            <MyTabsTab
+              value="overview"
+              selected={value === 'overview'}
+              data-testid="tab-my-overview"
+            >
+              Overview
+            </MyTabsTab>
+            <MyTabsTab
+              value="activity"
+              selected={value === 'activity'}
+              data-testid="tab-my-activity"
+            >
+              Activity
+            </MyTabsTab>
+            <MyTabsTab
+              value="settings"
+              selected={value === 'settings'}
+              data-testid="tab-my-settings"
+            >
+              Settings
+            </MyTabsTab>
+          </MyTabsList>
+          <Tabs.Panel value="overview" data-testid="panel-my-overview">
+            <Span fontSize="3.5r">High-level project overview.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="activity" data-testid="panel-my-activity">
+            <Span fontSize="3.5r">Recent activity audit trail.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="settings" data-testid="panel-my-settings">
+            <Span fontSize="3.5r">Team-wide workspace settings.</Span>
+          </Tabs.Panel>
+        </Tabs>
+        {/* Built-in override: css() compiles to utilities, which beat the
+            kernel recipe classes by layer order — no variants API needed. */}
+        <Tabs value={lineValue} onChange={setLineValue}>
+          <Tabs.List data-testid="tabs-my-override-list">
+            <Tabs.Tab
+              value="alpha"
+              className={css({ color: 'red.500' })}
+              data-testid="tab-my-override"
+            >
+              Overridden
+            </Tabs.Tab>
+            <Tabs.Tab value="beta" data-testid="tab-my-plain">
+              Plain
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="alpha" data-testid="panel-my-alpha">
+            <Span fontSize="3.5r">Alpha content.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="beta" data-testid="panel-my-beta">
+            <Span fontSize="3.5r">Beta content.</Span>
+          </Tabs.Panel>
         </Tabs>
       </Div>
     </ReferenceLibrary>

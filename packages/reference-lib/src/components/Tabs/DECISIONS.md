@@ -5,6 +5,25 @@ acceptance, per decision, never by exhaustion.
 
 Controlled tablist with automatic/manual activation and tab/panel linkage.
 
+## HQ standing decisions
+
+- **`variant` is permanent kernel API (2026-09-27).** Tabs stays a
+  complete, immediately useful styled component: structure and
+  classNames frozen, `line`/`pill` in the kernel. The headless /
+  Book-recipe direction is closed — no variant strip, no migration.
+  Customization grows through the variant axis (authors add their own
+  variant or override one). Supersedes the walkthrough fork 2/3
+  freeze framing and the `FEATURES.md` #1 Book-migration take for
+  `variant`. Mechanism landed 2026-09-27 (crew 155): SYSTEM-level prop —
+  prepackaged kernel recipes + open `TabsVariantProp`; unknown names
+  resolve base-only; worked `MyTabs` proof; 22/22 snapshots identical.
+- **Collector note:** the member-form collection gap that blocked
+  Book-side styles (`docs/BUGS/TABS_RECIPE_COLLECTION.md`) was a real
+  engine miss, fixed in styletrace + atomic (`a5e86f4e9`,
+  `94bd4b6f3`; stations `ATM-SITE-87`, `member_alias`). It stays
+  relevant: userland variant overrides ride the same member-form
+  collection.
+
 ## Landed (context, 2-4 lines)
 
 Landing ported 7 stability wins (nested-tablist scoping, redundant-request

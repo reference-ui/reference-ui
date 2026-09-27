@@ -297,11 +297,11 @@ describe('Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception
     const activeTab = document.getElementById('tab-overview')
     const inactiveTab = document.getElementById('tab-activity')
 
-    expect(tabsList?.className).toContain('bg_ui.tab.track.background')
-    expect(activeTab?.className).toContain('bg_gray.200')
-    expect(activeTab?.className).toContain('c_ui.button.foreground')
-    expect(inactiveTab?.className).toContain('bg_transparent')
-    expect(inactiveTab?.className).toContain('c_design.text.light')
+    expect(tabsList?.className).toContain('tabsList_v_pill')
+    expect(activeTab?.className).toContain('tabsTab_v_pill')
+    expect(activeTab?.className).toContain('tabsTab_s_selected')
+    expect(inactiveTab?.className).toContain('tabsTab_v_pill')
+    expect(inactiveTab?.className).toContain('tabsTab_s_unselected')
   })
 })
 

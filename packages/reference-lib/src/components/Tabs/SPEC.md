@@ -49,13 +49,13 @@ Visual polish is not this gate. No `variant`.
   partial). Seeding props are gone EOD 2026-09-26 (HQ optional-value
   exception: Tabs keeps uncontrolled support with `value` simply
   optional, self-managed from the first tab).
-- `variant` (`line` / `pill`) — RETAINED 2026-09-26: deletion is
-  pipeline-blocked (same campaign). Book-side token recipes flip in/out
-  of the generated CSS across syncs (proven: 12+ probes, triple-sync +
-  cross-sync flip-flop with no source change); only kernel-inline props
-  on primitives collect reliably, so the pill look has no other
-  collectible home. Delete `variant` only after the collector crew makes
-  consumer-side collection deterministic.
+- `variant` (`line` / `pill`) — PERMANENT kernel API 2026-09-27 (HQ):
+  no deletion, no headless split. (The 2026-09-26 retention rationale —
+  the member-form collection gap — is fixed in styletrace+atomic and
+  closed in `docs/bugs/TABS_RECIPE_COLLECTION.md`; retention is now
+  design, not pipeline necessity.) Prepackaged as kernel recipes
+  (`tabsListRecipe`/`tabsTabRecipe`); authors extend via normal
+  `css()`/`recipe()` through the open `variant` prop.
 - Reinvents arrows on List. Freeze: RovingFocus. BLOCKED 2026-09-26
   (FEATURES #2): the kernel stripped controlled current-id with no
   set-currentness export, so composition cannot keep the
@@ -64,8 +64,8 @@ Visual polish is not this gate. No `variant`.
 - [x] ~~`tabIndex={isSelected ? 0 : -1}` ties the tab stop to selection~~ —
   fixed 2026-09-25: roving stop follows focus, selection re-syncs it
   (`TB-MANUAL-01` proven in Vitest + CT).
-- Hardcoded line/pill chrome in List/Tab: stays (see `variant`
-  retention above); visuals byte-identical, all 22 CT snapshots green.
+- Line/pill chrome in List/Tab: system recipes since 2026-09-27 (was
+  kernel-inline props); visuals byte-identical, all 22 CT snapshots green.
 
 ### Vendor
 

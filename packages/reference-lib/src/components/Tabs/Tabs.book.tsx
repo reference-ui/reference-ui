@@ -1,13 +1,12 @@
 import * as React from 'react'
 import { A, Div, Span } from '@reference-ui/react'
-import { Tabs } from './index'
+import { Tabs, tabsListRecipe, tabsTabRecipe } from './index'
 
 // Optional value (HQ EOD 2026-09-26 optional-value exception: `value`
 // optional, omitted = self-managed from the first tab, no seeding
 // prop); the Book stories stay controlled throughout.
-// `variant` stays in the kernel — the stylesheet collector cannot
-// reliably deliver Book-side token styles, so the pill look has no
-// other collectible home.
+// `variant` stays in the kernel (permanent API): line/pill ship prepackaged
+// as system recipes, extended userland via normal css()/recipe().
 
 function HorizontalTabs() {
   const [value, setValue] = React.useState('account')
@@ -86,19 +85,26 @@ function PillTabs() {
 // aria-selected — this is navigation, not the ARIA tab pattern. The
 // current route gets aria-current="page".
 //
-// Styling: the tab look reuses the kernel's own utility classes by name.
-// Consumer-side token styles (spreads, inline props) are invisible to
-// the stylesheet collector, so a recipe cannot regenerate them — but it
-// CAN reference the classes the kernel's inline props already collect.
-// Pinned to the namer output; revisit if the kernel look changes.
-const LINK_LIST_CLASS =
-  'reference-ui__d_flex reference-ui__flex-dir_row reference-ui__gap_4r reference-ui__bd-b-w_1px reference-ui__bd-b-s_solid reference-ui__bd-b-c_ui.table.border reference-ui__bg_transparent reference-ui__p_0 reference-ui__pos_relative'
-const LINK_TAB_BASE =
-  'reference-ui__h_auto reference-ui__px_2r reference-ui__pt_2.5r reference-ui__pb_3.5r reference-ui__bd_none reference-ui__bd-b-w_3px reference-ui__bd-b-s_solid reference-ui__mb_-1px reference-ui__rounded_0 reference-ui__cursor_pointer reference-ui__bg_transparent reference-ui__font-weight_500 reference-ui__fs_3.5r reference-ui__shadow_none reference-ui__op_1 reference-ui__trans_color_150ms_ease,_border-color_150ms_ease,_background-color_150ms_ease reference-ui__focusVisible:outline-w_2px reference-ui__focusVisible:outline-s_solid reference-ui__focusVisible:outline-c_ui.focus.ring reference-ui__focusVisible:outline-offset_-2px'
-const LINK_TAB_SELECTED_EXTRA =
-  'reference-ui__bd-c_ui.focus.ring reference-ui__c_design.text.base reference-ui__text-shadow_0_0_0.4px_currentColor'
-const LINK_TAB_UNSELECTED_EXTRA =
-  'reference-ui__bd-b-c_transparent reference-ui__bd-c_transparent reference-ui__c_design.text.light reference-ui__hover:c_design.text.base reference-ui__hover:bd-c_ui.field.border'
+// Styling: the tab look resolves through the kernel's own recipes — live
+// calls, not pinned class names, so the recipe can never drift from the
+// kernel look. (The pre-recipe version pinned atomic utilities by name;
+// the recipe migration deleted that pinning with the inline props.)
+const LINK_LIST_CLASS = tabsListRecipe({
+  variant: 'line',
+  orientation: 'horizontal',
+})
+const LINK_TAB_SELECTED_CLASS = tabsTabRecipe({
+  variant: 'line',
+  orientation: 'horizontal',
+  selected: 'selected',
+  disabled: 'enabled',
+})
+const LINK_TAB_UNSELECTED_CLASS = tabsTabRecipe({
+  variant: 'line',
+  orientation: 'horizontal',
+  selected: 'unselected',
+  disabled: 'enabled',
+})
 
 function LinkNavTabs() {
   // In your app `current` comes from the router (it re-renders after
@@ -124,7 +130,7 @@ function LinkNavTabs() {
               href={link.href}
               aria-current={selected ? 'page' : undefined}
               onClick={() => setCurrent(link.href)}
-              className={`${LINK_TAB_BASE} ${selected ? LINK_TAB_SELECTED_EXTRA : LINK_TAB_UNSELECTED_EXTRA}`}
+              className={selected ? LINK_TAB_SELECTED_CLASS : LINK_TAB_UNSELECTED_CLASS}
               style={{ textDecoration: 'none' }}
             >
               {link.label}

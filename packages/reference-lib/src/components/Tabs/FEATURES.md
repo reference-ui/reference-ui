@@ -31,6 +31,24 @@ uncontrolled seeding prop, `variant` (`line`/`pill`), and root
 
 **Maintainer take:** Right direction for a major, but only after Book owns line/pill stories so current `variant="pill"` consumers have a migration path.
 
+**HQ DECISION (2026-09-27, variant — SUPERSEDES the take above for
+`variant`):** Tabs stays a complete styled component. `variant`
+(`line`/`pill`) is permanent kernel API, not a deviation; no headless
+split, no structural or className churn. Customization grows through
+the variant axis itself — authors add their own variant or override an
+existing one. The Book-migration framing for `variant` is retired.
+Open item: the open-variant API (HQ sketch requested, not yet picked).
+
+**MECHANISM LANDED (2026-09-27, system-variant crew 155):** `variant` is a
+SYSTEM-level prop — `TabsVariant` (`line`/`pill`) prepackaged as kernel
+`recipe()` configs (`tabsListRecipe`/`tabsTabRecipe`, exported), the prop
+type open (`TabsVariantProp`) so author names typecheck and render through
+the author's own recipe classes; unknown names resolve to kernel base +
+axis classes with no built-in paint. No variants prop, no theme registry.
+Worked proof: `MyTabs.tsx` + `MyTabs` story + `TB-SYS-01` (custom `underline`
+name + `css()` override of a built-in). Line/pill pixel-identical (22/22
+snapshots). Lib-wide pattern per HQ.
+
 ## 2. RovingFocus composition (from DECISIONS candidate #2)
 
 **What it does:** Renders the List inside `RovingFocus.Root` and each Tab

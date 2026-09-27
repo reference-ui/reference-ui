@@ -1,9 +1,18 @@
 import * as React from 'react'
-import { Button, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { Button, Div, recipe, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 
 export type TabsOrientation = 'horizontal' | 'vertical'
 export type TabsActivation = 'automatic' | 'manual'
 export type TabsVariant = 'line' | 'pill'
+/**
+ * System-level variant (HQ system-variant mechanism): the prepackaged
+ * `line`/`pill` names plus any author recipe name. Custom names typecheck
+ * here and render through the author's own recipe classes; the kernel
+ * recipes below resolve unknown names to base + axis classes with no
+ * built-in paint. There is no variants prop and no theme registry — the
+ * style system's `css()`/`recipe()` calls ARE the extension API.
+ */
+export type TabsVariantProp = TabsVariant | (string & {})
 
 export interface TabsProps {
   children?: React.ReactNode
@@ -13,8 +22,185 @@ export interface TabsProps {
   onChange?: (value: string) => void
   orientation?: TabsOrientation
   activation?: TabsActivation
-  variant?: TabsVariant
+  variant?: TabsVariantProp
 }
+
+// Prepackaged variant styles, authored as system recipes (HQ system-variant
+// mechanism — the strip direction is closed, the kernel keeps line/pill).
+// Axes hold axis-pure styles only; every cross-term (padding, indicator,
+// selected color, idle hover) lives in a compound keyed on its variant, so
+// unknown author names resolve to base + axis classes with no built-in
+// paint. Overriding a built-in goes through the normal cascade: host style
+// props / css() / the css prop compile to utilities, and the utilities
+// layer follows the recipes layer. Verbatim values from the former inline
+// props — the 22 CT snapshots pin them pixel-identical.
+export const tabsListRecipe = recipe({
+  className: 'tabsList',
+  base: {
+    position: 'relative',
+  },
+  variants: {
+    variant: {
+      line: { display: 'flex', bg: 'transparent', p: '0' },
+      pill: {
+        display: 'inline-flex',
+        bg: 'ui.tab.track.background',
+        p: '1r',
+        borderRadius: 'md',
+        gap: '1r',
+      },
+    },
+    orientation: {
+      horizontal: { flexDirection: 'row' },
+      vertical: { flexDirection: 'column' },
+    },
+  },
+  compoundVariants: [
+    {
+      variant: 'line',
+      orientation: 'horizontal',
+      css: {
+        gap: '4r',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderBottomColor: 'ui.table.border',
+      },
+    },
+    {
+      variant: 'line',
+      orientation: 'vertical',
+      css: {
+        gap: '1r',
+        borderRightWidth: '1px',
+        borderRightStyle: 'solid',
+        borderRightColor: 'ui.table.border',
+      },
+    },
+  ],
+})
+
+export const tabsTabRecipe = recipe({
+  className: 'tabsTab',
+  base: {
+    border: 'none',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    fontWeight: '500',
+    fontSize: '3.5r',
+    boxShadow: 'none',
+    transition:
+      'color 150ms ease, border-color 150ms ease, background-color 150ms ease',
+    _focusVisible: {
+      outline: '2px solid',
+      outlineColor: 'ui.focus.ring',
+    },
+  },
+  variants: {
+    variant: {
+      line: {
+        h: 'auto',
+        borderRadius: '0',
+        _focusVisible: { outlineOffset: '-2px' },
+      },
+      pill: {
+        px: '3r',
+        pt: '1.5r',
+        pb: '1.5r',
+        borderRadius: 'sm',
+        _focusVisible: { outlineOffset: '2px' },
+      },
+    },
+    // No orientation-pure tab styles exist — every orientation effect
+    // crosses with the variant — so these values stay empty and compounds
+    // below carry the orientation predicates.
+    orientation: {
+      horizontal: {},
+      vertical: {},
+    },
+    selected: {
+      selected: {},
+      unselected: { color: 'design.text.light' },
+    },
+    disabled: {
+      disabled: { cursor: 'not-allowed', opacity: 0.5 },
+      enabled: { cursor: 'pointer', opacity: 1 },
+    },
+  },
+  compoundVariants: [
+    // Line padding + overlap pull (orientation-crossed).
+    {
+      variant: 'line',
+      orientation: 'horizontal',
+      css: { px: '2r', pt: '2.5r', pb: '3.5r', marginBottom: '-1px' },
+    },
+    {
+      variant: 'line',
+      orientation: 'vertical',
+      css: { px: '3r', pt: '2r', pb: '2r', marginRight: '-1px' },
+    },
+    // Line indicator (orientation × selection crossed).
+    {
+      variant: 'line',
+      orientation: 'horizontal',
+      selected: 'selected',
+      css: { borderBottom: '3px solid' },
+    },
+    {
+      variant: 'line',
+      orientation: 'horizontal',
+      selected: 'unselected',
+      css: { borderBottom: '3px solid transparent' },
+    },
+    {
+      variant: 'line',
+      orientation: 'vertical',
+      selected: 'selected',
+      css: { borderRight: '3px solid' },
+    },
+    {
+      variant: 'line',
+      orientation: 'vertical',
+      selected: 'unselected',
+      css: { borderRight: '3px solid transparent' },
+    },
+    // Selected color/weight (variant-crossed).
+    {
+      variant: 'line',
+      selected: 'selected',
+      css: {
+        borderColor: 'ui.focus.ring',
+        color: 'design.text.base',
+        textShadow: '0 0 0.4px currentColor',
+      },
+    },
+    {
+      variant: 'pill',
+      selected: 'selected',
+      css: {
+        bg: 'gray.200',
+        color: 'ui.button.foreground',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+      },
+    },
+    // Idle hover (variant × unselected × enabled crossed).
+    {
+      variant: 'line',
+      selected: 'unselected',
+      disabled: 'enabled',
+      css: {
+        _hover: { color: 'design.text.base', borderColor: 'ui.field.border' },
+      },
+    },
+    {
+      variant: 'pill',
+      selected: 'unselected',
+      disabled: 'enabled',
+      css: {
+        _hover: { color: 'design.text.base', bg: 'rgba(255,255,255,0.04)' },
+      },
+    },
+  ],
+})
 
 interface TabsTabEntry {
   id: string
@@ -32,7 +218,7 @@ interface TabsContextValue {
   setValue: (value: string) => void
   orientation: TabsOrientation
   activation: TabsActivation
-  variant: TabsVariant
+  variant: TabsVariantProp
   baseId: string
   rovingValue: string
   setRovingValue: (value: string) => void
@@ -452,7 +638,7 @@ export function Tabs({
 }
 
 export type TabsListProps = PrimitiveProps<'div'> & {
-  variant?: TabsVariant
+  variant?: TabsVariantProp
 }
 
 export function TabsList({
@@ -534,11 +720,13 @@ export function TabsList({
     }
   }
 
-  // Variant chrome stays kernel-inline (FEATURES #1): the collector
-  // only reliably harvests inline JSX literals on primitives — Book-side
-  // recipe consts flip in/out across syncs (proven 2026-09-26) — so the
-  // pill look has no other collectible home and `variant` stays.
-  const isLine = variant === 'line'
+  // Variant chrome resolves through the system recipe: the call takes the
+  // kernel union, and unknown author names match no table axis at runtime,
+  // so they resolve to base + axis classes with no built-in paint.
+  const recipeClasses = tabsListRecipe({
+    variant: variant as TabsVariant,
+    orientation,
+  })
 
   return (
     <Div
@@ -548,23 +736,10 @@ export function TabsList({
       data-variant={variant}
       data-reference-tabs-list=""
       onKeyDown={handleKeyDown}
-      display={isLine ? 'flex' : 'inline-flex'}
-      flexDirection={orientation === 'vertical' ? 'column' : 'row'}
-      gap={isLine ? (orientation === 'horizontal' ? '4r' : '1r') : '1r'}
-      borderBottomWidth={isLine && orientation === 'horizontal' ? '1px' : undefined}
-      borderBottomStyle={isLine && orientation === 'horizontal' ? 'solid' : undefined}
-      borderBottomColor={isLine && orientation === 'horizontal' ? 'ui.table.border' : undefined}
-      borderRightWidth={isLine && orientation === 'vertical' ? '1px' : undefined}
-      borderRightStyle={isLine && orientation === 'vertical' ? 'solid' : undefined}
-      borderRightColor={isLine && orientation === 'vertical' ? 'ui.table.border' : undefined}
-      bg={isLine ? 'transparent' : 'ui.tab.track.background'}
-      p={isLine ? '0' : '1r'}
-      borderRadius={isLine ? undefined : 'md'}
-      position="relative"
-      className={className}
+      className={className ? `${recipeClasses} ${className}` : recipeClasses}
       style={{
-        borderBottomColor: isLine && orientation === 'horizontal' ? 'var(--colors-ui-table-border)' : undefined,
-        borderRightColor: isLine && orientation === 'vertical' ? 'var(--colors-ui-table-border)' : undefined,
+        borderBottomColor: variant === 'line' && orientation === 'horizontal' ? 'var(--colors-ui-table-border)' : undefined,
+        borderRightColor: variant === 'line' && orientation === 'vertical' ? 'var(--colors-ui-table-border)' : undefined,
         ...style,
       }}
       {...props}
@@ -576,7 +751,7 @@ export function TabsList({
 
 export type TabProps = Omit<PrimitiveProps<'button'>, 'value'> & {
   value: string
-  variant?: TabsVariant
+  variant?: TabsVariantProp
 }
 
 export function Tab({
@@ -647,9 +822,17 @@ export function Tab({
     }
   }
 
-  const isLine = variant === 'line'
   const isRovingStop =
     !!context && !isDisabled && context.rovingValue === value
+
+  // Variant chrome resolves through the system recipe (same unknown-name
+  // rule as the list: base + axis classes, no built-in paint).
+  const recipeClasses = tabsTabRecipe({
+    variant: variant as TabsVariant,
+    orientation,
+    selected: isSelected ? 'selected' : 'unselected',
+    disabled: isDisabled ? 'disabled' : 'enabled',
+  })
 
   return (
     <Button
@@ -667,63 +850,7 @@ export function Tab({
       disabled={isDisabled}
       onClick={handleClick}
       onFocus={handleFocus}
-      h={isLine ? 'auto' : undefined}
-      px={isLine ? (orientation === 'vertical' ? '3r' : '2r') : '3r'}
-      pt={isLine ? (orientation === 'horizontal' ? '2.5r' : '2r') : '1.5r'}
-      pb={isLine ? (orientation === 'horizontal' ? '3.5r' : '2r') : '1.5r'}
-      border="none"
-      borderBottom={
-        isLine && orientation === 'horizontal'
-          ? isSelected
-            ? '3px solid'
-            : '3px solid transparent'
-          : undefined
-      }
-      borderRight={
-        isLine && orientation === 'vertical'
-          ? isSelected
-            ? '3px solid'
-            : '3px solid transparent'
-          : undefined
-      }
-      borderColor={isLine && isSelected ? 'ui.focus.ring' : 'transparent'}
-      marginBottom={isLine && orientation === 'horizontal' ? '-1px' : undefined}
-      marginRight={isLine && orientation === 'vertical' ? '-1px' : undefined}
-      borderRadius={isLine ? '0' : 'sm'}
-      cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      bg={
-        isLine
-          ? 'transparent'
-          : isSelected
-          ? 'gray.200'
-          : 'transparent'
-      }
-      color={
-        isSelected
-          ? isLine
-            ? 'design.text.base'
-            : 'ui.button.foreground'
-          : 'design.text.light'
-      }
-      fontWeight="500"
-      textShadow={isLine && isSelected ? '0 0 0.4px currentColor' : undefined}
-      fontSize="3.5r"
-      boxShadow={!isLine && isSelected ? '0 1px 3px rgba(0,0,0,0.12)' : 'none'}
-      opacity={isDisabled ? 0.5 : 1}
-      transition="color 150ms ease, border-color 150ms ease, background-color 150ms ease"
-      _hover={
-        !isSelected && !isDisabled
-          ? isLine
-            ? { color: 'design.text.base', borderColor: 'ui.field.border' }
-            : { color: 'design.text.base', bg: 'rgba(255,255,255,0.04)' }
-          : undefined
-      }
-      _focusVisible={{
-        outline: '2px solid',
-        outlineColor: 'ui.focus.ring',
-        outlineOffset: isLine ? '-2px' : '2px',
-      }}
-      className={className}
+      className={className ? `${recipeClasses} ${className}` : recipeClasses}
       style={style}
       {...props}
     >
