@@ -627,7 +627,10 @@ export type NumberFieldStepperName =
   | { 'aria-label'?: string; 'aria-labelledby': string }
 
 export type NumberFieldIncrementProps = Omit<PrimitiveProps<'button'>, 'aria-label' | 'aria-labelledby'> &
-  NumberFieldStepperName
+  NumberFieldStepperName & {
+    /** Managed by the press-and-hold session machine; any authored value is stripped. */
+    'data-pressed'?: string
+  }
 
 // Dev-only diagnostic writer (Combobox/Splitter globalProcess pattern:
 // the package declares no node types, so process comes via globalThis).
@@ -821,7 +824,10 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
 )
 
 export type NumberFieldDecrementProps = Omit<PrimitiveProps<'button'>, 'aria-label' | 'aria-labelledby'> &
-  NumberFieldStepperName
+  NumberFieldStepperName & {
+    /** Managed by the press-and-hold session machine; any authored value is stripped. */
+    'data-pressed'?: string
+  }
 
 export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFieldDecrementProps>(
   function NumberFieldDecrement(
