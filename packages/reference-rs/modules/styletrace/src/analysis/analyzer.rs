@@ -69,7 +69,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
     /// Record one traced export's owned props under its export name.
     /// Empty sets stay out: untraced and own-nothing hosts both mean
     /// no shadow, so the map carries only real shadows.
-    fn record_owned(&mut self, export_name: &str, owned: BTreeSet<String>) {
+    pub(super) fn record_owned(&mut self, export_name: &str, owned: BTreeSet<String>) {
         if owned.is_empty() {
             return;
         }
@@ -116,6 +116,21 @@ impl<'s> StyleTraceAnalyzer<'s> {
             }
         }
 
+        self.collect_export_all_bindings(module_path, &module, &rel_module, bindings)?;
+        self.collect_member_aliases(module_path, &module, &rel_module, bindings)?;
+        self.collect_reexported_aliases(module_path, &module, &rel_module, bindings)?;
+        Ok(())
+    }
+
+    /// Re-emit each export-star target's traced names under this module.
+    /// Unresolvable and unloadable targets contribute nothing.
+    fn collect_export_all_bindings(
+        &mut self,
+        module_path: &Path,
+        module: &TraceModule,
+        rel_module: &str,
+        bindings: &mut BTreeSet<TracedBinding>,
+    ) -> Result<(), StyleTraceError> {
         for source in &module.export_all_sources {
             let Some(target) =
                 self.resolver.resolve_imported_module(module_path, source, &self.sync_root)?
@@ -128,10 +143,80 @@ impl<'s> StyleTraceAnalyzer<'s> {
             };
             for export_name in target_module.exports.keys() {
                 if let Some(owned) = self.export_is_traced(&target, export_name, &mut Vec::new())? {
-                    bindings.insert(TracedBinding::new(&rel_module, export_name));
+                    bindings.insert(TracedBinding::new(rel_module, export_name));
                     self.record_owned(export_name, owned);
                 }
             }
+            let walk = super::aliases::WalkModule {
+                path: &target,
+                module: &target_module,
+                rel: rel_module,
+                aliases: &target_module.member_aliases,
+            };
+            super::aliases::collect_alias_bindings(self, &walk, bindings)?;
+        }
+        Ok(())
+    }
+
+    /// Resolve one module's compound-member aliases (`Tabs.Panel`) into
+    /// dotted bindings. One step of the module walk, beside the exports.
+    fn collect_member_aliases(
+        &mut self,
+        module_path: &Path,
+        module: &TraceModule,
+        rel_module: &str,
+        bindings: &mut BTreeSet<TracedBinding>,
+    ) -> Result<(), StyleTraceError> {
+        let walk = super::aliases::WalkModule {
+            path: module_path,
+            module,
+            rel: rel_module,
+            aliases: &module.member_aliases,
+        };
+        super::aliases::collect_alias_bindings(self, &walk, bindings)
+    }
+
+    /// Re-emit a re-exported namespace's aliases under the barrel's name.
+    /// `export { Tabs }` (direct or via a local import) carries `Tabs.*`;
+    /// a rename (`as Accordion`) remaps the hosts. One level, like the
+    /// export-star walk; unresolvable targets contribute nothing.
+    fn collect_reexported_aliases(
+        &mut self,
+        module_path: &Path,
+        module: &TraceModule,
+        rel_module: &str,
+        bindings: &mut BTreeSet<TracedBinding>,
+    ) -> Result<(), StyleTraceError> {
+        for (export_name, target) in &module.exports {
+            let ExportTarget::Imported {
+                source,
+                imported_name,
+            } = target
+            else {
+                continue;
+            };
+            let Some(resolved) =
+                self.resolver
+                    .resolve_imported_module(module_path, source, &self.sync_root)?
+            else {
+                continue;
+            };
+            self.ensure_module_loaded(&resolved)?;
+            let Some(target_module) = self.modules.get(&resolved).cloned() else {
+                continue;
+            };
+            let remapped =
+                super::aliases::remapped_aliases(&target_module, imported_name, export_name);
+            if remapped.is_empty() {
+                continue;
+            }
+            let walk = super::aliases::WalkModule {
+                path: &resolved,
+                module: &target_module,
+                rel: rel_module,
+                aliases: &remapped,
+            };
+            super::aliases::collect_alias_bindings(self, &walk, bindings)?;
         }
         Ok(())
     }
@@ -196,7 +281,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
         Ok(result)
     }
 
-    fn component_is_traced(
+    pub(super) fn component_is_traced(
         &mut self,
         module_path: &Path,
         component_name: &str,
@@ -335,7 +420,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
         Ok(result)
     }
 
-    fn import_target_is_traced(
+    pub(super) fn import_target_is_traced(
         &mut self,
         module_path: &Path,
         source: &str,

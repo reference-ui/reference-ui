@@ -217,7 +217,7 @@ fn expression_is_props_identifier(expression: &Expression<'_>, props_name: &str)
     )
 }
 
-fn unwrap_transparent_expression<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+pub(super) fn unwrap_transparent_expression<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
     match expression {
         Expression::ParenthesizedExpression(parenthesized) => {
             unwrap_transparent_expression(&parenthesized.expression)

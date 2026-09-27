@@ -4,6 +4,7 @@
 
 pub mod component;
 pub mod context;
+pub mod member_alias;
 pub mod pipeline;
 pub mod types;
 
@@ -22,7 +23,8 @@ use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
-    ExportTarget, FactoryTarget, TraceComponent, TraceFactory, TraceImport, TraceModule,
+    ExportTarget, FactoryTarget, MemberAlias, TraceComponent, TraceFactory, TraceImport,
+    TraceModule,
 };
 use crate::analysis::surface::{StyleSurface, TraceSources};
 use crate::analysis::util::{module_export_name, module_source_literal};
@@ -40,6 +42,8 @@ pub struct ParseState {
     pub factories: FxHashMap<String, TraceFactory>,
     pub exports: HashMap<String, ExportTarget>,
     pub export_all_sources: Vec<String>,
+    pub member_aliases: Vec<MemberAlias>,
+    pub identifier_aliases: FxHashMap<String, String>,
 }
 
 impl Default for ParseState {
@@ -50,6 +54,8 @@ impl Default for ParseState {
             factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
+            member_aliases: Vec::new(),
+            identifier_aliases: FxHashMap::default(),
         }
     }
 }
@@ -120,6 +126,9 @@ pub fn fold_trace_module(
         factories: state.factories,
         exports: state.exports,
         export_all_sources: state.export_all_sources,
+        imports,
+        member_aliases: state.member_aliases,
+        identifier_aliases: state.identifier_aliases,
     })
 }
 
@@ -204,9 +213,15 @@ fn collect_statement(
             collect_variable_symbols(
                 declaration.declarations.iter(),
                 ctx,
-                &mut state.components,
-                &mut state.component_factories,
+                SymbolTargets {
+                    components: &mut state.components,
+                    component_factories: &mut state.component_factories,
+                    identifier_aliases: &mut state.identifier_aliases,
+                },
             )?;
+        }
+        Statement::ExpressionStatement(expression) => {
+            member_alias::collect_member_alias(expression, &mut state.member_aliases);
         }
         Statement::ExportNamedDeclaration(export_decl) => {
             collect_export_named_declaration(export_decl, ctx, state)?;
@@ -371,8 +386,11 @@ fn collect_export_named_declaration_body(
             collect_variable_symbols(
                 declaration.declarations.iter(),
                 ctx,
-                &mut state.components,
-                &mut state.component_factories,
+                SymbolTargets {
+                    components: &mut state.components,
+                    component_factories: &mut state.component_factories,
+                    identifier_aliases: &mut state.identifier_aliases,
+                },
             )?;
             for declarator in &declaration.declarations {
                 let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
@@ -394,11 +412,18 @@ fn collect_export_named_declaration_body(
     Ok(())
 }
 
+/// The symbol maps one declarator pass writes into: parsed components,
+/// factory targets, and identifier links for the alias walk.
+pub struct SymbolTargets<'a> {
+    pub components: &'a mut FxHashMap<String, TraceComponent>,
+    pub component_factories: &'a mut FxHashMap<String, FactoryTarget>,
+    pub identifier_aliases: &'a mut FxHashMap<String, String>,
+}
+
 pub fn collect_variable_symbols<'a, I>(
     declarators: I,
     ctx: &ParserContext,
-    components: &mut FxHashMap<String, TraceComponent>,
-    component_factories: &mut FxHashMap<String, FactoryTarget>,
+    targets: SymbolTargets<'_>,
 ) -> Result<(), StyleTraceError>
 where
     I: IntoIterator<Item = &'a oxc_ast::ast::VariableDeclarator<'a>>,
@@ -413,12 +438,20 @@ where
         if let Some(component) =
             component_from_expression(&identifier.name.to_string(), init, ctx, BTreeSet::new())?
         {
-            components.insert(identifier.name.to_string(), component);
+            targets.components.insert(identifier.name.to_string(), component);
             continue;
         }
         if let Some(factory_target) = factory_target_from_expression(init, ctx.imports) {
-            component_factories.insert(identifier.name.to_string(), factory_target);
+            targets
+                .component_factories
+                .insert(identifier.name.to_string(), factory_target);
+            continue;
         }
+        member_alias::collect_identifier_alias(
+            identifier.name.as_str(),
+            init,
+            &mut *targets.identifier_aliases,
+        );
     }
     Ok(())
 }

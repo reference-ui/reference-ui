@@ -3,6 +3,7 @@
 //! Takes directory paths and file patterns to discover and process TSX files.
 //! Emits the aggregated analysis results detailing style propagation through component hierarchies.
 
+mod aliases;
 mod analyzer;
 mod model;
 mod module_resolution;

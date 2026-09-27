@@ -67,8 +67,11 @@ pub fn factory_from_function_declaration(
             })
             .flatten(),
         ctx,
-        &mut local_components,
-        &mut FxHashMap::default(),
+        super::SymbolTargets {
+            components: &mut local_components,
+            component_factories: &mut FxHashMap::default(),
+            identifier_aliases: &mut FxHashMap::default(),
+        },
     )?;
 
     for statement in &body.statements {

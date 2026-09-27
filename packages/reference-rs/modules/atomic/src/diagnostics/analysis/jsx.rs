@@ -85,10 +85,17 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
 
     /// True when this tag is a StyleProps host: a file-local Reference
     /// import, a traced name, or a configured name — never shadowed.
-    /// Member tags match concatenated hosts, the discovery spelling.
+    /// Member tags match concatenated hosts, the discovery spelling. A
+    /// member tag resolves through its root, so a locally bound root
+    /// rebinds every use and gates it, mirroring the extract gate.
     fn allows_tag(&self, tag: &str) -> bool {
         if is_shadowed(&self.shadows, tag) {
             return false;
+        }
+        if let Some((root, _)) = tag.split_once('.') {
+            if is_shadowed(&self.shadows, root) {
+                return false;
+            }
         }
         if self.bindings.jsx.contains(tag) || self.hosts.contains(tag) {
             return true;

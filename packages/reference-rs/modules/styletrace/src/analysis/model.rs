@@ -32,6 +32,9 @@ pub struct TraceModule {
     pub(super) factories: FxHashMap<String, TraceFactory>,
     pub(super) exports: HashMap<String, ExportTarget>,
     pub(super) export_all_sources: Vec<String>,
+    pub(super) imports: FxHashMap<String, TraceImport>,
+    pub(super) member_aliases: Vec<MemberAlias>,
+    pub(super) identifier_aliases: FxHashMap<String, String>,
 }
 
 impl TraceModule {
@@ -44,7 +47,26 @@ impl TraceModule {
             factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
+            imports: FxHashMap::default(),
+            member_aliases: Vec::new(),
+            identifier_aliases: FxHashMap::default(),
         }
+    }
+}
+
+/// One compound-member assignment (`Tabs.Panel = TabPanel`): the dotted
+/// use-site spelling (`namespace.prop`) for a traced wrapper `target`.
+#[derive(Clone)]
+pub(super) struct MemberAlias {
+    pub(super) namespace: String,
+    pub(super) prop: String,
+    pub(super) target: String,
+}
+
+impl MemberAlias {
+    /// The dotted host the consumer spells (`Tabs.Panel`).
+    pub(super) fn host(&self) -> String {
+        format!("{}.{}", self.namespace, self.prop)
     }
 }
 
