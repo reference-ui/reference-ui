@@ -1,7 +1,7 @@
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('NumberField CT', () => {
-  test('renders spinbutton, steppers, and increments/decrements via keyboard and buttons', async ({
+  test('renders textbox, steppers, and increments/decrements via keyboard and buttons', async ({
     mount,
     page,
   }) => {
@@ -15,8 +15,16 @@ test.describe('NumberField CT', () => {
     const root = page.getByTestId('number-field-fixture-root')
     const field = page.getByTestId('number-field-root')
 
-    await expect(input).toHaveAttribute('role', 'spinbutton')
-    await expect(input).toHaveAttribute('aria-valuenow', '42')
+    // B-26 / PATCHES §8: plain textbox semantics, never spinbutton or
+    // numeric aria-value*.
+    const exposure = await input.evaluate(el => ({
+      role: el.getAttribute('role'),
+      now: el.getAttribute('aria-valuenow'),
+      min: el.getAttribute('aria-valuemin'),
+      max: el.getAttribute('aria-valuemax'),
+      text: el.getAttribute('aria-valuetext'),
+    }))
+    expect(exposure).toEqual({ role: null, now: null, min: null, max: null, text: null })
     await expect(input).toHaveValue('42')
     await expect(display).toHaveText('Numeric Value: 42')
     await page.waitForTimeout(300)
@@ -476,7 +484,7 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('0.3')
   })
 
-  test('NF-EDIT-04: Clearing requests null as a live candidate', async ({
+  test('NF-EDIT-04: Clearing requests null at commit, never mid-keystroke', async ({
     mount,
     page,
   }) => {
@@ -485,9 +493,37 @@ test.describe('NumberField CT', () => {
     const input = page.getByTestId('number-field-input')
     const display = page.getByTestId('number-field-value-display')
 
+    // B-19: the cleared text sits in the draft; the value holds until commit.
     await input.fill('')
     await expect(input).toHaveValue('')
+    await expect(input).toHaveAttribute('data-editing', '')
+    await expect(display).toHaveText('Numeric Value: 42')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('')
     await expect(display).toHaveText('Numeric Value: None')
+  })
+
+  test('B-19: Keystroke-typing a bounded decimal publishes once at commit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/BoundedDecimalFixture')
+
+    const input = page.getByTestId('bounded-decimal-input')
+    const display = page.getByTestId('bounded-decimal-display')
+    const log = page.getByTestId('bounded-decimal-log')
+
+    await input.click()
+    // True per-keystroke typing into the empty bounded (min 1, max 10)
+    // field: the "." must survive instead of clamping the run to 10.
+    await input.pressSequentially('2.5', { delay: 20 })
+    await expect(input).toHaveValue('2.5')
+    await expect(display).toHaveText('Decimal Value: None')
+    await expect(log).toHaveText('requests: 0')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('2.5')
+    await expect(display).toHaveText('Decimal Value: 2.5')
+    await expect(log).toHaveText('requests: 1')
   })
 
   test('NF-EDIT-19: Focused Input leaves wheel behavior entirely native inside a scrollable ancestor', async ({
@@ -546,6 +582,7 @@ test.describe('NumberField CT', () => {
         selectionBefore,
         selectionAfter: [el.selectionStart, el.selectionEnd],
         now: el.getAttribute('aria-valuenow'),
+        editing: el.getAttribute('data-editing'),
       }
       el.removeEventListener('wheel', onWheel)
       spacer.remove()
@@ -564,7 +601,8 @@ test.describe('NumberField CT', () => {
     // Value, callback echo, text, selection, managed data unchanged.
     expect(result.text).toBe('42')
     expect(result.selectionAfter).toEqual(result.selectionBefore)
-    expect(result.now).toBe('42')
+    expect(result.now).toBeNull()
+    expect(result.editing).toBeNull()
     await expect(input).toHaveValue('42')
     await expect(display).toHaveText('Numeric Value: 42')
   })

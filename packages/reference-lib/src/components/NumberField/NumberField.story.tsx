@@ -123,6 +123,45 @@ export const NamedStepperFixture = () => {
   )
 }
 
+// B-19: the exact playtest repro — empty field, min 1, max 10 — with a
+// request counter proving commit happens once, never mid-keystroke.
+export const BoundedDecimalFixture = () => {
+  const [value, setValue] = React.useState<number | null>(null)
+  const [requests, setRequests] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <Div style={{ margin: '16px 0', width: 220 }}>
+          <NumberField
+            data-testid="bounded-decimal-field"
+            value={value}
+            locale="en-US"
+            onChange={v => {
+              setRequests(c => c + 1)
+              setValue(v)
+            }}
+            min={1}
+            max={10}
+            step={1}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input data-testid="bounded-decimal-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField>
+        </Div>
+
+        <Span fontSize="3r" color="design.text.light" data-testid="bounded-decimal-display">
+          Decimal Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="bounded-decimal-log">
+          requests: {requests}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 // PATCHES §6 (NF-DOM-09): type-bypassed unnamed steppers — absent naming
 // on Decrement, an unresolving labelledby on Increment.
 const unnamedDecProps = {} as unknown as NumberFieldDecrementProps

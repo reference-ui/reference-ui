@@ -241,8 +241,8 @@ describe('NumberField step math', () => {
 
 describe('NumberField managed authority', () => {
   it('NF-TYPE-03 / NF-DOM-06: Managed part authority should defeat every behavior-owned conflicting cast', async () => {
-    // Landing re-target: this engine keeps spinbutton (frozen visuals) and
-    // uncontrolled mode, so the managed set is adapted — but conflicts lose.
+    // B-26 / PATCHES §8: Input keeps plain textbox semantics — a forged
+    // role or numeric aria-value* loses to managed absence.
     const { container, root } = mount()
     await React.act(async () => {
       root.render(
@@ -253,6 +253,8 @@ describe('NumberField managed authority', () => {
             role="button"
             value="999"
             aria-valuenow={5}
+            aria-valuemin={0}
+            aria-valuemax={100}
             inputMode="numeric"
             disabled={false}
           />
@@ -265,9 +267,12 @@ describe('NumberField managed authority', () => {
 
     const input = container.querySelector('input') as HTMLInputElement
     expect(input.getAttribute('type')).toBe('text')
-    expect(input.getAttribute('role')).toBe('spinbutton')
+    expect(input.getAttribute('role')).toBeNull()
     expect(input.value).toBe('42')
-    expect(input.getAttribute('aria-valuenow')).toBe('42')
+    expect(input.getAttribute('aria-valuenow')).toBeNull()
+    expect(input.getAttribute('aria-valuemin')).toBeNull()
+    expect(input.getAttribute('aria-valuemax')).toBeNull()
+    expect(input.getAttribute('aria-valuetext')).toBeNull()
     expect(input.getAttribute('inputmode')).toBe('decimal')
 
     for (const btn of Array.from(container.querySelectorAll('button'))) {
@@ -281,6 +286,7 @@ describe('NumberField managed authority', () => {
     // Regression: user onChange used to clobber the internal handler via
     // last-spread, silently killing typing.
     // FEATURES #1: controlled — the App echoes requests into value.
+    // B-19: typing writes the draft; the managed request lands at commit.
     const userEdits: string[] = []
     const managed: Array<number | null> = []
     function App() {
@@ -306,11 +312,19 @@ describe('NumberField managed authority', () => {
     })
     const input = container.querySelector('input') as HTMLInputElement
     await React.act(async () => {
+      input.focus()
       setNativeValue(input, '7')
     })
     expect(userEdits).toEqual(['7'])
+    expect(managed).toEqual([])
+    expect(input.value).toBe('7')
+    expect(input.getAttribute('data-editing')).toBe('')
+    await React.act(async () => {
+      input.blur()
+    })
     expect(managed).toEqual([7])
     expect(input.value).toBe('7')
+    expect(input.getAttribute('data-editing')).toBeNull()
     await cleanup(container, root)
   })
 
@@ -1350,7 +1364,8 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
   })
 
   it('Text edits that change nothing should emit nothing', async () => {
-    // Retyping the current value and clearing an empty field are no-ops.
+    // Retyping the current value and clearing an empty field are no-ops —
+    // judged at commit, never mid-keystroke (B-19).
     const seen: Array<number | null> = []
     const { container, root } = mount()
     await React.act(async () => {
@@ -1364,12 +1379,22 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     })
     const input = container.querySelector('input') as HTMLInputElement
     await React.act(async () => {
+      input.focus()
       setNativeValue(input, '5')
     })
     expect(seen).toEqual([])
-    // Clearing a non-empty field still requests null.
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('5')
+    // Clearing a non-empty field still requests null at commit.
     await React.act(async () => {
       setNativeValue(input, '')
+    })
+    expect(seen).toEqual([])
+    await React.act(async () => {
+      input.blur()
     })
     expect(seen).toEqual([null])
     await cleanup(container, root)
@@ -1388,20 +1413,240 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     const inputNull = n.container.querySelector('input') as HTMLInputElement
     // Clearing an already-empty field emits nothing.
     await React.act(async () => {
+      inputNull.focus()
       setNativeValue(inputNull, '')
     })
-    expect(seenNull).toEqual([])
-    // Typing a real value still requests it.
     await React.act(async () => {
+      inputNull.blur()
+    })
+    expect(seenNull).toEqual([])
+    // Typing a real value still requests it — once, at commit.
+    await React.act(async () => {
+      inputNull.focus()
       setNativeValue(inputNull, '8')
+    })
+    expect(seenNull).toEqual([])
+    await React.act(async () => {
+      pressKey(inputNull, 'Enter')
     })
     expect(seenNull).toEqual([8])
     await cleanup(n.container, n.root)
   })
 })
 
+describe('NumberField dirty edit session (B-19)', () => {
+  it('Keystroke-typing a bounded decimal should publish once at commit, never mid-keystroke', async () => {
+    // B-19 repro: min=1 max=10, keystroke-type "2.5" into an empty field.
+    // Old engine: "." reformatted to "2", then "5" made "25" → clamped 10.
+    const seen: Array<number | null> = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={1}
+          max={10}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+    })
+    for (const text of ['2', '2.', '2.5']) {
+      await React.act(async () => {
+        setNativeValue(input, text)
+      })
+      expect(input.value).toBe(text)
+      expect(seen).toEqual([])
+    }
+    expect(input.getAttribute('data-editing')).toBe('')
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([2.5])
+    expect(input.value).toBe('2.5')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('Out-of-range commits should clamp once; invalid text should revert with no request', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US" min={1} max={10} onChange={v => void seen.push(v)}>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    // Clamp happens at commit, not while typing.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '25')
+    })
+    expect(input.value).toBe('25')
+    expect(seen).toEqual([])
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([10])
+    // Parent holds 5: the rejecting echo snaps the display back.
+    expect(input.value).toBe('5')
+    // Invalid text reverts silently.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, 'garbage')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([10])
+    expect(input.value).toBe('5')
+    await cleanup(container, root)
+  })
+
+  it('Step actions should use a complete dirty candidate as their base and end the session', async () => {
+    const seen: Array<number | null> = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          min={0}
+          max={100}
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    // Dirty "7" + ArrowUp steps 7 → 8 (one request, session ends).
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '7')
+    })
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([8])
+    expect(input.value).toBe('8')
+    // Dirty "20" + stepper click steps 20 → 21.
+    await React.act(async () => {
+      setNativeValue(input, '20')
+    })
+    await React.act(async () => {
+      inc.click()
+    })
+    expect(seen).toEqual([8, 21])
+    expect(input.value).toBe('21')
+    // Incomplete drafts fall back to controlled value: "-" + ArrowUp → 22.
+    await React.act(async () => {
+      setNativeValue(input, '-')
+    })
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([8, 21, 22])
+    expect(input.value).toBe('22')
+    await cleanup(container, root)
+  })
+
+  it('A prevented blur should veto commit and keep the dirty buffer', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input onBlur={e => e.preventDefault()} />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '9')
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('9')
+    expect(input.getAttribute('data-editing')).toBe('')
+    // Enter still commits the resumed session.
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([9])
+    await cleanup(container, root)
+  })
+
+  it('A programmatic value change should replace the buffer and end the session', async () => {
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US">
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '9')
+    })
+    expect(input.getAttribute('data-editing')).toBe('')
+    await React.act(async () => {
+      root.render(
+        <NumberField value={42} locale="en-US">
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField>
+      )
+    })
+    expect(input.value).toBe('42')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+})
+
 describe('NumberField environments', () => {
-  it('NF-ENV-01: Server markup should carry spinbutton semantics for hydration', () => {
+  it('NF-ENV-01: Server markup should carry textbox semantics for hydration', () => {
+    // B-26 / PATCHES §8: plain textbox, never spinbutton or numeric
+    // aria-value* — so unbounded ±Infinity sentinels never reach ARIA.
     const html = renderToString(
       <NumberField value={42} locale="en-US" min={0} max={100}>
         <NumberField.Decrement aria-label="Decrement" />
@@ -1409,10 +1654,24 @@ describe('NumberField environments', () => {
         <NumberField.Increment aria-label="Increment" />
       </NumberField>
     )
-    expect(html).toContain('role="spinbutton"')
-    expect(html).toContain('aria-valuenow="42"')
+    expect(html).not.toContain('spinbutton')
+    expect(html).not.toContain('aria-valuenow')
+    expect(html).not.toContain('aria-valuemin')
+    expect(html).not.toContain('aria-valuemax')
+    expect(html).not.toContain('aria-valuetext')
     expect(html).toContain('value="42"')
     expect(html).toContain('role="group"')
+
+    // Unbounded defaults leave no -Infinity/Infinity ARIA behind either.
+    const unboundedHtml = renderToString(
+      <NumberField value={42} locale="en-US">
+        <NumberField.Decrement aria-label="Decrement" />
+        <NumberField.Input />
+        <NumberField.Increment aria-label="Increment" />
+      </NumberField>
+    )
+    expect(unboundedHtml).not.toContain('Infinity')
+    expect(unboundedHtml).not.toContain('aria-value')
   })
 
   it('NF-ENV-05: StrictMode should not duplicate callbacks on a single step', async () => {

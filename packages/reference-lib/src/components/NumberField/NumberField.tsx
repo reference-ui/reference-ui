@@ -35,10 +35,15 @@ interface NumberFieldContextValue {
   max?: number
   step: number
   disabled: boolean
+  // B-19: transient edit buffer; null means clean (input shows formatted
+  // controlled value). Typing only writes the draft — commit boundaries
+  // (blur, Enter, step actions) publish, never mid-keystroke.
+  draft: string | null
   increment: (factor?: number) => void
   decrement: (factor?: number) => void
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  commitDraft: () => void
   inputRef: React.RefObject<HTMLInputElement | null>
   focusInput: () => void
 }
@@ -63,10 +68,12 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
     const context = React.useContext(NumberFieldContext)
     if (!context) return null
 
-    const { value, min, max, disabled, handleInputChange, handleKeyDown, inputRef } = context
+    const { value, disabled, draft, handleInputChange, handleKeyDown, commitDraft, inputRef } = context
 
     // Managed authority (NF-TYPE-03, NF-DOM-06): behavior-owned props are
-    // stripped so conflicting consumer casts cannot break the spinbutton.
+    // stripped so conflicting consumer casts cannot break the field.
+    // B-26 / SPEC: Input keeps plain textbox semantics — no role recast,
+    // no numeric aria-value* — so stripping also enforces their absence.
     // Unrelated props (readOnly, aria-invalid, aria-label, data-*) pass
     // through untouched (NF-DOM-05).
     const {
@@ -116,21 +123,27 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       }
     }
 
+    // Blur is a commit boundary: the consumer observes first and can veto
+    // the commit with preventDefault, leaving the dirty buffer intact.
+    const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      userOnBlur?.(e)
+      if (!e.defaultPrevented) {
+        commitDraft()
+      }
+    }
+
     return (
       <Input
         ref={setInputRef}
         type="text"
-        role="spinbutton"
         inputMode="decimal"
-        aria-valuenow={value !== null ? value : undefined}
-        aria-valuemin={min}
-        aria-valuemax={max}
         disabled={disabled}
-        value={value !== null ? String(value) : ''}
+        value={draft ?? (value !== null ? String(value) : '')}
+        data-editing={draft !== null ? '' : undefined}
         onChange={onChange}
         onKeyDown={onKeyDown}
         onFocus={userOnFocus}
-        onBlur={userOnBlur}
+        onBlur={onBlur}
         className={className}
         style={style}
         {...restProps}
@@ -175,9 +188,9 @@ interface StepperRepeatUserHandlers {
   onLostPointerCapture?: React.PointerEventHandler<HTMLButtonElement>
 }
 
-// Shared press-and-hold machine for both steppers (NF-STEP-02..08/10/12..15,
-// re-targeted to the live-clamp engine: steppers step the current value with
-// one request per step — there is no dirty candidate until PATCHES §1).
+// Shared press-and-hold machine for both steppers (NF-STEP-02..08/10/12..15):
+// each step calls the root action once, which commits any dirty candidate
+// as its base and ends the edit session (B-19 commit boundary).
 // No explicit pointer capture: leave must end the session (NF-STEP-07).
 function useStepperRepeat(options: {
   action: ((factor: number) => void) | undefined
@@ -786,6 +799,19 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
 
     const inputRef = React.useRef<HTMLInputElement | null>(null)
 
+    // B-19: the dirty edit session. Typing writes the draft only; the
+    // controlled value is published at commit boundaries (blur, Enter, or a
+    // handled step action) — never mid-keystroke, so bounded decimals like
+    // "2.5" survive the "." keystroke instead of clamping to the max.
+    const [draft, setDraft] = React.useState<string | null>(null)
+
+    // Any controlled-value change ends the session: commit echoes land on an
+    // already-clean draft (no-op), while unrelated programmatic changes
+    // replace the buffer with formatted controlled state.
+    React.useEffect(() => {
+      setDraft(null)
+    }, [value])
+
     const focusInput = React.useCallback(() => {
       if (inputRef.current) {
         inputRef.current.focus()
@@ -798,49 +824,69 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       }
     }, [])
 
+    // A complete dirty candidate (parseable, clamped once) is the step base;
+    // empty or incomplete drafts fall back to controlled value, never NaN.
+    const stepBase = React.useMemo(() => {
+      if (draft === null || draft.trim() === '') return null
+      const num = Number(draft)
+      if (Number.isNaN(num)) return null
+      return Math.max(min, Math.min(max, num))
+    }, [draft, min, max])
+
     const increment = React.useCallback(
       (factor = 1) => {
         if (disabled) return
-        const current = value ?? 0
+        const current = stepBase ?? value ?? 0
         const nextVal = Math.min(max, cleanFloat(current + step * factor))
-        // FEATURES #2: no change → no event (uniform, not bounds-only).
+        // Step actions are commit boundaries: the session ends even when
+        // the step itself is suppressed (FEATURES #2: no change → no event).
+        setDraft(null)
         if (nextVal === value) return
         onChange?.(nextVal)
       },
-      [value, max, step, disabled, onChange]
+      [value, max, step, stepBase, disabled, onChange]
     )
 
     const decrement = React.useCallback(
       (factor = 1) => {
         if (disabled) return
-        const current = value ?? 0
+        const current = stepBase ?? value ?? 0
         const nextVal = Math.max(min, cleanFloat(current - step * factor))
-        // FEATURES #2: no change → no event (uniform, not bounds-only).
+        // Step actions are commit boundaries: the session ends even when
+        // the step itself is suppressed (FEATURES #2: no change → no event).
+        setDraft(null)
         if (nextVal === value) return
         onChange?.(nextVal)
       },
-      [value, min, step, disabled, onChange]
+      [value, min, step, stepBase, disabled, onChange]
     )
 
-    const handleInputChange = React.useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const valStr = e.target.value
-        if (valStr.trim() === '') {
-          // FEATURES #2: clearing an already-empty field is no change.
-          if (value === null) return
-          onChange?.(null)
-          return
-        }
-        const num = Number(valStr)
-        if (!Number.isNaN(num)) {
-          const clamped = Math.max(min, Math.min(max, num))
-          // FEATURES #2: retyping the current value is no change.
-          if (clamped === value) return
-          onChange?.(clamped)
-        }
-      },
-      [value, min, max, onChange]
-    )
+    const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      // Typing never publishes: the draft holds partial input ("2.", "-",
+      // "") verbatim until a commit boundary.
+      setDraft(e.target.value)
+    }, [])
+
+    const commitDraft = React.useCallback(() => {
+      if (draft === null) return
+      const text = draft
+      // The session ends optimistically: accepted commits echo through the
+      // controlled prop, rejected ones snap back to controlled state, and
+      // invalid text reverts — all without a numeric request for no-change.
+      setDraft(null)
+      if (text.trim() === '') {
+        // FEATURES #2: clearing an already-empty field is no change.
+        if (value === null) return
+        onChange?.(null)
+        return
+      }
+      const num = Number(text)
+      if (Number.isNaN(num)) return
+      const clamped = Math.max(min, Math.min(max, num))
+      // FEATURES #2: committing the current value is no change.
+      if (clamped === value) return
+      onChange?.(clamped)
+    }, [draft, value, min, max, onChange])
 
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -861,6 +907,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
           if (min === -Infinity) return
           e.preventDefault()
+          setDraft(null)
           // FEATURES #2: already at the bound is no change — the key
           // stays handled (caret pinned) but emits nothing.
           if (value === min) return
@@ -869,13 +916,21 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
           if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return
           if (max === Infinity) return
           e.preventDefault()
+          setDraft(null)
           // FEATURES #2: already at the bound is no change — the key
           // stays handled (caret pinned) but emits nothing.
           if (value === max) return
           onChange?.(max)
+        } else if (e.key === 'Enter') {
+          // Enter commits the draft in place (no blur): invalid text
+          // reverts, valid text publishes once. A clean field is untouched
+          // and the key stays native for form submission.
+          if (draft !== null && !e.altKey && !e.ctrlKey && !e.metaKey) {
+            commitDraft()
+          }
         }
       },
-      [disabled, increment, decrement, value, min, max, onChange]
+      [disabled, draft, increment, decrement, commitDraft, value, min, max, onChange]
     )
 
     const contextValue = React.useMemo<NumberFieldContextValue>(
@@ -885,14 +940,29 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         max,
         step,
         disabled,
+        draft,
         increment,
         decrement,
         handleInputChange,
         handleKeyDown,
+        commitDraft,
         inputRef,
         focusInput,
       }),
-      [value, min, max, step, disabled, increment, decrement, handleInputChange, handleKeyDown, focusInput]
+      [
+        value,
+        min,
+        max,
+        step,
+        disabled,
+        draft,
+        increment,
+        decrement,
+        handleInputChange,
+        handleKeyDown,
+        commitDraft,
+        focusInput,
+      ]
     )
 
     return (
