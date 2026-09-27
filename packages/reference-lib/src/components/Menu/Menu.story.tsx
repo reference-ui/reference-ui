@@ -669,6 +669,281 @@ function ShadowMenuInner() {
   )
 }
 
+export const Choice = () => {
+  const [grid, setGrid] = React.useState(false)
+  const [guides, setGuides] = React.useState(true)
+  const [sort, setSort] = React.useState<string | null>('name')
+  const [changeLogs, setChangeLogs] = React.useState<string[]>([])
+  const [selectLogs, setSelectLogs] = React.useState<string[]>([])
+  const [openLogs, setOpenLogs] = React.useState<string[]>([])
+  const [closeLogs, setCloseLogs] = React.useState<string[]>([])
+  const [aliasLogs, setAliasLogs] = React.useState<string[]>([])
+  const [cancelAction, setCancelAction] = React.useState<string | null>(null)
+
+  const logChange = (label: string) => (next: unknown) => {
+    setChangeLogs(prev => [...prev, `${label}:${String(next)}`])
+  }
+  const logSelect = (label: string) => (event: Event) => {
+    const key = (event as KeyboardEvent).key
+    const detail = (event as MouseEvent).detail
+    setSelectLogs(prev => [...prev, `${label}:${event.type}:${key ?? detail ?? ''}`])
+  }
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
+        {/* Main choice menu: controlled toggles + sort group + plain item */}
+        <Div mb="4r">
+          <Popover onOpenChange={next => setOpenLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-choice-trigger">Open Choice</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-choice-root">
+                <Menu.CheckboxItem
+                  data-testid="choice-grid"
+                  checked={grid}
+                  onChange={next => {
+                    logChange('grid')(next)
+                    setGrid(next)
+                  }}
+                  onSelect={logSelect('grid')}
+                >
+                  Show grid
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem
+                  data-testid="choice-guides"
+                  checked={guides}
+                  onChange={next => {
+                    logChange('guides')(next)
+                    setGuides(next)
+                  }}
+                  onSelect={logSelect('guides')}
+                >
+                  Show guides
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem
+                  data-testid="choice-mixed"
+                  checked="mixed"
+                  onChange={logChange('mixed')}
+                  onSelect={logSelect('mixed')}
+                >
+                  Mixed state
+                </Menu.CheckboxItem>
+                <Menu.Separator />
+                <Menu.RadioGroup
+                  data-testid="choice-sort-group"
+                  aria-label="Sort by"
+                  value={sort}
+                  onChange={next => {
+                    logChange('sort')(next)
+                    setSort(next)
+                  }}
+                >
+                  <Menu.RadioItem
+                    data-testid="choice-sort-name"
+                    value="name"
+                    onSelect={logSelect('sort-name')}
+                  >
+                    Name
+                  </Menu.RadioItem>
+                  <Menu.RadioItem
+                    data-testid="choice-sort-date"
+                    value="date"
+                    onSelect={logSelect('sort-date')}
+                  >
+                    Date
+                  </Menu.RadioItem>
+                  <Menu.RadioItem data-testid="choice-sort-size" value="size" disabled>
+                    Size
+                  </Menu.RadioItem>
+                </Menu.RadioGroup>
+                <Menu.Separator />
+                <Menu.Item
+                  data-testid="choice-plain"
+                  onSelect={logSelect('plain')}
+                >
+                  Plain action
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        {/* Close-policy menu: explicit closeOnSelect=true choices */}
+        <Div mb="4r">
+          <Popover onOpenChange={next => setCloseLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-choice-close-trigger">Open Choice Close</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-choice-close-root">
+                <Menu.CheckboxItem
+                  data-testid="choice-close-check"
+                  checked={false}
+                  onChange={logChange('close-check')}
+                  closeOnSelect
+                >
+                  Closing check
+                </Menu.CheckboxItem>
+                <Menu.RadioGroup
+                  aria-label="Close group"
+                  value="a"
+                  onChange={logChange('close-radio')}
+                >
+                  <Menu.RadioItem data-testid="choice-close-radio" value="b" closeOnSelect>
+                    Closing radio
+                  </Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        {/* Cancel menu: native + select cancellation */}
+        <Div mb="4r">
+          <Popover>
+            <EntryTrigger data-testid="btn-choice-cancel-trigger">Open Choice Cancel</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-choice-cancel-root">
+                <Menu.CheckboxItem
+                  data-testid="choice-cancel-native"
+                  checked={false}
+                  onClick={e => e.preventDefault()}
+                  onChange={() => setCancelAction('NativeCancel')}
+                >
+                  Native Cancel
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem
+                  data-testid="choice-cancel-select"
+                  checked={false}
+                  onSelect={e => {
+                    e.preventDefault()
+                    setCancelAction('SelectCancel')
+                  }}
+                  onChange={() => setCancelAction('SelectChange')}
+                >
+                  Select Cancel
+                </Menu.CheckboxItem>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        {/* Alias menu: W-28 onCheckedChange/onValueChange naming */}
+        <Div mb="4r">
+          <Popover>
+            <EntryTrigger data-testid="btn-choice-alias-trigger">Open Choice Alias</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-choice-alias-root">
+                <Menu.CheckboxItem
+                  data-testid="choice-alias-check"
+                  checked={false}
+                  onCheckedChange={next => setAliasLogs(prev => [...prev, `alias-check:${next}`])}
+                >
+                  Alias check
+                </Menu.CheckboxItem>
+                <Menu.RadioGroup
+                  aria-label="Alias group"
+                  value="a"
+                  onValueChange={next => setAliasLogs(prev => [...prev, `alias-radio:${next}`])}
+                >
+                  <Menu.RadioItem data-testid="choice-alias-radio" value="b">
+                    Alias radio
+                  </Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        <Span data-testid="menu-choice-change-logs" fontSize="3.5r" color="design.text.base">
+          Choice Changes: {changeLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-choice-select-logs" fontSize="3.5r" color="design.text.base">
+          Choice Selects: {selectLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-choice-open-logs" fontSize="3.5r" color="design.text.base">
+          Choice Open Logs: {openLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-choice-close-logs" fontSize="3.5r" color="design.text.base">
+          Choice Close Logs: {closeLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-choice-alias-logs" fontSize="3.5r" color="design.text.base">
+          Choice Alias Logs: {aliasLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-choice-cancel-display" fontSize="3.5r" color="design.text.base">
+          Choice Cancel: {cancelAction ?? 'None'}
+        </Span>
+        <Span data-testid="menu-choice-state" fontSize="3.5r" color="design.text.base">
+          Choice State: grid={String(grid)},guides={String(guides)},sort={String(sort)}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const Adjacent = () => {
+  const [fileLogs, setFileLogs] = React.useState<string[]>([])
+  const [editLogs, setEditLogs] = React.useState<string[]>([])
+  const [action, setAction] = React.useState<string | null>(null)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="menu-fixture-root">
+        {/* Two adjacent menus, no Menubar: baseline outside-dismiss must
+            compose — pressing Edit while File is open closes File. */}
+        <Div mb="4r" display="flex" gap="2r">
+          <Popover onOpenChange={next => setFileLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-file-trigger">File</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-file-root">
+                <Menu.Item
+                  data-testid="menu-file-new"
+                  onSelect={() => setAction('New')}
+                >
+                  New
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-file-open"
+                  onSelect={() => setAction('Open')}
+                >
+                  Open
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+          <Popover onOpenChange={next => setEditLogs(prev => [...prev, String(next)])}>
+            <EntryTrigger data-testid="btn-edit-trigger">Edit</EntryTrigger>
+            <Popover.Content placement="bottom-start">
+              <Menu data-testid="menu-edit-root">
+                <Menu.Item
+                  data-testid="menu-edit-cut"
+                  onSelect={() => setAction('Cut')}
+                >
+                  Cut
+                </Menu.Item>
+                <Menu.Item
+                  data-testid="menu-edit-copy"
+                  onSelect={() => setAction('Copy')}
+                >
+                  Copy
+                </Menu.Item>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        </Div>
+
+        <Span data-testid="menu-adjacent-action" fontSize="3.5r" color="design.text.base">
+          Adjacent Action: {action ?? 'None'}
+        </Span>
+        <Span data-testid="menu-adjacent-file-logs" fontSize="3.5r" color="design.text.base">
+          File Logs: {fileLogs.join(',')}
+        </Span>
+        <Span data-testid="menu-adjacent-edit-logs" fontSize="3.5r" color="design.text.base">
+          Edit Logs: {editLogs.join(',')}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 export const Shadow = () => {
   const hostRef = React.useRef<HTMLDivElement | null>(null)
   const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)

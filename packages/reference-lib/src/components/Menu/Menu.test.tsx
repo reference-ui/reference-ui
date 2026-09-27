@@ -621,4 +621,161 @@ describe('Menu component keyboard navigation and triggers', () => {
     const item1 = document.getElementById('item-1')!
     expect(document.activeElement).not.toBe(item1)
   })
+
+  it('MN-DOM-B27: Menu.md Popover+root-Menu+direct-Item composition opens without crashing', async () => {
+    await React.act(async () => {
+      root.render(
+        <Popover>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="item-1">Item 1</Menu.Item>
+              <Menu.Item id="item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    const trigger = document.getElementById('trigger-btn')!
+    await React.act(async () => {
+      trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    // No RovingFocus.Root throw: the menu owns its roving set.
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(document.getElementById('item-1')?.getAttribute('role')).toBe('menuitem')
+    expect(document.getElementById('item-2')?.getAttribute('role')).toBe('menuitem')
+  })
+
+  it('MN-CHOICE-03: CheckboxItem keeps controlled checked authoritative across rejection and updates', async () => {
+    const onChange = vi.fn()
+    const renderChecked = async (checked: boolean | 'mixed') => {
+      await React.act(async () => {
+        root.render(
+          <Popover defaultOpen>
+            <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+            <Popover.Content>
+              <Menu>
+                <Menu.CheckboxItem id="choice-grid" checked={checked} onChange={onChange}>
+                  Show grid
+                </Menu.CheckboxItem>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        )
+      })
+    }
+
+    await renderChecked(false)
+    const item = document.getElementById('choice-grid')!
+    expect(item.getAttribute('role')).toBe('menuitemcheckbox')
+    expect(item.getAttribute('aria-checked')).toBe('false')
+    expect(item.getAttribute('data-state')).toBe('unchecked')
+
+    // Rejected request: parent ignores onChange, ARIA never moves.
+    await React.act(async () => {
+      item.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    })
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith(true)
+    expect(item.getAttribute('aria-checked')).toBe('false')
+
+    // Programmatic updates change ARIA without callbacks.
+    await renderChecked(true)
+    expect(document.getElementById('choice-grid')?.getAttribute('aria-checked')).toBe('true')
+    expect(document.getElementById('choice-grid')?.getAttribute('data-state')).toBe('checked')
+    expect(onChange).toHaveBeenCalledTimes(1)
+
+    await renderChecked('mixed')
+    expect(document.getElementById('choice-grid')?.getAttribute('aria-checked')).toBe('mixed')
+    expect(document.getElementById('choice-grid')?.getAttribute('data-state')).toBe('mixed')
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('MN-CHOICE-05: RadioGroup preserves controlled value through rejection, reorder, and absent values', async () => {
+    const onChange = vi.fn()
+    const renderGroup = async (value: string | null, order: string[]) => {
+      await React.act(async () => {
+        root.render(
+          <Popover defaultOpen>
+            <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+            <Popover.Content>
+              <Menu>
+                <Menu.RadioGroup aria-label="Sort by" value={value} onChange={onChange}>
+                  {order.map(v => (
+                    <Menu.RadioItem key={v} id={`sort-${v}`} value={v}>
+                      {v}
+                    </Menu.RadioItem>
+                  ))}
+                </Menu.RadioGroup>
+              </Menu>
+            </Popover.Content>
+          </Popover>
+        )
+      })
+    }
+
+    await renderGroup('name', ['name', 'date'])
+    expect(document.getElementById('sort-name')?.getAttribute('aria-checked')).toBe('true')
+    expect(document.getElementById('sort-date')?.getAttribute('aria-checked')).toBe('false')
+
+    // Rejected request keeps name checked.
+    await React.act(async () => {
+      document.getElementById('sort-date')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('date')
+    expect(document.getElementById('sort-name')?.getAttribute('aria-checked')).toBe('true')
+
+    // Reorder follows value identity without callbacks.
+    await renderGroup('name', ['date', 'name'])
+    const radios = Array.from(document.querySelectorAll('[role="menuitemradio"]'))
+    expect(radios.map(el => el.id)).toEqual(['sort-date', 'sort-name'])
+    expect(document.getElementById('sort-name')?.getAttribute('aria-checked')).toBe('true')
+    expect(onChange).toHaveBeenCalledTimes(1)
+
+    // Absent value leaves every mounted radio unchecked.
+    await renderGroup('ghost', ['date', 'name'])
+    expect(document.getElementById('sort-name')?.getAttribute('aria-checked')).toBe('false')
+    expect(document.getElementById('sort-date')?.getAttribute('aria-checked')).toBe('false')
+    expect(onChange).toHaveBeenCalledTimes(1)
+
+    // Programmatic selection checks without callbacks.
+    await renderGroup('date', ['date', 'name'])
+    expect(document.getElementById('sort-date')?.getAttribute('aria-checked')).toBe('true')
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('MN-CHOICE-06: choice activation orders native, select, state request, then dismissal', async () => {
+    const order: string[] = []
+    await React.act(async () => {
+      root.render(
+        <Popover defaultOpen onOpenChange={next => next === false && order.push('dismiss')}>
+          <EntryTrigger id="trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.CheckboxItem
+                id="choice-grid"
+                checked={false}
+                closeOnSelect
+                onClick={() => order.push('native')}
+                onSelect={() => order.push('select')}
+                onChange={next => order.push(`change:${next}`)}
+              >
+                Show grid
+              </Menu.CheckboxItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    })
+
+    await React.act(async () => {
+      document.getElementById('choice-grid')!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(order).toEqual(['native', 'select', 'change:true', 'dismiss'])
+    expect(document.getElementById('choice-grid')).toBeNull()
+  })
 })

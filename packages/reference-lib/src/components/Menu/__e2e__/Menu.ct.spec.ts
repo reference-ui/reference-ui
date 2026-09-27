@@ -1237,3 +1237,341 @@ test.describe('Menu ShadowRoot ownership (PATCHES #3)', () => {
     )
   })
 })
+
+test.describe('Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss)', () => {
+  test('MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items (B-33)', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    const content = page.getByTestId('menu-sub-root')
+    const first = page.getByTestId('menu-sub-item-new')
+    const last = page.getByTestId('menu-sub-trigger-omitted')
+    await expect(content).toBeVisible()
+    await expect(content).toBeFocused()
+
+    // ArrowDown lands on the FIRST item, never skipping to the second.
+    await page.keyboard.press('ArrowDown')
+    await expect(first).toBeFocused()
+
+    await content.focus()
+    await page.keyboard.press('End')
+    await expect(last).toBeFocused()
+
+    await content.focus()
+    await page.keyboard.press('Home')
+    await expect(first).toBeFocused()
+
+    await content.focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(last).toBeFocused()
+
+    // Nothing selected, nothing dismissed by navigation alone.
+    await expect(page.getByTestId('menu-sub-action')).toHaveText('Sub Action: None')
+    await expect(content).toBeVisible()
+  })
+
+  test('MN-FOCUS-07-sub: Submenu content moves container keys to its own edge items', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Submenu')
+    await page.getByTestId('btn-sub-trigger').click()
+    await page.getByTestId('menu-sub-trigger').focus()
+    await page.keyboard.press('ArrowRight')
+    const subContent = page.getByTestId('menu-sub-content')
+    const first = page.getByTestId('menu-sub-item-email')
+    const last = page.getByTestId('menu-sub-item-copy')
+    await expect(subContent).toBeVisible()
+
+    await subContent.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(first).toBeFocused()
+
+    await subContent.focus()
+    await page.keyboard.press('End')
+    await expect(last).toBeFocused()
+
+    await subContent.focus()
+    await page.keyboard.press('Home')
+    await expect(first).toBeFocused()
+
+    await subContent.focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(last).toBeFocused()
+
+    await expect(subContent).toBeVisible()
+    await expect(page.getByTestId('menu-sub-root')).toBeVisible()
+  })
+
+  test('MN-CLOSE-11: Adjacent trigger press closes the open menu before opening its own', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Adjacent')
+    const fileTrigger = page.getByTestId('btn-file-trigger')
+    const editTrigger = page.getByTestId('btn-edit-trigger')
+    const fileRoot = page.getByTestId('menu-file-root')
+    const editRoot = page.getByTestId('menu-edit-root')
+
+    await fileTrigger.click()
+    await expect(fileRoot).toBeVisible()
+    await expect(editRoot).toHaveCount(0)
+
+    // Baseline dismiss, no Menubar: File closes, Edit opens, never both.
+    await editTrigger.click()
+    await expect(fileRoot).toHaveCount(0)
+    await expect(editRoot).toBeVisible()
+    await expect(page.getByTestId('menu-adjacent-file-logs')).toHaveText('File Logs: true,false')
+    await expect(page.getByTestId('menu-adjacent-edit-logs')).toHaveText('Edit Logs: true')
+
+    // Symmetric the other way.
+    await fileTrigger.click()
+    await expect(editRoot).toHaveCount(0)
+    await expect(fileRoot).toBeVisible()
+
+    // Selection still dismisses exactly its own tree.
+    await page.getByTestId('menu-file-new').click()
+    await expect(fileRoot).toHaveCount(0)
+    await expect(editRoot).toHaveCount(0)
+    await expect(page.getByTestId('menu-adjacent-action')).toHaveText('Adjacent Action: New')
+    await expect(fileTrigger).toBeFocused()
+  })
+
+  test('MN-CHOICE-01: Choice items expose exact roles, checked states, and group naming', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-trigger').click()
+    const root = page.getByTestId('menu-choice-root')
+    await expect(root).toBeVisible()
+
+    const grid = page.getByTestId('choice-grid')
+    await expect(grid).toHaveAttribute('role', 'menuitemcheckbox')
+    await expect(grid).toHaveAttribute('aria-checked', 'false')
+    await expect(grid).toHaveAttribute('data-state', 'unchecked')
+    expect(await grid.evaluate(el => el.tagName.toLowerCase())).toBe('div')
+
+    const guides = page.getByTestId('choice-guides')
+    await expect(guides).toHaveAttribute('aria-checked', 'true')
+    await expect(guides).toHaveAttribute('data-state', 'checked')
+
+    const mixed = page.getByTestId('choice-mixed')
+    await expect(mixed).toHaveAttribute('aria-checked', 'mixed')
+    await expect(mixed).toHaveAttribute('data-state', 'mixed')
+
+    const group = page.getByTestId('choice-sort-group')
+    await expect(group).toHaveAttribute('role', 'group')
+    await expect(group).toHaveAttribute('aria-label', 'Sort by')
+
+    await expect(page.getByTestId('choice-sort-name')).toHaveAttribute('role', 'menuitemradio')
+    await expect(page.getByTestId('choice-sort-name')).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByTestId('choice-sort-date')).toHaveAttribute('aria-checked', 'false')
+    const size = page.getByTestId('choice-sort-size')
+    await expect(size).toHaveAttribute('aria-checked', 'false')
+    await expect(size).toHaveAttribute('aria-disabled', 'true')
+
+    // Built-in indicators: checked glyphs render, unchecked slots stay blank.
+    await expect(grid.locator('[data-menu-indicator]')).toHaveText('')
+    await expect(guides.locator('[data-menu-indicator]')).toHaveText('✓')
+    await expect(mixed.locator('[data-menu-indicator]')).toHaveText('–')
+    await expect(page.getByTestId('choice-sort-name').locator('[data-menu-indicator]')).toHaveText('●')
+  })
+
+  test('MN-CHOICE-02: CheckboxItem requests the opposite boolean once per modality and stays open', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-trigger').click()
+    const root = page.getByTestId('menu-choice-root')
+    const changes = page.getByTestId('menu-choice-change-logs')
+    const selects = page.getByTestId('menu-choice-select-logs')
+    await expect(root).toBeVisible()
+
+    await page.getByTestId('choice-grid').click()
+    await expect(changes).toHaveText('Choice Changes: grid:true')
+    await expect(selects).toHaveText('Choice Selects: grid:click:1')
+    await expect(root).toBeVisible()
+    await expect(page.getByTestId('choice-grid')).toHaveAttribute('aria-checked', 'true')
+
+    await page.getByTestId('choice-guides').click()
+    await expect(changes).toHaveText('Choice Changes: grid:true,guides:false')
+    await expect(root).toBeVisible()
+    await expect(page.getByTestId('choice-guides')).toHaveAttribute('aria-checked', 'false')
+
+    // Mixed requests true; the log-only parent rejects, so ARIA never moves.
+    await page.getByTestId('choice-mixed').focus()
+    await page.keyboard.press('Enter')
+    await expect(changes).toHaveText('Choice Changes: grid:true,guides:false,mixed:true')
+    await expect(selects).toContainText('mixed:keydown:Enter')
+    await expect(page.getByTestId('choice-mixed')).toHaveAttribute('aria-checked', 'mixed')
+    await expect(root).toBeVisible()
+
+    // Space toggles too, exactly once.
+    await page.getByTestId('choice-grid').focus()
+    await page.keyboard.press('Space')
+    await expect(changes).toHaveText('Choice Changes: grid:true,guides:false,mixed:true,grid:false')
+    await expect(root).toBeVisible()
+
+    await expect(page.getByTestId('menu-choice-open-logs')).toHaveText('Choice Open Logs: true')
+    await expect(page.getByTestId('menu-choice-state')).toHaveText(
+      'Choice State: grid=false,guides=false,sort=name'
+    )
+  })
+
+  test('MN-CHOICE-04: RadioItem requests its value once while the group stays controlled', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-trigger').click()
+    const root = page.getByTestId('menu-choice-root')
+    const changes = page.getByTestId('menu-choice-change-logs')
+    const selects = page.getByTestId('menu-choice-select-logs')
+    const name = page.getByTestId('choice-sort-name')
+    const date = page.getByTestId('choice-sort-date')
+    await expect(root).toBeVisible()
+
+    await date.click()
+    await expect(changes).toHaveText('Choice Changes: sort:date')
+    await expect(selects).toHaveText('Choice Selects: sort-date:click:1')
+    await expect(root).toBeVisible()
+    await expect(date).toHaveAttribute('aria-checked', 'true')
+    await expect(name).toHaveAttribute('aria-checked', 'false')
+
+    // Activating the already-selected value still requests it once.
+    await date.click()
+    await expect(changes).toHaveText('Choice Changes: sort:date,sort:date')
+
+    await name.focus()
+    await page.keyboard.press('Enter')
+    await expect(changes).toHaveText('Choice Changes: sort:date,sort:date,sort:name')
+    await expect(selects).toContainText('sort-name:keydown:Enter')
+    await expect(name).toHaveAttribute('aria-checked', 'true')
+
+    // Disabled radio is inert on every route.
+    await page.getByTestId('choice-sort-size').click({ force: true })
+    await expect(changes).toHaveText('Choice Changes: sort:date,sort:date,sort:name')
+    await expect(root).toBeVisible()
+    await expect(page.getByTestId('menu-choice-open-logs')).toHaveText('Choice Open Logs: true')
+  })
+
+  test('MN-CHOICE-08: Choices default to staying open and honor explicit closeOnSelect', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    // Default: activation without dismissal (also asserted in 02/04).
+    await page.getByTestId('btn-choice-trigger').click()
+    await page.getByTestId('choice-grid').click()
+    await expect(page.getByTestId('menu-choice-root')).toBeVisible()
+    await expect(page.getByTestId('menu-choice-open-logs')).toHaveText('Choice Open Logs: true')
+    await page.keyboard.press('Escape')
+
+    // Explicit true: state request first, then one complete dismissal.
+    await page.getByTestId('btn-choice-close-trigger').click()
+    const closeRoot = page.getByTestId('menu-choice-close-root')
+    await expect(closeRoot).toBeVisible()
+    await page.getByTestId('choice-close-check').click()
+    await expect(closeRoot).toHaveCount(0)
+    await expect(page.getByTestId('menu-choice-close-logs')).toHaveText('Choice Close Logs: true,false')
+    await expect(page.getByTestId('menu-choice-change-logs')).toHaveText(
+      'Choice Changes: grid:true,close-check:true'
+    )
+    await expect(page.getByTestId('btn-choice-close-trigger')).toBeFocused()
+
+    await page.getByTestId('btn-choice-close-trigger').click()
+    await page.getByTestId('choice-close-radio').click()
+    await expect(page.getByTestId('menu-choice-close-root')).toHaveCount(0)
+  })
+
+  test('MN-CHOICE-07: Choice cancellation stops both the state request and dismissal', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-cancel-trigger').click()
+    const root = page.getByTestId('menu-choice-cancel-root')
+    const display = page.getByTestId('menu-choice-cancel-display')
+    await expect(root).toBeVisible()
+
+    await page.getByTestId('choice-cancel-native').click()
+    await expect(display).toHaveText('Choice Cancel: None')
+    await expect(root).toBeVisible()
+
+    await page.getByTestId('choice-cancel-select').click()
+    // onSelect ran (and prevented); onChange never fired.
+    await expect(display).toHaveText('Choice Cancel: SelectCancel')
+    await expect(root).toBeVisible()
+
+    await page.getByTestId('choice-cancel-select').focus()
+    await page.keyboard.press('Enter')
+    await expect(display).toHaveText('Choice Cancel: SelectCancel')
+    await expect(root).toBeVisible()
+  })
+
+  test('MN-CHOICE-09: Roving and typeahead treat choices as commands, skipping group structure', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-trigger').click()
+    const root = page.getByTestId('menu-choice-root')
+    const grid = page.getByTestId('choice-grid')
+    const guides = page.getByTestId('choice-guides')
+    const mixed = page.getByTestId('choice-mixed')
+    const name = page.getByTestId('choice-sort-name')
+    const date = page.getByTestId('choice-sort-date')
+    const plain = page.getByTestId('choice-plain')
+    await expect(root).toBeVisible()
+
+    await grid.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(guides).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(mixed).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(name).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(date).toBeFocused()
+    // Disabled radio skipped, group never a stop.
+    await page.keyboard.press('ArrowDown')
+    await expect(plain).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(grid).toBeFocused()
+
+    await expect(root.locator('[tabindex="0"]')).toHaveCount(1)
+    await expect(page.getByTestId('choice-sort-group')).not.toHaveAttribute('tabindex', '0')
+
+    // Typeahead crosses item kinds by current text.
+    await grid.focus()
+    await page.keyboard.press('p')
+    await expect(plain).toBeFocused()
+    await page.waitForTimeout(1500)
+    await page.keyboard.press('n')
+    await expect(name).toBeFocused()
+
+    // Movement never requests state.
+    await expect(page.getByTestId('menu-choice-change-logs')).toHaveText('Choice Changes: ')
+    await expect(root).toBeVisible()
+  })
+
+  test('MN-CHOICE-02-alias: W-28 alias props request through onCheckedChange/onValueChange', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Menu/Menu/Choice')
+    await page.getByTestId('btn-choice-alias-trigger').click()
+    const logs = page.getByTestId('menu-choice-alias-logs')
+    await expect(page.getByTestId('menu-choice-alias-root')).toBeVisible()
+
+    await page.getByTestId('choice-alias-check').click()
+    await expect(logs).toHaveText('Choice Alias Logs: alias-check:true')
+
+    await page.getByTestId('choice-alias-radio').click()
+    await expect(logs).toHaveText('Choice Alias Logs: alias-check:true,alias-radio:b')
+  })
+})

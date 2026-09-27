@@ -122,12 +122,51 @@ const menuIdByTriggerRef = new WeakMap<object, string>()
 const MENU_ROOT_ID = 'menu-root'
 
 const ENABLED_MENUITEM_SELECTOR =
-  '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled])'
+  '[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]),' +
+  '[role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled]),' +
+  '[role="menuitemradio"]:not([aria-disabled="true"]):not([data-disabled])'
+
+function levelItems(content: HTMLElement | null): HTMLElement[] {
+  if (!content) return []
+  // Scope to this level: a nested menuitem must resolve to its own content.
+  // (Submenu contents portal out as siblings, but never match descendants.)
+  return Array.from(content.querySelectorAll<HTMLElement>(ENABLED_MENUITEM_SELECTOR)).filter(
+    el => el.closest('[data-reference-menu-content]') === content
+  )
+}
 
 function focusFirstEnabledItem(content: HTMLElement | null) {
-  if (!content) return
-  const items = Array.from(content.querySelectorAll<HTMLElement>(ENABLED_MENUITEM_SELECTOR))
-  items[0]?.focus()
+  levelItems(content)[0]?.focus()
+}
+
+// B-33: content-focused edge navigation. Pointer-opened menus focus the
+// container itself, and RovingFocus keys are item-level only, so the
+// container handles its own arrows/Home/End (mirroring RovingFocus 1D
+// mapping: PageUp→first, PageDown→last). Callers gate on
+// e.target === e.currentTarget so item keys keep roving authority.
+function focusEdgeEnabledItem(content: HTMLElement | null, edge: 'first' | 'last') {
+  const items = levelItems(content)
+  if (items.length === 0) return
+  const target = edge === 'last' ? items[items.length - 1] : items[0]
+  target?.focus()
+}
+
+function handleContentContainerKey(
+  e: React.KeyboardEvent<HTMLDivElement>,
+  content: HTMLElement | null
+): boolean {
+  if (e.target !== e.currentTarget) return false
+  if (e.key === 'ArrowDown' || e.key === 'Home' || e.key === 'PageUp') {
+    e.preventDefault()
+    focusEdgeEnabledItem(content, 'first')
+    return true
+  }
+  if (e.key === 'ArrowUp' || e.key === 'End' || e.key === 'PageDown') {
+    e.preventDefault()
+    focusEdgeEnabledItem(content, 'last')
+    return true
+  }
+  return false
 }
 
 // Owning-root reads for ShadowRoot-mounted trees. A trigger or menu living
@@ -479,6 +518,10 @@ const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
       if (requestRootDeepestClose()) return
       overlay.setIsOpen(false)
       restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
+    } else {
+      // B-33: arrows/Home/End with focus on the container itself move to
+      // the edge item. No-ops unless the container is the key target.
+      handleContentContainerKey(e, menuRef.current)
     }
   }
 
@@ -1015,7 +1058,10 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(fu
     if (e.key === closeKey) {
       e.preventDefault()
       level.requestClose()
+      return
     }
+    // B-33, submenu level: container-focused edge navigation.
+    handleContentContainerKey(e, level.getContentNode())
   }
 
   return (
@@ -1165,6 +1211,313 @@ export const MenuItem = React.forwardRef<HTMLDivElement, MenuItemProps>(function
     </RovingFocus.Item>
   )
 })
+
+// --- Choice items (W-28) ------------------------------------------------------
+// Controlled choice commands. Activation order (MN-CHOICE-06): native
+// handler → cancelable onSelect → one checked/value request → optional
+// deepest-first dismissal. closeOnSelect defaults false; cancellation in a
+// native handler or onSelect stops both the state request and dismissal
+// (MN-CHOICE-07). Controlled props stay authoritative: ARIA derives from
+// props, never from a hidden toggle (MN-CHOICE-03/05).
+
+function useChoiceDismiss() {
+  const overlay = useOverlay()
+  const level = useMenuLevel()
+  return React.useCallback(() => {
+    if (level) {
+      level.requestTreeDismiss()
+      restoreFocusToTrigger(rootTriggerOf(level))
+      return
+    }
+    if (overlay) {
+      overlay.setIsOpen(false)
+      restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
+    }
+  }, [level, overlay])
+}
+
+function ChoiceIndicator({ glyph }: { glyph: string }) {
+  // Fixed slot keeps labels aligned with unchecked siblings. aria-hidden
+  // keeps the glyph out of accessible names and typeahead text.
+  return (
+    <Div
+      aria-hidden="true"
+      data-menu-indicator=""
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      flexShrink={0}
+      w="4r"
+      mr="2r"
+    >
+      {glyph}
+    </Div>
+  )
+}
+
+function choiceItemLayout(disabled: boolean) {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    minHeight: controlSize.height,
+    height: 'auto',
+    px: '3r',
+    py: controlSize.paddingBlock,
+    boxSizing: 'border-box',
+    borderRadius: 'sm',
+    fontSize: '3.5r',
+    lineHeight: '5r',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    bg: 'transparent',
+    color: 'design.text.base',
+    opacity: disabled ? 0.5 : 1,
+    outline: 'none',
+    userSelect: 'none',
+  } as const
+}
+
+export type MenuCheckboxItemProps = Omit<PrimitiveProps<'div'>, 'onSelect' | 'onChange'> & {
+  checked: boolean | 'mixed'
+  onChange?: (checked: boolean) => void
+  /** Alias of onChange (W-28 naming). Both fire when both are provided. */
+  onCheckedChange?: (checked: boolean) => void
+  disabled?: boolean
+  textValue?: string
+  onSelect?: (event: Event) => void
+  closeOnSelect?: boolean
+}
+
+export const MenuCheckboxItem = React.forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
+  function MenuCheckboxItem(
+    {
+      children,
+      checked,
+      onChange,
+      onCheckedChange,
+      disabled = false,
+      textValue,
+      onSelect,
+      closeOnSelect = false,
+      onClick,
+      onKeyDown,
+      className,
+      style,
+      ...props
+    }: MenuCheckboxItemProps,
+    ref
+  ) {
+    const dismissAfterSelect = useChoiceDismiss()
+
+    const requestState = React.useCallback(() => {
+      // checked=true → false; false and mixed → true.
+      const next = checked !== true
+      onChange?.(next)
+      onCheckedChange?.(next)
+    }, [checked, onChange, onCheckedChange])
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (disabled) {
+        e.preventDefault()
+        return
+      }
+      onClick?.(e)
+      if (e.defaultPrevented) return
+      onSelect?.(e.nativeEvent)
+      if (e.nativeEvent.defaultPrevented) return
+      requestState()
+      if (closeOnSelect) dismissAfterSelect()
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(e)
+      if (e.defaultPrevented || disabled) return
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.stopPropagation()
+        onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
+        if (e.defaultPrevented) return
+        onSelect?.(e.nativeEvent)
+        if (e.nativeEvent.defaultPrevented) {
+          e.preventDefault()
+          return
+        }
+        e.preventDefault()
+        requestState()
+        if (closeOnSelect) dismissAfterSelect()
+      }
+    }
+
+    const ariaChecked = checked === 'mixed' ? 'mixed' : checked ? 'true' : 'false'
+    const dataState = checked === 'mixed' ? 'mixed' : checked ? 'checked' : 'unchecked'
+    const glyph = checked === 'mixed' ? '–' : checked ? '✓' : ''
+
+    return (
+      <RovingFocus.Item disabled={disabled} textValue={textValue}>
+        <Div
+          role="menuitemcheckbox"
+          tabIndex={disabled ? -1 : 0}
+          aria-checked={ariaChecked}
+          aria-disabled={disabled ? 'true' : undefined}
+          data-disabled={disabled ? '' : undefined}
+          data-state={dataState}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          {...choiceItemLayout(disabled)}
+          _hover={!disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+          _focus={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          className={className}
+          style={{
+            minHeight: controlHeightPx,
+            boxSizing: 'border-box',
+            ...style,
+          }}
+          {...props}
+          ref={ref}
+        >
+          <ChoiceIndicator glyph={glyph} />
+          {children}
+        </Div>
+      </RovingFocus.Item>
+    )
+  }
+)
+
+interface MenuRadioGroupValue {
+  value: string | null | undefined
+  onChange: ((value: string) => void) | undefined
+  onValueChange: ((value: string) => void) | undefined
+}
+
+const MenuRadioGroupContext = React.createContext<MenuRadioGroupValue | null>(null)
+
+export type MenuRadioGroupProps = Omit<PrimitiveProps<'div'>, 'onChange'> & {
+  value?: string | null
+  onChange?: (value: string) => void
+  /** Alias of onChange (W-28 naming). Both fire when both are provided. */
+  onValueChange?: (value: string) => void
+}
+
+export const MenuRadioGroup = React.forwardRef<HTMLDivElement, MenuRadioGroupProps>(
+  function MenuRadioGroup(
+    { children, value, onChange, onValueChange, className, style, ...props }: MenuRadioGroupProps,
+    ref
+  ) {
+    // Structural only: never a roving stop, never a typeahead match.
+    const groupValue = React.useMemo<MenuRadioGroupValue>(
+      () => ({ value, onChange, onValueChange }),
+      [value, onChange, onValueChange]
+    )
+    return (
+      <MenuRadioGroupContext.Provider value={groupValue}>
+        <Div role="group" className={className} style={style} {...props} ref={ref}>
+          {children}
+        </Div>
+      </MenuRadioGroupContext.Provider>
+    )
+  }
+)
+
+export type MenuRadioItemProps = Omit<PrimitiveProps<'div'>, 'onSelect'> & {
+  value: string
+  disabled?: boolean
+  textValue?: string
+  onSelect?: (event: Event) => void
+  closeOnSelect?: boolean
+}
+
+export const MenuRadioItem = React.forwardRef<HTMLDivElement, MenuRadioItemProps>(
+  function MenuRadioItem(
+    {
+      children,
+      value,
+      disabled = false,
+      textValue,
+      onSelect,
+      closeOnSelect = false,
+      onClick,
+      onKeyDown,
+      className,
+      style,
+      ...props
+    }: MenuRadioItemProps,
+    ref
+  ) {
+    const group = React.useContext(MenuRadioGroupContext)
+    const dismissAfterSelect = useChoiceDismiss()
+    if (!group) {
+      devWarn('Menu.RadioItem is valid only inside a Menu.RadioGroup.')
+    }
+    const checked = group != null && group.value === value
+
+    const requestState = React.useCallback(() => {
+      // Every activation requests, including the already-selected value;
+      // the group never interprets parent acceptance (MN-CHOICE-04).
+      group?.onChange?.(value)
+      group?.onValueChange?.(value)
+    }, [group, value])
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (disabled) {
+        e.preventDefault()
+        return
+      }
+      onClick?.(e)
+      if (e.defaultPrevented) return
+      onSelect?.(e.nativeEvent)
+      if (e.nativeEvent.defaultPrevented) return
+      requestState()
+      if (closeOnSelect) dismissAfterSelect()
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(e)
+      if (e.defaultPrevented || disabled) return
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.stopPropagation()
+        onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
+        if (e.defaultPrevented) return
+        onSelect?.(e.nativeEvent)
+        if (e.nativeEvent.defaultPrevented) {
+          e.preventDefault()
+          return
+        }
+        e.preventDefault()
+        requestState()
+        if (closeOnSelect) dismissAfterSelect()
+      }
+    }
+
+    return (
+      <RovingFocus.Item disabled={disabled} textValue={textValue}>
+        <Div
+          role="menuitemradio"
+          tabIndex={disabled ? -1 : 0}
+          aria-checked={checked ? 'true' : 'false'}
+          aria-disabled={disabled ? 'true' : undefined}
+          data-disabled={disabled ? '' : undefined}
+          data-state={checked ? 'checked' : 'unchecked'}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          {...choiceItemLayout(disabled)}
+          _hover={!disabled ? { bg: 'ui.table.row.mutedBackground', color: 'design.text.base' } : undefined}
+          _focus={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          _focusVisible={{ bg: 'ui.table.row.mutedBackground', color: 'design.text.base', outline: 'none' }}
+          className={className}
+          style={{
+            minHeight: controlHeightPx,
+            boxSizing: 'border-box',
+            ...style,
+          }}
+          {...props}
+          ref={ref}
+        >
+          <ChoiceIndicator glyph={checked ? '●' : ''} />
+          {children}
+        </Div>
+      </RovingFocus.Item>
+    )
+  }
+)
 
 export type MenuLinkItemProps = Omit<PrimitiveProps<'a'>, 'onSelect'> & {
   href: string
@@ -1328,6 +1681,9 @@ export const Menu = React.forwardRef<HTMLDivElement, MenuProps>(function Menu(pr
   Trigger: typeof MenuTrigger
   Content: typeof MenuContent
   LinkItem: typeof MenuLinkItem
+  CheckboxItem: typeof MenuCheckboxItem
+  RadioGroup: typeof MenuRadioGroup
+  RadioItem: typeof MenuRadioItem
 }
 
 Menu.Item = MenuItem
@@ -1335,3 +1691,6 @@ Menu.Separator = MenuSeparator
 Menu.Trigger = MenuTrigger
 Menu.Content = MenuContent
 Menu.LinkItem = MenuLinkItem
+Menu.CheckboxItem = MenuCheckboxItem
+Menu.RadioGroup = MenuRadioGroup
+Menu.RadioItem = MenuRadioItem
