@@ -334,6 +334,7 @@ export const Constrained = () => {
   const [monthReqs, setMonthReqs] = React.useState<ISOMonth[]>([])
   const [blockTen, setBlockTen] = React.useState(false)
   const [blockAll, setBlockAll] = React.useState(false)
+  const [bounded, setBounded] = React.useState(false)
   const isDateUnavailable = React.useCallback(
     (d: string) => {
       if (blockAll) return true
@@ -351,7 +352,7 @@ export const Constrained = () => {
           data-testid="test-con-calendar"
           month="2024-04"
           today="2024-05-01"
-          min="2024-04-05"
+          min={bounded ? '2024-04-15' : '2024-04-05'}
           max="2024-04-20"
           isDateUnavailable={isDateUnavailable}
           value={date}
@@ -383,6 +384,9 @@ export const Constrained = () => {
           </Button>
           <Button type="button" data-testid="con-toggle-all" onClick={() => setBlockAll((b) => !b)}>
             {blockAll ? 'unblock-all' : 'block-all'}
+          </Button>
+          <Button type="button" data-testid="con-toggle-bounds" onClick={() => setBounded((b) => !b)}>
+            {bounded ? 'unbind' : 'bind'}
           </Button>
         </Div>
       </Div>
@@ -785,6 +789,107 @@ export const BareHeadingViews = () => {
             {veto ? 'veto-on' : 'veto-off'}
           </Button>
         </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const CustomDayCells = () => {
+  const [date, setDate] = React.useState<string | null>(null)
+  const [changes, setChanges] = React.useState<string[]>([])
+  // Event counts per date: a plain day (04-08), an unavailable day
+  // (04-12), and an out-of-bounds day (04-02). 04-15 returns null
+  // explicitly; every other date falls through to the default cell.
+  const events: Record<string, number> = {
+    '2024-04-02': 1,
+    '2024-04-08': 2,
+    '2024-04-12': 1,
+  }
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="custom-fixture-root">
+        <Calendar
+          locale="en-US"
+          data-testid="test-custom-calendar"
+          month="2024-04"
+          today="2024-04-10"
+          min="2024-04-05"
+          max="2024-04-25"
+          isDateUnavailable={(d) => d >= '2024-04-11' && d <= '2024-04-13'}
+          Day={(day) => {
+            const count = events[day]
+            if (!count) return null
+            return (
+              <Span display="inline-flex" flexDirection="column" alignItems="center" lineHeight="1">
+                {Number(day.slice(8, 10))}
+                <Span data-testid={`day-dot-${day}`} fontSize="2r" aria-hidden="true">
+                  {'●'.repeat(count)}
+                </Span>
+              </Span>
+            )
+          }}
+          value={date}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setDate(next)
+          }}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton data-testid="custom-prev" />
+            <Calendar.Heading data-testid="custom-heading" />
+            <Calendar.NextButton data-testid="custom-next" />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="custom-grid" />
+        </Calendar>
+        <Span fontSize="3r" color="design.text.light" data-testid="custom-value">
+          {date ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="custom-changes">
+          {changes.join(',') || 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const WeekStartOverride = () => {
+  const [usDate, setUsDate] = React.useState<string | null>(null)
+  const [gbDate, setGbDate] = React.useState<string | null>(null)
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" display="flex" flexDirection="column" gap="3r" data-testid="ws-fixture-root">
+        <Calendar
+          locale="en-US"
+          firstDayOfWeek="mon"
+          data-testid="test-ws-us-calendar"
+          month="2024-04"
+          today="2024-04-10"
+          value={usDate}
+          onChange={setUsDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton />
+            <Calendar.Heading data-testid="ws-us-heading" />
+            <Calendar.NextButton />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="ws-us-grid" />
+        </Calendar>
+        <Calendar
+          locale="en-GB"
+          firstDayOfWeek="sun"
+          data-testid="test-ws-gb-calendar"
+          month="2024-04"
+          today="2024-04-10"
+          value={gbDate}
+          onChange={setGbDate}
+        >
+          <Calendar.Header>
+            <Calendar.PrevButton />
+            <Calendar.Heading data-testid="ws-gb-heading" />
+            <Calendar.NextButton />
+          </Calendar.Header>
+          <Calendar.Grid data-testid="ws-gb-grid" />
+        </Calendar>
       </Div>
     </ReferenceLibrary>
   )

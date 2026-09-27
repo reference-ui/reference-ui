@@ -362,7 +362,7 @@ describe('Calendar FEATURES cluster B', () => {
     expect(ids[0]).not.toBe(ids[1])
   })
 
-  it('CA-STATE-04 (adapted): bounds + predicate combine into one disabled triple-state', () => {
+  it('CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled (W-21)', () => {
     const html = renderToString(
       <Calendar
         locale="en-US"
@@ -373,20 +373,27 @@ describe('Calendar FEATURES cluster B', () => {
         isDateUnavailable={(d) => d === '2024-06-12'}
       />
     )
-    for (const blocked of ['2024-06-04', '2024-06-26', '2024-06-12']) {
-      const button = dayButton(html, blocked)
-      expect(button).toContain('disabled')
+    for (const outOfBounds of ['2024-06-04', '2024-06-26']) {
+      const button = dayButton(html, outOfBounds)
+      expect(button).toMatch(/(?:^|\s)disabled(?:=|\s|>)/)
       expect(button).toContain('aria-disabled="true"')
       expect(button).toContain('data-disabled')
+      expect(button).not.toContain('data-unavailable')
     }
+    const unavailable = dayButton(html, '2024-06-12')
+    expect(unavailable).not.toMatch(/(?:^|\s)disabled(?:=|\s|>)/)
+    expect(unavailable).toContain('aria-disabled="true"')
+    expect(unavailable).toContain('data-unavailable')
+    expect(unavailable).not.toContain('data-disabled')
     for (const allowed of ['2024-06-05', '2024-06-10', '2024-06-25']) {
       const button = dayButton(html, allowed)
       expect(button).not.toContain('disabled')
       expect(button).not.toContain('data-disabled')
+      expect(button).not.toContain('data-unavailable')
     }
   })
 
-  it('CA-STATE-06 (adapted): a selected date that becomes disabled stays painted but loses the tab stop', () => {
+  it('CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop (W-21)', () => {
     const html = renderToString(
       <Calendar
         locale="en-US"
@@ -399,14 +406,38 @@ describe('Calendar FEATURES cluster B', () => {
     const button = dayButton(html, '2024-06-12')
     expect(button).toContain('data-selected')
     expect(button).toContain('aria-selected="true"')
-    expect(button).toContain('data-disabled')
-    expect(button).toContain('tabindex="-1"')
+    expect(button).toContain('data-unavailable')
+    expect(button).toContain('tabindex="0"')
     const targets = html.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []
     expect(targets).toHaveLength(1)
-    expect(targets[0]).toContain('data-date="2024-06-01"')
+    expect(targets[0]).toContain('data-date="2024-06-12"')
+
+    const bounded = renderToString(
+      <Calendar
+        locale="en-US"
+        month="2024-06"
+        value="2024-06-12"
+        today="2024-06-01"
+        min="2024-06-13"
+      />
+    )
+    const boundedButton = dayButton(bounded, '2024-06-12')
+    expect(boundedButton).toContain('data-selected')
+    expect(boundedButton).toContain('data-disabled')
+    expect(boundedButton).toContain('tabindex="-1"')
+    const boundedTargets = bounded.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []
+    expect(boundedTargets).toHaveLength(1)
+    expect(boundedTargets[0]).toContain('data-date="2024-06-13"')
   })
 
-  it('CA-STATE-03 (disabled): the tab target skips disabled days to the first enabled in-month day', () => {
+  it('CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days (W-21)', () => {
+    const bounded = renderToString(
+      <Calendar locale="en-US" month="2024-06" value={null} today="2024-07-15" min="2024-06-07" />
+    )
+    const boundedTargets = bounded.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []
+    expect(boundedTargets).toHaveLength(1)
+    expect(boundedTargets[0]).toContain('data-date="2024-06-07"')
+
     const html = renderToString(
       <Calendar
         locale="en-US"
@@ -419,7 +450,79 @@ describe('Calendar FEATURES cluster B', () => {
     )
     const targets = html.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []
     expect(targets).toHaveLength(1)
-    expect(targets[0]).toContain('data-date="2024-06-07"')
+    expect(targets[0]).toContain('data-date="2024-06-05"')
+  })
+
+  it('CA-STATE-07 (adapted): an all-out-of-bounds grid exposes no day tab stop', () => {
+    const html = renderToString(
+      <Calendar locale="en-US" month="2024-04" value={null} min="2024-05-15" max="2024-05-15" />
+    )
+    expect(html.match(/<button[^>]*tabindex="0"[^>]*>/g) ?? []).toHaveLength(0)
+    expect(dayButton(html, '2024-04-10')).toContain('data-disabled')
+  })
+
+  it('FEATURES #3: firstDayOfWeek="sun" overrides the en-GB Monday default', () => {
+    const html = renderToString(
+      <Calendar locale="en-GB" firstDayOfWeek="sun" month="2024-08" value={null} />
+    )
+    const headers = [...html.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((m) => m[1])
+    expect(headers[0]).toBe('Sun')
+    // August 2024 Sunday-first: leading Sun(28)–Wed(31).
+    expect(html).toContain('data-date="2024-07-28"')
+  })
+
+  it('W-20: Day replaces cell content with (date, state); null keeps the default number', () => {
+    const seen: Array<{ date: string; state: unknown }> = []
+    const html = renderToString(
+      <Calendar
+        locale="en-US"
+        month="2024-06"
+        mode="range"
+        value={{ start: '2024-06-10', end: '2024-06-12' }}
+        today="2024-06-11"
+        min="2024-06-05"
+        isDateUnavailable={(d) => d === '2024-06-12'}
+        Day={(date, state) => {
+          seen.push({ date, state: { ...state } })
+          if (date === '2024-06-15') return null
+          return (
+            <i data-day-state={`${state.selected ? 1 : 0}${state.inRange ? 1 : 0}${state.disabled ? 1 : 0}${state.today ? 1 : 0}`}>
+              {date.slice(8)}
+            </i>
+          )
+        }}
+      />
+    )
+    // Range start endpoint: selected, not in-range, in bounds, not today.
+    expect(html).toContain('data-day-state="1000"')
+    // Range interior + today marker.
+    expect(html).toContain('data-day-state="0101"')
+    // Range end endpoint refused by the predicate: selected + disabled.
+    expect(html).toContain('data-day-state="1010"')
+    // Out-of-bounds day: disabled only.
+    expect(html).toContain('data-day-state="0010"')
+    // Explicit null keeps the default locale number.
+    const plain = html.match(
+      new RegExp(`<button[^>]*data-date="2024-06-15"[^>]*>([^<]*)</button>`)
+    )
+    expect(plain?.[1]).toBe('15')
+    // The renderer saw every rendered day button exactly once.
+    const dates = seen.map((s) => s.date)
+    expect(new Set(dates).size).toBe(dates.length)
+    expect(dates).toContain('2024-06-01')
+    expect(dates).toContain('2024-06-30')
+  })
+
+  it('W-20: a non-function Day fails closed naming the prop', () => {
+    const { html, errors } = renderInvalidLocale({
+      locale: 'en-US',
+      month: '2024-06',
+      value: null,
+      Day: 'not-a-renderer',
+    })
+    expect(html).toBe('')
+    expect(errors).toHaveLength(1)
+    expect(String(errors[0][0])).toContain('Day')
   })
 
   it('CA-STATE-05 (adapted): the current predicate sees only valid canonical dates, deterministically', () => {

@@ -40,6 +40,26 @@ export interface DateRangeValue {
   end: ISODate | null
 }
 
+/** Render state for the `Day` render prop (W-20): the four flags a custom
+ * day cell needs. `disabled` merges both unselectable reasons (outside
+ * `min`/`max`, or refused by `isDateUnavailable`); the cell chrome —
+ * button, roving tabindex, ARIA — stays lib-owned either way. */
+export interface CalendarDayRenderState {
+  selected: boolean
+  inRange: boolean
+  disabled: boolean
+  today: boolean
+}
+
+/** Custom day-cell content (W-20). Return `null` (or `undefined`) to keep
+ * the default locale day number. Called for every rendered day button —
+ * including outside-month, disabled, and unavailable days — never for
+ * void (out-of-domain) padding cells, which have no button. */
+export type CalendarDayRenderer = (
+  date: ISODate,
+  state: CalendarDayRenderState
+) => React.ReactNode
+
 // Dev-only diagnostic writer (Combobox/Splitter globalProcess pattern:
 // the package declares no node types, so process comes via globalThis).
 const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
@@ -62,10 +82,19 @@ type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'd
   onMonthChange?: (month: ISOMonth) => void
   min?: ISODate
   max?: ISODate
-  /** Per-date availability predicate (FEATURES #6). Combined with
-   * `min`/`max` into one non-interactive day state; called only with
-   * valid canonical in-domain dates. */
+  /** Per-date availability predicate (W-21, exact React Aria name +
+   * semantics). An unavailable date stays focusable — roving tabindex,
+   * arrows, Home/End, and Page keys all land on it — but is unselectable
+   * in every modality (`aria-disabled`, greyed, `data-unavailable`, never
+   * emits). Out-of-`min`/`max` dates keep the stronger state: natively
+   * disabled and skipped by keyboard. Called only with valid canonical
+   * in-domain dates. */
   isDateUnavailable?: (date: ISODate) => boolean
+  /** Custom day-cell content (W-20): `Day={(date, state) => node}`.
+   * Replaces only the button's content — selection, disabled/unavailable,
+   * and keyboard behavior stay lib-owned. A `null` return keeps the
+   * default locale day number. */
+  Day?: CalendarDayRenderer
   /** Seeds the default pane when neither `month` nor `value` is given.
    * Defaults to the current UTC date (previous behavior); pass an explicit
    * ISO date for SSR-safe deterministic rendering. Ignored when `month`
@@ -181,6 +210,10 @@ function validateCalendarProps(props: CalendarProps): string | null {
   } catch {
     return `invalid locale ${JSON.stringify(locale)}. Expected a structurally valid BCP 47 locale.`
   }
+  const day = (props as { Day?: unknown }).Day
+  if (day !== undefined && typeof day !== 'function') {
+    return `invalid Day ${JSON.stringify(day)}. Expected a render function (date, state) => ReactNode.`
+  }
   return null
 }
 
@@ -236,9 +269,19 @@ interface CalendarContextValue {
   isDateInRange: (dateStr: ISODate) => boolean
   isRangeStart: (dateStr: ISODate) => boolean
   isRangeEnd: (dateStr: ISODate) => boolean
-  /** Single non-interactive day state (FEATURES #6): outside min/max or
-   * refused by isDateUnavailable. Never called with out-of-domain dates. */
+  /** Out-of-bounds day state (W-21): outside `min`/`max`. Natively
+   * disabled, skipped by keyboard, excluded from the roving tab order.
+   * Never called with out-of-domain dates. */
   isDateDisabled: (dateStr: ISODate) => boolean
+  /** Predicate-only unavailable state (W-21, exact React Aria): refused
+   * by `isDateUnavailable` (`false` when no predicate). Focusable but
+   * unselectable; the Grid derives `data-unavailable` from it. */
+  isDateUnavailableDay: (dateStr: ISODate) => boolean
+  /** Merged unselectable state: out of bounds OR unavailable. Guards
+   * activation, month/year disabling, and nav-target evaluation. */
+  isDateUnselectable: (dateStr: ISODate) => boolean
+  /** Custom day content (W-20); a nullish return keeps the default. */
+  dayRender?: CalendarDayRenderer
 }
 
 /** Locale month/year name ("February 2024") for Heading + nav targets.
@@ -615,6 +658,9 @@ export function CalendarGrid({
     isRangeStart,
     isRangeEnd,
     isDateDisabled,
+    isDateUnavailableDay,
+    isDateUnselectable,
+    dayRender,
   } = context
 
   const gridRef = React.useRef<HTMLTableElement>(null)
@@ -642,10 +688,11 @@ export function CalendarGrid({
     [renderedDays]
   )
 
-  // Preferred roving target (CA-STATE-03): enabled rendered selection,
-  // then enabled rendered today, then the first enabled in-month day,
-  // then the first enabled rendered day. Null when nothing is enabled —
-  // no artificial tab stop (CA-STATE-07).
+  // Preferred roving target (CA-STATE-03): in-bounds rendered
+  // selection, then in-bounds rendered today, then the first in-bounds
+  // in-month day, then the first in-bounds rendered day. Unavailable
+  // days are in-bounds and fully participate (W-21). Null when nothing
+  // is in bounds — no artificial tab stop (CA-STATE-07).
   const computePreferredTarget = React.useCallback((): ISODate | null => {
     const enabledSelected = renderedDays.find(
       (cell) => !isDateDisabled(cell.date) && isDateSelected(cell.date)
@@ -663,9 +710,10 @@ export function CalendarGrid({
 
   const [focusedDate, setFocusedDate] = React.useState<ISODate | null>(computePreferredTarget)
 
-  // Nearest enabled rendered date to a lost target, forward-first
-  // (CA-DYNAMIC-02: April 10 → April 11), else null.
-  const nearestEnabled = React.useCallback(
+  // Nearest focusable (in-bounds) rendered date to a lost target,
+  // forward-first (CA-DYNAMIC-02: April 10 → April 11), else null.
+  // Unavailable days are focusable landing spots (W-21).
+  const nearestFocusable = React.useCallback(
     (origin: ISODate | null): ISODate | null => {
       const originIndex = origin ? renderedDays.findIndex((cell) => cell.date === origin) : -1
       const scan = (from: number, step: 1 | -1): ISODate | null => {
@@ -749,7 +797,7 @@ export function CalendarGrid({
           if (focusedDate && renderedSet.has(focusedDate) && !isDateDisabled(focusedDate)) return
           const next =
             focusedDate && renderedSet.has(focusedDate)
-              ? nearestEnabled(focusedDate)
+              ? nearestFocusable(focusedDate)
               : computePreferredTarget()
           if (next !== focusedDate) setFocusedDate(next)
           return
@@ -760,8 +808,9 @@ export function CalendarGrid({
         if (pending.focusWasInGrid) focusDay(pending.date)
         return
       } else {
-        // Committed but unusable (disabled/removed) → drop and relocate
-        // to one valid tab target without stealing focus (CA-KEY-10).
+        // Committed but unusable (out of bounds/removed) → drop and
+        // relocate to one valid tab target without stealing focus
+        // (CA-KEY-10). Unavailable targets stay usable (W-21).
         pendingFocusRef.current = null
       }
     }
@@ -773,13 +822,13 @@ export function CalendarGrid({
       }
       return
     }
-    // Disabled in place → nearest (CA-DYNAMIC-02); unrendered (month or
-    // locale moved on) → preferred target (CA-DYNAMIC-03, CA-LOC-07).
+    // Out of bounds in place → nearest (CA-DYNAMIC-02); unrendered (month
+    // or locale moved on) → preferred target (CA-DYNAMIC-03, CA-LOC-07).
     // DOM focus follows only when it was grid-owned: live in the grid,
     // or dropped by the same commit's disable/unmount.
     const next =
       focusedDate && renderedSet.has(focusedDate)
-        ? nearestEnabled(focusedDate)
+        ? nearestFocusable(focusedDate)
         : computePreferredTarget()
     if (next !== focusedDate) {
       setFocusedDate(next)
@@ -787,11 +836,12 @@ export function CalendarGrid({
     }
   })
 
-  // Disabled-date skip: walk from the candidate while blocked, stopping
-  // at the inclusive bounds without wrapping (CA-KEY-05). The step cap
-  // terminates fully-blocked spans instead of looping (CA-KEY-06); ten
-  // thousand days covers any plausible constraint window.
-  const skipToEnabled = (
+  // Out-of-bounds skip: walk from the candidate while blocked, stopping
+  // at the inclusive bounds without wrapping (CA-KEY-05). Unavailable
+  // dates are landing spots, not skipped (W-21). The step cap terminates
+  // fully-blocked spans instead of looping (CA-KEY-06); ten thousand
+  // days covers any plausible constraint window.
+  const skipToFocusable = (
     candidate: ISODate,
     step: 1 | -1,
     minBound: ISODate,
@@ -857,7 +907,7 @@ export function CalendarGrid({
               : 1
       const dirOrStep: 1 | -1 = step > 0 ? 1 : -1
       try {
-        candidate = skipToEnabled(
+        candidate = skipToFocusable(
           addCalendarDays(origin as CanonicalISODate, vertical ? step * 7 : step),
           dirOrStep,
           minBound,
@@ -867,8 +917,9 @@ export function CalendarGrid({
         candidate = null
       }
     } else if (key === 'Home' || key === 'End') {
-      // Locale week boundary (CA-KEY-02); blocked boundary dates skip
-      // inward toward the origin week interior.
+      // Locale week boundary (CA-KEY-02); out-of-bounds boundary dates
+      // skip inward toward the origin week interior. Unavailable
+      // boundaries are landing spots (W-21).
       try {
         const { year, month, day } = parseISODate(origin)
         const dow = getDayOfWeek(year, month, day)
@@ -897,7 +948,7 @@ export function CalendarGrid({
       const targetMonth = shiftMonth(year, month - 1, direction)
       if (targetMonth) {
         const clampedDay = Math.min(day, getDaysInMonth(targetMonth.year, targetMonth.month + 1))
-        candidate = skipToEnabled(
+        candidate = skipToFocusable(
           formatISODate(targetMonth.year, targetMonth.month + 1, clampedDay),
           direction,
           minBound,
@@ -920,7 +971,7 @@ export function CalendarGrid({
   }
 
   const handleDayClick = (cell: GridDay) => {
-    if (isDateDisabled(cell.date)) return // locked out in every modality (CA-SINGLE-04)
+    if (isDateUnselectable(cell.date)) return // locked out in every modality (CA-SINGLE-04)
     if (cell.outsideMonth) {
       // Outside activation requests the month first, then the date
       // (CA-SINGLE-07); focus survives month acceptance (CA-MONTH-07).
@@ -990,8 +1041,22 @@ export function CalendarGrid({
               const rangeStart = isRangeStart(cell.date)
               const rangeEnd = isRangeEnd(cell.date)
               const disabled = isDateDisabled(cell.date)
+              // Unavailable is the focusable half of unselectable (W-21):
+              // out-of-bounds already implies it, so the flag marks only
+              // the in-bounds predicate-refused dates.
+              const unavailable = !disabled && isDateUnavailableDay(cell.date)
+              const unselectable = disabled || unavailable
               const isToday = markerToday === cell.date
               const isFocused = focusedDate === cell.date
+              // Custom content (W-20) replaces only the button's children;
+              // nullish keeps the default locale day number.
+              const dayContent =
+                dayRender?.(cell.date, {
+                  selected,
+                  inRange,
+                  disabled: unselectable,
+                  today: isToday,
+                }) ?? cell.formattedDay
 
               return (
                 <Td
@@ -1013,7 +1078,7 @@ export function CalendarGrid({
                     // exactly one tab stop exists per shown collection.
                     tabIndex={isFocused && view === 'day' ? 0 : -1}
                     disabled={disabled}
-                    aria-disabled={disabled ? 'true' : undefined}
+                    aria-disabled={unselectable ? 'true' : undefined}
                     aria-selected={selected}
                     aria-current={isToday ? 'date' : undefined}
                     aria-label={cell.accessibleName}
@@ -1023,6 +1088,7 @@ export function CalendarGrid({
                     data-outside-month={cell.outsideMonth ? '' : undefined}
                     data-today={isToday ? '' : undefined}
                     data-disabled={disabled ? '' : undefined}
+                    data-unavailable={unavailable ? '' : undefined}
                     data-focused={isFocused ? '' : undefined}
                     onClick={() => handleDayClick(cell)}
                     width="7r"
@@ -1036,7 +1102,7 @@ export function CalendarGrid({
                     color={
                       selected
                         ? 'ui.button.foreground'
-                        : disabled || cell.outsideMonth
+                        : unselectable || cell.outsideMonth
                           ? 'design.text.light'
                           : 'design.text.base'
                     }
@@ -1044,12 +1110,12 @@ export function CalendarGrid({
                     fontWeight={selected || isToday ? '600' : '400'}
                     textDecoration={isToday ? 'underline' : undefined}
                     textUnderlineOffset={isToday ? '0.15em' : undefined}
-                    cursor={disabled ? 'not-allowed' : 'pointer'}
+                    cursor={unselectable ? 'not-allowed' : 'pointer'}
                     outline="none"
-                    _hover={!selected && !disabled ? { bg: 'ui.button.mutedBackground' } : undefined}
+                    _hover={!selected && !unselectable ? { bg: 'ui.button.mutedBackground' } : undefined}
                     _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
                   >
-                    {cell.formattedDay}
+                    {dayContent}
                   </Button>
                 </Td>
               )
@@ -1649,6 +1715,7 @@ export function Calendar(calendarProps: CalendarProps) {
     min,
     max,
     isDateUnavailable,
+    Day: dayRender,
     today,
     className,
     style,
@@ -1721,21 +1788,36 @@ export function Calendar(calendarProps: CalendarProps) {
   }, [today])
   const markerToday = today ?? mountedToday
 
-  // Single non-interactive day state (FEATURES #6): outside the
-  // canonical bounds or refused by the predicate. Lexical comparison is
-  // exact here — bounds passed the CA-ISO-04 canonical gate and grid
-  // dates are canonical by construction.
+  // Out-of-bounds day state (W-21): outside the canonical bounds.
+  // Natively disabled, keyboard-skipped, never the roving target.
+  // Lexical comparison is exact here — bounds passed the CA-ISO-04
+  // canonical gate and grid dates are canonical by construction.
   const isDateDisabled = React.useCallback(
     (dateStr: ISODate) => {
       if (min !== undefined && dateStr < min) return true
       if (max !== undefined && dateStr > max) return true
-      return isDateUnavailable?.(dateStr) ?? false
+      return false
     },
-    [min, max, isDateUnavailable]
+    [min, max]
+  )
+
+  // Predicate-only unavailable state (W-21): refused by
+  // `isDateUnavailable`, regardless of bounds. Focusable but
+  // unselectable; the Grid intersects it with in-bounds for paint.
+  const isDateUnavailableDay = React.useCallback(
+    (dateStr: ISODate) => isDateUnavailable?.(dateStr) ?? false,
+    [isDateUnavailable]
+  )
+
+  // Merged unselectable state: activation, month/year disabling, and
+  // the W-20 Day `disabled` flag all read this.
+  const isDateUnselectable = React.useCallback(
+    (dateStr: ISODate) => isDateDisabled(dateStr) || isDateUnavailableDay(dateStr),
+    [isDateDisabled, isDateUnavailableDay]
   )
 
   // Month/year non-interactive states (FEATURES #10): a unit is disabled
-  // exactly when every day of it is blocked, so partial months stay
+  // exactly when every day of it is unselectable, so partial months stay
   // enabled (CA-VIEW-04) and a unit flips only when its last day does
   // (CA-MODE-05). Whole units outside the bound months short-circuit
   // without scanning days; the predicate scan is inherent to the
@@ -1748,11 +1830,11 @@ export function Calendar(calendarProps: CalendarProps) {
       if (y < 1 || y > 9999) return true
       const days = getDaysInMonth(y, m)
       for (let day = 1; day <= days; day++) {
-        if (!isDateDisabled(formatISODate(y, m, day))) return false
+        if (!isDateUnselectable(formatISODate(y, m, day))) return false
       }
       return true
     },
-    [min, max, isDateDisabled]
+    [min, max, isDateUnselectable]
   )
 
   const isYearDisabled = React.useCallback(
@@ -1903,15 +1985,15 @@ export function Calendar(calendarProps: CalendarProps) {
 
   const selectDate = React.useCallback(
     (dateStr: ISODate) => {
-      // Blocked dates never emit, in any modality (FEATURES #6,
-      // CA-SINGLE-04). Request-only control otherwise — with one guard:
+      // Unselectable dates never emit, in any modality (CA-SINGLE-04).
+      // Request-only control otherwise — with one guard:
       // re-activating the already-selected value is not a change and
       // emits nothing (B-36 identical-value suppression, restoring
       // CA-SINGLE-03's no-emit read over the FEATURES #13 uniform-request
       // triage). No null request, not a toggle. The parent owns
       // selection; rejection leaves it unchanged, programmatic value
       // changes apply silently with no focus move.
-      if (isDateDisabled(dateStr)) return
+      if (isDateUnselectable(dateStr)) return
       if (mode === 'day') {
         if (dateStr !== value) {
           emitChange?.(dateStr)
@@ -1935,7 +2017,7 @@ export function Calendar(calendarProps: CalendarProps) {
         }
       }
     },
-    [mode, value, emitChange, isDateDisabled]
+    [mode, value, emitChange, isDateUnselectable]
   )
 
   const selectMonth = React.useCallback(
@@ -2036,6 +2118,9 @@ export function Calendar(calendarProps: CalendarProps) {
       isRangeStart,
       isRangeEnd,
       isDateDisabled,
+      isDateUnavailableDay,
+      isDateUnselectable,
+      dayRender,
     }),
     [
       mode,
@@ -2067,6 +2152,9 @@ export function Calendar(calendarProps: CalendarProps) {
       isRangeStart,
       isRangeEnd,
       isDateDisabled,
+      isDateUnavailableDay,
+      isDateUnselectable,
+      dayRender,
     ]
   )
 

@@ -394,34 +394,51 @@ test.describe('Calendar CT', () => {
     await expect(targets).toHaveAttribute('data-date', '2024-04-05')
   })
 
-  test('CA-STATE-04/CA-SINGLE-04: blocked dates are locked out in every modality', async ({
+  test('CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent (W-21)', async ({
     mount,
     page,
   }) => {
     await mount('components/Calendar/Calendar/Constrained')
 
-    for (const blocked of ['2024-04-04', '2024-04-21', '2024-04-12']) {
+    for (const blocked of ['2024-04-04', '2024-04-21']) {
       const button = page.locator(`button[data-date="${blocked}"]`)
       await expect(button).toBeDisabled()
       await expect(button).toHaveAttribute('aria-disabled', 'true')
       await expect(button).toHaveAttribute('data-disabled', '')
     }
+    // Unavailable (W-21): focusable — no native disabled, aria-disabled,
+    // data-unavailable. (Playwright's toBeEnabled treats aria-disabled as
+    // disabled, so focusability is asserted by focusing directly.)
+    const unavailable = page.locator('button[data-date="2024-04-12"]')
+    await expect(unavailable).not.toHaveAttribute('disabled', '')
+    await expect(unavailable).toHaveAttribute('aria-disabled', 'true')
+    await expect(unavailable).toHaveAttribute('data-unavailable', '')
+    await expect(unavailable).not.toHaveAttribute('data-disabled', '')
+    await unavailable.focus()
+    await expect(unavailable).toBeFocused()
     await expect(page.locator('button[data-date="2024-04-10"]')).toBeEnabled()
 
     // Synthetic dispatch bypasses native disabled suppression, so the
-    // guard itself is what keeps these silent.
-    const blocked = page.locator('button[data-date="2024-04-12"]')
-    await blocked.dispatchEvent('click')
-    await blocked.dispatchEvent('keydown', { key: 'Enter' })
-    await blocked.dispatchEvent('keyup', { key: ' ' })
+    // guard itself is what keeps out-of-bounds dates silent.
+    await page.locator('button[data-date="2024-04-04"]').dispatchEvent('click')
+    await expect(page.getByTestId('con-changes')).toHaveText('none')
+
+    // Real gestures on the unavailable day are silent in every modality
+    // and leave the roving tab stop untouched. Force bypasses Playwright's
+    // aria-disabled actionability gate; the click itself is still trusted.
+    await unavailable.click({ force: true })
+    await unavailable.focus()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press(' ')
     await expect(page.getByTestId('con-changes')).toHaveText('none')
     await expect(page.getByTestId('con-month-reqs')).toHaveText('none')
+    await expect(page.locator('button[data-date="2024-04-05"]')).toHaveAttribute('tabindex', '0')
 
     await page.locator('button[data-date="2024-04-10"]').click()
     await expect(page.getByTestId('con-changes')).toHaveText('2024-04-10')
   })
 
-  test('CA-KEY-01/05: arrows move by day and week, skipping blocked dates without wrapping', async ({
+  test('CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping (W-21)', async ({
     mount,
     page,
   }) => {
@@ -431,9 +448,15 @@ test.describe('Calendar CT', () => {
     await page.keyboard.press('ArrowLeft')
     await expect(page.locator('button[data-date="2024-04-09"]')).toBeFocused()
 
+    // 04-11–13 unavailable but focusable: every Right lands in sequence.
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-10"]')).toBeFocused()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-11"]')).toBeFocused()
     await page.keyboard.press('ArrowRight')
     await page.keyboard.press('ArrowRight')
-    // 04-11–13 unavailable: the second Right lands on 04-14.
+    await expect(page.locator('button[data-date="2024-04-13"]')).toBeFocused()
+    await page.keyboard.press('ArrowRight')
     await expect(page.locator('button[data-date="2024-04-14"]')).toBeFocused()
 
     await page.keyboard.press('ArrowUp')
@@ -452,7 +475,7 @@ test.describe('Calendar CT', () => {
     await expect(page.getByTestId('con-changes')).toHaveText('none')
   })
 
-  test('CA-KEY-02: Home/End reach locale week boundaries, skipping inward past blocked dates', async ({
+  test('CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates (W-21)', async ({
     mount,
     page,
   }) => {
@@ -464,12 +487,18 @@ test.describe('Calendar CT', () => {
     await page.keyboard.press('End')
     await expect(page.locator('button[data-date="2024-04-20"]')).toBeFocused()
 
-    // End boundary 04-13 blocked inward through 04-11: stays on the origin.
+    // End boundary 04-13 is unavailable but focusable: End lands on it.
     await page.locator('button[data-date="2024-04-10"]').focus()
     await page.keyboard.press('End')
-    await expect(page.locator('button[data-date="2024-04-10"]')).toBeFocused()
+    await expect(page.locator('button[data-date="2024-04-13"]')).toBeFocused()
     await page.keyboard.press('Home')
     await expect(page.locator('button[data-date="2024-04-07"]')).toBeFocused()
+
+    // Out-of-bounds boundary dates still skip inward: Home from 04-05
+    // walks 03-31 inward through 04-01–04 and stays on the origin.
+    await page.locator('button[data-date="2024-04-05"]').focus()
+    await page.keyboard.press('Home')
+    await expect(page.locator('button[data-date="2024-04-05"]')).toBeFocused()
     await expect(page.getByTestId('con-month-reqs')).toHaveText('none')
   })
 
@@ -612,7 +641,7 @@ test.describe('Calendar CT', () => {
     await expect(page.getByTestId('out-next')).toBeEnabled()
   })
 
-  test('CA-DYNAMIC-02/CA-STATE-06: live constraints relocate focus but preserve selection', async ({
+  test('CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved (W-21)', async ({
     mount,
     page,
   }) => {
@@ -621,33 +650,69 @@ test.describe('Calendar CT', () => {
     await page.locator('button[data-date="2024-04-10"]').click()
     await expect(page.locator('button[data-date="2024-04-10"]')).toBeFocused()
 
-    // Synthetic toggle: the case changes constraints while focus is in
+    // Synthetic toggles: the case changes constraints while focus is in
     // the grid, and a real click would move focus to the toggle first.
     await page.getByTestId('con-toggle-ten').dispatchEvent('click')
-    // 04-11–13 already unavailable: focus skips forward to 04-14.
-    await expect(page.locator('button[data-date="2024-04-14"]')).toBeFocused()
-    await expect(page.locator('button[data-date="2024-04-14"]')).toHaveAttribute('tabindex', '0')
+    // Unavailable stays focusable: focus and the tab stop stay on 04-10,
+    // selection paint is preserved, activation goes silent.
     const selected = page.locator('button[data-date="2024-04-10"]')
+    await expect(selected).toBeFocused()
+    await expect(selected).toHaveAttribute('tabindex', '0')
+    await expect(selected).toHaveAttribute('data-selected', '')
+    await expect(selected).toHaveAttribute('aria-selected', 'true')
+    await expect(selected).toHaveAttribute('data-unavailable', '')
+    await expect(selected).not.toHaveAttribute('data-disabled', '')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('con-changes')).toHaveText('2024-04-10')
+
+    // Binding min to 04-15 pushes 04-10 out of bounds: focus relocates
+    // forward-first to 04-15 — 04-11–14 are out of bounds too — while
+    // selection paint is preserved.
+    await page.getByTestId('con-toggle-bounds').dispatchEvent('click')
+    await expect(page.locator('button[data-date="2024-04-15"]')).toBeFocused()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute('tabindex', '0')
     await expect(selected).toHaveAttribute('data-selected', '')
     await expect(selected).toHaveAttribute('aria-selected', 'true')
     await expect(selected).toHaveAttribute('data-disabled', '')
     await expect(selected).toHaveAttribute('tabindex', '-1')
   })
 
-  test('CA-STATE-07: an all-disabled grid exposes no day tab stop', async ({ mount, page }) => {
+  test('CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing (W-21)', async ({ mount, page }) => {
     await mount('components/Calendar/Calendar/Constrained')
 
     await page.getByTestId('con-toggle-all').click()
-    await expect(page.locator('button[data-date][tabindex="0"]')).toHaveCount(0)
+    const targets = page.locator('button[data-date][tabindex="0"]')
+    await expect(targets).toHaveCount(1)
+    await expect(targets).toHaveAttribute('data-date', '2024-04-05')
 
-    // Native Tab skips the grid body in both directions (nav is disabled
-    // too — every target-month date is unavailable — so the run starts
-    // from the fixture buttons surrounding the grid).
+    // Out-of-bounds paint wins where both apply; nav stays disabled —
+    // no target-month date is selectable.
+    await expect(page.locator('button[data-date="2024-04-04"]')).toHaveAttribute('data-disabled', '')
+    await expect(page.locator('button[data-date="2024-04-04"]')).not.toHaveAttribute(
+      'data-unavailable',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-unavailable',
+      ''
+    )
+    await expect(page.getByTestId('con-prev')).toBeDisabled()
+    await expect(page.getByTestId('con-next')).toBeDisabled()
+
+    // Pointer and keyboard activation are silent everywhere (force
+    // bypasses the aria-disabled actionability gate; the click is trusted).
+    await page.locator('button[data-date="2024-04-10"]').click({ force: true })
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('con-changes')).toHaveText('none')
+    await expect(page.getByTestId('con-month-reqs')).toHaveText('none')
+
+    // The grid tab stop is reachable in native order: Shift+Tab from the
+    // first fixture button lands on it (nav is disabled, so nothing sits
+    // between the grid and the fixture buttons).
     await page.getByTestId('con-toggle-ten').focus()
-    await page.keyboard.press('Tab')
-    await expect(page.getByTestId('con-toggle-all')).toBeFocused()
     await page.keyboard.press('Shift+Tab')
-    await expect(page.getByTestId('con-toggle-ten')).toBeFocused()
+    await expect(page.locator('button[data-date="2024-04-05"]')).toBeFocused()
   })
 
   test('CA-LOC-06: inherited RTL reverses visual arrows while nav stays chronological', async ({
@@ -1310,5 +1375,78 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
     await y2025.click({ force: true })
     await expect(page.getByTestId('ymode-changes')).toHaveText('none')
     await expect(years.locator('button[data-year="2024"]')).toBeEnabled()
+  })
+})
+
+test.describe('Calendar custom days + week start (W-20/W-21)', () => {
+  test('W-20: Day renders custom content, null keeps the default, selection/disabled/keyboard compose', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/CustomDayCells')
+
+    // Custom content on plain, unavailable, and out-of-bounds days alike.
+    await expect(page.getByTestId('day-dot-2024-04-08')).toHaveText('●●')
+    await expect(page.getByTestId('day-dot-2024-04-12')).toHaveText('●')
+    await expect(page.getByTestId('day-dot-2024-04-02')).toHaveText('●')
+    // Null return keeps the default locale number.
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveText('15')
+
+    // Selection composes: the dotted day selects with full selected paint.
+    await page.locator('button[data-date="2024-04-08"]').click()
+    await expect(page.getByTestId('custom-changes')).toHaveText('2024-04-08')
+    await expect(page.getByTestId('custom-value')).toHaveText('2024-04-08')
+    const dotted = page.locator('button[data-date="2024-04-08"]')
+    await expect(dotted).toHaveAttribute('aria-selected', 'true')
+    await expect(dotted).toHaveAttribute('data-selected', '')
+
+    // Disabled and unavailable custom days render dots but stay silent
+    // (force bypasses the disabled/aria-disabled actionability gates).
+    await page.locator('button[data-date="2024-04-02"]').click({ force: true })
+    await page.locator('button[data-date="2024-04-12"]').click({ force: true })
+    await expect(page.getByTestId('custom-changes')).toHaveText('2024-04-08')
+
+    // Keyboard traverses custom cells; Enter on the unavailable one is silent.
+    await page.locator('button[data-date="2024-04-08"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-12"]')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('custom-changes')).toHaveText('2024-04-08')
+  })
+
+  test('W-21: firstDayOfWeek overrides the locale default in both directions', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/WeekStartOverride')
+
+    const usHeaders = page.getByTestId('ws-us-grid').locator('th')
+    await expect(usHeaders).toHaveText(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+    const gbHeaders = page.getByTestId('ws-gb-grid').locator('th')
+    await expect(gbHeaders).toHaveText(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
+
+    // April 2024 Monday-first has no leading padding (the 1st is a
+    // Monday); Sunday-first leads with Sunday March 31.
+    await expect(
+      page.getByTestId('ws-us-grid').locator('button[data-date="2024-03-31"]')
+    ).toHaveCount(0)
+    await expect(
+      page.getByTestId('ws-gb-grid').locator('button[data-date="2024-03-31"]')
+    ).toHaveCount(1)
+
+    // Home respects the override: Monday in the US grid, Sunday in GB.
+    await page.getByTestId('ws-us-grid').locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Home')
+    await expect(
+      page.getByTestId('ws-us-grid').locator('button[data-date="2024-04-08"]')
+    ).toBeFocused()
+    await page.getByTestId('ws-gb-grid').locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Home')
+    await expect(
+      page.getByTestId('ws-gb-grid').locator('button[data-date="2024-04-07"]')
+    ).toBeFocused()
   })
 })
