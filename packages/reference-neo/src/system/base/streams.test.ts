@@ -32,6 +32,7 @@ import {
   OWN_NORESET_CSS,
   PREAMBLE,
   RICH_ENTRY,
+  ROOT_DEFAULT,
   RICH_STRIPPED,
   SCOPED_ENTRY,
   SHARED_BASE_CSS,
@@ -53,8 +54,8 @@ describe('mergeStreams statement', () => {
       APP_OWN,
       'app'
     )
-    const [statement] = merged.stylesheet.split('\n')
-    expect(statement).toBe('@layer extend-library, extend-library-2, app;')
+    expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer extend-library, extend-library-2, app;')
     const first = merged.stylesheet.indexOf('@layer extend-library {')
     const second = merged.stylesheet.indexOf('@layer extend-library-2 {')
     const self = merged.stylesheet.indexOf('@layer app {')
@@ -73,8 +74,8 @@ describe('mergeStreams statement', () => {
       APP_OWN,
       'app'
     )
-    const [statement] = merged.stylesheet.split('\n')
-    expect(statement).toBe('@layer base-lib, outer-a, outer-b, app;')
+    expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer base-lib, outer-a, outer-b, app;')
     expect(countOccurrences(merged.stylesheet, '@layer base-lib, outer-a;')).toBe(0)
     expect(countOccurrences(merged.stylesheet, '.base-lib__c_bg')).toBe(2)
     expect(countOccurrences(merged.stylesheet, '@layer reset {')).toBe(1)
@@ -90,12 +91,12 @@ describe('mergeStreams statement', () => {
       APP_OWN,
       'app'
     )
-    const [statement] = merged.stylesheet.split('\n')
-    expect(statement).toBe('@layer flat-lib, app;')
+    expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer flat-lib, app;')
     expect(countOccurrences(merged.stylesheet, '.flat-lib__p_1px')).toBe(2)
   })
 
-  it('composes a two-level expansion statement-first with its closure', () => {
+  it('composes a two-level expansion root-first with its closure', () => {
     const merged = mergeStreams(
       [{ name: 'mid-lib', streams: [MID_BASE_ENTRY, MID_ENTRY] }],
       APP_OWN,
@@ -107,8 +108,8 @@ describe('mergeStreams statement', () => {
 
   it('keeps self last against a pathological self-extends entry', () => {
     const merged = mergeStreams([{ name: 'app', streams: [EXTEND_ENTRY] }], APP_OWN, 'app')
-    const [statement] = merged.stylesheet.split('\n')
-    expect(statement).toBe('@layer extend-library, app;')
+    expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer extend-library, app;')
     expect(merged.streams.map((entry) => entry.name)).toEqual(['extend-library', 'app'])
   })
 })
@@ -120,8 +121,8 @@ describe('mergeStreams statement escaping', () => {
       APP_OWN,
       'app'
     )
-    expect(merged.stylesheet.split('\n')[0]).toBe('@layer \\@scope\\/pkg, app;')
-    expect(merged.portableStylesheet.split('\n')[0]).toBe('@layer \\@scope\\/pkg, app;')
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer \\@scope\\/pkg, app;')
+    expect(merged.portableStylesheet.split('\n')[3]).toBe('@layer \\@scope\\/pkg, app;')
     expect(merged.stylesheet).toContain('@layer \\@scope\\/pkg {')
   })
 
@@ -133,8 +134,8 @@ describe('mergeStreams statement escaping', () => {
       package: 'a,b',
     }
     const merged = mergeStreams([{ name: 'a,b', streams: [commaUpstream] }], APP_OWN, 'app')
-    expect(merged.stylesheet.split('\n')[0]).toBe('@layer a\\,b, app;')
-    expect(merged.portableStylesheet.split('\n')[0]).toBe('@layer a\\,b, app;')
+    expect(merged.stylesheet.split('\n')[3]).toBe('@layer a\\,b, app;')
+    expect(merged.portableStylesheet.split('\n')[3]).toBe('@layer a\\,b, app;')
     expect(merged.stylesheet).toContain('@layer a\\,b {')
   })
 })
@@ -185,7 +186,7 @@ describe('mergeStreams reset', () => {
       'chain-t1'
     )
     expect(merged.stylesheet).toBe(
-      `@layer base-lib, chain-t1;\n${SHARED_BASE_CSS}${OWN_NORESET_CSS}`
+      `${ROOT_DEFAULT}@layer base-lib, chain-t1;\n${SHARED_BASE_CSS}${OWN_NORESET_CSS}`
     )
     expect(countOccurrences(merged.stylesheet, '@layer reset {')).toBe(0)
   })
@@ -224,15 +225,16 @@ describe('mergeStreams assemblies', () => {
       T1_OWN,
       'chain-t1'
     )
-    expect(merged.portableStylesheet.startsWith(STATEMENT_T1)).toBe(true)
+    expect(merged.portableStylesheet.startsWith(ROOT_DEFAULT + STATEMENT_T1)).toBe(true)
     expect(merged.portableStylesheet).toContain('[data-layer="extend-library"]')
     expect(merged.portableStylesheet).toContain('[data-layer="chain-t1"]')
-    expect(merged.portableStylesheet).not.toContain(':root')
+    expect(merged.portableStylesheet).toContain(ROOT_DEFAULT)
+    expect(countOccurrences(merged.portableStylesheet, ':root')).toBe(1)
   })
 
   it('no-ops byte-identical with no upstreams at all', () => {
     const merged = mergeStreams([], T1_OWN, 'chain-t1')
-    expect(merged.stylesheet).toBe(OWN_CSS)
+    expect(merged.stylesheet).toBe(ROOT_DEFAULT + OWN_CSS)
   })
 
   it('no-ops byte-identical when every upstream carries no streams', () => {
@@ -241,7 +243,7 @@ describe('mergeStreams assemblies', () => {
       T1_OWN,
       'chain-t1'
     )
-    expect(merged.stylesheet).toBe(OWN_CSS)
+    expect(merged.stylesheet).toBe(ROOT_DEFAULT + OWN_CSS)
   })
 })
 
@@ -274,6 +276,7 @@ describe('mergeStreams published payload', () => {
     const own = merged.streams[merged.streams.length - 1]
     expect(own.tokensPortable).toBe(T1_OWN.tokensPortable)
     expect(own.reset).toBe(T1_OWN.reset)
+    expect(own.root).toBe(T1_OWN.root)
   })
 
   it('still publishes the own entry with no usable upstreams', () => {
@@ -298,8 +301,8 @@ describe('mergeStreams wrap', () => {
 
   it('leaves an unpackaged entry flat', () => {
     const merged = mergeStreams([], FLAT_ENTRY, 'flat-lib')
-    expect(merged.stylesheet).toBe(FLAT_CSS)
-    expect(merged.portableStylesheet).toBe(FLAT_CSS)
+    expect(merged.stylesheet).toBe(ROOT_DEFAULT + FLAT_CSS)
+    expect(merged.portableStylesheet).toBe(ROOT_DEFAULT + FLAT_CSS)
   })
 
   it('escapes scope characters in the package wrap', () => {
@@ -314,5 +317,44 @@ describe('mergeStreams wrap', () => {
 
   it('reprints a prelude-less legacy entry byte-exact', () => {
     expect(mergeStreams([], LEGACY_ENTRY, 'old-lib').portableStylesheet).toBe(LEGACY_CSS)
+  })
+})
+
+describe('mergeStreams root default', () => {
+  it('hoists the own root ahead of the statement in both sheets', () => {
+    const merged = mergeStreams(
+      [{ name: 'extend-library', streams: [EXTEND_ENTRY] }],
+      T1_OWN,
+      'chain-t1'
+    )
+    expect(merged.stylesheet.startsWith(ROOT_DEFAULT + STATEMENT_T1)).toBe(true)
+    expect(merged.portableStylesheet.startsWith(ROOT_DEFAULT + STATEMENT_T1)).toBe(true)
+    expect(merged.stylesheet.indexOf('@layer root {')).toBe(0)
+  })
+
+  it('prints exactly one root block: upstream roots drop, never concat', () => {
+    const merged = mergeStreams(
+      [
+        { name: 'outer-a', streams: [SHARED_BASE_ENTRY, OUTER_A_ENTRY] },
+        { name: 'outer-b', streams: [SHARED_BASE_ENTRY, OUTER_B_ENTRY] },
+      ],
+      APP_OWN,
+      'app'
+    )
+    expect(countOccurrences(merged.stylesheet, '@layer root {')).toBe(1)
+    expect(countOccurrences(merged.portableStylesheet, '@layer root {')).toBe(1)
+    expect(countOccurrences(merged.stylesheet, '--spacing-root:')).toBe(1)
+  })
+
+  it('merges statement-first when the own object carries no root', () => {
+    const rootless: SystemStreams = { ...T1_OWN, root: undefined }
+    const merged = mergeStreams(
+      [{ name: 'extend-library', streams: [EXTEND_ENTRY] }],
+      rootless,
+      'chain-t1'
+    )
+    expect(merged.stylesheet.startsWith(STATEMENT_T1)).toBe(true)
+    expect(merged.stylesheet).toContain(EXTEND_STRIPPED)
+    expect(merged.stylesheet).not.toContain('@layer root {')
   })
 })

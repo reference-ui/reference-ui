@@ -261,11 +261,15 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
       'preamble',
       'recipes',
       'reset',
+      'root',
       'tokens',
       'tokensPortable',
       'utilities',
     ])
     expect(slim.streams.name).toBe('lib-test-system')
+    expect(slim.streams.root).toBe('@layer root {\n  :root { --spacing-root: 0.25rem }\n}\n')
+    expect(slim.stylesheet.startsWith(slim.streams.root)).toBe(true)
+    expect(slim.portableStylesheet!.startsWith(slim.streams.root)).toBe(true)
     expect('stylePlans' in slim).toBe(false)
     expect('wants' in slim).toBe(false)
     expect('css' in slim).toBe(false)

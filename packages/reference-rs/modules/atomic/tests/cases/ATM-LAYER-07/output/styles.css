@@ -1,3 +1,6 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
 @layer layer-07 {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {

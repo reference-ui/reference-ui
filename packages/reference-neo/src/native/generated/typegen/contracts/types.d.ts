@@ -177,6 +177,7 @@ export type LogChannel = 'compiler' | 'proof';
  */
 export interface SystemStreams {
     name: string;
+    root?: string;
     preamble: string;
     reset?: string;
     global?: string;

@@ -1,6 +1,7 @@
 //! Seed contract for the atomic compile pipeline: an empty request emits
-//! the six-layer preamble with no plans, no diagnostics, and no tokens.
-//! Takes the default CompileRequest; anchors every station's empty baseline.
+//! the baked root default plus the six-layer preamble with no plans, no
+//! diagnostics, and no tokens. Takes the default CompileRequest; anchors
+//! every station's empty baseline.
 
 use crate::{compile, CompileRequest};
 
@@ -8,9 +9,10 @@ use crate::{compile, CompileRequest};
 fn test_compile_seed_contract() {
     let req = CompileRequest::default();
     let res = compile(&req).expect("compile seed contract");
-    assert!(res
-        .stylesheet
-        .starts_with("@layer reset, global, base, tokens, recipes, utilities;"));
+    assert!(res.stylesheet.starts_with(
+        "@layer root {\n  :root { --spacing-root: 0.25rem }\n}\n\
+         @layer reset, global, base, tokens, recipes, utilities;"
+    ));
     assert!(res.css.is_none());
     assert!(res.style_plans.is_empty());
     assert!(res.diagnostics.is_empty());

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "root-override",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/spacing.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.5rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

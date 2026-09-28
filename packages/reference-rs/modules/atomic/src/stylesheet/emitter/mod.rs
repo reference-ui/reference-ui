@@ -38,7 +38,8 @@ pub fn build_stylesheet(
 /// Same as `build_stylesheet`, with closed recipe classes in `@layer recipes`.
 ///
 /// Named systems nest the six layers inside their package layer so composed
-/// output keeps utilities above global; unnamed systems stay flat.
+/// output keeps utilities above global; unnamed systems stay flat. Both shapes
+/// open with the baked root default ahead of the wrap, the lowest layer.
 pub fn build_stylesheet_with(
     atom_set: &AtomSet,
     system: &BaseSystem,
@@ -49,7 +50,7 @@ pub fn build_stylesheet_with(
     append_system_layers(&mut inner, system, diagnostics);
     append_recipes_layer(&mut inner, recipes);
     append_utilities_layer(&mut inner, atom_set, &system.name);
-    wrap_package_layer(&system.name, &inner)
+    prepend_root_default(&wrap_package_layer(&system.name, &inner))
 }
 
 /// Same as `build_stylesheet_with`, with portable [data-layer] token selectors.
@@ -63,7 +64,17 @@ pub fn build_portable_stylesheet_with(
     append_portable_system_layers(&mut inner, system, diagnostics);
     append_recipes_layer(&mut inner, recipes);
     append_utilities_layer(&mut inner, atom_set, &system.name);
-    wrap_package_layer(&system.name, &inner)
+    prepend_root_default(&wrap_package_layer(&system.name, &inner))
+}
+
+/// Prefix the baked root default ahead of a wrapped sheet. The default stays
+/// outside the package wrap so it keeps the lowest layer rank in any compose.
+fn prepend_root_default(wrapped: &str) -> String {
+    let mut out =
+        String::with_capacity(super::root_default::ROOT_DEFAULT_BLOCK.len() + wrapped.len());
+    super::root_default::append_root_default(&mut out);
+    out.push_str(wrapped);
+    out
 }
 
 /// Paired diagnostic sinks for the dual-sheet build. The primary sink is kept;

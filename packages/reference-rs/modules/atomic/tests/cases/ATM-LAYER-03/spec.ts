@@ -4,13 +4,13 @@
  * stay omitted. Utility rules stay inside `@layer utilities`.
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, type AtomicCaseSpec } from '../../helpers.js'
+import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-03',
   verify(result) {
     const sheet = result.stylesheet
-    expect(sheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
+    expect(sheet.startsWith(`${ROOT_DEFAULT_BLOCK}${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
     expect(sheet).toContain('@layer global {')
     expect(sheet).toContain('--spacing-root: 0.25rem')
     expect(sheet).toContain('@layer tokens {')

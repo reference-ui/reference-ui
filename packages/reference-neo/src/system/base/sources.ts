@@ -10,6 +10,7 @@ export function baseSystemInterfaceSource(): string {
   return [
     'export interface SystemStreams {',
     '  name: string',
+    '  root?: string',
     '  preamble: string',
     '  reset?: string',
     '  global?: string',

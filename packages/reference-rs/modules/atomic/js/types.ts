@@ -219,6 +219,8 @@ export interface NativeRuntimeArtifact {
 export interface CompileStreams {
   /** The system name: entry identity for statement dedupe (names-as-data). */
   name: string
+  /** `@layer root {…}` baked spacing-root default, ahead of the package wrap. */
+  root: string
   /** The `@layer …;` preamble, verbatim. */
   preamble: string
   /** `@layer reset {…}`, empty when the system prints no reset. */

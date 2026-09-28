@@ -3,7 +3,8 @@
 //! Guarantees strict cascade precedence and prevents unintended specificity wars across generated CSS rules.
 //! Every named system nests those six layers inside its own package layer, so composed
 //! packages keep their internal order and no internal layer leaks to the top level.
-//! An unnamed system keeps the bare six-layer preamble for unit-isolated compiles.
+//! The baked `@layer root` default prints ahead of the wrap (or the preamble when
+//! flat); only the rejection path keeps the bare six-layer preamble.
 
 use super::name::escape::escape_css_selector;
 

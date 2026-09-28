@@ -3,13 +3,14 @@
 //! and concatenation reproduces today's bytes exactly. The dual-sheet entry point
 //! builds these streams then joins them; the single-sheet builds stay sequential
 //! as the byte-identity oracle. S2 carries these across N-API verbatim as the
-//! 9-key own object: the system name plus one string per layer block.
+//! 10-key own object: the system name plus one string per layer block.
 
 use serde::{Deserialize, Serialize};
 
 use super::StylesheetSinks;
 use super::super::global::append_reset_css;
 use super::super::layers::{LAYER_PREAMBLE, wrap_package_layer};
+use super::super::root_default::append_root_default;
 use super::super::system_layers::{append_global, append_tokens};
 use crate::atom::AtomSet;
 use crate::recipes::CompiledRecipe;
@@ -18,13 +19,16 @@ use base_system::BaseSystem;
 /// One captured chunk per layer block, plus the package name the wrap prints.
 /// Vocabulary A (PLAN §3.6, Final): names as data + one string per layer block
 /// + package name. Field order is the emitter's push order. Serde carries the
-/// 9-key N-API own object verbatim (snake→camel); empty blocks stay empty
+/// 10-key N-API own object verbatim (snake→camel); empty blocks stay empty
 /// strings, never omitted, so the oracle channel needs no refold.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StylesheetStreams {
     /// The system name: entry identity for statement dedupe (names-as-data).
     pub name: String,
+    /// `@layer root {…}` baked spacing-root default, printed before the
+    /// package wrap so it stays the lowest-precedence layer in any compose.
+    pub root: String,
     /// The `@layer …;` preamble, verbatim.
     pub preamble: String,
     /// `@layer reset {…}`, empty when the system prints no reset.
@@ -54,13 +58,23 @@ impl StylesheetStreams {
     }
 
     /// Concatenate the served sheet exactly as the sequential build did.
+    /// The root default rides ahead of the package wrap, never inside it.
     pub fn stylesheet(&self) -> String {
-        wrap_package_layer(&self.package, &self.inner(&self.tokens))
+        format!(
+            "{}{}",
+            self.root,
+            wrap_package_layer(&self.package, &self.inner(&self.tokens))
+        )
     }
 
     /// Concatenate the portable sheet exactly as the sequential build did.
+    /// Same root default: only the token selectors differ between sheets.
     pub fn portable_stylesheet(&self) -> String {
-        wrap_package_layer(&self.package, &self.inner(&self.tokens_portable))
+        format!(
+            "{}{}",
+            self.root,
+            wrap_package_layer(&self.package, &self.inner(&self.tokens_portable))
+        )
     }
 
     /// Join one sheet's inner streams in push order: preamble, reset, global,
@@ -112,8 +126,11 @@ pub fn build_stylesheet_streams(
     append_tokens(&mut tokens, system, false, sinks.primary);
     let mut tokens_portable = String::new();
     append_tokens(&mut tokens_portable, system, true, sinks.portable);
+    let mut root = String::new();
+    append_root_default(&mut root);
     StylesheetStreams {
         name: system.name.clone(),
+        root,
         preamble: LAYER_PREAMBLE.to_string(),
         reset,
         global,

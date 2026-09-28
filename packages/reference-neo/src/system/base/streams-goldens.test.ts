@@ -27,6 +27,7 @@ import {
   OWN_CSS,
   OWN_NORESET_CSS,
   RICH_CSS,
+  ROOT_DEFAULT,
   RICH_ENTRY,
   SHARED_BASE_CSS,
   SHARED_BASE_ENTRY,
@@ -37,17 +38,17 @@ import {
 } from './streams-corpus.ts'
 
 const PORTABLE_REPRINTS: Array<{ entry: SystemStreams; css: string }> = [
-  { entry: EXTEND_ENTRY, css: EXTEND_CSS },
-  { entry: EXTEND2_ENTRY, css: EXTEND2_CSS },
-  { entry: SHARED_BASE_ENTRY, css: SHARED_BASE_CSS },
-  { entry: OUTER_A_ENTRY, css: OUTER_A_CSS },
-  { entry: MID_BASE_ENTRY, css: MID_BASE_BLOCK },
-  { entry: MID_ENTRY, css: MID_OWN_BLOCK },
+  { entry: EXTEND_ENTRY, css: ROOT_DEFAULT + EXTEND_CSS },
+  { entry: EXTEND2_ENTRY, css: ROOT_DEFAULT + EXTEND2_CSS },
+  { entry: SHARED_BASE_ENTRY, css: ROOT_DEFAULT + SHARED_BASE_CSS },
+  { entry: OUTER_A_ENTRY, css: ROOT_DEFAULT + OUTER_A_CSS },
+  { entry: MID_BASE_ENTRY, css: ROOT_DEFAULT + MID_BASE_BLOCK },
+  { entry: MID_ENTRY, css: ROOT_DEFAULT + MID_OWN_BLOCK },
   { entry: LEGACY_ENTRY, css: LEGACY_CSS },
-  { entry: RICH_ENTRY, css: RICH_CSS },
-  { entry: FLAT_ENTRY, css: FLAT_CSS },
-  { entry: T1_OWN, css: T1_PORTABLE_CSS },
-  { entry: APP_OWN, css: APP_CSS },
+  { entry: RICH_ENTRY, css: ROOT_DEFAULT + RICH_CSS },
+  { entry: FLAT_ENTRY, css: ROOT_DEFAULT + FLAT_CSS },
+  { entry: T1_OWN, css: ROOT_DEFAULT + T1_PORTABLE_CSS },
+  { entry: APP_OWN, css: ROOT_DEFAULT + APP_CSS },
 ]
 
 describe('streams reprints', () => {
@@ -56,9 +57,11 @@ describe('streams reprints', () => {
   })
 
   it('reprints own objects in the served variant', () => {
-    expect(mergeStreams([], T1_OWN, 'chain-t1').stylesheet).toBe(OWN_CSS)
-    expect(mergeStreams([], T1_NORESET_OWN, 'chain-t1').stylesheet).toBe(OWN_NORESET_CSS)
-    expect(mergeStreams([], APP_OWN, 'app').stylesheet).toBe(APP_CSS)
+    expect(mergeStreams([], T1_OWN, 'chain-t1').stylesheet).toBe(ROOT_DEFAULT + OWN_CSS)
+    expect(mergeStreams([], T1_NORESET_OWN, 'chain-t1').stylesheet).toBe(
+      ROOT_DEFAULT + OWN_NORESET_CSS
+    )
+    expect(mergeStreams([], APP_OWN, 'app').stylesheet).toBe(ROOT_DEFAULT + APP_CSS)
   })
 })
 

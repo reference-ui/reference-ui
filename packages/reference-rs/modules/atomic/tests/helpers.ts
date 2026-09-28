@@ -43,7 +43,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const CASES_DIR = path.resolve(__dirname, 'cases')
 export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})$/
-export { LAYER_PREAMBLE, LIB_PACKAGE_OPEN } from './package-layers.js'
+export { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK } from './package-layers.js'
 
 /** Frozen lib spec for stations without their own baseSystem; the seam validates it. */
 export const LIB_SYSTEM_SPEC = libSystemSpecJson as EvaluatedSystemSpec

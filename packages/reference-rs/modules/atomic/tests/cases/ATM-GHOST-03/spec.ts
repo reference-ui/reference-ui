@@ -4,12 +4,12 @@
  * tokens/global may fill those layers (ATM-LAYER-03).
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, type AtomicCaseSpec } from '../../helpers.js'
+import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-03',
   verify(result) {
-    expect(result.stylesheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
+    expect(result.stylesheet.startsWith(`${ROOT_DEFAULT_BLOCK}${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(
       true
     )
     expect(result.stylesheet).not.toContain('@layer utilities')

@@ -8,6 +8,9 @@ import type { SystemStreams } from './types.ts'
 
 export const PREAMBLE = '@layer reset, global, base, tokens, recipes, utilities;\n'
 
+/** Baked root-default block, verbatim engine bytes; engine sheets open with it. */
+export const ROOT_DEFAULT = '@layer root {\n  :root { --spacing-root: 0.25rem }\n}\n'
+
 const BLOCK_OPEN = /^@layer ([A-Za-z-]+) \{\n/
 const PREAMBLE_LINE = /^@layer [^;{]+;\n/
 
@@ -76,12 +79,35 @@ function assignChunk(name: string, entry: SystemStreams, chunk: string, field: T
 
 /** Split one whole-string sheet into its per-layer entry; unknown chunks throw. */
 function splitEntry(name: string, css: string, options: SplitOptions): SystemStreams {
-  const inner = options.wrapped ? unwrapEntry(name, css) : css
+  const { root, rest } = splitLeadingRoot(css)
+  const inner = options.wrapped ? unwrapEntry(name, rest) : rest
   const entry: SystemStreams = { name, preamble: '' }
+  if (root !== undefined) entry.root = root
   const field = options.tokensField ?? 'tokensPortable'
   for (const chunk of splitTopLevel(inner)) assignChunk(name, entry, chunk, field)
   if (options.pkg !== undefined) entry.package = options.pkg
   return entry
+}
+
+/** Peel the engine's leading `@layer root` chunk (outside the wrap, when present). */
+function splitLeadingRoot(css: string): { root?: string; rest: string } {
+  if (!css.startsWith('@layer root {')) return { rest: css }
+  const end = findChunkEnd(css)
+  if (end === -1) throw new Error('splitEntry: unterminated leading @layer root chunk')
+  return { root: css.slice(0, end), rest: css.slice(end) }
+}
+
+/** Offset just past a leading block's depth-zero close (newline included); -1 when open. */
+function findChunkEnd(css: string): number {
+  let depth = 0
+  for (let i = 0; i < css.length; i += 1) {
+    if (css[i] === '{') depth += 1
+    else if (css[i] === '}') {
+      depth -= 1
+      if (depth === 0) return i + (css[i + 1] === '\n' ? 2 : 1)
+    }
+  }
+  return -1
 }
 
 export const EXTEND_CSS = `@layer extend-library {
@@ -119,7 +145,7 @@ export const EXTEND_STRIPPED = `@layer extend-library {
 }
 `
 
-export const EXTEND_ENTRY = splitEntry('extend-library', EXTEND_CSS, { wrapped: true, pkg: 'extend-library' })
+export const EXTEND_ENTRY = splitEntry('extend-library', ROOT_DEFAULT + EXTEND_CSS, { wrapped: true, pkg: 'extend-library' })
 
 export const EXTEND2_CSS = `@layer extend-library-2 {
 @layer reset, global, base, tokens, recipes, utilities;
@@ -132,7 +158,7 @@ export const EXTEND2_CSS = `@layer extend-library-2 {
 }
 `
 
-export const EXTEND2_ENTRY = splitEntry('extend-library-2', EXTEND2_CSS, { wrapped: true, pkg: 'extend-library-2' })
+export const EXTEND2_ENTRY = splitEntry('extend-library-2', ROOT_DEFAULT + EXTEND2_CSS, { wrapped: true, pkg: 'extend-library-2' })
 
 export const OWN_CSS = `@layer chain-t1 {
 @layer reset, global, base, tokens, recipes, utilities;
@@ -166,8 +192,8 @@ export const T1_PORTABLE_CSS = `@layer chain-t1 {
 }
 `
 
-const T1_SERVED = splitEntry('chain-t1', OWN_CSS, { tokensField: 'tokens', wrapped: true, pkg: 'chain-t1' })
-const T1_PORTABLE = splitEntry('chain-t1', T1_PORTABLE_CSS, { wrapped: true, pkg: 'chain-t1' })
+const T1_SERVED = splitEntry('chain-t1', ROOT_DEFAULT + OWN_CSS, { tokensField: 'tokens', wrapped: true, pkg: 'chain-t1' })
+const T1_PORTABLE = splitEntry('chain-t1', ROOT_DEFAULT + T1_PORTABLE_CSS, { wrapped: true, pkg: 'chain-t1' })
 export const T1_OWN: SystemStreams = { ...T1_SERVED, tokensPortable: T1_PORTABLE.tokensPortable }
 
 export const OWN_NORESET_CSS = `@layer chain-t1 {
@@ -183,7 +209,7 @@ export const OWN_NORESET_CSS = `@layer chain-t1 {
 }
 `
 
-const T1_NORESET_SERVED = splitEntry('chain-t1', OWN_NORESET_CSS, { tokensField: 'tokens', wrapped: true, pkg: 'chain-t1' })
+const T1_NORESET_SERVED = splitEntry('chain-t1', ROOT_DEFAULT + OWN_NORESET_CSS, { tokensField: 'tokens', wrapped: true, pkg: 'chain-t1' })
 export const T1_NORESET_OWN: SystemStreams = { ...T1_NORESET_SERVED, tokensPortable: T1_OWN.tokensPortable }
 
 export const APP_CSS = `@layer app {
@@ -197,7 +223,7 @@ export const APP_CSS = `@layer app {
 }
 `
 
-export const APP_OWN = splitEntry('app', APP_CSS, { wrapped: true, pkg: 'app' })
+export const APP_OWN = splitEntry('app', ROOT_DEFAULT + APP_CSS, { wrapped: true, pkg: 'app' })
 
 export const SHARED_BASE_CSS = `@layer base-lib {
 @layer reset, global, base, tokens, recipes, utilities;
@@ -207,7 +233,7 @@ export const SHARED_BASE_CSS = `@layer base-lib {
 }
 `
 
-export const SHARED_BASE_ENTRY = splitEntry('base-lib', SHARED_BASE_CSS, { wrapped: true, pkg: 'base-lib' })
+export const SHARED_BASE_ENTRY = splitEntry('base-lib', ROOT_DEFAULT + SHARED_BASE_CSS, { wrapped: true, pkg: 'base-lib' })
 
 export const OUTER_A_CSS = `@layer outer-a {
 @layer reset, global, base, tokens, recipes, utilities;
@@ -220,7 +246,7 @@ export const OUTER_A_CSS = `@layer outer-a {
 }
 `
 
-export const OUTER_A_ENTRY = splitEntry('outer-a', OUTER_A_CSS, { wrapped: true, pkg: 'outer-a' })
+export const OUTER_A_ENTRY = splitEntry('outer-a', ROOT_DEFAULT + OUTER_A_CSS, { wrapped: true, pkg: 'outer-a' })
 export const OUTER_B_ENTRY: SystemStreams = {
   ...OUTER_A_ENTRY,
   name: 'outer-b',
@@ -260,7 +286,7 @@ export const MID_BASE_BLOCK = `@layer base-lib {
 }
 `
 
-export const MID_BASE_ENTRY = splitEntry('base-lib', MID_BASE_BLOCK, { wrapped: true, pkg: 'base-lib' })
+export const MID_BASE_ENTRY = splitEntry('base-lib', ROOT_DEFAULT + MID_BASE_BLOCK, { wrapped: true, pkg: 'base-lib' })
 
 export const MID_OWN_BLOCK = `@layer mid-lib {
 @layer reset, global, base, tokens, recipes, utilities;
@@ -285,7 +311,7 @@ export const MID_OWN_STRIPPED = `@layer mid-lib {
 }
 `
 
-export const MID_ENTRY = splitEntry('mid-lib', MID_OWN_BLOCK, { wrapped: true, pkg: 'mid-lib' })
+export const MID_ENTRY = splitEntry('mid-lib', ROOT_DEFAULT + MID_OWN_BLOCK, { wrapped: true, pkg: 'mid-lib' })
 
 export const LEGACY_CSS = `@layer old-lib {
 @layer tokens {
@@ -339,7 +365,7 @@ export const RICH_STRIPPED = `@layer rich-lib {
 }
 `
 
-export const RICH_ENTRY = splitEntry('rich-lib', RICH_CSS, { wrapped: true, pkg: 'rich-lib' })
+export const RICH_ENTRY = splitEntry('rich-lib', ROOT_DEFAULT + RICH_CSS, { wrapped: true, pkg: 'rich-lib' })
 
 export const FLAT_CSS = `@layer reset, global, base, tokens, recipes, utilities;
 @layer utilities {
@@ -347,15 +373,15 @@ export const FLAT_CSS = `@layer reset, global, base, tokens, recipes, utilities;
 }
 `
 
-export const FLAT_ENTRY = splitEntry('flat-lib', FLAT_CSS, { wrapped: false })
-export const SCOPED_ENTRY = splitEntry('@scope/pkg', FLAT_CSS, { wrapped: false, pkg: '@scope/pkg' })
-export const DIGIT_ENTRY = splitEntry('2xl-lib', FLAT_CSS, { wrapped: false, pkg: '2xl-lib' })
+export const FLAT_ENTRY = splitEntry('flat-lib', ROOT_DEFAULT + FLAT_CSS, { wrapped: false })
+export const SCOPED_ENTRY = splitEntry('@scope/pkg', ROOT_DEFAULT + FLAT_CSS, { wrapped: false, pkg: '@scope/pkg' })
+export const DIGIT_ENTRY = splitEntry('2xl-lib', ROOT_DEFAULT + FLAT_CSS, { wrapped: false, pkg: '2xl-lib' })
 
 export const STATEMENT_T1 = '@layer extend-library, chain-t1;\n'
-export const NORMAL_GOLDEN = STATEMENT_T1 + EXTEND_STRIPPED + OWN_CSS
-export const NORESET_GOLDEN = STATEMENT_T1 + EXTEND_STRIPPED + OWN_NORESET_CSS
+export const NORMAL_GOLDEN = ROOT_DEFAULT + STATEMENT_T1 + EXTEND_STRIPPED + OWN_CSS
+export const NORESET_GOLDEN = ROOT_DEFAULT + STATEMENT_T1 + EXTEND_STRIPPED + OWN_NORESET_CSS
 export const TRANSITIVE_STREAMS_GOLDEN =
-  '@layer base-lib, mid-lib, app;\n' + MID_BASE_BLOCK + MID_OWN_STRIPPED + APP_CSS
+  ROOT_DEFAULT + '@layer base-lib, mid-lib, app;\n' + MID_BASE_BLOCK + MID_OWN_STRIPPED + APP_CSS
 
 export function countOccurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1

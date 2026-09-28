@@ -4,13 +4,13 @@
  * appear before that block; utility classes must not.
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, type AtomicCaseSpec } from '../../helpers.js'
+import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-04',
   verify(result) {
     const sheet = result.stylesheet
-    expect(sheet.startsWith(`${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
+    expect(sheet.startsWith(`${ROOT_DEFAULT_BLOCK}${LIB_PACKAGE_OPEN}\n${LAYER_PREAMBLE}`)).toBe(true)
     const utilitiesOpen = sheet.indexOf('@layer utilities {')
     expect(utilitiesOpen).toBeGreaterThan(-1)
     const body = sheet.slice(utilitiesOpen)

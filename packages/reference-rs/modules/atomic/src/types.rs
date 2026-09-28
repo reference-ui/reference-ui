@@ -77,7 +77,7 @@ pub struct CompileResult {
     pub stylesheet: String,
     #[serde(default)]
     pub portable_stylesheet: String,
-    /// The own system's per-layer streams (S2 oracle channel): the 9-key
+    /// The own system's per-layer streams (S2 oracle channel): the 10-key
     /// object with both token variants, shipped verbatim next to the joined
     /// sheets. Required on schema 2; fail-closed artifacts carry preamble-only.
     pub streams: StylesheetStreams,

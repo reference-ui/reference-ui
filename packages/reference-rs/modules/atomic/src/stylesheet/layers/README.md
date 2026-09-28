@@ -4,6 +4,7 @@ The shipped contract is **six** layers nested inside the compiling
 package's layer (`M0-fix21-A`):
 
 ```css
+@layer root { /* :root { --spacing-root: 0.25rem } — baked default, lowest rank */ }
 @layer color-mode {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global { /* ... */ }
@@ -14,9 +15,11 @@ package's layer (`M0-fix21-A`):
 The engine is the only thing that prints the preamble, and it prints
 this string. The six-layer order is verbatim and inner; the package
 wrap is what lets a composed page order packages without a top-level
-internal layer outranking another package's nested utilities. Do not
-drop a layer to "simplify." Unnamed compiles and the rejection path
-keep the bare preamble; they never compose.
+internal layer outranking another package's nested utilities. The baked
+`@layer root` default is the one layer ahead of the wrap: it declares
+first, ranks below every package, and loses to any author definition.
+Do not drop a layer to "simplify." Only the rejection path keeps the
+bare preamble; it never composes.
 
 | Layer | Content |
 | :--- | :--- |

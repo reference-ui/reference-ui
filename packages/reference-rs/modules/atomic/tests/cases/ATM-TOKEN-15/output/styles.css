@@ -1,3 +1,6 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
 @layer token-radii {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {

@@ -1,0 +1,13 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer root-override {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  :root { --spacing-root: 0.5rem }
+}
+@layer utilities {
+  .root-override__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .root-override__max-w_140r { max-width: calc(140 * var(--spacing-root)); }
+}
+}

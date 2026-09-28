@@ -93,9 +93,12 @@ const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
 
 /** Expected byte cells: filled from the first measured run, then pinned. */
 const EXPECTED_BYTES = {
-  cssRaw: 341037,
-  cssGzip: 41496,
-  cssBrotli: 21057,
+  // 2026-09-27 root-default re-pin (HQ ruling, CONTINUITY-01): +52 raw is
+  // exactly the baked `@layer root` block, +1 rule is its `:root` rule;
+  // stylePlans/harvestWants unchanged — the default mints no atoms.
+  cssRaw: 341089,
+  cssGzip: 41501,
+  cssBrotli: 21173,
   stylePlans: 4938,
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
@@ -108,7 +111,7 @@ const EXPECTED_BYTES = {
   // acceptance caveat stands, so re-verify again if acceptance moves bytes.
   reactRaw: 158073,
   reactGzip: 39595,
-  fixtureRules: 4941,
+  fixtureRules: 4942,
   m500Rules: 33806,
 }
 

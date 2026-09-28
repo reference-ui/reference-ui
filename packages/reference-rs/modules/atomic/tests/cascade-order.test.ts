@@ -1,11 +1,13 @@
 /**
  * Cascade-order regression (M0-fix21-A). The atomic emitter nests its six
- * internal layers inside the compiling package's layer; nothing internal may
+ * internal layers inside the compiling package's layer; no internal layer may
  * leak to the top level, where a top-level `global` would outrank another
  * package's nested `utilities` and silently drop token-backed declarations.
- * These tests pin the emitted order and probe the cascade winner with a
- * spec-shaped layer comparison: outer layers decide first, later wins, and a
- * deeper path wins when one path extends the other.
+ * The one top-level layer is the baked `@layer root` spacing-root default,
+ * which prints first so it ranks below every package: any author definition
+ * wins over it by cascade rank. These tests pin the emitted order and probe
+ * the cascade winner with a spec-shaped layer comparison: outer layers decide
+ * first, later wins, and a deeper path wins when one path extends the other.
  */
 import { describe, expect, it } from 'vitest'
 import { compileSync } from '../js/index.js'
@@ -201,7 +203,8 @@ describe('M0-fix21-A cascade layer order', () => {
   it('nests the six internal layers inside the package layer', () => {
     const { stylesheet } = compileUtility('color-mode')
     const firstLine = stylesheet.slice(0, stylesheet.indexOf('\n'))
-    expect(firstLine).toBe('@layer color-mode {')
+    expect(firstLine).toBe('@layer root {')
+    expect(stylesheet).toContain('@layer color-mode {')
     expect(stylesheet).toContain(`\n${LAYER_PREAMBLE}`)
     expect(stylesheet.endsWith('}\n')).toBe(true)
 
@@ -210,15 +213,18 @@ describe('M0-fix21-A cascade layer order', () => {
     const ranks = inner.map(name => order.get(JSON.stringify(['color-mode', name])))
     expect(ranks.every(rank => rank !== undefined)).toBe(true)
     expect([...ranks].sort((a, b) => a! - b!)).toEqual(ranks)
+    const rootRank = order.get(JSON.stringify(['root']))
+    expect(rootRank).toBe(0)
 
-    expect(topLevelLayerBlocks(stylesheet)).toEqual(['color-mode'])
+    expect(topLevelLayerBlocks(stylesheet)).toEqual(['root', 'color-mode'])
   })
 
   it('escapes scope characters in the package layer name', () => {
     const { stylesheet } = compileUtility('@reference-ui/lib')
     const firstLine = stylesheet.slice(0, stylesheet.indexOf('\n'))
-    expect(firstLine).toBe('@layer \\@reference-ui\\/lib {')
-    expect(topLevelLayerBlocks(stylesheet)).toEqual(['\\@reference-ui\\/lib'])
+    expect(firstLine).toBe('@layer root {')
+    expect(stylesheet).toContain('@layer \\@reference-ui\\/lib {')
+    expect(topLevelLayerBlocks(stylesheet)).toEqual(['root', '\\@reference-ui\\/lib'])
   })
 
   it('probes utilities beating global inside one package', () => {
@@ -255,9 +261,10 @@ describe('M0-fix21-A cascade layer order', () => {
   it('wraps the portable stylesheet in the same package layer', () => {
     const { portableStylesheet } = compileUtility('color-mode')
     const firstLine = portableStylesheet.slice(0, portableStylesheet.indexOf('\n'))
-    expect(firstLine).toBe('@layer color-mode {')
+    expect(firstLine).toBe('@layer root {')
+    expect(portableStylesheet).toContain('@layer color-mode {')
     expect(portableStylesheet).toContain(`\n${LAYER_PREAMBLE}`)
     expect(portableStylesheet).toContain('[data-layer="color-mode"]')
-    expect(topLevelLayerBlocks(portableStylesheet)).toEqual(['color-mode'])
+    expect(topLevelLayerBlocks(portableStylesheet)).toEqual(['root', 'color-mode'])
   })
 })

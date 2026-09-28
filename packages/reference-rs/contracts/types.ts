@@ -168,6 +168,7 @@ export type LogChannel = 'compiler' | 'proof'
  */
 export interface SystemStreams {
   name: string
+  root?: string // baked @layer root default; downstream DROPS, hoists its own
   preamble: string // verbatim inner prelude (~55 B, drift-proof)
   reset?: string // separable chunk; downstream DROPS, never concats
   global?: string

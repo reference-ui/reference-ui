@@ -3,6 +3,7 @@
 //! Ordering across at-rule wraps lives in `emitter_ordering_tests`.
 
 use super::*;
+use super::super::root_default::ROOT_DEFAULT_BLOCK;
 use crate::atom::CssValue;
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 use smallvec::smallvec;
@@ -23,14 +24,15 @@ fn test_empty_stylesheet() {
     let set = AtomSet::new();
     assert_eq!(
         build_stylesheet(&set, &empty_system(), &mut Vec::new()),
-        LAYER_PREAMBLE
+        format!("{ROOT_DEFAULT_BLOCK}{LAYER_PREAMBLE}")
     );
 }
 
 #[test]
 fn test_lib_fixture_empty_atoms_still_print_tokens() {
     let css = build_stylesheet(&AtomSet::new(), BaseSystem::lib_fixture(), &mut Vec::new());
-    assert!(css.starts_with("@layer \\@reference-ui\\/lib {\n"));
+    assert!(css.starts_with(ROOT_DEFAULT_BLOCK));
+    assert!(css.contains("@layer \\@reference-ui\\/lib {\n"));
     assert!(css.contains(LAYER_PREAMBLE));
     assert!(css.contains("@layer global {"));
     assert!(css.contains("@keyframes fadeIn"));
@@ -50,16 +52,18 @@ fn test_named_system_nests_internal_layers_in_package() {
         false,
     ));
     let css = build_stylesheet(&set, BaseSystem::lib_fixture(), &mut Vec::new());
+    let root = css.find("@layer root {").expect("root default block");
     let package = css
         .find("@layer \\@reference-ui\\/lib {")
         .expect("package open");
     let global = css.find("@layer global {").expect("global block");
     let utilities = css.find("@layer utilities {").expect("utilities block");
+    assert_eq!(root, 0);
     assert!(package < global && global < utilities);
     assert!(css.ends_with("}\n"));
     let portable =
         build_portable_stylesheet_with(&set, BaseSystem::lib_fixture(), &[], &mut Vec::new());
-    assert!(portable.starts_with("@layer \\@reference-ui\\/lib {\n"));
+    assert!(portable.starts_with(ROOT_DEFAULT_BLOCK));
     assert!(portable.ends_with("}\n"));
 }
 
@@ -180,6 +184,9 @@ fn test_streams_concatenate_to_paired_single_builds() {
     assert_eq!(portable_sink, single_portable);
     assert_eq!(streams.preamble, LAYER_PREAMBLE);
     assert_eq!(streams.package, system.name);
+    assert_eq!(streams.root, ROOT_DEFAULT_BLOCK);
+    assert!(streams.stylesheet().starts_with(ROOT_DEFAULT_BLOCK));
+    assert!(streams.portable_stylesheet().starts_with(ROOT_DEFAULT_BLOCK));
     assert!(streams.global.contains("@layer global {"));
     assert!(streams.tokens.contains(":root"));
     assert!(streams.tokens_portable.contains("[data-layer="));
@@ -232,7 +239,7 @@ fn test_dual_build_matches_paired_single_builds() {
 }
 
 #[test]
-fn test_streams_serialize_to_nine_wire_keys() {
+fn test_streams_serialize_to_ten_wire_keys() {
     let mut set = AtomSet::new();
     set.insert(Atom::new(
         "color".into(),
@@ -263,6 +270,7 @@ fn test_streams_serialize_to_nine_wire_keys() {
         keys,
         [
             "name",
+            "root",
             "preamble",
             "reset",
             "global",
@@ -274,6 +282,7 @@ fn test_streams_serialize_to_nine_wire_keys() {
         ]
     );
     assert_eq!(value["name"], serde_json::json!(system.name));
+    assert_eq!(value["root"], serde_json::json!(ROOT_DEFAULT_BLOCK));
     assert!(value["tokens"].as_str().is_some_and(|s| s.contains(":root")));
     assert!(
         value["tokensPortable"]

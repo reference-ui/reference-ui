@@ -7,6 +7,7 @@ pub mod emitter;
 pub mod global;
 pub mod layers;
 pub mod name;
+pub mod root_default;
 mod system_layers;
 
 use crate::diagnostics::Diagnostic;
