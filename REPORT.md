@@ -24,7 +24,7 @@ tightening relocates to a position user space never touches.
 | NumberField lattice/validate/live | Blocked on HQ calls | Rulings (§3) |
 | `playwright/ct.ts` type errors | Pre-existing, live | Nothing now |
 
-## 1. SITE-16: bound member root vs the shadow gate (needs HQ ruling)
+## 1. SITE-16: bound member root vs the shadow gate (RULED + LANDED)
 
 **What's broken.** The world binds a namespace object and renders
 through it; the configured concatenated host never fires:
@@ -133,8 +133,14 @@ through scope-init/binding tables, not walk order); add an
 atomic station (bound-root member extracts + twin negative);
 re-run all 251 atomic stations for flips; re-prove with
 `pnpm agentneo run NEO-SITE-16` + `pnpm agentrs c atomic`.
-Medium arc, crewed, not a drive-by. Full root-cause chain and
-resume checklist: `.agents/missions/landing-sequence/REDS.md`.
+
+**Landed 2026-09-28** (`0267a8762`): semantic (i) in
+`extract/context.rs` + `diagnostics/analysis/jsx.rs` lockstep
+(`gate.rs` verified attr-filter-only, no change), scope-table
+resolution (order-independent), new ATM-SITE-88 station. Proof:
+gating 13/13, cargo 738+1+1+7+5 zero failed, quality 0
+violations, flip check 252/252, `NEO-SITE-16` PASS. The
+case-vs-contract conflict above is kept as the decision record.
 
 ## 2. Landing status (since the last report)
 
@@ -158,14 +164,30 @@ committed on `reference-system`, tree clean:
   (8/8), React-17 async loading fixed at the Announcer root
   (render-stable election id; 35/35 on 17, no 19 regression).
   SITE-16 is the 1/4 skip → §1.
-- **Sweep in flight**: P3 matrix (FF/WebKit, browser:all) crew
-  out on the landed tree, sweep-only (fixes nothing, reports
-  reds as findings). Table due on return.
+- **Sweep returned**: 1710/1784 legs (95.9%) — FF 872/892, WebKit
+  838/892, 68 findings in 5 clusters (SWEEP.md). Fully green both
+  engines: Field, Tabs, Collapsible, Menubar, Presence, Portal.
+  Hermetic chain-t2 froze (UNKNOWN, gap stands).
+- **DIAG verdicts**: WebKit focus = platform model (scope ~24
+  traversal assertions; restore/trap = product-hardening tail);
+  FF dup commit = REAL double-`onChange` re-entrancy bug (fixing);
+  Home/End caret = platform no-op (scope); F40 = scope. No WebKit
+  keyboard pref exists in Playwright — scoping stands, no
+  harness alternative.
+- **Fix wave out**: FIX-D2 (NumberField re-entrancy), SCOPE-1
+  (Select chain), SCOPE-2 (Date/Disclosure/Menu/FocusLock
+  traversal). Held: restore/trap fixes (focus ruling), G1/H1
+  (confirm), Splitter cluster (4a).
 
 ## 3. HQ pile (yours, in one place)
 
-- **SITE-16 ruling** (§1): confirm semantic (i) or pick (ii)
-  with eyes open.
+- **Focus ruling** (gate for restore/trap fixes): should
+  FocusLock restore + trap-reclaim harden against Safari's
+  no-click-focus / mousedown-blur model (F47/F48/F53/F54/F56,
+  F57, F58)? And if the D3 trigger probe confirms keys-after-
+  mouse-open go to body, explicit trigger `.focus()` on open?
+- **G1/H1 confirm**: G1 chromium-UA gate → skip-by-project
+  (recommended); H1 CDP test → mark chromium-only.
 - **API/productionization read-through**: naming 1a, W-02
   sub-rulings, Splitter 4a execution, snapshot policy, Switch /
   Slider takes, Date takes. No crew touches API surfaces until

@@ -16,3 +16,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
   in isolated worktree, 90-min box. Sweep crew still out (shared tree).
 - Sweep returned: 1710/1784 (95.9%), 68 findings, S10 blocked. Captain
   triaged (5 clusters + G1/H1); DIAG crew dispatched (report-only).
+- DIAG returned with verdicts (D2 real bug, D1/D3 platform+scope).
+  No WK keyboard pref in Playwright (captain-settled). Fix wave:
+  FIX-D2 + SCOPE-1 + SCOPE-2 dispatched.
