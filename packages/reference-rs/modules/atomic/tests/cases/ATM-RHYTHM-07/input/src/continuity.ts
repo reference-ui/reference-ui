@@ -1,0 +1,16 @@
+import { css } from '@reference-ui/styled'
+
+export const c0 = css({ marginTop: 'infr' })
+export const c1 = css({ marginTop: 'nanr' })
+export const c2 = css({ marginTop: 'infinityr' })
+export const c3 = css({ marginTop: 'Infinityr' })
+export const c4 = css({ marginTop: '-infr' })
+export const c5 = css({ marginTop: '1e309r' })
+export const c6 = css({ marginTop: '999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r' })
+export const c7 = css({ marginTop: '1/infr' })
+export const c8 = css({ marginTop: 'inf/3r' })
+export const c9 = css({ marginTop: '2r' })
+export const c10 = css({ marginTop: '1/3r' })
+export const c11 = css({ marginTop: '0.5r' })
+export const c12 = css({ marginTop: '1e-3r' })
+export const c13 = css({ marginTop: '1e308r' })

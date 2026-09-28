@@ -4,6 +4,16 @@
 
 use std::borrow::Cow;
 
+use super::lexical;
+
+/// One finiteness gate for every rhythm stem: finite decimals mint, named
+/// non-finite spellings and overflow refuse (close (a) passthrough, silent —
+/// legacy parity on every named spelling; genuine overflow passes through
+/// where legacy mints `Infinity`, documented GIGO).
+fn parse_finite_stem(text: &str) -> Option<f64> {
+    lexical::parse_decimal(text).and_then(|stem| stem.finite())
+}
+
 fn format_denom_rhythm(num: f64, denom: f64) -> String {
     if (num - 1.0).abs() < f64::EPSILON {
         // 1/3r
@@ -53,8 +63,8 @@ pub fn resolve_single_rhythm(val: &str) -> Option<String> {
 
     if let Some((num_str, denom_str)) = parse_fraction_parts(raw) {
         // 1/3r  /  -2/3r
-        let num: f64 = num_str.parse().ok()?;
-        let denom: f64 = denom_str.parse().ok()?;
+        let num = parse_finite_stem(num_str)?;
+        let denom = parse_finite_stem(denom_str)?;
         if denom == 0.0 {
             return None;
         }
@@ -62,7 +72,7 @@ pub fn resolve_single_rhythm(val: &str) -> Option<String> {
     }
 
     // 2r  /  0.5r  /  -2r
-    let n: f64 = raw.parse().ok()?;
+    let n = parse_finite_stem(raw)?;
     Some(get_rhythm(n, None))
 }
 
@@ -233,6 +243,42 @@ mod tests {
         assert_eq!(
             resolve_rhythm("-2/3r"),
             "calc(-2 * var(--spacing-root) / 3)"
+        );
+    }
+
+    #[test]
+    fn test_non_finite_stems_refuse_silently() {
+        // doom-r-rule: named spellings, overflow, and case variants refuse
+        // (close (a) passthrough) — Rust Display never mints into the sheet.
+        for stem in [
+            "infr",
+            "nanr",
+            "infinityr",
+            "Infinityr",
+            "-infr",
+            "-nanr",
+            "NANr",
+            "1e309r",
+            "1/infr",
+            "inf/3r",
+        ] {
+            assert_eq!(resolve_single_rhythm(stem), None, "{stem}");
+            assert_eq!(resolve_rhythm(stem), stem);
+        }
+        let giant = format!("{}r", "9".repeat(309));
+        assert_eq!(resolve_single_rhythm(&giant), None);
+        assert_eq!(resolve_rhythm(&giant), giant);
+    }
+
+    #[test]
+    fn test_finite_neighbors_still_mint() {
+        // The fence is finiteness, not magnitude: finite neighbors mint.
+        assert_eq!(resolve_rhythm("0.5r"), "calc(0.5 * var(--spacing-root))");
+        assert_eq!(resolve_rhythm("1e-3r"), "calc(0.001 * var(--spacing-root))");
+        assert!(resolve_single_rhythm("1e308r").is_some());
+        assert_eq!(
+            resolve_rhythm("1e308r"),
+            format!("calc({} * var(--spacing-root))", 1e308f64)
         );
     }
 

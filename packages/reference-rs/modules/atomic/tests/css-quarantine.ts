@@ -52,6 +52,15 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // namers spell the verbatim classes. `--brandX` needs no entry: custom
   // properties validate.
   'ATM-COND-05': ['MyProp: 2px', 'myProp: 2px', 'mozFoo: 2px'],
+  // Doom-r fortify (CONTINUITY-01 r-computation, close (a)): refused
+  // non-finite rhythm stems pass through raw under the section 11 silent
+  // bare-value passthrough policy (permanent, like ATM-TOKEN-16) — the
+  // author wrote them, the browser drops them. The sheet-text pins in the
+  // case spec are the real guard; these entries only quiet the grammar
+  // gauge over the intentionally invalid passthrough spellings.
+  'ATM-RHYTHM-07': ['margin-top: infr', 'margin-top: nanr', 'margin-top: infinityr',
+    'margin-top: Infinityr', 'margin-top: -infr', 'margin-top: 1e309r',
+    'margin-top: 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r', 'margin-top: 1/infr', 'margin-top: inf/3r'],
 }
 
 export function quarantineFor(stationId: string): readonly string[] {
