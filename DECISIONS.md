@@ -41,6 +41,10 @@ Answer inline (a number + a letter each).
   zero diagnostics. New lead suspect for the original sighting:
   `--spacing-root` undefined in the consumer (emits fine, paints
   nothing) — or stale/legacy path. Objective-1 COMPLETE, unanimous.
+  HQ RULED: (1) unscanned consumer gets the dead class, no runtime
+  fallback — sync is the move; (2) compiler auto-defines
+  `--spacing-root` at the current value (`0.25rem`), and YES users
+  can overwrite it — author definition always wins.
 - 7. Merge — REMOVED per HQ (not a decision; no merge yet).
 
 ## 1. Handler naming — one spelling?
