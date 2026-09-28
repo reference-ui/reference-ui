@@ -1,259 +1,190 @@
-# REPORT — Remaining Issues (W4 cutover)
+# REPORT — Remaining Issues (landing sequence)
 
 Plain-language breakdown of everything still open, with the smallest
-code that shows each problem. Status as of 2026-09-24, HEAD 4c33dd981.
+code that shows each problem. Status as of 2026-09-28, HEAD c7fbc2713.
 
-## 0. The governing law: user space stays as is
+The 2026-09-24 W4-cutover report is fully retired: variant relocation,
+css accommodation (c), S4/S5A/S5/S6 landings, ruling-8, ruling-4, and
+the sync.test.ts tripwire are all landed/moot and their sections are
+deleted, not carried. What follows is only what is still live.
 
-`reference-lib` is user space. It has not changed since Panda v1;
-every breakage in this voyage came from tightening underneath it.
-Therefore:
+## 0. Standing law (unchanged)
 
-- We do not touch user space. No sweeps, no drive-bys, no "surgical"
-  exceptions — 52 sites is not surgical, and the count doesn't matter:
-  the principle holds at 1 site.
-- Any tightening that breaks user space is void as specified. The
-  fix goes below user space (Neo), or the tightening relocates to a
-  position user space never touches.
-- This replaces the earlier recommendation. The library sweep is
-  rejected and will not be crewed.
-
-Everything below is read through this lens.
+`reference-lib` is user space. Any tightening that breaks it is void
+as specified; the fix goes below user space (Neo/atomic), or the
+tightening relocates to a position user space never touches.
 
 ## Summary
 
 | Issue | State | Needs |
 |---|---|---|
-| Variant collision | Resolved by reframe | S4 rework crew |
-| S4 / S5A landings | Rework, then land | Re-verify |
-| Ruling-8 arm | Moot, reverting | Nothing |
-| Ruling-4 tension | Landed, FYI | Nothing |
-| sync.test.ts tripwire | Loud warning | S6 splits file |
-| Kill-leg flakes | Noise, handled | Nothing now |
+| SITE-16 member-through-bound-root | Root-caused, design conflict | HQ ruling (§1) |
+| Matrix sweep (FF/WebKit, all) | Crew out on landed tree | Nothing now |
+| HQ API/productionization pass | Yours | Your read-through |
+| NumberField lattice/validate/live | Blocked on HQ calls | Rulings (§3) |
+| `playwright/ct.ts` type errors | Pre-existing, live | Nothing now |
 
-## 1. Variant collision (resolved by reframe, not by sweep)
+## 1. SITE-16: bound member root vs the shadow gate (needs HQ ruling)
 
-**What's broken.** Same facts, new meaning. Library components
-spread their own open props (`variant?: unknown` inside, inherited
-from the raw E4 shelf shape) into the bound per-tag props. S4
-narrowed the per-tag `variant`, so 52 spread sites across 18
-components fail typecheck and the two chain gates go red:
+**What's broken.** The world binds a namespace object and renders
+through it; the configured concatenated host never fires:
 
 ```tsx
-// Accordion.tsx:132 — typical of all 52 sites (user space, untouchable):
-<Div
-  ref={ref}
-  data-reference-accordion=""
-  onKeyDown={handleKeyDown}
-  {...props}   // props.variant is unknown; Div wants never | string
->
+// world/src/app.tsx — the case (NEO-SITE-16):
+const NS = { Panel: Div }
+const Other = { Panel: Div }
+
+<NS.Panel color="brand" p="sm" id="member">   {/* must extract */}
+<Other.Panel bg="paper" id="twin">              {/* must stay silent */}
 ```
-
-```
-error TS2322: Type 'unknown' is not assignable to type '(string & {}) | undefined'.
-```
-
-Census (kept as evidence of scale — this is why per-tag
-narrowing, not the library, had to give):
-
-| Component | Sites |
-|---|---|
-| Calendar | 7 |
-| Tree | 5 |
-| Overlay | 5 |
-| Listbox | 5 |
-| Splitter | 4 |
-| Slider | 4 |
-| NumberField | 4 |
-| Toast | 3 |
-| Switch | 2 |
-| Menu | 2 |
-| DateField | 2 |
-| Combobox | 2 |
-| Collapsible | 2 |
-| Tabs | 1 |
-| Reference | 1 |
-| Popover | 1 |
-| Field | 1 |
-| Accordion | 1 |
-
-**Why no bake-side trick saves per-tag narrowing.** This is a proof,
-not an opinion. Two requirements, one position:
 
 ```ts
-// Requirement A (user space, immovable — 52 live spread sites):
-const props: LibProps = getProps()  // variant?: unknown inside
-<Div {...props} />                  // MUST compile
-// → per-tag variant must accept unknown.
-
-// Requirement B (S5's flip as briefed):
-const bad: DivProps = { variant: { tone: 'not-a-tone' } }  // MUST fail
-// → per-tag variant must reject this object.
+// world/ui.config.ts:
+jsxElements: ['NSPanel']   // concat host: NS + Panel
 ```
 
-No type satisfies both: the only types `unknown` fits into are
-`unknown` and `any`, and both accept every object. QED. Per-tag
-variant narrowing is void — not disliked, unsatisfiable. (Every
-alternative dies the same way: omitting the prop breaks all direct
-authors; the string arm still rejects `unknown`.)
+Repro (quoted): `pnpm agentneo run NEO-SITE-16` → exit 1,
+`FAIL member.spec.ts: sheet carries member color`. The synced sheet
+carries tokens but zero utilities.
 
-**The resolution: the narrowing relocates.** The per-tag position
-goes back to exactly what user space has always spread into:
+**Why.** The tag gate refuses every locally-bound member root before
+the concatenated-host match is ever consulted:
 
-```ts
-// Per-tag (user-space-facing): open, as since Panda v1:
-variant?: unknown
+```rust
+// extract/context.rs — allows_jsx_tag:
+pub fn allows_jsx_tag(&self, name: &str) -> bool {
+    if bindings::is_shadowed(self.shadowed, name) {
+        return false;
+    }
+    if let Some((root, _)) = name.split_once('.') {
+        if bindings::is_shadowed(self.shadowed, root) {
+            return false;   // ← "NS" is shadowed by `const NS`, exit here
+        }
+    }
+    if self.jsx_hosts.contains(name) {
+        return true;
+    }
+    name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+    // ← the NSPanel concat match: never reached for bound roots
+}
 ```
 
-The precision S4 built survives where user space never spreads:
+Every `const` (module-top included) lands in the shadow set via
+`add_declarator_shadow` (`extract/visitor.rs`), so `const NS`
+vetoes `<NS.Panel>` unconditionally.
 
-```ts
-// 1. The exported alias (precise union/never, still emitted):
-import type { PrimitiveVariantProp } from '@reference-ui/react'
-const bad: PrimitiveVariantProp = { tone: 'not-a-tone' }  // FAILS, as ruled
-const good: PrimitiveVariantProp = { tone: 'accent' }     // passes (tone recipe)
+**The discriminator.** ATM-SITE-22 passes with the identical shape
+because its root is entirely unbound (`Overlay` bare +
+`void OverlayContent`); SITE-16 binds `const NS` and goes silent.
+Bound-vs-unbound root is the whole difference.
 
-// 2. The recipe call (typed by its own definition, authors write literals):
-button({ variant: { tone: 'not-a-tone' } })  // FAILS via RecipeVariantProps
+**The conflict.** The refusal is not a bug — it is pinned
+correctness. The opaque-rebinding case must stay silent:
+
+```rust
+// extract/tests/gating.rs — test_shadowed_member_root_is_not_an_extract_site:
+import { Tabs } from './tabs';
+function Other() { return null; }
+export function App() {
+    const Tabs = Other;   // rebinds away from the traced host
+    return <Tabs.Panel mt="2r" value="a" />;  // must NOT collect
+}
+assert!(res.wants.is_empty());
 ```
 
-Neither position ever receives an `unknown` spread (proven: library
-spreads land on per-tag props only; recipe calls take author
-literals), so user space stays green while bad variants are still
-caught where authors write them.
+The case wants `const NS = { Panel: Div }` to extract; the gate
+says any bound root rebinds away and must stay silent "instead of
+collecting onto the wrong component." Both cannot hold. The gate
+is also mirrored in `diagnostics/analysis/jsx.rs` + `gate.rs`,
+so whatever is ruled must land in all three in lockstep.
 
-**What changes.** S4 rework (small, Neo-side): the per-tag line
-reverts to `variant?: unknown` (arm included — it also rejects
-`unknown`), the alias stays precise, PGEN-22's variant legs and the
-unit variant tests re-target from `DivProps` to the alias position,
-then the full proof bar re-runs. S5's PGEN-17 flip re-briefs from
-`DivProps` to the alias + recipe-call positions (its current probe
-tests `DivProps` directly, which is now provably the wrong
-position). PGEN-15 (css) is unaffected — css narrowing produced
-zero library errors, as did the compiled prop-name list.
+**Candidate semantics.**
 
-**The risk.** An author writing a bad variant object directly on a
-primitive gets no red squiggle at that exact spot anymore; the
-check catches it at the alias/recipe positions instead. That is the
-cost of the law, and it is contained: primitives are overwhelmingly
-consumed through components and recipes, not hand-written with
-variant objects.
+- (i) *Resolve through object literals.* A root bound to a
+  same-file `const` object literal is transparent: `NS.Panel`
+  resolves member `Panel` → `Div`, and `Div` is a host, so the
+  site is admitted to normal host-membership checks (configured
+  `NSPanel` hits, unconfigured `OtherPanel` twin stays silent
+  through membership, not shadowing). Opaque rebindings
+  (`const Tabs = Other`) stay silent; the pinning test keeps
+  passing. Cost: extract + both mirrors + scope-init handling
+  (declaration order must not matter) + a new atomic station.
+- (ii) *Configured hosts win over shadowing.* Any bound root
+  extracts if the concatenated host is configured. Small in
+  lines — but it deletes the gate's entire purpose: a rebinding
+  like `const Tabs = Other` would silently collect onto the
+  wrong component for every configured host. Requires
+  rewriting the pinning test and accepting the hole.
 
-## 1b. Css narrowing survives via accommodation (c) (adjudicated)
+**Recommendation: (i), and reject the two evasions.** (ii) breaks
+a pinned correctness property to buy line-count; the silence
+guarantee is load-bearing and the hole it opens is silent
+wrong-component collection — the exact failure the gate exists
+to prevent. Rewriting the world to an unbound/namespace-import
+spelling is theater, not a fix: that coverage already passes
+via SITE-22 and the SITE-87/gating tests, and the case's unique
+value is precisely the bound root. Under (i) the twin negative
+keeps working for the reason the case was designed around (the
+twin is *unhosted*), and the opaque-rebinding pin stands.
 
-**What happened.** The rework's loud finding (1 css failure at Divider,
-merging two style objects via spread) adjudicated to TWO independent
-poisons, proven with a 2×2 matrix on real bake text: (a) the array
-arm — spreading an array type yields array-method shapes, not css;
-(b) the font-scope union — spreading two union-typed values makes
-cross-scope hybrids no member accepts. Dropping the array arm alone
-still fails; flattening scopes alone still fails; both together:
-Divider green, bogus-key still red, array-css red (zero usage
-anywhere in user space — census-proven).
+**Work plan once ruled:** implement (i) in `extract/context.rs` +
+`diagnostics/analysis/jsx.rs` + `gate.rs` (lockstep, resolving
+through scope-init/binding tables, not walk order); add an
+atomic station (bound-root member extracts + twin negative);
+re-run all 251 atomic stations for flips; re-prove with
+`pnpm agentneo run NEO-SITE-16` + `pnpm agentrs c atomic`.
+Medium arc, crewed, not a drive-by. Full root-cause chain and
+resume checklist: `.agents/missions/landing-sequence/REDS.md`.
 
-```ts
-// Before (both poisons live — removed by (c), kept here as history):
-export type PrimitiveCssProp = SystemStyleObject | Array<SystemStyleObject>
-// After (accommodation (c) — mirrors the StyleProps precedent one line up):
-export type PrimitiveCssProp = Omit<SystemStyleObject, 'font' | 'weight'> & { font?: unknown; weight?: unknown }
-```
+## 2. Landing status (since the last report)
 
-**Precision cost.** Font/weight *values* go `unknown` at the css
-position — identical to the already-landed props position, with
-zero tests pinning font-token rejection. Bogus-key rejection
-(PGEN-15's guarantee) intact.
+All verified firsthand by the captain on React 17/18/19 and
+committed on `reference-system`, tree clean:
 
-**Status.** Implementer dispatched with exact bytes; verifier +
-landing follow. Voiding css narrowing was refused — the law voids
-only what no accommodation saves.
+- **Finish-line P2 chains**: Select 73/73+98/98+64/64, Date
+  (DateField/Calendar/Field), Disclosure (Tabs/Collapsible/
+  Accordion), Menu 85/91, primitives, Slider 73/73, Switch 26/27,
+  RovingFocus 53/55, Portal/Overlay seam. Pre-existing reds
+  itemized, never absorbed.
+- **NumberField 99/148**: wave-2 (+28: format/parse/edit/commit/
+  comp) and the FORM leg (+3: FORM-11/12/14 event-order CT).
+  Forms/submit/reset fully green on 17/18/19.
+- **AXE infra**: repo-level `playwright/axe.ts` scanner
+  (`expectNoAxeViolations` + report-only `scanAxe`, devDeps
+  only, no API surface). Every `*-A11Y-01` scanner half is now
+  unblocked on infra. Handoff: Combobox's open-popover story
+  reports an unlabeled input for the CB scanner-half author.
+- **REDS 3/4**: harvest-census re-pin (4/4), HINTS pin refresh
+  (8/8), React-17 async loading fixed at the Announcer root
+  (render-stable election id; 35/35 on 17, no 19 regression).
+  SITE-16 is the 1/4 skip → §1.
+- **Sweep in flight**: P3 matrix (FF/WebKit, browser:all) crew
+  out on the landed tree, sweep-only (fixes nothing, reports
+  reds as findings). Table due on return.
 
-## 2. S4 / S5A landings (rework + css fix, then land)
+## 3. HQ pile (yours, in one place)
 
-**What's open.** S4's LAND verdict covered the narrowed per-tag line,
-so the rework voids it: S4 must be re-verified after the revert.
-S5A (recipe collector) is unaffected — it touches collect/, not the
-bake — and its LAND stands; it lands after S4 as before (its tests
-import S4's exports).
+- **SITE-16 ruling** (§1): confirm semantic (i) or pick (ii)
+  with eyes open.
+- **API/productionization read-through**: naming 1a, W-02
+  sub-rulings, Splitter 4a execution, snapshot policy, Switch /
+  Slider takes, Date takes. No crew touches API surfaces until
+  you rule.
+- **NumberField engine calls** (block the remaining 45
+  automatable cases + 4 manual gates): lattice/snap anchoring (zero-anchor?
+  ties? endpoints?), validate retain-vs-reject, live-request
+  vs pinned B-19 commit-only titles. Crews are held off these
+  — engine flips without rulings would break green titles.
+- **After rulings**: Intl grammar engine (PARSE bulk),
+  edit-filtering/caret/composition engine (EDIT bulk),
+  ENV-02/ENV-06 probes, EDIT-16 undo harness, then docs phase.
 
-**The fix.** Rework crew → verifier → land S4 → land S5A → T1/T2
-must go green (the bake returns to the per-tag shape user space has
-always consumed; css/prop-name narrowing already proved clean).
+## 4. Carried, no action
 
-**The risk.** Rework drift (crew touches more than the variant
-line). Mitigation: the brief names the exact lines; the verifier
-diffs the arc against this report.
-
-## 3. Ruling-8 arm (moot — reverting with the line)
-
-**What happened.** The per-tag `(string & {})` arm was added to keep
-landed PARITY-01 green under narrowing. With per-tag narrowing void,
-the arm goes away with it and the P7 conflict evaporates: P7 returns
-to the open shape it has always been green under, with zero P7 edits
-then and zero now.
-
-**HQ decision, reframed.** Not "keep or revert the arm" anymore but:
-accept the relocation (per-tag open, precision at alias + recipe
-calls). The old ruling-8 letter (per-tag narrowing) is void under
-the user-space law by the proof in §1.
-
-## 4. Ruling-4 tension (landed, FYI only)
-
-**What happened.** HQ ruled the entry imports the primitives roster
-from tracked source, never dist. In packed installs no source tree
-exists, so the letter is unsatisfiable there. Both legs resolve the
-roster live through the workspace package's exports map instead —
-same bytes in the workspace, working bytes in packed installs.
-
-**The risk of reverting.** Packed installs break outright (the
-original T1 failure). There is no third reading.
-
-**Recommendation.** Keep. No action.
-
-## 5. sync.test.ts tripwire (loud warning for S6)
-
-**What's wrong.** The file sits at exactly 500 lines; the quality
-gate fails above 500. Any line added anywhere in the file fails the
-gate. It got here honestly (a repin had to squeeze to net +1).
-
-**The fix.** S6 splits the file before touching it.
-
-**The risk.** Forgetting, then chasing a red gate mid-cutover.
-Carried loudly so nobody has to rediscover it.
-
-## 6. Kill-leg flakes (noise, handled)
-
-**What's wrong.** The sync-lock kill tests occasionally observe the
-victim process as still alive when asserted (`exitCode null`
-instead of 75). Load-sensitive timing, foreign files, never in the
-arc under test. Seen across many crews; always green on isolated
-re-run.
-
-**The fix.** None scheduled. Discipline is: attribute every red by
-name, re-run isolated, require a full green before landing.
-
-**The risk.** Noise masking a real regression. Mitigation is the
-discipline above — it has held so far.
-
-## 7. Remaining program (for the map)
-
-- **S4 (+rework +css) + S5A: LANDED** (36th, 37th). Chain green.
-- **S5 flips: LANDED** (39th). PGEN-15 as briefed; PGEN-17 at alias
-  + recipe-call positions with a live tone recipe.
-- **S6 deletes: LANDED** (41st). Split first, deletes in order,
-  tags last. W4 (the per-system cutover) is DONE — chain green,
-  user space untouched throughout.
-
-## 8. Carried, no action
-
-- PGEN-22 README says "three negatives," lists four; two prose
-  soft-pins. Cosmetic; fold into the S4 rework touch or any later
-  PGEN edit.
-- Recipe collection inherits the evaluator's shared-scope pattern
-  (an upstream file declaring a top-level `const recipe` would
-  collide, exactly as `const tokens` does today). No current file
-  does. In-kind exposure, not new.
-- Two `playwright/ct.ts` type errors (mount/screenshot vocabulary)
-  show in lib's local typecheck and involve none of the new types;
-  presumed pre-existing — confirm on HEAD if lib is ever typechecked
-  for another reason. (No sweep means no sweep crew to do it;
-  harmless either way since T1 never gated on them.)
+- `playwright/ct.ts` type errors (mount/screenshot vocabulary)
+  still show in lib's local typecheck; still involve none of
+  the new types; still presumed pre-existing. Confirmed live
+  today, still harmless (T1 never gated on them).
+- Kill-leg flakes: still load-sensitive noise, still green on
+  isolated re-run. Discipline stands: attribute every red by
+  name, re-run isolated, full green before landing.
