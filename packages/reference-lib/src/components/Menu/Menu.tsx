@@ -17,8 +17,10 @@ import { controlSize, controlHeightPx } from '../../core/theme/primitives/shared
 import {
   asRect as intentAsRect,
   evaluateSubmenuIntent,
+  pointInRect as intentPointInRect,
   SUBMENU_CLOSE_DELAY_MS,
   SUBMENU_OPEN_DELAY_MS,
+  SUBMENU_SAFE_PADDING,
   type Point as IntentPoint,
   type PointerSample as IntentSample,
   type Side as IntentSide,
@@ -83,6 +85,27 @@ export function useMenuTriggerKeys() {
   }, [])
 
   return React.useMemo(() => ({ onKeyDown, onClick }), [onKeyDown, onClick])
+}
+
+// Keyboard/context-entry wiring for a ContextMenu target that opens a root
+// Menu from a context press, the ContextMenu key, or Shift+F10. Spread the
+// result onto the target; the gesture must open the menu (controlled open +
+// virtual anchor), otherwise the plant leaks into the next unrelated open.
+// Plants unconditionally: contextmenu preventDefault suppresses the native
+// menu, so it can never double as entry cancellation the way a trigger
+// preventDefault does. Chaining order against consumer handlers is free.
+export function useMenuContextKeys() {
+  const onContextMenu = React.useCallback((_e: React.MouseEvent<HTMLElement>) => {
+    setMenuEntryIntent('first')
+  }, [])
+
+  const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'ContextMenu' || (e.shiftKey && (e.key === 'F10' || e.key === 'f10'))) {
+      setMenuEntryIntent('first')
+    }
+  }, [])
+
+  return React.useMemo(() => ({ onContextMenu, onKeyDown }), [onContextMenu, onKeyDown])
 }
 
 function restoreFocusToTrigger(
@@ -226,10 +249,19 @@ interface SubmenuIntentState {
   leavePoint: IntentPoint | null
   prevSample: IntentSample | null
   keyboardOpen: boolean
+  /** A close was requested for the current away episode; re-entry clears it. */
+  closeRequested: boolean
 }
 
 function freshIntentState(): SubmenuIntentState {
-  return { openTimer: null, closeTimer: null, leavePoint: null, prevSample: null, keyboardOpen: false }
+  return {
+    openTimer: null,
+    closeTimer: null,
+    leavePoint: null,
+    prevSample: null,
+    keyboardOpen: false,
+    closeRequested: false,
+  }
 }
 
 function clearIntentTimer(state: SubmenuIntentState, kind: 'openTimer' | 'closeTimer') {
@@ -272,6 +304,17 @@ function rootTriggerOf(level: MenuLevelValue | null): HTMLElement | null {
   let current = level
   while (current?.parent) current = current.parent
   return current?.getTrigger() ?? null
+}
+
+// Direction for submenu keys, default placement, and intent math. Menu
+// content portals to document.body and loses the author's dir context, so
+// the root trigger — the one tree node that stays in the authored DOM — is
+// the direction source. Overlay-direct roots (context menus) have no trigger
+// part and fall back to the level's own mounted nodes.
+function levelDirection(level: MenuLevelValue | null): 'ltr' | 'rtl' {
+  const rootTrigger = rootTriggerOf(level)
+  if (rootTrigger) return getDirection(rootTrigger)
+  return getDirection(level?.getContentNode() ?? level?.getTrigger() ?? null)
 }
 
 function isLevelDescendantOf(
@@ -500,6 +543,30 @@ const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
     }
   })
 
+  // Right-button outside path. Pointerdown dismiss ignores non-primary
+  // presses, so an outside contextmenu is the tree's close signal (MN-COMP-02:
+  // outside dismissal occurs once while native context behavior remains
+  // available — never prevented, capture so a stopping target still closes).
+  // Inside presses (content, triggers, submenu branches) stay open.
+  React.useEffect(() => {
+    if (!isOpen) return
+    const doc =
+      menuRef.current?.ownerDocument ?? (typeof document !== 'undefined' ? document : null)
+    if (!doc) return
+    const onMenu = (event: MouseEvent) => {
+      const inTree =
+        isEventInside(menuRef.current, event) ||
+        isEventInside(overlayRef.current?.triggerRef.current ?? null, event) ||
+        [...registryRef.current.values()].some(
+          reg => isEventInside(reg.getTrigger(), event) || isEventInside(reg.getContent(), event)
+        )
+      if (inTree) return
+      requestRootTreeDismiss()
+    }
+    doc.addEventListener('contextmenu', onMenu, true)
+    return () => doc.removeEventListener('contextmenu', onMenu, true)
+  }, [isOpen, requestRootTreeDismiss])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || !overlay) return
@@ -622,6 +689,7 @@ function NestedMenuInner({
       clearIntentTimer(intent, 'closeTimer')
       intent.leavePoint = null
       intent.prevSample = null
+      intent.closeRequested = false
     }
   }, [isOpen, intent])
   React.useEffect(() => {
@@ -722,7 +790,9 @@ function NestedMenuInner({
   }, [isOpen, parentLevel])
 
   // Grace-polygon travel tracking while open. Inside/grace samples cancel
-  // the close timer; leave samples arm the frozen 300ms close.
+  // the close timer; leave samples arm the frozen 300ms close once per away
+  // episode, so a rejected close never spams while the pointer rests outside.
+  // Travel inside an open descendant keeps every ancestor open (COMP-03).
   React.useEffect(() => {
     if (!isOpen) return
     const doc =
@@ -735,31 +805,65 @@ function NestedMenuInner({
       const trigger = overlayRef.current?.triggerRef.current ?? null
       const content = overlayRef.current?.contentRef.current ?? null
       if (!trigger || !content) return
-      const fallback: IntentSide =
-        getDirection(trigger) === 'rtl' ? 'left' : 'right'
+      const registry = parentLevel.registry
+      let inDescendant = false
+      for (const reg of registry.values()) {
+        if (!reg.isOpen || reg.id === contentId) continue
+        if (!isLevelDescendantOf(registry, reg.id, contentId)) continue
+        const nodeTrigger = reg.getTrigger()
+        const nodeContent = reg.getContent()
+        if (
+          (nodeTrigger &&
+            intentPointInRect(
+              event.clientX,
+              event.clientY,
+              intentAsRect(nodeTrigger.getBoundingClientRect()),
+              SUBMENU_SAFE_PADDING
+            )) ||
+          (nodeContent &&
+            intentPointInRect(
+              event.clientX,
+              event.clientY,
+              intentAsRect(nodeContent.getBoundingClientRect()),
+              SUBMENU_SAFE_PADDING
+            ))
+        ) {
+          inDescendant = true
+          break
+        }
+      }
+      const prev = intent.prevSample ?? undefined
+      intent.prevSample = { x: event.clientX, y: event.clientY, timestamp: event.timeStamp }
+      if (inDescendant) {
+        clearIntentTimer(intent, 'closeTimer')
+        intent.closeRequested = false
+        return
+      }
+      const fallback: IntentSide = levelDirection(parentLevel) === 'rtl' ? 'left' : 'right'
       const decision = evaluateSubmenuIntent({
         currentPoint: [event.clientX, event.clientY],
         triggerRect: intentAsRect(trigger.getBoundingClientRect()),
         contentRect: intentAsRect(content.getBoundingClientRect()),
         side: submenuSide(content, fallback),
         leavePoint: intent.leavePoint ?? undefined,
-        prevSample: intent.prevSample ?? undefined,
+        prevSample: prev,
       })
-      intent.prevSample = { x: event.clientX, y: event.clientY, timestamp: event.timeStamp }
       if (decision === 'leave') {
-        if (!intent.closeTimer) {
+        if (!intent.closeTimer && !intent.closeRequested) {
           intent.closeTimer = setTimeout(() => {
             intent.closeTimer = null
+            intent.closeRequested = true
             if (isOpenRef.current) overlayRef.current?.setIsOpen(false)
           }, SUBMENU_CLOSE_DELAY_MS)
         }
       } else {
         clearIntentTimer(intent, 'closeTimer')
+        intent.closeRequested = false
       }
     }
     doc.addEventListener('pointermove', onMove, true)
     return () => doc.removeEventListener('pointermove', onMove, true)
-  }, [isOpen, intent])
+  }, [isOpen, intent, parentLevel, contentId])
 
   return <MenuLevelContext.Provider value={levelValue}>{children}</MenuLevelContext.Provider>
 }
@@ -858,7 +962,7 @@ export const MenuTrigger = React.forwardRef<HTMLDivElement, MenuTriggerProps>(fu
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || disabled || !level || !level.isSubmenu) return
-    const isRtl = getDirection(e.currentTarget) === 'rtl'
+    const isRtl = levelDirection(level) === 'rtl'
     const openKey = isRtl ? 'ArrowLeft' : 'ArrowRight'
     if (e.key === openKey || e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -881,6 +985,8 @@ export const MenuTrigger = React.forwardRef<HTMLDivElement, MenuTriggerProps>(fu
     // Hover supersedes any stale keyboard-open flag from a rejected request.
     intent.keyboardOpen = false
     clearIntentTimer(intent, 'closeTimer')
+    // Re-entry resets the away episode: a later exit requests exactly once.
+    intent.closeRequested = false
     if (isOpen || intent.openTimer) return
     intent.openTimer = setTimeout(() => {
       intent.openTimer = null
@@ -1008,7 +1114,7 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(fu
   }, [isOpen, overlay, ref])
 
   const resolvedPlacement =
-    placement ?? (getDirection(level?.getTrigger() ?? null) === 'rtl' ? 'left-start' : 'right-start')
+    placement ?? (levelDirection(level) === 'rtl' ? 'left-start' : 'right-start')
 
   // Keyboard-open entry focus once per open; close restores the trigger
   // unless focus already left (outside press) or the trigger is gone
@@ -1057,7 +1163,9 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(fu
       level.requestDeepestClose()
       return
     }
-    const isRtl = getDirection(e.currentTarget) === 'rtl'
+    // Direction follows the root trigger: content portals to document.body
+    // and loses the author's dir context (SUBKEY-04).
+    const isRtl = levelDirection(level) === 'rtl'
     const closeKey = isRtl ? 'ArrowRight' : 'ArrowLeft'
     if (e.key === closeKey) {
       e.preventDefault()

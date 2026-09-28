@@ -4,8 +4,8 @@ Current freeze, cases, and proof. Design narrative: [Menu.md](./Menu.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/menu.spec.ts`
-CT: `__e2e__/Menu.ct.spec.ts` (30 tests, React 17/18/19)
-Colocated: `Menu.test.tsx` (7 tests) + `menu-intent.test.ts` (1 test)
+CT: `__e2e__/Menu.ct.spec.ts` (92 tests, React 17/18/19)
+Colocated: `Menu.test.tsx` (22 tests) + `menu-intent.test.ts` (1 test)
 Page: `/menu`
 
 ## Legend
@@ -35,32 +35,37 @@ rebuild Overlay dismiss.
 | Intent | 100ms open / 300ms close / 5px grace |
 | Escape | one level (Overlay stack) |
 
-### Status (2026-09-25 quarantine landing)
+### Status (finish-line P2E — 85/91)
 
 | | |
 | :--- | :--- |
-| Engine | Trigger/Content/Item/Separator + own Overlay + RovingFocus typeahead. |
-| Production | **Root menu only.** No nested submenus / choice / link parts. |
-| Named `[x]` | 31 / 91 (root-level adaptations; see deviations) |
-| CT | 30 (2 frozen originals + 28 parity re-targets), React 17/18/19 green |
-| Vitest | 8 (5 original + ENV-01/ENV-02 + INTENT-09) |
+| Engine | Popover-root Menu + recursive nested Menu + RovingFocus typeahead. |
+| Production | Root + nested submenus, choice parts, LinkItem, intent, context recipe. |
+| Named `[x]` | 85 / 91 (6 gaps: 3 maintainer-skipped, 2 Overlay-owned, 1 matrix-only) |
+| CT | 92 (React 17/18/19 green), incl. 32 P2E completions + 5 COMP gates |
+| Vitest | 23 (unit pins for CHOICE-03/05/06, LINK-04, INTENT-09, ENV-01/02, …) |
 
-Landing ports (zero paint, uncontrolled API preserved): cancelable
-`onSelect(event)` (Menu.md already specified `(event: Event) => void`),
-`textValue` (Menu.md specified), RovingFocus `typeahead`, Tab
-trigger-relative continuation, live-trigger focus restore,
-close-transition focus restore, stable content id + `aria-controls`,
-forwardRef on all parts, `menu-intent.ts` verbatim (unwired — submenu
-follow-up fuel, not exported from index).
+P2E arc (on the FEATURES-A/B + W-28 landings): Popover-root rewrite,
+nested submenus with SUBKEY keys, 100/300/5px intent wiring, Checkbox /
+Radio / Link parts, ContextMenu recipe (`useMenuContextKeys` +
+outside-contextmenu dismiss). Behavior fixes: direction-from-root-trigger
+(portals lose `dir`), descendant-aware intent travel, once-per-episode
+rejected-close, RTL close-key source.
 
 ### Gaps & incoherence
 
-- Missing CheckboxItem / RadioGroup / RadioItem / LinkItem.
-- Own Overlay root + `defaultOpen` / `onOpenChange` instead of Popover +
-  nested Menu model.
-- No submenu nesting, intent polygon, typeahead-vs-Space gate, choice ARIA.
-- `onSelect` is `() => void`, not cancelable event-first.
-- `MN-DOM-02` is a visual focus-ring title, not catalog.
+- `MN-FOCUS-04` horizontal prop — FEATURES #5 maintainer-take: skip (no
+  Menubar consumer; Menubar roves horizontally itself, verified).
+- `MN-TYPE-02` Space-as-search — PATCHES #2, blocked on the RovingFocus
+  crew's typeahead-session gate (Menu must not fork the buffer).
+- `MN-ACT-07` press-drag-select — FEATURES #6 maintainer-take: doubtful in
+  base Menu, needs a demonstrating consumer.
+- `MN-CLOSE-03` FocusLock shard + `MN-CLOSE-10` nested dialog — Overlay /
+  FocusLock-owned layer wiring, outside Menu scope.
+- `MN-ENV-04` browser:all — CT runs Chromium only; needs the matrix
+  engine sweep (the old "`--react all`" proof conflated React with engines).
+- `MN-DOM-02` keeps its original visual focus-ring title as a frozen
+  regression alongside the catalog adaptation.
 
 ### Vendor
 
@@ -72,32 +77,37 @@ follow-up fuel, not exported from index).
 
 ### Case index
 
-Proven by passing CT/unit titles (root-level adaptations of TESTS.md):
+Proven by passing CT/unit titles (P2E: full submenu/choice/link/intent
+coverage; quarantine-era root-only adaptations retained where noted):
 
-- `[x]` `MN-DOM-01` `MN-DOM-02` `MN-DOM-03` `MN-DOM-04` `MN-DOM-05`
-  `MN-DOM-06` `MN-DOM-07` `MN-DOM-09`
+- `[x]` all `MN-DOM-01..10`
 - `[x]` `MN-FOCUS-01` `MN-FOCUS-02` `MN-FOCUS-03` `MN-FOCUS-05`
-- `[x]` `MN-TYPE-01` `MN-TYPE-04`
-- `[x]` `MN-ACT-01` `MN-ACT-02` `MN-ACT-03` `MN-ACT-06` `MN-ACT-08`
-- `[x]` `MN-CHOICE-08` (plain-item close policy only)
-- `[x]` `MN-INTENT-09` (unit) `MN-INTENT-10`
-- `[x]` `MN-CLOSE-01` `MN-CLOSE-04` `MN-CLOSE-05` `MN-CLOSE-08`
-- `[x]` `MN-DYNAMIC-01` `MN-DYNAMIC-03`
-- `[x]` `MN-ENV-01` `MN-ENV-02` (unit) `MN-ENV-04` (via `--react all`)
+  `MN-FOCUS-06`
+- `[x]` `MN-TYPE-01` `MN-TYPE-03` `MN-TYPE-04`
+- `[x]` `MN-ACT-01` `MN-ACT-02` `MN-ACT-03` `MN-ACT-04` `MN-ACT-05`
+  `MN-ACT-06` `MN-ACT-08`
+- `[x]` all `MN-CHOICE-01..10` (`-03/-05/-06` unit, rest CT)
+- `[x]` all `MN-LINK-01..09` (`-04` unit, rest CT)
+- `[x]` all `MN-SUBKEY-01..10`
+- `[x]` all `MN-INTENT-01..10` (`-09` unit, rest CT)
+- `[x]` `MN-CLOSE-01` `MN-CLOSE-02` `MN-CLOSE-04` `MN-CLOSE-05`
+  `MN-CLOSE-06` `MN-CLOSE-07` `MN-CLOSE-08` `MN-CLOSE-09`
+- `[x]` all `MN-DYNAMIC-01..04`
+- `[x]` `MN-ENV-01` `MN-ENV-02` (unit) `MN-ENV-03` (shadow; Overlay
+  FEATURES #1 automatic rule + Menu owning-root adoption; Tab
+  traversal stays document-scoped per Tree-deferred precedent)
 - `[x]` `MN-A11Y-01` (explicit asserts; no axe in repo)
-- `[ ]` `MN-DOM-08` `MN-DOM-10` (Popover engine / submenu placement)
-- `[ ]` `MN-FOCUS-04` `MN-FOCUS-06` (horizontal prop / submenus)
-- `[ ]` `MN-TYPE-02` `MN-TYPE-03` (Space-buffer gate needs RovingFocus
-  order change — child handlers run first; submenu buffers)
-- `[ ]` `MN-ACT-04` `MN-ACT-05` `MN-ACT-07` (submenu tree / press-drag)
-- `[ ]` `MN-CHOICE-*` except `-08`, all `MN-LINK-*` (parts do not exist)
-- `[ ]` all `MN-SUBKEY-*`, `MN-INTENT-01..08` (no submenus)
-- `[ ]` `MN-CLOSE-02` `MN-CLOSE-03` `MN-CLOSE-06` (submenu portion)
-  `MN-CLOSE-07` `MN-CLOSE-09` (dup of CLOSE-01 single-level)
-  `MN-CLOSE-10`
-- `[ ]` `MN-DYNAMIC-02` `MN-DYNAMIC-04` (submenu ownership)
-- `[x]` `MN-ENV-03` (shadow; Overlay FEATURES #1 automatic rule + Menu owning-root adoption; Tab traversal stays document-scoped per Tree-deferred precedent)
-- `[ ]` all `MN-COMP-*` (need Popover-root/nested model)
+- `[x]` all `MN-COMP-01..05`
+- `[ ]` `MN-FOCUS-04` (FEATURES #5 skip — no Menubar consumer)
+- `[ ]` `MN-TYPE-02` (PATCHES #2 — RovingFocus session gate)
+- `[ ]` `MN-ACT-07` (FEATURES #6 — needs a demonstrating consumer)
+- `[ ]` `MN-CLOSE-03` `MN-CLOSE-10` (Overlay/FocusLock-owned)
+- `[ ]` `MN-ENV-04` (matrix engine sweep; CT is Chromium-only)
+
+Non-catalog regression titles (kept, not counted): `MN-FOCUS-07[-sub]`
+(B-33 container edge keys), `MN-CLOSE-11` (adjacent-trigger press),
+`MN-DOM-B27` (Menu.md composition), `MN-CHOICE-02-alias` (W-28),
+P4 plant-site pin.
 
 Adaptations (pinned current behavior over quarantine where they
 conflict): `MN-FOCUS-02` asserts NO item focus after pointer opening
@@ -112,14 +122,31 @@ cloneElement + Overlay ref-as-prop drop `props.ref` on 17/18 —
 handoff); `MN-DOM-02` original visual CT title kept as frozen
 regression alongside the catalog adaptation.
 
+P2E adaptations: `MN-SUBKEY-08` counts one `ext:onDismiss` per
+deliberate gesture (hover-away, then sibling press) under rejection —
+accepted parents unmount after the first; `MN-INTENT-05` disabled-entry
+leg rides the same SUBKEY-08 pin; `MN-COMP-02` composes Overlay-direct
+(virtual `anchor` + `useMenuContextKeys`) because Popover does not pass
+`anchor` through — Popover passthrough is the follow-up, the Menu
+contract is proven; context entry plants only on closed→open
+transitions (a repeated gesture batches dismiss+reopen without
+unmounting); submenu direction reads the root trigger (portals lose
+`dir` — Menu-side adoption pending Portal dir propagation);
+descendant travel keeps ancestors open; `MN-LINK-06` download leg
+asserts attribute + dismiss + no-navigation (no harness download
+server); `MN-ENV-04` is `[ ]` — the old `--react all` proof conflated
+React majors with browser engines.
+
 ### Work order
 
-1. Anatomy: Popover root + recursive nested Menu (no second overlay).
-2. Item activation + closeOnSelect; cancelable `onSelect`.
-3. Choice items + LinkItem.
-4. Intent polygon (`MN-INTENT-*`).
+1. ~~Anatomy: Popover root + recursive nested Menu~~ — landed (P2E).
+2. ~~Item activation + closeOnSelect; cancelable `onSelect`~~ — landed.
+3. ~~Choice items + LinkItem~~ — landed (W-28 + P2E dynamics).
+4. ~~Intent polygon (`MN-INTENT-*`)~~ — landed + wired (P2E).
 5. Escape / layer policy composes Overlay — do not reimplement.
-6. ID’d cases.
+6. Remaining IDs: `TYPE-02` (RovingFocus gate), `CLOSE-03/10`
+   (Overlay), `ENV-04` (matrix sweep); `FOCUS-04`/`ACT-07` skipped
+   per maintainer-take.
 
 ### Won't do
 

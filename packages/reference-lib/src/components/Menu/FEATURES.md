@@ -2,7 +2,15 @@
 
 Status: companion to DECISIONS.md — every item here needs a product, UX, or API design call before anyone builds it.
 
-## 1. Nested submenu model (from DECISIONS candidate #1)
+## Status (finish-line P2E)
+
+#1 nested submenus, #2 choice parts, #3 LinkItem, #4 Popover-root are
+**LANDED** (SPEC 85/91; SUBKEY/INTENT/CLOSE-tree/CHOICE/LINK/COMP pins
+green on React 17/18/19). #5 skipped per its maintainer-take (verified:
+Menubar roves horizontally itself). #6 stays doubtful (no consumer).
+#7/#8 unchanged.
+
+## 1. Nested submenu model (from DECISIONS candidate #1) — LANDED
 
 **What it does:** Recursive submenus — a nested `Menu` renders a submenu level with its own trigger item and positioned content, keyboardable with Left/Right and one-level Escape.
 
@@ -19,7 +27,7 @@ Omitted nested `open` is controlled false; one child layer per open submenu; Lef
 
 **Maintainer take:** Yes — the missing ~60/91 cases hang off this; build it as a designed arc (anatomy, then SUBKEY keys, then intent, then layer policy).
 
-## 2. CheckboxItem + RadioGroup/RadioItem parts (from DECISIONS candidate #2)
+## 2. CheckboxItem + RadioGroup/RadioItem parts (from DECISIONS candidate #2) — LANDED
 
 **What it does:** Stateful choice rows for settings-style menus — checkboxes and radio groups that live in the same roving/typeahead owner as plain items but don't dismiss on select by default.
 
@@ -36,7 +44,7 @@ Both default `closeOnSelect={false}`; checkbox requests the opposite boolean (`m
 
 **Maintainer take:** Yes once a settings-menu consumer names it; let it ride the submenu arc and gate on `MN-COMP-04`.
 
-## 3. LinkItem part (from DECISIONS candidate #3)
+## 3. LinkItem part (from DECISIONS candidate #3) — LANDED
 
 **What it does:** Real-anchor menu rows for docs/nav menus — native navigation preserved, then dismissed by default, with modified/middle/right clicks staying fully native.
 
@@ -50,7 +58,7 @@ Unmodified primary click / Enter / Menu-owned Space run handlers, preserve nativ
 
 **Maintainer take:** Yes for docs/nav menus, but as its own arc — the navigation-vs-dismissal interleave is the subtlest activation contract in the suite; gate on `MN-COMP-05`.
 
-## 4. Popover-root anatomy (from DECISIONS candidate #5)
+## 4. Popover-root anatomy (from DECISIONS candidate #5) — LANDED
 
 **What it does:** Root `Menu` stops owning its own overlay and renders `div[role=menu]` inside a consumer-wrapped `Popover`, which owns open state, placement, portal, and Presence exit — one overlay runtime, not two.
 

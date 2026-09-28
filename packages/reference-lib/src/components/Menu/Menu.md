@@ -136,6 +136,20 @@ itself. The opening key is consumed once per open; a Menu unmounted while
 closed cannot observe trigger keys any other way. Intent is recorded only by
 a press that opens — a press on an already-open trigger plants nothing.
 
+Context targets use `useMenuContextKeys()`, spread onto the target: a
+context press, the ContextMenu key, or Shift+F10 plants first-item entry.
+Plant only on closed→open transitions — a repeated source gesture batches
+dismiss+reopen without unmounting, so planting then would leak into the
+next unrelated open. An outside contextmenu dismisses the tree once without
+preventing the native menu; inside context presses stay open. (The current
+recipe composes Overlay-direct with a virtual `anchor`; Popover does not
+yet pass `anchor` through.)
+
+Submenu direction (open/close keys, default placement, intent fallback)
+reads the root trigger: menu content portals to `document.body` and loses
+the author's `dir` context. Travel inside an open descendant keeps every
+ancestor open; a rejected hover-close requests once per away episode.
+
 An Item's consumer `onSelect` receives the cancelable native event first.
 Plain Item defaults `closeOnSelect=true`; CheckboxItem and RadioItem default
 it false. An unprevented command requests dismissal; checkbox activation
