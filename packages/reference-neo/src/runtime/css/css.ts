@@ -41,6 +41,12 @@ let active: ActiveRuntime | undefined
 /** Miss diagnostics already reported this session; repeats stay silent. */
 const reportedMissDiagnostics = new Set<string>()
 
+/** Candidates held while the document may still receive dev-injected sheets. */
+let heldMissCandidates: MissCandidate[] = []
+
+/** True once the load flush below is armed; one listener per wait. */
+let loadFlushArmed = false
+
 function isProductionBuild(): boolean {
   return (
     typeof process !== 'undefined' &&
@@ -75,6 +81,40 @@ function formatMissTarget(query: NamerRequest): string {
 }
 
 /**
+ * Deliver candidates to the probe once the sheet list is settled. Dev
+ * bundlers inject `<style>` tags during module evaluation, after the first
+ * css() calls but before load, and the probe only gates on linked sheets —
+ * so candidates from a still-loading document wait for load instead of
+ * scanning a half-arrived sheet list and crying wolf for present rules.
+ * Node (no document) and settled documents hand off immediately; true
+ * misses still warn at the flush since their class never arrives.
+ */
+function deliverMissCandidates(candidates: MissCandidate[]): void {
+  if (typeof document === 'undefined' || document.readyState === 'complete') {
+    reportMissCandidates(candidates)
+    return
+  }
+  if (typeof window === 'undefined') {
+    reportMissCandidates(candidates)
+    return
+  }
+  heldMissCandidates.push(...candidates)
+  if (loadFlushArmed) {
+    return
+  }
+  loadFlushArmed = true
+  window.addEventListener('load', flushHeldMissCandidates, { once: true })
+}
+
+/** Hand the load-waited candidates to the probe, exactly once per wait. */
+function flushHeldMissCandidates(): void {
+  loadFlushArmed = false
+  const drained = heldMissCandidates
+  heldMissCandidates = []
+  reportMissCandidates(drained)
+}
+
+/**
  * Queue one dev diagnostic per constructed class the sheet may not back.
  * Holes and conditional skips never reach here (collect drops them), and
  * refused queries name nothing to check, so every candidate is a class the
@@ -100,7 +140,7 @@ function reportStyleMisses(named: Array<{ query: NamerRequest; classes: string[]
       candidates.push({ className, message })
     }
   }
-  reportMissCandidates(candidates)
+  deliverMissCandidates(candidates)
 }
 
 /**
