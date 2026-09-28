@@ -19,9 +19,11 @@ export const StepperFixture = () => {
             max={100}
             step={1}
           >
-            <NumberField.Decrement aria-label="Decrement" data-testid="btn-decrement" />
-            <NumberField.Input data-testid="number-field-input" />
-            <NumberField.Increment aria-label="Increment" data-testid="btn-increment" />
+            <NumberField.Group data-testid="number-field-group">
+              <NumberField.Decrement aria-label="Decrement" data-testid="btn-decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="number-field-input" />
+              <NumberField.Increment aria-label="Increment" data-testid="btn-increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
@@ -37,9 +39,11 @@ export const DisabledFixture = () => (
   <ReferenceLibrary>
     <Div p="4r" maxW="80r">
       <NumberField value={7} locale="en-US" disabled min={0} max={100} data-testid="disabled-number-field">
-        <NumberField.Decrement aria-label="Decrement" />
-        <NumberField.Input />
-        <NumberField.Increment aria-label="Increment" />
+        <NumberField.Group data-testid="disabled-number-field-group">
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField.Group>
       </NumberField>
     </Div>
   </ReferenceLibrary>
@@ -58,9 +62,11 @@ export const DecimalFixture = () => {
           onChange={setValue}
           step={0.1}
         >
-          <NumberField.Decrement aria-label="Decrement" data-testid="decimal-btn-decrement" />
-          <NumberField.Input data-testid="decimal-number-field-input" />
-          <NumberField.Increment aria-label="Increment" data-testid="decimal-btn-increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" data-testid="decimal-btn-decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="decimal-number-field-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="decimal-btn-increment" />
+          </NumberField.Group>
         </NumberField>
       </Div>
     </ReferenceLibrary>
@@ -74,9 +80,11 @@ export const UnboundedFixture = () => {
     <ReferenceLibrary>
       <Div p="4r" maxW="80r">
         <NumberField data-testid="unbounded-number-field" value={value} locale="en-US" onChange={setValue}>
-          <NumberField.Decrement aria-label="Decrement" data-testid="unbounded-btn-decrement" />
-          <NumberField.Input data-testid="unbounded-number-field-input" />
-          <NumberField.Increment aria-label="Increment" data-testid="unbounded-btn-increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" data-testid="unbounded-btn-decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="unbounded-number-field-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="unbounded-btn-increment" />
+          </NumberField.Group>
         </NumberField>
       </Div>
     </ReferenceLibrary>
@@ -101,9 +109,11 @@ export const NamedStepperFixture = () => {
           min={0}
           max={100}
         >
-          <NumberField.Decrement data-testid="named-en-dec" aria-label="Decrease quantity" />
-          <NumberField.Input data-testid="named-en-input" />
-          <NumberField.Increment data-testid="named-en-inc" aria-labelledby="named-en-inc-label" />
+          <NumberField.Group>
+            <NumberField.Decrement data-testid="named-en-dec" aria-label="Decrease quantity" />
+            <NumberField.Input aria-label="Quantity" data-testid="named-en-input" />
+            <NumberField.Increment data-testid="named-en-inc" aria-labelledby="named-en-inc-label" />
+          </NumberField.Group>
         </NumberField>
         <span id="named-de-inc-label">Increase quantity</span>
         <NumberField
@@ -114,9 +124,11 @@ export const NamedStepperFixture = () => {
           min={0}
           max={100}
         >
-          <NumberField.Decrement data-testid="named-de-dec" aria-label="Decrease quantity" />
-          <NumberField.Input data-testid="named-de-input" />
-          <NumberField.Increment data-testid="named-de-inc" aria-labelledby="named-de-inc-label" />
+          <NumberField.Group>
+            <NumberField.Decrement data-testid="named-de-dec" aria-label="Decrease quantity" />
+            <NumberField.Input aria-label="Quantity" data-testid="named-de-input" />
+            <NumberField.Increment data-testid="named-de-inc" aria-labelledby="named-de-inc-label" />
+          </NumberField.Group>
         </NumberField>
       </Div>
     </ReferenceLibrary>
@@ -145,9 +157,11 @@ export const BoundedDecimalFixture = () => {
             max={10}
             step={1}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input data-testid="bounded-decimal-input" />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="bounded-decimal-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
@@ -182,9 +196,11 @@ export const SnapFixture = () => {
             }}
             step={1}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input data-testid="snap-input" />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="snap-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
@@ -221,9 +237,11 @@ export const ValidateFixture = () => {
             max={10}
             step={1}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input data-testid="validate-input" />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="validate-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
@@ -253,9 +271,11 @@ export const CurrencyFixture = () => {
             formatOptions={{ style: 'currency', currency: 'USD' }}
             onChange={setValue}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input data-testid="currency-input" />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="currency-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
@@ -282,14 +302,59 @@ export const PercentFixture = () => {
             formatOptions={{ style: 'percent' }}
             onChange={setValue}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input data-testid="percent-input" />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="percent-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </Div>
 
         <Span fontSize="3r" color="design.text.light" data-testid="percent-display">
           Percent Value: {value !== null ? value : 'None'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NF-DOM-02 / NF-SURF-01 / NF-FORM-02: named field in a live form with a
+// warning-status Group — hidden canonical serialization plus the
+// Field-surface host contract in one composition.
+export const NamedFormFixture = () => {
+  const [value, setValue] = React.useState<number | null>(1234.5)
+  const [payload, setPayload] = React.useState('none')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <form
+          data-testid="named-form"
+          onSubmit={e => {
+            e.preventDefault()
+            setPayload(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`).join(','))
+          }}
+        >
+          <NumberField
+            data-testid="named-form-field"
+            value={value}
+            locale="en-US"
+            formatOptions={{ style: 'currency', currency: 'USD' }}
+            onChange={setValue}
+            name="price"
+          >
+            <NumberField.Group data-testid="named-form-group" status="warning">
+              <NumberField.Decrement aria-label="Decrease price" />
+              <NumberField.Input aria-label="Price" data-testid="named-form-input" />
+              <NumberField.Increment aria-label="Increase price" />
+            </NumberField.Group>
+          </NumberField>
+          <button type="submit" data-testid="named-form-submit">
+            Submit
+          </button>
+        </form>
+        <Span fontSize="3r" color="design.text.light" data-testid="named-form-payload">
+          payload: {payload}
         </Span>
       </Div>
     </ReferenceLibrary>
@@ -304,9 +369,11 @@ export const UnnamedStepperFixture = () => (
   <ReferenceLibrary>
     <Div p="4r" maxW="80r">
       <NumberField data-testid="unnamed-field" value={42} locale="en-US" min={0} max={100}>
-        <NumberField.Decrement data-testid="unnamed-dec" {...unnamedDecProps} />
-        <NumberField.Input data-testid="unnamed-input" />
-        <NumberField.Increment data-testid="unnamed-inc" aria-labelledby="unnamed-missing-target" />
+        <NumberField.Group>
+          <NumberField.Decrement data-testid="unnamed-dec" {...unnamedDecProps} />
+          <NumberField.Input aria-label="Quantity" data-testid="unnamed-input" />
+          <NumberField.Increment data-testid="unnamed-inc" aria-labelledby="unnamed-missing-target" />
+        </NumberField.Group>
       </NumberField>
     </Div>
   </ReferenceLibrary>

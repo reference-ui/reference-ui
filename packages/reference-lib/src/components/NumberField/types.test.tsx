@@ -4,6 +4,7 @@ import {
   NumberField,
   type NumberFieldCommitBehavior,
   type NumberFieldDecrementProps,
+  type NumberFieldGroupProps,
   type NumberFieldIncrementProps,
   type NumberFieldInputProps,
   type NumberFieldInvalidCommitReason,
@@ -13,6 +14,7 @@ import {
 describe('NumberField type contract', () => {
   it('NF-TYPE-01: NumberField should export the conventional root and no Root alias', () => {
     expect(NumberField).toBeDefined()
+    expect(NumberField.Group).toBeDefined()
     expect(NumberField.Input).toBeDefined()
     expect(NumberField.Increment).toBeDefined()
     expect(NumberField.Decrement).toBeDefined()
@@ -46,11 +48,22 @@ describe('NumberField type contract', () => {
       max: 100,
       step: 1,
       disabled: false,
+      readOnly: false,
+      required: true,
+      invalid: false,
+      name: 'quantity',
+      form: 'order-form',
       locale: 'en-US',
       width: '40r',
     }
     expect(validProps.value).toBe(123.45)
     expect(typeof validProps.onChange).toBe('function')
+
+    const validGroupProps: NumberFieldGroupProps = {
+      status: 'warning',
+      width: '40r',
+    }
+    expect(validGroupProps.status).toBe('warning')
 
     const validInputProps: NumberFieldInputProps = {
       'aria-label': 'Quantity',
@@ -64,9 +77,11 @@ describe('NumberField type contract', () => {
 
     const element = (
       <NumberField {...validProps}>
-        <NumberField.Decrement {...validDecProps} />
-        <NumberField.Input {...validInputProps} />
-        <NumberField.Increment {...validIncProps} />
+        <NumberField.Group {...validGroupProps}>
+          <NumberField.Decrement {...validDecProps} />
+          <NumberField.Input {...validInputProps} />
+          <NumberField.Increment {...validIncProps} />
+        </NumberField.Group>
       </NumberField>
     )
     expect(React.isValidElement(element)).toBe(true)
@@ -77,6 +92,11 @@ describe('NumberField type contract', () => {
     expectTypeOf<NumberFieldProps['max']>().toEqualTypeOf<number | undefined>()
     expectTypeOf<NumberFieldProps['step']>().toEqualTypeOf<number | undefined>()
     expectTypeOf<NumberFieldProps['disabled']>().toEqualTypeOf<boolean | undefined>()
+    expectTypeOf<NumberFieldProps['readOnly']>().toEqualTypeOf<boolean | undefined>()
+    expectTypeOf<NumberFieldProps['required']>().toEqualTypeOf<boolean | undefined>()
+    expectTypeOf<NumberFieldProps['invalid']>().toEqualTypeOf<boolean | undefined>()
+    expectTypeOf<NumberFieldProps['name']>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<NumberFieldProps['form']>().toEqualTypeOf<string | undefined>()
     expectTypeOf<NumberFieldProps['locale']>().toEqualTypeOf<string>()
 
     // @ts-expect-error - string value rejected
@@ -87,9 +107,256 @@ describe('NumberField type contract', () => {
     const _rawCb: NumberFieldProps = { value: null, locale: 'en-US', onTextChange: (s: string) => void s }
     expect(_rawCb).toBeDefined()
 
-    // NOTE: role/type/aria-valuenow stay in the public part types (no Omit
-    // churn); at runtime each part owns them (conflicting casts stripped,
-    // managed values win). aria-label stays consumer-overridable by design.
+    // @ts-expect-error - allowWheel does not exist (wheel never steps)
+    const _noWheel: NumberFieldProps = { value: null, locale: 'en-US', allowWheel: true }
+    expect(_noWheel).toBeDefined()
+
+    // @ts-expect-error - smallStep does not exist (one lattice)
+    const _noSmall: NumberFieldProps = { value: null, locale: 'en-US', smallStep: 0.1 }
+    expect(_noSmall).toBeDefined()
+
+    // @ts-expect-error - largeStep does not exist (fixed 10 * step Shift)
+    const _noLarge: NumberFieldProps = { value: null, locale: 'en-US', largeStep: 10 }
+    expect(_noLarge).toBeDefined()
+
+    // @ts-expect-error - as does not exist (fixed hosts, no polymorphism)
+    const _noAs: NumberFieldProps = { value: null, locale: 'en-US', as: 'section' }
+    expect(_noAs).toBeDefined()
+  })
+
+  it('NF-TYPE-03: NumberField parts should omit every behavior-owned native and ARIA prop', () => {
+    // Group: native props, StyleProps, css, and matching refs compile;
+    // behavior-owned role/state ARIA do not. Group read-only/required
+    // styling stays data-only (no aria-readonly/aria-required anywhere).
+    const groupRef = React.createRef<HTMLDivElement>()
+    const groupElement = (
+      <NumberField.Group
+        ref={groupRef}
+        id="group"
+        title="group title"
+        aria-label="Quantity group"
+        aria-describedby="desc"
+        width="40r"
+        css={{ padding: '4px' }}
+        status="warning"
+      />
+    )
+    expect(React.isValidElement(groupElement)).toBe(true)
+
+    // @ts-expect-error - Group role is managed
+    const _groupRole: NumberFieldGroupProps = { role: 'form' }
+    expect(_groupRole).toBeDefined()
+
+    // @ts-expect-error - Group aria-disabled is managed
+    const _groupDisabled: NumberFieldGroupProps = { 'aria-disabled': true }
+    expect(_groupDisabled).toBeDefined()
+
+    // @ts-expect-error - Group aria-readonly never exists
+    const _groupReadonly: NumberFieldGroupProps = { 'aria-readonly': true }
+    expect(_groupReadonly).toBeDefined()
+
+    // @ts-expect-error - Group aria-required never exists
+    const _groupRequired: NumberFieldGroupProps = { 'aria-required': true }
+    expect(_groupRequired).toBeDefined()
+
+    // @ts-expect-error - Group aria-invalid is managed
+    const _groupInvalid: NumberFieldGroupProps = { 'aria-invalid': true }
+    expect(_groupInvalid).toBeDefined()
+
+    // @ts-expect-error - Group status="error" does not exist
+    const _groupError: NumberFieldGroupProps = { status: 'error' }
+    expect(_groupError).toBeDefined()
+
+    // Input: every documented managed prop is rejected while unrelated
+    // naming/description/event props remain available.
+    const inputRef = React.createRef<HTMLInputElement>()
+    const inputElement = (
+      <NumberField.Input
+        ref={inputRef}
+        id="input"
+        aria-label="Quantity"
+        aria-labelledby="label"
+        aria-describedby="desc"
+        aria-errormessage="err"
+        placeholder="0.00"
+        enterKeyHint="done"
+        autoComplete="off"
+        spellCheck={false}
+        width="40r"
+        css={{ padding: '4px' }}
+        onFocus={() => {}}
+        onBlur={() => {}}
+        onKeyDown={() => {}}
+      />
+    )
+    expect(React.isValidElement(inputElement)).toBe(true)
+
+    // @ts-expect-error - Input type is managed
+    const _inputType: NumberFieldInputProps = { type: 'number' }
+    expect(_inputType).toBeDefined()
+
+    // @ts-expect-error - Input role is managed (plain textbox)
+    const _inputRole: NumberFieldInputProps = { role: 'spinbutton' }
+    expect(_inputRole).toBeDefined()
+
+    // @ts-expect-error - Input value is managed
+    const _inputValue: NumberFieldInputProps = { value: '1' }
+    expect(_inputValue).toBeDefined()
+
+    // @ts-expect-error - Input defaultValue is managed
+    const _inputDefault: NumberFieldInputProps = { defaultValue: '1' }
+    expect(_inputDefault).toBeDefined()
+
+    // @ts-expect-error - Input inputMode is managed
+    const _inputMode: NumberFieldInputProps = { inputMode: 'numeric' }
+    expect(_inputMode).toBeDefined()
+
+    // @ts-expect-error - Input name is managed (hidden input owns it)
+    const _inputName: NumberFieldInputProps = { name: 'x' }
+    expect(_inputName).toBeDefined()
+
+    // @ts-expect-error - Input form is managed
+    const _inputForm: NumberFieldInputProps = { form: 'f' }
+    expect(_inputForm).toBeDefined()
+
+    // @ts-expect-error - Input min is managed
+    const _inputMin: NumberFieldInputProps = { min: 0 }
+    expect(_inputMin).toBeDefined()
+
+    // @ts-expect-error - Input max is managed
+    const _inputMax: NumberFieldInputProps = { max: 1 }
+    expect(_inputMax).toBeDefined()
+
+    // @ts-expect-error - Input step is managed
+    const _inputStep: NumberFieldInputProps = { step: 1 }
+    expect(_inputStep).toBeDefined()
+
+    // @ts-expect-error - Input disabled is managed
+    const _inputDisabled: NumberFieldInputProps = { disabled: true }
+    expect(_inputDisabled).toBeDefined()
+
+    // @ts-expect-error - Input readOnly is managed
+    const _inputReadonly: NumberFieldInputProps = { readOnly: true }
+    expect(_inputReadonly).toBeDefined()
+
+    // @ts-expect-error - Input required is managed
+    const _inputRequired: NumberFieldInputProps = { required: true }
+    expect(_inputRequired).toBeDefined()
+
+    // @ts-expect-error - Input aria-disabled is managed
+    const _inputAriaDisabled: NumberFieldInputProps = { 'aria-disabled': true }
+    expect(_inputAriaDisabled).toBeDefined()
+
+    // @ts-expect-error - Input aria-readonly is managed
+    const _inputAriaReadonly: NumberFieldInputProps = { 'aria-readonly': true }
+    expect(_inputAriaReadonly).toBeDefined()
+
+    // @ts-expect-error - Input aria-required is managed
+    const _inputAriaRequired: NumberFieldInputProps = { 'aria-required': true }
+    expect(_inputAriaRequired).toBeDefined()
+
+    // @ts-expect-error - Input aria-invalid is managed
+    const _inputAriaInvalid: NumberFieldInputProps = { 'aria-invalid': true }
+    expect(_inputAriaInvalid).toBeDefined()
+
+    // @ts-expect-error - Input aria-valuemin never exists (textbox)
+    const _inputValueMin: NumberFieldInputProps = { 'aria-valuemin': 0 }
+    expect(_inputValueMin).toBeDefined()
+
+    // @ts-expect-error - Input aria-valuemax never exists (textbox)
+    const _inputValueMax: NumberFieldInputProps = { 'aria-valuemax': 1 }
+    expect(_inputValueMax).toBeDefined()
+
+    // @ts-expect-error - Input aria-valuenow never exists (textbox)
+    const _inputValueNow: NumberFieldInputProps = { 'aria-valuenow': 0 }
+    expect(_inputValueNow).toBeDefined()
+
+    // @ts-expect-error - Input aria-valuetext never exists (textbox)
+    const _inputValueText: NumberFieldInputProps = { 'aria-valuetext': 'x' }
+    expect(_inputValueText).toBeDefined()
+
+    // Steppers: every documented managed semantic prop is rejected while
+    // the accessible-name union plus native button handlers/children stay.
+    const stepperRef = React.createRef<HTMLButtonElement>()
+    const stepperElement = (
+      <NumberField.Increment
+        ref={stepperRef}
+        aria-label="Increase"
+        id="inc"
+        title="inc title"
+        width="10r"
+        css={{ padding: '4px' }}
+        onClick={() => {}}
+      >
+        +
+      </NumberField.Increment>
+    )
+    expect(React.isValidElement(stepperElement)).toBe(true)
+
+    // @ts-expect-error - stepper type is managed
+    const _stepType: NumberFieldIncrementProps = { 'aria-label': 'x', type: 'submit' }
+    expect(_stepType).toBeDefined()
+
+    // @ts-expect-error - stepper tabIndex is managed
+    const _stepTab: NumberFieldIncrementProps = { 'aria-label': 'x', tabIndex: 0 }
+    expect(_stepTab).toBeDefined()
+
+    // @ts-expect-error - stepper role is managed
+    const _stepRole: NumberFieldIncrementProps = { 'aria-label': 'x', role: 'switch' }
+    expect(_stepRole).toBeDefined()
+
+    // @ts-expect-error - stepper aria-controls is managed
+    const _stepControls: NumberFieldIncrementProps = { 'aria-label': 'x', 'aria-controls': 'y' }
+    expect(_stepControls).toBeDefined()
+
+    // @ts-expect-error - stepper aria-disabled is managed
+    const _stepDisabled: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-disabled': true }
+    expect(_stepDisabled).toBeDefined()
+
+    // @ts-expect-error - stepper aria-readonly never exists
+    const _stepReadonly: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-readonly': true }
+    expect(_stepReadonly).toBeDefined()
+
+    // @ts-expect-error - stepper aria-required never exists
+    const _stepRequired: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-required': true }
+    expect(_stepRequired).toBeDefined()
+
+    // @ts-expect-error - stepper aria-checked never exists
+    const _stepChecked: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-checked': true }
+    expect(_stepChecked).toBeDefined()
+
+    // @ts-expect-error - stepper aria-pressed never exists
+    const _stepPressed: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-pressed': true }
+    expect(_stepPressed).toBeDefined()
+
+    // @ts-expect-error - stepper aria-valuemin never exists
+    const _stepValueMin: NumberFieldDecrementProps = { 'aria-label': 'x', 'aria-valuemin': 0 }
+    expect(_stepValueMin).toBeDefined()
+
+    // @ts-expect-error - stepper aria-valuemax never exists
+    const _stepValueMax: NumberFieldIncrementProps = { 'aria-label': 'x', 'aria-valuemax': 1 }
+    expect(_stepValueMax).toBeDefined()
+
+    // @ts-expect-error - stepper aria-valuenow never exists
+    const _stepValueNow: NumberFieldIncrementProps = { 'aria-label': 'x', 'aria-valuenow': 0 }
+    expect(_stepValueNow).toBeDefined()
+
+    // @ts-expect-error - stepper aria-valuetext never exists
+    const _stepValueText: NumberFieldIncrementProps = { 'aria-label': 'x', 'aria-valuetext': 'y' }
+    expect(_stepValueText).toBeDefined()
+
+    const stringRef = React.createRef<string>()
+    // @ts-expect-error - wrong ref type on Group (non-element refs rejected)
+    const _wrongGroupRef = <NumberField.Group ref={stringRef} />
+    expect(_wrongGroupRef).toBeDefined()
+
+    // @ts-expect-error - wrong ref type on Input
+    const _wrongInputRef = <NumberField.Input ref={groupRef} aria-label="x" />
+    expect(_wrongInputRef).toBeDefined()
+
+    // @ts-expect-error - wrong ref type on stepper
+    const _wrongStepRef = <NumberField.Increment ref={groupRef} aria-label="x" />
+    expect(_wrongStepRef).toBeDefined()
   })
 
   it('NF-TYPE-04: Each stepper should require an authored accessible-name prop at the type boundary', () => {
@@ -113,11 +380,13 @@ describe('NumberField type contract', () => {
     }
     const named = (
       <NumberField value={null} locale="en-US">
-        <NumberField.Decrement aria-label="Decrease" />
-        <NumberField.Input />
-        <NumberField.Increment aria-label="Increase" onClick={() => {}}>
-          +
-        </NumberField.Increment>
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrease" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increase" onClick={() => {}}>
+            +
+          </NumberField.Increment>
+        </NumberField.Group>
       </NumberField>
     )
     expect(full.disabled).toBe(true)
@@ -165,9 +434,11 @@ describe('NumberField type contract', () => {
 
     const element = (
       <NumberField {...commitProps}>
-        <NumberField.Decrement aria-label="Decrease" />
-        <NumberField.Input aria-label="Price" />
-        <NumberField.Increment aria-label="Increase" />
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrease" />
+          <NumberField.Input aria-label="Price" />
+          <NumberField.Increment aria-label="Increase" />
+        </NumberField.Group>
       </NumberField>
     )
     expect(React.isValidElement(element)).toBe(true)

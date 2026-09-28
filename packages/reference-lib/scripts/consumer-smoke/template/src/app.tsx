@@ -190,9 +190,11 @@ export function App() {
 
         <Mount id="numberfield">
           <NumberField value={3} locale="en-US" min={0} max={10} onChange={() => {}}>
-            <NumberField.Decrement aria-label="Down" />
-            <NumberField.Input aria-label="number" />
-            <NumberField.Increment aria-label="Up" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Down" />
+              <NumberField.Input aria-label="number" />
+              <NumberField.Increment aria-label="Up" />
+            </NumberField.Group>
           </NumberField>
         </Mount>
 

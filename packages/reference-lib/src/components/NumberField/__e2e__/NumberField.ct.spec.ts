@@ -13,7 +13,7 @@ test.describe('NumberField CT', () => {
     const display = page.getByTestId('number-field-value-display')
 
     const root = page.getByTestId('number-field-fixture-root')
-    const field = page.getByTestId('number-field-root')
+    const field = page.getByTestId('number-field-group')
 
     // B-26 / PATCHES §8: plain textbox semantics, never spinbutton or
     // numeric aria-value*.
@@ -76,7 +76,7 @@ test.describe('NumberField CT', () => {
   }) => {
     await mount('components/NumberField/NumberField/StepperFixture')
 
-    const root = page.getByTestId('number-field-root')
+    const root = page.getByTestId('number-field-group')
     const input = page.getByTestId('number-field-input')
 
     await input.click()
@@ -110,7 +110,7 @@ test.describe('NumberField CT', () => {
   }) => {
     await mount('components/NumberField/NumberField/StepperFixture')
 
-    const root = page.getByTestId('number-field-root')
+    const root = page.getByTestId('number-field-group')
     const input = page.getByTestId('number-field-input')
 
     // Mouse click first to get pointer focus border
@@ -166,7 +166,7 @@ test.describe('NumberField CT', () => {
   }) => {
     await mount('components/NumberField/NumberField/StepperFixture')
 
-    const root = page.getByTestId('number-field-root')
+    const root = page.getByTestId('number-field-group')
     const input = page.getByTestId('number-field-input')
     const btnInc = page.getByTestId('btn-increment')
     const btnDec = page.getByTestId('btn-decrement')
@@ -243,10 +243,11 @@ test.describe('NumberField CT', () => {
     await mount('components/NumberField/NumberField/DisabledFixture')
 
     const root = page.getByTestId('disabled-number-field')
+    const group = page.getByTestId('disabled-number-field-group')
     await expect(root).toBeVisible()
     await page.waitForTimeout(300)
     await snap(page, 'numberfield-disabled')
-    await snap(root, 'numberfield-disabled-root', { maxDiffPixelRatio: 0.001 })
+    await snap(group, 'numberfield-disabled-root', { maxDiffPixelRatio: 0.001 })
   })
 
   test('NF-KEY-01: unmodified Up and Down request one step per keydown', async ({
@@ -720,5 +721,102 @@ test.describe('NumberField CT', () => {
     await input.focus()
     await page.keyboard.press('ArrowUp')
     await expect(input).toHaveValue('5')
+  })
+
+  test('NF-DOM-01: NumberField renders exactly one root div, group div, text input, and authored stepper buttons', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+
+    const host = page.getByTestId('number-field-root')
+    const group = page.getByTestId('number-field-group')
+    const input = page.getByTestId('number-field-input')
+
+    // Fixed tags and managed roles.
+    await expect(host).toHaveJSProperty('tagName', 'DIV')
+    await expect(host).not.toHaveAttribute('role')
+    await expect(host).not.toHaveAttribute('data-reference-field')
+    await expect(group).toHaveJSProperty('tagName', 'DIV')
+    await expect(group).toHaveAttribute('role', 'group')
+    await expect(group).toHaveAttribute('data-reference-field', '')
+    await expect(group).toHaveAttribute('data-reference-number-field', '')
+
+    // Authored order, no wrapper: decrement, text input, increment.
+    const order = await group.evaluate(el =>
+      Array.from(el.children).map(c => `${c.tagName}:${c.getAttribute('type') ?? ''}`)
+    )
+    expect(order).toEqual(['BUTTON:button', 'INPUT:text', 'BUTTON:button'])
+
+    // Plain textbox exposure, never spinbutton or native number.
+    await expect(input).toHaveAttribute('type', 'text')
+    await expect(input).not.toHaveAttribute('role')
+    await expect(input).not.toHaveAttribute('aria-valuenow')
+    await expect(page.locator('[role="spinbutton"]')).toHaveCount(0)
+    await expect(page.locator('input[type="number"]')).toHaveCount(0)
+
+    // Accessible textbox name resolves in the tree.
+    await expect(page.getByRole('textbox', { name: 'Quantity' })).toBeVisible()
+  })
+
+  test('NF-DOM-02: A name adds only one direct canonical hidden form input', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/NamedFormFixture')
+
+    const host = page.getByTestId('named-form-field')
+    const input = page.getByTestId('named-form-input')
+
+    // Exactly one root-direct hidden input with canonical text.
+    const hiddenCount = await host.evaluate(
+      el => el.querySelectorAll(':scope > input[type="hidden"]').length
+    )
+    expect(hiddenCount).toBe(1)
+    const hidden = host.locator(':scope > input[type="hidden"]')
+    await expect(hidden).toHaveAttribute('name', 'price')
+    await expect(hidden).toHaveValue('1234.5')
+
+    // Visible Input shows localized text and carries no name.
+    await expect(input).toHaveValue('$1,234.50')
+    await expect(input).not.toHaveAttribute('name')
+  })
+
+  test('NF-SURF-01: Group consumes the Field recipe on its own group node', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/NamedFormFixture')
+
+    const host = page.getByTestId('named-form-field')
+    const group = page.getByTestId('named-form-group')
+
+    // Exactly one group host, no nested Field-surface node.
+    expect(await host.locator('div[role="group"][data-reference-field]').count()).toBe(1)
+    expect(await group.locator('[data-reference-field]').count()).toBe(0)
+
+    // Warning status is visual only: data-status set, aria-invalid absent.
+    await expect(group).toHaveAttribute('data-status', 'warning')
+    await expect(group).not.toHaveAttribute('aria-invalid')
+    const warningBorder = await group.evaluate(el => window.getComputedStyle(el).borderColor)
+    expect(warningBorder.startsWith('oklab(0.7') || warningBorder.startsWith('oklch(0.7')).toBe(true)
+
+    // Embedded input: no standalone border inside the bezel.
+    const inputBorder = await page
+      .getByTestId('named-form-input')
+      .evaluate(el => window.getComputedStyle(el).borderWidth)
+    expect(inputBorder).toBe('0px')
+  })
+
+  test('NF-FORM-02: A named field submits one canonical pair from the live form', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/NamedFormFixture')
+
+    const payload = page.getByTestId('named-form-payload')
+    await expect(payload).toHaveText('payload: none')
+    await page.getByTestId('named-form-submit').click()
+    await expect(payload).toHaveText('payload: price=1234.5')
   })
 })

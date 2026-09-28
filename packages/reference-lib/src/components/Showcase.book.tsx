@@ -180,9 +180,11 @@ function FormInputsRow({
             alignItems="center"
             gap="1.5r"
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </DemoCell>
 

@@ -232,20 +232,26 @@ export const CompoundEmbedFixture = () => (
       </Combobox>
 
       <NumberField data-testid="host-numberfield-group" value={10} locale="en-US" onChange={() => {}}>
-        <NumberField.Decrement aria-label="Decrement" data-testid="compound-number-dec" />
-        <NumberField.Input data-testid="compound-number-input" />
-        <NumberField.Increment aria-label="Increment" data-testid="compound-number-inc" />
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrement" data-testid="compound-number-dec" />
+          <NumberField.Input aria-label="Quantity" data-testid="compound-number-input" />
+          <NumberField.Increment aria-label="Increment" data-testid="compound-number-inc" />
+        </NumberField.Group>
       </NumberField>
 
-      <NumberField data-testid="comp-numberfield-group" value={42} locale="en-US" onChange={() => {}}>
-        <NumberField.Decrement aria-label="Decrement" data-testid="comp-number-dec" />
-        <NumberField.Input data-testid="comp-number-input" />
-        <NumberField.Increment aria-label="Increment" data-testid="comp-number-inc" />
+      <NumberField value={42} locale="en-US" onChange={() => {}}>
+        <NumberField.Group data-testid="comp-numberfield-group">
+          <NumberField.Decrement aria-label="Decrement" data-testid="comp-number-dec" />
+          <NumberField.Input aria-label="Quantity" data-testid="comp-number-input" />
+          <NumberField.Increment aria-label="Increment" data-testid="comp-number-inc" />
+        </NumberField.Group>
       </NumberField>
 
       <Field data-testid="comp-double-bezel-wrapper" width="100%">
-        <NumberField data-testid="comp-double-bezel-inner" value={10} locale="en-US" onChange={() => {}}>
-          <NumberField.Input />
+        <NumberField value={10} locale="en-US" onChange={() => {}}>
+          <NumberField.Group data-testid="comp-double-bezel-inner">
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
         </NumberField>
       </Field>
     </Div>
@@ -332,20 +338,21 @@ export const SurfaceRecipeFixture = () => {
         </Combobox>
 
         <NumberField
-          data-testid="surf-fixture-4"
           value={5}
           locale="en-US"
           onChange={() => {}}
           disabled={surfState === 'disabled'}
-          data-invalid={surfState === 'invalid' ? '' : undefined}
-          data-status={surfState === 'warning' ? 'warning' : undefined}
+          readOnly={surfState === 'readonly'}
+          invalid={surfState === 'invalid'}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input
-            aria-invalid={surfState === 'invalid' ? 'true' : undefined}
-            readOnly={surfState === 'readonly'}
-          />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group
+            data-testid="surf-fixture-4"
+            status={surfState === 'warning' ? 'warning' : undefined}
+          >
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       </Div>
     </ReferenceLibrary>
@@ -378,8 +385,10 @@ export const TokenPickerFixture = () => {
   const [cbInputVal, setCbInputVal] = React.useState('')
   const [selectedPeople, setSelectedPeople] = React.useState([{ id: '1', name: 'Alice' }])
   const [cbInvalid, setCbInvalid] = React.useState(false)
+  const [cbChanges, setCbChanges] = React.useState<Array<string | null>>([])
 
   const handleCommitPerson = (personName: string | null) => {
+    setCbChanges(prev => [...prev, personName])
     if (!personName) return
     if (!selectedPeople.some(p => p.name === personName)) {
       setSelectedPeople(prev => [...prev, { id: `${Date.now()}`, name: personName }])
@@ -454,6 +463,32 @@ export const TokenPickerFixture = () => {
             </Listbox>
           </Combobox.Popover>
         </Combobox>
+        <Span data-testid="comp-people-changes">Changes: {cbChanges.length}</Span>
+        <Span data-testid="comp-people-last">
+          Last: {cbChanges.length ? JSON.stringify(cbChanges[cbChanges.length - 1]) : 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const RangeHostedFixture = () => {
+  const [rangeVal, setRangeVal] = React.useState<{ start: string; end: string | null } | null>({
+    start: '2026-09-10',
+    end: '2026-09-15',
+  })
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="120r" display="flex" flexDirection="column" gap="2r">
+        <Div data-testid="comp-range-wrapper">
+          <DateField.Range value={rangeVal} onChange={setRangeVal} locale="en-US">
+            <DateField.Picker data-testid="comp-range-picker" />
+          </DateField.Range>
+        </Div>
+        <Span data-testid="comp-range-val">
+          Value: {rangeVal ? `${rangeVal.start}..${rangeVal.end ?? 'null'}` : 'null'}
+        </Span>
       </Div>
     </ReferenceLibrary>
   )

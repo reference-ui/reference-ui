@@ -6,7 +6,9 @@ import { createRoot } from 'react-dom/client'
 import {
   NumberField,
   type NumberFieldDecrementProps,
+  type NumberFieldGroupProps,
   type NumberFieldIncrementProps,
+  type NumberFieldInputProps,
 } from './NumberField'
 
 // @ts-ignore
@@ -46,9 +48,11 @@ describe('NumberField numeric defaults', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={0} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -138,9 +142,11 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -179,9 +185,11 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -213,9 +221,11 @@ describe('NumberField step math', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -241,43 +251,151 @@ describe('NumberField step math', () => {
 
 describe('NumberField managed authority', () => {
   it('NF-TYPE-03 / NF-DOM-06: Managed part authority should defeat every behavior-owned conflicting cast', async () => {
-    // B-26 / PATCHES §8: Input keeps plain textbox semantics — a forged
-    // role or numeric aria-value* loses to managed absence.
+    // Freeze: the root is a plain host (role passes through, managed data
+    // wins); Group owns role=group + managed aria; Input owns host/value/
+    // form/input-mode attributes, native disabled/readOnly/required, managed
+    // aria-invalid, and the absence of numeric value ARIA; steppers own
+    // button semantics, aria-controls, and the absence of state/value ARIA.
+    // Forged props arrive through runtime casts (the type boundary rejects
+    // them separately in types.test.tsx). B-26: a forged role or numeric
+    // aria-value* on Input loses to managed absence.
+    const forgedGroup = {
+      role: 'form',
+      'aria-disabled': 'false',
+      'aria-readonly': 'true',
+      'aria-required': 'true',
+      'aria-invalid': 'false',
+      'data-status': 'error',
+    } as unknown as NumberFieldGroupProps
+    const forgedInput = {
+      type: 'number',
+      role: 'button',
+      value: '999',
+      defaultValue: '888',
+      inputMode: 'numeric',
+      name: 'forged',
+      form: 'forged-form',
+      min: 0,
+      max: 100,
+      step: 5,
+      disabled: false,
+      readOnly: false,
+      required: false,
+      'aria-disabled': 'false',
+      'aria-readonly': 'true',
+      'aria-required': 'true',
+      'aria-invalid': 'false',
+      'aria-valuenow': 5,
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuetext': 'forged',
+    } as unknown as NumberFieldInputProps
+    const forgedStepper = {
+      type: 'submit',
+      tabIndex: 0,
+      role: 'switch',
+      'aria-controls': 'forged-controls',
+      'aria-disabled': 'false',
+      'aria-readonly': 'true',
+      'aria-required': 'true',
+      'aria-checked': 'true',
+      'aria-pressed': 'true',
+      'aria-valuenow': 5,
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuetext': 'forged',
+      'data-pressed': '',
+    } as unknown as NumberFieldIncrementProps
     const { container, root } = mount()
     await React.act(async () => {
       root.render(
-        <NumberField value={42} locale="en-US" role="form" data-testid="nf-root">
-          <NumberField.Decrement aria-label="Decrement" type="submit" tabIndex={0} />
-          <NumberField.Input
-            type="number"
-            role="button"
-            value="999"
-            aria-valuenow={5}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            inputMode="numeric"
-            disabled={false}
-          />
-          <NumberField.Increment aria-label="Increment" type="submit" tabIndex={0} />
+        <NumberField
+          value={42}
+          locale="en-US"
+          data-testid="nf-root"
+          disabled
+          readOnly
+          required
+          invalid
+          data-editing=""
+        >
+          <NumberField.Group data-testid="nf-group" {...forgedGroup}>
+            <NumberField.Decrement aria-label="Decrement" {...forgedStepper} />
+            <NumberField.Input aria-label="Quantity" {...forgedInput} />
+            <NumberField.Increment aria-label="Increment" {...forgedStepper} />
+          </NumberField.Group>
         </NumberField>
       )
     })
-    const group = container.querySelector('[data-testid="nf-root"]') as HTMLElement
-    expect(group.getAttribute('role')).toBe('group')
+    // Root: plain host, no managed role; managed data wins atomically
+    // (forged data-editing loses to the clean session).
+    const host = container.querySelector('[data-testid="nf-root"]') as HTMLElement
+    expect(host.getAttribute('role')).toBeNull()
+    expect(host.getAttribute('data-editing')).toBeNull()
+    expect(host.getAttribute('data-disabled')).toBe('')
+    expect(host.getAttribute('data-readonly')).toBe('')
+    expect(host.getAttribute('data-required')).toBe('')
+    expect(host.getAttribute('data-invalid')).toBe('')
 
-    const input = container.querySelector('input') as HTMLInputElement
+    // Group keeps role=group, managed aria-disabled/invalid, and
+    // data-readonly/data-required; aria-readonly/aria-required are always
+    // absent and data-status is unset without status="warning".
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    expect(group.getAttribute('role')).toBe('group')
+    expect(group.getAttribute('aria-disabled')).toBe('true')
+    expect(group.getAttribute('aria-invalid')).toBe('true')
+    expect(group.getAttribute('aria-readonly')).toBeNull()
+    expect(group.getAttribute('aria-required')).toBeNull()
+    expect(group.getAttribute('data-readonly')).toBe('')
+    expect(group.getAttribute('data-required')).toBe('')
+    expect(group.getAttribute('data-status')).toBeNull()
+
+    // Input alone carries native readOnly/required semantics plus managed
+    // inputMode/aria-invalid; visible Input never carries a name.
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
     expect(input.getAttribute('type')).toBe('text')
     expect(input.getAttribute('role')).toBeNull()
     expect(input.value).toBe('42')
+    expect(input.getAttribute('inputmode')).toBe('text')
+    expect(input.getAttribute('name')).toBeNull()
+    expect(input.getAttribute('form')).toBeNull()
+    expect(input.getAttribute('min')).toBeNull()
+    expect(input.getAttribute('max')).toBeNull()
+    expect(input.getAttribute('step')).toBeNull()
+    expect(input.disabled).toBe(true)
+    expect(input.readOnly).toBe(true)
+    expect(input.required).toBe(true)
+    expect(input.getAttribute('aria-disabled')).toBeNull()
+    expect(input.getAttribute('aria-readonly')).toBeNull()
+    expect(input.getAttribute('aria-required')).toBeNull()
+    expect(input.getAttribute('aria-invalid')).toBe('true')
     expect(input.getAttribute('aria-valuenow')).toBeNull()
     expect(input.getAttribute('aria-valuemin')).toBeNull()
     expect(input.getAttribute('aria-valuemax')).toBeNull()
     expect(input.getAttribute('aria-valuetext')).toBeNull()
-    expect(input.getAttribute('inputmode')).toBe('decimal')
+    // Unrelated authored ARIA survives the strip.
+    expect(input.getAttribute('aria-label')).toBe('Quantity')
 
+    // Steppers: native button role/type, no tab stop, resolving controls,
+    // root-disabled capability, no state/value ARIA, no forged pressed.
     for (const btn of Array.from(container.querySelectorAll('button'))) {
       expect(btn.getAttribute('type')).toBe('button')
+      expect(btn.getAttribute('role')).toBeNull()
       expect(btn.tabIndex).toBe(-1)
+      expect(btn.getAttribute('aria-controls')).toBe(input.id)
+      expect(input.id).not.toBe('')
+      expect(btn.disabled).toBe(true)
+      expect(btn.getAttribute('data-disabled')).toBe('')
+      expect(btn.getAttribute('aria-disabled')).toBeNull()
+      expect(btn.getAttribute('aria-readonly')).toBeNull()
+      expect(btn.getAttribute('aria-required')).toBeNull()
+      expect(btn.getAttribute('aria-checked')).toBeNull()
+      expect(btn.getAttribute('aria-pressed')).toBeNull()
+      expect(btn.getAttribute('aria-valuenow')).toBeNull()
+      expect(btn.getAttribute('aria-valuemin')).toBeNull()
+      expect(btn.getAttribute('aria-valuemax')).toBeNull()
+      expect(btn.getAttribute('aria-valuetext')).toBeNull()
+      expect(btn.getAttribute('data-pressed')).toBeNull()
     }
     await cleanup(container, root)
   })
@@ -300,9 +418,11 @@ describe('NumberField managed authority', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input onChange={e => void userEdits.push(e.target.value)} />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" onChange={e => void userEdits.push(e.target.value)} />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -329,39 +449,87 @@ describe('NumberField managed authority', () => {
   })
 
   it('NF-DOM-05: Fixed hosts should preserve unrelated native props, handlers, and refs', async () => {
+    // Freeze: readOnly/invalid live on the root and map to managed Input
+    // state; everything unrelated (ids, titles, placeholder, enterKeyHint,
+    // descriptions, classes, CSS variables, styles, refs, events) passes
+    // through every fixed host untouched, with node identity across
+    // rerenders and ref cleanup on unmount.
     const rootRef = React.createRef<HTMLDivElement>()
+    const groupRef = React.createRef<HTMLDivElement>()
     const inputRef = React.createRef<HTMLInputElement>()
     const incRef = React.createRef<HTMLButtonElement>()
+    const inputCallbackCalls: Array<HTMLInputElement | null> = []
     let focused = 0
     let blurred = 0
-    function App() {
+    function App({ value }: { value: number | null }) {
       return (
-        <NumberField ref={rootRef} value={5} locale="en-US" data-testid="nf-root" className="consumer-root">
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input
-            ref={inputRef}
-            aria-label="Quantity"
-            aria-invalid="true"
-            readOnly
-            data-testid="nf-input"
-            onFocus={() => void focused++}
-            onBlur={() => void blurred++}
-          />
-          <NumberField.Increment ref={incRef} aria-label="Increase" />
+        <NumberField
+          ref={rootRef}
+          value={value}
+          locale="en-US"
+          readOnly
+          invalid
+          data-testid="nf-root"
+          className="consumer-root"
+          title="root title"
+        >
+          <NumberField.Group ref={groupRef} data-testid="nf-group" className="consumer-group">
+            <NumberField.Decrement aria-label="Decrement" data-testid="nf-dec" />
+            <NumberField.Input
+              ref={(node: HTMLInputElement | null) => {
+                inputCallbackCalls.push(node)
+                ;(inputRef as React.MutableRefObject<HTMLInputElement | null>).current = node
+              }}
+              id="nf-dom05-input"
+              aria-label="Quantity"
+              aria-describedby="nf-dom05-desc"
+              placeholder="0.00"
+              enterKeyHint="done"
+              title="input title"
+              autoComplete="bday"
+              spellCheck
+              data-testid="nf-input"
+              className="consumer-input"
+              style={{ ['--consumer-var' as string]: '42px' }}
+              onFocus={() => void focused++}
+              onBlur={() => void blurred++}
+            />
+            <NumberField.Increment ref={incRef} aria-label="Increase" data-testid="nf-inc" />
+          </NumberField.Group>
         </NumberField>
       )
     }
     const { container, root } = mount()
     await React.act(async () => {
-      root.render(<App />)
+      root.render(<App value={5} />)
     })
-    expect(rootRef.current).toBe(container.querySelector('[data-testid="nf-root"]'))
-    expect(rootRef.current?.className).toContain('consumer-root')
+    const host = container.querySelector('[data-testid="nf-root"]') as HTMLElement
+    expect(rootRef.current).toBe(host)
+    expect(host.className).toContain('consumer-root')
+    expect(host.getAttribute('title')).toBe('root title')
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    expect(groupRef.current).toBe(group)
+    expect(group.className).toContain('consumer-group')
     const input = container.querySelector('input') as HTMLInputElement
     expect(inputRef.current).toBe(input)
+    expect(inputCallbackCalls).toEqual([input])
+    expect(input.id).toBe('nf-dom05-input')
     expect(input.getAttribute('aria-label')).toBe('Quantity')
-    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(input.getAttribute('aria-describedby')).toBe('nf-dom05-desc')
+    expect(input.placeholder).toBe('0.00')
+    expect(input.getAttribute('enterkeyhint')).toBe('done')
+    expect(input.getAttribute('title')).toBe('input title')
+    // Explicit native values win over the managed autocomplete defaults.
+    expect(input.getAttribute('autocomplete')).toBe('bday')
+    expect(input.getAttribute('spellcheck')).toBe('true')
+    expect(input.className).toContain('consumer-input')
+    expect(input.style.getPropertyValue('--consumer-var')).toBe('42px')
+    // Root state maps to managed Input state (not forged passthrough).
     expect(input.readOnly).toBe(true)
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(group.getAttribute('data-readonly')).toBe('')
+    expect(group.getAttribute('data-invalid')).toBe('')
+    expect(group.getAttribute('aria-readonly')).toBeNull()
     expect(incRef.current).toBe(container.querySelector('button[aria-label="Increase"]'))
     await React.act(async () => {
       input.focus()
@@ -371,7 +539,17 @@ describe('NumberField managed authority', () => {
       input.blur()
     })
     expect(blurred).toBe(1)
+    // Rerenders preserve node identity and exact consumer presentation.
+    await React.act(async () => {
+      root.render(<App value={6} />)
+    })
+    expect(container.querySelector('input')).toBe(input)
+    expect(container.querySelector('[data-testid="nf-group"]')).toBe(group)
+    expect(input.value).toBe('6')
+    expect(input.getAttribute('aria-label')).toBe('Quantity')
     await cleanup(container, root)
+    // Callback refs clean up on unmount.
+    expect(inputCallbackCalls[inputCallbackCalls.length - 1]).toBeNull()
   })
 })
 
@@ -381,9 +559,11 @@ describe('NumberField steppers', () => {
     function App() {
       return (
         <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" disabled />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" disabled />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -419,9 +599,11 @@ describe('NumberField steppers', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -444,13 +626,15 @@ describe('NumberField keyboard', () => {
     function App() {
       return (
         <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input
-            onKeyDown={e => {
-              if (e.key === 'ArrowUp') e.preventDefault()
-            }}
-          />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity"
+              onKeyDown={e => {
+                if (e.key === 'ArrowUp') e.preventDefault()
+              }}
+            />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -475,9 +659,11 @@ describe('NumberField keyboard', () => {
     await React.act(async () => {
       d.root.render(
         <NumberField value={10} locale="en-US" disabled onChange={v => void seenDisabled.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -552,9 +738,11 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
           setValue(v)
         }}
       >
-        <NumberField.Decrement aria-label="Decrement" />
-        <NumberField.Input />
-        <NumberField.Increment aria-label="Increment" disabled={extra?.incDisabled} />
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" disabled={extra?.incDisabled} />
+        </NumberField.Group>
       </NumberField>
     )
   }
@@ -1056,8 +1244,10 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
             current = v
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1235,9 +1425,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -1273,9 +1465,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       m.root.render(
         <NumberField value={0} locale="en-US" min={0} max={10} onChange={v => void seenMin.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1298,9 +1492,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={0} locale="en-US" min={0} max={100} onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1322,9 +1518,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       a.root.render(
         <NumberField value={50} locale="en-US" min={0} max={100} onChange={v => void seenAway.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1346,9 +1544,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       b.root.render(
         <NumberField value={100} locale="en-US" min={0} max={100} onChange={v => void seenMax.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1371,9 +1571,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1404,9 +1606,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
     await React.act(async () => {
       n.root.render(
         <NumberField value={null} locale="en-US" onChange={v => void seenNull.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1452,9 +1656,11 @@ describe('NumberField dirty edit session (B-19)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -1489,9 +1695,11 @@ describe('NumberField dirty edit session (B-19)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={5} locale="en-US" min={1} max={10} onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1537,9 +1745,11 @@ describe('NumberField dirty edit session (B-19)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -1586,9 +1796,11 @@ describe('NumberField dirty edit session (B-19)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input onBlur={e => e.preventDefault()} />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" onBlur={e => e.preventDefault()} />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1616,9 +1828,11 @@ describe('NumberField dirty edit session (B-19)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={5} locale="en-US">
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1631,9 +1845,11 @@ describe('NumberField dirty edit session (B-19)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={42} locale="en-US">
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -1649,9 +1865,11 @@ describe('NumberField environments', () => {
     // aria-value* — so unbounded ±Infinity sentinels never reach ARIA.
     const html = renderToString(
       <NumberField value={42} locale="en-US" min={0} max={100}>
-        <NumberField.Decrement aria-label="Decrement" />
-        <NumberField.Input />
-        <NumberField.Increment aria-label="Increment" />
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField.Group>
       </NumberField>
     )
     expect(html).not.toContain('spinbutton')
@@ -1665,9 +1883,11 @@ describe('NumberField environments', () => {
     // Unbounded defaults leave no -Infinity/Infinity ARIA behind either.
     const unboundedHtml = renderToString(
       <NumberField value={42} locale="en-US">
-        <NumberField.Decrement aria-label="Decrement" />
-        <NumberField.Input />
-        <NumberField.Increment aria-label="Increment" />
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField.Group>
       </NumberField>
     )
     expect(unboundedHtml).not.toContain('Infinity')
@@ -1688,9 +1908,11 @@ describe('NumberField environments', () => {
               setValue(v)
             }}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         </React.StrictMode>
       )
@@ -1730,9 +1952,11 @@ describe('NumberField required stepper names', () => {
         await React.act(async () => {
           root.render(
             <NumberField value={42} locale="en-US" onChange={v => void seen.push(v)}>
-              <NumberField.Decrement {...noNameDec} />
-              <NumberField.Input />
-              <NumberField.Increment {...noNameInc} />
+              <NumberField.Group>
+                <NumberField.Decrement {...noNameDec} />
+                <NumberField.Input aria-label="Quantity" />
+                <NumberField.Increment {...noNameInc} />
+              </NumberField.Group>
             </NumberField>
           )
         })
@@ -1757,8 +1981,10 @@ describe('NumberField required stepper names', () => {
         await React.act(async () => {
           root.render(
             <NumberField value={1} locale="en-US">
-              <NumberField.Decrement {...(bad as NumberFieldDecrementProps)} />
-              <NumberField.Input />
+              <NumberField.Group>
+                <NumberField.Decrement {...(bad as NumberFieldDecrementProps)} />
+                <NumberField.Input aria-label="Quantity" />
+              </NumberField.Group>
             </NumberField>
           )
         })
@@ -1775,8 +2001,10 @@ describe('NumberField required stepper names', () => {
         await React.act(async () => {
           root.render(
             <NumberField value={1} locale="en-US">
-              <NumberField.Input />
-              <NumberField.Increment aria-labelledby="nf-dom09-missing" />
+              <NumberField.Group>
+                <NumberField.Input aria-label="Quantity" />
+                <NumberField.Increment aria-labelledby="nf-dom09-missing" />
+              </NumberField.Group>
             </NumberField>
           )
         })
@@ -1795,8 +2023,10 @@ describe('NumberField required stepper names', () => {
             <div>
               <span id="nf-dom09-empty" />
               <NumberField value={1} locale="en-US">
-                <NumberField.Input />
-                <NumberField.Increment aria-labelledby="nf-dom09-empty" />
+                <NumberField.Group>
+                  <NumberField.Input aria-label="Quantity" />
+                  <NumberField.Increment aria-labelledby="nf-dom09-empty" />
+                </NumberField.Group>
               </NumberField>
             </div>
           )
@@ -1815,8 +2045,10 @@ describe('NumberField required stepper names', () => {
             <div>
               <span id="nf-dom09-label">Less</span>
               <NumberField value={1} locale="en-US">
-                <NumberField.Decrement aria-labelledby="nf-dom09-label" />
-                <NumberField.Input />
+                <NumberField.Group>
+                  <NumberField.Decrement aria-labelledby="nf-dom09-label" />
+                  <NumberField.Input aria-label="Quantity" />
+                </NumberField.Group>
               </NumberField>
             </div>
           )
@@ -1834,8 +2066,10 @@ describe('NumberField required stepper names', () => {
         await React.act(async () => {
           root.render(
             <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-              <NumberField.Input />
-              <NumberField.Increment {...noNameInc} />
+              <NumberField.Group>
+                <NumberField.Input aria-label="Quantity" />
+                <NumberField.Increment {...noNameInc} />
+              </NumberField.Group>
             </NumberField>
           )
         })
@@ -1844,8 +2078,10 @@ describe('NumberField required stepper names', () => {
         await React.act(async () => {
           root.render(
             <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)}>
-              <NumberField.Input />
-              <NumberField.Increment aria-label="More" />
+              <NumberField.Group>
+                <NumberField.Input aria-label="Quantity" />
+                <NumberField.Increment aria-label="More" />
+              </NumberField.Group>
             </NumberField>
           )
         })
@@ -1881,9 +2117,11 @@ describe('NumberField commitBehavior (W-02)', () => {
           onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
           {...extra}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -1954,9 +2192,11 @@ describe('NumberField commitBehavior (W-02)', () => {
           }}
           onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -1995,9 +2235,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2032,9 +2274,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2067,9 +2311,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2104,9 +2350,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2140,9 +2388,11 @@ describe('NumberField commitBehavior (W-02)', () => {
           onChange={v => void seen.push(v)}
           onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -2185,9 +2435,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2228,9 +2480,11 @@ describe('NumberField commitBehavior (W-02)', () => {
           onInvalidCommit={(attempted, reason) => void invalid.push([attempted, reason])}
           {...extra}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2326,9 +2580,11 @@ describe('NumberField commitBehavior (W-02)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2367,9 +2623,11 @@ describe('NumberField commitBehavior (W-02)', () => {
               setValue(v)
             }}
           >
-            <NumberField.Decrement aria-label="Decrement" />
-            <NumberField.Input />
-            <NumberField.Increment aria-label="Increment" />
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
           </NumberField>
         )
       }
@@ -2417,9 +2675,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2454,9 +2714,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2516,9 +2778,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2558,9 +2822,11 @@ describe('NumberField formatOptions (W-25)', () => {
     await React.act(async () => {
       d.root.render(
         <NumberField value={5} locale="en-US" onChange={v => void seenDecimal.push(v)}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -2591,9 +2857,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2624,9 +2892,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2670,9 +2940,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2697,9 +2969,11 @@ describe('NumberField formatOptions (W-25)', () => {
     await React.act(async () => {
       root.render(
         <NumberField value={null} locale="en-US" formatOptions={{ style: 'currency', currency: 'USD' }}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -2721,9 +2995,11 @@ describe('NumberField formatOptions (W-25)', () => {
             setValue(v)
           }}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2754,9 +3030,11 @@ describe('NumberField formatOptions (W-25)', () => {
           formatOptions={{ maximumFractionDigits: 0 }}
           onChange={v => void seen.push(v)}
         >
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     })
@@ -2780,9 +3058,11 @@ describe('NumberField formatOptions (W-25)', () => {
     function App({ formatOptions }: { formatOptions?: Intl.NumberFormatOptions }) {
       return (
         <NumberField value={5} locale="en-US" formatOptions={formatOptions}>
-          <NumberField.Decrement aria-label="Decrement" />
-          <NumberField.Input />
-          <NumberField.Increment aria-label="Increment" />
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
         </NumberField>
       )
     }
@@ -2828,5 +3108,1910 @@ describe('NumberField formatOptions (W-25)', () => {
         />
       )
     ).not.toThrow()
+  })
+})
+
+describe('NumberField freeze anatomy (PATCHES §4)', () => {
+  it('NF-DOM-01: NumberField should render exactly one root div, group div, text input, and authored stepper buttons', async () => {
+    // Unit assist for the [browser] case: fixed tags, role=group,
+    // type=text, type=button, authored order, no spinbutton, no
+    // implicit native-number input. Group carries both bezel markers.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={42} locale="en-US" data-testid="nf-root">
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrease quantity" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increase quantity" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const host = container.querySelector('[data-testid="nf-root"]') as HTMLElement
+    expect(host.tagName).toBe('DIV')
+    expect(host.getAttribute('role')).toBeNull()
+    expect(host.hasAttribute('data-reference-field')).toBe(false)
+
+    const groups = Array.from(host.children).filter(
+      el => el.tagName === 'DIV' && el.getAttribute('role') === 'group'
+    )
+    expect(groups).toHaveLength(1)
+    const group = groups[0] as HTMLElement
+    expect(group.hasAttribute('data-reference-field')).toBe(true)
+    expect(group.hasAttribute('data-reference-number-field')).toBe(true)
+
+    // Authored order is preserved; no wrapper is inserted around parts.
+    const kinds = Array.from(group.children).map(el =>
+      el.tagName === 'INPUT' ? `input:${el.getAttribute('type')}` : `${el.tagName}:button`
+    )
+    expect(kinds).toEqual(['BUTTON:button', 'input:text', 'BUTTON:button'])
+
+    const input = group.querySelector('input') as HTMLInputElement
+    expect(input.getAttribute('type')).toBe('text')
+    expect(input.getAttribute('role')).toBeNull()
+    for (const btn of Array.from(group.querySelectorAll('button'))) {
+      expect(btn.getAttribute('type')).toBe('button')
+    }
+    expect(container.querySelector('[role="spinbutton"]')).toBeNull()
+    expect(container.querySelector('input[type="number"]')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('NF-DOM-02: A name should add only one direct canonical hidden form input', async () => {
+    // Unit assist: exactly one root-direct input[type=hidden] with
+    // canonical text, current association, and disabled mirroring.
+    const { container, root } = mount()
+    const renderField = (props: { name?: string; form?: string; disabled?: boolean; value: number | null }) =>
+      React.act(async () => {
+        root.render(
+          <NumberField value={props.value} locale="en-US" name={props.name} form={props.form} disabled={props.disabled}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        )
+      })
+    const hostOf = () => container.firstElementChild as HTMLElement
+    const hiddenOf = () =>
+      Array.from(hostOf().children).filter(
+        el => el.tagName === 'INPUT' && el.getAttribute('type') === 'hidden'
+      )
+
+    // No name: no hidden input anywhere.
+    await renderField({ value: 5 })
+    expect(hiddenOf()).toHaveLength(0)
+    expect(container.querySelectorAll('input[type="hidden"]')).toHaveLength(0)
+
+    // Name added: exactly one root-direct hidden input, canonical text.
+    await renderField({ value: 1234.5, name: 'quantity' })
+    const hidden = hiddenOf()
+    expect(hidden).toHaveLength(1)
+    expect(hidden[0].getAttribute('name')).toBe('quantity')
+    expect((hidden[0] as HTMLInputElement).value).toBe('1234.5')
+    expect((hidden[0] as HTMLInputElement).disabled).toBe(false)
+    // Visible Input never carries the name.
+    expect((container.querySelector('input[type="text"]') as HTMLInputElement).name).toBe('')
+
+    // Null serializes as the empty string; form association is current.
+    await renderField({ value: null, name: 'quantity', form: 'order-form' })
+    expect(hiddenOf()).toHaveLength(1)
+    expect((hiddenOf()[0] as HTMLInputElement).value).toBe('')
+    expect(hiddenOf()[0].getAttribute('form')).toBe('order-form')
+
+    // Disabled mirrors onto the hidden input (native omission).
+    await renderField({ value: 5, name: 'quantity', disabled: true })
+    expect((hiddenOf()[0] as HTMLInputElement).disabled).toBe(true)
+
+    // Name removed: the hidden input is gone, with no part/ref residue.
+    await renderField({ value: 5 })
+    expect(container.querySelectorAll('input[type="hidden"]')).toHaveLength(0)
+    await cleanup(container, root)
+  })
+
+  it('NF-DOM-03: NumberField should diagnose missing, duplicate, or misplaced named parts', async () => {
+    // Each invalid anatomy throws a part-specific diagnostic; nothing
+    // partial mounts (no callback) and no DOM-order authority is chosen.
+    const seen: Array<number | null> = []
+    const Named = ({ children }: { children: React.ReactNode }) => (
+      <NumberField value={1} locale="en-US" onChange={v => void seen.push(v)}>
+        {children}
+      </NumberField>
+    )
+    // Parts direct under root (missing Group).
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" />
+        </Named>
+      )
+    ).toThrow(/requires exactly one direct <NumberField\.Group>.*none was found/)
+    // Duplicate Groups.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+        </Named>
+      )
+    ).toThrow(/requires exactly one direct <NumberField\.Group> but found 2/)
+    // Group without Input.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </Named>
+      )
+    ).toThrow(/requires exactly one direct <NumberField\.Input>.*none was found/)
+    // Duplicate direct Inputs: no DOM-order authority.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Input aria-label="One" />
+            <NumberField.Input aria-label="Two" />
+          </NumberField.Group>
+        </Named>
+      )
+    ).toThrow(/requires exactly one direct <NumberField\.Input> but found 2/)
+    // Duplicate direct steppers.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="A" />
+            <NumberField.Increment aria-label="B" />
+          </NumberField.Group>
+        </Named>
+      )
+    ).toThrow(/at most one direct <NumberField\.Increment> but found 2/)
+    // Input misplaced outside any Group.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+          <NumberField.Input aria-label="Stray" />
+        </Named>
+      )
+    ).toThrow(/NumberField\.Input must be a direct child of <NumberField\.Group>/)
+    // Stepper misplaced outside any Group.
+    expect(() =>
+      renderToString(
+        <Named>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+          <NumberField.Increment aria-label="Stray" />
+        </Named>
+      )
+    ).toThrow(/NumberField\.Increment must be a direct child of <NumberField\.Group>/)
+    // Parts with no field at all.
+    expect(() => renderToString(<NumberField.Input aria-label="Quantity" />)).toThrow(
+      /NumberField\.Input must be used inside <NumberField>/
+    )
+    expect(() => renderToString(<NumberField.Group />)).toThrow(
+      /NumberField\.Group must be a direct child of <NumberField>/
+    )
+    // No partial callback from any invalid anatomy.
+    expect(seen).toEqual([])
+
+    // Nested extras escape the direct-children scan, so the Group
+    // registry diagnoses them after commit (error-boundary catchable,
+    // React error logging suppressed for the assertion).
+    const errors: string[] = []
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      const caught: Error[] = []
+      class Boundary extends React.Component<{ children: React.ReactNode }> {
+        state = { error: null as Error | null }
+        static getDerivedStateFromError(error: Error) {
+          return { error }
+        }
+        componentDidCatch(error: Error) {
+          caught.push(error)
+        }
+        render() {
+          return this.state.error ? null : this.props.children
+        }
+      }
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <Boundary>
+            <NumberField value={1} locale="en-US">
+              <NumberField.Group>
+                <NumberField.Input aria-label="Quantity" />
+                <div>
+                  <NumberField.Input aria-label="Nested extra" />
+                </div>
+              </NumberField.Group>
+            </NumberField>
+          </Boundary>
+        )
+      })
+      expect(caught).toHaveLength(1)
+      expect(caught[0].message).toMatch(/duplicate named parts nested/)
+      expect(container.querySelector('input')).toBeNull()
+      await cleanup(container, root)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('NF-DOM-04: Group should allow arbitrary authored siblings while only named parts join behavior', async () => {
+    // Labels, links, buttons, icons, status content, and foreign inputs
+    // keep native behavior/refs/order; only named parts receive managed
+    // state, registration, focus, and stepping.
+    const seen: Array<number | null> = []
+    const siblingInputRef = React.createRef<HTMLInputElement>()
+    const siblingButtonRef = React.createRef<HTMLButtonElement>()
+    let siblingClicks = 0
+    function App() {
+      const [value, setValue] = React.useState<number | null>(10)
+      return (
+        <NumberField
+          value={value}
+          locale="en-US"
+          onChange={v => {
+            seen.push(v)
+            setValue(v)
+          }}
+        >
+          <NumberField.Group data-testid="nf-group">
+            <label data-testid="sib-label" htmlFor="sib-input">
+              Amount
+            </label>
+            <NumberField.Decrement aria-label="Decrement" />
+            <span data-testid="sib-icon" aria-hidden="true">
+              $
+            </span>
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <input
+              ref={siblingInputRef}
+              id="sib-input"
+              data-testid="sib-input"
+              defaultValue="foreign"
+              aria-label="Foreign"
+            />
+            <button
+              ref={siblingButtonRef}
+              data-testid="sib-button"
+              type="button"
+              onClick={() => void siblingClicks++}
+            >
+              Sibling
+            </button>
+            <output data-testid="sib-status">ok</output>
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    // Authored order preserved across parts and siblings.
+    expect(Array.from(group.children).map(el => el.getAttribute('data-testid') ?? el.tagName)).toEqual([
+      'sib-label',
+      'BUTTON',
+      'sib-icon',
+      'nf-input',
+      'sib-input',
+      'sib-button',
+      'sib-status',
+      'BUTTON',
+    ])
+    // Siblings keep native behavior and refs.
+    const sibButton = container.querySelector('[data-testid="sib-button"]') as HTMLButtonElement
+    expect(siblingButtonRef.current).toBe(sibButton)
+    expect(sibButton.tabIndex).not.toBe(-1)
+    expect(sibButton.hasAttribute('data-pressed')).toBe(false)
+    expect(sibButton.hasAttribute('aria-controls')).toBe(false)
+    await React.act(async () => {
+      sibButton.click()
+    })
+    expect(siblingClicks).toBe(1)
+    const sibInput = container.querySelector('[data-testid="sib-input"]') as HTMLInputElement
+    expect(siblingInputRef.current).toBe(sibInput)
+    await React.act(async () => {
+      setNativeValue(sibInput, 'edited')
+    })
+    expect(sibInput.value).toBe('edited')
+    expect(seen).toEqual([])
+    // Only named parts step and carry managed state.
+    const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    expect(input.hasAttribute('data-editing')).toBe(false)
+    const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
+    expect(inc.tabIndex).toBe(-1)
+    expect(inc.getAttribute('aria-controls')).toBe(input.id)
+    await React.act(async () => {
+      inc.click()
+    })
+    expect(seen).toEqual([11])
+    expect(input.value).toBe('11')
+    await cleanup(container, root)
+  })
+
+  it('NF-DOM-07: Input IDs and stepper controls should stay stable within one React root', async () => {
+    // Two fields, explicit-ID change, stepper remove/reinsert: root-local
+    // uniqueness, explicit-ID priority, same-commit aria-controls
+    // retargeting, no stale registration.
+    function App({
+      firstId,
+      secondId,
+      showSecondInc,
+    }: {
+      firstId?: string
+      secondId?: string
+      showSecondInc: boolean
+    }) {
+      return (
+        <div>
+          <NumberField value={1} locale="en-US" data-testid="nf-first">
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="First" id={firstId} data-testid="nf-first-input" />
+              <NumberField.Increment aria-label="Increment" data-testid="nf-first-inc" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={2} locale="en-US" data-testid="nf-second">
+            <NumberField.Group>
+              <NumberField.Input aria-label="Second" id={secondId} data-testid="nf-second-input" />
+              {showSecondInc ? (
+                <NumberField.Increment aria-label="Increment" data-testid="nf-second-inc" />
+              ) : null}
+            </NumberField.Group>
+          </NumberField>
+        </div>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App showSecondInc />)
+    })
+    const firstInput = container.querySelector('[data-testid="nf-first-input"]') as HTMLInputElement
+    const secondInput = container.querySelector('[data-testid="nf-second-input"]') as HTMLInputElement
+    // Generated IDs are unique within the root and stable.
+    expect(firstInput.id).not.toBe('')
+    expect(secondInput.id).not.toBe('')
+    expect(firstInput.id).not.toBe(secondInput.id)
+    const firstGenerated = firstInput.id
+    const firstInc = container.querySelector('[data-testid="nf-first-inc"]') as HTMLButtonElement
+    expect(firstInc.getAttribute('aria-controls')).toBe(firstGenerated)
+    // Explicit ID wins; steppers retarget in the same commit.
+    await React.act(async () => {
+      root.render(<App firstId="explicit-first" showSecondInc />)
+    })
+    expect(firstInput.id).toBe('explicit-first')
+    expect(firstInc.getAttribute('aria-controls')).toBe('explicit-first')
+    // Unrelated field untouched.
+    expect(secondInput.id).not.toBe('explicit-first')
+    // Stepper remove/reinsert resolves current controls, no stale state.
+    await React.act(async () => {
+      root.render(<App firstId="explicit-first" showSecondInc={false} />)
+    })
+    expect(container.querySelector('[data-testid="nf-second-inc"]')).toBeNull()
+    await React.act(async () => {
+      root.render(<App firstId="explicit-first" secondId="explicit-second" showSecondInc />)
+    })
+    const secondInc = container.querySelector('[data-testid="nf-second-inc"]') as HTMLButtonElement
+    expect(secondInput.id).toBe('explicit-second')
+    expect(secondInc.getAttribute('aria-controls')).toBe('explicit-second')
+    await cleanup(container, root)
+  })
+
+  it('NF-DOM-08: Managed data should distinguish dirty editing, visible emptiness, validity, focus, disabled state, and pointer press', async () => {
+    // Each documented data attribute appears only on its documented parts:
+    // root/Group/Input share the six state flags; Group adds data-focused;
+    // steppers expose data-disabled/data-pressed.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={null} locale="en-US" data-testid="nf-root">
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrement" data-testid="nf-dec" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="nf-inc" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const host = () => container.querySelector('[data-testid="nf-root"]') as HTMLElement
+    const group = () => container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    const input = () => container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    const inc = () => container.querySelector('[data-testid="nf-inc"]') as HTMLButtonElement
+    // Clean null: empty everywhere, nothing else.
+    for (const el of [host(), group(), input()]) {
+      expect(el.getAttribute('data-empty')).toBe('')
+      expect(el.getAttribute('data-editing')).toBeNull()
+      expect(el.getAttribute('data-invalid')).toBeNull()
+      expect(el.getAttribute('data-disabled')).toBeNull()
+    }
+    expect(group().getAttribute('data-focused')).toBeNull()
+    // Dirty sign-only partial: editing on the shared hosts, nonempty text.
+    await React.act(async () => {
+      input().focus()
+      setNativeValue(input(), '-')
+    })
+    for (const el of [host(), group(), input()]) {
+      expect(el.getAttribute('data-editing')).toBe('')
+      expect(el.getAttribute('data-empty')).toBeNull()
+    }
+    // Input focus publishes Group data-focused (single tab stop).
+    expect(group().getAttribute('data-focused')).toBe('')
+    // Pointer press publishes stepper data-pressed (immediate step).
+    await React.act(async () => {
+      input().blur()
+      pressKey(input(), 'Escape')
+    })
+    expect(group().getAttribute('data-focused')).toBeNull()
+    const seen: Array<number | null> = []
+    await React.act(async () => {
+      root.render(
+        <NumberField value={10} locale="en-US" onChange={v => void seen.push(v)} data-testid="nf-root">
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrement" data-testid="nf-dec" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="nf-inc" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    await React.act(async () => {
+      inc().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          buttons: 1,
+          pointerId: 7,
+          pointerType: 'mouse',
+          isPrimary: true,
+        })
+      )
+    })
+    expect(inc().getAttribute('data-pressed')).toBe('')
+    expect(seen).toEqual([11])
+    await React.act(async () => {
+      inc().dispatchEvent(
+        new PointerEvent('pointerup', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          pointerId: 7,
+          pointerType: 'mouse',
+          isPrimary: true,
+        })
+      )
+    })
+    expect(inc().getAttribute('data-pressed')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('NF-SURF-01: Group should consume the Field recipe on its own group node', async () => {
+    // Exactly one div[role=group][data-reference-field], no nested Field,
+    // status warning without aria-invalid, omitted status unset, StyleProps
+    // override baseline without forking role/marker.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US" data-testid="nf-root">
+          <NumberField.Group data-testid="nf-group" status="warning" style={{ padding: '9px' }}>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const host = container.querySelector('[data-testid="nf-root"]') as HTMLElement
+    const groups = host.querySelectorAll('div[role="group"][data-reference-field]')
+    expect(groups).toHaveLength(1)
+    const group = groups[0] as HTMLElement
+    // No nested Field-surface host inside Group.
+    expect(Array.from(group.children).filter(el => el.hasAttribute('data-reference-field'))).toHaveLength(0)
+    expect(group.querySelectorAll('[data-reference-field]')).toHaveLength(0)
+    // Warning is visual only: data-status set, aria-invalid absent.
+    expect(group.getAttribute('data-status')).toBe('warning')
+    expect(group.getAttribute('aria-invalid')).toBeNull()
+    // Local StyleProps override the shared baseline; role/marker remain.
+    expect(group.style.padding).toBe('9px')
+    expect(group.getAttribute('role')).toBe('group')
+    expect(group.hasAttribute('data-reference-field')).toBe(true)
+    // Omitted status leaves the attribute unset.
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US" data-testid="nf-root">
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const plain = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    expect(plain.hasAttribute('data-status')).toBe(false)
+    await cleanup(container, root)
+  })
+})
+
+describe('NumberField hidden form pipeline (PATCHES §5)', () => {
+  it('NF-FORM-01: Visible localized text and canonical hidden form value should remain separate', async () => {
+    // Decimal, currency, percent, unit, scientific, and null fixtures:
+    // visible Input shows localized text with no name; one hidden input
+    // carries canonical String(value). No number proxy exists.
+    const cases: Array<{ formatOptions?: Intl.NumberFormatOptions; value: number | null; hidden: string }> = [
+      { value: 1234.5, hidden: '1234.5' },
+      { value: 1234.5, formatOptions: { style: 'currency', currency: 'USD' }, hidden: '1234.5' },
+      { value: 0.12, formatOptions: { style: 'percent' }, hidden: '0.12' },
+      { value: 12, formatOptions: { style: 'unit', unit: 'kilometer' }, hidden: '12' },
+      { value: 12345, formatOptions: { notation: 'scientific' }, hidden: '12345' },
+      { value: null, formatOptions: { style: 'currency', currency: 'USD' }, hidden: '' },
+    ]
+    for (const [index, fixture] of cases.entries()) {
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <form data-testid={`nf-form-${index}`}>
+            <NumberField
+              value={fixture.value}
+              locale="en-US"
+              formatOptions={fixture.formatOptions}
+              name={`field-${index}`}
+            >
+              <NumberField.Group>
+                <NumberField.Decrement aria-label="Decrement" />
+                <NumberField.Input aria-label="Quantity" />
+                <NumberField.Increment aria-label="Increment" />
+              </NumberField.Group>
+            </NumberField>
+          </form>
+        )
+      })
+      const visible = container.querySelector('input[type="text"]') as HTMLInputElement
+      expect(visible.name).toBe('')
+      expect(visible.value).not.toBe('__impossible__')
+      const hiddens = container.querySelectorAll('input[type="hidden"]')
+      expect(hiddens).toHaveLength(1)
+      expect((hiddens[0] as HTMLInputElement).value).toBe(fixture.hidden)
+      expect(hiddens[0].getAttribute('name')).toBe(`field-${index}`)
+      expect(container.querySelector('input[type="number"]')).toBeNull()
+      await cleanup(container, root)
+    }
+    // Spot-check the separation: localized visible text, canonical hidden.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={1234.5} locale="en-US" formatOptions={{ style: 'currency', currency: 'USD' }} name="price">
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Price" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    expect((container.querySelector('input[type="text"]') as HTMLInputElement).value).toBe('$1,234.50')
+    expect((container.querySelector('input[type="hidden"]') as HTMLInputElement).value).toBe('1234.5')
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-02: Clean forms should submit only accepted controlled numeric state', async () => {
+    // One canonical pair per name in real FormData; no affix/group/digit
+    // leakage from localized display text.
+    const seen: Array<number | null> = []
+    const payloads: string[][] = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <form
+          data-testid="nf-form"
+          onSubmit={e => {
+            e.preventDefault()
+            payloads.push(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`))
+          }}
+        >
+          <NumberField value={1234.5} locale="en-US" formatOptions={{ style: 'currency', currency: 'USD' }} name="price">
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Price" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={0.25} locale="de-DE" formatOptions={{ style: 'percent' }} name="rate">
+            <NumberField.Group>
+              <NumberField.Input aria-label="Rate" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={null} locale="en-US" name="empty" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Input aria-label="Empty" />
+            </NumberField.Group>
+          </NumberField>
+          <button type="submit">Submit</button>
+        </form>
+      )
+    })
+    const form = container.querySelector('form') as HTMLFormElement
+    await React.act(async () => {
+      form.requestSubmit()
+    })
+    expect(payloads).toEqual([['price=1234.5', 'rate=0.25', 'empty=']])
+    expect(seen).toEqual([])
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-03: Disabled, read-only, dynamic name, and external same-root form association should follow the frozen policy', async () => {
+    const payloads: string[][] = []
+    function App({
+      disabled,
+      readOnly,
+      name,
+      form,
+    }: {
+      disabled?: boolean
+      readOnly?: boolean
+      name?: string
+      form?: string
+    }) {
+      return (
+        <div>
+          <form
+            data-testid="nf-form"
+            id="nf-external-form"
+            onSubmit={e => {
+              e.preventDefault()
+              payloads.push(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`))
+            }}
+          />
+          <NumberField
+            value={7}
+            locale="en-US"
+            disabled={disabled}
+            readOnly={readOnly}
+            name={name}
+            form={form}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </div>
+      )
+    }
+    const { container, root } = mount()
+    const submitExternal = async () => {
+      const form = container.querySelector('#nf-external-form') as HTMLFormElement
+      await React.act(async () => {
+        form.requestSubmit()
+      })
+    }
+    // External same-root form association via the form attribute.
+    await React.act(async () => {
+      root.render(<App name="qty" form="nf-external-form" />)
+    })
+    await submitExternal()
+    expect(payloads).toEqual([['qty=7']])
+    // Dynamic name change re-serializes under the current name only.
+    await React.act(async () => {
+      root.render(<App name="amount" form="nf-external-form" />)
+    })
+    await submitExternal()
+    expect(payloads).toEqual([['qty=7'], ['amount=7']])
+    // Disabled fields are omitted natively (hidden mirrors disabled).
+    await React.act(async () => {
+      root.render(<App name="amount" form="nf-external-form" disabled />)
+    })
+    expect((container.querySelector('input[type="hidden"]') as HTMLInputElement).disabled).toBe(true)
+    await submitExternal()
+    expect(payloads).toEqual([['qty=7'], ['amount=7'], []])
+    // Read-only fields serialize canonical state without numeric blocking.
+    await React.act(async () => {
+      root.render(
+        <App name="amount" form="nf-external-form" readOnly />
+      )
+    })
+    await submitExternal()
+    expect(payloads[payloads.length - 1]).toEqual(['amount=7'])
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-04: Native required should retain platform valueMissing behavior', async () => {
+    // required renders natively; empty is valueMissing with no
+    // NumberField custom validity; accepted nonempty submits one payload.
+    const payloads: string[][] = []
+    const seen: Array<number | null> = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(null)
+      return (
+        <form
+          data-testid="nf-form"
+          onSubmit={e => {
+            e.preventDefault()
+            payloads.push(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`))
+          }}
+        >
+          <NumberField
+            value={value}
+            locale="en-US"
+            name="qty"
+            required
+            onChange={v => {
+              seen.push(v)
+              setValue(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    expect(input.required).toBe(true)
+    expect(input.validity.valueMissing).toBe(true)
+    expect(input.validity.customError).toBe(false)
+    expect(input.validationMessage).toBe('')
+    // Accept a nonempty value, then submit one valid payload.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '3')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([3])
+    expect(input.validity.valueMissing).toBe(false)
+    const form = container.querySelector('form') as HTMLFormElement
+    await React.act(async () => {
+      form.requestSubmit()
+    })
+    expect(payloads).toEqual([['qty=3']])
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-05 / NF-A11Y-06: Managed numeric constraint failures should block submit without changing native text-input validity flags', async () => {
+    // Accepted underflow, overflow, and off-step values in validate mode
+    // prevent submission with managed invalid data/ARIA; application
+    // invalid alone submits normally. Native range/step/custom flags stay
+    // false and no validation proxy exists.
+    const blocked: boolean[] = []
+    function App({ value, invalid }: { value: number | null; invalid?: boolean }) {
+      return (
+        <form data-testid="nf-form">
+          <NumberField
+            value={value}
+            locale="en-US"
+            name="qty"
+            min={1}
+            max={10}
+            step={1}
+            commitBehavior="validate"
+            invalid={invalid}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    const submitBlocked = async () => {
+      const form = container.querySelector('form') as HTMLFormElement
+      let prevented = false
+      await React.act(async () => {
+        prevented = !form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+      blocked.push(prevented)
+      return prevented
+    }
+    for (const bad of [-5, 25, 2.5]) {
+      await React.act(async () => {
+        root.render(<App value={bad} />)
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      expect(input.getAttribute('aria-invalid')).toBe('true')
+      expect(input.validity.rangeUnderflow).toBe(false)
+      expect(input.validity.rangeOverflow).toBe(false)
+      expect(input.validity.stepMismatch).toBe(false)
+      expect(input.validity.customError).toBe(false)
+      expect(input.validationMessage).toBe('')
+      expect(await submitBlocked()).toBe(true)
+    }
+    expect(blocked).toEqual([true, true, true])
+    // A numerically valid field submits with invalid={true}: application
+    // invalid is an ARIA/style signal, never a submit blocker by itself.
+    await React.act(async () => {
+      root.render(<App value={5} invalid />)
+    })
+    const validInput = container.querySelector('input[type="text"]') as HTMLInputElement
+    expect(validInput.getAttribute('aria-invalid')).toBe('true')
+    expect(await submitBlocked()).toBe(false)
+    expect(container.querySelector('input[type="number"]')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-06: Programmatic requestSubmit should process a still-dirty complete candidate and require explicit retry', async () => {
+    // One final commit request, prevented first submit, controlled hidden
+    // value, no auto-resubmit; accepted canonical payload after retry.
+    const seen: Array<number | null> = []
+    const payloads: string[][] = []
+    function App() {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <form
+          data-testid="nf-form"
+          onSubmit={e => {
+            // A prevented submit never serializes: only record payloads
+            // the field did not block (the form-level native listener runs
+            // before this root-delegated React handler).
+            if (e.defaultPrevented) return
+            payloads.push(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`))
+          }}
+        >
+          <NumberField
+            value={value}
+            locale="en-US"
+            name="qty"
+            min={1}
+            max={10}
+            commitBehavior="snap"
+            onChange={v => {
+              seen.push(v)
+              setValue(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    // Leave a complete candidate dirty and requestSubmit without echoing:
+    // hold the echo by rendering the App but intercepting is unnecessary —
+    // requestSubmit runs the commit synchronously, then blocks.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '7')
+    })
+    expect(input.getAttribute('data-editing')).toBe('')
+    let firstPrevented = false
+    const firstListener = (e: Event) => {
+      firstPrevented = e.defaultPrevented
+    }
+    form.addEventListener('submit', firstListener)
+    await React.act(async () => {
+      // Dispatch directly: requestSubmit would also work, but the direct
+      // event observes prevention deterministically in happy-dom.
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    form.removeEventListener('submit', firstListener)
+    // One final commit request (snap keeps 7), first submit prevented,
+    // hidden still shows the controlled value until the echo lands.
+    expect(seen).toEqual([7])
+    expect(firstPrevented).toBe(true)
+    // The echo landed synchronously through setValue in act(); retry
+    // submits the accepted canonical payload with no second request.
+    await React.act(async () => {
+      form.requestSubmit()
+    })
+    expect(payloads).toEqual([['qty=7']])
+    expect(seen).toEqual([7])
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-07: Programmatic requestSubmit should block incomplete dirty text without a numeric substitute', async () => {
+    // Sign/exponent/group/overflow partials: the field processes once per
+    // attempt, submission stays prevented, failed-boundary state persists
+    // without consumption, no numeric callback, hidden stays controlled.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <form data-testid="nf-form">
+          <NumberField value={5} locale="en-US" name="qty" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    const attempt = async () => {
+      let prevented = false
+      await React.act(async () => {
+        prevented = !form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+      return prevented
+    }
+    for (const partial of ['-', '1e', '1,', '1e999999']) {
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, partial)
+      })
+      expect(await attempt()).toBe(true)
+      // Reverted to controlled display; hidden untouched; no request.
+      expect(input.value).toBe('5')
+      expect(hidden.value).toBe('5')
+      expect(input.getAttribute('data-editing')).toBeNull()
+      expect(input.getAttribute('aria-invalid')).toBe('true')
+    }
+    expect(seen).toEqual([])
+    // The retained boundary blocks repeated attempts without consumption.
+    expect(await attempt()).toBe(true)
+    expect(await attempt()).toBe(true)
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-08: Programmatic reset while focused should clear transient state without blurring or changing controlled value', async () => {
+    // Unprevented reset reformats controlled text, retains focus with caret
+    // at the formatted end, clears editing/failed/pressed state, keeps
+    // hidden state, emits no callback; canceled reset leaves the session
+    // exactly intact.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <form data-testid="nf-form">
+          <NumberField value={1234.5} locale="en-US" name="qty" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    expect(input.value).toBe('1,234.5')
+    // Dirty valid session, then unprevented programmatic reset.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '99')
+    })
+    expect(input.getAttribute('data-editing')).toBe('')
+    await React.act(async () => {
+      form.reset()
+    })
+    expect(input.value).toBe('1,234.5')
+    expect(document.activeElement).toBe(input)
+    expect(input.selectionStart).toBe(input.value.length)
+    expect(input.selectionEnd).toBe(input.value.length)
+    expect(input.getAttribute('data-editing')).toBeNull()
+    expect(hidden.value).toBe('1234.5')
+    expect(seen).toEqual([])
+    // Failed boundary also clears on unprevented reset.
+    await React.act(async () => {
+      setNativeValue(input, 'garbage')
+      input.blur()
+    })
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    await React.act(async () => {
+      input.focus()
+      form.reset()
+    })
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    expect(input.value).toBe('1,234.5')
+    // Canceled reset leaves the focused dirty session exactly intact.
+    // The application prevents in capture, before the field's listener.
+    const cancel = (e: Event) => e.preventDefault()
+    form.addEventListener('reset', cancel, true)
+    try {
+      await React.act(async () => {
+        setNativeValue(input, '77')
+      })
+      await React.act(async () => {
+        form.reset()
+      })
+      expect(input.value).toBe('77')
+      expect(input.getAttribute('data-editing')).toBe('')
+    } finally {
+      form.removeEventListener('reset', cancel, true)
+    }
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-10: Application custom validity should survive every NumberField update untouched', async () => {
+    // A message set through the Input ref survives edits, commits, bound
+    // and format changes, numeric-invalid submits, and resets until the
+    // application clears it; NumberField never calls or clears it.
+    const inputRef = React.createRef<HTMLInputElement>()
+    function App({ min, formatOptions }: { min?: number; formatOptions?: Intl.NumberFormatOptions }) {
+      const [value, setValue] = React.useState<number | null>(5)
+      return (
+        <form data-testid="nf-form">
+          <NumberField
+            value={value}
+            locale="en-US"
+            name="qty"
+            min={min}
+            formatOptions={formatOptions}
+            onChange={setValue}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input ref={inputRef} aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    expect(inputRef.current).toBe(input)
+    input.setCustomValidity('application says no')
+    expect(input.validity.customError).toBe(true)
+    // Edit, commit, prop changes, invalid submit, reset: message intact.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '6')
+    })
+    expect(input.validationMessage).toBe('application says no')
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(input.validationMessage).toBe('application says no')
+    await React.act(async () => {
+      root.render(<App min={10} formatOptions={{ style: 'currency', currency: 'USD' }} />)
+    })
+    expect(input.validationMessage).toBe('application says no')
+    const form = container.querySelector('form') as HTMLFormElement
+    await React.act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(input.validationMessage).toBe('application says no')
+    await React.act(async () => {
+      input.focus()
+      form.reset()
+    })
+    expect(input.validationMessage).toBe('application says no')
+    expect(input.validity.customError).toBe(true)
+    // The application clears it; NumberField never did.
+    input.setCustomValidity('')
+    expect(input.validity.customError).toBe(false)
+    await cleanup(container, root)
+  })
+
+  it('NF-FORM-13: All dirty NumberFields should process the same submit even when it is already prevented', async () => {
+    // Two dirty fields in one form: both independently commit once with
+    // deterministic callback order; an application capture preventer does
+    // not short-circuit the second field; no payload escapes.
+    const seen: string[] = []
+    const payloads: string[][] = []
+    function App() {
+      const [first, setFirst] = React.useState<number | null>(1)
+      const [second, setSecond] = React.useState<number | null>(2)
+      return (
+        <form
+          data-testid="nf-form"
+          onSubmit={e => {
+            if (e.defaultPrevented) return
+            payloads.push(Array.from(new FormData(e.currentTarget).entries()).map(([k, v]) => `${k}=${v}`))
+          }}
+        >
+          <NumberField
+            value={first}
+            locale="en-US"
+            name="first"
+            onChange={v => {
+              seen.push(`first:${v}`)
+              setFirst(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Input aria-label="First" data-testid="nf-first" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField
+            value={second}
+            locale="en-US"
+            name="second"
+            onChange={v => {
+              seen.push(`second:${v}`)
+              setSecond(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Input aria-label="Second" data-testid="nf-second" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    const first = container.querySelector('[data-testid="nf-first"]') as HTMLInputElement
+    const second = container.querySelector('[data-testid="nf-second"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    await React.act(async () => {
+      first.focus()
+      setNativeValue(first, '10')
+      setNativeValue(second, '20')
+    })
+    // Application capture handler prevents first; both fields still run.
+    const appPrevent = (e: Event) => e.preventDefault()
+    form.addEventListener('submit', appPrevent, true)
+    try {
+      await React.act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+    } finally {
+      form.removeEventListener('submit', appPrevent, true)
+    }
+    expect(seen).toEqual(['first:10', 'second:20'])
+    // Both requests echo through act(); an explicit retry serializes both.
+    await React.act(async () => {
+      form.requestSubmit()
+    })
+    expect(payloads).toEqual([['first=10', 'second=20']])
+    await cleanup(container, root)
+  })
+})
+
+describe('NumberField managed semantics and environments', () => {
+  it('NF-A11Y-01: Input should expose an accessible named textbox rather than a spinbutton', async () => {
+    // Label, aria-label, and aria-labelledby namings: textbox role, name,
+    // focus, and text value with no spinbutton or numeric value ARIA.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <div>
+          <label htmlFor="nf-a11y01-a">Labeled</label>
+          <NumberField value={1} locale="en-US">
+            <NumberField.Group>
+              <NumberField.Input id="nf-a11y01-a" data-testid="nf-a" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={2} locale="en-US">
+            <NumberField.Group>
+              <NumberField.Input aria-label="Described" data-testid="nf-b" />
+            </NumberField.Group>
+          </NumberField>
+          <span id="nf-a11y01-label">Referenced</span>
+          <NumberField value={3} locale="en-US">
+            <NumberField.Group>
+              <NumberField.Input aria-labelledby="nf-a11y01-label" data-testid="nf-c" />
+            </NumberField.Group>
+          </NumberField>
+        </div>
+      )
+    })
+    const a = container.querySelector('[data-testid="nf-a"]') as HTMLInputElement
+    const b = container.querySelector('[data-testid="nf-b"]') as HTMLInputElement
+    const c = container.querySelector('[data-testid="nf-c"]') as HTMLInputElement
+    for (const input of [a, b, c]) {
+      expect(input.getAttribute('role')).toBeNull()
+      expect(input.getAttribute('type')).toBe('text')
+      expect(input.getAttribute('aria-valuenow')).toBeNull()
+      expect(input.getAttribute('aria-valuemin')).toBeNull()
+      expect(input.getAttribute('aria-valuemax')).toBeNull()
+      expect(input.getAttribute('aria-valuetext')).toBeNull()
+    }
+    // Each naming path resolves (label activation behavior itself is
+    // platform-owned, not a component claim).
+    expect(a.labels?.length).toBe(1)
+    expect((container.querySelector('label[for="nf-a11y01-a"]') as HTMLLabelElement).htmlFor).toBe(a.id)
+    expect(b.getAttribute('aria-label')).toBe('Described')
+    expect(c.getAttribute('aria-labelledby')).toBe('nf-a11y01-label')
+    expect(container.querySelector('[role="spinbutton"]')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('NF-A11Y-02: An unnamed Input should diagnose without inventing application label markup', async () => {
+    // One descriptive diagnostic for the unnamed Input; no hidden label;
+    // Group naming never substituted; external-label repair quiets it.
+    const errors: string[] = []
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      const diags = () => errors.filter(t => t.includes('Reference UI: NumberField Input has no accessible name'))
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <NumberField value={1} locale="en-US">
+            <NumberField.Group aria-label="Group name">
+              <NumberField.Input data-testid="nf-input" />
+            </NumberField.Group>
+          </NumberField>
+        )
+      })
+      expect(diags()).toHaveLength(1)
+      const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+      // Nothing invented: no label element, no name attributes.
+      expect(container.querySelector('label')).toBeNull()
+      expect(input.getAttribute('aria-label')).toBeNull()
+      expect(input.getAttribute('aria-labelledby')).toBeNull()
+      // Repair with an external label: accessible name resolves, no more logs.
+      await React.act(async () => {
+        root.render(
+          <div>
+            <label htmlFor="nf-a11y02-repaired">Repaired</label>
+            <NumberField value={1} locale="en-US">
+              <NumberField.Group aria-label="Group name">
+                <NumberField.Input id="nf-a11y02-repaired" aria-label="Repaired" data-testid="nf-input" />
+              </NumberField.Group>
+            </NumberField>
+          </div>
+        )
+      })
+      expect((container.querySelector('[data-testid="nf-input"]') as HTMLInputElement).getAttribute('aria-label')).toBe(
+        'Repaired'
+      )
+      expect(diags()).toHaveLength(1)
+      await cleanup(container, root)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('NF-A11Y-03: Disabled, read-only, required, and invalid semantics should appear only on supported roles', async () => {
+    // Input alone exposes native readOnly/required; Group always omits
+    // unsupported aria-readonly/aria-required while exposing managed
+    // data-readonly/data-required plus aria-disabled/invalid; steppers
+    // expose native/ARIA-disabled but no other state ARIA.
+    function App({ disabled, readOnly, required, invalid }: { disabled?: boolean; readOnly?: boolean; required?: boolean; invalid?: boolean }) {
+      return (
+        <NumberField value={5} locale="en-US" disabled={disabled} readOnly={readOnly} required={required} invalid={invalid}>
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App disabled readOnly required invalid />)
+    })
+    const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    expect(input.disabled).toBe(true)
+    expect(input.readOnly).toBe(true)
+    expect(input.required).toBe(true)
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(group.getAttribute('aria-disabled')).toBe('true')
+    expect(group.getAttribute('aria-invalid')).toBe('true')
+    expect(group.getAttribute('aria-readonly')).toBeNull()
+    expect(group.getAttribute('aria-required')).toBeNull()
+    expect(group.getAttribute('data-readonly')).toBe('')
+    expect(group.getAttribute('data-required')).toBe('')
+    for (const btn of Array.from(container.querySelectorAll('button'))) {
+      expect(btn.disabled).toBe(true)
+      expect(btn.getAttribute('aria-disabled')).toBeNull()
+      expect(btn.getAttribute('aria-readonly')).toBeNull()
+      expect(btn.getAttribute('aria-required')).toBeNull()
+      expect(btn.getAttribute('aria-checked')).toBeNull()
+      expect(btn.getAttribute('aria-pressed')).toBeNull()
+    }
+    // Toggling off clears every managed semantic atomically.
+    await React.act(async () => {
+      root.render(<App />)
+    })
+    expect(input.disabled).toBe(false)
+    expect(input.readOnly).toBe(false)
+    expect(input.required).toBe(false)
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    expect(group.getAttribute('aria-disabled')).toBeNull()
+    expect(group.getAttribute('aria-invalid')).toBeNull()
+    expect(group.getAttribute('data-readonly')).toBeNull()
+    expect(group.getAttribute('data-required')).toBeNull()
+    for (const btn of Array.from(container.querySelectorAll('button'))) {
+      expect(btn.disabled).toBe(false)
+    }
+    await cleanup(container, root)
+  })
+
+  it('NF-A11Y-05: Group focus state should track the single Input tab stop without adding stepper tab stops', async () => {
+    // Keyboard/pointer/programmatic Input focus publishes Group
+    // data-focused; only Input is tabbable; steppers stay tabIndex=-1.
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={5} locale="en-US">
+          <NumberField.Group data-testid="nf-group">
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    const buttons = Array.from(container.querySelectorAll('button'))
+    expect(buttons).toHaveLength(2)
+    for (const btn of buttons) expect(btn.tabIndex).toBe(-1)
+    expect(input.tabIndex).toBe(0)
+    await React.act(async () => {
+      input.focus()
+    })
+    expect(document.activeElement).toBe(input)
+    expect(group.getAttribute('data-focused')).toBe('')
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(group.getAttribute('data-focused')).toBeNull()
+    // Pointer activation focuses Input through the stepper path.
+    await React.act(async () => {
+      buttons[1].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, pointerId: 3, pointerType: 'mouse', isPrimary: true }))
+    })
+    expect(document.activeElement).toBe(input)
+    expect(group.getAttribute('data-focused')).toBe('')
+    await React.act(async () => {
+      buttons[1].dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, button: 0, pointerId: 3, pointerType: 'mouse', isPrimary: true }))
+    })
+    await cleanup(container, root)
+  })
+
+  it('NF-DYNAMIC-03: Bounds, step, and commit-policy changes should atomically revalidate controlled state and stepper capability', async () => {
+    // Constraint changes recompute managed invalid state and stepper
+    // capability with no normalization callback; invalid configurations
+    // fail property-specifically before mixed output.
+    const seen: Array<number | null> = []
+    function App(props: { min?: number; max?: number; step?: number; commitBehavior?: 'snap' | 'validate' | 'none' }) {
+      return (
+        <NumberField value={5} locale="en-US" min={props.min} max={props.max} step={props.step} commitBehavior={props.commitBehavior} onChange={v => void seen.push(v)}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" data-testid="nf-dec" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="nf-inc" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App min={0} max={10} step={1} commitBehavior="validate" />)
+    })
+    const input = () => container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    const inc = () => container.querySelector('[data-testid="nf-inc"]') as HTMLButtonElement
+    const dec = () => container.querySelector('[data-testid="nf-dec"]') as HTMLButtonElement
+    expect(input().getAttribute('aria-invalid')).toBeNull()
+    expect(inc().disabled).toBe(false)
+    expect(dec().disabled).toBe(false)
+    // Tightening max below the value invalidates without a callback.
+    await React.act(async () => {
+      root.render(<App min={0} max={4} step={1} commitBehavior="validate" />)
+    })
+    expect(input().getAttribute('aria-invalid')).toBe('true')
+    expect(inc().disabled).toBe(true)
+    expect(dec().disabled).toBe(false)
+    expect(seen).toEqual([])
+    // Loosening clears; an off-step value stays step-invalid in validate.
+    await React.act(async () => {
+      root.render(<App min={0} max={10} step={2} commitBehavior="validate" />)
+    })
+    expect(input().getAttribute('aria-invalid')).toBe('true')
+    expect(seen).toEqual([])
+    // Invalid configurations diagnose property-specifically.
+    expect(() =>
+      renderToString(
+        <NumberField value={5} locale="en-US" min={10} max={0}>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    ).toThrow(/"min" must be less than or equal to "max"/)
+    await cleanup(container, root)
+  })
+
+  it('NF-DYNAMIC-04: Optional steppers and arbitrary siblings should insert, remove, and reorder without replacing Input', async () => {
+    // Keyed mutations around a focused dirty Input preserve Input/caret
+    // identity, current controls, and sibling independence with no stale
+    // listener or request.
+    const seen: Array<number | null> = []
+    function App({ order, showInc, showDec }: { order: 'normal' | 'reversed'; showInc: boolean; showDec: boolean }) {
+      const parts = [
+        showDec ? <NumberField.Decrement key="dec" aria-label="Decrement" data-testid="nf-dec" /> : null,
+        <span key="prefix" data-testid="nf-prefix">
+          $
+        </span>,
+        <NumberField.Input key="input" aria-label="Quantity" data-testid="nf-input" />,
+        showInc ? <NumberField.Increment key="inc" aria-label="Increment" data-testid="nf-inc" /> : null,
+      ].filter(Boolean)
+      return (
+        <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
+          <NumberField.Group data-testid="nf-group">{order === 'normal' ? parts : [...parts].reverse()}</NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<App order="normal" showInc showDec />)
+    })
+    const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '9')
+      input.setSelectionRange(1, 1)
+    })
+    // Remove a stepper: Input/caret identity and dirty text survive.
+    await React.act(async () => {
+      root.render(<App order="normal" showInc={false} showDec />)
+    })
+    expect(container.querySelector('[data-testid="nf-input"]')).toBe(input)
+    expect(input.value).toBe('9')
+    expect(input.selectionStart).toBe(1)
+    expect(container.querySelector('[data-testid="nf-inc"]')).toBeNull()
+    // Reorder with sibling: order follows, registration stays current.
+    await React.act(async () => {
+      root.render(<App order="reversed" showInc showDec />)
+    })
+    const group = container.querySelector('[data-testid="nf-group"]') as HTMLElement
+    expect(Array.from(group.children).map(el => el.getAttribute('data-testid') ?? el.tagName)).toEqual([
+      'nf-inc',
+      'nf-input',
+      'nf-prefix',
+      'nf-dec',
+    ])
+    expect(container.querySelector('[data-testid="nf-input"]')).toBe(input)
+    const inc = container.querySelector('[data-testid="nf-inc"]') as HTMLButtonElement
+    expect(inc.getAttribute('aria-controls')).toBe(input.id)
+    expect(seen).toEqual([])
+    // The reinserted stepper steps the complete dirty candidate once.
+    await React.act(async () => {
+      inc.click()
+    })
+    expect(seen).toEqual([10])
+    await cleanup(container, root)
+  })
+
+  it('NF-ENV-03: Generated IDs should be stable and unique within one React root', async () => {
+    // SSR markup carries unique stable Input ids with exact stepper
+    // controls; hydration matches byte-identically with no callback.
+    const html = renderToString(
+      <div>
+        <NumberField value={1} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="First" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField value={2} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Input aria-label="Second" />
+          </NumberField.Group>
+        </NumberField>
+      </div>
+    )
+    const ids = Array.from(html.matchAll(/<input[^>]*id="([^"]+)"/g)).map(m => m[1])
+    expect(ids).toHaveLength(2)
+    expect(ids[0]).not.toBe('')
+    expect(ids[1]).not.toBe('')
+    expect(ids[0]).not.toBe(ids[1])
+    const controls = Array.from(html.matchAll(/aria-controls="([^"]+)"/g)).map(m => m[1])
+    expect(controls).toEqual([ids[0], ids[0]])
+    // Deterministic across renders: same tree, same ids.
+    const again = renderToString(
+      <div>
+        <NumberField value={1} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="First" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField value={2} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Input aria-label="Second" />
+          </NumberField.Group>
+        </NumberField>
+      </div>
+    )
+    expect(again).toBe(html)
+  })
+
+  it('NF-ENV-07: Automated mobile coverage should assert only grammar-derived inputMode attributes', async () => {
+    // Validate min-zero, snap negative, snap nonnegative integer, snap
+    // nonnegative fraction, and scientific fixtures map to text, text,
+    // numeric, decimal, and text from public grammar alone.
+    const modes: Record<string, string | null> = {}
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <div>
+          <NumberField value={0} locale="en-US" min={0} commitBehavior="validate">
+            <NumberField.Group>
+              <NumberField.Input aria-label="A" data-testid="nf-mode-validate" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={-3} locale="en-US" min={-10} step={1} commitBehavior="snap">
+            <NumberField.Group>
+              <NumberField.Input aria-label="B" data-testid="nf-mode-negative" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={3} locale="en-US" min={0} step={1} commitBehavior="snap">
+            <NumberField.Group>
+              <NumberField.Input aria-label="C" data-testid="nf-mode-integer" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={3} locale="en-US" min={0} step={0.005} commitBehavior="snap">
+            <NumberField.Group>
+              <NumberField.Input aria-label="D" data-testid="nf-mode-fraction" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={1000} locale="en-US" min={0} step={1} commitBehavior="snap" formatOptions={{ notation: 'scientific' }}>
+            <NumberField.Group>
+              <NumberField.Input aria-label="E" data-testid="nf-mode-scientific" />
+            </NumberField.Group>
+          </NumberField>
+          <NumberField value={0.12} locale="en-US" min={0} step={0.005} commitBehavior="snap" formatOptions={{ style: 'percent', minimumFractionDigits: 1 }}>
+            <NumberField.Group>
+              <NumberField.Input aria-label="F" data-testid="nf-mode-percent" />
+            </NumberField.Group>
+          </NumberField>
+        </div>
+      )
+    })
+    for (const key of ['validate', 'negative', 'integer', 'fraction', 'scientific', 'percent']) {
+      modes[key] = (container.querySelector(`[data-testid="nf-mode-${key}"]`) as HTMLInputElement).getAttribute('inputmode')
+    }
+    expect(modes).toEqual({
+      validate: 'text',
+      negative: 'text',
+      integer: 'numeric',
+      fraction: 'decimal',
+      scientific: 'text',
+      // Percent display step 0.5 (0.005 * 100) is fractional: decimal.
+      percent: 'decimal',
+    })
+    await cleanup(container, root)
+  })
+
+  it('NF-STEP-11: Stepper capability should follow controlled, dirty, bound, and root state', async () => {
+    // Null/middle/endpoints, off-range, dirty complete/partial,
+    // disabled/read-only, and part-disabled states map to exact
+    // native/ARIA/data disabled state with atomic recovery.
+    const seen: Array<number | null> = []
+    function App({ value, disabled, readOnly, incDisabled }: { value: number | null; disabled?: boolean; readOnly?: boolean; incDisabled?: boolean }) {
+      return (
+        <NumberField value={value} locale="en-US" min={0} max={10} disabled={disabled} readOnly={readOnly} onChange={v => void seen.push(v)}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" data-testid="nf-dec" />
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+            <NumberField.Increment aria-label="Increment" data-testid="nf-inc" disabled={incDisabled} />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    const inc = () => container.querySelector('[data-testid="nf-inc"]') as HTMLButtonElement
+    const dec = () => container.querySelector('[data-testid="nf-dec"]') as HTMLButtonElement
+    const input = () => container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    // Middle: both enabled.
+    await React.act(async () => {
+      root.render(<App value={5} />)
+    })
+    expect(inc().disabled).toBe(false)
+    expect(dec().disabled).toBe(false)
+    expect(inc().getAttribute('data-disabled')).toBeNull()
+    // Exact endpoints disable the outward stepper only.
+    await React.act(async () => {
+      root.render(<App value={10} />)
+    })
+    expect(inc().disabled).toBe(true)
+    expect(inc().getAttribute('data-disabled')).toBe('')
+    expect(dec().disabled).toBe(false)
+    await React.act(async () => {
+      root.render(<App value={0} />)
+    })
+    expect(dec().disabled).toBe(true)
+    expect(inc().disabled).toBe(false)
+    // Null never disables: the first step selects in-range-nearest-zero.
+    await React.act(async () => {
+      root.render(<App value={null} />)
+    })
+    expect(inc().disabled).toBe(false)
+    expect(dec().disabled).toBe(false)
+    // Complete dirty text drives capability from its numeric meaning.
+    await React.act(async () => {
+      root.render(<App value={5} />)
+    })
+    await React.act(async () => {
+      input().focus()
+      setNativeValue(input(), '10')
+    })
+    expect(inc().disabled).toBe(true)
+    expect(dec().disabled).toBe(false)
+    // Partial drafts fall back to controlled state.
+    await React.act(async () => {
+      setNativeValue(input(), '-')
+    })
+    expect(inc().disabled).toBe(false)
+    expect(dec().disabled).toBe(false)
+    await React.act(async () => {
+      pressKey(input(), 'Escape')
+      input().blur()
+    })
+    // Root disabled/read-only and part-disabled disable atomically.
+    await React.act(async () => {
+      root.render(<App value={5} disabled />)
+    })
+    expect(inc().disabled).toBe(true)
+    expect(dec().disabled).toBe(true)
+    await React.act(async () => {
+      root.render(<App value={5} readOnly />)
+    })
+    expect(inc().disabled).toBe(true)
+    expect(dec().disabled).toBe(true)
+    await React.act(async () => {
+      root.render(<App value={5} incDisabled />)
+    })
+    expect(inc().disabled).toBe(true)
+    expect(dec().disabled).toBe(false)
+    // Recovery is atomic: one rerender restores both.
+    await React.act(async () => {
+      root.render(<App value={5} />)
+    })
+    expect(inc().disabled).toBe(false)
+    expect(dec().disabled).toBe(false)
+    expect(seen).toEqual([])
+    await cleanup(container, root)
+  })
+
+  it('NF-KEY-07: Read-only state should suppress handled keyboard work', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <NumberField value={10} locale="en-US" min={0} max={100} readOnly onChange={v => void seen.push(v)}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+      pressKey(input, 'ArrowDown')
+      pressKey(input, 'Home')
+      pressKey(input, 'End')
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('10')
+    await cleanup(container, root)
+  })
+
+  it('NF-COMMIT-03 / NF-COMMIT-07: Invalid commits should revert with a failed boundary that resolves only authoritatively', async () => {
+    // Sign/decimal/exponent/malformed-group/affix partials revert with
+    // zero callback and managed invalid state; submits stay blocked until
+    // a valid user edit, an accepted commit, an authoritative programmatic
+    // change, or an unprevented reset clears the boundary.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <form data-testid="nf-form">
+          <NumberField value={5} locale="en-US" name="qty" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    const submitBlocked = async () => {
+      let prevented = false
+      await React.act(async () => {
+        prevented = !form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      })
+      return prevented
+    }
+    for (const partial of ['-', '.', '1e', '1,2,3,4', '$']) {
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, partial)
+      })
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(input.value).toBe('5')
+      expect(input.getAttribute('data-editing')).toBeNull()
+      expect(input.getAttribute('aria-invalid')).toBe('true')
+    }
+    expect(seen).toEqual([])
+    expect(await submitBlocked()).toBe(true)
+    expect(await submitBlocked()).toBe(true)
+    // A valid user edit clears the boundary before the next commit.
+    await React.act(async () => {
+      setNativeValue(input, '6')
+    })
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([6])
+    // Fail again, then resolve by authoritative programmatic change.
+    await React.act(async () => {
+      setNativeValue(input, 'junk')
+      pressKey(input, 'Enter')
+    })
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    await React.act(async () => {
+      root.render(
+        <form data-testid="nf-form">
+          <NumberField value={42} locale="en-US" name="qty" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </form>
+      )
+    })
+    expect(input.value).toBe('42')
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    expect(await submitBlocked()).toBe(false)
+    await cleanup(container, root)
+  })
+
+  it('NF-COMMIT-10: Canceling blur should retain a dirty session while unfocused and resume it on refocus', async () => {
+    // Exact dirty text/selection/data-editing survive unfocused time with
+    // no callback or format reset; refocus resumes the session.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <div>
+          <button type="button" data-testid="nf-outside">
+            Outside
+          </button>
+          <NumberField value={5} locale="en-US" onChange={v => void seen.push(v)}>
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" onBlur={e => e.preventDefault()} />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+        </div>
+      )
+    })
+    const input = container.querySelector('input') as HTMLInputElement
+    const outside = container.querySelector('[data-testid="nf-outside"]') as HTMLButtonElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '9')
+      input.setSelectionRange(0, 1)
+    })
+    await React.act(async () => {
+      outside.focus()
+    })
+    expect(document.activeElement).toBe(outside)
+    expect(input.value).toBe('9')
+    expect(input.getAttribute('data-editing')).toBe('')
+    expect(seen).toEqual([])
+    await React.act(async () => {
+      input.focus()
+    })
+    expect(input.value).toBe('9')
+    expect(input.selectionStart).toBe(0)
+    expect(input.selectionEnd).toBe(1)
+    expect(input.getAttribute('data-editing')).toBe('')
+    // The resumed session still commits.
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([9])
+    await cleanup(container, root)
+  })
+
+  it('NF-MATH-15: Off-grid bound validity should distinguish an allowed endpoint from an ordinary step mismatch', async () => {
+    // Validate mode: exact off-grid endpoints are bound-valid but
+    // step-invalid; interior mismatch is invalid. Snap mode: endpoints are
+    // step-valid by endpoint exception. Native flags stay false; no prop
+    // is normalized.
+    const seen: Array<number | null> = []
+    function App({ value, commitBehavior }: { value: number | null; commitBehavior: 'snap' | 'validate' }) {
+      return (
+        <NumberField value={value} locale="en-US" min={0} max={10} step={3} commitBehavior={commitBehavior} onChange={v => void seen.push(v)}>
+          <NumberField.Group>
+            <NumberField.Input aria-label="Quantity" data-testid="nf-input" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const { container, root } = mount()
+    const invalidOf = () =>
+      (container.querySelector('[data-testid="nf-input"]') as HTMLInputElement).getAttribute('aria-invalid') ===
+      'true'
+    // Validate: exact off-grid max is step-invalid (no endpoint exception).
+    await React.act(async () => {
+      root.render(<App value={10} commitBehavior="validate" />)
+    })
+    expect(invalidOf()).toBe(true)
+    // Validate: interior on-lattice value is valid.
+    await React.act(async () => {
+      root.render(<App value={9} commitBehavior="validate" />)
+    })
+    expect(invalidOf()).toBe(false)
+    // Validate: interior mismatch is invalid.
+    await React.act(async () => {
+      root.render(<App value={8} commitBehavior="validate" />)
+    })
+    expect(invalidOf()).toBe(true)
+    // Snap: the same off-grid endpoint is step-valid by exception.
+    await React.act(async () => {
+      root.render(<App value={10} commitBehavior="snap" />)
+    })
+    expect(invalidOf()).toBe(false)
+    // Snap: interior mismatch stays invalid.
+    await React.act(async () => {
+      root.render(<App value={8} commitBehavior="snap" />)
+    })
+    expect(invalidOf()).toBe(true)
+    const input = container.querySelector('[data-testid="nf-input"]') as HTMLInputElement
+    expect(input.validity.rangeUnderflow).toBe(false)
+    expect(input.validity.rangeOverflow).toBe(false)
+    expect(input.validity.stepMismatch).toBe(false)
+    // Display follows the prop verbatim: nothing normalized.
+    expect(input.value).toBe('8')
+    expect(seen).toEqual([])
+    await cleanup(container, root)
   })
 })
