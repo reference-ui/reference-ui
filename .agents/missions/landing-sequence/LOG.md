@@ -14,3 +14,5 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 - Wave-1 landed (FORM 99/148, AXE infra, REDS 3/4, SITE-16 skipped to HQ).
 - HQ ruled SITE-16 semantic (i) (REPORT.md §1). SITE-16 crew dispatched
   in isolated worktree, 90-min box. Sweep crew still out (shared tree).
+- Sweep returned: 1710/1784 (95.9%), 68 findings, S10 blocked. Captain
+  triaged (5 clusters + G1/H1); DIAG crew dispatched (report-only).
