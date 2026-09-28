@@ -1,0 +1,7 @@
+{
+  "marginTop:-2.5r": "@reference-ui/lib__mt_-2.5r",
+  "maxW:220r": "@reference-ui/lib__max-w_220r",
+  "maxWidth:140r": "@reference-ui/lib__max-w_140r",
+  "minH:12.5r": "@reference-ui/lib__min-h_12.5r",
+  "minWidth:137.5r": "@reference-ui/lib__min-w_137.5r"
+}
