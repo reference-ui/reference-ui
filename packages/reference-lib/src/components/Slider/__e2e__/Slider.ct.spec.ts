@@ -107,7 +107,7 @@ test.describe('Slider CT', () => {
     await snap(page, 'slider-track-clicked-80')
   })
 
-  test('scopes keyboard focus ring to keyboard interaction and removes outline on pointer click/drag', async ({
+  test('SD-POINTER-14: scopes keyboard focus ring to keyboard interaction and removes outline on pointer click/drag', async ({
     mount,
     page,
   }) => {

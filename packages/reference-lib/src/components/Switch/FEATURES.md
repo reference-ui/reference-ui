@@ -9,6 +9,7 @@ until HQ (or a reporting consumer) settles the API.
 - **What it does:** Removes Switch's inline thumb `transform`/`transition` so all thumb travel is app-owned CSS against `data-state="checked" | "unchecked"` (including RTL); Switch publishes no geometry.
 - **API:** No new props — the styling contract becomes `data-state`-only. Open: do default-thumb consumers get a documented CSS travel recipe?
 - **Maintainer take:** Only as a designed restyle arc with fresh snapshots — never as a silent strip of the shipped 200ms slide.
+- **TAIL (2026-09-28, finish-line P2C):** proceeded on the maintainer-take — the inline transform/transition is blessed as the shipped styling contract (no strip, no restyle, all 7 snapshots byte-identical). HQ walkthrough to confirm the blessing or commission the restyle arc.
 
 ### 2. Managed-prop type Omit (from DECISIONS candidate #4)
 

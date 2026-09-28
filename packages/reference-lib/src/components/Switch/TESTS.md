@@ -41,14 +41,18 @@ Switch-specific type cases cover only managed-prop omissions.
 - [x] `SW-TYPE-01` `[reference]` `[unit]` —
   **Switch should preserve behavior-prop types when ReferencePartProps also
   supplies StyleProps.** Compile a Thumb-less Root with `checked={false}`,
+  `defaultChecked={false}`,
   `onChange={(checked: boolean) => void checked}`, `disabled={false}`,
   `width="6r"`, `css={{ opacity: 0.5 }}`, and
   `r={{ 320: { width: "7r" } }}`, then compile `Switch.Thumb` with
   `width="2r"` and `bg="bg"`. Assert `onChange` remains
-  `(checked: boolean) => void`, Thumb accepts the shared StyleProps surface,
-  and that `type`, `role`, `aria-checked`, `aria-pressed`, and native button
+  `(checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void`
+  (single-argument handlers keep working), `defaultChecked` stays public
+  (uncontrolled mode is blessed, not out of scope), Thumb accepts the
+  shared StyleProps surface, and that `type`, `role`, `aria-checked`,
+  `aria-pressed`, `data-state`, `data-disabled`, and native button
   `onChange` are not public on Root. Add `@ts-expect-error` fixtures for
-  `checked="true"`, `defaultChecked`, and `aria-checked="mixed"`.
+  `checked="true"`, `role`, `type`, `aria-checked`, and `aria-pressed`.
 
 ### DOM, parts, and state
 
@@ -235,7 +239,6 @@ Switch-specific type cases cover only managed-prop omissions.
 
 ## Out of scope
 
-- Uncontrolled / `defaultChecked`.
 - Hidden form inputs, `name` / `value` / `required` / `readOnly`.
 - `aria-checked="mixed"`, `aria-pressed`, or checkbox `role`.
 - Orientation props, geometry custom properties, Presence, Slot/`as`, a

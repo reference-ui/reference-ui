@@ -33,15 +33,15 @@ Visual polish is not this gate. Invented `SD-FOCUS-*` titles are not catalog.
 | Axis | `orientation?` horizontal \| vertical → `aria-orientation` + `data-orientation`; RTL flips the horizontal value↔position mapping |
 | Geometry | `--reference-slider-thumb-position`, range start/end; never overwrite consumer `transform` |
 
-### Status (2026-09-26 PATCHES crew)
+### Status (2026-09-28 finish-line P2C crew)
 
 | | |
 | :--- | :--- |
 | Engine | Owned-pointer session engine. RTL/vertical axis + keymaps, grab offset, track-press tie rule, once-per-session ends, render/anatomy/count diagnostics. |
-| Production | **No.** Remaining KEY/CTRL/DOM/DYNAMIC/COMP cases not yet pinned; matrix re-target still open. |
-| Named `[x]` | 48 / 73 (all colocated; see Case index) |
-| Playwright | 34 CT (`Slider.ct.spec.ts`, react17/18/19 green, 9 frozen baselines unmodified) + `env04` cross-engine smoke (chromium/firefox/webkit green) |
-| Vitest | 42 colocated (2 geometry + 13 math + 2 contract + 21 patches + 4 features) |
+| Production | **Yes.** All 73 catalog IDs proven. Only open item is FEATURES #5 (single-thumb default name — catalog policy, HOLD-FOR-HQ, no case impact). |
+| Named `[x]` | 73 / 73 (see Case index) |
+| Playwright | 36 CT (`Slider.ct.spec.ts`, react17/18/19 green, 9 frozen baselines unmodified) + `env04` cross-engine smoke (chromium/firefox/webkit green) |
+| Vitest | 68 colocated (13 math + 4 contract + 2 visual + 4 features + 21 patches + 24 tail) |
 
 ### Landing notes (2026-09-25)
 
@@ -94,15 +94,33 @@ Visual polish is not this gate. Invented `SD-FOCUS-*` titles are not catalog.
 - In-repo migration: `Slider.book.tsx`, `Slider.story.tsx`,
   `Showcase.book.tsx`, colocated tests. No `matrix/` consumers.
 
+### TAIL notes (2026-09-28 finish-line P2C)
+
+- Pinned the 25-ID tail: 24 colocated (`Slider.tail.test.tsx`) + `SD-POINTER-14`
+  via retitling the existing real-engine CT focus-ring leg (it already asserted
+  the case step-for-step; happy-dom cannot drive `isFocusVisible` modality).
+- No slider spec exists under `matrix/` on this branch, so the "matrix
+  re-target" landed colocated per PATCHES/FEATURES crew precedent; no
+  `matrix/` changes needed.
+- One source fix: `SliderThumb` is now `forwardRef` with a composed ref.
+  As a plain function component, a React 19 consumer `ref` arrived via props
+  and the `{...props}` spread overwrote internal registration — the thumb
+  silently never registered and every interaction threw count-mismatch.
+  The catalog requires working thumb refs (SD-DOM-03/KEY-06/POINTER-11/
+  DYNAMIC-01). No visual change (9 CT baselines unmodified); React 17/18
+  CT green (forwardRef is the version-safe API).
+
 ### Gaps & incoherence
 
 - ~~`value?` + `defaultValue`. Freeze requires controlled `value`.~~
   Resolved by FEATURES #1 (2026-09-26).
-- Owns Thumb `transform` and theme sizes while also setting CSS vars —
-  fights “never overwrite transforms”.
-- `onChange?: (value: any)` loosens freeze typing.
-- No `orientation` axis or RTL mapping. Freeze: vertical geometry +
-  RTL-flipped horizontal position (arrow-key direction follows suit).
+- ~~Thumb `transform` ownership vs “never overwrite transforms”.~~
+  Consumer transforms win (spread last; pinned SD-DOM-03/09). The thumb's own
+  centering transform is retained chrome, frozen by the 9 CT baselines.
+- ~~`onChange?: (value: any)` loosens freeze typing.~~
+  Resolved at landing: generic `SliderProps<T>` types `onChange`/`onChangeEnd`.
+- ~~No `orientation` axis or RTL mapping.~~ Resolved by PATCHES #1
+  (2026-09-26): vertical + RTL geometry, keymaps, and pointer mapping.
 - `SD-FOCUS-01` / `02` are visual extras, not in TESTS.md.
 
 ### Vendor
@@ -129,25 +147,21 @@ is a parsed scalar, not a controlled array).
   `SD-ENV-02`, `SD-ENV-03`, `SD-ENV-04`
 - `[x]` FEATURES (2026-09-26): `SD-KEY-07` (colocated unit +
   CT real-engine legs)
-- `[ ]` `SD-DOM-01` – `SD-DOM-04`, `SD-DOM-07`, `SD-DOM-09` –
-  `SD-DOM-11`, `SD-CTRL-01` – `SD-CTRL-04`, `SD-CTRL-06`,
-  `SD-CTRL-08`, `SD-KEY-01`, `SD-KEY-05`, `SD-KEY-06`,
-  `SD-KEY-08`, `SD-KEY-09`,
-  `SD-POINTER-11`, `SD-POINTER-12`, `SD-POINTER-14`,
-  `SD-DYNAMIC-01`, `SD-DYNAMIC-04`, `SD-COMP-02` (no matrix slider
-  spec exists on this branch; old `SD-DOM-01`–`03` proof lapsed with
-  the `matrix/lib` layout)
+- `[x]` TAIL (2026-09-28): `SD-DOM-01` – `SD-DOM-04`, `SD-DOM-07`,
+  `SD-DOM-09` – `SD-DOM-11`, `SD-CTRL-01` – `SD-CTRL-04`,
+  `SD-CTRL-06`, `SD-CTRL-08`, `SD-KEY-01`, `SD-KEY-05`, `SD-KEY-06`,
+  `SD-KEY-08`, `SD-KEY-09`, `SD-POINTER-11`, `SD-POINTER-12`,
+  `SD-DYNAMIC-01`, `SD-DYNAMIC-04`, `SD-COMP-02` (colocated
+  `Slider.tail.test.tsx`) + `SD-POINTER-14` (retitled real-engine CT leg)
 
 Not catalog: `SD-FOCUS-01`, `SD-FOCUS-02`. Drop or rehome after freeze.
 
 ### Work order
 
-1. Controlled-only; type `onChange`.
-2. Pure `SD-MATH-*` unit module.
-3. Geometry via CSS vars only (no owned thumb transform in the kernel);
-   vertical + RTL mapping in the same solver.
-4. Port KEY / POINTER / END / CTRL with real IDs (arrow direction honors
-   orientation + RTL).
+1. ~~Controlled-only; type `onChange`.~~ Done (FEATURES #1 + generic props).
+2. ~~Pure `SD-MATH-*` unit module.~~ Done (landing).
+3. ~~Geometry via CSS vars (+ retained centering chrome); vertical + RTL mapping.~~ Done (PATCHES #1; consumer transforms win).
+4. ~~Port KEY / POINTER / END / CTRL with real IDs.~~ Done (PATCHES + TAIL; 73/73).
 
 ### Won't do
 

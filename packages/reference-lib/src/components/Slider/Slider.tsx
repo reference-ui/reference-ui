@@ -292,18 +292,21 @@ const thumbHitAreaVertical = {
   inset: '0 -4px',
 } as const
 
-export function SliderThumb({
-  valueText,
-  formatValue,
-  className,
-  style,
-  onKeyDown,
-  onKeyUp,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  ...props
-}: SliderThumbProps) {
+export const SliderThumb = React.forwardRef<HTMLDivElement, SliderThumbProps>(function SliderThumb(
+  {
+    valueText,
+    formatValue,
+    className,
+    style,
+    onKeyDown,
+    onKeyUp,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    ...props
+  }: SliderThumbProps,
+  forwardedRef
+) {
   const context = React.useContext(SliderContext)
   if (!context) return null
 
@@ -355,11 +358,19 @@ export function SliderThumb({
     setLocalFocusVisible(focusVisibleIndex === index)
   }, [focusVisibleIndex, index])
 
+  // Composed ref: registration must survive a consumer ref. (A plain
+  // function component lets React 19 ref-as-prop overwrite registration
+  // via the {...props} spread below, silently breaking interaction.)
   const setThumbRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       registerThumb(mountId, node)
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(node)
+      } else if (forwardedRef) {
+        ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }
     },
-    [registerThumb, mountId]
+    [registerThumb, mountId, forwardedRef]
   )
 
   // Out-of-range thumbs render global bounds so no ARIA attribute ever
@@ -506,7 +517,9 @@ export function SliderThumb({
       {...props}
     />
   )
-}
+})
+
+SliderThumb.displayName = 'SliderThumb'
 
 function countMismatchMessage(valueLength: number, thumbCount: number): string {
   return (
