@@ -4,6 +4,11 @@ Working copy of `docs/MISSIONS/DAY-REPORT.md`, moved here per HQ
 request. Crew recommendations kept; prior art added under each item.
 Answer inline (a number + a letter each).
 
+Stance (HQ 2026-09-28): no freeze pressure — the library is in
+development. API decisions are development, made without dogma, not
+freeze-gates. The pre-release window in `API-STANCE.md` stands, but
+nothing here is blocked on ceremony.
+
 ## HQ position (live)
 
 - 1. Handler naming — leaning 1a (house `onChange` everywhere); not yet ruled.
