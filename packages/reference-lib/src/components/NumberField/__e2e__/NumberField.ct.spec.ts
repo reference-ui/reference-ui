@@ -819,4 +819,440 @@ test.describe('NumberField CT', () => {
     await page.getByTestId('named-form-submit').click()
     await expect(payload).toHaveText('payload: price=1234.5')
   })
+
+  test('NF-FORMAT-03: Referentially new but effectively equal format options preserve a dirty session', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/FormatSwapFixture')
+
+    const input = page.getByTestId('format-swap-input')
+    const log = page.getByTestId('format-swap-log')
+    await input.click()
+    await input.fill('1234.5')
+    await input.evaluate(el => (el as HTMLInputElement).setSelectionRange(2, 5))
+    const before = await input.evaluate(el => ({
+      value: (el as HTMLInputElement).value,
+      start: (el as HTMLInputElement).selectionStart,
+      end: (el as HTMLInputElement).selectionEnd,
+      editing: el.getAttribute('data-editing'),
+    }))
+    await input.evaluate(el => {
+      ;(window as unknown as { __nfNode: unknown }).__nfNode = el
+    })
+    // Mousedown-prevented swap: rerender without blur, so only option
+    // equality is under test.
+    await page.getByTestId('format-swap-same').click()
+    const after = await input.evaluate(el => ({
+      value: (el as HTMLInputElement).value,
+      start: (el as HTMLInputElement).selectionStart,
+      end: (el as HTMLInputElement).selectionEnd,
+      editing: el.getAttribute('data-editing'),
+      sameNode: el === (window as unknown as { __nfNode: unknown }).__nfNode,
+    }))
+    expect(after).toEqual({ ...before, sameNode: true })
+    await expect(input).toBeFocused()
+    await expect(log).toHaveText('log: none')
+  })
+
+  test('NF-FORMAT-04: An effective format change replaces dirty text from controlled state', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/FormatSwapFixture')
+
+    const input = page.getByTestId('format-swap-input')
+    const log = page.getByTestId('format-swap-log')
+    const hidden = page.locator('input[name="price"]')
+    await input.click()
+    await input.fill('999')
+    await expect(input).toHaveAttribute('data-editing', '')
+    await page.getByTestId('format-swap-eur').click()
+    await expect(input).toHaveValue('€1,234.50')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    await expect(hidden).toHaveValue('1234.5')
+    await expect(log).toHaveText('log: none')
+    await expect(input).toBeFocused()
+  })
+
+  test('NF-EDIT-01: Focusing clean Input does not start a dirty session', async ({ mount, page }) => {
+    // Keyboard focus shares the programmatic focus path (no key-specific
+    // focus logic exists), so pointer + programmatic focus prove the case.
+    await mount('components/NumberField/NumberField/StepperFixture')
+    const input = page.getByTestId('number-field-input')
+    await input.click()
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('42')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 42')
+    await input.evaluate(el => (el as HTMLInputElement).blur())
+    await input.evaluate(el => (el as HTMLInputElement).focus())
+    await expect(input).toHaveValue('42')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 42')
+  })
+
+  test('NF-EDIT-01: Focusing null and formatted fields leaves them clean', async ({ mount, page }) => {
+    await mount('components/NumberField/NumberField/CurrencyFixture')
+    const currency = page.getByTestId('currency-input')
+    await currency.click()
+    await expect(currency).toHaveValue('$1,234.50')
+    await expect(currency).not.toHaveAttribute('data-editing', '')
+    await expect(page.getByTestId('currency-display')).toHaveText('Currency Value: 1234.5')
+
+    await mount('components/NumberField/NumberField/BoundedDecimalFixture')
+    const empty = page.getByTestId('bounded-decimal-input')
+    await empty.click()
+    await expect(empty).toHaveValue('')
+    await expect(empty).not.toHaveAttribute('data-editing', '')
+    await expect(page.getByTestId('bounded-decimal-log')).toHaveText('requests: 0')
+  })
+
+  test('NF-EDIT-06: Horizontal navigation and selection remain native around localized tokens', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/UnboundedFixture')
+    const input = page.getByTestId('unbounded-number-field-input')
+    await input.click()
+    const sel = () =>
+      input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    await page.keyboard.press('End')
+    expect(await sel()).toEqual([1, 1])
+    await page.keyboard.press('Home')
+    expect(await sel()).toEqual([0, 0])
+    await page.keyboard.press('ArrowRight')
+    expect(await sel()).toEqual([1, 1])
+    await page.keyboard.press('Shift+ArrowLeft')
+    expect(await sel()).toEqual([0, 1])
+    await page.keyboard.press('ArrowRight')
+    expect(await sel()).toEqual([1, 1])
+    await page.keyboard.press('Control+ArrowLeft')
+    expect(await sel()).toEqual([0, 0])
+    await expect(input).toHaveValue('5')
+    // Ranged dirty buffer incl. RTL text: navigation alone never commits.
+    await input.fill('12א')
+    await page.keyboard.press('Home')
+    expect(await sel()).toEqual([0, 0])
+    await page.keyboard.press('End')
+    expect(await sel()).toEqual([3, 3])
+    await expect(input).toHaveValue('12א')
+
+    // No-request half on the echoing fixture: horizontal arrows never
+    // publish (Home/End omitted here — that fixture has bounds, so they are
+    // handled endpoint keys, proved natively above on the unbounded field).
+    await mount('components/NumberField/NumberField/StepperFixture')
+    const echoing = page.getByTestId('number-field-input')
+    await echoing.click()
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('Shift+ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await expect(echoing).toHaveValue('42')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 42')
+  })
+
+  test('NF-EDIT-10: Unreadable clipboard data fails open without fabricating an edit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/StepperFixture')
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(String(error)))
+    const input = page.getByTestId('number-field-input')
+    await input.click()
+    await input.evaluate(el => {
+      el.dispatchEvent(new Event('paste', { bubbles: true, cancelable: true }))
+    })
+    await expect(input).toHaveValue('42')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 42')
+    await input.evaluate(el => {
+      const event = new Event('paste', { bubbles: true, cancelable: true })
+      Object.defineProperty(event, 'clipboardData', {
+        get() {
+          throw new Error('denied')
+        },
+      })
+      el.dispatchEvent(event)
+    })
+    await expect(input).toHaveValue('42')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 42')
+    await expect(input).toBeFocused()
+    expect(errors).toEqual([])
+  })
+
+  test('NF-EDIT-11: Synthetic composition suspends filtering, stepping, and commit until its final event', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const log = page.getByTestId('commit-lab-log')
+    await input.click()
+    const prevention = await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      target.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, cancelable: true }))
+      setter.call(target, 'ni3hao')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+      const enter = !target.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true })
+      )
+      const arrow = !target.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true, isComposing: true })
+      )
+      return { enter, arrow }
+    })
+    expect(prevention).toEqual({ enter: false, arrow: false })
+    await expect(input).toHaveValue('ni3hao')
+    await expect(log).toHaveText('log: none')
+    // Valid final text flows through the ordinary input path; the boundary
+    // after the session commits it exactly once.
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, '12')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+      target.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, cancelable: true }))
+    })
+    await expect(log).toHaveText('log: none')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(log).toHaveText('log: 12')
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 12')
+  })
+
+  test('NF-EDIT-14: Rejected live requests do not create a hidden numeric store', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const display = page.getByTestId('commit-lab-display')
+    const log = page.getByTestId('commit-lab-log')
+    const hidden = page.locator('input[name="qty"]')
+    // Echo off while clean: every later request is rejected by the parent.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await input.click()
+    for (const text of ['1', '12', '42']) {
+      await input.fill(text)
+      await expect(input).toHaveValue(text)
+      await expect(display).toHaveText('Value: 5')
+      await expect(hidden).toHaveValue('5')
+    }
+    await expect(log).toHaveText('log: none')
+    // The later request derives from the current buffer, still prop-based.
+    await page.keyboard.press('Enter')
+    await expect(log).toHaveText('log: 42')
+    await expect(display).toHaveText('Value: 5')
+    await expect(hidden).toHaveValue('5')
+    await expect(input).toHaveValue('5')
+  })
+
+  test('NF-COMMIT-01: Blur commits after the consumer handler and retries a candidate that differs from controlled value', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const order = page.getByTestId('commit-lab-order')
+    const log = page.getByTestId('commit-lab-log')
+    const display = page.getByTestId('commit-lab-display')
+    const hidden = page.locator('input[name="qty"]')
+    await input.click()
+    await input.fill('7')
+    await expect(log).toHaveText('log: none')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(order).toHaveText('order: blur,request')
+    await expect(log).toHaveText('log: 7')
+    await expect(display).toHaveText('Value: 7')
+    await expect(hidden).toHaveValue('7')
+    await expect(page.getByTestId('commit-lab-outside')).toBeFocused()
+    // Delayed echo: the request publishes, hidden stays controlled, and an
+    // explicit retry after echo-on lands the value.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await input.click()
+    await input.fill('8')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(log).toHaveText('log: 7,8')
+    await expect(display).toHaveText('Value: 7')
+    await expect(hidden).toHaveValue('7')
+    await page.getByTestId('commit-lab-echo-on').click()
+    await input.click()
+    await input.fill('8')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(log).toHaveText('log: 7,8,8')
+    await expect(display).toHaveText('Value: 8')
+  })
+
+  test('NF-COMMIT-02: Enter commits without moving focus or synthesizing form submission', async ({
+    mount,
+    page,
+  }) => {
+    // Standalone half: no form exists, so no submission path is reachable.
+    await mount('components/NumberField/NumberField/StepperFixture')
+    const standalone = page.getByTestId('number-field-input')
+    await standalone.click()
+    await standalone.fill('43')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('number-field-value-display')).toHaveText('Numeric Value: 43')
+    await expect(standalone).toHaveValue('43')
+    await expect(standalone).toBeFocused()
+    // In-form half: consumer key handler first, one commit, focus retained,
+    // and at most the browser's single implicit submit — never a second
+    // NumberField-synthesized submission (the engine calls no submit API).
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    await input.click()
+    await input.fill('9')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('commit-lab-order')).toHaveText('order: key,request')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: 9')
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 9')
+    await expect(input).toBeFocused()
+    const submits = await page.getByTestId('commit-lab-submits').textContent()
+    expect(['submits: 0', 'submits: 1']).toContain(submits?.trim())
+  })
+
+  test('NF-FORM-09: Autofill-equivalent input/change events follow ordinary public edit and commit rules', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const log = page.getByTestId('commit-lab-log')
+    const display = page.getByTestId('commit-lab-display')
+    const hidden = page.locator('input[name="qty"]')
+    await input.click()
+    const focusedTag = await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, '42')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+      target.dispatchEvent(new Event('change', { bubbles: true }))
+      const active = target.ownerDocument.activeElement
+      return active === target ? 'input' : active?.tagName ?? 'none'
+    })
+    expect(focusedTag).toBe('input')
+    await expect(input).toHaveValue('42')
+    await expect(log).toHaveText('log: none')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(log).toHaveText('log: 42')
+    await expect(display).toHaveText('Value: 42')
+    await expect(hidden).toHaveValue('42')
+    // Reject run: callbacks fire, controlled/hidden state stays prop-based.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await input.click()
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, '43')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+      target.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(log).toHaveText('log: 42,43')
+    await expect(display).toHaveText('Value: 42')
+    await expect(hidden).toHaveValue('42')
+  })
+
+  test('NF-DYNAMIC-02: Locale and effective format changes atomically replace parser, formatter, grammar, and inputMode', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/FormatSwapFixture')
+    const input = page.getByTestId('format-swap-input')
+    const log = page.getByTestId('format-swap-log')
+    const hidden = page.locator('input[name="price"]')
+    await expect(input).toHaveAttribute('inputmode', 'numeric')
+    await input.click()
+    await input.fill('999')
+    await input.evaluate(el => {
+      ;(window as unknown as { __nfNode: unknown }).__nfNode = el
+    })
+    await page.getByTestId('format-swap-de').click()
+    const expectedDe = await page.evaluate(() =>
+      new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'USD' }).format(1234.5)
+    )
+    await expect(input).toHaveValue(expectedDe)
+    await expect(input).toHaveAttribute('inputmode', 'numeric')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(hidden).toHaveValue('1234.5')
+    await expect(log).toHaveText('log: none')
+    await expect(input).toBeFocused()
+    const sameAfterLocale = await input.evaluate(
+      el => el === (window as unknown as { __nfNode: unknown }).__nfNode
+    )
+    expect(sameAfterLocale).toBe(true)
+    // Scientific grammar flips inputMode with the same atomic replacement.
+    await input.fill('1500')
+    await page.getByTestId('format-swap-scientific').click()
+    const expectedSci = await page.evaluate(() =>
+      new Intl.NumberFormat('de-DE', { notation: 'scientific' }).format(1234.5)
+    )
+    await expect(input).toHaveValue(expectedSci)
+    await expect(input).toHaveAttribute('inputmode', 'text')
+    await expect(log).toHaveText('log: none')
+    const sameAfterNotation = await input.evaluate(
+      el => el === (window as unknown as { __nfNode: unknown }).__nfNode
+    )
+    expect(sameAfterNotation).toBe(true)
+  })
+
+  test('NF-COMP-01: A quantity NumberField composes integer bounds, named steppers, controlled rejection, reset, and forms', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const display = page.getByTestId('commit-lab-display')
+    const log = page.getByTestId('commit-lab-log')
+    const hidden = page.locator('input[name="qty"]')
+    const inc = page.getByRole('button', { name: 'Increment' })
+    const dec = page.getByRole('button', { name: 'Decrement' })
+    await expect(inc).toHaveAttribute('aria-controls', await input.getAttribute('id'))
+    // Type to 99, then hold Increment: the immediate step lands 100 and the
+    // bound ends the hold with no further request.
+    await input.click()
+    await input.fill('99')
+    await page.keyboard.press('Enter')
+    await expect(display).toHaveText('Value: 99')
+    // Enter may additionally implicit-submit (browser path, echo-timing
+    // dependent), so the explicit submit below asserts a relative +1.
+    const submitsAfterEnter = Number(
+      ((await page.getByTestId('commit-lab-submits').textContent()) ?? 'submits: 0')
+        .replace('submits:', '')
+        .trim()
+    )
+    const box = await inc.boundingBox()
+    expect(box).not.toBeNull()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    await page.waitForTimeout(550)
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 99,100')
+    await expect(display).toHaveText('Value: 100')
+    await expect(inc).toBeDisabled()
+    // Controlled rejection: the request publishes, the display stands.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await dec.click()
+    await expect(log).toHaveText('log: 99,100,99')
+    await expect(display).toHaveText('Value: 100')
+    await page.getByTestId('commit-lab-echo-on').click()
+    // Reset from a dirty session: blur commits first (rejected, echo off),
+    // then reset clears the transient state around the standing authority.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await input.click()
+    await input.fill('50')
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(input).toHaveValue('100')
+    await expect(display).toHaveText('Value: 100')
+    await expect(log).toHaveText('log: 99,100,99,50')
+    // Submit serializes the canonical hidden value exactly once.
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(page.getByTestId('commit-lab-submits')).toHaveText(`submits: ${submitsAfterEnter + 1}`)
+    await expect(hidden).toHaveValue('100')
+  })
 })

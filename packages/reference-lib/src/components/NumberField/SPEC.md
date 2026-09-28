@@ -39,17 +39,17 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | :--- | :--- |
 | Engine | Controlled textbox + dirty draft/commit, Group host, hidden form pipeline. |
 | Production | **No** (Intl parser + live-request + lattice flips remain). |
-| Named `[x]` | 68 / 148 |
-| Playwright | 27 CT on React 17/18/19 (snapshots intact, 4 new freeze titles) |
-| Vitest | 84 unit + 5 type (63 title IDs + 5 A11Y IDs) |
+| Named `[x]` | 96 / 148 |
+| Playwright | 40 CT on React 17/18/19 (snapshots intact, 13 new wave-2 titles) |
+| Vitest | 98 unit + 5 type (16 new wave-2 titles) |
 | API | FEATURES #1 landed 2026-09-26: required controlled `value` + required `locale`, no `defaultValue`, no env default; FEATURES #2 landed (any-no-change suppression). PATCHES §4 (Group) + §5-core (form/state/hidden/submit/reset) + §8 remainder (textbox proof, unnamed-Input diagnostic) landed 2026-09-28. |
 
 ### Gaps & incoherence
 
-- Intl parser is ASCII + locale punctuation only (`NF-PARSE-*` unproven
-  except through commit vectors); full numbering-system/affix grammar,
-  paste/composition filtering, and caret work remain (PATCHES §2 / §1
-  completion).
+- Intl parser is ASCII + locale punctuation only (`NF-PARSE-04`/`05`/`14`
+  proven through commit vectors; `NF-PARSE-19`-class grammar unproven);
+  full numbering-system/affix grammar, paste/composition filtering, and
+  caret work remain (PATCHES §2 / §1 completion).
 - No live parseable-edit requests: typing publishes only at commit
   boundaries (B-19). `NF-EDIT-03`/`NF-EDIT-05`/`NF-COMMIT-08`/`NF-COMMIT-11`
   want live requests with dedupe — contradicts pinned B-19 titles, needs
@@ -91,7 +91,13 @@ smallStep/largeStep.
   `NF-FORM-05`, `NF-FORM-06`, `NF-FORM-07`, `NF-FORM-08`, `NF-FORM-10`,
   `NF-FORM-13`, `NF-A11Y-01`, `NF-A11Y-02`, `NF-A11Y-03`, `NF-A11Y-05`,
   `NF-A11Y-06`, `NF-SURF-01`, `NF-DYNAMIC-03`, `NF-DYNAMIC-04`,
-  `NF-ENV-01`, `NF-ENV-03`, `NF-ENV-05`, `NF-ENV-07`
+  `NF-ENV-01`, `NF-ENV-03`, `NF-ENV-05`, `NF-ENV-07`, `NF-FORMAT-01`,
+  `NF-FORMAT-02`, `NF-FORMAT-03`, `NF-FORMAT-04`, `NF-FORMAT-05`,
+  `NF-FORMAT-06`, `NF-FORMAT-07`, `NF-FORMAT-08`, `NF-PARSE-04`,
+  `NF-PARSE-05`, `NF-PARSE-14`, `NF-EDIT-01`, `NF-EDIT-06`, `NF-EDIT-10`,
+  `NF-EDIT-11`, `NF-EDIT-14`, `NF-COMMIT-01`, `NF-COMMIT-02`, `NF-COMMIT-04`,
+  `NF-COMMIT-05`, `NF-COMMIT-09`, `NF-KEY-06`, `NF-FORM-09`, `NF-A11Y-04`,
+  `NF-DYNAMIC-02`, `NF-ENV-04`, `NF-COMP-01`, `NF-COMP-03`
   (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
   to the current spinbutton + uncontrolled engine: spinbutton kept per
   frozen visuals; `defaultValue` + optional `locale` preserved per recon
@@ -113,13 +119,18 @@ smallStep/largeStep.
   `NF-COMMIT-03`/`07`/`10`, `NF-A11Y-06`, `NF-DYNAMIC-03`,
   `NF-MATH-15` validity display); PATCHES §8 remainder (textbox proof,
   `NF-A11Y-01`/`02`/`03`/`05`, grammar `inputMode` per `NF-ENV-07` with
-  `none`-as-snap derivation flagged for HQ.)
-- `[ ]` `NF-PARSE-*`, `NF-FORMAT-*`, remaining `NF-MATH-*` (`03`–`06`,
-  `09`–`13`), remaining `NF-EDIT-*`, remaining `NF-COMMIT-*` (`01`, `02`,
-  `04`–`06`, `08`, `09`, `11`), `NF-KEY-06`, remaining `NF-FORM-*` (`09`,
-  `11`, `12`, `14`), `NF-DYNAMIC-01`, `NF-DYNAMIC-02`, `NF-DYNAMIC-05`,
-  remaining `NF-ENV-*` (`02`, `04`, `06`), `NF-COMP-*`, `NF-MANUAL-*`
-  (4 manual release gates)
+  `none`-as-snap derivation flagged for HQ.) Wave-2 landed 2026-09-28
+  (+28: full `NF-FORMAT-*`, `NF-PARSE-04`/`05`/`14`, `NF-EDIT-01`/`06`/
+  `10`/`11`/`14`, `NF-COMMIT-01`/`02`/`04`/`05`/`09`, `NF-KEY-06`,
+  `NF-FORM-09`, `NF-A11Y-04`, `NF-DYNAMIC-02`, `NF-ENV-04`,
+  `NF-COMP-01`/`03`): trailing-decimal parser flip, isComposing key
+  guard; 40 CT green on React 17/18/19, 105 unit green.
+- `[ ]` remaining `NF-PARSE-*` (`01`–`03`, `06`–`13`, `15`–`19`),
+  remaining `NF-MATH-*` (`03`–`06`, `09`–`13`), remaining `NF-EDIT-*`
+  (`02`, `03`, `05`, `07`–`09`, `12`, `15`–`18`), remaining `NF-COMMIT-*`
+  (`06`, `08`, `11`), remaining `NF-FORM-*` (`11`, `12`, `14`),
+  `NF-DYNAMIC-01`, `NF-DYNAMIC-05`, remaining `NF-ENV-*` (`02`, `06`),
+  `NF-COMP-02`, `NF-COMP-04`, `NF-MANUAL-*` (4 manual release gates)
 
 Not catalog: FEATURES #2 suppression trio (no freeze ID — behavior wart
 fix, decided any-no-change).

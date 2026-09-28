@@ -5015,3 +5015,849 @@ describe('NumberField managed semantics and environments', () => {
     await cleanup(container, root)
   })
 })
+
+function Wave2Field(props: React.ComponentProps<typeof NumberField>) {
+  const { children: _ignoredDefault, ...rest } = props
+  return (
+    <NumberField {...rest}>
+      <NumberField.Group>
+        <NumberField.Decrement aria-label="Decrement" />
+        <NumberField.Input aria-label="Quantity" />
+        <NumberField.Increment aria-label="Increment" />
+      </NumberField.Group>
+    </NumberField>
+  )
+}
+
+describe('NumberField wave-2 formatting', () => {
+  it('NF-FORMAT-01: NumberField should render controlled values with the exact requested Intl format through public Input', async () => {
+    const vectors: Array<{ value: number; locale: string; formatOptions?: Intl.NumberFormatOptions }> = [
+      { value: 12.5, locale: 'en-US' },
+      { value: -3.25, locale: 'en-US' },
+      { value: 0, locale: 'en-US' },
+      { value: 0.00001, locale: 'en-US' },
+      { value: 1234567.89, locale: 'en-US' },
+      { value: 1234567.89, locale: 'de-DE' },
+      { value: 1234.5, locale: 'en-US', formatOptions: { style: 'currency', currency: 'USD' } },
+      { value: 0.125, locale: 'en-US', formatOptions: { style: 'percent' } },
+      { value: 12, locale: 'en-US', formatOptions: { style: 'unit', unit: 'kilogram' } },
+      { value: 12345, locale: 'en-US', formatOptions: { notation: 'scientific' } },
+      { value: 12345, locale: 'en-US', formatOptions: { notation: 'engineering' } },
+      {
+        value: -12.5,
+        locale: 'en-US',
+        formatOptions: { style: 'currency', currency: 'USD', currencySign: 'accounting' },
+      },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <Wave2Field
+            value={vector.value}
+            locale={vector.locale}
+            formatOptions={vector.formatOptions}
+            onChange={v => void seen.push(v)}
+          />
+        )
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      expect(input.value).toBe(new Intl.NumberFormat(vector.locale, vector.formatOptions).format(vector.value))
+      expect(seen).toEqual([])
+      await cleanup(container, root)
+    }
+  })
+
+  it('NF-FORMAT-02: Controlled null should be the only clean empty display', async () => {
+    const vectors: Array<{
+      value: number | null
+      formatOptions?: Intl.NumberFormatOptions
+      empty: boolean
+    }> = [
+      { value: null, empty: true },
+      { value: 0, empty: false },
+      { value: -0, empty: false },
+      { value: 0.0001, formatOptions: { maximumFractionDigits: 0 }, empty: false },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <Wave2Field
+            value={vector.value}
+            locale="en-US"
+            name="qty"
+            formatOptions={vector.formatOptions}
+            onChange={v => void seen.push(v)}
+          />
+        )
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+      if (vector.empty) {
+        expect(input.value).toBe('')
+        expect(input.getAttribute('data-empty')).toBe('')
+        expect(hidden.value).toBe('')
+      } else {
+        expect(input.value).not.toBe('')
+        expect(input.getAttribute('data-empty')).toBeNull()
+        expect(hidden.value).toBe(String(vector.value))
+      }
+      expect(seen).toEqual([])
+      await cleanup(container, root)
+    }
+    // Programmatic -0 renders "0", interaction never stores it (NF-MATH-14 echo).
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<Wave2Field value={-0} locale="en-US" />)
+    })
+    expect((container.querySelector('input[type="text"]') as HTMLInputElement).value).toBe('0')
+    await cleanup(container, root)
+  })
+
+  it('NF-FORMAT-05: Omitted Intl precision defaults should remain display-only', async () => {
+    // 1.23456 renders visually rounded ("1.235") but focus/blur without
+    // editing never republishes, truncates, or reparses the number.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<Wave2Field value={1.23456} locale="en-US" name="qty" onChange={v => void seen.push(v)} />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    expect(input.value).toBe('1.235')
+    expect(hidden.value).toBe('1.23456')
+    await React.act(async () => {
+      input.focus()
+    })
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(input.getAttribute('data-editing')).toBeNull()
+    expect(input.value).toBe('1.235')
+    expect(hidden.value).toBe('1.23456')
+    await cleanup(container, root)
+  })
+
+  it('NF-FORMAT-06: Authored fraction rounding should apply only at a dirty commit boundary', async () => {
+    // Snap + fine step keeps every vector on-lattice so only the authored
+    // rounding moves the candidate; each commit publishes one request.
+    const vectors: Array<{ text: string; formatOptions: Intl.NumberFormatOptions; expected: number }> = [
+      { text: '2.5', formatOptions: { maximumFractionDigits: 0 }, expected: 3 },
+      { text: '-2.5', formatOptions: { maximumFractionDigits: 0 }, expected: -3 },
+      { text: '2.5', formatOptions: { maximumFractionDigits: 0, roundingMode: 'halfEven' }, expected: 2 },
+      { text: '2.1', formatOptions: { maximumFractionDigits: 0, roundingMode: 'ceil' }, expected: 3 },
+      { text: '2.9', formatOptions: { maximumFractionDigits: 0, roundingMode: 'floor' }, expected: 2 },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      const renderEcho = (value: number | null) =>
+        root.render(
+          <Wave2Field
+            value={value}
+            locale="en-US"
+            commitBehavior="snap"
+            step={0.01}
+            formatOptions={vector.formatOptions}
+            onChange={v => void seen.push(v)}
+          />
+        )
+      await React.act(async () => {
+        renderEcho(0)
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, vector.text)
+      })
+      expect(seen).toEqual([])
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(seen).toEqual([vector.expected])
+      await React.act(async () => {
+        renderEcho(vector.expected)
+      })
+      expect(input.value).toBe(
+        new Intl.NumberFormat('en-US', vector.formatOptions).format(vector.expected)
+      )
+      expect(input.getAttribute('data-editing')).toBeNull()
+      await cleanup(container, root)
+    }
+    // Clean rerenders keep the unmodified controlled number: display shows
+    // the rounded image while the hidden value and callback log stay exact.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(
+        <Wave2Field
+          value={2.5}
+          locale="en-US"
+          name="qty"
+          commitBehavior="snap"
+          step={0.01}
+          formatOptions={{ maximumFractionDigits: 0 }}
+          onChange={v => void seen.push(v)}
+        />
+      )
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    expect(input.value).toBe('3')
+    expect((container.querySelector('input[type="hidden"]') as HTMLInputElement).value).toBe('2.5')
+    await React.act(async () => {
+      root.render(
+        <Wave2Field
+          value={2.5}
+          locale="en-US"
+          name="qty"
+          commitBehavior="snap"
+          step={0.01}
+          formatOptions={{ maximumFractionDigits: 0 }}
+          onChange={v => void seen.push(v)}
+        />
+      )
+    })
+    expect(seen).toEqual([])
+    expect(input.value).toBe('3')
+    await cleanup(container, root)
+  })
+
+  it('NF-FORMAT-07: Authored significant digits, priority, and rounding increments should produce observable public commit results', async () => {
+    // Priority vectors use a fine step so snap is the identity and only
+    // the authored priority moves the candidate (snap runs before rounding).
+    const vectors: Array<{
+      text: string
+      step: number
+      formatOptions: Intl.NumberFormatOptions
+      expected: number
+    }> = [
+      {
+        text: '1234.5',
+        step: 0.01,
+        formatOptions: { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
+        expected: 1230,
+      },
+      {
+        text: '1.23',
+        step: 0.01,
+        formatOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2, roundingIncrement: 5 },
+        expected: 1.25,
+      },
+      {
+        text: '1.2345',
+        step: 0.0001,
+        formatOptions: {
+          minimumFractionDigits: 2,
+          maximumSignificantDigits: 3,
+          roundingPriority: 'morePrecision',
+        },
+        expected: 1.235,
+      },
+      {
+        text: '1.2345',
+        step: 0.0001,
+        formatOptions: {
+          minimumFractionDigits: 2,
+          maximumSignificantDigits: 3,
+          roundingPriority: 'lessPrecision',
+        },
+        expected: 1.23,
+      },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <Wave2Field
+            value={0}
+            locale="en-US"
+            commitBehavior="snap"
+            step={vector.step}
+            formatOptions={vector.formatOptions}
+            onChange={v => void seen.push(v)}
+          />
+        )
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, vector.text)
+      })
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(seen).toEqual([vector.expected])
+      await cleanup(container, root)
+    }
+    // Invalid combinations diagnose before interaction, naming the props.
+    expect(() =>
+      renderToString(
+        <Wave2Field value={0} locale="en-US" formatOptions={{ minimumFractionDigits: 5, maximumFractionDigits: 2 }} />
+      )
+    ).toThrow(/"locale"\/"formatOptions"/)
+    expect(() =>
+      renderToString(
+        <Wave2Field value={0} locale="en-US" formatOptions={{ maximumFractionDigits: 2, roundingIncrement: 7 }} />
+      )
+    ).toThrow(/"locale"\/"formatOptions"/)
+  })
+
+  it('NF-FORMAT-08: Percent rounding should occur at display scale while currency and units retain numeric scale', async () => {
+    // Percent: the commit rounds the displayed 12.55% and publishes the
+    // fractional candidate 0.125.
+    const seenPercent: Array<number | null> = []
+    const percentMount = mount()
+    const renderPercent = (value: number | null) =>
+      percentMount.root.render(
+        <Wave2Field
+          value={value}
+          locale="en-US"
+          commitBehavior="snap"
+          step={0.005}
+          formatOptions={{ style: 'percent', maximumFractionDigits: 1 }}
+          onChange={v => void seenPercent.push(v)}
+        />
+      )
+    await React.act(async () => {
+      renderPercent(0)
+    })
+    const percentInput = percentMount.container.querySelector('input[type="text"]') as HTMLInputElement
+    await React.act(async () => {
+      percentInput.focus()
+      setNativeValue(percentInput, '12.55%')
+    })
+    await React.act(async () => {
+      pressKey(percentInput, 'Enter')
+    })
+    expect(seenPercent).toEqual([0.125])
+    await React.act(async () => {
+      renderPercent(0.125)
+    })
+    expect(percentInput.value).toBe('12.5%')
+    await cleanup(percentMount.container, percentMount.root)
+    // Percent-unit and currency keep numeric scale: bare digits commit
+    // unscaled and echo with their unit/currency display.
+    const seenUnit: Array<number | null> = []
+    const unitMount = mount()
+    const renderUnit = (value: number | null) =>
+      unitMount.root.render(
+        <Wave2Field
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'unit', unit: 'percent' }}
+          onChange={v => void seenUnit.push(v)}
+        />
+      )
+    await React.act(async () => {
+      renderUnit(0)
+    })
+    const unitInput = unitMount.container.querySelector('input[type="text"]') as HTMLInputElement
+    await React.act(async () => {
+      unitInput.focus()
+      setNativeValue(unitInput, '12.5')
+    })
+    await React.act(async () => {
+      pressKey(unitInput, 'Enter')
+    })
+    expect(seenUnit).toEqual([12.5])
+    await React.act(async () => {
+      renderUnit(12.5)
+    })
+    expect(unitInput.value).toBe(new Intl.NumberFormat('en-US', { style: 'unit', unit: 'percent' }).format(12.5))
+    await cleanup(unitMount.container, unitMount.root)
+    const seenCurrency: Array<number | null> = []
+    const currencyMount = mount()
+    const renderCurrency = (value: number | null) =>
+      currencyMount.root.render(
+        <Wave2Field
+          value={value}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+          onChange={v => void seenCurrency.push(v)}
+        />
+      )
+    await React.act(async () => {
+      renderCurrency(0)
+    })
+    const currencyInput = currencyMount.container.querySelector('input[type="text"]') as HTMLInputElement
+    await React.act(async () => {
+      currencyInput.focus()
+      setNativeValue(currencyInput, '$12.50')
+    })
+    await React.act(async () => {
+      pressKey(currencyInput, 'Enter')
+    })
+    expect(seenCurrency).toEqual([12.5])
+    await React.act(async () => {
+      renderCurrency(12.5)
+    })
+    expect(currencyInput.value).toBe('$12.50')
+    await cleanup(currencyMount.container, currencyMount.root)
+  })
+})
+
+describe('NumberField wave-2 parsing', () => {
+  it('NF-PARSE-04: NumberField should preserve incomplete localized grammar as dirty text without publishing a substitute value', async () => {
+    // Empty, sign-only, decimal-only, trailing decimal/group, affix
+    // partial, and incomplete exponent strings stay verbatim + dirty with
+    // no numeric callback; commit reverts to controlled state.
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<Wave2Field value={5} locale="en-US" name="qty" onChange={v => void seen.push(v)} />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    for (const partial of ['-', '.', '1.', '1,', '$', '1e', '1.5e+']) {
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, partial)
+      })
+      expect(input.value).toBe(partial)
+      expect(input.getAttribute('data-editing')).toBe('')
+      expect(seen).toEqual([])
+      expect(hidden.value).toBe('5')
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(seen).toEqual([])
+      expect(input.value).toBe('5')
+      expect(hidden.value).toBe('5')
+      expect(input.getAttribute('data-editing')).toBeNull()
+    }
+    await cleanup(container, root)
+  })
+
+  it('NF-PARSE-05: Current-locale decimal and group meaning should win over ambiguous foreign punctuation', async () => {
+    const vectors: Array<{ locale: string; text: string; expected: number | null }> = [
+      { locale: 'en-US', text: '1,234.5', expected: 1234.5 },
+      { locale: 'de-DE', text: '1.234,5', expected: 1234.5 },
+      { locale: 'fr-FR', text: '1 234,5', expected: 1234.5 },
+      // Deterministic rejection, never punctuation guessing.
+      { locale: 'en-US', text: '1.2.3', expected: null },
+      { locale: 'en-US', text: '12,34,567', expected: null },
+      { locale: 'de-DE', text: '1,2,3', expected: null },
+      { locale: 'de-DE', text: '1.2.3', expected: null },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(<Wave2Field value={0} locale={vector.locale} onChange={v => void seen.push(v)} />)
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, vector.text)
+      })
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      if (vector.expected === null) {
+        expect(seen).toEqual([])
+        expect(input.value).toBe('0')
+      } else {
+        expect(seen).toEqual([vector.expected])
+      }
+      await cleanup(container, root)
+    }
+  })
+
+  it('NF-PARSE-14: Empty, nonnumeric, overflowing, and nonfinite text should never cross the numeric callback', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<Wave2Field value={5} locale="en-US" name="qty" onChange={v => void seen.push(v)} />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    for (const text of ['   ', 'abc', '$', 'NaN', 'Infinity', '1e999', '-Infinity', '12abc34']) {
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, text)
+      })
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      // Only numbers are asserted absent: whitespace-only commits the empty
+      // null request, everything else reverts with zero callback.
+      for (const candidate of seen) {
+        expect(typeof candidate).not.toBe('number')
+      }
+      expect(input.value).toBe('5')
+      expect(hidden.value).toBe('5')
+      expect(input.getAttribute('data-editing')).toBeNull()
+    }
+    expect(seen).toEqual([null])
+    await cleanup(container, root)
+  })
+})
+
+describe('NumberField wave-2 commit and semantics', () => {
+  it('NF-A11Y-04: Authored descriptions and error relationships should survive managed validity changes', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    const renderField = (describedby: string, errormessage: string, invalid: boolean) =>
+      root.render(
+        <NumberField value={5} locale="en-US" invalid={invalid} onChange={v => void seen.push(v)}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input
+              aria-label="Quantity"
+              aria-describedby={describedby}
+              aria-errormessage={errormessage}
+            />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    await React.act(async () => {
+      renderField('desc-a desc-b', 'err-a', false)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    expect(input.getAttribute('aria-describedby')).toBe('desc-a desc-b')
+    expect(input.getAttribute('aria-errormessage')).toBe('err-a')
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    // Owned failure toggles managed invalid without touching relationships.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, 'junk')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(input.getAttribute('aria-describedby')).toBe('desc-a desc-b')
+    expect(input.getAttribute('aria-errormessage')).toBe('err-a')
+    // Recovery + replaced IDs: exact new tokens, no stale duplicates.
+    await React.act(async () => {
+      setNativeValue(input, '6')
+    })
+    expect(input.getAttribute('aria-invalid')).toBeNull()
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(input.value).toBe('5')
+    await React.act(async () => {
+      renderField('desc-c', 'err-b', true)
+    })
+    expect(input.getAttribute('aria-describedby')).toBe('desc-c')
+    expect(input.getAttribute('aria-errormessage')).toBe('err-b')
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(seen).toEqual([6])
+    await cleanup(container, root)
+  })
+
+  it('NF-COMMIT-04: Empty commit should retry null when controlled value is still non-null', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    const renderEcho = (value: number | null) =>
+      root.render(<Wave2Field value={value} locale="en-US" name="qty" onChange={v => void seen.push(v)} />)
+    await React.act(async () => {
+      renderEcho(5)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    // Clearing stages a dirty empty session with no live request (B-19).
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '')
+    })
+    expect(input.getAttribute('data-editing')).toBe('')
+    expect(seen).toEqual([])
+    // Blur commits the null retry; rejection restores controlled display.
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([null])
+    expect(input.value).toBe('5')
+    expect(hidden.value).toBe('5')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    // Still non-null, so a second empty commit retries again.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([null, null])
+    expect(hidden.value).toBe('5')
+    // Acceptance ends the dirty state with canonical empty display.
+    await React.act(async () => {
+      renderEcho(null)
+    })
+    expect(input.value).toBe('')
+    expect(hidden.value).toBe('')
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+
+  it('NF-COMMIT-05: Snap commit should publish only its final documented candidate', async () => {
+    // Clamp, midpoint (W-02 half-up), lattice, and explicit-rounding vectors
+    // each publish one final request with no intermediate callbacks.
+    const vectors: Array<{
+      text: string
+      initial: number
+      min?: number
+      max?: number
+      step?: number
+      formatOptions?: Intl.NumberFormatOptions
+      expected: number
+    }> = [
+      { text: '25', initial: 0, min: 0, max: 10, step: 1, expected: 10 },
+      { text: '-5', initial: 5, min: 0, max: 10, step: 1, expected: 0 },
+      { text: '2.5', initial: 0, step: 1, expected: 3 },
+      { text: '7', initial: 0, min: 0, max: 10, step: 3, expected: 6 },
+      { text: '2.5', initial: 0, step: 0.01, formatOptions: { maximumFractionDigits: 0 }, expected: 3 },
+    ]
+    for (const vector of vectors) {
+      const seen: Array<number | null> = []
+      const { container, root } = mount()
+      await React.act(async () => {
+        root.render(
+          <Wave2Field
+            value={vector.initial}
+            locale="en-US"
+            commitBehavior="snap"
+            min={vector.min}
+            max={vector.max}
+            step={vector.step}
+            formatOptions={vector.formatOptions}
+            onChange={v => void seen.push(v)}
+          />
+        )
+      })
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, vector.text)
+      })
+      expect(seen).toEqual([])
+      await React.act(async () => {
+        pressKey(input, 'Enter')
+      })
+      expect(seen).toEqual([vector.expected])
+      await cleanup(container, root)
+    }
+  })
+
+  it('NF-COMMIT-09: A no-edit focus/blur cycle should preserve full controlled precision', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    await React.act(async () => {
+      root.render(<Wave2Field value={1.23456} locale="en-US" name="qty" onChange={v => void seen.push(v)} />)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+    })
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await React.act(async () => {
+      input.blur()
+    })
+    expect(seen).toEqual([])
+    expect(input.getAttribute('data-editing')).toBeNull()
+    expect(input.value).toBe('1.235')
+    expect(hidden.value).toBe('1.23456')
+    await cleanup(container, root)
+  })
+
+  it('NF-KEY-06: A complete dirty candidate should be the base for keyboard stepping', async () => {
+    // B-19 engine: no live request exists to reject — the dirty candidate is
+    // the step base, partials fall back to controlled value, and only the
+    // stepped candidate publishes (no intermediate raw commit).
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    const renderEcho = (value: number | null) =>
+      root.render(<Wave2Field value={value} locale="en-US" onChange={v => void seen.push(v)} />)
+    await React.act(async () => {
+      renderEcho(5)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '7')
+    })
+    await React.act(async () => {
+      pressKey(input, 'ArrowUp')
+    })
+    expect(seen).toEqual([8])
+    expect(input.getAttribute('data-editing')).toBeNull()
+    // Rejection authority: without an echo the controlled display stands.
+    expect(input.value).toBe('5')
+    // Acceptance authority: the echo formats the stepped candidate.
+    await React.act(async () => {
+      renderEcho(8)
+    })
+    expect(input.value).toBe('8')
+    // Incomplete partials fall back to the controlled value as the base.
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '-')
+    })
+    await React.act(async () => {
+      pressKey(input, 'ArrowDown')
+    })
+    expect(seen).toEqual([8, 7])
+    expect(input.getAttribute('data-editing')).toBeNull()
+    await cleanup(container, root)
+  })
+})
+
+describe('NumberField wave-2 environment and composition', () => {
+  it('NF-ENV-04: Independent SSR roots should require distinct identifierPrefix values or explicit Input IDs', async () => {
+    const errors: string[] = []
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      // Unprotected SSR roots mint the same deterministic generated id, so
+      // hydrating beside each other diagnoses the deployment mismatch.
+      // (React 19 client roots are globally unique — the collision is
+      // SSR-only, which is exactly the case's scope.)
+      const htmlA = renderToString(<Wave2Field value={1} locale="en-US" />)
+      const htmlB = renderToString(<Wave2Field value={2} locale="en-US" />)
+      const idOf = (html: string) => html.match(/<input[^>]*type="text"[^>]*id="([^"]+)"/)?.[1] ?? ''
+      expect(idOf(htmlA)).not.toBe('')
+      expect(idOf(htmlB)).toBe(idOf(htmlA))
+      const { hydrateRoot } = await import('react-dom/client')
+      const first = document.createElement('div')
+      const second = document.createElement('div')
+      first.innerHTML = htmlA
+      second.innerHTML = htmlB
+      document.body.append(first, second)
+      await React.act(async () => {
+        hydrateRoot(first, <Wave2Field value={1} locale="en-US" />)
+      })
+      expect(errors.some(message => /collides across independent roots/.test(message))).toBe(true)
+      first.remove()
+      second.remove()
+      // Distinct identifierPrefix values keep the relationships unique.
+      errors.length = 0
+      const third = document.createElement('div')
+      const fourth = document.createElement('div')
+      document.body.append(third, fourth)
+      const rootC = createRoot(third, { identifierPrefix: 'left-' })
+      const rootD = createRoot(fourth, { identifierPrefix: 'right-' })
+      await React.act(async () => {
+        rootC.render(<Wave2Field value={1} locale="en-US" />)
+        rootD.render(<Wave2Field value={2} locale="en-US" />)
+      })
+      const idC = (third.querySelector('input[type="text"]') as HTMLInputElement).id
+      const idD = (fourth.querySelector('input[type="text"]') as HTMLInputElement).id
+      expect(idC).not.toBe(idD)
+      expect(errors).toEqual([])
+      await React.act(async () => {
+        rootC.unmount()
+        rootD.unmount()
+      })
+      third.remove()
+      fourth.remove()
+      // Explicit Input ids protect roots without any prefix coordination.
+      errors.length = 0
+      const fifth = document.createElement('div')
+      const sixth = document.createElement('div')
+      document.body.append(fifth, sixth)
+      const rootE = createRoot(fifth)
+      const rootF = createRoot(sixth)
+      const explicit = (id: string) => (
+        <NumberField value={1} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input id={id} aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+      await React.act(async () => {
+        rootE.render(explicit('env-left-input'))
+        rootF.render(explicit('env-right-input'))
+      })
+      expect(errors).toEqual([])
+      await React.act(async () => {
+        rootE.unmount()
+        rootF.unmount()
+      })
+      fifth.remove()
+      sixth.remove()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('NF-COMP-03: A percent NumberField should type 12.5% only with explicit fractional grammar and compatible step', async () => {
+    const seen: Array<number | null> = []
+    const { container, root } = mount()
+    const renderEcho = (value: number | null) =>
+      root.render(
+        <form data-testid="comp-form">
+          <Wave2Field
+            value={value}
+            locale="en-US"
+            name="pct"
+            min={0}
+            step={0.005}
+            formatOptions={{ style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+            onChange={v => void seen.push(v)}
+          />
+        </form>
+      )
+    await React.act(async () => {
+      renderEcho(0)
+    })
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement
+    const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+    const form = container.querySelector('form') as HTMLFormElement
+    // Nonnegative fractional grammar selects decimal (minus rejected).
+    expect(input.getAttribute('inputmode')).toBe('decimal')
+    await React.act(async () => {
+      input.focus()
+      setNativeValue(input, '12.5%')
+    })
+    await React.act(async () => {
+      pressKey(input, 'Enter')
+    })
+    expect(seen).toEqual([0.125])
+    await React.act(async () => {
+      renderEcho(0.125)
+    })
+    expect(input.value).toBe('12.5%')
+    // Shift-step rides the same lattice from the accepted candidate.
+    await React.act(async () => {
+      input.focus()
+      pressKey(input, 'ArrowUp', { shiftKey: true })
+    })
+    expect(seen).toEqual([0.125, 0.175])
+    // Rejection holds the last accepted display; acceptance formats.
+    expect(input.value).toBe('12.5%')
+    await React.act(async () => {
+      renderEcho(0.175)
+    })
+    expect(input.value).toBe('17.5%')
+    // Display rounding never feeds back into the numeric authority.
+    await React.act(async () => {
+      renderEcho(0.126)
+    })
+    expect(input.value).toBe('12.6%')
+    expect(hidden.value).toBe('0.126')
+    expect(seen).toEqual([0.125, 0.175])
+    // Submit serializes the canonical fractional payload.
+    await React.act(async () => {
+      renderEcho(0.175)
+    })
+    let prevented = true
+    await React.act(async () => {
+      prevented = !form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    })
+    expect(prevented).toBe(false)
+    expect(hidden.value).toBe('0.175')
+    await cleanup(container, root)
+  })
+})

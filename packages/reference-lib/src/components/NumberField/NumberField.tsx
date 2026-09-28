@@ -165,6 +165,9 @@ function parseDraftNumber(text: string, symbols: DraftNumberSymbols, percentStyl
   if (decimalIndex >= 0) {
     head = core.slice(0, decimalIndex)
     tail = core.slice(decimalIndex + symbols.decimal.length)
+    // A trailing decimal ("1.") is incomplete grammar, never a commitable
+    // number (NF-PARSE-04): it stays dirty and reverts at the boundary.
+    if (tail === '') return NaN
     // One decimal separator only; group separators never follow it.
     if (tail.includes(symbols.decimal)) return NaN
     if (symbols.group !== null && tail.includes(symbols.group)) return NaN
@@ -1873,6 +1876,10 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (disabled || readOnly) return
+        // Synthetic/IME composition suspends stepping and commit (NF-EDIT-11):
+        // the session's final input event carries the text; keys — including
+        // Enter and arrows — stay native and unhandled until it ends.
+        if (e.nativeEvent?.isComposing) return
         const factor = e.shiftKey ? 10 : 1
 
         if (e.key === 'ArrowUp') {

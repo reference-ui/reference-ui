@@ -361,6 +361,155 @@ export const NamedFormFixture = () => {
   )
 }
 
+// Wave-2 commit lab (NF-COMMIT-01/02, NF-EDIT-11/14, NF-FORM-09,
+// NF-COMP-01): echo toggle for accept/reject runs, consumer-first order log,
+// request log, submit counter, and blur/reset targets.
+export const CommitLabFixture = () => {
+  const [value, setValue] = React.useState<number | null>(5)
+  const [log, setLog] = React.useState<string[]>([])
+  const [order, setOrder] = React.useState<string[]>([])
+  const [echo, setEcho] = React.useState(true)
+  const [submits, setSubmits] = React.useState(0)
+  const echoRef = React.useRef(true)
+  echoRef.current = echo
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <form
+          data-testid="commit-lab-form"
+          onSubmit={e => {
+            e.preventDefault()
+            setSubmits(s => s + 1)
+          }}
+        >
+          <NumberField
+            data-testid="commit-lab-field"
+            value={value}
+            locale="en-US"
+            min={0}
+            max={100}
+            step={1}
+            name="qty"
+            onChange={v => {
+              setLog(entries => [...entries, String(v)])
+              setOrder(entries => [...entries, 'request'])
+              if (echoRef.current) setValue(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" data-testid="commit-lab-dec" />
+              <NumberField.Input
+                aria-label="Quantity"
+                data-testid="commit-lab-input"
+                onBlur={() => setOrder(entries => [...entries, 'blur'])}
+                onKeyDown={() => setOrder(entries => [...entries, 'key'])}
+              />
+              <NumberField.Increment aria-label="Increment" data-testid="commit-lab-inc" />
+            </NumberField.Group>
+          </NumberField>
+          <button type="submit" data-testid="commit-lab-submit">
+            Submit
+          </button>
+          <button type="reset" data-testid="commit-lab-reset">
+            Reset
+          </button>
+        </form>
+        <button type="button" data-testid="commit-lab-echo-off" onClick={() => setEcho(false)}>
+          Echo off
+        </button>
+        <button type="button" data-testid="commit-lab-echo-on" onClick={() => setEcho(true)}>
+          Echo on
+        </button>
+        <button type="button" data-testid="commit-lab-outside">
+          Outside
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="commit-lab-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="commit-lab-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="commit-lab-order">
+          order: {order.length > 0 ? order.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="commit-lab-submits">
+          submits: {submits}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// Wave-2 format swap lab (NF-FORMAT-03/04, NF-DYNAMIC-02): swap controls use
+// mousedown-prevented buttons so rerenders never blur the dirty Input.
+export const FormatSwapFixture = () => {
+  const [value, setValue] = React.useState<number | null>(1234.5)
+  const [locale, setLocale] = React.useState('en-US')
+  const [opts, setOpts] = React.useState<Intl.NumberFormatOptions>({ style: 'currency', currency: 'USD' })
+  const [log, setLog] = React.useState<string[]>([])
+  const keepFocus = (e: React.MouseEvent) => e.preventDefault()
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <NumberField
+          data-testid="format-swap-field"
+          value={value}
+          locale={locale}
+          min={0}
+          step={1}
+          name="price"
+          formatOptions={opts}
+          onChange={v => {
+            setLog(entries => [...entries, String(v)])
+            setValue(v)
+          }}
+        >
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Price" data-testid="format-swap-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <button type="button" data-testid="format-swap-same" onMouseDown={keepFocus} onClick={() => setOpts({ ...opts })}>
+          Same options
+        </button>
+        <button
+          type="button"
+          data-testid="format-swap-eur"
+          onMouseDown={keepFocus}
+          onClick={() => setOpts({ style: 'currency', currency: 'EUR' })}
+        >
+          To EUR
+        </button>
+        <button
+          type="button"
+          data-testid="format-swap-de"
+          onMouseDown={keepFocus}
+          onClick={() => setLocale('de-DE')}
+        >
+          To de-DE
+        </button>
+        <button
+          type="button"
+          data-testid="format-swap-scientific"
+          onMouseDown={keepFocus}
+          onClick={() => setOpts({ notation: 'scientific' })}
+        >
+          To scientific
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="format-swap-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="format-swap-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 // PATCHES §6 (NF-DOM-09): type-bypassed unnamed steppers — absent naming
 // on Decrement, an unresolving labelledby on Increment.
 const unnamedDecProps = {} as unknown as NumberFieldDecrementProps
