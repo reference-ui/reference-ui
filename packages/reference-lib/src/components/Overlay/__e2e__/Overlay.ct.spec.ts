@@ -2997,6 +2997,36 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(content).toHaveCount(0)
       await expect(dismissCountEl).toHaveText('1')
     })
+
+    test('OV-TRG-05 reject: Tab-bridge exit stands on the after-Trigger stop when the parent rejects close (FEATURES #6)', async ({
+      page,
+    }) => {
+      const openTrg = page.getByTestId('btn-open-trg-05-reject')
+      const content = page.getByTestId('trg-05-reject-content')
+      const inner1 = page.getByTestId('btn-trg-05-reject-inner-1')
+      const inner2 = page.getByTestId('btn-trg-05-reject-inner-2')
+      const afterTrg = page.getByTestId('btn-after-trg-05-reject')
+      const dismissCountEl = page.getByTestId('trg-05-reject-dismiss-count')
+      const logEl = page.getByTestId('trg-05-reject-log')
+
+      await openTrg.click()
+      await expect(content).toBeVisible()
+      await expect(openTrg).toBeFocused()
+
+      await page.keyboard.press('Tab')
+      await expect(inner1).toBeFocused()
+
+      await page.keyboard.press('Tab')
+      await expect(inner2).toBeFocused()
+
+      // Optimistic-stands: one dismiss request, focus advances relative to
+      // the Trigger and stays there, open DOM is retained.
+      await page.keyboard.press('Tab')
+      await expect(afterTrg).toBeFocused()
+      await expect(content).toBeVisible()
+      await expect(dismissCountEl).toHaveText('1')
+      await expect(logEl).toHaveText('request:true,request:false')
+    })
   })
 
   test.describe('OV-ESC-07: Native top-layer popover Escape', () => {

@@ -27,8 +27,14 @@ record commit `931feb84c` (verified via `git log`).
 4. Closed-content observability — NON-GOAL (b): unmount-when-closed
    absolute; coordinators read authored children + metadata
    (Combobox `authored.ts`). `Overlay.md` + SPEC Out of scope.
-5. Trigger-toggle focus retention — still HOLD-FOR-HQ (untouched).
-6. Tab-bridge reject semantics — still HOLD-FOR-HQ (untouched).
+5. Trigger-toggle focus retention — RETURN-TO-COORDINATOR-TARGET,
+   coordinator-named only: Trigger keeps native focus; input-paired
+   coordinators return focus in consumer `onClick` (DateField
+   `DF-CAL-03`). `OV-TRG-03` + `Overlay.md`.
+6. Tab-bridge reject semantics — OPTIMISTIC-STANDS, joint with Menu:
+   rejected Tab-bridge exits keep focus where Tab put it and retain
+   open DOM (`MN-CLOSE-08` adaptation is the joint freeze). Extended
+   `OV-TRG-05` fixture, same ID.
 
 ## Candidate features (quarantine-sourced)
 

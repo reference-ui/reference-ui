@@ -105,7 +105,22 @@ at all, and if (a), what query surface pays for its staleness proofs.
 
 **Maintainer take:** Good to decide, leaning non-goal — keeping unmount-when-closed absolute wins unless a coordinator proves authored-children inspection insufficient.
 
-### 5. Trigger-toggle focus retention (from DECISIONS gap #5, OPEN)
+### 5. Trigger-toggle focus retention (from DECISIONS gap #5, OPEN) — LANDED 2026-09-28
+
+**Decision: RETURN-TO-COORDINATOR-TARGET, coordinator-named only.**
+`Overlay.Trigger` performs no focus management on toggle: native focus
+stands (the activator keeps platform focus). Coordinators that pair a
+trigger with a text input return focus in their consumer `onClick`,
+which Overlay guarantees runs before the toggle request — DateField's
+`onTriggerClick` (`inputRef.current?.focus()`, `tabIndex={-1}` trigger)
+is the conforming consumer half, pinned by `DF-CAL-03` "input keeps
+focus". No mousedown-default-prevention policy on Trigger (it would
+break native activator focus and screen-reader expectations for every
+trigger), no new Overlay prop, no `restoreFocus` path for toggles.
+Combobox select-only needs nothing: the Trigger IS the focus source, so
+native toggle focus is already correct. Pinned Overlay-side by
+`OV-TRG-03` (consumer-first ordering on both the open and dismiss
+edges: `consumerClick,onOpen` / `consumerClick,onDismiss`).
 
 **What it does:** Clicking an open `Overlay.Trigger` toggles closed while
 focus stays on (or returns to) a designated input instead of landing on the
@@ -121,7 +136,25 @@ Trigger toggles vs only coordinator-named targets.
 
 **Maintainer take:** Good to add — the cheapest open choreography call, with a directly feelable DateField payoff.
 
-### 6. Tab-bridge reject semantics (from DECISIONS gap #6, DEFERRED)
+### 6. Tab-bridge reject semantics (from DECISIONS gap #6, DEFERRED) — LANDED 2026-09-28
+
+**Decision: OPTIMISTIC-STANDS, documented final, joint with Menu.**
+Tab past the last Content control (`isolation` focus off) preventDefaults,
+fires one `onDismiss`, and moves focus relative to Trigger synchronously —
+and when the controlled parent rejects by staying open, the focus move
+stands and Content stays mounted. No reclaim into Content, no
+will-you-accept handshake: Tab latency is a platform contract, and
+prevent-then-restore would add perceptible jank plus break
+Shift+Tab-into-dialog (`MN-CLOSE-10`) and native traversal expectations.
+The Menu joint shares the shape: Menu's Tab handler already
+preventDefaults + requests close + moves relative to the trigger
+optimistically, so `MN-CLOSE-08`'s adaptation (one request, open DOM
+retained, focus NOT retained) is the joint freeze — no Menu change.
+Popover inherits via Overlay with no Popover fixture (Popover SPEC
+"Won't do" already defers the bridge to `OV-TRG-05`). Pinned by the
+extended `OV-TRG-05` fixture with a rejecting parent
+(`fixtures/dialog-fixture.tsx` reject bridge; CT `OV-TRG-05 reject`,
+same ID — no new `OV-*` case per SPEC).
 
 **What it does:** Defines the focus outcome when the Overlay Tab bridge
 (`OV-TRG-05`: Tab past the last control advances relative to Trigger and fires

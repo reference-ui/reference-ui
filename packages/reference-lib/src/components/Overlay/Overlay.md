@@ -300,6 +300,28 @@ live only on Popover; it is Overlay's, because Overlay now owns Trigger.
 move. Omitted `restoreFocus` returns to the pre-open target after
 Presence exit.
 
+### Trigger toggle focus (FEATURES #5)
+
+Toggling from an open Trigger performs no Overlay focus management:
+native focus stands on the activator. Coordinators that pair a trigger
+with a text input return focus themselves in their consumer `onClick`,
+which runs before the toggle request (`OV-TRG-03` pins the ordering on
+both edges) — DateField's `input.focus()` in `onTriggerClick` is the
+conforming shape, pinned by `DF-CAL-03` "input keeps focus". There is
+no mousedown-prevention policy on Trigger and no `restoreFocus` path
+for toggles; coordinator-named targets only, no new prop.
+
+### Tab-bridge reject (FEATURES #6)
+
+When the bridge exit (Tab past the last control advances relative to
+Trigger and fires one `onDismiss`) meets a controlled parent that stays
+open, the optimistic focus move stands and Content stays mounted — no
+reclaim into Content, no will-you-accept handshake. Menu shares the
+shape (`MN-CLOSE-05` moves the same way; `MN-CLOSE-08`'s one-request /
+open-DOM-retained / focus-not-retained adaptation is the joint freeze),
+and Popover inherits it with no Popover fixture. Pinned by the extended
+`OV-TRG-05` rejecting-parent fixture (same ID, no new case).
+
 ---
 
 ## Handle (edge drag)

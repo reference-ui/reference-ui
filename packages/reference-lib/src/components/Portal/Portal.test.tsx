@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { createRoot, type Root } from 'react-dom/client'
+import { createRoot, hydrateRoot, type Root } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { Div, LayerScopeContext, ColorModeContext } from '@reference-ui/react'
 import { Portal } from './Portal'
 
@@ -94,7 +95,7 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
     expect(portalNested?.getAttribute('data-color-mode')).toBe('dark')
   })
 
-  it('PT-REACT-05: switching containers performs one subtree replacement (state resets, effects rerun)', async () => {
+  it('PT-REACT-05 + PT-CONTAINER-06: switching containers replaces once; same-container rerenders preserve the subtree', async () => {
     const targetA = document.createElement('div')
     targetA.id = 'portal-unit-target-a'
     const targetB = document.createElement('div')
@@ -183,6 +184,112 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
     } finally {
       targetA.remove()
       targetB.remove()
+    }
+  })
+
+  it('PT-CONTAINER-03: waits for a resolver function that initially returns null, with no transient body copy', async () => {
+    const target = document.createElement('section')
+    target.id = 'portal-unit-resolver-target'
+    document.body.appendChild(target)
+
+    let resolved: Element | null = null
+    const resolver = () => resolved
+
+    try {
+      await React.act(async () => {
+        root.render(
+          <Portal container={resolver}>
+            <div id="portal-unit-resolver-child">Resolver child</div>
+          </Portal>
+        )
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      // Unresolved: nothing in place, nothing in body.
+      expect(document.getElementById('portal-unit-resolver-child')).toBeNull()
+      expect(container.querySelector('#portal-unit-resolver-child')).toBeNull()
+
+      // Resolve and rerender: exactly one copy in the returned element.
+      resolved = target
+      await React.act(async () => {
+        root.render(
+          <Portal container={resolver}>
+            <div id="portal-unit-resolver-child">Resolver child</div>
+          </Portal>
+        )
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      const child = document.getElementById('portal-unit-resolver-child')
+      expect(child?.parentElement).toBe(target)
+      expect(document.body.querySelectorAll('#portal-unit-resolver-child').length).toBe(1)
+    } finally {
+      target.remove()
+      document.getElementById('portal-unit-resolver-child')?.remove()
+    }
+  })
+
+  it('PT-ENV-01: server render emits no portal child markup and touches no browser globals', () => {
+    const html = renderToString(
+      <div id="portal-ssr-host">
+        <Portal>
+          <div id="portal-ssr-child">Server child</div>
+        </Portal>
+      </div>
+    )
+
+    expect(html).toContain('portal-ssr-host')
+    expect(html).not.toContain('portal-ssr-child')
+  })
+
+  it('PT-ENV-02: hydrates the server shell then attaches exactly one body child after the mount gate', async () => {
+    const errors: string[] = []
+    const origError = console.error
+    console.error = (...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    }
+    try {
+      const html = renderToString(
+        <div id="portal-ssr-hydrate-host">
+          <Portal>
+            <div id="portal-ssr-hydrate-child">Hydrated child</div>
+          </Portal>
+        </div>
+      )
+      expect(html).not.toContain('portal-ssr-hydrate-child')
+
+      const host = document.createElement('div')
+      host.innerHTML = html
+      document.body.appendChild(host)
+
+      const hydrateRootHandle = hydrateRoot(
+        host,
+        <div id="portal-ssr-hydrate-host">
+          <Portal>
+            <div id="portal-ssr-hydrate-child">Hydrated child</div>
+          </Portal>
+        </div>
+      )
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      // No in-place first-frame child: the mount gate portals to body.
+      expect(host.querySelector('#portal-ssr-hydrate-child')).toBeNull()
+      const child = document.getElementById('portal-ssr-hydrate-child')
+      expect(child?.parentElement).toBe(document.body)
+
+      await React.act(async () => {
+        hydrateRootHandle.unmount()
+      })
+      host.remove()
+      expect(errors.join('\n')).not.toMatch(/hydrat/i)
+    } finally {
+      console.error = origError
     }
   })
 
