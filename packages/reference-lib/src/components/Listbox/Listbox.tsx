@@ -196,28 +196,44 @@ interface ListboxContextValue {
 
 const ListboxContext = React.createContext<ListboxContextValue | null>(null)
 
-export function ListboxOption<TValue extends string = string>({
-  value,
-  disabled = false,
-  textValue,
-  index,
-  children,
-  onClick,
-  onKeyDown,
-  onKeyDownCapture,
-  onPointerDown,
-  onMouseDown,
-  onPointerEnter,
-  onFocus,
-  className,
-  style,
-  id: idProp,
-  ...props
-}: ListboxOptionProps<TValue>) {
+// String-typed forwardRef implementation (LB-DOM-05: the option ref promise
+// holds on React 17/18 too, where ref-as-prop does not exist). The public
+// generic face follows the same cast pattern as ListboxComponentBase.
+const ListboxOptionBase = React.forwardRef<HTMLDivElement, ListboxOptionProps>(
+  function ListboxOption(
+    {
+      value,
+      disabled = false,
+      textValue,
+      index,
+      children,
+      onClick,
+      onKeyDown,
+      onKeyDownCapture,
+      onPointerDown,
+      onMouseDown,
+      onPointerEnter,
+      onFocus,
+      className,
+      style,
+      id: idProp,
+      ...props
+    }: ListboxOptionProps,
+    forwardedRef
+  ) {
   const context = React.useContext(ListboxContext)
   const combobox = React.useContext(ComboboxContext)
   const optionRef = React.useRef<HTMLDivElement | null>(null)
   const optionId = idProp ?? `ref-opt-${value}`
+
+  const composedOptionRef = (node: HTMLDivElement | null) => {
+    optionRef.current = node
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(node)
+    } else if (forwardedRef && typeof forwardedRef === 'object' && 'current' in forwardedRef) {
+      ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+    }
+  }
 
   // LB-DOM-06: Register and check uniqueness during render
   context?.registerRenderValue(value, optionId)
@@ -305,6 +321,13 @@ export function ListboxOption<TValue extends string = string>({
   }
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // LB-DOM-04 / LB-POINTER-04: disabled options are strictly inert — no
+    // consumer activation, and the default (compatibility mouse events) is
+    // suppressed so the press cannot start a focus/selection path.
+    if (isDisabled) {
+      e.preventDefault()
+      return
+    }
     onPointerDown?.(e)
     if (e.defaultPrevented) return
     if (e.button === 0 || e.pointerType === 'touch') {
@@ -313,6 +336,12 @@ export function ListboxOption<TValue extends string = string>({
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // LB-DOM-04: suppress the mousedown default so a pointer press on a
+    // disabled option cannot move DOM focus to it (native disabled parity).
+    if (isDisabled) {
+      e.preventDefault()
+      return
+    }
     onMouseDown?.(e)
     if (e.defaultPrevented) return
     if (e.button === 0) {
@@ -328,8 +357,13 @@ export function ListboxOption<TValue extends string = string>({
   }
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // LB-POINTER-04: a disabled option never runs consumer activation.
+    if (isDisabled) {
+      hasTriggeredPressRef.current = false
+      return
+    }
     onClick?.(e)
-    if (e.defaultPrevented || isDisabled) {
+    if (e.defaultPrevented) {
       hasTriggeredPressRef.current = false
       return
     }
@@ -372,15 +406,27 @@ export function ListboxOption<TValue extends string = string>({
     if (!e.currentTarget.contains(e.target as Node)) return
     if (isInteractiveDescendant(e.target, e.currentTarget)) return
 
+    // LB-POINTER-04: a disabled option never runs consumer activation —
+    // not even for pass-through keys. Observation (focus landing on an
+    // already-focused node) still reports via onFocus.
+    if (isDisabled) return
+
     if (e.key === 'PageUp' || e.key === 'PageDown' || e.key === 'Escape' || e.key === 'Tab') {
       onKeyDown?.(e)
       return
     }
 
     onKeyDown?.(e)
-    if (e.defaultPrevented || isDisabled) return
+    if (e.defaultPrevented) return
+
+    // LB-KEY-06: modified activation stays with the browser/application —
+    // Ctrl/Meta/Alt/Shift+Enter (or Space) must not select. Navigation keys
+    // intentionally keep kernel parity (arrows move regardless of modifiers;
+    // movement never selects, so LB-MULTI-05 still holds).
+    const hasActivationModifier = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey
 
     if (e.key === 'Enter') {
+      if (hasActivationModifier) return
       e.preventDefault()
       if (context) {
         context.selectOption(value)
@@ -391,6 +437,7 @@ export function ListboxOption<TValue extends string = string>({
     }
 
     if (e.key === ' ') {
+      if (hasActivationModifier) return
       const hasBuffer = context?.typeaheadHasBuffer?.() ?? false
       if (!hasBuffer) {
         e.preventDefault()
@@ -441,6 +488,10 @@ export function ListboxOption<TValue extends string = string>({
 
   const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     onFocus?.(e)
+    // LB-KEY-07: focus landing in an interactive descendant (input, button)
+    // is the descendant's own focus — it must not promote the option to the
+    // roving tab stop or the combobox active value.
+    if (e.target !== e.currentTarget) return
     if (!isDisabled && context) {
       context.setFocusedValue(value)
     }
@@ -451,7 +502,7 @@ export function ListboxOption<TValue extends string = string>({
 
   return (
     <Div
-      ref={optionRef}
+      ref={composedOptionRef}
       id={optionId}
       role="option"
       tabIndex={tabIndex}
@@ -576,7 +627,17 @@ export function ListboxOption<TValue extends string = string>({
       )}
     </Div>
   )
+  }
+)
+
+export type ListboxOptionComponent = {
+  <TValue extends string = string>(
+    props: ListboxOptionProps<TValue> & React.RefAttributes<HTMLDivElement>
+  ): React.ReactElement | null
 }
+
+// Public generic face over the string-typed forwardRef implementation.
+export const ListboxOption = ListboxOptionBase as unknown as ListboxOptionComponent
 
 export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProps>(
   function Listbox(
@@ -671,10 +732,14 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
 
     const virtualItems = virtual?.items
 
-    // LB-VIRT-09: re-validate mounted indexed options when logical items change
+    // LB-VIRT-09: re-validate mounted indexed options when logical items change.
+    // An atomic adapter replacement also drops any pending target: the index
+    // may name a different logical item under the new order, so the next
+    // command must start from mounted intent, never a stale closure.
     React.useEffect(() => {
       const liveVirtual = virtualRef.current
       if (!liveVirtual || !virtualItems) return
+      setPendingVirtualIndex(null)
       validateVirtualAdapter(liveVirtual, toMountedIndexEntries(optionsMapRef.current.values()))
     }, [virtualItems])
 
@@ -717,6 +782,13 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       const ordered = getOrderedOptions()
       const currentValues = ordered.map(o => o.value)
 
+      // LB-VIRT-06: a pending virtual target owns focus — the mounted set
+      // legitimately lacks it until the window lands. Never recover over it.
+      if (virtual && pendingVirtualIndex != null) {
+        lastOrderedValuesRef.current = currentValues
+        return
+      }
+
       if (focusedValue != null) {
         const currentRecord = ordered.find(o => o.value === focusedValue)
 
@@ -757,11 +829,20 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
           } else {
             setFocusedValue(null)
           }
+        } else if (
+          typeof document !== 'undefined' &&
+          (document.activeElement === null || document.activeElement === document.body)
+        ) {
+          // LB-GROUP-04: the focused value survived (moved between native
+          // groups, same identity) but its DOM node detached and focus fell
+          // to body — restore DOM focus to the same value. Only when focus
+          // has nowhere else to be; never steal from elsewhere.
+          currentRecord.ref.current?.focus()
         }
       }
 
       lastOrderedValuesRef.current = currentValues
-    }, [optionsVersion, focusedValue, getOrderedOptions])
+    }, [optionsVersion, focusedValue, getOrderedOptions, virtual, pendingVirtualIndex])
 
     const isOptionSelected = React.useCallback(
       (val: string) => {
@@ -1102,12 +1183,9 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       [virtual, collator]
     )
 
-    // LB-VIRT-10: Cleanup pending virtual target on unmount
-    React.useEffect(() => {
-      return () => {
-        setPendingVirtualIndex(null)
-      }
-    }, [])
+    // LB-VIRT-10: no unmount cleanup needed — the pending virtual target is
+    // plain component state, so unmount discards it inherently. (A setState
+    // cleanup here would warn on React 17; there is no timer or rAF to kill.)
 
     const contextValue = React.useMemo<ListboxContextValue>(
       () => ({

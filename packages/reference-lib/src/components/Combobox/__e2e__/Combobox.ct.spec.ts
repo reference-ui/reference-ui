@@ -130,6 +130,26 @@ async function readLog(page: Page, testid: string): Promise<string[]> {
   return JSON.parse(text ?? '[]')
 }
 
+/**
+ * Retry-until read for logs written from passive effects (tree expansion
+ * consumption, windowed value-follow scrolls, announcements): the write
+ * lands a microtask after the action, so an instant read races it.
+ */
+async function readLogSoon(page: Page, testid: string): Promise<string[]> {
+  let latest: string[] = []
+  await expect
+    .poll(async () => {
+      latest = await readLog(page, testid)
+      return latest.length
+    })
+    .toBeGreaterThan(0)
+  return latest
+}
+
+async function expectLogSoon(page: Page, testid: string, expected: string[]) {
+  await expect.poll(async () => readLog(page, testid)).toEqual(expected)
+}
+
 async function focusedTestId(page: Page) {
   return page.evaluate(
     () => (document.activeElement as HTMLElement | null)?.getAttribute('data-testid')
@@ -140,6 +160,86 @@ async function expectActiveDescendant(source: Locator, option: Locator) {
   const id = await option.getAttribute('id')
   expect(id).toBeTruthy()
   await expect(source).toHaveAttribute('aria-activedescendant', id!)
+}
+
+/**
+ * Automated accessibility scan over the component-owned surface
+ * (CB-A11Y-01): duplicate IDs, dangling ID references, required
+ * combobox attributes, expanded-controls resolution, and no tab stops
+ * on virtual collection children. Input/Trigger *names* are
+ * application-owned (CB-SELECT-01 parity) and out of the scan; the
+ * component owns the relationship plumbing names travel through.
+ */
+async function scanA11y(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const violations: string[] = []
+    const ids = new Map<string, number>()
+    for (const el of Array.from(document.querySelectorAll('[id]'))) {
+      const id = (el as HTMLElement).id
+      ids.set(id, (ids.get(id) ?? 0) + 1)
+    }
+    for (const [id, count] of ids) {
+      if (count > 1) violations.push(`duplicate id "${id}" x${count}`)
+    }
+    // aria-controls is exempt while collapsed: the coordinator keeps the
+    // stable relationship to the unmounted popover ID by design
+    // (CB-DOM-06 atomicity); expanded controls must resolve (below).
+    const refAttrs = [
+      'aria-activedescendant',
+      'aria-owns',
+      'aria-labelledby',
+      'aria-describedby',
+    ]
+    for (const el of Array.from(document.querySelectorAll('*'))) {
+      for (const attr of refAttrs) {
+        const val = el.getAttribute(attr)
+        if (!val) continue
+        for (const id of val.split(/\s+/).filter(Boolean)) {
+          if (!document.getElementById(id)) {
+            violations.push(`dangling ${attr} "${id}"`)
+          }
+        }
+      }
+    }
+    for (const el of Array.from(document.querySelectorAll('[role="combobox"]'))) {
+      for (const attr of ['aria-expanded', 'aria-controls', 'aria-haspopup']) {
+        if (!el.hasAttribute(attr)) violations.push(`combobox missing ${attr}`)
+      }
+      if (el.tagName === 'INPUT' && !el.hasAttribute('aria-autocomplete')) {
+        violations.push('editable combobox missing aria-autocomplete')
+      }
+      if (el.getAttribute('aria-expanded') === 'true') {
+        const controls = el.getAttribute('aria-controls')
+        if (controls && !document.getElementById(controls)) {
+          violations.push(`expanded combobox dangling aria-controls "${controls}"`)
+        }
+        const desc = el.getAttribute('aria-activedescendant')
+        if (desc) {
+          const target = document.getElementById(desc)
+          const role = target?.getAttribute('role')
+          if (role !== 'option' && role !== 'treeitem' && role !== 'gridcell') {
+            violations.push(`active descendant "${desc}" has role "${role}"`)
+          }
+        }
+      }
+    }
+    // NOTE: treeitem is exempt — nested Tree keeps its roving tab stop
+    // (Tree.tsx, frozen) until the native Tree bridge renders tabindex=-1
+    // under Combobox, mirroring Listbox's nested behavior. Tracked in the
+    // Tree-bridge contract notes; the option/gridcell ban below is the
+    // Combobox-owned surface.
+    for (const el of Array.from(
+      document.querySelectorAll('[role="option"],[role="gridcell"]')
+    )) {
+      const tab = el.getAttribute('tabindex')
+      if (tab !== null && Number(tab) >= 0) {
+        violations.push(
+          `collection child tab stop on #${(el as HTMLElement).id || el.getAttribute('data-testid') || '?'}`
+        )
+      }
+    }
+    return violations
+  })
 }
 
 async function clickPopoverChrome(page: Page, popover: Locator) {
@@ -351,10 +451,26 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     const input = page.getByTestId('scroll-input')
     await input.click()
     await expect(page.getByTestId('scroll-popover')).toBeVisible()
+    await page.keyboard.type('a')
+    await expectActiveDescendant(input, page.getByTestId('scroll-opt-alpha'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('scroll-opt-bravo'))
 
+    // Ancestor scroll dismisses with exactly one granular-before-high-level
+    // sequence and no text revert: unlike blur/outside press, the editing
+    // session continues (focus stays, typed text is preserved).
     await page.evaluate(() => window.scrollBy(0, 400))
     await expect(page.getByTestId('scroll-popover')).toHaveCount(0)
-    expect(await readLog(page, 'scroll-log')).toContain('dismiss')
+    expect(await readLog(page, 'scroll-log')).toEqual([
+      'open',
+      'openChange:true',
+      'input:a',
+      'openChange:false',
+      'dismiss',
+    ])
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('a')
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
   })
 
   test('CB-EDIT-08: pointer commit keeps input focus and fills the label', async ({
@@ -1651,17 +1767,23 @@ test.describe('Combobox cluster B CT', () => {
     )
   })
 
-  test('Tree popup survey: haspopup maps to tree; no navigation bridge exists yet (#6)', async ({
+  test('Tree popup bridge: native registration navigates TreeItems and commits through root onChange (#6)', async ({
     mount,
     page,
   }) => {
     await mount('components/Combobox/Combobox/TreePopupLog')
     const input = page.getByTestId('tp-input')
+    await expect(input).toHaveAttribute('aria-haspopup', 'tree')
     await input.click()
     await expect(page.getByTestId('tp-tree')).toBeVisible()
     await input.press('ArrowDown')
-    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
-    expect(await logOf(page, 'tp-log')).toEqual(['open'])
+    await expectActiveDescendant(input, page.getByTestId('tp-item-leaf-a'))
+    await expect(input).toBeFocused()
+    await input.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tp-item-leaf-b'))
+    await input.press('Enter')
+    expect(await logOf(page, 'tp-log')).toEqual(['open', 'change:leaf-b', 'dismiss'])
+    await expect(page.getByTestId('tp-popover')).toHaveCount(0)
   })
 
   test('CB-COMP-02: filtered both-mode consumer across edit, commit, escape, blur, tab, reject', async ({
@@ -1822,6 +1944,10 @@ test.describe('Combobox playtest CT', () => {
     // Keyboard path: arrows back onto the committed value + Enter.
     await input.click()
     await expect(page.getByTestId('log-opt-bravo')).toBeVisible()
+    // Reopen must settle onto the committed value before arrows run: without
+    // this, a first-frame Down can hit an empty registration order and noop,
+    // leaving Up to walk bravo→alpha (react18 matrix flake).
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
     await page.keyboard.press('ArrowDown')
     await page.keyboard.press('ArrowUp')
     await page.keyboard.press('Enter')
@@ -1977,5 +2103,1346 @@ test.describe('Combobox playtest CT', () => {
       () => (document.activeElement as HTMLElement | null)?.getAttribute('role')
     )
     expect(activeRole).not.toBe('option')
+  })
+})
+
+test.describe('Combobox finish-line P2A CT', () => {
+  test('CB-VIRT-01: windowed Listbox target scrolls into the DOM before its active ID publishes', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/WindowedLog')
+
+    const input = page.getByTestId('wl-input')
+    const popover = page.getByTestId('wl-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // Indices 0..4 mounted: five Downs land index 4 with a real ID.
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expectActiveDescendant(input, page.getByTestId('wl-opt-4'))
+    expect(await readLog(page, 'wl-scroll-log')).toEqual([])
+
+    // The sixth Down targets unmounted index 5: exactly one scroll
+    // request, focus stays, and no ID publishes while absent.
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'wl-scroll-log')).toEqual(['scroll:5:gen0'])
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(input).toBeFocused()
+
+    // Applying the scroll mounts the window; the real ID publishes.
+    await page.getByTestId('wl-apply').click()
+    await expectActiveDescendant(input, page.getByTestId('wl-opt-5'))
+    await page.getByTestId('wl-input').focus()
+    await expect(input).toBeFocused()
+    expect(await readLog(page, 'wl-scroll-log')).toEqual(['scroll:5:gen0'])
+  })
+
+  test('CB-VIRT-02: rapid windowed navigation and metadata replacement keep only the latest request', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/WindowedLog')
+
+    const input = page.getByTestId('wl-input')
+    await input.click()
+    await expect(page.getByTestId('wl-popover')).toBeVisible()
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expectActiveDescendant(input, page.getByTestId('wl-opt-4'))
+
+    // Three keys while the first window is pending: each request is
+    // current at its own time, but nothing publishes until mount.
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'wl-scroll-log')).toEqual([
+      'scroll:5:gen0',
+      'scroll:6:gen0',
+      'scroll:7:gen0',
+    ])
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(input).toBeFocused()
+
+    // Replacing metadata before mounting clears the stale pending slot:
+    // the fallback resolves within the latest collection only, never
+    // the stale value.
+    await page.getByTestId('wl-replace').click()
+    await expectActiveDescendant(input, page.getByTestId('wl-opt-0'))
+    await expect(page.getByTestId('wl-opt-0')).toHaveAttribute('data-value', /^repl-/)
+    await expect(input).toBeFocused()
+
+    // Moving the window re-resolves within the latest collection again.
+    await page.getByTestId('wl-apply').click()
+    await expectActiveDescendant(input, page.getByTestId('wl-opt-3'))
+    await expect(page.getByTestId('wl-opt-3')).toHaveAttribute('data-value', /^repl-/)
+    await expect(input).toBeFocused()
+
+    // Post-replacement navigation uses only the latest callback, and
+    // unmounted targets defer again behind one current request.
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    const scrolls = await readLog(page, 'wl-scroll-log')
+    expect(scrolls[scrolls.length - 1]).toBe('scroll:8:gen1')
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(input).toBeFocused()
+  })
+
+  test('CB-VIRT-03: windowed collection keeps set metadata, selection, and value identity', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/WindowedTriggerLog')
+
+    const trigger = page.getByTestId('wt-trigger')
+    const popover = page.getByTestId('wt-popover')
+    await trigger.click()
+    await expect(popover).toBeVisible()
+
+    // Navigate beyond the mounted window (skipping disabled index 5):
+    // unmounted index 10 pends behind one scroll request.
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    expect(await readLog(page, 'wt-scroll-log')).toEqual(['scroll:10'])
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-10'))
+
+    // Selecting offscreen index 75 while open pends + scrolls to it.
+    await page.getByTestId('wt-select-75').click()
+    await expectLogSoon(page, 'wt-scroll-log', ['scroll:10', 'scroll:75'])
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('wt-apply').click()
+
+    // Mounted options carry logical set metadata; the selected value is
+    // selected immediately with its logical value intact.
+    const opt75 = page.getByTestId('wt-opt-75')
+    await expectActiveDescendant(trigger, opt75)
+    await expect(opt75).toHaveAttribute('aria-setsize', '100')
+    await expect(opt75).toHaveAttribute('aria-posinset', '76')
+    await expect(opt75).toHaveAttribute('aria-selected', 'true')
+
+    // Recommitting the already-selected value is silent (B-36) while
+    // dismissal still runs.
+    await trigger.focus()
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'wt-log')).toEqual(['open', 'dismiss'])
+    await expect(trigger).toHaveText('WTItem75')
+    await expect(popover).toHaveCount(0)
+
+    // Reopening re-requests the selection deterministically (registrations
+    // always land after the open commit, so resolution pends first); the
+    // already-mounted window resolves it with no further scroll.
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await expectLogSoon(page, 'wt-scroll-log', ['scroll:10', 'scroll:75', 'scroll:75'])
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-75'))
+
+    // One commit of a newly mounted target returns the logical value,
+    // never the DOM index.
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'wt-scroll-log')).toEqual([
+      'scroll:10',
+      'scroll:75',
+      'scroll:75',
+      'scroll:76',
+    ])
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-76'))
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'wt-log')).toEqual([
+      'open',
+      'dismiss',
+      'open',
+      'change:wt-item-76',
+      'dismiss',
+    ])
+    await expect(trigger).toHaveText('WTItem76')
+    await expect(popover).toHaveCount(0)
+  })
+
+  test('CB-TREE-01: tree popup navigates visible items and delegates expansion with input focused', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TreeLog')
+
+    const input = page.getByTestId('tb-input')
+    await expect(input).toHaveAttribute('aria-haspopup', 'tree')
+    await input.click()
+    const popover = page.getByTestId('tb-popover')
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('tb-tree')).toHaveAttribute('role', 'tree')
+
+    // Vertical arrows visit mounted visible treeitems only: fruits,
+    // apple, banana (expanded), then veg — never unmounted carrot —
+    // then other, wrapping back to fruits.
+    const order = ['fruits', 'apple', 'banana', 'veg', 'other', 'fruits']
+    for (const value of order) {
+      await page.keyboard.press('ArrowDown')
+      await expectActiveDescendant(input, page.getByTestId(`tb-item-${value}`))
+      await expect(input).toBeFocused()
+    }
+    expect(await readLog(page, 'tb-log')).toEqual(['open'])
+
+    // Redundant expansion enters the first enabled child instead of
+    // emitting: fruits is already expanded, so ArrowRight moves
+    // virtual-active to apple with no onExpandedChange.
+    await expect(page.getByTestId('tb-item-fruits')).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('ArrowRight')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-apple'))
+    await expect(input).toBeFocused()
+    // Negative emission assert: let a late effect write land first.
+    await page.waitForTimeout(150)
+    expect(await readLog(page, 'tb-log')).toEqual(['open'])
+
+    // Collapsing the branch emits once, unmounts the children, and
+    // navigation skips them.
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-fruits'))
+    await page.keyboard.press('ArrowLeft')
+    await expectLogSoon(page, 'tb-log', ['open', 'expanded:'])
+    await expect(page.getByTestId('tb-item-fruits')).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('tb-item-apple')).toHaveCount(0)
+    await expect(page.getByTestId('tb-item-banana')).toHaveCount(0)
+    await expectActiveDescendant(input, page.getByTestId('tb-item-fruits'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-veg'))
+
+    // Re-expand, then type mid-text so the caret sits mid-field:
+    // typing re-actives the first visible item.
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-fruits'))
+    await page.keyboard.press('ArrowRight')
+    await expectLogSoon(page, 'tb-log', ['open', 'expanded:', 'expanded:fruits'])
+    await expect(page.getByTestId('tb-item-apple')).toBeVisible()
+    await page.keyboard.type('xy')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-fruits'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-apple'))
+
+    // Leaves swallow horizontal keys in both directions: no request,
+    // and a mid-field caret does not move (native keys would move it).
+    await input.evaluate(el => (el as HTMLInputElement).setSelectionRange(1, 1))
+    const logBefore = await readLog(page, 'tb-log')
+    await page.keyboard.press('ArrowLeft')
+    // Negative request assert: let a late effect write land first.
+    await page.waitForTimeout(150)
+    expect(await readLog(page, 'tb-log')).toEqual(logBefore)
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(1)
+    await page.keyboard.press('ArrowRight')
+    await page.waitForTimeout(150)
+    expect(await readLog(page, 'tb-log')).toEqual(logBefore)
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(1)
+    await expect(input).toBeFocused()
+
+    // Item activation commits one scalar through root onChange only;
+    // the nested Tree carries no callback at all.
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tb-item-banana'))
+    await page.keyboard.press('Enter')
+    const log = await readLog(page, 'tb-log')
+    expect(log).toContain('change:banana')
+    expect(log.filter(entry => entry.startsWith('tree:'))).toEqual([])
+    expect(log.filter(entry => entry === 'dismiss')).toHaveLength(1)
+    await expect(popover).toHaveCount(0)
+  })
+
+  test('CB-COMP-01: select-only trigger composes with a virtualized Listbox', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/WindowedTriggerLog')
+
+    const trigger = page.getByTestId('wt-trigger')
+    const popover = page.getByTestId('wt-popover')
+    await trigger.focus()
+
+    // Keyboard open pends its resolution target once (registrations
+    // always land after the open commit), then the initial window
+    // resolves it; one layer registers.
+    await page.keyboard.press('ArrowDown')
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-0'))
+    expect(await readLog(page, 'wt-log')).toEqual(['open'])
+    await expectLogSoon(page, 'wt-scroll-log', ['scroll:0'])
+    await expect(page.getByTestId('wt-layers')).toHaveText('1')
+    await expect(trigger).toBeFocused()
+
+    // Typeahead reaches beyond the mounted window behind one scroll.
+    await page.keyboard.type('wtitem75', { delay: 50 })
+    await expectLogSoon(page, 'wt-scroll-log', ['scroll:0', 'scroll:75'])
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('wt-apply').click()
+    const opt75 = page.getByTestId('wt-opt-75')
+    await expectActiveDescendant(trigger, opt75)
+    await expect(opt75).toHaveAttribute('aria-setsize', '100')
+    await expect(trigger).toBeFocused()
+
+    // Arrow navigation continues past the window with exact scrolls.
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'wt-scroll-log')).toEqual(['scroll:0', 'scroll:75', 'scroll:76'])
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-76'))
+
+    // One scalar commit, no form submit, layer released.
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'wt-log')).toEqual(['open', 'change:wt-item-76', 'dismiss'])
+    await expect(trigger).toHaveText('WTItem76')
+    await expect(trigger).toBeFocused()
+    await expect(popover).toHaveCount(0)
+    await expect(page.getByTestId('wt-layers')).toHaveText('0')
+
+    // Pointer open, keyboard-eligible Tab commit, native traversal.
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-77'))
+    await page.keyboard.press('Tab')
+    expect(await readLog(page, 'wt-log')).toEqual([
+      'open',
+      'change:wt-item-76',
+      'dismiss',
+      'open',
+      'change:wt-item-77',
+      'dismiss',
+    ])
+    await expect(popover).toHaveCount(0)
+    expect(await focusedTestId(page)).not.toBe('wt-trigger')
+
+    // Resizing keeps the gate functional: reopen onto the mounted
+    // selection, then navigate past the window again.
+    await page.setViewportSize({ width: 1000, height: 600 })
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-77'))
+    await page.keyboard.press('ArrowDown')
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-78'))
+    await expect(trigger).toBeFocused()
+  })
+
+  test('CB-SELECT-08 windowed: trigger Home and End wait behind one scroll for offscreen targets', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/WindowedTriggerLog')
+
+    const trigger = page.getByTestId('wt-trigger')
+    await trigger.click()
+    await expect(page.getByTestId('wt-popover')).toBeVisible()
+
+    // End targets the last ENABLED logical option (99 is disabled).
+    await page.keyboard.press('End')
+    expect(await readLog(page, 'wt-scroll-log')).toEqual(['scroll:98'])
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-98'))
+    await expect(trigger).toBeFocused()
+
+    // Home targets the first option, unmounted after the window moved.
+    await page.keyboard.press('Home')
+    expect(await readLog(page, 'wt-scroll-log')).toEqual(['scroll:98', 'scroll:0'])
+    await expect(trigger).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('wt-apply').click()
+    await expectActiveDescendant(trigger, page.getByTestId('wt-opt-0'))
+    await expect(trigger).toBeFocused()
+
+    // Navigation is silent: no value, text, commit, or dismissal.
+    expect(await readLog(page, 'wt-log')).toEqual(['open'])
+  })
+
+  test('CB-COMP-03 tree: palette composes a locked overlay with a tree popup', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/PaletteTreeLog')
+
+    const input = page.getByTestId('pt-input')
+    const popover = page.getByTestId('pt-popover')
+    await expect(page.getByTestId('pt-parent-state')).toHaveText('parent-open')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // One parent/child layer model; collection-authored roles.
+    await expect(page.getByTestId('pt-layers')).toHaveText('2')
+    await expect(input).toHaveAttribute('aria-haspopup', 'tree')
+    await expect(page.getByTestId('pt-tree')).toHaveAttribute('role', 'tree')
+    await expect(popover).toHaveAttribute('role', 'presentation')
+
+    // Popover interaction dismisses neither owner (tree-aware chrome
+    // click: the gap above the first treeitem).
+    const popBox = await popover.boundingBox()
+    const firstItem = popover.locator('[role="treeitem"]').first()
+    const itemBox = await firstItem.boundingBox()
+    expect(popBox).toBeTruthy()
+    expect(itemBox).toBeTruthy()
+    const chromeGap = itemBox!.y - popBox!.y
+    expect(chromeGap).toBeGreaterThan(0)
+    await page.mouse.click(popBox!.x + 4, popBox!.y + chromeGap / 2)
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('pt-parent-state')).toHaveText('parent-open')
+    expect(await readLog(page, 'pt-log')).toEqual(['open'])
+
+    // Parent-internal but popover-external press closes only the child, once.
+    const card = page.getByTestId('pt-card')
+    const cardBox = await card.boundingBox()
+    await page.mouse.click(cardBox!.x + 8, cardBox!.y + 8)
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'pt-log')).toEqual(['open', 'dismiss'])
+    await expect(page.getByTestId('pt-parent-state')).toHaveText('parent-open')
+    await expect(page.getByTestId('pt-layers')).toHaveText('1')
+
+    // Reopen and navigate to the collapsed branch, expand it, reach the
+    // revealed leaf.
+    await input.click()
+    await expect(popover).toBeVisible()
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expectActiveDescendant(input, page.getByTestId('pt-item-veg'))
+    await page.keyboard.press('ArrowRight')
+    await expectLogSoon(page, 'pt-log', ['open', 'dismiss', 'open', 'expanded:fruits+veg'])
+    await expect(input).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('pt-item-carrot'))
+
+    // One scalar Combobox commit; the nested Tree carries no callback at all.
+    await page.keyboard.press('Enter')
+    const log = await readLog(page, 'pt-log')
+    expect(log).toContain('change:carrot')
+    expect(log.filter(entry => entry.startsWith('tree:'))).toEqual([])
+    expect(log.filter(entry => entry === 'dismiss')).toHaveLength(2)
+    await expect(popover).toHaveCount(0)
+    await expect(page.getByTestId('pt-parent-state')).toHaveText('parent-open')
+    await expect(page.getByTestId('pt-layers')).toHaveText('1')
+
+    // Dismissing across the branch closes the parent last, exactly once.
+    // (Dialog-shape modals take explicit dismissal; Escape reaches the
+    // top parent layer deterministically.)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('pt-parent-state')).toHaveText('parent-closed')
+    await expect(page.getByTestId('pt-layers')).toHaveText('0')
+  })
+
+  test('CB-COMP-03 grid: palette composes a locked overlay with a grid popup', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/PaletteGridLog')
+
+    const input = page.getByTestId('pg-input')
+    const popover = page.getByTestId('pg-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // One parent/child layer model; the grid role comes from the adapter.
+    await expect(page.getByTestId('pg-layers')).toHaveText('2')
+    await expect(input).toHaveAttribute('aria-haspopup', 'grid')
+    await expect(popover).toHaveAttribute('role', 'grid')
+
+    // Grid navigation, windowed scroll, and one scalar commit with the
+    // input focused throughout.
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('pg-cell-cell-00'))
+    await page.keyboard.press('PageDown')
+    expect(await readLog(page, 'pg-log')).toContain('scroll:20')
+    await expectActiveDescendant(input, page.getByTestId('pg-cell-cell-20'))
+    await expect(input).toBeFocused()
+    await page.keyboard.press('Enter')
+    const log = await readLog(page, 'pg-log')
+    expect(log).toContain('change:cell-20')
+    expect(log.filter(entry => entry === 'dismiss')).toHaveLength(1)
+    await expect(popover).toHaveCount(0)
+    await expect(page.getByTestId('pg-parent-state')).toHaveText('parent-open')
+    await expect(page.getByTestId('pg-layers')).toHaveText('1')
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('pg-parent-state')).toHaveText('parent-closed')
+    await expect(page.getByTestId('pg-layers')).toHaveText('0')
+  })
+
+  test('CB-COMP-04: combobox in a locked shadow overlay with a windowed popover', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ShadowPaletteLog')
+
+    const host = page.getByTestId('so-host')
+    const input = page.getByTestId('so-input')
+    const popover = page.getByTestId('so-popover')
+    await expect(page.getByTestId('so-parent-state')).toHaveText('parent-open')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // The popover portals into the focus source's ShadowRoot, not body.
+    expect(
+      await host.evaluate(el => !!el.shadowRoot?.querySelector('[data-testid="so-popover"]'))
+    ).toBe(true)
+    expect(
+      await page.evaluate(() => !!document.querySelector('[data-testid="so-popover"]'))
+    ).toBe(false)
+
+    // Focus is discovered in the owning root; the background stays inert.
+    expect(
+      await host.evaluate(
+        el =>
+          ((el.shadowRoot?.activeElement ?? null) as HTMLElement | null)?.getAttribute(
+            'data-testid'
+          ) ?? null
+      )
+    ).toBe('so-input')
+    await expect(page.getByTestId('so-background')).toHaveAttribute('inert', '')
+
+    // Offscreen navigation defers behind one scroll; every exposed ID
+    // resolves in the same root with focus on the source.
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expectActiveDescendant(input, page.getByTestId('so-opt-4'))
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'so-scroll-log')).toEqual(['scroll:5'])
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('so-apply').click()
+    await expectActiveDescendant(input, page.getByTestId('so-opt-5'))
+    const descId = await input.getAttribute('aria-activedescendant')
+    expect(
+      await host.evaluate((el, id) => !!el.shadowRoot?.getElementById(id!), descId)
+    ).toBe(true)
+
+    // Internal composed paths stay open with no extra callbacks.
+    await clickPopoverChrome(page, popover)
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    expect(await readLog(page, 'so-log')).toEqual(['open'])
+
+    // Tab commits through the root and the locked overlay keeps focus:
+    // the popover behaves as one FocusLock branch.
+    await page.keyboard.press('Tab')
+    expect(await readLog(page, 'so-log')).toEqual(['open', 'change:item-5', 'dismiss'])
+    await expect(popover).toHaveCount(0)
+    expect(
+      await host.evaluate(
+        el =>
+          ((el.shadowRoot?.activeElement ?? null) as HTMLElement | null)?.getAttribute(
+            'data-testid'
+          ) ?? null
+      )
+    ).toBe('so-input')
+
+    // Parent-internal but popover-external press closes only the child.
+    await input.click()
+    await expect(popover).toBeVisible()
+    const cardBox = await page.getByTestId('so-card').boundingBox()
+    await page.mouse.click(cardBox!.x + 8, cardBox!.y + 8)
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'so-log')).toEqual([
+      'open',
+      'change:item-5',
+      'dismiss',
+      'open',
+      'dismiss',
+    ])
+    await expect(page.getByTestId('so-parent-state')).toHaveText('parent-open')
+
+    // A true outside touch (outside the popover, inside the parent)
+    // dismisses only the top affected layer once, with no compat-mouse
+    // replay. The locked modal itself takes explicit dismissal.
+    await input.click()
+    await expect(popover).toBeVisible()
+    const cardTouchBox = await page.getByTestId('so-card').boundingBox()
+    const session = await page.context().newCDPSession(page)
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: Math.round(cardTouchBox!.x + 8), y: Math.round(cardTouchBox!.y + 8) }],
+    })
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect(popover).toHaveCount(0)
+    const log = await readLog(page, 'so-log')
+    expect(log.filter(entry => entry === 'dismiss')).toHaveLength(3)
+    await expect(page.getByTestId('so-parent-state')).toHaveText('parent-open')
+    await page.waitForTimeout(500)
+    expect(await readLog(page, 'so-log')).toEqual(log)
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('so-parent-state')).toHaveText('parent-closed')
+  })
+
+  test('CB-COMP-02 list-mode: controlled list consumer across edit, commit, escape, blur, tab', async ({
+    mount,
+    page,
+  }) => {
+    // NoCustomLog: controlled list mode, initial bravo/Bravo, live label
+    // filtering, disabled delta, and a clear button for blur/Tab targets.
+    await mount('components/Combobox/Combobox/NoCustomLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+
+    // Native caret/text behavior while editing; list mode never completes.
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.type('al')
+    await expect(input).toHaveValue('al')
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(2)
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    expect(await readLog(page, 'log-counts')).toEqual(['open', 'input:a', 'input:al'])
+
+    // Clear the filter, navigate (skipping disabled delta), and commit
+    // with one ordered sequence while focus stays on the source.
+    await page.keyboard.press('Backspace')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-charlie'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-charlie'))
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:a',
+      'input:al',
+      'input:a',
+      'input:',
+      'change:charlie',
+      'dismiss',
+    ])
+    await expect(popover).toHaveCount(0)
+    await expect(input).toBeFocused()
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+
+    // Unmatched text + Escape reverts to the committed label once.
+    await input.click()
+    await page.keyboard.type('zzz')
+    await expect(input).toHaveValue('Charliezzz')
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:a',
+      'input:al',
+      'input:a',
+      'input:',
+      'change:charlie',
+      'dismiss',
+      'open',
+      'input:Charliez',
+      'input:Charliezz',
+      'input:Charliezzz',
+      'input:Charlie',
+      'dismiss',
+    ])
+    await expect(input).toHaveValue('Charlie')
+    await expect(input).toBeFocused()
+
+    // Blur outside reverts unmatched text and dismisses (programmatic
+    // focus: clicking log-clear would wipe the log under assertion).
+    await input.click()
+    await page.keyboard.type('q')
+    await page.getByTestId('log-clear').focus()
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:a',
+      'input:al',
+      'input:a',
+      'input:',
+      'change:charlie',
+      'dismiss',
+      'open',
+      'input:Charliez',
+      'input:Charliezz',
+      'input:Charliezzz',
+      'input:Charlie',
+      'dismiss',
+      'open',
+      'input:Charlieq',
+      'input:Charlie',
+      'dismiss',
+    ])
+    await expect(input).toHaveValue('Charlie')
+    await expect(popover).toHaveCount(0)
+
+    // Tab commits the keyboard-active option and traverses natively to
+    // the next stop with no stale descendant. Clearing the filter keeps
+    // charlie (identity follow); arrows wrap past it to bravo.
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('Backspace')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-charlie'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+    await page.keyboard.press('Tab')
+    expect(await readLog(page, 'log-counts')).toEqual([
+      'open',
+      'input:a',
+      'input:al',
+      'input:a',
+      'input:',
+      'change:charlie',
+      'dismiss',
+      'open',
+      'input:Charliez',
+      'input:Charliezz',
+      'input:Charliezzz',
+      'input:Charlie',
+      'dismiss',
+      'open',
+      'input:Charlieq',
+      'input:Charlie',
+      'dismiss',
+      'open',
+      'input:',
+      'change:bravo',
+      'dismiss',
+    ])
+    await expect(popover).toHaveCount(0)
+    expect(await focusedTestId(page)).toBe('log-clear')
+  })
+
+  test('CB-COMP-02 list-mode reject: ignored text requests leave no hidden state', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/CaretRejectLog')
+
+    const input = page.getByTestId('cr-input')
+    const popover = page.getByTestId('cr-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // The parent ignores every text request: the DOM restores, one
+    // request per keystroke, no commit, no hidden divergence.
+    await page.keyboard.type('x')
+    expect(await readLog(page, 'cr-log')).toEqual(['open', 'input:Alphax'])
+    await expect(input).toHaveValue('Alpha')
+    await expect(input).toBeFocused()
+
+    // Escape reverts to the committed (null) label and dismisses
+    // atomically; the ignored restore request leaves the DOM untouched.
+    // A second Escape on the closed source is inert. Reopening restores
+    // nothing phantom.
+    await page.keyboard.press('Escape')
+    await expect(popover).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    expect(await readLog(page, 'cr-log')).toEqual(['open', 'input:Alphax', 'input:', 'dismiss'])
+    await expect(input).toHaveValue('Alpha')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expect(input).toHaveValue('Alpha')
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('cr-opt-alpha'))
+  })
+
+  test('CB-CLOSE-04: controlled close clears semantics at commit and unmounts after the exit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ExitTimingLog')
+
+    const input = page.getByTestId('ex-input')
+    const popover = page.getByTestId('ex-popover')
+    await page.getByTestId('ex-open').click()
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('ex-layers')).toHaveText('1')
+    await input.focus()
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('ex-opt-alpha'))
+
+    // Programmatic close: open/active semantics clear at commit while the
+    // exiting popover stays mounted, closed, and out of the layer.
+    // Synthetic activation: a real pointer press would dismiss through
+    // the outside path instead of the programmatic prop change.
+    await page.getByTestId('ex-close').evaluate((el: HTMLElement) => el.click())
+    await expect(popover).toHaveAttribute('data-state', 'closed')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(popover).toHaveCount(1)
+    await expect(page.getByTestId('ex-layers')).toHaveText('0')
+
+    // The popover unmounts on its own exit with no extra dismissal.
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'ex-log')).toEqual(['close-click'])
+
+    // Exit-kept content is inert: pressing an option during a second
+    // exit commits nothing and dismisses nothing further.
+    await page.getByTestId('ex-open').click()
+    await expect(popover).toBeVisible()
+    // Synthetic activation: a real pointer press would dismiss through
+    // the outside path instead of the programmatic prop change.
+    await page.getByTestId('ex-close').evaluate((el: HTMLElement) => el.click())
+    await expect(popover).toHaveAttribute('data-state', 'closed')
+    await page.getByTestId('ex-opt-bravo').click()
+    expect(await readLog(page, 'ex-log')).toEqual(['close-click', 'close-click'])
+    await expect(popover).toHaveCount(0)
+  })
+
+  test('CB-CLOSE-02 parent-internal: combobox-external press closes only the child once', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/NestedOverlay')
+
+    const input = page.getByTestId('nested-input')
+    const popover = page.getByTestId('nested-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    expect(await readLog(page, 'nested-log')).toEqual(['open'])
+
+    // Popover interaction dismisses neither owner.
+    await clickPopoverChrome(page, popover)
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('parent-state')).toHaveText('parent-open')
+
+    // Parent-internal but combobox-external press closes only the
+    // combobox, exactly once; the parent layer remains.
+    const content = page.getByTestId('parent-content')
+    const box = await content.boundingBox()
+    await page.mouse.click(box!.x + 5, box!.y + 5)
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'nested-log')).toEqual(['open', 'dismiss'])
+    await expect(page.getByTestId('parent-state')).toHaveText('parent-open')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('CB-ENV-02: strict mode issues one request per user action across the gate', async ({
+    mount,
+    page,
+  }) => {
+    // Runs under --react 17/18/19 (suite matrix); effect replay must not
+    // duplicate registrations, text requests, commits, or dismissals.
+    await mount('components/Combobox/Combobox/StrictLog')
+
+    const input = page.getByTestId('st-input')
+    const popover = page.getByTestId('st-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.type('a')
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('st-opt-bravo'))
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'st-log')).toEqual(['open', 'input:a', 'change:bravo', 'dismiss'])
+    await expect(popover).toHaveCount(0)
+
+    // Dynamically removing the committed option leaves no stale listener:
+    // navigation skips it and it can never commit.
+    await page.getByTestId('st-remove-bravo').click()
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('st-opt-bravo')).toHaveCount(0)
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('st-opt-alpha'))
+    await page.keyboard.press('Enter')
+    const log = await readLog(page, 'st-log')
+    expect(log.slice(4)).toEqual(['open', 'change:alpha', 'dismiss'])
+    expect(log.filter(entry => entry === 'change:bravo')).toHaveLength(1)
+  })
+
+  test('CB-ENV-03 windowed: one current scroll request resolves in the owning root', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/ShadowWindowedLog')
+
+    const host = page.getByTestId('sw-host')
+    const input = page.getByTestId('sw-input')
+    const popover = page.getByTestId('sw-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expectActiveDescendant(input, page.getByTestId('sw-opt-4'))
+
+    // Exactly one current scroll request; the deferred ID resolves in
+    // the shadow root with focus on the source.
+    await page.keyboard.press('ArrowDown')
+    expect(await readLog(page, 'sw-scroll-log')).toEqual(['scroll:5'])
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await page.getByTestId('sw-apply').click()
+    await expectActiveDescendant(input, page.getByTestId('sw-opt-5'))
+    const descId = await input.getAttribute('aria-activedescendant')
+    expect(
+      await host.evaluate((el, id) => !!el.shadowRoot?.getElementById(id!), descId)
+    ).toBe(true)
+    expect(
+      await host.evaluate(
+        el =>
+          ((el.shadowRoot?.activeElement ?? null) as HTMLElement | null)?.getAttribute(
+            'data-testid'
+          ) ?? null
+      )
+    ).toBe('sw-input')
+  })
+
+  test('CB-A11Y-01 structural: roles, names, and relationships across shapes', async ({
+    mount,
+    page,
+  }) => {
+    // Scanner half is infra-blocked (no axe in repo — same bar as
+    // LB-A11Y-01); this spec pins the structural half on every shape:
+    // combobox role, popup ownership, haspopup, autocomplete, expanded,
+    // and mounted-only active descendants.
+    for (const [story, mode] of [
+      ['NoneLog', 'none'],
+      ['ControlledLog', 'list'],
+      ['BothLog', 'both'],
+    ] as const) {
+      await mount(`components/Combobox/Combobox/${story}`)
+      const input = page.getByTestId('log-input')
+      await expect(input).toHaveAttribute('role', 'combobox')
+      await expect(input).toHaveAttribute('aria-autocomplete', mode)
+      await expect(input).toHaveAttribute('aria-haspopup', 'listbox')
+      await expect(input).toHaveAttribute('aria-expanded', 'false')
+      await input.click()
+      const popover = page.getByTestId('log-popover')
+      await expect(popover).toBeVisible()
+      await expect(popover).toHaveAttribute('role', 'presentation')
+      await expect(input).toHaveAttribute('aria-expanded', 'true')
+      expect(await input.getAttribute('aria-controls')).toBe(
+        await popover.getAttribute('id')
+      )
+      const listbox = popover.locator('[role="listbox"]')
+      await expect(listbox).toHaveCount(1)
+      await page.keyboard.press('ArrowDown')
+      const desc = await input.getAttribute('aria-activedescendant')
+      expect(desc).toBeTruthy()
+      await expect(popover.locator(`#${String(desc!)}`)).toHaveAttribute(
+        'role',
+        'option'
+      )
+    }
+
+    await mount('components/Combobox/Combobox/SelectOnlyStory')
+    const trigger = page.getByTestId('select-trigger')
+    await expect(trigger).toHaveAttribute('role', 'combobox')
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'listbox')
+
+    await mount('components/Combobox/Combobox/DisabledReadonly')
+    await expect(page.getByTestId('dr-disabled')).toBeDisabled()
+    await expect(page.getByTestId('dr-readonly')).toHaveAttribute('readonly', '')
+
+    await mount('components/Combobox/Combobox/EmptyPopoverLog')
+    const emptyInput = page.getByTestId('eo-input')
+    await emptyInput.click()
+    await expect(page.getByTestId('eo-popover')).toBeVisible()
+    await expect(emptyInput).not.toHaveAttribute('aria-activedescendant', /.+/)
+
+    // Virtualized and tree shapes keep the same relationships with
+    // mounted-only descendants.
+    await mount('components/Combobox/Combobox/WindowedLog')
+    const wlInput = page.getByTestId('wl-input')
+    await wlInput.click()
+    await page.keyboard.press('ArrowDown')
+    const wlDesc = await wlInput.getAttribute('aria-activedescendant')
+    expect(wlDesc).toBeTruthy()
+    await expect(page.getByTestId('wl-popover').locator(`#${String(wlDesc!)}`)).toHaveAttribute(
+      'role',
+      'option'
+    )
+
+    await mount('components/Combobox/Combobox/TreeLog')
+    const tbInput = page.getByTestId('tb-input')
+    await expect(tbInput).toHaveAttribute('aria-haspopup', 'tree')
+    await tbInput.click()
+    await page.keyboard.press('ArrowDown')
+    const tbDesc = await tbInput.getAttribute('aria-activedescendant')
+    expect(tbDesc).toBeTruthy()
+    await expect(page.getByTestId('tb-popover').locator(`#${String(tbDesc!)}`)).toHaveAttribute(
+      'role',
+      'treeitem'
+    )
+  })
+
+  test('CB-A11Y-01 scan: automated relationship scan reports zero violations across shapes', async ({
+    mount,
+    page,
+  }) => {
+    // No axe in repo (workspace constraint: no new deps from this
+    // directory) — this scan encodes the component-owned checks an
+    // engine would run: ID uniqueness, reference resolution, required
+    // combobox attributes, and virtual-focus tab-stop bans.
+    const shapes: Array<{
+      story: string
+      input: string
+      popover: string | null
+      navigate: boolean
+    }> = [
+      { story: 'NoneLog', input: 'log-input', popover: 'log-popover', navigate: true },
+      { story: 'ControlledLog', input: 'log-input', popover: 'log-popover', navigate: true },
+      { story: 'BothLog', input: 'log-input', popover: 'log-popover', navigate: true },
+      { story: 'SelectOnlyStory', input: 'select-trigger', popover: null, navigate: true },
+      { story: 'DisabledReadonly', input: 'dr-disabled', popover: null, navigate: false },
+      { story: 'EmptyPopoverLog', input: 'eo-input', popover: 'eo-popover', navigate: false },
+      { story: 'WindowedLog', input: 'wl-input', popover: 'wl-popover', navigate: true },
+      { story: 'TreeLog', input: 'tb-input', popover: 'tb-popover', navigate: true },
+    ]
+    for (const shape of shapes) {
+      await mount(`components/Combobox/Combobox/${shape.story}`)
+      const input = page.getByTestId(shape.input)
+      // Closed scan first: collapsed relationships must already hold.
+      expect(await scanA11y(page)).toEqual([])
+      if (shape.story === 'DisabledReadonly') continue
+      await input.click()
+      if (shape.popover) {
+        await expect(page.getByTestId(shape.popover)).toBeVisible()
+      }
+      if (shape.navigate) {
+        await page.keyboard.press('ArrowDown')
+      }
+      expect(await scanA11y(page)).toEqual([])
+    }
+  })
+
+  test('CB-DOM-10 blur: omitted closeOnBlur restores committed text and dismisses on blur', async ({
+    mount,
+    page,
+  }) => {
+    // DefaultsLog omits inputValue, autocomplete, allowCustomValue, and
+    // closeOnBlur; only the option callbacks are spied (and ignored).
+    await mount('components/Combobox/Combobox/DefaultsLog')
+
+    const input = page.getByTestId('df-input')
+    const popover = page.getByTestId('df-popover')
+    await expect(input).toHaveAttribute('aria-autocomplete', 'list')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.type('Zulu')
+    await expect(input).toHaveValue('Zulu')
+
+    // closeOnBlur defaults true: blur requests committed-only text ('',
+    // nothing committed) and dismissal; nothing is hidden. Programmatic
+    // focus isolates the blur path (a pointer press would take the
+    // outside path first, and the open popover covers the button).
+    await page.getByTestId('df-outside').focus()
+    expect(await readLog(page, 'df-log')).toEqual([
+      'open',
+      'input:Z',
+      'input:Zu',
+      'input:Zul',
+      'input:Zulu',
+      'input:',
+      'dismiss',
+    ])
+    await expect(input).toHaveValue('')
+    await expect(popover).toHaveCount(0)
+
+    // Reopening restores nothing phantom.
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expect(input).toHaveValue('')
+  })
+
+  test('CB-EDIT-04 self-scroll: the input scrolling preserves the open popover', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelfScrollLog')
+
+    const input = page.getByTestId('ss-input')
+    const popover = page.getByTestId('ss-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('ss-opt-alpha'))
+    const logBefore = await readLog(page, 'ss-log')
+
+    // The input's own scroll (not an ancestor's) changes scrollLeft and
+    // fires scroll without touching popover, focus, active ID, or log.
+    const scrolled = await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const before = target.scrollLeft
+      target.scrollLeft = 200
+      target.dispatchEvent(new Event('scroll', { bubbles: false }))
+      return { before, after: target.scrollLeft }
+    })
+    expect(scrolled.after).toBeGreaterThan(scrolled.before)
+    await expect(popover).toBeVisible()
+    await expect(input).toBeFocused()
+    await expectActiveDescendant(input, page.getByTestId('ss-opt-alpha'))
+    expect(await readLog(page, 'ss-log')).toEqual(logBefore)
+  })
+
+  test('CB-EDIT-07: rejected keystrokes keep the caret clamped and usable', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/CaretRejectLog')
+
+    const input = page.getByTestId('cr-input')
+    await input.click()
+    await expect(page.getByTestId('cr-popover')).toBeVisible()
+    await input.evaluate(el => (el as HTMLInputElement).setSelectionRange(3, 3))
+    await page.keyboard.type('x')
+
+    // One text request for the native result; the DOM restores to the
+    // controlled text with a clamped, usable caret; no commit.
+    expect(await readLog(page, 'cr-log')).toEqual(['open', 'input:Alpxha'])
+    await expect(input).toHaveValue('Alpha')
+    const caret = await input.evaluate(el => ({
+      start: (el as HTMLInputElement).selectionStart,
+      end: (el as HTMLInputElement).selectionEnd,
+    }))
+    expect(caret.start).toBeGreaterThanOrEqual(0)
+    expect(caret.start).toBeLessThanOrEqual(5)
+    expect(caret.end).toBeGreaterThanOrEqual(0)
+    expect(caret.end).toBeLessThanOrEqual(5)
+    await expect(input).toBeFocused()
+
+    // The caret stays usable after the restore.
+    await input.evaluate(el => (el as HTMLInputElement).setSelectionRange(2, 4))
+    expect(
+      await input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    ).toEqual([2, 4])
+  })
+
+  test('CB-EDIT-09: isComposing keys never open, move, or commit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/NoCustomLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+
+    // Composing arrows on the closed source: no open, no active, no log.
+    await input.focus()
+    await input.evaluate(el => {
+      for (const key of ['ArrowDown', 'ArrowUp']) {
+        el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, isComposing: true }))
+      }
+    })
+    await expect(popover).toHaveCount(0)
+    expect(await readLog(page, 'log-counts')).toEqual([])
+
+    // Composing arrows while open never move: the exposed descendant
+    // is preserved, the popover stays, and nothing is requested.
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+    await input.evaluate(el => {
+      for (const key of ['ArrowDown', 'ArrowUp']) {
+        el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, isComposing: true }))
+      }
+    })
+    await expectActiveDescendant(input, page.getByTestId('log-opt-bravo'))
+    await expect(popover).toBeVisible()
+    expect(await readLog(page, 'log-counts')).toEqual(['open'])
+
+    // Composing Enter never commits; the same key post-composition does.
+    await input.fill('a')
+    await page.keyboard.press('ArrowUp')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    await input.evaluate(el => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true }))
+    })
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    await expect(popover).toBeVisible()
+    expect(await readLog(page, 'log-counts')).toEqual(['open', 'input:a'])
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'log-counts')).toEqual(['open', 'input:a', 'change:alpha', 'dismiss'])
+    await expect(popover).toHaveCount(0)
+  })
+
+  test('CB-SELECT-06: select-only trigger never submits its form until type=submit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectFormLog')
+
+    const trigger = page.getByTestId('sf-trigger')
+    const popover = page.getByTestId('sf-popover')
+    await expect(trigger).toHaveAttribute('type', 'button')
+
+    // Open and select by pointer: no submit.
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await page.getByTestId('sf-opt-bravo').click()
+    expect(await readLog(page, 'sf-log')).toEqual(['open', 'change:bravo', 'dismiss'])
+    await expect(trigger).toHaveText('Bravo')
+
+    // Open and select by keyboard: no submit.
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(trigger, page.getByTestId('sf-opt-bravo'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('sf-opt-charlie'))
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'sf-log')).toEqual([
+      'open',
+      'change:bravo',
+      'dismiss',
+      'open',
+      'change:charlie',
+      'dismiss',
+    ])
+    await expect(trigger).toHaveText('Charlie')
+
+    // An explicit type=submit stays application-owned: clicking the
+    // closed trigger opens the popover AND submits natively.
+    await page.getByTestId('sf-type').click()
+    await expect(trigger).toHaveAttribute('type', 'submit')
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    expect(await readLog(page, 'sf-log')).toContain('submit')
+  })
+
+  test('CB-COMMIT-03 headers: section headers are not options', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SectionLog')
+
+    const input = page.getByTestId('sc-input')
+    const popover = page.getByTestId('sc-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // Clicking a section header produces nothing and leaves the popover
+    // open with focus on the source.
+    const header = popover.locator('[data-reference-listbox-header]').first()
+    await header.click()
+    await expect(popover).toBeVisible()
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    await expect(input).toBeFocused()
+    expect(await readLog(page, 'sc-log')).toEqual(['open'])
+
+    // Options beside the headers still commit once.
+    await page.getByTestId('sc-opt-bravo').click()
+    expect(await readLog(page, 'sc-log')).toEqual(['open', 'change:bravo', 'dismiss'])
+    await expect(popover).toHaveCount(0)
+  })
+
+  test('CB-COMMIT-04 shift-tab: backward traversal commits and lands behind', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TabOrder')
+
+    const input = page.getByTestId('tab-input')
+    const popover = page.getByTestId('tab-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tab-opt-apple'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(input, page.getByTestId('tab-opt-banana'))
+
+    // Shift+Tab commits the keyboard-active option, dismisses, clears
+    // the descendant, and traverses natively to the previous stop.
+    await page.keyboard.press('Shift+Tab')
+    await expect(popover).toHaveCount(0)
+    await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
+    await expect(input).toHaveValue('Banana')
+    expect(await focusedTestId(page)).toBe('tab-before')
+  })
+
+  test('CB-SELECT-05 shift-tab: select-only backward traversal commits text-free', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/SelectOnlyTabOrder')
+
+    const trigger = page.getByTestId('sel-tab-trigger')
+    const popover = page.getByTestId('sel-tab-popover')
+    await trigger.click()
+    await expect(popover).toBeVisible()
+    await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-alpha'))
+    await page.keyboard.press('ArrowDown')
+    await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-bravo'))
+
+    // Shift+Tab commits with zero text callbacks and lands behind.
+    await page.keyboard.press('Shift+Tab')
+    await expect(popover).toHaveCount(0)
+    const log = await readLog(page, 'sel-tab-log')
+    expect(log).toContain('change:bravo')
+    expect(log.some(entry => entry.startsWith('input:'))).toBe(false)
+    expect(await focusedTestId(page)).toBe('sel-tab-before')
+  })
+
+  test('Async loading: busy collection and shared-announcer status, no private live region', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/LoadingLog')
+
+    const input = page.getByTestId('ld-input')
+    const popover = page.getByTestId('ld-popover')
+    const listbox = page.getByTestId('ld-listbox')
+    const polite = page.locator('[data-reference-announcer="polite"]')
+    await input.click()
+    await expect(popover).toBeVisible()
+
+    // Loading marks the nested listbox busy until it resolves.
+    await expect(listbox).not.toHaveAttribute('aria-busy', 'true')
+    await page.getByTestId('ld-loading').click()
+    await expect(listbox).toHaveAttribute('aria-busy', 'true')
+    await page.getByTestId('ld-loading').click()
+    await expect(listbox).not.toHaveAttribute('aria-busy', 'true')
+
+    // Empty collections announce once through the shared announcer.
+    await page.getByTestId('ld-clear').click()
+    await expect(polite).toHaveText('No options available')
+
+    // Unmatched text switches the message to no-results, still once.
+    await input.fill('zzz')
+    await expect(polite).toHaveText('No results found')
+
+    // An authored Empty node speaks for itself: suppression, and never
+    // a Combobox-owned live region inside the popover.
+    await page.getByTestId('ld-empty').click()
+    await page.getByTestId('ld-fill').click()
+    await page.getByTestId('ld-clear').click()
+    await page.waitForTimeout(300)
+    await expect(polite).not.toHaveText('No options available')
+    await expect(popover.locator('[aria-live]')).toHaveCount(1)
+    await expect(popover.locator('[data-testid="ld-empty-node"]')).toHaveCount(1)
+  })
+
+  test('CB-ENV-04 chromium: cross-engine baseline order for the native gate', async ({
+    mount,
+    page,
+  }) => {
+    // Chromium half of the multi-engine gate: pins the exact public DOM,
+    // focus, and controlled callback order Firefox/WebKit runs compare
+    // against (matrix engine layer owns the other engines).
+    expect(await page.evaluate(() => navigator.userAgent)).toContain('Chrome')
+    await mount('components/Combobox/Combobox/ControlledLog')
+
+    const input = page.getByTestId('log-input')
+    const popover = page.getByTestId('log-popover')
+    await input.click()
+    await expect(popover).toBeVisible()
+    await page.keyboard.type('a')
+    await expectActiveDescendant(input, page.getByTestId('log-opt-alpha'))
+    await expect(input).toBeFocused()
+    await page.keyboard.press('Enter')
+    expect(await readLog(page, 'log-counts')).toEqual(['open', 'input:a', 'change:alpha', 'dismiss'])
+    await expect(popover).toHaveCount(0)
+
+    await mount('components/Combobox/Combobox/WindowedTriggerLog')
+    const trigger = page.getByTestId('wt-trigger')
+    await trigger.click()
+    await expect(page.getByTestId('wt-popover')).toBeVisible()
+    for (let i = 0; i < 10; i++) {
+      await page.keyboard.press('ArrowDown')
+    }
+    expect(await readLog(page, 'wt-scroll-log')).toEqual(['scroll:10'])
+    await expect(trigger).toBeFocused()
   })
 })

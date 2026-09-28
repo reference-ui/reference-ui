@@ -30,6 +30,8 @@ shared by `Option`, `VirtualFocusItem`, and `computeNextMultipleSelection`. Stil
 
 **Status (features campaign F2 2026-09-26):** PARTIAL — `getDirection` adopted (local helper deleted, body-identical) and `shouldIgnoreTypeaheadKey` adopted as the printable-char entry guard (delta: IME-composing keys no longer feed the buffer — convergent bug fix). `TypeaheadModel` swap VERIFY-BLOCKED: the kernel lacks Listbox's empty-buffer cycle branch (LB-KEY-04 pins focus apple + `a` → avocado; kernel returns apple — proven by swap experiment failing CT) and its repeat detection is `toLowerCase`-based vs Listbox's collator-based (diverge on e.g. `σ`/`ς`). Zero public API change. See crew log `features-Listbox-F2.md`.
 
+**Status (finish-line P2A 2026-09-28):** divergence RE-VERIFIED against the landed P1.1 kernel (`RovingFocus/typeahead.ts`): still no empty-buffer cycle branch (cycles only when the buffer is already a non-empty repeat run) and still `toLowerCase` repeat detection. Local model kept; LB-KEY-04 stays green on all React majors. Arrows deliberately not composed (live-DOM model handles dynamic reorder + disabled skip; kernel has no modifier guards on arrows either, so parity holds without a swap). No further convergence available without forking pinned behavior.
+
 ## 3. `Section` / `Header` / `Empty` chrome fate (from DECISIONS candidate #6)
 
 **What it does:** Resolves the three byte-identical extra chrome exports (`Listbox.Section` / `.Header` / `.Empty`, zero TESTS.md cases, zero in-repo consumers) by removal or legacy documentation.

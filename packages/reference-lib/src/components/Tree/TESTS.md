@@ -373,15 +373,21 @@ Tree state.
 
 ### Dynamic hierarchy
 
-- [x] `TR-DYNAMIC-01` `[vendor]` `[unit]` —
+- [x] `TR-DYNAMIC-01` `[vendor]` `[browser]` —
   **Tree's hierarchy model should recompute metadata and traversal after structural edits.**
+  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
+  note: the shipped engine traverses live DOM, so the metadata/traversal
+  recompute is proven end-to-end through the real component.)
   Insert, remove, and reorder both leaves and branches at root and nested
   levels, including empty and single-branch trees. Assert parent lookup,
   one-based level/sibling position, set size, first/last node, and depth-first
   next/previous traversal after each mutation; this ports Zag's tree
   collection traversal/remove/replace cases.
-- [x] `TR-DYNAMIC-02` `[vendor]` `[unit]` —
+- [x] `TR-DYNAMIC-02` `[vendor]` `[browser]` —
   **Tree's hierarchy model should preserve value identity when moving a branch with descendants.**
+  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
+  note: branch moves with identity preserved are proven end-to-end
+  through the real component.)
   Move a multi-level branch within its parent and then to another parent while
   retaining the same values. Assert every descendant's parent path, level,
   sibling position, and traversal order updates while lookups by value still

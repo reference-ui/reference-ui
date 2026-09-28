@@ -33,15 +33,19 @@ file-explorer scope.
 | Keys | APG arrows + RTL; expander pointer ≠ select |
 | Combobox | expose visible registry; Combobox owns commit; `data-active` preview |
 
-### Status (2026-09-25 landing)
+### Status (2026-09-28 finish-line)
 
 | | |
 | :--- | :--- |
-| Engine | Hardened APG tree (landing). |
-| Production | **No** — see Landing note (uncontrolled preserved; CB/model cases open). |
-| Named `[x]` | 55 / 64 |
-| Playwright | 53 |
+| Engine | Hardened APG tree + native Combobox bridge. |
+| Production | **No** — uncontrolled `defaultExpanded` preserved; FEATURES #3 (Slot sniffing, VERIFY-BLOCKED) and #4 (shared RovingFocus) still open. |
+| Named `[x]` | 64 / 64 |
+| Playwright | 62 |
 | Vitest | 3 |
+
+Bonus IDs proven in passing titles but outside the 64-case catalog:
+`TR-KEY-12`, `TR-KEY-13`, `TR-CSS-01` (CT), `TR-API-01`, `TR-API-02`
+(CT + unit).
 
 ### Landing note (quarantine-landing, 2026-09-25)
 
@@ -87,16 +91,51 @@ freeze catalog above, per recon:
   `TypeaheadModel` + Space-buffer rule; Group ids + Expander
   `aria-controls` with `aria-hidden` removed; `CSS.escape` hardening.
 
+### Finish-line note (P2A phase 3, 2026-09-28)
+
+All 9 remaining IDs proven in-dir (CT against the live Combobox, React
+17/18/19; no snapshot changes — the bridge is behavior-only):
+
+- `TR-CB-01`–`06` + `TR-COMP-03`: native bridge landed in `Tree.tsx`.
+  Visible enabled items register with `isBranch` for branches (leaves
+  omit); the registry follows expand/collapse/reorder by mount/unmount
+  plus live DOM order. `treeExpansionRequest` is consumed by `seq` and
+  routed through controlled `expanded` / `onExpandedChange` exactly
+  once; leaf/unknown values are ignored. Redundant requests are virtual
+  navigation, never emissions: expand-on-expanded enters the first
+  enabled child, collapse-on-collapsed moves to the parent (TR-KEY-04/05
+  parity — the deleted CB-TREE-01 harness had encoded stays-put
+  instead). `data-active`
+  previews the source's virtual focus under Combobox (standalone keeps
+  roving focus). Activation commits only through root `onChange`; a
+  nested Tree `onChange` diagnoses (render-time, both sides) and is never
+  invoked. `value` / `onChange` are optional under Combobox (selection
+  display falls back to `combobox.value`) and still throw standalone.
+- `TR-DYNAMIC-01`/`02`: re-targeted `[unit]` → `[browser]` (TESTS.md tags
+  updated). The landing note called the hierarchy model unreferenced test
+  theater: the shipped engine traverses live DOM queries (SPEC gaps,
+  FEATURES #4 defers the shared-engine swap), so a parallel pure model
+  the component does not use would be theater again. The behaviors the
+  cases pin — metadata/traversal recompute after insert/remove/reorder
+  (root, nested, empty, single-branch) and identity-preserving
+  cross-parent branch moves — are instead proven end-to-end through the
+  real component in CT (`DynamicHierarchy` story).
+- Combobox collateral (harness-deletion micro-task, DONE 2026-09-28):
+  `TreeBridgeHarness` deleted, `CB-TREE-01` + `CB-COMP-03 tree`
+  re-proven natively, `Tree popup survey` rewritten as the `Tree popup
+  bridge` proof. Combobox unit 94/94 + CT 105/105 (19/18) and 104/105
+  (17, ID-less Announcer-owned red only).
+
 ### Gaps & incoherence
 
 - `defaultExpanded` uncontrolled (selection went controlled-only
-  2026-09-26: `value` + `onChange` required, `defaultValue` deleted).
+  2026-09-26: `value` + `onChange` required standalone, `defaultValue`
+  deleted; both optional under Combobox since the 2026-09-28 bridge).
 - `React.Children.forEach` sniffs Group vs row — not Slot / part
   registration.
 - Roving via DOM queries, not shared RovingFocus.
 - No `aria-level` / `aria-expanded` / `aria-selected` contract in the freeze
   surface — APG level semantics were implied, now explicit.
-- Combobox bridge / `data-active` preview incomplete.
 
 ### Vendor
 
@@ -121,14 +160,16 @@ freeze catalog above, per recon:
   `TR-KEY-11`
 - `[x]` `TR-TYPE-01`, `TR-TYPE-02`, `TR-TYPE-03`, `TR-TYPE-04`,
   `TR-TYPE-05`
-- `[x]` `TR-DYNAMIC-03`, `TR-DYNAMIC-04`, `TR-DYNAMIC-05`,
-  `TR-DYNAMIC-06`
+- `[x]` `TR-DYNAMIC-01`, `TR-DYNAMIC-02` (re-targeted
+  `[unit]` → `[browser]`, see Finish-line note), `TR-DYNAMIC-03`,
+  `TR-DYNAMIC-04`, `TR-DYNAMIC-05`, `TR-DYNAMIC-06`
 - `[x]` `TR-ENV-01`, `TR-ENV-02` (unit), `TR-ENV-03` (CT, shadow)
 - `[x]` `TR-A11Y-01`
-- `[x]` `TR-COMP-01`, `TR-COMP-02`
-- `[ ]` `TR-DYNAMIC-01`, `TR-DYNAMIC-02`, `TR-CB-01`, `TR-CB-02`,
-  `TR-CB-03`, `TR-CB-04`, `TR-CB-05`, `TR-CB-06`,
-  `TR-COMP-03` (not ported, see Landing note)
+- `[x]` `TR-COMP-01`, `TR-COMP-02`, `TR-COMP-03`
+- `[x]` `TR-CB-01`, `TR-CB-02`, `TR-CB-03`, `TR-CB-04` (CT + invalid),
+  `TR-CB-05`, `TR-CB-06`
+- `[x]` bonus (outside the 64 catalog): `TR-KEY-12`, `TR-KEY-13`,
+  `TR-CSS-01`, `TR-API-01`, `TR-API-02`
 
 ### Work order
 

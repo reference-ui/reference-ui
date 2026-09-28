@@ -26,6 +26,17 @@ commit-authority proof land together on the Combobox side.
 
 **Maintainer take:** Good to add only as a Combobox-owned contract; Tree must not fork `data-active` semantics alone.
 
+**LANDED (2026-09-28, P2A finish-line crew):** Combobox owned the contract
+(`registerOption` + `isBranch`, sequenced `treeExpansionRequest`,
+sole-authored-Tree `popupRole`, `data-active`-on-`activeValue` publication
+rule) and Tree implemented its side with no new props — cases `TR-CB-01`–`06`
++ `TR-COMP-03` proven in CT against the live Combobox on React 17/18/19.
+`data-active` semantics are not forked: standalone keeps roving-focus
+publication, nested previews the source's virtual focus (Listbox
+derivation parity). Follow-up owned elsewhere: the harness-deletion
+micro-task removes Combobox's temporary `TreeBridgeHarness` and re-proofs
+`CB-TREE-01` / `CB-COMP-03` (+ the now-obsolete Tree-popup survey) natively.
+
 ## 2. Shadow-root focus discovery and traversal (from DECISIONS candidate #2, DEFERRED)
 
 **What it does:** Makes a Tree mounted in an open ShadowRoot behave

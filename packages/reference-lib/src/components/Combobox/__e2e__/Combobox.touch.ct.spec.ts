@@ -102,4 +102,20 @@ test.describe('Combobox touch outside-dismiss CT', () => {
       'tc-input'
     )
   })
+
+  test('CB-COMMIT-03 tap: tapping option bravo commits one ordered sequence', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Combobox/Combobox/TouchLog')
+    const input = page.getByTestId('tc-input')
+    await input.click()
+    await page.getByTestId('tc-clear').evaluate((el: HTMLElement) => el.click())
+
+    await touchTap(page, page.getByTestId('tc-opt-bravo'))
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    expect(await logOf(page, 'tc-log')).toEqual(['change:bravo', 'dismiss'])
+    await page.waitForTimeout(500)
+    expect(await logOf(page, 'tc-log')).toEqual(['change:bravo', 'dismiss'])
+  })
 })

@@ -36,6 +36,14 @@ export interface AuthoredCollectionScan {
   virtualFocusAdapter: unknown
   /** Logical item count from adapter metadata (grid + windowed Listbox). */
   metadataItemCount: number
+  /**
+   * First nested Listbox `virtual` prop (CB-VIRT driver). Untyped here so
+   * this module stays dependency-free; the caller narrows to its windowed
+   * adapter. Part of the Listbox authority, never a second one.
+   */
+  listboxVirtualAdapter: unknown
+  /** An Empty element is authored under any Popover (FEATURES #4). */
+  emptyAuthored: boolean
   /** Option/VirtualItem/TreeItem elements authored under any Popover. */
   authoredItemCount: number
   /** Built-in collection roots under any Popover, deduped in order. */
@@ -61,6 +69,8 @@ export function scanAuthoredCollections(
     popovers: [],
     virtualFocusAdapter: undefined,
     metadataItemCount: 0,
+    listboxVirtualAdapter: undefined,
+    emptyAuthored: false,
     authoredItemCount: 0,
     collectionKinds: [],
     nestedOnChangeKind: null,
@@ -91,12 +101,18 @@ export function scanAuthoredCollections(
         return
       }
       // Inside a Popover below this line.
-      if (type === refs.Empty) return
+      if (type === refs.Empty) {
+        scan.emptyAuthored = true
+        return
+      }
       if (type === refs.Listbox) {
         recordKind('listbox')
         if (rootHasOnChange && props.onChange != null) scan.nestedOnChangeKind = 'listbox'
         if (props.selection === 'multiple') scan.multipleListbox = true
         scan.metadataItemCount += metadataLength(props.virtual)
+        if (scan.listboxVirtualAdapter === undefined && props.virtual != null) {
+          scan.listboxVirtualAdapter = props.virtual
+        }
         visit(props.children as React.ReactNode, true)
         return
       }

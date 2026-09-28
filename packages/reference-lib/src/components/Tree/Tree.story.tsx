@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tree } from './index'
+import { Combobox } from '../Combobox'
+import { Field } from '../Field'
+import { useOverlayStore } from '../Overlay/stack'
 
 export const Basic = () => {
   const [value, setValue] = React.useState<string | null>('doc-1')
@@ -604,6 +607,549 @@ export const Shadow = () => {
             <ShadowHost testId="tree-shadow-rtl-host" idPrefix="tree-shadow-rtl" />
           </div>
         </section>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+function CbLayerCount({ testid }: { testid: string }) {
+  const openLayers = useOverlayStore(state => state.layers.filter(l => l.open).length)
+  return <Div data-testid={testid}>{openLayers}</Div>
+}
+
+const cbLabels: Record<string, string> = {
+  src: 'src',
+  'src/index': 'index.ts',
+  'src/main': 'main.ts',
+  'src/lib': 'lib',
+  'src/lib/deep': 'deep.ts',
+  docs: 'docs',
+  'docs/guide': 'guide.md',
+  'docs/new': 'new.md',
+  readme: 'README.md',
+  'disabled-leaf': 'Disabled Leaf',
+}
+
+// Valid bridge anatomy (TR-CB-01..06, TR-COMP-03): a three-level Tree nested
+// directly in an editable Combobox.Popover with NO value/onChange of its
+// own — selection display follows the root, commits route to the root —
+// plus a select-only Trigger section. Structural controls drive the
+// TR-CB-05 registry-freshness flow; expansion is controlled and accepted.
+export const ComboboxTree = () => {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [inputValue, setInputValue] = React.useState('')
+  const [expanded, setExpanded] = React.useState<string[]>(['src'])
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+  const [rejectSelect, setRejectSelect] = React.useState(false)
+  const [order, setOrder] = React.useState<string[]>(['src', 'docs', 'readme', 'disabled-leaf'])
+  const [showSrc, setShowSrc] = React.useState(true)
+  const [renamed, setRenamed] = React.useState(false)
+  const [extraChild, setExtraChild] = React.useState(false)
+
+  const indexValue = renamed ? 'src/main' : 'src/index'
+
+  const [selOpen, setSelOpen] = React.useState(false)
+  const [selValue, setSelValue] = React.useState<string | null>(null)
+  const [selExpanded, setSelExpanded] = React.useState<string[]>(['tb-a'])
+  const [selLog, setSelLog] = React.useState<string[]>([])
+  const selPush = (entry: string) => setSelLog(prev => [...prev, entry])
+  const selLabel = selValue ?? 'Choose'
+
+  const renderRoot = (key: string) => {
+    if (key === 'src') {
+      if (!showSrc) return null
+      return (
+        <Tree.Item key="src" value="src" data-testid="cb-item-src">
+          <Tree.Expander data-testid="cb-expander-src" aria-label="Toggle src" />
+          <span>src</span>
+          <Tree.Group data-testid="cb-group-src">
+            <Tree.Item key="cb-index" value={indexValue} data-testid="cb-item-index">
+              <span>{renamed ? 'main.ts' : 'index.ts'}</span>
+            </Tree.Item>
+            <Tree.Item key="cb-lib" value="src/lib" data-testid="cb-item-lib">
+              <Tree.Expander data-testid="cb-expander-lib" aria-label="Toggle lib" />
+              <span>lib</span>
+              <Tree.Group data-testid="cb-group-lib">
+                <Tree.Item value="src/lib/deep" data-testid="cb-item-deep">
+                  <span>deep.ts</span>
+                </Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+      )
+    }
+    if (key === 'docs') {
+      return (
+        <Tree.Item key="docs" value="docs" data-testid="cb-item-docs">
+          <Tree.Expander data-testid="cb-expander-docs" aria-label="Toggle docs" />
+          <span>docs</span>
+          <Tree.Group data-testid="cb-group-docs">
+            <Tree.Item value="docs/guide" data-testid="cb-item-guide">
+              <span>guide.md</span>
+            </Tree.Item>
+            {extraChild && (
+              <Tree.Item value="docs/new" data-testid="cb-item-new">
+                <span>new.md</span>
+              </Tree.Item>
+            )}
+          </Tree.Group>
+        </Tree.Item>
+      )
+    }
+    if (key === 'readme') {
+      return (
+        <Tree.Item key="readme" value="readme" data-testid="cb-item-readme">
+          <span>README.md</span>
+        </Tree.Item>
+      )
+    }
+    return (
+      <Tree.Item key="disabled-leaf" value="disabled-leaf" disabled data-testid="cb-item-disabled">
+        <span>Disabled Leaf</span>
+      </Tree.Item>
+    )
+  }
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tree-fixture-root" maxW="120r">
+        <section>
+          <h2>Editable Combobox Tree</h2>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+            <button type="button" data-testid="cb-toggle-reject" onClick={() => setRejectSelect(p => !p)}>
+              Toggle Reject Select ({rejectSelect ? 'ON' : 'OFF'})
+            </button>
+            <button type="button" data-testid="cb-reorder" onClick={() => setOrder(prev => [...prev].reverse())}>
+              Reverse root order
+            </button>
+            <button type="button" data-testid="cb-toggle-src" onClick={() => setShowSrc(p => !p)}>
+              Toggle src branch
+            </button>
+            <button type="button" data-testid="cb-rename" onClick={() => setRenamed(true)}>
+              Rename index to main
+            </button>
+            <button type="button" data-testid="cb-add-child" onClick={() => setExtraChild(true)}>
+              Add docs child
+            </button>
+            <button type="button" data-testid="cb-collapse-src" onClick={() => setExpanded(prev => prev.filter(v => v !== 'src'))}>
+              Collapse src
+            </button>
+            <button type="button" data-testid="cb-expand-docs" onClick={() => setExpanded(prev => (prev.includes('docs') ? prev : [...prev, 'docs']))}>
+              Expand docs
+            </button>
+            <button type="button" data-testid="cb-select-readme" onClick={() => setValue('readme')}>
+              Programmatic select readme
+            </button>
+            <button type="button" data-testid="cb-clear-log" onClick={() => setLog([])}>
+              Clear log
+            </button>
+          </div>
+          <div style={{ width: 320 }}>
+            <Combobox
+              open={open}
+              onOpen={() => {
+                push('open')
+                setOpen(true)
+              }}
+              onDismiss={() => {
+                push('dismiss')
+                setOpen(false)
+              }}
+              value={value}
+              onChange={v => {
+                push(`change:${v}`)
+                if (!rejectSelect) {
+                  setValue(v)
+                  setInputValue(v != null ? (cbLabels[v] ?? v) : '')
+                }
+              }}
+              inputValue={inputValue}
+              onInputValueChange={v => {
+                push(`input:${v}`)
+                setInputValue(v)
+              }}
+            >
+              <Field>
+                <Combobox.Input data-testid="cb-input" placeholder="Search..." />
+              </Field>
+              <Combobox.Popover data-testid="cb-popover">
+                <Tree
+                  data-testid="cb-tree"
+                  expanded={expanded}
+                  onExpandedChange={next => {
+                    push(`expanded:${next.join('+')}`)
+                    setExpanded(next)
+                  }}
+                >
+                  {order.map(renderRoot)}
+                </Tree>
+              </Combobox.Popover>
+            </Combobox>
+          </div>
+          <p data-testid="cb-log">{JSON.stringify(log)}</p>
+          <p data-testid="cb-value">Selected: {value ?? 'None'}</p>
+          <p data-testid="cb-expanded">Expanded: {expanded.join(', ')}</p>
+          <CbLayerCount testid="cb-layers" />
+        </section>
+
+        <section>
+          <h2>Select-only Combobox Tree</h2>
+          <div style={{ width: 320 }}>
+            <Combobox
+              open={selOpen}
+              onOpen={() => {
+                selPush('open')
+                setSelOpen(true)
+              }}
+              onDismiss={() => {
+                selPush('dismiss')
+                setSelOpen(false)
+              }}
+              value={selValue}
+              onChange={v => {
+                selPush(`change:${v}`)
+                setSelValue(v)
+              }}
+            >
+              <Combobox.Trigger data-testid="cbs-trigger">{selLabel}</Combobox.Trigger>
+              <Combobox.Popover data-testid="cbs-popover">
+                <Tree
+                  data-testid="cbs-tree"
+                  expanded={selExpanded}
+                  onExpandedChange={next => {
+                    selPush(`expanded:${next.join('+')}`)
+                    setSelExpanded(next)
+                  }}
+                >
+                  <Tree.Item value="tb-a" data-testid="cbs-item-a">
+                    <Tree.Expander data-testid="cbs-expander-a" aria-label="Toggle A" />
+                    <span>Branch A</span>
+                    <Tree.Group data-testid="cbs-group-a">
+                      <Tree.Item value="tb-a1" data-testid="cbs-item-a1">
+                        <span>Leaf A1</span>
+                      </Tree.Item>
+                    </Tree.Group>
+                  </Tree.Item>
+                  <Tree.Item value="tb-b" data-testid="cbs-item-b">
+                    <span>Leaf B</span>
+                  </Tree.Item>
+                </Tree>
+              </Combobox.Popover>
+            </Combobox>
+          </div>
+          <p data-testid="cbs-log">{JSON.stringify(selLog)}</p>
+        </section>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// Invalid bridge anatomy (TR-CB-04): a nested Tree onChange diagnoses and
+// is never invoked — activation still commits only through root onChange.
+export const ComboboxTreeInvalid = () => {
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [inputValue, setInputValue] = React.useState('')
+  const [expanded, setExpanded] = React.useState<string[]>(['ci-src'])
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tree-fixture-root" maxW="120r">
+        <div style={{ width: 320 }}>
+          <Combobox
+            open={open}
+            onOpen={() => {
+              push('open')
+              setOpen(true)
+            }}
+            onDismiss={() => {
+              push('dismiss')
+              setOpen(false)
+            }}
+            value={value}
+            onChange={v => {
+              push(`change:${v}`)
+              setValue(v)
+              setInputValue(v ?? '')
+            }}
+            inputValue={inputValue}
+            onInputValueChange={v => {
+              push(`input:${v}`)
+              setInputValue(v)
+            }}
+          >
+            <Field>
+              <Combobox.Input data-testid="cbi-input" placeholder="Search..." />
+            </Field>
+            <Combobox.Popover data-testid="cbi-popover">
+              <Tree
+                data-testid="cbi-tree"
+                value={value}
+                onChange={v => push(`tree:${v}`)}
+                expanded={expanded}
+                onExpandedChange={next => {
+                  push(`expanded:${next.join('+')}`)
+                  setExpanded(next)
+                }}
+              >
+                <Tree.Item value="ci-src" data-testid="cbi-item-src">
+                  <Tree.Expander data-testid="cbi-expander-src" aria-label="Toggle src" />
+                  <span>src</span>
+                  <Tree.Group data-testid="cbi-group-src">
+                    <Tree.Item value="ci-index" data-testid="cbi-item-index">
+                      <span>index.ts</span>
+                    </Tree.Item>
+                  </Tree.Group>
+                </Tree.Item>
+                <Tree.Item value="ci-readme" data-testid="cbi-item-readme">
+                  <span>README.md</span>
+                </Tree.Item>
+              </Tree>
+            </Combobox.Popover>
+          </Combobox>
+        </div>
+        <p data-testid="cbi-log">{JSON.stringify(log)}</p>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+type DynNode = { value: string; label: string; children: DynNode[] }
+
+const dynInitial: DynNode[] = [
+  {
+    value: 'a',
+    label: 'Branch A',
+    children: [
+      { value: 'a1', label: 'A1', children: [] },
+      {
+        value: 'a2',
+        label: 'A2',
+        children: [{ value: 'a2i', label: 'A2i', children: [] }],
+      },
+    ],
+  },
+  {
+    value: 'b',
+    label: 'Branch B',
+    children: [{ value: 'b1', label: 'B1', children: [] }],
+  },
+]
+
+const DynSubtree = ({ node }: { node: DynNode }) => {
+  if (node.children.length === 0) {
+    return (
+      <Tree.Item value={node.value} data-testid={`dyn-item-${node.value}`}>
+        <span>{node.label}</span>
+      </Tree.Item>
+    )
+  }
+  return (
+    <Tree.Item value={node.value} data-testid={`dyn-item-${node.value}`}>
+      <Tree.Expander data-testid={`dyn-expander-${node.value}`} aria-label={`Toggle ${node.label}`} />
+      <span>{node.label}</span>
+      <Tree.Group data-testid={`dyn-group-${node.value}`}>
+        {node.children.map(child => (
+          <DynSubtree key={child.value} node={child} />
+        ))}
+      </Tree.Group>
+    </Tree.Item>
+  )
+}
+
+const dynHas = (nodes: DynNode[], value: string): boolean =>
+  nodes.some(n => n.value === value || dynHas(n.children, value))
+
+const dynRemove = (nodes: DynNode[], value: string): DynNode[] =>
+  nodes
+    .filter(n => n.value !== value)
+    .map(n => ({ ...n, children: dynRemove(n.children, value) }))
+
+const dynFind = (nodes: DynNode[], value: string): DynNode | null => {
+  for (const n of nodes) {
+    if (n.value === value) return n
+    const hit = dynFind(n.children, value)
+    if (hit) return hit
+  }
+  return null
+}
+
+// Structural-editing fixture (TR-DYNAMIC-01/02): insert, remove, reorder,
+// and cross-parent moves at root and nested levels, plus empty and
+// single-branch states. Each op is a fixed deterministic edit.
+export const DynamicHierarchy = () => {
+  const [nodes, setNodes] = React.useState<DynNode[]>(dynInitial)
+  const [value, setValue] = React.useState<string | null>(null)
+  const [expanded, setExpanded] = React.useState<string[]>(['a', 'a2', 'b'])
+  const [selectionLog, setSelectionLog] = React.useState<string[]>([])
+  const [expansionLog, setExpansionLog] = React.useState<string[][]>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tree-fixture-root" maxW="120r">
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          <button
+            type="button"
+            data-testid="dyn-add-root-leaf"
+            onClick={() =>
+              setNodes(prev =>
+                dynHas(prev, 'c') ? prev : [...prev, { value: 'c', label: 'C', children: [] }]
+              )
+            }
+          >
+            Add root leaf C
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-add-nested-leaf"
+            onClick={() =>
+              setNodes(prev => {
+                if (dynHas(prev, 'a3')) return prev
+                return prev.map(n =>
+                  n.value === 'a'
+                    ? { ...n, children: [...n.children, { value: 'a3', label: 'A3', children: [] }] }
+                    : n
+                )
+              })
+            }
+          >
+            Add nested leaf A3
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-add-root-branch"
+            onClick={() =>
+              setNodes(prev =>
+                dynHas(prev, 'd')
+                  ? prev
+                  : [
+                      ...prev,
+                      {
+                        value: 'd',
+                        label: 'Branch D',
+                        children: [{ value: 'd1', label: 'D1', children: [] }],
+                      },
+                    ]
+              )
+            }
+          >
+            Add root branch D
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-reorder-roots"
+            onClick={() => setNodes(prev => [...prev].reverse())}
+          >
+            Reverse roots
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-reorder-nested"
+            onClick={() =>
+              setNodes(prev =>
+                prev.map(n =>
+                  n.value === 'a' ? { ...n, children: [...n.children].reverse() } : n
+                )
+              )
+            }
+          >
+            Reverse A children
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-remove-leaf"
+            onClick={() => setNodes(prev => dynRemove(prev, 'a1'))}
+          >
+            Remove leaf A1
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-remove-branch"
+            onClick={() => setNodes(prev => dynRemove(prev, 'd'))}
+          >
+            Remove branch D
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-move-within"
+            onClick={() =>
+              setNodes(prev => {
+                const hit = dynFind(prev, 'a')
+                if (!hit) return prev
+                return [...dynRemove(prev, 'a'), hit]
+              })
+            }
+          >
+            Move A to root end
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-move-under-b"
+            onClick={() =>
+              setNodes(prev => {
+                const hit = dynFind(prev, 'a')
+                if (!hit) return prev
+                const rest = dynRemove(prev, 'a')
+                return rest.map(n =>
+                  n.value === 'b' ? { ...n, children: [...n.children, hit] } : n
+                )
+              })
+            }
+          >
+            Move A under B
+          </button>
+          <button type="button" data-testid="dyn-clear" onClick={() => setNodes([])}>
+            Clear all
+          </button>
+          <button
+            type="button"
+            data-testid="dyn-single"
+            onClick={() =>
+              setNodes([
+                {
+                  value: 's',
+                  label: 'Solo',
+                  children: [{ value: 's1', label: 'S1', children: [] }],
+                },
+              ])
+            }
+          >
+            Single branch
+          </button>
+          <button type="button" data-testid="dyn-reset" onClick={() => setNodes(dynInitial)}>
+            Reset
+          </button>
+        </div>
+        <div style={{ width: 320, border: '1px solid #ccc', padding: 12, borderRadius: 6 }}>
+          <Tree
+            data-testid="dyn-tree"
+            value={value}
+            onChange={next => {
+              setSelectionLog(prev => [...prev, String(next)])
+              setValue(next)
+            }}
+            expanded={expanded}
+            onExpandedChange={next => {
+              setExpansionLog(prev => [...prev, next])
+              setExpanded(next)
+            }}
+          >
+            {nodes.map(node => (
+              <DynSubtree key={node.value} node={node} />
+            ))}
+          </Tree>
+        </div>
+        <p data-testid="dyn-value">Selected: {value ?? 'None'}</p>
+        <p data-testid="dyn-expanded">Expanded: {expanded.join(', ')}</p>
+        <p data-testid="dyn-selection-log">SelectionLog: {selectionLog.join(', ')}</p>
+        <p data-testid="dyn-expansion-log">
+          ExpansionLog: {expansionLog.map(arr => arr.join('+')).join('|')}
+        </p>
       </Div>
     </ReferenceLibrary>
   )

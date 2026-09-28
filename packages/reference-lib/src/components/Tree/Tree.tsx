@@ -1,6 +1,19 @@
 import * as React from 'react'
 import { Div, Button, type PrimitiveProps } from '@reference-ui/react'
 import { TypeaheadModel } from '../RovingFocus/typeahead'
+import { ComboboxContext } from '../Combobox/combobox-context'
+
+// The package declares no node types, so the bare `process` global is
+// unresolvable in the narrow build program — read it through globalThis
+// with a file-local shape instead. Same pattern as Combobox's diagnostic.
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+export function treeDiagnostic(message: string) {
+  const isProd = globalProcess?.env?.NODE_ENV === 'production'
+  if (!isProd) {
+    console.error(`[reference-ui] Tree: ${message}`)
+  }
+}
 
 // Deterministic expanded-array emission (TR-EXPAND-06): known branches follow
 // current document order, unknown application values keep incoming order.
@@ -132,8 +145,18 @@ function isGroupChild(child: React.ReactNode): boolean {
 }
 
 export type TreeProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
-  value: string | null
-  onChange: (value: string | null) => void
+  /**
+   * Controlled selection. Required standalone (omission throws); optional
+   * inside Combobox, where it displays `combobox.value` when omitted and
+   * the root owns commits either way (TR-CB-04).
+   */
+  value?: string | null
+  /**
+   * Selection requests. Required standalone (omission throws); forbidden
+   * inside Combobox — a nested onChange diagnoses and is never invoked,
+   * because activation commits only through root onChange (TR-CB-04).
+   */
+  onChange?: (value: string | null) => void
   expanded?: string[]
   defaultExpanded?: string[]
   onExpandedChange?: (expanded: string[]) => void
@@ -194,6 +217,9 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
       onClick,
       onKeyDown,
       onFocus,
+      onPointerDown,
+      onMouseDown,
+      onPointerMove,
       className,
       style,
       ...props
@@ -203,6 +229,7 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
     const generatedId = React.useId()
     const id = (valueProp ?? idProp ?? generatedId) as string
     const tree = React.useContext(TreeContext)
+    const combobox = React.useContext(ComboboxContext)
     const level = React.useContext(TreeLevelContext) ?? 1
     // Branch semantics follow authored structure: an explicit prop or a nested
     // Group child (TR-DOM-03). Render-time scan keeps SSR deterministic.
@@ -221,10 +248,41 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
     const isDisabled = disabled || (tree?.disabled ?? false)
 
     const isCurrentFocus = tree?.focusedId === id
-    const tabIndex = isDisabled ? -1 : isCurrentFocus ? 0 : -1
+    // TR-CB-01: inside Combobox the source owns DOM focus, so nested items
+    // keep no tab stop; standalone roving is unchanged.
+    const tabIndex = combobox ? -1 : isDisabled ? -1 : isCurrentFocus ? 0 : -1
+    // TR-CB-06: inside Combobox, data-active previews the source's virtual
+    // focus (Listbox active-derivation parity); standalone keeps focus.
+    const isVirtualActive = combobox
+      ? combobox.activeOptionId === id ||
+        (combobox.activeValue === id &&
+          (!combobox.activeOptionId || combobox.activeOptionId === id))
+      : false
+    const showActive = combobox ? isVirtualActive : isCurrentFocus
 
     const itemRef = React.useRef<HTMLDivElement | null>(null)
     const composedRef = useComposedRefs(ref, itemRef)
+
+    // TR-CB-01/05: nested items join the Combobox registry — visible-only
+    // by mount/unmount, since collapsed Groups unmount. Branches flag
+    // isBranch; leaves omit it. Registry order follows live DOM order, so
+    // expand/collapse/reorder stay current without explicit sync.
+    React.useEffect(() => {
+      if (!combobox) return
+      const node =
+        itemRef.current ??
+        (typeof document !== 'undefined'
+          ? (document.getElementById(id) as HTMLElement | null)
+          : null)
+      return combobox.registerOption({
+        value: id,
+        id,
+        node,
+        disabled: isDisabled,
+        textValue: textValue ?? (node ? extractTypeaheadText(node) : undefined),
+        isBranch: isBranch || undefined,
+      })
+    }, [combobox, id, isDisabled, textValue, isBranch, children])
 
     // Reject duplicate item identities before focus/selection goes ambiguous (TR-DOM-08)
     const registerItemInstance = tree?.registerItemInstance
@@ -263,18 +321,55 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
     e.stopPropagation()
     onClick?.(e)
     if (!e.defaultPrevented && !isDisabled && tree) {
-      tree.setFocusedId(id)
-      itemRef.current?.focus()
-      tree.selectItem(id)
+      if (combobox) {
+        // TR-CB-04: no DOM focus move — the source keeps focus — and the
+        // commit routes only through the Combobox root via selectItem.
+        tree.selectItem(id)
+      } else {
+        tree.setFocusedId(id)
+        itemRef.current?.focus()
+        tree.selectItem(id)
+      }
     }
   }
 
   const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return
     onFocus?.(e)
-    if (!e.defaultPrevented && !isDisabled && tree && tree.focusedId !== id) {
+    if (!e.defaultPrevented && !isDisabled && tree && !combobox && tree.focusedId !== id) {
       tree.setFocusedId(id)
     }
+  }
+
+  // TR-CB-01: inside Combobox, pointerdown never moves DOM focus off the
+  // source (Listbox press parity) — otherwise the input blurs and the
+  // popover dismisses before click commits.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerDown?.(e)
+    if (combobox && !e.defaultPrevented) {
+      e.preventDefault()
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    onMouseDown?.(e)
+    if (combobox && !e.defaultPrevented) {
+      e.preventDefault()
+    }
+  }
+
+  // TR-CB-06: pointer preview under virtual focus (Combobox VirtualItem
+  // parity: touch excluded, consumer cancellation honored). Branch items
+  // wrap their Groups in the DOM, so moves bubbled from a descendant item
+  // are ignored — the nearest treeitem owns the preview (same guard family
+  // as handleClick; without it the outermost ancestor would win).
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    onPointerMove?.(e)
+    if (!combobox || e.defaultPrevented || isDisabled) return
+    if (e.pointerType === 'touch') return
+    const target = e.target as HTMLElement
+    if (target.closest('[role="treeitem"]') !== e.currentTarget) return
+    combobox.setActiveValue(id)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -282,6 +377,10 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
     if (e.target !== e.currentTarget) return
     onKeyDown?.(e)
     if (e.defaultPrevented || isDisabled || !tree) return
+
+    // TR-CB-01: inside Combobox the source owns all keys (virtual focus) —
+    // item roving and typeahead never run, so DOM focus cannot be stolen.
+    if (combobox) return
 
     // Modified keys are not Tree commands (TR-KEY-11)
     if (e.altKey || e.ctrlKey || e.metaKey) {
@@ -321,11 +420,14 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
           data-expanded={isExpanded ? '' : undefined}
           data-disabled={isDisabled ? '' : undefined}
           data-level={level}
-          data-active={isCurrentFocus ? '' : undefined}
+          data-active={showActive ? '' : undefined}
           data-text-value={textValue}
           onClick={handleClick}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
+          onPointerDown={handlePointerDown}
+          onMouseDown={handleMouseDown}
+          onPointerMove={handlePointerMove}
           display="flex"
           flexDirection="column"
           outline="none"
@@ -386,11 +488,14 @@ export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
         data-selected={isSelected ? '' : undefined}
         data-disabled={isDisabled ? '' : undefined}
         data-level={level}
-        data-active={isCurrentFocus ? '' : undefined}
+        data-active={showActive ? '' : undefined}
         data-text-value={textValue}
         onClick={handleClick}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
+        onPointerDown={handlePointerDown}
+        onMouseDown={handleMouseDown}
+        onPointerMove={handlePointerMove}
         display="flex"
         alignItems="center"
         minHeight="8r"
@@ -500,11 +605,14 @@ export const TreeExpander = React.forwardRef<HTMLButtonElement, TreeExpanderProp
       className,
       style,
       onClick,
+      onPointerDown,
+      onMouseDown,
       ...props
     },
     ref
   ) {
     const tree = React.useContext(TreeContext)
+    const combobox = React.useContext(ComboboxContext)
     const itemContext = React.useContext(TreeItemContext)
     const itemId = itemIdProp ?? itemContext?.id ?? ''
 
@@ -530,6 +638,23 @@ export const TreeExpander = React.forwardRef<HTMLButtonElement, TreeExpanderProp
       }
     }
 
+    // TR-CB-01: inside Combobox, Expander press never moves DOM focus off
+    // the source — a mousedown default here would blur the input and
+    // dismiss the popover before click expands.
+    const handleExpanderPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+      onPointerDown?.(e)
+      if (combobox && !e.defaultPrevented) {
+        e.preventDefault()
+      }
+    }
+
+    const handleExpanderMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onMouseDown?.(e)
+      if (combobox && !e.defaultPrevented) {
+        e.preventDefault()
+      }
+    }
+
     return (
       <Button
         ref={ref}
@@ -539,6 +664,8 @@ export const TreeExpander = React.forwardRef<HTMLButtonElement, TreeExpanderProp
         aria-expanded={isExpanded}
         aria-controls={groupId}
         onClick={handleClick}
+        onPointerDown={handleExpanderPointerDown}
+        onMouseDown={handleExpanderMouseDown}
       border="none"
       bg="transparent"
       color="inherit"
@@ -599,19 +726,34 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     },
     ref
   ) {
-    // Fully controlled selection: value is required (null is the empty
-    // value) and onChange is required — a callback-less tree would freeze
-    // silently. Render-phase pure checks: StrictMode-safe.
-    if (value === undefined) {
+    const combobox = React.useContext(ComboboxContext)
+
+    // Fully controlled selection standalone: value is required (null is the
+    // empty value) and onChange is required — a callback-less tree would
+    // freeze silently. Inside Combobox both are optional: selection display
+    // falls back to the root value and commits route to the root (TR-CB-04).
+    // Render-phase pure checks: StrictMode-safe.
+    if (value === undefined && !combobox) {
       throw new Error(
         'Reference UI: Tree "value" is required — the tree is fully controlled, with null as the empty value.'
       )
     }
-    if (onChange === undefined) {
+    if (onChange === undefined && !combobox) {
       throw new Error(
         'Reference UI: Tree "onChange" is required — the tree is fully controlled; pass a handler that writes selection state back.'
       )
     }
+
+    // TR-CB-04: a nested onChange diagnoses (render-time, matching the
+    // Combobox authored-scan diagnostic) and is never invoked — activation
+    // commits only through root onChange, never double-updates.
+    if (combobox && onChange !== undefined) {
+      treeDiagnostic(
+        'Tree owns expansion, not commits, inside Combobox: a nested onChange is ignored. Remove it; root onChange is the sole commit callback.'
+      )
+    }
+
+    const effectiveValue = combobox ? (value ?? combobox.value) : value
 
     const isControlledExpanded = expandedProp !== undefined
     const [internalExpanded, setInternalExpanded] = React.useState<string[]>(defaultExpanded)
@@ -648,8 +790,8 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     }
 
     const isItemSelected = React.useCallback(
-      (id: string) => value === id,
-      [value]
+      (id: string) => effectiveValue === id,
+      [effectiveValue]
     )
 
     const isItemExpanded = React.useCallback(
@@ -659,13 +801,22 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
 
     const selectItem = React.useCallback(
       (id: string) => {
+        // TR-CB-04: inside Combobox the root owns commits — route there and
+        // never invoke a nested onChange (diagnosed at render, ignored here).
+        if (combobox) {
+          combobox.handleSelect(id)
+          return
+        }
+        if (onChange === undefined) {
+          return
+        }
         // Single selection is idempotent, not a toggle (TR-SELECT-03)
         if (value === id) {
           return
         }
         onChange(id)
       },
-      [onChange, value]
+      [combobox, onChange, value]
     )
 
     // Live branches in current document order for deterministic payloads
@@ -685,7 +836,8 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       (id: string) => {
         const isCurrentlyExpanded = expanded.includes(id)
         // If about to collapse id and currently focused item is a descendant, move focus to branch first
-        if (isCurrentlyExpanded) {
+        // (standalone only — inside Combobox the source keeps DOM focus and virtual active follows).
+        if (isCurrentlyExpanded && !combobox) {
           const rootEl = rootRef.current
           if (rootEl && focusedId && focusedId !== id) {
             const branchEl = rootEl.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`)
@@ -703,8 +855,73 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         }
         onExpandedChange?.(next)
       },
-      [expanded, isControlledExpanded, onExpandedChange, focusedId, getOrderedBranches]
+      [expanded, isControlledExpanded, onExpandedChange, focusedId, getOrderedBranches, combobox]
     )
+
+    // Explicit expansion setter for Combobox bridge requests (TR-CB-02):
+    // routes through the controlled expanded/onExpandedChange path exactly
+    // once, and stays silent when already in the requested state.
+    const setBranchExpanded = React.useCallback(
+      (id: string, expand: boolean) => {
+        const isCurrentlyExpanded = expanded.includes(id)
+        if (isCurrentlyExpanded === expand) {
+          return false
+        }
+        const next = getDeterministicExpanded(expanded, id, getOrderedBranches(), expand)
+        if (!isControlledExpanded) {
+          setInternalExpanded(next)
+        }
+        onExpandedChange?.(next)
+        return true
+      },
+      [expanded, isControlledExpanded, onExpandedChange, getOrderedBranches]
+    )
+
+    // Combobox bridge consumption (TR-CB-02): sequenced horizontal-key
+    // requests become Tree hierarchy commands. Unknown/leaf values are
+    // ignored; a redundant expand enters the first enabled child and a
+    // redundant collapse moves to the parent (TR-KEY-04/05 parity under
+    // virtual focus — navigation, never emissions).
+    const lastExpansionSeqRef = React.useRef(0)
+    const expansionRequest = combobox?.treeExpansionRequest ?? null
+    React.useEffect(() => {
+      if (!combobox || !expansionRequest) return
+      if (expansionRequest.seq === lastExpansionSeqRef.current) return
+      lastExpansionSeqRef.current = expansionRequest.seq
+      const reqValue = expansionRequest.value
+      const expand = expansionRequest.expand
+      if (!getOrderedBranches().includes(reqValue)) {
+        return
+      }
+      const isCurrentlyExpanded = expanded.includes(reqValue)
+      if (expand && !isCurrentlyExpanded) {
+        setBranchExpanded(reqValue, true)
+        return
+      }
+      if (!expand && isCurrentlyExpanded) {
+        setBranchExpanded(reqValue, false)
+        return
+      }
+      const rootEl = rootRef.current
+      if (!rootEl) return
+      const branchEl = rootEl.querySelector<HTMLElement>(`[id="${CSS.escape(reqValue)}"]`)
+      if (!branchEl) return
+      if (expand) {
+        const group = branchEl.querySelector(':scope > [role="group"]')
+        const firstChild = group?.querySelector<HTMLElement>(
+          ':scope > [role="treeitem"]:not([aria-disabled="true"])'
+        )
+        if (firstChild) {
+          combobox.setActiveValue(firstChild.id, 'keyboard')
+        }
+      } else {
+        const parentGroup = branchEl.parentElement?.closest('[role="group"]')
+        const parentItem = parentGroup?.closest<HTMLElement>('[role="treeitem"]')
+        if (parentItem && rootEl.contains(parentItem)) {
+          combobox.setActiveValue(parentItem.id, 'keyboard')
+        }
+      }
+    }, [combobox, expansionRequest, expanded, getOrderedBranches, setBranchExpanded])
 
     // Batch expansion (W-17): one deterministic emission for a whole sibling
     // set. Callers skip the call when there is nothing new to expand, so a
@@ -731,13 +948,15 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       if (visibleItems.length === 0) return
 
       if (!focusedId || !visibleItems.some((el) => el.id === focusedId)) {
-        const selectedEl = value ? visibleItems.find((el) => el.id === value) : null
+        const selectedEl = effectiveValue
+          ? visibleItems.find((el) => el.id === effectiveValue)
+          : null
         const target = selectedEl ?? visibleItems[0]
         if (target) {
           setFocusedId(target.id)
         }
       }
-    }, [focusedId, value, expanded])
+    }, [focusedId, effectiveValue, expanded])
 
     // Top-level sibling set metadata (TR-DOM-05)
     React.useLayoutEffect(() => {
@@ -762,7 +981,9 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
       )
       const currentValues = visibleItems.map((el) => el.id)
 
-      if (focusedId !== null && !currentValues.includes(focusedId)) {
+      // Standalone only — inside Combobox the source keeps DOM focus and
+      // virtual active follows the registry (TR-CB-05), never DOM recovery.
+      if (!combobox && focusedId !== null && !currentValues.includes(focusedId)) {
         const oldIndex = prevVisibleValuesRef.current.indexOf(focusedId)
         let candidate: HTMLElement | null = null
 
@@ -986,7 +1207,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
 
     const contextValue = React.useMemo<TreeContextValue>(
       () => ({
-        value,
+        value: effectiveValue ?? null,
         expanded,
         disabled,
         focusedId,
@@ -1000,7 +1221,7 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
         handleItemKeyDown,
       }),
       [
-        value,
+        effectiveValue,
         expanded,
         disabled,
         focusedId,

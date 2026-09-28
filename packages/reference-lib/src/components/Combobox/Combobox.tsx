@@ -7,9 +7,11 @@ import {
   ListboxSection,
   ListboxEmpty,
   type ListboxOptionProps,
+  type VirtualFocusAdapter,
   type VirtualFocusItem,
 } from '../Listbox'
 import { Tree, TreeItem } from '../Tree'
+import { announce } from '../Announcer'
 import {
   ComboboxContext,
   shadowContainerForSource,
@@ -18,6 +20,7 @@ import {
   type ComboboxContextValue,
   type ComboboxGridAdapter,
   type ComboboxOptionEntry,
+  type ComboboxTreeExpansionRequest,
   type ComboboxVirtualEntry,
   type VirtualFocusNavigationKey,
   type VirtualFocusNavigationRequest,
@@ -41,6 +44,7 @@ import {
 export type {
   ComboboxAutocomplete,
   ComboboxGridAdapter,
+  ComboboxTreeExpansionRequest,
   VirtualFocusItem,
   VirtualFocusNavigationKey,
   VirtualFocusNavigationRequest,
@@ -99,6 +103,54 @@ function isGridAdapter(value: unknown): value is ComboboxGridAdapter {
     typeof candidate.getNextIndex === 'function' &&
     typeof candidate.scrollToIndex === 'function'
   )
+}
+
+/** Nested-Listbox `virtual` shape check (CB-VIRT): items/scrollToIndex. */
+function isWindowedListAdapter(value: unknown): value is VirtualFocusAdapter {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Record<string, unknown>
+  return (
+    Array.isArray(candidate.items) &&
+    typeof candidate.scrollToIndex === 'function'
+  )
+}
+
+/**
+ * 1-D logical step for the windowed-Listbox driver (CB-VIRT-01): wraps
+ * through enabled logical items from the current logical index. Null
+ * current starts at the directional edge; empty/all-disabled yields null.
+ */
+function stepWindowedIndex(args: {
+  items: readonly VirtualFocusItem[]
+  currentIndex: number | null
+  direction: 1 | -1
+}): number | null {
+  const { items, currentIndex, direction } = args
+  if (items.length === 0) return null
+  if (currentIndex == null) {
+    const order =
+      direction === 1
+        ? items.map((item, at) => ({ item, at }))
+        : items.map((item, at) => ({ item, at })).reverse()
+    return order.find(entry => !entry.item.disabled)?.at ?? null
+  }
+  for (let step = 1; step <= items.length; step += 1) {
+    const at = (currentIndex + direction * step + items.length * step) % items.length
+    if (!items[at]?.disabled) return at
+  }
+  return null
+}
+
+/** First/last enabled logical index for the windowed driver (Home/End). */
+function edgeWindowedIndex(
+  items: readonly VirtualFocusItem[],
+  which: 'first' | 'last'
+): number | null {
+  const order =
+    which === 'first'
+      ? items.map((item, at) => ({ item, at }))
+      : items.map((item, at) => ({ item, at })).reverse()
+  return order.find(entry => !entry.item.disabled)?.at ?? null
 }
 
 /** Still-mounted check (CB-NAV-07): only a connected option may commit. */
@@ -163,11 +215,44 @@ export interface ComboboxProps {
    * not forward to the Overlay layer (no double-fire).
    */
   onEscape?: (event: KeyboardEvent) => void
+  /**
+   * Async busy state (FEATURES #4, default `false`). `true` marks the
+   * popup collection `aria-busy` (the nested listbox/tree node, or the
+   * grid popover itself) until the collection resolves. Never renders a
+   * private live region — status prose routes through the shared
+   * `announce()` below.
+   */
+  loading?: boolean
+  /**
+   * Empty-collection status prose (FEATURES #4). Announced once via the
+   * shared `announce()` when the open popover's collection is logically
+   * empty and the input holds no text — unless an Empty node is authored
+   * (its native live region speaks for itself) or `loading` is true.
+   */
+  emptyMessage?: string
+  /**
+   * No-results status prose (FEATURES #4). Announced once via the shared
+   * `announce()` when the open popover's collection is logically empty
+   * and the input holds unmatched text — unless an Empty node is
+   * authored (its native live region speaks for itself) or `loading` is
+   * true.
+   */
+  noResultsMessage?: string
 }
 
-export type ComboboxInputProps = Omit<PrimitiveProps<'input'>, 'value' | 'defaultValue'> & {
+export type ComboboxInputProps = Omit<
+  PrimitiveProps<'input'>,
+  'value' | 'defaultValue' | 'onChange'
+> & {
   value?: never
   defaultValue?: never
+  /**
+   * Rejected (CB-DOM-11): root `inputValue` + `onInputValueChange` is
+   * the only text authority. Observe/cancel the native edit through
+   * `onInput` / `onBeforeInput` instead — the type surface rejects this
+   * and bypassed JS gets a diagnostic, never a callback.
+   */
+  onChange?: never
 }
 
 export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
@@ -190,10 +275,15 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
     }: ComboboxInputProps,
     userRef
   ) {
-  const rawProps = { value: forbiddenValue, defaultValue: forbiddenDefaultValue }
+  const rawProps = { value: forbiddenValue, defaultValue: forbiddenDefaultValue, onChange }
   if (rawProps.value !== undefined || rawProps.defaultValue !== undefined) {
     comboboxDiagnostic(
       'Combobox.Input does not accept value or defaultValue. Use root inputValue and onInputValueChange.'
+    )
+  }
+  if (rawProps.onChange !== undefined) {
+    comboboxDiagnostic(
+      'Combobox.Input does not accept onChange. Use root onInputValueChange; observe the native edit through onInput or cancel it through onBeforeInput.'
     )
   }
 
@@ -295,7 +385,10 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
   const isReadOnly = Boolean(readOnly)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange?.(e)
+    // No consumer onChange observer (CB-DOM-11): root onInputValueChange
+    // is the only text callback path. Consumers cancel the edit earlier
+    // through onBeforeInput (CB-OPEN-07 type third), which prevents the
+    // native edit and this event together.
     if (!e.defaultPrevented && !isDisabled && !isReadOnly) {
       handleInputChange(e.target.value)
       // #10: an edit requests open only when popover collection content
@@ -371,7 +464,7 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
       e.preventDefault()
       if (!isOpen) {
         context.requestArrowOpen(1)
-      } else if (context.virtualAdapter) {
+      } else if (context.virtualAdapter ?? context.windowedListAdapter) {
         context.navigateVirtual('ArrowDown')
       } else {
         stepActiveValue({
@@ -385,7 +478,7 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
       e.preventDefault()
       if (!isOpen) {
         context.requestArrowOpen(-1)
-      } else if (context.virtualAdapter) {
+      } else if (context.virtualAdapter ?? context.windowedListAdapter) {
         context.navigateVirtual('ArrowUp')
       } else {
         stepActiveValue({
@@ -394,6 +487,25 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
           direction: -1,
           setActive: context.setActiveValue,
         })
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // Tree-bridge delegation (FEATURES #6, CB-TREE-01): with a sole
+      // Tree popup open, horizontal keys expand/collapse instead of
+      // moving the caret — the caret yields to the tree, while listbox
+      // and grid popups keep these keys native (CB-EDIT-03). Leaves and
+      // missing active values swallow the key with no request.
+      if (isOpen && context.popupRole === 'tree' && !context.collectionConflict) {
+        e.preventDefault()
+        const active = mountedActiveValue
+        const entry =
+          active != null
+            ? context.getOrderedOptions().find(opt => opt.value === active)
+            : undefined
+        if (active != null && entry?.isBranch) {
+          const expandKey =
+            directionForElement(inputRef.current) === 'rtl' ? 'ArrowLeft' : 'ArrowRight'
+          context.requestTreeExpansion(active, e.key === expandKey)
+        }
       }
     } else if (e.key === 'PageUp' || e.key === 'PageDown') {
       // Virtual grids only (#5): single-line inputs have no native page
@@ -494,6 +606,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
       disabled: disabledProp,
       className,
       style,
+      type: typeProp,
       ...props
     }: ComboboxTriggerProps,
     userRef
@@ -583,7 +696,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
       e.preventDefault()
       if (!context.isOpen) {
         context.requestArrowOpen(1)
-      } else if (context.virtualAdapter) {
+      } else if (context.virtualAdapter ?? context.windowedListAdapter) {
         context.navigateVirtual('ArrowDown')
       } else {
         stepActiveValue({
@@ -600,7 +713,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
       e.preventDefault()
       if (!context.isOpen) {
         context.requestArrowOpen(-1)
-      } else if (context.virtualAdapter) {
+      } else if (context.virtualAdapter ?? context.windowedListAdapter) {
         context.navigateVirtual('ArrowUp')
       } else {
         stepActiveValue({
@@ -615,13 +728,36 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
 
     // #5: grid horizontal/page keys exist only for select-only Triggers
     // (editable inputs keep them native per CB-EDIT-03) and only with an
-    // adapter; otherwise ignored as before.
-    if (
-      e.key === 'ArrowLeft' ||
-      e.key === 'ArrowRight' ||
-      e.key === 'PageUp' ||
-      e.key === 'PageDown'
-    ) {
+    // adapter; otherwise ignored as before. Tree popups delegate
+    // horizontal keys to expansion (FEATURES #6); windowed lists leave
+    // horizontal/page keys alone (no contract).
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (context.isOpen && context.virtualAdapter) {
+        e.preventDefault()
+        context.navigateVirtual(e.key)
+      } else if (
+        context.isOpen &&
+        context.popupRole === 'tree' &&
+        !context.collectionConflict
+      ) {
+        e.preventDefault()
+        const active = mountedActiveValue
+        const entry =
+          active != null
+            ? context.getOrderedOptions().find(opt => opt.value === active)
+            : undefined
+        if (active != null && entry?.isBranch) {
+          const expandKey =
+            directionForElement(context.sourceRef.current) === 'rtl'
+              ? 'ArrowLeft'
+              : 'ArrowRight'
+          context.requestTreeExpansion(active, e.key === expandKey)
+        }
+      }
+      return
+    }
+
+    if (e.key === 'PageUp' || e.key === 'PageDown') {
       if (context.isOpen && context.virtualAdapter) {
         e.preventDefault()
         context.navigateVirtual(e.key)
@@ -658,7 +794,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
 
     if (e.key === 'Home') {
       if (context.isOpen) {
-        if (context.virtualAdapter) context.navigateVirtual('Home')
+        if (context.virtualAdapter ?? context.windowedListAdapter) context.navigateVirtual('Home')
         else activateFirstLast('first')
       }
       return
@@ -666,7 +802,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
 
     if (e.key === 'End') {
       if (context.isOpen) {
-        if (context.virtualAdapter) context.navigateVirtual('End')
+        if (context.virtualAdapter ?? context.windowedListAdapter) context.navigateVirtual('End')
         else activateFirstLast('last')
       }
       return
@@ -682,8 +818,9 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
         return
       }
       // #5: with an adapter the buffer searches logical items (mounted
-      // or not) and scrolls unmounted matches into the DOM.
-      const adapter = context.virtualAdapter
+      // or not) and scrolls unmounted matches into the DOM. Windowed
+      // Listboxes share the logical search (CB-VIRT/CB-COMP-01).
+      const adapter = context.virtualAdapter ?? context.windowedListAdapter
       if (adapter) {
         const match = model.handleKey(
           e.key,
@@ -715,7 +852,9 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
     <Button
       {...props}
       ref={composedRef}
-      type="button"
+      // CB-SELECT-06: `button` by default (no accidental submit), but an
+      // explicit native type stays application-owned.
+      type={typeProp ?? 'button'}
       role="combobox"
       aria-expanded={context.isOpen}
       aria-haspopup={context.popupRole}
@@ -800,11 +939,16 @@ export function ComboboxPopover({
   // (conflicts resolve to null, so presentation survives ADAPTER-08).
   // Nested Listbox/Tree supply their own roles; nothing is invented.
   const popoverRole = context?.virtualAdapter ? 'grid' : 'presentation'
+  // FEATURES #4: a grid popover IS the collection, so it carries busy
+  // directly. Nested listbox/tree nodes get theirs from the root's sync
+  // effect (frozen parts, no prop channel).
+  const popoverBusy = context?.loading === true && popoverRole === 'grid'
 
   return (
     <Overlay.Content
       data-reference-combobox-popover=""
       role={popoverRole}
+      aria-busy={popoverBusy || undefined}
       placement="bottom-start"
       p="1r"
       bg="ui.dialog.background"
@@ -982,6 +1126,9 @@ export function Combobox({
   autocomplete = 'list',
   allowCustomValue = false,
   onEscape,
+  loading = false,
+  emptyMessage = 'No options available',
+  noResultsMessage = 'No results found',
 }: ComboboxProps) {
   // Controlled-only: value + onChange are required; there is no uncontrolled branch.
   if (globalProcess?.env?.NODE_ENV !== 'production') {
@@ -1134,10 +1281,32 @@ export function Combobox({
 
   const virtualAdapter =
     collectionConflict || duplicateValue != null ? null : authoredAdapter
+  // Windowed-Listbox driver (CB-VIRT-*): the nested Listbox's own
+  // `virtual` prop, engaged only as the sole unconflicted authority.
+  // This is Listbox-internal metadata, so a malformed value diagnoses
+  // and falls back to mounted-only navigation rather than breaking the
+  // collection. Never coexists with the grid adapter (that combination
+  // is already a CB-ADAPTER-08 conflict above).
+  const authoredWindowed = isWindowedListAdapter(authoredScan.listboxVirtualAdapter)
+    ? (authoredScan.listboxVirtualAdapter as VirtualFocusAdapter)
+    : null
+  if (authoredScan.listboxVirtualAdapter != null && authoredWindowed == null) {
+    comboboxDiagnostic(
+      'Combobox ignores a nested Listbox virtual prop that is not a windowed adapter (items array with scrollToIndex). Mounted-only navigation applies.'
+    )
+  }
+  const soleListboxKind =
+    authoredKinds.length === 1 && authoredKinds[0] === 'listbox'
+  const windowedListAdapter =
+    collectionConflict || virtualAdapter != null || !soleListboxKind
+      ? null
+      : authoredWindowed
   // Live adapter for registration-time callbacks (ref: mounts must not
   // re-subscribe when the adapter object identity changes).
   const adapterRef = React.useRef(virtualAdapter)
   adapterRef.current = virtualAdapter
+  const windowedRef = React.useRef(windowedListAdapter)
+  windowedRef.current = windowedListAdapter
   const virtualMapRef = React.useRef(new Map<number, ComboboxVirtualEntry>())
   // Requested-but-unmounted logical target (#5 mount timing). Identity
   // is index + value so stale mounts after metadata replacement can
@@ -1146,17 +1315,36 @@ export function Combobox({
   const [pendingVirtualIndex, setPendingVirtualIndex] = React.useState<number | null>(null)
   // Metadata replacement/reorder cancels stale mount requests; identity
   // follows the items array so inline adapter wrappers stay harmless.
+  // Windowed lists share the pending slot (CB-VIRT-02) — only one driver
+  // engages at a time, so one slot cannot mix authorities.
   const adapterItems = virtualAdapter?.items
+  const windowedItems = windowedListAdapter?.items
   React.useEffect(() => {
     pendingVirtualRef.current = null
     setPendingVirtualIndex(null)
-  }, [adapterItems])
+  }, [adapterItems, windowedItems])
 
   const popupRole: 'listbox' | 'tree' | 'grid' = virtualAdapter
     ? 'grid'
     : authoredKinds.length === 1 && authoredKinds[0] === 'tree'
       ? 'tree'
       : 'listbox'
+
+  // Tree expansion delegation (FEATURES #6): sequenced request state.
+  // The nested Tree root consumes it; Combobox never interprets it.
+  const [treeExpansionRequest, setTreeExpansionRequest] =
+    React.useState<ComboboxTreeExpansionRequest | null>(null)
+  const requestTreeExpansion = React.useCallback(
+    (value: string, expand: boolean) => {
+      if (collectionConflict || !isOpen || popupRole !== 'tree') return
+      setTreeExpansionRequest(prev => ({
+        value,
+        expand,
+        seq: (prev?.seq ?? 0) + 1,
+      }))
+    },
+    [collectionConflict, isOpen, popupRole]
+  )
 
   // #13: the registered focus-source type decides select-only mode.
   // Under the exactly-one-source invariant last-wins is exact.
@@ -1240,34 +1428,39 @@ export function Combobox({
     setActiveValueState(value ?? null)
   }, [value])
 
-  // Logical-target activation (#5): validates the index, activates
-  // mounted targets with keyboard source, and pends + `scrollToIndex`
-  // for unmounted ones. Active value tracks the logical target either
-  // way; the ID publishes only after mount (optionsMap lookup). No-op
-  // without an adapter (absent, malformed, duplicate, or conflicted).
+  // Logical-target activation (#5 + CB-VIRT): validates the index,
+  // activates mounted targets with keyboard source, and pends +
+  // `scrollToIndex` for unmounted ones. Active value tracks the logical
+  // target either way; the ID publishes only after mount (registry
+  // lookup). Grid cells resolve through the VirtualItem map, windowed
+  // Listbox targets through the option registry the window populates.
+  // No-op without an adapter (absent, malformed, duplicate, conflicted).
   const requestVirtualIndex = React.useCallback(
     (index: number) => {
-      const adapter = adapterRef.current
+      const grid = adapterRef.current
+      const windowed = windowedRef.current
+      const adapter = grid ?? windowed
       if (!adapter) return
       if (validateVirtualTarget(adapter.items, index) !== 'ok') {
         comboboxDiagnostic(
-          `Combobox grid target index ${index} is out of range or disabled. Ignored; it cannot become active.`
+          `Combobox logical target index ${index} is out of range or disabled. Ignored; it cannot become active.`
         )
         return
       }
       const target = adapter.items[index]
       if (!target) return
-      const mounted = virtualMapRef.current.get(index)
-      if (
-        mounted &&
-        mounted.node &&
-        mounted.node.isConnected &&
-        mounted.value === target.value
-      ) {
+      const mountedNode = windowed
+        ? (optionsMapRef.current.get(target.value)?.node ?? null)
+        : (virtualMapRef.current.get(index)?.node ?? null)
+      const mountedValueMatches = windowed
+        ? optionsMapRef.current.get(target.value)?.node?.isConnected === true
+        : virtualMapRef.current.get(index)?.value === target.value &&
+          virtualMapRef.current.get(index)?.node?.isConnected === true
+      if (mountedNode && mountedValueMatches) {
         pendingVirtualRef.current = null
         setPendingVirtualIndex(null)
         setActiveValue(target.value, 'keyboard')
-        mounted.node.scrollIntoView({ block: 'nearest' })
+        mountedNode.scrollIntoView({ block: 'nearest' })
         return
       }
       const pending = pendingVirtualRef.current
@@ -1280,27 +1473,51 @@ export function Combobox({
     [setActiveValue]
   )
 
-  // Key navigation through the grid adapter (#5). Null (no move) is
-  // valid; invalid `getNextIndex` results diagnose via requestVirtualIndex.
+  // Key navigation through the logical adapter (#5 + CB-VIRT). Grids own
+  // topology via `getNextIndex`; windowed lists step 1-D (arrows wrap,
+  // Home/End edge, page/horizontal keys have no contract and stay put).
+  // Null (no move) is valid; invalid results diagnose via
+  // requestVirtualIndex.
   const navigateVirtual = React.useCallback(
     (key: VirtualFocusNavigationKey) => {
-      const adapter = adapterRef.current
-      if (!adapter) return
-      const next = adapter.getNextIndex({
-        key,
-        currentIndex: currentVirtualIndex(adapter.items, activeValue),
-        direction: directionForElement(sourceRef.current),
-      })
-      if (next == null) return
-      requestVirtualIndex(next)
+      const grid = adapterRef.current
+      const windowed = windowedRef.current
+      if (grid) {
+        const next = grid.getNextIndex({
+          key,
+          currentIndex: currentVirtualIndex(grid.items, activeValue),
+          direction: directionForElement(sourceRef.current),
+        })
+        if (next == null) return
+        requestVirtualIndex(next)
+        return
+      }
+      if (windowed) {
+        const current = currentVirtualIndex(windowed.items, activeValue)
+        let next: number | null = null
+        if (key === 'ArrowDown') {
+          next = stepWindowedIndex({ items: windowed.items, currentIndex: current, direction: 1 })
+        } else if (key === 'ArrowUp') {
+          next = stepWindowedIndex({ items: windowed.items, currentIndex: current, direction: -1 })
+        } else if (key === 'Home') {
+          next = edgeWindowedIndex(windowed.items, 'first')
+        } else if (key === 'End') {
+          next = edgeWindowedIndex(windowed.items, 'last')
+        } else {
+          return
+        }
+        if (next == null) return
+        requestVirtualIndex(next)
+      }
     },
     [activeValue, requestVirtualIndex]
   )
 
-  // Prefix search over logical adapter items (#5, CB-ADAPTER-07).
+  // Prefix search over logical adapter items (#5, CB-ADAPTER-07; CB-VIRT
+  // shares it for windowed typing/typeahead).
   const searchVirtual = React.useCallback(
     (text: string) => {
-      const adapter = adapterRef.current
+      const adapter = adapterRef.current ?? windowedRef.current
       if (!adapter) return
       const match = findVirtualMatch(adapter.items, text)
       if (match == null) {
@@ -1328,9 +1545,38 @@ export function Combobox({
       setActiveValueState(null)
     } else if (isOpen) {
       // Value changed while open (CB-NAV-06): follow the selection.
+      // Windowed targets that are not mounted pend + scroll exactly like
+      // the open resolver (CB-VIRT-03); the source stays null (a
+      // programmatic follow, never Tab-eligible keyboard intent).
+      const nextVal = value ?? null
+      const windowed = windowedRef.current
+      if (windowed && nextVal != null) {
+        const at = windowed.items.findIndex(
+          item => item.value === nextVal && !item.disabled
+        )
+        if (at !== -1) {
+          const node = optionsMapRef.current.get(nextVal)?.node
+          if (node?.isConnected) {
+            pendingVirtualRef.current = null
+            setPendingVirtualIndex(null)
+            node.scrollIntoView({ block: 'nearest' })
+          } else if (
+            pendingVirtualRef.current?.index !== at ||
+            pendingVirtualRef.current?.value !== nextVal
+          ) {
+            pendingVirtualRef.current = { index: at, value: nextVal }
+            setPendingVirtualIndex(at)
+            windowed.scrollToIndex(at)
+          }
+          activeSourceRef.current = null
+          setActiveSourceState(null)
+          setActiveValueState(nextVal)
+          return
+        }
+      }
       activeSourceRef.current = null
       setActiveSourceState(null)
-      setActiveValueState(value ?? null)
+      setActiveValueState(nextVal)
     } else {
       needsResolveRef.current = false
       pendingDirectionRef.current = null
@@ -1349,10 +1595,10 @@ export function Combobox({
     // Conflicted collections stay unresolved (CB-ADAPTER-08); the flag
     // is a dep so single-authority recovery rerenders resolve.
     if (collectionConflict) return
-    // Grid open (#5): resolve over logical items — selection wins,
-    // else first/last enabled by opening direction. Unmounted targets
-    // pend + scroll; no mount wait needed.
-    const adapter = adapterRef.current
+    // Logical open (#5 + CB-VIRT): resolve over logical items —
+    // selection wins, else first/last enabled by opening direction.
+    // Unmounted targets pend + scroll; no mount wait needed.
+    const adapter = adapterRef.current ?? windowedRef.current
     if (adapter) {
       const items = adapter.items
       const committed = value ?? null
@@ -1409,7 +1655,69 @@ export function Combobox({
     setActiveValueState(next)
   }, [isOpen, optionsVersion, value, inputValue, getOrderedOptions, collectionConflict, requestVirtualIndex, searchVirtual])
 
-  const effectiveActive = activeValue ?? (isOpen ? value : null)
+  // Windowed mount resolution (CB-VIRT-01): the Listbox window populates
+  // the registry on its own (frozen side), so each registration commit
+  // rechecks the shared pending slot. A mounted target clears the slot —
+  // the active value was already set at request time, so the ID now
+  // derives and publishes. Stale mounts (value mismatch) never clear.
+  React.useEffect(() => {
+    if (!isOpen || !windowedRef.current) return
+    const pending = pendingVirtualRef.current
+    if (!pending) return
+    const entry = optionsMapRef.current.get(pending.value)
+    if (entry?.node?.isConnected) {
+      pendingVirtualRef.current = null
+      setPendingVirtualIndex(null)
+    }
+  }, [isOpen, optionsVersion])
+
+  // Dynamic-data active follow (CB-NAV-06): as mounted options change
+  // while open, identity stays when still valid; an invalidated active
+  // value (unregistered, or registered-but-disabled) falls to the
+  // positional neighbor — the item now at its last index, clamped to the
+  // end — chosen from mounted options only. Two guards keep this from
+  // overreaching: registered-but-disconnected entries are NAV-07 yanked
+  // nodes, not data changes (the ID omits via derivation, no pick); and
+  // an invalidated COMMITTED value clears to null instead of picking —
+  // the app removed its own selection, so Combobox must not guess the
+  // next one (CB-DOM-05, CB-NAV-07). Pending logical requests (VIRT/grid
+  // scrolls in flight) always win over this fallback.
+  const lastOrderRef = React.useRef<string[]>([])
+  React.useEffect(() => {
+    if (!isOpen || collectionConflict) {
+      lastOrderRef.current = []
+      return
+    }
+    const order = getOrderedOptions()
+      .filter(opt => !opt.disabled)
+      .map(opt => opt.value)
+    const prev = lastOrderRef.current
+    lastOrderRef.current = order
+    if (pendingVirtualRef.current) return
+    if (activeValue == null || order.includes(activeValue)) return
+    const live = optionsMapRef.current.get(activeValue)
+    if (live && !live.disabled && !(live.node?.isConnected === true)) return
+    if (activeValue === (value ?? null)) {
+      activeSourceRef.current = null
+      setActiveSourceState(null)
+      setActiveValueState(null)
+      return
+    }
+    const lastIndex = prev.indexOf(activeValue)
+    const at = lastIndex === -1 ? 0 : Math.min(lastIndex, order.length - 1)
+    const next = at >= 0 ? (order[at] ?? null) : null
+    activeSourceRef.current = null
+    setActiveSourceState(null)
+    setActiveValueState(next)
+  }, [isOpen, optionsVersion, activeValue, value, collectionConflict, getOrderedOptions])
+
+  // Selection-following (CB-NAV-02, CB-SELECT-07): the committed value
+  // refines the active descendant only when it names a registered,
+  // enabled option. A disabled or absent selection never becomes active —
+  // every open path then falls to its directional/positional default.
+  const committedEntry = value != null ? optionsMapRef.current.get(value) : undefined
+  const committedFollowable = committedEntry != null && !committedEntry.disabled
+  const effectiveActive = activeValue ?? (isOpen && committedFollowable ? value : null)
   const activeOption = effectiveActive ? optionsMapRef.current.get(effectiveActive) : null
   const activeOptionId =
     activeOption && activeOption.node && activeOption.node.isConnected
@@ -1456,15 +1764,16 @@ export function Combobox({
     (nextInput: string) => {
       if (!isControlledInput) setInternalInput(nextInput)
       notifyInput?.(nextInput)
-      // Grid typing (#5, CB-ADAPTER-07): prefix search over logical
-      // items (mounted or not); unmounted matches pend + scroll.
-      // Conflicted collections take no active state (CB-ADAPTER-08).
+      // Logical typing (#5, CB-ADAPTER-07; CB-VIRT shares it): prefix
+      // search over logical items (mounted or not); unmounted matches
+      // pend + scroll. Conflicted collections take no active state
+      // (CB-ADAPTER-08).
       if (collectionConflict) return
-      if (adapterRef.current) {
-        // Grids resolve live; only closed typing pends (a fresh open
-        // wipes event-time state, and the resolver restores it). Typing
-        // while open must not arm the flag, or a later mount would
-        // clobber arrow navigation with a stale search.
+      if (adapterRef.current ?? windowedRef.current) {
+        // Logical adapters resolve live; only closed typing pends (a
+        // fresh open wipes event-time state, and the resolver restores
+        // it). Typing while open must not arm the flag, or a later mount
+        // would clobber arrow navigation with a stale search.
         if (!isOpen) pendingTypingRef.current = true
         searchVirtual(nextInput)
         return
@@ -1541,6 +1850,11 @@ export function Combobox({
 
   const handleSelect = React.useCallback(
     (nextVal: string | null) => {
+      // Closed popovers never commit (CB-CLOSE-04): exit-kept content is
+      // inert, so late clicks/presses during the visual exit are dropped.
+      // Every legitimate caller is an open path (open Enter/Tab, Trigger
+      // activation, mounted option/cell press).
+      if (!isOpen) return
       // Two-authority conflict (#5, CB-ADAPTER-08): no adapter
       // receives a commit until exactly one authority remains.
       if (collectionConflict) return
@@ -1556,7 +1870,7 @@ export function Combobox({
       }
       setIsOpen(false)
     },
-    [isControlledInput, selectOnly, value, onChange, handleInputChange, setIsOpen, collectionConflict]
+    [isControlledInput, isOpen, selectOnly, value, onChange, handleInputChange, setIsOpen, collectionConflict]
   )
 
   // Outside press (#3): Overlay dismisses non-inert layers synchronously
@@ -1686,6 +2000,58 @@ export function Combobox({
     [handleSelect]
   )
 
+  // FEATURES #4: busy sync for nested (frozen) collections. Grid popovers
+  // carry busy as a React prop; Listbox/Tree nodes have no prop channel
+  // (frozen parts), so the attribute syncs onto the mounted node and is
+  // removed on cleanup. SSR-safe; resolves in the source's own root so
+  // shadow popovers stay in-root (CB-ENV-03).
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (!isOpen || !loading || popupRole === 'grid') return
+    const rootNode = sourceRef.current?.getRootNode?.() as
+      | Document
+      | ShadowRoot
+      | null
+      | undefined
+    const scope = rootNode ?? document
+    const getById = (scope as Document).getElementById?.bind(scope)
+    if (typeof getById !== 'function') return
+    const popoverEl = getById(popoverId)
+    const collectionEl =
+      popoverEl?.querySelector?.('[role="listbox"], [role="tree"]') ?? null
+    if (!collectionEl) return
+    collectionEl.setAttribute('aria-busy', 'true')
+    return () => {
+      collectionEl.removeAttribute('aria-busy')
+    }
+  }, [isOpen, loading, popupRole, popoverId, optionsVersion])
+
+  // FEATURES #4: empty/no-results status through the shared announcer —
+  // once per entry into the state, never a private live region. Fires
+  // only while open, idle (not loading), and logically empty; an
+  // authored Empty node suppresses it (its native live region speaks).
+  // Select-only popovers use the empty message (no text to mismatch).
+  const announcedEmptyRef = React.useRef<'empty' | 'none' | null>(null)
+  React.useEffect(() => {
+    if (!isOpen || loading || hasPopoverContent || authoredScan.emptyAuthored) {
+      announcedEmptyRef.current = null
+      return
+    }
+    const key = !selectOnly && inputValue !== '' ? 'none' : 'empty'
+    if (announcedEmptyRef.current === key) return
+    announcedEmptyRef.current = key
+    announce(key === 'none' ? noResultsMessage : emptyMessage)
+  }, [
+    isOpen,
+    loading,
+    hasPopoverContent,
+    authoredScan.emptyAuthored,
+    selectOnly,
+    inputValue,
+    emptyMessage,
+    noResultsMessage,
+  ])
+
   const contextValue = React.useMemo<ComboboxContextValue>(
     () => ({
       value,
@@ -1699,7 +2065,11 @@ export function Combobox({
       onEscape,
       hasPopoverContent,
       virtualAdapter,
+      windowedListAdapter,
       pendingVirtualIndex,
+      treeExpansionRequest,
+      requestTreeExpansion,
+      loading,
       navigateVirtual,
       searchVirtual,
       requestVirtualIndex,
@@ -1740,7 +2110,11 @@ export function Combobox({
       onEscape,
       hasPopoverContent,
       virtualAdapter,
+      windowedListAdapter,
       pendingVirtualIndex,
+      treeExpansionRequest,
+      requestTreeExpansion,
+      loading,
       navigateVirtual,
       searchVirtual,
       requestVirtualIndex,

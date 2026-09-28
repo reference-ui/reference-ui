@@ -1,11 +1,13 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { createRoot, type Root } from 'react-dom/client'
+import { createRoot, hydrateRoot, type Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { Combobox } from './index'
 import { Listbox } from '../Listbox'
 import { Field } from '../Field'
+import { Tree, TreeItem, TreeGroup } from '../Tree'
+import { getAnnouncerSnapshot } from '../Announcer/internal'
 import { completesInline } from './autocomplete'
 
 // @ts-ignore
@@ -376,6 +378,7 @@ interface HarnessProps {
   onOpen?: () => void
   onDismiss?: () => void
   onOpenChange?: (open: boolean) => void
+  onEscape?: (event: KeyboardEvent) => void
   disabled?: boolean
   closeOnBlur?: boolean
   options?: CaseOption[]
@@ -395,6 +398,7 @@ function Harness({
   onOpen,
   onDismiss,
   onOpenChange,
+  onEscape,
   disabled,
   closeOnBlur,
   options = caseOptions,
@@ -414,6 +418,7 @@ function Harness({
       onOpen={onOpen}
       onDismiss={onDismiss}
       onOpenChange={onOpenChange}
+      onEscape={onEscape}
       disabled={disabled}
       closeOnBlur={closeOnBlur}
     >
@@ -1227,21 +1232,79 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     await unmount(container, root)
   })
 
-  it('CB-COMMIT-06: emits no second selection when focus leaves after an accepted commit', async () => {
-    const onChange = vi.fn()
-    const { container, root } = await mount(
-      <Harness value={null} onChange={onChange} defaultOpen />
-    )
-    const input = inputOf(container)
-    await pressKey(input, 'ArrowDown')
-    await pressKey(input, 'Enter')
-    expect(onChange).toHaveBeenCalledTimes(1)
-
-    await React.act(async () => {
-      input.dispatchEvent(new Event('blur', { bubbles: true }))
-    })
-    expect(onChange).toHaveBeenCalledTimes(1)
-    await unmount(container, root)
+  it('CB-COMMIT-06/CB-REVERT-03 committed: accepted commit retains Bravo across focus-out and Tab runs', async () => {
+    // Run 1: Enter commit, parent accepts both controlled props, then a
+    // real focusout to an outside button emits nothing further.
+    {
+      const onChange = vi.fn()
+      const onInputValueChange = vi.fn()
+      const onDismiss = vi.fn()
+      const { container, root } = await mount(
+        <Harness
+          value={null}
+          onChange={onChange}
+          onInputValueChange={onInputValueChange}
+          onDismiss={onDismiss}
+          defaultOpen
+        />
+      )
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'Enter')
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenCalledWith('bravo')
+      // Parent accepts: controlled value, text, and closed state.
+      await React.act(async () => {
+        root.render(
+          <Harness
+            value="bravo"
+            onChange={onChange}
+            inputValue="Bravo"
+            onInputValueChange={onInputValueChange}
+            open={false}
+            onDismiss={onDismiss}
+          />
+        )
+      })
+      onChange.mockClear()
+      onInputValueChange.mockClear()
+      onDismiss.mockClear()
+      const outside = document.createElement('button')
+      document.body.appendChild(outside)
+      await blurSource(inputOf(container), outside)
+      expect(onChange).not.toHaveBeenCalled()
+      expect(onInputValueChange).not.toHaveBeenCalled()
+      expect(onDismiss).not.toHaveBeenCalled()
+      expect(inputOf(container).value).toBe('Bravo')
+      expect(inputOf(container).getAttribute('aria-expanded')).toBe('false')
+      outside.remove()
+      await unmount(container, root)
+    }
+    // Run 2: same accepted commit, then Tab leaves natively with no
+    // second selection (closed-Tab native path, CB-COMMIT-09).
+    {
+      const onChange = vi.fn()
+      const { container, root } = await mount(
+        <Harness value={null} onChange={onChange} defaultOpen />
+      )
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'Enter')
+      expect(onChange).toHaveBeenCalledWith('alpha')
+      await React.act(async () => {
+        root.render(
+          <Harness value="alpha" onChange={onChange} inputValue="Alpha" open={false} />
+        )
+      })
+      onChange.mockClear()
+      const prevented = await pressKey(inputOf(container), 'Tab')
+      expect(prevented).toBe(false)
+      expect(onChange).not.toHaveBeenCalled()
+      expect(inputOf(container).value).toBe('Alpha')
+      expect(inputOf(container).getAttribute('aria-expanded')).toBe('false')
+      await unmount(container, root)
+    }
   })
 
   it('CB-COMMIT-08: prevents an open Enter commit from submitting its containing form', async () => {
@@ -1449,6 +1512,103 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     expect(html).not.toContain('aria-activedescendant')
   })
 
+  it('CB-ENV-01 hydrate: closed SSR is deterministic and hydrates warning-free, then navigates post-mount', async () => {
+    function EditableSSR() {
+      return (
+        <Harness
+          value="alpha"
+          onChange={() => {}}
+          inputValue="Alpha"
+          inputId="ssr-input"
+          popoverId="ssr-pop"
+        />
+      )
+    }
+    function SelectSSR() {
+      return <SelectHarness value="alpha" onChange={() => {}} label="SSR choose" />
+    }
+    // Deterministic: identical markup across server renders, including
+    // generated relationship IDs.
+    const editableHtml = renderToString(<EditableSSR />)
+    expect(renderToString(<EditableSSR />)).toBe(editableHtml)
+    const selectHtml = renderToString(<SelectSSR />)
+    expect(renderToString(<SelectSSR />)).toBe(selectHtml)
+
+    const errors: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      // Editable: hydrate closed, then open and navigate.
+      {
+        const onChange = vi.fn()
+        const onOpen = vi.fn()
+        const onDismiss = vi.fn()
+        function Hydrated() {
+          return (
+            <Harness
+              value="alpha"
+              onChange={onChange}
+              inputValue="Alpha"
+              onOpen={onOpen}
+              onDismiss={onDismiss}
+              inputId="ssr-input"
+              popoverId="ssr-pop"
+            />
+          )
+        }
+        expect(renderToString(<Hydrated />)).toBe(renderToString(<EditableSSR />))
+        const container = document.createElement('div')
+        container.innerHTML = renderToString(<Hydrated />)
+        document.body.appendChild(container)
+        let root: Root | undefined
+        await React.act(async () => {
+          root = hydrateRoot(container, <Hydrated />)
+        })
+        expect(errors).toEqual([])
+        expect(onChange).not.toHaveBeenCalled()
+        expect(onOpen).not.toHaveBeenCalled()
+        expect(onDismiss).not.toHaveBeenCalled()
+        const input = inputOf(container)
+        expect(input.id).toBe('ssr-input')
+        expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+        // No duplicate relationship IDs after hydration.
+        const ids = Array.from(document.body.querySelectorAll('[id]')).map(el => el.id)
+        expect(new Set(ids).size).toBe(ids.length)
+
+        await pressKey(input, 'ArrowDown')
+        expect(popoverOf()?.id).toBe('ssr-pop')
+        const desc = input.getAttribute('aria-activedescendant')
+        expect(desc).toBe(optionOf('alpha')!.id)
+        expect(document.getElementById(desc!)?.getAttribute('role')).toBe('option')
+        await unmount(container, root!)
+      }
+      // Select-only: hydrate closed, then arrows open onto the selection.
+      {
+        const onChange = vi.fn()
+        const container = document.createElement('div')
+        container.innerHTML = selectHtml
+        document.body.appendChild(container)
+        let root: Root | undefined
+        await React.act(async () => {
+          root = hydrateRoot(container, <SelectHarness value="alpha" onChange={onChange} label="SSR choose" />)
+        })
+        expect(errors).toEqual([])
+        expect(onChange).not.toHaveBeenCalled()
+        const trigger = triggerOf(container)
+        expect(trigger.hasAttribute('aria-activedescendant')).toBe(false)
+        await pressKey(trigger, 'ArrowDown')
+        expect(trigger.getAttribute('aria-expanded')).toBe('true')
+        const desc = trigger.getAttribute('aria-activedescendant')
+        expect(desc).toBe(optionOf('alpha')!.id)
+        expect(document.getElementById(desc!)?.getAttribute('role')).toBe('option')
+        await unmount(container, root!)
+      }
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
   it('CB-ENV-02: issues one registration and one request per action under StrictMode', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const onOpen = vi.fn()
@@ -1621,10 +1781,24 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
         defaultInputValue="Alpha"
         onInputValueChange={v => calls.push(`input:${v}`)}
         onDismiss={() => calls.push('dismiss')}
-        options={[]}
         defaultOpen
       />
     )
+    // Filtering to empty clears the selection-followed active option while
+    // the label cache keeps the committed display label.
+    await React.act(async () => {
+      root.render(
+        <Harness
+          value="alpha"
+          onChange={onChange}
+          defaultInputValue="Alpha"
+          onInputValueChange={v => calls.push(`input:${v}`)}
+          onDismiss={() => calls.push('dismiss')}
+          options={[]}
+          defaultOpen
+        />
+      )
+    })
     const input = inputOf(container)
     await React.act(async () => {
       typeText(input, 'Zulu')
@@ -1634,9 +1808,10 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     const prevented = await pressKey(input, 'Tab')
     expect(prevented).toBe(false)
     expect(onChange).not.toHaveBeenCalled()
-    // No options mounted, so the committed label falls back to the raw value.
-    expect(calls).toEqual(['input:Zulu', 'input:alpha', 'dismiss'])
-    expect(input.value).toBe('alpha')
+    // The revert restores the committed label, not the raw value.
+    expect(calls).toEqual(['input:Zulu', 'input:Alpha', 'dismiss'])
+    expect(input.value).toBe('Alpha')
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
     expect(input.getAttribute('aria-expanded')).toBe('false')
     await unmount(container, root)
   })
@@ -2039,6 +2214,59 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
     expect(trigger.hasAttribute('aria-activedescendant')).toBe(false)
     await unmount(container, root)
+  })
+
+  it('CB-SELECT-07 selected half: a disabled selected option never activates or commits; fallback navigation wins', async () => {
+    const onChange = vi.fn()
+    const options = [
+      { value: 'alpha', label: 'Alpha' },
+      { value: 'bravo', label: 'Bravo', disabled: true },
+      { value: 'charlie', label: 'Charlie' },
+    ]
+    const { container, root } = await mount(
+      <SelectHarness value="bravo" onChange={onChange} options={options} />
+    )
+    const trigger = triggerOf(container)
+
+    // Click opens; selection-following refuses the disabled value.
+    await React.act(async () => {
+      trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    const bravoId = optionOf('bravo')!.id
+    expect(trigger.getAttribute('aria-activedescendant')).not.toBe(bravoId)
+    // Controlled selected ARIA stays representable on the disabled option.
+    expect(optionOf('bravo')!.getAttribute('aria-selected')).toBe('true')
+    expect(optionOf('bravo')!.getAttribute('aria-disabled')).toBe('true')
+
+    // Arrows move through enabled fallbacks, skipping bravo both ways.
+    await pressKey(trigger, 'ArrowDown')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    await pressKey(trigger, 'ArrowDown')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+    await pressKey(trigger, 'ArrowUp')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+
+    // Typeahead matching only the disabled option stays put and silent.
+    await pressKey(trigger, 'b')
+    expect(trigger.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    expect(onChange).not.toHaveBeenCalled()
+
+    // Activation commits the enabled fallback, never the disabled selection.
+    await pressKey(trigger, 'Enter')
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('alpha')
+    await unmount(container, root)
+
+    // Closed Space opens (SELECT-04 path) without activating bravo.
+    const second = await mount(
+      <SelectHarness value="bravo" onChange={() => {}} options={options} />
+    )
+    const trigger2 = triggerOf(second.container)
+    await pressKey(trigger2, ' ')
+    expect(trigger2.getAttribute('aria-expanded')).toBe('true')
+    expect(trigger2.getAttribute('aria-activedescendant')).not.toBe(optionOf('bravo')!.id)
+    await unmount(second.container, second.root)
   })
 
   it('controlled value with uncontrolled input/open works end-to-end (API freeze pin)', async () => {
@@ -2888,6 +3116,354 @@ describe('Combobox W-24: inline mode + custom values', () => {
     expect(calls).toEqual(['input:Bravo', 'dismiss'])
     expect(input.value).toBe('Bravo')
     await unmount(container, root)
+  })
+})
+
+describe('Combobox finish-line P2A unit', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  /** Outside pointer press in happy-dom: trusted-shaped pointerdown on body. */
+  async function pressOutside() {
+    await React.act(async () => {
+      document.body.dispatchEvent(
+        new PointerEvent('pointerdown', {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          pointerId: 1,
+          isPrimary: true,
+          pointerType: 'mouse',
+        })
+      )
+    })
+  }
+
+  function captureDiagnostics() {
+    const errors: string[] = []
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    return errors
+  }
+
+  it('CB-COMMIT-01 granular: Enter emits change, text, granular open:false, then high-level dismiss', async () => {
+    const calls: string[] = []
+    const { container, root } = await mount(
+      <Combobox
+        value={null}
+        onChange={v => calls.push(`change:${v}`)}
+        onInputValueChange={v => calls.push(`input:${v}`)}
+        onOpenChange={v => calls.push(`open:${v}`)}
+        onDismiss={() => calls.push('dismiss')}
+        defaultOpen
+      >
+        <Field>
+          <Combobox.Input />
+        </Field>
+        <Combobox.Popover>
+          <Listbox>
+            {caseOptions.map(opt => (
+              <Listbox.Option key={opt.value} value={opt.value}>
+                {opt.label}
+              </Listbox.Option>
+            ))}
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    await pressKey(input, 'Enter')
+    // Granular dismissal (onOpenChange(false)) precedes high-level
+    // onDismiss exactly once; the full ordered protocol is pinned.
+    expect(calls).toEqual(['change:alpha', 'input:Alpha', 'open:false', 'dismiss'])
+    await unmount(container, root)
+  })
+
+  it('CB-CLOSE-03/CB-CLOSE-01 granular: escape and outside paths order granular before high-level', async () => {
+    for (const path of ['escape', 'outside'] as const) {
+      const calls: string[] = []
+      const { container, root } = await mount(
+        <Harness
+          value="bravo"
+          defaultInputValue="Bravo"
+          onInputValueChange={v => calls.push(`input:${v}`)}
+          onOpenChange={v => calls.push(`open:${v}`)}
+          onDismiss={() => calls.push('dismiss')}
+          onEscape={() => calls.push('escape')}
+          defaultOpen
+        />
+      )
+      const input = inputOf(container)
+      // Dirty the text so the revert path has work to do.
+      await React.act(async () => {
+        typeText(input, 'Bravissimo')
+      })
+      calls.length = 0
+      if (path === 'escape') {
+        await pressKey(input, 'Escape')
+        expect(calls).toEqual(['escape', 'input:Bravo', 'open:false', 'dismiss'])
+      } else {
+        await pressOutside()
+        expect(calls).toEqual(['input:Bravo', 'open:false', 'dismiss'])
+      }
+      expect(input.getAttribute('aria-expanded')).toBe('false')
+      await unmount(container, root)
+    }
+  })
+
+  it('CB-ADAPTER-08 two-builtins: Listbox plus Tree diagnoses, stays inert, then recovers', async () => {
+    const errors = captureDiagnostics()
+    const onChange = vi.fn()
+    const { container, root } = await mount(
+      <Combobox value={null} onChange={onChange} defaultOpen>
+        <Field>
+          <Combobox.Input />
+        </Field>
+        <Combobox.Popover>
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+          <Tree value={null} onChange={() => {}}>
+            <TreeItem value="t1">T1</TreeItem>
+          </Tree>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    expect(errors.some(e => e.includes('exactly one collection authority'))).toBe(true)
+    expect(errors.some(e => e.includes('listbox') && e.includes('tree'))).toBe(true)
+    // Inert while conflicted: navigation and commit are refused.
+    await pressKey(input, 'ArrowDown')
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+    await pressKey(input, 'Enter')
+    expect(onChange).not.toHaveBeenCalled()
+
+    // Recovery: rerendering with one authority restores the gate.
+    await React.act(async () => {
+      root.render(
+        <Combobox value={null} onChange={onChange} defaultOpen>
+          <Field>
+            <Combobox.Input />
+          </Field>
+          <Combobox.Popover>
+            <Listbox>
+              <Listbox.Option value="alpha">Alpha</Listbox.Option>
+            </Listbox>
+          </Combobox.Popover>
+        </Combobox>
+      )
+    })
+    await pressKey(inputOf(container), 'ArrowDown')
+    expect(inputOf(container).getAttribute('aria-activedescendant')).toBe(
+      optionOf('alpha')!.id
+    )
+    await unmount(container, root)
+  })
+
+  it('CB-ADAPTER-02 tree-invalid: nested Tree onChange diagnoses and never double-updates', async () => {
+    const errors = captureDiagnostics()
+    const onRootChange = vi.fn()
+    const onTreeChange = vi.fn()
+    const { container, root } = await mount(
+      <Combobox value={null} onChange={onRootChange} defaultOpen>
+        <Field>
+          <Combobox.Input />
+        </Field>
+        <Combobox.Popover>
+          <Tree value={null} onChange={onTreeChange}>
+            <TreeItem value="t1">T1</TreeItem>
+          </Tree>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    expect(errors.some(e => e.includes('must not carry its own onChange'))).toBe(true)
+    // Activating the treeitem invokes at most one update path — never
+    // both. (Today the nested path fires; the Tree crew reroutes to the
+    // root path. This assert is stable across that landing.)
+    const item = document.body.querySelector('[role="treeitem"]') as HTMLElement
+    await React.act(async () => {
+      item.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onRootChange.mock.calls.length + onTreeChange.mock.calls.length).toBeLessThanOrEqual(1)
+    await unmount(container, root)
+  })
+
+  it('CB-ADAPTER-03 conflicted: navigation is refused with no active ID', async () => {
+    captureDiagnostics()
+    const onChange = vi.fn()
+    const { container, root } = await mount(
+      <Combobox value={null} onChange={onChange} defaultOpen>
+        <Field>
+          <Combobox.Input />
+        </Field>
+        <Combobox.Popover
+          virtualFocus={{
+            role: 'grid',
+            items: [{ value: 'c0', textValue: 'C0' }],
+            getNextIndex: () => 0,
+            scrollToIndex: () => {},
+          }}
+        >
+          <Listbox>
+            <Listbox.Option value="alpha">Alpha</Listbox.Option>
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+    await pressKey(input, 'Enter')
+    expect(onChange).not.toHaveBeenCalled()
+    await unmount(container, root)
+  })
+
+  it('CB-NAV-06 dynamic: identity follows valid options, preview falls to the mounted neighbor', async () => {
+    async function renderWith(options: CaseOption[]) {
+      const { container, root } = await mount(
+        <Harness value={null} defaultOpen options={options} />
+      )
+      inputOf(container).focus()
+      return { container, root }
+    }
+    // Filter keeps identity: bravo stays active when still valid.
+    {
+      const { container, root } = await renderWith(caseOptions)
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'ArrowDown')
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+      await React.act(async () => {
+        root.render(<Harness value={null} defaultOpen options={[caseOptions[1]!, caseOptions[2]!]} />)
+      })
+      expect(inputOf(container).getAttribute('aria-activedescendant')).toBe(
+        optionOf('bravo')!.id
+      )
+      expect(document.activeElement).toBe(inputOf(container))
+      await unmount(container, root)
+    }
+    // Remove invalidates preview: positional neighbor wins, mounted-only.
+    {
+      const { container, root } = await renderWith(caseOptions)
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'ArrowDown')
+      await React.act(async () => {
+        root.render(<Harness value={null} defaultOpen options={[caseOptions[0]!, caseOptions[2]!]} />)
+      })
+      const after = inputOf(container)
+      expect(after.getAttribute('aria-activedescendant')).toBe(optionOf('charlie')!.id)
+      expect(document.activeElement).toBe(after)
+      await unmount(container, root)
+    }
+    // Disable in place invalidates preview: neighbor wins.
+    {
+      const disabledBravo = caseOptions.map(o =>
+        o.value === 'bravo' ? { ...o, disabled: true } : o
+      )
+      const { container, root } = await renderWith(caseOptions)
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'ArrowDown')
+      await React.act(async () => {
+        root.render(<Harness value={null} defaultOpen options={disabledBravo} />)
+      })
+      expect(inputOf(container).getAttribute('aria-activedescendant')).toBe(
+        optionOf('charlie')!.id
+      )
+      await unmount(container, root)
+    }
+    // Insert and reorder preserve identity by value, not position.
+    {
+      const { container, root } = await renderWith(caseOptions)
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      await pressKey(input, 'ArrowDown')
+      const reordered = [caseOptions[2]!, caseOptions[0]!, caseOptions[1]!]
+      await React.act(async () => {
+        root.render(<Harness value={null} defaultOpen options={reordered} />)
+      })
+      expect(inputOf(container).getAttribute('aria-activedescendant')).toBe(
+        optionOf('bravo')!.id
+      )
+      await unmount(container, root)
+    }
+  })
+
+  it('CB-NAV-02 selection: arrows open onto the selection, absence, and disabled edges', async () => {
+    // Enabled selected value: either arrow lands on it.
+    for (const key of ['ArrowDown', 'ArrowUp']) {
+      const { container, root } = await mount(<Harness value="bravo" defaultInputValue="Bravo" />)
+      const input = inputOf(container)
+      await pressKey(input, key)
+      expect(input.getAttribute('aria-expanded')).toBe('true')
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+      await unmount(container, root)
+    }
+    // Absent selected value: direction decides the edge.
+    {
+      const { container, root } = await mount(<Harness value="missing" defaultInputValue="Missing" />)
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowDown')
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+      await unmount(container, root)
+    }
+    // Disabled selected value: selection is not valid, direction wins.
+    {
+      const { container, root } = await mount(
+        <Harness
+          value="charlie"
+          defaultInputValue="Charlie"
+          options={[
+            { value: 'alpha', label: 'Alpha' },
+            { value: 'bravo', label: 'Bravo' },
+            { value: 'charlie', label: 'Charlie', disabled: true },
+          ]}
+        />
+      )
+      const input = inputOf(container)
+      await pressKey(input, 'ArrowUp')
+      expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+      await unmount(container, root)
+    }
+  })
+
+  it('CB-OPEN-02 disabled-final: closed arrows skip a disabled final option', async () => {
+    const { container, root } = await mount(
+      <Harness
+        value={null}
+        options={[
+          { value: 'alpha', label: 'Alpha' },
+          { value: 'bravo', label: 'Bravo' },
+          { value: 'charlie', label: 'Charlie', disabled: true },
+        ]}
+      />
+    )
+    const input = inputOf(container)
+    await pressKey(input, 'ArrowDown')
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionOf('alpha')!.id)
+    await unmount(container, root)
+    const second = await mount(
+      <Harness
+        value={null}
+        options={[
+          { value: 'alpha', label: 'Alpha' },
+          { value: 'bravo', label: 'Bravo' },
+          { value: 'charlie', label: 'Charlie', disabled: true },
+        ]}
+      />
+    )
+    const input2 = inputOf(second.container)
+    await pressKey(input2, 'ArrowUp')
+    expect(input2.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
+    await unmount(second.container, second.root)
   })
 })
 

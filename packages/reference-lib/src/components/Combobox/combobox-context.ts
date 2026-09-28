@@ -13,6 +13,29 @@ export interface ComboboxOptionEntry {
    * tells a grid mount from a nested-collection mount.
    */
   index?: number
+  /**
+   * Tree-bridge metadata (FEATURES #6). A nested Tree item passes true
+   * when it is a branch (has children); leaves omit it. Combobox uses
+   * this to decide whether horizontal keys emit an expansion request —
+   * leaves swallow the key with no request (documented, HQ-flagged).
+   */
+  isBranch?: boolean
+}
+
+/**
+ * Tree expansion delegation (FEATURES #6, CB-TREE-01). Combobox owns the
+ * request: with a sole authored Tree popup open, direction-appropriate
+ * horizontal keys on the focus source preventDefault and publish one of
+ * these instead of moving the caret. The nested Tree root subscribes
+ * (Tree side of the bridge contract) and routes it through its
+ * controlled `expanded` / `onExpandedChange` path exactly once; requests
+ * for leaves or unknown values are ignored by the Tree. `seq` disambigs
+ * repeat requests for the same value+direction.
+ */
+export interface ComboboxTreeExpansionRequest {
+  value: string
+  expand: boolean
+  seq: number
 }
 
 /**
@@ -98,8 +121,34 @@ export interface ComboboxContextValue {
    * Listbox keeps working through the mounted registry.
    */
   virtualAdapter: ComboboxGridAdapter | null
+  /**
+   * Windowed-Listbox driver (CB-VIRT-*, LB-CB-02 remainder). The nested
+   * Listbox's own `virtual` prop, captured from authored children and
+   * shape-validated — part of the single Listbox authority, NOT a second
+   * authority (CB-ADAPTER-08 unaffected: a sole windowed Listbox is one
+   * kind, and Popover virtualFocus + any nested collection still
+   * conflicts). Null without a sole windowed Listbox. Engaged, the
+   * `navigateVirtual` / `searchVirtual` / `requestVirtualIndex` trio
+   * drives these logical items (1-D topology) instead of the grid's
+   * `getNextIndex`; only one of the two adapters is ever non-null.
+   */
+  windowedListAdapter: VirtualFocusAdapter | null
   /** Requested-but-unmounted logical target (#5 mount timing). */
   pendingVirtualIndex: number | null
+  /**
+   * Latest tree expansion request (FEATURES #6). Null until the first
+   * horizontal-key delegation; the nested Tree root consumes it (Tree
+   * side of the bridge contract).
+   */
+  treeExpansionRequest: ComboboxTreeExpansionRequest | null
+  /**
+   * Horizontal-key delegation (FEATURES #6, CB-TREE-01). No-op unless a
+   * sole authored Tree popup is open and unconflicted; publishes a
+   * sequenced request for the Tree root to route once.
+   */
+  requestTreeExpansion: (value: string, expand: boolean) => void
+  /** Async policy (FEATURES #4): busy listbox + shared-announcer messages. */
+  loading: boolean
   /**
    * Key navigation through the grid adapter (#5). Validates the
    * `getNextIndex` result, activates mounted targets, and pends +

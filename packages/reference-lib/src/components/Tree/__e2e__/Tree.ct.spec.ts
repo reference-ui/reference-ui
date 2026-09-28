@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import type { Locator, Page } from '@playwright/test'
 
 test.describe('Tree Composition Gates & Browser Proofs', () => {
   test('TR-DOM-01: Renders tree, expands/collapses branch and selects items', async ({
@@ -1449,5 +1450,616 @@ test.describe('Tree Quarantine Parity', () => {
     expect(probe.matching.length).toBeGreaterThan(0)
     expect(probe.matching.some((text) => text.includes('outline-color'))).toBe(true)
     expect(probe.offenders).toEqual([])
+  })
+})
+
+async function cbReadLog(page: Page, testid: string): Promise<string[]> {
+  return JSON.parse((await page.getByTestId(testid).textContent()) ?? '[]')
+}
+
+async function cbExpectLogSoon(page: Page, testid: string, expected: string[]) {
+  await expect.poll(async () => cbReadLog(page, testid)).toEqual(expected)
+}
+
+async function cbExpectActiveItem(source: Locator, item: Locator) {
+  const id = await item.getAttribute('id')
+  await expect(source).toHaveAttribute('aria-activedescendant', id ?? '')
+}
+
+// Programmatic click: drives story controls without moving DOM focus, so an
+// open Combobox popover is neither blurred nor outside-dismissed.
+async function cbClickNoFocus(page: Page, testid: string) {
+  await page.getByTestId(testid).evaluate((el: HTMLElement) => el.click())
+}
+
+function cbCaptureDiagnostics(page: Page, marker: string) {
+  const errors: string[] = []
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && msg.text().includes(marker)) {
+      errors.push(msg.text())
+    }
+  })
+  return errors
+}
+
+test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
+  test('TR-CB-01: Tree should provide visible-only virtual navigation inside an editable Combobox', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+    await input.click()
+    const popover = page.getByTestId('cb-popover')
+    await expect(popover).toBeVisible()
+
+    // Nested items keep no tab stop: the input owns DOM focus.
+    await expect(popover.getByRole('treeitem')).toHaveCount(6)
+    for (const testid of [
+      'cb-item-src',
+      'cb-item-index',
+      'cb-item-lib',
+      'cb-item-docs',
+      'cb-item-readme',
+      'cb-item-disabled',
+    ]) {
+      await expect(page.getByTestId(testid)).toHaveAttribute('tabindex', '-1')
+    }
+
+    // Vertical arrows visit mounted enabled visible treeitems only, wrapping.
+    const order = [
+      'cb-item-src',
+      'cb-item-index',
+      'cb-item-lib',
+      'cb-item-docs',
+      'cb-item-readme',
+      'cb-item-src',
+    ]
+    for (const testid of order) {
+      await page.keyboard.press('ArrowDown')
+      await cbExpectActiveItem(input, page.getByTestId(testid))
+      await expect(input).toBeFocused()
+    }
+    await page.keyboard.press('ArrowUp')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await expect(input).toBeFocused()
+
+    // Collapsed descendants stay unmounted and are never referenced.
+    await expect(page.getByTestId('cb-item-guide')).toHaveCount(0)
+    await expect(page.getByTestId('cb-item-deep')).toHaveCount(0)
+    expect(await cbReadLog(page, 'cb-log')).toEqual(['open'])
+
+    // Pointer press on a disabled item never moves DOM focus or commits.
+    await page.getByTestId('cb-item-disabled').click({ force: true })
+    await expect(input).toBeFocused()
+    await expect(popover).toBeVisible()
+    expect(await cbReadLog(page, 'cb-log')).toEqual(['open'])
+  })
+
+  test('TR-CB-02: Tree should request horizontal expansion under Combobox virtual focus without moving DOM focus', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+
+    // Setup: collapse src through the delegated collapse key, then clear the
+    // log so the pinned flow starts collapsed with a clean slate.
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.getByTestId('cb-item-src')).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('cb-item-index')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await cbClickNoFocus(page, 'cb-clear-log')
+    expect(await cbReadLog(page, 'cb-log')).toEqual([])
+
+    // Expand key on collapsed src: one request, active retained on src.
+    await page.keyboard.press('ArrowRight')
+    await cbExpectLogSoon(page, 'cb-log', ['expanded:src'])
+    await expect(page.getByTestId('cb-item-src')).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByTestId('cb-item-index')).toBeVisible()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await expect(input).toBeFocused()
+
+    // Press again: no second request — virtual enter moves to first child.
+    await page.keyboard.press('ArrowRight')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-index'))
+    await page.waitForTimeout(150)
+    expect(await cbReadLog(page, 'cb-log')).toEqual(['expanded:src'])
+    await expect(input).toBeFocused()
+
+    // Redundant collapse on a nested collapsed branch moves to the parent
+    // (TR-KEY-05 parity), still without emissions or commits.
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-lib'))
+    await page.keyboard.press('ArrowLeft')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await page.waitForTimeout(150)
+    const log = await cbReadLog(page, 'cb-log')
+    expect(log).toEqual(['expanded:src'])
+    expect(log.filter((entry) => entry.startsWith('change:'))).toEqual([])
+    await expect(input).toBeFocused()
+  })
+
+  test('TR-CB-03: Tree should register its Combobox bridge automatically without adapter props or duplicate collection roles', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+    const popover = page.getByTestId('cb-popover')
+
+    // Sole authored Tree ⇒ tree popup, with controls linkage.
+    await expect(input).toHaveAttribute('aria-haspopup', 'tree')
+    const controlsId = await input.getAttribute('aria-controls')
+    expect(controlsId).toBeTruthy()
+    await input.click()
+    await expect(popover).toBeVisible()
+    await expect(popover).toHaveAttribute('id', controlsId ?? '')
+
+    // No invented role: the Tree owns role=tree, the popover stays presentation.
+    await expect(popover).toHaveAttribute('role', 'presentation')
+    await expect(page.getByTestId('cb-tree')).toHaveAttribute('role', 'tree')
+    await expect(popover.getByRole('tree')).toHaveCount(1)
+
+    // No registration wrapper between the Tree and its items.
+    await expect(page.locator('[data-testid="cb-tree"] > [role="treeitem"]')).toHaveCount(4)
+    await expect(page.locator('[data-testid="cb-group-src"] > [role="treeitem"]')).toHaveCount(2)
+    await expect(page.locator('[data-testid*="bridge"], [data-testid*="harness"]')).toHaveCount(0)
+
+    // Generated active IDs name mounted items only: collapse src while its
+    // child is active and the descendant follows to a mounted item.
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-index'))
+    await cbClickNoFocus(page, 'cb-collapse-src')
+    await expect(page.getByTestId('cb-item-index')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    const activeId = await input.getAttribute('aria-activedescendant')
+    expect(activeId).toBe('docs')
+    await expect(page.locator(`[id="${activeId}"]`)).toBeVisible()
+
+    // Select-only variant: the same tree popup contract on the Trigger.
+    await page.keyboard.press('Escape')
+    await expect(popover).toHaveCount(0)
+    const trigger = page.getByTestId('cbs-trigger')
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'tree')
+    await trigger.click()
+    await expect(page.getByTestId('cbs-popover')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(trigger, page.getByTestId('cbs-item-a'))
+    await expect(trigger).toBeFocused()
+  })
+
+  test('TR-CB-04: Tree activation inside Combobox should route one scalar commit only through the Combobox root', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+
+    // Pointer activation commits one scalar and dismisses; input kept focus.
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+    await page.getByTestId('cb-item-readme').click()
+    await cbExpectLogSoon(page, 'cb-log', ['open', 'change:readme', 'dismiss'])
+    await expect(page.getByTestId('cb-popover')).toHaveCount(0)
+    await expect(input).toBeFocused()
+    await expect(page.getByTestId('cb-value')).toHaveText('Selected: readme')
+
+    // Enter activation on the virtual-active item commits once.
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await page.keyboard.press('Enter')
+    await cbExpectLogSoon(page, 'cb-log', [
+      'open',
+      'change:readme',
+      'dismiss',
+      'open',
+      'change:docs',
+      'dismiss',
+    ])
+    await expect(input).toBeFocused()
+
+    // Space activation in the select-only variant commits once.
+    const trigger = page.getByTestId('cbs-trigger')
+    await trigger.click()
+    await expect(page.getByTestId('cbs-popover')).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(trigger, page.getByTestId('cbs-item-a'))
+    await page.keyboard.press('Space')
+    await cbExpectLogSoon(page, 'cbs-log', ['open', 'change:tb-a', 'dismiss'])
+
+    // Rejected controlled value: one request, no state change, no duplicate.
+    await cbClickNoFocus(page, 'cb-toggle-reject')
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('cb-popover')).toHaveCount(0)
+    const log = await cbReadLog(page, 'cb-log')
+    expect(log.filter((entry) => entry.startsWith('change:'))).toEqual([
+      'change:readme',
+      'change:docs',
+      'change:readme',
+    ])
+    await expect(page.getByTestId('cb-value')).toHaveText('Selected: docs')
+    await input.click()
+    await expect(page.getByTestId('cb-item-docs')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('cb-item-readme')).toHaveAttribute('aria-selected', 'false')
+  })
+
+  test('TR-CB-04 invalid: a nested Tree onChange diagnoses and never double-updates', async ({
+    mount,
+    page,
+  }) => {
+    const treeErrors = cbCaptureDiagnostics(page, '[reference-ui] Tree')
+    const comboErrors = cbCaptureDiagnostics(page, '[reference-ui] Combobox')
+    await mount('components/Tree/Tree/ComboboxTreeInvalid')
+    await expect(page.getByTestId('tree-fixture-root')).toBeVisible()
+    expect(comboErrors.some((text) => text.includes('must not carry its own onChange'))).toBe(true)
+
+    const input = page.getByTestId('cbi-input')
+    await input.click()
+    await expect(page.getByTestId('cbi-popover')).toBeVisible()
+    // The nested Tree renders (and diagnoses) once the popover mounts it.
+    expect(treeErrors.some((text) => text.includes('nested onChange'))).toBe(true)
+    await page.getByTestId('cbi-item-readme').click()
+    await cbExpectLogSoon(page, 'cbi-log', ['open', 'change:ci-readme', 'dismiss'])
+    expect((await cbReadLog(page, 'cbi-log')).filter((entry) => entry.startsWith('tree:'))).toEqual(
+      []
+    )
+  })
+
+  test('TR-CB-05: Tree should refresh the automatic Combobox registry when expansion or dynamic hierarchy changes visibility', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+
+    // An active child disappears by controlled collapse; the descendant follows.
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-index'))
+    await cbClickNoFocus(page, 'cb-collapse-src')
+    await expect(page.getByTestId('cb-item-index')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await expect(input).toBeFocused()
+
+    // Reorder: reversed roots navigate in the new order.
+    await cbClickNoFocus(page, 'cb-reorder')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await page.keyboard.press('ArrowUp')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await page.keyboard.press('ArrowUp')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await expect(input).toBeFocused()
+
+    // Replace a hidden value, re-expand, and prove the stale value is gone.
+    await cbClickNoFocus(page, 'cb-rename')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('cb-item-index')).toBeVisible()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-src'))
+    // Let passive registration effects catch up to the painted DOM: the
+    // ArrowDown presses below read the registry synchronously.
+    await page.waitForTimeout(200)
+    const seen: string[] = []
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowDown')
+      seen.push((await input.getAttribute('aria-activedescendant')) ?? '')
+    }
+    expect(seen).not.toContain('src/index')
+    expect(seen).toContain('src/main')
+
+    // Remove the active branch: active follows to a mounted item, and Enter
+    // commits the current value — never the stale branch.
+    await cbClickNoFocus(page, 'cb-toggle-src')
+    await expect(page.getByTestId('cb-item-src')).toHaveCount(0)
+    await expect(page.getByTestId('cb-item-index')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await expect(input).toBeFocused()
+    await page.keyboard.press('Enter')
+    const log = await cbReadLog(page, 'cb-log')
+    expect(log.filter((entry) => entry.startsWith('change:'))).toEqual(['change:docs'])
+
+    // A newly mounted descendant expands into the navigable set.
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+    await cbClickNoFocus(page, 'cb-add-child')
+    await expect(page.getByTestId('cb-item-new')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('cb-item-new')).toBeVisible()
+    // Let passive registration effects catch up before navigating.
+    await page.waitForTimeout(200)
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-guide'))
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-new'))
+    await expect(input).toBeFocused()
+  })
+
+  test('TR-CB-06: Tree should publish local active styling state when Combobox virtually focuses one visible mounted Item', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    await cbClickNoFocus(page, 'cb-select-readme')
+    await expect(page.getByTestId('cb-value')).toHaveText('Selected: readme')
+    const input = page.getByTestId('cb-input')
+    await input.click()
+    await expect(page.getByTestId('cb-popover')).toBeVisible()
+
+    // Keyboard virtual focus previews data-active only on the active item
+    // while controlled selection stays independently on readme.
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-index'))
+    const index = page.getByTestId('cb-item-index')
+    await expect(index).toHaveAttribute('data-active', '')
+    await expect(page.getByTestId('cb-item-readme')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('cb-item-readme')).not.toHaveAttribute('data-active', '')
+    await expect(page.getByTestId('cb-item-src')).not.toHaveAttribute('data-active', '')
+    await expect(page.locator('[data-testid="cb-tree"] [data-active]')).toHaveCount(1)
+    await expect(input).toBeFocused()
+
+    // Pointer preview moves the hook; DOM focus stays on the input.
+    await page.getByTestId('cb-item-lib').hover()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-lib'))
+    await expect(page.getByTestId('cb-item-lib')).toHaveAttribute('data-active', '')
+    await expect(index).not.toHaveAttribute('data-active', '')
+    await expect(input).toBeFocused()
+
+    // Collapse clears the hidden child's hook and descendant atomically.
+    await cbClickNoFocus(page, 'cb-collapse-src')
+    await expect(page.getByTestId('cb-item-lib')).toHaveCount(0)
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await expect(page.getByTestId('cb-item-readme')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.locator('[data-testid="cb-tree"] [data-active]')).toHaveCount(1)
+
+    // Activating a sibling commits once through the root; selection follows.
+    await page.keyboard.press('ArrowUp')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-docs'))
+    await page.keyboard.press('Enter')
+    const log = await cbReadLog(page, 'cb-log')
+    expect(log.filter((entry) => entry.startsWith('change:'))).toEqual(['change:docs'])
+    await expect(page.getByTestId('cb-popover')).toHaveCount(0)
+    await input.click()
+    await expect(page.getByTestId('cb-item-docs')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('cb-item-readme')).toHaveAttribute('aria-selected', 'false')
+  })
+
+  test('TR-COMP-03: Tree should compose with Combobox through one virtual-focus and commit authority', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/ComboboxTree')
+    const input = page.getByTestId('cb-input')
+    await expect(input).toHaveAttribute('aria-haspopup', 'tree')
+    await input.click()
+    const popover = page.getByTestId('cb-popover')
+    await expect(popover).toBeVisible()
+    await expect(page.getByTestId('cb-layers')).toHaveText('1')
+
+    // Navigate the three-level tree with DOM focus on the input.
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-lib'))
+    await expect(input).toBeFocused()
+
+    // Expand the nested branch: exactly one Tree expansion request.
+    await page.keyboard.press('ArrowRight')
+    await cbExpectLogSoon(page, 'cb-log', ['open', 'expanded:src+src/lib'])
+    await expect(page.getByTestId('cb-item-deep')).toBeVisible()
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-lib'))
+
+    // Redundant expand enters the revealed third level without emitting.
+    await page.keyboard.press('ArrowRight')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-deep'))
+    await page.waitForTimeout(150)
+    expect(await cbReadLog(page, 'cb-log')).toEqual(['open', 'expanded:src+src/lib'])
+
+    // Dynamic reorder mid-session keeps navigation on the latest hierarchy.
+    await cbClickNoFocus(page, 'cb-reorder')
+    await page.keyboard.press('ArrowDown')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-readme'))
+    await expect(input).toBeFocused()
+
+    // Commit the visible leaf: one scalar root commit, no nested callback.
+    await page.keyboard.press('ArrowUp')
+    await cbExpectActiveItem(input, page.getByTestId('cb-item-deep'))
+    await page.keyboard.press('Enter')
+    const log = await cbReadLog(page, 'cb-log')
+    expect(log.filter((entry) => entry.startsWith('change:'))).toEqual(['change:src/lib/deep'])
+    expect(log.filter((entry) => entry.startsWith('tree:'))).toEqual([])
+    expect(log.filter((entry) => entry === 'dismiss')).toHaveLength(1)
+    await expect(popover).toHaveCount(0)
+    await expect(page.getByTestId('cb-layers')).toHaveText('0')
+    await expect(input).toBeFocused()
+  })
+})
+
+test.describe('Tree Dynamic Hierarchy Proofs (TR-DYNAMIC-01/02)', () => {
+  test('TR-DYNAMIC-01: hierarchy metadata recomputes after structural edits at every level', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/DynamicHierarchy')
+    const item = (value: string) => page.getByTestId(`dyn-item-${value}`)
+
+    // Initial metadata: levels, positions, set sizes.
+    await expect(item('a')).toHaveAttribute('aria-level', '1')
+    await expect(item('a')).toHaveAttribute('aria-posinset', '1')
+    await expect(item('a')).toHaveAttribute('aria-setsize', '2')
+    await expect(item('a1')).toHaveAttribute('aria-level', '2')
+    await expect(item('a2i')).toHaveAttribute('aria-level', '3')
+
+    // Insert a root leaf: root sibling metadata updates.
+    await cbClickNoFocus(page, 'dyn-add-root-leaf')
+    await expect(item('c')).toBeVisible()
+    await expect(item('c')).toHaveAttribute('aria-level', '1')
+    await expect(item('c')).toHaveAttribute('aria-posinset', '3')
+    await expect(item('b')).toHaveAttribute('aria-setsize', '3')
+
+    // Insert a nested leaf: nested positions update.
+    await cbClickNoFocus(page, 'dyn-add-nested-leaf')
+    await expect(item('a3')).toHaveAttribute('aria-level', '2')
+    await expect(item('a3')).toHaveAttribute('aria-posinset', '3')
+    await expect(item('a1')).toHaveAttribute('aria-setsize', '3')
+
+    // Insert a root branch and expand it: the new subtree joins.
+    await cbClickNoFocus(page, 'dyn-add-root-branch')
+    await expect(item('d')).toHaveAttribute('aria-expanded', 'false')
+    await expect(item('d1')).toHaveCount(0)
+    await page.getByTestId('dyn-expander-d').click()
+    await expect(item('d1')).toBeVisible()
+    await expect(item('d1')).toHaveAttribute('aria-level', '2')
+
+    // Reorder roots: positions follow the new order.
+    await cbClickNoFocus(page, 'dyn-reorder-roots')
+    await expect(item('a')).toHaveAttribute('aria-posinset', '4')
+    await expect(item('d')).toHaveAttribute('aria-posinset', '1')
+
+    // Reorder nested: nested positions follow.
+    await cbClickNoFocus(page, 'dyn-reorder-nested')
+    await expect(item('a1')).toHaveAttribute('aria-posinset', '3')
+    await expect(item('a3')).toHaveAttribute('aria-posinset', '1')
+
+    // Remove a focused leaf: focus recovers, metadata contracts.
+    await item('a1').click()
+    await expect(item('a1')).toBeFocused()
+    await cbClickNoFocus(page, 'dyn-remove-leaf')
+    await expect(item('a1')).toHaveCount(0)
+    await expect(item('a2i')).toBeFocused()
+    await expect(item('a2')).toHaveAttribute('aria-setsize', '2')
+
+    // Remove a branch: the whole subtree leaves.
+    await cbClickNoFocus(page, 'dyn-remove-branch')
+    await expect(item('d')).toHaveCount(0)
+    await expect(item('d1')).toHaveCount(0)
+  })
+
+  test('TR-DYNAMIC-01 traversal: depth-first traversal tracks structural edits with first/last boundaries', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/DynamicHierarchy')
+    const item = (value: string) => page.getByTestId(`dyn-item-${value}`)
+
+    // Full depth-first walk of the initial tree.
+    await item('a').click()
+    for (const value of ['a1', 'a2', 'a2i', 'b', 'b1']) {
+      await page.keyboard.press('ArrowDown')
+      await expect(item(value)).toBeFocused()
+    }
+    // Boundary: Down at last stays; Home/End span the visible set.
+    await page.keyboard.press('ArrowDown')
+    await expect(item('b1')).toBeFocused()
+    await page.keyboard.press('Home')
+    await expect(item('a')).toBeFocused()
+    await page.keyboard.press('End')
+    await expect(item('b1')).toBeFocused()
+
+    // Insert plus reorder reshape traversal immediately.
+    await cbClickNoFocus(page, 'dyn-add-root-leaf')
+    await page.keyboard.press('End')
+    await expect(item('c')).toBeFocused()
+    await cbClickNoFocus(page, 'dyn-reorder-roots')
+    await page.keyboard.press('Home')
+    await expect(item('c')).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(item('b')).toBeFocused()
+
+    // Empty tree: role without items; reset restores traversal.
+    await cbClickNoFocus(page, 'dyn-clear')
+    await expect(page.getByTestId('dyn-tree')).toHaveAttribute('role', 'tree')
+    await expect(page.getByTestId('dyn-tree').getByRole('treeitem')).toHaveCount(0)
+    await cbClickNoFocus(page, 'dyn-reset')
+    await item('a').click()
+    await page.keyboard.press('End')
+    await expect(item('b1')).toBeFocused()
+
+    // Single branch: first/last span the two nodes.
+    await cbClickNoFocus(page, 'dyn-single')
+    await expect(item('s')).toHaveAttribute('aria-expanded', 'false')
+    await page.getByTestId('dyn-expander-s').click()
+    await expect(item('s1')).toBeVisible()
+    await item('s').click()
+    await page.keyboard.press('End')
+    await expect(item('s1')).toBeFocused()
+    await page.keyboard.press('Home')
+    await expect(item('s')).toBeFocused()
+  })
+
+  test('TR-DYNAMIC-02: hierarchy preserves value identity when moving a branch with descendants', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Tree/Tree/DynamicHierarchy')
+    const item = (value: string) => page.getByTestId(`dyn-item-${value}`)
+    const focusItem = async (value: string) => {
+      await item(value).evaluate((el: HTMLElement) => el.focus())
+      await expect(item(value)).toBeFocused()
+    }
+
+    // Pin selection on the moving subtree before any move.
+    await item('a2i').click()
+    await expect(item('a2i')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('dyn-value')).toHaveText('Selected: a2i')
+
+    // Move within the parent: A travels to the root end, descendants intact.
+    await cbClickNoFocus(page, 'dyn-move-within')
+    await expect(item('a')).toHaveAttribute('aria-level', '1')
+    await expect(item('a')).toHaveAttribute('aria-posinset', '2')
+    await expect(item('a2i')).toHaveAttribute('aria-level', '3')
+    await expect(item('a2i')).toHaveAttribute('aria-selected', 'true')
+    await expect(item('a')).toHaveAttribute('aria-expanded', 'true')
+    await expect(item('a2')).toHaveAttribute('aria-expanded', 'true')
+    await focusItem('b')
+    for (const value of ['b1', 'a', 'a1', 'a2', 'a2i']) {
+      await page.keyboard.press('ArrowDown')
+      await expect(item(value)).toBeFocused()
+    }
+
+    // Move to another parent: levels shift, identity holds, no callbacks.
+    await cbClickNoFocus(page, 'dyn-move-under-b')
+    await expect(item('a')).toHaveAttribute('aria-level', '2')
+    await expect(item('a1')).toHaveAttribute('aria-level', '3')
+    await expect(item('a2i')).toHaveAttribute('aria-level', '4')
+    await expect(item('a')).toHaveAttribute('aria-posinset', '2')
+    await expect(item('a')).toHaveAttribute('aria-setsize', '2')
+    await expect(item('a2i')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('dyn-value')).toHaveText('Selected: a2i')
+    await expect(item('a')).toHaveAttribute('aria-expanded', 'true')
+    await focusItem('b')
+    for (const value of ['b1', 'a', 'a1', 'a2', 'a2i']) {
+      await page.keyboard.press('ArrowDown')
+      await expect(item(value)).toBeFocused()
+    }
+    await page.keyboard.press('End')
+    await expect(item('a2i')).toBeFocused()
+
+    // Only the user's own selection exists — moves emit nothing corrective.
+    await expect(page.getByTestId('dyn-selection-log')).toHaveText('SelectionLog: a2i')
+    await expect(page.getByTestId('dyn-expansion-log')).toHaveText('ExpansionLog:')
   })
 })
