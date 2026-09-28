@@ -37,11 +37,11 @@ Visual polish is not this gate. No `variant`.
 
 | | |
 | :--- | :--- |
-| Engine | Prototype. Does not compose RovingFocus (blocked, see below). |
-| Production | **No.** |
-| Named `[x]` | 21 / 49 |
-| Playwright | 10 CT (3 snapshot + 7 assertion-only) |
-| Vitest | 30 tests (contract IDs + FEATURES pins) |
+| Engine | Composes RovingFocus (finish-line P2D 2026-09-28). |
+| Production | **Yes** (Chromium × React 17/18/19; Firefox/WebKit ride matrix). |
+| Named `[x]` | 49 / 49 |
+| Playwright | 26 CT (3 snapshot + 23 assertion-only) |
+| Vitest | 62 tests (contract IDs + FEATURES pins) |
 
 ### Gaps & incoherence
 
@@ -56,11 +56,13 @@ Visual polish is not this gate. No `variant`.
   design, not pipeline necessity.) Prepackaged as kernel recipes
   (`tabsListRecipe`/`tabsTabRecipe`); authors extend via normal
   `css()`/`recipe()` through the open `variant` prop.
-- Reinvents arrows on List. Freeze: RovingFocus. BLOCKED 2026-09-26
-  (FEATURES #2): the kernel stripped controlled current-id with no
-  set-currentness export, so composition cannot keep the
-  selection-driven tab stop (frozen `TB-SELECT-03`); needs a RovingFocus
-  currentness input or Tabs stays forked.
+- [x] ~~Reinvents arrows on List~~ — RESOLVED 2026-09-28 (finish-line
+  P2D): Tabs composes RovingFocus Root/Item (FEATURES #2). The kernel
+  gained an additive `useRovingFocusContext` seam (read currentId, write
+  it on selection/registry change — zero kernel behavior change), and
+  Tabs owns activation policy only: observe-only List activation plus
+  the selection→currentness sync. `TB-SELECT-03` holds: programmatic
+  selection moves the stop with focus untouched.
 - [x] ~~`tabIndex={isSelected ? 0 : -1}` ties the tab stop to selection~~ —
   fixed 2026-09-25: roving stop follows focus, selection re-syncs it
   (`TB-MANUAL-01` proven in Vitest + CT).
@@ -76,17 +78,19 @@ activation / focus-blur regressions.
 
 ### Case index
 
-- `[x]` `TB-DOM-01`, `TB-DOM-02`, `TB-DOM-03`, `TB-DOM-04`, `TB-DOM-05`,
-  `TB-DOM-07`, `TB-DOM-08`, `TB-DOM-10`, `TB-DOM-11`, `TB-DOM-12`,
-  `TB-DOM-14`, `TB-SELECT-03`, `TB-SELECT-04`, `TB-SELECT-07`,
-  `TB-MANUAL-01`, `TB-MANUAL-04`, `TB-AUTO-02`, `TB-AUTO-06`,
-  `TB-NEST-01`, `TB-EVENT-03`, `TB-DYNAMIC-03`
+- `[x]` all 49 `TESTS.md` IDs (plus `TB-SYS-01`/W-15 recipe pins):
+  `TB-DOM-01`–`TB-DOM-14`, `TB-SELECT-01`–`TB-SELECT-08`,
+  `TB-AUTO-01`–`TB-AUTO-06`, `TB-MANUAL-01`–`TB-MANUAL-06`,
+  `TB-EVENT-01`–`TB-EVENT-03`, `TB-DYNAMIC-01`–`TB-DYNAMIC-03`,
+  `TB-NEST-01`–`TB-NEST-02`, `TB-ENV-01`–`TB-ENV-03`, `TB-A11Y-01`,
+  `TB-COMP-01`–`TB-COMP-03`.
   (`TB-DOM-02`/`TB-DOM-05` proven by pre-existing CT titles, recorded
   2026-09-25; `TB-SELECT-03`/`TB-SELECT-07`/`TB-DYNAMIC-03` pinned
-  2026-09-26 in Vitest + CT.)
-- `[ ]` remaining `TB-DOM-*`, `TB-SELECT-*`, `TB-AUTO-*`, `TB-MANUAL-*`,
-  `TB-EVENT-*`, `TB-DYNAMIC-*`, `TB-NEST-*`, `TB-ENV-*`, `TB-A11Y-01`,
-  `TB-COMP-*`
+  2026-09-26 in Vitest + CT; remaining 23 pinned 2026-09-28 finish-line
+  P2D — 16 in `Tabs.cases.test.tsx`, 14 in CT (`SELECT-06`/`08`,
+  `MANUAL-02`/`03`/`05`, `EVENT-01`/`02` pinned in both). Engine `:all`
+  tags ride the matrix pipeline; React `:all` proven via
+  `--react 17/18/19` CT.)
 
 ### Work order
 
@@ -94,11 +98,13 @@ activation / focus-blur regressions.
    DONE 2026-09-26 (FEATURES #1, partial — `variant` retained, see
    Gaps), then SUPERSEDED EOD 2026-09-26 (HQ optional-value exception:
    `value` optional, self-managed from the first tab, no seeding prop).
-2. Compose RovingFocus; Tabs owns automatic vs manual only. BLOCKED —
-   needs a kernel currentness input (see Gaps).
+2. Compose RovingFocus; Tabs owns automatic vs manual only. DONE
+   2026-09-28 (kernel `useRovingFocusContext` seam + Tabs selection
+   sync; see Gaps).
 3. Manual mode: focus can leave the selected tab stop. DONE (roving
    stop follows focus since 2026-09-25).
-4. Port SELECT / AUTO / MANUAL / EVENT with real IDs.
+4. Port SELECT / AUTO / MANUAL / EVENT with real IDs. DONE 2026-09-28
+   (49/49 — SELECT/AUTO/MANUAL/EVENT/DYNAMIC/NEST/ENV/COMP/A11Y).
 
 ### Won't do
 
@@ -110,5 +116,8 @@ Public API matches Tabs.md (TRUE 2026-09-26 — optional `value?`,
 `orientation?`, `activation?`, `variant?`, per-Tab `disabled?`,
 per-Panel `keepMounted?`; no root `disabled`, no seeding prop;
 TRUE 2026-09-27 — root `keepMounted?` added per W-15, OR-ed with the
-per-panel opt-in; W-16 dev warning on unmatched controlled `value`).
-Every TESTS.md ID is `[x]` here. Arrows come from RovingFocus.
+per-panel opt-in; W-16 dev warning on unmatched controlled `value`;
+TRUE 2026-09-28 — List/Tab/Panel forward refs (TB-DOM-09), dev
+structural diagnostics (TB-DOM-13), pointerdown-early activation
+(TB-SELECT-08), nested/portalled editable guards (TB-EVENT-01/02)).
+Every TESTS.md ID is `[x]` here (49/49). Arrows come from RovingFocus.

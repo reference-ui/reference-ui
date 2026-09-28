@@ -82,6 +82,12 @@ Moved items now live in `PATCHES.md` (mechanical, test-pinnable) or
 - **Open questions:** none — hard DECLINED. Killer reason: warns train
   consumers to ignore the console; the duplicate-value throw covers the
   one case that corrupts ARIA.
+- **OVERRIDDEN 2026-09-28 (finish-line P2D, TESTS-driven):** `TESTS.md`
+  `TB-DOM-13` mandates the diagnostics, so the contract overrules the
+  decline — implemented as dev-only `console.error`s via the `warnTabs`
+  idiom (W-16 precedent), plus render-time omission of dangling
+  `aria-controls`/`aria-labelledby` once client commits settle. Empty
+  trees stay silent (async anatomy never false-positives).
 
 ## Suspected gaps (no quarantine source)
 

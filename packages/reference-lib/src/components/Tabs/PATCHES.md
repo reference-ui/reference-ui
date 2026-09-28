@@ -4,6 +4,8 @@ Mechanical follow-ups: fully specified, test-pinnable today. Each entry
 names the proof that would pin it. Split out of `DECISIONS.md`; that file
 keeps the verdicts, this file keeps the work list.
 
+Both entries LANDED 2026-09-28 (finish-line P2D).
+
 ### 1. Registration maps (identity registry) (from DECISIONS candidate #4)
 
 - **What:** Internal value → `{ id, element, disabled }` registry with effect subscribe/unsubscribe; explicit Tab `id` flows into its Panel's `aria-labelledby`; insert/reorder/remove keep IDs stable.

@@ -1,9 +1,15 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { Div, Span, css } from '@reference-ui/react'
+import { Div, Span, Button, css } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Tabs } from './index'
 import { MyTabsList, MyTabsTab } from './MyTabs'
+import { Popover } from '../Popover'
+import { Menu } from '../Menu'
+import { Combobox } from '../Combobox'
+import { Listbox } from '../Listbox'
+import { Tooltip } from '../Tooltip'
+import { Overlay } from '../Overlay'
 
 export const Horizontal = () => {
   const [value, setValue] = React.useState('account')
@@ -459,6 +465,603 @@ export const KeepMounted = () => {
           </Tabs.Panel>
           <Tabs.Panel value="billing" data-testid="panel-k-billing">
             <input data-testid="panel-k-input" defaultValue="" aria-label="Billing note" />
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const SelectLog = () => {
+  const [value, setValue] = React.useState('general')
+  const [accept, setAccept] = React.useState(true)
+  const [cancel, setCancel] = React.useState(false)
+  const [order, setOrder] = React.useState(['general', 'billing', 'security'])
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+  const labels: Record<string, string> = {
+    general: 'General',
+    billing: 'Billing',
+    security: 'Security',
+  }
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-select-root" maxW="100r">
+        <button
+          type="button"
+          data-testid="select-accept"
+          aria-pressed={accept}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setAccept(a => !a)}
+        >
+          accept:{accept ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          data-testid="select-cancel"
+          aria-pressed={cancel}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setCancel(c => !c)}
+        >
+          cancel:{cancel ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          data-testid="select-reorder"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setOrder(o => [...o].reverse())}
+        >
+          reverse
+        </button>
+        <Div data-testid="tabs-select-log">{log.join('|')}</Div>
+        <Tabs
+          value={value}
+          onChange={(next: string) => {
+            push(`change:${next}`)
+            if (accept) setValue(next)
+          }}
+        >
+          <Tabs.List data-testid="tabs-select-list">
+            {order.map(v => (
+              <Tabs.Tab
+                key={v}
+                value={v}
+                data-testid={`tab-sl-${v}`}
+                onFocus={() => push(`focus:${v}`)}
+                onClick={
+                  v === 'billing'
+                    ? e => {
+                        if (cancel) {
+                          push('consumer')
+                          e.preventDefault()
+                        }
+                      }
+                    : undefined
+                }
+              >
+                {labels[v]}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {order.map(v => (
+            <Tabs.Panel key={v} value={v} data-testid={`panel-sl-${v}`}>
+              {v === 'general' ? (
+                <input
+                  data-testid="sl-panel-input"
+                  aria-label="Panel input"
+                  onBlur={() => push('blur:input')}
+                />
+              ) : (
+                <Span fontSize="3.5r">{labels[v]} settings.</Span>
+              )}
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const ManualKeys = () => {
+  const [value, setValue] = React.useState('preview')
+  const [preventArrow, setPreventArrow] = React.useState(false)
+  const [preventSpace, setPreventSpace] = React.useState(false)
+  const [preventEnter, setPreventEnter] = React.useState(false)
+  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr')
+  const [orientation, setOrientation] = React.useState<'horizontal' | 'vertical'>('horizontal')
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  const guardedKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const isArrow =
+      e.key === 'ArrowRight' ||
+      e.key === 'ArrowLeft' ||
+      e.key === 'ArrowUp' ||
+      e.key === 'ArrowDown' ||
+      e.key === 'Home' ||
+      e.key === 'End'
+    if (
+      (isArrow && preventArrow) ||
+      (e.key === ' ' && preventSpace) ||
+      (e.key === 'Enter' && preventEnter)
+    ) {
+      push(`consumer:${e.key}`)
+      e.preventDefault()
+    }
+  }
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-mk-root" maxW="100r" dir={dir}>
+        <button
+          type="button"
+          data-testid="mk-prevent-arrow"
+          aria-pressed={preventArrow}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setPreventArrow(v => !v)}
+        >
+          prevent-arrow:{preventArrow ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          data-testid="mk-prevent-space"
+          aria-pressed={preventSpace}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setPreventSpace(v => !v)}
+        >
+          prevent-space:{preventSpace ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          data-testid="mk-prevent-enter"
+          aria-pressed={preventEnter}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setPreventEnter(v => !v)}
+        >
+          prevent-enter:{preventEnter ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          data-testid="mk-dir"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setDir(d => (d === 'ltr' ? 'rtl' : 'ltr'))}
+        >
+          dir:{dir}
+        </button>
+        <button
+          type="button"
+          data-testid="mk-orientation"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() =>
+            setOrientation(o => (o === 'horizontal' ? 'vertical' : 'horizontal'))
+          }
+        >
+          orientation:{orientation}
+        </button>
+        <Div data-testid="tabs-mk-log">{log.join('|')}</Div>
+        <Tabs
+          value={value}
+          activation="manual"
+          orientation={orientation}
+          onChange={(next: string) => {
+            push(`change:${next}`)
+            setValue(next)
+          }}
+        >
+          <Tabs.List data-testid="tabs-mk-list">
+            <Tabs.Tab value="preview" data-testid="tab-mk-preview" onKeyDown={guardedKeyDown}>
+              Preview
+            </Tabs.Tab>
+            <Tabs.Tab value="history" data-testid="tab-mk-history" disabled>
+              History
+            </Tabs.Tab>
+            <Tabs.Tab value="source" data-testid="tab-mk-source" onKeyDown={guardedKeyDown}>
+              Source
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="preview" data-testid="panel-mk-preview">
+            <Span fontSize="3.5r">Live preview output.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="history" data-testid="panel-mk-history">
+            <Span fontSize="3.5r">Revision history.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="source" data-testid="panel-mk-source">
+            <Span fontSize="3.5r">Editable source.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const EventScope = () => {
+  const [value, setValue] = React.useState('general')
+  const [log, setLog] = React.useState<string[]>([])
+  const portalHostRef = React.useRef<HTMLDivElement>(null)
+  const [portalHost, setPortalHost] = React.useState<HTMLDivElement | null>(null)
+
+  React.useEffect(() => {
+    setPortalHost(portalHostRef.current)
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-ev-root" maxW="100r">
+        <Div data-testid="tabs-ev-log">{log.join('|')}</Div>
+        <Tabs
+          value={value}
+          activation="manual"
+          onChange={(next: string) => {
+            setLog(prev => [...prev, `change:${next}`])
+            setValue(next)
+          }}
+        >
+          <Tabs.List data-testid="tabs-ev-list">
+            <Tabs.Tab value="general" data-testid="tab-ev-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-ev-billing">
+              Billing
+              <input data-testid="tab-ev-nested" defaultValue="" aria-label="Nested" />
+            </Tabs.Tab>
+            <Tabs.Tab value="security" data-testid="tab-ev-security">
+              Security
+              {portalHost &&
+                ReactDOM.createPortal(
+                  <input
+                    data-testid="tab-ev-portalled"
+                    defaultValue=""
+                    aria-label="Portalled"
+                  />,
+                  portalHost
+                )}
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-ev-general">
+            <Span fontSize="3.5r">General settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-ev-billing">
+            <Span fontSize="3.5r">Billing settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="security" data-testid="panel-ev-security">
+            <Span fontSize="3.5r">Security settings.</Span>
+          </Tabs.Panel>
+        </Tabs>
+        <div ref={portalHostRef} data-testid="tab-ev-portal-host" />
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const CompSettings = () => {
+  const [value, setValue] = React.useState('profile')
+  const [submits, setSubmits] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-c1-root" maxW="100r">
+        <Div data-testid="tabs-c1-submits">{submits}</Div>
+        <Tabs value={value} onChange={setValue}>
+          <Tabs.List data-testid="tabs-c1-list">
+            <Tabs.Tab value="profile" data-testid="tab-c1-profile">
+              Profile
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-c1-billing">
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab value="security" data-testid="tab-c1-security">
+              Security
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="profile" data-testid="panel-c1-profile">
+            <Span fontSize="3.5r">Profile form.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-c1-billing">
+            <form
+              data-testid="panel-c1-form"
+              onSubmit={e => {
+                e.preventDefault()
+                setSubmits(n => n + 1)
+              }}
+            >
+              <input data-testid="panel-c1-input" defaultValue="" aria-label="Card" />
+              <button type="submit" data-testid="panel-c1-submit">
+                Save
+              </button>
+            </form>
+          </Tabs.Panel>
+          <Tabs.Panel value="security" data-testid="panel-c1-security">
+            <Span fontSize="3.5r">Security form.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const CompEditor = () => {
+  const [value, setValue] = React.useState('preview')
+  const [pending, setPending] = React.useState<string | null>(null)
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-c2-root" maxW="120r">
+        <button
+          type="button"
+          data-testid="c2-accept"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => {
+            if (pending) {
+              setValue(pending)
+              setPending(null)
+            }
+          }}
+        >
+          accept:{pending ?? 'none'}
+        </button>
+        <Div data-testid="tabs-c2-log">{log.join('|')}</Div>
+        <Tabs
+          value={value}
+          activation="manual"
+          orientation="vertical"
+          onChange={(next: string) => {
+            push(`change:${next}`)
+            setPending(next)
+          }}
+        >
+          <Div display="flex">
+            <Tabs.List data-testid="tabs-c2-list">
+              <Tabs.Tab value="preview" data-testid="tab-c2-preview">
+                Preview
+              </Tabs.Tab>
+              <Tabs.Tab value="history" data-testid="tab-c2-history" disabled>
+                History
+              </Tabs.Tab>
+              <Tabs.Tab value="source" data-testid="tab-c2-source">
+                Source
+              </Tabs.Tab>
+            </Tabs.List>
+            <Div flexGrow={1} p="4r">
+              <Tabs.Panel value="preview" data-testid="panel-c2-preview">
+                <input
+                  data-testid="panel-c2-input"
+                  defaultValue="draft"
+                  aria-label="Preview note"
+                  onBlur={() => push('blur:input')}
+                />
+              </Tabs.Panel>
+              <Tabs.Panel value="history" data-testid="panel-c2-history">
+                <Span fontSize="3.5r">Revision history.</Span>
+              </Tabs.Panel>
+              <Tabs.Panel value="source" data-testid="panel-c2-source">
+                <Span fontSize="3.5r">Editable source.</Span>
+              </Tabs.Panel>
+            </Div>
+          </Div>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const CompWorkspace = () => {
+  const [outer, setOuter] = React.useState('general')
+  const [inner, setInner] = React.useState('a')
+  const [outerLog, setOuterLog] = React.useState<string[]>([])
+  const [innerLog, setInnerLog] = React.useState<string[]>([])
+  const [comboValue, setComboValue] = React.useState<string | null>(null)
+  const [overlayOpen, setOverlayOpen] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-ws-root" maxW="140r">
+        <Div data-testid="tabs-ws-outer-log">{outerLog.join('|')}</Div>
+        <Div data-testid="tabs-ws-inner-log">{innerLog.join('|')}</Div>
+        <Tabs
+          value={outer}
+          onChange={(next: string) => {
+            setOuterLog(prev => [...prev, `change:${next}`])
+            setOuter(next)
+          }}
+        >
+          <Tabs.List data-testid="tabs-ws-outer-list">
+            <Tabs.Tab value="general" data-testid="tab-w-outer-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-w-outer-billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-w-outer-general">
+            <Tabs
+              value={inner}
+              activation="manual"
+              onChange={(next: string) => {
+                setInnerLog(prev => [...prev, `change:${next}`])
+                setInner(next)
+              }}
+            >
+              <Tabs.List data-testid="tabs-ws-inner-list">
+                <Tabs.Tab value="a" data-testid="tab-w-inner-a">
+                  A
+                </Tabs.Tab>
+                <Tabs.Tab value="b" data-testid="tab-w-inner-b">
+                  B
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="a" data-testid="panel-w-inner-a">
+                <Span fontSize="3.5r">Inner A content.</Span>
+              </Tabs.Panel>
+              <Tabs.Panel value="b" data-testid="panel-w-inner-b">
+                <Span fontSize="3.5r">Inner B content.</Span>
+              </Tabs.Panel>
+            </Tabs>
+            <Div display="flex" gap="2r" mt="4r">
+              <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+                <Popover.Trigger data-testid="ws-menu-trigger">
+                  Actions
+                </Popover.Trigger>
+                <Popover.Content placement="bottom-start">
+                  <Menu data-testid="ws-menu">
+                    <Menu.Item
+                      data-testid="ws-menu-item-edit"
+                      onSelect={() => setMenuOpen(false)}
+                    >
+                      Edit
+                    </Menu.Item>
+                    <Menu.Item
+                      data-testid="ws-menu-item-dupe"
+                      onSelect={() => setMenuOpen(false)}
+                    >
+                      Duplicate
+                    </Menu.Item>
+                  </Menu>
+                </Popover.Content>
+              </Popover>
+              <Combobox value={comboValue} onChange={setComboValue}>
+                <Combobox.Input data-testid="ws-combo-input" placeholder="Pick…" />
+                <Combobox.Popover data-testid="ws-combo-pop">
+                  <Listbox>
+                    <Listbox.Option value="apple" data-testid="ws-combo-apple">
+                      Apple
+                    </Listbox.Option>
+                    <Listbox.Option value="banana" data-testid="ws-combo-banana">
+                      Banana
+                    </Listbox.Option>
+                  </Listbox>
+                </Combobox.Popover>
+              </Combobox>
+              <Tooltip openDelay={50} closeDelay={50}>
+                <Tooltip.Trigger>
+                  <Button data-testid="ws-tt-trigger">Help</Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content placement="top" data-testid="ws-tt-content">
+                  <Span fontSize="3r">Helpful tip</Span>
+                </Tooltip.Content>
+              </Tooltip>
+              <Overlay
+                open={overlayOpen}
+                onOpenChange={setOverlayOpen}
+                isolation={false}
+                onEscape={() => setOverlayOpen(false)}
+                onDismiss={() => setOverlayOpen(false)}
+              >
+                <Overlay.Trigger data-testid="ws-ov-trigger">
+                  Details
+                </Overlay.Trigger>
+                <Overlay.Content
+                  data-testid="ws-ov-content"
+                  placement="bottom-start"
+                  offset={8}
+                  style={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #555',
+                    padding: 12,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Span fontSize="3r">Overlay details</Span>
+                  <button
+                    type="button"
+                    data-testid="ws-ov-close"
+                    onClick={() => setOverlayOpen(false)}
+                  >
+                    Close
+                  </button>
+                </Overlay.Content>
+              </Overlay>
+            </Div>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-w-outer-billing">
+            <Span fontSize="3.5r">Outer billing content.</Span>
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const A11yMatrix = () => {
+  const [horz, setHorz] = React.useState('general')
+  const [vert, setVert] = React.useState('preview')
+  const [oneDis, setOneDis] = React.useState('general')
+  const [allDis, setAllDis] = React.useState('billing')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-a11y-root" maxW="120r">
+        <Tabs value={horz} onChange={setHorz}>
+          <Tabs.List data-testid="tabs-a11y-horz-list">
+            <Tabs.Tab value="general" data-testid="tab-a11y-h-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-a11y-h-billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-a11y-h-general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-a11y-h-billing">
+            B
+          </Tabs.Panel>
+        </Tabs>
+        <Tabs value={vert} onChange={setVert} activation="manual" orientation="vertical">
+          <Tabs.List data-testid="tabs-a11y-vert-list">
+            <Tabs.Tab value="preview" data-testid="tab-a11y-v-preview">
+              Preview
+            </Tabs.Tab>
+            <Tabs.Tab value="source" data-testid="tab-a11y-v-source">
+              Source
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="preview" data-testid="panel-a11y-v-preview">
+            P
+          </Tabs.Panel>
+          <Tabs.Panel value="source" data-testid="panel-a11y-v-source">
+            S
+          </Tabs.Panel>
+        </Tabs>
+        <Tabs value={oneDis} onChange={setOneDis}>
+          <Tabs.List data-testid="tabs-a11y-disabled-list">
+            <Tabs.Tab value="general" data-testid="tab-a11y-d-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-a11y-d-billing" disabled>
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab value="security" data-testid="tab-a11y-d-security">
+              Security
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-a11y-d-general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-a11y-d-billing">
+            B
+          </Tabs.Panel>
+          <Tabs.Panel value="security" data-testid="panel-a11y-d-security">
+            S
+          </Tabs.Panel>
+        </Tabs>
+        <Tabs value={allDis} onChange={setAllDis}>
+          <Tabs.List data-testid="tabs-a11y-alldisabled-list">
+            <Tabs.Tab value="general" data-testid="tab-a11y-x-general" disabled>
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-a11y-x-billing" disabled>
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-a11y-x-general">
+            G
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-a11y-x-billing">
+            B
           </Tabs.Panel>
         </Tabs>
       </Div>

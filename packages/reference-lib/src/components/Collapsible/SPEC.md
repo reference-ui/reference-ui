@@ -4,7 +4,7 @@ Current freeze, cases, and proof. Design narrative: [Collapsible.md](./Collapsib
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `__e2e__/Collapsible.ct.spec.ts` (colocated CT; quarantine matrix cases re-targeted here)
-Vitest: `Collapsible.test.tsx` (colocated)
+Vitest: `Collapsible.test.tsx`, `Collapsible.mount.test.tsx` (colocated)
 Page: `/collapsible` (quarantine matrix fixture; CT mounts `Collapsible.story.tsx` fixtures)
 
 ## Legend
@@ -39,9 +39,9 @@ public motion.
 | :--- | :--- |
 | Engine | Hardened disclosure + Presence exit + measured size vars (landing). |
 | Production | **No** — freeze items 1–3 superseded, see Landing note. |
-| Named `[x]` | 39 / 39 |
-| Playwright | 22 |
-| Vitest | 19 |
+| Named `[x]` | 49 / 49 (39 freeze + 10 CO-MOUNT) |
+| Playwright | 25 (22 + 3 CO-MOUNT-CT) |
+| Vitest | 30 (20 + 10 CO-MOUNT) |
 
 ### Landing note (quarantine-landing, 2026-09-25)
 
@@ -56,8 +56,14 @@ LANDING.md (visuals frozen):
   are **preserved**. Visuals are frozen per LANDING.md.
 - GSAP `animateCollapse` is **preserved** as the owned exit motion.
   Freeze work-order item 3 is superseded; apps do not own collapse CSS.
-- `hiddenUntilFound` / `beforematch` reveal is **not ported** (new
-  public API with no TESTS.md case ID — follow-up, not stability).
+- `hiddenUntilFound` / `beforematch` reveal + `forceMount` **landed**
+  2026-09-28 (CO-MOUNT-01–10; unit + CT on React 17/18/19). Root
+  `hiddenUntilFound` default, Content override wins; `untilFound` wins over
+  `forceMount`; `beforematch` opens with enter motion skipped once (deferred
+  past dispatch so a later-registered consumer cancel wins); rejected
+  `beforematch` arms the skip consumed by the next committed open;
+  `forceMount`-alone closed Content stays visible/interactive with no
+  collapse styles and no focus evacuation.
 - `CO-ACT-05` post-close content may be a closed exiting node (GSAP
   suspends unmount in happy-dom); the case pins controlled-following +
   no echo.
@@ -88,8 +94,9 @@ LANDING.md (visuals frozen):
 - Default chevron + `hideIcon` / `icon` chrome — not in the API.
 - GSAP `animateCollapse`. Freeze: apps own CSS from measured vars.
 - `aria-controls` only when open. `CO-DOM-03`: keep through Presence exit.
-- No `hiddenUntilFound` / `beforematch`. Freeze: closed content stays
-  find-in-page discoverable and opens on match, skipping motion once.
+- ~~No `hiddenUntilFound` / `beforematch`.~~ Landed 2026-09-28
+  (CO-MOUNT-01–10): closed content stays find-in-page discoverable and
+  opens on match, skipping motion once; `forceMount` escape hatch included.
 
 ### Vendor
 
@@ -115,13 +122,16 @@ Disclosure.
 - `[x]` `CO-NEST-01`, `CO-NEST-02`
 - `[x]` `CO-ENV-01`, `CO-ENV-02`
 - `[x]` `CO-COMP-01`, `CO-COMP-02`, `CO-COMP-03`
+- `[x]` `CO-MOUNT-01`, `CO-MOUNT-02`, `CO-MOUNT-03`, `CO-MOUNT-04`,
+  `CO-MOUNT-05`, `CO-MOUNT-06`, `CO-MOUNT-07`, `CO-MOUNT-08`,
+  `CO-MOUNT-09`, `CO-MOUNT-10`
 
 ### Work order
 
 1. Controlled-only; remove `defaultOpen` / icon chrome.
 2. Keep `aria-controls` through exit; Presence wiring.
 3. Publish size vars; stop owning GSAP collapse as the kernel.
-4. `hiddenUntilFound` + `beforematch` reveal (skip motion once).
+4. ~~`hiddenUntilFound` + `beforematch` reveal (skip motion once).~~ Done 2026-09-28.
 5. Port `CO-PRES` / `CO-ACT` browser cases.
 
 ### Won't do

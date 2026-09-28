@@ -38,7 +38,7 @@ interface ItemEntry {
   textValue?: string
 }
 
-interface RovingFocusContextValue {
+export interface RovingFocusContextValue {
   orientation: RovingFocusOrientation
   loop: boolean
   typeahead: boolean
@@ -180,6 +180,14 @@ function assertSingleElementChild(
 }
 
 const RovingFocusContext = React.createContext<RovingFocusContextValue | null>(null)
+
+// Composed-policy seam (finish-line P2D): Tabs owns activation policy, so
+// it syncs selection into kernel currentness through this hook — reading
+// currentId and writing it on selection/registry changes. Additive export
+// only; kernel movement, settlement, and slot behavior are unchanged.
+export function useRovingFocusContext(): RovingFocusContextValue | null {
+  return React.useContext(RovingFocusContext)
+}
 
 let rovingFocusIdCounter = 0
 

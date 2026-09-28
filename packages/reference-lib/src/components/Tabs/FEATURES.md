@@ -61,6 +61,15 @@ orientation, loop, and typeahead off; delete the `querySelectorAll` /
 
 **Maintainer take:** The right end-state once the RovingFocus kernel API stabilizes — one shared movement owner beats two arrow implementations.
 
+**LANDED 2026-09-28 (finish-line P2D):** List renders inside
+`RovingFocus.Root` (orientation, loop, typeahead off), each Tab inside
+`RovingFocus.Item`; the hand-rolled keydown is deleted. The kernel
+gained an additive `useRovingFocusContext` seam (P1.1-frozen API
+otherwise untouched) so Tabs can sync selection into kernel
+currentness (`TB-SELECT-03`). Activation policy stays in Tabs:
+observe-only List activation (moved-check, nested-scoped) plus the
+`TabsSelectionSync` null component. All 22 snapshots byte-identical.
+
 ## 3. Always-mounted panel children (from DECISIONS candidate #3)
 
 **What it does:** Inactive panels keep children mounted under native
@@ -100,6 +109,19 @@ click dedupes; consumer `preventDefault` on pointerdown cancels; pins the
 
 **Maintainer take:** Only with UX-signed press-timing design — it changes timing every consumer feels, so demand a forcing bug first.
 
+**LANDED 2026-09-28 (finish-line P2D, TESTS-driven):** `TESTS.md`
+`TB-SELECT-08` mandates the behavior, so the take's forcing requirement
+is met by contract. Primary press arms the request; the native
+mousedown-default focus fires the focus handler, which requests — so
+blur, tab focus, and `onChange` order themselves (TB-SELECT-06) with
+zero script focus (script focus during a mouse press matches
+`:focus-visible` and paints a ring the snapshots pin as absent). The
+completing click dedupes; consumer `preventDefault` on the press
+cancels press and click. Reconciliation with `TB-SELECT-05`
+(click-cancel): cancel works at the same phase — a real press already
+requested before its click, so `TB-SELECT-05` pins discrete-click
+semantics in Vitest.
+
 ## 6. Disabled/removed-tab focus handoff (from DECISIONS candidate #7)
 
 **What it does:** In manual mode, when the focused (unselected) tab
@@ -131,6 +153,16 @@ const panelRef = useRef<HTMLDivElement>(null);
 Repo idiom call: ref-as-prop (React 19) vs `forwardRef` for 17/18 compat.
 
 **Maintainer take:** Add on first consumer demand — small and safe, but no reason to grow API surface speculatively.
+
+**LANDED 2026-09-28 (finish-line P2D, TESTS-driven):** `TB-DOM-09`
+mandates refs, so the demand requirement is met by contract.
+`forwardRef` on List/Tab/Panel (React 17/18 compat), composed with
+internal registry refs, cleanup on unmount. Managed-wins: internal
+`data-state`/`data-disabled`/`aria-selected`/`aria-controls`/
+orientation attrs drop consumer conflicts. Known imperfection:
+slot-wrapped callback refs (List, Tab) see settled-correct
+attach churn per render — the kernel slot chain recreates per render
+(flagged kernel follow-up; Panel's direct ref is stable).
 
 ## 8. Tab-stop policy when selection is disabled (from DECISIONS gap #1)
 

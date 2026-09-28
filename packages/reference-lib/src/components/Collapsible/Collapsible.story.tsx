@@ -258,6 +258,50 @@ export const FocusFallback = () => {
   )
 }
 
+// CO-MOUNT: closed content stays mounted but hidden (until-found); browser
+// find (`beforematch`) reveals it by opening the Collapsible.
+export const UntilFound = () => {
+  const [open, setOpen] = React.useState(true)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="uf-root">
+        <Collapsible open={open} onChange={setOpen}>
+          <Collapsible.Trigger data-testid="uf-trigger">Toggle</Collapsible.Trigger>
+          <Collapsible.Content data-testid="uf-content" hiddenUntilFound>
+            <Span data-testid="uf-text">findable hidden-until-found secret</Span>
+          </Collapsible.Content>
+        </Collapsible>
+        <button data-testid="uf-close" onMouseDown={keepFocusOnMouseDown} onClick={() => setOpen(false)}>
+          Close
+        </button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// CO-MOUNT: closed content stays mounted AND interactive (no hidden, no
+// inert); focus inside it survives close.
+export const ForceMount = () => {
+  const [open, setOpen] = React.useState(true)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="fm-root">
+        <Collapsible open={open} onChange={setOpen}>
+          <Collapsible.Trigger data-testid="fm-trigger">Toggle</Collapsible.Trigger>
+          <Collapsible.Content data-testid="fm-content" forceMount>
+            <input data-testid="fm-input" aria-label="inside" />
+          </Collapsible.Content>
+        </Collapsible>
+        <button data-testid="fm-close" onMouseDown={keepFocusOnMouseDown} onClick={() => setOpen(false)}>
+          Close
+        </button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
 // CO-SIZE-01 (exact): the collapse engine forces border-box, so the authored
 // 120px width + 3px padding + 2px border measure a 120px border box.
 export const SizeExact = () => {

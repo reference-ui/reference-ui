@@ -744,7 +744,11 @@ describe('Tabs stability proofs (quarantine-landing ports)', () => {
     function Rtl({ dir }: { dir: 'rtl' | 'ltr' }) {
       const [value, setValue] = React.useState('billing')
       return (
-        <div dir={dir}>
+        // Inline direction mirrors the dir attribute: happy-dom does not
+        // map dir→computed direction, and the RovingFocus kernel reads
+        // inherited direction from getComputedStyle (real browsers map
+        // dir natively — the CT Rtl fixture pins that path unstyled).
+        <div dir={dir} style={{ direction: dir }}>
           <Tabs
             value={value}
             onChange={(next: string) => {

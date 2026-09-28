@@ -624,4 +624,82 @@ test.describe('Collapsible Quarantine Ports (GSAP-owned motion)', () => {
     await expect(page.getByTestId('nest-acc-content-2')).toBeVisible()
     await expect(accContent1).toHaveCount(0, { timeout: 2000 })
   })
+
+  test('CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Collapsible/Collapsible/UntilFound')
+    const trigger = page.getByTestId('uf-trigger')
+    const content = page.getByTestId('uf-content')
+
+    await expect(content).toBeVisible()
+    await page.getByTestId('uf-close').click()
+    await expect(content).toHaveCount(1)
+    await expect(content).toBeHidden()
+    await expect(content).toHaveAttribute('hidden', 'until-found')
+    await expect(content).toHaveAttribute('data-state', 'closed')
+    // hidden=until-found skips rendering via content-visibility (display
+    // stays; boxes go zero) so find-in-page can still match the text.
+    const skipped = await content.evaluate((el) => getComputedStyle(el).contentVisibility)
+    expect(skipped).toBe('hidden')
+    const contentId = await content.getAttribute('id')
+    await expect(trigger).toHaveAttribute('aria-controls', contentId!)
+
+    await trigger.click()
+    await expect(content).toBeVisible()
+    await expect(content).not.toHaveAttribute('hidden', 'until-found')
+  })
+
+  test('CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Collapsible/Collapsible/UntilFound')
+    const content = page.getByTestId('uf-content')
+
+    await page.getByTestId('uf-close').click()
+    await expect(content).toBeHidden()
+
+    await content.evaluate((el) => {
+      el.dispatchEvent(new Event('beforematch', { bubbles: true, cancelable: true }))
+    })
+    await expect(content).toBeVisible()
+    await expect(content).toHaveAttribute('data-state', 'open')
+
+    await page.getByTestId('uf-close').click()
+    await expect(content).toBeHidden()
+    await content.evaluate((el) => {
+      el.addEventListener(
+        'beforematch',
+        (event) => event.preventDefault(),
+        { once: true }
+      )
+      el.dispatchEvent(new Event('beforematch', { bubbles: true, cancelable: true }))
+    })
+    await expect(content).toBeHidden()
+    await expect(content).toHaveAttribute('data-state', 'closed')
+  })
+
+  test('CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Collapsible/Collapsible/ForceMount')
+    const trigger = page.getByTestId('fm-trigger')
+    const content = page.getByTestId('fm-content')
+    const input = page.getByTestId('fm-input')
+
+    await input.focus()
+    await expect(input).toBeFocused()
+    await page.getByTestId('fm-close').click()
+
+    await expect(content).toHaveCount(1)
+    await expect(content).toBeVisible()
+    await expect(content).not.toHaveAttribute('hidden', 'until-found')
+    await expect(content).toHaveAttribute('data-state', 'closed')
+    expect(await content.evaluate((el) => el.hasAttribute('inert'))).toBe(false)
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toBeFocused()
+  })
 })

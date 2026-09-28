@@ -4,7 +4,7 @@ Current freeze, cases, and proof. Design narrative: [Accordion.md](./Accordion.m
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `__e2e__/Accordion.ct.spec.ts` (colocated CT; quarantine matrix cases re-targeted here)
-Vitest: `Accordion.test.tsx` (colocated)
+Vitest: `Accordion.test.tsx`, `Accordion.find.test.tsx` (colocated)
 Page: `/accordion` (quarantine matrix fixture; CT mounts `Accordion.story.tsx` fixtures)
 
 ## Legend
@@ -40,9 +40,9 @@ prop. No extra Item/Trigger product API unless freeze is amended.
 | :--- | :--- |
 | Engine | Controlled + uncontrolled policy engine (landing rework). |
 | Production | **Yes.** |
-| Named `[x]` | 41 / 41 |
-| Playwright | 18 (+ 2 legacy smoke) |
-| Vitest | 26 (23 case-titled + 2 omitted-value pins + 1 freeze pin) |
+| Named `[x]` | 47 / 47 (41 + 6 AC-FIND) |
+| Playwright | 19 (+ 2 legacy smoke) |
+| Vitest | 32 (26 + 6 AC-FIND) |
 
 ### Landing note (quarantine-landing, 2026-09-25)
 
@@ -65,10 +65,14 @@ Deliberate positions, per recon and LANDING.md (visuals frozen):
   composeRefs), and restores `keyboard: 'arrows'` as a headers alias.
   Book + `Multiple` story reverted to the base seeding prop (identical
   renders, zero visual delta).
-- `hiddenUntilFound` / `beforematch` (Find axis): Q has no
-  Accordion-side implementation and neither does this port — items
-  inherit it from Collapsible when it lands there (Collapsible crew
-  deferred it as follow-up). No TESTS.md case ID affected.
+- `hiddenUntilFound` / `beforematch` (Find axis): **landed
+  2026-09-28** (AC-FIND-01–06 + AC-FIND-CT-01; unit + CT on React
+  17/18/19). `AccordionItem hiddenUntilFound` passes through to the item
+  Collapsible (raw `<Collapsible id>` items take the root prop directly);
+  `beforematch` expands through existing policy — single swaps the open
+  item (native `<details name>` parity), multiple adds — with enter
+  motion skipped once. No separate `findExpansion` switch: setting
+  `hiddenUntilFound` IS the opt-in (see FEATURES.md #1).
 - New CT tests are behavioral (snapshot-free); frozen visuals are
   proven by the untouched legacy snapshots.
 
@@ -131,6 +135,8 @@ Spectrum DisclosureGroup (collapsible single).
 - `[x]` `AC-ENV-01`, `AC-ENV-02`
 - `[x]` `AC-A11Y-01`
 - `[x]` `AC-COMP-01`, `AC-COMP-02`, `AC-COMP-03`
+- `[x]` `AC-FIND-01`, `AC-FIND-02`, `AC-FIND-03`, `AC-FIND-04`,
+  `AC-FIND-05`, `AC-FIND-06`
 
 ### Work order
 

@@ -685,3 +685,45 @@ export const Scope = () => {
     </ReferenceLibrary>
   )
 }
+
+// AC-FIND: single-mode swap on browser find — item-1 starts open, closed
+// until-found items reveal by expanding through existing policy.
+export const FindSwap = () => {
+  const [value, setValue] = React.useState<string | null>('item-1')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" maxW="100r" data-testid="find-fixture-root">
+        <Accordion
+          value={value}
+          onChange={(v) => setValue(v as string | null)}
+          expansion="single"
+          display="flex"
+          flexDirection="column"
+        >
+          <Accordion.Item id="item-1" hiddenUntilFound>
+            <Accordion.Trigger {...dividerTrigger} data-testid="btn-find-trigger-1">
+              Section 1
+            </Accordion.Trigger>
+            <Accordion.Content {...dividerContent} data-testid="find-content-1">
+              <Span fontSize="3.5r" color="design.text.light">
+                Content for section 1
+              </Span>
+            </Accordion.Content>
+          </Accordion.Item>
+
+          <Accordion.Item id="item-2" hiddenUntilFound>
+            <Accordion.Trigger {...dividerTrigger} data-testid="btn-find-trigger-2">
+              Section 2
+            </Accordion.Trigger>
+            <Accordion.Content {...dividerContent} data-testid="find-content-2">
+              <Span fontSize="3.5r" color="design.text.light">
+                findable Content for section 2
+              </Span>
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion>
+      </Div>
+    </ReferenceLibrary>
+  )
+}

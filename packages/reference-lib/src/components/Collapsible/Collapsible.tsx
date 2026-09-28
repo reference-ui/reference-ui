@@ -14,6 +14,12 @@ export interface CollapsibleProps {
   onChange?: (open: boolean) => void
   onOpenChange?: (open: boolean) => void
   disabled?: boolean
+  /**
+   * CO-MOUNT: default `hidden` passthrough for Content. Closed content stays
+   * mounted but hidden (`hidden="until-found"`), so browser find can reveal
+   * it. A Content-level `hiddenUntilFound` prop wins over this default.
+   */
+  hiddenUntilFound?: boolean
 }
 
 interface CollapsibleContextValue {
@@ -24,6 +30,10 @@ interface CollapsibleContextValue {
   setContentId: (id: string | null) => void
   accordionItem?: boolean
   skipEnterRef: React.MutableRefObject<boolean>
+  /** Armed by beforematch; consumed by the next open (skips enter motion once). */
+  skipMotionOnceRef: React.MutableRefObject<boolean>
+  /** Root-level default for Content `hiddenUntilFound` (Content prop wins). */
+  hiddenUntilFound: boolean
   isContentPresent: boolean
   setIsContentPresent: (present: boolean) => void
   isContentMounted: boolean
@@ -49,6 +59,7 @@ export function Collapsible({
   onChange,
   onOpenChange,
   disabled = false,
+  hiddenUntilFound = false,
 }: CollapsibleProps) {
   const accordion = React.useContext(AccordionContext)
   const isAccordionItem = Boolean(accordion && id)
@@ -76,6 +87,7 @@ export function Collapsible({
   const [explicitContentId, setExplicitContentId] = React.useState<string | null>(null)
   const contentId = explicitContentId ?? generatedContentId
   const skipEnterRef = React.useRef(isOpen)
+  const skipMotionOnceRef = React.useRef(false)
   const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
   // B-12: both change handlers fire, non-breaking — either alone behaves
@@ -113,13 +125,15 @@ export function Collapsible({
       setContentId: setExplicitContentId,
       accordionItem: isAccordionItem,
       skipEnterRef,
+      skipMotionOnceRef,
+      hiddenUntilFound,
       isContentPresent,
       setIsContentPresent,
       isContentMounted,
       setIsContentMounted,
       triggerRef,
     }),
-    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem, isContentPresent, isContentMounted]
+    [isOpen, setIsOpen, isDisabled, contentId, isAccordionItem, isContentPresent, isContentMounted, hiddenUntilFound]
   )
 
   return (
@@ -242,13 +256,31 @@ export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, Collapsibl
 )
 
 
-export type CollapsibleContentProps = PrimitiveProps<'div'>
+export type CollapsibleContentProps = PrimitiveProps<'div'> & {
+  /**
+   * CO-MOUNT: keep closed content mounted but hidden (`hidden="until-found"`)
+   * so browser find can reveal it. Wins over `forceMount` (hidden content
+   * must actually hide) and over the root default. Closed content still
+   * animates shut instantly and stays inert; a `beforematch` reveal opens
+   * the Collapsible with enter motion skipped.
+   */
+  hiddenUntilFound?: boolean
+  /**
+   * CO-MOUNT: keep closed content mounted AND interactive (no `hidden`, no
+   * inert, no collapse styles) — the escape hatch for measured/pre-mounted
+   * content. Focus is never evacuated on close. Loses to `hiddenUntilFound`.
+   */
+  forceMount?: boolean
+}
 
-type CollapsibleContentPanelProps = CollapsibleContentProps & {
+type CollapsibleContentPanelProps = Omit<CollapsibleContentProps, 'hiddenUntilFound' | 'forceMount'> & {
   isOpen: boolean
   disabled: boolean
   consumerRef?: React.Ref<HTMLDivElement>
   skipEnterRef: React.MutableRefObject<boolean>
+  skipMotionOnceRef: React.MutableRefObject<boolean>
+  untilFound: boolean
+  forceMountAlone: boolean
   inert?: boolean
   'aria-hidden'?: boolean | 'true' | 'false'
 }
@@ -260,6 +292,9 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       disabled,
       consumerRef,
       skipEnterRef,
+      skipMotionOnceRef,
+      untilFound,
+      forceMountAlone,
       children,
       style,
       inert: userInert,
@@ -289,13 +324,15 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       }
     }, [setIsContentPresent])
 
-    // CO-PRES-07: Evacuate focus before closing Content becomes inert
+    // CO-PRES-07: Evacuate focus before closing Content becomes inert.
+    // CO-MOUNT: forceMount-alone content stays interactive when closed, so
+    // focus inside it is never evacuated.
     const prevOpenRef = React.useRef(isOpen)
     React.useLayoutEffect(() => {
       const wasOpen = prevOpenRef.current
       prevOpenRef.current = isOpen
 
-      if (wasOpen && !isOpen) {
+      if (wasOpen && !isOpen && !forceMountAlone) {
         const node = nodeRef.current
         if (node && typeof document !== 'undefined') {
           const activeEl = document.activeElement
@@ -314,7 +351,31 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
           }
         }
       }
-    }, [isOpen, context])
+    }, [isOpen, context, forceMountAlone])
+
+    // CO-MOUNT: browser find (`beforematch`) on closed hidden-until-found
+    // content opens the Collapsible and skips enter motion so the match is
+    // visible immediately. A consumer-cancelled reveal stays closed.
+    React.useEffect(() => {
+      if (!untilFound) return
+      const node = nodeRef.current
+      if (!node) return
+      const handleBeforeMatch = (event: Event) => {
+        // Defer past dispatch: every sync listener (including a consumer
+        // canceler registered after mount) runs before the open decision.
+        queueMicrotask(() => {
+          if (event.defaultPrevented) return
+          if (!node.isConnected) return
+          if (isOpen) return
+          skipMotionOnceRef.current = true
+          context?.setIsOpen(true)
+        })
+      }
+      node.addEventListener('beforematch', handleBeforeMatch)
+      return () => {
+        node.removeEventListener('beforematch', handleBeforeMatch)
+      }
+    }, [untilFound, isOpen, context, skipMotionOnceRef])
 
     const publish = React.useCallback(() => {
 
@@ -348,8 +409,18 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       const node = nodeRef.current
       if (!node) return
 
-      const skip = Boolean(skipEnterRef.current && isOpen)
+      const skipEnter = skipEnterRef.current && isOpen
+      const skipOnce = skipMotionOnceRef.current && isOpen
+      skipMotionOnceRef.current = false
       if (isOpen) skipEnterRef.current = false
+
+      // CO-MOUNT: forceMount-alone content keeps author styles in both
+      // states — no collapse tween and no instant restyle, open or closed.
+      if (forceMountAlone) return
+
+      // CO-MOUNT: hidden-until-found content shuts instantly (its boxes
+      // are rendering-skipped either way); the open reveal tweens unless skipped.
+      const skip = Boolean(skipEnter || skipOnce || (!isOpen && untilFound))
       animateCollapse(node, {
         open: isOpen,
         skip,
@@ -361,15 +432,29 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       return () => {
         gsap.killTweensOf(node)
       }
-    }, [isOpen, skipEnterRef, publish])
+    }, [isOpen, skipEnterRef, skipMotionOnceRef, untilFound, forceMountAlone, publish])
 
-    // CO-PRES-08: isolate visually exiting closed Content, restore only isolation it owns
-    const isInert = !isOpen || Boolean(userInert)
-    const isAriaHidden = !isOpen ? 'true' : userAriaHidden
+    // CO-PRES-08: isolate visually exiting closed Content, restore only isolation it owns.
+    // CO-MOUNT: forceMount-alone closed content stays interactive (no inert,
+    // no aria-hidden, no pointer-events kill).
+    const closedHidden = !isOpen && !forceMountAlone
+    const isInert = closedHidden || Boolean(userInert)
+    const isAriaHidden = closedHidden ? 'true' : userAriaHidden
     const contentStyle: React.CSSProperties = {
       ...style,
-      ...(!isOpen ? { pointerEvents: 'none' } : undefined),
+      ...(closedHidden ? { pointerEvents: 'none' } : undefined),
     }
+
+    // CO-MOUNT: closed hidden-until-found content carries `hidden`, upgraded
+    // to `until-found` before paint; React owns removal on open.
+    const untilFoundClosed = untilFound && !isOpen
+    React.useLayoutEffect(() => {
+      const node = nodeRef.current
+      if (!node) return
+      if (untilFoundClosed) {
+        node.setAttribute('hidden', 'until-found')
+      }
+    }, [untilFoundClosed])
 
     // `inert` is a known React attribute only from 19 (17/18 skip dash-less
     // unknown attributes), so toggle it imperatively for every runtime.
@@ -387,6 +472,7 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
       <Div
         ref={setRefs}
         {...props}
+        hidden={untilFoundClosed ? true : undefined}
         data-state={isOpen ? 'open' : 'closed'}
         data-disabled={disabled ? '' : undefined}
         aria-hidden={isAriaHidden}
@@ -399,7 +485,10 @@ const CollapsibleContentPanel = React.forwardRef<HTMLDivElement, CollapsibleCont
 )
 
 export const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(
-  function CollapsibleContent({ children, id: idProp, style, ...props }, forwardedRef) {
+  function CollapsibleContent(
+    { children, id: idProp, style, hiddenUntilFound: hiddenUntilFoundProp, forceMount = false, ...props },
+    forwardedRef
+  ) {
     const context = React.useContext(CollapsibleContext)
 
     // CO-DOM-06: register linkage atomically with mount so trigger and content never disagree
@@ -417,14 +506,22 @@ export const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleCo
 
     const contentId = idProp ?? context.contentId
 
+    // CO-MOUNT: Content prop wins over the root default; untilFound wins
+    // over forceMount (hidden-until-found content must actually hide).
+    const untilFound = hiddenUntilFoundProp ?? context.hiddenUntilFound ?? false
+    const forceMountAlone = forceMount && !untilFound
+
     return (
-      <Presence present={context.isOpen}>
+      <Presence present={context.isOpen || untilFound || forceMount}>
         <CollapsibleContentPanel
           id={contentId}
           isOpen={context.isOpen}
           disabled={context.disabled}
           consumerRef={forwardedRef}
           skipEnterRef={context.skipEnterRef}
+          skipMotionOnceRef={context.skipMotionOnceRef}
+          untilFound={untilFound}
+          forceMountAlone={forceMountAlone}
           style={style}
           {...props}
         >

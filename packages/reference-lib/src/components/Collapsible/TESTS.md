@@ -252,6 +252,63 @@ transform styles.
   handlers; reopening removes Collapsible-added isolation while preserving
   any consumer-authored `inert` or `aria-hidden` values.
 
+### Mount retention
+
+- [x] `CO-MOUNT-01` `[reference]` `[browser]` —
+  **Closed hidden-until-found Content should stay mounted, rendering-skipped,
+  inert, and linked.** Render closed Content with `hiddenUntilFound`, then
+  inspect the panel and Trigger. Assert the panel carries
+  `hidden="until-found"` with computed `content-visibility: hidden`, is
+  inert and `aria-hidden` with `data-state="closed"`, and Trigger
+  `aria-controls` still targets the mounted panel ID.
+- [x] `CO-MOUNT-02` `[reference]` —
+  **Root `hiddenUntilFound` should be inherited unless Content overrides
+  it.** Render closed Content under a root with `hiddenUntilFound` and no
+  Content prop, then with explicit `hiddenUntilFound={false}`. Assert the
+  first stays mounted-hidden and the second unmounts; Content wins.
+- [x] `CO-MOUNT-03` `[reference]` `[browser]` —
+  **Hidden-until-found close should shut instantly with no exit tween.**
+  Close open `hiddenUntilFound` Content and inspect synchronously. Assert the
+  panel stays mounted with `hidden="until-found"`, inline height rests at
+  the closed value, and no finite GSAP tween owns the node.
+- [x] `CO-MOUNT-04` `[reference]` `[browser]` —
+  **`beforematch` on closed hidden-until-found Content should open it with
+  enter motion skipped.** Dispatch a cancelable `beforematch` on the closed
+  panel. Assert one `onChange(true)` request, `hidden` removed,
+  `data-state="open"`, and no finite enter tween (the match is visible
+  immediately).
+- [x] `CO-MOUNT-05` `[reference]` `[browser]` —
+  **A cancelled `beforematch` should keep Content closed and preserve later
+  motion.** Prevent the default of a dispatched `beforematch`, then open via
+  Trigger. Assert no request fires while cancelled, and the later
+  trigger-open runs a finite enter tween; cancellation wins regardless of
+  listener registration order.
+- [x] `CO-MOUNT-06` `[reference]` `[browser]` —
+  **`forceMount` closed Content should stay mounted, visible, and
+  interactive with focus kept.** Focus an input inside open `forceMount`
+  Content, then close programmatically. Assert the panel has no `hidden`,
+  `inert`, `aria-hidden`, or pointer-events kill, carries no collapse inline
+  styles, keeps `data-state="closed"`, and retains active focus.
+- [x] `CO-MOUNT-07` `[reference]` —
+  **`hiddenUntilFound` should win over `forceMount`.** Render closed Content
+  with both props. Assert the panel carries `hidden="until-found"` and is
+  inert; hidden content must actually hide.
+- [x] `CO-MOUNT-08` `[reference]` —
+  **A rejected `beforematch` should arm the skip consumed by the next
+  committed open.** Under controlled `open={false}`, dispatch `beforematch`
+  and keep the parent rejecting, then commit `open={true}`. Assert the
+  `beforematch` request fires while closed, and the later committed open
+  runs with no finite enter tween.
+- [x] `CO-MOUNT-09` `[reference]` —
+  **Default close should still evacuate focus from exiting Content.**
+  Focus an input inside open default Content, then close. Assert active
+  focus evacuates to Trigger; the `forceMount` exemption must not leak into
+  the default path.
+- [x] `CO-MOUNT-10` `[reference]` —
+  **`beforematch` while open should be a no-op.** Dispatch `beforematch` on
+  open `hiddenUntilFound` Content. Assert no `onChange` fires and state
+  stays open.
+
 ### Measured-size styling
 
 - [x] `CO-SIZE-01` `[vendor]` `[browser]` —

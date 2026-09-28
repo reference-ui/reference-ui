@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Button, Div, recipe, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
+import { RovingFocus, useRovingFocusContext } from '../RovingFocus'
 
 export type TabsOrientation = 'horizontal' | 'vertical'
 export type TabsActivation = 'automatic' | 'manual'
@@ -240,14 +241,25 @@ interface TabsContextValue {
   variant: TabsVariantProp
   keepMounted: boolean
   baseId: string
-  rovingValue: string
-  setRovingValue: (value: string) => void
+  // Selection→currentness sync (kernel composition): the tab value that
+  // should hold the kernel tab stop — the selected value when it names an
+  // enabled tab, else first-enabled, else null (kernel settlement owns the
+  // all-disabled zero-stop state). Consumed by TabsSelectionSync inside the
+  // RovingFocus root; the kernel owns focus-following currentness.
+  selectionSyncTarget: string | null
+  // True once client layout effects have run (never in SSR): ARIA
+  // references render from generated fallbacks until set, then omit when
+  // the live registry lacks the counterpart (TB-ENV-01 vs TB-DOM-13).
+  linkageSettled: boolean
   claimTabValue: (tabValue: string) => () => void
   claimPanelValue: (panelValue: string) => () => void
   registerTab: (tabValue: string, entry: TabsTabEntry) => () => void
   registerPanel: (panelValue: string, entry: TabsPanelEntry) => () => void
+  registerList: () => () => void
   getTabId: (tabValue: string) => string | undefined
   getPanelId: (panelValue: string) => string | undefined
+  hasTab: (tabValue: string) => boolean
+  hasPanel: (panelValue: string) => boolean
   notePanelFocus: (panelValue: string) => void
   noteTabFocus: (tabValue: string) => void
 }
@@ -297,13 +309,6 @@ export function Tabs({
   // render and the version bump would loop forever.
   const reactId = React.useId()
   const [baseId] = React.useState(() => `tabs-${reactId.replace(/:/g, '')}`)
-
-  // Roving tab stop (TB-DOM-03, TB-MANUAL-01): follows focus so manual
-  // arrows can leave the selected tab; selection changes re-sync it.
-  const [rovingValue, setRovingValueState] = React.useState(value)
-  const setRovingValue = React.useCallback((next: string) => {
-    setRovingValueState(next)
-  }, [])
 
   // Duplicate tracking (TB-DOM-10): value identity is claimed in an
   // effect with cleanup, so StrictMode double-render/double-effects and
@@ -386,6 +391,32 @@ export function Tabs({
     (panelValue: string) => panelEntries.current.get(panelValue)?.id,
     []
   )
+  const hasTab = React.useCallback(
+    (tabValue: string) => tabEntries.current.has(tabValue),
+    []
+  )
+  const hasPanel = React.useCallback(
+    (panelValue: string) => panelEntries.current.has(panelValue),
+    []
+  )
+
+  // Linkage settlement (TB-ENV-01 vs TB-DOM-13): flips pre-paint on
+  // the client (child registry subscriptions run first, so one re-render
+  // carries both); never flips in SSR, where layout effects never run.
+  const [linkageSettled, setLinkageSettled] = React.useState(false)
+  useIsomorphicLayoutEffect(() => {
+    setLinkageSettled(true)
+  }, [])
+
+  // Mounted List count (TB-DOM-13): exactly one List per Tabs; zero or
+  // two-plus is a dev diagnostic, never a crash.
+  const [listCount, setListCount] = React.useState(0)
+  const registerList = React.useCallback(() => {
+    setListCount(count => count + 1)
+    return () => {
+      setListCount(count => Math.max(0, count - 1))
+    }
+  }, [])
 
   // DOM-ordered enabled tabs (FEATURES #8, #4, #6): registry insertion
   // order goes stale across reorders (TB-DYNAMIC-01), so enabled entries
@@ -455,6 +486,23 @@ export function Tabs({
     [getOrderedEnabledTabs, getOrderedTabs]
   )
 
+  // Ordered enabled values for the selection sync, recomputed per
+  // registry commit (identity-stable between bumps).
+  const enabledTabValues = React.useMemo(
+    () => getOrderedEnabledTabs(),
+    [registryVersion, getOrderedEnabledTabs]
+  )
+
+  // Selection→currentness target (TB-SELECT-03, FEATURES #8): the
+  // selected value when it names an enabled tab, else first-enabled, else
+  // null. Applied by TabsSelectionSync inside the RovingFocus root; null
+  // leaves the stop to kernel settlement (all-disabled → zero stops,
+  // TB-DOM-11). Consumed on value/registry change only — manual
+  // focus-diverged stops are never snapped back (TB-MANUAL-01).
+  const selectionSyncTarget: string | null = enabledTabValues.includes(value)
+    ? value
+    : (enabledTabValues[0] ?? null)
+
   // Natural-zero seed (optional value): an uncontrolled Tabs with no
   // user selection yet starts on the first enabled tab. Seeding is a
   // mount repair, not a transition — no onChange fires. Retries across
@@ -483,6 +531,44 @@ export function Tabs({
     }
   }, [isControlled, value, registryVersion])
 
+  // Structural diagnostics (TB-DOM-13): one List and one Tab/Panel pair
+  // per value, verified per commit in dev. An empty tree stays silent
+  // (async anatomy resolving must never false-positive); anything
+  // mounted but unpaired names the exact mismatch. Dangling ARIA is
+  // prevented at render (Tab/Panel omit the reference when the live
+  // registry lacks the counterpart on the client).
+  React.useEffect(() => {
+    if (globalProcess?.env?.NODE_ENV === 'production') return
+    const tabs = Array.from(tabEntries.current.keys())
+    const panels = Array.from(panelEntries.current.keys())
+    if (tabs.length === 0 && panels.length === 0) return
+    if (listCount === 0) {
+      warnTabs(
+        'renders Tab/Panel parts with no Tabs.List. Render exactly one Tabs.List so keyboard movement and the tab stop exist.'
+      )
+    } else if (listCount > 1) {
+      warnTabs(
+        `renders ${listCount} Tabs.List parts. Render exactly one List per Tabs.`
+      )
+    }
+    const panelSet = new Set(panels)
+    for (const tabValue of tabs) {
+      if (!panelSet.has(tabValue)) {
+        warnTabs(
+          `Tab value "${tabValue}" has no matching Panel. Render one Panel per Tab value.`
+        )
+      }
+    }
+    const tabSet = new Set(tabs)
+    for (const panelValue of panels) {
+      if (!tabSet.has(panelValue)) {
+        warnTabs(
+          `Panel value "${panelValue}" has no matching Tab. Render one Tab per Panel value.`
+        )
+      }
+    }
+  }, [registryVersion, listCount])
+
   // Last panel to hold focus (FEATURES #4): set on focus-enter, never
   // cleared on blur — removal drops focus synchronously during commit, so
   // a blur-clear would erase the trail before the rescue effect reads it.
@@ -500,7 +586,8 @@ export function Tabs({
   // with no onChange. Fires when focus is still inside the hidden panel
   // (keepMounted, display:none drop pending) or was lost to the root by
   // the unmounting children. Focus anywhere else (a tab, an external
-  // control) is left untouched — never stolen.
+  // control) is left untouched — never stolen. The kernel tab stop
+  // follows via the focus itself (Item onFocus sets currentness).
   useIsomorphicLayoutEffect(() => {
     const lastPanel = focusedPanelRef.current
     if (lastPanel === null || lastPanel === value) return
@@ -526,29 +613,9 @@ export function Tabs({
     if (target === undefined) return
     const targetEl = tabEntries.current.get(target)?.element
     if (targetEl && targetEl.isConnected) {
-      setRovingValueState(target)
       targetEl.focus()
     }
   }, [value, nearestEnabledTab])
-
-  // Selection re-syncs the stop (TB-SELECT-03); a disabled or unmatched
-  // selection falls back to the first enabled tab (FEATURES #8). With no
-  // enabled tab the stop stays on the value, which no enabled tab
-  // matches, so zero tabIndex=0 is exposed (TB-DOM-11). Registry churn
-  // repairs only a broken stop — never snaps a focus-moved stop back to
-  // the selection (TB-MANUAL-01, TB-AUTO-05). Selection is untouched and
-  // no onChange fires on either path.
-  const prevValueRef = React.useRef(value)
-  React.useEffect(() => {
-    const ordered = getOrderedEnabledTabs()
-    if (value !== prevValueRef.current) {
-      prevValueRef.current = value
-      setRovingValueState(ordered.includes(value) ? value : (ordered[0] ?? value))
-    } else if (!ordered.includes(rovingValue)) {
-      const first = ordered[0]
-      if (first !== undefined) setRovingValueState(first)
-    }
-  }, [value, registryVersion, rovingValue, getOrderedEnabledTabs])
 
   // Focused tab trail (FEATURES #6): the tab holding DOM focus, for the
   // disable/remove handoff. Focusing a tab also clears the panel trail —
@@ -565,11 +632,10 @@ export function Tabs({
   const prevTabOrderRef = React.useRef<string[]>([])
 
   // Disabled/removed-tab handoff (TB-DYNAMIC-03, FEATURES #6): when the
-  // focused tab disables or unmounts, focus and the current stop move to
-  // the nearest enabled tab (ties to preceding), while selection and the
-  // visible panel stay unchanged and no request fires. Declared after the
-  // #8 repair so the handoff target wins over first-enabled. Focus that
-  // already moved elsewhere is never stolen.
+  // focused tab disables or unmounts, focus moves to the nearest enabled
+  // tab (ties to preceding), while selection and the visible panel stay
+  // unchanged and no request fires. The kernel tab stop follows via the
+  // focus itself. Focus that already moved elsewhere is never stolen.
   React.useEffect(() => {
     const currentOrder = getOrderedTabs()
     const walkOrder =
@@ -609,7 +675,6 @@ export function Tabs({
     const targetEl = tabEntries.current.get(target)?.element
     if (targetEl && targetEl.isConnected) {
       focusedTabRef.current = target
-      setRovingValueState(target)
       targetEl.focus()
     }
   }, [registryVersion, getOrderedTabs, nearestEnabledTab])
@@ -636,14 +701,17 @@ export function Tabs({
       variant,
       keepMounted,
       baseId,
-      rovingValue,
-      setRovingValue,
+      selectionSyncTarget,
+      linkageSettled,
       claimTabValue,
       claimPanelValue,
       registerTab,
       registerPanel,
+      registerList,
       getTabId,
       getPanelId,
+      hasTab,
+      hasPanel,
       notePanelFocus,
       noteTabFocus,
     }),
@@ -655,14 +723,17 @@ export function Tabs({
       variant,
       keepMounted,
       baseId,
-      rovingValue,
-      setRovingValue,
+      selectionSyncTarget,
+      linkageSettled,
       claimTabValue,
       claimPanelValue,
       registerTab,
       registerPanel,
+      registerList,
       getTabId,
       getPanelId,
+      hasTab,
+      hasPanel,
       notePanelFocus,
       noteTabFocus,
       // Unread by the factory: bumps re-render ARIA-linkage readers.
@@ -677,302 +748,532 @@ export function Tabs({
   )
 }
 
+// Selection→currentness sync (TB-SELECT-03, FEATURES #8): the one
+// direction the kernel cannot infer. Rendered (rendering null) inside
+// the tablist so the RovingFocus context is in scope. Keyed on the
+// target only: selection and registry changes move the stop, while
+// focus-diverged stops (manual arrows, rejected nav) never re-run the
+// effect and are never snapped back. A layout effect on purpose — the
+// write lands (with its synchronous re-render) before the kernel's
+// passive settlement pass, so initial mount and selection changes win
+// over the first-available default. A null target (no enabled tab)
+// leaves the all-disabled zero-stop state to kernel settlement.
+function TabsSelectionSync() {
+  const tabs = React.useContext(TabsContext)
+  const roving = useRovingFocusContext()
+  const target = tabs?.selectionSyncTarget ?? null
+  const currentId = roving?.currentId ?? null
+
+  useIsomorphicLayoutEffect(() => {
+    if (!tabs || !roving || target === null) return
+    if (currentId !== target) {
+      roving.setCurrentId(target)
+    }
+    // Deps are the target alone by design (see above); contexts are
+    // stable enough (Root memo) and currentId is read fresh per target.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target])
+
+  return null
+}
+
 export type TabsListProps = PrimitiveProps<'div'> & {
   variant?: TabsVariantProp
 }
 
-export function TabsList({
-  children,
-  variant: variantProp,
-  className,
-  style,
-  onKeyDown,
-  ...props
-}: TabsListProps) {
-  const context = React.useContext(TabsContext)
-  const orientation = context?.orientation ?? 'horizontal'
-  const variant = variantProp ?? context?.variant ?? 'line'
+export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
+  function TabsList(
+    {
+      children,
+      variant: variantProp,
+      className,
+      style,
+      onKeyDown,
+      // Managed-wins (TB-DOM-09): orientation state is kernel-owned;
+      // consumer conflicts are dropped while unrelated props survive.
+      'aria-orientation': _dropAriaOrientation,
+      ...props
+    }: TabsListProps,
+    forwardedRef
+  ) {
+    void _dropAriaOrientation
+    // data-* needs a Record cast: TS allows data-* at JSX sites but the
+    // prop types carry no index signature to destructure from.
+    const { 'data-orientation': _dropDataOrientation, ...listProps } =
+      props as typeof props & Record<string, unknown>
+    void _dropDataOrientation
+    const context = React.useContext(TabsContext)
+    const orientation = context?.orientation ?? 'horizontal'
+    const variant = variantProp ?? context?.variant ?? 'line'
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    onKeyDown?.(e)
-    if (e.defaultPrevented) return
+    // List subscription for the TB-DOM-13 one-List diagnostic.
+    const registerList = context?.registerList
+    React.useEffect(() => {
+      if (!registerList) return
+      return registerList()
+    }, [registerList])
 
-    // Scope to this list only (TB-NEST-01): nested instances' tabs live
-    // inside this subtree but belong to their own tablist.
-    const tabs = Array.from(
-      e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    ).filter(
-      tab =>
-        !tab.disabled &&
-        tab.closest('[role="tablist"]') === e.currentTarget
+    // Observe-only activation (automatic mode): the RovingFocus kernel
+    // moves focus synchronously at the tab during the keydown dispatch;
+    // this bubble-phase handler reads the RESULT. A destination tab in
+    // this list that differs from the keydown source means the kernel
+    // moved — request it. Consumer-prevented keys never move (source and
+    // destination coincide), and nested-instance keys scope out via the
+    // closest-tablist checks, so no defaultPrevented inspection is needed
+    // (the kernel's own preventDefault is indistinguishable from a
+    // consumer's at bubble time). Tabs owns this activation policy only;
+    // arrows, wrap, Home/End, RTL, and the tab stop are the kernel's.
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(e)
+      if (context?.activation !== 'automatic') return
+
+      const fromEl = e.target as Element | null
+      const sourceTab = fromEl?.closest?.('[role="tab"]') ?? null
+      const destTab =
+        getDeepActiveElement(e.currentTarget)?.closest?.('[role="tab"]') ??
+        null
+      if (!sourceTab || !destTab || destTab === sourceTab) return
+      if (sourceTab.closest('[role="tablist"]') !== e.currentTarget) return
+      if (destTab.closest('[role="tablist"]') !== e.currentTarget) return
+      const val = destTab.getAttribute('data-value')
+      if (val) {
+        context.setValue(val)
+      }
+    }
+
+    // Variant chrome resolves through the system recipe: the call takes the
+    // kernel union, and unknown author names match no table axis at runtime,
+    // so they resolve to base + axis classes with no built-in paint.
+    const recipeClasses = tabsListRecipe({
+      variant: variant as TabsVariant,
+      orientation,
+    })
+
+    return (
+      <RovingFocus.Root
+        orientation={orientation}
+        loop
+        typeahead={false}
+      >
+        <Div
+          role="tablist"
+          aria-orientation={orientation}
+          data-orientation={orientation}
+          data-variant={variant}
+          data-reference-tabs-list=""
+          onKeyDown={handleKeyDown}
+          className={className ? `${recipeClasses} ${className}` : recipeClasses}
+          style={{
+            borderBottomColor: variant === 'line' && orientation === 'horizontal' ? 'var(--colors-ui-table-border)' : undefined,
+            borderRightColor: variant === 'line' && orientation === 'vertical' ? 'var(--colors-ui-table-border)' : undefined,
+            ...style,
+          }}
+          ref={forwardedRef}
+          {...listProps}
+        >
+          {children}
+          <TabsSelectionSync />
+        </Div>
+      </RovingFocus.Root>
     )
-
-    if (tabs.length === 0) return
-
-    // Deep lookup (TB-ENV-03): document.activeElement returns the shadow
-    // host inside a ShadowRoot, which would index -1 and kill the arrows.
-    const activeIndex = tabs.indexOf(
-      getDeepActiveElement(e.currentTarget) as HTMLButtonElement
-    )
-    if (activeIndex === -1) return
-
-    // Read at event time (TB-AUTO-02, TB-AUTO-06): runtime dir flips apply
-    // to the next keypress with no cached direction to go stale.
-    const dirAncestor = e.currentTarget.closest('[dir]')
-    const isRTL = dirAncestor?.getAttribute('dir') === 'rtl'
-
-    let targetIndex = -1
-
-    if (orientation === 'horizontal') {
-      if (e.key === 'ArrowRight') {
-        targetIndex = isRTL
-          ? (activeIndex - 1 + tabs.length) % tabs.length
-          : (activeIndex + 1) % tabs.length
-      } else if (e.key === 'ArrowLeft') {
-        targetIndex = isRTL
-          ? (activeIndex + 1) % tabs.length
-          : (activeIndex - 1 + tabs.length) % tabs.length
-      }
-    } else {
-      if (e.key === 'ArrowDown') {
-        targetIndex = (activeIndex + 1) % tabs.length
-      } else if (e.key === 'ArrowUp') {
-        targetIndex = (activeIndex - 1 + tabs.length) % tabs.length
-      }
-    }
-
-    if (e.key === 'Home') {
-      targetIndex = 0
-    } else if (e.key === 'End') {
-      targetIndex = tabs.length - 1
-    }
-
-    if (targetIndex !== -1) {
-      e.preventDefault()
-      const targetTab = tabs[targetIndex]
-      targetTab?.focus()
-      if (context?.activation === 'automatic') {
-        const val = targetTab?.getAttribute('data-value')
-        if (val) {
-          context.setValue(val)
-        }
-      }
-    }
   }
+)
 
-  // Variant chrome resolves through the system recipe: the call takes the
-  // kernel union, and unknown author names match no table axis at runtime,
-  // so they resolve to base + axis classes with no built-in paint.
-  const recipeClasses = tabsListRecipe({
-    variant: variant as TabsVariant,
-    orientation,
-  })
-
-  return (
-    <Div
-      role="tablist"
-      aria-orientation={orientation}
-      data-orientation={orientation}
-      data-variant={variant}
-      data-reference-tabs-list=""
-      onKeyDown={handleKeyDown}
-      className={className ? `${recipeClasses} ${className}` : recipeClasses}
-      style={{
-        borderBottomColor: variant === 'line' && orientation === 'horizontal' ? 'var(--colors-ui-table-border)' : undefined,
-        borderRightColor: variant === 'line' && orientation === 'vertical' ? 'var(--colors-ui-table-border)' : undefined,
-        ...style,
-      }}
-      {...props}
-    >
-      {children}
-    </Div>
-  )
-}
+TabsList.displayName = 'Tabs.List'
 
 export type TabProps = Omit<PrimitiveProps<'button'>, 'value'> & {
   value: string
   variant?: TabsVariantProp
 }
 
-export function Tab({
-  value,
-  children,
-  variant: variantProp,
-  disabled: disabledProp,
-  onClick,
-  onFocus,
-  className,
-  style,
-  id: idProp,
-  ...props
-}: TabProps) {
-  const context = React.useContext(TabsContext)
-  const orientation = context?.orientation ?? 'horizontal'
-  const variant = variantProp ?? context?.variant ?? 'line'
-  const isSelected = context ? context.value === value : false
-  const isDisabled = disabledProp ?? false
-  const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
-  // Explicit Panel IDs flow in through the registry (TB-DOM-06); the
-  // generated fallback keeps SSR and first render unchanged.
-  const panelId = context
-    ? (context.getPanelId(value) ?? `${context.baseId}-panel-${value}`)
-    : undefined
+// Interactive descendants that own their own activation (TB-EVENT-01/02):
+// clicks bubbling from these (including native Space/Enter keyup-clicks
+// from nested or portalled editables) must not select the tab. Plain
+// label chrome (spans, icons) still activates.
+const TAB_EDITABLE_SELECTOR =
+  'input,textarea,select,[contenteditable]:not([contenteditable="false"])'
 
-  // Duplicate identity is a hard error (TB-DOM-10): value is the public
-  // Tab-to-Panel mapping, so a collision would fork ARIA linkage.
-  // Claimed in an effect (commit phase), never during render.
-  const claimTabValue = context?.claimTabValue
-  React.useEffect(() => {
-    if (!claimTabValue) return
-    return claimTabValue(value)
-  }, [claimTabValue, value])
-
-  // Identity registry entry (TB-DOM-06, TB-DYNAMIC-01/02): layout effect
-  // with cleanup, so the Panel's aria-labelledby updates before paint and
-  // unmounts unsubscribe. Refs attach before layout effects, so the host
-  // element is captured on the same commit.
-  const tabRef = React.useRef<HTMLButtonElement>(null)
-  const registerTab = context?.registerTab
-  useIsomorphicLayoutEffect(() => {
-    if (!registerTab || tabId === undefined) return
-    return registerTab(value, {
-      id: tabId,
-      element: tabRef.current,
-      disabled: isDisabled,
-    })
-  }, [registerTab, value, tabId, isDisabled])
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented && !isDisabled && context) {
-      context.setValue(value)
-    }
-  }
-
-  const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
-    onFocus?.(e)
-    // The roving stop tracks focus (TB-MANUAL-01); disabled tabs stay
-    // unreachable (TB-DOM-08, TB-DOM-11). Every tab focus (even a
-    // disabled one, where the engine allows it) records the handoff
-    // trail (FEATURES #6).
-    if (!context) return
-    context.noteTabFocus(value)
-    if (!isDisabled) {
-      context.setRovingValue(value)
-    }
-  }
-
-  const isRovingStop =
-    !!context && !isDisabled && context.rovingValue === value
-
-  // Variant chrome resolves through the system recipe (same unknown-name
-  // rule as the list: base + axis classes, no built-in paint).
-  const recipeClasses = tabsTabRecipe({
-    variant: variant as TabsVariant,
-    orientation,
-    selected: isSelected ? 'selected' : 'unselected',
-    disabled: isDisabled ? 'disabled' : 'enabled',
-  })
-
-  return (
-    <Button
-      type="button"
-      role="tab"
-      ref={tabRef}
-      id={tabId}
-      tabIndex={isRovingStop ? 0 : -1}
-      aria-selected={isSelected}
-      aria-controls={isSelected ? panelId : undefined}
-      data-state={isSelected ? 'active' : 'inactive'}
-      data-variant={variant}
-      data-disabled={isDisabled ? '' : undefined}
-      data-value={value}
-      disabled={isDisabled}
-      onClick={handleClick}
-      onFocus={handleFocus}
-      className={className ? `${recipeClasses} ${className}` : recipeClasses}
-      style={style}
-      {...props}
-    >
-      {children}
-    </Button>
-  )
+function isEditableClickTarget(target: Element | null): boolean {
+  if (!target || typeof target.closest !== 'function') return false
+  return target.closest(TAB_EDITABLE_SELECTOR) !== null
 }
+
+export const Tab = React.forwardRef<HTMLButtonElement, TabProps>(
+  function Tab(
+    {
+      value,
+      children,
+      variant: variantProp,
+      disabled: disabledProp,
+      onClick,
+      onFocus,
+      onPointerDown,
+      onMouseDown,
+      className,
+      style,
+      id: idProp,
+      // Managed-wins (TB-DOM-09): selection state and panel linkage are
+      // kernel-owned; consumer conflicts are dropped while unrelated
+      // data/aria/class/style props survive.
+      'aria-selected': _dropAriaSelected,
+      'aria-controls': _dropAriaControls,
+      ...props
+    }: TabProps,
+    forwardedRef
+  ) {
+    void _dropAriaSelected
+    void _dropAriaControls
+    // data-* needs a Record cast (see TabsList).
+    const {
+      'data-state': _dropDataState,
+      'data-disabled': _dropDataDisabled,
+      ...tabProps
+    } = props as typeof props & Record<string, unknown>
+    void _dropDataState
+    void _dropDataDisabled
+    const context = React.useContext(TabsContext)
+    const orientation = context?.orientation ?? 'horizontal'
+    const variant = variantProp ?? context?.variant ?? 'line'
+    const isSelected = context ? context.value === value : false
+    const isDisabled = disabledProp ?? false
+    const tabId = idProp ?? (context ? `${context.baseId}-tab-${value}` : undefined)
+    // Explicit Panel IDs flow in through the registry (TB-DOM-06); the
+    // generated fallback keeps SSR and first render unchanged.
+    const panelId = context
+      ? (context.getPanelId(value) ?? `${context.baseId}-panel-${value}`)
+      : undefined
+    // Dangling-linkage guard (TB-DOM-13): once the client commit is
+    // settled, a selected tab with no registered Panel omits
+    // aria-controls instead of pointing at a missing element. SSR and
+    // first render keep the generated fallback so valid trees hydrate
+    // linked (TB-ENV-01).
+    const panelLinked = !(context?.linkageSettled ?? false) || (context?.hasPanel(value) ?? true)
+
+    // Duplicate identity is a hard error (TB-DOM-10): value is the public
+    // Tab-to-Panel mapping, so a collision would fork ARIA linkage.
+    // Claimed in an effect (commit phase), never during render.
+    const claimTabValue = context?.claimTabValue
+    React.useEffect(() => {
+      if (!claimTabValue) return
+      return claimTabValue(value)
+    }, [claimTabValue, value])
+
+    // Identity registry entry (TB-DOM-06, TB-DYNAMIC-01/02): layout effect
+    // with cleanup, so the Panel's aria-labelledby updates before paint and
+    // unmounts unsubscribe. Refs attach before layout effects, so the host
+    // element is captured on the same commit.
+    const tabRef = React.useRef<HTMLButtonElement>(null)
+    const setRefs = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        tabRef.current = node
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node)
+        } else if (forwardedRef && typeof forwardedRef === 'object' && 'current' in forwardedRef) {
+          ;(forwardedRef as React.MutableRefObject<HTMLButtonElement | null>).current = node
+        }
+      },
+      [forwardedRef]
+    )
+    const registerTab = context?.registerTab
+    useIsomorphicLayoutEffect(() => {
+      if (!registerTab || tabId === undefined) return
+      return registerTab(value, {
+        id: tabId,
+        element: tabRef.current,
+        disabled: isDisabled,
+      })
+    }, [registerTab, value, tabId, isDisabled])
+
+    // Pointerdown-early gesture flags (TB-SELECT-08): the completing
+    // click for the same value is the same gesture, not a second request.
+    // Per-tab: a pointerdown and its click always share the tab. Stale
+    // flags (aborted gestures) are overwritten by the next pointerdown,
+    // and every real click is preceded by one.
+    const pendingPointerValueRef = React.useRef<string | null>(null)
+    const requestedPointerValueRef = React.useRef<string | null>(null)
+    const canceledPointerValueRef = React.useRef<string | null>(null)
+
+    // Pointerdown-early activation (TB-SELECT-08): a primary press on an
+    // enabled unselected tab arms the request; the native mousedown-default
+    // focus fires the tab's focus handler, which requests — so blur, tab
+    // focus, and onChange order themselves (TB-SELECT-06) with zero script
+    // focus. Never focus() here: a script focus during a mouse press
+    // matches :focus-visible and paints a ring the settled snapshots pin
+    // as absent, while the native focus it replaces resolves mouse
+    // modality. Consumer-first: a consumer preventDefault on the press
+    // cancels (the completing click is suppressed too). Disabled,
+    // selected, and non-primary presses are untouched.
+    const requestFromPress = (e: React.SyntheticEvent<HTMLButtonElement>) => {
+      if (!context || isDisabled) return
+      if (canceledPointerValueRef.current === value) return
+      if (e.defaultPrevented) {
+        // Consumer canceled the press: suppress the completing click.
+        canceledPointerValueRef.current = value
+        return
+      }
+      // Event-target guard (TB-EVENT-01/02): presses that start in an
+      // editable descendant (nested inputs, portalled editables whose
+      // React-tree events bubble through the tab) keep their focus and
+      // request nothing — mirroring the click guard below, since a real
+      // click on the editable press-fires before it click-fires.
+      if (
+        e.target !== e.currentTarget &&
+        isEditableClickTarget(e.target as Element | null)
+      ) {
+        return
+      }
+      if (pendingPointerValueRef.current === value) return
+      if (context.value === value) return
+      pendingPointerValueRef.current = value
+    }
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+      onPointerDown?.(e)
+      if ((e as React.PointerEvent).button !== 0) return
+      requestFromPress(e)
+    }
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onMouseDown?.(e)
+      if (e.button !== 0) return
+      requestFromPress(e)
+    }
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e)
+      // Same-gesture paths (TB-SELECT-08): a press-armed click is the
+      // same gesture, not a second request. When the focus handler
+      // already requested, the click is pure dedupe; when focus never
+      // fired (the tab already held focus), the click requests only if
+      // focus demonstrably landed here — a press whose focus never
+      // arrived (consumer mousedown-preventDefault) stays silent.
+      if (pendingPointerValueRef.current === value) {
+        pendingPointerValueRef.current = null
+        const wasRequested = requestedPointerValueRef.current === value
+        requestedPointerValueRef.current = null
+        if (e.defaultPrevented) return
+        if (
+          e.target !== e.currentTarget &&
+          isEditableClickTarget(e.target as Element | null)
+        ) {
+          return
+        }
+        if (wasRequested) return
+        const host = e.currentTarget as unknown as HTMLElement
+        if (getDeepActiveElement(host) === host && !isDisabled && context) {
+          context.setValue(value)
+        }
+        return
+      }
+      requestedPointerValueRef.current = null
+      // Press-canceled gestures (consumer preventDefault on the press):
+      // the completing click is suppressed with the press.
+      if (canceledPointerValueRef.current === value) {
+        canceledPointerValueRef.current = null
+        return
+      }
+      if (e.defaultPrevented) return
+      // Event-target guard (TB-EVENT-01/02): activation from editable
+      // descendants (nested inputs, portalled editables whose React-tree
+      // clicks bubble through the tab) is ignored without stopping
+      // bubbling globally.
+      if (
+        e.target !== e.currentTarget &&
+        isEditableClickTarget(e.target as Element | null)
+      ) {
+        return
+      }
+      // Retargeted-activation guard (TB-EVENT-01): Chrome retargets
+      // Space/Enter activation clicks from a nested editable to the
+      // ancestor button (detail 0, target the tab itself), so the target
+      // guard above cannot see them. A keyboard-synthesized click
+      // (detail 0) while focus sits on a nested descendant is that
+      // retarget — ignore it. Legit keyboard activation has focus on
+      // the tab; real pointer clicks carry detail ≥ 1; unfocused
+      // synthetic clicks (unit bare clicks) have no nested focus.
+      if (e.detail === 0) {
+        const host = e.currentTarget as unknown as HTMLElement
+        const active = getDeepActiveElement(host)
+        if (active && active !== host && host.contains(active)) {
+          return
+        }
+      }
+      if (!isDisabled && context) {
+        context.setValue(value)
+      }
+    }
+
+    const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
+      onFocus?.(e)
+      // The kernel tab stop tracks focus; Tabs records the handoff trail
+      // (every tab focus, even a disabled one where the engine allows it).
+      context?.noteTabFocus(value)
+      // Press-armed request (TB-SELECT-08): the native mousedown-default
+      // focus lands after the press armed, so the request fires here —
+      // after blur and focus, before mouseup/click (TB-SELECT-06). Focus
+      // without an armed press (arrows, Tab key, programmatic) never
+      // requests. setValue redundant-suppresses, so re-focusing the
+      // selected tab is a silent no-op.
+      if (
+        context &&
+        !isDisabled &&
+        e.target === e.currentTarget &&
+        pendingPointerValueRef.current === value &&
+        requestedPointerValueRef.current !== value
+      ) {
+        requestedPointerValueRef.current = value
+        context.setValue(value)
+      }
+    }
+
+    // Variant chrome resolves through the system recipe (same unknown-name
+    // rule as the list: base + axis classes, no built-in paint).
+    const recipeClasses = tabsTabRecipe({
+      variant: variant as TabsVariant,
+      orientation,
+      selected: isSelected ? 'selected' : 'unselected',
+      disabled: isDisabled ? 'disabled' : 'enabled',
+    })
+
+    // No nested-focusable keydown guard here: preventing the keydown
+    // would break typing/caret in the nested editable itself
+    // (TB-EVENT-01). The kernel ignores non-arrow keys with typeahead
+    // off, and the click-target guard above absorbs native Space/Enter
+    // keyup-clicks — the same division Radix uses. (Arrow keys from a
+    // nested focusable do drive kernel movement; that shape is invalid
+    // HTML and unpinned.)
+    return (
+      <RovingFocus.Item id={value} disabled={isDisabled}>
+        <Button
+          type="button"
+          role="tab"
+          ref={setRefs}
+          id={tabId}
+          aria-selected={isSelected}
+          aria-controls={isSelected && panelLinked ? panelId : undefined}
+          data-state={isSelected ? 'active' : 'inactive'}
+          data-variant={variant}
+          data-disabled={isDisabled ? '' : undefined}
+          data-value={value}
+          disabled={isDisabled}
+          onClick={handleClick}
+          onFocus={handleFocus}
+          onPointerDown={handlePointerDown}
+          onMouseDown={handleMouseDown}
+          className={className ? `${recipeClasses} ${className}` : recipeClasses}
+          style={style}
+          {...tabProps}
+        >
+          {children}
+        </Button>
+      </RovingFocus.Item>
+    )
+  }
+)
+
+Tab.displayName = 'Tabs.Tab'
 
 export type TabPanelProps = Omit<PrimitiveProps<'div'>, 'value'> & {
   value: string
   keepMounted?: boolean
 }
 
-export function TabPanel({
-  value,
-  children,
-  keepMounted: keepMountedProp = false,
-  id: idProp,
-  onFocus,
-  className,
-  style,
-  ...props
-}: TabPanelProps) {
-  const context = React.useContext(TabsContext)
-  const isSelected = context ? context.value === value : false
-  // Root keepMounted (W-15) ORs with the per-panel opt-in: either switch
-  // keeps this panel's children alive. Inactive kept panels sit under
-  // native `hidden` (display:none drops them from tab order and the
-  // accessibility tree, so no aria-hidden/inert is needed).
-  const keepMounted = keepMountedProp || (context?.keepMounted ?? false)
-  // Explicit Tab IDs flow in through the registry (TB-DOM-06); the
-  // generated fallback keeps SSR and first render unchanged.
-  const tabId = context
-    ? (context.getTabId(value) ?? `${context.baseId}-tab-${value}`)
-    : undefined
-  const panelId = idProp ?? (context ? `${context.baseId}-panel-${value}` : undefined)
+export const TabPanel = React.forwardRef<HTMLDivElement, TabPanelProps>(
+  function TabPanel(
+    {
+      value,
+      children,
+      keepMounted: keepMountedProp = false,
+      id: idProp,
+      onFocus,
+      className,
+      style,
+      ...props
+    }: TabPanelProps,
+    forwardedRef
+  ) {
+    // Managed-wins (TB-DOM-09): panel state is kernel-owned (Record
+    // cast: see TabsList).
+    const { 'data-state': _dropDataState, ...panelProps } =
+      props as typeof props & Record<string, unknown>
+    void _dropDataState
+    const context = React.useContext(TabsContext)
+    const isSelected = context ? context.value === value : false
+    // Root keepMounted (W-15) ORs with the per-panel opt-in: either switch
+    // keeps this panel's children alive. Inactive kept panels sit under
+    // native `hidden` (display:none drops them from tab order and the
+    // accessibility tree, so no aria-hidden/inert is needed).
+    const keepMounted = keepMountedProp || (context?.keepMounted ?? false)
+    // Explicit Tab IDs flow in through the registry (TB-DOM-06); the
+    // generated fallback keeps SSR and first render unchanged.
+    const tabId = context
+      ? (context.getTabId(value) ?? `${context.baseId}-tab-${value}`)
+      : undefined
+    const panelId = idProp ?? (context ? `${context.baseId}-panel-${value}` : undefined)
+    // Dangling-linkage guard (TB-DOM-13): mirrors the Tab side — a Panel
+    // with no registered Tab omits aria-labelledby on settled client
+    // commits instead of pointing at a missing element.
+    const tabLinked = !(context?.linkageSettled ?? false) || (context?.hasTab(value) ?? true)
 
-  const claimPanelValue = context?.claimPanelValue
-  React.useEffect(() => {
-    if (!claimPanelValue) return
-    return claimPanelValue(value)
-  }, [claimPanelValue, value])
+    const claimPanelValue = context?.claimPanelValue
+    React.useEffect(() => {
+      if (!claimPanelValue) return
+      return claimPanelValue(value)
+    }, [claimPanelValue, value])
 
-  // Identity registry entry (TB-DOM-06): same subscribe/unsubscribe shape
-  // as Tab, so the Tab's aria-controls tracks explicit Panel IDs.
-  const panelRef = React.useRef<HTMLDivElement>(null)
-  const registerPanel = context?.registerPanel
-  useIsomorphicLayoutEffect(() => {
-    if (!registerPanel || panelId === undefined) return
-    return registerPanel(value, { id: panelId, element: panelRef.current })
-  }, [registerPanel, value, panelId])
+    // Identity registry entry (TB-DOM-06): same subscribe/unsubscribe shape
+    // as Tab, so the Tab's aria-controls tracks explicit Panel IDs.
+    const panelRef = React.useRef<HTMLDivElement>(null)
+    const setRefs = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        panelRef.current = node
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node)
+        } else if (forwardedRef && typeof forwardedRef === 'object' && 'current' in forwardedRef) {
+          ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }
+      },
+      [forwardedRef]
+    )
+    const registerPanel = context?.registerPanel
+    useIsomorphicLayoutEffect(() => {
+      if (!registerPanel || panelId === undefined) return
+      return registerPanel(value, { id: panelId, element: panelRef.current })
+    }, [registerPanel, value, panelId])
 
-  const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
-    onFocus?.(e)
-    // Focus entered this panel's subtree (FEATURES #4): record the trail
-    // so a hiding selection change can rescue it. React normalizes focus
-    // to bubble through the tree, so descendant (even portalled) focus
-    // lands here. Consumer-first.
-    context?.notePanelFocus(value)
+    const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+      onFocus?.(e)
+      // Focus entered this panel's subtree (FEATURES #4): record the trail
+      // so a hiding selection change can rescue it. React normalizes focus
+      // to bubble through the tree, so descendant (even portalled) focus
+      // lands here. Consumer-first.
+      context?.notePanelFocus(value)
+    }
+
+    return (
+      <Div
+        role="tabpanel"
+        ref={setRefs}
+        id={panelId}
+        aria-labelledby={tabLinked ? tabId : undefined}
+        hidden={!isSelected}
+        onFocus={handleFocus}
+        data-state={isSelected ? 'active' : 'inactive'}
+        data-value={value}
+        py="5r"
+        px="0"
+        color="design.text.base"
+        className={className}
+        style={style}
+        {...panelProps}
+      >
+        {(isSelected || keepMounted) && children}
+      </Div>
+    )
   }
+)
 
-  return (
-    <Div
-      role="tabpanel"
-      ref={panelRef}
-      id={panelId}
-      aria-labelledby={tabId}
-      hidden={!isSelected}
-      onFocus={handleFocus}
-      data-state={isSelected ? 'active' : 'inactive'}
-      data-value={value}
-      py="5r"
-      px="0"
-      color="design.text.base"
-      className={className}
-      style={style}
-      {...props}
-    >
-      {(isSelected || keepMounted) && children}
-    </Div>
-  )
-}
+TabPanel.displayName = 'Tabs.Panel'
 
 export const TabsTrigger = Tab
 export const TabsContent = TabPanel

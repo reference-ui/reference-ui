@@ -32,11 +32,20 @@ export type AccordionItemProps = {
   id: string
   children?: React.ReactNode
   disabled?: boolean
+  /**
+   * AC-FIND: default `hidden` passthrough for the item Collapsible. Closed
+   * item Content stays mounted but hidden (`hidden="until-found"`) so
+   * browser find can match it; a `beforematch` reveal expands the item
+   * through existing policy (single mode swaps the open item, multiple
+   * adds) with enter motion skipped once. Setting this prop IS the opt-in —
+   * there is no separate `findExpansion` switch (see FEATURES.md #1).
+   */
+  hiddenUntilFound?: boolean
 }
 
-export function AccordionItem({ id, children, disabled = false }: AccordionItemProps) {
+export function AccordionItem({ id, children, disabled = false, hiddenUntilFound = false }: AccordionItemProps) {
   return (
-    <Collapsible id={id} disabled={disabled}>
+    <Collapsible id={id} disabled={disabled} hiddenUntilFound={hiddenUntilFound}>
       {children}
     </Collapsible>
   )

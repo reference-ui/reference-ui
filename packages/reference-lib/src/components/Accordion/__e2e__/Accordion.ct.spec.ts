@@ -589,4 +589,34 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     await expect(standalone).toHaveAttribute('aria-expanded', 'true')
     await expect(outer1).toHaveAttribute('aria-expanded', 'true')
   })
+
+  test('AC-FIND-CT-01: native beforematch swaps the single-mode open item and reveals the match', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Accordion/Accordion/FindSwap')
+    const trigger1 = page.getByTestId('btn-find-trigger-1')
+    const trigger2 = page.getByTestId('btn-find-trigger-2')
+    const content1 = page.getByTestId('find-content-1')
+    const content2 = page.getByTestId('find-content-2')
+
+    await expect(trigger1).toHaveAttribute('aria-expanded', 'true')
+    await expect(content1).toBeVisible()
+    // hidden=until-found skips contents (the panel's own 1px divider border
+    // still paints, so assert the skip, not whole-box hiddenness).
+    await expect(content2).toHaveAttribute('hidden', 'until-found')
+    expect(await content2.evaluate((el) => getComputedStyle(el).contentVisibility)).toBe('hidden')
+    await expect(content2.locator('span')).toBeHidden()
+
+    await content2.evaluate((el) => {
+      el.dispatchEvent(new Event('beforematch', { bubbles: true, cancelable: true }))
+    })
+
+    await expect(trigger2).toHaveAttribute('aria-expanded', 'true')
+    await expect(trigger1).toHaveAttribute('aria-expanded', 'false')
+    await expect(content2).toBeVisible()
+    await expect(content1).toHaveAttribute('hidden', 'until-found')
+    expect(await content1.evaluate((el) => getComputedStyle(el).contentVisibility)).toBe('hidden')
+    await expect(content1.locator('span')).toBeHidden()
+  })
 })
