@@ -44,6 +44,21 @@ Pressing an Item (pointer) makes it current without moving DOM focus, so
 Tab-out-and-back re-enters on the pressed item. Root and Item each take
 exactly one element child and throw a descriptive error otherwise.
 
+Both parts accept the shared slot surface (native div props, events, ARIA,
+StyleProps, `css`, `className`, `style`, `ref`) and merge it onto that
+child: the child wins, except `className` (combined, `css` compiled first),
+`style` (shallow-merged), event handlers (child, then part, then kernel —
+each gated on `defaultPrevented`), refs (chained), and `aria-describedby`
+(concatenated). Item `tabIndex` stays kernel-authoritative. Direct token
+props (e.g. `padding="4"`) forward to the child; reference-primitive
+children compile them, and the `css` prop compiles on any child.
+
+`orientation="both"` reads item rects per keystroke: rows group by vertical
+overlap, Left/Right follow visual x order, Up/Down take the adjacent row's
+nearest horizontal center (DOM-order ties), disabled cells keep their
+geometry but are never destinations, and loop wraps inside the geometry.
+RTL reversal falls out of the layout; no direction lookup is involved.
+
 Forked engines converge through the exported seams — `TypeaheadModel`,
 `shouldIgnoreTypeaheadKey` (IME/editable guards), `getDirection` — instead
 of reimplementing typeahead, guards, or RTL direction.
