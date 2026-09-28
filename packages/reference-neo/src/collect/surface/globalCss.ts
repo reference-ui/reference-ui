@@ -23,11 +23,17 @@ const { fn, collector } = createFragmentFunction<GlobalCssConfig>({
  * Called from fragment files; collected at sync time.
  * Downstream consumption (merge into the spec) is wired separately.
  *
+ * This is also the canonical spacing-feel knob: every rhythm utility
+ * (`1r`, `4r`, …) lowers to a calc against `--spacing-root`, whose baked
+ * default is `0.25rem`. One line rescales the whole UI, because the baked
+ * default ranks below all author CSS and any author `:root` wins:
+ *
  * @example
  * ```ts
  * globalCss({
  *   ':root': {
- *     '--spacing-root': '0.25rem',
+ *     // Rescale knob: doubles every Nr rhythm value over the default.
+ *     '--spacing-root': '0.5rem',
  *   },
  *   body: {
  *     fontFamily: 'sans',
