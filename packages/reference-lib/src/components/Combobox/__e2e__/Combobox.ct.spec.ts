@@ -282,14 +282,22 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   test('CB-DOM-09/CB-COMMIT-04: nonmodal tab order with tab commit and native traversal', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/TabOrder')
 
     const before = page.getByTestId('tab-before')
     const input = page.getByTestId('tab-input')
     const after = page.getByTestId('tab-after')
+    // DIAG D1: WebKit click never focuses buttons and Tab skips them;
+    // text inputs stay tab stops (SCOPE-1 P-TAB probe).
+    const isWebKit = browserName === 'webkit'
 
-    await before.click()
+    if (isWebKit) {
+      await before.focus()
+    } else {
+      await before.click()
+    }
     await expect(before).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(input).toBeFocused()
@@ -309,7 +317,13 @@ test.describe('Combobox quarantine reconciliation CT', () => {
 
     await page.keyboard.press('Tab')
     await expect(page.getByTestId('tab-value-display')).toHaveText('Selected: banana')
-    await expect(after).toBeFocused()
+    if (isWebKit) {
+      // Commit + dismiss proven above; native traversal skips the
+      // After button to body (probe P-TAB).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      await expect(after).toBeFocused()
+    }
     await expect(input).toHaveAttribute('aria-expanded', 'false')
   })
 
@@ -427,6 +441,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   test('CB-EDIT-03 caret: Home and End move the caret with the active option unchanged', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/CaretField')
 
@@ -434,8 +449,14 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await input.click()
     await expect(input).toHaveAttribute('aria-expanded', 'true')
 
+    // DIAG D3: bare Home/End are caret no-ops in Firefox/WebKit native
+    // editing (identical key events, different default action), so the
+    // click-placed caret (end, 11) stays put there. The product contract
+    // — keys unhandled, active option unchanged, zero callbacks — is
+    // asserted identically on all engines below.
+    const homeEnd = browserName === 'chromium' ? 0 : 11
     await page.keyboard.press('Home')
-    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(0)
+    expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(homeEnd)
     await page.keyboard.press('End')
     expect(await input.evaluate(el => (el as HTMLInputElement).selectionStart)).toBe(11)
     await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
@@ -745,6 +766,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   test('CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/ControlledLog')
 
@@ -765,12 +787,19 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(log.filter(e => e.startsWith('change:'))).toEqual([])
     expect(log.filter(e => e === 'dismiss').length).toBe(1)
     await expect(input).toHaveAttribute('aria-expanded', 'false')
-    await expect(page.getByTestId('log-clear')).toBeFocused()
+    if (browserName === 'webkit') {
+      // DIAG D1: revert + dismiss proven above; native traversal
+      // skips the Clear-log button to body (probe P-TAB).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      await expect(page.getByTestId('log-clear')).toBeFocused()
+    }
   })
 
   test('CB-COMMIT-04 source gate: immediate tab on selection-active commits nothing', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/SelectedLog')
 
@@ -785,7 +814,12 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(log.filter(e => e.startsWith('change:'))).toEqual([])
     expect(log.filter(e => e === 'dismiss').length).toBe(1)
     await expect(input).toHaveAttribute('aria-expanded', 'false')
-    await expect(page.getByTestId('log-clear')).toBeFocused()
+    if (browserName === 'webkit') {
+      // DIAG D1: same button-skip landing as CB-COMMIT-07 above.
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      await expect(page.getByTestId('log-clear')).toBeFocused()
+    }
   })
 
   test('CB-REVERT-03: outside press blurs, reverts unmatched text, dismisses once', async ({
@@ -905,11 +939,19 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   test('CB-SELECT-08 trigger home/end: jump to first and last enabled options', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/SelectOnlyStory')
 
     const trigger = page.getByTestId('select-trigger')
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+      // trigger, so Home/End would go to body (proven: active=body,
+      // activedescendant stuck). Programmatic focus lands (D1B) and the
+      // control leg proves the handler jumps correctly given focus.
+      await trigger.focus()
+    }
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
 
     // Wait for content mount before Home/End navigation.
@@ -925,10 +967,21 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   test('CB-SELECT-05: select-only escape/tab/blur mirror with zero text callbacks', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/SelectOnlyTabOrder')
 
     const trigger = page.getByTestId('sel-tab-trigger')
+    // DIAG D1 + SCOPE-1 P-F16/P-F26 probes: WebKit click never focuses
+    // the trigger, so every click-open below is followed by a
+    // programmatic focus (D1B: lands fine) to replicate the focused
+    // state Chromium gets from the click — including the blur leg,
+    // which needs focus inside the trigger for the blur to exist.
+    const isWebKit = browserName === 'webkit'
+    const openTrigger = async () => {
+      await trigger.click()
+      if (isWebKit) await trigger.focus()
+    }
     const logIsTextFree = async () => {
       const log = await readLog(page, 'sel-tab-log')
       expect(log.filter(e => e.startsWith('input:'))).toEqual([])
@@ -936,7 +989,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     }
 
     // Escape: no commit, one close, cleared active, trigger keeps focus.
-    await trigger.click()
+    await openTrigger()
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     await page.keyboard.press('Escape')
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
@@ -945,19 +998,25 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(await logIsTextFree()).toEqual(['open', 'dismiss'])
 
     // Tab with keyboard-derived active commits and traverses natively.
-    await trigger.click()
+    await openTrigger()
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     // Wait for content mount + selection resolution before arrowing.
     await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-alpha'))
     await page.keyboard.press('ArrowDown')
     await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-bravo'))
     await page.keyboard.press('Tab')
-    await expect(page.getByTestId('sel-tab-after')).toBeFocused()
+    if (isWebKit) {
+      // Commit + dismiss proven below; native traversal skips the
+      // After button to body (probe P3-F17).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      await expect(page.getByTestId('sel-tab-after')).toBeFocused()
+    }
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(await logIsTextFree()).toEqual(['open', 'dismiss', 'open', 'change:bravo', 'dismiss'])
 
     // Blur outside closes with no commit.
-    await trigger.click()
+    await openTrigger()
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     await page.getByTestId('sel-tab-after').focus()
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
@@ -1789,6 +1848,7 @@ test.describe('Combobox cluster B CT', () => {
   test('CB-COMP-02: filtered both-mode consumer across edit, commit, escape, blur, tab, reject', async ({
     mount,
     page,
+    browserName,
   }) => {
     test.setTimeout(60000)
     await mount('components/Combobox/Combobox/FilterBothLog')
@@ -1832,9 +1892,17 @@ test.describe('Combobox cluster B CT', () => {
     await clickNoFocus(page, 'fb-clear')
     await input.press('Tab')
     expect(await logOf(page, 'fb-log')).toEqual(['dismiss'])
-    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
-      'fb-after'
-    )
+    if (browserName === 'webkit') {
+      // DIAG D1: dismiss proven above; native traversal skips the
+      // After button to body (probe P-TAB).
+      expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+        null
+      )
+    } else {
+      expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+        'fb-after'
+      )
+    }
 
     // Rejected requests cannot create accepted state.
     await clickNoFocus(page, 'fb-accept')
@@ -2195,12 +2263,22 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-VIRT-03: windowed collection keeps set metadata, selection, and value identity', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/WindowedTriggerLog')
 
     const trigger = page.getByTestId('wt-trigger')
     const popover = page.getByTestId('wt-popover')
-    await trigger.click()
+    // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+    // trigger, so arrows after click-open would go to body and no
+    // scroll would pend. Programmatic focus replicates the Chromium
+    // click-focused state; the window/scroll contract stays proven.
+    const isWebKit = browserName === 'webkit'
+    const openTrigger = async () => {
+      await trigger.click()
+      if (isWebKit) await trigger.focus()
+    }
+    await openTrigger()
     await expect(popover).toBeVisible()
 
     // Navigate beyond the mounted window (skipping disabled index 5):
@@ -2238,7 +2316,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     // Reopening re-requests the selection deterministically (registrations
     // always land after the open commit, so resolution pends first); the
     // already-mounted window resolves it with no further scroll.
-    await trigger.click()
+    await openTrigger()
     await expect(popover).toBeVisible()
     await expectLogSoon(page, 'wt-scroll-log', ['scroll:10', 'scroll:75', 'scroll:75'])
     await expectActiveDescendant(trigger, page.getByTestId('wt-opt-75'))
@@ -2356,11 +2434,21 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-COMP-01: select-only trigger composes with a virtualized Listbox', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/WindowedTriggerLog')
 
     const trigger = page.getByTestId('wt-trigger')
     const popover = page.getByTestId('wt-popover')
+    // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+    // trigger; without the workaround the pointer legs below lose
+    // their arrows to body and wt-opt-77 never mounts (F20's 30s
+    // getAttribute timeout was that cascade, not an env flake).
+    const isWebKit = browserName === 'webkit'
+    const openTrigger = async () => {
+      await trigger.click()
+      if (isWebKit) await trigger.focus()
+    }
     await trigger.focus()
 
     // Keyboard open pends its resolution target once (registrations
@@ -2399,7 +2487,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     await expect(page.getByTestId('wt-layers')).toHaveText('0')
 
     // Pointer open, keyboard-eligible Tab commit, native traversal.
-    await trigger.click()
+    await openTrigger()
     await expect(popover).toBeVisible()
     await page.keyboard.press('ArrowDown')
     await page.getByTestId('wt-apply').click()
@@ -2419,7 +2507,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     // Resizing keeps the gate functional: reopen onto the mounted
     // selection, then navigate past the window again.
     await page.setViewportSize({ width: 1000, height: 600 })
-    await trigger.click()
+    await openTrigger()
     await expect(popover).toBeVisible()
     await expectActiveDescendant(trigger, page.getByTestId('wt-opt-77'))
     await page.keyboard.press('ArrowDown')
@@ -2431,11 +2519,18 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-SELECT-08 windowed: trigger Home and End wait behind one scroll for offscreen targets', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/WindowedTriggerLog')
 
     const trigger = page.getByTestId('wt-trigger')
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F16 probe: same click-focus workaround
+      // as CB-VIRT-03 — without it End/Home go to body and no scroll
+      // pends on WebKit.
+      await trigger.focus()
+    }
     await expect(page.getByTestId('wt-popover')).toBeVisible()
 
     // End targets the last ENABLED logical option (99 is disabled).
@@ -2676,6 +2771,7 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-COMP-02 list-mode: controlled list consumer across edit, commit, escape, blur, tab', async ({
     mount,
     page,
+    browserName,
   }) => {
     // NoCustomLog: controlled list mode, initial bravo/Bravo, live label
     // filtering, disabled delta, and a clear button for blur/Tab targets.
@@ -2809,7 +2905,13 @@ test.describe('Combobox finish-line P2A CT', () => {
       'dismiss',
     ])
     await expect(popover).toHaveCount(0)
-    expect(await focusedTestId(page)).toBe('log-clear')
+    if (browserName === 'webkit') {
+      // DIAG D1: commit + dismiss proven by the log above; native
+      // traversal skips the Clear-log button to body (probe P-F11 WK).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      expect(await focusedTestId(page)).toBe('log-clear')
+    }
   })
 
   test('CB-COMP-02 list-mode reject: ignored text requests leave no hidden state', async ({
@@ -3262,6 +3364,7 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-SELECT-06: select-only trigger never submits its form until type=submit', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/SelectFormLog')
 
@@ -3278,6 +3381,12 @@ test.describe('Combobox finish-line P2A CT', () => {
 
     // Open and select by keyboard: no submit.
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F24 probe: WebKit click leaves focus on
+      // body (proven: ArrowDown no-op, active stuck at bravo), so the
+      // keyboard legs below need the programmatic-focus workaround.
+      await trigger.focus()
+    }
     await expect(popover).toBeVisible()
     await expectActiveDescendant(trigger, page.getByTestId('sf-opt-bravo'))
     await page.keyboard.press('ArrowDown')
@@ -3331,6 +3440,7 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-COMMIT-04 shift-tab: backward traversal commits and lands behind', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/TabOrder')
 
@@ -3349,18 +3459,30 @@ test.describe('Combobox finish-line P2A CT', () => {
     await expect(popover).toHaveCount(0)
     await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
     await expect(input).toHaveValue('Banana')
-    expect(await focusedTestId(page)).toBe('tab-before')
+    if (browserName === 'webkit') {
+      // DIAG D1: commit + dismiss + value proven above; backward
+      // traversal skips the Before button to body (probe P-TAB).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      expect(await focusedTestId(page)).toBe('tab-before')
+    }
   })
 
   test('CB-SELECT-05 shift-tab: select-only backward traversal commits text-free', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Combobox/Combobox/SelectOnlyTabOrder')
 
     const trigger = page.getByTestId('sel-tab-trigger')
     const popover = page.getByTestId('sel-tab-popover')
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F26 probe: click leaves focus on body
+      // (proven: ArrowDown no-op, active stuck at alpha).
+      await trigger.focus()
+    }
     await expect(popover).toBeVisible()
     await expectActiveDescendant(trigger, page.getByTestId('sel-tab-opt-alpha'))
     await page.keyboard.press('ArrowDown')
@@ -3372,7 +3494,13 @@ test.describe('Combobox finish-line P2A CT', () => {
     const log = await readLog(page, 'sel-tab-log')
     expect(log).toContain('change:bravo')
     expect(log.some(entry => entry.startsWith('input:'))).toBe(false)
-    expect(await focusedTestId(page)).toBe('sel-tab-before')
+    if (browserName === 'webkit') {
+      // Commit + dismiss proven above; backward traversal skips the
+      // Before button to body (probe P3-F26).
+      expect(await focusedTestId(page)).toBeNull()
+    } else {
+      expect(await focusedTestId(page)).toBe('sel-tab-before')
+    }
   })
 
   test('Async loading: busy collection and shared-announcer status, no private live region', async ({

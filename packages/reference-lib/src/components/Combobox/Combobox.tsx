@@ -1736,8 +1736,15 @@ export function Combobox({
   // closed — and re-arms on every settled render so programmatic prop
   // changes stay callback-free (CB-OPEN-06) yet actionable afterwards.
   const lastOpenRequestRef = React.useRef<boolean>(isOpen)
+  // F11 (SCOPE-1): Tab commits synchronously record here so a same-task
+  // blur (Firefox runs Tab→blur before React flushes, D2 family) skips
+  // the already-resolved session instead of reverting against stale
+  // value/input state. Re-arms on every settled render, like the open
+  // request ref above, so later blurs resolve normally.
+  const justCommittedRef = React.useRef<boolean>(false)
   React.useEffect(() => {
     lastOpenRequestRef.current = isOpen
+    justCommittedRef.current = false
   })
 
   const setIsOpen = React.useCallback(
@@ -1868,6 +1875,8 @@ export function Combobox({
         const labelText = selectedOpt?.textValue ?? nextVal
         handleInputChange(labelText)
       }
+      // F11: synchronous commit mark (see justCommittedRef).
+      justCommittedRef.current = true
       setIsOpen(false)
     },
     [isControlledInput, isOpen, selectOnly, value, onChange, handleInputChange, setIsOpen, collectionConflict]
@@ -1902,7 +1911,10 @@ export function Combobox({
       // mounted) so order stays resolve-before-dismiss. Blur after
       // unmount must NOT resolve: the registry is empty and the raw-value
       // fallback would fabricate a phantom text request.
-      if (isOpen) {
+      // F11: a same-task blur after a synchronous commit (Firefox
+      // Tab→blur ordering) skips the resolved session exactly as the
+      // post-flush blur does on Chromium (no-op but deduped close).
+      if (isOpen && !justCommittedRef.current) {
         resolveUnmatchedText()
         activeSourceRef.current = null
         setActiveSourceState(null)
