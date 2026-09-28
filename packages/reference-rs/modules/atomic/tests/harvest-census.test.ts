@@ -106,11 +106,11 @@ const EXPECTED_BYTES = {
   // Axis shorthands: +42 raw is the four baked names
   // ("marginX","marginY","paddingX","paddingY"); the rest of the move from
   // the 149479/32889 pin is in-flight tree drift, re-verify at landing.
-  // 2026-09-25 re-verify: 149593/32898 -> 158073/39595 post-Jettison
-  // implementation (Slices 0-4) plus the W4 bound-entry legs; the Jettison
-  // acceptance caveat stands, so re-verify again if acceptance moves bytes.
-  reactRaw: 158073,
-  reactGzip: 39595,
+  // 2026-09-25 -> 158073/39595 post-Jettison (Slices 0-4 + W4 legs);
+  // 2026-09-28 landing -> 158317/39664 (+244/+69), react.mjs-only with all
+  // CSS pins green (red since before root-var). Re-verify if acceptance moves bytes.
+  reactRaw: 158317,
+  reactGzip: 39664,
   fixtureRules: 4942,
   m500Rules: 33806,
 }
