@@ -160,7 +160,7 @@ describe('sync diagnostics', () => {
     expect(calls).toHaveLength(1)
     expect(output).toContain('ATM-W-UNKNOWN-PROPERTY')
     expect(output).toContain('Unknown property in staticCss')
-    expect(output).toContain('remove it or check the property spelling')
+    expect(output).toContain("remove 'notAStyleProp' or check its spelling")
     expect(output).not.toContain('[--verbose]')
     expect(existsSync(outFile(dir, 'styled/styles.css'))).toBe(true)
   })
