@@ -198,6 +198,36 @@ fn test_shadowed_member_root_is_not_an_extract_site() {
 }
 
 #[test]
+fn test_bound_member_root_through_const_object_extracts() {
+    // A shadowed root re-admits through its own const object literal when
+    // the member value is an admitted host: `NS.Panel` extracts under the
+    // configured `NSPanel`, while the unconfigured `Other.Panel` twin —
+    // admitted past the shadow but matching no host — stays silent.
+    let res = compile_with_hosts(
+        r#"
+        import { Div } from '@reference-ui/react';
+        const NS = { Panel: Div };
+        const Other = { Panel: Div };
+        export function App() {
+            return (
+                <>
+                    <NS.Panel mt="2r" />
+                    <Other.Panel p="4r" />
+                </>
+            );
+        }
+        "#,
+        &["NSPanel"],
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
+    assert!(!res.wants.iter().any(|w| &*w.prop == "p"));
+    assert!(res.diagnostics.is_empty());
+}
+
+#[test]
 fn test_namespace_spelled_member_collects_against_dotted_host() {
     // Member tags match dotted hosts literally: a namespace import that
     // keeps the `Tabs` spelling collects exactly like the named import.

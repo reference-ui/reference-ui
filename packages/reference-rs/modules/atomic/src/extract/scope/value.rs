@@ -173,6 +173,7 @@ fn record_ident_entry(ctx: SpreadCtx<'_, '_>, name: &str, key: &str, sink: &mut 
                 leaves,
                 nested: ConstObject::new(),
                 residue,
+                ident: None,
             },
         );
         return true;
@@ -185,8 +186,9 @@ fn record_ident_entry(ctx: SpreadCtx<'_, '_>, name: &str, key: &str, sink: &mut 
             key.to_string(),
             ObjectProp {
                 leaves: Vec::new(),
-                nested: map,
+                nested: super::fill::stripped_nested(map),
                 residue: false,
+                ident: None,
             },
         );
         return true;

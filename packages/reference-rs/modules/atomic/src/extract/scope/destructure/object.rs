@@ -13,7 +13,7 @@ use super::super::table::ScopeId;
 use super::super::value::{self, Dep, DepKey, KeyProvenance};
 use super::{default_value, push_leaves, shadow_binding, LeavesBind, PatternBind, PatternCtx};
 use crate::atom::AtomValue;
-use crate::extract::constants::ConstObject;
+use crate::extract::constants::{strip_member_refs, ConstObject, ObjectProp};
 use crate::extract::resolver::UnfoldableSpread;
 
 /// A resolved object source: its entries plus per-key provenance.
@@ -208,11 +208,13 @@ fn bind_object_rest(
             .push(shadow_binding(ctx, id.name.as_str(), id.span));
         return;
     }
-    // const { color, ...space } = tokens  — everything but `color`
+    // const { color, ...space } = tokens  — everything but `color`.
+    // Rest entries strip member references: a pattern is not an object
+    // literal, so the copy proves no spelling the gate may read.
     let mut remaining = ConstObject::new();
     for (key, prop) in &source.entries {
         if !rest.listed.iter().any(|name| name == key) {
-            remaining.insert(key.clone(), prop.clone());
+            remaining.insert(key.clone(), stripped_entry(prop));
             if let Some(prov) = source.provenances.get(key) {
                 let dep = prov.clone().into_dep(
                     ctx.scope,
@@ -321,4 +323,13 @@ fn pattern_key(
         }
         _ => None,
     }
+}
+
+/// One rest entry with member references stripped: the rest names another
+/// object's entries, never its own literal.
+fn stripped_entry(prop: &ObjectProp) -> ObjectProp {
+    let mut copied = prop.clone();
+    copied.ident = None;
+    strip_member_refs(&mut copied.nested);
+    copied
 }

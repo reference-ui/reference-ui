@@ -18,7 +18,9 @@ use super::fill::OriginFill;
 use super::lookup::{ImportLookup, ScopeChain};
 use super::table::{ScopeId, ScopeTable};
 use super::value::{object_binding, object_init, peel, DepKey, EntrySink, KeyProvenance};
-use crate::extract::constants::{union_entry, ConstObject, LocalConstants};
+use crate::extract::constants::{
+    strip_member_refs, union_entry, ConstObject, LocalConstants, ObjectProp,
+};
 use crate::extract::expressions::walk::is_guard_expression;
 use crate::extract::resolver::{reason_text, RefusalCtx, UnfoldableSpread, ValueRefused};
 
@@ -91,15 +93,24 @@ fn record_direct_spread(
 }
 
 /// Spread one identifier: its recorded object, else its fill outcome.
+/// Copied member references strip: the spread names another binding.
 fn record_ident_spread(name: &str, span: Span, ctx: SpreadCtx<'_, '_>, sink: &mut EntrySink) {
     if let Some((src_scope, map)) = object_binding(ctx.table, ctx.scope, name) {
         for (key, prop) in map {
             push_spread_provenance(sink, &key, src_scope, name);
-            sink.entries.insert(key, prop);
+            sink.entries.insert(key, stripped_prop(prop));
         }
     } else if let Some(outcome) = fill_spread(ctx, name, span) {
         merge_fill_outcome(outcome, sink, false);
     }
+}
+
+/// One copied entry with member references stripped: the copy left the
+/// literal that recorded it, so it proves no spelling the gate may read.
+fn stripped_prop(mut prop: ObjectProp) -> ObjectProp {
+    prop.ident = None;
+    strip_member_refs(&mut prop.nested);
+    prop
 }
 
 /// Merge one fill outcome: entries by overwrite or union, markers always.
@@ -120,9 +131,9 @@ fn merge_fill_object(object: Option<ConstObject>, sink: &mut EntrySink, union: b
     };
     for (key, prop) in map {
         if union {
-            union_entry(&mut sink.entries, key, prop);
+            union_entry(&mut sink.entries, key, stripped_prop(prop));
         } else {
-            sink.entries.insert(key, prop);
+            sink.entries.insert(key, stripped_prop(prop));
         }
     }
 }
@@ -251,7 +262,7 @@ fn union_ident_arm(target: &str, span: Span, ctx: SpreadCtx<'_, '_>, sink: &mut 
     if let Some((src_scope, map)) = object_binding(ctx.table, ctx.scope, target) {
         for (key, prop) in map {
             push_spread_provenance(sink, &key, src_scope, target);
-            union_entry(&mut sink.entries, key, prop);
+            union_entry(&mut sink.entries, key, stripped_prop(prop));
         }
     } else if let Some(outcome) = fill_spread(ctx, target, span) {
         merge_fill_outcome(outcome, sink, true);
@@ -284,7 +295,7 @@ pub(crate) fn record_member_spread(
             src_name: root.clone(),
             src_key: None,
         });
-        sink.entries.insert(key, prop);
+        sink.entries.insert(key, stripped_prop(prop));
     }
 }
 

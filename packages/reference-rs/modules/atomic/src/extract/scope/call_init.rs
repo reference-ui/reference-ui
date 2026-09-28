@@ -147,11 +147,13 @@ fn fence_entry(value: &FenceValue) -> Option<ObjectProp> {
             leaves: leaves.clone(),
             nested: ConstObject::new(),
             residue: false,
+            ident: None,
         }),
         FenceValue::Object(entries) => Some(ObjectProp {
             leaves: Vec::new(),
             nested: fence_object(entries)?,
             residue: false,
+            ident: None,
         }),
         FenceValue::Array(_) => None,
     }

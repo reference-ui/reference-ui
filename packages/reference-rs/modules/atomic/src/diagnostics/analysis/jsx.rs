@@ -87,13 +87,15 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// import, a traced name, or a configured name — never shadowed.
     /// Member tags match concatenated hosts, the discovery spelling. A
     /// member tag resolves through its root, so a locally bound root
-    /// rebinds every use and gates it, mirroring the extract gate.
+    /// rebinds every use and gates it, mirroring the extract gate —
+    /// unless the root re-admits through its own const object literal,
+    /// after which membership decides.
     fn allows_tag(&self, tag: &str) -> bool {
         if is_shadowed(&self.shadows, tag) {
             return false;
         }
-        if let Some((root, _)) = tag.split_once('.') {
-            if is_shadowed(&self.shadows, root) {
+        if let Some((root, member)) = tag.split_once('.') {
+            if is_shadowed(&self.shadows, root) && !self.shadowed_member_admitted(root, member) {
                 return false;
             }
         }
@@ -105,6 +107,28 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         }
         let flat = tag.replace('.', "");
         self.bindings.jsx.contains(&flat) || self.hosts.contains(&flat)
+    }
+
+    /// True when a shadowed member root re-admits through the const bag:
+    /// `const NS = { Panel: Div }` re-admits `NS.Panel` exactly when the
+    /// statically matched member value is itself an admitted host tag. The
+    /// bag records const-literal references only, so opaque bindings never
+    /// re-admit; like every mirror read it is scope-flattened (F-G1b).
+    fn shadowed_member_admitted(&self, root: &str, member: &str) -> bool {
+        if self.constants.mutation(root).is_some() {
+            return false;
+        }
+        let Some(value) = self
+            .constants
+            .get_object_prop(root, member)
+            .and_then(|prop| prop.ident.as_deref())
+        else {
+            return false;
+        };
+        if is_shadowed(&self.shadows, value) {
+            return false;
+        }
+        self.bindings.jsx.contains(value) || self.hosts.contains(value)
     }
 
     /// Lower one opening element's attributes when the tag is a host.
@@ -298,6 +322,23 @@ mod tests {
         let facts = analyze_source(&format!("{IMPORT} const el = <Div {{...bag}} />;"));
         assert!(exact_keys(&facts).is_empty());
         assert_eq!(dynamic_count(&facts), 1);
+    }
+
+    #[test]
+    fn bound_member_root_through_const_object_predicts() {
+        // `NS.Panel` re-admits through its const literal; the twin stays silent.
+        let facts = analyze_source("import { Div, NSPanel } from '@reference-ui/react'; const NS = { Panel: Div }; const Other = { Panel: Div }; const el = <NS.Panel mt=\"2r\" />; const twin = <Other.Panel p=\"4r\" />;");
+        assert_eq!(
+            exact_keys(&facts),
+            vec![r#"["test",[],"mt","2r",false]"#.to_string()]
+        );
+    }
+
+    #[test]
+    fn opaque_member_root_rebinding_predicts_nothing() {
+        // `const Tabs = Other` is opaque: no const literal, no prediction.
+        let facts = analyze_source("import { Div } from '@reference-ui/react'; const Tabs = Other; const el = <Tabs.Panel mt=\"2r\" />;");
+        assert!(facts.is_empty());
     }
 
     #[test]

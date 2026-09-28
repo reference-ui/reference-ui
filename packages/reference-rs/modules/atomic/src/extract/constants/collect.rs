@@ -13,12 +13,12 @@ use std::collections::BTreeMap;
 use oxc_ast::ast::{
     ArrayExpressionElement, AssignmentExpression, BindingPattern, Expression, ForInStatement,
     ForOfStatement, ObjectPropertyKind, Program, PropertyKey, UnaryExpression, UnaryOperator,
-    UpdateExpression, VariableDeclarator,
+    UpdateExpression, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 
-use super::entries::object_entries;
+use super::entries::{object_entries, strip_member_refs};
 use super::index::{ConstArrayElement, LocalConstants, MutatedBinding};
 use super::mutate::{
     delete_target_writes, for_head_writes, simple_target_writes, target_writes, Write,
@@ -44,6 +44,7 @@ pub fn collect_local_constants(
         constants: LocalConstants::new(),
         file,
         source,
+        kind: VariableDeclarationKind::Var,
     };
     collector.visit_program(program);
     collector.constants.drop_mutated();
@@ -58,9 +59,17 @@ struct ConstCollector<'a> {
     constants: LocalConstants,
     file: &'a str,
     source: Option<&'a str>,
+    kind: VariableDeclarationKind,
 }
 
 impl<'a> Visit<'a> for ConstCollector<'a> {
+    fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'a>) {
+        let prev = self.kind;
+        self.kind = decl.kind;
+        walk::walk_variable_declaration(self, decl);
+        self.kind = prev;
+    }
+
     fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
         if let BindingPattern::BindingIdentifier(ident) = &decl.id {
             if let Some(init) = &decl.init {
@@ -68,6 +77,7 @@ impl<'a> Visit<'a> for ConstCollector<'a> {
                     &mut self.constants,
                     ident.name.as_str(),
                     unwrap_expression(init),
+                    is_const_kind(self.kind),
                 );
             }
         }
@@ -147,7 +157,23 @@ impl ConstCollector<'_> {
     }
 }
 
-fn record_declaration(constants: &mut LocalConstants, name: &str, expr: &Expression<'_>) {
+/// True for declaration kinds that pin their init: `const` plus the
+/// `using` forms, matching the scope table's kind map.
+fn is_const_kind(kind: VariableDeclarationKind) -> bool {
+    matches!(
+        kind,
+        VariableDeclarationKind::Const
+            | VariableDeclarationKind::Using
+            | VariableDeclarationKind::AwaitUsing
+    )
+}
+
+fn record_declaration(
+    constants: &mut LocalConstants,
+    name: &str,
+    expr: &Expression<'_>,
+    is_const: bool,
+) {
     // const space = '2r'
     if let Some(leaf) = literal_leaf(expr) {
         constants.insert_scalar(name, leaf);
@@ -155,7 +181,7 @@ fn record_declaration(constants: &mut LocalConstants, name: &str, expr: &Express
     }
     // const theme = { primary: 'n300' }
     if let Expression::ObjectExpression(obj) = expr {
-        record_object_properties(constants, name, obj);
+        record_object_properties(constants, name, obj, is_const);
         return;
     }
     // const sizes = ['2px', '4px']
@@ -307,9 +333,16 @@ fn record_object_properties(
     constants: &mut LocalConstants,
     obj_name: &str,
     obj: &oxc_ast::ast::ObjectExpression<'_>,
+    is_const: bool,
 ) {
     // const theme = { primary: 'n300', tone: flag ? 'r' : 'b' }
-    for (key, prop) in object_entries(obj) {
+    // Non-const declarators keep their style values but shed member
+    // references: only a const literal proves a spelling the gate may read.
+    let mut entries = object_entries(obj);
+    if !is_const {
+        strip_member_refs(&mut entries);
+    }
+    for (key, prop) in entries {
         constants.insert_object_prop(obj_name, key, prop);
     }
 }

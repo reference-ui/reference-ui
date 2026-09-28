@@ -286,6 +286,7 @@ fn nested_array_object(object: &Expression<'_>, key: &str, scoped: Scoped<'_>) -
                         leaves: vec![leaf.clone()],
                         nested: ConstObject::new(),
                         residue: false,
+                        ident: None,
                     },
                 );
             }

@@ -10,7 +10,7 @@ use rustc_hash::FxHashMap;
 use super::binding::BindingKind;
 use super::table::{ScopeId, ScopeTable};
 use super::value::EntrySink;
-use crate::extract::constants::{ConstObject, ObjectProp};
+use crate::extract::constants::{strip_member_refs, ConstObject, ObjectProp};
 use crate::extract::resolver::{ResolvedExport, UnfoldableSpread, ValueRefused};
 
 /// One origin file's resolved imports, for graph-backed collection.
@@ -69,6 +69,7 @@ pub(crate) fn record_fill_entry(sink: &mut EntrySink, key: &str, export: &Resolv
                 leaves: export.scalars().to_vec(),
                 nested: ConstObject::new(),
                 residue: false,
+                ident: None,
             },
         );
         return true;
@@ -78,13 +79,21 @@ pub(crate) fn record_fill_entry(sink: &mut EntrySink, key: &str, export: &Resolv
             key.to_string(),
             ObjectProp {
                 leaves: Vec::new(),
-                nested: map.clone(),
+                nested: stripped_nested(map.clone()),
                 residue: false,
+                ident: None,
             },
         );
         return true;
     }
     false
+}
+
+/// A copied nested map with member references stripped: the copy left its
+/// literal, so it no longer proves any spelling the gate may read.
+pub(crate) fn stripped_nested(mut map: ConstObject) -> ConstObject {
+    strip_member_refs(&mut map);
+    map
 }
 
 /// Provenance for one copied identifier entry: the source binding.

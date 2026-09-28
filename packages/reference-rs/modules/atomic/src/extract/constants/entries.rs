@@ -27,6 +27,8 @@ pub type ConstObject = BTreeMap<String, ObjectProp>;
 /// the use site diagnoses — never silently skipped, never a ghost. The
 /// residue flag marks a partially static entry: leaves were kept while a
 /// dynamic arm was dropped at collect time, which the use site diagnoses.
+/// The ident slot records a bare-identifier value (`{ Panel: Div }`) for the
+/// member-tag gate only; it never counts as a lowerable leaf.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ObjectProp {
     /// Literal and branching leaves (`'red'`, both arms of `flag ? 'r' : 'b'`).
@@ -35,12 +37,28 @@ pub struct ObjectProp {
     pub nested: ConstObject,
     /// True when a dynamic arm was dropped beside the kept leaves.
     pub residue: bool,
+    /// A bare-identifier value (`Div` in `{ Panel: Div }`), for the
+    /// member-tag gate. `None` for every other value shape.
+    pub ident: Option<Box<str>>,
 }
 
 impl ObjectProp {
     /// True when the entry carries nothing lowerable (a dynamic value).
+    /// The ident slot never lowers, so it never affects emptiness.
     pub fn is_empty(&self) -> bool {
         self.leaves.is_empty() && self.nested.is_empty()
+    }
+}
+
+/// Drop every recorded member reference in this map, recursively. Copies
+/// that leave the literal — aliases, member reads, identifier and member
+/// spreads, import fills — no longer prove the literal's own spelling, so
+/// the scope layer strips them at the copy and the gate only ever reads
+/// entries the declarator's own literal recorded.
+pub fn strip_member_refs(map: &mut ConstObject) {
+    for prop in map.values_mut() {
+        prop.ident = None;
+        strip_member_refs(&mut prop.nested);
     }
 }
 
@@ -157,6 +175,8 @@ fn union_entries(into: &mut ConstObject, from: ConstObject) {
 /// layer so branching spreads record identically in both collectors.
 /// Residue unions too: an empty marker merged beside kept leaves is a
 /// dropped dynamic arm, exactly like a partially static branch.
+/// The member reference survives only when both arms name it: any
+/// disagreeing or foreign arm leaves the key statically unmatched.
 pub(crate) fn union_entry(into: &mut ConstObject, key: String, prop: ObjectProp) {
     match into.get_mut(&key) {
         Some(existing) => {
@@ -166,6 +186,9 @@ pub(crate) fn union_entry(into: &mut ConstObject, key: String, prop: ObjectProp)
             }
             union_entries(&mut existing.nested, prop.nested);
             existing.residue |= dropped;
+            if existing.ident != prop.ident {
+                existing.ident = None;
+            }
         }
         None => {
             into.insert(key, prop);
@@ -184,6 +207,7 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
             leaves: vec![leaf],
             nested: ConstObject::new(),
             residue: false,
+            ident: None,
         };
     }
     if matches!(
@@ -198,6 +222,7 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
             residue: !leaves.is_empty() && dropped,
             leaves,
             nested: ConstObject::new(),
+            ident: None,
         };
     }
     if let Expression::ObjectExpression(nested) = expr {
@@ -206,6 +231,17 @@ fn prop_from_expr(expr: &Expression<'_>) -> ObjectProp {
             leaves: Vec::new(),
             nested: object_entries(nested),
             residue: false,
+            ident: None,
+        };
+    }
+    if let Expression::Identifier(id) = expr {
+        // { Panel: Div } — empty marker for the value walker, with the
+        // member reference attached for the member-tag gate.
+        return ObjectProp {
+            leaves: Vec::new(),
+            nested: ConstObject::new(),
+            residue: false,
+            ident: Some(id.name.as_str().into()),
         };
     }
     // { color: pick() } — empty marker; the use site diagnoses it

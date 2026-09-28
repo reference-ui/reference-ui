@@ -51,6 +51,7 @@ pub fn enum_object(decl: &TSEnumDeclaration<'_>) -> ConstObject {
                     leaves: vec![leaf],
                     nested: ConstObject::new(),
                     residue: false,
+                    ident: None,
                 },
             );
         }
@@ -182,6 +183,7 @@ pub fn param_type_object(param: &FormalParameter<'_>) -> Option<ConstObject> {
                 leaves: vec![leaf],
                 nested: ConstObject::new(),
                 residue: false,
+                ident: None,
             },
         );
     }

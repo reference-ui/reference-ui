@@ -38,6 +38,7 @@ pub fn lower_array_object(
                     leaves: vec![val.clone()],
                     nested: ConstObject::new(),
                     residue: false,
+                    ident: None,
                 },
             )
         })

@@ -27,7 +27,7 @@ use super::expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
-use super::scope::{ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
+use super::scope::{BindingInit, BindingKind, Lookup, ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
 /// Configuration references passed into style extraction contexts.
 pub struct ExtractConfig<'a> {
@@ -115,13 +115,17 @@ impl<'a> ExtractContext<'a> {
     /// Member tags match concatenated hosts (`<Overlay.Content />` admits
     /// `OverlayContent`), the Panda discovery spelling (core parity). A
     /// member tag resolves through its root, so a locally bound root
-    /// (`const Tabs = Other`) rebinds every `<Tabs.*>` use and gates it.
+    /// (`const Tabs = Other`) rebinds every `<Tabs.*>` use and gates it —
+    /// unless the root re-admits through its own const object literal (see
+    /// `shadowed_member_admitted`), after which membership decides.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
         if bindings::is_shadowed(self.shadowed, name) {
             return false;
         }
-        if let Some((root, _)) = name.split_once('.') {
-            if bindings::is_shadowed(self.shadowed, root) {
+        if let Some((root, member)) = name.split_once('.') {
+            if bindings::is_shadowed(self.shadowed, root)
+                && !self.shadowed_member_admitted(root, member)
+            {
                 return false;
             }
         }
@@ -129,6 +133,31 @@ impl<'a> ExtractContext<'a> {
             return true;
         }
         name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+    }
+
+    /// True when a shadowed member root re-admits through the scope table:
+    /// `const NS = { Panel: Div }` re-admits `NS.Panel` exactly when the
+    /// statically matched member value is itself an admitted host tag. The
+    /// root must be a same-file `const` object literal resolved from the
+    /// use-site scope, so declaration order never matters; opaque bindings
+    /// (aliases, params, functions, imports, `let`/`var`) never re-admit.
+    fn shadowed_member_admitted(&self, root: &str, member: &str) -> bool {
+        if self.scoped().mutation(root).is_some() {
+            return false;
+        }
+        let Lookup::Local(binding) = self.chain.resolve(root, self.scope) else {
+            return false;
+        };
+        if !matches!(binding.kind, BindingKind::Const) {
+            return false;
+        }
+        let Some(BindingInit::Object(entries)) = &binding.init else {
+            return false;
+        };
+        let Some(value) = entries.get(member).and_then(|prop| prop.ident.as_deref()) else {
+            return false;
+        };
+        !bindings::is_shadowed(self.shadowed, value) && self.jsx_hosts.contains(value)
     }
 
     /// True when the host's own declaration owns this prop name (§14).

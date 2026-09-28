@@ -16,7 +16,7 @@ use super::super::lookup::{ImportLookup, ScopeChain};
 use super::super::value::{self, Dep, DepKey};
 use super::ScopeCollector;
 use crate::atom::AtomValue;
-use crate::extract::constants::LocalConstants;
+use crate::extract::constants::{strip_member_refs, LocalConstants};
 
 /// Record a declarator: identifier inits carry values, patterns bind entries.
 pub(crate) fn record_declarator(collector: &mut ScopeCollector<'_>, decl: &VariableDeclarator<'_>) {
@@ -141,9 +141,20 @@ fn member_init(
         // const hover = styles.hover  — the nested entries carry, so alias
         // uses lower exactly like the member they abbreviate (§13)
         let dep = member_dep(collector, name, root)?;
-        return Some((Some(BindingInit::Object(entries.clone())), vec![dep]));
+        let mut hoisted = entries.clone();
+        strip_member_refs(&mut hoisted);
+        return Some((Some(BindingInit::Object(hoisted)), vec![dep]));
     }
     Some((None, Vec::new()))
+}
+
+/// A cloned init with member references stripped: an alias names another
+/// binding, never its own literal, so the copy proves no spelling.
+fn stripped_clone(mut init: BindingInit) -> BindingInit {
+    if let BindingInit::Object(map) = &mut init {
+        strip_member_refs(map);
+    }
+    init
 }
 
 /// A whole-binding dep from a member init onto its root binding, or None
@@ -231,7 +242,7 @@ fn alias_init(
     }
     let scope = collector.current();
     let (src_scope, binding) = collector.table.resolve_from(target.name.as_str(), scope)?;
-    let cloned = binding.init.clone()?;
+    let cloned = stripped_clone(binding.init.clone()?);
     Some((
         Some(cloned),
         vec![Dep {
