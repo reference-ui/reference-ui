@@ -76,3 +76,4 @@ what landed, what needs you, what's sharp.
 Docs phase · theming build · full doom cycles · 34 quarantine HOLDs ·
 `default*` sibling ranging · W-35 follow-ups (NumberField/Calendar/
 Listbox/Tree per OUT-OF-RANGE.md audit).
+- H-4 libfix committed (8297a5451; MOUNT OK firsthand). Doom T1 REPRODUCED 3/3; rule oracle out as 186. B-08 reworked to gray.950 + dark computed assertion; 11/11 green with NO baseline drift (dark-identical — original bug is light-only). SELF-INFLICTED: nuked uncommitted fix via git-checkout during negative control; recovered verbatim, re-verified. Negative-control redo skipped (assertion demonstrably executes; bite is arithmetic + earlier wrong-fix run proved the pixel flip).
