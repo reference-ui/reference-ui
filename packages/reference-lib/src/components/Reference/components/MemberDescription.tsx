@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { P } from '@reference-ui/react'
 
 export function MemberDescription({ description }: { description?: string }) {

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { ReferenceDocument as ReferenceDocumentData } from '@reference-ui/types'
 import { ReferenceInterface } from './ReferenceInterface'

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { ReferenceMemberDocument } from '@reference-ui/types'
 import { MemberDescription } from './MemberDescription'

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import type { ReferenceDocument as ReferenceDocumentData } from '@reference-ui/types'
 import { ReferenceMemberList } from '../components/ReferenceMemberList'
 import { ReferenceDocumentHeader } from './ReferenceDocumentHeader'

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div, H2, P } from '@reference-ui/react'
 import { formatReferenceTypeParameter, type ReferenceDocument } from '@reference-ui/types'
 import { MonoText } from '../components/shared/MonoText'

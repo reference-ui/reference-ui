@@ -1,4 +1,4 @@
-import type * as React from 'react'
+import * as React from 'react'
 import { P } from '@reference-ui/react'
 
 export function ReferenceNotice({ children }: { children: React.ReactNode }) {
