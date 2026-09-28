@@ -185,6 +185,14 @@ StyleProps-documented target convention.
 signed visuals and is probably right, but HQ must accept the click-strip
 trade-off first.
 
+**Status (2026-09-28): LANDED per HQ FULL-BLAST order on the maintainer
+recommendation — WITHOUT explicit HQ acceptance of the click-strip
+trade-off.** Transparent `::before` strip on the Handle (±8px into each
+neighbor, 25px total); 9px visuals and all 7 baselines unchanged. Clicks
+within 8px of the Handle now land on the separator instead of neighboring
+content. Pinned by the `FEATURES #11` CT test (`elementFromPoint` both
+axes).
+
 ## Root-level `disabled` freeze or removal
 
 **What it does:** Resolves the undocumented root `disabled` prop:

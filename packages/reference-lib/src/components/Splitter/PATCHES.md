@@ -27,11 +27,12 @@ Source contracts live in TESTS.md / SPEC.md; provenance in DECISIONS.md.
 - **Acceptance:** `SP-MATH-09`, `SP-KEY-05`, `SP-KEY-08`, `SP-DRAG-02`, `SP-DOM-05` green on the `[rtl]` axis.
 - **Source:** quarantine `c7bdd1f7c` direction-aware adjacency/deltas; DECISIONS.md candidate 10.
 
-### 5. Environment and composition proof suites (from DECISIONS candidate #13)
+### 5. Environment and composition proof suites (from DECISIONS candidate #13) — LANDED 2026-09-28 (adapted to colocated CT)
 
 - **What:** Matrix-only proof obligations: StrictMode single-registration on React 17/18/19, ShadowRoot focus/cleanup, cross-engine drag/keyboard/Enter parity, and the four product compositions (sidebar, editor/console, nested workspace, inner grid never writing `grid-template-*`).
 - **Acceptance:** `SP-ENV-02`, `SP-ENV-03`, `SP-ENV-04`, `SP-COMP-01`–`SP-COMP-04` green (re-targeted to the real API, never copied verbatim); `SP-ENV-01` SSR already landed adapted.
 - **Source:** quarantine `c7bdd1f7c` matrix suites; DECISIONS.md candidate 13.
+- **Status:** `SP-COMP-01`–`SP-COMP-04` were already green; `SP-ENV-02` (StrictModeGroup, green on `--react all`), `SP-ENV-03` (ShadowHost portal), and `SP-ENV-04` (Chromium parity smoke) landed in the colocated CT spec. Remainder that truly needs matrix: the Firefox/WebKit legs of `SP-ENV-04` (CT runs Chromium only).
 
 ### 6. `prefers-reduced-motion` on Handle transitions (from DECISIONS gap #2)
 

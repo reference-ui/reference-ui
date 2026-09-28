@@ -2806,3 +2806,677 @@ test.describe('Splitter controlled sessions and compositions', () => {
     expect(after.panelStyle).not.toContain('grid-template')
   })
 })
+
+test.describe('Splitter FINISH-LINE P2F tails', () => {
+  test('SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/OrientationToggle')
+
+    const hooks = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="test-splitter-orientation"]') as HTMLElement
+        const panels = [...root.querySelectorAll('[data-reference-splitter-panel]')] as HTMLElement[]
+        const handle = document.querySelector('[data-testid="orientation-handle-0"]') as HTMLElement
+        return {
+          root: root.dataset.orientation,
+          panels: panels.map((p) => p.dataset.orientation),
+          handle: handle.dataset.orientation,
+          aria: handle.getAttribute('aria-orientation'),
+        }
+      })
+
+    expect(await hooks()).toEqual({
+      root: 'horizontal',
+      panels: ['horizontal', 'horizontal'],
+      handle: 'horizontal',
+      aria: 'vertical',
+    })
+    await expect(page.getByTestId('orientation-value-display')).toHaveText('Layout: 40% / 60%')
+
+    await page.getByTestId('orientation-toggle').click()
+
+    // Rerender vertical: styling hooks follow the Panel layout axis while
+    // the separator movement axis flips perpendicular — values untouched.
+    expect(await hooks()).toEqual({
+      root: 'vertical',
+      panels: ['vertical', 'vertical'],
+      handle: 'vertical',
+      aria: 'horizontal',
+    })
+    await expect(page.getByTestId('orientation-value-display')).toHaveText('Layout: 40% / 60%')
+    await expect(page.getByTestId('orientation-change-count')).toHaveText('0')
+  })
+
+  test('SP-DOM-06: State hooks update while authored classes and styles stay exact', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/StyledHooks')
+
+    // The kernel-owned cursor class legitimately flips with blocked state
+    // (bound-appropriate cursor); it is stripped so the comparison pins only
+    // unrelated authored classes. The app tokens are asserted separately.
+    const authored = () =>
+      page.evaluate(() => {
+        const root = document.querySelector('[data-testid="test-splitter-styled"]') as HTMLElement
+        const panel0 = document.querySelector('[data-testid="styled-panel-0"]') as HTMLElement
+        const panel1 = document.querySelector('[data-testid="styled-panel-1"]') as HTMLElement
+        const handle = document.querySelector('[data-testid="styled-handle-0"]') as HTMLElement
+        const stripCursor = (className: string) => className.replace(/reference-ui__cursor_\S+/g, '')
+        return {
+          rootClass: stripCursor(root.className),
+          rootTransform: root.style.transform,
+          rootGrid: root.style.gridAutoFlow,
+          panelClass: stripCursor(panel0.className),
+          panelTransform: panel0.style.transform,
+          panelFlexWrap: panel0.style.flexWrap,
+          panelAccent: panel0.style.getPropertyValue('--app-accent'),
+          panel1Accent: panel1.style.getPropertyValue('--app-accent'),
+          handleClass: stripCursor(handle.className),
+          handleTransform: handle.style.transform,
+          appTokens:
+            root.className.includes('app-root-hooks') &&
+            panel0.className.includes('app-panel-hooks') &&
+            handle.className.includes('app-handle-hooks'),
+        }
+      })
+    const resizing = () =>
+      page.evaluate(() => ({
+        root: document.querySelector('[data-testid="test-splitter-styled"]')?.hasAttribute('data-resizing'),
+        panel0: document.querySelector('[data-testid="styled-panel-0"]')?.hasAttribute('data-resizing'),
+        handle: document.querySelector('[data-testid="styled-handle-0"]')?.hasAttribute('data-resizing'),
+      }))
+
+    const baseline = await authored()
+    expect(baseline.rootClass).toContain('app-root-hooks')
+    expect(baseline.panelClass).toContain('app-panel-hooks')
+    expect(baseline.handleClass).toContain('app-handle-hooks')
+    expect(baseline).toMatchObject({
+      rootTransform: 'translateX(0px)',
+      rootGrid: 'row',
+      panelTransform: 'translateZ(0px)',
+      panelFlexWrap: 'nowrap',
+      panelAccent: 'hotpink',
+      panel1Accent: 'hotpink',
+      handleTransform: 'translateZ(0px)',
+    })
+
+    // Drag: resizing hooks appear on Root, Panels, and Handle, then clear.
+    const at = await handleCenter(page, 'styled-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    expect(await resizing()).toEqual({ root: true, panel0: true, handle: true })
+    await page.mouse.move(at.x + 40, at.y, { steps: 4 })
+    await page.mouse.up()
+    expect(await resizing()).toEqual({ root: false, panel0: false, handle: false })
+    await expect(page.getByTestId('styled-change-end-count')).toHaveText('1')
+    expect(await authored()).toEqual(baseline)
+
+    // Collapse: the collapsed hook lands on the Panel only.
+    await page.getByTestId('styled-handle-0').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('styled-last-request')).toHaveText(/^5,/)
+    await expect(page.getByTestId('styled-panel-0')).toHaveAttribute('data-collapsed', '')
+    await expect(page.getByTestId('styled-panel-1')).not.toHaveAttribute('data-collapsed', '')
+    expect(await authored()).toEqual(baseline)
+
+    // Disable: the disabled hook lands on the Handle only.
+    await page.getByTestId('styled-toggle-disabled').click()
+    await expect(page.getByTestId('styled-handle-0')).toHaveAttribute('data-disabled', '')
+    await expect(page.getByTestId('styled-handle-0')).toHaveAttribute('aria-disabled', 'true')
+    expect(await authored()).toEqual(baseline)
+  })
+
+  test('SP-DOM-07: Native props, handlers, and refs reach every part and clean up the same nodes', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/NativeProps')
+
+    // IDs, owners, ARIA, classes, and styles reach the native divs.
+    const dom = await page.evaluate(() => {
+      const read = (testId: string) => {
+        const el = document.querySelector(`[data-testid="${testId}"]`) as HTMLElement
+        return {
+          tag: el.tagName,
+          id: el.id,
+          owner: el.dataset.owner,
+          label: el.getAttribute('aria-label'),
+          className: el.className,
+          border: el.style.border,
+        }
+      }
+      return {
+        root: read('test-splitter-native'),
+        panel0: read('native-panel-0'),
+        handle0: read('native-handle-0'),
+        panel1: read('native-panel-1'),
+      }
+    })
+    expect(dom.root).toMatchObject({
+      tag: 'DIV',
+      id: 'native-splitter-root',
+      owner: 'root',
+      label: 'Native splitter group',
+      border: '1px solid rgb(1, 2, 3)',
+    })
+    expect(dom.root.className).toContain('app-native-root')
+    expect(dom.panel0).toMatchObject({ tag: 'DIV', id: 'native-panel-0', owner: 'panel0' })
+    expect(dom.panel0.className).toContain('app-native-panel')
+    expect(dom.handle0).toMatchObject({
+      tag: 'DIV',
+      id: 'native-handle-0',
+      owner: 'handle0',
+      label: 'Resize native panels',
+    })
+    expect(dom.handle0.className).toContain('app-native-handle')
+    expect(dom.panel1).toMatchObject({ tag: 'DIV', id: 'native-panel-1', owner: 'panel1' })
+
+    // Object refs (Root, Panel1) and callback refs (Panel0, Handle) got nodes.
+    const objectRefs = await page.evaluate(() => {
+      const refs = (window as unknown as { __spNativeRefs: Record<string, { current: HTMLElement | null }> })
+        .__spNativeRefs
+      const read = (key: string) => {
+        const current = refs[key]?.current
+        return current ? { tag: current.tagName, testId: current.dataset.testid } : null
+      }
+      return { root: read('root'), panel1: read('panel1') }
+    })
+    expect(objectRefs).toEqual({
+      root: { tag: 'DIV', testId: 'test-splitter-native' },
+      panel1: { tag: 'DIV', testId: 'native-panel-1' },
+    })
+    // Mount settles with both nodes attached. Registration settle may cost
+    // one extra detach/attach round; the contract is relative to that
+    // baseline: every round delivers the same live node, interactions add
+    // nothing, unmount detaches, remount re-attaches fresh nodes — no
+    // ref-triggered render loop.
+    const refLog = () =>
+      page.evaluate(() => (window as unknown as { __spRefLog?: string[] }).__spRefLog ?? [])
+    const mountedLog = await refLog()
+    const tags = (label: string) =>
+      mountedLog.filter((e) => e.startsWith(`${label}:attach:`)).map((e) => e.split('#')[1])
+    for (const label of ['panel0', 'handle0']) {
+      expect(tags(label).length).toBeGreaterThanOrEqual(1)
+      expect(tags(label).length).toBeLessThanOrEqual(2)
+      expect(new Set(tags(label)).size).toBe(1)
+    }
+    const liveNodes = await page.evaluate(() => {
+      const attached = (window as unknown as { __spAttached: Record<string, Element> }).__spAttached
+      return {
+        panel0: attached.panel0 === document.querySelector('[data-testid="native-panel-0"]'),
+        handle0: attached.handle0 === document.querySelector('[data-testid="native-handle-0"]'),
+      }
+    })
+    expect(liveNodes).toEqual({ panel0: true, handle0: true })
+
+    // Handlers observe their own node as currentTarget (plus the Root bubble).
+    await page.getByTestId('native-panel-0').click()
+    await page.getByTestId('native-handle-0').click()
+    await page.getByTestId('native-panel-1').click()
+    const clicks = await page.getByTestId('native-clicks').textContent()
+    expect(clicks).toContain('panel0:DIV:panel0')
+    expect(clicks).toContain('handle0:DIV:handle0')
+    expect(clicks).toContain('panel1:DIV:panel1')
+    expect(clicks).toContain('root:DIV:root')
+    // A click is press-without-move: no resize requests, no ref churn.
+    expect(await refLog()).toEqual(mountedLog)
+
+    // Unmount: callback refs detach and the object refs null.
+    await page.getByTestId('native-toggle-mounted').click()
+    await expect(page.getByTestId('native-unmounted')).toBeVisible()
+    expect(await refLog()).toEqual([...mountedLog, 'panel0:detach', 'handle0:detach'])
+    const nulled = await page.evaluate(() => {
+      const refs = (window as unknown as { __spNativeRefs: Record<string, { current: unknown }> })
+        .__spNativeRefs
+      return { root: refs.root?.current ?? null, panel1: refs.panel1?.current ?? null }
+    })
+    expect(nulled).toEqual({ root: null, panel1: null })
+
+    // Remount: refs re-attach to fresh nodes with no render loop.
+    await page.getByTestId('native-toggle-mounted').click()
+    await expect(page.getByTestId('test-splitter-native')).toBeVisible()
+    const remountedLog = await refLog()
+    expect(remountedLog.slice(0, mountedLog.length + 2)).toEqual([
+      ...mountedLog,
+      'panel0:detach',
+      'handle0:detach',
+    ])
+    // Remount settles with the same shape as mount, on fresh nodes.
+    const shape = (entries: string[]) => entries.map((e) => e.replace(/#\d+$/, ''))
+    const tail = remountedLog.slice(mountedLog.length + 2)
+    expect(shape(tail)).toEqual(shape(mountedLog))
+    const tailTags = (label: string) =>
+      tail.filter((e) => e.startsWith(`${label}:attach:`)).map((e) => e.split('#')[1])
+    for (const label of ['panel0', 'handle0']) {
+      expect(new Set(tailTags(label)).size).toBe(1)
+      expect(tailTags(label)[0]).not.toBe(tags(label)[0])
+    }
+    await expect(page.getByTestId('native-value-display')).toHaveText('Layout: 40% / 60%')
+  })
+
+  test('SP-DOM-10: Omitted orientation means horizontal Panels with a vertical separator', async ({
+    mount,
+    page,
+  }) => {
+    // The Basic fixture omits orientation entirely.
+    await mount('components/Splitter/Splitter/Basic')
+
+    await expect(page.getByTestId('test-splitter')).toHaveAttribute('data-orientation', 'horizontal')
+    await expect(page.getByTestId('splitter-handle-0')).toHaveAttribute('aria-orientation', 'vertical')
+    const direction = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector('[data-testid="test-splitter"]') as HTMLElement)
+          .flexDirection
+    )
+    expect(direction).toBe('row')
+
+    await page.getByTestId('splitter-handle-0').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('splitter-value-display')).toHaveText('Layout: 41% / 59%')
+    await expect(page.getByTestId('splitter-handle-0')).toHaveAttribute('aria-valuenow', '41')
+  })
+
+  test('SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/CollapseOptIn')
+
+    const handle = page.getByTestId('optin-handle-0')
+    await expect(handle).not.toHaveAttribute('aria-disabled', 'true')
+    await handle.focus()
+
+    // Omitted behavior props: Arrow resizes, Enter is not consumed.
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('optin-last-request')).toHaveText('51,49')
+    await expect(page.getByTestId('optin-value-display')).toHaveText('Layout: 51% / 49%')
+    const unprevented = await dispatchKey(page, 'optin-handle-0', 'keydown', { key: 'Enter' })
+    expect(unprevented).toBe(true)
+    await dispatchKey(page, 'optin-handle-0', 'keyup', { key: 'Enter' })
+    await expect(page.getByTestId('optin-change-count')).toHaveText('1')
+    await expect(page.getByTestId('optin-change-end-count')).toHaveText('1')
+
+    // Opt the primary Panel in with collapsedSize still omitted: Enter
+    // collapses to exactly 0.
+    await page.getByTestId('optin-toggle-collapsible').click()
+    await handle.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('optin-last-request')).toHaveText('0,100')
+    await expect(page.getByTestId('optin-value-display')).toHaveText('Layout: 0% / 100%')
+    await expect(page.getByTestId('optin-panel-0')).toHaveAttribute('data-collapsed', '')
+  })
+
+  test('SP-CTRL-03: Programmatic values update hooks and ARIA on the same nodes with focus kept', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Dynamic')
+    const handle = page.getByTestId('dynamic-handle-0')
+    await handle.focus()
+
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __spNodes?: Record<string, Element | null>
+        __spStray?: number
+      }
+      w.__spNodes = {
+        root: document.querySelector('[data-testid="test-splitter-dynamic"]'),
+        panelA: document.querySelector('[data-testid="dynamic-panel-a"]'),
+        handle0: document.querySelector('[data-testid="dynamic-handle-0"]'),
+      }
+      w.__spStray = 0
+      const count = () => {
+        w.__spStray = (w.__spStray ?? 0) + 1
+      }
+      document
+        .querySelector('[data-testid="test-splitter-dynamic"]')
+        ?.addEventListener('pointerdown', count, true)
+      document
+        .querySelector('[data-testid="test-splitter-dynamic"]')
+        ?.addEventListener('keydown', count, true)
+    })
+
+    // Programmatic rerender without stealing focus.
+    await page.evaluate(() =>
+      (document.querySelector('[data-testid="dynamic-op-programmatic"]') as HTMLElement).click()
+    )
+    await expect(page.getByTestId('dynamic-value-display')).toHaveText('Layout: 5% / 60% / 35%')
+
+    const after = await page.evaluate(() => {
+      const w = window as unknown as {
+        __spNodes: Record<string, Element | null>
+        __spStray: number
+      }
+      const panelA = document.querySelector('[data-testid="dynamic-panel-a"]') as HTMLElement
+      const handle0 = document.querySelector('[data-testid="dynamic-handle-0"]') as HTMLElement
+      const now = Number(handle0.getAttribute('aria-valuenow'))
+      return {
+        sameRoot:
+          w.__spNodes.root === document.querySelector('[data-testid="test-splitter-dynamic"]'),
+        samePanelA: w.__spNodes.panelA === panelA,
+        sameHandle: w.__spNodes.handle0 === handle0,
+        panelVar: panelA.style.getPropertyValue('--reference-splitter-panel-size'),
+        collapsed: panelA.hasAttribute('data-collapsed'),
+        now,
+        min: Number(handle0.getAttribute('aria-valuemin')),
+        max: Number(handle0.getAttribute('aria-valuemax')),
+        focused: document.activeElement === handle0,
+        stray: w.__spStray,
+      }
+    })
+    expect(after.sameRoot).toBe(true)
+    expect(after.samePanelA).toBe(true)
+    expect(after.sameHandle).toBe(true)
+    expect(after.panelVar).toBe('5%')
+    expect(after.collapsed).toBe(true)
+    expect(after.now).toBe(5)
+    expect(after.min).toBeLessThanOrEqual(5)
+    expect(after.max).toBeGreaterThanOrEqual(5)
+    expect(after.focused).toBe(true)
+    expect(after.stray).toBe(0)
+    await expect(page.getByTestId('dynamic-change-count')).toHaveText('0')
+    await expect(page.getByTestId('dynamic-change-end-count')).toHaveText('0')
+  })
+
+  test('SP-KEY-01: Unmodified axis Arrows request one point per keydown, horizontal and vertical', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Constrained')
+    await page.getByTestId('constrained-handle-0').focus()
+
+    // One callback per keydown in each direction.
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 41% / 59%')
+    await expect(page.getByTestId('change-count')).toHaveText('1')
+    await expect(page.getByTestId('change-end-count')).toHaveText('1')
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 40% / 60%')
+    await expect(page.getByTestId('change-count')).toHaveText('2')
+    await expect(page.getByTestId('change-end-count')).toHaveText('2')
+
+    await mount('components/Splitter/Splitter/Vertical')
+    await page.getByTestId('splitter-vertical-handle').focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByText('Top (51%)')).toBeVisible()
+    await page.keyboard.press('ArrowUp')
+    await expect(page.getByText('Top (50%)')).toBeVisible()
+    // CT runs Chromium; Firefox/WebKit parity for this key matrix is a
+    // matrix remainder (see PATCHES #5 / SP-ENV-04).
+  })
+
+  test('SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds', async ({
+    mount,
+    page,
+  }) => {
+    // Fixture max is 60 (prose names 55): the clamp boundary adapts, the
+    // solver path and focus behavior are what's pinned.
+    await mount('components/Splitter/Splitter/Constrained')
+    const handle = page.getByTestId('constrained-handle-0')
+    await handle.focus()
+
+    await page.keyboard.press('Shift+ArrowRight')
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 50% / 50%')
+    await expect(page.getByTestId('change-count')).toHaveText('1')
+    await expect(handle).toHaveAttribute('aria-valuenow', '50')
+
+    await page.keyboard.press('Shift+ArrowRight')
+    await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 60% / 40%')
+    await expect(page.getByTestId('change-count')).toHaveText('2')
+    await expect(handle).toHaveAttribute('aria-valuenow', '60')
+    await expect(handle).toHaveAttribute('aria-valuemax', '60')
+    const focused = await page.evaluate(
+      () => document.activeElement?.getAttribute('data-testid') === 'constrained-handle-0'
+    )
+    expect(focused).toBe(true)
+  })
+
+  test('SP-ENV-02: StrictMode mounts, reorders, drags, and unmounts with single registration', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount('components/Splitter/Splitter/StrictModeGroup')
+
+    // Stable generated IDs: every aria-controls target exists.
+    const controlsIntact = () =>
+      page.evaluate(() =>
+        ['strict-handle-0', 'strict-handle-1'].every((testId) => {
+          const controls = document
+            .querySelector(`[data-testid="${testId}"]`)
+            ?.getAttribute('aria-controls')
+          return !!controls && !!document.getElementById(controls)
+        })
+      )
+    expect(await controlsIntact()).toBe(true)
+
+    // Atomic reorder: adjacency rebuilds with no dangling references and no
+    // unsolicited callback (single registration per live part).
+    await page.getByTestId('strict-op-reorder').click()
+    await expect(page.getByTestId('strict-value-display')).toHaveText('Layout: 30% / 20% / 50%')
+    expect(await controlsIntact()).toBe(true)
+    await expect(page.getByTestId('strict-change-count')).toHaveText('0')
+    await expect(page.getByTestId('strict-change-end-count')).toHaveText('0')
+
+    // Press-without-move is silent (no doubled session under effect replay).
+    const at = await handleCenter(page, 'strict-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.up()
+    await expect(page.getByTestId('strict-change-count')).toHaveText('0')
+
+    // One physical drag: requests flow, exactly one end.
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 40, at.y, { steps: 4 })
+    await page.mouse.up()
+    await expect(page.getByTestId('strict-change-end-count')).toHaveText('1')
+    const changes = await page.getByTestId('strict-change-count').textContent()
+    expect(Number(changes)).toBeGreaterThan(0)
+    const lastRequest = await page.getByTestId('strict-last-request').textContent()
+    expect(lastRequest?.split(',').map(Number).reduce((a, b) => a + b, 0)).toBeCloseTo(100, 5)
+
+    // Complete cleanup on unmount.
+    await component.unmount()
+    const cleared = await page.evaluate(() => ({
+      group: document.querySelector('[data-testid="test-splitter-strict"]'),
+      resizing: document.querySelectorAll('[data-resizing]').length,
+      cursor: document.body.style.cursor,
+      userSelect: document.body.style.userSelect,
+    }))
+    expect(cleared.group).toBeNull()
+    expect(cleared.resizing).toBe(0)
+    expect(cleared.cursor).toBe('')
+    expect(cleared.userSelect).toBe('')
+    // Run this spec with --react all for the React 17/18/19 leg (StrictMode
+    // replays effects on 18+ dev; 17 asserts uniform single behavior).
+  })
+
+  test('SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/ShadowHost')
+    const handle = page.getByTestId('shadow-handle-0')
+    await expect(handle).toBeVisible()
+
+    // Focus lands in the shadow tree, not the light document.
+    await handle.focus()
+    const shadowFocus = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-host"]') as HTMLElement
+      const shadow = host.shadowRoot!
+      return {
+        active: shadow.activeElement?.getAttribute('data-testid'),
+        lightActive: document.activeElement?.getAttribute('data-testid'),
+      }
+    })
+    expect(shadowFocus.active).toBe('shadow-handle-0')
+    expect(shadowFocus.lightActive).toBe('shadow-host')
+
+    // Drag from the shadow Handle to outside the host element.
+    const at = await handleCenter(page, 'shadow-handle-0')
+    const hostBox = await page.getByTestId('shadow-host').boundingBox()
+    expect(hostBox).not.toBeNull()
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(hostBox!.x + hostBox!.width + 60, at.y + 40, { steps: 5 })
+    await page.mouse.up()
+
+    await expect(page.getByTestId('shadow-change-end-count')).toHaveText('1')
+    const changes = await page.getByTestId('shadow-change-count').textContent()
+    expect(Number(changes)).toBeGreaterThan(0)
+    // Panel hooks inside the shadow tree followed the solver.
+    const hook = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-host"]') as HTMLElement
+      return (host.shadowRoot!.querySelector('[data-testid="shadow-panel-0"]') as HTMLElement).style
+        .getPropertyValue('--reference-splitter-panel-size')
+        .trim()
+    })
+    expect(hook).not.toBe('40%')
+    expect(hook).toMatch(/^-?\d+(\.\d+)?%$/)
+
+    // Cleanup belongs to the instance: shadow focus kept, document clean.
+    const clean = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-host"]') as HTMLElement
+      return {
+        active: host.shadowRoot!.activeElement?.getAttribute('data-testid'),
+        lightResizing: document.querySelectorAll('[data-resizing]').length,
+        shadowResizing: host.shadowRoot!.querySelectorAll('[data-resizing]').length,
+        cursor: document.body.style.cursor,
+        userSelect: document.body.style.userSelect,
+      }
+    })
+    expect(clean).toMatchObject({
+      active: 'shadow-handle-0',
+      lightResizing: 0,
+      shadowResizing: 0,
+      cursor: '',
+      userSelect: '',
+    })
+  })
+
+  test('SP-ENV-04: Two-Panel parity smoke — constrained drag, Arrows, and Enter collapse/restore', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Sidebar')
+    const handle = page.getByTestId('sidebar-handle-0')
+    await handle.focus()
+
+    // Keyboard leg with exact arrays from fresh [30,70].
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('sidebar-last-request')).toHaveText('31,69')
+    await page.keyboard.press('Shift+ArrowRight')
+    await expect(page.getByTestId('sidebar-last-request')).toHaveText('41,59')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('sidebar-last-request')).toHaveText('5,95')
+    await expect(page.getByTestId('sidebar-panel-0')).toHaveAttribute('data-collapsed', '')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('sidebar-last-request')).toHaveText('41,59')
+    await expect(page.getByTestId('sidebar-panel-0')).not.toHaveAttribute('data-collapsed', '')
+    await expect(page.getByTestId('sidebar-change-count')).toHaveText('4')
+    await expect(page.getByTestId('sidebar-change-end-count')).toHaveText('4')
+    await expect(handle).toHaveAttribute('aria-valuenow', '41')
+    // Honest bounds include the collapse floor (Enter can reach 5).
+    await expect(handle).toHaveAttribute('aria-valuemin', '5')
+    await expect(handle).toHaveAttribute('aria-valuemax', '95')
+
+    // Constrained drag leg: one end, focus kept, capture released.
+    const at = await handleCenter(page, 'sidebar-handle-0')
+    await page.mouse.move(at.x, at.y)
+    await page.mouse.down()
+    await page.mouse.move(at.x + 60, at.y, { steps: 5 })
+    await page.mouse.up()
+    await expect(page.getByTestId('sidebar-change-end-count')).toHaveText('5')
+    const dragChanges = await page.getByTestId('sidebar-change-count').textContent()
+    expect(Number(dragChanges)).toBeGreaterThan(4)
+
+    const settled = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="test-splitter-sidebar"]') as HTMLElement
+      const panel0 = document.querySelector('[data-testid="sidebar-panel-0"]') as HTMLElement
+      const handleEl = document.querySelector('[data-testid="sidebar-handle-0"]') as HTMLElement
+      return {
+        focused: document.activeElement === handleEl,
+        resizing: document.querySelectorAll('[data-resizing]').length,
+        cursor: document.body.style.cursor,
+        userSelect: document.body.style.userSelect,
+        panelVar: panel0.style.getPropertyValue('--reference-splitter-panel-size'),
+        root1: root.style.getPropertyValue('--reference-splitter-1'),
+        now: handleEl.getAttribute('aria-valuenow'),
+      }
+    })
+    expect(settled.focused).toBe(true)
+    expect(settled.resizing).toBe(0)
+    expect(settled.cursor).toBe('')
+    expect(settled.userSelect).toBe('')
+    // Size hooks agree with each other and the rounded display.
+    expect(settled.panelVar).toBe(settled.root1)
+    expect(Math.round(parseFloat(settled.panelVar))).toBe(Number(settled.now))
+    // CT runs Chromium; Firefox/WebKit legs of this smoke are a matrix
+    // remainder (see PATCHES #5).
+  })
+
+  test('FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Splitter/Splitter/Basic')
+
+    const geometry = await page.evaluate(() => {
+      const handle = document.querySelector('[data-testid="splitter-handle-0"]') as HTMLElement
+      const line = handle.querySelector('[data-reference-splitter-handle-line]') as HTMLElement
+      const rect = handle.getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      const hit = (x: number, y: number) =>
+        (document.elementFromPoint(x, y) as HTMLElement | null)?.closest(
+          '[data-testid="splitter-handle-0"]'
+        ) != null
+      const panel = (x: number, y: number) =>
+        (document.elementFromPoint(x, y) as HTMLElement | null)?.closest(
+          '[data-reference-splitter-panel]'
+        ) != null
+      return {
+        handleWidth: getComputedStyle(handle).width,
+        lineWidth: getComputedStyle(line).width,
+        farOutsideLeftHitsPanel: panel(cx - 16, cy),
+        stripLeftHitsHandle: hit(cx - 10, cy),
+        stripRightHitsHandle: hit(cx + 10, cy),
+        farOutsideRightHitsPanel: panel(cx + 16, cy),
+      }
+    })
+    // Visuals unchanged: 9px Handle, 1px line.
+    expect(geometry.handleWidth).toBe('9px')
+    expect(geometry.lineWidth).toBe('1px')
+    // The invisible strip (±12.5px) answers inside the 9px box's reach.
+    expect(geometry.stripLeftHitsHandle).toBe(true)
+    expect(geometry.stripRightHitsHandle).toBe(true)
+    // Beyond the strip, neighboring content still wins.
+    expect(geometry.farOutsideLeftHitsPanel).toBe(true)
+    expect(geometry.farOutsideRightHitsPanel).toBe(true)
+
+    await mount('components/Splitter/Splitter/Vertical')
+    const vertical = await page.evaluate(() => {
+      const handle = document.querySelector(
+        '[data-testid="splitter-vertical-handle"]'
+      ) as HTMLElement
+      const rect = handle.getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      const hit = (x: number, y: number) =>
+        (document.elementFromPoint(x, y) as HTMLElement | null)?.closest(
+          '[data-testid="splitter-vertical-handle"]'
+        ) != null
+      return {
+        handleHeight: getComputedStyle(handle).height,
+        stripAboveHitsHandle: hit(cx, cy - 10),
+        stripBelowHitsHandle: hit(cx, cy + 10),
+      }
+    })
+    expect(vertical.handleHeight).toBe('9px')
+    expect(vertical.stripAboveHitsHandle).toBe(true)
+    expect(vertical.stripBelowHitsHandle).toBe(true)
+  })
+})

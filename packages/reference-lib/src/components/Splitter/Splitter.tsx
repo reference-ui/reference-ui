@@ -113,6 +113,25 @@ function measuredEntriesEqual(
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
+// SP-DOM-07: consumer refs compose with the kernel's registration/geometry
+// refs onto the same native node — object and callback forms, no loops.
+function useComposedRef<T>(
+  internalRef: React.RefObject<T | null>,
+  forwardedRef: React.ForwardedRef<T>
+): (node: T | null) => void {
+  return React.useCallback(
+    (node: T | null) => {
+      internalRef.current = node
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(node)
+      } else if (forwardedRef) {
+        ;(forwardedRef as React.MutableRefObject<T | null>).current = node
+      }
+    },
+    [internalRef, forwardedRef]
+  )
+}
+
 type SplitterDirection = 'ltr' | 'rtl'
 
 // Inherited direction for the group: nearest [dir] ancestor wins, falling back
@@ -199,19 +218,22 @@ export type SplitterPanelProps = Omit<
   collapsedSize?: number
 }
 
-export function SplitterPanel({
-  children,
-  min: minProp,
-  max: maxProp,
-  minSize: legacyMinSize,
-  maxSize: legacyMaxSize,
-  id: idProp,
-  collapsible = false,
-  collapsedSize = 0,
-  className,
-  style,
-  ...props
-}: SplitterPanelProps) {
+export const SplitterPanel = React.forwardRef<HTMLDivElement, SplitterPanelProps>(function SplitterPanel(
+  {
+    children,
+    min: minProp,
+    max: maxProp,
+    minSize: legacyMinSize,
+    maxSize: legacyMaxSize,
+    id: idProp,
+    collapsible = false,
+    collapsedSize = 0,
+    className,
+    style,
+    ...props
+  }: SplitterPanelProps,
+  forwardedRef
+) {
   // B-28: legacy aliases resolve into the solver inputs; the deleted
   // `index` prop is stripped so stale call sites can't leak it to the DOM.
   const min = minProp ?? legacyMinSize
@@ -230,6 +252,7 @@ export function SplitterPanel({
   const size = panelIndex >= 0 ? (context?.value[panelIndex] ?? 50) : 50
 
   const panelRef = React.useRef<HTMLDivElement | null>(null)
+  const composedPanelRef = useComposedRef(panelRef, forwardedRef)
   const registerPanel = context?.registerPanel
   useIsomorphicLayoutEffect(() => {
     if (!registerPanel) return
@@ -258,9 +281,10 @@ export function SplitterPanel({
 
   return (
     <Div
-      ref={panelRef}
+      ref={composedPanelRef}
       id={panelId}
       data-reference-splitter-panel=""
+      data-orientation={orientation}
       data-collapsed={isCollapsed ? '' : undefined}
       data-resizing={context?.isResizing ? '' : undefined}
       minWidth={orientation === 'horizontal' ? 0 : undefined}
@@ -273,7 +297,7 @@ export function SplitterPanel({
       {children}
     </Div>
   )
-}
+})
 
 export interface SplitterHandleContextValue {
   orientation: SplitterOrientation
@@ -381,24 +405,27 @@ export type SplitterHandleProps = Omit<
   withThumb?: boolean
 }
 
-export function SplitterHandle({
-  disabled = false,
-  withThumb = true,
-  children,
-  className,
-  style,
-  onKeyDown,
-  onKeyUp,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onPointerCancel,
-  onPointerEnter,
-  onPointerLeave,
-  onFocus,
-  onBlur,
-  ...props
-}: SplitterHandleProps) {
+export const SplitterHandle = React.forwardRef<HTMLDivElement, SplitterHandleProps>(function SplitterHandle(
+  {
+    disabled = false,
+    withThumb = true,
+    children,
+    className,
+    style,
+    onKeyDown,
+    onKeyUp,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    onPointerEnter,
+    onPointerLeave,
+    onFocus,
+    onBlur,
+    ...props
+  }: SplitterHandleProps,
+  forwardedRef
+) {
   const context = React.useContext(SplitterContext)
   if (!context) return null
 
@@ -420,7 +447,8 @@ export function SplitterHandle({
 
   const [isHovered, setIsHovered] = React.useState(false)
   const [isFocused, setIsFocused] = React.useState(false)
-  const handleRef = React.useRef<HTMLDivElement>(null)
+  const handleRef = React.useRef<HTMLDivElement | null>(null)
+  const composedHandleRef = useComposedRef(handleRef, forwardedRef)
 
   const registerHandle = context.registerHandle
   useIsomorphicLayoutEffect(() => {
@@ -573,7 +601,7 @@ export function SplitterHandle({
   return (
     <SplitterHandleContext.Provider value={handleContextValue}>
       <Div
-        ref={handleRef}
+        ref={composedHandleRef}
         role="separator"
         tabIndex={0}
         aria-valuenow={Math.round(separatorAria.valueNow)}
@@ -583,6 +611,7 @@ export function SplitterHandle({
         aria-disabled={isBlocked ? true : undefined}
         aria-orientation={isHorizontal ? 'vertical' : 'horizontal'}
         data-reference-splitter-handle=""
+        data-orientation={orientation}
         data-disabled={isDisabled ? '' : undefined}
         data-state={isDragging ? 'active' : isHovered ? 'hover' : 'idle'}
         data-hover={isHovered ? '' : undefined}
@@ -621,7 +650,7 @@ export function SplitterHandle({
       </Div>
     </SplitterHandleContext.Provider>
   )
-}
+})
 
 interface ActivePointerSession {
   handleIndex: number

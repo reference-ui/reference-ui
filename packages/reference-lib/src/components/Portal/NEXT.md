@@ -24,11 +24,21 @@ This document specifies the remaining implementation gaps, testing contracts, ve
 
 ## 2. Current Verification & Proof Status
 
-- **Playwright E2E**: `matrix/lib/tests/e2e/portal.spec.ts`
-  - **Current Automated Suite**: 11 tests (`PT-DOM-01`, `PT-CONTAINER-01/02/05`, `PT-REACT-01/02`, and `PT-THEME-01` through `PT-THEME-06`).
-- **Cosmos Harness**: None (Tier 0 foundation primitive; needs fixture in Cosmos).
-- **Executable Contract Count**: 25 tagged behavior cases and composition gates specified in `TESTS.md`.
-- **Testing Ratio**: 11 tests currently automated in browser E2E suites; remainder of the behavioral contract in `TESTS.md` requires test implementation in `matrix/lib`.
+> **Retired 2026-09-28:** `matrix/lib` does not exist on this branch, so the
+> old "11 E2E in `matrix/lib`" count below is historical. The browser contract
+> lives in the colocated suite — `__e2e__/Portal.ct.spec.ts` (22 specs,
+> React 17/18/19 green) plus `Portal.test.tsx` (9 Vitest pins) — and CT
+> stories (`Fixture`, `ShadowFixture`, `CoverageFixture`) supersede the
+> Cosmos fixture milestone. Case index: `SPEC.md` (25/25 `[x]`).
+
+- **Playwright CT (in-dir, canonical)**: `__e2e__/Portal.ct.spec.ts`
+  - **Current Automated Suite**: 22 specs covering all 25 `TESTS.md` IDs
+    plus the 6 extra-catalog `PT-THEME` color-mode regression guards.
+- **Vitest (in-dir)**: `Portal.test.tsx` — 9 tests (`PT-CONTAINER-03/06`,
+  `PT-REACT-03/04/05`, `PT-ENV-01/02`, theme/layer-scope support).
+- **Historical Playwright E2E**: `matrix/lib/tests/e2e/portal.spec.ts`
+  (11 tests; matrix layer out of scope on this branch).
+- **Executable Contract Count**: 25 tagged behavior cases and composition gates specified in `TESTS.md` — all proven in-dir.
 
 ---
 
@@ -67,11 +77,11 @@ To guarantee battle-tested reliability, algorithms, edge-case regressions, and t
 
 ## 5. Next Execution Milestones & Priority Action Items
 
-### Step 1: **Add Cosmos Fixture**: Author `Portal.fixture.tsx` showing teleportation into custom containers.
+### Step 1: **Add Cosmos Fixture**: SUPERSEDED — `Portal.story.tsx` CT stories (`Fixture`, `ShadowFixture`, `CoverageFixture`) cover teleportation into custom containers.
 
-### Step 2: **Automate PT-SHADOW-01**: Test portaling into Shadow DOM in Playwright.
+### Step 2: **Automate PT-SHADOW-01**: DONE in-dir — `PT-DOM-05`, `PT-ENV-03`, `PT-COMP-03`, `PT-SHADOW-01` CT specs, React 17/18/19 green.
 
-### Step 3: **Verify React 19 Cleanliness**: Ensure React 19 ref-as-prop passes without warnings.
+### Step 3: **Verify React 19 Cleanliness**: DONE — full CT suite green on React 17/18/19 (`pnpm agentct Portal --e2e --react all`); no ref warnings.
 
 ---
 

@@ -429,3 +429,349 @@ export function ShadowPortalFixture() {
 }
 
 export const ShadowFixture = ShadowPortalFixture
+
+function CoverageContextChild({ testId }: { testId: string }) {
+  const contextVal = React.useContext(TestContext)
+  return (
+    <div data-testid={testId} data-context-val={contextVal}>
+      ctx:{contextVal}
+    </div>
+  )
+}
+
+function CoverageScopedChild({
+  onMount,
+  onUnmount,
+}: {
+  onMount: () => void
+  onUnmount: () => void
+}) {
+  const contextVal = React.useContext(TestContext)
+  React.useEffect(() => {
+    onMount()
+    return () => onUnmount()
+  }, [onMount, onUnmount])
+  return (
+    <>
+      <span data-testid="coverage-scoped-styled" data-context-val={contextVal}>
+        Scoped styled
+      </span>
+      <button type="button" data-testid="coverage-scoped-btn">
+        Scoped action
+      </button>
+    </>
+  )
+}
+
+function CoverageIframeChild({
+  onMount,
+  onUnmount,
+  onPress,
+}: {
+  onMount: () => void
+  onUnmount: () => void
+  onPress: () => void
+}) {
+  React.useEffect(() => {
+    onMount()
+    return () => onUnmount()
+  }, [onMount, onUnmount])
+  return (
+    <button type="button" data-testid="coverage-iframe-btn" onClick={onPress}>
+      Frame button
+    </button>
+  )
+}
+
+export function CoveragePortalFixture() {
+  // PT-DOM-04: detached fragment destination (created once, attached on demand).
+  const [detached] = React.useState(() => document.createDocumentFragment())
+  const fragmentHostRef = React.useRef<HTMLDivElement | null>(null)
+  const [, setFragmentAttached] = React.useState(false)
+  React.useEffect(() => {
+    ;(window as unknown as { __coverageDetached?: DocumentFragment }).__coverageDetached =
+      detached
+  }, [detached])
+
+  // PT-DOM-07: keyed element updates + sibling add/remove + unmount.
+  const [keyedText, setKeyedText] = React.useState('v1')
+  const [siblingOn, setSiblingOn] = React.useState(false)
+  const [updatePortalOn, setUpdatePortalOn] = React.useState(true)
+
+  // PT-COMP-01: multi-node default-destination composition.
+  const [comp1Text, setComp1Text] = React.useState('alpha')
+  const [comp1On, setComp1On] = React.useState(true)
+  const [comp1Clicks, setComp1Clicks] = React.useState(0)
+
+  // PT-COMP-02: scoped overlay root resolved after mount + unrelated state.
+  const scopedRootRef = React.useRef<HTMLDivElement | null>(null)
+  const [scopedOn, setScopedOn] = React.useState(false)
+  const [unrelated, setUnrelated] = React.useState(0)
+  const [scopedClicks, setScopedClicks] = React.useState(0)
+  const [scopedMounts, setScopedMounts] = React.useState(0)
+  const [scopedCleanups, setScopedCleanups] = React.useState(0)
+  const handleScopedMount = React.useCallback(() => {
+    setScopedMounts(m => m + 1)
+  }, [])
+  const handleScopedUnmount = React.useCallback(() => {
+    setScopedCleanups(c => c + 1)
+  }, [])
+
+  // PT-ENV-04: same-origin iframe destination.
+  const [iframeContainer, setIframeContainer] = React.useState<Element | null>(null)
+  const [iframeOn, setIframeOn] = React.useState(true)
+  const [iframeLog, setIframeLog] = React.useState<string[]>([])
+  const [iframeMounts, setIframeMounts] = React.useState(0)
+  const [iframeCleanups, setIframeCleanups] = React.useState(0)
+  // Stable identities: inline closures here re-fire the child's mount
+  // effect on every parent render (infinite loop). Same as handleScopedMount.
+  const handleIframeMount = React.useCallback(() => {
+    setIframeMounts(m => m + 1)
+  }, [])
+  const handleIframeUnmount = React.useCallback(() => {
+    setIframeCleanups(c => c + 1)
+  }, [])
+  const handleIframePress = React.useCallback(() => {
+    setIframeLog(prev => [...prev, 'child'])
+  }, [])
+
+  const mixedDestRef = React.useRef<HTMLDivElement | null>(null)
+  const updateDestRef = React.useRef<HTMLDivElement | null>(null)
+  const emptyNullRef = React.useRef<HTMLDivElement | null>(null)
+  const emptyFalseRef = React.useRef<HTMLDivElement | null>(null)
+  const emptyFragRef = React.useRef<HTMLDivElement | null>(null)
+
+  return (
+    <TestContext.Provider value="logical-provider-value">
+      <div data-testid="coverage-fixture-root" style={{ padding: 16 }}>
+        <h1>Portal Coverage Fixture</h1>
+
+        {/* PT-DOM-02: mixed children (text + nested app element) */}
+        <section>
+          <h2>Mixed children</h2>
+          <div data-testid="coverage-logical-parent">
+            <Portal container={mixedDestRef}>
+              <>
+                {'mixed-leading-text'}
+                <div data-testid="coverage-mixed-app">
+                  <span data-testid="coverage-mixed-descendant">descendant</span>
+                </div>
+              </>
+            </Portal>
+          </div>
+          <div data-testid="coverage-mixed-dest" ref={mixedDestRef} />
+        </section>
+
+        {/* PT-DOM-04: detached fragment destination */}
+        <section>
+          <h2>Detached fragment</h2>
+          <Portal container={detached}>
+            <div data-testid="coverage-frag-a">Frag A</div>
+            <div data-testid="coverage-frag-b">Frag B</div>
+          </Portal>
+          <div data-testid="coverage-frag-host" ref={fragmentHostRef} />
+          <button
+            type="button"
+            data-testid="btn-coverage-frag-attach"
+            onClick={() => {
+              fragmentHostRef.current?.appendChild(detached)
+              setFragmentAttached(true)
+            }}
+          >
+            Attach fragment
+          </button>
+        </section>
+
+        {/* PT-DOM-06: empty / falsy children add nothing */}
+        <section>
+          <h2>Empty children</h2>
+          <Portal container={emptyNullRef}>{null}</Portal>
+          <Portal container={emptyFalseRef}>{false}</Portal>
+          <Portal container={emptyFragRef}>
+            <></>
+          </Portal>
+          <div data-testid="coverage-empty-null-dest" ref={emptyNullRef}>
+            <i data-testid="coverage-empty-null-sentinel" />
+          </div>
+          <div data-testid="coverage-empty-false-dest" ref={emptyFalseRef}>
+            <i data-testid="coverage-empty-false-sentinel" />
+          </div>
+          <div data-testid="coverage-empty-frag-dest" ref={emptyFragRef}>
+            <i data-testid="coverage-empty-frag-sentinel" />
+          </div>
+        </section>
+
+        {/* PT-DOM-07: keyed update + sibling add/remove + unmount */}
+        <section>
+          <h2>Keyed updates</h2>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button
+              type="button"
+              data-testid="btn-coverage-update-text"
+              onClick={() => setKeyedText('v2')}
+            >
+              Update text
+            </button>
+            <button
+              type="button"
+              data-testid="btn-coverage-add-sibling"
+              onClick={() => setSiblingOn(true)}
+            >
+              Add sibling
+            </button>
+            <button
+              type="button"
+              data-testid="btn-coverage-remove-sibling"
+              onClick={() => setSiblingOn(false)}
+            >
+              Remove sibling
+            </button>
+            <button
+              type="button"
+              data-testid="btn-coverage-update-unmount"
+              onClick={() => setUpdatePortalOn(false)}
+            >
+              Unmount portal
+            </button>
+          </div>
+          {updatePortalOn && (
+            <Portal container={updateDestRef}>
+              <div key="stable" data-testid="coverage-update-keyed" data-text={keyedText}>
+                {keyedText}
+              </div>
+              {siblingOn && <div data-testid="coverage-update-sibling">sib</div>}
+            </Portal>
+          )}
+          <div data-testid="coverage-update-dest" ref={updateDestRef} />
+        </section>
+
+        {/* PT-COMP-01: default-destination composition */}
+        <section>
+          <h2>Default composition</h2>
+          <div
+            data-testid="coverage-comp1-scope"
+            onClick={() => setComp1Clicks(c => c + 1)}
+          >
+            <button
+              type="button"
+              data-testid="btn-coverage-comp1-update"
+              onClick={e => {
+                e.stopPropagation()
+                setComp1Text('beta')
+              }}
+            >
+              Update composition
+            </button>
+            <button
+              type="button"
+              data-testid="btn-coverage-comp1-unmount"
+              onClick={e => {
+                e.stopPropagation()
+                setComp1On(false)
+              }}
+            >
+              Unmount composition
+            </button>
+            {comp1On && (
+              <Portal>
+                <CoverageContextChild testId="coverage-comp1-ctx" />
+                <div data-testid="coverage-comp1-node" data-text={comp1Text}>
+                  {comp1Text}
+                </div>
+                <button type="button" data-testid="coverage-comp1-btn">
+                  Compose action
+                </button>
+              </Portal>
+            )}
+          </div>
+          <div data-testid="coverage-comp1-clicks">{comp1Clicks}</div>
+        </section>
+
+        {/* PT-COMP-02: scoped overlay root composition */}
+        <section>
+          <h2>Scoped composition</h2>
+          <button
+            type="button"
+            data-testid="btn-coverage-scoped-mount"
+            onClick={() => setScopedOn(true)}
+          >
+            Mount scoped root
+          </button>
+          <button
+            type="button"
+            data-testid="btn-coverage-unrelated"
+            onClick={() => setUnrelated(u => u + 1)}
+          >
+            Unrelated state ({unrelated})
+          </button>
+          {scopedOn && (
+            <div
+              ref={scopedRootRef}
+              data-testid="coverage-scoped-root"
+              style={{ color: 'rgb(11, 22, 33)' }}
+            />
+          )}
+          <div
+            data-testid="coverage-scoped-scope"
+            onClick={() => setScopedClicks(c => c + 1)}
+          >
+            <Portal container={scopedRootRef}>
+              <CoverageScopedChild
+                onMount={handleScopedMount}
+                onUnmount={handleScopedUnmount}
+              />
+            </Portal>
+          </div>
+          <div data-testid="coverage-scoped-clicks">{scopedClicks}</div>
+          <div data-testid="coverage-scoped-mounts">{scopedMounts}</div>
+          <div data-testid="coverage-scoped-cleanups">{scopedCleanups}</div>
+        </section>
+
+        {/* PT-ENV-04: same-origin iframe destination */}
+        <section>
+          <h2>Iframe destination</h2>
+          <div
+            data-testid="coverage-iframe-scope"
+            onClick={() => setIframeLog(prev => [...prev, 'logical-parent'])}
+          >
+            <iframe
+              title="coverage-frame"
+              data-testid="coverage-iframe"
+              srcDoc="<div id='frame-target'></div>"
+              onLoad={e => {
+                const doc = (
+                  e.currentTarget as unknown as { contentDocument: Document | null }
+                ).contentDocument
+                setIframeContainer(doc?.getElementById('frame-target') ?? null)
+              }}
+            />
+            <button
+              type="button"
+              data-testid="btn-coverage-iframe-unmount"
+              onClick={e => {
+                e.stopPropagation()
+                setIframeOn(false)
+              }}
+            >
+              Unmount iframe portal
+            </button>
+            {iframeOn && iframeContainer ? (
+              <Portal container={iframeContainer}>
+                <CoverageIframeChild
+                  onMount={handleIframeMount}
+                  onUnmount={handleIframeUnmount}
+                  onPress={handleIframePress}
+                />
+              </Portal>
+            ) : null}
+          </div>
+          <div data-testid="coverage-iframe-log">{iframeLog.join(',') || 'none'}</div>
+          <div data-testid="coverage-iframe-mounts">{iframeMounts}</div>
+          <div data-testid="coverage-iframe-cleanups">{iframeCleanups}</div>
+        </section>
+      </div>
+    </TestContext.Provider>
+  )
+}
+
+export const CoverageFixture = CoveragePortalFixture

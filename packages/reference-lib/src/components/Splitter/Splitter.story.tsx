@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Splitter } from './index'
@@ -1715,6 +1716,500 @@ export const LegacyProps = () => {
 
         <Span data-testid="legacy-value-display" fontSize="3.5r" color="design.text.base">
           Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// --- FINISH-LINE P2F tail fixtures ---
+
+// SP-DOM-04: orientation toggles while the controlled value stays put.
+export const OrientationToggle = () => {
+  const [orientation, setOrientation] = React.useState<'horizontal' | 'vertical'>('horizontal')
+  const [value, setValue] = React.useState<number[]>([40, 60])
+  const [changeCount, setChangeCount] = React.useState(0)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-orientation-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          <Splitter
+            orientation={orientation}
+            data-testid="test-splitter-orientation"
+            value={value}
+            onChange={(next) => {
+              setChangeCount((c) => c + 1)
+              setValue(next)
+            }}
+            height="100%"
+          >
+            <Splitter.Panel data-testid="orientation-panel-0" p="3r" bg="ui.table.row.mutedBackground" color="design.text.base">
+              <Span fontSize="3r" fontWeight="500">
+                A ({Math.round(value[0])}%)
+              </Span>
+            </Splitter.Panel>
+            <Splitter.Handle data-testid="orientation-handle-0" aria-label="Resize orientation panels" />
+            <Splitter.Panel data-testid="orientation-panel-1" p="3r" bg="ui.field.background" color="design.text.base">
+              <Span fontSize="3r" fontWeight="500">
+                B ({Math.round(value[1])}%)
+              </Span>
+            </Splitter.Panel>
+          </Splitter>
+        </Div>
+
+        <Span data-testid="orientation-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+        </Span>
+        <Span data-testid="orientation-change-count" fontSize="3r" color="design.text.base" ml="4r">
+          {changeCount}
+        </Span>
+        <Div mt="2r">
+          <button
+            data-testid="orientation-toggle"
+            onClick={() => setOrientation((o) => (o === 'horizontal' ? 'vertical' : 'horizontal'))}
+          >
+            Toggle orientation
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// SP-DOM-06: authored classes + cross-axis styles must survive state-hook
+// churn (drag, collapse, disable). Owned layout-axis flex is the kernel's;
+// everything else is the app's and must remain exact.
+export const StyledHooks = () => {
+  const [value, setValue] = React.useState<number[]>([40, 60])
+  const [disabled, setDisabled] = React.useState(false)
+  const [changeCount, setChangeCount] = React.useState(0)
+  const [changeEndCount, setChangeEndCount] = React.useState(0)
+  const [lastRequest, setLastRequest] = React.useState('')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-styled-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          <Splitter
+            data-testid="test-splitter-styled"
+            value={value}
+            onChange={(next) => {
+              setChangeCount((c) => c + 1)
+              setLastRequest(next.join(','))
+              setValue(next)
+            }}
+            onChangeEnd={() => setChangeEndCount((c) => c + 1)}
+            height="100%"
+            className="app-root-hooks"
+            style={{ transform: 'translateX(0px)', gridAutoFlow: 'row' } as React.CSSProperties}
+          >
+            <Splitter.Panel
+              data-testid="styled-panel-0"
+              min={20}
+              collapsible
+              collapsedSize={5}
+              p="3r"
+              bg="ui.table.row.mutedBackground"
+              color="design.text.base"
+              className="app-panel-hooks"
+              style={{ transform: 'translateZ(0)', flexWrap: 'nowrap', '--app-accent': 'hotpink' } as React.CSSProperties}
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Left ({Math.round(value[0])}%)
+              </Span>
+            </Splitter.Panel>
+            <Splitter.Handle
+              data-testid="styled-handle-0"
+              aria-label="Resize styled panels"
+              disabled={disabled}
+              className="app-handle-hooks"
+              style={{ transform: 'translateZ(0)' }}
+            />
+            <Splitter.Panel
+              data-testid="styled-panel-1"
+              p="3r"
+              bg="ui.field.background"
+              color="design.text.base"
+              className="app-panel-hooks"
+              style={{ transform: 'translateZ(0)', '--app-accent': 'hotpink' } as React.CSSProperties}
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Right ({Math.round(value[1])}%)
+              </Span>
+            </Splitter.Panel>
+          </Splitter>
+        </Div>
+
+        <Span data-testid="styled-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+        </Span>
+        <Div display="flex" gap="4r" mt="2r">
+          <Span data-testid="styled-change-count" fontSize="3r" color="design.text.base">
+            {changeCount}
+          </Span>
+          <Span data-testid="styled-change-end-count" fontSize="3r" color="design.text.base">
+            {changeEndCount}
+          </Span>
+          <Span data-testid="styled-last-request" fontSize="3r" color="design.text.base">
+            {lastRequest}
+          </Span>
+        </Div>
+        <Div mt="2r">
+          <button data-testid="styled-toggle-disabled" onClick={() => setDisabled((d) => !d)}>
+            Toggle disabled
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// SP-DOM-07: native props/handlers/refs on every part. Clicks log which node
+// observed them as currentTarget; refs log attach/detach; the mount toggle
+// proves cleanup delivers the same nodes back as null.
+export const NativeProps = () => {
+  const [mounted, setMounted] = React.useState(true)
+  const [value, setValue] = React.useState<number[]>([40, 60])
+  const [clicks, setClicks] = React.useState<string[]>([])
+  const rootRef = React.useRef<HTMLDivElement | null>(null)
+  const panel1Ref = React.useRef<HTMLDivElement | null>(null)
+
+  const logClick = (label: string) => (e: React.MouseEvent<HTMLDivElement>) => {
+    const node = e.currentTarget as HTMLElement
+    setClicks((c) => [...c, `${label}:${node.tagName}:${node.dataset.owner ?? ''}`])
+  }
+  // Stable callback refs: inline closures would detach/attach on every
+  // render and drown the attach/detach log in churn. Each attach tags its
+  // node so the test can prove every round delivered the same node.
+  const tagCounter = React.useRef(0)
+  const pushRef = React.useCallback((label: string, node: HTMLDivElement | null) => {
+    const w = window as unknown as { __spRefLog?: string[]; __spAttached?: Record<string, unknown> }
+    w.__spRefLog = w.__spRefLog ?? []
+    w.__spAttached = w.__spAttached ?? {}
+    if (!node) {
+      w.__spRefLog.push(`${label}:detach`)
+      return
+    }
+    const el = node as HTMLElement & { __spTag?: number }
+    if (el.__spTag == null) {
+      tagCounter.current += 1
+      el.__spTag = tagCounter.current
+    }
+    w.__spAttached[label] = node
+    w.__spRefLog.push(`${label}:attach:${node.tagName}:${node.dataset.owner ?? ''}#${el.__spTag}`)
+  }, [])
+  const panel0Ref = React.useCallback((node: HTMLDivElement | null) => pushRef('panel0', node), [pushRef])
+  const handle0Ref = React.useCallback((node: HTMLDivElement | null) => pushRef('handle0', node), [pushRef])
+  React.useEffect(() => {
+    ;(window as unknown as { __spNativeRefs?: { root: typeof rootRef; panel1: typeof panel1Ref } }).__spNativeRefs = { root: rootRef, panel1: panel1Ref }
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-native-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          {mounted ? (
+            <Splitter
+              ref={rootRef}
+              id="native-splitter-root"
+              data-testid="test-splitter-native"
+              data-owner="root"
+              aria-label="Native splitter group"
+              className="app-native-root"
+              style={{ border: '1px solid rgb(1, 2, 3)' }}
+              value={value}
+              onChange={setValue}
+              onClick={logClick('root')}
+              height="100%"
+            >
+              <Splitter.Panel
+                ref={panel0Ref}
+                id="native-panel-0"
+                data-testid="native-panel-0"
+                data-owner="panel0"
+                className="app-native-panel"
+                style={{ border: '1px solid rgb(4, 5, 6)' }}
+                onClick={logClick('panel0')}
+              >
+                Left
+              </Splitter.Panel>
+              <Splitter.Handle
+                ref={handle0Ref}
+                id="native-handle-0"
+                data-testid="native-handle-0"
+                data-owner="handle0"
+                aria-label="Resize native panels"
+                className="app-native-handle"
+                style={{ border: '1px solid rgb(7, 8, 9)' }}
+                onClick={logClick('handle0')}
+              />
+              <Splitter.Panel
+                ref={panel1Ref}
+                id="native-panel-1"
+                data-testid="native-panel-1"
+                data-owner="panel1"
+                className="app-native-panel"
+                style={{ border: '1px solid rgb(10, 11, 12)' }}
+                onClick={logClick('panel1')}
+              >
+                Right
+              </Splitter.Panel>
+            </Splitter>
+          ) : (
+            <Div data-testid="native-unmounted" p="3r" color="design.text.base">
+              Unmounted
+            </Div>
+          )}
+        </Div>
+
+        <Span data-testid="native-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+        </Span>
+        <Span data-testid="native-clicks" fontSize="3r" color="design.text.base" ml="4r">
+          {clicks.join(' | ')}
+        </Span>
+        <Div mt="2r">
+          <button data-testid="native-toggle-mounted" onClick={() => setMounted((m) => !m)}>
+            Toggle mounted
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// SP-DOM-11: collapsible/collapsedSize/disabled all omitted at first; the
+// toggle opts the primary Panel into collapse with collapsedSize still
+// omitted (must resolve to 0).
+export const CollapseOptIn = () => {
+  const [value, setValue] = React.useState<number[]>([50, 50])
+  const [collapsible, setCollapsible] = React.useState(false)
+  const [changeCount, setChangeCount] = React.useState(0)
+  const [changeEndCount, setChangeEndCount] = React.useState(0)
+  const [lastRequest, setLastRequest] = React.useState('')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-optin-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          <Splitter
+            data-testid="test-splitter-optin"
+            value={value}
+            onChange={(next) => {
+              setChangeCount((c) => c + 1)
+              setLastRequest(next.join(','))
+              setValue(next)
+            }}
+            onChangeEnd={() => setChangeEndCount((c) => c + 1)}
+            height="100%"
+          >
+            <Splitter.Panel
+              data-testid="optin-panel-0"
+              collapsible={collapsible || undefined}
+              p="3r"
+              bg="ui.table.row.mutedBackground"
+              color="design.text.base"
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Left ({Math.round(value[0])}%)
+              </Span>
+            </Splitter.Panel>
+            <Splitter.Handle data-testid="optin-handle-0" aria-label="Resize opt-in panels" />
+            <Splitter.Panel
+              data-testid="optin-panel-1"
+              p="3r"
+              bg="ui.field.background"
+              color="design.text.base"
+            >
+              <Span fontSize="3r" fontWeight="500">
+                Right ({Math.round(value[1])}%)
+              </Span>
+            </Splitter.Panel>
+          </Splitter>
+        </Div>
+
+        <Span data-testid="optin-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+        </Span>
+        <Div display="flex" gap="4r" mt="2r">
+          <Span data-testid="optin-change-count" fontSize="3r" color="design.text.base">
+            {changeCount}
+          </Span>
+          <Span data-testid="optin-change-end-count" fontSize="3r" color="design.text.base">
+            {changeEndCount}
+          </Span>
+          <Span data-testid="optin-last-request" fontSize="3r" color="design.text.base">
+            {lastRequest}
+          </Span>
+        </Div>
+        <Div mt="2r">
+          <button data-testid="optin-toggle-collapsible" onClick={() => setCollapsible((c) => !c)}>
+            Opt into collapse
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// SP-ENV-02: StrictMode mount/reorder/drag/unmount. Effect replay (React 18+
+// dev) must still leave one registration per live part, one session per
+// physical action, and complete cleanup. Run with --react all.
+export const StrictModeGroup = () => {
+  const [order, setOrder] = React.useState(['a', 'b', 'c'])
+  const [value, setValue] = React.useState<number[]>([20, 30, 50])
+  const [changeCount, setChangeCount] = React.useState(0)
+  const [changeEndCount, setChangeEndCount] = React.useState(0)
+  const [lastRequest, setLastRequest] = React.useState('')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-strict-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          <React.StrictMode>
+            <Splitter
+              data-testid="test-splitter-strict"
+              value={value}
+              onChange={(next) => {
+                setChangeCount((c) => c + 1)
+                setLastRequest(next.join(','))
+                setValue(next)
+              }}
+              onChangeEnd={() => setChangeEndCount((c) => c + 1)}
+              height="100%"
+            >
+              {order.flatMap((id, slot) => {
+                const parts: React.ReactNode[] = [
+                  <Splitter.Panel key={id} data-testid={`strict-panel-${id}`} p="3r" color="design.text.base">
+                    <Span fontSize="3r" fontWeight="500">
+                      {id.toUpperCase()}
+                    </Span>
+                  </Splitter.Panel>,
+                ]
+                if (slot < order.length - 1) {
+                  parts.push(
+                    <Splitter.Handle
+                      key={`h${slot}`}
+                      data-testid={`strict-handle-${slot}`}
+                      aria-label={`Resize strict boundary ${slot}`}
+                    />
+                  )
+                }
+                return parts
+              })}
+            </Splitter>
+          </React.StrictMode>
+        </Div>
+
+        <Span data-testid="strict-value-display" fontSize="3.5r" color="design.text.base">
+          Layout: {value.map((v) => `${Math.round(v)}%`).join(' / ')}
+        </Span>
+        <Div display="flex" gap="4r" mt="2r">
+          <Span data-testid="strict-change-count" fontSize="3r" color="design.text.base">
+            {changeCount}
+          </Span>
+          <Span data-testid="strict-change-end-count" fontSize="3r" color="design.text.base">
+            {changeEndCount}
+          </Span>
+          <Span data-testid="strict-last-request" fontSize="3r" color="design.text.base">
+            {lastRequest}
+          </Span>
+        </Div>
+        <Div mt="2r">
+          <button
+            data-testid="strict-op-reorder"
+            onClick={() => {
+              setOrder(['b', 'a', 'c'])
+              setValue([30, 20, 50])
+            }}
+          >
+            Reorder B/A/C
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// SP-ENV-03: a nested horizontal Splitter living in an open ShadowRoot.
+// Host styles are cloned in best-effort so the fixture lays out; every
+// assertion is behavioral (measured at runtime) and never assumes paint.
+const ShadowInner = ({
+  value,
+  onChange,
+  onChangeEnd,
+}: {
+  value: number[]
+  onChange: (next: number[]) => void
+  onChangeEnd: (next: number[]) => void
+}) => (
+  <div style={{ width: '100%', height: '100%' }}>
+    <Splitter
+      data-testid="test-splitter-shadow"
+      value={value}
+      onChange={onChange}
+      onChangeEnd={onChangeEnd}
+      height="100%"
+    >
+      <Splitter.Panel data-testid="shadow-panel-0" min={20}>
+        Left ({Math.round(value[0])}%)
+      </Splitter.Panel>
+      <Splitter.Handle data-testid="shadow-handle-0" aria-label="Resize shadow panels" />
+      <Splitter.Panel data-testid="shadow-panel-1">
+        Right ({Math.round(value[1])}%)
+      </Splitter.Panel>
+    </Splitter>
+    <div data-testid="shadow-value-display">
+      Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
+    </div>
+  </div>
+)
+
+export const ShadowHost = () => {
+  const hostRef = React.useRef<HTMLDivElement | null>(null)
+  const [shadow, setShadow] = React.useState<ShadowRoot | null>(null)
+  const [value, setValue] = React.useState<number[]>([40, 60])
+  const [changeCount, setChangeCount] = React.useState(0)
+  const [changeEndCount, setChangeEndCount] = React.useState(0)
+
+  React.useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    if (host.shadowRoot) {
+      setShadow(host.shadowRoot)
+      return
+    }
+    const root = host.attachShadow({ mode: 'open' })
+    document.querySelectorAll('head style').forEach((s) => root.appendChild(s.cloneNode(true)))
+    setShadow(root)
+  }, [])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="splitter-shadowhost-root">
+        <Div width="100r" height="50r" borderRadius="md" overflow="hidden" mb="4r">
+          <div ref={hostRef} data-testid="shadow-host" style={{ width: '100%', height: '100%' }} />
+          {shadow
+            ? createPortal(
+                <ShadowInner
+                  value={value}
+                  onChange={(next) => {
+                    setChangeCount((c) => c + 1)
+                    setValue(next)
+                  }}
+                  onChangeEnd={() => setChangeEndCount((c) => c + 1)}
+                />,
+                shadow
+              )
+            : null}
+        </Div>
+
+        <Span data-testid="shadow-change-count" fontSize="3r" color="design.text.base">
+          {changeCount}
+        </Span>
+        <Span data-testid="shadow-change-end-count" fontSize="3r" color="design.text.base" ml="4r">
+          {changeEndCount}
         </Span>
       </Div>
     </ReferenceLibrary>

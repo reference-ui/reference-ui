@@ -4,7 +4,8 @@ Current freeze, cases, and proof. Design narrative: [README.md](./README.md).
 Mounted by: [ReferenceLibrary](../ReferenceLibrary/ReferenceLibrary.md).
 Used by: [Toast](../Toast/Toast.md) `{announce}` and any `announce()` caller.
 
-Playwright: `matrix/lib/tests/e2e/announcer.spec.ts` (missing)
+Playwright: `packages/reference-lib/src/components/Announcer/__e2e__/Announcer.ct.spec.ts`
+(`pnpm agentct Announcer`; `matrix/lib/tests/e2e/announcer.spec.ts` does not exist on this branch)
 Unit: `packages/reference-lib/src/components/Announcer/Announcer.test.ts`
 Page: `/announcer` (missing)
 Sibling proof: `matrix/lib/tests/e2e/toast.spec.ts` · `reference-library.spec.ts`
@@ -19,13 +20,12 @@ Fixture root: `ReferenceLibrary`
 
 ## Next agent — Announcer is not production
 
-The engine exists as a Toast / ReferenceLibrary appendix. It is not a frozen
-runtime. Twelve Vitest cases poke a fake `Document` object and never paint live
-regions (7 named `ANN-*`, 5 dual-titled `TO-ANN-*` siblings). Toast Playwright
-covers a subset of speech vs visual (`TO-ANN-*`). ReferenceLibrary covers
-mount/election smokes (`RL-*`). Browser-prose `ANN-*` cases are unproven until
-`matrix/lib/tests/e2e/announcer.spec.ts` is re-targeted (quarantine corpus,
-pending).
+The engine shipped as a Toast / ReferenceLibrary appendix; the 2026-09-28
+finish-line crew froze it with 35 colocated CT proofs plus 15 Vitest cases
+(43 / 46 named `ANN-*`, all Must rows). Toast Playwright covers speech vs
+visual (`TO-ANN-*`); ReferenceLibrary covers mount/election smokes (`RL-*`).
+`matrix/lib/tests/e2e/announcer.spec.ts` still does not exist on this branch —
+the browser runner is the colocated `__e2e__/Announcer.ct.spec.ts`.
 
 Do not add Toast queue, swipe, or toaster chrome here. Do not add Overlay
 dismiss / inert / FocusLock catalogs. Do not add a public Provider, a second
@@ -35,11 +35,11 @@ live-region library, or per-widget `aria-live` on NumberField / Toast cards.
 
 | Axis | Public surface | Status |
 | :--- | :--- | :--- |
-| Call | `announce(message, { politeness, document })` | Shipped; untargeted multi-document routing is wrong |
+| Call | `announce(message, { politeness, document })` | Shipped; ambiguous untargeted no-op + dev diagnostic (`ANN-API-05`) |
 | Channels | One polite `role="status"` and one assertive `role="alert"` | Shipped |
-| Replay | Pending queue until first host activation | Shipped; activation is sticky after unmount |
-| Isolation | `data-reference-overlay-ignore` + hide-outside exempt | Shipped; no `ANN-*` proof |
-| Clear | Same-string clear-then-reinsert; 7000ms recycle | Shipped in the store; AT DOM under-proven |
+| Replay | Pending queue until first host activation | Shipped; activation resets on last unmount (`ANN-LIFE-04`) |
+| Isolation | `data-reference-overlay-ignore` + hide-outside exempt | Shipped; `ANN-OV-01`–`04` |
+| Clear | Same-string clear-then-reinsert; 7000ms recycle | Shipped; `ANN-LIVE-03` / `04` / `06` / `07` |
 
 ### Do not duplicate
 
@@ -63,34 +63,35 @@ Sibling titles that already exist (do not restate as new product):
 | `TO-ANN-08` / `RL-LIFE-02` | `ANN-LIFE-01` |
 | `TO-ANN-03` / `04` / `06` | `ANN-COMP-01` / `02` (Toast-owned; smoke only) |
 | `RL-DOM-02` / `RL-ROOT-01` / `02` / `06` | `ANN-HOST-01` / `02` / `03` |
-| `RL-ROOT-08` | `ANN-API-05` — **not actually implemented on `announce()`** |
+| `RL-ROOT-08` | `ANN-API-05` — implemented on `announce()` itself (CT + unit pins) |
 
 When adding `announcer.spec.ts`, dual-title with the sibling ID if the same
 fixture already asserts the prose. Do not copy a weak `toBeVisible()` check
 and call it done.
 
-### Status (2026-09-10)
+### Status (2026-09-10; proofs landed 2026-09-28)
 
 | | |
 | :--- | :--- |
 | Engine | Shipped (two-channel store, host, pending, 7s clear, overlay-ignore) |
-| Production | **No.** Host-activation, document routing, AT-safe remount, and overlay exemption are not `ANN-*` browser-proven. |
-| Named `ANN-*` | 7 / 41 (`ANN-API-01` / `06` / `07`, `ANN-LIVE-08`, `ANN-ENV-01` / `02` / `04` — unit/ssr only) |
-| Vitest | 12 store/ssr tests (7 `ANN-*` + 5 dual-titled `TO-ANN-*` siblings) against `{} as Document` |
-| Playwright | 0 Announcer files. Toast + ReferenceLibrary smokes only |
+| Production | Must rows are `[x]` (29 proven + `ANN-DOM-05` retired). Defects 1–2 fixed and CT-pinned. |
+| Named `ANN-*` | 43 / 46 (all Must; Should gaps: `ANN-ENV-05`, `ANN-COMP-03`; `ANN-DOM-05` retired) |
+| Vitest | 15 tests incl. 3 `ANN-API-05` diagnostic pins (dev once-per-shape, prod silence) |
+| Playwright | 35 CT (`pnpm agentct Announcer`): API/DOM/LIVE/LIFE/HOST/OV/ENV/COMP browser proofs |
 
 ### Defects this freeze names
 
-1. **Sticky `activated`.** `replayPendingAnnouncements` sets `activated = true`
-   and never clears it when the last subscriber unmounts. After the first
-   host, hostless `announce()` does not re-queue. Remount can paint current
-   store text as **initial** live-region content, which AT often does not
-   speak. `RL-LIFE-05` claims hostless `announce("Connection restored")`
-   replays; the announcer machine does not honor that.
-2. **Untargeted multi-document.** `announce()` with omitted `document` always
-   writes to global `document`. ReferenceLibrary freeze `RL-ROOT-08` requires
-   a development diagnostic and a no-op when more than one Document is
-   eligible. Toast follows that freeze; Announcer does not.
+1. **Sticky `activated` — FIXED 2026-09-28.** Last-subscriber teardown now
+   resets `activated = false` and clears channel text (`Announcer.tsx`
+   cleanup). Failing-if-regressed CT: `ANN-LIFE-04` (remount must insert
+   `After` as a mutation, never initial text) and `ANN-LIFE-05` /
+   `RL-LIFE-05` (`Connection restored` across the failover gap).
+2. **Untargeted multi-document — FIXED 2026-09-28.**
+   `resolveAnnouncerDocument` no-ops with one dev-gated, deduped diagnostic
+   when more than one Document is eligible (`RL-ROOT-08` freeze). CT:
+   `ANN-API-05` (untargeted `Nope` mutates neither host, exactly one
+   `ambiguous untargeted call` warning); unit pins once-per-shape +
+   production silence.
 3. **Duplicate hosts.** `AnnouncerHost` has no election. Two direct mounts
    subscribe independently and double-speak. Production depends entirely on
    ReferenceLibrary rendering the host only on the elected mount.
@@ -107,8 +108,9 @@ and call it done.
 ### Work order
 
 Prove Announcer as its own runtime. Toast and ReferenceLibrary keep their
-sibling titles. New proof lives in `matrix/lib/tests/e2e/announcer.spec.ts`
-plus real-document Vitest for the token/pending machine.
+sibling titles. New proof lives in the colocated
+`__e2e__/Announcer.ct.spec.ts` (matrix `announcer.spec.ts` does not exist on
+this branch) plus real-document Vitest for the token/pending machine.
 
 1. **Must — API freeze** — `ANN-API-01`–`07`. Public `announce()` only.
    Untargeted routing matches ReferenceLibrary. Internals un-leaked or
@@ -132,9 +134,10 @@ plus real-document Vitest for the token/pending machine.
 
 ### Done when
 
-- Must rows in this file are `[x]`.
-- `matrix/lib/tests/e2e/announcer.spec.ts` exists and matrix fixtures import
-  only `@reference-ui/lib`.
+- Must rows in this file are `[x]` (29 proven + `ANN-DOM-05` retired).
+- Colocated `__e2e__/Announcer.ct.spec.ts` exists and passes via
+  `pnpm agentct Announcer`; fixtures import only `@reference-ui/lib`-local
+  modules (`matrix/lib/tests/e2e/announcer.spec.ts` still absent).
 - Sticky activation and untargeted multi-document routing are fixed, not
   documented around.
 - Toast `TO-ANN-*` and RL announce smokes still pass.
@@ -237,23 +240,23 @@ the internal/test-only entry (`internal.ts`).
   active host, then announce `"Complete"`. Assert no live-region mutation
   and no pending record for the blanks, and exactly one polite insertion of
   `"Complete"`.
-- [ ] `ANN-API-02` `[reference]` `[browser]` —
+- [x] `ANN-API-02` `[reference]` `[browser]` —
   **Announcer should use the polite channel when `politeness` is omitted.**
   With one elected host, call `announce("Saved", {document})`. Assert the
   polite region receives `"Saved"` once, the assertive region stays empty,
   and no toast item is created.
-- [ ] `ANN-API-03` `[reference]` `[browser]` —
+- [x] `ANN-API-03` `[reference]` `[browser]` —
   **Announcer should write only the targeted document when `document` is
   explicit.** Mount hosts in the top document and a same-origin iframe.
   Announce `"Top"` at the top `Document` and `"Frame"` at the iframe
   `Document`. Assert each live region contains only its own string and no
   node is adopted across documents.
-- [ ] `ANN-API-04` `[reference]` `[browser]` —
+- [x] `ANN-API-04` `[reference]` `[browser]` —
   **Announcer should use the unique eligible document when `document` is
   omitted and one host exists.** With one mounted library, call untargeted
   `announce("Saved")`. Assert one polite insertion under that host and none
   on `document.body` outside the React root.
-- [ ] `ANN-API-05` `[reference]` `[browser]` —
+- [x] `ANN-API-05` `[reference]` `[browser]` —
   **Announcer should reject ambiguous untargeted calls when multiple
   Documents are eligible.** With active hosts in the top document and an
   iframe, call targeted announces at each `Document`, then `announce("Nope")`
@@ -275,7 +278,7 @@ the internal/test-only entry (`internal.ts`).
 
 ### DOM
 
-- [ ] `ANN-DOM-01` `[reference]` `[browser]` —
+- [x] `ANN-DOM-01` `[reference]` `[browser]` —
   **Announcer should paint one hidden host with two live regions when
   ReferenceLibrary elects a mount.** Mount one library. Assert exactly one
   `div[data-reference-announcer-host][data-reference-overlay-ignore]` in that
@@ -284,28 +287,30 @@ the internal/test-only entry (`internal.ts`).
   `[data-reference-announcer="assertive"]` with `role="alert"`
   `aria-live="assertive"` `aria-atomic="true"`, and that the host is not inside
   `[data-reference-toast-host]`.
-- [ ] `ANN-DOM-02` `[reference]` `[browser]` —
+- [x] `ANN-DOM-02` `[reference]` `[browser]` —
   **Announcer should hide the host visually without `aria-hidden` when it
   mounts.** Read computed styles on the host and both regions. Assert clipped
   1×1 absolute hiding (or equivalent sr-only), `aria-hidden` absent on host
   and regions, and that Playwright `toBeVisible()` is not the proof —
   visibility to AT is the live attributes, not a non-empty bounding box.
-- [ ] `ANN-DOM-03` `[reference]` `[browser]` —
+- [x] `ANN-DOM-03` `[reference]` `[browser]` —
   **Announcer should keep live regions out of the tab order when the page is
   tabbed.** Mount a library plus two ordinary buttons, tab through the
   document, and assert `document.activeElement` never becomes the host or
   either region.
-- [ ] `ANN-DOM-04` `[reference]` `[browser]` —
+- [x] `ANN-DOM-04` `[reference]` `[browser]` —
   **Announcer should treat the message as text when it contains markup.**
   Call `announce("<b>Saved</b>", {document})`. Assert the polite region’s
   `textContent` is the literal string `"<b>Saved</b>"` with no `b` element
   child and no HTML parse.
-- [ ] `ANN-DOM-05` `[reference]` `[browser]` —
-  **Announcer should expose stable contract selectors when testids also
-  exist.** If `data-testid` aliases remain during migration, assert both
-  `data-reference-announcer` and the current testids point at the same two
-  nodes. New tests must use the contract selectors.
-- [ ] `ANN-DOM-06` `[reference]` `[browser]` —
+- [ ] `ANN-DOM-05` `[reference]` `[browser]` — **RETIRED 2026-09-28
+  (PATCHES#1).** The migration premise is gone: zero `polite-announcer` /
+  `assertive-announcer` consumers remain repo-wide (only this file's defect
+  history mentions them) and the host emits no `data-testid`. The
+  contract-selector-only pin lives in the `ANN-DOM-01` CT (`no testids`
+  asserts). Original prose: *Announcer should expose stable contract
+  selectors when testids also exist.*
+- [x] `ANN-DOM-06` `[reference]` `[browser]` —
   **Announcer should not assign live semantics to toast or application DOM
   when it announces.** Announce `"Saved"` and show a silent toast whose
   visual text is `"Payment failed"`. Assert no `aria-live` / `role="status"`
@@ -314,42 +319,42 @@ the internal/test-only entry (`internal.ts`).
 
 ### Live machine
 
-- [ ] `ANN-LIVE-01` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-01` `[reference]` `[browser]` —
   **Announcer should insert one polite message and no toast when `announce`
   is called without assertive politeness.** Observe live-region mutations
   and call `announce("Project saved", {document})`. Assert one insertion into
   the polite path, assertive empty, and zero `data-reference-toast-id`.
   Sibling: `TO-ANN-01`.
-- [ ] `ANN-LIVE-02` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-02` `[reference]` `[browser]` —
   **Announcer should preserve both messages when polite and assertive
   announcements occur in the same turn.** Synchronously call polite
   `"Background sync complete"` and assertive `"Session expired"`. Assert
   each string causes one mutation in its own region and neither replaces the
   other. Sibling: `TO-ANN-02`.
-- [ ] `ANN-LIVE-03` `[convergence]` `[browser]` —
+- [x] `ANN-LIVE-03` `[convergence]` `[browser]` —
   **Announcer should produce two observable mutations when the same message is
   announced twice.** Attach a `MutationObserver`, announce `"Saved"`, wait for
   its insertion boundary, and announce `"Saved"` again. Assert the region
   clears and reinserts so two distinct AT-observable insertions occur.
   Sibling: `TO-ANN-05`.
-- [ ] `ANN-LIVE-04` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-04` `[reference]` `[browser]` —
   **Announcer should ignore blanks and clear old text when the recycle delay
   ends.** After `"Complete"` is inserted, advance to just before 7000ms and
   through it. Assert the string remains through the safe interval, then the
   region is emptied without a second spoken message. Sibling: `TO-ANN-07`.
-- [ ] `ANN-LIVE-05` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-05` `[reference]` `[browser]` —
   **Announcer should keep only the latest same-channel message when a second
   announce wins the token before insert.** On an active host, announce
   `"First"` then immediately `"Second"` on polite. Assert the mutation log
   does not end with a committed `"First"` after `"Second"`, and the polite
   region’s settled text is `"Second"`. Assertive remains empty.
-- [ ] `ANN-LIVE-06` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-06` `[reference]` `[browser]` —
   **Announcer should recycle channels independently when both have text.**
   Announce polite `"A"` and assertive `"B"`, then advance 7000ms. Assert both
   clear. In a second run, announce polite `"A"`, advance 3500ms, announce
   assertive `"B"`, then advance 3500ms. Assert polite is cleared and assertive
   still holds `"B"` until its own deadline.
-- [ ] `ANN-LIVE-07` `[reference]` `[browser]` —
+- [x] `ANN-LIVE-07` `[reference]` `[browser]` —
   **Announcer should not treat a recycle clear as a message when the delay
   fires.** Observe mutations around the 7000ms clear of `"Complete"`. Assert
   the empty text is not recorded as an announcement in application-facing
@@ -364,42 +369,42 @@ the internal/test-only entry (`internal.ts`).
 
 ### Activation, pending, remount
 
-- [ ] `ANN-LIFE-01` `[vendor]` `[browser]` —
+- [x] `ANN-LIFE-01` `[vendor]` `[browser]` —
   **Announcer should keep pending speech off-DOM when calls happen before any
   host exists.** Before a library mounts, announce `"Saved"` then `"Ready"`.
   Assert no live-region node exists, then after mount both strings are
   inserted in order into the polite path. Sibling: `TO-ANN-08` /
   `RL-LIFE-02`.
-- [ ] `ANN-LIFE-02` `[reference]` `[browser]` —
+- [x] `ANN-LIFE-02` `[reference]` `[browser]` —
   **Announcer should replay pending items into an already-mounted region when
   the host first activates.** Observe the host node identity: regions exist
   (empty) before replay inserts text. Assert no region mounts with
   pre-filled text as its first committed child, so AT can observe a mutation.
-- [ ] `ANN-LIFE-03` `[reference]` `[react:all]` —
+- [x] `ANN-LIFE-03` `[reference]` `[react:all]` —
   **Announcer should speak pending work once when StrictMode replays mount
   effects.** Queue `"Ready"` before mounting a StrictMode library. Assert one
   host, one polite insertion of `"Ready"`, and no doubled mutation from
   setup-cleanup-setup.
-- [ ] `ANN-LIFE-04` `[reference]` `[browser]` —
+- [x] `ANN-LIFE-04` `[reference]` `[browser]` —
   **Announcer should re-queue hostless work after the elected host unmounts.**
   Mount, announce `"Before"`, unmount the only library, announce `"After"`,
   then mount a new library. Assert `"After"` is inserted post-mount as a
   mutation (not leftover `"Before"` as initial text, unless `"Before"` is
   still inside the 7000ms window and is re-inserted AT-safely). Sticky
   `activated === true` fails this case.
-- [ ] `ANN-LIFE-05` `[reference]` `[browser]` —
+- [x] `ANN-LIFE-05` `[reference]` `[browser]` —
   **Announcer should not lose a hostless announce that arrives during a
   ReferenceLibrary failover gap.** Reproduce `RL-LIFE-04` / `05`: unmount
   the only host, call `announce("Connection restored", {document})`, remount.
   Assert one polite insertion of `"Connection restored"` after the new host
   exists. This is the defect `RL-LIFE-05` currently claims and Announcer does
   not implement.
-- [ ] `ANN-LIFE-06` `[reference]` `[browser]` —
+- [x] `ANN-LIFE-06` `[reference]` `[browser]` —
   **Announcer should not re-speak already-cleared text when a new host
   mounts after the recycle delay.** Announce `"Old"`, unmount, advance past
   7000ms, remount. Assert the polite region mounts empty and `"Old"` is not
   inserted.
-- [ ] `ANN-LIFE-07` `[reference]` `[browser]` —
+- [x] `ANN-LIFE-07` `[reference]` `[browser]` —
   **Announcer should bound pending replay when many messages queue before
   mount.** Before mount, announce 50 distinct polite strings, then mount.
   Assert replay is ordered, finite, does not hang the UI thread, and the
@@ -408,21 +413,21 @@ the internal/test-only entry (`internal.ts`).
 
 ### Host election (smoke; algorithm is ReferenceLibrary)
 
-- [ ] `ANN-HOST-01` `[reference]` `[browser]` —
+- [x] `ANN-HOST-01` `[reference]` `[browser]` —
   **Announcer should render under the elected React root when two libraries
   share a document.** Mount A then B. Assert one announcer host, under A,
   and `announce("Once")` mutates only A. Sibling: `RL-ROOT-01` / `02`.
-- [ ] `ANN-HOST-02` `[reference]` `[browser]` —
+- [x] `ANN-HOST-02` `[reference]` `[browser]` —
   **Announcer should move with toast failover when the active root unmounts.**
   Announce under A, unmount A with B standing by. Assert B contains the only
   host and a subsequent `announce("Handoff")` mutates B once. Sibling:
   `RL-ROOT-03`.
-- [ ] `ANN-HOST-03` `[reference]` `[shadow]` —
+- [x] `ANN-HOST-03` `[reference]` `[shadow]` —
   **Announcer should keep host DOM inside a winning ShadowRoot.** Mount the
   elected library in an open ShadowRoot and announce for the owner document.
   Assert live regions are shadow descendants, not light-DOM body children.
   Sibling: `RL-ROOT-06`.
-- [ ] `ANN-HOST-04` `[reference]` `[browser]` —
+- [x] `ANN-HOST-04` `[reference]` `[browser]` —
   **Announcer should not double-speak when `AnnouncerHost` is not
   application-mounted.** With an elected library, assert a second accidental
   `AnnouncerHost` is not part of the public recipe. If internals remain
@@ -431,23 +436,23 @@ the internal/test-only entry (`internal.ts`).
 
 ### Overlay exemption
 
-- [ ] `ANN-OV-01` `[reference]` `[browser]` —
+- [x] `ANN-OV-01` `[reference]` `[browser]` —
   **Announcer should remain non-inert when an isolating Overlay is open.**
   Open a default-isolating Overlay, then announce `"Saved"`. Assert the
   announcer host and both regions are not `inert`, not
   `data-overlay-managed-inert`, and not `aria-hidden="true"`, while ordinary
   siblings are isolated. Overlay `OV-INERT-05` is the toast-host seam; this
   case is the announcer node.
-- [ ] `ANN-OV-02` `[reference]` `[browser]` —
+- [x] `ANN-OV-02` `[reference]` `[browser]` —
   **Announcer should still receive mutations when hide-outside runs.**
   With the overlay from `ANN-OV-01` open, announce polite and assertive
   strings. Assert both insertions appear in the live regions.
-- [ ] `ANN-OV-03` `[reference]` `[browser]` —
+- [x] `ANN-OV-03` `[reference]` `[browser]` —
   **Announcer should not count as outside press when Overlay hit-tests
   ignore nodes.** Open Overlay, dispatch a primary pointer sequence on the
   announcer host. Assert no `onOutsidePress` / `onDismiss` from that
   sequence (`data-reference-overlay-ignore`).
-- [ ] `ANN-OV-04` `[reference]` `[browser]` —
+- [x] `ANN-OV-04` `[reference]` `[browser]` —
   **Announcer should stay a sibling of the toast host when both run under
   an isolating Overlay.** Show a toast and announce `"Saved"` with Overlay
   open. Assert two distinct hosts, toast not wrapping the announcer, both
@@ -464,7 +469,7 @@ the internal/test-only entry (`internal.ts`).
   **Announcer should create one client host when server markup hydrates.**
   Hydrate one library. Assert no duplicate polite/assertive regions and no
   hydration mismatch diagnostics.
-- [ ] `ANN-ENV-03` `[reference]` `[browser]` —
+- [x] `ANN-ENV-03` `[reference]` `[browser]` —
   **Announcer should isolate stores when two Documents each have a host.**
   Same as `ANN-API-03` plus recycle timers: clearing top `"Top"` must not
   clear iframe `"Frame"`.
@@ -472,12 +477,13 @@ the internal/test-only entry (`internal.ts`).
   **Announcer should not throw when `flushSync` has no React flush target.**
   Drive replay/pending in a non-browser or detached store. Assert notify
   still runs subscribers and does not surface `flushSync` errors.
-- [ ] `ANN-ENV-05` `[reference]` `[browser]` —
-  **Announcer should keep speech document-local when the page is inside an
-  iframe and the parent also has a library.** From inside the iframe, call
-  untargeted `announce("Inner")` (one eligible document in that realm).
-  Assert only the iframe host mutates.
-- [ ] `ANN-ENV-06` `[reference]` `[browser]` —
+- [ ] `ANN-ENV-05` `[reference]` `[browser]` — **PARKED 2026-09-28.**
+  Needs a second JS realm with its own module registry calling untargeted
+  `announce("Inner")`; single-realm CT cannot host that (the iframe host in
+  `ANN-API-03` shares the top registry). Original prose: *Announcer should
+  keep speech document-local when the page is inside an iframe and the
+  parent also has a library.* Assert only the iframe host mutates.
+- [x] `ANN-ENV-06` `[reference]` `[browser]` —
   **Announcer should ignore `visibilitychange` for recycle.** Hide the tab
   during an active `"Saved"` window and restore before 7000ms. Assert the
   text is still present until the original deadline. Announcer does not copy
@@ -485,22 +491,23 @@ the internal/test-only entry (`internal.ts`).
 
 ### Composition
 
-- [ ] `ANN-COMP-01` `[reference]` `[browser]` —
+- [x] `ANN-COMP-01` `[reference]` `[browser]` —
   **Announcer should be the path Toast uses when `toast.show` includes
   `announce`.** Show a custom visual with `{announce: "Draft was saved"}`.
   Assert visual JSX is untouched and the exact string mutates the polite
   announcer. Sibling: `TO-ANN-03`. Toast owns the option; this is one smoke.
-- [ ] `ANN-COMP-02` `[reference]` `[browser]` —
+- [x] `ANN-COMP-02` `[reference]` `[browser]` —
   **Announcer should stay silent when Toast omits `announce`.** Show visual
   `"Payment failed"` with no announce option. Assert no live-region mutation
   derives that text. Sibling: `TO-ANN-04`.
-- [ ] `ANN-COMP-03` `[reference]` `[browser]` —
-  **Announcer should remain the shared live path when a field primitive
-  announces.** From a NumberField (or equivalent) fixture, trigger the
-  documented shared announcement string via `announce()`. Assert that
+- [ ] `ANN-COMP-03` `[reference]` `[browser]` — **PARKED 2026-09-28.**
+  No field primitive calls `announce()` in source yet (only a Combobox
+  FEATURES-deferred item and a NumberField TESTS aspiration), so there is no
+  real trigger to fixture. Original prose: *Announcer should remain the
+  shared live path when a field primitive announces.* Assert that
   primitive’s DOM has no private `aria-live` and the library polite region
   received the string.
-- [ ] `ANN-COMP-04` `[reference]` `[browser]` —
+- [x] `ANN-COMP-04` `[reference]` `[browser]` —
   **Announcer should survive microfrontend host exchange without double
   speech.** Mount roots A and B, announce `"Once"` through A, unmount A, then
   announce `"Two"` through the surviving host. Assert one insertion per

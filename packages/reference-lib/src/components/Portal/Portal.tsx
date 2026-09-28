@@ -43,12 +43,12 @@ function resolveContainer(
     return containerProp()
   }
 
-  // 4. Direct Element or DocumentFragment
-  if (
-    containerProp instanceof Element ||
-    containerProp instanceof DocumentFragment
-  ) {
-    return containerProp
+  // 4. Direct Element or DocumentFragment. Realm-safe nodeType check:
+  // an element from an iframe document fails `instanceof` against this
+  // realm's globals, so identity must come from the node itself (PT-ENV-04).
+  const nodeType = (containerProp as Node).nodeType
+  if (nodeType === 1 || nodeType === 11) {
+    return containerProp as PortalContainer
   }
 
   return null

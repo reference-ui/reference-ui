@@ -30,3 +30,12 @@ enhancement" vs "Gaps & incoherence" ("Document that as a deliberate
 extension or remove it"); open questions: any in-repo GSAP exit consumer
 (rumored: Collapsible measured-height work), and whether HQ wants GSAP in
 the contract at all.
+
+**Disposition (2026-09-28, p2f-presence): KEEP — do not delete.**
+The lean-delete premise ("no proven in-repo consumer") is false:
+`Collapsible.tsx` renders `<Presence present>` around its content panel and
+that panel's exit motion is GSAP-owned (`animateCollapse` tweens the exact
+node Presence observes; `CO-PRES-02` "GSAP holds the exit", `CO-PRES-03`
+reduced-motion shortcut). Verified in code + CT titles. Documented as a
+deliberate extension in `Presence.md` and `SPEC.md`; proven by `PR-GSAP-01`.
+This item is closed unless HQ explicitly re-opens it.

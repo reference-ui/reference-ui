@@ -2,9 +2,8 @@
 
 Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
 
-Playwright: `matrix/lib/tests/e2e/presence.spec.ts`  
-Unit: `matrix/lib/tests/unit/presence.test.ts`
-Page: `/presence`
+Playwright CT: `__e2e__/Presence.ct.spec.ts` (`pnpm agentct Presence`)
+Unit: `Presence.test.tsx` + `elementRef.test.tsx` (colocated Vitest)
 
 Presence owns exit-lifecycle detection for CSS transitions and animations. It
 renders no host and does not set `data-state`; the consumer sets closed state
@@ -395,6 +394,16 @@ before Presence decides when to remove the child.
 
 Overlay and Popover prove only that they wire `data-state` and teardown to this
 kernel. Collapsible proves measured-height integration.
+
+### Third-party exit drivers
+
+- [x] `PR-GSAP-01` `[reference]` `[browser]` —
+  **Presence should retain an exiting child until its finite GSAP tweens complete, and skip the wait under reduced motion.**
+  Start a finite GSAP tween on an observed child with no CSS effect, set
+  `present` false, and observe retention through the tween and removal on its
+  completion with one exit callback. Then repeat with reduced motion and
+  assert instant removal with a second exit callback. Collapsible's
+  `animateCollapse` exit is the proven in-repo consumer of this wait.
 
 ## Out of scope
 

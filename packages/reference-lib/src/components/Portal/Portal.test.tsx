@@ -313,4 +313,141 @@ describe('Portal & Layer Scope Theme Inheritance', () => {
     // It MUST read 'dark' from document.documentElement!
     expect(element?.getAttribute('data-color-mode')).toBe('dark')
   })
+
+  it('PT-REACT-03: preserves keyed child state across unrelated parent rerenders', async () => {
+    const target = document.createElement('div')
+    target.id = 'portal-unit-keyed-target'
+    document.body.appendChild(target)
+
+    let mounts = 0
+    let cleanups = 0
+    let refDetaches = 0
+    let refAttaches = 0
+
+    function KeyedChild() {
+      const [count, setCount] = React.useState(0)
+      const refCb = React.useCallback((node: HTMLButtonElement | null) => {
+        if (node) refAttaches += 1
+        else refDetaches += 1
+      }, [])
+      React.useEffect(() => {
+        mounts += 1
+        return () => {
+          cleanups += 1
+        }
+      }, [])
+      return (
+        <button
+          type="button"
+          id="portal-unit-keyed-child"
+          ref={refCb}
+          data-count={count}
+          onClick={() => setCount(c => c + 1)}
+        >
+          keyed
+        </button>
+      )
+    }
+
+    function KeyedParent({ bump }: { bump: number }) {
+      return (
+        <div>
+          <span id="portal-unit-unrelated">{bump}</span>
+          <Portal container={target}>
+            <KeyedChild key="stable-child" />
+          </Portal>
+        </div>
+      )
+    }
+
+    try {
+      await React.act(async () => {
+        root.render(<KeyedParent bump={0} />)
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      const before = document.getElementById('portal-unit-keyed-child')
+      expect(before?.parentElement).toBe(target)
+      await React.act(async () => {
+        before?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      expect(before?.getAttribute('data-count')).toBe('1')
+
+      // Unrelated parent rerenders keep the same container: no remount.
+      for (const bump of [1, 2, 3]) {
+        await React.act(async () => {
+          root.render(<KeyedParent bump={bump} />)
+        })
+        await React.act(async () => {
+          await new Promise(r => setTimeout(r, 0))
+        })
+      }
+
+      const after = document.getElementById('portal-unit-keyed-child')
+      expect(after).toBe(before)
+      expect(after?.getAttribute('data-count')).toBe('1')
+      expect(after?.parentElement).toBe(target)
+      expect(mounts).toBe(1)
+      expect(cleanups).toBe(0)
+      expect(refAttaches).toBe(1)
+      expect(refDetaches).toBe(0)
+    } finally {
+      target.remove()
+      document.getElementById('portal-unit-keyed-child')?.remove()
+    }
+  })
+
+  it('PT-REACT-04: StrictMode replay leaves one visible subtree and cleans up fully on unmount', async () => {
+    let setups = 0
+    let cleanups = 0
+
+    function LifecycleChild() {
+      React.useEffect(() => {
+        setups += 1
+        return () => {
+          cleanups += 1
+        }
+      }, [])
+      return <div id="portal-unit-strict-child">Strict child</div>
+    }
+
+    // Own root: the shared root belongs to afterEach, this test owns unmount.
+    const host = document.createElement('div')
+    host.id = 'portal-unit-strict-host'
+    document.body.appendChild(host)
+    const strictRoot = createRoot(host)
+
+    try {
+      await React.act(async () => {
+        strictRoot.render(
+          <React.StrictMode>
+            <Portal>
+              <LifecycleChild />
+            </Portal>
+          </React.StrictMode>
+        )
+      })
+      await React.act(async () => {
+        await new Promise(r => setTimeout(r, 0))
+      })
+
+      // One visible copy after StrictMode replays effects (dev: setup/cleanup/setup).
+      const copies = document.body.querySelectorAll('#portal-unit-strict-child')
+      expect(copies.length).toBe(1)
+      expect((copies[0] as HTMLElement)?.parentElement).toBe(document.body)
+      expect(setups).toBe(2)
+      expect(cleanups).toBe(1)
+
+      await React.act(async () => {
+        strictRoot.unmount()
+      })
+      expect(document.getElementById('portal-unit-strict-child')).toBeNull()
+      expect(cleanups).toBe(2)
+    } finally {
+      host.remove()
+      document.getElementById('portal-unit-strict-child')?.remove()
+    }
+  })
 })

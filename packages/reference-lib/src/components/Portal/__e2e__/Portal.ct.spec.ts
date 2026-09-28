@@ -393,3 +393,288 @@ test.describe('Portal ShadowRoot event contract (FEATURES #1, PORTAL-OWNS)', () 
     await expect(switchLog).toHaveText('child,logical-parent,child,logical-parent')
   })
 })
+
+test.describe('Portal catalog coverage (CT re-target, no matrix on this branch)', () => {
+  // Per-test page-error capture for PT-DOM-06. Listeners attach before mount
+  // (addInitScript is too late: the gallery page is already open). Fresh page
+  // per test, so no accumulation across specs.
+  let pageErrors: string[] = []
+
+  test.beforeEach(async ({ mount, page }) => {
+    pageErrors = []
+    page.on('pageerror', e => {
+      pageErrors.push(`pageerror:${e.message}`)
+    })
+    page.on('console', msg => {
+      if (msg.type() === 'error') pageErrors.push(`console:${msg.text()}`)
+    })
+    await mount('components/Portal/Portal/CoverageFixture')
+    await expect(page.getByTestId('coverage-fixture-root')).toBeVisible()
+  })
+
+  test('PT-DOM-02: Mixed children keep text, nesting, and sibling order at the destination', async ({
+    page,
+  }) => {
+    const dest = page.getByTestId('coverage-mixed-dest')
+    await expect(dest.getByTestId('coverage-mixed-app')).toBeVisible()
+
+    // Same text and element nodes, same order, only the DOM parent changed.
+    const shape = await dest.evaluate(el =>
+      Array.from(el.childNodes).map(n =>
+        n.nodeType === 3
+          ? `text:${n.textContent}`
+          : `${(n as Element).tagName}:${(n as Element).getAttribute('data-testid')}`
+      )
+    )
+    expect(shape).toEqual(['text:mixed-leading-text', 'DIV:coverage-mixed-app'])
+    await expect(dest.getByTestId('coverage-mixed-descendant')).toHaveText('descendant')
+
+    // Absent from the logical parent: no added host, no in-place copy.
+    expect(
+      await page
+        .getByTestId('coverage-logical-parent')
+        .locator('[data-testid="coverage-mixed-app"],[data-testid="coverage-mixed-descendant"]')
+        .count()
+    ).toBe(0)
+  })
+
+  test('PT-DOM-04: Detached fragment destination retains children, then reveals the same nodes on attach', async ({
+    page,
+  }) => {
+    // Pre-attach: the fragment owns both children in order; the document has none.
+    const pre = await page.evaluate(() => {
+      const frag = (window as unknown as { __coverageDetached: DocumentFragment })
+        .__coverageDetached
+      return {
+        kids: Array.from(frag.children).map(e => e.getAttribute('data-testid')),
+        parentIsFrag:
+          frag.querySelector('[data-testid="coverage-frag-a"]')?.parentNode === frag,
+        inDoc: !!document.querySelector('[data-testid="coverage-frag-a"]'),
+      }
+    })
+    expect(pre.kids).toEqual(['coverage-frag-a', 'coverage-frag-b'])
+    expect(pre.parentIsFrag).toBe(true)
+    expect(pre.inDoc).toBe(false)
+
+    // Mark node A while detached: the attach must move it, never remount it.
+    await page.evaluate(() => {
+      const frag = (window as unknown as { __coverageDetached: DocumentFragment })
+        .__coverageDetached
+      frag
+        .querySelector('[data-testid="coverage-frag-a"]')
+        ?.setAttribute('data-same-node', 'true')
+    })
+
+    await page.getByTestId('btn-coverage-frag-attach').click()
+
+    const host = page.getByTestId('coverage-frag-host')
+    await expect(host.getByTestId('coverage-frag-a')).toBeVisible()
+    const post = await host.evaluate(el => ({
+      kids: Array.from(el.children).map(e => e.getAttribute('data-testid')),
+      directA:
+        el.querySelector('[data-testid="coverage-frag-a"]')?.parentElement === el,
+      marker: el
+        .querySelector('[data-testid="coverage-frag-a"]')
+        ?.getAttribute('data-same-node'),
+    }))
+    expect(post.kids).toEqual(['coverage-frag-a', 'coverage-frag-b'])
+    expect(post.directA).toBe(true)
+    expect(post.marker).toBe('true')
+  })
+
+  test('PT-DOM-06: Null, false, and empty-fragment children add nothing and log no errors', async ({
+    page,
+  }) => {
+    // Each destination keeps only its sentinel child.
+    for (const id of [
+      'coverage-empty-null-dest',
+      'coverage-empty-false-dest',
+      'coverage-empty-frag-dest',
+    ]) {
+      expect(await page.getByTestId(id).evaluate(el => el.childNodes.length)).toBe(1)
+    }
+    // No render or console error anywhere in the fixture lifecycle.
+    expect(pageErrors).toEqual([])
+  })
+
+  test('PT-DOM-07: Keyed child updates in place; siblings add/remove singly; unmount leaves no orphans', async ({
+    page,
+  }) => {
+    const dest = page.getByTestId('coverage-update-dest')
+    const keyed = dest.getByTestId('coverage-update-keyed')
+    await expect(keyed).toHaveText('v1')
+
+    await keyed.evaluate(el => el.setAttribute('data-same-node', 'true'))
+    await page.getByTestId('btn-coverage-update-text').click()
+    await expect(keyed).toHaveText('v2')
+    expect(await keyed.getAttribute('data-text')).toBe('v2')
+    expect(await keyed.getAttribute('data-same-node')).toBe('true')
+
+    await page.getByTestId('btn-coverage-add-sibling').click()
+    await expect(dest.getByTestId('coverage-update-sibling')).toBeVisible()
+    expect(await dest.evaluate(el => el.childElementCount)).toBe(2)
+
+    await page.getByTestId('btn-coverage-remove-sibling').click()
+    await expect(dest.getByTestId('coverage-update-sibling')).toHaveCount(0)
+    expect(await dest.evaluate(el => el.childElementCount)).toBe(1)
+
+    await page.getByTestId('btn-coverage-update-unmount').click()
+    await expect(keyed).toHaveCount(0)
+    expect(await dest.evaluate(el => el.childNodes.length)).toBe(0)
+  })
+
+  test('PT-COMP-01: Default-destination composition places, updates with context/events, and cleans up', async ({
+    page,
+  }) => {
+    const ctx = page.getByTestId('coverage-comp1-ctx')
+    const node = page.getByTestId('coverage-comp1-node')
+    const btn = page.getByTestId('coverage-comp1-btn')
+    await expect(ctx).toBeVisible()
+
+    // Direct body placement with no wrapper, logical context intact.
+    const placement = await node.evaluate(el => ({
+      parentIsBody: el.parentElement === document.body,
+      ctxVal: document
+        .querySelector('[data-testid="coverage-comp1-ctx"]')
+        ?.getAttribute('data-context-val'),
+    }))
+    expect(placement.parentIsBody).toBe(true)
+    expect(placement.ctxVal).toBe('logical-provider-value')
+
+    // Logical React events fire.
+    await page.getByTestId('btn-coverage-comp1-update').click()
+    await expect(node).toHaveText('beta')
+    await expect(ctx).toHaveAttribute('data-context-val', 'logical-provider-value')
+    await btn.click()
+    await expect(page.getByTestId('coverage-comp1-clicks')).toHaveText('1')
+    // No snap(): unstyled coverage chrome — the DOM assertions above are the proof.
+
+    // Full cleanup: none of the three portalled nodes survives.
+    await page.getByTestId('btn-coverage-comp1-unmount').click()
+    for (const id of ['coverage-comp1-ctx', 'coverage-comp1-node', 'coverage-comp1-btn']) {
+      await expect(page.getByTestId(id)).toHaveCount(0)
+    }
+  })
+
+  test('PT-COMP-02: Scoped overlay root composition resolves late, inherits scope, and stays stable', async ({
+    page,
+  }) => {
+    // Pre-resolve: nothing anywhere, no transient body copy.
+    for (const id of ['coverage-scoped-styled', 'coverage-scoped-btn']) {
+      await expect(page.getByTestId(id)).toHaveCount(0)
+    }
+    expect(
+      await page.evaluate(
+        () =>
+          document.body.querySelectorAll(
+            '[data-testid="coverage-scoped-styled"],[data-testid="coverage-scoped-btn"]'
+          ).length
+      )
+    ).toBe(0)
+
+    // Clear the COMP-01 body-level composition first: it paints over this
+    // section's controls in the gallery's stacked viewports and would
+    // otherwise intercept the mount click. (Control click via DOM dispatch;
+    // the portalled button below keeps a real pointer click.)
+    await page
+      .getByTestId('btn-coverage-comp1-unmount')
+      .evaluate(el => (el as HTMLElement).click())
+    await expect(page.getByTestId('coverage-comp1-btn')).toHaveCount(0)
+
+    await page.getByTestId('btn-coverage-scoped-mount').click()
+    const root = page.getByTestId('coverage-scoped-root')
+    await expect(root.getByTestId('coverage-scoped-btn')).toBeVisible()
+
+    // One subtree in the scoped root; scoped styling inherited via DOM placement.
+    expect(await root.evaluate(el => el.childElementCount)).toBe(2)
+    expect(
+      await page
+        .getByTestId('coverage-scoped-styled')
+        .evaluate(el => window.getComputedStyle(el).color)
+    ).toBe('rgb(11, 22, 33)')
+    await expect(page.getByTestId('coverage-scoped-styled')).toHaveAttribute(
+      'data-context-val',
+      'logical-provider-value'
+    )
+
+    // Logical React event bubbling.
+    await page.getByTestId('coverage-scoped-btn').click()
+    await expect(page.getByTestId('coverage-scoped-clicks')).toHaveText('1')
+    // No snap(): unstyled coverage chrome — the DOM assertions above are the proof.
+
+    // Unrelated parent state: stable subtree, no remount. The gallery mounts
+    // in StrictMode (dev double-effects), so settle is relational — one live
+    // subscription — and stability is capture-compare, not an absolute count.
+    await expect
+      .poll(async () => {
+        const m = Number(await page.getByTestId('coverage-scoped-mounts').textContent())
+        const c = Number(await page.getByTestId('coverage-scoped-cleanups').textContent())
+        return m >= 1 && c === m - 1
+      })
+      .toBe(true)
+    const mountsBefore = await page.getByTestId('coverage-scoped-mounts').textContent()
+    await page
+      .getByTestId('coverage-scoped-styled')
+      .evaluate(el => el.setAttribute('data-same-node', 'true'))
+    await page.getByTestId('btn-coverage-unrelated').click()
+    await page.getByTestId('btn-coverage-unrelated').click()
+    await expect(page.getByTestId('coverage-scoped-mounts')).toHaveText(mountsBefore ?? '1')
+    expect(await page.getByTestId('coverage-scoped-styled').getAttribute('data-same-node')).toBe(
+      'true'
+    )
+    expect(await root.evaluate(el => el.childElementCount)).toBe(2)
+  })
+
+  test('PT-ENV-04: Same-origin iframe destination owns placement, React events, and cleanup', async ({
+    page,
+  }) => {
+    const frame = page.frameLocator('[data-testid="coverage-iframe"]')
+    const btn = frame.getByTestId('coverage-iframe-btn')
+    await expect(btn).toBeVisible()
+
+    // Created only in the iframe target, owned by the iframe document.
+    expect(
+      await page.evaluate(() => !!document.querySelector('[data-testid="coverage-iframe-btn"]'))
+    ).toBe(false)
+    const placement = await page.evaluate(() => {
+      const iframe = document.querySelector(
+        '[data-testid="coverage-iframe"]'
+      ) as HTMLIFrameElement
+      const target = iframe.contentDocument?.getElementById('frame-target') ?? null
+      return {
+        parentOk:
+          target?.querySelector('[data-testid="coverage-iframe-btn"]')?.parentElement ===
+          target,
+        ownerDocOk: target?.ownerDocument === iframe.contentDocument,
+      }
+    })
+    expect(placement.parentOk).toBe(true)
+    expect(placement.ownerDocOk).toBe(true)
+    // StrictMode gallery: settle is one live subscription (cleanups = mounts - 1).
+    await expect
+      .poll(async () => {
+        const m = Number(await page.getByTestId('coverage-iframe-mounts').textContent())
+        const c = Number(await page.getByTestId('coverage-iframe-cleanups').textContent())
+        return m >= 1 && c === m - 1
+      })
+      .toBe(true)
+    const iframeMounts = Number(await page.getByTestId('coverage-iframe-mounts').textContent())
+
+    // React bubbling reaches the outer logical ancestor exactly once.
+    await btn.click()
+    await expect(page.getByTestId('coverage-iframe-log')).toHaveText('child,logical-parent')
+
+    // Unmount cleans refs/effects and DOM nodes from the iframe document.
+    await page.getByTestId('btn-coverage-iframe-unmount').click()
+    await expect(btn).toHaveCount(0)
+    await expect(page.getByTestId('coverage-iframe-cleanups')).toHaveText(String(iframeMounts))
+    expect(
+      await page.evaluate(() => {
+        const iframe = document.querySelector(
+          '[data-testid="coverage-iframe"]'
+        ) as HTMLIFrameElement
+        return iframe.contentDocument?.getElementById('frame-target')?.childElementCount ?? -1
+      })
+    ).toBe(0)
+  })
+})

@@ -4,8 +4,8 @@ Current freeze, cases, and proof. Design narrative: [Portal.md](./Portal.md).
 Case catalog: [TESTS.md](./TESTS.md).
 
 Playwright: `matrix/lib/tests/e2e/portal.spec.ts` (historical; see Status)
-Colocated: `Portal.test.tsx` (7 tests)
-CT: `__e2e__/Portal.ct.spec.ts` (15 specs, React 17/18/19 + snapshots)
+Colocated: `Portal.test.tsx` (9 tests)
+CT: `__e2e__/Portal.ct.spec.ts` (22 specs, React 17/18/19 + snapshots)
 Page: `/portal`
 
 ## Legend
@@ -44,19 +44,21 @@ content. See Joints below for the Menu/Combobox seams.
 
 | | |
 | :--- | :--- |
-| Engine | Mount gate + container resolution + layer/document context reset. |
-| Production | **Seam done.** Relocation, late-resolve, SSR gate, and the shadow event contract are proven. |
-| Named `[x]` | 17 / 25 in-dir (CT + unit titles; matrix layer out of scope) |
-| CT | 15 specs (React 17/18/19 green; 6 PT-THEME color-mode proofs are extra-catalog) |
-| Vitest | 7 tests (ID'd case pins plus theme/layer-scope support) |
+| Engine | Mount gate + realm-safe container resolution + layer/document context reset. |
+| Production | **Seam done.** Relocation, late-resolve, SSR gate, shadow + iframe delivery are proven. |
+| Named `[x]` | 25 / 25 in-dir (CT + unit titles; matrix layer out of scope) |
+| CT | 22 specs (React 17/18/19 green; 6 PT-THEME color-mode proofs are extra-catalog) |
+| Vitest | 9 tests (ID'd case pins plus theme/layer-scope support) |
 
 ### Gaps & incoherence
 
-- No `[ ]` case is a behavior gap: the engine handles every catalog shape
-  (fragments, empty children, keyed updates, StrictMode replay, iframe
-  documents); the `[ ]` rows are unpinned coverage, not missing code.
-- `NEXT.md` still cites the old matrix counts (11 E2E) and a Cosmos
-  fixture milestone; the in-dir CT suite supersedes both.
+- No gaps: every catalog ID is `[x]` in-dir. The finish-line pass found
+  one real engine gap and fixed it — direct iframe-document containers
+  failed the `instanceof` check (cross-realm globals) and rendered
+  nothing; `resolveContainer` now identifies Element/Fragment by
+  `nodeType` (`PT-ENV-04` CT proves placement, React events, cleanup).
+- `NEXT.md` matrix counts are retired; the in-dir CT suite supersedes
+  them (see NEXT.md §2).
 - `PT-THEME-01..06` CT titles pin the Portal Color Mode Protocol, which
   lives outside TESTS.md; they are frozen regression guards, not catalog
   cases.
@@ -75,25 +77,18 @@ contracts.
 
 Proven in-dir (`Portal.test.tsx` Vitest + `__e2e__` CT):
 
-- `[x]` `PT-DOM-01` `PT-DOM-03` `PT-DOM-05`
+- `[x]` `PT-DOM-01` `PT-DOM-02` (CT) `PT-DOM-03` `PT-DOM-04` (CT)
+  `PT-DOM-05` `PT-DOM-06` (CT) `PT-DOM-07` (CT)
 - `[x]` `PT-CONTAINER-01` `PT-CONTAINER-02` `PT-CONTAINER-03` (unit)
   `PT-CONTAINER-04` `PT-CONTAINER-05` `PT-CONTAINER-06` (unit title)
-- `[x]` `PT-REACT-01` `PT-REACT-02` `PT-REACT-05` (unit)
+- `[x]` `PT-REACT-01` `PT-REACT-02` `PT-REACT-03` (unit)
+  `PT-REACT-04` (unit) `PT-REACT-05` (unit)
 - `[x]` `PT-ENV-01` (unit) `PT-ENV-02` (unit) `PT-ENV-03`
-- `[x]` `PT-COMP-03`
+  `PT-ENV-04` (CT, incl. the `nodeType` engine fix)
+- `[x]` `PT-COMP-01` (CT) `PT-COMP-02` (CT) `PT-COMP-03`
 - `[x]` `PT-SHADOW-01`
 
-Not proven (coverage work, no behavior gap):
-
-- `[ ]` `PT-DOM-02` (mixed-children shape/order) `PT-DOM-04` (detached
-  fragment) `PT-DOM-06` (empty/falsy children) `PT-DOM-07`
-  (update/unmount cleanup)
-- `[ ]` `PT-REACT-03` (keyed state across unrelated parent rerenders;
-  the `PT-CONTAINER-06` unit half covers the mechanism but not the
-  keyed/unrelated-parent shape) `PT-REACT-04` (StrictMode replay)
-- `[ ]` `PT-ENV-04` (same-origin iframe owner document)
-- `[ ]` `PT-COMP-01` (default-destination composition with
-  update/unmount) `PT-COMP-02` (scoped overlay root composition)
+Not proven: none. All 25 TESTS.md IDs are `[x]`.
 
 Extra-catalog frozen guards (not TESTS.md IDs): `PT-THEME-01..06`
 (color-mode/layer-scope protocol), `FAILURE MODE 1/2` + nested-scope
@@ -142,10 +137,9 @@ using Portal internally; no consumer re-proves it.
 
 ### Work order
 
-1. Keep the seam frozen: late-resolve, SSR gate, shadow delivery.
-2. Pin remaining `[ ]` coverage in-dir (fragment/empty/update DOM
-   halves, keyed/StrictMode React halves, iframe env, COMP-01/02).
-3. Retire `NEXT.md` matrix counts once the catalog is fully `[x]`.
+1. Keep the seam frozen: late-resolve, SSR gate, shadow/iframe delivery.
+2. Done 2026-09-28: all `[ ]` coverage pinned in-dir (CT `CoverageFixture`
+   + `PT-REACT-03`/`PT-REACT-04` units); `NEXT.md` matrix counts retired.
 
 ### Won't do
 

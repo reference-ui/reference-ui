@@ -2,7 +2,7 @@
 
 Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
 
-Keeps unmounting elements in the DOM until CSS animations or transitions complete. Overlay and Popover use it internally for the `data-state` exit contract.
+Keeps unmounting elements in the DOM until CSS animations, CSS transitions, or finite GSAP tweens complete. Overlay and Popover use it internally for the `data-state` exit contract.
 
 ```tsx
 <Presence present={open}>
@@ -73,6 +73,10 @@ Overlay rather than requiring application-authored Presence wrappers.
 ### `forceMount`
 
 Radix render-prop always renders. We do not need that as a public prop: Overlay keeps children mounted through exit via Presence internally.
+
+### GSAP exit hold (deliberate extension)
+
+An exiting child is also retained while **finite GSAP tweens** run on the observed node — alongside CSS effects, not as a fallback. Reduced motion gates the wait off. This blesses one third-party driver because there is a proven in-repo consumer: Collapsible renders `<Presence present>` around its content panel and that panel's exit motion is GSAP-owned (`animateCollapse` tweens the same node Presence observes; `CO-PRES-02` pins "GSAP holds the exit", `CO-PRES-03` pins the reduced-motion shortcut). Deleting the wait would cut Collapsible exits short. Proof: `PR-GSAP-01`.
 
 ---
 

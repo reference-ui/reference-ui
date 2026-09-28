@@ -18,6 +18,8 @@ Opt-in prop (name illustrative); cross-origin traversal stays impossible by plat
 
 **Maintainer take:** Deliberate boundary, not an oversight — revisit only when a real consumer needs nested same-origin iframe dialogs contained by one outer lock.
 
+**Status:** DEFERRED — not implemented. No in-repo consumer traverses frame content (verified: locks are scoped per-Document, `FL-NEST-06`; iframes stay opaque stops, `FL-CAND-12` / `FL-CAND-14`).
+
 ## 2. TalkBack virtual-modality skip (from DECISIONS gap #2)
 
 **What it does:** Skips virtual-modality handling on Android Chrome TalkBack (cf. Aria's skip), behavior-only — parked as not a production blocker with no consumer pain evidenced.
@@ -25,3 +27,5 @@ Opt-in prop (name illustrative); cross-origin traversal stays impossible by plat
 **API sketch:** No new props — internal behavior change only.
 
 **Maintainer take:** Parked without a repro — do not implement until an a11y audit or TalkBack user report names a concrete failure inside a locked dialog.
+
+**Status:** DEFERRED — not implemented. No TalkBack repro on file (verified: only vendor note in `FocusLock.md`).
