@@ -1797,7 +1797,14 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         // The session ends optimistically: accepted commits echo through
         // the controlled prop, rejected ones snap back to controlled state,
         // and invalid text reverts — all without a request for no-change.
+        // The ref clears synchronously (mirroring onReset): Firefox runs
+        // implicit submit inside the Enter-keydown default action, before
+        // React flushes — a render-only clear lets onSubmit re-commit the
+        // same draft and double-publish onChange (NF-FORM-12/EDIT-14/
+        // COMMIT-02/COMP-01). The submit listener still blocks via the
+        // pending/failed refs, so no submit behavior changes.
         setDraft(null)
+        draftRef.current = null
         if (text.trim() === '') {
           // FEATURES #2: clearing an already-empty field is no change.
           if (value === null) return 'noop'

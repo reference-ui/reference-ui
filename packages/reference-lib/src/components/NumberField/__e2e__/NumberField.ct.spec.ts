@@ -911,6 +911,7 @@ test.describe('NumberField CT', () => {
   test('NF-EDIT-06: Horizontal navigation and selection remain native around localized tokens', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/NumberField/NumberField/UnboundedFixture')
     const input = page.getByTestId('unbounded-number-field-input')
@@ -920,23 +921,33 @@ test.describe('NumberField CT', () => {
         (el as HTMLInputElement).selectionStart,
         (el as HTMLInputElement).selectionEnd,
       ])
+    // Platform: bare Home/End are caret no-ops in Firefox/WebKit macOS
+    // builds — Playwright delivers identical key events on all engines and
+    // the product correctly leaves the keys unhandled on unbounded fields,
+    // but only Chromium binds the native caret move (DIAG D3A). Assert the
+    // native outcome per engine: Chromium moves, FF/WebKit hold position.
+    const homeEndMove = browserName === 'chromium'
+    const afterClick = await sel()
     await page.keyboard.press('End')
-    expect(await sel()).toEqual([1, 1])
+    expect(await sel()).toEqual(homeEndMove ? [1, 1] : afterClick)
     await page.keyboard.press('Home')
-    expect(await sel()).toEqual([0, 0])
+    expect(await sel()).toEqual(homeEndMove ? [0, 0] : afterClick)
     await page.keyboard.press('ArrowRight')
     expect(await sel()).toEqual([1, 1])
     await page.keyboard.press('Shift+ArrowLeft')
     expect(await sel()).toEqual([0, 1])
     await page.keyboard.press('ArrowRight')
     expect(await sel()).toEqual([1, 1])
+    // Same platform class, split outcome: Control+ArrowLeft word-jumps on
+    // Chromium and WebKit, but is a caret no-op on Firefox macOS (where
+    // word-jump is Option+Arrow). Product leaves it unhandled everywhere.
     await page.keyboard.press('Control+ArrowLeft')
-    expect(await sel()).toEqual([0, 0])
+    expect(await sel()).toEqual(browserName === 'firefox' ? [1, 1] : [0, 0])
     await expect(input).toHaveValue('5')
     // Ranged dirty buffer incl. RTL text: navigation alone never commits.
     await input.fill('12א')
     await page.keyboard.press('Home')
-    expect(await sel()).toEqual([0, 0])
+    expect(await sel()).toEqual(homeEndMove ? [0, 0] : [3, 3])
     await page.keyboard.press('End')
     expect(await sel()).toEqual([3, 3])
     await expect(input).toHaveValue('12א')
@@ -1053,6 +1064,7 @@ test.describe('NumberField CT', () => {
   test('NF-COMMIT-01: Blur commits after the consumer handler and retries a candidate that differs from controlled value', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/NumberField/NumberField/CommitLabFixture')
     const input = page.getByTestId('commit-lab-input')
@@ -1068,7 +1080,15 @@ test.describe('NumberField CT', () => {
     await expect(log).toHaveText('log: 7')
     await expect(display).toHaveText('Value: 7')
     await expect(hidden).toHaveValue('7')
-    await expect(page.getByTestId('commit-lab-outside')).toBeFocused()
+    // Platform: Safari never moves focus on click — buttons/links are not
+    // click-focusable (only text controls take click focus; mousedown still
+    // blurs, so the commit above fires identically). The landing differs,
+    // not the publish (DIAG D1A).
+    if (browserName === 'webkit') {
+      await expect(page.getByTestId('commit-lab-outside')).not.toBeFocused()
+    } else {
+      await expect(page.getByTestId('commit-lab-outside')).toBeFocused()
+    }
     // Delayed echo: the request publishes, hidden stays controlled, and an
     // explicit retry after echo-on lands the value.
     await page.getByTestId('commit-lab-echo-off').click()
