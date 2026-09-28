@@ -285,8 +285,13 @@ export function ListboxOption<TValue extends string = string>({
     tabIndex = activeVal === value ? 0 : -1
   }
 
-  const handlePressStart = (e: React.SyntheticEvent) => {
+  const handlePressStart = (e: React.SyntheticEvent<HTMLDivElement>) => {
     if (isDisabled) return
+    // B-02: presses from portaled row content (Menu/Popover React-tree
+    // children) or interactive in-row content (button/input/...) are not
+    // option presses — same guard family as keydown below.
+    if (!e.currentTarget.contains(e.target as Node)) return
+    if (isInteractiveDescendant(e.target, e.currentTarget)) return
     if (combobox) {
       e.preventDefault()
       return
@@ -328,6 +333,18 @@ export function ListboxOption<TValue extends string = string>({
       hasTriggeredPressRef.current = false
       return
     }
+    // B-02: clicks from portaled row content bubble through the React tree
+    // into this handler — without a DOM-containment check every menu action
+    // re-toggles the row. In-row interactive content (a ⋯ Menu trigger)
+    // must not select either.
+    if (!e.currentTarget.contains(e.target as Node)) {
+      hasTriggeredPressRef.current = false
+      return
+    }
+    if (isInteractiveDescendant(e.target, e.currentTarget)) {
+      hasTriggeredPressRef.current = false
+      return
+    }
 
     if (combobox) {
       combobox.handleSelect(value)
@@ -351,6 +368,8 @@ export function ListboxOption<TValue extends string = string>({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // B-02: keydowns from portaled row content are not this option's keys.
+    if (!e.currentTarget.contains(e.target as Node)) return
     if (isInteractiveDescendant(e.target, e.currentTarget)) return
 
     if (e.key === 'PageUp' || e.key === 'PageDown' || e.key === 'Escape' || e.key === 'Tab') {
@@ -466,8 +485,23 @@ export function ListboxOption<TValue extends string = string>({
       fontSize="3.5r"
       lineHeight="5r"
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      bg={isActive ? 'ui.button.background' : 'transparent'}
-      color={isActive ? 'ui.button.foreground' : 'design.text.base'}
+      /* B-38: standalone selection uses the muted wash (Menu/Tree parity;
+         ui.button.background renders near-white in dark mode). Combobox
+         active-highlight keeps the paired button tokens (transient). */
+      bg={
+        isActive
+          ? combobox
+            ? 'ui.button.background'
+            : 'ui.table.row.mutedBackground'
+          : 'transparent'
+      }
+      color={
+        isActive
+          ? combobox
+            ? 'ui.button.foreground'
+            : 'design.text.base'
+          : 'design.text.base'
+      }
       opacity={isDisabled ? 0.5 : 1}
       outline="none"
       userSelect="none"

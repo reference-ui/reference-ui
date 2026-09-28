@@ -546,4 +546,54 @@ test.describe('Listbox Composition Gates & Browser Proofs', () => {
     await expect(opt37).toHaveAttribute('aria-selected', 'true')
     await expect(opt37).toHaveAttribute('data-selected', '')
   })
+
+  test('B-02: interactive and portaled row content never (de)selects', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Listbox/Listbox/RowActions')
+    const display = page.getByTestId('rowactions-value-display')
+    await expect(display).toHaveText('Selected: events')
+
+    // (a) In-row trigger press: the popover opens, selection untouched.
+    await page.getByTestId('row-trigger-events').click()
+    await expect(page.getByTestId('row-popover-events')).toBeVisible()
+    await expect(display).toHaveText('Selected: events')
+
+    // (b) Portaled action click bubbles through the React tree but is outside
+    // the row's DOM subtree: the action fires, selection untouched.
+    await page.getByTestId('row-action-pin').click()
+    await expect(display).toHaveText('Selected: events')
+    const log = JSON.parse(
+      (await page.getByTestId('rowactions-log').textContent()) ?? '[]'
+    )
+    expect(log).toEqual(['action:pin'])
+
+    // Plain row press still toggles.
+    await page.getByTestId('row-opt-alerts').click()
+    await expect(display).toHaveText('Selected: events, alerts')
+  })
+
+  test('B-38: selected option uses the muted wash, not the button token', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Listbox/Listbox/Basic')
+    const selected = page.getByTestId('opt-apple')
+    await expect(selected).toHaveAttribute('aria-selected', 'true')
+    const bg = await selected.evaluate(el => getComputedStyle(el).backgroundColor)
+    // Muted wash (gray.800 in dark mode, L≈28%) is nowhere near the
+    // near-white button token (gray.50, L≈98%): lightness must stay < 50%.
+    let lightness: number
+    if (bg.startsWith('oklch')) {
+      // Chrome serializes L as 0..1 ("oklch(0.278 …)"); percent form divides.
+      const raw = Number(bg.match(/[\d.]+/)?.[0] ?? '1')
+      lightness = raw > 1 ? raw / 100 : raw
+    } else {
+      const rgb = bg.match(/[\d.]+/g)?.map(Number) ?? [255, 255, 255]
+      const [r, g, b] = [...rgb, 255, 255, 255].slice(0, 3)
+      lightness = (Math.max(r, g, b) + Math.min(r, g, b)) / 2 / 255
+    }
+    expect(lightness).toBeLessThan(0.5)
+  })
 })

@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { Div, Span } from '@reference-ui/react'
+import { Div, Span, Button } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Listbox } from './index'
+import { Popover } from '../Popover'
 
 export const Basic = () => {
   const [value, setValue] = React.useState<string | null>('apple')
@@ -589,6 +590,52 @@ export const Virtual = () => {
         <Span data-testid="virt-scroll-log" fontSize="3.5r" color="design.text.base">
           {JSON.stringify(scrollLog)}
         </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const RowActions = () => {
+  const [value, setValue] = React.useState<string[]>(['events'])
+  const [log, setLog] = React.useState<string[]>([])
+  const push = (entry: string) => setLog(prev => [...prev, entry])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="rowactions-root" maxW="80r">
+        <Div width="60r" mb="4r">
+          <Listbox
+            data-testid="rowactions-listbox"
+            selection="multiple"
+            value={value}
+            onChange={v => {
+              push(`change:${JSON.stringify(v)}`)
+              setValue(v)
+            }}
+          >
+            <Listbox.Option value="events" data-testid="row-opt-events">
+              <Span flex="1">Events</Span>
+              <Popover>
+                <Popover.Trigger data-testid="row-trigger-events" aria-label="Row actions">
+                  ⋯
+                </Popover.Trigger>
+                <Popover.Content data-testid="row-popover-events">
+                  <Button data-testid="row-action-pin" onClick={() => push('action:pin')}>
+                    Pin
+                  </Button>
+                </Popover.Content>
+              </Popover>
+            </Listbox.Option>
+            <Listbox.Option value="alerts" data-testid="row-opt-alerts">
+              Alerts
+            </Listbox.Option>
+          </Listbox>
+        </Div>
+
+        <Span data-testid="rowactions-value-display" fontSize="3.5r" color="design.text.base">
+          Selected: {value.length ? value.join(', ') : 'None'}
+        </Span>
+        <Div data-testid="rowactions-log">{JSON.stringify(log)}</Div>
       </Div>
     </ReferenceLibrary>
   )
