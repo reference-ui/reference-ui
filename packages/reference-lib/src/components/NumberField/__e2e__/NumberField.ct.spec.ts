@@ -1255,4 +1255,256 @@ test.describe('NumberField CT', () => {
     await expect(page.getByTestId('commit-lab-submits')).toHaveText(`submits: ${submitsAfterEnter + 1}`)
     await expect(hidden).toHaveValue('100')
   })
+
+  test('NF-FORM-11: Clicking submit from dirty partial or unaccepted complete blocks stale serialization', async ({
+    mount,
+    page,
+  }) => {
+    // Submit probe: registered after the engine listener, so
+    // defaultPrevented reflects engine blocking, and qty shows the hidden
+    // value that would have serialized.
+    const installProbe = () =>
+      page.evaluate(() => {
+        const form = document.querySelector('[data-testid="commit-lab-form"]') as HTMLFormElement
+        ;(
+          window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> }
+        ).__nfSubmits = []
+        form.addEventListener('submit', e => {
+          ;(
+            window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> }
+          ).__nfSubmits.push({
+            prevented: e.defaultPrevented,
+            qty: new FormData(form).get('qty') as string | null,
+          })
+        })
+      })
+    const probe = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> })
+            .__nfSubmits
+      )
+    // Run A: incomplete partial, echo on. Blur runs first (consumer blur,
+    // failed commit, no request), the ensuing submit is prevented, and the
+    // old hidden value never escapes.
+    const lab = await mount('components/NumberField/NumberField/CommitLabFixture')
+    await installProbe()
+    const input = page.getByTestId('commit-lab-input')
+    const hidden = page.locator('input[name="qty"]')
+    const submits = page.getByTestId('commit-lab-submits')
+    await input.click()
+    await input.fill('-')
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(page.getByTestId('commit-lab-order')).toHaveText('order: blur')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: none')
+    await expect(input).toHaveValue('5')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(hidden).toHaveValue('5')
+    await expect.poll(async () => (await probe()).length).toBe(1)
+    expect(await probe()).toEqual([{ prevented: true, qty: '5' }])
+    // The fixture counts delivered submit events (its React handler runs
+    // regardless of prevention); the probe's prevented flag is the blocking
+    // signal.
+    await expect(submits).toHaveText('submits: 1')
+    // Repeated click attempts remain blocked without consuming failed state.
+    await page.getByTestId('commit-lab-submit').click()
+    await page.getByTestId('commit-lab-submit').click()
+    await expect.poll(async () => (await probe()).length).toBe(3)
+    await expect(submits).toHaveText('submits: 3')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: none')
+    expect(await probe()).toEqual([
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+    ])
+    // Resolution: a subsequent valid user edit clears the boundary, the
+    // accepted commit lands, and the next click submits canonically.
+    await input.click()
+    await input.fill('7')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: 7')
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 7')
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(submits).toHaveText('submits: 4')
+    await expect.poll(async () => (await probe()).length).toBe(4)
+    expect(await probe()).toEqual([
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+      { prevented: false, qty: '7' },
+    ])
+    // Run B: complete but unaccepted (echo off) — blur-first request, then
+    // pending-blocked submit and retries; an unprevented reset clears the
+    // boundary and a later accepted commit submits.
+    await lab.unmount()
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    await installProbe()
+    const inputB = page.getByTestId('commit-lab-input')
+    const submitsB = page.getByTestId('commit-lab-submits')
+    await page.getByTestId('commit-lab-echo-off').click()
+    await inputB.click()
+    await inputB.fill('8')
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(page.getByTestId('commit-lab-order')).toHaveText('order: blur,request')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: 8')
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 5')
+    await expect.poll(async () => (await probe()).length).toBe(1)
+    expect(await probe()).toEqual([{ prevented: true, qty: '5' }])
+    await expect(submitsB).toHaveText('submits: 1')
+    await page.getByTestId('commit-lab-submit').click()
+    await expect.poll(async () => (await probe()).length).toBe(2)
+    await expect(submitsB).toHaveText('submits: 2')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: 8')
+    expect(await probe()).toEqual([
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+    ])
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(inputB).toHaveValue('5')
+    await page.getByTestId('commit-lab-echo-on').click()
+    await inputB.click()
+    await inputB.fill('8')
+    await page.getByTestId('commit-lab-outside').click()
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 8')
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(submitsB).toHaveText('submits: 3')
+    await expect.poll(async () => (await probe()).length).toBe(3)
+    expect((await probe()).at(-1)).toEqual({ prevented: false, qty: '8' })
+  })
+
+  test('NF-FORM-12: Implicit Enter submit after an unaccepted key commit stays blocked without a second submit', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="commit-lab-form"]') as HTMLFormElement
+      ;(window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> }).__nfSubmits =
+        []
+      form.addEventListener('submit', e => {
+        ;(
+          window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> }
+        ).__nfSubmits.push({
+          prevented: e.defaultPrevented,
+          qty: new FormData(form).get('qty') as string | null,
+        })
+      })
+    })
+    const probe = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __nfSubmits: Array<{ prevented: boolean; qty: string | null }> })
+            .__nfSubmits
+      )
+    const input = page.getByTestId('commit-lab-input')
+    const submits = page.getByTestId('commit-lab-submits')
+    await input.click()
+    await input.fill('-')
+    await page.keyboard.press('Enter')
+    // Key commit precedes the native implicit submit: exactly one submit
+    // event (never a NumberField-synthesized second), prevented, carrying
+    // the controlled hidden value — never the partial.
+    await expect(page.getByTestId('commit-lab-order')).toHaveText('order: key')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: none')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(input).toBeFocused()
+    await expect.poll(async () => (await probe()).length).toBe(1)
+    expect(await probe()).toEqual([{ prevented: true, qty: '5' }])
+    await expect(submits).toHaveText('submits: 1')
+    // Repeated Enter and click attempts remain blocked without consumption.
+    await page.keyboard.press('Enter')
+    await expect.poll(async () => (await probe()).length).toBe(2)
+    await page.getByTestId('commit-lab-submit').click()
+    await expect.poll(async () => (await probe()).length).toBe(3)
+    await expect(submits).toHaveText('submits: 3')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: none')
+    expect(await probe()).toEqual([
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+      { prevented: true, qty: '5' },
+    ])
+    // Resolution: a valid accepted edit clears the boundary/invalid state,
+    // then submit succeeds (relative count — Enter may additionally
+    // implicit-submit depending on echo timing, COMP-01 pattern).
+    await input.click()
+    await input.fill('9')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('commit-lab-log')).toHaveText('log: 9')
+    await expect(page.getByTestId('commit-lab-display')).toHaveText('Value: 9')
+    const submitsAfterEnter = Number(
+      ((await submits.textContent()) ?? 'submits: 0').replace('submits:', '').trim()
+    )
+    await page.getByTestId('commit-lab-submit').click()
+    await expect(submits).toHaveText(`submits: ${submitsAfterEnter + 1}`)
+    await expect.poll(async () => (await probe()).at(-1)?.prevented).toBe(false)
+    expect((await probe()).at(-1)).toEqual({ prevented: false, qty: '9' })
+  })
+
+  test('NF-FORM-14: Clicked reset applies blur first and cancellation preserves post-blur state', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const display = page.getByTestId('commit-lab-display')
+    const log = page.getByTestId('commit-lab-log')
+    const order = page.getByTestId('commit-lab-order')
+    const hidden = page.locator('input[name="qty"]')
+    // Accepted run: blur commits first (echo on), reset clears transient.
+    await input.click()
+    await input.fill('50')
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(order).toHaveText('order: blur,request')
+    await expect(log).toHaveText('log: 50')
+    await expect(display).toHaveText('Value: 50')
+    await expect(input).toHaveValue('50')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    // Rejected run: blur publishes, reset clears pending around authority.
+    await page.getByTestId('commit-lab-echo-off').click()
+    await input.click()
+    await input.fill('60')
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(log).toHaveText('log: 50,60')
+    await expect(display).toHaveText('Value: 50')
+    await expect(input).toHaveValue('50')
+    await expect(hidden).toHaveValue('50')
+    // Incomplete run: blur records the boundary, reset clears it.
+    await input.click()
+    await input.fill('-')
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(input).toHaveValue('50')
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(log).toHaveText('log: 50,60')
+    // Canceled run: an application capture-cancel preserves the post-blur
+    // failed state and no old dirty text returns.
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="commit-lab-form"]') as HTMLFormElement
+      const cancel = (e: Event) => e.preventDefault()
+      ;(window as unknown as { __nfCancelReset: (e: Event) => void }).__nfCancelReset = cancel
+      form.addEventListener('reset', cancel, true)
+    })
+    await input.click()
+    await input.fill('-')
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(input).toHaveValue('50')
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    // Removing the cancel lets an unprevented reset clear the boundary.
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="commit-lab-form"]') as HTMLFormElement
+      form.removeEventListener(
+        'reset',
+        (window as unknown as { __nfCancelReset: (e: Event) => void }).__nfCancelReset,
+        true
+      )
+    })
+    await page.getByTestId('commit-lab-reset').click()
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await expect(input).toHaveValue('50')
+    await expect(display).toHaveText('Value: 50')
+  })
 })

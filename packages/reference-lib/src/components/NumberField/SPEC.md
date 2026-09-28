@@ -39,7 +39,7 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | :--- | :--- |
 | Engine | Controlled textbox + dirty draft/commit, Group host, hidden form pipeline. |
 | Production | **No** (Intl parser + live-request + lattice flips remain). |
-| Named `[x]` | 96 / 148 |
+| Named `[x]` | 99 / 148 |
 | Playwright | 40 CT on React 17/18/19 (snapshots intact, 13 new wave-2 titles) |
 | Vitest | 98 unit + 5 type (16 new wave-2 titles) |
 | API | FEATURES #1 landed 2026-09-26: required controlled `value` + required `locale`, no `defaultValue`, no env default; FEATURES #2 landed (any-no-change suppression). PATCHES §4 (Group) + §5-core (form/state/hidden/submit/reset) + §8 remainder (textbox proof, unnamed-Input diagnostic) landed 2026-09-28. |
@@ -97,7 +97,8 @@ smallStep/largeStep.
   `NF-PARSE-05`, `NF-PARSE-14`, `NF-EDIT-01`, `NF-EDIT-06`, `NF-EDIT-10`,
   `NF-EDIT-11`, `NF-EDIT-14`, `NF-COMMIT-01`, `NF-COMMIT-02`, `NF-COMMIT-04`,
   `NF-COMMIT-05`, `NF-COMMIT-09`, `NF-KEY-06`, `NF-FORM-09`, `NF-A11Y-04`,
-  `NF-DYNAMIC-02`, `NF-ENV-04`, `NF-COMP-01`, `NF-COMP-03`
+  `NF-DYNAMIC-02`, `NF-ENV-04`, `NF-COMP-01`, `NF-COMP-03`,
+  `NF-FORM-11`, `NF-FORM-12`, `NF-FORM-14`
   (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
   to the current spinbutton + uncontrolled engine: spinbutton kept per
   frozen visuals; `defaultValue` + optional `locale` preserved per recon
@@ -128,8 +129,8 @@ smallStep/largeStep.
 - `[ ]` remaining `NF-PARSE-*` (`01`–`03`, `06`–`13`, `15`–`19`),
   remaining `NF-MATH-*` (`03`–`06`, `09`–`13`), remaining `NF-EDIT-*`
   (`02`, `03`, `05`, `07`–`09`, `12`, `15`–`18`), remaining `NF-COMMIT-*`
-  (`06`, `08`, `11`), remaining `NF-FORM-*` (`11`, `12`, `14`),
-  `NF-DYNAMIC-01`, `NF-DYNAMIC-05`, remaining `NF-ENV-*` (`02`, `06`),
+  (`06`, `08`, `11`), `NF-DYNAMIC-01`, `NF-DYNAMIC-05`,
+  remaining `NF-ENV-*` (`02`, `06`),
   `NF-COMP-02`, `NF-COMP-04`, `NF-MANUAL-*` (4 manual release gates)
 
 Not catalog: FEATURES #2 suppression trio (no freeze ID — behavior wart
@@ -147,8 +148,9 @@ fix, decided any-no-change).
    composition/caret (PATCHES §1 completion + §2).
 5. Step lattice freeze — HQ call first (zero-anchor? ties? endpoints?),
    then `NF-MATH-03`–`06`/`09`–`12` + repeat timings.
-6. ~~Forms / submit / reset (core).~~ Done (P2C 2026-09-28;
-   `NF-FORM-09`/`11`/`12`/`14` event-order cases remain).
+6. ~~Forms / submit / reset (core).~~ Done (P2C 2026-09-28; FORM
+   leg 2026-09-28 landed `NF-FORM-09`/`11`/`12`/`14` event-order CT,
+   43 green on React 17/18/19).
 
 ### Won't do
 
