@@ -133,7 +133,8 @@ Root trigger keys reach the Menu through `useMenuTriggerKeys()`, spread
 onto the `Popover.Trigger`: Enter/Space/ArrowDown open onto the first
 enabled item, ArrowUp onto the last, and pointer opens focus the menu
 itself. The opening key is consumed once per open; a Menu unmounted while
-closed cannot observe trigger keys any other way.
+closed cannot observe trigger keys any other way. Intent is recorded only by
+a press that opens — a press on an already-open trigger plants nothing.
 
 An Item's consumer `onSelect` receives the cancelable native event first.
 Plain Item defaults `closeOnSelect=true`; CheckboxItem and RadioItem default

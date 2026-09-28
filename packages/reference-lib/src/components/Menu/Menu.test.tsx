@@ -779,3 +779,124 @@ describe('Menu component keyboard navigation and triggers', () => {
     expect(document.getElementById('choice-grid')).toBeNull()
   })
 })
+
+// Red-team Hunt 1 fortify pin (P4): entry keys on an ALREADY-OPEN trigger
+// plant no consumable intent. Each leg plants from the open trigger, closes,
+// then reopens: genuine key reopens land per the fresh key, and a
+// gesture-free programmatic reopen lands on the container.
+describe('Menu plant-site pin', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    container.id = 'menu-root'
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+    for (const child of Array.from(document.body.children)) {
+      if (child.id !== 'menu-root') {
+        child.remove()
+      }
+    }
+  })
+
+  /** Menu entry focus runs in requestAnimationFrame; flush it inside act. */
+  async function flushEntryFocus(rounds = 3) {
+    await React.act(async () => {
+      for (let i = 0; i < rounds; i++) {
+        await new Promise<void>(resolve => {
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => resolve())
+          } else {
+            setTimeout(() => resolve(), 16)
+          }
+        })
+      }
+    })
+  }
+
+  function pressKey(el: HTMLElement, key: string) {
+    return React.act(async () => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+    })
+  }
+
+  it('P4: Up/Down on an already-open trigger plants no consumable intent', async () => {
+    const control = { setOpen: (_v: boolean) => {} }
+    function Harness() {
+      const [open, setOpen] = React.useState(false)
+      control.setOpen = setOpen
+      return (
+        <Popover open={open} onOpenChange={setOpen}>
+          <EntryTrigger id="pin-trigger-btn">Trigger</EntryTrigger>
+          <Popover.Content>
+            <Menu>
+              <Menu.Item id="pin-item-1">Item 1</Menu.Item>
+              <Menu.Item id="pin-item-2">Item 2</Menu.Item>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Harness />)
+    })
+    const trigger = () => document.getElementById('pin-trigger-btn')!
+    const isContainerFocused = () =>
+      (document.activeElement as HTMLElement | null)?.hasAttribute('data-reference-menu-content') ??
+      false
+
+    // Seed: pointer open lands on the container; Up on the open trigger is a
+    // non-opening key (stays open, plants nothing fix-side).
+    await React.act(async () => {
+      trigger().dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await flushEntryFocus()
+    expect(trigger().getAttribute('aria-expanded')).toBe('true')
+    trigger().focus()
+    await pressKey(trigger(), 'ArrowUp')
+    await React.act(async () => {
+      control.setOpen(false)
+    })
+    expect(document.getElementById('pin-item-1')).toBeNull()
+
+    // Genuine Down reopen lands on the first item.
+    await pressKey(trigger(), 'ArrowDown')
+    await flushEntryFocus()
+    expect(document.activeElement?.id).toBe('pin-item-1')
+
+    // Up on the open trigger, then a genuine Up reopen lands on the last item.
+    trigger().focus()
+    await pressKey(trigger(), 'ArrowUp')
+    await React.act(async () => {
+      control.setOpen(false)
+    })
+    await pressKey(trigger(), 'ArrowUp')
+    await flushEntryFocus()
+    expect(document.activeElement?.id).toBe('pin-item-2')
+
+    // Up on the open trigger, then a gesture-free programmatic reopen lands
+    // on the container — the stale 'last' must not leak into it.
+    trigger().focus()
+    await pressKey(trigger(), 'ArrowUp')
+    await React.act(async () => {
+      control.setOpen(false)
+    })
+    await React.act(async () => {
+      control.setOpen(true)
+    })
+    await flushEntryFocus()
+    expect(document.getElementById('pin-item-1')).not.toBeNull()
+    expect(
+      isContainerFocused(),
+      `programmatic reopen landed on #${(document.activeElement as HTMLElement | null)?.id}; expected the menu container`
+    ).toBe(true)
+  })
+})

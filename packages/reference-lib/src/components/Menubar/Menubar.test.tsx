@@ -17,9 +17,11 @@ const ControlledMenubar = React.forwardRef<
     children: React.ReactNode
     initialValue?: string | null
     seen?: (string | null)[]
+    control?: { setValue: (v: string | null) => void }
   }
->(function ControlledMenubar({ children, initialValue = null, seen }, ref) {
+>(function ControlledMenubar({ children, initialValue = null, seen, control }, ref) {
   const [value, setValue] = React.useState<string | null>(initialValue)
+  if (control) control.setValue = setValue
   return (
     <Menubar
       ref={ref}
@@ -396,5 +398,173 @@ describe('Menubar value coordination', () => {
 
     expect(selectSpy).toHaveBeenCalledTimes(1)
     expect(seen).toEqual(['file', null])
+  })
+})
+
+// Red-team Hunt 1 fortify pins: a no-op entry key (Up/Down/Enter/Space) on an
+// already-open trigger must plant no entry intent, so the next unrelated
+// open (switch or programmatic) lands container-or-first per SPEC MB-KEY-03.
+describe('Menubar stale entry intent pins', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    container.id = 'menubar-test-root'
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+    for (const child of Array.from(document.body.children)) {
+      if (child.id !== 'menubar-test-root') {
+        child.remove()
+      }
+    }
+  })
+
+  function Bar({ seen, control }: { seen?: (string | null)[]; control?: { setValue: (v: string | null) => void } }) {
+    return (
+      <ControlledMenubar seen={seen} control={control}>
+        <Menubar.Menu value="file">
+          <Menubar.Trigger id="mb-pin-trigger-file">File</Menubar.Trigger>
+          <Menubar.Content>
+            <Menu.Item id="mb-pin-file-new">New</Menu.Item>
+            <Menu.Item id="mb-pin-file-open">Open</Menu.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+        <Menubar.Menu value="edit">
+          <Menubar.Trigger id="mb-pin-trigger-edit">Edit</Menubar.Trigger>
+          <Menubar.Content>
+            <Menu.Item id="mb-pin-edit-undo">Undo</Menu.Item>
+            <Menu.Item id="mb-pin-edit-redo">Redo</Menu.Item>
+          </Menubar.Content>
+        </Menubar.Menu>
+      </ControlledMenubar>
+    )
+  }
+
+  /** Menu entry focus runs in requestAnimationFrame; flush it inside act. */
+  async function flushEntryFocus(rounds = 3) {
+    await React.act(async () => {
+      for (let i = 0; i < rounds; i++) {
+        await new Promise<void>(resolve => {
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => resolve())
+          } else {
+            setTimeout(() => resolve(), 16)
+          }
+        })
+      }
+    })
+  }
+
+  function pressKey(el: HTMLElement, key: string) {
+    return React.act(async () => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+    })
+  }
+
+  function activeId(): string | null {
+    const el = document.activeElement as HTMLElement | null
+    return el ? el.id || null : null
+  }
+
+  /** SPEC landing set for a fresh switch: the new menu's container or first item. */
+  function landedFirstOrContainer(): boolean {
+    const el = document.activeElement as HTMLElement | null
+    if (!el) return false
+    if (el.id === 'mb-pin-edit-undo') return true
+    return el.hasAttribute('data-reference-menu-content')
+  }
+
+  it('P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
+    const seen: (string | null)[] = []
+    await React.act(async () => {
+      root.render(<Bar seen={seen} />)
+    })
+    const file = document.getElementById('mb-pin-trigger-file')!
+
+    await React.act(async () => {
+      file.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await flushEntryFocus()
+    expect(document.getElementById('mb-pin-file-new')).not.toBeNull()
+
+    file.focus()
+
+    // Up on an ALREADY-OPEN menu: a non-opening key. Nothing may open or emit.
+    await pressKey(file, 'ArrowUp')
+    await flushEntryFocus()
+    expect(seen).toEqual(['file'])
+    expect(document.getElementById('mb-pin-file-new')).not.toBeNull()
+
+    await pressKey(file, 'ArrowRight')
+    await flushEntryFocus()
+    expect(document.getElementById('mb-pin-file-new')).toBeNull()
+    expect(document.getElementById('mb-pin-edit-undo')).not.toBeNull()
+    expect(seen).toEqual(['file', 'edit'])
+
+    expect(
+      landedFirstOrContainer(),
+      `switch landed on #${activeId()}; SPEC pins container-or-first (mb-pin-edit-undo)`
+    ).toBe(true)
+  })
+
+  it('P2: content-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
+    await React.act(async () => {
+      root.render(<Bar />)
+    })
+    const file = document.getElementById('mb-pin-trigger-file')!
+
+    await React.act(async () => {
+      file.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await flushEntryFocus()
+
+    file.focus()
+    await pressKey(file, 'ArrowUp')
+    const fileNew = document.getElementById('mb-pin-file-new')!
+    fileNew.focus()
+    await pressKey(fileNew, 'ArrowRight')
+    await flushEntryFocus()
+
+    expect(document.getElementById('mb-pin-edit-undo')).not.toBeNull()
+    expect(
+      landedFirstOrContainer(),
+      `content switch landed on #${activeId()}; SPEC pins container-or-first (mb-pin-edit-undo)`
+    ).toBe(true)
+  })
+
+  it('P3: programmatic open after Up-on-open-trigger lands container-or-first', async () => {
+    const control = { setValue: (_v: string | null) => {} }
+    await React.act(async () => {
+      root.render(<Bar control={control} />)
+    })
+    const file = document.getElementById('mb-pin-trigger-file')!
+
+    await React.act(async () => {
+      file.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await flushEntryFocus()
+
+    file.focus()
+    await pressKey(file, 'ArrowUp')
+
+    // No gesture at all: the parent opens Edit on its own.
+    await React.act(async () => {
+      control.setValue('edit')
+    })
+    await flushEntryFocus()
+
+    expect(document.getElementById('mb-pin-edit-undo')).not.toBeNull()
+    expect(
+      landedFirstOrContainer(),
+      `programmatic open landed on #${activeId()}; SPEC pins container-or-first (mb-pin-edit-undo)`
+    ).toBe(true)
   })
 })
