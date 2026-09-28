@@ -1,6 +1,7 @@
 # SWEEP — objective log
 
-QUEUED
+IN PROGRESS
 
 Scope: P3 matrix sweep (FF/WebKit, browser:all) on the landed tree.
-Dispatch after FORM + REDS land. Crew: TBD.
+Base: `8572339b5` (FORM + AXE + REDS landed, tree clean).
+Crew writes below.
