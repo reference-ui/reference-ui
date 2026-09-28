@@ -11,3 +11,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 ## Entries
 
 - Captain opened wave-1. Tree clean on `reference-system`.
+- Wave-1 landed (FORM 99/148, AXE infra, REDS 3/4, SITE-16 skipped to HQ).
+- HQ ruled SITE-16 semantic (i) (REPORT.md §1). SITE-16 crew dispatched
+  in isolated worktree, 90-min box. Sweep crew still out (shared tree).
