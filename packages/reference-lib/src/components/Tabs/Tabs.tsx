@@ -178,7 +178,12 @@ export const tabsTabRecipe = recipe({
       selected: 'selected',
       css: {
         bg: 'gray.200',
-        color: 'ui.button.foreground',
+        // B-08: bg is mode-STATIC light gray, so the text must be
+        // mode-static dark. Mode-flipping tokens are wrong in exactly one
+        // mode each: ui.button.foreground is white-on-gray.200 in light
+        // mode (the filed bug); design.text.base would be white-on-gray.200
+        // in dark mode. gray.950 reads on gray.200 in both modes.
+        color: 'gray.950',
         boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
       },
     },
