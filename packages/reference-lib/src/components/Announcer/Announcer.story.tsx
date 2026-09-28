@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Overlay } from '../Overlay'
@@ -525,6 +526,26 @@ export function AnnouncerElection() {
   )
 }
 
+type LegacyDom = {
+  render: (node: React.ReactNode, container: Element) => void
+  unmountComponentAtNode: (container: Element) => boolean
+}
+
+// The react-17 CT runtime aliases react-dom/client to a shim without
+// createRoot: fall back to legacy render there. Same tree either way.
+function renderInto(node: React.ReactNode, container: Element): () => void {
+  if (typeof createRoot === 'function') {
+    const root = createRoot(container)
+    root.render(node)
+    return () => root.unmount()
+  }
+  const legacy = ReactDOM as unknown as LegacyDom
+  legacy.render(node, container)
+  return () => {
+    legacy.unmountComponentAtNode(container)
+  }
+}
+
 /** Multi-document: elected top host plus a test-only host in an iframe. */
 export function AnnouncerMultiDoc() {
   const frameRef = React.useRef<HTMLIFrameElement>(null)
@@ -534,7 +555,7 @@ export function AnnouncerMultiDoc() {
   React.useEffect(() => {
     const frame = frameRef.current
     if (!frame) return
-    let root: ReturnType<typeof createRoot> | null = null
+    let unmount: (() => void) | null = null
     let mountEl: HTMLDivElement | null = null
     let cancelled = false
     const attach = () => {
@@ -547,14 +568,13 @@ export function AnnouncerMultiDoc() {
       mountEl = doc.createElement('div')
       mountEl.setAttribute('data-testid', 'md-frame-root')
       doc.body.appendChild(mountEl)
-      root = createRoot(mountEl)
-      root.render(<AnnouncerHost document={doc} />)
+      unmount = renderInto(<AnnouncerHost document={doc} />, mountEl)
       setFrameReady(true)
     }
     attach()
     return () => {
       cancelled = true
-      root?.unmount()
+      unmount?.()
       mountEl?.remove()
     }
   }, [])

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { Toast, toast } from './index'
 import { announce } from '../Announcer'
@@ -1079,6 +1080,26 @@ function ShadowLibraryApp() {
   )
 }
 
+type LegacyDom = {
+  render: (node: React.ReactNode, container: Element) => void
+  unmountComponentAtNode: (container: Element) => boolean
+}
+
+// The react-17 CT runtime aliases react-dom/client to a shim without
+// createRoot: fall back to legacy render there. Same tree either way.
+function renderInto(node: React.ReactNode, container: Element): () => void {
+  if (typeof createRoot === 'function') {
+    const root = createRoot(container)
+    root.render(node)
+    return () => root.unmount()
+  }
+  const legacy = ReactDOM as unknown as LegacyDom
+  legacy.render(node, container)
+  return () => {
+    legacy.unmountComponentAtNode(container)
+  }
+}
+
 export const HardenShadow = () => {
   const hostRef = React.useRef<HTMLDivElement>(null)
 
@@ -1092,11 +1113,7 @@ export const HardenShadow = () => {
       mount.setAttribute('data-testid', 'shadow-react-root')
       shadow.appendChild(mount)
     }
-    const root = createRoot(mount)
-    root.render(<ShadowLibraryApp />)
-    return () => {
-      root.unmount()
-    }
+    return renderInto(<ShadowLibraryApp />, mount)
   }, [])
 
   return (

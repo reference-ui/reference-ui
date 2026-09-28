@@ -208,9 +208,13 @@ const HOST_STYLE: React.CSSProperties = {
   border: 0,
 }
 
+let announcerHostIdCounter = 0
+
 export function AnnouncerHost({ document: docProp }: { document?: Document } = {}) {
   const hostRef = React.useRef<HTMLDivElement>(null)
-  const hostId = React.useId()
+  // Render-stable election id without useId: the id never reaches the DOM,
+  // and useId shims may mint per render (React 17 CT), which drops the host.
+  const [hostId] = React.useState(() => `announcer-host-${(announcerHostIdCounter += 1)}`)
   const [, forceUpdate] = React.useReducer(x => x + 1, 0)
   const resolvedDoc = docProp ?? safeGetGlobalDocument()
   const docRef = React.useRef<Document | undefined>(resolvedDoc)
