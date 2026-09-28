@@ -143,12 +143,16 @@ pub enum DiagnosticCode {
     /// `sources`: a `retentionToken` drained by an earlier compile;
     /// retention moves once, so reuse is a lifecycle bug, fail loud.
     DrainedRetentionToken,
+    /// `stylesheet/system_layers`: a token owning `--spacing-root` carries a
+    /// rhythm value, which would mint a self-referential `var()`. Refused
+    /// with the declaration omitted (doom CONTINUITY-T fortify).
+    RhythmRootCycle,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 50] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 51] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -259,6 +263,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 50] = [
         DiagnosticCode::DrainedRetentionToken,
         "ATM-E-DRAINED-RETENTION-TOKEN",
     ),
+    (DiagnosticCode::RhythmRootCycle, "ATM-E-RHYTHM-ROOT-CYCLE"),
 ];
 
 impl DiagnosticCode {
@@ -390,6 +395,7 @@ mod tests {
             DiagnosticCode::ConflictingScanInputs,
             DiagnosticCode::UnknownRetentionToken,
             DiagnosticCode::DrainedRetentionToken,
+            DiagnosticCode::RhythmRootCycle,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

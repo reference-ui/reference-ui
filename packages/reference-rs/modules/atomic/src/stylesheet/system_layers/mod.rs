@@ -5,11 +5,13 @@
 //! Empty layers and empty keyframe tables are omitted; recipes and utilities stay separate.
 //! Keyframe bodies resolve aliases, units, `{token}` refs, and `r` units through
 //! the utility passes; unresolvable values print verbatim, mirroring tokens.
+//! Token values resolve whole-value `{aliases}` and `r` rhythm through the shared
+//! chains; the rhythm root itself refuses rhythm values with a diagnostic.
 
 use base_system::{BaseSystem, KeyframeDefinition, StyleMap, TokenEntry};
 
 use crate::atom::AtomValue;
-use crate::diagnostics::DiagnosticLocation;
+use crate::diagnostics::{DiagnosticCode, DiagnosticLocation};
 use crate::resolve::rhythm::resolve_rhythm;
 use crate::resolve::tokens::resolve_token_value;
 use crate::resolve::unit::css_value_from_authored;
@@ -30,7 +32,7 @@ pub fn append_system_layers(
 ) {
     global::append_reset_css(out, system, diagnostics);
     append_global(out, system, diagnostics);
-    append_tokens(out, system, false);
+    append_tokens(out, system, false, diagnostics);
 }
 
 /// Append globalCss and portable [data-layer] token custom-property layers.
@@ -41,7 +43,7 @@ pub fn append_portable_system_layers(
 ) {
     global::append_reset_css(out, system, diagnostics);
     append_global(out, system, diagnostics);
-    append_tokens(out, system, true);
+    append_tokens(out, system, true, diagnostics);
 }
 
 /// Append `@layer global {…}` when fragments, fonts, or keyframes print.
@@ -219,7 +221,13 @@ fn push_css_property(out: &mut String, prop: &str) {
 }
 
 /// Append `@layer tokens {…}`; portable selects `[data-layer]` over `:root`.
-pub fn append_tokens(out: &mut String, system: &BaseSystem, portable: bool) {
+/// Rhythm-root cycles diagnose into `diagnostics` and omit the declaration.
+pub fn append_tokens(
+    out: &mut String,
+    system: &BaseSystem,
+    portable: bool,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
     if system.tokens.is_empty() {
         return;
     }
@@ -238,9 +246,9 @@ pub fn append_tokens(out: &mut String, system: &BaseSystem, portable: bool) {
             DARK_SELECTOR.to_string(),
         )
     };
-    write_token_block(out, &light_sel, system, TokenMode::Light);
+    write_token_block(out, &light_sel, system, TokenMode::Light, diagnostics);
     if has_dark_overrides(system) {
-        write_token_block(out, &dark_sel, system, TokenMode::Dark);
+        write_token_block(out, &dark_sel, system, TokenMode::Dark, diagnostics);
     }
     out.push_str("}\n");
 }
@@ -258,17 +266,33 @@ fn has_dark_overrides(system: &BaseSystem) -> bool {
         .any(|(_, entry)| entry.dark().is_some())
 }
 
-fn write_token_block(out: &mut String, selector: &str, system: &BaseSystem, mode: TokenMode) {
+/// The custom property the `r` unit lowers against. A token owning this slot
+/// must never carry a rhythm value: resolving it would reference itself.
+const SPACING_ROOT_VAR: &str = "--spacing-root";
+
+fn write_token_block(
+    out: &mut String,
+    selector: &str,
+    system: &BaseSystem,
+    mode: TokenMode,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
     out.push_str("  ");
     out.push_str(selector);
     out.push_str(" {\n");
     for (_, entry) in system.tokens.iter() {
-        write_token_entry(out, entry, system, mode);
+        write_token_entry(out, entry, system, mode, diagnostics);
     }
     out.push_str("  }\n");
 }
 
-fn write_token_entry(out: &mut String, entry: &TokenEntry, system: &BaseSystem, mode: TokenMode) {
+fn write_token_entry(
+    out: &mut String,
+    entry: &TokenEntry,
+    system: &BaseSystem,
+    mode: TokenMode,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
     let raw = match mode {
         TokenMode::Light => entry.light(),
         TokenMode::Dark => match entry.dark() {
@@ -276,22 +300,49 @@ fn write_token_entry(out: &mut String, entry: &TokenEntry, system: &BaseSystem, 
             None => return,
         },
     };
+    let Some(value) = css_token_value(raw, system, entry.css_var(), diagnostics) else {
+        return;
+    };
     out.push_str("    ");
     out.push_str(entry.css_var());
     out.push_str(": ");
-    out.push_str(&css_token_value(raw, system));
+    out.push_str(&value);
     out.push_str(";\n");
 }
 
-fn css_token_value(raw: &str, system: &BaseSystem) -> String {
+/// Lower one token value for the tokens layer: whole-value `{brace}` aliases
+/// become `var(--…)`; engine-grammar `r` values resolve through the shared
+/// rhythm chain like keyframes; genuine CSS prints verbatim. Returns `None`
+/// — with an error diagnostic — only when the rhythm root itself carries a
+/// rhythm value, which would mint a self-referential `var(--spacing-root)`.
+fn css_token_value(
+    raw: &str,
+    system: &BaseSystem,
+    owner_var: &str,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) -> Option<String> {
     let trimmed = raw.trim();
-    let Some(inner) = brace_path(trimmed) else {
-        return trimmed.to_string();
-    };
-    match system.token(inner) {
-        Some(entry) => format!("var({})", entry.css_var()),
-        None => trimmed.to_string(),
+    if let Some(inner) = brace_path(trimmed) {
+        let aliased = match system.token(inner) {
+            Some(entry) => format!("var({})", entry.css_var()),
+            None => trimmed.to_string(),
+        };
+        return Some(aliased);
     }
+    let resolved = resolve_rhythm(trimmed);
+    if resolved.as_ref() == trimmed {
+        return Some(trimmed.to_string());
+    }
+    if owner_var == SPACING_ROOT_VAR {
+        diagnostics.push(DiagnosticLocation::default().error(
+            DiagnosticCode::RhythmRootCycle,
+            format!(
+                "token `{owner_var}` defines the rhythm root in rhythm units (`{trimmed}`); self-reference refused, declaration omitted"
+            ),
+        ));
+        return None;
+    }
+    Some(resolved.into_owned())
 }
 
 fn brace_path(trimmed: &str) -> Option<&str> {

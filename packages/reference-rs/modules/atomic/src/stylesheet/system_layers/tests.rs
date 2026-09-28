@@ -44,6 +44,28 @@ fn emit(system: &BaseSystem) -> String {
     out
 }
 
+fn emit_with_diagnostics(system: &BaseSystem) -> (String, Vec<crate::diagnostics::Diagnostic>) {
+    let mut out = String::new();
+    let mut diagnostics = Vec::new();
+    append_system_layers(&mut out, system, &mut diagnostics);
+    (out, diagnostics)
+}
+
+fn doom_t_system(light: &str, dark: &str) -> BaseSystem {
+    let mut tokens = TokenDictionary::default();
+    tokens.insert_leaf(TokenLeaf {
+        category: "spacing",
+        path: "4",
+        light,
+        dark,
+    });
+    BaseSystem {
+        name: "doom-t".into(),
+        tokens,
+        ..Default::default()
+    }
+}
+
 #[test]
 fn empty_system_prints_no_layers() {
     assert_eq!(emit(&BaseSystem::default()), "");
@@ -213,6 +235,111 @@ fn font_face_array_prints_one_block_per_entry() {
     assert!(css.contains("src: url(/fonts/inter-italic.woff2);"));
     assert!(css.contains("font-style: normal;"));
     assert!(css.contains("font-style: italic;"));
+}
+
+#[test]
+fn doom_t_rhythm_token_value_resolves_through_spacing_root() {
+    let (css, diagnostics) = emit_with_diagnostics(&doom_t_system("1r", "1r"));
+    assert!(
+        css.contains("--spacing-4: var(--spacing-root);"),
+        "rhythm token must resolve like keyframes:\n{css}"
+    );
+    assert!(
+        !css.contains(": 1r;"),
+        "no invalid raw-r mint allowed:\n{css}"
+    );
+    assert!(diagnostics.is_empty(), "resolved rhythm stays silent");
+}
+
+#[test]
+fn doom_t_dark_override_rhythm_resolves_in_dark_block() {
+    let (css, diagnostics) = emit_with_diagnostics(&doom_t_system("1r", "2r"));
+    let (_, dark) = css
+        .split_once("[data-color-mode=dark]")
+        .expect("dark block must print for dark overrides");
+    assert!(
+        css.contains("--spacing-4: var(--spacing-root);"),
+        "light keeps resolving:\n{css}"
+    );
+    assert!(
+        dark.contains("--spacing-4: calc(2 * var(--spacing-root));"),
+        "dark override resolves through the same choke point:\n{css}"
+    );
+    assert!(!css.contains(": 1r;") && !css.contains(": 2r;"));
+    assert!(diagnostics.is_empty(), "resolved rhythm stays silent");
+}
+
+#[test]
+fn doom_t_genuine_css_token_values_print_verbatim() {
+    let mut tokens = TokenDictionary::default();
+    tokens.insert_leaf(TokenLeaf {
+        category: "spacing",
+        path: "px",
+        light: "0.25rem",
+        dark: "0.25rem",
+    });
+    tokens.insert_leaf(TokenLeaf {
+        category: "borders",
+        path: "line",
+        light: "1px solid red",
+        dark: "1px solid red",
+    });
+    let system = BaseSystem {
+        name: "doom-t".into(),
+        tokens,
+        ..Default::default()
+    };
+    let (css, diagnostics) = emit_with_diagnostics(&system);
+    assert!(css.contains("--spacing-px: 0.25rem;"), "{css}");
+    assert!(css.contains("--borders-line: 1px solid red;"), "{css}");
+    assert!(diagnostics.is_empty(), "raw CSS stays silent");
+}
+
+#[test]
+fn doom_t_spacing_root_refuses_rhythm_value() {
+    let mut tokens = TokenDictionary::default();
+    tokens.insert_leaf(TokenLeaf {
+        category: "spacing",
+        path: "root",
+        light: "1r",
+        dark: "1r",
+    });
+    tokens.insert_leaf(TokenLeaf {
+        category: "spacing",
+        path: "4",
+        light: "1r",
+        dark: "1r",
+    });
+    let system = BaseSystem {
+        name: "doom-t".into(),
+        tokens,
+        ..Default::default()
+    };
+    let (css, diagnostics) = emit_with_diagnostics(&system);
+    assert!(
+        !css.contains("--spacing-root:"),
+        "no self-referential root mint:\n{css}"
+    );
+    assert!(
+        css.contains("--spacing-4: var(--spacing-root);"),
+        "healthy sibling still emits:\n{css}"
+    );
+    assert_eq!(diagnostics.len(), 1, "one refusal, no silence");
+    let refusal = &diagnostics[0];
+    assert_eq!(
+        refusal.severity,
+        crate::diagnostics::DiagnosticSeverity::Error
+    );
+    assert_eq!(
+        refusal.code,
+        crate::diagnostics::DiagnosticCode::RhythmRootCycle
+    );
+    assert!(
+        refusal.message.contains("--spacing-root"),
+        "{}",
+        refusal.message
+    );
+    assert!(refusal.message.contains("1r"), "{}", refusal.message);
 }
 
 #[test]

@@ -109,9 +109,9 @@ pub fn build_stylesheet_streams(
         "global prints identically in both sheets"
     );
     let mut tokens = String::new();
-    append_tokens(&mut tokens, system, false);
+    append_tokens(&mut tokens, system, false, sinks.primary);
     let mut tokens_portable = String::new();
-    append_tokens(&mut tokens_portable, system, true);
+    append_tokens(&mut tokens_portable, system, true, sinks.portable);
     StylesheetStreams {
         name: system.name.clone(),
         preamble: LAYER_PREAMBLE.to_string(),
