@@ -108,6 +108,40 @@ describe('DateField required value + onChange (controlled-only)', () => {
   })
 })
 
+describe('DateField.Range required props (FEATURES #2)', () => {
+  it('Range should throw without locale, value, or onChange (throw-for-all)', () => {
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — locale is required; the runtime must throw.
+        <DateField.Range value={null} onChange={() => {}} />
+      )
+    ).toThrow('[reference-ui] DateField.Range requires an explicit locale prop.')
+
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — value is required; the runtime must throw.
+        <DateField.Range onChange={() => {}} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField.Range requires an explicit value prop')
+
+    expect(() =>
+      renderToString(
+        // @ts-expect-error — onChange is required; the runtime must throw.
+        <DateField.Range value={null} locale="en-GB" />
+      )
+    ).toThrow('[reference-ui] DateField.Range requires an explicit onChange prop.')
+
+    // Legal empty range renders both endpoint inputs in one bezel.
+    const html = renderToString(
+      <DateField.Range value={null} onChange={() => {}} locale="en-GB" />
+    )
+    expect(html).toContain('data-reference-field')
+    expect(html).toContain('data-reference-date-endpoint="start"')
+    expect(html).toContain('data-reference-date-endpoint="end"')
+    expect(html).toContain('data-can-apply="false"')
+  })
+})
+
 describe('DateField constraint bounds (FEATURES #3)', () => {
   it('DF-BND-04: DateField should fail when min is after max or either is not canonical ISO', () => {
     // Fail-closed: invalid bounds throw during render, so no edit session

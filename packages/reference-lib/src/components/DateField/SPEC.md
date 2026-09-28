@@ -104,23 +104,47 @@ stepping (PATCHES #2), submit/reset observers (PATCHES #5), the
 | CT | 44 titles green (22 pre-existing re-targeted to locale display + 22 engine proofs); 8 frozen snapshots pass unmodified within 2% tolerance (text-only delta — baselines still show pre-fix ISO text, flagged for HQ) |
 | Vitest | 30 tests (25 parse-kit + 5 component proofs incl. locale-display asserts) |
 
+### Finish-line P2B (2026-09-28, date crew)
+
+Landed PATCHES #2 (caret-aware stepping: ±1/Shift-±10 per segment with
+Gregorian carry, each step commits one ISO, lockout past constraints),
+PATCHES #5 (submit/reset observers mirroring NumberField NF-FORM-06/07/08:
+failed-boundary blocking, process-once-then-block dirty submits,
+reformat-without-callback reset with capture veto), and FEATURES #2
+(`DateField.Range` / `Start` / `End`: two endpoint sessions, draft /
+committed snapshots, pending-in-draft Calendar anchors, apply-on-completion
+with no Apply button, Escape/Cancel restore, focused-endpoint pane sync,
+split or shared form names). Settled takes: step-onto-violation locks out;
+`canApply=false` blocks commit, never close; anchor clicks restart the
+draft; accepted live echo reformats both endpoints. Out of scope, still
+open: `DF-CAL-04` (PATCHES #4 slotted binding), `DF-ENV-02` (PATCHES #8 RTL).
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 60 / 64 |
+| CT | 57 titles green (44 pre-existing + 3 stepping + 2 submit/reset + 8 range); 8 frozen snapshots pass unmodified |
+| Vitest | 33 tests (25 parse-kit + 5 component proofs + 2 stepping-carry DOM proofs + 1 Range guard proof) |
+
 ### Gaps & incoherence
 
 - ~~`defaultValue` (uncontrolled) still exists~~ — landed (HQ controlled-only
   rule, `docs/MISSIONS/API-STANCE.md`): `defaultValue` deleted, `value` +
   `onChange` + `locale` required and throwing; in-repo consumers migrated.
-- **No `DateField.Range` / Start / End.**
+- ~~No `DateField.Range` / Start / End~~ — landed (finish-line P2B,
+  2026-09-28): real namespace with draft transactions, not glued fields.
 - ~~No locale `formatToParts` parse/format; input shows the ISO string~~ —
   landed (playtest PATCHES #1, 2026-09-27): locale display + parse,
   dirty session, ISO-gated `onChange`, `data-editing`.
-- No caret-aware stepping (`selectionStart` unused) — PATCHES #2, open.
+- ~~No caret-aware stepping (`selectionStart` unused)~~ — landed
+  (finish-line P2B, 2026-09-28): PATCHES #2 wired, `DF-KEY-*` all green.
 - ~~`onChange` fed raw text; no ISO gate~~ — landed (same): invalid,
   impossible, and out-of-constraints text never publishes; commit
   reverts with managed invalid.
 - ~~Child sniffing instead of Slot / Part-Resolution Law~~ — landed
   (PATCHES #3): parts register into Slot ids, host merges per the Law.
 - Combobox attrs complete incl. `aria-controls` link (PATCHES #9);
-  `required` passthrough landed (PATCHES #6); submit/reset still open.
+  `required` passthrough landed (PATCHES #6); submit/reset landed
+  (finish-line P2B, 2026-09-28 — PATCHES #5, `DF-FRM-03` / `DF-FRM-05`).
 - `DF-DOM-02` / `03` / `DF-CAL-01` titles exist as popup smokes. They do not
   prove dual-host, locale grammar, or caret stepping.
 
@@ -182,10 +206,14 @@ windows; min/max clamp.
   `DF-CMT-01`, `DF-CMT-02`, `DF-CMT-03`, `DF-CMT-04`, `DF-CMT-05`,
   `DF-CMT-06`, `DF-CMT-07`, `DF-BND-01`, `DF-BND-03`, `DF-CAL-02`,
   `DF-COMP-01`, `DF-COMP-03` (playtest PATCHES #1 engine, 2026-09-27)
-- `[ ]` `DF-KEY-01/02/03/04/07` (stepping — PATCHES #2, still open),
-  `DF-CAL-04` (PATCHES #4), `DF-RANGE-*` (FEATURES #2),
-  `DF-FRM-03`, `DF-FRM-05` (submit/reset — PATCHES #5), `DF-ENV-02`
-  (PATCHES #8), `DF-COMP-05`, `DF-COMP-06` (Range composition)
+- `[x]` `DF-KEY-01`, `DF-KEY-04`, `DF-KEY-07` (CT stepping proofs),
+  `DF-KEY-02`, `DF-KEY-03` (unit Gregorian-carry proofs),
+  `DF-FRM-03`, `DF-FRM-05` (CT submit/reset proofs), `DF-RANGE-01`,
+  `DF-RANGE-02`, `DF-RANGE-03`, `DF-RANGE-04`, `DF-RANGE-05`,
+  `DF-RANGE-06`, `DF-COMP-05`, `DF-COMP-06` (CT range proofs —
+  finish-line P2B, 2026-09-28)
+- `[ ]` `DF-CAL-04` (PATCHES #4 slotted binding), `DF-ENV-02`
+  (PATCHES #8 RTL)
 - ~~`DF-ENV-01`, `DF-COMP-04` — ShadowRoot composition~~ — landed
   (PATCHES #7): the Overlay-crew shadow-portal contract (Overlay FEATURES
   #1, automatic rule) shipped and both proofs are green

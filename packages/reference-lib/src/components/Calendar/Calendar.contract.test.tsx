@@ -1,12 +1,17 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
+import { hydrateRoot, type Root } from 'react-dom/client'
 import { describe, expect, it, vi } from 'vitest'
 import { Calendar, type CalendarProps } from './index'
 
+// @ts-ignore
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
+
 // Adapted from quarantine b19c73bee matrix unit suite. Skipped by triage:
 // CA-ISO-06/07 (fail-closed render-''), CA-MODE-04 (discriminated props),
-// CA-DAY-13/14 (Weekdays/Days/Day parts), CA-ENV-01 today marker (new paint).
+// CA-ENV-01 today marker (new paint). CA-DAY-13 landed below; CA-DAY-14 is
+// a CT proof (react:all via `pnpm agentct Calendar --react all`).
 describe('Calendar contract', () => {
   it('CA-ENV-02: Calendar should register dates and emit navigation, selection, and announcements once across supported React versions and StrictMode replay', () => {
     // Announcements and the today marker do not exist on this branch; the
@@ -822,5 +827,81 @@ describe('Calendar month/year views (FEATURES #10)', () => {
     )
     expect(yearCell(wholeYear, '2025')).toContain('disabled')
     expect(yearCell(wholeYear, '2024')).not.toContain('disabled')
+  })
+
+  it('CA-DAY-13: custom Days hydrate with deterministic content, managed state, and native identity', async () => {
+    const events: Record<string, number> = { '2024-04-08': 2, '2024-04-12': 1 }
+    const dayRef = React.createRef<HTMLButtonElement>()
+    const onChange = vi.fn()
+    const onMonthChange = vi.fn()
+    const tree = () => (
+      <Calendar
+        month="2024-04"
+        locale="en-GB"
+        today="2024-04-10"
+        value="2024-04-10"
+        onChange={onChange}
+        onMonthChange={onMonthChange}
+        isDateUnavailable={(d) => d === '2024-04-12'}
+      >
+        <Calendar.Grid>
+          <Calendar.Days>
+            {(day) => (
+              <Calendar.Day
+                date={day.date}
+                ref={day.date === '2024-04-10' ? dayRef : undefined}
+              >
+                {day.formattedDay}
+                {events[day.date] ? (
+                  <span aria-hidden="true">{'●'.repeat(events[day.date])}</span>
+                ) : null}
+              </Calendar.Day>
+            )}
+          </Calendar.Days>
+        </Calendar.Grid>
+      </Calendar>
+    )
+
+    // Deterministic SSR: byte-equivalent custom content across renders.
+    const ssr = renderToString(tree())
+    expect(renderToString(tree())).toBe(ssr)
+    expect(ssr).toContain('data-date="2024-04-10"')
+    expect(ssr).toContain('data-selected=""')
+    expect(ssr).toContain('●●')
+
+    // Hydration attaches to the server nodes: no warning, no callback.
+    const errors: unknown[][] = []
+    const origError = console.error
+    console.error = (...args: unknown[]) => {
+      errors.push(args)
+    }
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    container.innerHTML = ssr
+    try {
+      let root: Root | null = null
+      await React.act(async () => {
+        root = hydrateRoot(container, tree())
+      })
+      expect(errors).toEqual([])
+      expect(onChange).not.toHaveBeenCalled()
+      expect(onMonthChange).not.toHaveBeenCalled()
+      const serverButton = container.querySelector('button[data-date="2024-04-10"]')
+      expect(serverButton).not.toBeNull()
+      expect(dayRef.current).toBe(serverButton)
+      expect(serverButton!.getAttribute('aria-selected')).toBe('true')
+      expect(serverButton!.getAttribute('aria-label')).toContain('April')
+      expect(serverButton!.getAttribute('tabindex')).toBe('0')
+      expect(serverButton!.textContent).toBe('10')
+      expect(
+        container.querySelector('button[data-date="2024-04-08"]')!.textContent
+      ).toContain('●●')
+      await React.act(async () => {
+        root!.unmount()
+      })
+    } finally {
+      console.error = origError
+      container.remove()
+    }
   })
 })

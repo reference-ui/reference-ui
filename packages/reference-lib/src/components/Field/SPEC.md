@@ -42,6 +42,20 @@ Visual polish is not this gate. Do not add Label / Control / Error parts.
 | Playwright CT | 20 (19 carry `FI-*` IDs; prefix/suffix is unnumbered) |
 | Vitest | 1 (`FI-TYPE-01`) |
 
+### Finish-line P2B (2026-09-28, date crew)
+
+Landed PATCHES #2 (hosted DateField typing/publish session re-added
+verbatim over the proven DateField contract, plus a Range
+two-inputs-one-bezel hosted title) and PATCHES #3 (hosted token-picker
+commit/remove flows over proven Combobox CB-COMMIT/CB-SELECT semantics).
+`FI-COMP-02` is now full; `FI-COMP-04` is full except ring-on-opener,
+which still waits on the `FI-CSS-06` theme fix. No `Field.tsx` change.
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 19 / 20 (`FI-CSS-06` blocked — see gaps) |
+| Playwright CT | 21 (20 carry `FI-*` IDs; prefix/suffix is unnumbered) |
+
 ### Gaps & incoherence
 
 - `FI-CSS-06` (no bezel ring when a nested Button is keyboard-focused)
@@ -99,14 +113,14 @@ recipes + `:has()`.
 - [x] `FI-LAY-01` — prefix, control, action in authored order, one row.
 - [x] `FI-COMP-01` — Label `htmlFor` stays on the input; AT
   attributes live on Input.
-- [x] `FI-COMP-02` (bezel subset) — compound DateField bezel wraps
-  input + trigger; typing/publish sessions belong to DateField.
+- [x] `FI-COMP-02` — compound DateField bezel wraps input + trigger
+  with hosted typing/publish sessions, plus a Range two-inputs-one-bezel
+  hosted title (PATCHES #2, finish-line P2B).
 - [x] `FI-COMP-03` — NumberField.Group consumes the recipe with no
   nested Field (double-bezel wrap is application error).
-- [x] `FI-COMP-04` (Field-owned subset) — token picker hosting:
-  label/input-embed/opener/chips/portal/invalid-bezel. Ring-on-opener
-  waits on the `FI-CSS-06` theme fix; commit/remove flows belong to
-  Combobox.
+- [x] `FI-COMP-04` — token picker hosting: label/input-embed/opener/
+  chips/portal/invalid-bezel plus hosted commit/remove flows (PATCHES #3,
+  finish-line P2B). Ring-on-opener waits on the `FI-CSS-06` theme fix.
 
 ### Work order
 

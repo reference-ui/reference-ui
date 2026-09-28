@@ -64,6 +64,25 @@ playtest observed stale `dist`).
 | Playwright CT | 50 titles green (32 pre-existing + 18 view/mode proofs); 7 frozen snaps pass unmodified |
 | Vitest | 63 (56 pre-existing + 7 view/mode contract proofs) |
 
+### Finish-line P2B (2026-09-28, calendar leg)
+
+Landed FEATURES #5 (Weekdays/Days/Day parts + exact 10-field render
+state + CA-DAY-08..11 diagnostics), FEATURES #9 (range preview machine
++ Tab-commit, HQ take (a)), per-part defaulting for CA-VIEW-13 (HQ
+take (c)), and the PATCHES.md #1 colocated port (CA-DAY-13 SSR
+hydration, CA-DAY-14 StrictMode on React 17/18/19, CA-ENV-03 shadow,
+CA-ENV-04 chromium vectors). No `matrix/` dir exists in this repo
+(SPEC paths are stale) — colocated suites ARE the port. HQ takes
+(b) exactness diagnostic kept, (d) `{start,end:null}` already the
+`DateRangeValue` shape (validation also tolerates absent `end`).
+
+| | |
+| :--- | :--- |
+| Named `[x]` | 111 / 132 |
+| Playwright CT | 84 titles green react19 (52 pre-existing + 32 new); CA-DAY-14 also green on 17/18; 7 frozen snaps pass unmodified |
+| Vitest | 68 (63 pre-existing + CA-DAY-13 SSR hydration) |
+| Honest scope | CA-DAY-07 + CA-ENV-04 chromium-only (CT runs Desktop Chrome; no Firefox/WebKit project); CA-RANGE-11 synthetic tap path (no touch context); CA-DAY-14 literally 17/18/19 |
+
 ### Gaps & incoherence
 
 - ~~`defaultValue`, `onChange?: (value: any)` retained~~ → LANDED
@@ -87,14 +106,16 @@ playtest observed stale `dist`).
   single disable state + nav coverage, 2D keys + skip + pending focus,
   post-mount local today marker, div Heading live-atomic + target-month
   nav names + grid labelling.
-- Still missing: range Tab-commit preview (HOLD #9), Day renderer
-  parts (HOLD #5).
+- ~~Still missing: range Tab-commit preview (HOLD #9), Day renderer
+  parts (HOLD #5)~~ → LANDED (finish-line P2B, 2026-09-28):
+  FEATURES #5 parts + 10-field state + diagnostics, FEATURES #9
+  preview machine + Tab-commit, per-part defaulting.
 - ~~Month/year product modes (HOLD #10)~~ → LANDED (playtest FEATURES
   #10, 2026-09-27): private view, Month/Year parts, Months/Years
-  collections, month/year publishing. No hasAuthored part-defaulting
-  (CA-VIEW-13 first fixture stays `[ ]` with HOLD #5): explicit
-  children still replace all defaults, per the current-branch
-  `children ?? defaults` rule.
+  collections, month/year publishing. Per-part defaulting replaced the
+  `children ?? defaults` rule in P2B (2026-09-28, HQ take (c)):
+  authored parts replace only their own default, so the CA-VIEW-13
+  first fixture (custom Days + default Header/Months/Years) is green.
 - Part naming drift vs Calendar.md — kept (quarantine renames NOT ported).
 - `CA-ISO-01` is now the ISO gate (unit); the old click-smoke title lives on
   as CT coverage without the ID.
@@ -138,21 +159,36 @@ as public values; ±100y Date min/max defaults.
   `CA-KEY-04`, `CA-KEY-05`, `CA-KEY-07`, `CA-KEY-08`, `CA-KEY-10`,
   `CA-SINGLE-04`, `CA-SINGLE-07`, `CA-DYNAMIC-02` (FEATURES #4/#6/#7/#8
   cluster B; `CA-KEY-06`-style bound termination covered inside the
-  `CA-KEY-01/05` bounds leg, `CA-KEY-09` waits on HOLD #5 Day parts)
+  `CA-KEY-01/05` bounds leg; `CA-KEY-09` proven with P2B Day parts,
+  indexed below)
 - `[x]` `CA-VIEW-01`, `CA-VIEW-02`, `CA-VIEW-03`, `CA-VIEW-04`,
   `CA-VIEW-05`, `CA-VIEW-06`, `CA-VIEW-07`, `CA-VIEW-08` (nav-disable +
   silence + range round-trip; the "pending range preview" clause is
   vacuous — no preview machine on this branch, HOLD #9), `CA-VIEW-09`,
   `CA-VIEW-10`, `CA-VIEW-11` (bare-Heading mutation counts + folded
-  live-region integrity), `CA-VIEW-12`, `CA-VIEW-13` (second fixture
-  only — custom header without drill-down stays home; the custom-Days
-  + defaulted-parts fixture needs HOLD #5 Day parts), `CA-MODE-01`,
+  live-region integrity), `CA-VIEW-12`, `CA-VIEW-13` (both fixtures —
+  second: custom header without drill-down stays home; first: custom
+  Days + per-part defaulted Header/Months/Years, P2B), `CA-MODE-01`,
   `CA-MODE-02`, `CA-MODE-03`, `CA-MODE-05` (playtest FEATURES #10,
   2026-09-27)
-- `[ ]` `CA-DAY-13`, `CA-DAY-14` (Weekdays/Days/Day parts — NOT ported),
-  remaining `CA-DAY-*`, `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`,
-  `CA-SINGLE-*`, `CA-RANGE-*`, `CA-CHROME-*`,
-  `CA-DYNAMIC-*`, `CA-ENV-*`, `CA-A11Y-01`, `CA-COMP-*`
+- `[x]` `CA-DAY-01`, `CA-DAY-02`, `CA-DAY-03`, `CA-DAY-04`,
+  `CA-DAY-05`, `CA-DAY-06`, `CA-DAY-07` (chromium only — CT has no
+  Firefox/WebKit project), `CA-DAY-08`, `CA-DAY-09`, `CA-DAY-10`,
+  `CA-DAY-11`, `CA-DAY-12`, `CA-KEY-09` (with the `CA-DAY-07` title),
+  `CA-DAY-13` (unit SSR hydration), `CA-DAY-14` (CT StrictMode,
+  literally React 17/18/19) — finish-line P2B FEATURES #5, 2026-09-28
+- `[x]` `CA-RANGE-01`, `CA-RANGE-02`, `CA-RANGE-03`, `CA-RANGE-04`,
+  `CA-RANGE-05`, `CA-RANGE-06`, `CA-RANGE-07`, `CA-RANGE-08`,
+  `CA-RANGE-09`, `CA-RANGE-10`, `CA-RANGE-11` (synthetic tap path —
+  CT has no touch context), `CA-RANGE-12`, `CA-RANGE-13`,
+  `CA-RANGE-14` (Tab-commit per HQ take (a)), `CA-RANGE-15`,
+  `CA-RANGE-16` — finish-line P2B FEATURES #9, 2026-09-28
+- `[x]` `CA-ENV-03` (shadow), `CA-ENV-04` (chromium vectors only —
+  Firefox/WebKit unrun) — PATCHES.md #1 colocated port (no `matrix/`
+  dir; colocated suites ARE the port)
+- `[ ]` remaining `CA-STATE-*`, `CA-MONTH-*`, `CA-KEY-*`,
+  `CA-SINGLE-*`, `CA-CHROME-*`, `CA-DYNAMIC-*`, `CA-ENV-*`,
+  `CA-A11Y-01`, `CA-COMP-*`
 
 ### Work order
 

@@ -1347,7 +1347,7 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
     await expect(calendar.locator('[data-reference-calendar-year]')).toHaveCount(0)
     await expect(calendar.locator('[role="grid"]')).toBeVisible()
     // The first CA-VIEW-13 fixture (custom Days renderer + defaulted
-    // Header/Months/Years) needs HOLD #5 Day parts and stays unproven.
+    // Header/Months/Years) is proven in the day-parts suite below.
   })
 
   test('CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled', async ({
@@ -1448,5 +1448,1359 @@ test.describe('Calendar custom days + week start (W-20/W-21)', () => {
     await expect(
       page.getByTestId('ws-gb-grid').locator('button[data-date="2024-04-07"]')
     ).toBeFocused()
+  })
+})
+
+test.describe('Calendar day parts (FEATURES #5)', () => {
+  const stateOf = (page: import('@playwright/test').Page, date: string) =>
+    page.evaluate(
+      (d) =>
+        (window as unknown as { __dayStates: Record<string, unknown> }).__dayStates[d],
+      date
+    )
+
+  test('CA-DAY-01: default Days render each locale day number with exactly one button per gridcell', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DayPartsDefault')
+
+    const grid = page.getByTestId('ddef-grid')
+    await expect(grid.locator('button[data-date="2024-04-10"]')).toHaveText('10')
+    await expect(grid.locator('button[data-date="2024-05-01"]')).toHaveText('1')
+    // April 2024 Monday-first: 30 in-month + 5 trailing, all in-domain.
+    await expect(grid.locator('tbody td')).toHaveCount(35)
+    await expect(grid.locator('tbody td button')).toHaveCount(35)
+    // The visible number is not the accessible name: no duplicated text.
+    const name = await grid
+      .locator('button[data-date="2024-04-10"]')
+      .getAttribute('aria-label')
+    expect(name).not.toBe('10')
+    expect(name).toContain('April')
+  })
+
+  test('CA-DAY-02: the Day render state carries exactly ten fields for single, today, outside, and disabled dates', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DayCustom')
+
+    const expectedKeys = [
+      'date',
+      'formattedDay',
+      'outsideMonth',
+      'today',
+      'selected',
+      'disabled',
+      'rangeStart',
+      'rangeEnd',
+      'inRange',
+      'preview',
+    ]
+    // Every recorded state — not just the sampled dates — is exact.
+    const violations = await page.evaluate((keys) => {
+      const states = (window as unknown as { __dayStates: Record<string, object> }).__dayStates
+      return Object.entries(states)
+        .filter(([, s]) => JSON.stringify(Object.keys(s)) !== JSON.stringify(keys))
+        .map(([d]) => d)
+    }, expectedKeys)
+    expect(violations).toEqual([])
+
+    await expect
+      .poll(async () => stateOf(page, '2024-04-10'))
+      .toEqual({
+        date: '2024-04-10',
+        formattedDay: '10',
+        outsideMonth: false,
+        today: false,
+        selected: true,
+        disabled: false,
+        rangeStart: false,
+        rangeEnd: false,
+        inRange: false,
+        preview: false,
+      })
+    expect(await stateOf(page, '2024-04-11')).toEqual({
+      date: '2024-04-11',
+      formattedDay: '11',
+      outsideMonth: false,
+      today: true,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+      preview: false,
+    })
+    expect(await stateOf(page, '2024-04-12')).toEqual({
+      date: '2024-04-12',
+      formattedDay: '12',
+      outsideMonth: false,
+      today: false,
+      selected: false,
+      disabled: true,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+      preview: false,
+    })
+    expect(await stateOf(page, '2024-05-01')).toEqual({
+      date: '2024-05-01',
+      formattedDay: '1',
+      outsideMonth: true,
+      today: false,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+      preview: false,
+    })
+  })
+
+  test('CA-DAY-03: a completed controlled range is inclusive with distinguished endpoints in render state', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-completed-13').click()
+
+    const base = {
+      outsideMonth: false,
+      today: false,
+      disabled: false,
+      preview: false,
+    }
+    expect(await stateOf(page, '2024-04-09')).toEqual({
+      date: '2024-04-09',
+      formattedDay: '9',
+      ...base,
+      selected: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+    })
+    expect(await stateOf(page, '2024-04-10')).toEqual({
+      date: '2024-04-10',
+      formattedDay: '10',
+      ...base,
+      selected: true,
+      rangeStart: true,
+      rangeEnd: false,
+      inRange: true,
+    })
+    for (const d of ['2024-04-11', '2024-04-12']) {
+      expect(await stateOf(page, d)).toEqual({
+        date: d,
+        formattedDay: String(Number(d.slice(8, 10))),
+        ...base,
+        selected: true,
+        rangeStart: false,
+        rangeEnd: false,
+        inRange: true,
+      })
+    }
+    expect(await stateOf(page, '2024-04-13')).toEqual({
+      date: '2024-04-13',
+      formattedDay: '13',
+      ...base,
+      selected: true,
+      rangeStart: false,
+      rangeEnd: true,
+      inRange: true,
+    })
+    expect(await stateOf(page, '2024-04-14')).toEqual({
+      date: '2024-04-14',
+      formattedDay: '14',
+      ...base,
+      selected: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+    })
+  })
+
+  test('CA-DAY-04: pending preview is public render state without touching controlled selection', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    await page.locator('button[data-date="2024-04-13"]').hover()
+    expect(await stateOf(page, '2024-04-10')).toEqual({
+      date: '2024-04-10',
+      formattedDay: '10',
+      outsideMonth: false,
+      today: false,
+      selected: true,
+      disabled: false,
+      rangeStart: true,
+      rangeEnd: false,
+      inRange: true,
+      preview: true,
+    })
+    expect(await stateOf(page, '2024-04-11')).toEqual({
+      date: '2024-04-11',
+      formattedDay: '11',
+      outsideMonth: false,
+      today: false,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: true,
+      preview: true,
+    })
+    expect(await stateOf(page, '2024-04-13')).toEqual({
+      date: '2024-04-13',
+      formattedDay: '13',
+      outsideMonth: false,
+      today: false,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: true,
+      inRange: true,
+      preview: true,
+    })
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+
+    // Hover clears; keyboard focus drives the next preview, and the prior
+    // candidate returns every selection/range field to false.
+    await page.getByTestId('range-after').hover()
+    await page.locator('button[data-date="2024-04-12"]').focus()
+    expect(await stateOf(page, '2024-04-12')).toEqual({
+      date: '2024-04-12',
+      formattedDay: '12',
+      outsideMonth: false,
+      today: false,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: true,
+      inRange: true,
+      preview: true,
+    })
+    expect(await stateOf(page, '2024-04-13')).toEqual({
+      date: '2024-04-13',
+      formattedDay: '13',
+      outsideMonth: false,
+      today: false,
+      selected: false,
+      disabled: false,
+      rangeStart: false,
+      rangeEnd: false,
+      inRange: false,
+      preview: false,
+    })
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+  })
+
+  test('CA-DAY-05: custom Day keeps children, native props, StyleProps, and a stable native ref across rerenders', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DayCustom')
+
+    const day8 = page.locator('button[data-date="2024-04-08"]')
+    const day10 = page.locator('button[data-date="2024-04-10"]')
+    await expect(page.getByTestId('dcustom-dot-2024-04-08')).toHaveText('●●')
+    await expect(day8).toHaveAttribute('title', 'day 2024-04-08')
+    await expect(day8).toHaveAttribute('data-booking-count', '2')
+    await expect(day8).toHaveClass(/dcustom-day/)
+    await expect(day8).toHaveCSS('color', 'rgb(255, 0, 0)')
+    // Consumer fontWeight wins over the managed selected weight (600).
+    await expect(day10).toHaveCSS('font-weight', '700')
+
+    const refIsButton = () =>
+      page.evaluate(() => {
+        const w = window as unknown as { __dayRef?: Element | null }
+        return w.__dayRef === document.querySelector('button[data-date="2024-04-10"]')
+      })
+    expect(await refIsButton()).toBe(true)
+
+    // A no-op rerender keeps the exact button attached: the stable ref
+    // still receives that node (an intermediate null+set from React 19
+    // ref-effect semantics inside the button primitive is supported
+    // cleanup behavior, not a remount).
+    await page.getByTestId('dcustom-bump').click()
+    expect(await refIsButton()).toBe(true)
+    const refLog = await page.evaluate(
+      () => (window as unknown as { __refLog: string[] }).__refLog
+    )
+    expect(refLog[refLog.length - 1]).toBe('set:2024-04-10')
+
+    // Unmount (month change) runs supported cleanup exactly once.
+    await page.getByTestId('dcustom-month').click()
+    await expect(page.locator('button[data-date="2024-05-01"]')).toBeVisible()
+    const refLogAfter = await page.evaluate(
+      () => (window as unknown as { __refLog: string[] }).__refLog
+    )
+    expect(refLogAfter[refLogAfter.length - 1]).toBe('null')
+  })
+
+  test('CA-DAY-06: managed Day semantics stay authoritative over conflicting consumer props', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DayCustom')
+    await page.getByTestId('dcustom-conflict').click()
+
+    const day10 = page.locator('button[data-date="2024-04-10"]')
+    const day11 = page.locator('button[data-date="2024-04-11"]')
+    const day12 = page.locator('button[data-date="2024-04-12"]')
+    const day2 = page.locator('button[data-date="2024-04-02"]')
+
+    // Selected day: managed label, selection, enabled state, sole tab stop.
+    const conflictLabel = await day10.getAttribute('aria-label')
+    expect(conflictLabel).not.toBe('forged label')
+    await expect(day10).toHaveAttribute('aria-selected', 'true')
+    await expect(day10).toBeEnabled()
+    await expect(day10).not.toHaveAttribute('aria-disabled', 'true')
+    await expect(day10).toHaveAttribute('tabindex', '0')
+    await expect(page.locator('button[data-date][tabindex="0"]')).toHaveCount(1)
+    await expect(day10).toHaveAttribute('data-selected', '')
+    await expect(day10).not.toHaveAttribute('data-today', '')
+    // The generated td alone exposes the managed cell selection.
+    await expect(day10.locator('xpath=ancestor::td[1]')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+    await expect(day11.locator('xpath=ancestor::td[1]')).toHaveAttribute(
+      'aria-selected',
+      'false'
+    )
+    // Unrelated decoration survives.
+    await expect(day10).toHaveAttribute('aria-describedby', 'dcustom-desc')
+
+    // Today, unavailable, out-of-bounds, and outside-month keep managed state.
+    await expect(day11).toHaveAttribute('data-today', '')
+    await expect(day12).toHaveAttribute('aria-disabled', 'true')
+    await expect(day12).toHaveAttribute('data-unavailable', '')
+    // Unavailable stays natively enabled (W-21): no native disabled
+    // attribute despite the conflicting consumer prop. (Playwright's
+    // toBeEnabled counts aria-disabled, so the native attribute is
+    // asserted directly.)
+    await expect(day12).not.toHaveAttribute('disabled', '')
+    await expect(day2).toBeDisabled()
+    await expect(day2).toHaveAttribute('data-disabled', '')
+    await expect(page.locator('button[data-date="2024-05-01"]')).toHaveAttribute(
+      'data-outside-month',
+      ''
+    )
+    await expect(day10).not.toHaveAttribute('data-outside-month', '')
+
+    // Forged range attributes never appear in single mode.
+    await expect(page.locator('button[data-date][data-range-start]')).toHaveCount(0)
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+    await expect(page.locator('button[data-date][data-in-range]')).toHaveCount(0)
+
+    // The managed label equals the default-path full date name.
+    await page.getByTestId('dcustom-plain').click()
+    await expect(day10).toHaveAttribute('aria-label', conflictLabel!)
+  })
+
+  test('CA-DAY-07/CA-KEY-09: consumer Day events run first and preventDefault cancels navigation and selection (chromium)', async ({
+    mount,
+    page,
+  }) => {
+    // CA-DAY-07 is tagged [browser:all]; the CT harness runs Desktop
+    // Chrome only, so Firefox/WebKit coverage is NOT proven here (same
+    // honest scope as CA-ENV-04 below).
+    await mount('components/Calendar/Calendar/DayCustom')
+    const log = page.getByTestId('dcustom-log')
+
+    // Uncanceled pointer order: Day.onClick → onChange(date).
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(log).toHaveText('click:2024-04-10,change:2024-04-10')
+
+    // Enter order: Day.onKeyDown → Day.onClick → onChange(date).
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Enter')
+    await expect(log).toHaveText('key:2024-04-10:Enter,click:2024-04-10,change:2024-04-10')
+
+    // Space follows native button keyup timing with one request.
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Space')
+    await expect(log).toHaveText('key:2024-04-10: ,click:2024-04-10,change:2024-04-10')
+
+    // Arrow order: Day.onKeyDown → focus(nextDate), no selection.
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(log).toHaveText('key:2024-04-10:ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-11"]')).toBeFocused()
+
+    // Cancellation in onClick suppresses selection; value stays empty.
+    await page.getByTestId('dcustom-veto-click').click()
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(log).toHaveText('click:2024-04-10')
+    await expect(page.getByTestId('dcustom-value')).toHaveText('None')
+    await page.getByTestId('dcustom-veto-click').click()
+
+    // Cancellation in onKeyDown suppresses movement and activation.
+    await page.getByTestId('dcustom-veto-key').click()
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-10"]')).toBeFocused()
+    await page.keyboard.press('PageDown')
+    await expect(log).toHaveText('key:2024-04-10:ArrowRight,key:2024-04-10:PageDown')
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Space')
+    await expect(page.getByTestId('dcustom-value')).toHaveText('None')
+    await expect(page.getByTestId('dcustom-month')).toHaveText('2024-04')
+
+    // Uncanceled control: the same gestures act once the veto lifts.
+    await page.getByTestId('dcustom-veto-key').click()
+    await page.getByTestId('dcustom-reset').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('button[data-date="2024-04-11"]')).toBeFocused()
+  })
+
+  test('CA-DAY-08: a Day whose date mismatches its render state diagnoses and renders non-interactive', async ({
+    mount,
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && msg.text().includes('[reference-ui] Calendar:')) {
+        errors.push(msg.text())
+      }
+    })
+    await mount('components/Calendar/Calendar/DayViolations')
+
+    await expect
+      .poll(() => errors.filter((e) => e.includes('2024-04-10') && e.includes('2024-04-11')))
+      .toHaveLength(1)
+    expect(errors[0]).toContain('must exactly match')
+    // No duplicate or misbound interactive cell: the 04-10 td has no
+    // button while the real 04-11 keeps exactly one.
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(0)
+    await expect(page.locator('button[data-date="2024-04-11"]')).toHaveCount(1)
+    await expect(page.getByTestId('dviol-changes')).toHaveText('none')
+    await expect(page.getByTestId('dviol-month-reqs')).toHaveText('none')
+
+    // A noncanonical date mismatches the same way and never reaches the
+    // availability predicate.
+    await page.getByTestId('dviol-noncanonical').click()
+    await expect
+      .poll(() => errors.filter((e) => e.includes('2024-4-1')))
+      .toHaveLength(1)
+    const unavailCalls = await page.evaluate(
+      () => (window as unknown as { __unavailCalls: string[] }).__unavailCalls
+    )
+    expect(unavailCalls).not.toContain('2024-4-1')
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(0)
+
+    // Recovery: the valid renderer mounts the cell with no new diagnostic.
+    const before = errors.length
+    await page.getByTestId('dviol-valid').click()
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(1)
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('dviol-changes')).toHaveText('2024-04-10')
+    expect(errors.length).toBe(before)
+  })
+
+  test('CA-DAY-09: a renderer returning no Day diagnoses the missing cell without partial grid state', async ({
+    mount,
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && msg.text().includes('[reference-ui] Calendar:')) {
+        errors.push(msg.text())
+      }
+    })
+    await mount('components/Calendar/Calendar/DayViolations')
+    await page.getByTestId('dviol-empty').click()
+
+    await expect
+      .poll(() =>
+        errors.filter((e) => e.includes('2024-04-10') && e.includes('no element'))
+      )
+      .toHaveLength(1)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(0)
+    await expect(page.getByTestId('dviol-changes')).toHaveText('none')
+    await expect(page.getByTestId('dviol-month-reqs')).toHaveText('none')
+  })
+
+  test('CA-DAY-10: a renderer returning multiple Days diagnoses without mounting duplicates', async ({
+    mount,
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && msg.text().includes('[reference-ui] Calendar:')) {
+        errors.push(msg.text())
+      }
+    })
+    await mount('components/Calendar/Calendar/DayViolations')
+    await page.getByTestId('dviol-multiple').click()
+
+    await expect
+      .poll(() =>
+        errors.filter((e) => e.includes('2024-04-10') && e.includes('exactly one Day'))
+      )
+      .toHaveLength(1)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(0)
+    await expect(page.getByTestId('dviol-changes')).toHaveText('none')
+    await expect(page.getByTestId('dviol-month-reqs')).toHaveText('none')
+  })
+
+  test('CA-DAY-11: a renderer returning a foreign element diagnoses without cloning managed props', async ({
+    mount,
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && msg.text().includes('[reference-ui] Calendar:')) {
+        errors.push(msg.text())
+      }
+    })
+    await mount('components/Calendar/Calendar/DayViolations')
+
+    await page.getByTestId('dviol-native').click()
+    await expect
+      .poll(() =>
+        errors.filter((e) => e.includes('2024-04-10') && e.includes('native <button>'))
+      )
+      .toHaveLength(1)
+
+    await page.getByTestId('dviol-wrapped').click()
+    await expect
+      .poll(() =>
+        errors.filter((e) => e.includes('2024-04-10') && e.includes('native <span>'))
+      )
+      .toHaveLength(1)
+
+    await page.getByTestId('dviol-component').click()
+    await expect
+      .poll(() =>
+        errors.filter((e) => e.includes('2024-04-10') && e.includes('<ForeignDay>'))
+      )
+      .toHaveLength(1)
+
+    // No substitute entered the grid: no foreign button, no managed
+    // props cloned, no listeners or refs leaked, no callbacks.
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveCount(0)
+    await expect(page.locator('[data-foreign-day]')).toHaveCount(0)
+    await expect(page.getByTestId('dviol-changes')).toHaveText('none')
+    await expect(page.getByTestId('dviol-month-reqs')).toHaveText('none')
+  })
+
+  test('CA-DAY-12: custom Day state and content refresh from latest props with stable node identity', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/DayCustom')
+
+    await page.evaluate(() => {
+      ;(window as unknown as { __april10?: Element | null }).__april10 =
+        document.querySelector('button[data-date="2024-04-10"]')
+    })
+    // Locale, selection, and availability update together; the April 10
+    // node survives with fresh state and managed attributes.
+    await page.getByTestId('dcustom-locale').click()
+    await page.getByTestId('dcustom-value-14').click()
+    await page.getByTestId('dcustom-unavail').click()
+    const sameNode = await page.evaluate(
+      () =>
+        document.querySelector('button[data-date="2024-04-10"]') ===
+        (window as unknown as { __april10?: Element | null }).__april10
+    )
+    expect(sameNode).toBe(true)
+    const day10Text = await page.locator('button[data-date="2024-04-10"]').innerText()
+    expect(day10Text).not.toContain('10')
+    expect(await stateOf(page, '2024-04-10')).toMatchObject({ selected: false })
+    expect(await stateOf(page, '2024-04-14')).toMatchObject({
+      selected: true,
+      disabled: false,
+    })
+    expect(await stateOf(page, '2024-04-13')).toMatchObject({ disabled: true })
+    expect(await stateOf(page, '2024-04-12')).toMatchObject({ disabled: false })
+    await expect(page.locator('button[data-date="2024-04-14"]')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+    await expect(page.locator('button[data-date="2024-04-13"]')).toHaveAttribute(
+      'data-unavailable',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-12"]')).not.toHaveAttribute(
+      'data-unavailable',
+      ''
+    )
+
+    // The controlled month swaps the grid: May invokes only current
+    // dates/data, the new event map applies, and the removed ref cleans up.
+    await page.evaluate(() => {
+      ;(window as unknown as { __dayStates: Record<string, unknown> }).__dayStates = {}
+    })
+    await page.getByTestId('dcustom-month').click()
+    await page.getByTestId('dcustom-events').click()
+    await expect(page.locator('button[data-date="2024-05-15"]')).toBeVisible()
+    const recorded = await page.evaluate(
+      () => Object.keys((window as unknown as { __dayStates: Record<string, unknown> }).__dayStates)
+    )
+    expect(recorded).toContain('2024-05-15')
+    expect(recorded).not.toContain('2024-04-10')
+    expect(recorded).not.toContain('2024-04-14')
+    await expect(page.locator('[data-testid^="dcustom-dot-"]')).toHaveCount(0)
+    const refLog = await page.evaluate(
+      () => (window as unknown as { __refLog: string[] }).__refLog
+    )
+    expect(refLog[refLog.length - 1]).toBe('null')
+  })
+})
+
+test.describe('Calendar range machine (FEATURES #9)', () => {
+  test('CA-RANGE-01: the first enabled activation requests a controlled pending range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":null}'
+    )
+    // No optimistic selection before acceptance.
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(0)
+
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-selected',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+  })
+
+  test('CA-RANGE-02: hover and focus preview the pending interval with no callback', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    for (const d of ['2024-04-10', '2024-04-12', '2024-04-13', '2024-04-15']) {
+      await expect(page.locator(`button[data-date="${d}"]`)).toHaveAttribute(
+        'data-in-range',
+        ''
+      )
+    }
+    await expect(page.locator('button[data-date="2024-04-09"]')).not.toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+    // Only the controlled start is selected; preview never is.
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(1)
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+
+    // Hover clears; keyboard focus drives the next preview.
+    await page.getByTestId('range-after').hover()
+    await page.locator('button[data-date="2024-04-13"]').focus()
+    await expect(page.locator('button[data-date="2024-04-13"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+  })
+
+  test('CA-RANGE-03: pointer leave clears transient preview without touching the pending range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+
+    await page.getByTestId('range-after').hover()
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+    for (const d of ['2024-04-11', '2024-04-13', '2024-04-15']) {
+      await expect(page.locator(`button[data-date="${d}"]`)).not.toHaveAttribute(
+        'data-in-range',
+        ''
+      )
+    }
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-selected',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+  })
+
+  test('CA-RANGE-04: a later enabled day completes an inclusive chronological range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    await page.locator('button[data-date="2024-04-15"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    for (const d of ['2024-04-10', '2024-04-11', '2024-04-13', '2024-04-15']) {
+      await expect(page.locator(`button[data-date="${d}"]`)).toHaveAttribute(
+        'data-in-range',
+        ''
+      )
+      await expect(page.locator(`button[data-date="${d}"]`)).toHaveAttribute(
+        'aria-selected',
+        'true'
+      )
+    }
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(6)
+    const preview = await page.evaluate(
+      () =>
+        (window as unknown as { __dayStates: Record<string, { preview: boolean }> })
+          .__dayStates['2024-04-12'].preview
+    )
+    expect(preview).toBe(false)
+  })
+
+  test('CA-RANGE-05: a completion before the pending start normalizes to chronological endpoints', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-15').click()
+
+    await page.locator('button[data-date="2024-04-10"]').hover()
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-10"]')).not.toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:2024-04-15')
+  })
+
+  test('CA-RANGE-06: re-activating the pending start completes a one-day range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-10"}'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    const sole = page.locator('button[data-date="2024-04-10"]')
+    await expect(sole).toHaveAttribute('data-range-start', '')
+    await expect(sole).toHaveAttribute('data-range-end', '')
+    await expect(sole).toHaveAttribute('data-in-range', '')
+    await expect(sole).toHaveAttribute('aria-selected', 'true')
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2024-04-09"]')).not.toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-11"]')).not.toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+
+    // Keyboard leg: Enter on the pending start completes the same way.
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.getByTestId('rmachine-clear').click()
+    await page.locator('button[data-date="2024-04-10"]').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-10"}'
+    )
+  })
+
+  test('CA-RANGE-07: a disabled endpoint or blocked crossing rejects with the pending start retained', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.getByTestId('rmachine-block12').click()
+
+    // Force bypasses the aria-disabled actionability gate: the attempt
+    // itself must be silent (W-20 precedent).
+    await page.locator('button[data-date="2024-04-12"]').click({ force: true })
+    await page.locator('button[data-date="2024-04-15"]').click()
+    await page.locator('button[data-date="2024-04-15"]').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    // Focus may move to the enabled candidate; nothing completes.
+    await expect(page.locator('button[data-date="2024-04-15"]')).toBeFocused()
+
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(1)
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+  })
+
+  test('CA-RANGE-08: bounds and outside-month navigation apply to range preview and completion', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeBounds')
+
+    // An out-of-bounds endpoint cannot preview.
+    await page.locator('button[data-date="2024-10-04"]').hover({ force: true })
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+
+    // An allowed endpoint previews inclusively.
+    await page.locator('button[data-date="2024-09-30"]').hover()
+    await expect(page.locator('button[data-date="2024-09-30"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-09-29"]')).toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+
+    // Outside activation orders month before range, exactly once each.
+    await page.locator('button[data-date="2024-10-01"]').click()
+    await expect(page.getByTestId('rbounds-order')).toHaveText(
+      'month:2024-10|change:2024-09-28:2024-10-01'
+    )
+    await page.getByTestId('rbounds-accept-month').click()
+    await page.getByTestId('rbounds-accept').click()
+    await expect(page.getByTestId('rbounds-value')).toHaveText('2024-09-28:2024-10-01')
+    await expect(page.locator('button[data-date="2024-10-01"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+  })
+
+  test('CA-RANGE-09: programmatic range values paint without emitting', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('range-after').click()
+
+    await page.getByTestId('rmachine-completed').click()
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(6)
+
+    await page.getByTestId('rmachine-pending-15').click()
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date][data-in-range]')).toHaveCount(0)
+
+    await page.getByTestId('rmachine-null').click()
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(0)
+    await expect(page.locator('button[data-date][data-range-start]')).toHaveCount(0)
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    await expect(page.getByTestId('rmachine-month-reqs')).toHaveText('none')
+  })
+
+  test('CA-RANGE-10: the first activation after a completed range starts a fresh pending range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-completed').click()
+
+    await page.locator('button[data-date="2024-04-20"]').hover()
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(1)
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+
+    await page.locator('button[data-date="2024-04-18"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-18","end":null}'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2024-04-18"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-10"]')).not.toHaveAttribute(
+      'data-selected',
+      ''
+    )
+    await expect(page.locator('button[data-date][data-in-range]')).toHaveCount(0)
+  })
+
+  test('CA-RANGE-11: touch taps complete a range with no hover-only preview (synthetic tap path)', async ({
+    mount,
+    page,
+  }) => {
+    // The CT harness has no touch context, so taps are dispatched as
+    // click events with no pointer movement — the tap path (activation
+    // without hover) rather than a device gesture.
+    await mount('components/Calendar/Calendar/RangeMachine')
+
+    await page.dispatchEvent('button[data-date="2024-04-10"]', 'click')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":null}'
+    )
+    // No hover preview exists between the taps.
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+    await expect(page.locator('button[data-date][data-in-range]')).toHaveCount(0)
+
+    await page.getByTestId('rmachine-accept').click()
+    await page.dispatchEvent('button[data-date="2024-04-15"]', 'click')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":null}|{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+    // The roving target follows activation even without pointer focus.
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'tabindex',
+      '0'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(6)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+  })
+
+  test('CA-RANGE-12: rejected request stages leave no hidden range state', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+
+    // A rejected first activation leaves no anchor: nothing previews.
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await page.getByTestId('rmachine-reject').click()
+    await expect(page.getByTestId('rmachine-value')).toHaveText('none')
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+    await expect(page.locator('button[data-date][data-in-range]')).toHaveCount(0)
+
+    // A rejected completion keeps the controlled anchor, which previews.
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.locator('button[data-date="2024-04-15"]').click()
+    await page.getByTestId('rmachine-reject').click()
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(1)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+  })
+
+  test('CA-RANGE-13: a preview crossing an unavailable date paints no continuous range', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.getByTestId('rmachine-block12').click()
+
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date="2024-04-12"]')).toHaveAttribute(
+      'data-unavailable',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    for (const d of ['2024-04-11', '2024-04-13', '2024-04-14', '2024-04-15']) {
+      await expect(page.locator(`button[data-date="${d}"]`)).not.toHaveAttribute(
+        'data-in-range',
+        ''
+      )
+    }
+    await expect(page.locator('button[data-date][aria-selected="true"]')).toHaveCount(1)
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+
+    // The focus-driven preview is invalid the same way.
+    await page.getByTestId('range-after').hover()
+    await page.locator('button[data-date="2024-04-15"]').focus()
+    await expect(page.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+    await expect(page.locator('button[data-date="2024-04-14"]')).not.toHaveAttribute(
+      'data-in-range',
+      ''
+    )
+  })
+
+  test('CA-RANGE-14: Tab leaving the grid commits a valid pending preview without preventing Tab', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+
+    // Valid path: the request fires on keydown, native focus settles on
+    // the next control, and the range paints only after acceptance.
+    await page.locator('button[data-date="2024-04-15"]').focus()
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+    await expect(page.getByTestId('rmachine-null')).toBeFocused()
+    await expect(page.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+    await page.getByTestId('rmachine-accept').click()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+
+    // Invalid path: a blocked span emits nothing while Tab still moves.
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.getByTestId('rmachine-block12').click()
+    await page.getByTestId('rmachine-clear').click()
+    await page.locator('button[data-date="2024-04-15"]').focus()
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    await expect(page.getByTestId('rmachine-null')).toBeFocused()
+
+    // Rejected path: blur clears the transient band, the start stays.
+    await page.getByTestId('rmachine-block12').click()
+    await page.locator('button[data-date="2024-04-15"]').focus()
+    await page.keyboard.press('Tab')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+    await page.getByTestId('rmachine-reject').click()
+    await expect(page.locator('button[data-date][data-range-end]')).toHaveCount(0)
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-selected',
+      ''
+    )
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+  })
+
+  test('CA-RANGE-15: month navigation never completes a pending preview', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.locator('button[data-date="2024-04-15"]').hover()
+
+    const calendar = page.getByTestId('test-rmachine-calendar')
+    await calendar.getByRole('button', { name: 'May 2024', exact: true }).click()
+    await expect(page.getByTestId('rmachine-month-reqs')).toHaveText('2024-05')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    await page.getByTestId('rmachine-accept-month').click()
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+    await expect(page.locator('button[data-date][data-selected]')).toHaveCount(0)
+
+    // Previous leg in the May pane: preview, navigate back, still pending.
+    await page.locator('button[data-date="2024-05-10"]').hover()
+    await calendar.getByRole('button', { name: 'April 2024', exact: true }).click()
+    await expect(page.getByTestId('rmachine-month-reqs')).toHaveText('2024-04')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    await page.getByTestId('rmachine-accept-month').click()
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'data-range-start',
+      ''
+    )
+  })
+
+  test('CA-RANGE-16: month/year view navigation keeps the pending range intact and completable', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.locator('button[data-date="2024-04-15"]').hover()
+
+    const calendar = page.getByTestId('test-rmachine-calendar')
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await expect(page.getByTestId('rmachine-month-reqs')).toHaveText('2024-06')
+    await page.getByTestId('rmachine-accept-month').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+
+    await calendar.locator('[data-reference-calendar-year]').click()
+    await calendar.locator('button[data-year="2025"]').click()
+    await expect(page.getByTestId('rmachine-month-reqs')).toHaveText('2025-06')
+    await page.getByTestId('rmachine-accept-month').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+
+    await expect(page.getByTestId('rmachine-value')).toHaveText('2024-04-10:null')
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+
+    // The same pending start still completes in the new pane.
+    await page.locator('button[data-date="2025-06-05"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2025-06-05"}'
+    )
+  })
+})
+
+test.describe('Calendar view defaulting + environments (VIEW-13, DAY-14, ENV)', () => {
+  test('CA-VIEW-13 (first fixture): a custom Days renderer keeps the default Header/Months/Years and drill-down', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/View13CustomDays')
+
+    const calendar = page.getByTestId('test-v13-calendar')
+    // Per-part defaulting: the authored Grid gains the default header.
+    await expect(calendar.locator('[data-reference-calendar-month]')).toHaveCount(1)
+    await expect(calendar.locator('[data-reference-calendar-year]')).toHaveCount(1)
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(page.getByTestId('v13-custom-2024-04-10')).toHaveText('custom-10')
+
+    // Drill-down still works through the defaulted Months part.
+    await calendar.locator('[data-reference-calendar-month]').click()
+    await expect(calendar).toHaveAttribute('data-view', 'month')
+    await expect(calendar.locator('button[data-month="2024-06"]')).toBeVisible()
+    await calendar.locator('button[data-month="2024-06"]').click()
+    await expect(page.getByTestId('v13-month-reqs')).toHaveText('2024-06')
+    await page.getByTestId('v13-accept-month').click()
+    await expect(calendar).toHaveAttribute('data-view', 'day')
+    await expect(page.getByTestId('v13-custom-2024-06-01')).toHaveText('custom-1')
+    await expect(page.getByTestId('v13-value')).toHaveText('2024-04-10')
+  })
+
+  test('CA-DAY-14: custom Days keep one button identity and one event default under StrictMode on every React version', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/StrictDays')
+
+    // Exactly one DOM Day per ISO date despite renderer replay.
+    const dateCounts = await page.evaluate(() => {
+      const dates = [...document.querySelectorAll('button[data-date]')].map((b) =>
+        b.getAttribute('data-date')
+      )
+      return { total: dates.length, unique: new Set(dates).size }
+    })
+    expect(dateCounts.total).toBeGreaterThan(0)
+    expect(dateCounts.total).toBe(dateCounts.unique)
+
+    const refIsButton = () =>
+      page.evaluate(() => {
+        const w = window as unknown as { __strictRef?: Element | null }
+        return w.__strictRef === document.querySelector('button[data-date="2024-04-10"]')
+      })
+    expect(await refIsButton()).toBe(true)
+
+    // A no-op rerender keeps the exact node: no loop, no stale registration.
+    await page.getByTestId('strict-bump').click()
+    expect(await refIsButton()).toBe(true)
+
+    // One activation: one consumer event, one controlled request.
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('strict-consumer')).toHaveText('1')
+    await expect(page.getByTestId('strict-changes')).toHaveText('2024-04-10')
+  })
+
+  test('CA-ENV-03: focus, labels, announcements, and preview work inside an open ShadowRoot', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/Calendar/Calendar/ShadowRange')
+
+    const shadowActiveDate = () =>
+      page.evaluate(() => {
+        const host = document.querySelector('[data-testid="shadow-host"]')!
+        const active = host.shadowRoot!.activeElement
+        return active?.getAttribute?.('data-date') ?? null
+      })
+
+    // Tab enters the shadow tree (the document sees only the host) and
+    // reaches the grid's pending-start tab stop through the header.
+    await page.getByTestId('shadow-before').click()
+    await page.keyboard.press('Tab')
+    const hostFocused = await page.evaluate(
+      () =>
+        document.activeElement?.getAttribute('data-testid') === 'shadow-host'
+    )
+    expect(hostFocused).toBe(true)
+    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab')
+    expect(await shadowActiveDate()).toBe('2024-04-10')
+
+    // Arrow movement stays inside the root.
+    await page.keyboard.press('ArrowRight')
+    expect(await shadowActiveDate()).toBe('2024-04-11')
+
+    // Full accessible labels resolve locally.
+    await expect(page.locator('button[data-date="2024-04-10"]')).toHaveAttribute(
+      'aria-label',
+      'Wednesday, 10 April 2024'
+    )
+
+    // Hover previews the pending interval across the shadow boundary.
+    await page.locator('button[data-date="2024-04-15"]').hover()
+    await expect(page.locator('button[data-date="2024-04-15"]')).toHaveAttribute(
+      'data-range-end',
+      ''
+    )
+
+    // Cross-month keyboard focus waits for the controlled month, then
+    // lands once with exactly one live heading mutation (CA-VIEW-11 count).
+    await page.locator('button[data-date="2024-04-30"]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('shadow-month-reqs')).toHaveText('2024-05')
+    expect(await shadowActiveDate()).toBe('2024-04-30')
+    await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-host"]')!
+      const node = host.shadowRoot!.querySelector('[data-reference-calendar-heading]')!
+      ;(window as unknown as { __headingMutations: number }).__headingMutations = 0
+      new MutationObserver((records) => {
+        const w = window as unknown as { __headingMutations: number }
+        for (const record of records) {
+          if (record.type === 'characterData') w.__headingMutations += 1
+          for (const added of record.addedNodes) {
+            if (added.nodeType === Node.TEXT_NODE) w.__headingMutations += 1
+          }
+        }
+      }).observe(node, { characterData: true, childList: true, subtree: true })
+    })
+    await page.getByTestId('shadow-accept-month').click()
+    expect(await shadowActiveDate()).toBe('2024-05-01')
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __headingMutations: number }).__headingMutations
+      )
+    ).toBe(1)
+
+    // Day ids are unique inside the root and invisible to the document.
+    const idCheck = await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="shadow-host"]')!
+      const ids = [...host.shadowRoot!.querySelectorAll('[id]')].map((el) => el.id)
+      return {
+        unique: new Set(ids).size === ids.length,
+        documentSeesFirst: document.getElementById(ids[0]) !== null,
+      }
+    })
+    expect(idCheck).toEqual({ unique: true, documentSeesFirst: false })
+  })
+
+  test('CA-ENV-04: public date behavior is identical across engines (chromium proof; others unrun)', async ({
+    mount,
+    page,
+  }) => {
+    // Honest scope: the CT harness runs Desktop Chrome only — there is no
+    // Firefox/WebKit project — so this pins the cross-engine vectors on
+    // chromium. Identical Firefox/WebKit behavior is NOT proven here.
+
+    // en-GB grid shape + full date names.
+    await mount('components/Calendar/Calendar/BritishGrid')
+    await expect(page.getByTestId('gb-grid').locator('th').first()).toHaveText('Mon')
+    const gbName = await page
+      .locator('button[data-date="2024-09-18"]')
+      .getAttribute('aria-label')
+    expect(gbName).toContain('September')
+
+    // Bounded arrow movement stops without wrapping.
+    await mount('components/Calendar/Calendar/Constrained')
+    await page.locator('button[data-date="2024-04-05"]').focus()
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.locator('button[data-date="2024-04-05"]')).toBeFocused()
+
+    // Outside-month callback ordering.
+    await mount('components/Calendar/Calendar/OutsideMonth')
+    await page.locator('button[data-date="2024-10-01"]').click()
+    await expect(page.getByTestId('out-events')).toHaveText('m:2024-10,c:2024-10-01')
+
+    // Single activation emits its canonical ISO once.
+    await mount('components/Calendar/Calendar/EmissionCounter')
+    await page.locator('button[data-date="2024-04-10"]').click()
+    await expect(page.getByTestId('emit-log')).toHaveText('2024-04-10')
+
+    // Pending/completed range with an unavailable crossing rejected.
+    await mount('components/Calendar/Calendar/RangeMachine')
+    await page.getByTestId('rmachine-pending-10').click()
+    await page.getByTestId('rmachine-block12').click()
+    await page.locator('button[data-date="2024-04-15"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
+    await page.getByTestId('rmachine-block12').click()
+    await page.locator('button[data-date="2024-04-15"]').click()
+    await expect(page.getByTestId('rmachine-requests')).toHaveText(
+      '{"start":"2024-04-10","end":"2024-04-15"}'
+    )
+
+    // Live month update announces through the stable Heading.
+    await mount('components/Calendar/Calendar/MonthMachine')
+    await page.getByTestId('month-next').click()
+    await page.getByTestId('month-accept').click()
+    await expect(page.getByTestId('month-heading')).toHaveText('February 2024')
   })
 })

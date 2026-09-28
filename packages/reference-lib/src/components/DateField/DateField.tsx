@@ -1,15 +1,33 @@
 import * as React from 'react'
 import { Input, Button, Span, Div, type PrimitiveProps, type PrimitiveElement } from '@reference-ui/react'
 import { Overlay, type OverlayContentProps } from '../Overlay'
-import { Calendar, type ISODate, type DateRangeValue } from '../Calendar'
-import { isValidISODate, type ISODate as CanonicalISODate } from '../Calendar/iso'
+import {
+  Calendar,
+  type CalendarMode,
+  type ISODate,
+  type DateRangeValue,
+} from '../Calendar'
+import {
+  isValidISODate,
+  type ISODate as CanonicalISODate,
+  type ISOMonth,
+  type ISOYear,
+} from '../Calendar/iso'
 import { CalendarTodayIcon } from '@reference-ui/icons'
-import { createSlotRootContext } from '../Slot'
+import { DateFieldSlotProvider, useSlotRegistration, useSlot } from './DateFieldSlots'
+import {
+  DateFieldEnd,
+  DateFieldRange,
+  DateFieldRangeContext,
+  DateFieldStart,
+} from './DateFieldRange'
 import {
   assertValidDateBounds,
   formatLocalDate,
+  getSegmentAtCaret,
   isDateWithinConstraints,
   parseLocalDate,
+  stepDateSegment,
 } from './parse'
 
 export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' | 'defaultValue'> & {
@@ -23,12 +41,6 @@ export type DateFieldProps = Omit<PrimitiveProps<'input'>, 'onChange' | 'value' 
   name?: string
   form?: string
 }
-
-const {
-  Provider: DateFieldSlotProvider,
-  useSlotRegistration,
-  useSlot,
-} = createSlotRootContext<{ ref?: React.Ref<any> }>()
 
 interface DateFieldContextValue {
   value: ISODate | null
@@ -130,8 +142,59 @@ export const DateFieldPicker = React.forwardRef<HTMLDivElement, DateFieldPickerP
 )
 DateFieldPicker.displayName = 'DateFieldPicker'
 
-export function DateFieldCalendar(props: React.ComponentPropsWithoutRef<typeof Calendar>) {
+export type DateFieldCalendarProps = Omit<
+  React.ComponentPropsWithoutRef<typeof Calendar>,
+  | 'value'
+  | 'onChange'
+  | 'locale'
+  | 'mode'
+  | 'min'
+  | 'max'
+  | 'isDateUnavailable'
+  | 'month'
+  | 'onMonthChange'
+> & {
+  mode?: CalendarMode
+  value?: ISODate | DateRangeValue | ISOMonth | ISOYear | null
+  onChange?: ((value: ISODate) => void) | ((value: DateRangeValue) => void) | ((value: ISOMonth) => void) | ((value: ISOYear) => void)
+  locale?: string
+  min?: ISODate
+  max?: ISODate
+  isDateUnavailable?: (date: ISODate) => boolean
+  month?: ISOMonth
+  onMonthChange?: (month: ISOMonth) => void
+}
+
+export function DateFieldCalendar(props: DateFieldCalendarProps) {
   const context = React.useContext(DateFieldContext)
+  const rangeContext = React.useContext(DateFieldRangeContext)
+  if (rangeContext && !context) {
+    // Range binding: the alias drives the range Calendar (mode managed,
+    // value/onChange/locale/min/max/unavailable/pane bound to the draft);
+    // caller grid props spread through, caller value/onChange/locale win.
+    const {
+      value: callerValue,
+      onChange: callerOnChange,
+      locale: callerLocale,
+      mode: _callerMode,
+      ...rest
+    } = props
+    const calendarProps = {
+      mode: 'range',
+      value: callerValue ?? rangeContext.calendarValue,
+      locale: callerLocale ?? rangeContext.locale,
+      min: rangeContext.min,
+      max: rangeContext.max,
+      isDateUnavailable: rangeContext.isDateUnavailable,
+      month: rangeContext.paneMonth,
+      onMonthChange: rangeContext.setPaneMonth,
+      onChange:
+        callerOnChange ??
+        ((nextVal: DateRangeValue) => rangeContext.handleRangeSelect(nextVal)),
+      ...rest,
+    } as React.ComponentPropsWithoutRef<typeof Calendar>
+    return <Calendar {...calendarProps} />
+  }
   // Context isDateUnavailable stays DateField-side until DateField
   // PATCHES #4 wires the bound alias; a caller-provided predicate spreads
   // through `rest` onto the Calendar #6 prop and works today.
@@ -522,6 +585,9 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
     )
     const [isDirty, setIsDirty] = React.useState(false)
     const [hasFailedBoundary, setHasFailedBoundary] = React.useState(false)
+    // Native form.reset() mutates the hidden input behind React's value
+    // tracker; remounting it on each reset restores canonical serialization.
+    const [resetEpoch, setResetEpoch] = React.useState(0)
     const isComposingRef = React.useRef(false)
 
     const reactId = React.useId()
@@ -640,6 +706,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         if (disabled || readOnly) return
         const nextText = e.target.value
         setIsDirty(true)
+        setHasFailedBoundary(false)
         setBuffer(nextText)
 
         if (isComposingRef.current) return
@@ -670,9 +737,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.defaultPrevented || disabled) return
 
-        // Enter is a commit boundary (DF-CMT-01). ArrowUp/Down stepping is
-        // PATCHES #2, out of scope: those keys stay native no-ops here
-        // (DF-KEY-05/06 pin the no-op).
+        // Enter is a commit boundary (DF-CMT-01).
         if (e.key === 'Enter') {
           commit()
         } else if (e.altKey && (e.key === 'ArrowDown' || e.key === 'Down')) {
@@ -681,9 +746,84 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
         } else if (e.key === 'Escape' && isOpen) {
           e.preventDefault()
           setIsOpen(false)
+        } else if (
+          (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Up' || e.key === 'Down') &&
+          !e.altKey &&
+          !readOnly
+        ) {
+          // Caret-aware segment stepping (PATCHES #2): the day/month/year
+          // segment under the caret steps ±1 (Shift = ±10) with Gregorian
+          // carry, and each step commits one ISO. From null/incomplete
+          // text there is no base date, so the keys stay native no-ops
+          // (DF-KEY-05); disabled/read-only suppress stepping (DF-KEY-06).
+          // A step landing outside min/max or on an unavailable date is
+          // locked out like a disabled Calendar day: no publish, text kept.
+          const currentText = isDirty
+            ? buffer
+            : value != null && isValidISODate(value)
+              ? formatLocalDate(value, locale)
+              : (value ?? '')
+          const base = isDirty
+            ? parseLocalDate(buffer, locale)
+            : value != null && isValidISODate(value)
+              ? { valid: true, iso: value as ISODate }
+              : { valid: false, iso: null as ISODate | null }
+          if (!base.valid || base.iso == null) return
+          const input = inputRef.current ?? (e.target as HTMLInputElement | null)
+          const caret = input?.selectionStart ?? currentText.length
+          const segment = getSegmentAtCaret(currentText, caret, locale)
+          const delta = (e.key === 'ArrowUp' || e.key === 'Up' ? 1 : -1) * (e.shiftKey ? 10 : 1)
+          const stepped = stepDateSegment(base.iso as CanonicalISODate, segment, delta)
+          if (stepped == null) return
+          if (
+            !isDateWithinConstraints(
+              stepped,
+              min as CanonicalISODate,
+              max as CanonicalISODate,
+              isDateUnavailable
+            )
+          ) {
+            return
+          }
+          e.preventDefault()
+          if (stepped !== value) {
+            onChange(stepped)
+          }
+          const nextText = formatLocalDate(stepped, locale)
+          setBuffer(nextText)
+          setIsDirty(false)
+          setHasFailedBoundary(false)
+          // Keep the caret in the stepped segment for repeated steps.
+          const caretPos = Math.min(caret, nextText.length)
+          const target = input
+          const restoreCaret = () => {
+            try {
+              target?.setSelectionRange(caretPos, caretPos)
+            } catch {
+              // Non-text selection contexts (tests) ignore caret restore.
+            }
+          }
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(restoreCaret)
+          } else {
+            restoreCaret()
+          }
         }
       },
-      [disabled, isOpen, commit]
+      [
+        disabled,
+        readOnly,
+        isOpen,
+        commit,
+        isDirty,
+        buffer,
+        value,
+        locale,
+        min,
+        max,
+        isDateUnavailable,
+        onChange,
+      ]
     )
 
     const handleBlur = React.useCallback(
@@ -711,6 +851,61 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
       if (!isComposingRef.current) return
       isComposingRef.current = false
     }, [])
+
+    // Form observers (PATCHES #5, NumberField NF-FORM-06/07/08 rules): every
+    // dirty field observes each submit; a failed boundary blocks until a
+    // documented resolution (valid edit, accepted commit, authoritative
+    // value change, or unprevented reset); reset reformats without
+    // changing controlled ISO. `form.submit()` bypasses events and stays
+    // outside the guarantee. Re-subscribed every render so the closures
+    // always see current session state; the bubble-phase reset listener
+    // runs after application capture vetoes (defaultPrevented = intact).
+    React.useEffect(() => {
+      const input = inputRef.current
+      const form = input?.form ?? null
+      if (!input || !form || disabled) return
+      const onSubmit = (submitEvent: Event) => {
+        if (readOnly || submitEvent.defaultPrevented) return
+        if (hasFailedBoundary) {
+          submitEvent.preventDefault()
+          return
+        }
+        if (isDirty) {
+          commit()
+          submitEvent.preventDefault()
+        }
+      }
+      const onReset = (resetEvent: Event) => {
+        if (resetEvent.defaultPrevented) return
+        setBuffer(
+          value != null && isValidISODate(value) ? formatLocalDate(value, locale) : (value ?? '')
+        )
+        setIsDirty(false)
+        setHasFailedBoundary(false)
+        setResetEpoch((epoch) => epoch + 1)
+        const target = inputRef.current
+        const caretToEnd = () => {
+          try {
+            target?.focus()
+            const end = target?.value.length ?? 0
+            target?.setSelectionRange(end, end)
+          } catch {
+            // Non-text selection contexts (tests) ignore caret placement.
+          }
+        }
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(caretToEnd)
+        } else {
+          caretToEnd()
+        }
+      }
+      form.addEventListener('submit', onSubmit)
+      form.addEventListener('reset', onReset)
+      return () => {
+        form.removeEventListener('submit', onSubmit)
+        form.removeEventListener('reset', onReset)
+      }
+    })
 
     const rootInputProps = React.useMemo<DateFieldContextValue['rootInputProps']>(
       () => ({
@@ -859,7 +1054,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
             data-empty={childlessEmpty ? 'true' : undefined}
           />
           {name && !disabled && (
-            <input type="hidden" name={name} value={value ?? ''} form={form} />
+            <input key={`hidden-${resetEpoch}`} type="hidden" name={name} value={value ?? ''} form={form} />
           )}
         </>
       )
@@ -899,7 +1094,7 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
             </Div>
             <DateFieldPickerLayer />
             {name && !disabled && (
-              <input type="hidden" name={name} value={value ?? ''} form={form} />
+              <input key={`hidden-${resetEpoch}`} type="hidden" name={name} value={value ?? ''} form={form} />
             )}
           </Overlay>
         </DateFieldContext.Provider>
@@ -911,9 +1106,15 @@ export const DateField = React.forwardRef<HTMLInputElement, DateFieldProps>(
   Trigger: typeof DateFieldTrigger
   Picker: typeof DateFieldPicker
   Calendar: typeof DateFieldCalendar
+  Range: typeof DateFieldRange
+  Start: typeof DateFieldStart
+  End: typeof DateFieldEnd
 }
 
 DateField.Input = DateFieldInput
 DateField.Trigger = DateFieldTrigger
 DateField.Picker = DateFieldPicker
 DateField.Calendar = DateFieldCalendar
+DateField.Range = DateFieldRange
+DateField.Start = DateFieldStart
+DateField.End = DateFieldEnd

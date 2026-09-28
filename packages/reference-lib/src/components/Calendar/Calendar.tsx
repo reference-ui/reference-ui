@@ -60,6 +60,33 @@ export type CalendarDayRenderer = (
   state: CalendarDayRenderState
 ) => React.ReactNode
 
+/** Exact per-day render state for the `Calendar.Days` renderer (FEATURES
+ * #5, CA-DAY-02/03/04): ten fields, no more. `disabled` merges both
+ * unselectable reasons (outside `min`/`max`, or refused by
+ * `isDateUnavailable`); `selected`/`inRange` are inclusive over committed
+ * ranges (endpoints and interior alike); `preview` marks the transient
+ * hover/focus band of a pending range, which never touches `selected`. */
+export interface CalendarDayState {
+  date: ISODate
+  formattedDay: string
+  outsideMonth: boolean
+  today: boolean
+  selected: boolean
+  disabled: boolean
+  rangeStart: boolean
+  rangeEnd: boolean
+  inRange: boolean
+  preview: boolean
+}
+
+/** Custom day-cell renderer (FEATURES #5): called once per rendered date
+ * with its exact ten-field state. Must return exactly one
+ * `<Calendar.Day date={day.date}>` — a missing, multiple, foreign, or
+ * date-mismatched return emits one dev diagnostic and renders that cell
+ * non-interactive (CA-DAY-08..11). The `ReactElement` return keeps
+ * nullish/multiple returns a type error; runtime casts still diagnose. */
+export type CalendarDaysRenderer = (day: CalendarDayState) => React.ReactElement
+
 // Dev-only diagnostic writer (Combobox/Splitter globalProcess pattern:
 // the package declares no node types, so process comes via globalThis).
 const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
@@ -266,7 +293,18 @@ interface CalendarContextValue {
   /** A year is disabled exactly when every month of it is disabled. */
   isYearDisabled: (year: ISOYear) => boolean
   isDateSelected: (dateStr: ISODate) => boolean
+  /** Committed inclusive selection (FEATURES #5/#9): single match,
+   * pending start, or any date inside a completed range (normalized, so
+   * a reversed controlled value still paints its band). Preview-only
+   * dates stay false. Drives button + td `aria-selected` (CA-RANGE-04,
+   * CA-STATE-09 form). */
+  isDateSelectedInclusive: (dateStr: ISODate) => boolean
   isDateInRange: (dateStr: ISODate) => boolean
+  /** Committed inclusive band (FEATURES #5/#9): every date from start
+   * through end, endpoints included (CA-RANGE-04). Pending values have
+   * no band. Drives inclusive `data-in-range`; td paint stays
+   * interior-only (frozen). */
+  isDateInRangeInclusive: (dateStr: ISODate) => boolean
   isRangeStart: (dateStr: ISODate) => boolean
   isRangeEnd: (dateStr: ISODate) => boolean
   /** Out-of-bounds day state (W-21): outside `min`/`max`. Natively
@@ -362,7 +400,97 @@ function shiftMonth(
   return { year: nextY, month: nextM }
 }
 
+/** True when any date in the inclusive canonical span refuses selection
+ * (out of bounds or unavailable). Guards range completion (CA-RANGE-07)
+ * and preview validity (CA-RANGE-13): a blocked span never paints or
+ * emits. Ascends lexically — canonical by construction — and fails
+ * closed at the Gregorian domain edge. */
+function rangeSpanHasBlockedDate(
+  low: ISODate,
+  high: ISODate,
+  isUnselectable: (date: ISODate) => boolean
+): boolean {
+  let current = low
+  for (;;) {
+    if (isUnselectable(current)) return true
+    if (current >= high) return false
+    try {
+      current = addCalendarDays(current as CanonicalISODate, 1)
+    } catch {
+      return true
+    }
+  }
+}
+
+/** Part-slot detection for per-part defaulting (CA-VIEW-13): true when
+ * the child is a direct element of the given part component. */
+function isPartElement(node: React.ReactNode, part: unknown): node is React.ReactElement {
+  return React.isValidElement(node) && node.type === part
+}
+
+/** Short received-type description for Days renderer diagnostics
+ * (CA-DAY-08..11). Takes unknown — renderers are runtime-validated. */
+function describeRendererNode(node: unknown): string {
+  if (node === null || node === undefined || node === false) return 'no element'
+  if (Array.isArray(node)) return `an array of ${node.length} nodes`
+  if (React.isValidElement(node)) {
+    const type = node.type as string | { displayName?: string; name?: string }
+    if (type === React.Fragment) return 'a Fragment'
+    if (typeof type === 'string') return `a native <${type}>`
+    return `a <${type.displayName ?? type.name ?? 'Component'}>`
+  }
+  return `a ${typeof node}`
+}
+
 const CalendarContext = React.createContext<CalendarContextValue | null>(null)
+
+/** Resolved per-date model shared by the day-grid sections: the exact
+ * ten-field render state plus the DOM/paint derivations. Resolved once
+ * per date per grid render so `Calendar.Days` (td paint) and
+ * `Calendar.Day` (button props) can never disagree. */
+interface DayCellModel {
+  cell: GridDay
+  renderState: CalendarDayState
+  /** Endpoint/single selection: `data-selected` + button paint + the
+   * preferred roving target. Range interior is NOT selected here — its
+   * band paints via `paintInRange` and its semantics via
+   * `selectedInclusive` (frozen-visuals split, flagged for HQ). */
+  selected: boolean
+  /** Committed inclusive selection: single match, pending start, or any
+   * date inside a completed range. Drives button + td `aria-selected`;
+   * preview-only dates stay false (CA-STATE-09 form). */
+  selectedInclusive: boolean
+  /** Inclusive `data-in-range`: committed band plus the valid preview
+   * band (CA-RANGE-02/04). */
+  inRangeInclusive: boolean
+  /** td band paint: committed interior plus preview-band interior.
+   * Endpoints keep radius-only paint (frozen). */
+  paintInRange: boolean
+  rangeStart: boolean
+  rangeEnd: boolean
+  disabled: boolean
+  unavailable: boolean
+  unselectable: boolean
+  isToday: boolean
+  isFocused: boolean
+  tabIndex: 0 | -1
+  /** Stable instance-local button id (`${idPrefix}-${ISO}`). */
+  id: string
+  defaultContent: React.ReactNode
+}
+
+/** Day-grid section plumbing (FEATURES #5): the Grid owns focus, preview,
+ * and activation; Weekdays/Days/Day render from it. */
+interface GridSectionContextValue {
+  weeks: GridDay[][]
+  getModel: (date: ISODate) => DayCellModel | null
+  onDayClick: (date: ISODate) => void
+  onDayFocus: (date: ISODate) => void
+  onDayMouseEnter: (date: ISODate) => void
+  onDayMouseLeave: (date: ISODate) => void
+}
+
+const GridSectionContext = React.createContext<GridSectionContextValue | null>(null)
 
 export type CalendarHeaderProps = PrimitiveProps<'div'>
 
@@ -624,11 +752,381 @@ export function CalendarNextButton({
   )
 }
 
+export type CalendarWeekdaysProps = Omit<PrimitiveProps<'thead'>, 'children'> & {
+  ref?: React.Ref<HTMLTableSectionElement>
+}
+
+/** Locale-ordered weekday header section (FEATURES #5): exactly
+ * `thead > tr > th[scope="col"]` (CA-GRID-11). Props/refs target the
+ * `thead`; per-day customization belongs to `Calendar.Days`. */
+export function CalendarWeekdays({
+  className,
+  style,
+  ref: consumerRef,
+  ...props
+}: CalendarWeekdaysProps) {
+  const context = React.useContext(CalendarContext)
+  // Hooks before the early return: the callback identity must stay
+  // stable across context-present transitions.
+  const setSectionRef = React.useCallback(
+    (node: HTMLTableSectionElement | null) => {
+      if (typeof consumerRef === 'function') {
+        consumerRef(node)
+      } else if (consumerRef && typeof consumerRef === 'object') {
+        ;(consumerRef as React.RefObject<HTMLTableSectionElement | null>).current = node
+      }
+    },
+    [consumerRef]
+  )
+  if (!context) return null
+  const { headers } = context
+
+  return (
+    <Thead className={className} style={style} ref={setSectionRef} {...props}>
+      <Tr role="row">
+        {headers.map((header) => (
+          <Th
+            key={header.weekday}
+            role="columnheader"
+            scope="col"
+            aria-label={header.accessibleName}
+            fontSize="3r"
+            color="design.text.light"
+            p="1r 0"
+            fontWeight="500"
+          >
+            {header.visibleText}
+          </Th>
+        ))}
+      </Tr>
+    </Thead>
+  )
+}
+
+/** Validate one `Calendar.Days` renderer return (CA-DAY-08..11): a direct
+ * `<Calendar.Day>` whose `date` exactly matches the rendered date passes
+ * through untouched; anything else emits one dev diagnostic per date and
+ * renders that cell non-interactive, so no duplicate, misbound, or
+ * foreign button can enter the grid, focus model, or callbacks. */
+function validateDayNode(
+  node: React.ReactNode,
+  model: DayCellModel,
+  diagnose: (kind: string, message: string) => void
+): React.ReactNode {
+  const date = model.cell.date
+  if (node === null || node === undefined || node === false) {
+    diagnose(
+      `${date}:missing`,
+      `Days renderer for date ${JSON.stringify(date)} returned no element. ` +
+        `Return exactly one <Calendar.Day date=${JSON.stringify(date)}> per date; ` +
+        `the cell renders non-interactive.`
+    )
+    return null
+  }
+  const children = Array.isArray(node)
+    ? node
+    : React.isValidElement(node) && node.type === React.Fragment
+      ? React.Children.toArray((node.props as { children?: React.ReactNode }).children)
+      : null
+  if (children !== null) {
+    const dayCount = children.filter((child) => isPartElement(child, CalendarDay)).length
+    if (dayCount > 1) {
+      diagnose(
+        `${date}:multiple:${dayCount}`,
+        `Days renderer for date ${JSON.stringify(date)} returned ${dayCount} ` +
+          `<Calendar.Day> elements. Return exactly one Day per date; the cell renders non-interactive.`
+      )
+    } else {
+      diagnose(
+        `${date}:foreign:${describeRendererNode(node)}`,
+        `Days renderer for date ${JSON.stringify(date)} returned ${describeRendererNode(node)} ` +
+          `instead of a direct <Calendar.Day date=${JSON.stringify(date)}>. ` +
+          `A Day must be the direct return, never wrapped; the cell renders non-interactive.`
+      )
+    }
+    return null
+  }
+  if (isPartElement(node, CalendarDay)) {
+    const returnedDate = (node.props as { date?: unknown }).date
+    if (returnedDate === date && typeof returnedDate === 'string' && isValidISODate(returnedDate)) {
+      return node
+    }
+    diagnose(
+      `${date}:mismatch:${String(returnedDate)}`,
+      `Days renderer for date ${JSON.stringify(date)} returned ` +
+        `<Calendar.Day date=${JSON.stringify(returnedDate)}>. ` +
+        `Each Day date must exactly match its render-state date; the mismatched cell renders ` +
+        `non-interactive and no callback receives the mismatched value.`
+    )
+    return null
+  }
+  diagnose(
+    `${date}:foreign:${describeRendererNode(node)}`,
+    `Days renderer for date ${JSON.stringify(date)} returned ${describeRendererNode(node)} ` +
+      `instead of a direct <Calendar.Day date=${JSON.stringify(date)}>. ` +
+      `Managed props are never cloned onto a substitute; the cell renders non-interactive.`
+  )
+  return null
+}
+
+export type CalendarDaysProps = Omit<PrimitiveProps<'tbody'>, 'children'> & {
+  /** Day renderer over the exact ten-field state (FEATURES #5). Omitted
+   * children render default locale day numbers. */
+  children?: CalendarDaysRenderer
+  ref?: React.Ref<HTMLTableSectionElement>
+}
+
+/** Date-cell section (FEATURES #5): exactly
+ * `tbody > tr > td[role="gridcell"] > Calendar.Day` (CA-GRID-11).
+ * Props/refs target the `tbody`. The renderer return is validated per
+ * date (CA-DAY-08..11); default rendering is pixel-identical to the
+ * pre-parts grid. */
+export function CalendarDays({
+  children,
+  className,
+  style,
+  ref: consumerRef,
+  ...props
+}: CalendarDaysProps) {
+  const section = React.useContext(GridSectionContext)
+  const warnedRef = React.useRef<Set<string>>(new Set())
+  const setSectionRef = React.useCallback(
+    (node: HTMLTableSectionElement | null) => {
+      if (typeof consumerRef === 'function') {
+        consumerRef(node)
+      } else if (consumerRef && typeof consumerRef === 'object') {
+        ;(consumerRef as React.RefObject<HTMLTableSectionElement | null>).current = node
+      }
+    },
+    [consumerRef]
+  )
+  if (!section) return null
+  const { weeks, getModel } = section
+
+  const renderer =
+    typeof children === 'function' ? (children as CalendarDaysRenderer) : undefined
+  if (children !== undefined && renderer === undefined) {
+    calendarDevDiagnostic(
+      `invalid Calendar.Days children: expected a render function ` +
+        `(day) => <Calendar.Day date={day.date}> or omitted children for default days, ` +
+        `received ${describeRendererNode(children)}. Rendering default days.`
+    )
+  }
+  const diagnose = (kind: string, message: string) => {
+    if (warnedRef.current.has(kind)) return
+    warnedRef.current.add(kind)
+    calendarDevDiagnostic(message)
+  }
+
+  return (
+    <Tbody className={className} style={style} ref={setSectionRef} {...props}>
+      {weeks.map((week, wIdx) => (
+        <Tr key={wIdx} role="row">
+          {week.map((cell) => {
+            if (cell.year < 1 || cell.year > 9999) {
+              return <Td key={cell.date} role="gridcell" p="0.5r 0" />
+            }
+            const model = getModel(cell.date)
+            if (!model) return <Td key={cell.date} role="gridcell" p="0.5r 0" />
+            return (
+              <Td
+                key={cell.date}
+                role="gridcell"
+                aria-selected={model.selectedInclusive}
+                p="0.5r 0"
+                textAlign="center"
+                bg={model.paintInRange ? 'ui.table.row.mutedBackground' : undefined}
+                borderTopLeftRadius={model.rangeStart ? 'full' : undefined}
+                borderBottomLeftRadius={model.rangeStart ? 'full' : undefined}
+                borderTopRightRadius={model.rangeEnd ? 'full' : undefined}
+                borderBottomRightRadius={model.rangeEnd ? 'full' : undefined}
+              >
+                {renderer
+                  ? validateDayNode(renderer(model.renderState), model, diagnose)
+                  : (
+                    <CalendarDay date={cell.date}>{model.defaultContent}</CalendarDay>
+                  )}
+              </Td>
+            )
+          })}
+        </Tr>
+      ))}
+    </Tbody>
+  )
+}
+
+export type CalendarDayProps = Omit<PrimitiveProps<'button'>, 'children'> & {
+  /** The rendered date: must exactly match the `Calendar.Days`
+   * render-state date (CA-DAY-08 exactness). Never spread onto the
+   * button. */
+  date: ISODate
+  children?: React.ReactNode
+  /** Managed data attributes (CA-DAY-06): declared so conflicting
+   * consumer values typecheck; the managed value always wins. */
+  'data-date'?: string
+  'data-selected'?: string
+  'data-in-range'?: string
+  'data-outside-month'?: string
+  'data-today'?: string
+  'data-disabled'?: string
+  'data-unavailable'?: string
+  'data-focused'?: string
+  'data-range-start'?: string
+  'data-range-end'?: string
+}
+
+/** Public day button part (FEATURES #5). Managed props — id, roving
+ * tabIndex, native/ARIA disabled, full-date label, selection/range/today
+ * semantics — stay authoritative over conflicting consumer props
+ * (CA-DAY-06); consumer children, styles, decoration, and refs compose
+ * (CA-DAY-05). Consumer events run first; `preventDefault()` cancels the
+ * derived navigation/selection default (CA-DAY-07, CA-KEY-09).
+ *
+ * `forwardRef` (not ref-as-prop like the section parts) so the native
+ * ref works on React 17 too (CA-DAY-14). */
+export const CalendarDay = React.forwardRef<HTMLButtonElement, CalendarDayProps>(
+  function CalendarDay(dayProps, forwardedRef) {
+    const {
+      date,
+      children,
+      onClick: consumerOnClick,
+      onKeyDown: consumerOnKeyDown,
+      onFocus: consumerOnFocus,
+      onBlur: consumerOnBlur,
+      onMouseEnter: consumerOnMouseEnter,
+      onMouseLeave: consumerOnMouseLeave,
+      onMouseOver: consumerOnMouseOver,
+      onMouseOut: consumerOnMouseOut,
+      // Managed props below are stripped: decoration can never forge
+      // accessibility, selection, or focus authority (CA-DAY-06).
+      // Consumer `type` is NOT stripped — an explicit type wins, matching
+      // the nav parts' CA-GRID-10 rule.
+      id: _managedId,
+      tabIndex: _managedTabIndex,
+      disabled: _managedDisabled,
+      'aria-label': _managedLabel,
+      'aria-selected': _managedSelected,
+      'aria-disabled': _managedDisabledAria,
+      'aria-current': _managedCurrent,
+      'data-date': _managedDataDate,
+      'data-selected': _managedDataSelected,
+      'data-in-range': _managedDataInRange,
+      'data-outside-month': _managedDataOutside,
+      'data-today': _managedDataToday,
+      'data-disabled': _managedDataDisabled,
+      'data-unavailable': _managedDataUnavailable,
+      'data-focused': _managedDataFocused,
+      'data-range-start': _managedDataRangeStart,
+      'data-range-end': _managedDataRangeEnd,
+      ...rest
+    } = dayProps
+    const section = React.useContext(GridSectionContext)
+    const model = section?.getModel(date) ?? null
+    if (!model) return null
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      consumerOnClick?.(event)
+      if (!event.defaultPrevented && section) {
+        section.onDayClick(date)
+      }
+    }
+    const handleFocus = (event: React.FocusEvent<HTMLButtonElement>) => {
+      consumerOnFocus?.(event)
+      section?.onDayFocus(date)
+    }
+    const handleBlur = (event: React.FocusEvent<HTMLButtonElement>) => {
+      consumerOnBlur?.(event)
+    }
+    // Preview tracking rides mouseover/mouseout — not enter/leave —
+    // because React's enter/leave polyfill cannot see through shadow
+    // retargeting while the bubbling pair dispatches via composedPath
+    // (CA-ENV-03). The containment guards restore exact enter/leave
+    // semantics in the light DOM; under retargeting they pass through
+    // and the idempotent set/clear keeps the end state correct.
+    const handleMouseOver = (event: React.MouseEvent<HTMLButtonElement>) => {
+      consumerOnMouseOver?.(event)
+      const related = event.relatedTarget as Node | null
+      if (related && event.currentTarget.contains(related)) return
+      section?.onDayMouseEnter(date)
+    }
+    const handleMouseOut = (event: React.MouseEvent<HTMLButtonElement>) => {
+      consumerOnMouseOut?.(event)
+      const related = event.relatedTarget as Node | null
+      if (related && event.currentTarget.contains(related)) return
+      section?.onDayMouseLeave(date)
+    }
+
+    return (
+      <Button
+        type="button"
+        id={model.id}
+        tabIndex={model.tabIndex}
+        disabled={model.disabled}
+        aria-disabled={model.unselectable ? 'true' : undefined}
+        aria-selected={model.selectedInclusive}
+        aria-current={model.isToday ? 'date' : undefined}
+        aria-label={model.cell.accessibleName}
+        data-date={model.cell.date}
+        data-selected={model.selected ? '' : undefined}
+        data-in-range={model.inRangeInclusive ? '' : undefined}
+        data-outside-month={model.cell.outsideMonth ? '' : undefined}
+        data-today={model.isToday ? '' : undefined}
+        data-disabled={model.disabled ? '' : undefined}
+        data-unavailable={model.unavailable ? '' : undefined}
+        data-focused={model.isFocused ? '' : undefined}
+        data-range-start={model.rangeStart ? '' : undefined}
+        data-range-end={model.rangeEnd ? '' : undefined}
+        width="7r"
+        height="7r"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        borderRadius="full"
+        border="none"
+        bg={model.selected ? 'ui.button.background' : 'transparent'}
+        color={
+          model.selected
+            ? 'ui.button.foreground'
+            : model.unselectable || model.cell.outsideMonth
+              ? 'design.text.light'
+              : 'design.text.base'
+        }
+        fontSize="3r"
+        fontWeight={model.selected || model.isToday ? '600' : '400'}
+        textDecoration={model.isToday ? 'underline' : undefined}
+        textUnderlineOffset={model.isToday ? '0.15em' : undefined}
+        cursor={model.unselectable ? 'not-allowed' : 'pointer'}
+        outline="none"
+        _hover={
+          !model.selected && !model.unselectable
+            ? { bg: 'ui.button.mutedBackground' }
+            : undefined
+        }
+        _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
+        {...rest}
+        onClick={handleClick}
+        onKeyDown={consumerOnKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onMouseEnter={consumerOnMouseEnter}
+        onMouseLeave={consumerOnMouseLeave}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+        ref={forwardedRef}
+      >
+        {children}
+      </Button>
+    )
+  }
+)
+CalendarDay.displayName = 'Calendar.Day'
+
 export type CalendarGridProps = PrimitiveProps<'table'> & {
   ref?: React.Ref<HTMLTableElement>
 }
 
 export function CalendarGrid({
+  children,
   className,
   style,
   ref: consumerRef,
@@ -641,9 +1139,10 @@ export function CalendarGrid({
   if (!context) return null
 
   const {
+    mode,
     view,
+    value,
     currentMonth,
-    headers,
     grid,
     headingId,
     idPrefix,
@@ -654,7 +1153,9 @@ export function CalendarGrid({
     requestMonthChange,
     selectDate,
     isDateSelected,
+    isDateSelectedInclusive,
     isDateInRange,
+    isDateInRangeInclusive,
     isRangeStart,
     isRangeEnd,
     isDateDisabled,
@@ -687,6 +1188,36 @@ export function CalendarGrid({
     () => new Set<string>(renderedDays.map((cell) => cell.date)),
     [renderedDays]
   )
+  const cellByDate = React.useMemo(
+    () => new Map<ISODate, GridDay>(renderedDays.map((cell) => [cell.date, cell])),
+    [renderedDays]
+  )
+
+  // Range preview candidates (FEATURES #9): the hovered day, else the
+  // grid-focused day. Hover wins while the pointer is over a day;
+  // keyboard focus drives preview once hover clears (CA-RANGE-02).
+  const [hoverDate, setHoverDate] = React.useState<ISODate | null>(null)
+  const [focusPreviewDate, setFocusPreviewDate] = React.useState<ISODate | null>(null)
+
+  // Valid preview band (FEATURES #9): range mode with a controlled
+  // pending start, a candidate that is not the start, selectable, and
+  // whose inclusive span holds no unselectable date. Anything else —
+  // completed/null value, degenerate, disabled endpoint, blocked span —
+  // previews nothing (CA-RANGE-02/07/10/13). The band is anchor-oriented:
+  // the start keeps range-start, the candidate takes range-end, and the
+  // completion normalizes to chronological (CA-RANGE-05).
+  const previewBand = React.useMemo(() => {
+    if (mode !== 'range' || !value || typeof value !== 'object') return null
+    const range = value as DateRangeValue
+    if (!range.start || range.end != null) return null
+    const candidate = hoverDate ?? focusPreviewDate
+    if (!candidate || candidate === range.start) return null
+    if (isDateUnselectable(candidate)) return null
+    const low = range.start < candidate ? range.start : candidate
+    const high = range.start < candidate ? candidate : range.start
+    if (rangeSpanHasBlockedDate(low, high, isDateUnselectable)) return null
+    return { low, high, start: range.start, candidate }
+  }, [mode, value, hoverDate, focusPreviewDate, isDateUnselectable])
 
   // Preferred roving target (CA-STATE-03): in-bounds rendered
   // selection, then in-bounds rendered today, then the first in-bounds
@@ -766,6 +1297,9 @@ export function CalendarGrid({
     const related = event.relatedTarget as Node | null
     if (related && gridRef.current?.contains(related)) return
     if (related) hadGridFocusRef.current = false
+    // Focus left the grid: the focus-driven preview ends. A rejected
+    // Tab-commit still retains its controlled pending start (CA-RANGE-14).
+    setFocusPreviewDate(null)
   }
   const focusDay = (date: ISODate) => {
     // Owner-root-safe: query inside the grid element, never the
@@ -782,6 +1316,12 @@ export function CalendarGrid({
   React.useEffect(() => {
     const gridChanged = prevGridRef.current !== grid
     prevGridRef.current = grid
+    if (gridChanged) {
+      // The pane rebuilt under a possibly stationary pointer: the hover
+      // candidate may be gone or rebound, so drop it (fresh mouse events
+      // re-establish it). Never Tab-commit to a stale date.
+      setHoverDate(null)
+    }
     const pending = pendingFocusRef.current
     if (pending) {
       const pendingMonth = pending.date.slice(0, 7)
@@ -864,12 +1404,21 @@ export function CalendarGrid({
 
   const handleGridKeyDown = (event: React.KeyboardEvent) => {
     if (event.defaultPrevented) return // consumer Grid onKeyDown ran first
-    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return // CA-KEY-04
     const target = event.target as HTMLElement | null
     const dayButton = target?.closest?.('button[data-date]') ?? null
     if (!dayButton || !gridRef.current?.contains(dayButton)) return
     const origin = dayButton.getAttribute('data-date') as ISODate
     const key = event.key
+    if (key === 'Tab') {
+      // Tab-commit (FEATURES #9, CA-RANGE-14): a valid pending preview
+      // completes when Tab leaves the grid — Shift+Tab leaves too, so it
+      // commits the same way. Never default-prevented: the request fires
+      // on keydown, native focus settles after. An invalid preview emits
+      // nothing; rejection just ends the transient band on blur.
+      if (previewBand) selectDate(previewBand.candidate)
+      return
+    }
+    if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return // CA-KEY-04
     const horizontal = key === 'ArrowLeft' || key === 'ArrowRight'
     const vertical = key === 'ArrowUp' || key === 'ArrowDown'
     if (
@@ -970,7 +1519,9 @@ export function CalendarGrid({
     }
   }
 
-  const handleDayClick = (cell: GridDay) => {
+  const handleDayClick = (date: ISODate) => {
+    const cell = cellByDate.get(date)
+    if (!cell) return
     if (isDateUnselectable(cell.date)) return // locked out in every modality (CA-SINGLE-04)
     if (cell.outsideMonth) {
       // Outside activation requests the month first, then the date
@@ -985,6 +1536,124 @@ export function CalendarGrid({
     setFocusedDate(cell.date) // the roving target follows activation (CA-SINGLE-01)
     selectDate(cell.date)
   }
+
+  // Resolved per-date models for the sections (FEATURES #5): the exact
+  // ten-field render state plus DOM/paint derivations, computed once per
+  // date so Days and Day can never disagree.
+  const dayModels = React.useMemo(() => {
+    const models = new Map<ISODate, DayCellModel>()
+    for (const cell of renderedDays) {
+      const date = cell.date
+      const selected = isDateSelected(date)
+      const selectedInclusive = isDateSelectedInclusive(date)
+      const inBand = previewBand !== null && date >= previewBand.low && date <= previewBand.high
+      const rangeStart = isRangeStart(date)
+      const rangeEnd = isRangeEnd(date) || previewBand?.candidate === date
+      const disabled = isDateDisabled(date)
+      // Unavailable is the focusable half of unselectable (W-21):
+      // out-of-bounds already implies it, so the flag marks only
+      // the in-bounds predicate-refused dates.
+      const unavailable = !disabled && isDateUnavailableDay(date)
+      const unselectable = disabled || unavailable
+      const isToday = markerToday === date
+      const isFocused = focusedDate === date
+      // Custom content (W-20) replaces only the button's children;
+      // nullish keeps the default locale day number.
+      const defaultContent =
+        dayRender?.(date, {
+          selected,
+          inRange: isDateInRange(date),
+          disabled: unselectable,
+          today: isToday,
+        }) ?? cell.formattedDay
+      const inRangeInclusive = isDateInRangeInclusive(date) || inBand
+      const renderState: CalendarDayState = {
+        date,
+        formattedDay: cell.formattedDay,
+        outsideMonth: cell.outsideMonth,
+        today: isToday,
+        selected: selectedInclusive,
+        disabled: unselectable,
+        rangeStart,
+        rangeEnd,
+        inRange: inRangeInclusive,
+        preview: inBand,
+      }
+      models.set(date, {
+        cell,
+        renderState,
+        selected,
+        selectedInclusive,
+        inRangeInclusive,
+        paintInRange:
+          isDateInRange(date) ||
+          (previewBand !== null && date > previewBand.low && date < previewBand.high),
+        rangeStart,
+        rangeEnd,
+        disabled,
+        unavailable,
+        unselectable,
+        isToday,
+        isFocused,
+        tabIndex: isFocused && view === 'day' ? 0 : -1,
+        id: `${idPrefix}-${date}`,
+        defaultContent,
+      })
+    }
+    return models
+  }, [
+    renderedDays,
+    isDateSelected,
+    isDateSelectedInclusive,
+    isDateInRange,
+    isDateInRangeInclusive,
+    isRangeStart,
+    isRangeEnd,
+    isDateDisabled,
+    isDateUnavailableDay,
+    previewBand,
+    markerToday,
+    focusedDate,
+    dayRender,
+    view,
+    idPrefix,
+  ])
+
+  const getModel = React.useCallback(
+    (date: ISODate) => dayModels.get(date) ?? null,
+    [dayModels]
+  )
+
+  // Deliberately unmemoized: the sections re-render with the Grid
+  // either way, and the click closure reads fresh focus helpers.
+  const sectionValue: GridSectionContextValue = {
+    weeks: grid.weeks,
+    getModel,
+    onDayClick: handleDayClick,
+    onDayFocus: (date: ISODate) => setFocusPreviewDate(date),
+    onDayMouseEnter: (date: ISODate) => setHoverDate(date),
+    onDayMouseLeave: () => setHoverDate(null),
+  }
+
+  // Authored sections replace their default per part; anything else is
+  // dropped — a table holds only thead/tbody (CA-GRID-11 validity).
+  const sections = React.useMemo(() => {
+    let weekdays: React.ReactElement | undefined
+    let days: React.ReactElement | undefined
+    const collect = (nodes: React.ReactNode): void => {
+      React.Children.forEach(nodes, (child) => {
+        if (isPartElement(child, React.Fragment)) {
+          collect((child.props as { children?: React.ReactNode }).children)
+        } else if (isPartElement(child, CalendarWeekdays)) {
+          weekdays ??= child
+        } else if (isPartElement(child, CalendarDays)) {
+          days ??= child
+        }
+      })
+    }
+    collect(children)
+    return { weekdays, days }
+  }, [children])
 
   return (
     <Table
@@ -1010,119 +1679,10 @@ export function CalendarGrid({
       style={{ display: view === 'day' ? undefined : 'none', ...style }}
       {...props}
     >
-      <Thead>
-        <Tr role="row">
-          {headers.map((header) => (
-            <Th
-              key={header.weekday}
-              role="columnheader"
-              scope="col"
-              aria-label={header.accessibleName}
-              fontSize="3r"
-              color="design.text.light"
-              p="1r 0"
-              fontWeight="500"
-            >
-              {header.visibleText}
-            </Th>
-          ))}
-        </Tr>
-      </Thead>
-      <Tbody>
-        {grid.weeks.map((week, wIdx) => (
-          <Tr key={wIdx} role="row">
-            {week.map((cell) => {
-              if (cell.year < 1 || cell.year > 9999) {
-                return <Td key={cell.date} role="gridcell" p="0.5r 0" />
-              }
-
-              const selected = isDateSelected(cell.date)
-              const inRange = isDateInRange(cell.date)
-              const rangeStart = isRangeStart(cell.date)
-              const rangeEnd = isRangeEnd(cell.date)
-              const disabled = isDateDisabled(cell.date)
-              // Unavailable is the focusable half of unselectable (W-21):
-              // out-of-bounds already implies it, so the flag marks only
-              // the in-bounds predicate-refused dates.
-              const unavailable = !disabled && isDateUnavailableDay(cell.date)
-              const unselectable = disabled || unavailable
-              const isToday = markerToday === cell.date
-              const isFocused = focusedDate === cell.date
-              // Custom content (W-20) replaces only the button's children;
-              // nullish keeps the default locale day number.
-              const dayContent =
-                dayRender?.(cell.date, {
-                  selected,
-                  inRange,
-                  disabled: unselectable,
-                  today: isToday,
-                }) ?? cell.formattedDay
-
-              return (
-                <Td
-                  key={cell.date}
-                  role="gridcell"
-                  p="0.5r 0"
-                  textAlign="center"
-                  bg={inRange ? 'ui.table.row.mutedBackground' : undefined}
-                  borderTopLeftRadius={rangeStart ? 'full' : undefined}
-                  borderBottomLeftRadius={rangeStart ? 'full' : undefined}
-                  borderTopRightRadius={rangeEnd ? 'full' : undefined}
-                  borderBottomRightRadius={rangeEnd ? 'full' : undefined}
-                >
-                  <Button
-                    type="button"
-                    id={`${idPrefix}-${cell.date}`}
-                    // The roving target is tabbable only in its own view:
-                    // a display:none collection is never a tab stop, so
-                    // exactly one tab stop exists per shown collection.
-                    tabIndex={isFocused && view === 'day' ? 0 : -1}
-                    disabled={disabled}
-                    aria-disabled={unselectable ? 'true' : undefined}
-                    aria-selected={selected}
-                    aria-current={isToday ? 'date' : undefined}
-                    aria-label={cell.accessibleName}
-                    data-date={cell.date}
-                    data-selected={selected ? '' : undefined}
-                    data-in-range={inRange ? '' : undefined}
-                    data-outside-month={cell.outsideMonth ? '' : undefined}
-                    data-today={isToday ? '' : undefined}
-                    data-disabled={disabled ? '' : undefined}
-                    data-unavailable={unavailable ? '' : undefined}
-                    data-focused={isFocused ? '' : undefined}
-                    onClick={() => handleDayClick(cell)}
-                    width="7r"
-                    height="7r"
-                    display="inline-flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius="full"
-                    border="none"
-                    bg={selected ? 'ui.button.background' : 'transparent'}
-                    color={
-                      selected
-                        ? 'ui.button.foreground'
-                        : unselectable || cell.outsideMonth
-                          ? 'design.text.light'
-                          : 'design.text.base'
-                    }
-                    fontSize="3r"
-                    fontWeight={selected || isToday ? '600' : '400'}
-                    textDecoration={isToday ? 'underline' : undefined}
-                    textUnderlineOffset={isToday ? '0.15em' : undefined}
-                    cursor={unselectable ? 'not-allowed' : 'pointer'}
-                    outline="none"
-                    _hover={!selected && !unselectable ? { bg: 'ui.button.mutedBackground' } : undefined}
-                    _focusVisible={{ outline: '2px solid', outlineColor: 'ui.focus.ring', outlineOffset: '2px' }}
-                  >
-                    {dayContent}
-                  </Button>
-                </Td>
-              )
-            })}
-          </Tr>
-        ))}
-      </Tbody>
+      <GridSectionContext.Provider value={sectionValue}>
+        {sections.weekdays ?? <CalendarWeekdays />}
+        {sections.days ?? <CalendarDays />}
+      </GridSectionContext.Provider>
     </Table>
   )
 }
@@ -1941,12 +2501,46 @@ export function Calendar(calendarProps: CalendarProps) {
     [mode, value]
   )
 
+  const isDateSelectedInclusive = React.useCallback(
+    (dateStr: ISODate) => {
+      if (mode === 'day') {
+        return value === dateStr
+      }
+      if (mode === 'range' && value && typeof value === 'object') {
+        const range = value as DateRangeValue
+        if (range.start && range.end) {
+          const low = range.start < range.end ? range.start : range.end
+          const high = range.start < range.end ? range.end : range.start
+          return dateStr >= low && dateStr <= high
+        }
+        return range.start === dateStr
+      }
+      return false
+    },
+    [mode, value]
+  )
+
   const isDateInRange = React.useCallback(
     (dateStr: ISODate) => {
       if (mode === 'range' && value && typeof value === 'object') {
         const range = value as DateRangeValue
         if (range.start && range.end) {
           return dateStr > range.start && dateStr < range.end
+        }
+      }
+      return false
+    },
+    [mode, value]
+  )
+
+  const isDateInRangeInclusive = React.useCallback(
+    (dateStr: ISODate) => {
+      if (mode === 'range' && value && typeof value === 'object') {
+        const range = value as DateRangeValue
+        if (range.start && range.end) {
+          const low = range.start < range.end ? range.start : range.end
+          const high = range.start < range.end ? range.end : range.start
+          return dateStr >= low && dateStr <= high
         }
       }
       return false
@@ -2007,6 +2601,15 @@ export function Calendar(calendarProps: CalendarProps) {
           nextRange = { start: dateStr, end: curr.start }
         } else {
           nextRange = { start: curr.start, end: dateStr }
+        }
+        // A completion whose inclusive span crosses an unselectable date
+        // is rejected with the pending start retained (CA-RANGE-07) —
+        // deliberately kept, never reset to the endpoint. Fresh pending
+        // starts (end null) skip the scan.
+        if (nextRange.end != null) {
+          const low = nextRange.start < nextRange.end ? nextRange.start : nextRange.end
+          const high = nextRange.start < nextRange.end ? nextRange.end : nextRange.start
+          if (rangeSpanHasBlockedDate(low, high, isDateUnselectable)) return
         }
         if (
           !curr ||
@@ -2114,7 +2717,9 @@ export function Calendar(calendarProps: CalendarProps) {
       isMonthDisabled,
       isYearDisabled,
       isDateSelected,
+      isDateSelectedInclusive,
       isDateInRange,
+      isDateInRangeInclusive,
       isRangeStart,
       isRangeEnd,
       isDateDisabled,
@@ -2148,7 +2753,9 @@ export function Calendar(calendarProps: CalendarProps) {
       isMonthDisabled,
       isYearDisabled,
       isDateSelected,
+      isDateSelectedInclusive,
       isDateInRange,
+      isDateInRangeInclusive,
       isRangeStart,
       isRangeEnd,
       isDateDisabled,
@@ -2157,6 +2764,44 @@ export function Calendar(calendarProps: CalendarProps) {
       dayRender,
     ]
   )
+
+  // Per-part defaulting (CA-VIEW-13): authored parts replace only their
+  // own default — an authored Grid keeps the default Header/Months/Years
+  // — while omitted parts render mode-gated defaults exactly as before.
+  // Unrecognized children are application chrome and render after the
+  // parts. Fragment wrappers are transparent to slot detection.
+  const parts = React.useMemo(() => {
+    const slots: {
+      header?: React.ReactElement
+      grid?: React.ReactElement
+      months?: React.ReactElement
+      years?: React.ReactElement
+      chrome: React.ReactNode[]
+    } = { chrome: [] }
+    const collect = (nodes: React.ReactNode): void => {
+      React.Children.forEach(nodes, (child) => {
+        if (isPartElement(child, React.Fragment)) {
+          collect((child.props as { children?: React.ReactNode }).children)
+        } else if (isPartElement(child, CalendarHeader)) {
+          if (!slots.header) slots.header = child
+          else slots.chrome.push(child)
+        } else if (isPartElement(child, CalendarGrid)) {
+          if (!slots.grid) slots.grid = child
+          else slots.chrome.push(child)
+        } else if (isPartElement(child, CalendarMonths)) {
+          if (!slots.months) slots.months = child
+          else slots.chrome.push(child)
+        } else if (isPartElement(child, CalendarYears)) {
+          if (!slots.years) slots.years = child
+          else slots.chrome.push(child)
+        } else {
+          slots.chrome.push(child)
+        }
+      })
+    }
+    collect(children)
+    return slots
+  }, [children])
 
   if (invalid || !localeData) {
     if (invalid) calendarDevDiagnostic(invalid)
@@ -2175,21 +2820,22 @@ export function Calendar(calendarProps: CalendarProps) {
         style={style}
         {...props}
       >
-        {children ?? (
-          <>
-            <CalendarHeader>
-              <CalendarPrevButton />
-              <CalendarHeading>
-                <CalendarMonth />
-                <CalendarYear />
-              </CalendarHeading>
-              <CalendarNextButton />
-            </CalendarHeader>
-            {(mode === 'day' || mode === 'range') && <CalendarGrid />}
-            {mode !== 'year' && <CalendarMonths />}
-            <CalendarYears />
-          </>
+        {parts.header ?? (
+          <CalendarHeader>
+            <CalendarPrevButton />
+            <CalendarHeading>
+              <CalendarMonth />
+              <CalendarYear />
+            </CalendarHeading>
+            <CalendarNextButton />
+          </CalendarHeader>
         )}
+        {mode === 'day' || mode === 'range'
+          ? (parts.grid ?? <CalendarGrid />)
+          : parts.grid}
+        {mode !== 'year' ? (parts.months ?? <CalendarMonths />) : parts.months}
+        {parts.years ?? <CalendarYears />}
+        {parts.chrome}
       </Div>
     </CalendarContext.Provider>
   )
@@ -2202,5 +2848,8 @@ Calendar.NextButton = CalendarNextButton
 Calendar.Month = CalendarMonth
 Calendar.Year = CalendarYear
 Calendar.Grid = CalendarGrid
+Calendar.Weekdays = CalendarWeekdays
+Calendar.Days = CalendarDays
+Calendar.Day = CalendarDay
 Calendar.Months = CalendarMonths
 Calendar.Years = CalendarYears

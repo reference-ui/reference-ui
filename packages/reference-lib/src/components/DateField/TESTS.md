@@ -330,12 +330,12 @@ below add only DateField-specific anatomy and behavior.
   **DateField picker should compose inside an open ShadowRoot.**
   Mount `<DateField><DateField.Picker /></DateField>` inside a ShadowRoot. Assert
   popover portal, keyboard navigation, and event bubbling function correctly.
-- [ ] `DF-COMP-05` `[reference]` `[browser]` —
+- [x] `DF-COMP-05` `[reference]` `[browser]` —
   **`<DateField.Range>` should express customizable range picker with unfolded parts.**
   Mount `<DateField.Range>` with explicit `<DateField.Start>`, `<DateField.End>`,
   `<DateField.Trigger>`, and `<DateField.Picker>`. Assert full two-endpoint editing,
   active endpoint sync, and Apply/Cancel transaction flow.
-- [ ] `DF-COMP-06` `[reference]` `[browser]` —
+- [x] `DF-COMP-06` `[reference]` `[browser]` —
   **DateField and DateField.Range should unfold all parts without breaking machine invariants.**
   Verify that unfolding `<DateField.Input>`, `<DateField.Trigger>`, `<DateField.Picker>`,
   `<DateField.Calendar>`, `<DateField.Start>`, and `<DateField.End>` preserves all

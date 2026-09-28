@@ -245,7 +245,7 @@ type ISOMonth = `${number}-${number}`
 
 type DateRangeValue = {
   start: ISODate
-  end: ISODate
+  end: ISODate | null
 } | null
 
 type DateRangeDraft = {
@@ -326,8 +326,8 @@ interface DateFieldRangeProps
     DateFieldManagedProp | "children"
   > {
   children?: React.ReactNode
-  value: DateRangeValue
-  onChange: (value: DateRangeValue) => void
+  value: DateRangeValue | null
+  onChange: (value: DateRangeValue | null) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -440,6 +440,16 @@ Renders the shared `Field` bezel containing:
   availability).
 - Apply / Cancel / Escape transactions on popup close and commit.
 
+Settled range takes (finish-line P2B): the folded picker applies on
+completion — there is no Apply button, and `canApply=false` blocks the
+commit, never the close. A pending Calendar anchor stays in the draft
+(never publishes); the anchor click restarts the draft and clears the
+end buffer, so the two-click gesture always completes. Only complete
+ranges and `null` reach `onChange`. An accepted live echo reformats
+both endpoints (when draft and committed agree semantically nothing is
+pending). The bezel exposes `data-can-apply` and `data-active-endpoint`
+for tests and styling.
+
 ---
 
 ## Controlled value and dirty edit session
@@ -527,10 +537,13 @@ Stepping is a commit boundary: it requests only the final ISO date and
 ends the dirty session by formatting accepted or rejected controlled
 state. From `null` or incomplete text, ArrowUp/Down are no-ops — DateField
 does not invent `today` (that would be timezone-dependent and SSR-unsafe).
-Disabled and read-only DateFields do not step.
+Disabled and read-only DateFields do not step. A step landing outside
+`min` / `max` or on an unavailable date is locked out like a disabled
+Calendar day: no publish, text kept.
 
 Caret on a literal/separator uses the nearest preceding numeric segment,
-or the following one at the start of the field.
+or the following one at the start of the field. Range endpoints step
+independently under the same contract.
 
 This is why DateField is a component rather than application parse code:
 locale parts, caret mapping, and Gregorian carry are one invariant.

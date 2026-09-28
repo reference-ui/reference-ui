@@ -633,12 +633,13 @@ test.describe('Field CT', () => {
     await expect(errorMsg).toHaveAttribute('id', 'amount-error')
   })
 
-  test('FI-COMP-02 (bezel): Field hosts the DateField compound bezel without owning its state', async ({
+  test('FI-COMP-02: Field hosts the DateField compound bezel without owning its state', async ({
     mount,
     page,
   }) => {
-    // Reduced to the Field-owned bezel share (TESTS.md "Owned elsewhere":
-    // typing sessions and ISO publishing belong to DateField).
+    // Field-owned bezel share plus the hosted typing/publish session
+    // (PATCHES #2): the session contract belongs to DateField, which has
+    // proven it — Field only hosts the wrap/trigger/portal around it.
     await mount('components/Field/Field/DateCompoundFixture')
 
     const root = page.getByTestId('comp-datefield-wrapper')
@@ -666,6 +667,68 @@ test.describe('Field CT', () => {
 
     await page.waitForTimeout(300)
     await snap(page, 'field-date-compound')
+
+    // Hosted typing session: ISO interchange publishes through the bezel.
+    await input.fill('2026-10-15')
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('comp-datefield-val')).toHaveText('Value: 2026-10-15')
+    await expect(bezel.locator(input)).toBeVisible()
+    await expect(bezel.locator(trigger)).toBeVisible()
+
+    // The Calendar stays inside the portalled picker layer, never a Field
+    // descendant.
+    await trigger.click()
+    const picker = page.getByTestId('comp-datefield-picker')
+    await expect(picker).toBeVisible()
+    await expect(picker.locator('button[data-date="2026-10-20"]')).toBeVisible()
+    const pickerInField = await bezel.evaluate(
+      (b, p) => b.contains(p),
+      await picker.elementHandle()
+    )
+    expect(pickerInField).toBe(false)
+  })
+
+  test('FI-COMP-02 (range bezel): Field-surface hosts two range inputs in one bezel', async ({
+    mount,
+    page,
+  }) => {
+    // Range share of PATCHES #2: the Range bezel is itself the
+    // Field-surface host (no nested Field), embedding both endpoints.
+    await mount('components/Field/Field/RangeHostedFixture')
+
+    const root = page.getByTestId('comp-range-wrapper')
+    const bezel = root.locator('[data-reference-field]')
+    const start = root.locator('input[data-reference-date-endpoint="start"]')
+    const end = root.locator('input[data-reference-date-endpoint="end"]')
+    const trigger = root.locator('button[data-reference-date-trigger]')
+
+    await expect(bezel).toHaveCount(1)
+    await expect(start).toBeVisible()
+    await expect(end).toBeVisible()
+    await expect(trigger).toBeVisible()
+
+    // Both endpoint inputs are embedded in the one bezel.
+    for (const endpoint of [start, end]) {
+      const border = await endpoint.evaluate(el => window.getComputedStyle(el).borderWidth)
+      expect(border).toBe('0px')
+    }
+
+    // Typing publishes through the shared bezel.
+    await start.fill('2026-09-01')
+    await expect(page.getByTestId('comp-range-val')).toHaveText(
+      'Value: 2026-09-01..2026-09-15'
+    )
+
+    // The range Calendar stays portalled outside the bezel.
+    await trigger.click()
+    const picker = page.getByTestId('comp-range-picker')
+    await expect(picker).toBeVisible()
+    await expect(picker.locator('button[data-date="2026-09-20"]')).toBeVisible()
+    const pickerInField = await bezel.evaluate(
+      (b, p) => b.contains(p),
+      await picker.elementHandle()
+    )
+    expect(pickerInField).toBe(false)
   })
 
   test('FI-COMP-03: NumberField.Group should consume the Field recipe without a nested Field', async ({
@@ -702,15 +765,15 @@ test.describe('Field CT', () => {
     await expect(doubleInner).toHaveAttribute('data-reference-field', '')
   })
 
-  test('FI-COMP-04 (bezel): Field hosts a Combobox token picker without owning Combobox or chips', async ({
+  test('FI-COMP-04: Field hosts a Combobox token picker without owning Combobox or chips', async ({
     mount,
     page,
   }) => {
-    // Field-owned subset: label/input-embed/opener/chips/portal/invalid-bezel.
-    // Focus-ring-on-opener assertions are omitted: they need the shared-theme
-    // focus propagation change, which is SUSPECT quarantine material outside
-    // Field scope (flagged in the mission log). Commit/remove flows belong to
-    // Combobox (TESTS.md "Owned elsewhere").
+    // Field-owned subset (label/input-embed/opener/chips/portal/invalid-bezel)
+    // plus hosted commit/remove flows (PATCHES #3): Combobox owns the
+    // semantics (CB-COMMIT/CB-SELECT proven), Field only hosts the bezel
+    // around them. Focus-ring-on-opener assertions stay omitted: they need
+    // the shared-theme focus propagation change (FI-CSS-06, theme crew).
     await mount('components/Field/Field/TokenPickerFixture')
 
     const label = page.getByTestId('comp-people-label')
@@ -767,6 +830,29 @@ test.describe('Field CT', () => {
     await page.waitForTimeout(300)
     const invBorder = await field.evaluate(el => window.getComputedStyle(el).borderColor)
     expect(invBorder).not.toBe(defaultBorder)
+
+    // 11. Commit an option: one scalar Combobox onChange, application chips
+    // update, Combobox renders no token nodes of its own.
+    await page.keyboard.press('Escape')
+    await expect(popover).toHaveCount(0)
+    await opener.click()
+    await expect(popover).toBeVisible()
+    await page.getByTestId('option-bob').click()
+    await expect(page.getByTestId('comp-people-changes')).toHaveText('Changes: 1')
+    await expect(page.getByTestId('comp-people-last')).toHaveText('Last: "Bob"')
+    const chipBob = page.getByTestId('chip-Bob')
+    await expect(chipBob).toBeVisible()
+    await expect(chipBob).toHaveAttribute('type', 'button')
+    await expect(input).toHaveValue('')
+    await expect(field.locator('[data-testid^="chip-"]')).toHaveCount(2)
+    await expect(field.locator('[data-reference-combobox-token]')).toHaveCount(0)
+
+    // 12. Remove a chip: application state updates, Combobox onChange silent.
+    await chipAlice.click()
+    await expect(page.getByTestId('chip-Alice')).toHaveCount(0)
+    await expect(chipBob).toBeVisible()
+    await expect(field.locator('[data-testid^="chip-"]')).toHaveCount(1)
+    await expect(page.getByTestId('comp-people-changes')).toHaveText('Changes: 1')
   })
 
   test('renders field with prefix and suffix', async ({ mount, page }) => {

@@ -437,3 +437,213 @@ export const ShadowPickerFixture = () => {
     </ReferenceLibrary>
   )
 }
+
+export const SubmitResetFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2024-02-01')
+  const [changes, setChanges] = React.useState<Array<string | null>>([])
+  const [submitted, setSubmitted] = React.useState('none')
+  const formRef = React.useRef<HTMLFormElement | null>(null)
+  const vetoNextResetRef = React.useRef(false)
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="sr-fixture-root">
+        <form
+          ref={formRef}
+          onSubmit={(e) => {
+            // DateField prevention lands before this React root listener.
+            setSubmitted(e.defaultPrevented ? 'blocked' : 'sent')
+            e.preventDefault()
+          }}
+          onResetCapture={(e) => {
+            if (vetoNextResetRef.current) {
+              vetoNextResetRef.current = false
+              e.preventDefault()
+            }
+          }}
+        >
+          <DateField
+            locale="en-GB"
+            name="birthday"
+            value={value}
+            onChange={(next) => {
+              setChanges((prev) => [...prev, next])
+              setValue(next)
+            }}
+            data-testid="sr-input"
+          />
+          <button
+            type="button"
+            data-testid="btn-sr-submit"
+            onClick={() => formRef.current?.requestSubmit()}
+          >
+            Request submit
+          </button>
+          <button type="button" data-testid="btn-sr-reset" onClick={() => formRef.current?.reset()}>
+            Reset
+          </button>
+          <button
+            type="button"
+            data-testid="btn-sr-arm-veto"
+            onClick={() => {
+              vetoNextResetRef.current = true
+            }}
+          >
+            Veto next reset
+          </button>
+        </form>
+        <Span fontSize="3r" color="design.text.light" data-testid="sr-value-display">
+          Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="sr-changes">
+          Changes: {changes.length}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="sr-last">
+          Last: {changes.length ? JSON.stringify(changes[changes.length - 1]) : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="sr-submitted">
+          Submitted: {submitted}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+type RangeValue = { start: string; end: string | null } | null
+
+export const RangeFixture = () => {
+  const [value, setValue] = React.useState<RangeValue>({ start: '2024-04-10', end: '2024-04-15' })
+  const [changes, setChanges] = React.useState<Array<RangeValue>>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="120r" data-testid="range-fixture-root">
+        <DateField.Range
+          locale="en-GB"
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+        >
+          <DateField.Picker data-testid="range-picker" />
+        </DateField.Range>
+        <Span fontSize="3r" color="design.text.light" data-testid="range-value-display">
+          Range Value: {value ? `${value.start}..${value.end ?? 'null'}` : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="range-changes">
+          Changes: {changes.length}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="range-last">
+          Last: {changes.length ? JSON.stringify(changes[changes.length - 1]) : 'none'}
+        </Span>
+        <Div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button
+            type="button"
+            data-testid="btn-range-set-ab"
+            onClick={() => setValue({ start: '2024-04-10', end: '2024-04-15' })}
+          >
+            Set Apr range
+          </button>
+          <button
+            type="button"
+            data-testid="btn-range-set-split"
+            onClick={() => setValue({ start: '2024-04-10', end: '2024-06-15' })}
+          >
+            Set split range
+          </button>
+          <button type="button" data-testid="btn-range-set-null" onClick={() => setValue(null)}>
+            Set null
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const UnfoldedRangeFixture = () => {
+  const [value, setValue] = React.useState<RangeValue>({ start: '2024-04-10', end: '2024-06-15' })
+  const [changes, setChanges] = React.useState<Array<RangeValue>>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="120r" data-testid="ur-fixture-root">
+        <DateField.Range
+          locale="en-GB"
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+        >
+          <DateField.Start
+            data-testid="ur-start"
+            placeholder="From"
+            value="forged"
+            role="spinbutton"
+          />
+          <DateField.End data-testid="ur-end" placeholder="To" aria-label="To date" />
+          <DateField.Trigger data-testid="ur-trigger" aria-label="Open range picker" />
+          <DateField.Picker data-testid="ur-picker">
+            <DateField.Calendar />
+          </DateField.Picker>
+        </DateField.Range>
+        <Span fontSize="3r" color="design.text.light" data-testid="ur-value-display">
+          Range Value: {value ? `${value.start}..${value.end ?? 'null'}` : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="ur-changes">
+          Changes: {changes.length}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="ur-last">
+          Last: {changes.length ? JSON.stringify(changes[changes.length - 1]) : 'none'}
+        </Span>
+        <Div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button
+            type="button"
+            data-testid="btn-ur-set-null"
+            onClick={() => setValue(null)}
+          >
+            Set null
+          </button>
+        </Div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+export const SingleUnfoldedFixture = () => {
+  const [value, setValue] = React.useState<string | null>('2024-04-10')
+  const [changes, setChanges] = React.useState<Array<string | null>>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r" data-testid="su-fixture-root">
+        <DateField
+          locale="en-GB"
+          value={value}
+          onChange={(next) => {
+            setChanges((prev) => [...prev, next])
+            setValue(next)
+          }}
+        >
+          <DateField.Input
+            data-testid="su-input"
+            placeholder="Explicit"
+            value="forged"
+            role="spinbutton"
+          />
+          <DateField.Trigger data-testid="su-trigger" />
+          <DateField.Picker data-testid="su-picker">
+            <DateField.Calendar />
+          </DateField.Picker>
+        </DateField>
+        <Span fontSize="3r" color="design.text.light" data-testid="su-value-display">
+          Value: {value ?? 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="su-changes">
+          Changes: {changes.length}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
