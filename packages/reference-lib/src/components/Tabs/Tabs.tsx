@@ -23,6 +23,20 @@ export interface TabsProps {
   orientation?: TabsOrientation
   activation?: TabsActivation
   variant?: TabsVariantProp
+  /**
+   * Keep every panel mounted when inactive (W-15, Base UI parity).
+   * Default false (current behavior: inactive panels unmount their
+   * children). True keeps all children alive under native `hidden`.
+   * OR-ed with the per-panel `keepMounted` on `TabPanel`.
+   */
+  keepMounted?: boolean
+}
+
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+function warnTabs(message: string) {
+  if (globalProcess?.env?.NODE_ENV === 'production') return
+  console.error(`Reference UI: Tabs ${message}`)
 }
 
 // Prepackaged variant styles, authored as system recipes (HQ system-variant
@@ -224,6 +238,7 @@ interface TabsContextValue {
   orientation: TabsOrientation
   activation: TabsActivation
   variant: TabsVariantProp
+  keepMounted: boolean
   baseId: string
   rovingValue: string
   setRovingValue: (value: string) => void
@@ -263,6 +278,7 @@ export function Tabs({
   orientation = 'horizontal',
   activation = 'automatic',
   variant = 'line',
+  keepMounted = false,
 }: TabsProps) {
   // Optional value (HQ EOD 2026-09-26 optional-value exception to the
   // no-uncontrolled-seed stance, superseding the FEATURES #1 reversal):
@@ -450,6 +466,23 @@ export function Tabs({
     if (first !== undefined) setInternalValue(first)
   }, [isControlled, internalValue, registryVersion, getOrderedEnabledTabs])
 
+  // Unmatched controlled value (W-16, near-verbatim MUI precedent): a
+  // typo'd controlled value renders a silently blank panel, so dev names
+  // the component, the bad value, and the registered values. Uncontrolled
+  // mode never warns (seed and transitions always come from registered
+  // tabs), and neither does an empty registry — async tabs that resolve
+  // must never false-positive on first render.
+  React.useEffect(() => {
+    if (!isControlled) return
+    const registered = Array.from(tabEntries.current.keys())
+    if (registered.length === 0) return
+    if (!registered.includes(value)) {
+      warnTabs(
+        `value "${value}" matches no Tab (registered values: ${registered.join(', ')}).`
+      )
+    }
+  }, [isControlled, value, registryVersion])
+
   // Last panel to hold focus (FEATURES #4): set on focus-enter, never
   // cleared on blur — removal drops focus synchronously during commit, so
   // a blur-clear would erase the trail before the rescue effect reads it.
@@ -601,6 +634,7 @@ export function Tabs({
       orientation,
       activation,
       variant,
+      keepMounted,
       baseId,
       rovingValue,
       setRovingValue,
@@ -619,6 +653,7 @@ export function Tabs({
       orientation,
       activation,
       variant,
+      keepMounted,
       baseId,
       rovingValue,
       setRovingValue,
@@ -872,7 +907,7 @@ export type TabPanelProps = Omit<PrimitiveProps<'div'>, 'value'> & {
 export function TabPanel({
   value,
   children,
-  keepMounted = false,
+  keepMounted: keepMountedProp = false,
   id: idProp,
   onFocus,
   className,
@@ -881,6 +916,11 @@ export function TabPanel({
 }: TabPanelProps) {
   const context = React.useContext(TabsContext)
   const isSelected = context ? context.value === value : false
+  // Root keepMounted (W-15) ORs with the per-panel opt-in: either switch
+  // keeps this panel's children alive. Inactive kept panels sit under
+  // native `hidden` (display:none drops them from tab order and the
+  // accessibility tree, so no aria-hidden/inert is needed).
+  const keepMounted = keepMountedProp || (context?.keepMounted ?? false)
   // Explicit Tab IDs flow in through the registry (TB-DOM-06); the
   // generated fallback keeps SSR and first render unchanged.
   const tabId = context

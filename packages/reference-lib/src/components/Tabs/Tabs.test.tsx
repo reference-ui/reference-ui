@@ -1672,3 +1672,344 @@ describe('Tabs PATCHES proofs (identity registry)', () => {
     }
   })
 })
+
+describe('Tabs W-15 proofs (root keepMounted)', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(async () => {
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function Trio({
+    value,
+    onChange,
+    ...tabsProps
+  }: {
+    value?: string
+    onChange?: (next: string) => void
+  } & Omit<React.ComponentProps<typeof Tabs>, 'value' | 'onChange'>) {
+    return (
+      <Tabs value={value} onChange={onChange} {...tabsProps}>
+        <Tabs.List>
+          <Tabs.Tab id="t-general" value="general">
+            General
+          </Tabs.Tab>
+          <Tabs.Tab id="t-billing" value="billing">
+            Billing
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="general">G</Tabs.Panel>
+        <Tabs.Panel value="billing">
+          <input id="billing-input" defaultValue="" />
+        </Tabs.Panel>
+      </Tabs>
+    )
+  }
+
+  it('root keepMounted keeps every inactive panel mounted under hidden', async () => {
+    const mounts: string[] = []
+    function Probe({ name }: { name: string }) {
+      React.useEffect(() => {
+        mounts.push(name)
+      }, [name])
+      return <span>{name} content</span>
+    }
+    function Fixture() {
+      const [value, setValue] = React.useState('general')
+      return (
+        <Tabs value={value} onChange={setValue} keepMounted>
+          <Tabs.List>
+            <Tabs.Tab id="t-general" value="general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab id="t-billing" value="billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general">G</Tabs.Panel>
+          <Tabs.Panel value="billing">
+            <Probe name="billing" />
+          </Tabs.Panel>
+          <Tabs.Panel value="security">
+            <Probe name="security" />
+          </Tabs.Panel>
+        </Tabs>
+      )
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
+    })
+
+    // Every panel mounted, including ones with no Tab at all.
+    expect(mounts.sort()).toEqual(['billing', 'security'])
+    for (const v of ['billing', 'security']) {
+      const panel = container.querySelector(
+        `[role="tabpanel"][data-value="${v}"]`
+      ) as HTMLElement
+      expect(panel.hidden).toBe(true)
+      expect(panel.textContent).toContain(`${v} content`)
+    }
+    // Round-trip without remount.
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-general')!)
+    })
+    expect(mounts.sort()).toEqual(['billing', 'security'])
+  })
+
+  it('root keepMounted preserves form state across round-trips (controlled + uncontrolled)', async () => {
+    async function roundTrip(render: () => Promise<void>) {
+      await render()
+      const input = document.getElementById(
+        'billing-input'
+      ) as HTMLInputElement
+      expect(input).not.toBeNull()
+      await React.act(async () => {
+        input.value = 'draft'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+      await React.act(async () => {
+        click(document.getElementById('t-billing')!)
+      })
+      await React.act(async () => {
+        click(document.getElementById('t-general')!)
+      })
+      expect(
+        (document.getElementById('billing-input') as HTMLInputElement).value
+      ).toBe('draft')
+    }
+
+    function Controlled() {
+      const [value, setValue] = React.useState('general')
+      return <Trio value={value} onChange={setValue} keepMounted />
+    }
+    await roundTrip(async () => {
+      await React.act(async () => {
+        root.render(<Controlled />)
+      })
+    })
+    await React.act(async () => {
+      root.unmount()
+    })
+    root = createRoot(container)
+
+    await roundTrip(async () => {
+      await React.act(async () => {
+        root.render(<Trio keepMounted />)
+      })
+    })
+  })
+
+  it('omitted root keepMounted still unmounts (default law preserved)', async () => {
+    function Fixture() {
+      const [value, setValue] = React.useState('general')
+      return <Trio value={value} onChange={setValue} />
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
+    })
+    expect(
+      container.querySelector('[role="tabpanel"][data-value="billing"]')
+        ?.textContent
+    ).toBe('')
+    expect(document.getElementById('billing-input')).toBeNull()
+  })
+
+  it('roving scope and tab order are unchanged under root keepMounted', async () => {
+    function Fixture() {
+      const [value, setValue] = React.useState('general')
+      return <Trio value={value} onChange={setValue} keepMounted />
+    }
+    await React.act(async () => {
+      root.render(<Fixture />)
+    })
+    const general = document.getElementById('t-general')!
+    const billing = document.getElementById('t-billing')!
+    await React.act(async () => {
+      general.focus()
+    })
+    await React.act(async () => {
+      keydown(general, 'ArrowRight')
+    })
+    // Automatic activation followed the rove; the stop moved with it.
+    expect(document.activeElement).toBe(billing)
+    expect(billing.getAttribute('aria-selected')).toBe('true')
+    expect(tabIndexOf('t-billing')).toBe('0')
+    expect(tabIndexOf('t-general')).toBe('-1')
+    // Hidden kept panels stay out of the tab order via native hidden.
+    expect(
+      (
+        container.querySelector(
+          '[role="tabpanel"][data-value="general"]'
+        ) as HTMLElement
+      ).hidden
+    ).toBe(true)
+    expect(
+      (
+        container.querySelector(
+          '[role="tabpanel"][data-value="billing"]'
+        ) as HTMLElement
+      ).hidden
+    ).toBe(false)
+  })
+})
+
+describe('Tabs W-16 proofs (dev warning on unmatched controlled value)', () => {
+  let container: HTMLDivElement
+  let root: Root
+  let errors: Array<Array<unknown>>
+  let errorSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    errors = []
+    errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((...args: Array<unknown>) => {
+        errors.push(args)
+      })
+  })
+
+  afterEach(async () => {
+    errorSpy.mockRestore()
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function unmatchedWarnings() {
+    return errors.filter(args =>
+      args.some(
+        part => typeof part === 'string' && part.includes('matches no Tab')
+      )
+    )
+  }
+
+  function Trio({
+    value,
+    onChange,
+  }: {
+    value?: string
+    onChange?: (next: string) => void
+  }) {
+    return (
+      <Tabs value={value} onChange={onChange}>
+        <Tabs.List>
+          <Tabs.Tab id="t-general" value="general">
+            General
+          </Tabs.Tab>
+          <Tabs.Tab id="t-settings" value="settings">
+            Settings
+          </Tabs.Tab>
+          <Tabs.Tab id="t-billing" value="billing">
+            Billing
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="general">G</Tabs.Panel>
+        <Tabs.Panel value="settings">S</Tabs.Panel>
+        <Tabs.Panel value="billing">B</Tabs.Panel>
+      </Tabs>
+    )
+  }
+
+  it('warns naming the component, the bad value, and the registered values', async () => {
+    await React.act(async () => {
+      root.render(<Trio value="setings" onChange={() => {}} />)
+    })
+    const warnings = unmatchedWarnings()
+    expect(warnings.length).toBeGreaterThan(0)
+    const text = warnings.map(args => args.join(' ')).join('\n')
+    expect(text).toContain('Tabs')
+    expect(text).toContain('"setings"')
+    expect(text).toContain('general')
+    expect(text).toContain('settings')
+    expect(text).toContain('billing')
+  })
+
+  it('stays silent for valid values and uncontrolled mode', async () => {
+    function Valid() {
+      const [value, setValue] = React.useState('general')
+      return <Trio value={value} onChange={setValue} />
+    }
+    await React.act(async () => {
+      root.render(<Valid />)
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-billing')!)
+    })
+    expect(unmatchedWarnings()).toEqual([])
+
+    await React.act(async () => {
+      root.render(<Trio onChange={() => {}} />)
+    })
+    await React.act(async () => {
+      click(document.getElementById('t-settings')!)
+    })
+    expect(unmatchedWarnings()).toEqual([])
+  })
+
+  it('stays silent for async-registered tabs that resolve, warns when they do not', async () => {
+    function Async({ values }: { values: Array<string> }) {
+      return (
+        <Tabs value="settings" onChange={() => {}}>
+          <Tabs.List>
+            {values.map(v => (
+              <Tabs.Tab key={v} id={`t-${v}`} value={v}>
+                {v}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {values.map(v => (
+            <Tabs.Panel key={v} value={v}>
+              {v}
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      )
+    }
+    // First render: nothing registered yet — must not false-positive.
+    await React.act(async () => {
+      root.render(<Async values={[]} />)
+    })
+    expect(unmatchedWarnings()).toEqual([])
+    // Tabs resolve with a match — still silent.
+    await React.act(async () => {
+      root.render(<Async values={['general', 'settings']} />)
+    })
+    expect(unmatchedWarnings()).toEqual([])
+    // Tabs resolve without a match — now it warns (no over-suppression).
+    await React.act(async () => {
+      root.render(<Async values={['general', 'billing']} />)
+    })
+    expect(unmatchedWarnings().length).toBeGreaterThan(0)
+  })
+
+  it('stays silent in production', async () => {
+    const prevEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
+    try {
+      await React.act(async () => {
+        root.render(<Trio value="setings" onChange={() => {}} />)
+      })
+      expect(unmatchedWarnings()).toEqual([])
+    } finally {
+      if (prevEnv === undefined) delete process.env.NODE_ENV
+      else process.env.NODE_ENV = prevEnv
+    }
+  })
+})

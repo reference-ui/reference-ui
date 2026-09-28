@@ -108,5 +108,7 @@ Indicator / panel transitions as kernel. Provider API. Overlay in panels.
 
 Public API matches Tabs.md (TRUE 2026-09-26 — optional `value?`,
 `orientation?`, `activation?`, `variant?`, per-Tab `disabled?`,
-per-Panel `keepMounted?`; no root `disabled`, no seeding prop).
+per-Panel `keepMounted?`; no root `disabled`, no seeding prop;
+TRUE 2026-09-27 — root `keepMounted?` added per W-15, OR-ed with the
+per-panel opt-in; W-16 dev warning on unmatched controlled `value`).
 Every TESTS.md ID is `[x]` here. Arrows come from RovingFocus.

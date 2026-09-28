@@ -438,3 +438,30 @@ export const Pill = () => {
     </ReferenceLibrary>
   )
 }
+
+export const KeepMounted = () => {
+  const [value, setValue] = React.useState('general')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" data-testid="tabs-keep-root" maxW="100r">
+        <Tabs value={value} onChange={setValue} keepMounted>
+          <Tabs.List data-testid="tabs-keep-list">
+            <Tabs.Tab value="general" data-testid="tab-k-general">
+              General
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" data-testid="tab-k-billing">
+              Billing
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="general" data-testid="panel-k-general">
+            <Span fontSize="3.5r">General settings.</Span>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="panel-k-billing">
+            <input data-testid="panel-k-input" defaultValue="" aria-label="Billing note" />
+          </Tabs.Panel>
+        </Tabs>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
