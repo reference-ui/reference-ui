@@ -87,6 +87,21 @@ never silently, never by chat alone:
 
 - 2026-09-29 (init): file created from landing-sequence closeout
   state. No additions yet.
+- 2026-09-29 (captain rulings, autonomy directive — Part A RESOLVED,
+  Part C triggered, all reversible by veto): C-NAME → 1a (house
+  onChange everywhere); C-W02 → i-freeze (zero-anchor + endpoint
+  preserve), ii-freeze (away-from-zero), iii-retain-and-report,
+  iv-keep, v-keep, vi-keep [adopts NFLAST (a)(b)(c) + flagged
+  interpolations]; C-NF-FLAGS → implement (b)(c) + Intl i–xvi per
+  NumberField/DECISIONS.md (merged with C-W02: one NumberField crew);
+  C-SNAPSHOT → 5a-modified (0.001 default per FINISH-07 + 25px
+  locator rule + ≥0.01 TOL-ban) + P6 = explicit 19-only snapshots
+  (snap() is r19-only by design) + per-browser r19 baselines ADOPT
+  (FINISH-04 ruling), executed LAST among flips (rides the regen);
+  C-SWITCH/SLIDER/DATE → VACUOUS (no written takes exist anywhere;
+  only references to them). F30 note: F30 fixed by flushSync arc,
+  not a ruling. Provenance: DECISIONS.md §§1–5 +
+  NumberField/DECISIONS.md, surveyed firsthand by captain.
 
 ## Crew law (every FINISH leg)
 
