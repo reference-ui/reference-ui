@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 test.describe('Slider CT', () => {
   test('renders slider parts and updates value via keyboard arrows', async ({
@@ -1202,6 +1203,11 @@ test.describe('Slider PATCHES pins', () => {
     expect(aria).toContain('slider "Disabled" [disabled]')
     expect(aria).toContain('slider "Vertical"')
     expect(aria).toContain('slider "Rtl"')
+
+    // Scanner half: the A11yFixture mount exercises scalar, range,
+    // disabled, vertical, and RTL thumbs in one story; #root scoping
+    // covers it whole (no portals in Slider).
+    await expectNoAxeViolations(page, { include: '#root' })
   })
 
   test('SD-ENV-02: keeps pointer sessions singular under StrictMode', async ({ mount, page }) => {
