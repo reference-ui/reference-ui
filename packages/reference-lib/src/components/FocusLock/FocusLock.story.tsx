@@ -87,6 +87,14 @@ export function FocusLockFixture() {
   const [liveLab, setLiveLab] = React.useState(false)
   const [liveDisabled, setLiveDisabled] = React.useState(false)
   const [liveInert, setLiveInert] = React.useState(false)
+  // FINISH-02F-WK (F11/F12): React 17/18 drop the unknown `inert` JSX prop
+  // (D9b: live-c renders with no inert attribute), so candidates include the
+  // node on r17/r18. The inert IDL reflects to the attribute in all Playwright
+  // browsers — set it imperatively so the fixture is major-proof.
+  const liveCRef = React.useRef<HTMLButtonElement | null>(null)
+  React.useEffect(() => {
+    if (liveCRef.current) liveCRef.current.inert = liveInert
+  }, [liveInert, liveLab])
   const [docsOn, setDocsOn] = React.useState(false)
   const [invalidKind, setInvalidKind] = React.useState<null | 'text' | 'fragment' | 'many'>(null)
   const [invalidError, setInvalidError] = React.useState('')
@@ -233,7 +241,11 @@ export function FocusLockFixture() {
             Hidden
           </button>
         </div>
-        <div inert>
+        <div
+          ref={el => {
+            if (el) el.inert = true
+          }}
+        >
           <button type="button" data-testid="catalog-inert">
             Inert
           </button>
@@ -880,7 +892,7 @@ export function FocusLockFixture() {
             <button type="button" data-testid="live-b" disabled={liveDisabled}>
               Live B
             </button>
-            <button type="button" data-testid="live-c" {...(liveInert ? { inert: true } : {})}>
+            <button type="button" data-testid="live-c" ref={liveCRef}>
               Live C
             </button>
           </div>
