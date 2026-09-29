@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 test.describe('Tabs Composition Gates & Browser Proofs', () => {
   test('TB-DOM-01, TB-DOM-03 & TB-DOM-04: Renders tablist, tabs and panels with active selection, hover, ARIA linkage and keyboard roving', async ({
@@ -1092,5 +1093,10 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
       return report
     })
     expect(linkage).toEqual([])
+
+    // Scanner half: the A11yMatrix mount exercises horizontal, vertical,
+    // one-disabled, and all-disabled tablists in their settled states;
+    // #root scoping covers it whole (no portals in Tabs).
+    await expectNoAxeViolations(page, { include: '#root' })
   })
 })
