@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 import type { Locator } from '@playwright/test'
 
 test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
@@ -1744,6 +1744,10 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Entering content activates trap
       await page.getByTestId('focus-no-initial-btn-1').click()
+      // FINISH-02F-VH (F54, F14 vehicle): WebKit clicks never focus buttons —
+      // deliver the Chromium focus state so the trap engages; the reclaim
+      // contract below runs identically.
+      if (isWebKit(page)) await page.getByTestId('focus-no-initial-btn-1').focus()
       await expect(page.getByTestId('focus-no-initial-btn-1')).toBeFocused()
 
       // Attempting programmatic escape outside must be reclaimed
@@ -2980,19 +2984,23 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Open modeless overlay from Trigger
       await openTrg.click()
+      // FINISH-02F-VH (F55, F14 vehicle): WebKit clicks never focus buttons —
+      // deliver the Chromium focus state; the Tab bridge starts from the trigger.
+      if (isWebKit(page)) await openTrg.focus()
       await expect(content).toBeVisible()
       await expect(openTrg).toBeFocused()
 
-      // Tab from Trigger into Content
-      await page.keyboard.press('Tab')
+      // Tab from Trigger into Content (pressTab: Option+Tab on WebKit reaches
+      // implicit destinations; the bridge handler keys on e.key === 'Tab').
+      await pressTab(page)
       await expect(inner1).toBeFocused()
 
       // Tab to second control
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(inner2).toBeFocused()
 
       // Tab past last control advances relative to Trigger (to afterTrg) and fires onDismiss
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(afterTrg).toBeFocused()
       await expect(content).toHaveCount(0)
       await expect(dismissCountEl).toHaveText('1')
@@ -3010,18 +3018,22 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const logEl = page.getByTestId('trg-05-reject-log')
 
       await openTrg.click()
+      // FINISH-02F-VH (F55 reject, F14 vehicle): WebKit clicks never focus —
+      // deliver the Chromium focus state; the Tab bridge starts from the trigger.
+      if (isWebKit(page)) await openTrg.focus()
       await expect(content).toBeVisible()
       await expect(openTrg).toBeFocused()
 
-      await page.keyboard.press('Tab')
+      // pressTab: Option+Tab on WebKit; bridge handler keys on e.key === 'Tab'.
+      await pressTab(page)
       await expect(inner1).toBeFocused()
 
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(inner2).toBeFocused()
 
       // Optimistic-stands: one dismiss request, focus advances relative to
       // the Trigger and stays there, open DOM is retained.
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(afterTrg).toBeFocused()
       await expect(content).toBeVisible()
       await expect(dismissCountEl).toHaveText('1')

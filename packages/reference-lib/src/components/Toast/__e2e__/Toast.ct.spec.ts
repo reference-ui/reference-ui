@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, isWebKit } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'
 
@@ -1097,6 +1097,11 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
+    // FINISH-02F-VH (F18, F14 vehicle): WebKit clicks never focus buttons, so
+    // the focusin-recorded opener chain stays empty and restore no-ops.
+    // Deliver the Chromium focus state; dismiss + restore below are the
+    // product contract and run identically.
+    if (isWebKit(page)) await page.getByTestId('btn-show').focus()
     await expect(page.getByTestId('dismiss')).toBeVisible()
     await page.waitForTimeout(300)
     await page.getByTestId('dismiss').focus()
@@ -1111,6 +1116,9 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
+    // FINISH-02F-VH (F19, F14 vehicle): same WebKit click-focus delivery as
+    // F18 — records the opener so the invalid-opener fallback below is tested.
+    if (isWebKit(page)) await page.getByTestId('btn-show').focus()
     await expect(page.getByTestId('dismiss')).toBeVisible()
     await page.waitForTimeout(300)
     await page.getByTestId('dismiss').focus()
@@ -1151,6 +1159,10 @@ test.describe('Toast hardening', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator('[data-reference-toast-id="untimed"]')).toBeVisible()
     await page.getByTestId('btn-away').click()
+    // FINISH-02F-VH (F20, F14 vehicle): WebKit never focuses on click — deliver
+    // the focus state directly. The contract (toast is not modal; an outside
+    // control stays reachable while the toast is exposed) still runs.
+    if (isWebKit(page)) await page.getByTestId('btn-away').focus()
     await expect(page.getByTestId('btn-away')).toBeFocused()
   })
 
