@@ -747,7 +747,6 @@ export const Choice = () => {
   const [selectLogs, setSelectLogs] = React.useState<string[]>([])
   const [openLogs, setOpenLogs] = React.useState<string[]>([])
   const [closeLogs, setCloseLogs] = React.useState<string[]>([])
-  const [aliasLogs, setAliasLogs] = React.useState<string[]>([])
   const [cancelAction, setCancelAction] = React.useState<string | null>(null)
 
   const logChange = (label: string) => (next: unknown) => {
@@ -896,33 +895,6 @@ export const Choice = () => {
           </Popover>
         </Div>
 
-        {/* Alias menu: W-28 onCheckedChange/onValueChange naming */}
-        <Div mb="4r">
-          <Popover>
-            <EntryTrigger data-testid="btn-choice-alias-trigger">Open Choice Alias</EntryTrigger>
-            <Popover.Content placement="bottom-start">
-              <Menu data-testid="menu-choice-alias-root">
-                <Menu.CheckboxItem
-                  data-testid="choice-alias-check"
-                  checked={false}
-                  onCheckedChange={next => setAliasLogs(prev => [...prev, `alias-check:${next}`])}
-                >
-                  Alias check
-                </Menu.CheckboxItem>
-                <Menu.RadioGroup
-                  aria-label="Alias group"
-                  value="a"
-                  onValueChange={next => setAliasLogs(prev => [...prev, `alias-radio:${next}`])}
-                >
-                  <Menu.RadioItem data-testid="choice-alias-radio" value="b">
-                    Alias radio
-                  </Menu.RadioItem>
-                </Menu.RadioGroup>
-              </Menu>
-            </Popover.Content>
-          </Popover>
-        </Div>
-
         <Span data-testid="menu-choice-change-logs" fontSize="3.5r" color="design.text.base">
           Choice Changes: {changeLogs.join(',')}
         </Span>
@@ -934,9 +906,6 @@ export const Choice = () => {
         </Span>
         <Span data-testid="menu-choice-close-logs" fontSize="3.5r" color="design.text.base">
           Choice Close Logs: {closeLogs.join(',')}
-        </Span>
-        <Span data-testid="menu-choice-alias-logs" fontSize="3.5r" color="design.text.base">
-          Choice Alias Logs: {aliasLogs.join(',')}
         </Span>
         <Span data-testid="menu-choice-cancel-display" fontSize="3.5r" color="design.text.base">
           Choice Cancel: {cancelAction ?? 'None'}

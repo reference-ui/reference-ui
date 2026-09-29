@@ -1610,22 +1610,6 @@ test.describe('Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss)', () => 
     await expect(page.getByTestId('menu-choice-change-logs')).toHaveText('Choice Changes: ')
     await expect(root).toBeVisible()
   })
-
-  test('MN-CHOICE-02-alias: W-28 alias props request through onCheckedChange/onValueChange', async ({
-    mount,
-    page,
-  }) => {
-    await mount('components/Menu/Menu/Choice')
-    await page.getByTestId('btn-choice-alias-trigger').click()
-    const logs = page.getByTestId('menu-choice-alias-logs')
-    await expect(page.getByTestId('menu-choice-alias-root')).toBeVisible()
-
-    await page.getByTestId('choice-alias-check').click()
-    await expect(logs).toHaveText('Choice Alias Logs: alias-check:true')
-
-    await page.getByTestId('choice-alias-radio').click()
-    await expect(logs).toHaveText('Choice Alias Logs: alias-check:true,alias-radio:b')
-  })
 })
 
 test.describe('Menu controlled submenu keyboard completions (P2E)', () => {

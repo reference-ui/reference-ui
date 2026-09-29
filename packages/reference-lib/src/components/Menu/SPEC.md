@@ -106,8 +106,8 @@ coverage; quarantine-era root-only adaptations retained where noted):
 
 Non-catalog regression titles (kept, not counted): `MN-FOCUS-07[-sub]`
 (B-33 container edge keys), `MN-CLOSE-11` (adjacent-trigger press),
-`MN-DOM-B27` (Menu.md composition), `MN-CHOICE-02-alias` (W-28),
-P4 plant-site pin.
+`MN-DOM-B27` (Menu.md composition), P4 plant-site pin.
+(`MN-CHOICE-02-alias` (W-28) removed under ruling 1a — Radix aliases stripped.)
 
 Adaptations (pinned current behavior over quarantine where they
 conflict): `MN-FOCUS-02` asserts NO item focus after pointer opening

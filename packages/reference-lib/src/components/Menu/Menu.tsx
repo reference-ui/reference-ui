@@ -1391,8 +1391,6 @@ function choiceItemLayout(disabled: boolean) {
 export type MenuCheckboxItemProps = Omit<PrimitiveProps<'div'>, 'onSelect' | 'onChange'> & {
   checked: boolean | 'mixed'
   onChange?: (checked: boolean) => void
-  /** Alias of onChange (W-28 naming). Both fire when both are provided. */
-  onCheckedChange?: (checked: boolean) => void
   disabled?: boolean
   textValue?: string
   onSelect?: (event: Event) => void
@@ -1405,7 +1403,6 @@ export const MenuCheckboxItem = React.forwardRef<HTMLDivElement, MenuCheckboxIte
       children,
       checked,
       onChange,
-      onCheckedChange,
       disabled = false,
       textValue,
       onSelect,
@@ -1424,8 +1421,7 @@ export const MenuCheckboxItem = React.forwardRef<HTMLDivElement, MenuCheckboxIte
       // checked=true → false; false and mixed → true.
       const next = checked !== true
       onChange?.(next)
-      onCheckedChange?.(next)
-    }, [checked, onChange, onCheckedChange])
+    }, [checked, onChange])
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       if (disabled) {
@@ -1497,7 +1493,6 @@ export const MenuCheckboxItem = React.forwardRef<HTMLDivElement, MenuCheckboxIte
 interface MenuRadioGroupValue {
   value: string | null | undefined
   onChange: ((value: string) => void) | undefined
-  onValueChange: ((value: string) => void) | undefined
 }
 
 const MenuRadioGroupContext = React.createContext<MenuRadioGroupValue | null>(null)
@@ -1505,19 +1500,17 @@ const MenuRadioGroupContext = React.createContext<MenuRadioGroupValue | null>(nu
 export type MenuRadioGroupProps = Omit<PrimitiveProps<'div'>, 'onChange'> & {
   value?: string | null
   onChange?: (value: string) => void
-  /** Alias of onChange (W-28 naming). Both fire when both are provided. */
-  onValueChange?: (value: string) => void
 }
 
 export const MenuRadioGroup = React.forwardRef<HTMLDivElement, MenuRadioGroupProps>(
   function MenuRadioGroup(
-    { children, value, onChange, onValueChange, className, style, ...props }: MenuRadioGroupProps,
+    { children, value, onChange, className, style, ...props }: MenuRadioGroupProps,
     ref
   ) {
     // Structural only: never a roving stop, never a typeahead match.
     const groupValue = React.useMemo<MenuRadioGroupValue>(
-      () => ({ value, onChange, onValueChange }),
-      [value, onChange, onValueChange]
+      () => ({ value, onChange }),
+      [value, onChange]
     )
     return (
       <MenuRadioGroupContext.Provider value={groupValue}>
@@ -1565,7 +1558,6 @@ export const MenuRadioItem = React.forwardRef<HTMLDivElement, MenuRadioItemProps
       // Every activation requests, including the already-selected value;
       // the group never interprets parent acceptance (MN-CHOICE-04).
       group?.onChange?.(value)
-      group?.onValueChange?.(value)
     }, [group, value])
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
