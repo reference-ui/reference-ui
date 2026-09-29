@@ -772,24 +772,8 @@ test('ANN-HOST-03 / RL-ROOT-06: host DOM stays inside the winning ShadowRoot', a
   mount,
   page,
 }) => {
-  // FINISH-02F-SL (F30): SCOPED on the r18 gallery — React 18.3.1 drops the
-  // nested createRoot().render() that HardenShadow schedules inside the outer
-  // host's flushSync (DIAG-A1: the shadow root holds only the empty 43-char
-  // mount div on r18 FF + WK + Chromium alike; r17 sync-legacy and r19 commit
-  // fine, so this is r18-major, NOT engine-specific). No product defect: the
-  // store, pending-replay, and election are sound (r19 36/36 green). Real fix
-  // (Toast lane): flushSync the inner root.render in Toast.story.tsx
-  // renderInto, mirroring playwright/runtimes/react-18/host.ts — then unskip.
-  // Handoff: follow-up crew owns Toast/ (F13 NEST-06 skip is the precedent).
   await mount('components/Toast/Toast/HardenShadow')
   await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
-  const galleryMajor = await page.evaluate(
-    () => document.documentElement.getAttribute('data-react-version') ?? ''
-  )
-  test.skip(
-    galleryMajor.startsWith('18'),
-    'r18 gallery drops nested-root shadow render (F30; unskip after Toast.story flushSync)'
-  )
 
   await page.getByTestId('btn-shadow-announce').click()
   await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Shadow ready')
