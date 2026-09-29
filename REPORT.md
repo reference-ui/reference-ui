@@ -183,25 +183,21 @@ committed on `reference-system`, tree clean:
 
 ## 3. HQ pile (yours, in one place)
 
-- **Focus ruling** (gate for restore/trap fixes): should
-  FocusLock restore + trap-reclaim harden against Safari's
-  no-click-focus / mousedown-blur model (F47/F48/F53/F54/F56,
-  F57, F58)? And if the D3 trigger probe confirms keys-after-
-  mouse-open go to body, explicit trigger `.focus()` on open?
-- **G1/H1 confirm**: G1 chromium-UA gate → skip-by-project
-  (recommended); H1 CDP test → mark chromium-only.
+- **Focus: RULED YES** — restore/trap hardening crew out (FOCUS).
+- **G1/H1: captain's call** (HQ-deferred) — skip-by-project +
+  chromium-only, being implemented.
+- **Splitter 4a: proceed-if-clean** — crew out (SPLIT).
+- **NumberField engine calls: delegated** — obvious-answer
+  rulings + last pass crew out (NFLAST).
 - **API/productionization read-through**: naming 1a, W-02
   sub-rulings, Splitter 4a execution, snapshot policy, Switch /
   Slider takes, Date takes. No crew touches API surfaces until
   you rule.
-- **NumberField engine calls** (block the remaining 45
-  automatable cases + 4 manual gates): lattice/snap anchoring (zero-anchor?
-  ties? endpoints?), validate retain-vs-reject, live-request
-  vs pinned B-19 commit-only titles. Crews are held off these
-  — engine flips without rulings would break green titles.
-- **After rulings**: Intl grammar engine (PARSE bulk),
-  edit-filtering/caret/composition engine (EDIT bulk),
-  ENV-02/ENV-06 probes, EDIT-16 undo harness, then docs phase.
+- **NumberField last pass** (delegated, crew out): obvious-answer
+  rulings recorded in component DECISIONS.md, then lattice →
+  Intl grammar → filtering/composition → ENV/EDIT-16. Sequential
+  boxed waves until 148/148-or-manual; least-surprise readings
+  flagged, never blocking.
 
 ## 4. Carried, no action
 

@@ -22,3 +22,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 - Fix wave LANDED (FIX-D2 7/7, SCOPE-1 4 arcs, SCOPE-2 5 arcs).
   F10 micro-crew closed the last finding. VOYAGE COMPLETE —
   all crews in, tree clean, handoff to HQ rulings.
+- HQ ruled: focus YES, G1/H1 deferred-to-captain, Splitter 4a
+  if-clean, NF engine calls delegated (obvious answers). LAST
+  PASS dispatched: NFLAST + FOCUS + SPLIT. API pass sealed (HQ).
