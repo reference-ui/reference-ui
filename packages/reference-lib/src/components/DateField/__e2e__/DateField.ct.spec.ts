@@ -1,5 +1,15 @@
 import { test, expect, snap } from '../../../../playwright/ct'
 
+// Landing-sequence engine scope: `engineOf` sniffs the Playwright project
+// (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
+// sweep vehicle) for per-engine delivery/expectations (DIAG D1/D2).
+function engineOf(): 'chromium' | 'firefox' | 'webkit' {
+  const project = test.info().project.name
+  if (project.includes('webkit')) return 'webkit'
+  if (project.includes('firefox')) return 'firefox'
+  return 'chromium'
+}
+
 test.describe('DateField CT', () => {
   test('renders compound DateField, opens picker on trigger click, selects date and updates', async ({
     mount,
@@ -523,7 +533,17 @@ test.describe('DateField quarantine re-targets', () => {
     await input.focus()
     await input.dispatchEvent('compositionstart')
     // Typing during composition joins the buffer but publishes nothing.
-    await input.fill('9/1/2026')
+    // P1 (F36, SCOPE2 probe P-F36): fill() on Firefox synthesizes a complete
+    // native composition session (start/update/insertCompositionText/end) that
+    // the product correctly commits — no real IME flow mirrors that inside an
+    // open session (other DF composition tests are green on FF). Keystrokes
+    // model the stated "typing" intent, so Firefox types instead of filling.
+    if (engineOf() === 'firefox') {
+      await input.press('Meta+a')
+      await input.pressSequentially('9/1/2026')
+    } else {
+      await input.fill('9/1/2026')
+    }
     await expect(input).toHaveValue('9/1/2026')
     await expect(changes).toHaveText('Changes: 0')
 
