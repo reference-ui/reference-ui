@@ -133,7 +133,9 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
     const current = parseFloat(win.getComputedStyle(body)[padProp]) || 0
     body.style[padProp] = `${current + gap}px`
   }
-  win.scrollTo(scrollX, scrollY)
+  // FINISH-02F-VH (OV-EDGE-06): force instant — the re-pin must not inherit
+  // a page-level `scroll-behavior: smooth` (e.g. html:focus-within in resets).
+  win.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
 
   const useFixed = positionFixed && isIOS(doc) && !isStandalone()
   if (useFixed) {
@@ -172,7 +174,7 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
   const onViewport = () => {
     if (useFixed) return
     if (win.scrollY !== scrollY || win.scrollX !== scrollX) {
-      win.scrollTo(scrollX, scrollY)
+      win.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
     }
   }
   vv?.addEventListener('scroll', onViewport)
@@ -199,7 +201,9 @@ function applyLock(doc: Document, positionFixed: boolean): Restore {
     win.removeEventListener('touchmove', onTouchMove)
     vv?.removeEventListener('scroll', onViewport)
     vv?.removeEventListener('resize', onViewport)
-    if (useFixed) win.scrollTo(scrollX, scrollY)
+    // FINISH-02F-VH (OV-EDGE-06): instant restore — a smooth page CSS would
+    // otherwise glide the background back over ~300ms (sync reads see 0).
+    if (useFixed) win.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
   }
 }
 
