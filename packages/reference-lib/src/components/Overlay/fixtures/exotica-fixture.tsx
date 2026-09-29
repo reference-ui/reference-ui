@@ -1,8 +1,17 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { createPortal } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { Overlay } from '../index'
 import { FrameFixture } from './frame-fixture'
+
+type LegacyDom = {
+  render: (node: React.ReactNode, container: Element) => void
+  unmountComponentAtNode: (container: Element) => boolean
+}
+
+// The react-17 CT runtime aliases react-dom/client to a shim without
+// createRoot: fall back to legacy render there. Same tree either way.
 
 function MiniRootOverlay({
   id,
@@ -245,11 +254,41 @@ export function ExoticaFixture() {
     setPos12Dest(dest)
   }, [])
 
+  // Twin roots are STABLE across openA/openB toggles (update, don't
+  // remount): legacy ReactDOM roots must not be torn down mid-open or the
+  // exiting portal outlives the unmount and the fresh mount duplicates it.
+  const twinRootsRef = React.useRef<{ a: unknown; b: unknown } | null>(null)
   React.useEffect(() => {
-    if (!hostARef.current || !hostBRef.current) return
-    const a = createRoot(hostARef.current)
-    const b = createRoot(hostBRef.current)
-    a.render(
+    const hostA = hostARef.current
+    const hostB = hostBRef.current
+    if (!hostA || !hostB) return
+    let roots = twinRootsRef.current as {
+      a: { render: (n: React.ReactNode) => void; unmount: () => void }
+      b: { render: (n: React.ReactNode) => void; unmount: () => void }
+    } | null
+    if (!roots) {
+      if (typeof createRoot === 'function') {
+        roots = { a: createRoot(hostA), b: createRoot(hostB) }
+      } else {
+        const legacy = ReactDOM as unknown as LegacyDom
+        roots = {
+          a: {
+            render: (n: React.ReactNode) => legacy.render(n, hostA),
+            unmount: () => {
+              legacy.unmountComponentAtNode(hostA)
+            },
+          },
+          b: {
+            render: (n: React.ReactNode) => legacy.render(n, hostB),
+            unmount: () => {
+              legacy.unmountComponentAtNode(hostB)
+            },
+          },
+        }
+      }
+      twinRootsRef.current = roots
+    }
+    roots.a.render(
       <MiniRootOverlay
         id="root-a"
         open={openA}
@@ -260,7 +299,7 @@ export function ExoticaFixture() {
         }}
       />
     )
-    b.render(
+    roots.b.render(
       <MiniRootOverlay
         id="root-b"
         open={openB}
@@ -271,11 +310,18 @@ export function ExoticaFixture() {
         }}
       />
     )
-    return () => {
-      a.unmount()
-      b.unmount()
-    }
   }, [openA, openB])
+  React.useEffect(() => {
+    return () => {
+      const roots = twinRootsRef.current as {
+        a: { unmount: () => void }
+        b: { unmount: () => void }
+      } | null
+      twinRootsRef.current = null
+      roots?.a.unmount()
+      roots?.b.unmount()
+    }
+  }, [])
 
   const layer09Container =
     layer09Host === 'a' ? layer09ARef.current : layer09BRef.current

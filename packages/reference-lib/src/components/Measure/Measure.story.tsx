@@ -1,6 +1,27 @@
 import * as React from 'react'
-import { createRoot, type Root } from 'react-dom/client'
+import * as ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { useMeasure } from '../../core/measure/use-measure'
+
+type LegacyDom = {
+  render: (node: React.ReactNode, container: Element) => void
+  unmountComponentAtNode: (container: Element) => boolean
+}
+
+// The react-17 CT runtime aliases react-dom/client to a shim without
+// createRoot: fall back to legacy render there. Same tree either way.
+function renderInto(node: React.ReactNode, container: Element): () => void {
+  if (typeof createRoot === 'function') {
+    const root = createRoot(container)
+    root.render(node)
+    return () => root.unmount()
+  }
+  const legacy = ReactDOM as unknown as LegacyDom
+  legacy.render(node, container)
+  return () => {
+    legacy.unmountComponentAtNode(container)
+  }
+}
 
 function MeasuredHost({
   testId,
@@ -83,7 +104,7 @@ export function MeasureFixture() {
   const [hidden, setHidden] = React.useState(false)
   const [mounted, setMounted] = React.useState(true)
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null)
-  const iframeRootRef = React.useRef<Root | null>(null)
+  const iframeRootRef = React.useRef<(() => void) | null>(null)
 
   React.useEffect(() => {
     const frame = iframeRef.current
@@ -96,16 +117,14 @@ export function MeasureFixture() {
       doc.body.replaceChildren()
       const node = doc.createElement('div')
       doc.body.append(node)
-      const root = createRoot(node)
-      root.render(<IframeHost />)
-      iframeRootRef.current = root
+      iframeRootRef.current = renderInto(<IframeHost />, node)
     }
 
     if (frame.contentDocument?.readyState === 'complete') mount()
     else frame.addEventListener('load', mount)
     return () => {
       frame.removeEventListener('load', mount)
-      iframeRootRef.current?.unmount()
+      iframeRootRef.current?.()
       iframeRootRef.current = null
     }
   }, [])
