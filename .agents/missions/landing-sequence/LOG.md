@@ -19,3 +19,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 - DIAG returned with verdicts (D2 real bug, D1/D3 platform+scope).
   No WK keyboard pref in Playwright (captain-settled). Fix wave:
   FIX-D2 + SCOPE-1 + SCOPE-2 dispatched.
+- Fix wave LANDED (FIX-D2 7/7, SCOPE-1 4 arcs, SCOPE-2 5 arcs).
+  F10 micro-crew closed the last finding. VOYAGE COMPLETE —
+  all crews in, tree clean, handoff to HQ rulings.

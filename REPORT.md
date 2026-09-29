@@ -174,10 +174,12 @@ committed on `reference-system`, tree clean:
   Home/End caret = platform no-op (scope); F40 = scope. No WebKit
   keyboard pref exists in Playwright — scoping stands, no
   harness alternative.
-- **Fix wave out**: FIX-D2 (NumberField re-entrancy), SCOPE-1
-  (Select chain), SCOPE-2 (Date/Disclosure/Menu/FocusLock
-  traversal). Held: restore/trap fixes (focus ruling), G1/H1
-  (confirm), Splitter cluster (4a).
+- **Fix wave LANDED**: FIX-D2 (FF double-publish fixed, 7/7),
+  SCOPE-1 (Combobox F11 stale-revert fix + Select scoping),
+  SCOPE-2 (5 arcs, held list honored), F10 (last finding scoped).
+  Sweep findings: all fixed, scoped, or held — zero unowned.
+  Held: restore/trap fixes (focus ruling), G1/H1 (confirm),
+  Splitter cluster (4a).
 
 ## 3. HQ pile (yours, in one place)
 
