@@ -224,7 +224,7 @@ test('ANN-DOM-02: host is clipped 1x1 without aria-hidden; AT visibility is the 
   )
 })
 
-test('ANN-DOM-03: live regions stay out of the tab order', async ({ mount, page }) => {
+test('ANN-DOM-03: live regions stay out of the tab order', async ({ mount, page, browserName }) => {
   await mount(PROBE)
   await expect(page.getByTestId('announcer-probe-root')).toBeVisible()
 
@@ -255,7 +255,17 @@ test('ANN-DOM-03: live regions stay out of the tab order', async ({ mount, page 
     )
   }
   expect(hits).not.toContain('ANNOUNCER')
-  expect(hits.filter(h => h !== 'body').length).toBeGreaterThan(0)
+  // DIAG D1 (landing-sequence/DIAG.md): WebKit/Safari skips buttons in
+  // sequential Tab (keyboard navigation off by default) and this probe's
+  // tabbables are buttons, so the walk legitimately never leaves body.
+  // The contract (regions unreachable via Tab) is proven above by the
+  // tabIndex -1s + zero ANNOUNCER hits; the traversal-sanity leg is
+  // Chromium/Firefox-only, and WebKit pins the platform walk instead.
+  if (browserName === 'webkit') {
+    expect(hits.every(h => h === 'body')).toBe(true)
+  } else {
+    expect(hits.filter(h => h !== 'body').length).toBeGreaterThan(0)
+  }
 })
 
 test('ANN-DOM-04: markup in the message is text, not HTML', async ({ mount, page }) => {
