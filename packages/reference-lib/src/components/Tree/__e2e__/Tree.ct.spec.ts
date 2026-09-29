@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
 test.describe('Tree Composition Gates & Browser Proofs', () => {
@@ -1270,6 +1271,11 @@ test.describe('Tree Quarantine Parity', () => {
       )
       expect(groupRole).toBe('group')
     }
+
+    // Scanner half: the Parity mount holds the expanded multi-branch
+    // hierarchy in its settled state; #root scoping covers it whole
+    // (no portals in Tree).
+    await expectNoAxeViolations(page, { include: '#root' })
   })
 
   test('TR-COMP-01: Tree should support a controlled two-level navigation composition with mixed leaves and branches', async ({
