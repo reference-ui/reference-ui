@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
@@ -756,10 +757,16 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     await expect(content.locator('[tabindex="0"]')).toHaveCount(1)
 
+    // Scanner half: open state first (menu items, separator, disabled
+    // item all mounted), then the closed state. Whole-page scope: the
+    // menu content portals to document.body, so #root-scoping would miss
+    // component-owned content; the gallery holds one story per mount.
+    await expectNoAxeViolations(page)
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('menu-content')).toHaveCount(0)
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await expect(trigger).toBeFocused()
+    await expectNoAxeViolations(page)
   })
 })
 

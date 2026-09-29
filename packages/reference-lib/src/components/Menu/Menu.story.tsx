@@ -132,7 +132,7 @@ export const Parity = () => {
             >
               Open Actions
             </EntryTrigger>
-            <Popover.Content placement="bottom-start">
+            <Popover.Content placement="bottom-start" aria-label="Actions">
               <Menu
                 data-testid="menu-content"
                 data-probe="content"
