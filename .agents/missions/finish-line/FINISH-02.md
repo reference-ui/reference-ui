@@ -106,3 +106,104 @@ Already-owned (confirm still reproduce, do not relitigate): Calendar r17 CA-RANG
 3. Sweep NOT-REACHED list (17 components above) with the same vehicle (private ports 3117/3118; :3101 stale-gallery hazard stands).
 4. Triage 02-F1..F29 to fix crews (clusters: Combobox r17-FF input-event loss ×10; Toast dismiss/focus ×8; Tooltip/FocusLock/Popover WK focus ×9; RIVAL ×2).
 5. Scaffolding: /tmp/sweep-ct.config.ts, /tmp/sweep-probe*, /tmp/finish02-*.txt (~50 logs) — all in /tmp, nothing in repo.
+
+---
+## PHASE 2 (FINISH-02b breadth crew) — CLOSED (ran 10:45→12:11 UTC, in-box). Captain-verified: Measure r17 0/10 + Tabs r17FF 26/26 confirmed in raw logs. 30/30 table COMPLETE. Findings 02-F30..F58 (29 new) all iso-confirmed. PNG dispute resolved: Overlay.ct.spec.ts writes relative-path screenshots (all-open/layer2-closed/after-escape) — 02b's Overlay legs rewrote the tracked copies; restored via git checkout (run artifacts, not baselines). F22 tiebreak + green-confirm debt + Toast F57/F58 carried to fix crews below.
+Scope: NOT-REACHED 17 sweep + green-confirm round (two-in-a-row) + 6 transients. Sibling FINISH-02F-CB owns Combobox/ (IN PROGRESS) — Combobox legs LAST, read-only test exec only.
+### 10:45 UTC — CREW START. Phase-1 log + SWEEP.md read. Tree clean except sibling FINISH-02F-CB.md (untracked). Ports 3101/3117/3118 all CLOSED (no stale gallery to dodge; fresh boots below). Config /tmp/sweep-ct.config.ts present; all 17 spec paths verified OK.
+### 11:00 UTC — PROBES GREEN (3117=17.0.2, 3118=18.3.1, fresh boots; /tmp/finish02b-probe-{17,18}.txt). Shell `&` rejected by sandbox → fanned out: sweep-half-B subagent owns Button/Collapsible/Field/Measure/Overlay/Portal/Presence/Primitives ×4 (32 legs); this crew runs Accordion/Announcer/ReferenceLibrary/RovingFocus/Showcase/Slider/Slot/Switch/Tabs ×4 (36 legs). CLOSED: Accordion 21/21 ×4 (sweep F37/F38 gone on r17/r18); Announcer r17 35/35 ×2 (sweep F8 gone on r17), r18 34/35 both engines (02-F30 ANN-HOST-03/RL-ROOT-06, iso-persistent both engines); ReferenceLibrary 3/3 ×4. Sibling FINISH-02F-CB still IN PROGRESS (Combobox untouched).
+### 11:17 UTC — CLOSED: RovingFocus FF 44/44 ×2, WK 38/44 ×2 (02-F31..F36: RF-TAB-01/02, TAB-04, KEY-09, TAB-03, DOM-03, COMP-01 — all toBeFocused→inactive on Tab-traversal landings, iso-persistent both majors); Showcase r17 2/3 both engines (02-F37 shebang-cascade 45s timeout clicking tier3, iso-persistent), r18 3/3 ×2; Slider FF 30/36 ×2, WK 31/36 ×2 (02-F38 POINTER-04 gotpointercapture never fires; 02-F39 POINTER-08 + 02-F40 END-03 __capId null; 02-F41/42 POINTER-05/COMP-03 CDP-harness H-class; 02-F43 ENV-03 ShadowRoot contract FF-only; all iso-persistent, same-test verified). Remaining sweep: Slot, Switch, Tabs (mine) + half-B 8.
+### 11:32 UTC — MY SWEEP HALF CLOSED (9/9): Slot 4/4 ×4, Switch 22/22 ×4, Tabs 26/26 ×4 (all green). Half-B peek (their isos pending): Button 7/7 ×4, Collapsible 25/25 ×4, Field 21/21 ×4, Portal 22/22 ×4, Presence 45/45 ×3 (r18WK in flight) green; Measure r17 0/10 BOTH engines (`page.evaluate: undefined is not a function` at story mount — whole-suite r17 mount failure, r18 10/10 ×2), Overlay r17 FF 93/120 + WK 90/120 with big cluster, r18 115/120 both engines; Primitives in flight. Confirms in flight: Listbox r17FF 72/72 PASS (rest running), Tree ×4 launched. Sibling fix crew MID-FIX (Combobox.tsx modified, uncommitted) — Combobox confirms deferred to LAST per brief, skip-with-rationale likely.
+### 12:00 UTC — STOP-ADDING. Confirms CLOSED: Listbox 72/72 ×4 + Tree 67/67 ×4 (two-in-a-row ✓). Settles CLOSED: Toast r18FF 55/60 (RIVAL-CARD/RIVAL-DIR/COMP-03 flipped green; TIME-05 red again; CLOSE-04 newly red, iso-green = flip transient; RIVAL-RICH flipped green — 02-F22 needs tiebreak), Toast r17FF 57/60 (DOM-05 red again), Calendar r17FF 84/85 (DAY-11 settled green, only owned RANGE-14 left). Half-B FINAL received: 32/32 legs, all reds iso-confirmed, zero transients. Combobox ×3 confirms SKIPPED: sibling FINISH-02F-CB CLOSED with fixes landed in Combobox.tsx (uncommitted) — re-proof belongs on the fixed tree, not this diag box. DF/NF/Menu/Splitter/CalWK/Popover confirms CARRIED (box; 1× phase-1 greens stand). (Note: 11:32 entry above was actually written 11:44 — clock skew in crew notes, run timestamps in logs are authoritative.)
+### 12:10 UTC — BOX END. CLOSED. All 30/30 swept; confirms + transients settled or carried with rationale below.
+
+## Phase-2 extended breadth table (30/30; P1 = phase-1 counts, P2 = new)
+
+| Component | FF 17 | FF 18 | WK 17 | WK 18 | Notes |
+|---|---|---|---|---|---|
+| Combobox (101) | 90/100 P1 | 100/100 P1 (1×) | 100/100 P1 (1×) | 100/100 P1 (1×) | confirms skipped — sibling fixes landed mid-box (see closeout) |
+| Listbox (72) | 72/72 ✓✓ | 72/72 ✓✓ | 72/72 ✓✓ | 72/72 ✓✓ | CONFIRMED two-in-a-row |
+| Tree (67) | 67/67 ✓✓ | 67/67 ✓✓ | 67/67 ✓✓ | 67/67 ✓✓ | CONFIRMED two-in-a-row |
+| Calendar (85) | 84/85 settle (RANGE-14 only) | 83/85 P1 | 85/85 P1 (1×) | 83/85 P1 | CA-DAY-11 SETTLED transient |
+| DateField (57) | 57/57 P1 (1×) | 57/57 P1 (1×) | 57/57 P1 (1×) | 57/57 P1 (1×) | confirms carried (box) |
+| NumberField (58) | 58/58 P1 (1×) | 58/58 P1 (1×) | 58/58 P1 (1×) | 58/58 P1 (1×) | confirms carried (box) |
+| Menu (92) | 92/92 P1 (1×) | 92/92 P1 (1×) | 92/92 P1 (1×) | 92/92 P1 (1×) | confirms carried (box) |
+| FocusLock (44) | 41/44 P1 | 42/44 P1 | 41/44 P1 | 42/44 P1 | 02-F11..F13 (no green legs to confirm) |
+| Splitter (79) | 79/79 P1 (1×) | 79/79 P1 (1×) | 79/79 P1 (1×) | 79/79 P1 (1×) | confirms carried (box) |
+| Menubar (23) | 14/23 P1 | 14/23 P1 | 14/23 P1 | 14/23 P1 | owned 9 only, zero new (no greens) |
+| Popover (19) | 18/19 P1 | 19/19 P1 (1×) | 16/19 P1 | 17/19 P1 | r18FF confirm carried (box) |
+| Toast (60) | 57/60 settle (F16+F17+DOM-05) | 55/60 settle (F16+F17+CLOSE-04+TIME-05+ENV-03) | 56/60 P1 | 54/60 P1 | transients settled (see dispositions) |
+| Tooltip (15) | 9/15 P1 | 13/15 P1 | 5/15 P1 | 9/15 P1 | 02-F24..F29 (no greens) |
+| Accordion (21) | 21/21 (1×) | 21/21 (1×) | 21/21 (1×) | 21/21 (1×) | sweep F37/F38 gone on r17/r18 |
+| Announcer (35) | 35/35 (1×) | 34/35 (02-F30) | 35/35 (1×) | 34/35 (02-F30) | sweep F8 gone on r17 AND r18 |
+| Button (7) | 7/7 (1×) | 7/7 (1×) | 7/7 (1×) | 7/7 (1×) | — |
+| Collapsible (25) | 25/25 (1×) | 25/25 (1×) | 25/25 (1×) | 25/25 (1×) | sweep green holds on r17/r18 |
+| Field (21) | 21/21 (1×) | 21/21 (1×) | 21/21 (1×) | 21/21 (1×) | sweep green holds on r17/r18 |
+| Measure (10) | 0/10 (02-F44) | 10/10 (1×) | 0/10 (02-F44) | 10/10 (1×) | whole-suite r17 mount failure (createRoot) |
+| Overlay main (97; dir 120) | 88/97 (dir 93/120) | 93/97 (dir 115/120) | 85/97 (dir 90/120) | 93/97 (dir 115/120) | dir = main + 18 Exotica + 5 Focus(5/5×4); 02-F45..F56 |
+| Portal (22) | 22/22 (1×) | 22/22 (1×) | 22/22 (1×) | 22/22 (1×) | sweep green holds on r17/r18 |
+| Presence (45) | 45/45 (1×) | 45/45 (1×) | 45/45 (1×) | 45/45 (1×) | sweep green holds on r17/r18 |
+| Primitives (4) | 4/4 (1×) | 4/4 (1×) | 4/4 (1×) | 4/4 (1×) | — |
+| ReferenceLibrary (3) | 3/3 (1×) | 3/3 (1×) | 3/3 (1×) | 3/3 (1×) | — |
+| RovingFocus (44) | 44/44 (1×) | 44/44 (1×) | 38/44 (02-F31..36) | 38/44 (02-F31..36) | WK Tab-traversal focus class ×6 |
+| Showcase (3) | 2/3 (02-F37) | 3/3 (1×) | 2/3 (02-F37) | 3/3 (1×) | shebang 45s timeout r17-only |
+| Slider (36) | 30/36 (02-F38..43) | 30/36 (02-F38..43) | 31/36 (02-F38..42) | 31/36 (02-F38..42) | pointer-capture ×3 + CDP-harness ×2 + ENV-03 FF-only |
+| Slot (4) | 4/4 (1×) | 4/4 (1×) | 4/4 (1×) | 4/4 (1×) | — |
+| Switch (22) | 22/22 (1×) | 22/22 (1×) | 22/22 (1×) | 22/22 (1×) | — |
+| Tabs (26) | 26/26 (1×) | 26/26 (1×) | 26/26 (1×) | 26/26 (1×) | sweep green holds on r17/r18 |
+
+## Phase-2 findings (02-F30+; all iso-confirmed unless noted)
+
+| ID | Comp | Leg | Failure (quoted) | Repro |
+|---|---|---|---|---|
+| 02-F30 | Announcer ANN-HOST-03/RL-ROOT-06 | r18 FF+WK (r17 green) | `[data-reference-announcer="polite"]` Expected `"Shadow ready"`, element(s) not found | `-g "ANN-HOST-03" --project=react18-<firefox\|webkit>` + CT_REACT=18 CT_PORT=3118 |
+| 02-F31 | RovingFocus RF-TAB-01/02 | r17+r18 WK (FF green) | `outside-after-btn toBeFocused` → inactive | `-g "RF-TAB-01" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F32 | RovingFocus RF-TAB-04 | r17+r18 WK | `outside-after-btn toBeFocused` → inactive | `-g "RF-TAB-04" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F33 | RovingFocus RF-KEY-09 | r17+r18 WK | `keys-b toBeFocused`, element(s) not found | `-g "RF-KEY-09" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F34 | RovingFocus RF-TAB-03 | r17+r18 WK | `keys-outside-before toBeFocused` → inactive | `-g "RF-TAB-03" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F35 | RovingFocus RF-DOM-03 | r17+r18 WK | `empty-after toBeFocused` → inactive | `-g "RF-DOM-03" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F36 | RovingFocus RF-COMP-01 | r17+r18 WK | `slot-outside-after toBeFocused` → inactive | `-g "RF-COMP-01" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F37 | Showcase shebang cascade | r17 FF+WK (r18 green) | `Test timeout 45000ms` clicking `btn-open-shebang-tier3` | `-g "full shebang cascade" --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F38 | Slider SD-POINTER-04 | r17+r18 × FF+WK | `expect.poll(__cap.length)).toBe(1)` Expected 1 Received 0 (gotpointercapture never fires) | `-g "SD-POINTER-04" --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F39 | Slider SD-POINTER-08 | r17+r18 × FF+WK | `expect.poll(__capId)).not.toBeNull()` → null (:698) | `-g "SD-POINTER-08" --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F40 | Slider SD-END-03 | r17+r18 × FF+WK | `expect.poll(__capId)).not.toBeNull()` → null (:878) | `-g "SD-END-03" --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F41 | Slider SD-POINTER-05 | r17+r18 × FF+WK | `browserContext.newCDPSession: CDP session is only available in Chromium` — HARNESS (H-class) | `-g "SD-POINTER-05" --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F42 | Slider SD-COMP-03 | r17+r18 × FF+WK | CDP-only (same H-class, :1140) | `-g "SD-COMP-03" --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F43 | Slider SD-ENV-03 contract | r17+r18 FF (WK green) | `shadow-changes` Expected `"[[21,80],[21,100]]"` Received `"[[21,80]]"` | `-g "preserves the contract inside a ShadowRoot" --project=react<major>-firefox` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F44 | Measure whole-suite mount | r17 FF+WK (r18 green) | `createRoot is not a function` (WK) / `undefined is not a function` at mount (FF) — all 10 | `-g "MS-DOM-01" --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F45 | Overlay Exotica mount cluster (18) | r17 FF+WK (r18 green exc F56) | `createRoot is not a function` at `exotica-fixture.tsx:281` — all 18 Exotica | `-g "OV-DOM-03" 'src/components/Overlay/__e2e__/OverlayExotica.ct.spec.ts' --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F46 | Overlay OV-ESC-01&04 | r17 FF+WK (r18 green) | Escape deepest-first `toBeVisible` | `-g "OV-ESC-01" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F47 | Overlay r17 dismiss cluster OV-LAYER-02/03/05/11 | r17 FF+WK (r18 green) | outside-dismiss `toBeVisible`/`toHaveCount` (4 tests, one class) | `-g "OV-LAYER-02\|OV-LAYER-03\|OV-LAYER-05\|OV-LAYER-11" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F48 | Overlay OV-EDGE-04 | r17 FF+WK (r18 green) | nested edge-stack CSS vars `toBe` | `-g "OV-EDGE-04" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react17-<firefox\|webkit>` + CT_REACT=17 CT_PORT=3117 |
+| 02-F49 | Overlay OV-DOM-08&09 | r17 WK only | `locator.click: Test timeout of 30000ms exceeded` (iso 31.3s) | `-g "OV-DOM-08" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react17-webkit` + CT_REACT=17 CT_PORT=3117 |
+| 02-F50 | Overlay OV-LAYER-04 touch | FF r17+r18 + WK r17 (WK r18 green) | FF: `locator.dispatchEvent: TouchEvent is not defined`; WK r17: `toHaveCount` | `-g "OV-LAYER-04" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F51 | Overlay OV-POS-06 CSS-vars | FF r17+r18 (WK green) | available/anchor geometry vars `toBe` | `-g "OV-POS-06" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react<major>-firefox` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F52 | Overlay OV-SCRL-01/02 | r18 FF only | closeOnScroll living-position `toBeVisible` | `-g "OV-SCRL-01" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react18-firefox` + CT_REACT=18 CT_PORT=3118 |
+| 02-F53 | Overlay OV-FOCUS-08 | r17+r18 × FF+WK | initial-focus-after-mount `toBeFocused` → inactive | `-g "OV-FOCUS-08" 'src/components/Overlay/__e2e__/Overlay.ct.spec.ts' --project=react<major>-<firefox\|webkit>` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F54 | Overlay OV-FOCUS-03 | r17+r18 WK (FF green) | initialFocus=false reclaim `toBeFocused` → inactive | `-g "OV-FOCUS-03" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F55 | Overlay OV-TRG-05 + reject | r17+r18 WK (FF green) | Tab-bridge into Content `toBeFocused` → inactive (both variants) | `-g "OV-TRG-05" --project=react<major>-webkit` + CT_REACT=<major> CT_PORT=3117/3118 |
+| 02-F56 | Overlay OV-SCROLL-06 Exotica | r18 FF+WK (r17 red via F45) | FF: `TouchEvent is not defined`; WK: `TypeError: Illegal constructor` (pinch path) | `-g "OV-SCROLL-06" 'src/components/Overlay/__e2e__/OverlayExotica.ct.spec.ts' --project=react18-<firefox\|webkit>` + CT_REACT=18 CT_PORT=3118 |
+| 02-F57 | Toast TO-DOM-05 ORDER-DEP | r17 FF | `toHaveCSS` on `scaled-child`, element(s) not found — full-red ×2, iso-green | `-g "TO-DOM-05" --project=react17-firefox` + CT_REACT=17 CT_PORT=3117 (iso PASSES; reproduces only in full suite) |
+| 02-F58 | Toast TO-TIME-05 ORDER-DEP | r18 FF | `toHaveCount` on `[data-reference-toast-id="swipe"]` Expected 0 Received 1 — full-red ×2, iso-green ×2 | `-g "TO-TIME-05" --project=react18-firefox` + CT_REACT=18 CT_PORT=3118 (iso PASSES; reproduces only in full suite) |
+
+## Phase-2 transient dispositions (all 6 settled + 2 flips)
+
+| Transient | Settle evidence | Disposition |
+|---|---|---|
+| CA-DAY-11 (r17FF) | settle 84/85, only owned RANGE-14 red | SETTLED one-off transient — NOT filed |
+| TO-DOM-05 (r17FF) | settle red again (full-red ×2, iso-green) | ORDER-DEPENDENT GENUINE → 02-F57 |
+| TO-RIVAL-CARD (r18FF) | settle green + iso green | SETTLED one-off transient — NOT filed |
+| TO-RIVAL-DIR (r18FF) | settle green + iso green | SETTLED one-off transient — NOT filed |
+| TO-COMP-03 (r18FF) | settle green + iso green | SETTLED one-off transient — NOT filed |
+| TO-TIME-05 (r18FF) | settle red again (full-red ×2, iso-green ×2) | ORDER-DEPENDENT GENUINE → 02-F58 |
+| TO-CLOSE-04 flip (r18FF) | green P1 full → red settle → green iso | single-occurrence flip — NOT filed, noted |
+| TO-RIVAL-RICH = 02-F22 | P1 full-red + iso-red, now settle-GREEN | DOWNGRADED to flaky — needs tiebreak run (carried) |
+
+## Phase-2 resume checklist
+
+1. Green-confirm debt (two-in-a-row unmet — box): Calendar r17WK, DateField ×4, NumberField ×4, Menu ×4, Splitter ×4, Popover r18FF (1× P1 greens stand), Combobox ×3 (re-proof on fixed tree; sibling 02F-CB closed 8-fixed/2-held).
+2. Tiebreak 02-F22 (TO-RIVAL-RICH): P1 iso-red vs P2 settle-green — one quiet full r18FF re-run decides.
+3. Triage 02-F30..F58 to fix crews (clusters: Overlay r17 ×~30 incl. createRoot-mount F44/F45; Toast order-dep F57/F58; Slider pointer-capture F38-40; RovingFocus/Overlay/Tooltip WK-focus F31-36/F53-55; CDP-harness F41/F42 → chromium-only marks; singles F30/F37/F43/F46/F48-52/F56).
+4. Overlay sweep deviation note: half-B ran the whole `__e2e__/` dir (120 tests) not just `Overlay.ct.spec.ts` — broader coverage, kept; main-only splits in table are exact per-file.
+5. Scaffolding: /tmp/sweep-ct.config.ts, /tmp/sweep-probe*, /tmp/finish02-*.txt (P1 ~50), /tmp/finish02b-*.txt (P2 ~90 incl. confirms/settles/isos) — all in /tmp, nothing in repo. Galleries on 3117/3118 left running (proven 17.0.2/18.3.1); :3101 still untouched.
+6. Only this log modified in repo; zero component files touched; nothing committed. Combobox/ never touched (sibling owned; their fixes + stray root PNGs left alone).
