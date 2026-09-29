@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 
 test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
   test.beforeEach(async ({ mount, page }) => {
@@ -20,7 +20,7 @@ test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
     await snap(page, 'outside-before-focused')
 
     // Tab into composite -> lands on first enabled item (Apple)
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(apple).toBeFocused()
     await expect(apple).toHaveAttribute('tabindex', '0')
     await expect(blueberry).toHaveAttribute('tabindex', '-1')
@@ -28,7 +28,7 @@ test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
     await snap(page, 'item-apple-focused')
 
     // Tab out of composite -> lands on outside after
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(outsideAfter).toBeFocused()
     await snap(page, 'outside-after-focused')
   })
@@ -129,9 +129,9 @@ test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
     await expect(blueberry).toHaveAttribute('tabindex', '0')
 
     // Tab out of the composite, then back in: re-entry lands on the pressed item.
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(outsideAfter).toBeFocused()
-    await page.keyboard.press('Shift+Tab')
+    await pressTab(page, 'back')
     await expect(blueberry).toBeFocused()
   })
 
@@ -496,7 +496,10 @@ test.describe('RovingFocus one-dimensional keys', () => {
 
     await b.focus()
     let seen = 0
-    for (const mod of ['Alt', 'Control', 'Meta'] as const) {
+    // WK reserves Control/Meta+Arrow for browser nav (Control+ArrowLeft unloads
+    // to about:blank, D7) — untestable in-browser; Alt proves the contract on WK.
+    const mods = (['Alt', 'Control', 'Meta'] as const).filter(m => m === 'Alt' || !isWebKit(page))
+    for (const mod of mods) {
       for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'] as const) {
         await page.keyboard.press(`${mod}+${key}`)
         await expect(b).toBeFocused()
@@ -594,10 +597,10 @@ test.describe('RovingFocus tab stops and currentness', () => {
     await expect(b).toBeFocused()
 
     await after.focus()
-    await page.keyboard.press('Shift+Tab')
+    await pressTab(page, 'back')
     await expect(b).toBeFocused()
 
-    await page.keyboard.press('Shift+Tab')
+    await pressTab(page, 'back')
     await expect(before).toBeFocused()
   })
 
@@ -773,7 +776,7 @@ test.describe('RovingFocus transparent DOM', () => {
       await page.keyboard.press(key)
       await expect(page.getByTestId('empty-before')).toBeFocused()
     }
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(page.getByTestId('empty-after')).toBeFocused()
 
     await expect(container.locator('[tabindex]')).toHaveCount(0)
@@ -1036,7 +1039,7 @@ test.describe('RovingFocus composition gates', () => {
     const link = page.getByTestId('slot-link')
 
     await page.getByTestId('slot-outside-before').focus()
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(bold).toBeFocused()
 
     await page.keyboard.press('ArrowRight')
@@ -1048,7 +1051,7 @@ test.describe('RovingFocus composition gates', () => {
     await page.keyboard.press('ArrowLeft')
     await expect(link).toBeFocused()
 
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(page.getByTestId('slot-outside-after')).toBeFocused()
 
     await bold.click()
