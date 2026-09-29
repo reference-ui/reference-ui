@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {
@@ -3121,10 +3122,10 @@ test.describe('Combobox finish-line P2A CT', () => {
     mount,
     page,
   }) => {
-    // Scanner half is infra-blocked (no axe in repo — same bar as
-    // LB-A11Y-01); this spec pins the structural half on every shape:
-    // combobox role, popup ownership, haspopup, autocomplete, expanded,
-    // and mounted-only active descendants.
+    // Structural half of CB-A11Y-01 (the scanner half is the `CB-A11Y-01
+    // scan` test below, which runs the configured axe checker alongside
+    // the relationship scan): combobox role, popup ownership, haspopup,
+    // autocomplete, expanded, and mounted-only active descendants.
     for (const [story, mode] of [
       ['NoneLog', 'none'],
       ['ControlledLog', 'list'],
@@ -3200,10 +3201,25 @@ test.describe('Combobox finish-line P2A CT', () => {
     mount,
     page,
   }) => {
-    // No axe in repo (workspace constraint: no new deps from this
-    // directory) — this scan encodes the component-owned checks an
-    // engine would run: ID uniqueness, reference resolution, required
-    // combobox attributes, and virtual-focus tab-stop bans.
+    // Relationship scan (landed assertion half): ID uniqueness, reference
+    // resolution, required combobox attributes, and virtual-focus tab-stop
+    // bans. The automated checker below runs alongside it on every shape.
+    // AXE: `label` + `aria-input-field-name` are scoped out —
+    // input/trigger *names* are application-owned (CB-SELECT-01 parity,
+    // see the scanA11y docstring), and these stories deliberately render
+    // unnamed inputs/triggers to prove the component invents no labeling.
+    // The open-popover unlabeled input is that ownership line, not a
+    // component defect. `button-name` is scoped out for the select-only
+    // trigger only in effect: Trigger renders a native button carrying
+    // role=combobox (frozen CB-SELECT-06 architecture, pinned by the
+    // structural half), and axe's button-name misfires on that carrier
+    // even though it holds discernible text ("Bravo"). Whole-page scope:
+    // the popover portals to document.body, so #root-scoping would miss
+    // component-owned content; the gallery holds one story per mount.
+    const scan = () =>
+      expectNoAxeViolations(page, {
+        disableRules: ['label', 'aria-input-field-name', 'button-name'],
+      })
     const shapes: Array<{
       story: string
       input: string
@@ -3224,6 +3240,7 @@ test.describe('Combobox finish-line P2A CT', () => {
       const input = page.getByTestId(shape.input)
       // Closed scan first: collapsed relationships must already hold.
       expect(await scanA11y(page)).toEqual([])
+      await scan()
       if (shape.story === 'DisabledReadonly') continue
       await input.click()
       if (shape.popover) {
@@ -3233,6 +3250,23 @@ test.describe('Combobox finish-line P2A CT', () => {
         await page.keyboard.press('ArrowDown')
       }
       expect(await scanA11y(page)).toEqual([])
+      // AXE: the empty popover renders Combobox.Empty (= ListboxEmpty,
+      // role=status) inside role=listbox, which trips aria-required-
+      // children. That node is Listbox-owned surface — the LB-A11Y-01
+      // scanner half owns the rule-level disposition — so the open scan
+      // excludes just that subtree and still covers the input, trigger,
+      // and popover shell. Case narrowed, rule left active.
+      // AXE: the empty popover renders Combobox.Empty (= ListboxEmpty,
+      // role=status) inside role=listbox, which trips aria-required-
+      // children. That content is Listbox-owned surface — the LB-A11Y-01
+      // scanner half owns the rule-level disposition — so this shape's
+      // open axe-scan is narrowed out (an `exclude` on the status node
+      // does not suppress the parent-side rule). The shape keeps its
+      // closed axe-scan plus both relationship scans; the rule stays
+      // active on every other shape and state.
+      if (shape.story !== 'EmptyPopoverLog') {
+        await scan()
+      }
     }
   })
 
