@@ -28,3 +28,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 - LAST PASS LANDED: FOCUS (+FIX), SPLIT cluster, NFLAST 1–4
   (NumberField 144/148 automated-complete). 4a crew dispatched
   (Splitter+smoke scope). Manual gates + HQ items remain.
+- CLOSEOUT LANDED: 4a executed, SMOKEREDS 2/3, NAMER 9/10,
+  EXTRACT #9. Smoke gate exit 0. Tree clean. ALL CREWS IN.
+  VOYAGE COMPLETE — only manual gates + HQ read-through remain.
