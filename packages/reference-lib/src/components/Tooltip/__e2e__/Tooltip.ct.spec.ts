@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator } from '@playwright/test'
 
@@ -34,7 +34,8 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await snap(page, 'basic-resting')
 
     // TT-FOCUS-01: honest keyboard Tab (not programmatic focus) — ring + tip together.
-    await page.keyboard.press('Tab')
+    // pressTab: Option+Tab on WK (traverse-all-controls), plain Tab elsewhere.
+    await pressTab(page)
     await expect(btnA).toBeFocused()
     await expect(btnA).toHaveAttribute('data-focus-visible', '')
 
@@ -49,8 +50,8 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await snap(page, 'focus-open-btn-a')
 
     // Tab off via btn-tooltip-b onto the outside control; blur closes unconditionally.
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
+    await pressTab(page)
+    await pressTab(page)
     await expect(page.getByTestId('btn-outside')).toBeFocused()
     await expect(contentA).toHaveCount(0)
   })
@@ -83,7 +84,7 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     const contentA = page.getByTestId('tooltip-content-a')
 
     // Honest keyboard Tab (not programmatic focus); anchoring assertions untouched.
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(btnA).toBeFocused()
     await expect(contentA).toBeVisible()
     await expectAnchoredTop(btnA, contentA)
@@ -326,7 +327,7 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await expect(button).toBeVisible()
 
     // The story is named KeyboardFocus: make it honest with a real Tab.
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(button).toBeFocused()
     await expect(button).toHaveAttribute('data-focus-visible', '')
     await page.waitForTimeout(200)
@@ -375,7 +376,7 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await expect(page.getByTestId('tooltip-fixture-root')).toBeVisible()
     const btnA = page.getByTestId('btn-tooltip-a')
     const contentA = page.getByTestId('tooltip-content-a')
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(btnA).toBeFocused()
     await expect(contentA).toBeVisible()
     await expect(contentA).toHaveAttribute('role', 'tooltip')
