@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import {
   NumberField,
   type NumberFieldDecrementProps,
@@ -2350,6 +2350,96 @@ describe('NumberField environments', () => {
     )
     expect(unboundedHtml).not.toContain('Infinity')
     expect(unboundedHtml).not.toContain('aria-value')
+  })
+
+  it('NF-ENV-02: Mismatched server/client Intl data should report an unsupported deployment instead of promising identical bytes', async () => {
+    // A server ICU whose decimal format carries a spacing the client ICU
+    // lacks: stub NumberFormat.format on the server side only.
+    const RealNumberFormat = Intl.NumberFormat
+    const ServerNumberFormat = class extends RealNumberFormat {
+      override format(value: number | bigint): string {
+        return `${super.format(value as number)} `
+      }
+    }
+    function App() {
+      return (
+        <NumberField value={1234.5} locale="en-US">
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+      )
+    }
+    const errors: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    try {
+      Object.defineProperty(Intl, 'NumberFormat', {
+        value: ServerNumberFormat,
+        writable: true,
+        configurable: true,
+      })
+      const ssrHtml = renderToString(<App />)
+      expect(ssrHtml).toContain('value="1,234.5 "')
+      Object.defineProperty(Intl, 'NumberFormat', {
+        value: RealNumberFormat,
+        writable: true,
+        configurable: true,
+      })
+      // Mismatched hydrate: the compatibility diagnostic fires (once),
+      // names the unsupported deployment, and disclaims the equal-bytes
+      // contract — without throwing.
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      container.innerHTML = ssrHtml
+      let root: ReturnType<typeof hydrateRoot> | null = null
+      await React.act(async () => {
+        root = hydrateRoot(container, <App />)
+      })
+      const diags = errors.filter(t => t.includes('Reference UI: NumberField'))
+      expect(diags).toHaveLength(1)
+      expect(diags[0]).toContain('Intl')
+      expect(diags[0]).toContain('unsupported deployment')
+      expect(diags[0]).toContain('not promised identical bytes')
+      await React.act(async () => {
+        root!.unmount()
+      })
+      container.remove()
+      // Matching hydrate stays silent: no NumberField diagnostic.
+      errors.length = 0
+      const matchHtml = renderToString(<App />)
+      expect(matchHtml).toContain('value="1,234.5"')
+      const matchContainer = document.createElement('div')
+      document.body.appendChild(matchContainer)
+      matchContainer.innerHTML = matchHtml
+      let matchRoot: ReturnType<typeof hydrateRoot> | null = null
+      await React.act(async () => {
+        matchRoot = hydrateRoot(matchContainer, <App />)
+      })
+      expect(errors.filter(t => t.includes('Reference UI: NumberField'))).toEqual([])
+      await React.act(async () => {
+        matchRoot!.unmount()
+      })
+      matchContainer.remove()
+      // Pure client render stays silent (no SSR attribute to compare).
+      errors.length = 0
+      const { container: clientContainer, root: clientRoot } = mount()
+      await React.act(async () => {
+        clientRoot.render(<App />)
+      })
+      expect(errors.filter(t => t.includes('Reference UI: NumberField'))).toEqual([])
+      await cleanup(clientContainer, clientRoot)
+    } finally {
+      Object.defineProperty(Intl, 'NumberFormat', {
+        value: RealNumberFormat,
+        writable: true,
+        configurable: true,
+      })
+      errorSpy.mockRestore()
+    }
   })
 
   it('NF-ENV-05: StrictMode should not duplicate callbacks on a single step', async () => {

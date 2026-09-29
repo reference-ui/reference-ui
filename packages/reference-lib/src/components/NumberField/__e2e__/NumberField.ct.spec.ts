@@ -2356,4 +2356,438 @@ test.describe('NumberField CT', () => {
     await expect(page.getByTestId('comp-currency-dec')).toHaveAttribute('aria-label', 'Decrease amount')
     await expect(page.getByTestId('comp-currency-inc')).toHaveAttribute('aria-label', 'Increase amount')
   })
+
+  test('NF-EDIT-07: Focused formatting replacements preserve the caret by logical digit with a documented end fallback', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CaretLabFixture')
+    const input = page.getByTestId('caret-input')
+    const currency = page.getByTestId('caret-currency-input')
+    const percent = page.getByTestId('caret-percent-input')
+    const caretOf = (target: typeof input) => () =>
+      target.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    const caret = caretOf(input)
+    const place = (target: typeof input, start: number, end: number) =>
+      target.evaluate(
+        (el, [s, e]) => (el as HTMLInputElement).setSelectionRange(s, e),
+        [start, end] as [number, number]
+      )
+    await expect(input).toHaveValue('1,234')
+    // Start anchor: no preceding digit stays at text start.
+    await input.click()
+    await place(input, 0, 0)
+    await page.getByTestId('caret-set-12345').click()
+    await expect(input).toHaveValue('12,345')
+    await expect(caret()).resolves.toEqual([0, 0])
+    await expect(input).toBeFocused()
+    // Middle insertion across a shifted group separator: 2 digits before
+    // stays after the 2nd digit.
+    await page.getByTestId('caret-set-1234').click()
+    await expect(input).toHaveValue('1,234')
+    await place(input, 3, 3)
+    await page.getByTestId('caret-set-12345').click()
+    await expect(input).toHaveValue('12,345')
+    await expect(caret()).resolves.toEqual([2, 2])
+    // Deeper middle: 3 digits before lands after the 3rd digit.
+    await page.getByTestId('caret-set-1234').click()
+    await place(input, 4, 4)
+    await page.getByTestId('caret-set-12345').click()
+    await expect(input).toHaveValue('12,345')
+    await expect(caret()).resolves.toEqual([4, 4])
+    // Ranged logical selection: each edge follows its own digit count.
+    await page.getByTestId('caret-set-1234').click()
+    await place(input, 1, 4)
+    await page.getByTestId('caret-set-12345').click()
+    await expect(input).toHaveValue('12,345')
+    await expect(caret()).resolves.toEqual([1, 4])
+    // Deletion past the digit supply clamps to the documented end fallback.
+    await place(input, 6, 6)
+    await page.getByTestId('caret-set-123').click()
+    await expect(input).toHaveValue('123')
+    await expect(caret()).resolves.toEqual([3, 3])
+    // Currency prefix: end-of-cents follows its 6 digits, not the new end.
+    await expect(currency).toHaveValue('$1,234.50')
+    const currencyCaret = caretOf(currency)
+    await currency.click()
+    await place(currency, 9, 9)
+    await page.getByTestId('caret-currency-set').click()
+    await expect(currency).toHaveValue('$12,345.67')
+    await expect(currencyCaret()).resolves.toEqual([9, 9])
+    await expect(currency).toBeFocused()
+    // Currency start anchors before the prefix.
+    await page.getByTestId('caret-currency-reset').click()
+    await expect(currency).toHaveValue('$1,234.50')
+    await place(currency, 0, 0)
+    await page.getByTestId('caret-currency-set').click()
+    await expect(currency).toHaveValue('$12,345.67')
+    await expect(currencyCaret()).resolves.toEqual([0, 0])
+    // Percent suffix: end clamps when the digit supply shrinks.
+    await expect(percent).toHaveValue('13%')
+    const percentCaret = caretOf(percent)
+    await percent.click()
+    await place(percent, 3, 3)
+    await page.getByTestId('caret-percent-set').click()
+    await expect(percent).toHaveValue('5%')
+    await expect(percentCaret()).resolves.toEqual([2, 2])
+    await expect(percent).toBeFocused()
+    await page.getByTestId('caret-percent-reset').click()
+    await expect(percent).toHaveValue('13%')
+    await place(percent, 0, 0)
+    await page.getByTestId('caret-percent-set').click()
+    await expect(percent).toHaveValue('5%')
+    await expect(percentCaret()).resolves.toEqual([0, 0])
+  })
+
+  test('NF-DYNAMIC-05: Interactive replacement cancels pending key, repeat, composition, and failed-submit work', async ({
+    mount,
+    page,
+    browserName,
+  }) => {
+    await mount('components/NumberField/NumberField/DynamicFixture')
+    const input = page.getByTestId('dynamic-input')
+    const inc = page.getByTestId('dynamic-inc')
+    const log = page.getByTestId('dynamic-log')
+    const display = page.getByTestId('dynamic-display')
+    const submits = page.getByTestId('dynamic-submits')
+    // Programmatic toggle clicks: the mouse stays held on the stepper, so
+    // only the replacement — never a drag/leave — ends the session.
+    const flip = (id: string) =>
+      page.getByTestId(id).evaluate(el => (el as HTMLElement).click())
+    const hold = async (target: typeof inc = inc) => {
+      const box = await target.boundingBox()
+      expect(box).not.toBeNull()
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+      await page.mouse.down()
+    }
+    const activeTag = () => page.evaluate(() => document.activeElement?.tagName ?? 'NONE')
+    // V1: disable mid-hold ends the repeat; the stale release never steps;
+    // the disabled input blurs natively (body) and stays there — the
+    // engine never refocuses; a fresh press steps.
+    await hold()
+    await expect(log).toHaveText('log: 6')
+    await expect(input).toBeFocused()
+    await flip('dynamic-toggle-disabled')
+    await expect(inc).toBeDisabled()
+    await page.waitForTimeout(700)
+    await expect(log).toHaveText('log: 6')
+    await expect(activeTag()).resolves.toBe('BODY')
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 6')
+    await flip('dynamic-toggle-disabled')
+    await expect(inc).not.toBeDisabled()
+    await expect(activeTag()).resolves.toBe('BODY')
+    await inc.click()
+    await expect(log).toHaveText('log: 6,7')
+    // V2: read-only mid-hold ends the repeat identically, but the
+    // focusable input keeps native focus throughout.
+    await hold()
+    await expect(log).toHaveText('log: 6,7,8')
+    await expect(input).toBeFocused()
+    await flip('dynamic-toggle-readonly')
+    await page.waitForTimeout(700)
+    await expect(log).toHaveText('log: 6,7,8')
+    await expect(input).toBeFocused()
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 6,7,8')
+    await flip('dynamic-toggle-readonly')
+    await inc.click()
+    await expect(log).toHaveText('log: 6,7,8,9')
+    // V3: stepper removal mid-hold ends the session; re-added steppers need
+    // a fresh press.
+    await hold()
+    await expect(log).toHaveText('log: 6,7,8,9,10')
+    await flip('dynamic-toggle-steppers')
+    await expect(inc).toHaveCount(0)
+    await page.waitForTimeout(700)
+    await expect(log).toHaveText('log: 6,7,8,9,10')
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 6,7,8,9,10')
+    await flip('dynamic-toggle-steppers')
+    await expect(inc).toHaveCount(1)
+    await inc.click()
+    await expect(log).toHaveText('log: 6,7,8,9,10,11')
+    // V4: owner-root replacement mid-hold remounts clean; focus follows
+    // native removal rules (body); fresh edits step from control.
+    await hold()
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12')
+    await flip('dynamic-toggle-owner')
+    await expect(page.getByTestId('dynamic-portal-host').locator('[data-testid="dynamic-field"]')).toHaveCount(1)
+    await page.waitForTimeout(700)
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12')
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12')
+    await expect(activeTag()).resolves.toBe('BODY')
+    await expect(input).toHaveValue('12')
+    await flip('dynamic-toggle-owner')
+    await inc.click()
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13')
+    // V5: disable mid-composition cancels the suspension; focus follows
+    // the native rule (body); the stale end is ignored; a fresh edit
+    // publishes immediately after re-enable. Whether disable COMMITS is
+    // engine-defined (probed): Chromium never delivers disable-blur to
+    // React onBlur, so the draft freezes staged; Firefox/WebKit deliver
+    // it, so the ordinary blur boundary commits (invalid reverts + failed
+    // boundary, cleared by the fresh edit below).
+    await input.click()
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      target.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, cancelable: true }))
+      setter.call(target, 'ni3hao')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(input).toHaveValue('ni3hao')
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13')
+    await flip('dynamic-toggle-disabled')
+    // Focus settles asynchronously on WebKit (V1's hold-wait covers the
+    // same landing); Chromium/Firefox move synchronously.
+    await page.waitForTimeout(300)
+    await expect(activeTag()).resolves.toBe('BODY')
+    const frozenDraft = browserName === 'chromium'
+    await expect(input).toHaveValue(frozenDraft ? 'ni3hao' : '13')
+    if (frozenDraft) {
+      await expect(input).toHaveAttribute('data-editing', '')
+    } else {
+      await expect(input).not.toHaveAttribute('data-editing', '')
+    }
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13')
+    await input.evaluate(el => {
+      el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, cancelable: true }))
+    })
+    await expect(input).toHaveValue(frozenDraft ? 'ni3hao' : '13')
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13')
+    await flip('dynamic-toggle-disabled')
+    await input.fill('42')
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42')
+    // V6: key repeats are gated per event; a disabled repeat never steps.
+    await input.click()
+    await page.keyboard.press('ArrowUp')
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43')
+    await flip('dynamic-toggle-disabled')
+    await input.evaluate(el => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }))
+    })
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43')
+    await flip('dynamic-toggle-disabled')
+    await input.click()
+    await page.keyboard.press('ArrowUp')
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43,44')
+    // V7: authoritative replacement clears failed-submit work; submit flows.
+    // Staged programmatically: fill() routes through the EDIT-02 typed
+    // gate, so letters must bypass beforeinput like EDIT-17 staging.
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, 'abc')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(input).toHaveValue('abc')
+    await page.getByTestId('dynamic-outside').click()
+    await expect(input).toHaveValue('44')
+    // FORM-11 probe pattern: the engine listener runs first, so the
+    // probe's defaultPrevented reflects blocking (the fixture counts
+    // delivered events either way).
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="dynamic-form"]') as HTMLFormElement
+      ;(window as unknown as { __nfDynSubmits: boolean[] }).__nfDynSubmits = []
+      form.addEventListener('submit', e => {
+        ;(window as unknown as { __nfDynSubmits: boolean[] }).__nfDynSubmits.push(e.defaultPrevented)
+      })
+    })
+    const preventedFlags = () =>
+      page.evaluate(() => (window as unknown as { __nfDynSubmits: boolean[] }).__nfDynSubmits)
+    await page.getByTestId('dynamic-submit').click()
+    await expect(preventedFlags()).resolves.toEqual([true])
+    await page.getByTestId('dynamic-set-99').click()
+    await expect(display).toHaveText('Value: 99')
+    await page.getByTestId('dynamic-submit').click()
+    await expect(preventedFlags()).resolves.toEqual([true, false])
+    // V8: authoritative replacement mid-hold ends the repeat; the stale
+    // release click is suppressed; only a fresh press steps.
+    const dec = page.getByTestId('dynamic-dec')
+    await hold(dec)
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43,44,98')
+    await flip('dynamic-set-99')
+    await expect(display).toHaveText('Value: 99')
+    await page.waitForTimeout(700)
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43,44,98')
+    await page.mouse.up()
+    await expect(log).toHaveText('log: 6,7,8,9,10,11,12,13,42,43,44,98')
+    await inc.click()
+    await expect(display).toHaveText('Value: 100')
+  })
+
+  test('NF-ENV-06: Open ShadowRoot operation scopes focus, IDs, listeners, and same-root forms to the owner root', async ({
+    mount,
+    page,
+  }) => {
+    // Console spy attaches before mount; the light-DOM calibration
+    // stepper (unresolvable labelledby) proves the spy hears NumberField
+    // diagnostics, so the shadow silence below is meaningful.
+    const errors: string[] = []
+    page.on('console', message => {
+      if (message.type() === 'error') errors.push(message.text())
+    })
+    await mount('components/NumberField/NumberField/ShadowFixture')
+    const qty = page.getByTestId('shadow-qty-input')
+    const price = page.getByTestId('shadow-price-input')
+    const qtyLog = page.getByTestId('shadow-qty-log')
+    const priceLog = page.getByTestId('shadow-price-log')
+    const shadowActiveTestId = () =>
+      page.evaluate(() => {
+        const host = document.querySelector('[data-testid="shadow-host"]')
+        const active = host?.shadowRoot?.activeElement as HTMLElement | null
+        return active?.getAttribute('data-testid') ?? active?.tagName ?? 'NONE'
+      })
+    // Edit + step both shadow fields through composed events.
+    await qty.fill('7')
+    await expect(qtyLog).toHaveText('log: 7')
+    await page.getByTestId('shadow-qty-inc').click()
+    await expect(qtyLog).toHaveText('log: 7,8')
+    await price.fill('12')
+    await expect(priceLog).toHaveText('log: 12')
+    // Stepper labelledby resolves in shadow (a document-global lookup
+    // finds no target and renders nothing): the stepper exists + steps.
+    const priceInc = page.getByTestId('shadow-price-inc')
+    await expect(priceInc).toHaveCount(1)
+    await priceInc.click()
+    await expect(priceLog).toHaveText('log: 12,13')
+    // Native shadow focus semantics: the shadow root owns the input,
+    // the document only sees the host.
+    await qty.click()
+    await expect(shadowActiveTestId()).resolves.toBe('shadow-qty-input')
+    await expect
+      .poll(() => page.evaluate(() => document.activeElement?.tagName ?? 'NONE'))
+      .toBe('DIV')
+    // Input labelledby resolves in shadow: no unnamed-Input diagnostic
+    // fires for the shadow-only target; the calibration diagnostic lands.
+    await expect
+      .poll(() => errors.filter(e => e.includes('does not resolve')).length)
+      .toBe(1)
+    expect(errors.filter(e => e.includes('has no accessible name'))).toEqual([])
+    expect(errors.filter(e => e.includes('collides across independent roots'))).toEqual([])
+    await expect(page.getByTestId('shadow-cal-inc')).toHaveCount(0)
+    // Same-root form: canonical payload from both shadow fields.
+    await page.getByTestId('shadow-submit').click()
+    await expect(page.getByTestId('shadow-payload')).toHaveText('payload: qty=8,price=13')
+    // Same-root reset: staged invalid text reverts to control, no request.
+    await qty.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, 'abc')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(qty).toHaveValue('abc')
+    await page.getByTestId('shadow-reset').click()
+    await expect(qty).toHaveValue('8')
+    await expect(qtyLog).toHaveText('log: 7,8')
+    // Shadow IDs are invisible to document-global lookup.
+    const docLookup = await page.evaluate(() => ({
+      span: document.getElementById('shadow-qty-name') !== null,
+      input: document.getElementById(
+        (
+          document
+            .querySelector('[data-testid="shadow-host"]')
+            ?.shadowRoot?.querySelector('[data-testid="shadow-qty-input"]') as HTMLInputElement | null
+        )?.id ?? 'shadow-missing-id'
+      ) !== null,
+    }))
+    expect(docLookup).toEqual({ span: false, input: false })
+  })
+
+  test('NF-COMP-04: A scientific unit NumberField composes validate mode, RTL, Shadow DOM, and programmatic replacement without custom parsing', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CompScienceFixture')
+    const input = page.getByTestId('sci-input')
+    const log = page.getByTestId('sci-log')
+    const display = page.getByTestId('sci-display')
+    // Every expectation derives from platform Intl in-page — the spec
+    // imports no engine parsing or formatting.
+    const fmt = (locale: string, value: number) =>
+      page.evaluate(
+        ([l, v]) =>
+          new Intl.NumberFormat(l, { style: 'unit', unit: 'meter', notation: 'scientific' }).format(v),
+        [locale, value] as [string, number]
+      )
+    await expect(input).toHaveValue(await fmt('en-US', 12000))
+    // RTL inheritance changes presentation, never step direction.
+    await expect(page.getByTestId('sci-rtl')).toHaveAttribute('dir', 'rtl')
+    const direction = await input.evaluate(el => getComputedStyle(el).direction)
+    expect(direction).toBe('rtl')
+    await page.getByTestId('sci-inc').click()
+    await expect(log).toHaveText('log: 12005')
+    await expect(display).toHaveText('Value: 12005')
+    // Exponent partials stage silently; completion requests exactly.
+    await input.fill('1.2E')
+    await expect(input).toHaveValue('1.2E')
+    await expect(log).toHaveText('log: 12005')
+    await input.fill('1.2E4')
+    await expect(log).toHaveText('log: 12005,12000')
+    // Validate mode retains the off-step value and reports managed
+    // invalidity without native range/step validity.
+    await input.fill('12001')
+    await expect(log).toHaveText('log: 12005,12000,12001')
+    await expect(display).toHaveText('Value: 12001')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    // Same-root reset reverts staged invalid text with no request. (Runs
+    // before the composition cycle: programmatic staging after a shadow
+    // composition invalidation is swallowed on React 17 only — see the
+    // wave log anomaly note. ENV-06 proves the same reset shape.)
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, 'abc')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(input).toHaveValue('abc')
+    await page.getByTestId('sci-reset').click()
+    await expect(input).toHaveValue(await fmt('en-US', 12001))
+    await expect(log).toHaveText('log: 12005,12000,12001')
+    // Locale replacement during composition: coherent new text, editing
+    // cleared, stale fallout ignored, zero callback.
+    await input.click()
+    await page.keyboard.press('ControlOrMeta+a')
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      target.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, cancelable: true }))
+      setter.call(target, 'ni3hao')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(input).toHaveValue('ni3hao')
+    await page.getByTestId('sci-de').click()
+    await expect(input).toHaveValue(await fmt('de-DE', 12001))
+    await expect(input).not.toHaveAttribute('data-editing', '')
+    await expect(log).toHaveText('log: 12005,12000,12001')
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      target.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, cancelable: true }))
+      setter.call(target, 'ni3hao!')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    await expect(input).toHaveValue(await fmt('de-DE', 12001))
+    await expect(log).toHaveText('log: 12005,12000,12001')
+    // Value replacement mid-session + canonical submit, all inside the
+    // shadow form.
+    await page.getByTestId('sci-set-5005').click()
+    await expect(display).toHaveText('Value: 5005')
+    await expect(input).toHaveValue(await fmt('de-DE', 5005))
+    await expect(input).not.toHaveAttribute('aria-invalid', 'true')
+    await page.getByTestId('sci-submit').click()
+    await expect(page.getByTestId('sci-payload')).toHaveText('payload: sci=5005')
+    // Local relationships: the labelledby stepper resolved in shadow,
+    // and shadow IDs stay invisible to the document.
+    await expect(page.getByTestId('sci-inc')).toHaveCount(1)
+    const docLookup = await page.evaluate(
+      () => document.getElementById('sci-name') !== null
+    )
+    expect(docLookup).toBe(false)
+  })
 })

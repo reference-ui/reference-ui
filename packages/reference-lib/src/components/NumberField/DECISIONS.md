@@ -301,7 +301,30 @@ exponent e), a duplicate decimal, or a second/misplaced sign —
 foreign-script digits still stage verbatim (silent) as before, and
 Playwright fill() routes through the same beforeinput gate (CDP
 InsertText), so letter-bearing CT buffers must be staged
-programmatically. (i) an explicit
+programmatically. (xiv) EDIT-07 maps each selection edge by preceding
+logical-digit count (ASCII + active-set glyphs, the parser's digit
+class) into the replacement text; a caret with no preceding digit
+anchors to text start (even past a prefix), an unsatisfiable count
+clamps to the end, blurred replacements keep the browser default, and
+a composition invalidation keeps its explicit end placement (never a
+logical remap). (xv) DYNAMIC-05 fresh-action requirement: after any
+mid-interaction cancellation, the stale completion event (release
+click, gated key repeat, compositionend, compat click) performs no
+step/request/commit — only a new physical press, key, session, or
+input acts. Whether disable COMMITS is engine-defined (probed):
+Chromium never delivers disable-blur to React onBlur (native blur
+fires, React onBlur does not), so a staged draft freezes and resumes
+on re-enable; Firefox/WebKit deliver it, so the ordinary blur
+boundary commits (invalid reverts + failed boundary). Either way only
+holds (timers) and the composition suspension cancel on disable, and
+only authoritative value/locale/format replacement clears
+failed/pending submit work. Key handling is per-event stateless, so
+per-keydown gating IS the key cancellation — no inter-repeat state
+exists. (xvi) ENV-02 captures the SSR text during first render (a
+pure pre-commit document read keyed by the deterministic inputId —
+post-commit React has already patched the node, probed) and the mount
+effect compares only when hydration adopted that exact node, so
+cross-root id twins and remounts never false-positive. (i) an explicit
 `numberingSystem` option wins over a conflicting locale `-u-nu-` tag per
 Intl precedence, no diagnostic; (ii) "hidden-sign formats" reads as
 `signDisplay: "never"` only — `exceptZero` still writes negatives and

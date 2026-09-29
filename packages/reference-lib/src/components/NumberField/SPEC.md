@@ -39,9 +39,9 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | :--- | :--- |
 | Engine | Controlled textbox + dirty draft/commit, Group host, hidden form pipeline. |
 | Production | **No** (Intl parser + live-request + lattice flips remain). |
-| Named `[x]` | 139 / 148 |
-| Playwright | 53/53 CT on React 17/18/19 + Firefox + WebKit (NFLAST-3: paste EDIT-08/09 + PARSE-07 + COMP-02, filter EDIT-02; EDIT-15/16 FF/WK legs) |
-| Vitest | 130 green across unit + type files (NFLAST-2 slices A–E: +16 Intl titles EDIT-05/PARSE-01/02/03/06/08/09/10/11/12/13/15/16/17/18/19) |
+| Named `[x]` | 144 / 148 |
+| Playwright | 57/57 CT on React 17/18/19 + Firefox + WebKit (NFLAST-4: EDIT-07, DYNAMIC-05, ENV-06, ENV-02, COMP-04) |
+| Vitest | 131 green across unit + type files (NFLAST-2 slices A–E: +16 Intl titles EDIT-05/PARSE-01/02/03/06/08/09/10/11/12/13/15/16/17/18/19; NFLAST-4: ENV-02) |
 | API | FEATURES #1 landed 2026-09-26: required controlled `value` + required `locale`, no `defaultValue`, no env default; FEATURES #2 landed (any-no-change suppression). PATCHES §4 (Group) + §5-core (form/state/hidden/submit/reset) + §8 remainder (textbox proof, unnamed-Input diagnostic) landed 2026-09-28. |
 
 ### Gaps & incoherence
@@ -51,9 +51,11 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
   exponent/bidi grammar + fail-fast matrix + 2000-vector proof
   (`NF-PARSE-*` COMPLETE except `07`, which rides §1 paste work).
   Composition session COMPLETE (`NF-EDIT-11`/`12`/`17`/`18`:
-  composingRef, invalid-restore, fallout invalidation). REMAIN:
-  filtering/paste/caret (`NF-EDIT-02`/`07`–`09`), `NF-COMP-02`/`04`,
-  `NF-DYNAMIC-05`, `NF-ENV-02`/`06`, 4 manual gates.
+  composingRef, invalid-restore, fallout invalidation). NFLAST-3 landed
+  filtering/paste (`NF-EDIT-02`/`08`/`09`); NFLAST-4 landed the caret
+  map (`NF-EDIT-07`), dynamic replacement (`NF-DYNAMIC-05`), and the
+  shadow audit (`NF-ENV-06`), ICU diagnostic (`NF-ENV-02`), science
+  composition (`NF-COMP-04`). REMAIN: 4 manual gates.
 - ~~No live parseable-edit requests (B-19 commit-only).~~ RULED +
   LANDED in unit (NFLAST leg 3a, 2026-09-28, ruling (c) in DECISIONS.md):
   live raw requests with per-session dedupe, echo-aware dirty session;
@@ -119,7 +121,8 @@ smallStep/largeStep.
   `NF-PARSE-13`, `NF-PARSE-01`, `NF-PARSE-19`, `NF-EDIT-12`,
   `NF-EDIT-15`, `NF-EDIT-16`, `NF-EDIT-17`, `NF-EDIT-18`,
   `NF-EDIT-08`, `NF-EDIT-09`, `NF-PARSE-07`, `NF-COMP-02`,
-  `NF-EDIT-02`
+  `NF-EDIT-02`, `NF-EDIT-07`, `NF-DYNAMIC-05`, `NF-ENV-06`, `NF-ENV-02`,
+  `NF-COMP-04`
   (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
   to the current spinbutton + uncontrolled engine: spinbutton kept per
   frozen visuals; `defaultValue` + optional `locale` preserved per recon
@@ -147,10 +150,9 @@ smallStep/largeStep.
   `NF-FORM-09`, `NF-A11Y-04`, `NF-DYNAMIC-02`, `NF-ENV-04`,
   `NF-COMP-01`/`03`): trailing-decimal parser flip, isComposing key
   guard; 40 CT green on React 17/18/19, 105 unit green.
-- `[ ]` `NF-PARSE-*` COMPLETE, `NF-MATH-*` COMPLETE,
-  remaining `NF-EDIT-*` (`07` only), `NF-COMMIT-*` COMPLETE,
-  `NF-DYNAMIC-05`, remaining `NF-ENV-*` (`02`, `06`),
-  `NF-COMP-04`, `NF-MANUAL-*` (4 manual release gates)
+- `[ ]` every automated family COMPLETE (`NF-PARSE-*`, `NF-MATH-*`,
+  `NF-EDIT-*`, `NF-COMMIT-*`, `NF-DYNAMIC-*`, `NF-ENV-*`, `NF-COMP-*`).
+  `NF-MANUAL-*` (4 manual release gates) remain manual.
 
 Not catalog: FEATURES #2 suppression trio (no freeze ID — behavior wart
 fix, decided any-no-change).
@@ -167,11 +169,10 @@ fix, decided any-no-change).
 4. Intl parse/format + composition done (NFLAST-2 2026-09-28, slices
    A–G: full `NF-PARSE-*` except `07`, `NF-EDIT-05`/`12`/`15`–`18`;
    recipes in `.agents/missions/landing-sequence/NFLAST2.md`).
-   REMAIN: filtering/paste/caret (`NF-EDIT-02`/`07`–`09`, `NF-PARSE-07`
-   — onPaste/beforeinput/caret-map engine unbuilt), `NF-COMP-02`/`04`,
-   `NF-DYNAMIC-05`, `NF-ENV-02`/`06` (shadow audit: scope 3
-   document-global lookups — input labelledby ~L858, stepper gate
-   ~L1402 needs button-ref threading, ENV-04 ~L2465).
+   DONE: all automated IDs `[x]` (NFLAST-4 leg 5 closed `NF-COMP-04`).
+   Shadow audit (leg 3): input labelledby, stepper gate (button-ref
+   threaded, no residual), ENV-04 per-root count, post-reset focus
+   check — all owner-root scoped. ICU diagnostic (leg 4).
 5. ~~Step lattice freeze — HQ call first (zero-anchor? ties? endpoints?),
    then `NF-MATH-03`–`06`/`09`–`12` + repeat timings.~~ Done (NFLAST
    legs 1–2, 2026-09-28, rulings (a)+(b)); `NF-MATH-*` complete.

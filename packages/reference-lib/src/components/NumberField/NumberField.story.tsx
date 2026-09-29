@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { NumberField, type NumberFieldDecrementProps } from './index'
@@ -690,6 +691,375 @@ export const CompCurrencyFixture = () => {
           log: {log.length > 0 ? log.join(',') : 'none'}
         </Span>
         <Span fontSize="3r" color="design.text.light" data-testid="comp-currency-payload">
+          payload: {payload}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-4 caret lab (NF-EDIT-07): plain + currency + percent fields with
+// mousedown-prevented value setters, so focused public rerenders replace
+// the text without moving focus — the caret map's vectors.
+export const CaretLabFixture = () => {
+  const [value, setValue] = React.useState<number | null>(1234)
+  const [currency, setCurrency] = React.useState<number | null>(1234.5)
+  const [percent, setPercent] = React.useState<number | null>(0.125)
+  const keepFocus = (e: React.MouseEvent) => e.preventDefault()
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <NumberField data-testid="caret-field" value={value} locale="en-US" onChange={setValue}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="caret-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField
+          data-testid="caret-currency-field"
+          value={currency}
+          locale="en-US"
+          formatOptions={{ style: 'currency', currency: 'USD' }}
+          onChange={setCurrency}
+        >
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Amount" data-testid="caret-currency-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField
+          data-testid="caret-percent-field"
+          value={percent}
+          locale="en-US"
+          formatOptions={{ style: 'percent' }}
+          onChange={setPercent}
+        >
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Rate" data-testid="caret-percent-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <button type="button" data-testid="caret-set-1234" onMouseDown={keepFocus} onClick={() => setValue(1234)}>
+          Set 1234
+        </button>
+        <button type="button" data-testid="caret-set-12345" onMouseDown={keepFocus} onClick={() => setValue(12345)}>
+          Set 12345
+        </button>
+        <button type="button" data-testid="caret-set-123" onMouseDown={keepFocus} onClick={() => setValue(123)}>
+          Set 123
+        </button>
+        <button
+          type="button"
+          data-testid="caret-currency-set"
+          onMouseDown={keepFocus}
+          onClick={() => setCurrency(12345.67)}
+        >
+          Set currency
+        </button>
+        <button type="button" data-testid="caret-percent-set" onMouseDown={keepFocus} onClick={() => setPercent(0.05)}>
+          Set percent
+        </button>
+        <button
+          type="button"
+          data-testid="caret-currency-reset"
+          onMouseDown={keepFocus}
+          onClick={() => setCurrency(1234.5)}
+        >
+          Reset currency
+        </button>
+        <button type="button" data-testid="caret-percent-reset" onMouseDown={keepFocus} onClick={() => setPercent(0.125)}>
+          Reset percent
+        </button>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-4 dynamic lab (NF-DYNAMIC-05): CommitLab superset with
+// disable/readOnly/stepper/owner toggles for mid-interaction
+// replacement. Toggles are mousedown-prevented so focus never moves
+// natively; the owner toggle reparents the whole field into a portal
+// host (unmount/remount, state reset).
+export const DynamicFixture = () => {
+  const [value, setValue] = React.useState<number | null>(5)
+  const [log, setLog] = React.useState<string[]>([])
+  const [submits, setSubmits] = React.useState(0)
+  const [disabled, setDisabled] = React.useState(false)
+  const [readOnly, setReadOnly] = React.useState(false)
+  const [steppers, setSteppers] = React.useState(true)
+  const [moved, setMoved] = React.useState(false)
+  const [host, setHost] = React.useState<HTMLElement | null>(null)
+  const keepFocus = (e: React.MouseEvent) => e.preventDefault()
+
+  const field = (
+    <NumberField
+      data-testid="dynamic-field"
+      value={value}
+      locale="en-US"
+      min={0}
+      max={100}
+      step={1}
+      name="qty"
+      disabled={disabled}
+      readOnly={readOnly}
+      onChange={v => {
+        setLog(entries => [...entries, String(v)])
+        setValue(v)
+      }}
+    >
+      <NumberField.Group>
+        {steppers ? <NumberField.Decrement aria-label="Decrement" data-testid="dynamic-dec" /> : null}
+        <NumberField.Input aria-label="Quantity" data-testid="dynamic-input" />
+        {steppers ? <NumberField.Increment aria-label="Increment" data-testid="dynamic-inc" /> : null}
+      </NumberField.Group>
+    </NumberField>
+  )
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <form
+          data-testid="dynamic-form"
+          onSubmit={e => {
+            e.preventDefault()
+            setSubmits(s => s + 1)
+          }}
+        >
+          {moved && host ? createPortal(field, host) : field}
+          <button type="submit" data-testid="dynamic-submit">
+            Submit
+          </button>
+        </form>
+        <div data-testid="dynamic-portal-host" ref={setHost} />
+        <button type="button" data-testid="dynamic-toggle-disabled" onMouseDown={keepFocus} onClick={() => setDisabled(v => !v)}>
+          Toggle disabled
+        </button>
+        <button type="button" data-testid="dynamic-toggle-readonly" onMouseDown={keepFocus} onClick={() => setReadOnly(v => !v)}>
+          Toggle readOnly
+        </button>
+        <button type="button" data-testid="dynamic-toggle-steppers" onMouseDown={keepFocus} onClick={() => setSteppers(v => !v)}>
+          Toggle steppers
+        </button>
+        <button type="button" data-testid="dynamic-toggle-owner" onMouseDown={keepFocus} onClick={() => setMoved(v => !v)}>
+          Toggle owner
+        </button>
+        <button type="button" data-testid="dynamic-set-99" onMouseDown={keepFocus} onClick={() => setValue(99)}>
+          Set 99
+        </button>
+        <button type="button" data-testid="dynamic-outside">
+          Outside
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="dynamic-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="dynamic-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="dynamic-submits">
+          submits: {submits}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-4 shadow lab (NF-ENV-06): two fields + form portaled into an open
+// shadow root. Labelledby targets live ONLY in shadow (a document-global
+// lookup would resolve nothing); the light-DOM calibration field's
+// unnamed stepper proves the console spy hears NumberField diagnostics.
+export const ShadowFixture = () => {
+  const [qty, setQty] = React.useState<number | null>(5)
+  const [qtyLog, setQtyLog] = React.useState<string[]>([])
+  const [price, setPrice] = React.useState<number | null>(10)
+  const [priceLog, setPriceLog] = React.useState<string[]>([])
+  const [payload, setPayload] = React.useState('none')
+  const [root, setRoot] = React.useState<ShadowRoot | null>(null)
+  const [formEl, setFormEl] = React.useState<HTMLFormElement | null>(null)
+  const hostRef = React.useCallback((el: HTMLDivElement | null) => {
+    if (el && !el.shadowRoot) setRoot(el.attachShadow({ mode: 'open' }))
+  }, [])
+  // Submit is not a composed event: it never reaches React's light-DOM
+  // root listeners, so the payload recorder is a native same-tree
+  // listener like the engine's own submit observation.
+  React.useEffect(() => {
+    if (!formEl) return
+    const onSubmit = (e: Event) => {
+      e.preventDefault()
+      setPayload(
+        Array.from(new FormData(formEl).entries())
+          .map(([k, v]) => `${k}=${v}`)
+          .join(',')
+      )
+    }
+    formEl.addEventListener('submit', onSubmit)
+    return () => formEl.removeEventListener('submit', onSubmit)
+  }, [formEl])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <div data-testid="shadow-host" ref={hostRef} />
+        {root
+          ? createPortal(
+              <form data-testid="shadow-form" ref={setFormEl}>
+                <span id="shadow-qty-name">Qty</span>
+                <span id="shadow-inc-name">Raise price</span>
+                <NumberField
+                  data-testid="shadow-qty-field"
+                  value={qty}
+                  locale="en-US"
+                  min={0}
+                  max={100}
+                  step={1}
+                  name="qty"
+                  onChange={v => {
+                    setQtyLog(entries => [...entries, String(v)])
+                    setQty(v)
+                  }}
+                >
+                  <NumberField.Group>
+                    <NumberField.Decrement aria-label="Decrement" data-testid="shadow-qty-dec" />
+                    <NumberField.Input aria-labelledby="shadow-qty-name" data-testid="shadow-qty-input" />
+                    <NumberField.Increment aria-label="Increment" data-testid="shadow-qty-inc" />
+                  </NumberField.Group>
+                </NumberField>
+                <NumberField
+                  data-testid="shadow-price-field"
+                  value={price}
+                  locale="en-US"
+                  min={0}
+                  max={100}
+                  step={1}
+                  name="price"
+                  onChange={v => {
+                    setPriceLog(entries => [...entries, String(v)])
+                    setPrice(v)
+                  }}
+                >
+                  <NumberField.Group>
+                    <NumberField.Decrement aria-label="Decrement" data-testid="shadow-price-dec" />
+                    <NumberField.Input aria-label="Price" data-testid="shadow-price-input" />
+                    <NumberField.Increment aria-labelledby="shadow-inc-name" data-testid="shadow-price-inc" />
+                  </NumberField.Group>
+                </NumberField>
+                <button type="submit" data-testid="shadow-submit">
+                  Submit
+                </button>
+                <button type="reset" data-testid="shadow-reset">
+                  Reset
+                </button>
+              </form>,
+              root
+            )
+          : null}
+        <NumberField data-testid="shadow-cal-field" value={1} locale="en-US" onChange={() => {}}>
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Calibration" />
+            <NumberField.Increment data-testid="shadow-cal-inc" aria-labelledby="shadow-cal-missing" />
+          </NumberField.Group>
+        </NumberField>
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-qty-log">
+          log: {qtyLog.length > 0 ? qtyLog.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-price-log">
+          log: {priceLog.length > 0 ? priceLog.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="shadow-payload">
+          payload: {payload}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-4 science composition lab (NF-COMP-04): validate-mode
+// scientific-unit field in an RTL shadow form with locale/value
+// replacement controls. Expectations derive from platform Intl in the
+// spec — never engine imports.
+export const CompScienceFixture = () => {
+  const [value, setValue] = React.useState<number | null>(12000)
+  const [locale, setLocale] = React.useState('en-US')
+  const [log, setLog] = React.useState<string[]>([])
+  const [payload, setPayload] = React.useState('none')
+  const [root, setRoot] = React.useState<ShadowRoot | null>(null)
+  const [formEl, setFormEl] = React.useState<HTMLFormElement | null>(null)
+  const hostRef = React.useCallback((el: HTMLDivElement | null) => {
+    if (el && !el.shadowRoot) setRoot(el.attachShadow({ mode: 'open' }))
+  }, [])
+  React.useEffect(() => {
+    if (!formEl) return
+    const onSubmit = (e: Event) => {
+      e.preventDefault()
+      setPayload(
+        Array.from(new FormData(formEl).entries())
+          .map(([k, v]) => `${k}=${v}`)
+          .join(',')
+      )
+    }
+    formEl.addEventListener('submit', onSubmit)
+    return () => formEl.removeEventListener('submit', onSubmit)
+  }, [formEl])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <div data-testid="sci-host" ref={hostRef} />
+        {root
+          ? createPortal(
+              <div dir="rtl" data-testid="sci-rtl">
+                <form data-testid="sci-form" ref={setFormEl}>
+                  <span id="sci-name">Distance</span>
+                  <span id="sci-inc-name">Raise</span>
+                  <NumberField
+                    data-testid="sci-field"
+                    value={value}
+                    locale={locale}
+                    min={0}
+                    max={100000}
+                    step={7}
+                    commitBehavior="validate"
+                    name="sci"
+                    formatOptions={{ style: 'unit', unit: 'meter', notation: 'scientific' }}
+                    onChange={v => {
+                      setLog(entries => [...entries, String(v)])
+                      setValue(v)
+                    }}
+                  >
+                    <NumberField.Group>
+                      <NumberField.Decrement aria-label="Decrement" data-testid="sci-dec" />
+                      <NumberField.Input aria-labelledby="sci-name" data-testid="sci-input" />
+                      <NumberField.Increment aria-labelledby="sci-inc-name" data-testid="sci-inc" />
+                    </NumberField.Group>
+                  </NumberField>
+                  <button type="submit" data-testid="sci-submit">
+                    Submit
+                  </button>
+                  <button type="reset" data-testid="sci-reset">
+                    Reset
+                  </button>
+                </form>
+              </div>,
+              root
+            )
+          : null}
+        <button type="button" data-testid="sci-de" onClick={() => setLocale('de-DE')}>
+          To de-DE
+        </button>
+        <button type="button" data-testid="sci-set-5005" onClick={() => setValue(5005)}>
+          Set 5005
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="sci-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="sci-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="sci-payload">
           payload: {payload}
         </Span>
       </Div>

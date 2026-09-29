@@ -244,6 +244,32 @@ function draftGroupSizes(locale: string): { units: number; middle: number } {
 const DRAFT_PLUS_VARIANTS = ['＋', '﹢']
 const DRAFT_MINUS_VARIANTS = ['－', '﹣']
 
+// Logical caret digit (NF-EDIT-07): ASCII plus the active numbering-system
+// glyphs — the same digit class the parser accepts. Hanidec/foreign digits
+// never render here, so they count as separators, never caret anchors.
+function isLogicalDigitChar(char: string, digits: string): boolean {
+  if (char >= '0' && char <= '9') return true
+  return digits.includes(char)
+}
+
+// Caret offset after the count-th logical digit of text (NF-EDIT-07): the
+// caret follows its digits across formatting replacements. A caret with no
+// preceding digit anchors to text start; a count the new text cannot
+// satisfy clamps to the end (documented end fallback).
+function offsetAfterLogicalDigits(text: string, count: number, digits: string): number {
+  if (count <= 0) return 0
+  let seen = 0
+  let offset = 0
+  for (const char of Array.from(text)) {
+    offset += char.length
+    if (isLogicalDigitChar(char, digits)) {
+      seen += 1
+      if (seen === count) return offset
+    }
+  }
+  return text.length
+}
+
 // Digit normalization (NF-PARSE-02/15): ASCII always parses; active-system
 // glyphs map to their positional value; any other decimal digit — a second
 // non-ASCII script or inactive-locale digits — rejects the whole text.
@@ -607,6 +633,9 @@ interface NumberFieldContextValue {
   stepBase: number | null
   // Form reset generation: steppers end active holds when it advances.
   resetEpoch: number
+  // NF-DYNAMIC-05 replacement generation: non-echo value/locale/format
+  // swaps advance it; steppers end active holds when it advances.
+  replacementEpoch: number
   increment: (factor?: number) => void
   decrement: (factor?: number) => void
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
@@ -892,20 +921,24 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       const labelledbyText = stepperNameText(ariaLabelledby)
       const ids = stepperNameIds(labelledbyText)
       let named = labelValid
-      if (!named && typeof document !== 'undefined') {
+      // NF-ENV-06: name resolution stays in the owner root (open
+      // ShadowRoot included) — never document-global.
+      const root =
+        (inputRef.current?.getRootNode() as Document | ShadowRoot | undefined) ??
+        (typeof document !== 'undefined' ? document : undefined)
+      if (!named && root !== undefined) {
         const node = inputRef.current
-        const ownerDoc = node?.ownerDocument ?? document
-        const forLabel = ownerDoc.querySelector(`label[for="${inputId}"]`)
+        const forLabel = root.querySelector(`label[for="${inputId}"]`)
         if (forLabel && (forLabel.textContent ?? '').trim() !== '') {
           named = true
         } else if (node?.closest('label') && (node.closest('label')?.textContent ?? '').trim() !== '') {
           named = true
         }
       }
-      if (!named && ids.length > 0 && typeof document !== 'undefined') {
+      if (!named && ids.length > 0 && root !== undefined) {
         const name = ids
           .map(id => {
-            const el = document.getElementById(id)
+            const el = root.getElementById(id)
             return el === null ? '' : el.getAttribute('aria-label') || el.textContent || ''
           })
           .join(' ')
@@ -1116,9 +1149,10 @@ function useStepperRepeat(options: {
   disabled: boolean
   atBound: boolean
   resetEpoch: number
+  replacementEpoch: number
   user: StepperRepeatUserHandlers
 }) {
-  const { action, focusInput, disabled, atBound, resetEpoch, user } = options
+  const { action, focusInput, disabled, atBound, resetEpoch, replacementEpoch, user } = options
   const [pressed, setPressed] = React.useState(false)
   const sessionRef = React.useRef<StepperRepeatSession | null>(null)
   const suppressClickRef = React.useRef(false)
@@ -1263,6 +1297,20 @@ function useStepperRepeat(options: {
       suppressClickRef.current = false
     }
   }, [resetEpoch, endSession])
+
+  // NF-DYNAMIC-05: an authoritative replacement mid-hold ends the session
+  // with suppression ARMED — the button stays enabled, so the stale
+  // release click arrives and must not step. Only a fresh press steps.
+  const firstReplacementEpochRef = React.useRef(true)
+  React.useEffect(() => {
+    if (firstReplacementEpochRef.current) {
+      firstReplacementEpochRef.current = false
+      return
+    }
+    if (sessionRef.current) {
+      endSession('cancel')
+    }
+  }, [replacementEpoch, endSession])
 
   const handlePointerDown: React.PointerEventHandler<HTMLButtonElement> = e => {
     user.onPointerDown?.(e)
@@ -1439,7 +1487,12 @@ function stepperNameIds(labelledbyText: string): string[] {
 // Effective-name semantics follow the
 // platform: a present labelledby overrides aria-label, so it must resolve
 // to a nonempty name even when a label is also authored.
-function useStepperName(kind: 'Increment' | 'Decrement', ariaLabel: unknown, ariaLabelledby: unknown): boolean {
+function useStepperName(
+  kind: 'Increment' | 'Decrement',
+  ariaLabel: unknown,
+  ariaLabelledby: unknown,
+  buttonRef?: React.RefObject<HTMLButtonElement | null>
+): boolean {
   const labelValid = stepperNameText(ariaLabel).trim() !== ''
   const labelledbyText = stepperNameText(ariaLabelledby)
   const usesLabelledby = stepperNameIds(labelledbyText).length > 0
@@ -1449,12 +1502,16 @@ function useStepperName(kind: 'Increment' | 'Decrement', ariaLabel: unknown, ari
   useIsomorphicLayoutEffect(() => {
     if (!usesLabelledby || typeof document === 'undefined') return
     const ids = stepperNameIds(labelledbyText)
-    const elements = ids.map(id => document.getElementById(id))
+    // NF-ENV-06: labelledby targets resolve in the stepper's owner root
+    // (open ShadowRoot included) — never document-global.
+    const root =
+      (buttonRef?.current?.getRootNode() as Document | ShadowRoot | undefined) ?? document
+    const elements = ids.map(id => root.getElementById(id))
     const name = elements
       .map(el => (el === null ? '' : el.getAttribute('aria-label') || el.textContent || ''))
       .join(' ')
     setLabelledbyValid(elements.every(el => el !== null) && name.trim() !== '')
-  }, [usesLabelledby, labelledbyText])
+  }, [usesLabelledby, labelledbyText, buttonRef])
 
   let named = true
   let reason = ''
@@ -1544,10 +1601,25 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
     const atBound = base !== null && max !== undefined && max !== Infinity && base >= max
     const isDisabled = context.disabled || context.readOnly || authoredDisabled || atBound || false
 
+    // Internal button node for owner-root name resolution (NF-ENV-06),
+    // merged with the forwarded ref below.
+    const buttonRef = React.useRef<HTMLButtonElement | null>(null)
+    const setButtonRef = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        buttonRef.current = node
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLButtonElement | null>).current = node
+        }
+      },
+      [ref]
+    )
+
     // Required-name gate (PATCHES §6): hooks run unconditionally so
     // named↔unnamed transitions never change the hook count; the null
     // return below is the "neither registers nor activates" branch.
-    const named = useStepperName('Increment', ariaLabel, ariaLabelledby)
+    const named = useStepperName('Increment', ariaLabel, ariaLabelledby, buttonRef)
 
     // Named-part registration (NF-DOM-03): unnamed steppers render nothing
     // and never register, so they cannot join behavior.
@@ -1566,6 +1638,7 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
       disabled: isDisabled,
       atBound,
       resetEpoch: context.resetEpoch,
+      replacementEpoch: context.replacementEpoch,
       user: {
         onClick,
         onPointerDown,
@@ -1582,7 +1655,7 @@ export const NumberFieldIncrement = React.forwardRef<HTMLButtonElement, NumberFi
 
     return (
       <Button
-        ref={ref}
+        ref={setButtonRef}
         type="button"
         tabIndex={-1}
         aria-label={ariaLabel}
@@ -1709,10 +1782,25 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
     const atBound = base !== null && min !== undefined && min !== -Infinity && base <= min
     const isDisabled = context.disabled || context.readOnly || authoredDisabled || atBound || false
 
+    // Internal button node for owner-root name resolution (NF-ENV-06),
+    // merged with the forwarded ref below.
+    const buttonRef = React.useRef<HTMLButtonElement | null>(null)
+    const setButtonRef = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        buttonRef.current = node
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLButtonElement | null>).current = node
+        }
+      },
+      [ref]
+    )
+
     // Required-name gate (PATCHES §6): hooks run unconditionally so
     // named↔unnamed transitions never change the hook count; the null
     // return below is the "neither registers nor activates" branch.
-    const named = useStepperName('Decrement', ariaLabel, ariaLabelledby)
+    const named = useStepperName('Decrement', ariaLabel, ariaLabelledby, buttonRef)
 
     // Named-part registration (NF-DOM-03): unnamed steppers render nothing
     // and never register, so they cannot join behavior.
@@ -1731,6 +1819,7 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
       disabled: isDisabled,
       atBound,
       resetEpoch: context.resetEpoch,
+      replacementEpoch: context.replacementEpoch,
       user: {
         onClick,
         onPointerDown,
@@ -1747,7 +1836,7 @@ export const NumberFieldDecrement = React.forwardRef<HTMLButtonElement, NumberFi
 
     return (
       <Button
-        ref={ref}
+        ref={setButtonRef}
         type="button"
         tabIndex={-1}
         aria-label={ariaLabel}
@@ -2041,11 +2130,26 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     // one swallow — the stale end/input fallout is ignored (and the DOM
     // node is reverted to controlled text, since no state change follows).
     const compositionFalloutRef = React.useRef(false)
+    // NF-DYNAMIC-05: disable/read-only/part-removal cancels an open
+    // composition session outright (no fallout swallow — nothing was
+    // replaced); the stale compositionend is then ignored once.
+    const compositionCancelRef = React.useRef(false)
+    // NF-ENV-02 pre-commit SSR capture (node + serialized text), taken
+    // once on the first render and validated by the mount effect.
+    const icuCaptureRef = React.useRef<{ node: HTMLInputElement; text: string } | null>(null)
+    const icuCaptureDoneRef = React.useRef(false)
+    // NF-EDIT-07: pre-commit caret capture (text + selection read during
+    // render, while the DOM still holds the outgoing text) and the one-shot
+    // skip a composition invalidation consumes — its explicit end placement
+    // is the placement, never a logical remap.
+    const caretCaptureRef = React.useRef<{ text: string; start: number; end: number } | null>(null)
+    const caretRestoreSkipRef = React.useRef(false)
     const invalidateComposition = React.useCallback((displayLength: number) => {
       if (!composingRef.current) return
       composingRef.current = false
       compositionSnapshotRef.current = null
       compositionFalloutRef.current = true
+      caretRestoreSkipRef.current = true
       const node = inputRef.current
       if (node) {
         try {
@@ -2055,6 +2159,11 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         }
       }
     }, [])
+    // NF-DYNAMIC-05: non-echo controlled replacements and effective
+    // locale/format swaps advance the replacement generation — active
+    // stepper holds end without a stale release step (their own echoes
+    // never bump, so holds survive normal ticking).
+    const [replacementEpoch, setReplacementEpoch] = React.useState(0)
     React.useEffect(() => {
       const echoed = value === lastLiveRef.current
       lastLiveRef.current = value
@@ -2062,6 +2171,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       if (!echoed) {
         draftRef.current = null
         setDraft(null)
+        setReplacementEpoch(epoch => epoch + 1)
         invalidateComposition(displayValue.length)
       }
     }, [value, clearTransientFailures, invalidateComposition, displayValue])
@@ -2080,10 +2190,57 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         lastLiveRef.current = value
         draftRef.current = null
         setDraft(null)
+        setReplacementEpoch(epoch => epoch + 1)
         clearTransientFailures()
         invalidateComposition(displayValue.length)
       }
     }, [locale, formatOptions, clearTransientFailures, value, invalidateComposition, displayValue])
+
+    // NF-DYNAMIC-05: disabling or read-locking mid-composition cancels
+    // the session — staged text stays for the blur boundary (disable
+    // natively blurs a focused input), but the session no longer suspends
+    // publish and its stale end is ignored once.
+    React.useEffect(() => {
+      if ((disabled || readOnly) && composingRef.current) {
+        composingRef.current = false
+        compositionSnapshotRef.current = null
+        compositionCancelRef.current = true
+      }
+    }, [disabled, readOnly])
+
+    // NF-EDIT-07: formatting replacements preserve the caret by logical
+    // digit. The capture (taken during render, pre-commit) holds the
+    // outgoing text and selection; when the committed text differs and the
+    // input still has focus in its own root, each selection edge follows
+    // its preceding-digit count into the new text. Typing commits are
+    // exact-text no-ops (capture equals render); blurred replacements keep
+    // the browser default; unsupported selection APIs fail open.
+    const renderedText = draft ?? displayValue
+    useIsomorphicLayoutEffect(() => {
+      if (caretRestoreSkipRef.current) {
+        caretRestoreSkipRef.current = false
+        return
+      }
+      const node = inputRef.current
+      const capture = caretCaptureRef.current
+      if (!node || !capture || capture.text === renderedText) return
+      const root = node.getRootNode() as Document | ShadowRoot
+      if (root.activeElement !== node) return
+      const digits = symbols.digits
+      const mapOffset = (offset: number): number => {
+        const clamped = Math.max(0, Math.min(offset, capture.text.length))
+        let count = 0
+        for (const char of Array.from(capture.text.slice(0, clamped))) {
+          if (isLogicalDigitChar(char, digits)) count += 1
+        }
+        return offsetAfterLogicalDigits(renderedText, count, digits)
+      }
+      try {
+        node.setSelectionRange(mapOffset(capture.start), mapOffset(capture.end))
+      } catch {
+        // ignore if not supported
+      }
+    }, [renderedText, symbols])
 
     // Authoritative constraint changes revalidate and clear failed/pending
     // (NF-COMMIT-07, NF-DYNAMIC-03): the new bounds/step/policy supersede
@@ -2209,13 +2366,19 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         // First step from null selects the in-range value nearest zero
         // (NF-MATH-05) — no additional step, so the factor is ignored.
         if (base === null) {
-          requestValue(Math.min(max, Math.max(min, 0)))
+          const first = Math.min(max, Math.max(min, 0))
+          lastLiveRef.current = first
+          requestValue(first)
           return
         }
         // Directional lattice step, clamped to the exact endpoint
         // (NF-MATH-04/06): off-grid bases move strictly in-direction.
         const nextVal = cleanFloat(Math.min(max, stepLatticeInDirection(base, 1, step, factor)))
         if (nextVal === value) return
+        // NF-DYNAMIC-05: steps are requests — the echo path recognizes the
+        // echo (holds survive their own ticks; only unrelated replacements
+        // advance the replacement generation).
+        lastLiveRef.current = nextVal
         requestValue(nextVal)
       },
       [value, min, max, step, stepBase, disabled, readOnly, requestValue]
@@ -2233,13 +2396,19 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         // First step from null selects the in-range value nearest zero
         // (NF-MATH-05) — no additional step, so the factor is ignored.
         if (base === null) {
-          requestValue(Math.min(max, Math.max(min, 0)))
+          const first = Math.min(max, Math.max(min, 0))
+          lastLiveRef.current = first
+          requestValue(first)
           return
         }
         // Directional lattice step, clamped to the exact endpoint
         // (NF-MATH-04/06): off-grid bases move strictly in-direction.
         const nextVal = cleanFloat(Math.max(min, stepLatticeInDirection(base, -1, step, factor)))
         if (nextVal === value) return
+        // NF-DYNAMIC-05: steps are requests — the echo path recognizes the
+        // echo (holds survive their own ticks; only unrelated replacements
+        // advance the replacement generation).
+        lastLiveRef.current = nextVal
         requestValue(nextVal)
       },
       [value, min, max, step, stepBase, disabled, readOnly, requestValue]
@@ -2295,11 +2464,20 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     // with lastLiveRef dedupe guarding the double-publish.
     const handleCompositionStart = React.useCallback(() => {
       composingRef.current = true
-      // A fresh session supersedes any armed fallout swallow.
+      // A fresh session supersedes any armed fallout swallow or cancel.
       compositionFalloutRef.current = false
+      compositionCancelRef.current = false
       compositionSnapshotRef.current = draftRef.current
     }, [])
     const handleCompositionEnd = React.useCallback(() => {
+      // NF-DYNAMIC-05: a cancelled session ignores its stale end — the
+      // buffer after cancellation is fresh user state, never restored.
+      if (compositionCancelRef.current) {
+        compositionCancelRef.current = false
+        composingRef.current = false
+        compositionSnapshotRef.current = null
+        return
+      }
       composingRef.current = false
       const snapshot = compositionSnapshotRef.current
       compositionSnapshotRef.current = null
@@ -2586,6 +2764,26 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       `nf-${pinnedGeneratedIdRef.current}`
     )
 
+    // NF-ENV-02: first render runs pre-commit, while the DOM still holds
+    // server HTML under hydration (or nothing under a client render) —
+    // the only moment the SSR text is observable. A pure read; the mount
+    // effect validates node identity (cross-root id twins are rejected).
+    if (!icuCaptureDoneRef.current && typeof document !== 'undefined') {
+      icuCaptureDoneRef.current = true
+      try {
+        const candidate = document.getElementById(inputId)
+        if (
+          typeof HTMLInputElement !== 'undefined' &&
+          candidate instanceof HTMLInputElement
+        ) {
+          const attr = candidate.getAttribute('value')
+          if (attr !== null) icuCaptureRef.current = { node: candidate, text: attr }
+        }
+      } catch {
+        // ignore if not supported
+      }
+    }
+
     // Root anatomy validation (NF-DOM-03, render phase): exactly one direct
     // Group. Anything else throws a part-specific diagnostic before any
     // listener, timer, hidden host, or callback exists.
@@ -2606,12 +2804,15 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     // Independent SSR roots without distinct identifierPrefix values (or
     // explicit Input ids) can mint colliding generated ids: diagnose the
     // unsupported deployment instead of promising global uniqueness
-    // (NF-ENV-04). Shadow-scoped ids never match a document query.
+    // (NF-ENV-04). The count is per owner root (NF-ENV-06): shadow-scoped
+    // ids collide only within their own root, never the document.
     useIsomorphicLayoutEffect(() => {
       if (explicitInputId || typeof document === 'undefined') return
       let matches = 0
       try {
-        matches = document.querySelectorAll(`[id="${inputId}"]`).length
+        const root =
+          (inputRef.current?.getRootNode() as Document | ShadowRoot | undefined) ?? document
+        matches = root.querySelectorAll(`[id="${inputId}"]`).length
       } catch {
         return
       }
@@ -2621,6 +2822,30 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         )
       }
     }, [inputId, explicitInputId])
+
+    // NF-ENV-02: server/client Intl/CLDR/ICU mismatch is an unsupported
+    // deployment — reported once through the dev channel, never thrown,
+    // and never a promise that arbitrary ICU versions produce equal
+    // bytes. The SSR text is captured during first render (pre-commit
+    // DOM read keyed by the deterministic inputId — post-commit React
+    // has already patched the node); the mount effect compares only
+    // when hydration adopted that exact node. Pure client renders and
+    // byte-identical hydrates stay silent; later text changes are user
+    // edits, never deployment evidence.
+    const icuMismatchLoggedRef = React.useRef(false)
+    useIsomorphicLayoutEffect(() => {
+      if (icuMismatchLoggedRef.current) return
+      const capture = icuCaptureRef.current
+      icuCaptureRef.current = null
+      if (!capture || capture.node !== inputRef.current) return
+      if (capture.text === displayValue) return
+      icuMismatchLoggedRef.current = true
+      numberFieldDevDiagnostic(
+        `server-rendered text ${JSON.stringify(capture.text)} does not match the client Intl format ` +
+          `${JSON.stringify(displayValue)} — the server and client Intl/CLDR/ICU data differ, ` +
+          `which is an unsupported deployment; arbitrary ICU versions are not promised identical bytes.`
+      )
+    }, [displayValue, draft])
 
     // Native submit/reset observation (PATCHES §5): resolved through the
     // owned inputs' .form so lookup stays scoped to the owner tree (open
@@ -2697,8 +2922,10 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       const input = inputRef.current
       if (input) {
         input.value = sync.displayValue
-        const doc = input.ownerDocument
-        if (doc && doc.activeElement === input) {
+        // NF-ENV-06: focus ownership reads from the owner root (a shadow
+        // input is never document.activeElement).
+        const root = input.getRootNode() as Document | ShadowRoot
+        if (root.activeElement === input) {
           try {
             input.setSelectionRange(sync.displayValue.length, sync.displayValue.length)
           } catch {
@@ -2725,6 +2952,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         draft,
         stepBase,
         resetEpoch,
+        replacementEpoch,
         increment,
         decrement,
         handleInputChange,
@@ -2750,6 +2978,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         draft,
         stepBase,
         resetEpoch,
+        replacementEpoch,
         increment,
         decrement,
         handleInputChange,
@@ -2762,6 +2991,29 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     )
 
     const empty = draft !== null ? draft === '' : value === null
+
+    // NF-EDIT-07 pre-commit capture: while the DOM still holds the outgoing
+    // text, remember it with the live selection. A pure read (no writes),
+    // refreshed on every focused render, so the replacing render always
+    // carries the true pre-replacement caret — including programmatic
+    // setSelectionRange placements, which fire no event to observe.
+    {
+      const node = inputRef.current
+      if (node) {
+        try {
+          const root = node.getRootNode() as Document | ShadowRoot
+          if (root.activeElement === node) {
+            caretCaptureRef.current = {
+              text: node.value,
+              start: node.selectionStart ?? node.value.length,
+              end: node.selectionEnd ?? node.value.length,
+            }
+          }
+        } catch {
+          // ignore if not supported
+        }
+      }
+    }
 
     return (
       <NumberFieldContext.Provider value={contextValue}>
