@@ -559,11 +559,22 @@ test.describe('Slider PATCHES pins', () => {
 
     await page.mouse.move(box!.x + 90, y)
     await page.mouse.down()
+    // FINISH-02F-SL (F38): FF/WebKit deliver `gotpointercapture` lazily — the
+    // event flushes on the NEXT input event, never on its own task (D1
+    // telemetry: hasPointerCapture true at down, `got` absent after 1s idle,
+    // flushed by the following move; proven r17 FF+WK). Capture is genuinely
+    // owned at down-time; this 1px move (30 -> 30.33, snaps to 30, no log
+    // entry) only flushes the engine's notification. Poll text unchanged.
+    await page.mouse.move(box!.x + 91, y)
     // The track owns real pointer capture for the session.
     await expect.poll(() => page.evaluate(() => (window as any).__cap.length)).toBe(1)
 
     // Drags beyond both ends keep requesting, clamped to the bounds.
-    await page.mouse.move(box!.x - 100, y)
+    // FINISH-02F-SL (F38): 10px beyond the edge (x~6) stays inside the 800px
+    // viewport; FF reports out-of-window moves with buttons=0, which the
+    // pinned buttons-zero path (SD-END-03) rightly cancels. Beyond-ness and
+    // the 0/100 clamps are what's pinned, not the overshoot distance.
+    await page.mouse.move(box!.x - 10, y)
     await page.mouse.move(700, 300)
     const log = JSON.parse((await page.getByTestId('logged-changes').textContent()) ?? '[]')
     expect(log[0]).toBe(30)
@@ -681,24 +692,35 @@ test.describe('Slider PATCHES pins', () => {
     await expect(page.getByTestId('constraint-slider')).toHaveAttribute('data-disabled', '')
 
     // Real lostpointercapture mid-drag cancels without an end report.
+    // FINISH-02F-SL (F39): FF/WebKit flush `gotpointercapture` only on the
+    // next input event (D1 telemetry, r17 FF+WK proven), so a `got` listener
+    // would idle forever here — yet capture IS owned at down-time
+    // (hasPointerCapture true). Record the real session pointer id from
+    // pointerdown instead. D3 telemetry adds a second FF rule: releasing
+    // while `got` is still pending silently swallows it (no `got`, no `lost`,
+    // session survives), so the same-coordinate move below first flushes a
+    // real `got` (value-neutral 40 -> 40, no log entry — and a no-op on
+    // Chromium where `got` already fired). The release then drives a real
+    // lostpointercapture -> cancel path on every engine.
     await mount('components/Slider/Slider/LoggedFixture', { initial: 20, width: 100 })
     const track2 = page.getByTestId('logged-track')
     await page.evaluate(() => {
-      ;(window as any).__capId = null
+      ;(window as any).__downId = null
       document
         .querySelector('[data-testid="logged-track"]')!
-        .addEventListener('gotpointercapture', (e: Event) => {
-          ;(window as any).__capId = (e as PointerEvent).pointerId
+        .addEventListener('pointerdown', (e: Event) => {
+          ;(window as any).__downId = (e as PointerEvent).pointerId
         })
     })
     const box2 = await track2.boundingBox()
     await page.mouse.move(box2!.x + 40, box2!.y + box2!.height / 2)
     await page.mouse.down()
     await expect(page.getByTestId('logged-changes')).toHaveText('[40]')
-    await expect.poll(() => page.evaluate(() => (window as any).__capId)).not.toBeNull()
+    await expect.poll(() => page.evaluate(() => (window as any).__downId)).not.toBeNull()
+    await page.mouse.move(box2!.x + 40, box2!.y + box2!.height / 2)
     await page.evaluate(() => {
       ;(document.querySelector('[data-testid="logged-track"]') as HTMLElement).releasePointerCapture(
-        (window as any).__capId
+        (window as any).__downId
       )
     })
     await page.mouse.move(box2!.x + 80, box2!.y + box2!.height / 2)
@@ -874,6 +896,11 @@ test.describe('Slider PATCHES pins', () => {
       const box = await track.boundingBox()
       await page.mouse.move(box!.x + 120, box!.y + box!.height / 2)
       await page.mouse.down()
+      // FINISH-02F-SL (F40): 1px flush move (40 -> 40.33, snaps to 40, no log
+      // entry) — FF/WebKit deliver `gotpointercapture` only on the next input
+      // event (D1 telemetry, r17 FF+WK proven; see SD-POINTER-04). Ownership
+      // itself is real at down-time; the poll below is unchanged.
+      await page.mouse.move(box!.x + 121, box!.y + box!.height / 2)
       await expect(page.getByTestId('logged-changes')).toHaveText('[40]')
       await expect.poll(() => page.evaluate(() => (window as any).__capId)).not.toBeNull()
 
@@ -1080,7 +1107,18 @@ test.describe('Slider PATCHES pins', () => {
     expect(style).toContain('--reference-slider-thumb-position: 80%')
   })
 
-  test('SD-POINTER-05: drives the drag from one owned touchpoint', async ({ mount, page }) => {
+  test('SD-POINTER-05: drives the drag from one owned touchpoint', async ({
+    mount,
+    page,
+    browserName,
+  }) => {
+    // FINISH-02F-SL (F41): HARNESS class (H1 precedent — Combobox CB-COMP
+    // touch leg): CDP touch injection (`page.context().newCDPSession`) exists
+    // only in Chromium (`CDP session is only available in Chromium` on
+    // FF/WebKit by construction). The whole test is CDP-driven, so it is
+    // chromium-only; the owned-touchpoint contract stays pinned on Chromium.
+    // No product change.
+    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only (H-class)')
     await mount('components/Slider/Slider/LoggedFixture', { initial: 20, width: 300 })
     const track = page.getByTestId('logged-track')
     const thumb = page.getByTestId('logged-thumb-0')
@@ -1122,7 +1160,15 @@ test.describe('Slider PATCHES pins', () => {
     expect(touchAction).toBe('none')
   })
 
-  test('SD-COMP-03: retains a vertical touch gesture beyond the track', async ({ mount, page }) => {
+  test('SD-COMP-03: retains a vertical touch gesture beyond the track', async ({
+    mount,
+    page,
+    browserName,
+  }) => {
+    // FINISH-02F-SL (F42): HARNESS class, same CDP wall as SD-POINTER-05
+    // (F41; H1 precedent): `newCDPSession` is Chromium-only, and the whole
+    // test is CDP-driven touch. Chromium-only; no product change.
+    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only (H-class)')
     await mount('components/Slider/Slider/LoggedFixture', {
       initial: 50,
       orientation: 'vertical',
@@ -1265,7 +1311,13 @@ test.describe('Slider PATCHES pins', () => {
     expect(tbox).not.toBeNull()
     await page.mouse.move(tbox!.x + tbox!.width / 2, tbox!.y + tbox!.height / 2)
     await page.mouse.down()
-    await page.mouse.move(trackBox!.x - 50, tbox!.y + tbox!.height / 2)
+    // FINISH-02F-SL (F43): 10px beyond the edge (x~6) stays inside the 800px
+    // viewport (D2 telemetry: trackBox.x=16, so -50 lands at x=-34). FF
+    // reports out-of-window moves with buttons=0, which the pinned
+    // buttons-zero path (SD-END-03) rightly cancels — the old -50 drag lost
+    // the whole session on FF. Beyond-ness and the 100 clamp are what's
+    // pinned, not the overshoot distance.
+    await page.mouse.move(trackBox!.x - 10, tbox!.y + tbox!.height / 2)
     await page.mouse.up()
     await expect(page.getByTestId('shadow-changes')).toHaveText('[[21,80],[21,100]]')
     await expect(page.getByTestId('shadow-ends')).toHaveText('[[21,80],[21,100]]')
