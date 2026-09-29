@@ -21,28 +21,35 @@ import { nextAfter, tabbables } from './tab-cycle'
 import { resolvePortalContainer } from './portal-container'
 export type OverlayContentProps = PrimitiveProps<'div'> & OverlayContentGeometry
 
-export function OverlayContent({
-  children,
-  placement = 'bottom-start',
-  offset = 8,
-  collisionPadding = 8,
-  strategy = 'absolute',
-  flip = true,
-  shift = true,
-  boundary,
-  fallbackPlacements,
-  animationFrame,
-  onPositionChange,
-  initialFocus,
-  restoreFocus,
-  style,
-  className,
-  ...props
-}: OverlayContentProps) {
+export const OverlayContent = React.forwardRef<HTMLDivElement, OverlayContentProps>(
+  function OverlayContent(
+    {
+      children,
+      placement = 'bottom-start',
+      offset = 8,
+      collisionPadding = 8,
+      strategy = 'absolute',
+      flip = true,
+      shift = true,
+      boundary,
+      fallbackPlacements,
+      animationFrame,
+      onPositionChange,
+      initialFocus,
+      restoreFocus,
+      style,
+      className,
+      ...props
+    }: OverlayContentProps,
+    forwardedRef
+  ) {
   const context = React.useContext(OverlayContext)
   const [node, setNode] = React.useState<HTMLDivElement | null>(null)
   const zIndex = useOverlayZIndex(context?.id ?? '')
-  const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  // r19 delivers ref as a prop; r17/r18 strip it (no forwardRef = dropped).
+  // forwardRef restores delivery on all majors with the same value on r19.
+  const propsRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const userRef = forwardedRef ?? propsRef
   const contentNodeRef = context?.contentRef
   const internalNodeRef = React.useCallback((el: HTMLDivElement | null) => {
     if (contentNodeRef) contentNodeRef.current = el
@@ -186,4 +193,5 @@ export function OverlayContent({
   ) : null
 
   return <Portal container={resolvePortalContainer(context)}>{presentable}</Portal>
-}
+  }
+)

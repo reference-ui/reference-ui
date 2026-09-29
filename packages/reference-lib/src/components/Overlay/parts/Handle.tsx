@@ -13,17 +13,22 @@ import {
 
 export type OverlayHandleProps = PrimitiveProps<'div'>
 
-export function OverlayHandle({
-  style,
-  className,
-  onPointerDown: userPointerDown,
-  ...props
-}: OverlayHandleProps) {
+export const OverlayHandle = React.forwardRef<HTMLDivElement, OverlayHandleProps>(
+  function OverlayHandle(
+    {
+      style,
+      className,
+      onPointerDown: userPointerDown,
+      ...props
+    }: OverlayHandleProps,
+    forwardedRef
+  ) {
   const context = React.useContext(OverlayContext)
   const dragging = React.useRef(false)
   const start = React.useRef({ x: 0, y: 0 })
   const history = React.useRef<Array<{ time: number; x: number; y: number }>>([])
-  const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const propsRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const userRef = forwardedRef ?? propsRef
 
   React.useLayoutEffect(() => {
     return context?.registerPart('handle')
@@ -99,4 +104,5 @@ export function OverlayHandle({
       style={style}
     />
   )
-}
+  }
+)

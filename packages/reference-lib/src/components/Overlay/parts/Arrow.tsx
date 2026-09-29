@@ -7,14 +7,19 @@ export type OverlayArrowProps = PrimitiveProps<'div'> & {
   edgePadding?: number
 }
 
-export function OverlayArrow({
-  edgePadding = 4,
-  style,
-  className,
-  ...props
-}: OverlayArrowProps) {
+export const OverlayArrow = React.forwardRef<HTMLDivElement, OverlayArrowProps>(
+  function OverlayArrow(
+    {
+      edgePadding = 4,
+      style,
+      className,
+      ...props
+    }: OverlayArrowProps,
+    forwardedRef
+  ) {
   const context = React.useContext(OverlayContext)
-  const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const propsRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const userRef = forwardedRef ?? propsRef
 
   React.useLayoutEffect(() => {
     return context?.registerPart('arrow')
@@ -37,4 +42,5 @@ export function OverlayArrow({
       style={style}
     />
   )
-}
+  }
+)

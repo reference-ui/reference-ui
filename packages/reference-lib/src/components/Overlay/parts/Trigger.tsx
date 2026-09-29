@@ -6,14 +6,19 @@ import { assignRef } from '../shared/refs'
 
 export type OverlayTriggerProps = PrimitiveProps<'button'>
 
-export function OverlayTrigger({
-  children,
-  disabled,
-  onClick,
-  ...props
-}: OverlayTriggerProps) {
+export const OverlayTrigger = React.forwardRef<HTMLButtonElement, OverlayTriggerProps>(
+  function OverlayTrigger(
+    {
+      children,
+      disabled,
+      onClick,
+      ...props
+    }: OverlayTriggerProps,
+    forwardedRef
+  ) {
   const context = React.useContext(OverlayContext)
-  const userRef = (props as { ref?: React.Ref<HTMLButtonElement> }).ref
+  const propsRef = (props as { ref?: React.Ref<HTMLButtonElement> }).ref
+  const userRef = forwardedRef ?? propsRef
 
   React.useLayoutEffect(() => {
     return context?.registerPart('trigger')
@@ -46,4 +51,5 @@ export function OverlayTrigger({
       {children}
     </Button>
   )
-}
+  }
+)
