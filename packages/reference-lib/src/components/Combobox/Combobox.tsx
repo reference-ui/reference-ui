@@ -423,15 +423,29 @@ export const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputPro
     onCompositionStart?.(e)
     // #1: composition owns the text — the display state clears any inline
     // completion through React so the IME never composes over a selected
-    // suffix (CB-EDIT-05).
+    // suffix (CB-EDIT-05). Deferred like compositionend: a synchronous
+    // React 17 commit inside compositionstart would rewrite the value
+    // and collapse a pending replacement range (fill-over-content lands
+    // at the collapsed caret, 02-F2). The ref keeps gates synchronous.
     isComposingRef.current = true
-    setIsComposing(true)
+    queueMicrotask(() => {
+      setIsComposing(true)
+    })
   }
 
   const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
     onCompositionEnd?.(e)
     isComposingRef.current = false
-    setIsComposing(false)
+    // The display recompute must not commit synchronously: React 17
+    // flushes discrete-event setState inside the compositionend dispatch,
+    // before Firefox dispatches the trailing input event, so the commit
+    // re-asserts the stale controlled value over the just-composed DOM
+    // text and the edit is swallowed (02-F1..F3/F5..F7/F9/F10). A
+    // microtask lands after the input event (same-task dispatch); the
+    // ref above keeps the behavioral gates synchronous.
+    queueMicrotask(() => {
+      setIsComposing(false)
+    })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
