@@ -234,3 +234,97 @@ Runner only. NEVER commit; touch NO repo files except this log.
 - [x] No freeze file needed (run completed); no terminate needed (clean exit, zero PIDs)
 - [x] Nothing pruned/stopped/removed; engine left running for the next leg
 - [x] Tree left quiet; nothing committed; no repo files touched except this log
+
+---
+
+# FINISH-03d — hermetic CLEAN-SLATE retry crew (engine + volume removed by captain, --trace)
+
+## Verdict: BLOCKED-infra-FINAL (EXIT 1, ENOSPC recurred on the clean slate — chain-t2 never executed)
+
+- `EXIT_CODE=1` + `✖ [agent] Matrix test suite FAILED (exit code 1).`
+- Cause (quoted from /tmp/finish03d-run.txt:316):
+  `import image "docker.io/library/node:24-bookworm@sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4": write /var/lib/dagger/worker/snapshots/snapshots/10/fs/usr/lib/gcc/x86_64-linux-gnu/12/cc1: no space left on device`
+- Decisive detail: snapshot slot is back at **10** (fresh volume, zero
+  accumulation) and the import STILL ENOSPC'd. This is not snapshot
+  buildup across runs — a SINGLE run's filesync payload + the
+  node:24-bookworm layer import does not fit the Docker VM backing disk.
+  The sync set itself exceeds the disk. In-box hermetic retries are
+  exhausted; the only fixes are pipeline surgery (sync-set shrink) and/or
+  VM disk growth — both out of this leg's scope, captain decides.
+
+## T+00 — clean-slate pre-flight (verified, non-destructive)
+
+- Branch: reference-system. `git status --porcelain`: empty (tree quiet).
+- `docker ps -a`: zero containers. `docker system df`: 0 containers,
+  0 volumes, 2 images @ 1.043GB. Captain's slate confirmed — nothing
+  pruned, removed, or touched beyond verification.
+- No competing PIDs (`chain-t2|pipeline test` grep empty). Sole crew.
+- Launch: `LAUNCH epoch=1790695278 date=2026-09-29T15:21:18Z` —
+  `pnpm agent pipeline test --packages=@matrix/chain-t2 --trace`,
+  teed to /tmp/finish03d-run.txt (17634 bytes, 324 lines).
+
+## Watch (clean-slate path confirmed, freeze rule never tripped)
+
+- NO disk reclaim at launch (`grep -c 'low Docker disk headroom'` = 0):
+  full headroom, opener skipped straight to discovery. CLEAN SLATE.
+- Engine recreated fresh (volume was gone): `exec docker ps -a` →
+  `exec docker run --name dagger-engine-v0.21.9 ... DONE [0.2s]` →
+  connected (no image re-pull line — engine image survived in the 2
+  cached images; only the container + volume were recreated).
+- Filesync ran full cold: `Host.directory DONE [12m36s]` / `filesync
+  DONE [12m36s]` with `packages DONE [6m54s]` + `copy DONE [4m58s]`.
+- Byte checks: T+1..T+4 flowing (5141→5720B, tail = filesync `copy`);
+  T+6 (1790695980) 5720B stale 230s; T+7 5720B stale 290s (UNDER 900s
+  bar — the ~5 min `copy` tail streams nothing, known quiet sub-phase);
+  T+8 (1790696100) 17634B DONE_MARKER_FOUND. Run completed 1790696064
+  (~786s elapsed, ~13.1 min). No terminate needed.
+- Post-run: zero chain-t2 PIDs (clean exit); engine `Up 13 minutes`.
+
+## Infra red (named) + post-run disk evidence
+
+- Docker/Dagger storage ENOSPC on the engine worker volume during
+  `node:24-bookworm` image import — identical failure mode to 03b/03c,
+  now on a FRESH volume with FULL disk headroom and NO reclaim wipe.
+- `docker system df` (post-run): 2 images 1.045GB (1.032GB reclaimable),
+  1 container 1.724MB, **1 volume @ 50.9GB, 0B reclaimable**
+  (= /var/lib/dagger, the ENOSPC victim — rebuilt to the same ~51GB in
+  a single run). Build cache 0B.
+- Failing path: `/var/lib/dagger/worker/snapshots/snapshots/10/fs/usr/lib/gcc/x86_64-linux-gnu/12/cc1`
+  (inside the Docker VM backing store, not the macOS host).
+- chain-t2 itself: no result (never reached — still shared prep,
+  `Container.from("node:24-bookworm")` for the rust container build).
+
+## Prescription (precise, NOT attempted — out of this leg's scope)
+
+1. Shrink the pipeline sync set: `Host.directory("/Users/ryn/Developer/reference-ui")`
+   re-syncs the whole tree every run (packages 6m54s + copy 4m58s even
+   on a clean slate; current excludes omit heavy dirs like `.reference-ui`,
+   `test-results`, `.complexity-temp`, `vendor`, `.playwright-mcp` — all
+   visible in this run's filesync list), AND/OR
+2. Grow the Docker Desktop VM disk image (a single run's ~51GB
+   /var/lib/dagger volume cannot absorb the node:24-bookworm layer import).
+3. Retry with THIS SAME command (`pnpm agent pipeline test
+   --packages=@matrix/chain-t2 --trace`) after 1 and/or 2.
+
+## Resume checklist (close)
+
+- [x] Clean slate verified first (0 containers, 0 volumes, quiet tree)
+- [x] ONE elevated run, same scope, same command, teed to /tmp/finish03d-run.txt
+- [x] Stream watched; freeze rule never tripped (bytes flowed; longest stale 290s < 900s bar)
+- [x] Verdict KNOWN: BLOCKED-infra-FINAL, exit 1 with ENOSPC cause quoted (failing path + df + volume size captured)
+- [x] No freeze file needed (run completed); no terminate needed (clean exit, zero PIDs)
+- [x] Nothing pruned/stopped/removed; engine left running; no repo files touched except this log
+- [x] No surgery attempted (sync-set shrink / VM disk growth = captain's call)
+
+---
+
+# CAPTAIN'S CLOSEOUT — FINISH-03 BLOCKED-infra-FINAL (2026-09-29)
+
+Evidence chain (complete, firsthand where noted):
+1. NOT frozen: the silent phase is Host.directory filesync + container rust build (~12–15 min, zero bytes without --trace). 03/S10 false-tripped ~1 min early. Future runs MUST use --trace (proven: bytes stream, no false trip).
+2. Root cause: a SINGLE run's ~51GB /var/lib/dagger volume + node:24-bookworm import exceeds the ~98GB Docker Desktop VM disk (decisive: clean slate, slot reset 10, still ENOSPC).
+3. Warmth worthless AND harmful: filesync re-transfers bulk regardless; snapshots accumulate per run (slots 10→20).
+4. Host excludes insufficient: excludable dirs total ~3GB (vendor 899M, rs/target 1.8G, rest small) vs a ~50GB problem — the bulk is container-side (cargo toolchain + target + image layers + filesync snapshots).
+5. Container build unavoidable in-box: `shouldBuildLinuxReferenceRustTargetWithDagger` skips only if linux-x64-gnu is not required (chain-t2 needs it — linux containers consume the napi binary) or a local linux binary is pre-staged (impossible on darwin hosts; no successful run ever staged one). No flag, no shortcut.
+
+DECISION: close BLOCKED-infra-FINAL. Remaining fixes (VM disk growth via Docker Desktop internals — settings.json empty, config path unknown; or container-build diet via cache mounts/slim image/prebuilt binaries) are unbounded environment/pipeline surgery with no guaranteed same-day payoff, while no packages/reference-core or matrix surface changed today (all work was lib + harness + stories — covered by smoke + native gates). Finish-line item 4 stays open with this prescription. Reversible: whoever grows the disk or slims the build re-runs `pnpm agent pipeline test --packages=@matrix/chain-t2 --trace` and lands the verdict.
