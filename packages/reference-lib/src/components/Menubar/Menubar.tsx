@@ -7,11 +7,11 @@ import { adjacentMenubarValue, menubarArrowDirection } from './menubar-nav'
 
 export type MenubarValue = string | null
 
-export type MenubarProps = PrimitiveProps<'div'> & {
+export type MenubarProps = Omit<PrimitiveProps<'div'>, 'onChange'> & {
   /** Open menu. `null` means none open. Required: Menubar is controlled-only. */
   value: MenubarValue
   /** Fires on user-driven open-menu changes. Never redundant. Required. */
-  onValueChange: (value: MenubarValue) => void
+  onChange: (value: MenubarValue) => void
   /** Wrap trigger arrows and menu switching at the edges. Default false. */
   loop?: boolean
 }
@@ -57,19 +57,19 @@ interface MenubarMenuContextValue {
 const MenubarMenuContext = React.createContext<MenubarMenuContextValue | null>(null)
 
 const MenubarRoot = React.forwardRef<HTMLDivElement, MenubarProps>(function MenubarRoot(
-  { children, value, onValueChange, loop = false, ...props }: MenubarProps,
+  { children, value, onChange, loop = false, ...props }: MenubarProps,
   ref
 ) {
   const valueRef = React.useRef(value)
   valueRef.current = value
-  const onValueChangeRef = React.useRef(onValueChange)
-  onValueChangeRef.current = onValueChange
+  const onChangeRef = React.useRef(onChange)
+  onChangeRef.current = onChange
   const loopRef = React.useRef(loop)
   loopRef.current = loop
 
   const requestValue = React.useCallback((next: MenubarValue) => {
     if (next === valueRef.current) return
-    onValueChangeRef.current(next)
+    onChangeRef.current(next)
   }, [])
 
   const requestValueRef = React.useRef(requestValue)

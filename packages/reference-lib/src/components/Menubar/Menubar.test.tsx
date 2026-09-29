@@ -10,7 +10,7 @@ import { Menubar } from './Menubar'
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 // Menubar is controlled-only: every interactive test drives it through this
-// stateful harness (value + onValueChange), recording emissions into `seen`.
+// stateful harness (value + onChange), recording emissions into `seen`.
 const ControlledMenubar = React.forwardRef<
   HTMLDivElement,
   {
@@ -26,7 +26,7 @@ const ControlledMenubar = React.forwardRef<
     <Menubar
       ref={ref}
       value={value}
-      onValueChange={next => {
+      onChange={next => {
         seen?.push(next)
         setValue(next)
       }}
@@ -175,7 +175,7 @@ describe('Menubar value coordination', () => {
     const seen: (string | null)[] = []
     await React.act(async () => {
       root.render(
-        <Menubar value="file" onValueChange={next => seen.push(next)}>
+        <Menubar value="file" onChange={next => seen.push(next)}>
           <Menubar.Menu value="file">
             <Menubar.Trigger id="mb-trigger-file">File</Menubar.Trigger>
             <Menubar.Content>

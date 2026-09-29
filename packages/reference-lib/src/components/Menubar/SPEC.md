@@ -15,7 +15,7 @@ TESTS.md checkboxes mean **specified**, not proven.
 
 ## Next agent
 
-**API and TESTS.md are the contract.** Controlled-only `value`/`onValueChange`
+**API and TESTS.md are the contract.** Controlled-only `value`/`onChange`
 coordination across Menu roots (no `defaultValue`; Menubar has no
 optional-value exception). Roving and layers are RovingFocus's and
 Overlay's. Everything inside one menu is Menu's.
@@ -28,7 +28,7 @@ rebuild Menu dismissal, and do not touch `../Menu` (read-only, other arcs).
 | Axis | Freeze |
 | :--- | :--- |
 | Parts | `Menubar` root, `Menubar.Menu` (`value?`), `Menubar.Trigger`, `Menubar.Content` (auto-wraps one Menu root; items are `Menu.*`) |
-| Value | Controlled-only: required `value` + `onValueChange`, `string \| null`, null = none, no `defaultValue`; open-one-closes-others by construction |
+| Value | Controlled-only: required `value` + `onChange`, `string \| null`, null = none, no `defaultValue`; open-one-closes-others by construction |
 | Triggers | `button[role=menuitem]`, `aria-haspopup=menu`, ghost variant, horizontal roving, `loop` (default false) |
 | Arrows | triggers: focus always + switch while open; content root level: switch; submenu parent open-arrow: Menu-owned; nested: Menu-owned |
 | Escape | none of Menubar's own — Menu closes one level per press with focus return (APG; rejects "Esc closes all") |

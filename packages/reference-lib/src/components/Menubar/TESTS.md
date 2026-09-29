@@ -16,9 +16,9 @@ dismiss. Menubar adds no second overlay runtime.
 1. One `value` names the open menu; `null` means none. Each `Menubar.Menu`
    is open exactly when the value names it — open-one-closes-others by
    construction, never by effect.
-2. `onValueChange` fires on user-driven changes, never redundantly
+2. `onChange` fires on user-driven changes, never redundantly
    (identical requests are dropped before emit). The bar is
-   controlled-only: `value` + `onValueChange` are required, there is no
+   controlled-only: `value` + `onChange` are required, there is no
    `defaultValue`.
 3. Trigger arrows move focus always (RovingFocus); the newly focused
    trigger's menu opens too only while a menu is open. Closed bars move
@@ -94,7 +94,7 @@ ContextMenu component.
 - [x] `MB-OPEN-03` `[reference]` `[browser]` —
   **Menubar should remain visibly controlled when value updates are rejected.**
   Control `value="file"` with a parent that logs but ignores
-  `onValueChange`, then click Edit. Assert one `onValueChange("edit")`,
+  `onChange`, then click Edit. Assert one `onChange("edit")`,
   File stays open, Edit never mounts, and trigger focus/ARIA stay
   consistent with the held value.
 - [x] `MB-OPEN-04` `[reference]` `[unit]` —
@@ -122,7 +122,7 @@ ContextMenu component.
   **Menubar should move trigger focus only when no menu is open.**
   With all menus closed, press Left/Right across the row. Assert focus
   visits each trigger in DOM order (RTL-mirrored per MB-RTL-01) and no
-  menu ever mounts, with no `onValueChange`.
+  menu ever mounts, with no `onChange`.
 - [x] `MB-KEY-03` `[vendor]` `[browser]` —
   **Menubar should move trigger focus and switch the open menu when a menu is open.**
   Open File, focus its trigger, press Right. Assert focus on the Edit
@@ -148,7 +148,7 @@ ContextMenu component.
 - [x] `MB-KEY-07` `[vendor]` `[browser]` —
   **Menubar should let the open-direction arrow open a submenu parent instead of switching.**
   Focus the Share submenu trigger at File root level, press Right (LTR).
-  Assert one submenu open, File still the open menu, no `onValueChange`,
+  Assert one submenu open, File still the open menu, no `onChange`,
   focus per Menu contract.
 - [x] `MB-KEY-08` `[reference]` `[browser]` —
   **Menubar should never switch menus from inside a nested submenu.**
@@ -192,7 +192,7 @@ ContextMenu component.
 - [x] `MB-ENV-02` `[reference]` `[unit]` —
   **Menubar should keep one action and one value request across StrictMode replay.**
   StrictMode render, click File, click an item. Assert `onSelect` once and
-  `onValueChange` exactly `["file", null]`.
+  `onChange` exactly `["file", null]`.
 - [x] `MB-NAV-01` `[reference]` `[unit]` —
   **Menubar nav helpers should resolve adjacent values.**
   Pure `menubar-nav` cases: advance/retreat, clamped edges without loop,

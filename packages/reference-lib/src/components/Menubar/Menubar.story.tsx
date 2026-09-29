@@ -17,7 +17,7 @@ export const Basic = () => {
           </button>
         </Div>
         <Div mb="4r">
-          <Menubar data-testid="menubar-root" value={value} onValueChange={setValue}>
+          <Menubar data-testid="menubar-root" value={value} onChange={setValue}>
             <Menubar.Menu value="file">
               <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
               <Menubar.Content data-testid="content-file" aria-label="File">
@@ -101,7 +101,7 @@ export const Submenu = () => {
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" data-testid="menubar-fixture-root">
         <Div mb="4r">
-          <Menubar data-testid="menubar-root" value={value} onValueChange={setValue}>
+          <Menubar data-testid="menubar-root" value={value} onChange={setValue}>
             <Menubar.Menu value="file">
               <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
               <Menubar.Content data-testid="content-file">
@@ -204,7 +204,7 @@ export const Controlled = () => {
           <Menubar
             data-testid="menubar-root"
             value={value}
-            onValueChange={next => {
+            onChange={next => {
               setLogs(prev => [...prev, `request:${next ?? 'null'}`])
               if (!reject) setValue(next)
             }}
@@ -240,7 +240,7 @@ export const Loop = () => {
   return (
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" data-testid="menubar-fixture-root">
-        <Menubar data-testid="menubar-root" loop value={value} onValueChange={setValue}>
+        <Menubar data-testid="menubar-root" loop value={value} onChange={setValue}>
           <Menubar.Menu value="file">
             <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
             <Menubar.Content data-testid="content-file">
@@ -264,7 +264,7 @@ export const Rtl = () => {
   return (
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" dir="rtl" data-testid="menubar-fixture-root">
-        <Menubar data-testid="menubar-root" value={value} onValueChange={setValue}>
+        <Menubar data-testid="menubar-root" value={value} onChange={setValue}>
           <Menubar.Menu value="file">
             <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
             <Menubar.Content data-testid="content-file">
@@ -289,7 +289,7 @@ export const Disabled = () => {
   return (
     <ReferenceLibrary>
       <Div p="6r" colorMode="dark" data-testid="menubar-fixture-root">
-        <Menubar data-testid="menubar-root" value={value} onValueChange={setValue}>
+        <Menubar data-testid="menubar-root" value={value} onChange={setValue}>
           <Menubar.Menu value="file">
             <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
             <Menubar.Content data-testid="content-file">
