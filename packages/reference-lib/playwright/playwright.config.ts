@@ -23,7 +23,17 @@ export default defineConfig({
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
-      maxDiffPixelRatio: 0.02,
+      // P1 (FINISH-07 evidence): 0.001 = 384px @800x480. Noise floor is 0px
+      // observed / 32px conservative ceiling (N=102, 91 bit-identical), so the
+      // budget holds 12x headroom while catching Listbox 1-row (7.6k),
+      // DateField-picker (5k) and gate7 close-move (553px) signals the old 2%
+      // (7,680px) masked. Sub-384px signals are the locator rule's job (P2:
+      // <=25px absolute or <=0.001 ratio on the assertable element).
+      // P6 (explicit accept): snapshots are React-19-only by design — snap()
+      // (ct.ts) no-ops off the r19 gallery. No per-major baselines; r17/r18
+      // legs stay behavior-only. Per-browser r19 baselines live under
+      // {projectName}-suffixed paths (FINISH-04 adoption).
+      maxDiffPixelRatio: 0.001,
     },
   },
   snapshotPathTemplate: '{testDir}/{testFileDir}/__snapshots__/{arg}{ext}',
