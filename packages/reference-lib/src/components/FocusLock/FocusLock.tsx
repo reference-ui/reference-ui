@@ -86,6 +86,36 @@ function safeFocus(node: HTMLElement | null) {
   node.focus({ preventScroll: true })
 }
 
+// Safari never moves focus on pointer activation, so the opener is
+// unfocused (activeElement stays body) while the lock activates. Record
+// the last pointer target per document as the fallback restore origin.
+const pointerOriginByDoc = new WeakMap<Document, HTMLElement | null>()
+
+function trackPointerOrigin(doc: Document) {
+  if (pointerOriginByDoc.has(doc)) return
+  pointerOriginByDoc.set(doc, null)
+  doc.addEventListener(
+    'pointerdown',
+    event => {
+      const target = event.target
+      pointerOriginByDoc.set(doc, target instanceof HTMLElement ? target : null)
+    },
+    true
+  )
+}
+
+function lastPointerOrigin(doc: Document): HTMLElement | null {
+  const node = pointerOriginByDoc.get(doc)
+  return node && node.isConnected ? node : null
+}
+
+// Install early: the opening pointerdown precedes the lock's mount, so
+// tracking must already be live when the first lock activates. SSR-safe
+// (no document at import); other ownerDocuments join on activation.
+if (typeof document !== 'undefined') {
+  trackPointerOrigin(document)
+}
+
 export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
   function FocusLock(
     {
@@ -282,6 +312,12 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
         const defaultTarget = resolveFocusTarget(defaultRestoreTargetRef.current)
         const active = doc.activeElement as HTMLElement | null
         const shards = getResolvedShardsRef.current()
+        trackPointerOrigin(doc)
+        const pointer = lastPointerOrigin(doc)
+        const pointerFallback =
+          pointer && !isInsideLock(container, shards, pointer) && isElementFocusable(pointer)
+            ? pointer
+            : null
         const origin =
           active &&
           active !== doc.body &&
@@ -289,7 +325,7 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
             ? active
             : defaultTarget && isElementFocusable(defaultTarget)
               ? defaultTarget
-              : active
+              : pointerFallback || active
         previousActiveElementRef.current = {
           node: origin,
           parent: origin?.parentElement || null,
@@ -463,6 +499,32 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
         reclaimToFallback()
       }
 
+      // Safari blurs to body on outside mousedown without firing focusin,
+      // so containment would be lost silently. Reclaim on the focusout
+      // leg when focus leaves the lock for nowhere focusable. The
+      // hasFocus gate skips window-blur (alt-tab keeps working).
+      const handleFocusOut = (event: FocusEvent) => {
+        if (!isTopLock(lockId, doc)) return
+        if (movingFocusRef.current) return
+        if (!doc.hasFocus()) return
+        const target = event.target
+        if (!(target instanceof Node)) return
+
+        const resolvedShards = getResolvedShardsRef.current()
+        if (!isInsideLock(container, resolvedShards, target)) return
+
+        if (initialFocusRef.current === false && !lastFocusedNodeRef.current) {
+          return
+        }
+
+        const related = event.relatedTarget
+        if (related instanceof Node && isInsideLock(container, resolvedShards, related)) {
+          return
+        }
+
+        reclaimToFallback()
+      }
+
       const mutationObserver = new MutationObserver(() => {
         if (!isTopLock(lockId, doc)) return
         if (movingFocusRef.current) return
@@ -497,12 +559,14 @@ export const FocusLock = React.forwardRef<HTMLElement, FocusLockProps>(
 
       doc.addEventListener('keydown', handleKeyDown)
       doc.addEventListener('focusin', handleFocusIn)
+      doc.addEventListener('focusout', handleFocusOut)
 
       return () => {
         clearReclaimFrame()
         mutationObserver.disconnect()
         doc.removeEventListener('keydown', handleKeyDown)
         doc.removeEventListener('focusin', handleFocusIn)
+        doc.removeEventListener('focusout', handleFocusOut)
       }
     }, [clearReclaimFrame, disabled, lockId, pickInsideFallback, rememberInside])
 

@@ -687,7 +687,13 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
   })
 
   test('FL-RESTORE-10: the latest restore target wins when replaced at close', async ({ page }) => {
-    await page.getByTestId('btn-restore-mode-replace').click()
+    // FOCUSFIX: keyboard-activate the invisible setup step. Under FF gallery
+    // contention the pointer click here was swallowed by layout shift
+    // (handler never ran, restoreMode stayed 'stale'), failing only this
+    // test — RESTORE-06 is a stale no-op and RESTORE-09 lands on the opener
+    // either way. The open/close clicks below stay pointer (they carry the
+    // pointer-origin semantics under test).
+    await page.getByTestId('btn-restore-mode-replace').press('Enter')
     await page.getByTestId('btn-open-restore-lab').click()
     await page.getByTestId('btn-close-restore-lab').click()
     await expect(page.getByTestId('fl-restore-c')).toBeFocused()
