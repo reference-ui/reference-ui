@@ -162,6 +162,11 @@ function mergeClassNames(
   return { ...toaster, ...toast }
 }
 
+function isReleasedMouseMove(e: PointerEvent | MouseEvent): boolean {
+  if ('pointerType' in e) return e.pointerType === 'mouse' && e.buttons === 0
+  return e.buttons === 0
+}
+
 interface ToastItemWrapperProps {
   item: ToastItem
   index: number
@@ -481,6 +486,13 @@ function ToastItemWrapper({
 
   React.useEffect(() => {
     const onMove = (e: PointerEvent | MouseEvent) => {
+      if (draggingRef.current && isReleasedMouseMove(e)) {
+        // Release outside the window: Firefox reports the out-of-window
+        // position with no buttons held and drops the up event, so finish
+        // from the last applied offset instead of tracking the phantom.
+        finishDrag()
+        return
+      }
       applyDragDelta(e.clientX, e.clientY)
     }
     const onUp = (e: Event) => {
