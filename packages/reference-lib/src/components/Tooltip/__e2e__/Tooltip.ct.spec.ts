@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator } from '@playwright/test'
 
 async function expectAnchoredTop(trigger: Locator, content: Locator) {
@@ -358,6 +359,27 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     expect(colors.color).toBe(colors.parentColor)
     // Legibility: WCAG AA contrast against the chip background.
     expect(contrastRatio(colors.color, colors.parentBg)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('TT-A11Y-01 scan: axe reports zero violations on the open tooltip', async ({
+    mount,
+    page,
+  }) => {
+    // Scanner half of TT-A11Y-01 (assertion half is TT-DOM-01/02's
+    // role/describedby/content checks): Basic exercises a generated
+    // descriptor ID plus keyboard-opened Content in one mount.
+    // Whole-page scope: Content portals to document.body, so
+    // #root-scoping would miss component-owned content; the gallery
+    // holds one story per mount.
+    await mount('components/Tooltip/Tooltip/Basic')
+    await expect(page.getByTestId('tooltip-fixture-root')).toBeVisible()
+    const btnA = page.getByTestId('btn-tooltip-a')
+    const contentA = page.getByTestId('tooltip-content-a')
+    await page.keyboard.press('Tab')
+    await expect(btnA).toBeFocused()
+    await expect(contentA).toBeVisible()
+    await expect(contentA).toHaveAttribute('role', 'tooltip')
+    await expectNoAxeViolations(page)
   })
 })
 
