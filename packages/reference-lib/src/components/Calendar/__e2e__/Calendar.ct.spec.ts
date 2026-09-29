@@ -1,5 +1,18 @@
 import { test, expect, snap } from '../../../../playwright/ct'
 
+// Landing-sequence engine scope (DIAG D1): Safari/WebKit never delivers
+// click-focus to buttons/links (mousedown blurs to body) and its native Tab
+// order skips them, honoring text controls + explicit tabindex stops only.
+// `engineOf` sniffs the Playwright project (`react19` on agentct Chromium,
+// `react19-firefox`/`react19-webkit` on the sweep vehicle) so specs can
+// compensate delivery (P1) or assert the deterministic platform outcome (P2).
+function engineOf(): 'chromium' | 'firefox' | 'webkit' {
+  const project = test.info().project.name
+  if (project.includes('webkit')) return 'webkit'
+  if (project.includes('firefox')) return 'firefox'
+  return 'chromium'
+}
+
 test.describe('Calendar CT', () => {
   test('renders calendar grid, selects date on click and updates state', async ({ mount, page }) => {
     await mount('components/Calendar/Calendar/SingleDate')
@@ -1254,6 +1267,10 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
     // Focus stays outside on the mode button; the switch resets the view.
     await page.getByTestId('mswitch-month').focus()
     await page.getByTestId('mswitch-month').click()
+    // P1 (F34, DIAG D1): WebKit click-focus never lands on buttons (mousedown
+    // blurs to body), so re-deliver the Chromium focus state; the no-steal
+    // assertion below then tests the mode switch on every engine.
+    if (engineOf() === 'webkit') await page.getByTestId('mswitch-month').focus()
     await expect(calendar).toHaveAttribute('data-mode', 'month')
     await expect(calendar).toHaveAttribute('data-view', 'month')
     await expect(calendar.locator('[data-reference-calendar-months]')).toBeVisible()
@@ -2514,7 +2531,16 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await expect(page.getByTestId('rmachine-requests')).toHaveText(
       '{"start":"2024-04-10","end":"2024-04-15"}'
     )
-    await expect(page.getByTestId('rmachine-null')).toBeFocused()
+    // P2 (F35 leg 1, DIAG D1 + SCOPE2 probe P-F35C): the origin day carries
+    // roving tabindex -1 (roving never followed the programmatic focus; the
+    // 0-stop stays 2024-04-03). Chromium Tabs forward out of the grid;
+    // WebKit restarts at the first explicit-tabindex stop. The commit
+    // assertions are the product contract and hold on both.
+    if (engineOf() === 'webkit') {
+      await expect(page.locator('button[data-date="2024-04-03"]')).toBeFocused()
+    } else {
+      await expect(page.getByTestId('rmachine-null')).toBeFocused()
+    }
     await expect(page.locator('button[data-date="2024-04-15"]')).not.toHaveAttribute(
       'aria-selected',
       'true'
@@ -2532,12 +2558,23 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await page.locator('button[data-date="2024-04-15"]').focus()
     await page.keyboard.press('Tab')
     await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
-    await expect(page.getByTestId('rmachine-null')).toBeFocused()
+    // P2 (F35 leg 2, same platform split as leg 1; probe P-F35C verified the
+    // 0-stop and landing stay 2024-04-03 across all three legs on WebKit).
+    if (engineOf() === 'webkit') {
+      await expect(page.locator('button[data-date="2024-04-03"]')).toBeFocused()
+    } else {
+      await expect(page.getByTestId('rmachine-null')).toBeFocused()
+    }
 
     // Rejected path: blur clears the transient band, the start stays.
     await page.getByTestId('rmachine-block12').click()
     await page.locator('button[data-date="2024-04-15"]').focus()
     await page.keyboard.press('Tab')
+    // P1 (F35 leg 3): the rejected path needs grid blur to clear the transient
+    // band; WebKit Tab stays in-grid (04-03 per the probe above), so move focus
+    // out the way Chromium's Tab did — the blur-driven clear then runs
+    // identically on both engines.
+    if (engineOf() === 'webkit') await page.getByTestId('rmachine-null').focus()
     await expect(page.getByTestId('rmachine-requests')).toHaveText(
       '{"start":"2024-04-10","end":"2024-04-15"}'
     )
