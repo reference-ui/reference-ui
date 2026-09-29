@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 test.describe('Switch CT', () => {
   test('renders button[role=switch] with default thumb and toggles checked state', async ({
@@ -364,6 +365,13 @@ test.describe('Switch quarantine parity', () => {
       const thumb = sw.locator('[data-reference-switch-thumb]')
       await expect(thumb).toHaveCount(1)
     }
+
+    // Scanner half: narrowed to section-a11y-01 (the named, disabled,
+    // and wrapping-label shapes this case asserts). The shared
+    // ParityFixture mount holds ~20 sections owned by other cases —
+    // several deliberately render unnamed switches — so #root-scoping
+    // would adjudicate other cases' fixtures, not this one.
+    await expectNoAxeViolations(page, { include: '[data-testid="section-a11y-01"]' })
   })
 
   test('SW-COMP-02: A wrapping-label Switch should sit in a form without serializing', async ({
