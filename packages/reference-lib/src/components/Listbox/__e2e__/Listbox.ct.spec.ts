@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 test.describe('Listbox Composition Gates & Browser Proofs', () => {
   test('LB-DOM-01: Renders listbox and options, selects option on click and updates state', async ({
@@ -1923,10 +1924,8 @@ test.describe('Listbox finish-line P2A gaps', () => {
     mount,
     page,
   }) => {
-    // NOTE: the repo has no configured a11y scanner dependency (no axe in any
-    // package.json or node_modules), so the scanner half of this case is
-    // blocked on infra outside Listbox scope. This test pins the runnable
-    // half: roles, accessible names, states, and relationships per shape.
+    // Assertion half: roles, accessible names, states, and relationships
+    // per shape. The scanner half runs at the end of this test.
     await mount('components/Listbox/Listbox/A11yShapes')
     await expect(page.getByTestId('a11y-root')).toBeVisible()
 
@@ -1962,6 +1961,11 @@ test.describe('Listbox finish-line P2A gaps', () => {
     await expect(page.getByRole('listbox', { name: 'Virtual list' })).toBeVisible()
     await expect(page.getByTestId('a11y-v-0')).toHaveAttribute('aria-setsize', '10')
     await expect(page.getByTestId('a11y-v-2')).toHaveAttribute('aria-posinset', '3')
+
+    // Scanner half: the A11yShapes mount holds every frozen shape —
+    // single, multiple, whole-disabled, empty, horizontal, virtualized —
+    // in one story; #root scoping covers it whole (no portals).
+    await expectNoAxeViolations(page, { include: '#root' })
   })
 
   test('LB-COMP-01: Standalone Listbox should support a complete controlled single-select composition', async ({
