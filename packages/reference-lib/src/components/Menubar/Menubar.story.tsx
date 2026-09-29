@@ -20,7 +20,7 @@ export const Basic = () => {
           <Menubar data-testid="menubar-root" value={value} onValueChange={setValue}>
             <Menubar.Menu value="file">
               <Menubar.Trigger data-testid="trigger-file">File</Menubar.Trigger>
-              <Menubar.Content data-testid="content-file">
+              <Menubar.Content data-testid="content-file" aria-label="File">
                 <Menu.Item
                   data-testid="file-new"
                   onSelect={() => setAction('File>New')}
@@ -45,7 +45,7 @@ export const Basic = () => {
             </Menubar.Menu>
             <Menubar.Menu value="edit">
               <Menubar.Trigger data-testid="trigger-edit">Edit</Menubar.Trigger>
-              <Menubar.Content data-testid="content-edit">
+              <Menubar.Content data-testid="content-edit" aria-label="Edit">
                 <Menu.Item
                   data-testid="edit-undo"
                   onSelect={() => setAction('Edit>Undo')}
@@ -62,7 +62,7 @@ export const Basic = () => {
             </Menubar.Menu>
             <Menubar.Menu value="view">
               <Menubar.Trigger data-testid="trigger-view">View</Menubar.Trigger>
-              <Menubar.Content data-testid="content-view">
+              <Menubar.Content data-testid="content-view" aria-label="View">
                 <Menu.Item
                   data-testid="view-zoom-in"
                   onSelect={() => setAction('View>ZoomIn')}

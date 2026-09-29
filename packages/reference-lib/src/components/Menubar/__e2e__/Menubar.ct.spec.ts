@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'
 
 async function activeTestId(page: Page): Promise<string | null> {
@@ -519,9 +520,15 @@ test.describe('Menubar coordination', () => {
     }, controls)
     expect(resolvesToMenu).toBe(true)
 
+    // Scanner half: open state first (edit content mounted with its
+    // menu), then the closed state. Whole-page scope: menu content
+    // portals to document.body, so #root-scoping would miss
+    // component-owned content; the gallery holds one story per mount.
+    await expectNoAxeViolations(page)
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('content-edit')).toHaveCount(0)
     await expect(edit).toHaveAttribute('aria-expanded', 'false')
     await expect(edit).not.toHaveAttribute('aria-controls', /.+/)
+    await expectNoAxeViolations(page)
   })
 })
