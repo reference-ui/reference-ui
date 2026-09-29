@@ -345,6 +345,56 @@ function stripDraftAffix(core: string, affixes: string[], atStart: boolean): str
   return atStart ? core.slice(match.length) : core.slice(0, core.length - match.length)
 }
 
+// Programmatic value write that React's change tracker still treats as
+// a user edit: writing through the prototype setter (not the instance
+// property React wraps) keeps a following synthetic input event real.
+function setNativeInputValue(node: HTMLInputElement, text: string): void {
+  const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(node), 'value')
+  if (descriptor?.set) {
+    descriptor.set.call(node, text)
+  } else {
+    node.value = text
+  }
+}
+
+// NF-EDIT-02 tendency gate: a typed insertion is impossible (canceled)
+// iff the typed text introduces a letter other than one well-placed
+// exponent e/E, a duplicate decimal separator, or a second/misplaced
+// sign. Digits, group separators, and valid partials always stage.
+function isImpossibleInsertion(
+  current: string,
+  start: number,
+  end: number,
+  data: string,
+  symbols: DraftNumberSymbols
+): boolean {
+  if (data === '') return false
+  const spliced = current.slice(0, start) + data + current.slice(end)
+  // Letters: exactly one e/E after a mantissa char passes (partial
+  // exponent "1e"); a leading, doubled, or non-exponent letter cancels.
+  const exponentParts = spliced.split(/[eE]/)
+  const withoutExponent =
+    exponentParts.length === 2 && exponentParts[0] !== '' ? data.replace(/[eE]/, '') : data
+  if (/\p{L}/u.test(withoutExponent)) return true
+  // Duplicate decimal: the insertion adds the separator while the
+  // splice would already hold one.
+  if (data.includes(symbols.decimal) && spliced.split(symbols.decimal).length > 2) return true
+  // Second/misplaced sign: the insertion adds sign text while the
+  // splice would hold more than one sign or a non-leading one.
+  const spellings = Array.from(
+    new Set(['+', '-', symbols.plus, symbols.minus, ...DRAFT_PLUS_VARIANTS, ...DRAFT_MINUS_VARIANTS])
+  )
+  if (spellings.some(spelling => data.includes(spelling))) {
+    const count = spellings.reduce(
+      (total, spelling) => total + (spliced.split(spelling).length - 1),
+      0
+    )
+    const leading = spellings.some(spelling => spliced.startsWith(spelling))
+    if (count > 1 || (count === 1 && !leading)) return true
+  }
+  return false
+}
+
 function startsWithDraftSign(core: string, symbols: DraftNumberSymbols): boolean {
   if (core.startsWith('+') || core.startsWith('-')) return true
   if (symbols.plus !== '+' && core.startsWith(symbols.plus)) return true
@@ -2362,6 +2412,105 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       if (draftRef.current === null) return
       runCommit(draftRef.current)
     }, [runCommit])
+
+    // NF-EDIT-08/09 + NF-PARSE-07: paste validates in NATIVE
+    // beforeinput/ paste listeners — never React's onBeforeInput, which
+    // React derives from keypress/textInput/paste/compositionend and
+    // never feeds the native beforeinput event (verified in the
+    // react-dom bundle: onBeforeInput registers compositionend,
+    // keypress, textInput, paste). Native ordering gives the SPEC order
+    // for free: every consumer paste observer (paste phase) runs before
+    // this beforeinput validation, and a consumer paste/beforeinput
+    // veto cancels the insertion natively before we ever run. The paste
+    // listener only stashes the payload (failing open on unreadable
+    // clipboards, NF-EDIT-10); only beforeinput ever prevents.
+    const pasteStashRef = React.useRef<string | null>(null)
+    const groupingDisabled = resolvedFormat.useGrouping === false
+    const handleBeforeInput = React.useCallback(
+      (e: Event) => {
+        const native = e as InputEvent
+        // Paste and ordinary typing validate here; compositional and
+        // deletion insertions stay fully native (NF-EDIT-11).
+        if (native.inputType !== 'insertFromPaste' && native.inputType !== 'insertText') return
+        if (disabled || readOnly) return
+        // Mid-composition insertions land natively and stage verbatim
+        // via the ordinary input path (NF-EDIT-11: never mid-session).
+        if (composingRef.current) return
+        // Authoritative insert text first, native paste stash second;
+        // unreadable either way fails open (NF-EDIT-10).
+        const payload = (typeof native.data === 'string' ? native.data : null) ?? pasteStashRef.current
+        pasteStashRef.current = null
+        if (payload === null) return
+        const node = e.currentTarget as HTMLInputElement | null
+        if (!node) return
+        let start: number
+        let end: number
+        try {
+          start = node.selectionStart ?? node.value.length
+          end = node.selectionEnd ?? node.value.length
+        } catch {
+          return
+        }
+        const current = node.value
+        // NF-EDIT-02 tendency gate: ordinary typed insertions cancel
+        // only the impossible — letters (other than one well-placed
+        // exponent e), a duplicate decimal, a second/misplaced sign.
+        // Valid partials ("-", "1.", "1e") always stage verbatim.
+        if (native.inputType === 'insertText') {
+          if (isImpossibleInsertion(current, start, end, payload, symbols)) {
+            e.preventDefault()
+          }
+          return
+        }
+        // NF-PARSE-07: grouping-disabled fields strip pasted group
+        // tokens — the number and caret model survive, separators go.
+        let insert = payload
+        if (groupingDisabled && symbols.group !== null && insert.includes(symbols.group)) {
+          insert = insert.split(symbols.group).join('')
+        }
+        const spliced = current.slice(0, start) + insert + current.slice(end)
+        // Strict live grammar (NF-EDIT-09): letters, conflicting
+        // affixes, malformed grouping, ambiguous punctuation, and
+        // overflow prevent with zero mutation — text, selection,
+        // control, and callbacks all stay.
+        if (Number.isNaN(parseDraftNumber(spliced, symbols, percentStyle))) {
+          e.preventDefault()
+          return
+        }
+        if (insert === payload) return
+        // Stripped payload: native landing would insert the separators,
+        // so apply the ungrouped splice through a real input event
+        // (consumer input observers still run in native order) with the
+        // caret after the inserted text.
+        e.preventDefault()
+        setNativeInputValue(node, spliced)
+        node.dispatchEvent(new Event('input', { bubbles: true }))
+        const caret = start + insert.length
+        try {
+          node.setSelectionRange(caret, caret)
+        } catch {
+          // ignore if not supported
+        }
+      },
+      [disabled, readOnly, symbols, percentStyle, groupingDisabled]
+    )
+    useIsomorphicLayoutEffect(() => {
+      const node = inputRef.current
+      if (!node) return
+      const stash = (e: Event) => {
+        try {
+          pasteStashRef.current = (e as ClipboardEvent).clipboardData?.getData('text') ?? null
+        } catch {
+          pasteStashRef.current = null
+        }
+      }
+      node.addEventListener('paste', stash)
+      node.addEventListener('beforeinput', handleBeforeInput)
+      return () => {
+        node.removeEventListener('paste', stash)
+        node.removeEventListener('beforeinput', handleBeforeInput)
+      }
+    }, [inputRef, handleBeforeInput])
 
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -272,7 +272,36 @@ the offending prop (`"locale"` / `"formatOptions"`), matching the
 NF-MATH-02 fail-fast precedent — "fail before accepting edits" means no
 markup and no callback, never a dev-only warning.
 
-Least-surprise interpolations (flagged for HQ): (i) an explicit
+NFLAST-3 paste record (EDIT-08/09 + PARSE-07 + COMP-02): validation
+lives in NATIVE beforeinput/paste listeners on the Input node — never
+React's onBeforeInput, which React derives from
+keypress/textInput/paste/compositionend and never feeds the native
+beforeinput event (verified in the react-dom bundle), and never a React
+onPaste, whose synthetic ClipboardEvent reads clipboardData eagerly and
+would throw on unreadable clipboards (NF-EDIT-10). Native ordering
+gives the SPEC order for free: every consumer paste observer (paste
+phase) runs before beforeinput validation, and a consumer
+paste/beforeinput veto cancels insertion natively before managed code
+runs. Payload = beforeinput.data, native paste stash second; valid
+splices land natively (one input event → one live request), invalid
+splices prevent with zero mutation, and useGrouping:false strips the
+active group char from the payload and applies the ungrouped splice
+through a real input event with the caret after the insert.
+
+Least-surprise interpolations (flagged for HQ): (xi) paste validity is
+the strict live grammar on the full spliced result — partial-yielding
+pastes ("-" alone, trailing "1.") prevent rather than stage (typing
+still stages partials per NF-EDIT-02; paste is bulk, NF-EDIT-09's
+zero-mutation rule governs); (xii) PARSE-07 strips only the active
+locale's exact group char from the payload — foreign group spellings
+in the payload reject via the strict parse, and the strip never
+touches pre-existing text. (xiii) EDIT-02 cancels only typed
+insertions that introduce a letter (other than one well-placed
+exponent e), a duplicate decimal, or a second/misplaced sign —
+foreign-script digits still stage verbatim (silent) as before, and
+Playwright fill() routes through the same beforeinput gate (CDP
+InsertText), so letter-bearing CT buffers must be staged
+programmatically. (i) an explicit
 `numberingSystem` option wins over a conflicting locale `-u-nu-` tag per
 Intl precedence, no diagnostic; (ii) "hidden-sign formats" reads as
 `signDisplay: "never"` only — `exceptZero` still writes negatives and

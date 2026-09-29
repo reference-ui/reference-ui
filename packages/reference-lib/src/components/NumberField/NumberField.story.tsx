@@ -406,6 +406,7 @@ export const CommitLabFixture = () => {
                 data-testid="commit-lab-input"
                 onBlur={() => setOrder(entries => [...entries, 'blur'])}
                 onKeyDown={() => setOrder(entries => [...entries, 'key'])}
+                onPaste={() => setOrder(entries => [...entries, 'paste'])}
               />
               <NumberField.Increment aria-label="Increment" data-testid="commit-lab-inc" />
             </NumberField.Group>
@@ -589,3 +590,109 @@ export const UnnamedStepperFixture = () => (
     </Div>
   </ReferenceLibrary>
 )
+
+// NFLAST-3 paste lab (NF-PARSE-07): grouping-disabled decimal with a
+// locale toggle — pasted group tokens strip without changing the number
+// or caret model, and commits stay ungrouped.
+export const NoGroupingFixture = () => {
+  const [value, setValue] = React.useState<number | null>(null)
+  const [locale, setLocale] = React.useState('en-US')
+  const [log, setLog] = React.useState<string[]>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <NumberField
+          data-testid="no-grouping-field"
+          value={value}
+          locale={locale}
+          formatOptions={{ useGrouping: false }}
+          onChange={v => {
+            setLog(entries => [...entries, String(v)])
+            setValue(v)
+          }}
+        >
+          <NumberField.Group>
+            <NumberField.Decrement aria-label="Decrement" />
+            <NumberField.Input aria-label="Quantity" data-testid="no-grouping-input" />
+            <NumberField.Increment aria-label="Increment" />
+          </NumberField.Group>
+        </NumberField>
+        <button type="button" data-testid="no-grouping-de" onClick={() => setLocale('de-DE')}>
+          To de-DE
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="no-grouping-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="no-grouping-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-3 composition lab (NF-COMP-02): two-digit currency with
+// step=0.05, a locale cycle (Latin punctuation → Arabic digits), and a
+// named form — paste/step/edit, locale round-trips, dirty submit.
+export const CompCurrencyFixture = () => {
+  const [value, setValue] = React.useState<number | null>(12.5)
+  const [locale, setLocale] = React.useState('en-US')
+  const [log, setLog] = React.useState<string[]>([])
+  const [payload, setPayload] = React.useState('none')
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <form
+          data-testid="comp-currency-form"
+          onSubmit={e => {
+            e.preventDefault()
+            setPayload(
+              Array.from(new FormData(e.currentTarget).entries())
+                .map(([k, v]) => `${k}=${v}`)
+                .join(',')
+            )
+          }}
+        >
+          <NumberField
+            data-testid="comp-currency-field"
+            value={value}
+            locale={locale}
+            step={0.05}
+            name="amount"
+            formatOptions={{ style: 'currency', currency: 'USD' }}
+            onChange={v => {
+              setLog(entries => [...entries, String(v)])
+              setValue(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrease amount" data-testid="comp-currency-dec" />
+              <NumberField.Input aria-label="Amount" data-testid="comp-currency-input" />
+              <NumberField.Increment aria-label="Increase amount" data-testid="comp-currency-inc" />
+            </NumberField.Group>
+          </NumberField>
+          <button type="submit" data-testid="comp-currency-submit">
+            Submit
+          </button>
+        </form>
+        <button type="button" data-testid="comp-currency-de" onClick={() => setLocale('de-DE')}>
+          To de-DE
+        </button>
+        <button type="button" data-testid="comp-currency-ar" onClick={() => setLocale('ar-EG')}>
+          To ar-EG
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="comp-currency-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="comp-currency-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="comp-currency-payload">
+          payload: {payload}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}

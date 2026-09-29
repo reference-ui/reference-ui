@@ -1,4 +1,35 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import type { Locator, Page } from '@playwright/test'
+
+// Real-paste helpers (probed headless-green on Chromium/Firefox/WebKit
+// 2026-09-28): stagePaste copies with focus outside the field — the prep
+// blur noops on echoed/in-range drafts — then refocuses; callers pin the
+// caret portably (select-all + arrow collapse, never Home) and press
+// ControlOrMeta+v.
+async function copyText(page: Page, text: string): Promise<void> {
+  await page.evaluate(staged => {
+    const node = document.createElement('div')
+    node.id = 'nf-paste-source'
+    node.textContent = staged
+    document.body.appendChild(node)
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }, text)
+  await page.keyboard.press('ControlOrMeta+c')
+  await page.evaluate(() => {
+    document.getElementById('nf-paste-source')?.remove()
+    window.getSelection()?.removeAllRanges()
+  })
+}
+
+async function stagePaste(page: Page, input: Locator, text: string): Promise<void> {
+  await input.evaluate(el => (el as HTMLInputElement).blur())
+  await copyText(page, text)
+  await input.evaluate(el => (el as HTMLInputElement).focus())
+}
 
 test.describe('NumberField CT', () => {
   test('renders textbox, steppers, and increments/decrements via keyboard and buttons', async ({
@@ -1014,7 +1045,15 @@ test.describe('NumberField CT', () => {
     expect(await sel()).toEqual(browserName === 'firefox' ? [1, 1] : [0, 0])
     await expect(input).toHaveValue('5')
     // Ranged dirty buffer incl. RTL text: navigation alone never commits.
-    await input.fill('12א')
+    // Staged programmatically (letters are untypeable since NF-EDIT-02,
+    // so the RTL buffer arrives the way autofill/composition would).
+    await input.evaluate(el => {
+      const target = el as HTMLInputElement
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+      setter.call(target, '12א')
+      target.dispatchEvent(new Event('input', { bubbles: true }))
+      target.setSelectionRange(3, 3)
+    })
     await page.keyboard.press('Home')
     expect(await sel()).toEqual(homeEndMove ? [0, 0] : [3, 3])
     await page.keyboard.press('End')
@@ -1617,6 +1656,7 @@ test.describe('NumberField CT', () => {
   test('NF-EDIT-16: Cut, undo, redo, and ranged replacement stay browser-native with requests only for new meanings', async ({
     mount,
     page,
+    browserName,
   }) => {
     // Zero command-interception code exists in the engine (PATCHES §9
     // class): cut/undo/redo/select-all reach the input natively and only
@@ -1639,25 +1679,38 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('')
     await expect(log).toHaveText('log: 4,43,null')
     await expect(display).toHaveText('Value: None')
-    // Undo restores natively and re-requests the restored meaning.
+    // Undo/redo traverse natively on every engine, but WebKit walks two
+    // history levels per command (typing-level + cut-level, one input
+    // event per level — observed native behavior, probed 2026-09-28)
+    // while Chromium/Firefox pop one level. Either way no command is
+    // canceled and every newly parseable meaning publishes (EDIT-06
+    // per-engine precedent for native-outcome branches).
+    const webkitHistory = browserName === 'webkit'
     await page.keyboard.press('ControlOrMeta+z')
-    await expect(input).toHaveValue('43')
-    await expect(log).toHaveText('log: 4,43,null,43')
-    await expect(display).toHaveText('Value: 43')
-    // Redo re-clears natively with a second null request.
+    if (webkitHistory) {
+      await expect(input).toHaveValue('5')
+      await expect(log).toHaveText('log: 4,43,null,43,5')
+      await expect(display).toHaveText('Value: 5')
+    } else {
+      await expect(input).toHaveValue('43')
+      await expect(log).toHaveText('log: 4,43,null,43')
+      await expect(display).toHaveText('Value: 43')
+    }
+    // Redo re-clears natively (two levels again on WebKit).
     await page.keyboard.press('ControlOrMeta+Shift+z')
     await expect(input).toHaveValue('')
-    await expect(log).toHaveText('log: 4,43,null,43,null')
+    const redoLog = webkitHistory ? 'log: 4,43,null,43,5,43,null' : 'log: 4,43,null,43,null'
+    await expect(log).toHaveText(redoLog)
     // Ranged replacement over typed text: native splice, one request.
     await input.pressSequentially('123', { delay: 20 })
-    await expect(log).toHaveText('log: 4,43,null,43,null,1,12,123')
+    await expect(log).toHaveText(`${redoLog},1,12,123`)
     await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('Shift+ArrowRight')
     await page.keyboard.press('9')
     await expect(input).toHaveValue('923')
-    await expect(log).toHaveText('log: 4,43,null,43,null,1,12,123,923')
+    await expect(log).toHaveText(`${redoLog},1,12,123,923`)
     // Localized tokens: cutting inside currency text stays native and
     // only a newly parseable meaning publishes.
     await mount('components/NumberField/NumberField/CurrencyFixture')
@@ -1665,7 +1718,12 @@ test.describe('NumberField CT', () => {
     const currencyDisplay = page.getByTestId('currency-display')
     await currency.click()
     await expect(currency).toHaveValue('$1,234.50')
-    await page.keyboard.press('Home')
+    // Portable caret-to-start: bare Home is a caret no-op on FF/WebKit
+    // macOS builds (DIAG D3A — EDIT-06 pins the platform rule), so
+    // select-all + ArrowLeft collapse instead of Home. Same SPEC step:
+    // cut the individual currency token.
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('Shift+ArrowRight')
     await page.keyboard.press('ControlOrMeta+x')
     await expect(currency).toHaveValue('1,234.50')
@@ -1726,7 +1784,11 @@ test.describe('NumberField CT', () => {
     const currency = page.getByTestId('currency-input')
     const currencyDisplay = page.getByTestId('currency-display')
     await currency.click()
-    await page.keyboard.press('Home')
+    // Portable caret-to-start (DIAG D3A: bare Home is a caret no-op on
+    // FF/WebKit macOS builds) — select-all + ArrowLeft collapse, then
+    // select the individual currency token. Same SPEC step as Home.
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('Shift+ArrowRight')
     await page.keyboard.press('Backspace')
     await expect(currency).toHaveValue('1,234.50')
@@ -1928,5 +1990,370 @@ test.describe('NumberField CT', () => {
       await expect(log).toHaveText('log: none')
       await lab.unmount()
     }
+  })
+
+  test('NF-EDIT-02: Valid partial edits remain visible while impossible ordinary insertions are canceled', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const log = page.getByTestId('commit-lab-log')
+    const display = page.getByTestId('commit-lab-display')
+    const caret = () =>
+      input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    // Sign partial stages verbatim with no callback; a letter into it
+    // cancels with text, caret, and dirty state intact.
+    await input.click()
+    await page.keyboard.press('ControlOrMeta+a')
+    await input.pressSequentially('-', { delay: 20 })
+    await expect(input).toHaveValue('-')
+    await expect(caret()).resolves.toEqual([1, 1])
+    await expect(input).toHaveAttribute('data-editing', '')
+    await expect(log).toHaveText('log: none')
+    await input.pressSequentially('a', { delay: 20 })
+    await expect(input).toHaveValue('-')
+    await expect(caret()).resolves.toEqual([1, 1])
+    await expect(input).toHaveAttribute('data-editing', '')
+    await expect(log).toHaveText('log: none')
+    await expect(display).toHaveText('Value: 5')
+    // Decimal partial completes and requests; a duplicate dot cancels.
+    await page.keyboard.press('ControlOrMeta+a')
+    await input.pressSequentially('1.5', { delay: 20 })
+    await expect(input).toHaveValue('1.5')
+    await expect(log).toHaveText('log: 1,1.5')
+    await input.pressSequentially('.', { delay: 20 })
+    await expect(input).toHaveValue('1.5')
+    await expect(caret()).resolves.toEqual([3, 3])
+    await expect(log).toHaveText('log: 1,1.5')
+    // A second sign at the head cancels; the staged buffer persists.
+    await page.keyboard.press('ControlOrMeta+a')
+    await input.pressSequentially('-5', { delay: 20 })
+    await expect(input).toHaveValue('-5')
+    await expect(log).toHaveText('log: 1,1.5,-5')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowLeft')
+    await input.pressSequentially('-', { delay: 20 })
+    await expect(input).toHaveValue('-5')
+    await expect(caret()).resolves.toEqual([0, 0])
+    await expect(input).toHaveAttribute('data-editing', '')
+    await expect(log).toHaveText('log: 1,1.5,-5')
+    // Localized partials (de-DE comma decimal) stage; duplicates and
+    // letters cancel; completion requests.
+    await mount('components/NumberField/NumberField/NoGroupingFixture')
+    const deInput = page.getByTestId('no-grouping-input')
+    const deLog = page.getByTestId('no-grouping-log')
+    const deCaret = () =>
+      deInput.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    await page.getByTestId('no-grouping-de').click()
+    await deInput.click()
+    await deInput.pressSequentially(',', { delay: 20 })
+    await expect(deInput).toHaveValue(',')
+    await expect(deCaret()).resolves.toEqual([1, 1])
+    await expect(deInput).toHaveAttribute('data-editing', '')
+    await expect(deLog).toHaveText('log: none')
+    await deInput.pressSequentially(',', { delay: 20 })
+    await expect(deInput).toHaveValue(',')
+    await expect(deCaret()).resolves.toEqual([1, 1])
+    await deInput.pressSequentially('a', { delay: 20 })
+    await expect(deInput).toHaveValue(',')
+    await expect(deLog).toHaveText('log: none')
+    await deInput.pressSequentially('5', { delay: 20 })
+    await expect(deInput).toHaveValue(',5')
+    await expect(deLog).toHaveText('log: 0.5')
+  })
+
+  test('NF-EDIT-08: Valid paste splices at the current selection and retains the resulting caret', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const log = page.getByTestId('commit-lab-log')
+    const display = page.getByTestId('commit-lab-display')
+    const caret = () =>
+      input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    // Full replacement, then end / middle / ranged insertions — each
+    // paste lands natively with the caret after the payload and exactly
+    // one parseable request.
+    await stagePaste(page, input, '4')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('4')
+    await expect(caret()).resolves.toEqual([1, 1])
+    await expect(log).toHaveText('log: 4')
+    await stagePaste(page, input, '2')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('42')
+    await expect(caret()).resolves.toEqual([2, 2])
+    await expect(log).toHaveText('log: 4,42')
+    await stagePaste(page, input, '.')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('4.2')
+    await expect(caret()).resolves.toEqual([2, 2])
+    await expect(log).toHaveText('log: 4,42,4.2')
+    await stagePaste(page, input, '5')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('Shift+ArrowRight')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('4.5')
+    await expect(caret()).resolves.toEqual([3, 3])
+    await expect(log).toHaveText('log: 4,42,4.2,4.5')
+    // Supported localized digits paste and request identically
+    // (ar-EG: ASCII live spelling formats to Eastern Arabic at commit).
+    await mount('components/NumberField/NumberField/CompositionFixture')
+    const arInput = page.getByTestId('composition-input')
+    const arLog = page.getByTestId('composition-log')
+    const arDisplay = page.getByTestId('composition-display')
+    const arCaret = () =>
+      arInput.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    await stagePaste(page, arInput, '١٢')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(arInput).toHaveValue('١٢')
+    await expect(arCaret()).resolves.toEqual([2, 2])
+    await expect(arLog).toHaveText('log: 12')
+    await expect(arDisplay).toHaveText('Value: 12')
+    await stagePaste(page, arInput, '34')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(arInput).toHaveValue('34')
+    await expect(arLog).toHaveText('log: 12,34')
+    // Locale formatting applies only at commit — the live buffer keeps
+    // the pasted spelling until the boundary.
+    await page.getByTestId('composition-outside').click()
+    await expect(arInput).toHaveValue('٣٤')
+    await expect(arDisplay).toHaveText('Value: 34')
+    // Currency: the pasted plain digits stay ungrouped live and format
+    // at commit.
+    await mount('components/NumberField/NumberField/CurrencyFixture')
+    const currency = page.getByTestId('currency-input')
+    const currencyDisplay = page.getByTestId('currency-display')
+    await stagePaste(page, currency, '2500')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(currency).toHaveValue('2500')
+    await expect(currencyDisplay).toHaveText('Currency Value: 2500')
+    await page.keyboard.press('Enter')
+    await expect(currency).toHaveValue('$2,500.00')
+    await expect(currencyDisplay).toHaveText('Currency Value: 2500')
+  })
+
+  test('NF-EDIT-09: Invalid paste leaves text, selection, controlled state, and callbacks unchanged', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CommitLabFixture')
+    const input = page.getByTestId('commit-lab-input')
+    const log = page.getByTestId('commit-lab-log')
+    const display = page.getByTestId('commit-lab-display')
+    const order = page.getByTestId('commit-lab-order')
+    const caret = () =>
+      input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    // Letters at a pinned caret: prevented, zero mutation.
+    await stagePaste(page, input, 'abc')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('5')
+    await expect(caret()).resolves.toEqual([0, 0])
+    await expect(log).toHaveText('log: none')
+    await expect(display).toHaveText('Value: 5')
+    // Malformed grouping over a range: the range selection survives.
+    await stagePaste(page, input, '1,0,0')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('5')
+    await expect(caret()).resolves.toEqual([0, 1])
+    await expect(log).toHaveText('log: none')
+    // Duplicate decimal: set up a valid decimal, then reject the dot.
+    await stagePaste(page, input, '1.5')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('1.5')
+    await expect(log).toHaveText('log: 1.5')
+    await stagePaste(page, input, '.')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('1.5')
+    await expect(caret()).resolves.toEqual([3, 3])
+    await expect(log).toHaveText('log: 1.5')
+    await expect(display).toHaveText('Value: 1.5')
+    // Overflow: nonfinite results never cross the callback.
+    await stagePaste(page, input, '1e999')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('1.5')
+    await expect(caret()).resolves.toEqual([0, 3])
+    await expect(log).toHaveText('log: 1.5')
+    // Foreign-script digits reject like letters under a Latin locale.
+    await stagePaste(page, input, '١٢')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('1.5')
+    await expect(caret()).resolves.toEqual([0, 3])
+    await expect(log).toHaveText('log: 1.5')
+    // Consumer paste observation precedes every prevention: all six
+    // pastes logged 'paste' while only the valid setup paste (3rd)
+    // produced a 'request' — every invalid paste was observed, then
+    // stopped with no request after it. (Prep arrows/select-all also log
+    // 'key', so the order is asserted structurally, not verbatim.)
+    const entries = ((await order.textContent()) ?? '')
+      .replace('order: ', '')
+      .split(',')
+      .filter(e => e === 'paste' || e === 'request')
+    expect(entries.filter(e => e === 'paste')).toHaveLength(6)
+    expect(entries.filter(e => e === 'request')).toHaveLength(1)
+    expect(entries).toEqual(['paste', 'paste', 'paste', 'request', 'paste', 'paste', 'paste'])
+    // Second sign + conflicting affix on the unbounded currency field.
+    await mount('components/NumberField/NumberField/CurrencyFixture')
+    const currency = page.getByTestId('currency-input')
+    const currencyDisplay = page.getByTestId('currency-display')
+    const currencyCaret = () =>
+      currency.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    await stagePaste(page, currency, '-5')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(currency).toHaveValue('-5')
+    await expect(currencyDisplay).toHaveText('Currency Value: -5')
+    // (The prep blur commits the setup draft, so the field shows the
+    // formatted '-$5.00' from here on — prevention still holds.)
+    await stagePaste(page, currency, '-')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(currency).toHaveValue('-$5.00')
+    await expect(currencyCaret()).resolves.toEqual([0, 0])
+    await expect(currencyDisplay).toHaveText('Currency Value: -5')
+    await stagePaste(page, currency, '€9')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(currency).toHaveValue('-$5.00')
+    await expect(currencyCaret()).resolves.toEqual([0, 6])
+    await expect(currencyDisplay).toHaveText('Currency Value: -5')
+  })
+
+  test('NF-PARSE-07: Disabling grouping removes pasted group tokens without changing the number or caret model', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/NoGroupingFixture')
+    const input = page.getByTestId('no-grouping-input')
+    const log = page.getByTestId('no-grouping-log')
+    const display = page.getByTestId('no-grouping-display')
+    const caret = () =>
+      input.evaluate(el => [
+        (el as HTMLInputElement).selectionStart,
+        (el as HTMLInputElement).selectionEnd,
+      ])
+    // US grouped form: separators strip, the number holds, the caret
+    // lands after the stripped payload.
+    await stagePaste(page, input, '1,000')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('1000')
+    await expect(caret()).resolves.toEqual([4, 4])
+    await expect(log).toHaveText('log: 1000')
+    await expect(display).toHaveText('Value: 1000')
+    // Committed display stays ungrouped.
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('1000')
+    await expect(display).toHaveText('Value: 1000')
+    // German grouped form under de-DE: the dot strips (never a decimal).
+    await page.getByTestId('no-grouping-de').click()
+    await expect(input).toHaveValue('1000')
+    await stagePaste(page, input, '2.500')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('2500')
+    await expect(caret()).resolves.toEqual([4, 4])
+    await expect(log).toHaveText('log: 1000,2500')
+    await expect(display).toHaveText('Value: 2500')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveValue('2500')
+    await expect(display).toHaveText('Value: 2500')
+  })
+
+  test('NF-COMP-02: A localized currency NumberField composes precision, non-Latin input, dirty submit, and authored labels', async ({
+    mount,
+    page,
+  }) => {
+    await mount('components/NumberField/NumberField/CompCurrencyFixture')
+    const input = page.getByTestId('comp-currency-input')
+    const log = page.getByTestId('comp-currency-log')
+    const display = page.getByTestId('comp-currency-display')
+    await expect(input).toHaveValue('$12.50')
+    await expect(input).toHaveAttribute('aria-label', 'Amount')
+    // Paste a precise value, then step the 0.05 lattice.
+    await stagePaste(page, input, '13.75')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('13.75')
+    await expect(log).toHaveText('log: 13.75')
+    await page.getByTestId('comp-currency-inc').click()
+    await expect(log).toHaveText('log: 13.75,13.8')
+    await expect(input).toHaveValue('$13.80')
+    // German round-trip: localized punctuation pastes and requests.
+    await page.getByTestId('comp-currency-de').click()
+    const deText = await page.evaluate(
+      () => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'USD' }).format(13.8)
+    )
+    await expect(input).toHaveValue(deText)
+    await stagePaste(page, input, '10,25 $')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('10,25 $')
+    await expect(log).toHaveText('log: 13.75,13.8,10.25')
+    // Arabic round-trip: non-Latin digits paste and request.
+    await page.getByTestId('comp-currency-ar').click()
+    const arText = await page.evaluate(
+      () => new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'USD' }).format(10.25)
+    )
+    await expect(input).toHaveValue(arText)
+    await stagePaste(page, input, '١٢٫٥٠')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('١٢٫٥٠')
+    await expect(log).toHaveText('log: 13.75,13.8,10.25,12.5')
+    // Dirty submit: the pasted value is still uncommitted text, and the
+    // form serializes the canonical number.
+    await expect(input).toHaveAttribute('data-editing', '')
+    await stagePaste(page, input, '٩٩٫٩٩')
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.press('ControlOrMeta+v')
+    await expect(input).toHaveValue('٩٩٫٩٩')
+    await expect(log).toHaveText('log: 13.75,13.8,10.25,12.5,99.99')
+    await page.getByTestId('comp-currency-submit').click()
+    await expect(page.getByTestId('comp-currency-payload')).toHaveText('payload: amount=99.99')
+    await expect(display).toHaveText('Value: 99.99')
+    // Authored labels survive every locale swap.
+    await expect(input).toHaveAttribute('aria-label', 'Amount')
+    await expect(page.getByTestId('comp-currency-dec')).toHaveAttribute('aria-label', 'Decrease amount')
+    await expect(page.getByTestId('comp-currency-inc')).toHaveAttribute('aria-label', 'Increase amount')
   })
 })
