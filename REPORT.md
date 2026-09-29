@@ -193,11 +193,13 @@ committed on `reference-system`, tree clean:
   sub-rulings, Splitter 4a execution, snapshot policy, Switch /
   Slider takes, Date takes. No crew touches API surfaces until
   you rule.
-- **NumberField last pass** (delegated, crew out): obvious-answer
-  rulings recorded in component DECISIONS.md, then lattice →
-  Intl grammar → filtering/composition → ENV/EDIT-16. Sequential
-  boxed waves until 148/148-or-manual; least-surprise readings
-  flagged, never blocking.
+- **NumberField AUTOMATED-COMPLETE**: 144/148 on the five-leg
+  gate (unit 131, CT 57/57 × 17/18/19 + FF + WK). Only the 4
+  manual release gates remain (human + devices). Least-surprise
+  flags recorded, never blocking. One anomaly noted (React-17
+  shadow-composition ordering, worked around, repro logged).
+- **4a execution**: crew out with Splitter + consumer-smoke scope
+  (last crew-doable item).
 
 ## 4. Carried, no action
 

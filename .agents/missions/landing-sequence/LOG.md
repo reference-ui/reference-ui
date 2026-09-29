@@ -25,3 +25,6 @@ Captain verifies firsthand and commits every landed arc. Tree stays clean.
 - HQ ruled: focus YES, G1/H1 deferred-to-captain, Splitter 4a
   if-clean, NF engine calls delegated (obvious answers). LAST
   PASS dispatched: NFLAST + FOCUS + SPLIT. API pass sealed (HQ).
+- LAST PASS LANDED: FOCUS (+FIX), SPLIT cluster, NFLAST 1–4
+  (NumberField 144/148 automated-complete). 4a crew dispatched
+  (Splitter+smoke scope). Manual gates + HQ items remain.
