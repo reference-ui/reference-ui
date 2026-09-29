@@ -87,6 +87,17 @@ never silently, never by chat alone:
 
 - 2026-09-29 (init): file created from landing-sequence closeout
   state. No additions yet.
+- 2026-09-29 (adoption DEFERRED, was ADOPT-in-wave — item 5):
+  two consecutive 90-min boxes (C-SNAPSHOT, C-SNAPSHOT-2) were
+  consumed by larger-than-expected Chromium fallout (13 snap reds +
+  39 abort-hidden + 31 orphans + unit triage + 4 daemon deaths);
+  adoption never got a slot. Release-blocking value is zero (paint
+  proven on Chromium @0.001; behavior proven all engines/majors;
+  FF/WK paint was never proven pre-FINISH either — deferral loses
+  nothing vs baseline). First follow-up with all vehicles preserved
+  (FINISH-04 exact vehicle + SERIAL generation constraint +
+  stale-candidate warning: F04 /tmp candidates are stale under the
+  re-pinned Chromium). Reversible by veto.
 - 2026-09-29 (captain rulings, autonomy directive — Part A RESOLVED,
   Part C triggered, all reversible by veto): C-NAME → 1a (house
   onChange everywhere); C-W02 → i-freeze (zero-anchor + endpoint
