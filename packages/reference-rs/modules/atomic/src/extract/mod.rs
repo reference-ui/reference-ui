@@ -23,6 +23,7 @@ pub mod recipes;
 pub mod resolver;
 pub mod scope;
 pub mod visitor;
+pub mod wrapper_thread;
 pub(crate) mod suggest;
 
 #[cfg(test)]
@@ -52,6 +53,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
         shadowed: &[],
     };
     let mut visitor = ExtractVisitor::new(ctx.file, ctx.source, config);
+    visitor.wrapper_threads = wrapper_thread::collect(program, ctx.jsx_hosts);
     visitor.visit_program(program);
     ctx.wants.extend(visitor.wants);
     ctx.recipes.extend(visitor.recipes);

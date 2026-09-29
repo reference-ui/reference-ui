@@ -24,7 +24,7 @@ use crate::extract::fold::{merge_spread, spread_base_name, MergeSpread};
 use crate::extract::ExtractContext;
 use canon::{is_condition_prop, is_known_style_prop};
 
-use names::{format_jsx_attribute_name, format_jsx_element_name};
+pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name};
 
 mod names;
 
@@ -42,7 +42,9 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div mt="2r" css={{ color: 'red' }} r={{ md: { p: '1r' } }} />
     let tag_name = format_jsx_element_name(&opening.name);
     if !ctx.allows_jsx_tag(&tag_name) {
-        report_dropped_tag(opening, &tag_name, ctx);
+        if !extract_threaded_wrapper(opening, &tag_name, ctx) {
+            report_dropped_tag(opening, &tag_name, ctx);
+        }
         return;
     }
     let origin = Some(tag_name.as_str());
@@ -65,6 +67,45 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
                 );
             }
         }
+    }
+}
+
+/// Lower a threaded wrapper's direct `css` value as if written on the
+/// host. True when the tag threads (handled, even with no `css` attr);
+/// only the threaded prop walks — every sibling is the wrapper's own.
+fn extract_threaded_wrapper(
+    opening: &JSXOpeningElement<'_>,
+    tag_name: &str,
+    ctx: &mut ExtractContext<'_>,
+) -> bool {
+    // <Rows members={list} css={shared} /> — only css={...} lowers.
+    if !ctx.threads_css(tag_name) {
+        return false;
+    }
+    let origin = Some(tag_name);
+    for item in &opening.attributes {
+        lower_threaded_item(item, origin, ctx);
+    }
+    true
+}
+
+/// Lower one wrapper attribute: a direct `css={...}` walks as a style
+/// block; every other attribute and spread is the wrapper's own.
+fn lower_threaded_item(
+    item: &JSXAttributeItem<'_>,
+    origin: Option<&str>,
+    ctx: &mut ExtractContext<'_>,
+) {
+    let JSXAttributeItem::Attribute(attr) = item else {
+        // Spread bags on a wrapper are the wrapper's own props,
+        // never style positions — only direct css={...} threads.
+        return;
+    };
+    if format_jsx_attribute_name(&attr.name) != "css" {
+        return;
+    }
+    if let Some(val) = &attr.value {
+        handle_attribute_value("css", val, origin, ctx);
     }
 }
 

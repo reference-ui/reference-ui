@@ -26,6 +26,7 @@ use super::bindings::{self, ExtractBindings};
 use super::expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
+use super::wrapper_thread::WrapperThreads;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{BindingInit, BindingKind, Lookup, ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 
@@ -62,6 +63,7 @@ pub struct ExtractContext<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub wrapper_threads: Option<&'a WrapperThreads>,
     pub shadowed: &'a [FxHashSet<String>],
     pub recipe_binding: Option<&'a str>,
     pub recipe_binding_span: Option<Span>,
@@ -94,6 +96,7 @@ impl<'a> ExtractContext<'a> {
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
             owned_props: config.owned_props,
+            wrapper_threads: None,
             shadowed: config.shadowed,
             recipe_binding: None,
             recipe_binding_span: None,
@@ -175,6 +178,12 @@ impl<'a> ExtractContext<'a> {
                 .owned_props
                 .get(&tag.replace('.', ""))
                 .is_some_and(|owned| owned.contains(name))
+    }
+
+    /// True when the tag threads `css` into a host (inner rebinds veto).
+    pub fn threads_css(&self, tag: &str) -> bool {
+        !bindings::is_inner_shadowed(self.shadowed, tag)
+            && self.wrapper_threads.is_some_and(|t| t.threads_css(tag))
     }
 
     /// Report a diagnostic warning at the offending node's span.

@@ -30,6 +30,7 @@ use super::css;
 use super::harvest;
 use super::jsx;
 use super::jsx_hosts::JsxHosts;
+use super::wrapper_thread::WrapperThreads;
 use super::recipes;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{ScopeChain, ScopeId, ROOT_SCOPE};
@@ -43,6 +44,7 @@ pub struct ExtractVisitor<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub wrapper_threads: WrapperThreads,
     pub shadows: Vec<FxHashSet<String>>,
     pub scope_stack: Vec<ScopeId>,
     next_scope: ScopeId,
@@ -70,6 +72,7 @@ impl<'a> ExtractVisitor<'a> {
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
             owned_props: config.owned_props,
+            wrapper_threads: WrapperThreads::default(),
             shadows: Vec::new(),
             scope_stack: Vec::new(),
             next_scope: ROOT_SCOPE,
@@ -203,6 +206,7 @@ fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractCo
         tentative: &mut visitor.tentative,
     };
     let mut ctx = ExtractContext::new(visitor.file, visitor.source, config, sinks);
+    ctx.wrapper_threads = Some(&visitor.wrapper_threads);
     ctx.recipe_binding = binding;
     ctx.recipe_binding_span = binding_span;
     ctx.default_recipe_export = default_export;

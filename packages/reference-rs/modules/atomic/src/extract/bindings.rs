@@ -193,6 +193,12 @@ pub(crate) fn is_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
     shadowed.iter().any(|scope| scope.contains(name))
 }
 
+/// True when a scope deeper than the file top rebinds the name. The top
+/// scope holds a wrapper's own definition, so only deeper scopes veto.
+pub(crate) fn is_inner_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
+    shadowed.iter().skip(1).any(|scope| scope.contains(name))
+}
+
 fn record_import(bindings: &mut ExtractBindings, decl: &ImportDeclaration<'_>) {
     if decl.import_kind == ImportOrExportKind::Type {
         return;

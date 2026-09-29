@@ -14,6 +14,7 @@ mod responsive;
 mod selection;
 mod site_plan;
 mod staleness;
+mod wrapper_thread;
 
 use crate::{compile, CompileRequest, VirtualSource};
 
