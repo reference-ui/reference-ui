@@ -63,6 +63,13 @@ function sanitizeBoundNumber(value: number | undefined, fallback: number): numbe
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback
 }
 
+// Restore a document-locked inline property: remove when it was absent so
+// no empty declaration lingers for the next reader.
+function restoreInline(style: CSSStyleDeclaration, property: string, original: string): void {
+  if (original) style.setProperty(property, original)
+  else style.removeProperty(property)
+}
+
 function toSolverConstraints(
   panels: RegisteredPanel[],
   measured: ReadonlyMap<string, MeasuredEntry>
@@ -1197,11 +1204,18 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
           handleEl.ownerDocument ?? (typeof document !== 'undefined' ? document : undefined)
         const ownerWindow =
           ownerDoc?.defaultView ?? (typeof window !== 'undefined' ? window : undefined)
-        const originalUserSelect = ownerDoc?.body?.style.userSelect ?? ''
-        const originalCursor = ownerDoc?.body?.style.cursor ?? ''
-        if (ownerDoc?.body) {
-          ownerDoc.body.style.userSelect = 'none'
-          ownerDoc.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize'
+        const bodyStyle = ownerDoc?.body?.style
+        const originalUserSelect = bodyStyle?.getPropertyValue('user-select') ?? ''
+        const originalWebkitUserSelect = bodyStyle?.getPropertyValue('-webkit-user-select') ?? ''
+        const originalCursor = bodyStyle?.getPropertyValue('cursor') ?? ''
+        if (bodyStyle) {
+          // setProperty, not the userSelect IDL: WebKit has no userSelect
+          // IDL (assignment is a dead expando, selection leaks), and
+          // ignores unprefixed user-select entirely — the -webkit- property
+          // carries the lock there. Both restore below.
+          bodyStyle.setProperty('user-select', 'none')
+          bodyStyle.setProperty('-webkit-user-select', 'none')
+          bodyStyle.setProperty('cursor', isHorizontal ? 'col-resize' : 'row-resize')
         }
 
         setIsResizing(true)
@@ -1265,9 +1279,10 @@ export const Splitter = React.forwardRef<HTMLDivElement, SplitterProps>(
             }
           } catch {}
 
-          if (ownerDoc?.body) {
-            ownerDoc.body.style.userSelect = originalUserSelect
-            ownerDoc.body.style.cursor = originalCursor
+          if (bodyStyle) {
+            restoreInline(bodyStyle, 'user-select', originalUserSelect)
+            restoreInline(bodyStyle, '-webkit-user-select', originalWebkitUserSelect)
+            restoreInline(bodyStyle, 'cursor', originalCursor)
           }
 
           containerEl.removeAttribute('data-resizing')

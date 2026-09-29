@@ -336,7 +336,7 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     await page.mouse.move(moved.x, moved.y)
     await page.mouse.down()
     await page.mouse.move(moved.x + 80, moved.y, { steps: 4 })
-    await page.mouse.move(640, 690)
+    await page.mouse.move(640, 470)
     await page.mouse.up()
 
     await expect(page.getByTestId('change-end-count')).toHaveText('2')
@@ -463,7 +463,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.mouse.move(2, center.y, { steps: 4 })
     await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 20% / 80%')
     // Across the body to beyond the right edge: clamps at the maximum.
-    await page.mouse.move(1270, center.y, { steps: 8 })
+    await page.mouse.move(798, center.y, { steps: 8 })
     await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 60% / 40%')
     await page.mouse.up()
 
@@ -614,7 +614,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.mouse.move(center.x, center.y)
     await page.mouse.down()
     const during = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(during.userSelect).toBe('none')
@@ -625,7 +625,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.mouse.up()
 
     const after = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
       selection: window.getSelection()?.toString() ?? '',
     }))
@@ -644,7 +644,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.mouse.move(center.x, center.y)
     await page.mouse.down()
     await page.mouse.move(center.x + 40, center.y, { steps: 4 })
-    await page.mouse.move(640, 690)
+    await page.mouse.move(640, 470)
     await page.mouse.up()
 
     await expect(page.getByTestId('change-end-count')).toHaveText('1')
@@ -656,7 +656,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await expect(page.getByTestId('constrained-panel-0')).not.toHaveAttribute('data-resizing', '')
     await expect(page.getByTestId('constrained-panel-1')).not.toHaveAttribute('data-resizing', '')
     const styles = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(styles.userSelect).toBe('')
@@ -687,7 +687,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
         resizing: document
           .querySelector('[data-testid="test-splitter-constrained"]')
           ?.hasAttribute('data-resizing'),
-        userSelect: document.body.style.userSelect,
+        userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
         cursor: document.body.style.cursor,
       }))
 
@@ -710,8 +710,10 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await expect(page.getByTestId('change-end-count')).toHaveText('0')
     await expect(page.getByTestId('constrained-value-display')).toHaveText('Layout: 50% / 50%')
 
-    // (ii) Lost capture aborts the same way. The browser dispatches
-    // lostpointercapture asynchronously, so wait for the hook to clear.
+    // (ii) Lost capture aborts the same way. Only Chromium fires
+    // lostpointercapture for an explicit releasePointerCapture (FF/WebKit
+    // stay silent; implicit release fires everywhere), so the browser
+    // signal itself is dispatched: Splitter's abort path is what's held.
     await recordNextPointerId(page, 'constrained-handle-0')
     const b = await handleCenter(page, 'constrained-handle-0')
     await page.mouse.move(b.x, b.y)
@@ -719,7 +721,13 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await page.mouse.move(b.x + 20, b.y, { steps: 2 })
     await page.evaluate(async () => {
       const el = document.querySelector('[data-testid="constrained-handle-0"]') as HTMLElement
-      el.releasePointerCapture((window as unknown as { __spId: number }).__spId)
+      el.dispatchEvent(
+        new PointerEvent('lostpointercapture', {
+          pointerId: (window as unknown as { __spId: number }).__spId,
+          bubbles: false,
+          cancelable: false,
+        })
+      )
     })
     await expect(page.getByTestId('test-splitter-constrained')).not.toHaveAttribute(
       'data-resizing',
@@ -767,7 +775,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
         resizing: document
           .querySelector('[data-testid="test-splitter-lifecycle"]')
           ?.hasAttribute('data-resizing'),
-        userSelect: document.body.style.userSelect,
+        userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
         cursor: document.body.style.cursor,
       }))
 
@@ -826,7 +834,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     )
     await expect(page.getByTestId('lifecycle-unmounted')).toBeVisible()
     const afterUnmount = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(afterUnmount).toEqual({ userSelect: '', cursor: '' })
@@ -972,7 +980,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
     await expect(page.getByTestId('change-end-count')).toHaveText('1')
     await expect(page.getByTestId('change-count')).toHaveText(changes)
     const styles = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(styles).toEqual({ userSelect: '', cursor: '' })
@@ -1616,7 +1624,7 @@ test.describe('Splitter FEATURES #9: strict structural errors', () => {
     await expect(page.locator('[role="separator"]')).toHaveCount(0)
     await expect(page.locator('[data-resizing]')).toHaveCount(0)
     const styles = await page.evaluate(() => ({
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(styles).toEqual({ userSelect: '', cursor: '' })
@@ -1904,10 +1912,10 @@ test.describe('Splitter FEATURES #3/#8: measured constraints over the Panel-axis
     const at = await handleCenter(page, 'measured-v-handle-0')
     await page.mouse.move(at.x, at.y)
     await page.mouse.down()
-    await page.mouse.move(at.x, at.y + 120, { steps: 6 })
+    await page.mouse.move(at.x, at.y + 60, { steps: 6 })
     const during = await page.evaluate(() => ({
       cursor: document.body.style.cursor,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
     }))
     expect(during).toEqual({ cursor: 'row-resize', userSelect: 'none' })
     await page.mouse.up()
@@ -2093,7 +2101,7 @@ test.describe('Splitter FEATURES #6: collapse memory and dynamic panels', () => 
     await expect(page.locator('[data-testid="splitter-dynamic-root"] [role="separator"]')).toHaveCount(0)
     const failed = await page.evaluate(() => ({
       resizing: document.querySelectorAll('[data-resizing]').length,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       cursor: document.body.style.cursor,
     }))
     expect(failed).toEqual({ resizing: 0, userSelect: '', cursor: '' })
@@ -2357,14 +2365,21 @@ test.describe('Splitter FEATURES #5: pointer-session frame budget', () => {
       },
       { pointerId, center }
     )
-    expect(seen).toMatchObject({ panel0: '52.531%', panel1: '47.469%', root1: '52.531%' })
+    // Thousandths differ per engine (Chromium keeps a fractional real-mouse
+    // origin; FF/WebKit round it to whole px against the same float
+    // synthetic move): the contract is the synchronous write, held ±0.05.
+    expect(parseFloat(seen.panel0 ?? '')).toBeCloseTo(52.531, 1)
+    expect(parseFloat(seen.panel1 ?? '')).toBeCloseTo(47.469, 1)
+    expect(parseFloat(seen.root1 ?? '')).toBeCloseTo(52.531, 1)
     expect(seen.display).toContain('Layout: 40% / 60%')
 
     // Lift where the gesture finished: release re-solves at the lift point,
     // so lifting at the untouched origin would end at [40,60].
     await page.mouse.move(center.x + 50, center.y)
     await page.mouse.up()
-    await expect(page.getByTestId('delayed-ends')).toHaveText('52.531,47.469')
+    const ends = (await page.getByTestId('delayed-ends').innerText()).split(',').map(Number)
+    expect(ends[0]).toBeCloseTo(52.531, 1)
+    expect(ends[1]).toBeCloseTo(47.469, 1)
   })
 
   test('SP-PERF-05: No requestAnimationFrame polling while idle or to produce drag frames', async ({
@@ -2493,7 +2508,7 @@ test.describe('Splitter FEATURES #5: pointer-session frame budget', () => {
       outer: document.querySelector('[data-testid="nested-outer"]')?.hasAttribute('data-resizing'),
       sibling: document.querySelector('[data-testid="nested-sibling"]')?.hasAttribute('data-resizing'),
       cursor: document.body.style.cursor,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
     }))
     expect(during).toEqual({
       inner: true,
@@ -2508,7 +2523,7 @@ test.describe('Splitter FEATURES #5: pointer-session frame budget', () => {
     const after = await page.evaluate(() => ({
       resizing: document.querySelectorAll('[data-resizing]').length,
       cursor: document.body.style.cursor,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
     }))
     expect(after).toEqual({ resizing: 0, cursor: '', userSelect: '' })
     await page.evaluate(() => {
@@ -2756,7 +2771,7 @@ test.describe('Splitter controlled sessions and compositions', () => {
     const clean = await page.evaluate(() => ({
       resizing: document.querySelectorAll('[data-resizing]').length,
       cursor: document.body.style.cursor,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
     }))
     expect(clean).toEqual({ resizing: 0, cursor: '', userSelect: '' })
   })
@@ -3284,7 +3299,7 @@ test.describe('Splitter FINISH-LINE P2F tails', () => {
       group: document.querySelector('[data-testid="test-splitter-strict"]'),
       resizing: document.querySelectorAll('[data-resizing]').length,
       cursor: document.body.style.cursor,
-      userSelect: document.body.style.userSelect,
+      userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
     }))
     expect(cleared.group).toBeNull()
     expect(cleared.resizing).toBe(0)
@@ -3345,7 +3360,7 @@ test.describe('Splitter FINISH-LINE P2F tails', () => {
         lightResizing: document.querySelectorAll('[data-resizing]').length,
         shadowResizing: host.shadowRoot!.querySelectorAll('[data-resizing]').length,
         cursor: document.body.style.cursor,
-        userSelect: document.body.style.userSelect,
+        userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
       }
     })
     expect(clean).toMatchObject({
@@ -3401,7 +3416,7 @@ test.describe('Splitter FINISH-LINE P2F tails', () => {
         focused: document.activeElement === handleEl,
         resizing: document.querySelectorAll('[data-resizing]').length,
         cursor: document.body.style.cursor,
-        userSelect: document.body.style.userSelect,
+        userSelect: (document.body.style.getPropertyValue('user-select') || document.body.style.getPropertyValue('-webkit-user-select')),
         panelVar: panel0.style.getPropertyValue('--reference-splitter-panel-size'),
         root1: root.style.getPropertyValue('--reference-splitter-1'),
         now: handleEl.getAttribute('aria-valuenow'),
