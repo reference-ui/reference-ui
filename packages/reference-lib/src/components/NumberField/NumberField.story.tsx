@@ -215,7 +215,8 @@ export const SnapFixture = () => {
   )
 }
 
-// W-02: validate commit — off-step and out-of-range attempts revert and log.
+// NFLAST ruling (b): validate commit — invalid attempts are retained and
+// reported (advisory log); the named field exposes canonical hidden state.
 export const ValidateFixture = () => {
   const [value, setValue] = React.useState<number | null>(5)
   const [invalidLog, setInvalidLog] = React.useState<string[]>([])
@@ -228,6 +229,7 @@ export const ValidateFixture = () => {
             data-testid="validate-field"
             value={value}
             locale="en-US"
+            name="qty"
             commitBehavior="validate"
             onChange={setValue}
             onInvalidCommit={(attempted, reason) =>
@@ -421,6 +423,14 @@ export const CommitLabFixture = () => {
         <button type="button" data-testid="commit-lab-echo-on" onClick={() => setEcho(true)}>
           Echo on
         </button>
+        <button
+          type="button"
+          data-testid="commit-lab-set-99"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setValue(99)}
+        >
+          Set 99
+        </button>
         <button type="button" data-testid="commit-lab-outside">
           Outside
         </button>
@@ -435,6 +445,50 @@ export const CommitLabFixture = () => {
         </Span>
         <Span fontSize="3r" color="design.text.light" data-testid="commit-lab-submits">
           submits: {submits}
+        </Span>
+      </Div>
+    </ReferenceLibrary>
+  )
+}
+
+// NFLAST-2 composition lab (NF-EDIT-12): ar-EG reset fixture mirroring
+// the commit lab, proving localized-digit composition finals parse.
+export const CompositionFixture = () => {
+  const [value, setValue] = React.useState<number | null>(5)
+  const [log, setLog] = React.useState<string[]>([])
+
+  return (
+    <ReferenceLibrary>
+      <Div p="4r" maxW="80r">
+        <form data-testid="composition-form">
+          <NumberField
+            data-testid="composition-field"
+            value={value}
+            locale="ar-EG"
+            name="qty"
+            onChange={v => {
+              setLog(entries => [...entries, String(v)])
+              setValue(v)
+            }}
+          >
+            <NumberField.Group>
+              <NumberField.Decrement aria-label="Decrement" />
+              <NumberField.Input aria-label="Quantity" data-testid="composition-input" />
+              <NumberField.Increment aria-label="Increment" />
+            </NumberField.Group>
+          </NumberField>
+          <button type="reset" data-testid="composition-reset">
+            Reset
+          </button>
+        </form>
+        <button type="button" data-testid="composition-outside">
+          Outside
+        </button>
+        <Span fontSize="3r" color="design.text.light" data-testid="composition-display">
+          Value: {value !== null ? value : 'None'}
+        </Span>
+        <Span fontSize="3r" color="design.text.light" data-testid="composition-log">
+          log: {log.length > 0 ? log.join(',') : 'none'}
         </Span>
       </Div>
     </ReferenceLibrary>
@@ -498,6 +552,14 @@ export const FormatSwapFixture = () => {
           onClick={() => setOpts({ notation: 'scientific' })}
         >
           To scientific
+        </button>
+        <button
+          type="button"
+          data-testid="format-swap-nu-arab"
+          onMouseDown={keepFocus}
+          onClick={() => setOpts({ ...opts, numberingSystem: 'arab' })}
+        >
+          To arab digits
         </button>
         <Span fontSize="3r" color="design.text.light" data-testid="format-swap-display">
           Value: {value !== null ? value : 'None'}

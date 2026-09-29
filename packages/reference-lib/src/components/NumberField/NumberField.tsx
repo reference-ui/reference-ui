@@ -42,40 +42,42 @@ function roundToStepPrecision(value: number, step: number): number {
   return roundedValue
 }
 
-// W-02 snap: React Spectrum's snapValueToStep with one deliberate change —
-// midpoint ties go round-half-up (toward +Infinity) per the signed-off W-02
-// acceptance; upstream moves ties by Math.sign(remainder). Lattice anchoring
-// (finite min, else 0) and the lattice-clamped maximum are upstream-verbatim,
-// which differs from TESTS.md's zero-anchored freeze with preserved non-grid
-// endpoints (flagged for HQ in the mission log).
+// NFLAST ruling (a): the TESTS.md freeze lattice, replacing the signed-off
+// W-02 RAC math (min-anchored, half-up ties, lattice-clamped max) — re-pinned
+// pre-release-cheap per root DECISIONS.md §3. Zero-anchored nearest lattice
+// with away-from-zero midpoint ties; exact/exceeded non-grid bounds are
+// preserved as endpoints. Order: endpoint-preservation → nearest-lattice →
+// authored rounding (the caller applies displayRoundTrip) → final clamp
+// (also the caller, NF-MATH-12).
 function snapValueToLattice(value: number, min: number | undefined, max: number | undefined, step: number): number {
-  const anchor = min === undefined ? 0 : min
+  // Endpoint preservation (NF-MATH-10/11): an exact or exceeded bound is
+  // returned as-is, never snapped to the lattice.
+  if (min !== undefined && value <= min) return min
+  if (max !== undefined && value >= max) return max
   // cleanFloat stabilizes float-quotient ties (0.075/0.05 reads
-  // 1.4999999999999998) before the half-up decision.
-  const snappedQuotient = Math.floor(cleanFloat((value - anchor) / step) + 0.5)
-  let snappedValue = roundToStepPrecision(anchor + snappedQuotient * step, step)
-
-  if (min !== undefined) {
-    if (snappedValue < min) {
-      snappedValue = min
-    } else if (max !== undefined && snappedValue > max) {
-      snappedValue = min + Math.floor(roundToStepPrecision((max - min) / step, step)) * step
-    }
-  } else if (max !== undefined && snappedValue > max) {
-    snappedValue = Math.floor(roundToStepPrecision(max / step, step)) * step
-  }
-
-  return roundToStepPrecision(snappedValue, step)
+  // 1.4999999999999998) before the tie decision.
+  const quotient = cleanFloat(value / step)
+  const snappedQuotient = quotient >= 0 ? Math.floor(quotient + 0.5) : Math.ceil(quotient - 0.5)
+  return roundToStepPrecision(snappedQuotient * step, step)
 }
 
-function isOnStepLattice(
-  value: number,
-  min: number | undefined,
-  max: number | undefined,
-  step: number
-): boolean {
-  const snapped = snapValueToLattice(value, min, max, step)
+// Pure zero-lattice membership (NF-MATH-15): off-grid supplied endpoints are
+// NOT on-lattice here — the snap branch of ownedInvalid grants them the
+// endpoint exception, while validate reports them step-invalid.
+function isOnStepLattice(value: number, step: number): boolean {
+  const snapped = snapValueToLattice(value, undefined, undefined, step)
   return roundToStepPrecision(snapped - value, step) === 0
+}
+
+// Directional lattice stepping (NF-MATH-04/06, freeze decision 6): the next
+// lattice point strictly in `direction`, then (factor - 1) further lattice
+// steps — Shift+Arrow ≡ 10× Arrow, so off-grid Shift lands where ten single
+// steps would (least-surprise interpolation, flagged in DECISIONS.md).
+// cleanFloat keeps the strictness exact at float-quotient edges (0.3/0.1).
+function stepLatticeInDirection(base: number, direction: 1 | -1, step: number, factor: number): number {
+  const quotient = cleanFloat(base / step)
+  const edge = direction > 0 ? Math.floor(quotient) + 1 : Math.ceil(quotient) - 1
+  return roundToStepPrecision((edge + direction * (factor - 1)) * step, step)
 }
 
 // Shallow format-options equality ported from React Spectrum's
@@ -99,65 +101,353 @@ function isEqualFormatOptions(
 interface DraftNumberSymbols {
   group: string | null
   decimal: string
+  // Ten positional glyphs for the resolved numbering system, index = value
+  // (NF-PARSE-02/15). Derived from formatToParts, never tabled.
+  digits: string
+  // Active-locale signs from formatToParts (NF-PARSE-03): fi-FI exposes
+  // U+2212 minus while en-US exposes ASCII hyphen-minus.
+  minus: string
+  plus: string
+  // Group pattern from a 10-digit probe (NF-PARSE-17): units = rightmost
+  // group size, middle = every inner group size and the head maximum.
+  // Western 3-3-3 gives {3,3}; en-IN/hi-IN 3-2-2 gives {3,2}.
+  groupSizes: { units: number; middle: number }
+  // Configured affixes in locale order (NF-PARSE-08/10/18): exact
+  // currency/unit/percent-sign spellings from formatToParts probes across
+  // plural values, longest-first. Foreign affixes never appear here.
+  affixPrefix: string[]
+  affixSuffix: string[]
+  // Accounting-currency parens rule (NF-PARSE-12).
+  accounting: boolean
+  // Localized exponent separator with active digits normalized to ASCII
+  // (NF-PARSE-11): "E" most places, "أس" in ar, "×10^" in fa.
+  exponentSeparator: string
 }
 
-function draftNumberSymbols(locale: string): DraftNumberSymbols {
+// Hanidec positional glyphs 0-9 (NF-PARSE-02): CJK ideographs are \p{Lo},
+// not \p{Nd}, so foreign-digit detection names them explicitly.
+const HANIDEC_DIGITS = '〇一二三四五六七八九'
+
+function draftDigits(locale: string, numberingSystem?: string): string {
+  const formatter = new Intl.NumberFormat(locale, numberingSystem ? { numberingSystem } : undefined)
+  const resolved = formatter.resolvedOptions()
+  // NF-PARSE-16: Intl silently drops unusable nu requests (roman → latn),
+  // which would be a fallback editor — refuse it explicitly. An explicit
+  // numberingSystem option wins over the locale tag, per Intl semantics.
+  const localeNu = /-u(?:-[a-z0-9]{2,8})*-nu-([a-z0-9]{3,8})/i.exec(locale)?.[1]?.toLowerCase()
+  const requestedNu = numberingSystem ?? localeNu
+  if (requestedNu && resolved.numberingSystem !== requestedNu) {
+    throw new Error(
+      `Reference UI: NumberField "locale" requests numbering system "${requestedNu}" but Intl resolves "${resolved.numberingSystem}" — "${locale}" is not editable.`
+    )
+  }
+  let digits = ''
+  for (let value = 0; value <= 9; value += 1) {
+    const integer = formatter.formatToParts(value).find(part => part.type === 'integer')?.value ?? ''
+    // NF-PARSE-16: algorithmic or non-invertible systems fail before
+    // accepting edits — no fallback editor, no silent ASCII.
+    if (Array.from(integer).length !== 1 || digits.includes(integer)) {
+      throw new Error(
+        `Reference UI: NumberField "locale" resolves to a numbering system without ten stable positional digits — "${locale}" is not editable.`
+      )
+    }
+    digits += integer
+  }
+  return digits
+}
+
+function draftNumberSymbols(locale: string, formatOptions?: Intl.NumberFormatOptions): DraftNumberSymbols {
   const parts = new Intl.NumberFormat(locale).formatToParts(1234567.89)
+  const numberingSystem = formatOptions?.numberingSystem
+  const formatter = new Intl.NumberFormat(locale, numberingSystem ? { numberingSystem } : undefined)
+  const display = new Intl.NumberFormat(locale, formatOptions)
+  const resolvedDisplay = display.resolvedOptions()
+  const affixes = draftAffixes(display, resolvedDisplay.style)
+  const digits = draftDigits(locale, numberingSystem)
+  const rawSeparator =
+    new Intl.NumberFormat(locale, { notation: 'scientific' })
+      .formatToParts(12345)
+      .find(part => part.type === 'exponentSeparator')?.value ?? 'E'
   return {
     group: parts.find(part => part.type === 'group')?.value ?? null,
     decimal: parts.find(part => part.type === 'decimal')?.value ?? '.',
+    digits,
+    minus:
+      formatter.formatToParts(-1).find(part => part.type === 'minusSign')?.value ?? '-',
+    plus:
+      new Intl.NumberFormat(locale, { signDisplay: 'exceptZero' })
+        .formatToParts(1)
+        .find(part => part.type === 'plusSign')?.value ?? '+',
+    groupSizes: draftGroupSizes(locale),
+    affixPrefix: affixes.prefix,
+    affixSuffix: affixes.suffix,
+    accounting: resolvedDisplay.style === 'currency' && resolvedDisplay.currencySign === 'accounting',
+    exponentSeparator: normalizeDraftDigits(rawSeparator, digits) ?? 'E',
   }
 }
 
-// Leading/trailing runs stripped before the numeric core is validated:
-// whitespace (incl. NBSP group variants), currency symbols, percent marks,
-// and formatter-inserted bidi controls. Interior junk stays and fails.
-const DRAFT_STRIP_RUN = /^[\s\p{Sc}%\u2030\u200E\u200F\u061C]+|[\s\p{Sc}%\u2030\u200E\u200F\u061C]+$/gu
-const DRAFT_EXPONENT_SUFFIX = /[eE][+-]?\d+$/
+// Values exposing every plural affix category (NF-PARSE-18): singular,
+// dual, few, many, plus grouped magnitudes. Liters (unit "liter") vary
+// more; currency names inflect in fr/ru/ar.
+const DRAFT_AFFIX_PROBE_VALUES = [0, 1, 2, 3, 5, 11, 100, 1234.5]
+
+// Permille marks (NF-PARSE-09): Intl never emits them, but percent style
+// scales U+2030 (and the Arabic-indic U+0609) by 1/1000 per React Aria.
+const DRAFT_PERMILLE_MARKS = ['\u2030', '\u0609']
+
+function draftAffixes(
+  display: Intl.NumberFormat,
+  style: string | undefined
+): { prefix: string[]; suffix: string[] } {
+  const prefix = new Set<string>()
+  const suffix = new Set<string>()
+  if (style === 'decimal') return { prefix: [], suffix: [] }
+  for (const value of DRAFT_AFFIX_PROBE_VALUES) {
+    const parts = display.formatToParts(value)
+    const firstNumeric = parts.findIndex(
+      part => part.type === 'integer' || part.type === 'decimal' || part.type === 'fraction'
+    )
+    parts.forEach((part, index) => {
+      if (part.type !== 'currency' && part.type !== 'unit' && part.type !== 'percentSign') return
+      if (firstNumeric === -1 || index < firstNumeric) prefix.add(part.value)
+      else suffix.add(part.value)
+    })
+  }
+  if (style === 'percent') {
+    for (const mark of DRAFT_PERMILLE_MARKS) suffix.add(mark)
+  }
+  const longestFirst = (a: string, b: string) => b.length - a.length
+  return {
+    prefix: Array.from(prefix).sort(longestFirst),
+    suffix: Array.from(suffix).sort(longestFirst),
+  }
+}
+
+function draftGroupSizes(locale: string): { units: number; middle: number } {
+  const segments: string[] = ['']
+  for (const part of new Intl.NumberFormat(locale).formatToParts(1234567890)) {
+    if (part.type === 'group') segments.push('')
+    else if (part.type === 'integer') segments[segments.length - 1] += part.value
+  }
+  // A 10-digit probe always groups in supported locales; fall back to
+  // western 3-3 if a locale ever renders it ungrouped.
+  if (segments.length < 3) return { units: 3, middle: 3 }
+  return {
+    units: Array.from(segments[segments.length - 1]).length,
+    middle: Array.from(segments[segments.length - 2]).length,
+  }
+}
+
+// Documented width variants (NF-PARSE-03, DECISIONS.md): fullwidth and
+// small-form signs parse globally. Figure/en/em dashes are sign-like
+// punctuation, never signs — they die at Number(), never normalize.
+const DRAFT_PLUS_VARIANTS = ['＋', '﹢']
+const DRAFT_MINUS_VARIANTS = ['－', '﹣']
+
+// Digit normalization (NF-PARSE-02/15): ASCII always parses; active-system
+// glyphs map to their positional value; any other decimal digit — a second
+// non-ASCII script or inactive-locale digits — rejects the whole text.
+function normalizeDraftDigits(text: string, digits: string): string | null {
+  let normalized = ''
+  for (const char of text) {
+    if (char >= '0' && char <= '9') {
+      normalized += char
+      continue
+    }
+    // ASCII was claimed above, so any active-set hit here is non-ASCII.
+    const active = digits.indexOf(char)
+    if (active >= 0) {
+      normalized += String(active)
+      continue
+    }
+    if (HANIDEC_DIGITS.includes(char) || /\p{Nd}/u.test(char)) return null
+    normalized += char
+  }
+  return normalized
+}
+
+// Formatter-inserted bidi controls (NF-PARSE-13): LRM/RLM/ALM appear at
+// edges AND embedded (ar negatives, he-IL currency), so they are removed
+// globally before parsing. Every other invisible (ZWSP/ZWNJ/ZWJ, word
+// joiner, controls) stays literal and dies at Number(). Currency/percent/
+// unit marks are NOT stripped: only configured affixes parse
+// (NF-PARSE-08/09/10); foreign marks stay literal and die at Number().
+const DRAFT_BIDI_GLOBAL = /[\u200E\u200F\u061C]/gu
 const DRAFT_ASCII_DIGITS = /^[0-9]+$/
 
-function isValidGroupHead(segments: string[]): boolean {
-  // Strict 3-digit grouping only (en-IN 3-2-2 stays NF-PARSE-17): every
-  // group separator must sit between valid digit runs, so foreign
-  // punctuation ("2.5" under de-DE) is rejected, never reinterpreted.
-  if (segments.length === 1) return true
-  if (!DRAFT_ASCII_DIGITS.test(segments[0]) || segments[0].length > 3) return false
-  for (let index = 1; index < segments.length; index += 1) {
-    if (!/^[0-9]{3}$/.test(segments[index])) return false
+// Localized exponent extraction (NF-PARSE-11): the active separator wins,
+// ASCII e/E always parse. The exponent takes one sign from the full
+// NF-PARSE-03 set plus ASCII digits (already normalized); anything else
+// leaves the separator in the core, where Number() rejects it.
+function stripDraftExponent(
+  core: string,
+  symbols: DraftNumberSymbols
+): { head: string; exponent: string } | null {
+  const separators = [symbols.exponentSeparator, 'e', 'E'].filter(
+    (candidate, index, all) => candidate !== '' && all.indexOf(candidate) === index
+  )
+  const signs = [
+    symbols.plus,
+    symbols.minus,
+    ...DRAFT_PLUS_VARIANTS,
+    ...DRAFT_MINUS_VARIANTS,
+    '+',
+    '-',
+  ]
+    .filter((candidate, index, all) => candidate !== '' && all.indexOf(candidate) === index)
+    .sort((a, b) => b.length - a.length)
+  for (const separator of separators) {
+    const index = core.lastIndexOf(separator)
+    if (index <= 0) continue
+    let rest = core.slice(index + separator.length)
+    let sign = ''
+    const signMatch = signs.find(candidate => rest.startsWith(candidate))
+    if (signMatch !== undefined) {
+      const isPlus =
+        signMatch === '+' ||
+        signMatch === symbols.plus ||
+        DRAFT_PLUS_VARIANTS.includes(signMatch)
+      sign = isPlus ? '+' : '-'
+      rest = rest.slice(signMatch.length)
+    }
+    if (!DRAFT_ASCII_DIGITS.test(rest)) continue
+    return { head: core.slice(0, index), exponent: `e${sign}${rest}` }
   }
-  return true
+  return null
 }
 
-// W-25 commit parser: ASCII digits with locale group/decimal normalization,
-// a single leading sign, and an optional ASCII exponent. Percent style
-// scales the result (1/100, 1/1000 for permille) per React Aria's parser.
-// Returns NaN for anything else: foreign punctuation placement, hex-able
-// prefixes are still honored via Number(), currency codes, unit names,
-// non-ASCII digits, accounting parens, or nonfinite results.
-function parseDraftNumber(text: string, symbols: DraftNumberSymbols, percentStyle: boolean): number {
-  const stripped = text.trim().replace(DRAFT_STRIP_RUN, '')
-  if (stripped === '') return NaN
-  // Percent marks are grammar only in percent style; elsewhere the affix
-  // strip already removed them, so their presence in the raw text rejects.
-  const affix = text.trim().replace(stripped, '')
-  const hasPercent = affix.includes('%')
-  const hasPermille = affix.includes('\u2030')
-  if ((hasPercent || hasPermille) && !percentStyle) return NaN
+function isValidGroupHead(segments: string[], sizes: { units: number; middle: number }): boolean {
+  // Locale-pattern grouping (NF-PARSE-05/17): the head holds 1..middle
+  // digits, inner groups exactly middle, the units group exactly units.
+  // Foreign punctuation ("2.5" under de-DE) and cross-pattern groups
+  // ("1,234,567" under en-IN) are rejected, never reinterpreted.
+  if (segments.length === 1) return true
+  if (!DRAFT_ASCII_DIGITS.test(segments[0]) || segments[0].length > sizes.middle) return false
+  for (let index = 1; index < segments.length - 1; index += 1) {
+    if (!DRAFT_ASCII_DIGITS.test(segments[index]) || segments[index].length !== sizes.middle) {
+      return false
+    }
+  }
+  const units = segments[segments.length - 1]
+  return DRAFT_ASCII_DIGITS.test(units) && units.length === sizes.units
+}
 
-  let core = stripped
+// W-25 commit parser: ASCII + active-numbering-system digits (NF-PARSE-02),
+// configured currency/unit/percent affixes in locale order (NF-PARSE-08),
+// locale group/decimal normalization, a single leading sign, and an
+// optional ASCII exponent. Percent style scales the result (1/100, 1/1000
+// for permille) per React Aria's parser. Returns NaN for anything else:
+// foreign digits/affixes/punctuation, hex-able prefixes are still honored
+// via Number(), or nonfinite results.
+function stripDraftAffix(core: string, affixes: string[], atStart: boolean): string | null {
+  const match = affixes.find(affix => (atStart ? core.startsWith(affix) : core.endsWith(affix)))
+  if (match === undefined) return null
+  return atStart ? core.slice(match.length) : core.slice(0, core.length - match.length)
+}
+
+function startsWithDraftSign(core: string, symbols: DraftNumberSymbols): boolean {
+  if (core.startsWith('+') || core.startsWith('-')) return true
+  if (symbols.plus !== '+' && core.startsWith(symbols.plus)) return true
+  if (symbols.minus !== '-' && core.startsWith(symbols.minus)) return true
+  return (
+    DRAFT_PLUS_VARIANTS.some(variant => core.startsWith(variant)) ||
+    DRAFT_MINUS_VARIANTS.some(variant => core.startsWith(variant))
+  )
+}
+
+function parseDraftNumber(
+  text: string,
+  symbols: DraftNumberSymbols,
+  percentStyle: boolean,
+  options?: { allowOrphanHead?: boolean }
+): number {
+  // NF-PARSE-13: formatter bidi controls vanish everywhere first.
+  const clean = text.replace(DRAFT_BIDI_GLOBAL, '')
+  // NF-PARSE-06: arbitrary leading whitespace rejects (whitespace-only
+  // text never reaches the parser — the empty path claims it first).
+  if (clean.trim() !== '' && /^\s/.test(clean)) return NaN
+  const stripped = clean.trim()
+  if (stripped === '') return NaN
+  // NF-PARSE-12: accounting parens mean exactly one minus, and only in
+  // accounting currency — unsigned paren-free inside, or the whole text
+  // rejects (never silent sign-stripping, never double negation).
+  if (symbols.accounting && stripped.startsWith('(') && stripped.endsWith(')') && stripped.length > 2) {
+    const inner = stripped.slice(1, stripped.length - 1)
+    if (inner.includes('(') || inner.includes(')') || startsWithDraftSign(inner, symbols)) return NaN
+    const innerParsed = parseDraftNumber(inner, symbols, percentStyle)
+    return Number.isNaN(innerParsed) ? NaN : -innerParsed
+  }
+  // Configured affixes strip before signs (NF-PARSE-08/10): one suffix,
+  // one prefix, then — only past a consumed sign — one more prefix, so
+  // "-$5" and "$-5" both parse while "$$5" and "++5" still reject.
+  let affixed = stripped
+  const removed: string[] = []
+  const suffixStripped = stripDraftAffix(affixed, symbols.affixSuffix, false)
+  if (suffixStripped !== null) {
+    removed.push(affixed.slice(suffixStripped.length))
+    affixed = suffixStripped
+  }
+  const prefixStripped = stripDraftAffix(affixed, symbols.affixPrefix, true)
+  if (prefixStripped !== null) {
+    removed.push(affixed.slice(0, affixed.length - prefixStripped.length))
+    affixed = prefixStripped
+  }
+
+  // NF-PARSE-03: one leading sign — ASCII, the active-locale sign, or a
+  // documented width variant. Anything else sign-like stays literal and
+  // dies at Number() (never normalized globally).
+  let core = affixed
   let sign = ''
+  const leadingVariant = (variants: string[]) => variants.find(variant => core.startsWith(variant))
   if (core.startsWith('+') || core.startsWith('-')) {
     sign = core.slice(0, 1)
     core = core.slice(1)
+  } else if (symbols.plus !== '+' && core.startsWith(symbols.plus)) {
+    sign = '+'
+    core = core.slice(symbols.plus.length)
+  } else if (symbols.minus !== '-' && core.startsWith(symbols.minus)) {
+    sign = '-'
+    core = core.slice(symbols.minus.length)
+  } else {
+    const plusVariant = leadingVariant(DRAFT_PLUS_VARIANTS)
+    const minusVariant = plusVariant === undefined ? leadingVariant(DRAFT_MINUS_VARIANTS) : undefined
+    if (plusVariant !== undefined) {
+      sign = '+'
+      core = core.slice(plusVariant.length)
+    } else if (minusVariant !== undefined) {
+      sign = '-'
+      core = core.slice(minusVariant.length)
+    }
   }
+  if (sign !== '') {
+    const innerPrefix = stripDraftAffix(core, symbols.affixPrefix, true)
+    if (innerPrefix !== null) {
+      removed.push(core.slice(0, core.length - innerPrefix.length))
+      core = innerPrefix
+    }
+  }
+  const digitNormalized = normalizeDraftDigits(core.trim(), symbols.digits)
+  if (digitNormalized === null) return NaN
+  core = digitNormalized
   let exponent = ''
-  const exponentMatch = core.match(DRAFT_EXPONENT_SUFFIX)
-  if (exponentMatch) {
-    exponent = exponentMatch[0]
-    core = core.slice(0, core.length - exponent.length)
+  const exponentStripped = stripDraftExponent(core, symbols)
+  if (exponentStripped !== null) {
+    exponent = exponentStripped.exponent
+    core = exponentStripped.head
   }
-  // A second sign outside the exponent is never valid ("++5", "5-3").
+  // A second sign outside the exponent is never valid ("++5", "5-3") —
+  // duplicates and embedded signs reject, never discard (NF-PARSE-03).
   if (core.includes('+') || core.includes('-')) return NaN
+  const embeddedSigns = [
+    symbols.plus,
+    symbols.minus,
+    ...DRAFT_PLUS_VARIANTS,
+    ...DRAFT_MINUS_VARIANTS,
+  ]
+  const hasEmbeddedSign = embeddedSigns.some(
+    candidate => candidate !== '+' && candidate !== '-' && core.includes(candidate)
+  )
+  if (hasEmbeddedSign) return NaN
 
   let head = core
   let tail: string | null = null
@@ -178,10 +468,22 @@ function parseDraftNumber(text: string, symbols: DraftNumberSymbols, percentStyl
   if (symbols.group !== null && /^\s$/.test(symbols.group)) {
     head = head.replace(/[\u0020\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, symbols.group)
   }
+  // Apostrophe-group locales (de-CH) accept the typographic right quote
+  // as the keyboard straight quote (NF-PARSE-06) — same rationale.
+  if (symbols.group === "'") {
+    head = head.replace(/’/g, "'")
+  }
+  // NF-EDIT-15: a single leading orphan group separator (first-digit
+  // deletion: ",024") is discarded at commit when the remainder is
+  // unambiguous. Live parsing stays strict, so the orphan partial never
+  // publishes mid-edit.
+  if (options?.allowOrphanHead === true && symbols.group !== null && head.startsWith(symbols.group)) {
+    head = head.slice(symbols.group.length)
+  }
   let headDigits = head
   if (symbols.group !== null && head.includes(symbols.group)) {
     const segments = head.split(symbols.group)
-    if (!isValidGroupHead(segments)) return NaN
+    if (!isValidGroupHead(segments, symbols.groupSizes)) return NaN
     headDigits = segments.join('')
   }
   if (headDigits === '' && (tail === null || tail === '') && exponent === '') return NaN
@@ -189,6 +491,7 @@ function parseDraftNumber(text: string, symbols: DraftNumberSymbols, percentStyl
   const parsed = Number(normalized)
   if (!Number.isFinite(parsed)) return NaN
   if (!percentStyle) return parsed
+  const hasPermille = removed.some(mark => DRAFT_PERMILLE_MARKS.includes(mark))
   return hasPermille ? parsed / 1000 : parsed / 100
 }
 
@@ -244,9 +547,10 @@ interface NumberFieldContextValue {
   // Stable Input identity: explicit Input id wins, else a pinned useId.
   // Steppers read the same value for aria-controls (same-commit retarget).
   inputId: string
-  // B-19: transient edit buffer; null means clean (input shows formatted
-  // controlled value). Typing only writes the draft — commit boundaries
-  // (blur, Enter, step actions) publish, never mid-keystroke.
+  // Transient edit buffer (B-19 dirty session + NFLAST ruling (c)
+  // live-request); null means clean (input shows formatted controlled
+  // value). Typing stages the verbatim draft and requests newly parseable
+  // meanings live; commit boundaries (blur, Enter, step actions) flush.
   draft: string | null
   // Complete dirty candidate (parseable, clamped once) or null; steppers
   // and keys use it as their base, falling back to controlled value.
@@ -256,6 +560,8 @@ interface NumberFieldContextValue {
   increment: (factor?: number) => void
   decrement: (factor?: number) => void
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  handleCompositionStart: () => void
+  handleCompositionEnd: () => void
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
   commitDraft: () => void
   inputRef: React.RefObject<HTMLInputElement | null>
@@ -474,6 +780,8 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       style,
       onKeyDown: userOnKeyDown,
       onChange: userOnChange,
+      onCompositionStart: userOnCompositionStart,
+      onCompositionEnd: userOnCompositionEnd,
       onFocus: userOnFocus,
       onBlur: userOnBlur,
       autoComplete: authoredAutoComplete,
@@ -509,6 +817,8 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       inputId,
       draft,
       handleInputChange,
+      handleCompositionStart,
+      handleCompositionEnd,
       handleKeyDown,
       commitDraft,
       inputRef,
@@ -628,6 +938,17 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
       }
     }
 
+    // NF-EDIT-11: consumer composition observers run first; the managed
+    // session flag always tracks the native session (no veto exists).
+    const onCompositionStart = (e: React.CompositionEvent<HTMLInputElement>) => {
+      userOnCompositionStart?.(e)
+      handleCompositionStart()
+    }
+    const onCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+      userOnCompositionEnd?.(e)
+      handleCompositionEnd()
+    }
+
     // A vetoed blur keeps the dirty session and its selection while
     // unfocused (NF-COMMIT-10); refocus restores the exact selection.
     const vetoedSelectionRef = React.useRef<{ start: number; end: number } | null>(null)
@@ -686,6 +1007,8 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
         data-empty={empty ? '' : undefined}
         data-editing={draft !== null ? '' : undefined}
         onChange={onChange}
+        onCompositionStart={onCompositionStart}
+        onCompositionEnd={onCompositionEnd}
         onKeyDown={onKeyDown}
         onFocus={onFocus}
         onBlur={onBlur}
@@ -1556,9 +1879,38 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       [formatter]
     )
     const notation = React.useMemo(() => formatter.resolvedOptions().notation, [formatter])
+    // NF-PARSE-16: compact notation and hidden-sign display fail before
+    // accepting edits — the editor cannot round-trip abbreviated or
+    // signless output, so no fallback editor is offered.
+    const resolvedFormat = formatter.resolvedOptions()
+    if (resolvedFormat.notation === 'compact') {
+      throw new Error(
+        'Reference UI: NumberField "formatOptions" with compact notation is not editable — abbreviated output has no invertible grammar.'
+      )
+    }
+    if (resolvedFormat.signDisplay === 'never') {
+      throw new Error(
+        'Reference UI: NumberField "formatOptions" with signDisplay "never" is not editable — negatives have no written form.'
+      )
+    }
+    // The numberingSystem option falls back silently too (roman → latn) —
+    // a refused request is a fallback editor, so it fails like the locale.
+    if (
+      formatOptions?.numberingSystem &&
+      resolvedFormat.numberingSystem !== formatOptions.numberingSystem
+    ) {
+      throw new Error(
+        `Reference UI: NumberField "formatOptions" requests numbering system "${formatOptions.numberingSystem}" but Intl resolves "${resolvedFormat.numberingSystem}" — this field is not editable.`
+      )
+    }
     // Parse symbols come from a default-grouping formatter so a grouped
-    // paste still parses under useGrouping:false (NF-PARSE-07 direction).
-    const symbols = React.useMemo(() => draftNumberSymbols(locale), [locale])
+    // paste still parses under useGrouping:false (NF-PARSE-07 direction) —
+    // but with the display formatter's resolved numbering system, so the
+    // parser accepts exactly the digits the field renders (NF-PARSE-02).
+    const symbols = React.useMemo(
+      () => draftNumberSymbols(locale, formatOptions),
+      [locale, formatOptions]
+    )
 
     // W-25: percent fields step hundredths by default (React Aria parity);
     // every other style keeps the historic step 1.
@@ -1574,13 +1926,18 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     const inputRef = React.useRef<HTMLInputElement | null>(null)
     const hiddenRef = React.useRef<HTMLInputElement | null>(null)
 
-    // B-19: the dirty edit session. Typing writes the draft only; the
-    // controlled value is published at commit boundaries (blur, Enter, or a
-    // handled step action) — never mid-keystroke, so bounded decimals like
-    // "2.5" survive the "." keystroke instead of clamping to the max.
+    // The dirty edit session (B-19 verbatim draft + NFLAST ruling (c)
+    // live-request). Typing stages the draft verbatim so bounded decimals
+    // like "2.5" survive the "." keystroke instead of clamping to the max;
+    // newly parseable meanings are requested live (raw); commit boundaries
+    // (blur, Enter, handled steps) flush whatever differs from control.
     const [draft, setDraft] = React.useState<string | null>(null)
     const draftRef = React.useRef<string | null>(null)
     draftRef.current = draft
+    // Controlled-value mirror for listeners/effects whose dependency lists
+    // must not resubscribe per value (reset sync below).
+    const valueRef = React.useRef<number | null>(value)
+    valueRef.current = value
 
     // Failed-boundary + pending-request submit blocking (NF-COMMIT-07,
     // NF-FORM-05/06/11/12). A failed boundary is set by invalid, incomplete,
@@ -1614,29 +1971,69 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       return formatter.format(Object.is(value, -0) ? 0 : value)
     }, [formatter, value])
 
-    // Any controlled-value change ends the session: commit echoes land on an
-    // already-clean draft (no-op), while unrelated programmatic changes
-    // replace the buffer with formatted controlled state. Either way an
-    // echo or authoritative change clears failed/pending boundaries: the
-    // accepted commit resolved, or the programmatic value superseded it.
+    // NFLAST ruling (c): the latest requested numeric meaning (live or
+    // commit). A controlled value change matching it is the latest echo —
+    // the dirty session survives with exact text/caret (NF-COMMIT-08);
+    // anything else is a stale echo or an unrelated replacement: the
+    // buffer is replaced from controlled state and the session ends with
+    // zero callback (NF-COMMIT-11, NF-DYNAMIC-01). Either way the change
+    // is authoritative and clears pending/failed transient state. The ref
+    // also dedupes live requests (NF-EDIT-03/05).
+    const lastLiveRef = React.useRef<number | null>(value)
+    // NF-EDIT-11: an open IME/synthetic composition suspends live publish
+    // (stepping/commit already suspend via isComposing in handleKeyDown).
+    // Staged text still buffers verbatim; the final event only ends the
+    // suspension — publish happens at the next input event or boundary.
+    const composingRef = React.useRef(false)
+    // NF-EDIT-12: pre-composition draft snapshot for invalid-final restore.
+    const compositionSnapshotRef = React.useRef<string | null>(null)
+    // NF-EDIT-17/18: an authoritative replacement during composition arms
+    // one swallow — the stale end/input fallout is ignored (and the DOM
+    // node is reverted to controlled text, since no state change follows).
+    const compositionFalloutRef = React.useRef(false)
+    const invalidateComposition = React.useCallback((displayLength: number) => {
+      if (!composingRef.current) return
+      composingRef.current = false
+      compositionSnapshotRef.current = null
+      compositionFalloutRef.current = true
+      const node = inputRef.current
+      if (node) {
+        try {
+          node.setSelectionRange(displayLength, displayLength)
+        } catch {
+          // ignore if not supported
+        }
+      }
+    }, [])
     React.useEffect(() => {
-      setDraft(null)
+      const echoed = value === lastLiveRef.current
+      lastLiveRef.current = value
       clearTransientFailures()
-    }, [value, clearTransientFailures])
+      if (!echoed) {
+        draftRef.current = null
+        setDraft(null)
+        invalidateComposition(displayValue.length)
+      }
+    }, [value, clearTransientFailures, invalidateComposition, displayValue])
 
     // W-25: an effective locale/format change replaces a dirty draft from
     // controlled state (React Aria parity); a referentially new but
     // effectively equal formatOptions object preserves the session.
     // Effective changes are authoritative and clear failed/pending too.
+    // The live-dedupe ref resets to control: dedupe is per-session, so a
+    // new session re-requests even a meaning the old session published.
     const prevFormatRef = React.useRef({ locale, formatOptions })
     React.useEffect(() => {
       const prev = prevFormatRef.current
       if (prev.locale !== locale || !isEqualFormatOptions(prev.formatOptions, formatOptions)) {
         prevFormatRef.current = { locale, formatOptions }
+        lastLiveRef.current = value
+        draftRef.current = null
         setDraft(null)
         clearTransientFailures()
+        invalidateComposition(displayValue.length)
       }
-    }, [locale, formatOptions, clearTransientFailures])
+    }, [locale, formatOptions, clearTransientFailures, value, invalidateComposition, displayValue])
 
     // Authoritative constraint changes revalidate and clear failed/pending
     // (NF-COMMIT-07, NF-DYNAMIC-03): the new bounds/step/policy supersede
@@ -1651,9 +2048,10 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         prev.commitBehavior !== commitBehavior
       ) {
         prevConstraintsRef.current = { min, max, step, commitBehavior }
+        lastLiveRef.current = value
         clearTransientFailures()
       }
-    }, [min, max, step, commitBehavior, clearTransientFailures])
+    }, [min, max, step, commitBehavior, clearTransientFailures, value])
 
     const focusInput = React.useCallback(() => {
       if (inputRef.current) {
@@ -1717,14 +2115,14 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       if (latticeMin !== undefined && value < latticeMin) return true
       if (latticeMax !== undefined && value > latticeMax) return true
       if (commitBehavior === 'validate') {
-        return !isOnStepLattice(value, latticeMin, latticeMax, step)
+        return !isOnStepLattice(value, step)
       }
       // Snap: an exact supplied endpoint is step-valid by endpoint
       // exception even off lattice; the explicitly rounded image of a
       // lattice point is valid too, so the required post-snap rounding
       // order cannot make a successful snap commit immediately invalid.
       if (value === latticeMin || value === latticeMax) return false
-      if (isOnStepLattice(value, latticeMin, latticeMax, step)) return false
+      if (isOnStepLattice(value, step)) return false
       return displayRoundTrip(snapValueToLattice(value, latticeMin, latticeMax, step)) !== value
     }, [value, commitBehavior, latticeMin, latticeMax, step, displayRoundTrip])
 
@@ -1752,41 +2150,122 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     const increment = React.useCallback(
       (factor = 1) => {
         if (disabled || readOnly) return
-        const current = stepBase ?? value ?? 0
-        const nextVal = Math.min(max, cleanFloat(current + step * factor))
         // Step actions are commit boundaries: the session ends even when
         // the step itself is suppressed (FEATURES #2: no change → no event).
         setDraft(null)
+        // Per-session live dedupe resets to control with the session end.
+        lastLiveRef.current = value
+        const base = stepBase ?? value
+        // First step from null selects the in-range value nearest zero
+        // (NF-MATH-05) — no additional step, so the factor is ignored.
+        if (base === null) {
+          requestValue(Math.min(max, Math.max(min, 0)))
+          return
+        }
+        // Directional lattice step, clamped to the exact endpoint
+        // (NF-MATH-04/06): off-grid bases move strictly in-direction.
+        const nextVal = cleanFloat(Math.min(max, stepLatticeInDirection(base, 1, step, factor)))
         if (nextVal === value) return
         requestValue(nextVal)
       },
-      [value, max, step, stepBase, disabled, readOnly, requestValue]
+      [value, min, max, step, stepBase, disabled, readOnly, requestValue]
     )
 
     const decrement = React.useCallback(
       (factor = 1) => {
         if (disabled || readOnly) return
-        const current = stepBase ?? value ?? 0
-        const nextVal = Math.max(min, cleanFloat(current - step * factor))
         // Step actions are commit boundaries: the session ends even when
         // the step itself is suppressed (FEATURES #2: no change → no event).
         setDraft(null)
+        // Per-session live dedupe resets to control with the session end.
+        lastLiveRef.current = value
+        const base = stepBase ?? value
+        // First step from null selects the in-range value nearest zero
+        // (NF-MATH-05) — no additional step, so the factor is ignored.
+        if (base === null) {
+          requestValue(Math.min(max, Math.max(min, 0)))
+          return
+        }
+        // Directional lattice step, clamped to the exact endpoint
+        // (NF-MATH-04/06): off-grid bases move strictly in-direction.
+        const nextVal = cleanFloat(Math.max(min, stepLatticeInDirection(base, -1, step, factor)))
         if (nextVal === value) return
         requestValue(nextVal)
       },
-      [value, min, step, stepBase, disabled, readOnly, requestValue]
+      [value, min, max, step, stepBase, disabled, readOnly, requestValue]
     )
 
     const handleInputChange = React.useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Typing never publishes: the draft holds partial input ("2.", "-",
-        // "") verbatim until a commit boundary. A new user edit supersedes
-        // any retained failed/pending boundary (NF-COMMIT-07).
+        // NF-EDIT-17/18: one swallow for stale composition fallout after
+        // an authoritative replacement — the DOM node reverts to
+        // controlled text, since no state change (and no callback) follows.
+        if (compositionFalloutRef.current && !composingRef.current) {
+          compositionFalloutRef.current = false
+          const controlled = draftRef.current ?? displayValue
+          if (e.target.value !== controlled) {
+            e.target.value = controlled
+          }
+          return
+        }
+        // A new user edit supersedes any retained failed/pending boundary
+        // (NF-COMMIT-07); the verbatim text stages the dirty session.
         clearTransientFailures()
-        setDraft(e.target.value)
+        const text = e.target.value
+        setDraft(text)
+        // NF-EDIT-11: mid-composition input stages the buffer verbatim but
+        // never publishes — not even a parseable final-looking string.
+        if (composingRef.current) return
+        // NFLAST ruling (c) live requests (NF-EDIT-03/04/05): a newly
+        // parseable meaning is requested immediately — raw, never
+        // clamped/snapped/rounded (those are commit-time, NF-COMMIT-05).
+        // Incomplete grammar stays silent; repeated meanings dedupe
+        // against both the controlled value and the latest request.
+        if (text.trim() === '') {
+          if (value !== null && lastLiveRef.current !== null) {
+            lastLiveRef.current = null
+            requestValue(null)
+          }
+          return
+        }
+        const parsed = parseDraftNumber(text, symbols, percentStyle)
+        if (Number.isNaN(parsed)) return
+        const canonical = Object.is(parsed, -0) ? 0 : parsed
+        if (canonical === value || canonical === lastLiveRef.current) return
+        lastLiveRef.current = canonical
+        requestValue(canonical)
       },
-      [clearTransientFailures]
+      [clearTransientFailures, value, symbols, percentStyle, requestValue, displayValue]
     )
+
+    // NF-EDIT-11 composition session: start suspends live publish, end
+    // only lifts the suspension — the staged buffer commits at the next
+    // boundary (synthetic final event carries no text of its own), while
+    // a real post-end input event publishes through the ordinary path
+    // with lastLiveRef dedupe guarding the double-publish.
+    const handleCompositionStart = React.useCallback(() => {
+      composingRef.current = true
+      // A fresh session supersedes any armed fallout swallow.
+      compositionFalloutRef.current = false
+      compositionSnapshotRef.current = draftRef.current
+    }, [])
+    const handleCompositionEnd = React.useCallback(() => {
+      composingRef.current = false
+      const snapshot = compositionSnapshotRef.current
+      compositionSnapshotRef.current = null
+      // NF-EDIT-12: a non-empty unparseable final result restores
+      // pre-composition text immediately (null snapshot = was clean).
+      // Valid finals and empties keep the staged buffer for the next
+      // boundary; empties commit null there.
+      const final = draftRef.current
+      if (
+        final !== null &&
+        final !== '' &&
+        Number.isNaN(parseDraftNumber(final, symbols, percentStyle))
+      ) {
+        setDraft(snapshot)
+      }
+    }, [symbols, percentStyle])
 
     // Commit outcome for submit handling: 'requested' means the parent has
     // not echoed yet (submit must wait for an explicit retry), 'failed'
@@ -1805,46 +2284,50 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         // pending/failed refs, so no submit behavior changes.
         setDraft(null)
         draftRef.current = null
+        // Per-session live dedupe: the session ends, so the next session
+        // re-requests from control even for a repeated meaning.
+        lastLiveRef.current = value
         if (text.trim() === '') {
           // FEATURES #2: clearing an already-empty field is no change.
           if (value === null) return 'noop'
           requestValue(null)
           return 'requested'
         }
-        const parsed = parseDraftNumber(text, symbols, percentStyle)
+        const parsed = parseDraftNumber(text, symbols, percentStyle, { allowOrphanHead: true })
         // Invalid/incomplete text reverts without a numeric substitute and
         // records a failed boundary (NF-COMMIT-03/07).
         if (Number.isNaN(parsed)) {
           setFailedBoundary(true)
           return 'failed'
         }
-        // W-02 validate: reject off-step and out-of-range commits — revert
-        // to controlled state, report the attempt, emit no onChange, and
-        // retain a failed boundary. Range wins when both apply.
+        // NFLAST ruling (b): validate retains and reports — request the
+        // rounded raw candidate as-is (never snap, never clamp); managed
+        // invalid state derives from the controlled value and blocks submit.
+        // onInvalidCommit is advisory: it fires after the onChange request
+        // when the committed candidate violates constraints, range-first.
+        // Violation is judged on the committed (rounded) candidate, so a
+        // rounding that lands valid stays silent.
         if (commitBehavior === 'validate') {
-          if (parsed < min || parsed > max) {
-            onInvalidCommit?.(parsed, 'out-of-range')
-            setFailedBoundary(true)
-            return 'failed'
-          }
-          if (!isOnStepLattice(parsed, latticeMin, latticeMax, step)) {
-            onInvalidCommit?.(parsed, 'off-step')
-            setFailedBoundary(true)
-            return 'failed'
-          }
           const accepted = displayRoundTrip(parsed)
           const canonical = Object.is(accepted, -0) ? 0 : accepted
           // FEATURES #2: committing the current value is no change.
           if (canonical === value) return 'noop'
           requestValue(canonical)
+          if (canonical < min || canonical > max) {
+            onInvalidCommit?.(canonical, 'out-of-range')
+          } else if (!isOnStepLattice(canonical, step)) {
+            onInvalidCommit?.(canonical, 'off-step')
+          }
           return 'requested'
         }
-        // W-02 snap: coerce to the lattice within bounds, then apply display
-        // precision — one request, never an invalid-commit report.
+        // NFLAST ruling (a) snap order (NF-MATH-12): endpoint-preservation
+        // or nearest lattice, then authored rounding, then final clamp — one
+        // request, never an invalid-commit report.
         if (commitBehavior === 'snap') {
           const snapped = snapValueToLattice(parsed, latticeMin, latticeMax, step)
           const accepted = displayRoundTrip(snapped)
-          const canonical = Object.is(accepted, -0) ? 0 : accepted
+          const clamped = Math.max(min, Math.min(max, accepted))
+          const canonical = Object.is(clamped, -0) ? 0 : clamped
           // FEATURES #2: committing the current value is no change.
           if (canonical === value) return 'noop'
           requestValue(canonical)
@@ -2059,6 +2542,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         firstResetSyncRef.current = false
         return
       }
+      // Per-session live dedupe resets to control with the reset session end.
+      lastLiveRef.current = valueRef.current
       const sync = postResetSyncRef.current
       const input = inputRef.current
       if (input) {
@@ -2094,6 +2579,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         increment,
         decrement,
         handleInputChange,
+        handleCompositionStart,
+        handleCompositionEnd,
         handleKeyDown,
         commitDraft,
         inputRef,
@@ -2117,6 +2604,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         increment,
         decrement,
         handleInputChange,
+        handleCompositionStart,
+        handleCompositionEnd,
         handleKeyDown,
         commitDraft,
         focusInput,

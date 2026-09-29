@@ -151,6 +151,149 @@ Full text now lives in PATCHES.md (mechanical, test-pinnable) and FEATURES.md
   rejected) — adapted at landing (P7): current unbounded sentinels kept;
   SPEC re-target note.
 
+## NFLAST engine rulings (HQ-delegated, 2026-09-28)
+
+HQ delegated the three open engine calls to the NFLAST mission (rule the
+obvious answers, least-surprise the rest). Root `DECISIONS.md` §3 shows HQ
+never ruled the six W-02 sub-items ("ruling after the write-up"), and
+WANTS.md W-02 signs off only the prop/policy level ("snap coerces to the
+nearest step", "validate rejects off-step values") — never the lattice
+anchor, tie direction, endpoint, retain, or publish-timing math. Each
+ruling below cites its evidence; flips re-pin tests + docs per the
+pre-release-cheap doctrine (root `DECISIONS.md` §3: "Anything flipped gets
+re-pinned (tests + docs, pre-release cheap)").
+
+### Ruling (a): snap lattice — ADOPT FREEZE (least-surprise: no flag, obvious)
+
+Zero-anchored lattice `k*step`; away-from-zero midpoint ties; exact and
+exceeded non-grid bounds preserved as endpoints; order
+endpoint-preservation → nearest-lattice → authored rounding → final clamp.
+
+- **Evidence:** TESTS.md freeze decision 7 ("Snap preserves exact/exceeded
+  non-grid bounds, otherwise snaps before ordinary clamp, uses
+  away-from-zero midpoint ties, applies explicit Intl rounding, then
+  final-clamps") plus `NF-MATH-03` (zero-anchored), `NF-MATH-09`
+  (away-from-zero), `NF-MATH-10`/`11` (endpoint preservation),
+  `NF-MATH-12` (order). SPEC.md "Gaps & incoherence" confirms the engine
+  (min-anchored, half-up, lattice-clamped max) contradicts the freeze.
+- **Why obvious:** nothing HQ-signed pins the RAC math — W-02 signs off
+  the policy, and the six sub-rulings were left open. Typing `max` must
+  commit to `max` (RAC's 10→9 clamp-down is the surprise); symmetric ties
+  are least-surprise (half-up is sign-asymmetric: -2.5→-2 but 2.5→3).
+- **Re-pin:** W-02 snap unit titles asserting min-anchor
+  (`NumberField.test.tsx` "lattice anchors at a finite min"), half-up
+  ties ("midpoint ties round half up"), and lattice-clamped max
+  ("out-of-range commits coerce to the lattice within bounds") are
+  rewritten to `NF-MATH-03`/`04`/`09`/`10`/`11`/`12` freeze titles.
+  Steppers/keys keep clamp-step-then-lattice behavior per freeze
+  decision 6 (`NF-MATH-04` directional stepping, `NF-MATH-06` endpoint
+  stability).
+
+### Ruling (b): validate mode — RETAIN-AND-REPORT (freeze; one least-surprise flag)
+
+Committing a finite underflow, overflow, or off-step candidate requests
+the rounded raw candidate via `onChange` (no snap, no clamp); the
+accepted text stays controlled; managed invalid state (bounds union
+step) reports each applicable constraint and blocks submit; native
+range/step flags stay false; no `setCustomValidity`.
+
+- **Evidence:** TESTS.md freeze decision 7 ("Validate mode never snaps or
+  clamps") plus `NF-MATH-13` (rounded raw candidate requested),
+  `NF-MATH-15` (endpoint/step-mismatch validity display — already proven
+  against controlled values), `NF-COMMIT-06`, `NF-FORM-05`,
+  `NF-COMP-04` ("accept off-step invalid value"). Prior art: native
+  `stepMismatch` (never coerces, blocks submit) and RAC
+  publish-and-mark-invalid (root `DECISIONS.md` §3 prior art).
+- **Why obvious:** the engine already computes owned invalid state for
+  retained controlled values (`NF-MATH-15` green) — reject-at-commit
+  makes that state reachable only programmatically, which is incoherent.
+  W-02's "validate rejects off-step values" (WANTS.md) is read as
+  rejects-as-valid (marks invalid, blocks submit): the value flows,
+  validity rejects. ⚠ LEAST-SURPRISE FLAG: that reading is ours, not
+  HQ-signed; if HQ meant revert, this ruling flips back cheaply.
+- **Re-pin:** W-02 validate unit titles ("revert with onInvalidCommit and
+  no onChange", "report out-of-range, winning over step", "rejection
+  without onInvalidCommit stays silent") are rewritten to
+  `NF-MATH-13`/`NF-COMMIT-06` retain titles.
+- **Least-surprise interpolation (flagged):** `onInvalidCommit` stays
+  (API shape untouchable) and becomes advisory — it fires alongside the
+  `onChange` request when a validate-mode commit violates constraints
+  (reason `out-of-range` wins over `off-step`, keeping today's
+  range-first order per root §3 item (iv)). The prop still means "an
+  invalid commit happened"; it adds reason metadata, never a second
+  numeric channel.
+
+### Ruling (c): publish timing — LIVE-REQUEST with dedupe (freeze; re-pins B-19)
+
+Newly parseable live edits request their numeric meaning immediately
+(raw parsed number — no clamp/snap/round until the commit boundary);
+repeated numeric meanings dedupe (one request per meaning); incomplete
+grammar (sign-only, trailing decimal, malformed groups) never publishes;
+accepted latest echoes preserve dirty text/caret until an explicit
+commit/revert; stale/unrelated replacements end the session with zero
+callback.
+
+- **Evidence:** `NF-EDIT-03` (ordered deduped numeric requests),
+  `NF-EDIT-04` (clearing requests null once),
+  `NF-EDIT-05` (dedupe across `1`/`1.`/`1.0`),
+  `NF-EDIT-14` (rejection authority — meaningless without live
+  requests), `NF-COMMIT-01`/`04` (commit retry while prop differs),
+  `NF-COMMIT-08` (accepted echoes preserve dirty text),
+  `NF-COMMIT-11` + `NF-DYNAMIC-01` (stale/unrelated replacement),
+  `NF-COMMIT-05` ("no intermediate clamp/snap/round callback" — live
+  callbacks are raw). `NF-KEY-06`/`NF-STEP-12` ("reject the live
+  request") are already proven with B-19-adapted titles.
+- **Why obvious:** B-19's root fix is the verbatim dirty draft (no
+  mid-keystroke coerce) — preserved by the session architecture, not by
+  commit-only publishing. Only the "never mid-keystroke" clauses in the
+  pinned B-19 titles are over-broad and get re-pinned. Controlled
+  text-input parity (publish parseable meanings like any `onChange`) is
+  least-surprise; rejection authority exists only with live requests.
+- **Re-pin:** B-19 unit titles ("publish once at commit, never
+  mid-keystroke", "clamp happens at commit, not while typing") and the
+  CT B-19 titles keep their repro cores (bounded "2.5" typeable verbatim
+  through "2.", final 2.5) with intermediate live requests (`[2, 2.5]`)
+  instead of silence.
+- **Least-surprise interpolation (flagged):** live requests carry the
+  raw parsed number unclamped/unsnapped (commit policy is
+  commit-time-only) — inferred from `NF-COMMIT-05`'s "no intermediate
+  clamp/snap/round callback", not pinned verbatim by any freeze line.
+
+## NFLAST-2 Intl parser record (2026-09-28, SPEC'd, no HQ call needed)
+
+Declared supported matrix (NF-PARSE-15/16, NumberField.md restates the
+rule): a locale/formatOptions pair is editable iff (1) every requested
+numbering system resolves exactly (refused `-u-nu-` / `numberingSystem`
+requests throw — Intl's silent latn fallback would be a fallback
+editor), (2) the resolved system exposes ten distinct single-glyph
+positional digits via `formatToParts`, (3) notation is not compact, (4)
+`signDisplay` is not `never`. Refusals throw render-time errors naming
+the offending prop (`"locale"` / `"formatOptions"`), matching the
+NF-MATH-02 fail-fast precedent — "fail before accepting edits" means no
+markup and no callback, never a dev-only warning.
+
+Least-surprise interpolations (flagged for HQ): (i) an explicit
+`numberingSystem` option wins over a conflicting locale `-u-nu-` tag per
+Intl precedence, no diagnostic; (ii) "hidden-sign formats" reads as
+`signDisplay: "never"` only — `exceptZero` still writes negatives and
+stays editable; (iii) ASCII digits always parse alongside the one active
+set (NumberField.md-pinned); hanidec glyphs are named explicitly because
+CJK ideographs are `\p{Lo}`, not `\p{Nd}`; (iv) "documented width sign
+variants" reads as fullwidth U+FF0B/U+FF0D + small-form U+FE62/U+FE63,
+accepted globally — figure/en/em dashes stay sign-like punctuation and
+reject everywhere; (v) accounting parens wrap an unsigned paren-free
+core only (`(-$5)`, `((5))` reject — never double negation, never
+silent stripping); (vi) digit-less plural outputs (ar dual يومان)
+stay silent instead of inventing a number; (vii) U+0609 joins U+2030
+as a percent-style permille mark; (viii) orphan-group discard covers
+the pinned leading shape only (`,024`→24 at commit, live stays
+silent) — other orphans keep stable rejection; (ix) invalid
+composition finals restore pre-composition text at compositionend,
+but empty finals keep the buffer (commit null at the boundary);
+(x) composition fallout swallow is one input event — a genuinely new
+keystroke arriving first after an invalidated composition is consumed
+once (fresh compositionstart supersedes).
+
 ## Walkthrough notes for HQ
 
 - Most important: FEATURES.md §1 controlled-only + required locale — the
