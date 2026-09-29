@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'
 
 async function setDocumentHidden(page: Page, hidden: boolean) {
@@ -1353,6 +1354,20 @@ test.describe('Toast hardening', () => {
       expect(snapshotText).toContain('Session expired')
       expect(snapshotText).toContain('Modal')
     }
+
+    // Scanner half: the Harden mount holds all positions, an interactive
+    // toast, both announcers, and the open modal in one settled state;
+    // #root scoping covers it whole (the toast host renders in place,
+    // no portals). Narrowed past the app-authored custom-toast input:
+    // toast.custom() renders whatever the app passes, and the story's
+    // raw <input> carries no label or authored colors of its own —
+    // excluding that one node keeps label/contrast coverage on every
+    // component-owned node. Raw: `color-contrast [serious]` +
+    // `label [critical]`, both on input[data-testid="toast-input"] only.
+    await expectNoAxeViolations(page, {
+      include: '#root',
+      exclude: '[data-testid="toast-input"]',
+    })
   })
 })
 
