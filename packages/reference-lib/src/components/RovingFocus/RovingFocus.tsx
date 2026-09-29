@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { css, type PrimitiveProps } from '@reference-ui/react'
+import { getElementRef } from '../Presence/elementRef'
 import { findGridTarget, type GridCell } from './grid'
 import { TypeaheadModel, shouldIgnoreTypeaheadKey, type TypeaheadItem } from './typeahead'
 
@@ -251,11 +252,11 @@ function chainSlotRefs(...refs: unknown[]): (node: HTMLElement | null) => void {
   }
 }
 
-// Pre-19 React strips ref from props into element.ref; 19 exposes both. Read
-// element.ref first so child refs survive on every runtime (Menu's 17/18
-// workaround documents the old drop).
+// Pre-19 React strips ref from props into element.ref; 19 exposes both.
+// Descriptor-only read (B-03): touching element.ref trips React 19's
+// removed-accessor warning, so child refs survive via the shared helper.
 function getChildRef(child: React.ReactElement): unknown {
-  return (child as { ref?: unknown }).ref ?? (child.props as AnyProps | undefined)?.ref
+  return getElementRef(child)
 }
 
 function concatDescribedBy(childValue: unknown, partValue: unknown): string | undefined {

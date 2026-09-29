@@ -409,11 +409,17 @@ export function Tabs({
   }, [])
 
   // Mounted List count (TB-DOM-13): exactly one List per Tabs; zero or
-  // two-plus is a dev diagnostic, never a crash.
+  // two-plus is a dev diagnostic, never a crash. The ref mirrors the
+  // state synchronously: passive effects of the mount commit flush before
+  // subscription setStates re-render, so the state still reads 0 when the
+  // diagnostic first runs — the ref reads the settled value.
   const [listCount, setListCount] = React.useState(0)
+  const listCountRef = React.useRef(0)
   const registerList = React.useCallback(() => {
+    listCountRef.current += 1
     setListCount(count => count + 1)
     return () => {
+      listCountRef.current = Math.max(0, listCountRef.current - 1)
       setListCount(count => Math.max(0, count - 1))
     }
   }, [])
@@ -542,13 +548,14 @@ export function Tabs({
     const tabs = Array.from(tabEntries.current.keys())
     const panels = Array.from(panelEntries.current.keys())
     if (tabs.length === 0 && panels.length === 0) return
-    if (listCount === 0) {
+    const liveListCount = listCountRef.current
+    if (liveListCount === 0) {
       warnTabs(
         'renders Tab/Panel parts with no Tabs.List. Render exactly one Tabs.List so keyboard movement and the tab stop exist.'
       )
-    } else if (listCount > 1) {
+    } else if (liveListCount > 1) {
       warnTabs(
-        `renders ${listCount} Tabs.List parts. Render exactly one List per Tabs.`
+        `renders ${liveListCount} Tabs.List parts. Render exactly one List per Tabs.`
       )
     }
     const panelSet = new Set(panels)
@@ -806,9 +813,12 @@ export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
     const orientation = context?.orientation ?? 'horizontal'
     const variant = variantProp ?? context?.variant ?? 'line'
 
-    // List subscription for the TB-DOM-13 one-List diagnostic.
+    // List subscription for the TB-DOM-13 one-List diagnostic. Layout
+    // timing, like Tab/Panel registration: a passive subscription settles
+    // after the parent's passive diagnostic reads the count, false-firing
+    // the no-List error on every correct mount.
     const registerList = context?.registerList
-    React.useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
       if (!registerList) return
       return registerList()
     }, [registerList])
