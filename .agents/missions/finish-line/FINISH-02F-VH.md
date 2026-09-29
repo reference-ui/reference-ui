@@ -1,0 +1,41 @@
+CLOSED — FINISH-02F-VH fix crew (Overlay/ + Toast/ vehicle adoptions + leftovers; Announcer/ F30 per claim rule). Box: 90 min hard. Branch reference-system.
+
+Scope: vehicle adoptions Overlay F54/F55×2 + Toast F18/F19/F20; order-dep F57/F58; F22 tiebreak; OV-EDGE-06; OV-HND-02; OV-DOM-01 evidence prep; F30 conditional (SIBLING CLAIMED — skipped, see T+45).
+Vehicle: `CT_REACT=<major> CT_PORT=3117/3118 pnpm agent playwright --dir packages/reference-lib --config=/tmp/sweep-ct.config.ts <spec> --project=react<major>-<firefox|webkit> --ignore-snapshots` + `pnpm agentct <Comp>`. Ports CLOSED at start → fresh boots; S2: 3117 GALLERY_RUNTIME=17.0.2, 3118=18.3.1 (probes green). Tree at start: only sibling Slider.ct.spec.ts modified (their lane, untouched).
+
+## Run log (15-min cadence, quoted proof)
+
+### T+25 — VEHICLE ADOPTIONS ALL GREEN ×2 (6/6). Pre-edit iso repro: OV F54+F55×2 `3 failed (2 passed)` both WK majors; TO F18/19/20 `3 failed (0 passed)` both WK majors (logs /tmp/finish02f-vh-ov-focus-{17,18}wk.txt, -to-focus-{17,18}wk.txt). Mechanism checks before editing: Toast opener recorded on document focusin outside host (ToastSystem.tsx:941-945) → .focus() records it; OV Tab-bridge handler keys on `e.key==='Tab'` with NO modifier guard (Content.tsx:130) → pressTab's Alt+Tab fires it. Spec-only edits (2 files: Overlay.ct.spec.ts import + F54/F55 sites; Toast.ct.spec.ts import + F18/19/20 sites). Post-edit: OV r17WK `5 passed` ×2 + r18WK `5 passed` ×2; TO r17WK `3 passed` ×2 + r18WK `3 passed` ×2 (logs -ov-adopt-{17,18}wk{-r2}.txt, -to-adopt-{17,18}wk{-r2}.txt). No ring asserts in path → no focus-visible Alt+Tab hold triggered.
+
+### T+40 — F57/F58/F22 FULL-SUITE ROUND. Full Toast r18FF `6 failed (54 passed)`: F58 TIME-05 GREEN, F22 RIVAL-RICH GREEN; reds = HOTKEY-01, DISMISSIBLE-01, RIVAL-ACTION, RIVAL-FOCUS, QUEUE-01/08 (all `toBeVisible element(s) not found`, no-show-under-load) + owned ENV-03. All 5 iso-green on re-run (ACTION needed 2nd run; first iso red one-off) → contention transients with sibling SL crew, none absorbed (logs -to-full-18ff.txt, -to-iso18-*.txt). F22 TIEBREAK DECIDED: P1 red → P2 settle-green → TO-crew iso-green ×2 → this full-green = flaky-scope, not genuine. Full Toast r17FF `2 failed (58 passed)`: F57 DOM-05 GREEN; reds TIME-04 + TIME-14 (same no-show signature, both iso-green → contention). F57/F58 both full-green post-TO-swipe-fix (pre-fix full-red ×2 each): order-dep NOT reproduced; mount fixture does page.goto per test (fresh context — cross-test page-state leak impossible), so the TO lost-up fix is the candidate healer for F58's lingering-toast signature. Scoped to test-owner with repro + confirm-ask (second quiet full ×2); no bisectable repro in-box.
+
+### T+45 — F30 SKIPPED (sibling claimed). SL log 13:45 UTC: "F30 UNCLAIMED, taking it" + temp Announcer zz-adiag spec in tree → per claim rule, Announcer/ untouched.
+
+### T+55 — OV-EDGE-06 FIXED (r19 Chromium, finalScrollY 0 vs 200). r19 gate pre-fix `118 passed | 2 failed` (DOM-01 + EDGE-06, zero new reds from my spec edits). Iso repro r19 `1 failed`, Received 0. Temp zz-diag telemetry (deleted after): applyLock re-pin scrollTo(0,200) → clamped y=0 (position:fixed collapses scroll range — inherent to the iOS trick, visuals held by top:-200); restore scrollTo(0,200) DID run with right args but GLIDED (y=14,50,105,…,200 over ~300ms) — book reset CSS `html:focus-within{scroll-behavior:smooth}` (focus is within during the test) makes programmatic scrollTo animate; the test's sync read sees 0. Root cause proven: scroll-lock inherits page smooth-scroll. Fix (scroll-lock.ts, 3 lines): `behavior:'instant'` on applyLock re-pin + onViewport re-pin + useFixed restore — contract-restoring (a gliding background defeats the lock on ANY smooth page), zero change on instant pages. Post-fix: EDGE-06 iso `1 passed` ×2; full `pnpm agentct Overlay` `119 passed | 1 failed` (only DOM-01) + Unit 34/34. Logs -edge06-iso/diag/fixed{-r2}.txt, -ov-r19{b}.txt.
+
+### T+70 — HND-02 SCOPED, DOM-01 EVIDENCE, GATES GREEN. HND-02 iso: r17WK RED (`toBeVisible element(s) not found` — dismissed instead of snap-back), r18WK GREEN (flip-flop vs OV crew's red → boundary-marginal both majors). Root cause proven in code, test-side: `sampleVelocity` (gesture/index.ts) measures last-≤5 pointermove spacing; the test's 100ms pre-release pause adds no samples, so it cannot zero the velocity. Recipe 20px/25 steps on WK (~1ms/step dispatch) = ~0.8px/ms physical fling > 0.4 Vaul threshold → product contract-correctly dismisses (F23 twin: same WK pacing finding). Product must not weaken the documented velocity contract → SCOPED to test-owner (physically-slow recipe: inter-step waits). Repro: `-g "OV-HND-02" --project=react17-webkit` + CT_REACT=17 CT_PORT=3117. DOM-01 evidence: snapshot `dialog-basic-open.png`, 8269px/0.03 + telemetry bbox x:0..799 y:465..479 (bottom 15px strip), expected #7b7b7b → actual #060607; expected/actual/diff paths + PNGs preserved at /tmp/finish02f-vh-dom01-{actual,diff}.png (test-results copies are wipe-volatile). NO --update-snapshots, NO PNG copies into __snapshots__. Toast r19 gate: `pnpm agentct Toast` `60 passed | 0 failed` + Unit 52/52. NOTE: my targeted DOM-01 regen run wiped test-results incl. sibling SL's Announcer zz-adiag dir (runner wipes outputDir at start — learned mid-box); their temp spec is re-runnable in seconds; DOM-01 PNGs preserved to /tmp before the Toast gate wiped them again. No stray PNGs in tree at close (checked); diag spec deleted.
+
+## Per-item dispositions
+
+| ID | Verdict | Rationale + proof |
+|---|---|---|
+| F54 OV-FOCUS-03 (r17+r18 WK) | FIXED | F14 `.focus()` vehicle after inside-click; trap-reclaim contract unchanged. Green ×2 both majors. |
+| F55 OV-TRG-05 ×2 (r17+r18 WK) | FIXED | F14 `.focus()` after trigger-click (was failing at :2984 pre-bridge) + `pressTab` ×3 (bridge keys on `e.key==='Tab'`, no modifier guard). Green ×2 both majors. |
+| F18 TO-FOCUS-01, F19 TO-FOCUS-02 (r17+r18 WK) | FIXED | F14 vehicle; opener recorded on document focusin outside host → restore works. Green ×2 both majors. |
+| F20 TO-OV-03 (r17+r18 WK) | FIXED | F14 vehicle on btn-away; non-modal reachability contract still asserted. Green ×2 both majors. |
+| F57 TO-DOM-05 (r17FF order-dep) | SCOPED | Full-green post-TO-fix (was full-red ×2); no repro to bisect; fresh-context mount rules out page-state leak. Test-owner: quiet full ×2 confirm. |
+| F58 TO-TIME-05 (r18FF order-dep) | SCOPED | Same; TO lost-up fix is candidate healer for the lingering-toast signature. Same confirm-ask. |
+| F22 TO-RIVAL-RICH (r18FF) | SCOPED (flaky) | Tiebreak full-green → P2 green + this green + iso-green ×2 vs P1 red. Contention transient, not genuine. |
+| OV-EDGE-06 (r19) | FIXED | Proven: smooth page CSS animates restore scrollTo; `behavior:'instant'` ×3 in scroll-lock.ts. Iso ×2 + full 119/120 + unit 34. |
+| OV-HND-02 (r17+r18 WK) | SCOPED (test-marginal) | WK 1ms-step pacing makes the "slow" recipe a physical fling; product contract-correct (F23 twin). Repro above. |
+| OV-DOM-01 (r19) | EVIDENCE ONLY | Telemetry + PNGs in /tmp (paths above); human --confirm gate. Untouched baselines. |
+| F30 Announcer | SKIPPED | Sibling SL claimed 13:45 UTC; zero Announcer touches. |
+
+Changed files (3, uncommitted per orders): Overlay/__e2e__/Overlay.ct.spec.ts (import + F54/F55), Toast/__e2e__/Toast.ct.spec.ts (import + F18/19/20), Overlay/isolation/scroll-lock.ts (instant ×3). Sibling files (Slider/Announcer specs, SL log) untouched.
+
+## Resume checklist
+
+1. Captain: verify diffs firsthand (`git diff` — mine: 2 CT specs + scroll-lock.ts + this log), commit per-arc (focus-vehicle arc F54/F55/F18/F19/F20; EDGE-06 arc scroll-lock.ts; scopes/holds need no commit).
+2. Test-owner follow-ups: F57/F58 quiet-full ×2 confirm; HND-02 physically-slow recipe (inter-step waits); F22 already settled flaky.
+3. Human --confirm gate: DOM-01 `dialog-basic-open.png` — evidence at /tmp/finish02f-vh-dom01-{actual,diff}.png + telemetry in /tmp/finish02f-vh-ov-r19b.txt.
+4. Logs: /tmp/finish02f-vh-*.txt (~25 files). Galleries on 3117/3118/3101 left running (reuseExistingServer); nothing else in repo touched. No commits (captain verifies firsthand).
