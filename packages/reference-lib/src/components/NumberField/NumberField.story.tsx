@@ -137,7 +137,8 @@ export const NamedStepperFixture = () => {
 }
 
 // B-19: the exact playtest repro — empty field, min 1, max 10 — with a
-// request counter proving commit happens once, never mid-keystroke.
+// request counter. Ruling (c) re-pin: parseable meanings publish live
+// ([2, 2.5]); the commit lands once with no duplicate request.
 export const BoundedDecimalFixture = () => {
   const [value, setValue] = React.useState<number | null>(null)
   const [requests, setRequests] = React.useState(0)

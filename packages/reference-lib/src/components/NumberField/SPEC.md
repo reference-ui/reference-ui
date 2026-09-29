@@ -38,7 +38,7 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | | |
 | :--- | :--- |
 | Engine | Controlled textbox + dirty draft/commit, Group host, hidden form pipeline. |
-| Production | **No** (Intl parser + live-request + lattice flips remain). |
+| Production | **Pending FINISH closeout** (rulings (a)(b)(c) + Intl i–xvi landed per FINISH.md captain rulings 2026-09-29; 4 manual gates remain). |
 | Named `[x]` | 144 / 148 |
 | Playwright | 57/57 CT on React 17/18/19 + Firefox + WebKit (NFLAST-4: EDIT-07, DYNAMIC-05, ENV-06, ENV-02, COMP-04) |
 | Vitest | 131 green across unit + type files (NFLAST-2 slices A–E: +16 Intl titles EDIT-05/PARSE-01/02/03/06/08/09/10/11/12/13/15/16/17/18/19; NFLAST-4: ENV-02) |
@@ -57,12 +57,11 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
   shadow audit (`NF-ENV-06`), ICU diagnostic (`NF-ENV-02`), science
   composition (`NF-COMP-04`). REMAIN: 4 manual gates.
 - ~~No live parseable-edit requests (B-19 commit-only).~~ RULED +
-  LANDED in unit (NFLAST leg 3a, 2026-09-28, ruling (c) in DECISIONS.md):
-  live raw requests with per-session dedupe, echo-aware dirty session;
-  `NF-EDIT-03`/`04`/`14`, `NF-COMMIT-01`/`04`/`08`/`11`, `NF-DYNAMIC-01`
-  proven in unit. CT re-pins parked (next wave). `NF-EDIT-05` full title
-  rides the Intl leg (needs the non-ASCII parser; ASCII core inside
-  `NF-EDIT-03`).
+  LANDED in unit (NFLAST leg 3a, 2026-09-28, ruling (c) in DECISIONS.md)
+  with CT re-pins landed (B-19 repro cores keep verbatim "2." + final 2.5,
+  intermediate live requests `[2, 2.5]`): live raw requests with
+  per-session dedupe, echo-aware dirty session; `NF-EDIT-03`/`04`/`05`/`14`,
+  `NF-COMMIT-01`/`04`/`08`/`11`, `NF-DYNAMIC-01` proven in unit + CT.
 - ~~Snap lattice is min-anchored with half-up ties and lattice-clamped
   max (signed-off W-02).~~ RULED + LANDED (NFLAST leg 1, 2026-09-28,
   ruling (a) in DECISIONS.md): zero-anchored, away-from-zero ties,
@@ -124,10 +123,10 @@ smallStep/largeStep.
   `NF-EDIT-02`, `NF-EDIT-07`, `NF-DYNAMIC-05`, `NF-ENV-06`, `NF-ENV-02`,
   `NF-COMP-04`
   (ported from quarantine recon 2026-09-25 as stability wins, re-targeted
-  to the current spinbutton + uncontrolled engine: spinbutton kept per
-  frozen visuals; `defaultValue` + optional `locale` preserved per recon
-  exhibit 1; ±Infinity bounds legal as unbounded sentinels; lattice /
-  snap / dirty-session / Intl meanings NOT ported. `NF-STEP-02` native
+  to the then-current spinbutton + uncontrolled engine — since superseded
+  by FEATURES #1 controlled-only + PATCHES §8 textbox + NFLAST rulings
+  (a)(b)(c): `defaultValue` deleted; `locale` required; ±Infinity bounds
+  legal as unbounded sentinels kept. `NF-STEP-02` native
   click only; `NF-ENV-05` StrictMode-on-19 only. PATCHES §7 landed
   2026-09-26 as standalone hold-repeat on the live-clamp engine: steppers
   step the current value with one request per step (`NF-STEP-12` adapted —
@@ -164,8 +163,8 @@ fix, decided any-no-change).
 2. ~~Group / Field-surface + named steppers.~~ Done (P2C 2026-09-28,
    PATCHES §4 + Field-crew handshake green).
 3. ~~Dirty buffer + commit boundaries (core).~~ Done (B-19 + P2C
-   failed/pending boundaries + NFLAST leg 3a live-request/echo unit;
-   filtering + CT re-pins remain).
+   failed/pending boundaries + NFLAST leg 3a live-request/echo unit +
+   NFLAST-3 filtering/paste + CT re-pins).
 4. Intl parse/format + composition done (NFLAST-2 2026-09-28, slices
    A–G: full `NF-PARSE-*` except `07`, `NF-EDIT-05`/`12`/`15`–`18`;
    recipes in `.agents/missions/landing-sequence/NFLAST2.md`).

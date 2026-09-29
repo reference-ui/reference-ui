@@ -650,7 +650,7 @@ test.describe('NumberField CT', () => {
     await expect(display).toHaveText('Numeric Value: 42')
   })
 
-  test('W-02: snap commitBehavior coerces typed 2.5 to 3 with one onChange', async ({
+  test('W-02: snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit', async ({
     mount,
     page,
   }) => {

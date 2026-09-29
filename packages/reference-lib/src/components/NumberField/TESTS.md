@@ -140,8 +140,10 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
 - [x] `NF-TYPE-02` `[reference]` `[unit]` —
   **NumberField should type one controlled numeric request authority without
   claiming compile-time finiteness.** Compile `number | null` value/callback
-  pairs and reject strings, bigint, arrays, raw-text callbacks, commit
-  callbacks, parser functions, and reason/detail callback parameters. Runtime
+  pairs and reject strings, bigint, arrays, raw-text callbacks, parser
+  functions, and second numeric channels. The advisory
+  `onInvalidCommit(attempted, reason)` report is the one shipped commit
+  callback and never requests a value. Runtime
   finiteness is intentionally proved separately because TypeScript `number`
   includes NaN and infinity.
 - [x] `NF-TYPE-03` `[reference]` `[unit]` —
@@ -1065,9 +1067,11 @@ The shared `PART-TYPE-01`, `PART-DOM-01`, `PART-PROP-01`,
   React's passive delegated wheel listener.
 - ScrubArea, pointer lock, acceleration, virtual cursor graphics, and global
   selection suppression.
-- Uncontrolled/default values, raw text/commit callbacks, reason details,
+- Uncontrolled/default values, raw-text callbacks, second numeric channels,
   imperative methods, parser/formatter functions, Provider/Field contracts,
-  render props, and polymorphic hosts.
+  render props, and polymorphic hosts. The advisory
+  `onInvalidCommit(attempted, reason)` report is the one shipped commit
+  callback and never requests a value.
 - Native number inputs/proxies, native range/step validity flags, NumberField
   custom validity, `step="any"`, and interception of legacy `form.submit()`.
 - Unsupported algorithmic numbering systems, arbitrary precision/bigint,

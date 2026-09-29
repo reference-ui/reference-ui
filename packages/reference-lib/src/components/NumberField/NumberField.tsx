@@ -571,12 +571,15 @@ function parseDraftNumber(
   return hasPermille ? parsed / 1000 : parsed / 100
 }
 
-// W-02: explicit commit policy. 'snap' coerces typed commits to the step
-// lattice within min/max; 'validate' rejects off-step/out-of-range commits
-// (revert + onInvalidCommit, no onChange); 'none' keeps historic behavior
-// (clamp, never snap or reject). Prop name and snap/validate pair mirror
-// React Aria NumberField verbatim; the default ('none') and third value are
-// ours (WANTS.md W-02).
+// W-02 commit policy as ruled (FINISH.md captain rulings adopting NFLAST
+// (a)(b)): 'snap' commits via the zero-anchored lattice with endpoint
+// preservation (order endpoint→lattice→rounding→final clamp); 'validate'
+// retains finite under/over/off-step candidates (requests the rounded raw
+// candidate, managed invalid state blocks submit) with advisory
+// onInvalidCommit alongside onChange; 'none' clamps at commit, never snaps,
+// and owns no invalid state. Prop name and snap/validate pair mirror React
+// Aria NumberField verbatim; the default ('none') and third value are ours
+// (WANTS.md W-02).
 export type NumberFieldCommitBehavior = 'snap' | 'validate' | 'none'
 
 export type NumberFieldInvalidCommitReason = 'off-step' | 'out-of-range'
@@ -2312,8 +2315,8 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
 
     // Owned numeric-constraint state (NF-MATH-15, NF-COMMIT-06, NF-FORM-05):
     // bound and step validity of the controlled value in snap/validate
-    // modes. 'none' is historic clamp-only behavior with no owned invalid
-    // (flagged for HQ in the mission log). Native text-input range/step
+    // modes. 'none' clamps at commit and owns no invalid state. Native
+    // text-input range/step
     // flags always stay false; this state surfaces only through managed
     // aria-invalid/data-invalid, stepper capability, and submit blocking —
     // never setCustomValidity.
