@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator } from '@playwright/test'
 
@@ -40,6 +40,11 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     const content = page.getByTestId('popover-content')
 
     await trigger.click()
+    // FINISH-02F-WK (F14, DIAG D1/D5): WebKit clicks never focus buttons, so
+    // the opener chain is empty and restore no-ops. Deliver the Chromium focus
+    // state directly (FocusLock DIAG-D1 precedent) — Escape-dismiss + restore
+    // below are the product contract and run identically.
+    if (isWebKit(page)) await trigger.focus()
     await expect(content).toBeVisible()
     await page.waitForTimeout(300)
     await snap(page, 'escape-open')
@@ -366,7 +371,7 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     const away = page.getByTestId('hover-away')
 
     await page.getByTestId('hover-before').focus()
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(content).toBeVisible()
     await expect(log).toHaveText('open')
     await inside.focus()
