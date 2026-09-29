@@ -1,4 +1,5 @@
 import { test, expect, snap } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
@@ -532,6 +533,11 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
         await expect(trigger).toHaveAttribute('data-disabled', '')
       }
     }
+
+    // Scanner half: the KeyBoundaries mount exercises expanded, collapsed,
+    // and disabled headers in one story; #root scoping covers it whole (no
+    // portals in Accordion).
+    await expectNoAxeViolations(page, { include: '#root' })
   })
 
   test('AC-COMP-01: A single Accordion should implement a collapsible FAQ with native header tabbing', async ({
