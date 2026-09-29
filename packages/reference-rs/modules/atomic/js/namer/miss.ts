@@ -209,12 +209,10 @@ function childRules(rule: CSSRule): CSSRuleList | undefined {
   }
 }
 
-/** Add every dot-class in a selector list, grouped selectors split. */
+/** Add every dot-class in a selector list. No pre-split: the token stops at raw commas itself, while splitting shreds escaped `\,` inside class names. */
 function collectClasses(selectorText: string, out: Set<string>): void {
-  for (const part of selectorText.split(',')) {
-    for (const match of part.matchAll(CLASS_TOKEN)) {
-      out.add(unescapeCss(match[1] ?? ''))
-    }
+  for (const match of selectorText.matchAll(CLASS_TOKEN)) {
+    out.add(unescapeCss(match[1] ?? ''))
   }
 }
 
