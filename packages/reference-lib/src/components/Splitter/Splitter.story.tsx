@@ -1657,16 +1657,16 @@ export const InnerGrid = () => {
   )
 }
 
-// B-28 REOPENED: legacy call-site shape (pre-rename minSize/maxSize/index,
-// as still seen in consumer code). `index` is a deleted prop — a type error
-// by design — so it rides a spread (no excess-prop check on spreads) while
-// proving the runtime strips it from css()/DOM.
-export const LegacyProps = () => {
+// B-28: constrained call-site shape (min/max + a stale deleted `index`,
+// as still seen in consumer code). `index` is a deleted prop — a type
+// error by design — so it rides a spread (no excess-prop check on
+// spreads) while proving the runtime strips it from css()/DOM.
+export const NoLeakProps = () => {
   const [value, setValue] = React.useState<number[]>([40, 60])
 
   return (
     <ReferenceLibrary>
-      <Div p="6r" colorMode="dark" data-testid="splitter-legacy-root">
+      <Div p="6r" colorMode="dark" data-testid="splitter-noleak-root">
         <Div
           width="100r"
           height="50r"
@@ -1677,15 +1677,15 @@ export const LegacyProps = () => {
           mb="4r"
         >
           <Splitter
-            data-testid="test-splitter-legacy"
+            data-testid="test-splitter-noleak"
             value={value}
             onChange={setValue}
             height="100%"
           >
             <Splitter.Panel
-              data-testid="legacy-panel-0"
-              minSize={10}
-              maxSize={90}
+              data-testid="noleak-panel-0"
+              min={10}
+              max={90}
               {...{ index: 0 }}
               p="3r"
               bg="ui.table.row.mutedBackground"
@@ -1696,12 +1696,12 @@ export const LegacyProps = () => {
               </Span>
             </Splitter.Panel>
             <Splitter.Handle
-              data-testid="legacy-handle-0"
+              data-testid="noleak-handle-0"
               aria-label="Resize panels"
               {...{ index: 0 }}
             />
             <Splitter.Panel
-              data-testid="legacy-panel-1"
+              data-testid="noleak-panel-1"
               {...{ index: 1 }}
               p="3r"
               bg="ui.field.background"
@@ -1714,7 +1714,7 @@ export const LegacyProps = () => {
           </Splitter>
         </Div>
 
-        <Span data-testid="legacy-value-display" fontSize="3.5r" color="design.text.base">
+        <Span data-testid="noleak-value-display" fontSize="3.5r" color="design.text.base">
           Layout: {Math.round(value[0])}% / {Math.round(value[1])}%
         </Span>
       </Div>

@@ -177,13 +177,13 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     expect(errors.filter(t => /collapsible|collapsedSize|minSize|maxSize/.test(t))).toEqual([])
   })
 
-  test('B-28 REOPENED: legacy minSize/maxSize/index never leak to css() or the DOM', async ({
+  test('B-28: min/max/index never leak to css() or the DOM', async ({
     mount,
     page,
   }) => {
-    // Pre-rename call sites (minSize/maxSize/index, as in consumer code) must
-    // not reach css() ("no compiled class for minSize: 10") or the DOM. The
-    // aliases still drive the solver; index is stripped and ignored.
+    // Constrained call sites (min/max + a stale deleted index, as in
+    // consumer code) must not reach css() ("no compiled class" spam) or
+    // the DOM. min/max drive the solver; index is stripped and ignored.
     const errors: string[] = []
     const warnings: string[] = []
     page.on('console', msg => {
@@ -192,17 +192,17 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     })
     page.on('pageerror', err => errors.push(String(err)))
 
-    await mount('components/Splitter/Splitter/LegacyProps')
-    await expect(page.getByTestId('legacy-panel-0')).toBeVisible()
+    await mount('components/Splitter/Splitter/NoLeakProps')
+    await expect(page.getByTestId('noleak-panel-0')).toBeVisible()
 
-    // Solver aliasing: minSize=10 / maxSize=90 bind the separator range.
-    const handle = page.getByTestId('legacy-handle-0')
+    // Solver routing: min=10 / max=90 bind the separator range.
+    const handle = page.getByTestId('noleak-handle-0')
     await expect(handle).toHaveAttribute('aria-valuemin', '10')
     await expect(handle).toHaveAttribute('aria-valuemax', '90')
 
     // Zero DOM leak on Panels and the Handle.
     const leakedAttrs = await page.evaluate(() => {
-      const names = ['minsize', 'maxsize', 'index', 'collapsible', 'collapsedsize']
+      const names = ['min', 'max', 'index', 'collapsible', 'collapsedsize']
       const hits: string[] = []
       for (const node of document.querySelectorAll(
         '[data-reference-splitter-panel], [data-reference-splitter-handle]'
@@ -217,7 +217,8 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     })
     expect(leakedAttrs).toEqual([])
 
-    // Zero miss-spam for the legacy names. Targeted (not blanket
+    // Zero miss-spam for the stripped names (minSize/maxSize are deleted
+    // aliases — they must never surface). Targeted (not blanket
     // zero-warnings): the H-6 dev-race can warn for values whose rules exist,
     // so only the leak signature fails here.
     const leak = /minSize|maxSize|collapsible|collapsedSize/

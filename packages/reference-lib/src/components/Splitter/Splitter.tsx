@@ -203,24 +203,13 @@ interface SplitterContextValue {
 
 const SplitterContext = React.createContext<SplitterContextValue | null>(null)
 
+// 4a: minSize/maxSize stay excluded — deleted aliases, never CSS props.
 export type SplitterPanelProps = Omit<
   PrimitiveProps<'div'>,
   'flexGrow' | 'flexShrink' | 'flexBasis' | 'flex' | 'minSize' | 'maxSize'
 > & {
   min?: number | string
   max?: number | string
-  /**
-   * Legacy alias of `min` (pre-rename API). Still drives the solver; `min`
-   * wins when both are set. Never reaches `css()` or the DOM (B-28: the
-   * names collide with the CSS `min-size`/`max-size` style props, so the
-   * constraint meaning owns them on this component).
-   */
-  minSize?: number | string
-  /**
-   * Legacy alias of `max` (pre-rename API). Still drives the solver; `max`
-   * wins when both are set. Never reaches `css()` or the DOM.
-   */
-  maxSize?: number | string
   collapsible?: boolean
   collapsedSize?: number
 }
@@ -228,10 +217,8 @@ export type SplitterPanelProps = Omit<
 export const SplitterPanel = React.forwardRef<HTMLDivElement, SplitterPanelProps>(function SplitterPanel(
   {
     children,
-    min: minProp,
-    max: maxProp,
-    minSize: legacyMinSize,
-    maxSize: legacyMaxSize,
+    min,
+    max,
     id: idProp,
     collapsible = false,
     collapsedSize = 0,
@@ -241,10 +228,8 @@ export const SplitterPanel = React.forwardRef<HTMLDivElement, SplitterPanelProps
   }: SplitterPanelProps,
   forwardedRef
 ) {
-  // B-28: legacy aliases resolve into the solver inputs; the deleted
-  // `index` prop is stripped so stale call sites can't leak it to the DOM.
-  const min = minProp ?? legacyMinSize
-  const max = maxProp ?? legacyMaxSize
+  // B-28: the deleted `index` prop is stripped so stale call sites
+  // can't leak it to the DOM.
   const { index: _index, ...rest } = props as typeof props & { index?: unknown }
   void _index
   const context = React.useContext(SplitterContext)

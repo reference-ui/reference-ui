@@ -40,7 +40,7 @@ Visual polish is not this gate. No grid mode. No `SplitterThumb` dots.
 | Production | Controlled v1 API + engine (#3 measured constraints, #4 CSS-var geometry, #5 session frame budget, #6 id-keyed collapse memory, #7 focusable-but-inert Handles, #8 Panel-axis-sum denominator, #9 structural throw, #11 invisible hit area — shipped on maintainer recommendation WITHOUT explicit HQ acceptance of the click-strip trade-off). |
 | Named `[x]` | 83 / 83 |
 | Playwright CT | 74 SP-titled (79 total incl. B-28/W-35/reduced-motion/#11) |
-| Vitest | 35 |
+| Vitest | 34 (35 − B-28 precedence, deleted with the 4a aliases) |
 
 ### Gaps & incoherence
 
