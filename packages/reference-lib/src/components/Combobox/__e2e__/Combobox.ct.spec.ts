@@ -2769,12 +2769,12 @@ test.describe('Combobox finish-line P2A CT', () => {
     // A true outside touch (outside the popover, inside the parent)
     // dismisses only the top affected layer once, with no compat-mouse
     // replay. The locked modal itself takes explicit dismissal.
-    // F10 (Firefox): CDP sessions exist only in Chromium
+    // H1: CDP sessions exist only in Chromium
     // (`browserContext.newCDPSession: CDP session is only available in
-    // Chromium`) — the same H1 harness wall that holds this case on
-    // WebKit — so the touch leg is unrunnable on FF by construction and
-    // skipped on that engine only (WK untouched: H1 still holds there).
-    if (browserName !== 'firefox') {
+    // Chromium`) — the touch leg is unrunnable on FF/WebKit by
+    // construction, so it is chromium-only (F10 scoped the FF leg
+    // first; this extends the same wall to WebKit).
+    if (browserName === 'chromium') {
       await input.click()
       await expect(popover).toBeVisible()
       const cardTouchBox = await page.getByTestId('so-card').boundingBox()
@@ -3573,7 +3573,11 @@ test.describe('Combobox finish-line P2A CT', () => {
   test('CB-ENV-04 chromium: cross-engine baseline order for the native gate', async ({
     mount,
     page,
+    browserName,
   }) => {
+    // G1: chromium gate by design — skip off-Chromium (never red
+    // elsewhere). Matrix engine layer owns the other engines.
+    test.skip(browserName !== 'chromium', 'G1: chromium UA gate')
     // Chromium half of the multi-engine gate: pins the exact public DOM,
     // focus, and controlled callback order Firefox/WebKit runs compare
     // against (matrix engine layer owns the other engines).

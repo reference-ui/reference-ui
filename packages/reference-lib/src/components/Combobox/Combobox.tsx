@@ -601,6 +601,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
     {
       children,
       onClick,
+      onMouseDown,
       onKeyDown,
       onBlur,
       disabled: disabledProp,
@@ -649,7 +650,21 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e)
     if (!e.defaultPrevented && !isDisabled) {
+      // Safari never focuses buttons on pointer activation, which strands
+      // follow-up keyboard handling on body (F16/F24/F26). Re-deliver the
+      // focused state the click carries on Chromium/Firefox (no-op there).
+      e.currentTarget.focus()
       context.setIsOpen(!context.isOpen)
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    onMouseDown?.(e)
+    if (!e.defaultPrevented && !isDisabled) {
+      // Safari blurs the focused trigger on mousedown default, which would
+      // dismiss via blur and make the click toggle re-open (CB-OPEN-04).
+      // Holding focus keeps the toggle one decision on all engines.
+      e.preventDefault()
     }
   }
 
@@ -862,6 +877,7 @@ export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTrigg
       aria-activedescendant={context.isOpen ? (context.activeOptionId ?? undefined) : undefined}
       disabled={isDisabled}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       className={`ref-input ${className || ''}`}
