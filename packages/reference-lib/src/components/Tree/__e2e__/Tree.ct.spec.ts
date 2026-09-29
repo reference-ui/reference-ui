@@ -316,6 +316,7 @@ test.describe('Tree Quarantine Parity', () => {
   test('TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Tree/Tree/Parity')
     await expect(page.getByTestId('tree-fixture-root')).toBeVisible()
@@ -330,7 +331,16 @@ test.describe('Tree Quarantine Parity', () => {
     await btnBefore.focus()
     await expect(btnBefore).toBeFocused()
     await page.keyboard.press('Tab')
-    await expect(btnAfter).toBeFocused()
+    if (browserName === 'webkit') {
+      // DIAG D1: WebKit skips buttons in sequential Tab, so the walk
+      // sails over btn-after-empty AND the tabindex-less empty tree to
+      // the next real stop (SCOPE-1 P-TAB probe: omitted-branch). The
+      // contract — empty tree invents no sequential target — holds.
+      await expect(emptyTree).not.toBeFocused()
+      await expect(btnAfter).not.toBeFocused()
+    } else {
+      await expect(btnAfter).toBeFocused()
+    }
   })
 
   test('TR-DOM-10: Tree should expand and select through state when only expansion props are omitted', async ({
@@ -1587,6 +1597,7 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
   test('TR-CB-03: Tree should register its Combobox bridge automatically without adapter props or duplicate collection roles', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Tree/Tree/ComboboxTree')
     const input = page.getByTestId('cb-input')
@@ -1628,6 +1639,14 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
     const trigger = page.getByTestId('cbs-trigger')
     await expect(trigger).toHaveAttribute('aria-haspopup', 'tree')
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses
+      // buttons, so ArrowDown would go to body and the bridge legs
+      // below could not run. Programmatic focus lands (D1B) and
+      // replicates the focused state Chromium gets from the click, so
+      // the bridge contract stays proven on WebKit.
+      await trigger.focus()
+    }
     await expect(page.getByTestId('cbs-popover')).toBeVisible()
     await page.keyboard.press('ArrowDown')
     await cbExpectActiveItem(trigger, page.getByTestId('cbs-item-a'))
@@ -1637,6 +1656,7 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
   test('TR-CB-04: Tree activation inside Combobox should route one scalar commit only through the Combobox root', async ({
     mount,
     page,
+    browserName,
   }) => {
     await mount('components/Tree/Tree/ComboboxTree')
     const input = page.getByTestId('cb-input')
@@ -1673,6 +1693,11 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
     // Space activation in the select-only variant commits once.
     const trigger = page.getByTestId('cbs-trigger')
     await trigger.click()
+    if (browserName === 'webkit') {
+      // DIAG D1 + SCOPE-1 P-F16 probe: same click-focus workaround as
+      // TR-CB-03 — without it ArrowDown/Space go to body on WebKit.
+      await trigger.focus()
+    }
     await expect(page.getByTestId('cbs-popover')).toBeVisible()
     await page.keyboard.press('ArrowDown')
     await cbExpectActiveItem(trigger, page.getByTestId('cbs-item-a'))
