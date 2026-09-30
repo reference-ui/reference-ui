@@ -7659,9 +7659,18 @@ describe('NumberField wave-2 parsing', () => {
     }
   })
 
-  it('NF-PARSE-19: A seeded public formatter/parser matrix should round-trip at least 2,000 deterministic values across the supported Intl surface', async () => {
+  it('NF-PARSE-19: A seeded public formatter/parser matrix should round-trip at least 2,000 deterministic values across the supported Intl surface', { timeout: 20_000 }, async ({ signal }) => {
     // Recorded seed: mulberry32(20260928). The sequence, locales, and
     // styles below are fixed — reruns reproduce every vector.
+    // Timeout budget: 2,000 vectors × 3 React act() flushes measure ~4.7s
+    // isolated, leaving only ~0.3s under the 5s default; full-suite
+    // parallel CPU contention pushes past it (RED-NF forced-abort repro:
+    // `pnpm agent vitest NumberField --testTimeout=1000` reproduces the
+    // full-run reds isolated). An aborted run must NOT keep looping: the
+    // abandoned promise chain would keep flushing act()s and stealing
+    // focus while later tests run, cascading into NF-PARSE-15,
+    // NF-COMMIT-04/05, and NF-KEY-06 value failures — hence the
+    // signal.aborted guard at the top of the matrix loop.
     const seed = 20260928
     let state = seed >>> 0
     const rand = () => {
@@ -7685,6 +7694,11 @@ describe('NumberField wave-2 parsing', () => {
     let completed = 0
     let attempts = 0
     while (completed < 2000 && attempts < 2600) {
+      // Fail closed on timeout: the test is already recorded red, so stop
+      // here instead of running on as a zombie that corrupts later tests.
+      if (signal.aborted) {
+        return
+      }
       attempts += 1
       const base = pick(baseLocales)
       const system = pick(numberingSystems)
