@@ -124,11 +124,11 @@ describe('formatBootBlock', () => {
     )
   })
 
-  it('paints the brand blue, ready-in dim with a bold time, CSS green, and the count yellow on FORCE_COLOR', () => {
+  it('paints brand and version blue, ready-in dim with a bold time, bold labels, CSS green, and the count yellow on FORCE_COLOR', () => {
     vi.stubEnv('NO_COLOR', '')
     vi.stubEnv('FORCE_COLOR', '1')
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
-      '\n  \x1b[1m\x1b[94mREF \x1b[0m v1.0.0  \x1b[2mready in\x1b[0m \x1b[1m104\x1b[0m\x1b[2m ms\x1b[0m\n\n  \x1b[94m→\x1b[0m CSS:       \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m→\x1b[0m Warnings:  \x1b[33m3\x1b[0m [--verbose]'
+      '\n  \x1b[1m\x1b[94mREF \x1b[0m \x1b[1m\x1b[94mv1.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m104\x1b[0m\x1b[2m ms\x1b[0m\n\n  \x1b[94m→\x1b[0m \x1b[1mCSS:     \x1b[0m  \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m→\x1b[0m \x1b[1mWarnings:\x1b[0m  \x1b[33m3\x1b[0m [--verbose]'
     )
   })
 

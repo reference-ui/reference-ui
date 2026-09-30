@@ -22,8 +22,9 @@ export interface ReferenceBuildPayload {
   verbose?: boolean
   /**
    * Fold the warning count into the caller's one-liner instead of
-   * printing the summary. Threaded from one-shot sync only; background
-   * landings leave it unset and keep their standalone line.
+   * printing the summary. Threaded from one-shot sync and the watch
+   * runner, which both drain the build and carry the count; undrained
+   * library landings leave it unset and keep their standalone line.
    */
   fold?: boolean
   /**

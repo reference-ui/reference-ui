@@ -158,11 +158,11 @@ export interface BootBlockOptions {
 // verbatim; callers pass the folded count, never the raw total.
 export function formatBootBlock(options: BootBlockOptions): string {
   const elapsed = Math.max(0, Math.floor(options.elapsedMs))
-  const head = `${paint(BRAND, `${BOLD}${BLUE}`)} v${options.version}  ${paint('ready in', FAINT)} ${paint(String(elapsed), BOLD)}${paint(' ms', FAINT)}`
-  const rows = [`${paint(ARROW, BLUE)} ${'CSS:'.padEnd(9)}  ${paint(formatBytes(options.cssBytes), GREEN)}`]
+  const head = `${paint(BRAND, `${BOLD}${BLUE}`)} ${paint(`v${options.version}`, `${BOLD}${BLUE}`)}  ${paint('ready in', FAINT)} ${paint(String(elapsed), BOLD)}${paint(' ms', FAINT)}`
+  const rows = [`${paint(ARROW, BLUE)} ${paint('CSS:'.padEnd(9), BOLD)}  ${paint(formatBytes(options.cssBytes), GREEN)}`]
   const folded = Math.max(0, Math.floor(options.warnings ?? 0))
-  if (folded > 0) rows.push(`${paint(ARROW, BLUE)} ${'Warnings:'.padEnd(9)}  ${paint(String(folded), YELLOW)} [--verbose]`)
-  if (options.watch === true) rows.push(`${paint(ARROW, BLUE)} ${'Watch:'.padEnd(9)}  on`)
+  if (folded > 0) rows.push(`${paint(ARROW, BLUE)} ${paint('Warnings:'.padEnd(9), BOLD)}  ${paint(String(folded), YELLOW)} [--verbose]`)
+  if (options.watch === true) rows.push(`${paint(ARROW, BLUE)} ${paint('Watch:'.padEnd(9), BOLD)}  on`)
   return `\n  ${head}\n\n  ${rows.join('\n  ')}`
 }
 

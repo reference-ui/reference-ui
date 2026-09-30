@@ -103,21 +103,21 @@ async function waitForOutput(watch: WatchChild, cond: () => boolean, label: stri
 
 // The boot leg: the boot header proves the --watch flag routed to the
 // bin's watch command, the baseline sync ran, and the watcher subscriptions
-// are live — so no settle sleep is needed before the first mutation.
+// are live — so no settle sleep is needed before the first mutation. Ready
+// means the hot path, and the block carries the TOTAL warnings: the runner
+// drains the folded tasty landing before printing, so sync plus tasty fold
+// into one Warnings row (this world's sync is clean, so the row is the
+// tasty count) and no standalone summary line ever dangles after it.
 async function proveBoot(watch: WatchChild): Promise<void> {
   await waitForOutput(watch, () => BOOT_BLOCK_RE.test(stripAnsiSpans(watch.output())), 'the boot block');
-  assert.ok(stripAnsiSpans(watch.output()).includes('→ CSS:'), 'watch boot prints the CSS row');
-  assert.ok(stripAnsiSpans(watch.output()).includes('→ Watch:'), 'watch boot prints the watch row');
-  assert.match(
-    stripAnsiSpans(watch.output()),
-    /Warnings:\s+\d+ \[--verbose\]/,
-    'watch boot folds the background ref warnings into its block',
+  const plain = stripAnsiSpans(watch.output());
+  assert.ok(plain.includes('→ CSS:'), 'watch boot prints the CSS row');
+  assert.ok(plain.includes('→ Watch:'), 'watch boot prints the watch row');
+  assert.ok(
+    /→ Warnings:\s+\d+ \[--verbose\]/.test(plain),
+    'watch boot folds the drained tasty warnings into its Warnings row',
   );
-  assert.equal(
-    stripAnsiSpans(watch.output()).match(/\d+ \[--verbose\]/g)?.length ?? 0,
-    1,
-    'the folded row is the only warning line at boot',
-  );
+  assert.ok(!plain.includes('⚠'), 'watch boot prints no dangling warning line');
   assert.ok(!watch.output().includes('watching'), 'boot prints no watching line');
   assert.ok(!watch.output().includes('Built reference'), 'boot prints no built-reference trivia');
 }

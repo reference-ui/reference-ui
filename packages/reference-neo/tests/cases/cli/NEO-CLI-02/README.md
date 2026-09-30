@@ -8,9 +8,12 @@ The runner syncs this world fresh, then the spec spawns the real
 `ref sync --watch` binary against it and proves four legs. Boot:
 the child prints its boot block, which proves the flag routed to
 the watch runner, the baseline sync ran, and the watcher
-subscriptions are live, the block carries the CSS, warnings, and
-watch rows with the background ref warnings folded in, and no
-`watching` line or `Built reference` trivia prints. Resync: a token-value
+subscriptions are live, the block carries the CSS and watch rows
+with the TOTAL warnings (the runner drains the folded tasty landing
+before printing, so sync plus tasty fold into one Warnings row —
+this world's sync is clean, so the row is the tasty count) with no
+standalone summary line after it, and no `watching` line or `Built
+reference` trivia prints. Resync: a token-value
 edit produces another sync one-liner with no file-event lines and no
 resync word, and the sheet pin flips to the new value; restoring the
 spelling resyncs again and flips the pin back. Debug: a `--debug` spawn

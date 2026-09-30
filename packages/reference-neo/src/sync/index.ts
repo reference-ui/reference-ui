@@ -56,7 +56,7 @@ export interface SyncResult {
   diagnostics: NativeDiagnostic[]
   /** Compiler backchannel entries (empty without the `logs` opt-in). */
   compilerDiagnostics: NativeDiagnostic[]
-  /** Wall time for a watch resync in ms: the scheduler stamps it so the resync one-liner matches the sync shape. */
+  /** Wall time for a watch sync in ms: the driver stamps the baseline and every resync alike, so the boot block and the one-liner both print the measured sync wall. */
   elapsedMs?: number
 }
 
@@ -100,9 +100,10 @@ export interface SyncOptions {
   verbose?: boolean
   /**
    * Fold the reference tasty warning count into the caller's one-liner
-   * instead of printing the summary. One-shot sync sets it (it drains
-   * the build and carries the count); watch leaves it unset so the
-   * background landing keeps its standalone line.
+   * instead of printing the summary. One-shot sync and the watch
+   * runner set it (both drain the build and carry the count);
+   * undrained library callers leave it unset so the background
+   * landing keeps its standalone line.
    */
   foldRefDiagnostics?: boolean
   /**

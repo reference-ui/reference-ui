@@ -13,7 +13,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { subscribe, type AsyncSubscription, type Event as ParcelEvent } from '@parcel/watcher'
 import picomatch from 'picomatch'
 import { getLastLoadedUserConfig, loadUserConfigWithDependencies } from '../../config/load.ts'
-import { sync, type SyncResult } from '../../sync/index.ts'
+import { sync, type SyncOptions, type SyncResult } from '../../sync/index.ts'
 import { acquireSyncSession } from '../../sync/session.ts'
 
 export type WatchEvent = 'add' | 'change' | 'unlink'
@@ -32,7 +32,7 @@ export interface WatchCallbacks {
 
 export interface WatchHandle {
   stop(): Promise<void>
-  /** The baseline sync's result: the boot line folds its warning count. */
+  /** The baseline sync's result: the boot line prints its elapsed wall and folds its warning count. */
   baseline: SyncResult
 }
 
@@ -333,11 +333,23 @@ export interface WatchSyncOptions {
    */
   json?: boolean
   /**
-   * Baseline only: the runner drains the baseline tasty build and folds
-   * its warning count into the boot one-liner, so the background stays
-   * silent. Resync builds always print — they land with no line to ride.
+   * Fold every tasty landing silent (baseline plus any resync retry)
+   * instead of letting it report its own summary line. Set it only
+   * with a drain: the watch runner drains each landing and carries
+   * its count into its own line; undrained callers leave it unset so
+   * no warning is lost.
    */
   foldRefDiagnostics?: boolean
+}
+
+// Time one driver sync and stamp its wall: the boot block and the resync
+// one-liner both print the stamped wall, never the runner's. Baseline and
+// resync share it so their reporting cannot drift apart.
+async function stampedSync(projectRoot: string, reporting: SyncOptions): Promise<SyncResult> {
+  const start = Date.now()
+  const result = await sync(projectRoot, reporting)
+  result.elapsedMs = Date.now() - start
+  return result
 }
 
 /**
@@ -366,7 +378,7 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
   const onPoke = (): void => { pokeTarget() }
   process.on('SIGUSR2', onPoke)
   try {
-    const baseline = await sync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false, foldRefDiagnostics: options.foldRefDiagnostics ?? false })
+    const baseline = await stampedSync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false, foldRefDiagnostics: options.foldRefDiagnostics ?? false })
 
     const state: WatchState = {
       projectRoot,
@@ -384,12 +396,10 @@ export async function watchSync(cwd: string, callbacks: WatchCallbacks = {}, opt
     let stopped = false
     const scheduler = createResyncScheduler(async () => {
       try {
-        const resyncStart = Date.now()
-        const result = await sync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false })
-        result.elapsedMs = Date.now() - resyncStart
+        const result = await stampedSync(projectRoot, { verbose: options.verbose ?? false, json: options.json ?? false, foldRefDiagnostics: options.foldRefDiagnostics ?? false })
         if (!stopped) {
           await refreshTriggerScope(scope)
-          callbacks.onResync?.(result)
+          await callbacks.onResync?.(result)
         }
       } catch (error) {
         if (!stopped) callbacks.onError?.(toError(error))
