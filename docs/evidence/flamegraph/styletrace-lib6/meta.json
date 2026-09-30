@@ -1,0 +1,147 @@
+{
+  "procedure": "agentrs-flame/3",
+  "procedureNote": "same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)",
+  "scale": "lib-styletrace",
+  "pin": {
+    "name": "84faa918f",
+    "hash": "84faa918fe8127a947766dab58388ac083d9be44",
+    "dirty": false
+  },
+  "plan": {
+    "scale": "lib-styletrace",
+    "target": "packages/reference-lib shape: 387 dense src + 12 book files via scratch copy",
+    "seed": null
+  },
+  "generated": {
+    "projectDir": "/tmp/styletrace-scratch",
+    "note": "scratch copy of src+book+ui.config.ts, symlinked node_modules; recipe byte-verified (261.8KB CSS identical)"
+  },
+  "worker": {
+    "syncMs": 1232.022879,
+    "wallMs": 1232,
+    "warnings": 3,
+    "scorer": "lib-world-probe/1"
+  },
+  "phases": {
+    "file": "phases.json",
+    "phases": {
+      "startup": 84.532666,
+      "config": 30.815048999999988,
+      "scan": 184.08586899999997,
+      "evaluate": 9.623740999999995,
+      "compile": 946.9853089999999,
+      "publish": 58.120109000000184,
+      "syncTotal": 1232.022879,
+      "workerTotal": 1316.5591459999998,
+      "workerTail": 0.003600999999889609,
+      "syncResidual": 2.3928020000000743
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 2.2737367544323206e-13,
+      "ok": true
+    },
+    "processStartDeltaMs": 206.885986328125,
+    "preMainWeight": 68,
+    "postWorkerWeight": 1944,
+    "sampleCount": 2924,
+    "weightSum": 3320,
+    "buckets": [
+      {
+        "name": "startup",
+        "ms": 84.532666,
+        "weight": 85,
+        "topLib": "node",
+        "topLibWeight": 49
+      },
+      {
+        "name": "config",
+        "ms": 30.815048999999988,
+        "weight": 27,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 20
+      },
+      {
+        "name": "scan",
+        "ms": 184.08586899999997,
+        "weight": 180,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 153
+      },
+      {
+        "name": "evaluate",
+        "ms": 9.623740999999995,
+        "weight": 9,
+        "topLib": "node",
+        "topLibWeight": 7
+      },
+      {
+        "name": "compile",
+        "ms": 946.9853089999999,
+        "weight": 946,
+        "topLib": "libsystem_malloc.dylib",
+        "topLibWeight": 322
+      },
+      {
+        "name": "publish",
+        "ms": 58.120109000000184,
+        "weight": 59,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 40
+      },
+      {
+        "name": "syncResidual",
+        "ms": 2.3928020000000743,
+        "weight": 2,
+        "topLib": "libobjc.A.dylib",
+        "topLibWeight": 1
+      },
+      {
+        "name": "workerTail",
+        "ms": 0.003600999999889609,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      }
+    ]
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 300142,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-lib-bZijb9/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/reference-native.darwin-x64.node",
+    "sha256": "1eaf739eed89e9ffc057db0f8c77a3838886f38973a48753b9ad03d39ba46d0d",
+    "profile": "release",
+    "builtVia": "landing captain: main-tree release build at landed commit"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "samply",
+    "record",
+    "--save-only",
+    "--unstable-presymbolicate",
+    "-o",
+    "/Users/ryn/Developer/reference-ui/docs/evidence/flamegraph/styletrace-lib6/profile.json.gz",
+    "-r",
+    "1000",
+    "--",
+    "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+    "--perf-basic-prof",
+    "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-lib-bZijb9/v8.log",
+    "/tmp/styletrace-probe/sync-probe.mts",
+    "/tmp/styletrace-scratch"
+  ],
+  "createdAt": "2026-09-30T16:10:03.874Z",
+  "treeStatus": []
+}
