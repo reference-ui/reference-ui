@@ -3,6 +3,7 @@
 //! This module implements the main recursive resolution passes. It evaluates
 //! type expressions like unions, intersections, and mapped types.
 
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -344,12 +345,15 @@ fn take_or_extend_owned(names: &mut BTreeSet<String>, props: BTreeSet<String>) {
     }
 }
 
-fn bind_type_params(
+fn bind_type_params<'a>(
     params: &[String],
     args: &[TypeExpr],
     arg_module_path: &Path,
-    inherited_env: &FxHashMap<String, BoundTypeExpr>,
-) -> FxHashMap<String, BoundTypeExpr> {
+    inherited_env: &'a FxHashMap<String, BoundTypeExpr>,
+) -> Cow<'a, FxHashMap<String, BoundTypeExpr>> {
+    if params.is_empty() {
+        return Cow::Borrowed(inherited_env);
+    }
     let mut env = inherited_env.clone();
     for (index, param) in params.iter().enumerate() {
         env.insert(
@@ -360,5 +364,5 @@ fn bind_type_params(
             },
         );
     }
-    env
+    Cow::Owned(env)
 }
