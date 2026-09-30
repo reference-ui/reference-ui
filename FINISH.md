@@ -391,8 +391,9 @@ not substitute. Record platform + version + per-item outcomes.
   FINISH-02 14/23 FF/WK legs fixed as bonus);
   Tooltip CLOSE-01/FOCUS-03 r19 pair CLOSED by RED-TT (`6048c4e97`;
   vehicle fix + ring baseline, F28/F29 superseded);
-  NF-unit full-suite flakes (isolated 131/131); FINISH-03 hermetic
-  infra (BLOCKED-infra-FINAL chain, `15b2c805b`).
+  NF-unit full-suite flakes CLOSED by RED-NF (PARSE-19 20s budget +
+  signal.aborted guard; 956/956 two-in-a-row + captain re-proof);
+  FINISH-03 hermetic infra (BLOCKED-infra-FINAL chain, `15b2c805b`).
 - [ ] Declare production-ready, propose `main` merge — USER'S CALL
   (no merges to `main` without HQ; captain recommends READY
   modulo the waivers above).
