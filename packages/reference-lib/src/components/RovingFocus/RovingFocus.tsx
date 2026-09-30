@@ -30,6 +30,11 @@ export type RovingFocusItemProps = ReferenceSlotPartProps & {
   id?: string
   disabled?: boolean
   textValue?: string
+  /** Portable node resolver. React 17/18 strip `ref` through plain-function
+   * children, so the kernel ref never resolves there (Menu `MenuTrigger`
+   * precedent); consumers in that position resolve the mounted node by id
+   * and hand it back here. The live ref always wins when set. */
+  getNode?: () => HTMLElement | null
 }
 
 interface ItemEntry {
@@ -37,6 +42,14 @@ interface ItemEntry {
   ref: React.RefObject<HTMLElement | null>
   disabled: boolean
   textValue?: string
+  getNode?: () => HTMLElement | null
+}
+
+// Live ref first, portable resolver second. Every kernel node read runs
+// through this so ref-stripped trees (Menubar triggers on React 17/18)
+// order, settle, and focus exactly like ref-resolved ones.
+function resolveEntryNode(entry: ItemEntry): HTMLElement | null {
+  return entry.ref.current ?? entry.getNode?.() ?? null
 }
 
 export interface RovingFocusContextValue {
@@ -53,7 +66,7 @@ export interface RovingFocusContextValue {
 
 function isItemAvailable(entry: ItemEntry): boolean {
   if (entry.disabled) return false
-  const el = entry.ref.current
+  const el = resolveEntryNode(entry)
   if (!el) return true
   if (el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true') {
     return false
@@ -122,7 +135,7 @@ function getItemSearchText(entry: ItemEntry): string {
   if (entry.textValue != null && entry.textValue !== '') {
     return entry.textValue.trim()
   }
-  const el = entry.ref.current
+  const el = resolveEntryNode(entry)
   if (!el) return ''
   const ariaLabel = el.getAttribute('aria-label')
   if (ariaLabel != null && ariaLabel !== '') {
@@ -352,6 +365,7 @@ const ITEM_EXCLUDED_PROPS: ReadonlySet<string> = new Set([
   'id',
   'disabled',
   'textValue',
+  'getNode',
 ])
 
 export const RovingFocusRoot = React.forwardRef<HTMLElement, RovingFocusRootProps>(
@@ -372,10 +386,13 @@ export const RovingFocusRoot = React.forwardRef<HTMLElement, RovingFocusRootProp
       const entries = Array.from(itemsMapRef.current.values())
       // Sort items by DOM position
       return entries
-        .filter(entry => entry.ref.current && entry.ref.current.isConnected)
+        .filter(entry => {
+          const node = resolveEntryNode(entry)
+          return node && node.isConnected
+        })
         .sort((a, b) => {
-          const elA = a.ref.current!
-          const elB = b.ref.current!
+          const elA = resolveEntryNode(a)!
+          const elB = resolveEntryNode(b)!
           const pos = elA.compareDocumentPosition(elB)
           if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
           if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
@@ -452,9 +469,10 @@ export const RovingFocusRoot = React.forwardRef<HTMLElement, RovingFocusRootProp
     const focusItemById = React.useCallback(
       (id: string) => {
         const entry = itemsMapRef.current.get(id)
-        if (entry?.ref.current && isItemAvailable(entry)) {
+        const node = entry ? resolveEntryNode(entry) : null
+        if (entry && node && isItemAvailable(entry)) {
           setCurrentId(id)
-          entry.ref.current.focus()
+          node.focus()
         }
       },
       [setCurrentId]
@@ -463,7 +481,7 @@ export const RovingFocusRoot = React.forwardRef<HTMLElement, RovingFocusRootProp
     const handle1DNavigation = React.useCallback(
       (e: React.KeyboardEvent<HTMLElement>, currentIndex: number, enabledItems: ItemEntry[]) => {
         const currentEntry = enabledItems[currentIndex]
-        const isRtl = getDirection(currentEntry?.ref.current ?? null) === 'rtl'
+        const isRtl = getDirection(currentEntry ? resolveEntryNode(currentEntry) : null) === 'rtl'
         const key = e.key
 
         let targetIndex = currentIndex
@@ -534,7 +552,7 @@ export const RovingFocusRoot = React.forwardRef<HTMLElement, RovingFocusRootProp
         e.preventDefault()
         const cells: GridCell[] = []
         orderedItems.forEach((entry, domIndex) => {
-          const el = entry.ref.current
+          const el = resolveEntryNode(entry)
           if (!el) return
           cells.push({
             id: entry.id,
@@ -666,7 +684,7 @@ RovingFocusRoot.displayName = 'RovingFocus.Root'
 
 export const RovingFocusItem = React.forwardRef<HTMLElement, RovingFocusItemProps>(
   function RovingFocusItem(props, forwardedRef) {
-    const { children, id: idProp, disabled = false, textValue } = props
+    const { children, id: idProp, disabled = false, textValue, getNode } = props
     const context = React.useContext(RovingFocusContext)
     if (!context) {
       throw new Error('Reference UI: RovingFocus.Item must be used within a RovingFocus.Root')
@@ -686,8 +704,9 @@ export const RovingFocusItem = React.forwardRef<HTMLElement, RovingFocusItemProp
         ref: itemRef,
         disabled,
         textValue,
+        getNode,
       })
-    }, [context, id, disabled, textValue])
+    }, [context, id, disabled, textValue, getNode])
 
     assertSingleElementChild(children, 'Item')
 

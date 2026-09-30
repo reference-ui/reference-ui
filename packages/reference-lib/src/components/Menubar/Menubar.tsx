@@ -229,6 +229,31 @@ export const MenubarTrigger = React.forwardRef<HTMLButtonElement, MenubarTrigger
       [ref]
     )
 
+    const generatedId = React.useId()
+    const stableTriggerIdRef = React.useRef<string | null>(null)
+    if (stableTriggerIdRef.current === null) {
+      stableTriggerIdRef.current = `menubar-trigger-${String(generatedId).replace(/[^a-zA-Z0-9_-]/g, '')}`
+    }
+    const triggerId = authoredId ?? stableTriggerIdRef.current
+
+    // Portable node resolution (Menu MenuTrigger precedent): the RovingFocus
+    // cloneElement ref dies through plain-function Popover.Trigger on React
+    // 17/18, so resolve the mounted button by stable id. Only-if-found: never
+    // null a live ref on 19.
+    React.useLayoutEffect(() => {
+      if (typeof document === 'undefined') return
+      const rootNode = menubar?.getRootNode() ?? null
+      const scope = rootNode?.getRootNode?.() ?? document
+      const doc =
+        scope instanceof Document || (typeof ShadowRoot !== 'undefined' && scope instanceof ShadowRoot)
+          ? scope
+          : document
+      const node = doc.getElementById(triggerId)
+      if (node instanceof HTMLElement) nodeRef.current = node as HTMLButtonElement
+    }, [menubar, triggerId])
+
+    const getItemNode = React.useCallback(() => nodeRef.current, [])
+
     const menuValue = menu?.menuValue
     React.useEffect(() => {
       if (!menubar || menuValue === undefined) return
@@ -277,7 +302,7 @@ export const MenubarTrigger = React.forwardRef<HTMLButtonElement, MenubarTrigger
     const triggerProps = { ...props, ref: composedTriggerRef as React.Ref<HTMLButtonElement> }
 
     return (
-      <RovingFocus.Item disabled={disabled}>
+      <RovingFocus.Item disabled={disabled} getNode={getItemNode}>
         <Popover.Trigger
           role="menuitem"
           aria-haspopup={ariaHasPopup}
@@ -289,7 +314,7 @@ export const MenubarTrigger = React.forwardRef<HTMLButtonElement, MenubarTrigger
           className={className}
           style={style}
           {...triggerProps}
-          id={authoredId}
+          id={triggerId}
         >
           {children}
         </Popover.Trigger>
