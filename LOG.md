@@ -18,3 +18,4 @@ compile 1742.2, RECONCILED). Base bench pin `reports/488bcfd7a660/`
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | rc | e9387f5ec | 1368.4 / 1383.9 | 1081.5 / 1086.5 | 137.7 | 193.2 | 950.7 | bundles bit-identical, ent −10.2 noise-null |
 | alloc | 84faa918f | 1238.3 / 1232.0 | 955.1 / 947.0 | 132.2 | 193.3 | 950.5 | bundles bit-identical, ent −10.4 noise-null |
+| cow (reserve) | ec4f6f725 | 1239.3 / 1221.6 | 952.1 / 936.4 | 134.7 | 195.9 | 950.4 | flat-as-filed straddle; bundles bit-identical |
