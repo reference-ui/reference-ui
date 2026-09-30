@@ -1,12 +1,11 @@
 // Stale-dir removal: it takes a directory path and emits nothing, retrying
 // the recursive remove while the background tasty writer lands files beside
-// the wipe. Sync wipes the output dir and the tasty phase writes into it
-// after sync returns, so the two overlap by design; a conflicting entry
-// fails the remove, and a brief backoff converges once the writer's atomic
-// rename lands. Bounded — a stuck writer still fails loud instead of
-// wedging sync. An optional preserve list keeps entries (the session lock)
-// across a wipe; the failure wipe preserves the lock, releases it, and drops
-// the emptied root, so no half-written folder survives (SYNC-11).
+// the wipe. `ref clean` (and test teardown) removes trees the tasty phase
+// may be extending after a sync returned, so the two overlap by design; a
+// conflicting entry fails the remove, and a brief backoff converges once
+// the writer's atomic rename lands. Bounded — a stuck writer still fails
+// loud instead of wedging the caller. An optional preserve list keeps
+// entries (the session lock) across a wipe.
 
 import { readdir, rm, rmdir } from 'node:fs/promises'
 import { join } from 'node:path'

@@ -14,4 +14,9 @@ with SITE-06/D11 — the spec pins that contrast with a temp world). This
 surfacing unblocks NEO-TOKEN-02: the missing-ref diagnostic now reaches
 authors named with file and line.
 
+Staged publish extends the atomicity: a failing *re-sync* over a good
+folder keeps the last-good outputs serving byte-identical (the spec pins
+the sheet) and drops its stage — readers never see the failure as a
+missing folder, only as the diagnostic.
+
 > Search terms: all-or-nothing, located-error, rollback, poison-world, fail closed, no half folder, sync/diagnostic-failure, sync/atomic-write, ATM-DIAG-02, ATM-DIAG-03, NEO-SYNC-08

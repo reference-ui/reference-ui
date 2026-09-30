@@ -1,6 +1,6 @@
 // Manifest writer for Neo generated packages.
 // It takes a target dir plus a package definition and emits the package.json published beside each bundle.
-// The write is unconditional: sync rm-wipes the output dir first, so change-gating the write would be dead code.
+// The write is unconditional: the commit change-gates identical bytes at publish, so gating here would be dead code.
 
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'

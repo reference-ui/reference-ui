@@ -4,4 +4,5 @@
 
 export { resolveRefConfigFile } from './ref-config.ts'
 export { getOutDirPath } from './out-dir.ts'
+export { getStageDirPath } from './stage-dir.ts'
 export { getOutDirTmpPath, getProjectTmpDirPath } from './tmp-dir.ts'

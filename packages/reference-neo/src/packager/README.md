@@ -20,10 +20,11 @@ project links can only agree with each other.
 
 The assembly runs serially by construction: shells first, then the
 runtime data, then the bundles that read it, then the declarations
-wired onto the bundles, then the project links last so every
-junction lands on a complete package. There are no workers, no
-thread pool, no event bus: natives compile fast and serial, and an
-ordered await chain is the whole orchestration.
+wired onto the bundles. Sync commits the assembled stage live and
+links the packages after, so every junction lands on a complete
+package. There are no workers, no thread pool, no event bus:
+natives compile fast and serial, and an ordered await chain is the
+whole orchestration.
 
 Two externals policies govern two bundling positions. The generated
 bundles externalize their host-provided edges (React rides with the
@@ -51,8 +52,9 @@ before, gone after, literal after — so it unit-pins without
 touching the filesystem. The legacy layer-name injection has no
 counterpart here: the system name bakes in at generation, so no
 placeholder exists to inject. The legacy worker lifecycle, the
-TypeScript declaration fan-out, the build-copy install mode, and
-the write-if-changed gating were all deliberately left behind:
-Neo's typegen plus a single declaration leg cover types, junctions
-carry every install, and sync wipes the output dir first, which
-makes change-gating dead code.
+TypeScript declaration fan-out, and the build-copy install mode
+were all deliberately left behind: Neo's typegen plus a single
+declaration leg cover types, and junctions carry every install.
+Write-if-changed gating came back, but in the commit instead of
+the legs: legs write the stage unconditionally, and the commit
+skips identical bytes so watchers never see a no-op resync.

@@ -28,9 +28,9 @@ function neoFilePath(...parts: string[]): string {
  * Publish the generated types package: bundle the reference entry (with
  * the per-system react primitives aliased in), rewrite the tasty runtime
  * edge, and write the bundle, manifest, and declarations. Runs after the
- * react leg — the alias target must exist — and before the links leg, so
- * the junction lands on a complete package. The tasty dir itself is
- * session-owned and lands later; this leg never touches it.
+ * react leg — the alias target must exist. Sync links the packages after
+ * the commit, so the junction lands on a complete package. The tasty dir
+ * itself is session-owned and lands later; this leg never touches it.
  */
 export async function publishReferenceTypesBundle(
   input: ReferenceTypesPublishInput

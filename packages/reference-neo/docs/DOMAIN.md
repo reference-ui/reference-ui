@@ -37,6 +37,13 @@ this file in the same pass.
   Owned by `reference-rs/contracts`, never redefined.
 - **publish** — writing `.reference-ui/{system,styled,react}` from
   Rust's output.
+- **stage** — the nested dir (`.reference-ui/sync.stage`) one sync
+  assembles into before committing. The live folder keeps serving
+  while the stage builds; the commit moves it live file by file
+  (identical bytes skipped, the rest atomic-renamed, stale entries
+  deleted last), so watchers see one coherent refresh with no
+  bundler plugin. A failed sync drops its stage and keeps the
+  last-good folder.
 - **packager** — the subsystem (`src/packager/`) that owns the
   generated package set as declarative definitions, the manifests,
   the externals policies, the assembly order, and the named

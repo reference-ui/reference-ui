@@ -72,6 +72,29 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
       fs.existsSync(path.join(warnDir, '.reference-ui', 'styled', 'styles.css')),
       'display:true warns and sync succeeds',
     );
+
+    // Staged publish: a failing re-sync keeps the last-good folder serving
+    // instead of wiping it, and drops its stage with the failed run.
+    const sheetPath = path.join(warnDir, '.reference-ui', 'styled', 'styles.css');
+    const sheetBefore = fs.readFileSync(sheetPath, 'utf8');
+    fs.writeFileSync(
+      path.join(warnDir, 'theme', 'bad.ts'),
+      'import { css } from \'@reference-ui/react\'\n\nexport const cls = css({ color: \'{colors.nope}\' })\n',
+    );
+    await assert.rejects(
+      sync(warnDir),
+      /unknown token reference `\{colors\.nope\}`/,
+      'broken re-sync rejects naming the ref',
+    );
+    assert.equal(
+      fs.readFileSync(sheetPath, 'utf8'),
+      sheetBefore,
+      'failed re-sync keeps the last-good sheet byte-identical',
+    );
+    assert.ok(
+      !fs.existsSync(path.join(warnDir, '.reference-ui', 'sync.stage')),
+      'failed re-sync drops its stage',
+    );
   } finally {
     fs.rmSync(warnDir, { recursive: true, force: true });
   }

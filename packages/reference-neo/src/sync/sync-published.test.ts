@@ -62,6 +62,10 @@ function snapshotFolder(outDir: string): string[] {
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
+      // The tasty dir is session-owned background output, not sync's
+      // publish: it lands after sync returns and persists across syncs, so
+      // determinism snapshots the committed folder without it.
+      if (relative(outDir, full) === join('types', 'tasty')) continue
       if (entry.isDirectory()) walk(full)
       else if (entry.isFile()) files.push(full)
     }

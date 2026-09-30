@@ -1,10 +1,11 @@
 // Sync session lock: the last-wins cross-process mutex behind `ref sync`.
 // It takes a project root plus the session kind and emits a held lock whose
-// release removes the lock dir. Concurrent syncs interleave in the cleanDir
-// rm-window, so the latest call wins: it preempts the holder (kill, or a
-// SIGUSR2 poke when a one-shot meets a resident watch) and takes over. The
-// owner document model lives in session-owner.ts; this module owns the
-// mkdir race, the preempt matrix, and the hold with its signal handlers.
+// release removes the lock dir. One sync holds the folder at a time, so the
+// latest call wins: it preempts the holder (kill, or a SIGUSR2 poke when a
+// one-shot meets a resident watch) and takes over. The loser dies mid-stage
+// with the live folder untouched. The owner document model lives in
+// session-owner.ts; this module owns the mkdir race, the preempt matrix,
+// and the hold with its signal handlers.
 
 import { randomBytes } from 'node:crypto'
 import { readFileSync, rmSync } from 'node:fs'

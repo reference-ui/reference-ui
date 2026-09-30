@@ -45,6 +45,8 @@ export async function runCleanCommand(dir: string | undefined, watch: boolean): 
     const session = await acquireSyncSession({ cwd, kind: 'clean' })
     let links = 0
     try {
+      // The stage nests inside the out dir, so the wipe takes it too — even
+      // one a killed sync stranded.
       await cleanDir(outDir, { preserve: [SYNC_LOCK_DIR_NAME] })
       links = removeScopeLinks(cwd, outDir)
     } finally {
