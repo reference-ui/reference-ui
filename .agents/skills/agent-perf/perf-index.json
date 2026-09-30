@@ -1,7 +1,7 @@
 {
- "built": "2026-09-22T15:14:35.324Z",
+ "built": "2026-09-30T16:14:11.212Z",
  "root": "docs/perf/waves",
- "count": 104,
+ "count": 109,
  "entries": [
   {
    "id": "DEAD-GC-SCHEDULING-FORCED-COLLECTION-ZERO",
@@ -140,6 +140,26 @@
    "report": "LOG.md",
    "patch": null,
    "summary": "Warm second-sync, churn profiling, new profiling infra as objectives.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "INT-STPERF-STACK",
+   "wave": "styletrace-perf",
+   "topic": "integrate stack",
+   "kind": "integration",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -777,
+    "pct": -42.1,
+    "pairs": "8/8"
+   },
+   "files": [],
+   "report": "docs/perf/waves/styletrace-perf/integrate-stack.md",
+   "patch": null,
+   "landing": "ec4f6f725",
+   "overruledBy": null,
+   "summary": "rc LAND + alloc LAND + cow reserve land as one arc: whole-sync −777.0 ms (−42.1%) 8/8; LOO −627.0 rc / −127.0 alloc / +5.0 cow; counts 4970 / 2037+126 / 892; 580/580 identity; pins e9387f5ec / 84faa918f / ec4f6f725.",
    "log": null,
    "filler": false
   },
@@ -349,7 +369,7 @@
    "landing": null,
    "overruledBy": null,
    "summary": "Base pin verified FIRST: `git rev-parse HEAD` = `0939615d5c2730eb56bae5af47384d077266a78c` (match, proceed).",
-   "log": "- swarm-intbank4 CUT-WITH-CAUSE (land nothing) — ACCEPTED, integrator\n  COMMENDED. The briefed \"3 pending BANKs\" were all previously ruled\n  by certified closeout b8a75b0bd (verified firsthand: AUTHCSS\n  yielded-subsumed/race, RECIPEPATH HELD→CUT/lottery, SCALARJSON\n  superseded/landed; all three overruledBy mirrors confirmed).\n  Captain's bad dispatch — full own: briefed from `landedIn: None`\n  without checking overruledBy + closeout. Integrator refused the\n  re-litigation with full receipts (per-member evidence, file:line\n  collisions, what-was-not-done, zero timed runs, tree untouched,\n  fences honored). New rule: integrator briefs check overruledBy +\n  closeout rulings before dispatch — None ≠ pending. Filed\n  `docs/perf/waves/wave-4/integrate-intbank4.md` (index 101, CUT).\n  Confirm: sync-ground banked remainder is ZERO by receipt; the only\n  unlanded banks anywhere are CATPOST + PRELOWER (MCP, still gated\n  on integrator + HQ scope decision per the closeout).",
+   "log": null,
    "filler": false
   },
   {
@@ -369,7 +389,7 @@
    "landing": "11e821a1a",
    "overruledBy": null,
    "summary": "Integrator for the 2 HQ scope-widened off-scope MCP BANKs. Judge and prove — no new diets.",
-   "log": "- swarm-intmcp BANK×2-CONFIRMED → LANDED `11e821a1a` (captain\n  sign-off: surface totals µs, absolute bar incommensurable; HQ\n  ordered main). Races: both B variants YIELD on count evidence\n  (dedupe covers 0 docs; fallback 3857 invocations/call). Proof:\n  3× 8-pair surface sets (browse −359.2µs −99.9%, demand −28.4µs\n  −1.9%, all 8/8), 79/79 identity, 12/12 suites, sync 0-confirm\n  (−3.22 noise, 4/8, bytes exact ×16). Captain firsthand: diff\n  reviewed, patch check-clean, byte-identical apply, icons-catalog\n  12/12, typecheck 0 errors (tip-clean, better than brief's 7\n  pre-existing). Filed `docs/perf/waves/wave-4/integrate-intmcp.md`\n  (index 102, LAND). SCOREBOARD (MCP surface): browse 359.7→0.5µs,\n  demand 1473.3→1444.9µs; sync 919.8→916.6 noise-0. No bench:neo\n  (sync untouched by importer-graph + 0-confirm; full bench rides\n  the F1 landing per HQ's closeout order).",
+   "log": null,
    "filler": false
   },
   {
@@ -473,6 +493,20 @@
    "filler": false
   },
   {
+   "id": "MEMO-MEMOSTPERFBENCHENT",
+   "wave": "styletrace-perf",
+   "topic": "memo stperf benchent",
+   "kind": "memo",
+   "verdict": "MEMO",
+   "effect": {},
+   "files": [],
+   "report": "docs/perf/waves/styletrace-perf/memo-stperf-benchent.md",
+   "patch": null,
+   "summary": "on the enterprise bench load all three diets + sum read **null** (rc −1.6, cow +8.4, alloc +6.4, sum +4.5 ms on ~960 ms; 6/8, 3/8, 1/8, 4/8) — the guard passes as **no-regression**, and the null is mechanistically grounded: the instrumented binary emits 500 stperf session lines on the scratch lib world vs **0** on the enterprise bench world through the same `sync()`. The diet surface (tracer `load",
+   "log": null,
+   "filler": false
+  },
+  {
    "id": "MEMO-PANDAV2THREADING",
    "wave": "wave-2",
    "topic": "panda v2 threading",
@@ -483,6 +517,72 @@
    "report": "docs/perf/waves/wave-2/panda-v2-threading.md",
    "patch": null,
    "summary": "one-shot `compile()`, stateful `parseFiles()` ingestion, snapshot assembly,",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-STPERF-ALLOC",
+   "wave": "styletrace-perf",
+   "topic": "alloc",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -111.5,
+    "pct": -6.13,
+    "pairs": "8/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/resolve.rs"
+   ],
+   "report": "docs/perf/waves/styletrace-perf/report-swarm-alloc.md",
+   "patch": "docs/perf/waves/styletrace-perf/alloc.patch",
+   "landedIn": "solo/84faa918f",
+   "summary": "every `resolve_prop_names`/`resolve_literal_names` level built a temp `BTreeSet` and `extend`ed it upward (2037 `Object` clones = 696,443 elems, 126 iface-prop clones, plus per-level temps); the diet threads a single `&mut BTreeSet` accumulator with move-when-empty merges. Whole-sync −111.5 ms (−6.13%), 8/8, stands ex-run-1.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-STPERF-COW",
+   "wave": "styletrace-perf",
+   "topic": "cow",
+   "kind": "diet",
+   "verdict": "BANK",
+   "effect": {
+    "ms": -10,
+    "pct": 22.9,
+    "pairs": "5/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/resolve.rs"
+   ],
+   "report": "docs/perf/waves/styletrace-perf/report-swarm-cow.md",
+   "patch": "docs/perf/waves/styletrace-perf/cow.patch",
+   "landedIn": "solo/ec4f6f725",
+   "summary": "`bind_type_params` cloned the inherited env on all 3904 calls/sync; 892 (22.9%) bind zero params, so those now borrow via `Cow`. Whole-sync −10.0 ms (−0.55%), 5/8 favor — a directional sub-noise straddle: BANK as a sum member.",
+   "log": null,
+   "filler": false
+  },
+  {
+   "id": "PERF-STPERF-RC",
+   "wave": "styletrace-perf",
+   "topic": "rc",
+   "kind": "diet",
+   "verdict": "LAND",
+   "effect": {
+    "ms": -647.5,
+    "pct": -35.25,
+    "pairs": "8/8"
+   },
+   "overruledBy": null,
+   "files": [
+    "packages/reference-rs/modules/styletrace/src/resolver/tracer/context.rs"
+   ],
+   "report": "docs/perf/waves/styletrace-perf/report-swarm-rc.md",
+   "patch": "docs/perf/waves/styletrace-perf/rc.patch",
+   "landedIn": "solo/e9387f5ec",
+   "summary": "`load_module` cache hits returned a deep `ParsedModule` clone (4970 hits/sync, 257,814 decls rebuilt+freed); the cache now holds `Rc<ParsedModule>` and hits are pointer bumps. Whole-sync −647.5 ms (−35.25%), 8/8, stands ex-run-1.",
    "log": null,
    "filler": false
   },
@@ -1795,7 +1895,7 @@
    "patch": "docs/perf/waves/wave-3/catpost.patch",
    "landedIn": null,
    "summary": "MCP search({category}) browse serves prebuilt category-to-entries postings instead of a MiniSearch wildcard; browse median 0.374 ms -> 0.002 ms (-99.5%), 8/8 agree.",
-   "log": "- swarm-catpost BANK (off-scope MCP search({category}) browse):\n  prebuilt category postings skip the MiniSearch wildcard; browse\n  0.374 ms -> 0.002 ms (-99.5%) 8/8 agree, identity 42/42, suites\n  12/12 as filed in claims (crew parked mid-flight, no surviving\n  REPORT). A-variant patch canonical, B unadjudicated. Landing needs\n  integrator re-proof + captain firsthand.",
+   "log": null,
    "filler": false
   },
   {
@@ -1814,7 +1914,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "MCP ctor category walk+sort hoist saves 0.26 ms one-time against a ~73 ms ctor; below the 15 ms LAND bar and the 5 ms floor; CUT as filed.",
-   "log": "- swarm-prebuiltcats CUT (sub-floor): ctor walk+sort hoist saves\n  0.26 ms one-time vs ~73 ms ctor; below LAND bar and 5 ms floor.\n  Closed.\n\n## Compile closeout (certified, base c593829d3 — HQ-ordered, pre-scan-voyage)\n\nBank reconciliation, all 25 bank-verdict entries, firsthand: 20 landed\nvia sets 1–5 + cloneplasma (every one a reference-rs compile path);\nAUTHCSS yielded-subsumed into landed cloneplasma (race rule);\nRECIPEPATH HELD→CUT (allocator lottery, PERF-W3-RECIPEPROOF);\nSCALARJSON superseded by landed SCALARREPROOF (set-4; original −14.59\ncarried crew noise disclaimer, patch retained as record); CATPOST +\nPRELOWER pending deliberately (off-scope MCP, 0 sync ms — landing\ngated on integrator + HQ scope decision). Unexplained-pending on sync\nground: ZERO. No integrator — member set empty. Improvement left on\nthe table in banked compile work: 0 ms by receipt. Seam scout\ndispatched as the last unscouted compile room (counts-first, no\ndiets); scan voyage opens separately after closeout lands.\n\n## Wave 4 — IN PROGRESS (scan frontier, HQ-ordered)",
+   "log": null,
    "filler": false
   },
   {
@@ -1835,7 +1935,7 @@
    "patch": "docs/perf/waves/wave-3/prelower.patch",
    "landedIn": null,
    "summary": "MCP icons index lowercases stored categories once at load so searchDemand/search filters use plain === with zero per-candidate allocs; lowers 4978/549 -> 1/4, browse 0.41 ms -> 0.36 ms.",
-   "log": "- swarm-prelower BANK (off-scope MCP icons filter path): lowercase\n  stored categories once at load, hot filters go alloc-free; lowers\n  4978/549 -> 1/4, browse 0.41 ms -> 0.36 ms, before-x3 + after-x2\n  (NOT 8-pair — deviation disclosed in the report). Landing needs\n  full 8-pair + integrator re-proof.",
+   "log": null,
    "filler": false
   },
   {
@@ -1913,7 +2013,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "MCP searchDemand options-object reuse showed no stable win under interleaved A/B with lottery control; CUT as filed.",
-   "log": "- swarm-reusesearchopts CUT (lottery): options-object reuse, no\n  stable win under interleaved A/B x2 + lottery control; identity\n  sha match. Closed.",
+   "log": null,
    "filler": false
   },
   {
@@ -1981,7 +2081,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `ff64ab75b594cfd81d0cb8488bd0ea86a0155b15` (verified `git rev-parse HEAD`",
-   "log": "- swarm-reflame6 REPROFILE (post-T1 flame refresh): scan −18.1\n  pair-mean confirms the landed diet; kernel flat, JS down; whole-sync\n  noise-bounded. Publish watch flagged.",
+   "log": null,
    "filler": false
   },
   {
@@ -2018,7 +2118,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base pin: `0eade4ac14167a094fd0ac12e07378f3c343280d` (verified first act; tree clean at start).",
-   "log": "- swarm-scanbundle CUT (fuse 2 esbuild builds → 1): −3.12 ms median,\n  8/8 agree, identity 4/4; real mechanism, below the 5 ms floor.\n  Closed — do not re-litigate without new filed evidence.",
+   "log": null,
    "filler": false
   },
   {
@@ -2038,7 +2138,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `0eade4ac14167a094fd0ac12e07378f3c343280d` (verified `git rev-parse HEAD`",
-   "log": "- swarm-scanidentity LAND (solo, prefix-strip + fused splitScan):\n  −16.84 ms / −1.96%, 8/8 agree, identity 4/4, integrator-confirmed\n  −15.05/−1.76%. Landed with its arc; bench pinned with this entry.",
+   "log": null,
    "filler": false
   },
   {
@@ -2057,7 +2157,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `b8a75b0bd74c72a72a2c6fe338ca8026088b5afe` (verified `git rev-parse HEAD`",
-   "log": "- swarm-scanrecon4 REPROFILE (wave-4 opening): fresh flames 5a/b flat,\n  exact scan census ×3, 2-topic backlog (T1 identity, T2 bundle),\n  dry rooms named, ceiling 919/932. Landed with bundles + census dir.",
+   "log": null,
    "filler": false
   },
   {
@@ -2076,7 +2176,7 @@
    "patch": null,
    "landedIn": null,
    "summary": "- Base: `c593829d3a2b6382d7150410a05a470159f40616` (`git rev-parse HEAD` verified first act; match, proceed).",
-   "log": "- swarm-seamscout CUT (compile-window N-API census): exactly 1\n  crossing/sync (optimal floor), fixed cost ≈0 ms; full codec 42/43wt\n  fenced/floor; filler = binary-protocol surgery with bank conditions.\n  Closed — do not re-litigate without new filed evidence.",
+   "log": null,
    "filler": false
   }
  ]

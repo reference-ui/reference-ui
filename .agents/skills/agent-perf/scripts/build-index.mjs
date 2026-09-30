@@ -8,12 +8,15 @@ import path from 'node:path';
 
 const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
 const WAVES = path.join(ROOT, 'docs/perf/waves');
+// Mission waves beyond the numbered series (styletrace-perf files here until HQ lands it).
+const isWaveDir = (d) => /^wave-\d+$/.test(d) || d === 'styletrace-perf';
+const waveTag = (wave) => wave === 'styletrace-perf' ? 'STPERF' : wave.replace('wave-', 'W').toUpperCase();
 const OUT = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'perf-index.json');
 // LOG sources: live log + every wave archive (closeout clears the live log,
 // so archives are the durable carrier — never drop them from this list).
 function logSources() {
   const srcs = [path.join(ROOT, 'LOG.md')];
-  for (const wave of fs.readdirSync(WAVES).filter((d) => /^wave-\d+$/.test(d))) {
+  for (const wave of fs.readdirSync(WAVES).filter(isWaveDir)) {
     for (const f of fs.readdirSync(path.join(WAVES, wave))) {
       if (/^log-archive-.*\.md$/.test(f)) srcs.push(path.join(WAVES, wave, f));
     }
@@ -28,6 +31,7 @@ const LANDINGS = {
   'INT-W2-SET5': '6c3909506',
   'INT-W4-SCANT1': '1e4e3a0b5',
   'INT-W4-INTMCP': '11e821a1a',
+  'INT-STPERF-STACK': 'ec4f6f725',
 };
 // Captain overrules (filed verdict superseded — extend when it happens).
 const OVERRULED = {
@@ -65,6 +69,9 @@ const LANDED_FILES = {
   'PERF-W2-HARVESTPHASE': ["packages/reference-rs/modules/atomic/src/extract/harvest/mint/mod.rs"],
   'PERF-W3-RAWINDEX': ["packages/reference-mcp/src/pipeline/icons-search-index.ts","packages/reference-mcp/tsup.config.ts"],
   'PERF-W4-FORMULA1': ["packages/reference-neo/src/fragments/base/fixtures/scan-goldens.churn.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.enterprise.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.medium.json","packages/reference-neo/src/fragments/base/fixtures/scan-goldens.small.json","packages/reference-neo/src/fragments/base/index.test.ts","packages/reference-neo/src/fragments/base/index.ts","packages/reference-neo/src/fragments/base/scan-crossings.test.ts","packages/reference-neo/src/fragments/base/scan-goldens.test.ts","packages/reference-neo/src/fragments/base/scan-native-helpers.ts","packages/reference-neo/src/fragments/base/scan-native-lifecycle.test.ts","packages/reference-neo/src/fragments/base/scan-native.test.ts","packages/reference-neo/src/fragments/index.ts","packages/reference-neo/src/fragments/lib/index.ts","packages/reference-neo/src/fragments/lib/scanner-native.ts","packages/reference-neo/src/fragments/lib/scanner.ts","packages/reference-neo/src/sync/index.ts","packages/reference-neo/src/sync/native.ts","packages/reference-rs/modules/atomic/js/index.ts","packages/reference-rs/modules/atomic/js/runtime.ts","packages/reference-rs/modules/atomic/js/types.ts","packages/reference-rs/modules/atomic/native.rs","packages/reference-rs/modules/atomic/src/diagnostics/codes.rs","packages/reference-rs/modules/atomic/src/lib.rs","packages/reference-rs/modules/atomic/src/scan/mod.rs","packages/reference-rs/modules/atomic/src/scan/store.rs","packages/reference-rs/modules/atomic/src/sources.rs","packages/reference-rs/modules/atomic/src/types.rs","packages/reference-rs/modules/atomic/tests/scan_retention.rs"],
+  'PERF-STPERF-RC': ["packages/reference-rs/modules/styletrace/src/resolver/tracer/context.rs"],
+  'PERF-STPERF-ALLOC': ["packages/reference-rs/modules/styletrace/src/resolver/tracer/resolve.rs"],
+  'PERF-STPERF-COW': ["packages/reference-rs/modules/styletrace/src/resolver/tracer/resolve.rs"],
 };
 // Crew verdict -> final disposition: these diets are IN THE TREE even when the
 // crew verdict says CUT (captain override, reserve precedent).
@@ -83,6 +90,9 @@ const LANDED_IN = {
   'PERF-W2-BAGDEFER': 'set-5/6c3909506', 'PERF-W2-HARVESTPHASE': 'set-5/6c3909506',
   'PERF-W3-RAWINDEX': 'solo/b3181fa93',
   'PERF-W4-FORMULA1': 'solo/36953b4d4',
+  'PERF-STPERF-RC': 'solo/e9387f5ec',
+  'PERF-STPERF-ALLOC': 'solo/84faa918f',
+  'PERF-STPERF-COW': 'solo/ec4f6f725',
 };
 
 const slugWords = (s) => s.replace(/-/g, ' ');
@@ -195,9 +205,9 @@ function deadEnds() {
 const entries = [];
 const logs = logEntries();
 
-for (const wave of fs.readdirSync(WAVES).filter((d) => /^wave-\d+$/.test(d)).sort()) {
+for (const wave of fs.readdirSync(WAVES).filter(isWaveDir).sort()) {
   const dir = path.join(WAVES, wave);
-  const wtag = wave.replace('wave-', 'W').toUpperCase();
+  const wtag = waveTag(wave);
   for (const f of fs.readdirSync(dir).sort()) {
     const fp = path.join(dir, f);
     if (!fs.statSync(fp).isFile() || !f.endsWith('.md')) continue;

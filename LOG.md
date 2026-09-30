@@ -1,16 +1,9 @@
-# STYLETRACE-PERF voyage log
+# Voyage log (live stub)
 
-Mission: cut styletrace-dominated `sync()` wall on the reference-lib-shaped
-world. Base `488bcfd7a`. HQ law: absolutes are box noise — the share and the
-structure carry the signal. Every diet removes counted work (counts +
-byte-identity + determinism). Enterprise bench is the regression guard (diets
-read null there: the tracer surface is never entered on the synth load —
-500 stperf sessions on scratch vs 0 on enterprise, REPORT-STPERF-benchent).
-
-Pre-landing flames (base tip): `docs/EVIDENCE/flamegraph/styletrace-lib1/`
-(sync 2246.7, compile 1802.2, RECONCILED) + `styletrace-lib2/` (sync 2025.6,
-compile 1742.2, RECONCILED). Base bench pin `reports/488bcfd7a660/`
-(small 134.7 / medium 195.3 / enterprise 960.9).
+STYLETRACE-PERF landed 2026-09-30 (base `488bcfd7a` → `ec4f6f725`):
+rc LAND + alloc LAND + cow reserve, sum −777 ms / −42.1% whole-sync 8/8.
+Full log: `docs/PERF/waves/styletrace-perf/log-archive-2026-09-30.md`.
+Filings: `docs/PERF/waves/styletrace-perf/` (index 109).
 
 ## Scoreboard (seed-7 medians; lib-world = flame sync/compile pair, bench = bench:neo)
 
