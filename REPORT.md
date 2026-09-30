@@ -1,5 +1,12 @@
 # REPORT — Remaining Issues (landing sequence)
 
+> SUPERSEDED 2026-09-29 by `FINISH.md` (the closeout doc) + the
+> `DECISIONS.md` closeout amendments. Everything below was 09-28
+> status; open items were resolved in the FINISH wave or carried
+> with prescription (hermetic infra, per-browser adoption,
+> Menubar-majors + Tooltip-pair pre-existing reds, RovingFocus-handoff
+> owner). Kept as history, not as a live list.
+
 Plain-language breakdown of everything still open, with the smallest
 code that shows each problem. Status as of 2026-09-28, HEAD c7fbc2713.
 

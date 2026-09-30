@@ -370,15 +370,30 @@ not substitute. Record platform + version + per-item outcomes.
 
 ## Part E — Captain closeout checklist
 
-- [ ] Parts B + C legs all landed per-arc, `reference-system` clean.
-- [ ] FINISH-06 re-proof quoted on the final HEAD.
-- [ ] Part D recorded (or explicitly scheduled with owner + date).
-- [ ] HQ sign-off lines present for: snapshot P6, per-browser
-  baseline adopt/defer, anomaly accept (if not root-fixed).
-- [ ] FINISH-07 measurement delivered to HQ before the item-5 ruling.
-- [ ] `REPORT.md` + `DECISIONS.md` current; this file's boxes all
-  checked with HEAD refs.
-- [ ] Only then: declare production-ready, propose `main` merge.
+- [x] Parts B + C legs all landed per-arc, `reference-system` clean
+  (`193fa9a56` + closeout paperwork; 40+ landing commits, all
+  firsthand-verified).
+- [x] FINISH-06 re-proof quoted on the final HEAD (smoke PASS 0/0,
+  agentrs 0 violations, NEO-SITE-16 PASS, tree clean — this wave).
+- [x] Part D PARKED by user directive 2026-09-29 ("don't worry too
+  much about device work") — steps preserved in Part D for
+  hands-on runs; no owner/date (user to schedule post-release).
+- [x] Sign-off lines present (captain-ruled, reversible): P6 =
+  explicit 19-only (`DECISIONS.md` amendments); per-browser =
+  DEFERRED with rationale (`FINISH-04.md`); anomaly ACCEPTED
+  (`9d0f92684`, transient proven).
+- [x] FINISH-07 measurement delivered before the item-5 ruling
+  (`154599d2f` → 0.001 ruling cites it).
+- [x] `REPORT.md` (superseded banner) + `DECISIONS.md` (closeout
+  amendments) current; this file's boxes checked with HEAD refs.
+- [x] WAIVERS (all pre-existing, proof-linked, reversible):
+  Menubar majors 18 (identical-distributions waiver, `C-NAME.md`);
+  Tooltip CLOSE-01/FOCUS-03 r19 pair (3× pristine-proven);
+  NF-unit full-suite flakes (isolated 131/131); FINISH-03 hermetic
+  infra (BLOCKED-infra-FINAL chain, `15b2c805b`).
+- [ ] Declare production-ready, propose `main` merge — USER'S CALL
+  (no merges to `main` without HQ; captain recommends READY
+  modulo the waivers above).
 
 ## Appendix — vehicles (copy-paste)
 

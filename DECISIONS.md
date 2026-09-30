@@ -259,3 +259,32 @@ Prior art:
   should not blame the user for a system gap. Genuinely malformed
   values (unknown props, garbage strings) are the uncontested W-04 core.
 
+---
+
+## Closeout amendments (2026-09-29, captain's rulings under user autonomy directive — all reversible by veto)
+
+Full record: `FINISH.md` change control + `.agents/missions/finish-line/`.
+
+- **§1 Handler naming → RULED 1a, LANDED.** House `onChange`
+  everywhere; Radix aliases stripped (Menu), Menubar's prop renamed
+  (`30e738184`, `b30e7272a`). No shims.
+- **§3 W-02 numerals → RULED + LANDED.** i-freeze (zero-anchor +
+  endpoint preserve), ii-freeze (away-from-zero), iii-retain-and-report
+  (advisory onInvalidCommit, range-first), iv-keep, v-keep, vi-keep
+  SUPERSEDED by the landed SPEC'd Intl parser (deleting it would be
+  perverse; recorded in `C-NF.md`). Engine was already landed by NFLAST
+  missions (verified firsthand); the flip was audit + re-pins, zero
+  behavior change (`b285a62b3`). B-19 re-pinned to live-request titles.
+- **§5 Snapshots → RULED 5a-modified + P6 19-only, LANDED.**
+  Default `0.001` (FINISH-07 measured: 12× headroom, `154599d2f`),
+  ≤25px locator rule, ≥0.01 TOL-ban; trio → locator snaps; 64
+  baselines regenned with per-baseline eyeball classification
+  (`02f306ee0`, `a21644351`, `83dda8f56`); 31 orphans pruned (349=349).
+  Per-browser r19 baselines DEFERRED to first follow-up (two boxes
+  consumed by Chromium fallout; zero release-blocking value; all
+  vehicles preserved). FF/WK paint stays behavior-only + page snaps
+  vs shared Chromium (7.2× headroom proven) until adoption.
+- **NumberField least-surprise flags (A2) → ADOPTED** as specified in
+  `NumberField/DECISIONS.md` (a)(b)(c) + Intl i–xvi (already landed).
+- **C-SWITCH/SLIDER/DATE → VACUOUS** (no written takes exist).
+
