@@ -182,6 +182,28 @@ export const NestedOverlay = () => {
                 Nested tooltip
               </Tooltip.Content>
             </Tooltip>
+            {/* Second trap tabbable (RED-TT): a single-tabbable trap wraps Tab
+                to self with NO focus event, and the lock synchronously reclaims
+                .blur() — so no keyboard focus arrival exists to open the tip.
+                This sr-only control (zero painted pixels, snapshots unaffected)
+                makes Tab-away / Shift+Tab-back honest focus events. */}
+            <button
+              type="button"
+              data-testid="nested-dialog-sr-next"
+              style={{
+                position: 'absolute',
+                width: 1,
+                height: 1,
+                padding: 0,
+                margin: -1,
+                overflow: 'hidden',
+                clipPath: 'inset(50%)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              Skip nested tip
+            </button>
           </Overlay.Content>
         </Overlay>
       </div>

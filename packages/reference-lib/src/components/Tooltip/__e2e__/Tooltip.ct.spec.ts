@@ -196,10 +196,13 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await expect(trigger).toBeFocused()
     await expect(tip).toHaveCount(0)
 
-    // Single-tabbable trap wraps Tab to self (no focus event), so blur out and
-    // Tab back in: the open below is an honest keyboard Tab with a ring.
-    await trigger.evaluate(el => (el as HTMLElement).blur())
-    await page.keyboard.press('Tab')
+    // RED-TT: .blur() is synchronously reclaimed by the lock and a lone Tab
+    // wraps to self with NO focus event — so Tab away to the sr-only second
+    // tabbable and Shift+Tab back: the open below is an honest keyboard Tab
+    // arrival with a ring. pressTab is dir-aware (WK: Alt+Tab chords).
+    await pressTab(page)
+    await expect(page.getByTestId('nested-dialog-sr-next')).toBeFocused()
+    await pressTab(page, 'back')
     await expect(trigger).toBeFocused()
     await expect(tip).toBeVisible()
     await page.waitForTimeout(200)
@@ -230,11 +233,13 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await expect(trigger).not.toHaveAttribute('data-focus-visible')
     await expect(tip).toHaveCount(0)
 
-    // Focus away and back via a real Tab: tip opens WITH the ring (TT-FOCUS-01).
-    // (Single-tabbable trap wraps Tab to self, so the "away" leg is a blur;
-    // the "back" leg is the honest keyboard Tab through the trap.)
-    await trigger.evaluate(el => (el as HTMLElement).blur())
-    await page.keyboard.press('Tab')
+    // Focus away and back via real Tabs: tip opens WITH the ring (TT-FOCUS-01).
+    // (RED-TT: .blur() is synchronously reclaimed by the lock, so the "away"
+    // leg is an honest Tab to the sr-only second tabbable; the "back" leg is
+    // the honest keyboard Shift+Tab through the trap.)
+    await pressTab(page)
+    await expect(page.getByTestId('nested-dialog-sr-next')).toBeFocused()
+    await pressTab(page, 'back')
     await expect(trigger).toBeFocused()
     await expect(trigger).toHaveAttribute('data-focus-visible', '')
     await expect(tip).toBeVisible()
