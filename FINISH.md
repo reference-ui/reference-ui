@@ -387,8 +387,10 @@ not substitute. Record platform + version + per-item outcomes.
 - [x] `REPORT.md` (superseded banner) + `DECISIONS.md` (closeout
   amendments) current; this file's boxes checked with HEAD refs.
 - [x] WAIVERS (all pre-existing, proof-linked, reversible):
-  Menubar majors 18 (identical-distributions waiver, `C-NAME.md`);
-  Tooltip CLOSE-01/FOCUS-03 r19 pair (3× pristine-proven);
+  Menubar majors 18 (identical-distributions waiver, `C-NAME.md`;
+  RED-MB crew out);
+  Tooltip CLOSE-01/FOCUS-03 r19 pair CLOSED by RED-TT (`6048c4e97`;
+  vehicle fix + ring baseline, F28/F29 superseded);
   NF-unit full-suite flakes (isolated 131/131); FINISH-03 hermetic
   infra (BLOCKED-infra-FINAL chain, `15b2c805b`).
 - [ ] Declare production-ready, propose `main` merge — USER'S CALL
