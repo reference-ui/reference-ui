@@ -7,6 +7,7 @@
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
 
@@ -22,7 +23,7 @@ use crate::resolver::path::{
 
 pub struct TraceSession {
     pub sync_root: PathBuf,
-    pub module_cache: FxHashMap<PathBuf, ParsedModule>,
+    pub module_cache: FxHashMap<PathBuf, Rc<ParsedModule>>,
     /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
     /// surface-type import denotes. `None` keeps disk resolution strict.
     pub unresolved_style_props: Option<BTreeSet<String>>,
@@ -63,19 +64,19 @@ impl<'a> TraceContext<'a> {
         }
     }
 
-    pub fn load_module(&mut self, module_path: &Path) -> Result<ParsedModule, StyleTraceError> {
+    pub fn load_module(&mut self, module_path: &Path) -> Result<Rc<ParsedModule>, StyleTraceError> {
         let normalized = normalize_path(module_path);
         if let Some(module) = self.session.module_cache.get(&normalized) {
-            return Ok(module.clone());
+            return Ok(Rc::clone(module));
         }
 
         let source = fs::read_to_string(&normalized).map_err(|error| {
             StyleTraceError::new(format!("failed to read {}: {error}", normalized.display()))
         })?;
-        let parsed = parse_module(&normalized, &source)?;
+        let parsed = Rc::new(parse_module(&normalized, &source)?);
         self.session
             .module_cache
-            .insert(normalized.clone(), parsed.clone());
+            .insert(normalized.clone(), Rc::clone(&parsed));
         Ok(parsed)
     }
 
