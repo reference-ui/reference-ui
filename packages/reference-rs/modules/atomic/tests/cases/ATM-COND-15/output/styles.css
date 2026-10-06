@@ -4,7 +4,7 @@
 @layer cond-15 {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   @container (min-width: 768px) {

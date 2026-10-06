@@ -4,9 +4,9 @@
 html,
 body {
   margin: 0;
-  background: oklch(13% 0.028 261.692);
+  background: oklch(13.14% 0.0137 266.5);
 }
 html[data-color-mode='light'],
 html[data-color-mode='light'] body {
-  background: oklch(96.7% 0.003 264.542);
+  background: oklch(96.69% 0.0014 266.5);
 }

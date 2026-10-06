@@ -4,12 +4,7 @@
 @layer nested-conditions {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-n900: #18181b;
-  }
-  [data-color-mode=dark] {
-    --colors-n900: #fafafa;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   [data-color-mode=dark] .nested-conditions__hover\:dark\:bg_n900:is(:hover, [data-hover]) { background: var(--colors-n900); }

@@ -4,19 +4,10 @@
 @layer category-breadth {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --shadows-card: 0 1px 2px rgb(0 0 0 / 0.1);
-    --sizes-content: 60ch;
-    --spacing-2: 0.5rem;
-    --spacing-4: 1rem;
-    --z-index-modal: 1400;
-    --easings-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --durations-fast: 150ms;
-    --gradients-hero: linear-gradient(180deg, #fff, #000);
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .category-breadth__shadow_card { box-shadow: var(--shadows-card); }

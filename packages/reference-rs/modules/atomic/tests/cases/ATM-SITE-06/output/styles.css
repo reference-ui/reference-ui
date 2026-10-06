@@ -4,15 +4,10 @@
 @layer local-const {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-n300: #d4d4d8;
-  }
-  [data-color-mode=dark] {
-    --colors-n300: #3f3f46;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .local-const__c_n300 { color: var(--colors-n300); }

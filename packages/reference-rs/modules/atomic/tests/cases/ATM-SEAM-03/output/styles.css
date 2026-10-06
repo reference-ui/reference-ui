@@ -4,25 +4,10 @@
 @layer plan-parity {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-cherry: #dc2645;
-    --colors-ocean: #0369a1;
-    --colors-teal: #0d9488;
-    --colors-amber: #d97706;
-    --colors-lime: #65a30d;
-    --colors-sky: #0284c7;
-  }
-  [data-color-mode=dark] {
-    --colors-cherry: #f26d85;
-    --colors-ocean: #38bdf8;
-    --colors-teal: #2dd4bf;
-    --colors-amber: #fbbf24;
-    --colors-lime: #a3e635;
-    --colors-sky: #7dd3fc;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .plan-parity__bg_lime { background: lime; }

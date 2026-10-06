@@ -39,37 +39,37 @@
       },
       "gray": {
         "50": {
-          "value": "oklch(98.5% 0.002 247.839)"
+          "value": "oklch(98.44% 0.0009 266.5)"
         },
         "100": {
-          "value": "oklch(96.7% 0.003 264.542)"
+          "value": "oklch(96.69% 0.0014 266.5)"
         },
         "200": {
-          "value": "oklch(92.8% 0.006 264.531)"
+          "value": "oklch(92.63% 0.0029 266.5)"
         },
         "300": {
-          "value": "oklch(87.2% 0.01 258.338)"
+          "value": "oklch(87.13% 0.0053 266.5)"
         },
         "400": {
-          "value": "oklch(70.7% 0.022 261.325)"
+          "value": "oklch(70.7% 0.0112 266.5)"
         },
         "500": {
-          "value": "oklch(55.1% 0.027 264.364)"
+          "value": "oklch(55% 0.0134 266.5)"
         },
         "600": {
-          "value": "oklch(44.6% 0.03 256.802)"
+          "value": "oklch(44.74% 0.0149 266.5)"
         },
         "700": {
-          "value": "oklch(37.3% 0.034 259.733)"
+          "value": "oklch(37.31% 0.0172 266.5)"
         },
         "800": {
-          "value": "oklch(27.8% 0.033 256.848)"
+          "value": "oklch(27.88% 0.0168 266.5)"
         },
         "900": {
-          "value": "oklch(21% 0.034 264.665)"
+          "value": "oklch(20.94% 0.0171 266.5)"
         },
         "950": {
-          "value": "oklch(13% 0.028 261.692)"
+          "value": "oklch(13.14% 0.0137 266.5)"
         }
       },
       "red": {
@@ -755,6 +755,18 @@
             "light": "{colors.blue.950}",
             "dark": "{colors.blue.200}"
           }
+        },
+        "positive": {
+          "text": {
+            "light": "{colors.green.600}",
+            "dark": "{colors.green.400}"
+          }
+        },
+        "bg": {
+          "muted": {
+            "light": "{colors.gray.100}",
+            "dark": "{colors.gray.900}"
+          }
         }
       },
       "ui": {
@@ -1055,6 +1067,10 @@
             "light": "{colors.gray.50}",
             "dark": "{colors.gray.950}"
           },
+          "mutedBackground": {
+            "light": "{colors.gray.100}",
+            "dark": "{colors.gray.800}"
+          },
           "disabled": {
             "background": {
               "light": "{colors.gray.200}",
@@ -1165,6 +1181,24 @@
             "background": {
               "light": "{colors.gray.100}",
               "dark": "{colors.gray.900}"
+            }
+          }
+        },
+        "panel": {
+          "background": {
+            "light": "{colors.gray.100}",
+            "dark": "{colors.gray.900}"
+          }
+        },
+        "status": {
+          "error": {
+            "border": {
+              "light": "{colors.red.600}",
+              "dark": "{colors.red.400}"
+            },
+            "text": {
+              "light": "{colors.red.600}",
+              "dark": "{colors.red.400}"
             }
           }
         }

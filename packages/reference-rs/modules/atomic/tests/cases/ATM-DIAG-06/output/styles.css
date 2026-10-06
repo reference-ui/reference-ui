@@ -4,7 +4,7 @@
 @layer diag-unicode {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  .日本語-café { color: red }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .diag-unicode__content_\😀 { content: 😀; }

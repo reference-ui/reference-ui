@@ -4,17 +4,10 @@
 @layer token-fence {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-gray-800: #1f2937;
-    --colors-red-500: #ef4444;
-  }
-  [data-color-mode=dark] {
-    --colors-gray-800: #f9fafb;
-    --colors-red-500: #f87171;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .token-fence__bd-c_color-mix\(in_srgb\,_red_50\%\,_blue\) { border-color: color-mix(in srgb, red 50%, blue); }

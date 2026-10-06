@@ -4,15 +4,10 @@
 @layer layer-keyframe-refs {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  @keyframes grow {
-    from { background-color: var(--colors-brand); width: var(--spacing-root); }
-    to { background-color: var(--colors-brand); width: calc(4 * var(--spacing-root)); }
-  }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-brand: #ff0000;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .layer-keyframe-refs__anim_grow { animation: grow; }

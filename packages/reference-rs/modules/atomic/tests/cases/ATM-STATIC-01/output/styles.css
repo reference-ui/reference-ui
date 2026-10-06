@@ -4,17 +4,7 @@
 @layer static-css {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-n100: #f4f4f5;
-    --colors-n200: #e4e4e7;
-    --colors-n300: #d4d4d8;
-    --radii-md: 0.4rem;
-  }
-  [data-color-mode=dark] {
-    --colors-n100: #18181b;
-    --colors-n200: #27272a;
-    --colors-n300: #3f3f46;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .static-css__bg_n100 { background: var(--colors-n100); }

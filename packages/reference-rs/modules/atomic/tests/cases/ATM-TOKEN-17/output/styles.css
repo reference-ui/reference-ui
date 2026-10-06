@@ -4,16 +4,10 @@
 @layer negated-brace {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --spacing-4: 1rem;
-    --colors-blue-600: #2563eb;
-  }
-  [data-color-mode=dark] {
-    --colors-blue-600: #3b82f6;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .negated-brace__bd-c_\{colors\.blue\.600\} { border-color: var(--colors-blue-600); }

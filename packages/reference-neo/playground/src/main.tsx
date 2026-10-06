@@ -19,16 +19,16 @@ const PAGES: PageDef[] = Object.entries(modules)
   .sort((a, b) => (a.route < b.route ? -1 : 1));
 
 // Palette is lib's gray ramp verbatim (oklch); the accent is our brand violet.
-const G50 = 'oklch(98.5% 0.002 247.839)';
-const G100 = 'oklch(96.7% 0.003 264.542)';
-const G200 = 'oklch(92.8% 0.006 264.531)';
-const G300 = 'oklch(87.2% 0.01 258.338)';
-const G400 = 'oklch(70.7% 0.022 261.325)';
-const G600 = 'oklch(44.6% 0.03 256.802)';
-const G700 = 'oklch(37.3% 0.034 259.733)';
-const G800 = 'oklch(27.8% 0.033 256.848)';
-const G900 = 'oklch(21% 0.034 264.665)';
-const G950 = 'oklch(13% 0.028 261.692)';
+const G50 = 'oklch(98.44% 0.0009 266.5)';
+const G100 = 'oklch(96.69% 0.0014 266.5)';
+const G200 = 'oklch(92.63% 0.0029 266.5)';
+const G300 = 'oklch(87.13% 0.0053 266.5)';
+const G400 = 'oklch(70.7% 0.0112 266.5)';
+const G600 = 'oklch(44.74% 0.0149 266.5)';
+const G700 = 'oklch(37.31% 0.0172 266.5)';
+const G800 = 'oklch(27.88% 0.0168 266.5)';
+const G900 = 'oklch(20.94% 0.0171 266.5)';
+const G950 = 'oklch(13.14% 0.0137 266.5)';
 const ACCENT = '#8b5cf6';
 const FONT = 'system-ui, -apple-system, sans-serif';
 const MONO = 'ui-monospace, monospace';

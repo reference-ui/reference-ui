@@ -4,8 +4,9 @@
  * composed page orders packages without a top-level internal layer outranking
  * another package's nested utilities. The baked `@layer root` spacing-root
  * default is the one layer ahead of the wrap, ranking below every package.
- * This module owns the order string, the lib package open line, and the
- * standing nesting gauge (M0-fix21-A).
+ * This module owns the order string, the lib package open line, the standing
+ * nesting gauge (M0-fix21-A), and the one station exempt from system-layer
+ * golden normalization (ATM-SYS-01).
  */
 import { expect } from 'vitest'
 
@@ -16,6 +17,14 @@ export const ROOT_DEFAULT_BLOCK = '@layer root {\n  :root { --spacing-root: 0.25
 
 /** Package open line for stations compiling the frozen lib spec. */
 export const LIB_PACKAGE_OPEN = '@layer \\@reference-ui\\/lib {'
+
+/**
+ * The single station whose committed stylesheet is not system-layer normalized.
+ * It pins the canonical lib `@layer global` / `@layer tokens` emission in full;
+ * every other station collapses those bodies so lib token values never churn
+ * the suite. See `normalizeSystemLayers` in `testing/normalizers.ts`.
+ */
+export const SYSTEM_EMISSION_ANCHOR = 'ATM-SYS-01'
 
 /**
  * Package-layer nesting gauge. The sheet opens a layer block first (the baked

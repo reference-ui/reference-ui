@@ -93,12 +93,12 @@ const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
 
 /** Expected byte cells: filled from the first measured run, then pinned. */
 const EXPECTED_BYTES = {
-  // 2026-09-27 root-default re-pin (HQ ruling, CONTINUITY-01): +52 raw is
-  // exactly the baked `@layer root` block, +1 rule is its `:root` rule;
-  // stylePlans/harvestWants unchanged — the default mints no atoms.
-  cssRaw: 341089,
-  cssGzip: 41501,
-  cssBrotli: 21173,
+  // 2026-10-06 gray re-pin: the onyx-aligned neutral ramp changed token value
+  // string lengths (+2 raw); the new digits compress better (-26 gzip,
+  // -14 brotli). stylePlans/harvestWants unchanged.
+  cssRaw: 341091,
+  cssGzip: 41475,
+  cssBrotli: 21159,
   stylePlans: 4938,
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/

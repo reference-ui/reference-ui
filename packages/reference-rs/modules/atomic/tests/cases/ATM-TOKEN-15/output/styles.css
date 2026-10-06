@@ -4,13 +4,10 @@
 @layer token-radii {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --radii-full: 9999px;
-    --radii-md: 0.375rem;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .token-radii__rounded_full { border-radius: var(--radii-full); }

@@ -4,21 +4,10 @@
 @layer expression-table {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer global {
-  :root { --spacing-root: 0.25rem }
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-n100: #f4f4f5;
-    --colors-n200: #e4e4e7;
-    --colors-primary: #3b82f6;
-    --radii-full: 9999px;
-    --radii-md: 0.4rem;
-  }
-  [data-color-mode=dark] {
-    --colors-n100: #18181b;
-    --colors-n200: #27272a;
-    --colors-primary: #60a5fa;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .expression-table__bg_n100 { background: var(--colors-n100); }

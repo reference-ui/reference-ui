@@ -4,16 +4,7 @@
 @layer static-wildcard {
 @layer reset, global, base, tokens, recipes, utilities;
 @layer tokens {
-  :root, [data-color-mode=light] {
-    --colors-n100: #f4f4f5;
-    --colors-n200: #e4e4e7;
-    --radii-sm: 0.2rem;
-    --radii-md: 0.4rem;
-  }
-  [data-color-mode=dark] {
-    --colors-n100: #18181b;
-    --colors-n200: #27272a;
-  }
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
   .static-wildcard__rounded_md { border-radius: var(--radii-md); }
