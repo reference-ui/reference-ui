@@ -5,7 +5,7 @@ order: 1
 slug: get-started
 ---
 
-import { Button, Div } from '@reference-ui/react'
+import { ButtonRow } from './button-row'
 
 # Get Started
 
@@ -19,11 +19,7 @@ pnpm add @reference-ui/lib react react-dom
 
 Reference UI compiles its CSS at build time, so this renders the real, shipped styles.
 
-<Div display="flex" gap="3r" alignItems="center" marginBottom="4r">
-  <Button variant="primary">Primary</Button>
-  <Button variant="default">Default</Button>
-  <Button variant="ghost">Ghost</Button>
-</Div>
+<ButtonRow />
 
 ```tsx
 <Div display="flex" gap="3r" alignItems="center">

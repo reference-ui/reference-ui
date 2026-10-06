@@ -1,0 +1,25 @@
+---
+title: Animations
+section: Foundations
+order: 2
+slug: animations
+---
+
+import { AnimationsDemo } from './animations-demo'
+
+# Animations
+
+Animation tokens bundle a keyframe, duration, easing, and iteration count into a
+single name. Apply one with the `animation` style prop — no keyframes to author.
+
+<AnimationsDemo />
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div animation="spin.slow" width="10r" height="10r" />
+```
+
+Groups include `spin`, `fadeIn`, `fadeOut`, `slideUp`, `slideDown`, `scaleIn`,
+`pulse`, `bounce`, and `ping`, each with `quick` / `normal` / `slow` (or `fast`)
+variants.

@@ -1,0 +1,66 @@
+---
+title: Primitives
+section: Components
+order: 1
+slug: primitives
+---
+
+import { PrimitiveCard, PrimitiveContent, PrimitiveList } from './primitives-sections'
+
+# Primitives
+
+Primitives are typed React wrappers around real HTML tags. They keep the
+semantics of native elements like `div`, `a`, and `p` while giving you
+Reference UI style props and generated classes.
+
+## Why primitives exist
+
+Reference UI starts from the platform. Instead of a generic `Box` or an `as`
+prop, each primitive maps directly to a real element.
+
+- You keep native HTML semantics.
+- You get typed props for the element you are rendering.
+- You can use Reference UI style props directly in JSX.
+- You can still reach for `css()` when you want reusable class composition.
+
+## Mental model
+
+<PrimitiveCard />
+
+```tsx
+import { Div, Span } from '@reference-ui/react'
+
+export function Card() {
+  return (
+    <Div display="grid" gap="3r" padding="4r" border="1px solid" borderColor="docsBorder" borderRadius="lg">
+      <Span color="docsMuted">Eyebrow</Span>
+      <Span fontWeight="600">Title</Span>
+    </Div>
+  )
+}
+```
+
+## Content
+
+<PrimitiveContent />
+
+## When to use primitives vs `css()`
+
+- Use primitives when rendering a specific element and styling it inline.
+- Use `css()` when composing styles once and applying them in several places.
+- Use recipes when defining a reusable component with variants and a stronger contract.
+
+## Good defaults
+
+<PrimitiveList />
+
+## Quick reference
+
+```tsx
+import { Div, P, A } from '@reference-ui/react'
+
+<Div padding="4r" bg="docsPanelBg">
+  <P color="docsText">Hello world</P>
+  <A href="/more" color="docsHighlight">Learn more</A>
+</Div>
+```

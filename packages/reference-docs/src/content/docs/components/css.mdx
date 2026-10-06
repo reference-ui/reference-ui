@@ -1,0 +1,107 @@
+---
+title: CSS
+section: Components
+order: 4
+slug: css
+---
+
+# CSS
+
+`css()` is the styling primitive in Reference UI. It takes a style object and
+returns a class name string you can put on any element. Every value is compiled
+at build time into an atomic class — there is no runtime style injection.
+
+Static values, token names, and known ternaries are extracted to CSS. Anything
+the compiler cannot see statically is dropped — see the rule of thumb below.
+
+## Basic usage
+
+```tsx
+import { css } from '@reference-ui/react'
+
+const card = css({
+  padding: '4r',
+  background: 'docsPanelBg',
+  color: 'docsText',
+  border: '1px solid',
+  borderColor: 'docsBorder',
+  borderRadius: 'md',
+})
+
+<div className={card}>Styled element</div>
+```
+
+## Tokens
+
+```tsx
+css({
+  color: 'docsText',         // semantic text token
+  background: 'docsPanelBg',  // semantic surface token
+  borderColor: 'docsBorder',  // semantic border token
+  padding: '4r',              // rhythm spacing
+  borderRadius: 'lg',
+})
+```
+
+Rhythm spacing uses the `r` suffix: `1r` is the base rhythm unit. Numeric
+spacing (`4`, `2`) still maps to the underlying rem scale when you want it.
+
+## Responsive
+
+Reference UI is container-query first. Use the `r` object, not viewport media
+queries:
+
+```tsx
+css({
+  padding: '4r',
+  display: 'grid',
+  gridTemplateColumns: '1fr',
+  r: {
+    640: { gridTemplateColumns: 'repeat(2, 1fr)' },
+    1024: { gridTemplateColumns: 'repeat(3, 1fr)', padding: '8r' },
+  },
+})
+```
+
+The element queries its nearest `container` ancestor. Add `container` to a
+parent to establish the scope.
+
+## Pseudo states
+
+```tsx
+css({
+  color: 'docsMuted',
+  transition: 'color 0.15s ease',
+  _hover: { color: 'docsText' },
+  _focusVisible: { outline: '2px solid', outlineColor: 'docsBorder' },
+})
+```
+
+## Composition and conditionals
+
+```tsx
+const base = css({ padding: '4r', borderRadius: 'md' })
+const active = css({ background: 'docsActiveBg', color: 'docsText' })
+
+<div className={`${base} ${active}`}>Composed</div>
+
+// Known branches are pre-compiled; dynamic values are not.
+<div className={css({ color: isActive ? 'docsText' : 'docsMuted' })}>Toggle</div>
+```
+
+## The fine line
+
+- Static literals, tokens, and in-file constants are extracted.
+- Ternaries between known values pre-compile both branches.
+- Runtime arithmetic, dynamic lookups, and values from other files are dropped —
+  apply those with inline `style={{ ... }}` instead.
+
+## `css()` vs JSX props
+
+```tsx
+// Props: simplest for one-off styling.
+<Div padding="4r" bg="docsPanelBg" color="docsText">Content</Div>
+
+// css(): better for reusable or composed styles.
+<div className={css({ padding: '4r', bg: 'docsPanelBg', color: 'docsText' })}>Content</div>
+```

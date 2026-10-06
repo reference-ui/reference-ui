@@ -6,6 +6,16 @@
   margin: 0;
 }
 
+/* The system styles every <code> as an inline pill; fenced blocks opt out. */
+pre code {
+  display: grid;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+}
+
 pre[data-theme] code {
   display: grid;
 }

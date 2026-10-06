@@ -1,0 +1,68 @@
+---
+title: Typography
+section: Components
+order: 2
+slug: typography
+---
+
+import {
+  EmphasisSamples,
+  FontFamilies,
+  HeadingSamples,
+  PreSample,
+  QuoteSamples,
+  SentenceOverlay,
+  TechnicalSamples,
+  WeightRamp,
+  WordOverlay,
+} from './typography-sections'
+
+# Typography
+
+One grayscale system, three shipped families, and a full weight ramp. Every text
+primitive is token-aware, so the same markup reads correctly in light and dark.
+
+## Headings
+
+<HeadingSamples />
+
+## Font families
+
+<FontFamilies />
+
+## Weight ramp
+
+<WeightRamp />
+
+## Word overlay
+
+The three families stacked at the same baseline — a quick way to feel the
+difference in rhythm and apertures.
+
+<WordOverlay />
+
+## Sentence overlay
+
+<SentenceOverlay />
+
+## Body & inline emphasis
+
+<EmphasisSamples />
+
+## Code & technical
+
+<TechnicalSamples />
+
+```tsx
+import { Code, Kbd, P } from '@reference-ui/react'
+
+<P>
+  Use <Code>const</Code>, or press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd>.
+</P>
+```
+
+## Quotations & abbreviations
+
+<QuoteSamples />
+
+<PreSample />

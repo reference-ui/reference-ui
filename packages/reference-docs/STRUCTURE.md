@@ -24,11 +24,18 @@ packages/reference-docs/
   src/
     app/
       router.tsx          route tree and app entry wiring
-      DocLayout.tsx       shell: sidebar + content frame + MDX provider
-      DocSidebar.tsx      section navigation
+      DocLayout.tsx       shell: sidebar rail + scrolling content column
+      DocHeader.tsx       floating header (menu, brand, repo link, theme)
+      DocSidebar.tsx      full-height navigation rail (shared DocNav)
+      DocMobileNav.tsx    off-canvas navigation for small viewports
+      DocPageNav.tsx      previous / next article pager
+      Brand.tsx           product wordmark
+      IconButton.tsx      shared square icon button
+      controlSurface.ts   frosted surface for floating controls
+      icons.tsx           inline shell glyphs
       DocPage.tsx         slug -> MDX module rendering
       ErrorBoundary.tsx   render-error fallback
-      ThemeToggle.tsx     light/dark chrome
+      ThemeToggle.tsx     light/dark switch
     collections/
       content-collections.ts  config entrypoint (must live here, see below)
       docs.ts                 collection schema + transform
@@ -44,6 +51,14 @@ packages/reference-docs/
     docs-theme.fragments.ts
     docs-syntax.css
 ```
+
+### `src/app` (shell chrome)
+
+The shell is a row: a full-height `DocSidebar` rail that owns navigation and
+the wordmark, beside a column whose `Main` scrolls independently. There is no
+opaque header bar — `DocHeader` floats over the article with each control
+carrying its own `controlSurface`. Small viewports hide the rail (a container
+query) and reveal `DocMobileNav`.
 
 ## Directory Intent
 

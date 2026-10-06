@@ -18,10 +18,15 @@ import {
 } from '@reference-ui/react'
 
 const linkClass = css({
-  color: 'docsAccent',
+  color: 'docsHighlight',
   textDecoration: 'underline',
-  textUnderlineOffset: '2px',
-  _hover: { color: 'docsAccent' },
+  textDecorationColor: 'color-mix(in oklch, currentColor 35%, transparent)',
+  textUnderlineOffset: '3px',
+  transition: 'text-decoration-color 0.15s ease',
+  _hover: {
+    color: 'docsHighlight',
+    textDecorationColor: 'currentColor',
+  },
 })
 
 /** Fenced blocks are highlighted at build time by rehype-pretty-code (shiki). */
@@ -31,10 +36,10 @@ const preClass = css({
   padding: '4r',
   bg: 'docsPanelBg',
   border: '1px solid',
-  borderColor: 'docsPanelBorder',
+  borderColor: 'docsBorder',
   borderRadius: 'lg',
   fontSize: 'sm',
-  lineHeight: '1.5',
+  lineHeight: '1.6',
   fontFamily: 'mono',
   overflowX: 'auto',
 })
@@ -84,10 +89,11 @@ export const mdxComponents = {
     <H1
       color="docsText"
       fontSize="8r"
-      letterSpacing="-0.02em"
-      lineHeight="1.15"
+      letterSpacing="-0.025em"
+      lineHeight="1.12"
       marginTop="0"
       marginBottom="4r"
+      scrollMarginTop="20r"
       {...props}
     />
   ),
@@ -96,11 +102,13 @@ export const mdxComponents = {
       color="docsText"
       fontSize="6r"
       fontWeight="600"
+      letterSpacing="-0.02em"
       marginTop="8r"
       marginBottom="3r"
       paddingBottom="2r"
       borderBottom="1px solid"
-      borderBottomColor="docsPanelBorder"
+      borderBottomColor="docsBorder"
+      scrollMarginTop="18r"
       {...props}
     />
   ),
@@ -109,8 +117,10 @@ export const mdxComponents = {
       color="docsText"
       fontSize="5r"
       fontWeight="600"
+      letterSpacing="-0.01em"
       marginTop="6r"
       marginBottom="2r"
+      scrollMarginTop="18r"
       {...props}
     />
   ),
@@ -118,7 +128,7 @@ export const mdxComponents = {
     <P
       color="docsText"
       fontSize="md"
-      lineHeight="1.65"
+      lineHeight="1.7"
       marginTop="0"
       marginBottom="4r"
       {...props}
@@ -133,7 +143,7 @@ export const mdxComponents = {
   ),
   li: (props: MdxProps<'li'>) => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
   strong: (props: MdxProps<'strong'>) => <Strong color="docsText" fontWeight="700" {...props} />,
-  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsPanelBorder" marginY="8r" {...props} />,
+  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsBorder" marginY="8r" {...props} />,
   blockquote: (props: MdxProps<'blockquote'>) => (
     <Blockquote
       borderLeft="4px solid"
