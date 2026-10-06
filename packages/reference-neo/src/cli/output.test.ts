@@ -113,22 +113,22 @@ describe('formatBootBlock', () => {
     vi.stubEnv('NO_COLOR', '1')
     vi.stubEnv('FORCE_COLOR', '')
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3, watch: true })).toBe(
-      '\n  REF  v1.0.0  ready in 104 ms\n\n  → CSS:       1.0 MB\n  → Warnings:  3 [--verbose]\n  → Watch:     on'
+      '\n  REF  v1.0.0  ready in 104 ms\n\n  ➜  CSS:       1.0 MB\n  ➜  Warnings:  3 [--verbose]\n  ➜  Watch:     on'
     )
   })
 
   it('omits the warnings row at zero and the watch row for one-shots', () => {
     vi.stubEnv('NO_COLOR', '1')
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 7, cssBytes: 512 })).toBe(
-      '\n  REF  v1.0.0  ready in 7 ms\n\n  → CSS:       512 B'
+      '\n  REF  v1.0.0  ready in 7 ms\n\n  ➜  CSS:       512 B'
     )
   })
 
-  it('paints brand and version blue, ready-in dim with a bold time, bold labels, CSS green, and the count yellow on FORCE_COLOR', () => {
+  it('paints brand bold blue with a plain-blue version, ready-in dim with a bold time and unit, bold labels, CSS green, and the count yellow on FORCE_COLOR', () => {
     vi.stubEnv('NO_COLOR', '')
     vi.stubEnv('FORCE_COLOR', '1')
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
-      '\n  \x1b[1m\x1b[94mREF \x1b[0m \x1b[1m\x1b[94mv1.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m104\x1b[0m\x1b[2m ms\x1b[0m\n\n  \x1b[94m→\x1b[0m \x1b[1mCSS:     \x1b[0m  \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m→\x1b[0m \x1b[1mWarnings:\x1b[0m  \x1b[33m3\x1b[0m [--verbose]'
+      '\n  \x1b[1m\x1b[94mREF \x1b[0m \x1b[94mv1.0.0\x1b[0m  \x1b[2mready in\x1b[0m \x1b[1m104 ms\x1b[0m\n\n  \x1b[94m➜\x1b[0m  \x1b[1mCSS:     \x1b[0m  \x1b[32m1.0 MB\x1b[0m\n  \x1b[94m➜\x1b[0m  \x1b[1mWarnings:\x1b[0m  \x1b[33m3\x1b[0m [--verbose]'
     )
   })
 
@@ -136,7 +136,7 @@ describe('formatBootBlock', () => {
     vi.stubEnv('NO_COLOR', '1')
     vi.stubEnv('FORCE_COLOR', '1')
     expect(formatBootBlock({ version: '1.0.0', elapsedMs: 104, cssBytes: 1024 * 1024, warnings: 3 })).toBe(
-      '\n  REF  v1.0.0  ready in 104 ms\n\n  → CSS:       1.0 MB\n  → Warnings:  3 [--verbose]'
+      '\n  REF  v1.0.0  ready in 104 ms\n\n  ➜  CSS:       1.0 MB\n  ➜  Warnings:  3 [--verbose]'
     )
   })
 })
@@ -153,7 +153,7 @@ describe('printBootBlock', () => {
       printBootBlock({ elapsedMs: 42, outDir: dir, warnings: 2 })
       expect(logged).toHaveBeenCalledTimes(1)
       expect(logged).toHaveBeenCalledWith(
-        `\n  REF  v${refVersion()}  ready in 42 ms\n\n  → CSS:       2.0 KB\n  → Warnings:  2 [--verbose]`
+        `\n  REF  v${refVersion()}  ready in 42 ms\n\n  ➜  CSS:       2.0 KB\n  ➜  Warnings:  2 [--verbose]`
       )
     } finally {
       rmSync(dir, { recursive: true, force: true })

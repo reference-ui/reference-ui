@@ -26,7 +26,7 @@ export const USAGE = 'usage: ref <sync|clean> [dir]\n       ref sync --watch [di
 
 const GLYPH = '⎔'
 const SEPARATOR = '⫶'
-const ARROW = '→'
+const ARROW = '➜'
 // The brand carries one trailing pad space: REF is three columns against
 // Vite's four, so the pad lines our version — and ready-in — up with
 // Vite's whenever the versions run the same length.
@@ -158,11 +158,11 @@ export interface BootBlockOptions {
 // verbatim; callers pass the folded count, never the raw total.
 export function formatBootBlock(options: BootBlockOptions): string {
   const elapsed = Math.max(0, Math.floor(options.elapsedMs))
-  const head = `${paint(BRAND, `${BOLD}${BLUE}`)} ${paint(`v${options.version}`, `${BOLD}${BLUE}`)}  ${paint('ready in', FAINT)} ${paint(String(elapsed), BOLD)}${paint(' ms', FAINT)}`
-  const rows = [`${paint(ARROW, BLUE)} ${paint('CSS:'.padEnd(9), BOLD)}  ${paint(formatBytes(options.cssBytes), GREEN)}`]
+  const head = `${paint(BRAND, `${BOLD}${BLUE}`)} ${paint(`v${options.version}`, BLUE)}  ${paint('ready in', FAINT)} ${paint(`${elapsed} ms`, BOLD)}`
+  const rows = [`${paint(ARROW, BLUE)}  ${paint('CSS:'.padEnd(9), BOLD)}  ${paint(formatBytes(options.cssBytes), GREEN)}`]
   const folded = Math.max(0, Math.floor(options.warnings ?? 0))
-  if (folded > 0) rows.push(`${paint(ARROW, BLUE)} ${paint('Warnings:'.padEnd(9), BOLD)}  ${paint(String(folded), YELLOW)} [--verbose]`)
-  if (options.watch === true) rows.push(`${paint(ARROW, BLUE)} ${paint('Watch:'.padEnd(9), BOLD)}  on`)
+  if (folded > 0) rows.push(`${paint(ARROW, BLUE)}  ${paint('Warnings:'.padEnd(9), BOLD)}  ${paint(String(folded), YELLOW)} [--verbose]`)
+  if (options.watch === true) rows.push(`${paint(ARROW, BLUE)}  ${paint('Watch:'.padEnd(9), BOLD)}  on`)
   return `\n  ${head}\n\n  ${rows.join('\n  ')}`
 }
 

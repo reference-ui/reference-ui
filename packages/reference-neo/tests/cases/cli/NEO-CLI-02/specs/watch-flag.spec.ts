@@ -111,10 +111,10 @@ async function waitForOutput(watch: WatchChild, cond: () => boolean, label: stri
 async function proveBoot(watch: WatchChild): Promise<void> {
   await waitForOutput(watch, () => BOOT_BLOCK_RE.test(stripAnsiSpans(watch.output())), 'the boot block');
   const plain = stripAnsiSpans(watch.output());
-  assert.ok(plain.includes('→ CSS:'), 'watch boot prints the CSS row');
-  assert.ok(plain.includes('→ Watch:'), 'watch boot prints the watch row');
+  assert.ok(plain.includes('➜  CSS:'), 'watch boot prints the CSS row');
+  assert.ok(plain.includes('➜  Watch:'), 'watch boot prints the watch row');
   assert.ok(
-    /→ Warnings:\s+\d+ \[--verbose\]/.test(plain),
+    /➜  Warnings:\s+\d+ \[--verbose\]/.test(plain),
     'watch boot folds the drained tasty warnings into its Warnings row',
   );
   assert.ok(!plain.includes('⚠'), 'watch boot prints no dangling warning line');
