@@ -10,211 +10,101 @@ The docs app should feel like:
 - a small amount of app shell
 - a small amount of content plumbing
 
-It should not drift into a generic component app where docs content and docs-only helpers get mixed together.
+It should not drift into a generic component app where docs content and
+docs-only helpers get mixed together.
 
-## Core Rule
-
-If a React component exists only to support one page or one small docs section, keep it next to that content under `src/content`.
-
-Do not promote docs-only helper components into a broad shared bucket just because they are React components.
-
-That is the main guardrail.
-
-## Preferred Top-Level Split
-
-Inside `src`, prefer these responsibilities:
-
-- `content/`
-  MDX documents and page-local helper components
-- `collections/`
-  content-collections config and runtime adapters
-- `app/`
-  docs app shell: layout, sidebar, route entry, error boundaries
-- `mdx/`
-  MDX rendering policy: provider components, link handling, element mapping
-- `shared/`
-  truly shared non-UI support code only when it is not content-specific and not app-shell-specific
-
-## Proposed Shape
-
-Target structure:
+## Actual Layout
 
 ```text
 packages/reference-docs/
   DOCS.md
   STRUCTURE.md
   vite.config.ts
+  ui.config.ts
   src/
     app/
-      layout/
-      routing/
-      ThemeToggle.tsx
-      ErrorBoundary/
+      router.tsx          route tree and app entry wiring
+      DocLayout.tsx       shell: sidebar + content frame + MDX provider
+      DocSidebar.tsx      section navigation
+      DocPage.tsx         slug -> MDX module rendering
+      ErrorBoundary.tsx   render-error fallback
+      ThemeToggle.tsx     light/dark chrome
     collections/
-      README.md
-      content-collections.ts
-      docs.ts
-      index.ts
-      runtime.ts
+      content-collections.ts  config entrypoint (must live here, see below)
+      docs.ts                 collection schema + transform
+      index.ts                content-collections config
+      runtime.ts              slug lookup for the Vite MDX runtime
     content/
-      docs/
-        getting-started/
-          intro.mdx
-          get-started.mdx
-          get-started.demo.tsx
-        foundations/
-        reference/
+      docs/...                all .mdx pages, grouped by section
     mdx/
-      components.tsx
+      components.tsx          MDX -> docs visual system element mapping
     shared/
-      providers/
+      providers/              cross-cutting React context
+    main.tsx
+    docs-theme.fragments.ts
+    docs-syntax.css
 ```
-
-This is a direction, not a demand for immediate churn.
 
 ## Directory Intent
 
 ### `src/content`
 
-This is the center of gravity.
-
-Put here:
-
-- all `.mdx` pages
-- page-local demo components
-- section-local helper components
-- assets or support files that only exist for docs content
-
-Example:
-
-```text
-src/content/docs/getting-started/
-  intro.mdx
-  intro.demo.tsx
-  _components.tsx
-```
-
-If a component is only used by `intro.mdx`, it belongs here.
-
-If two or three files in the same section use the same helper, it can still live here.
-
-### `src/collections`
-
-This owns content discovery and metadata.
-
-Put here:
-
-- content-collections schemas
-- transforms
-- generated metadata adapters
-- runtime lookup helpers such as slug-to-module mapping
-
-This is content plumbing, not app UI.
+The center of gravity. All `.mdx` pages live here, grouped by section. A demo
+or helper used by a single page belongs next to that page, not in a shared
+bucket.
 
 ### `src/app`
 
-This owns the docs shell.
-
-Put here:
-
-- overall layout
-- sidebar
-- route entry logic
-- error boundaries
-- theme chrome
-
-These are the pieces that make the docs behave like an app around the content.
+The docs shell: routing, layout, sidebar, page rendering, error boundary, and
+theme chrome. These are the pieces that make the docs behave like an app around
+the content.
 
 ### `src/mdx`
 
-This owns MDX rendering policy.
+MDX rendering policy: the provider component mapping, link behavior, and
+heading/list/code styling. This is the translation layer between MDX and the
+docs visual system, not generic shared UI.
 
-Put here:
+### `src/collections`
 
-- `MDXProvider` component mapping
-- custom link behavior
-- heading/list/code rendering policy
-
-This is not generic shared UI. It is the translation layer between MDX and the docs visual system.
+Content discovery and metadata: schema, transforms, generated metadata
+adapters, and slug lookup. Content plumbing, not app UI.
 
 ### `src/shared`
 
-Use this sparingly.
-
-Good candidates:
-
-- providers
-- generic hooks
-- low-level helpers with no content coupling and no app-shell coupling
-
-Bad candidates:
-
-- page demos
-- docs-only presentational helpers
-- section-specific examples
-- anything that exists mainly to make one MDX page work
+Truly shared, non-UI support code only when it is neither content-specific nor
+shell-specific.
 
 ## Naming Rules
 
 Prefer names that expose intent.
 
-Good:
-
 - `mdx/components.tsx`
 - `collections/runtime.ts`
-- `content/docs/getting-started/intro.demo.tsx`
-- `content/docs/reference/button/_components.tsx`
+- `app/DocLayout.tsx`
 
-Avoid vague names like:
+Avoid vague buckets like `shared/components` or `utils` for content-specific
+code. They hide ownership and invite accidental reuse.
 
-- `shared/components`
-- `utils` for content-specific code
-- `common` for page-local helpers
+## Why `content-collections.ts` Lives In `src/collections`
 
-Those names tend to hide ownership and invite accidental reuse.
+The content-collections watcher subscribes to the config file's own directory.
+A root-level entry would watch the entire package (including `dist/`) and
+exhaust file descriptors (`EMFILE: too many open files, watch`). The CLI
+scripts pass `--config` and the Vite plugin passes `configPath` to point at
+this file, so it stays a one-line re-export.
 
 ## Practical Rules
 
-### Rule 1
-
-Default to colocating React helpers with the page that uses them.
-
-### Rule 2
-
-Only move a helper out of `content/` when it is clearly reused across unrelated pages and still belongs to either `mdx/`, `app/`, or `shared/`.
-
-### Rule 3
-
-If a file exists to shape how MDX renders, it belongs under `mdx/`, not `components/`.
-
-### Rule 4
-
-If a file exists to shape docs metadata or route lookup, it belongs under `collections/`.
-
-### Rule 5
-
-If a file exists to render the shell around the document, it belongs under `app/`.
-
-## What This Means For The Current Package
-
-Likely moves over time:
-
-- move `src/components/mdxComponents.tsx` to `src/mdx/components.tsx`
-- move shell-oriented files out of `src/components/` into `src/app/`
-- keep `src/collections/` as the content metadata boundary
-- keep docs demos and page helpers inside `src/content/docs/...`
-
-The goal is not to create more folders.
-
-The goal is to make ownership obvious:
-
-- content stays with content
-- shell stays with shell
-- MDX policy stays with MDX
-- collection plumbing stays with collection plumbing
+1. Default to colocating a React helper with the content that uses it.
+2. Only move a helper to `app/`, `mdx/`, or `shared/` when it is clearly reused
+   and clearly belongs to that responsibility.
+3. If it shapes how MDX renders, it belongs in `mdx/`.
+4. If it shapes docs metadata or route lookup, it belongs in `collections/`.
+5. If it renders the shell around the document, it belongs in `app/`.
 
 ## Non-Goal
 
-This structure is not trying to turn the docs package into a general-purpose frontend architecture.
-
-It is intentionally biased toward a content-first docs system with a thin runtime around it.
+This structure is not trying to turn the docs package into a general-purpose
+frontend architecture. It is intentionally a content-first docs system with a
+thin runtime around it.

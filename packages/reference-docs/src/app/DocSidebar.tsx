@@ -1,7 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Aside, Div, H2, Nav, css } from '@reference-ui/react'
-import { docsBySection } from '../../collections/runtime'
-import { ThemeToggle } from '../ThemeToggle'
+import { docsBySection } from '../collections/runtime'
+import { ThemeToggle } from './ThemeToggle'
 
 const navLinkClass = css({
   display: 'block',

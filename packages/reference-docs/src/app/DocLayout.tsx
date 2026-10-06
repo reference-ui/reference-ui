@@ -1,8 +1,8 @@
 import { Outlet } from '@tanstack/react-router'
 import { MDXProvider } from '@mdx-js/react'
 import { Div, Main } from '@reference-ui/react'
-import { useDocsTheme } from '../../shared/providers/DocsThemeContext'
-import { mdxComponents } from '../mdxComponents'
+import { useDocsTheme } from '../shared/providers/DocsThemeContext'
+import { mdxComponents } from '../mdx/components'
 import { DocSidebar } from './DocSidebar'
 
 export function DocLayout() {

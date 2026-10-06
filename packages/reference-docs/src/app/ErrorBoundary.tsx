@@ -1,6 +1,6 @@
 import React from 'react'
 import { Div, H2, P, Pre } from '@reference-ui/react'
-import { useDocsTheme } from '../../shared/providers/DocsThemeContext'
+import { useDocsTheme } from '../shared/providers/DocsThemeContext'
 
 type Props = { children: React.ReactNode }
 type State = { error: Error | null }
