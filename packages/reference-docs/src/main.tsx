@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { DocsThemeProvider } from './shared/providers/DocsThemeContext'
 import { router } from './router'
 import './docs-theme.fragments'
+import './docs-syntax.css'
 import '@reference-ui/react/styles.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

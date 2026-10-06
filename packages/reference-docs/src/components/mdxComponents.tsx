@@ -14,7 +14,6 @@ import {
   P,
   Strong,
   Ul,
-  Div,
   css,
 } from '@reference-ui/react'
 
@@ -23,6 +22,21 @@ const linkClass = css({
   textDecoration: 'underline',
   textUnderlineOffset: '2px',
   _hover: { color: 'docsAccent' },
+})
+
+/** Fenced blocks are highlighted at build time by rehype-pretty-code (shiki). */
+const preClass = css({
+  marginTop: '0',
+  marginBottom: '4r',
+  padding: '4r',
+  bg: 'docsPanelBg',
+  border: '1px solid',
+  borderColor: 'docsPanelBorder',
+  borderRadius: 'lg',
+  fontSize: 'sm',
+  lineHeight: '1.5',
+  fontFamily: 'mono',
+  overflowX: 'auto',
 })
 
 /** MDX native props minus legacy string-refs, which neo primitives don't take. */
@@ -132,20 +146,14 @@ export const mdxComponents = {
     />
   ),
   code: ({ className, children, ...rest }: MdxProps<'code'>) => {
-    const isBlock = typeof className === 'string' && className.includes('language-')
+    const isBlock =
+      (typeof className === 'string' && className.includes('language-')) ||
+      'data-language' in rest
     if (isBlock) {
       return (
-        <Code
-          display="block"
-          fontFamily="mono"
-          fontSize="sm"
-          whiteSpace="pre"
-          color="inherit"
-          className={className}
-          {...rest}
-        >
+        <code className={className} {...rest}>
           {children}
-        </Code>
+        </code>
       )
     }
     return (
@@ -164,21 +172,9 @@ export const mdxComponents = {
       </Code>
     )
   },
-  pre: ({ children }) => (
-    <Div
-      overflow="auto"
-      padding="4r"
-      marginTop="0"
-      marginBottom="4r"
-      bg="docsPanelBg"
-      color="docsText"
-      border="1px solid"
-      borderColor="docsPanelBorder"
-      borderRadius="lg"
-      fontSize="sm"
-      lineHeight="1.5"
-    >
+  pre: ({ children, className, ...rest }: MdxProps<'pre'>) => (
+    <pre className={className ? `${preClass} ${className}` : preClass} {...rest}>
       {children}
-    </Div>
+    </pre>
   ),
 } satisfies MDXComponents

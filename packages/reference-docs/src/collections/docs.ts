@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 export const docsCollection = defineCollection({
   name: 'docs',
-  directory: 'src/content/docs',
+  directory: '../content/docs',
   include: '**/*.mdx',
   parser: 'frontmatter-only',
   schema: z.object({

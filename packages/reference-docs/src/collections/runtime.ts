@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import type { ComponentType } from 'react'
-import { allDocs } from '../../.content-collections/generated'
+import { allDocs } from './.content-collections/generated'
 
 const docModules = import.meta.glob<{
   default: ComponentType

@@ -12,30 +12,23 @@ import { Button, Div } from '@reference-ui/react'
 ## Installation
 
 ```bash
-pnpm add @reference-ui/react
-```
-
-## Usage
-
-Import the components and styles you need:
-
-```tsx
-import { Button, Div } from '@reference-ui/react'
-import '@reference-ui/react/styles.css'
-
-function App() {
-  return (
-    <Div>
-      <Button>Click me</Button>
-    </Div>
-  )
-}
+pnpm add @reference-ui/lib react react-dom
 ```
 
 ## Try it
 
-Here's a live example:
+Reference UI compiles its CSS at build time, so this renders the real, shipped styles.
 
-<Div padding="4r" bg="docsDemoCard" borderRadius="lg" border="1px solid" borderColor="docsPanelBorder">
-  <Button>Design system button</Button>
+<Div display="flex" gap="3r" alignItems="center" marginBottom="4r">
+  <Button variant="primary">Primary</Button>
+  <Button variant="default">Default</Button>
+  <Button variant="ghost">Ghost</Button>
 </Div>
+
+```tsx
+<Div display="flex" gap="3r" alignItems="center">
+  <Button variant="primary">Primary</Button>
+  <Button variant="default">Default</Button>
+  <Button variant="ghost">Ghost</Button>
+</Div>
+```

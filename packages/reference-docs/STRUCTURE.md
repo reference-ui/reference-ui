@@ -41,7 +41,6 @@ Target structure:
 
 ```text
 packages/reference-docs/
-  content-collections.ts
   DOCS.md
   STRUCTURE.md
   vite.config.ts
@@ -53,6 +52,7 @@ packages/reference-docs/
       ErrorBoundary/
     collections/
       README.md
+      content-collections.ts
       docs.ts
       index.ts
       runtime.ts
