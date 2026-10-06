@@ -93,12 +93,12 @@ const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
 
 /** Expected byte cells: filled from the first measured run, then pinned. */
 const EXPECTED_BYTES = {
-  // 2026-10-06 gray re-pin: the onyx-aligned neutral ramp changed token value
-  // string lengths (+2 raw); the new digits compress better (-26 gzip,
-  // -14 brotli). stylePlans/harvestWants unchanged.
-  cssRaw: 341091,
-  cssGzip: 41475,
-  cssBrotli: 21159,
+  // 2026-10-06 gray re-pin: gray.950 anchored to onyx #040711 with hue matched
+  // up the ramp; token value string lengths moved -19 raw, +4 gzip, +82 brotli.
+  // stylePlans/harvestWants unchanged.
+  cssRaw: 341070,
+  cssGzip: 41479,
+  cssBrotli: 21241,
   stylePlans: 4938,
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
