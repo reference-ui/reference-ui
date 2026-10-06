@@ -37,17 +37,14 @@ export function DocSidebar() {
     <Aside
       width="240px"
       flexShrink="0"
+      position="sticky"
+      top="0"
+      height="100vh"
+      overflowY="auto"
       padding="4r"
-      borderRightColor="docsSidebarBorder"
       borderRight="1px solid"
+      borderRightColor="docsSidebarBorder"
       background="docsSidebarBg"
-      css={{
-        position: 'fixed',
-        top: 0,
-        left: 'calc((100vw - 90ex) / 2 - 240px)',
-        maxHeight: '100vh',
-        overflowY: 'auto',
-      }}
     >
       <H2 margin="0 0 1rem" fontSize="6r" fontWeight="600" color="docsText">
         Reference UI

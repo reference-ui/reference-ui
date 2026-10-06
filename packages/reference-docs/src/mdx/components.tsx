@@ -42,8 +42,8 @@ const preClass = css({
 /** MDX native props minus legacy string-refs, which neo primitives don't take. */
 type MdxProps<T extends keyof JSX.IntrinsicElements> = Omit<JSX.IntrinsicElements[T], 'ref'>
 
-function MdxLink({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) {
-  if (!href || href.startsWith('http') || href.startsWith('mailto:')) {
+function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  if (href === '' || /^(https?:|mailto:)/.test(href)) {
     return (
       <A href={href} className={linkClass} target="_blank" rel="noreferrer" {...rest}>
         {children}
@@ -57,23 +57,23 @@ function MdxLink({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorEle
       </a>
     )
   }
-  if (href === '/') {
+  const slug = href.replace(/^\//, '')
+  if (slug === '') {
     return (
       <Link to="/" className={linkClass} {...rest}>
         {children}
       </Link>
     )
   }
-  const segment = href.replace(/^\//, '').split('/')[0]
-  if (segment && !href.slice(1).includes('/')) {
+  if (slug.includes('/')) {
     return (
-      <Link to="/$slug" params={{ slug: segment }} className={linkClass} {...rest}>
+      <a href={href} className={linkClass} {...rest}>
         {children}
-      </Link>
+      </a>
     )
   }
   return (
-    <Link to={href} className={linkClass} {...rest}>
+    <Link to="/$slug" params={{ slug }} className={linkClass} {...rest}>
       {children}
     </Link>
   )

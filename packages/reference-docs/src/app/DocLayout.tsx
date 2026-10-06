@@ -9,26 +9,15 @@ export function DocLayout() {
   const { colorMode } = useDocsTheme()
 
   return (
-    <Div
-      colorMode={colorMode}
-      w="100%"
-      minHeight="100vh"
-      bg="docsPageBg"
-      color="docsText"
-      display="grid"
-      gridTemplateColumns="1fr minmax(0, 90ex) 1fr"
-    >
-      <Div minHeight="100vh" display="flex" justifyContent="flex-end">
-        <DocSidebar />
-      </Div>
-      <Main minHeight="100vh" minWidth="0" overflow="auto">
-        <Div padding="10r" minWidth="0" w="100%">
+    <Div colorMode={colorMode} display="flex" minHeight="100vh" bg="docsPageBg" color="docsText">
+      <DocSidebar />
+      <Main flex="1" minWidth="0">
+        <Div maxWidth="90ex" marginX="auto" padding="10r" minWidth="0">
           <MDXProvider components={mdxComponents}>
             <Outlet />
           </MDXProvider>
         </Div>
       </Main>
-      <Div minHeight="100vh" />
     </Div>
   )
 }

@@ -16,6 +16,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
+| `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
 | Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (`pnpm agentperf`) |
@@ -210,4 +211,20 @@ pnpm agentneo q [paths]       # Biome quality gate (section 6 of the skill)
 ```
 
 See the skill for Playwright policy, scope discipline, gate limits, and the retirement clause.
+
+---
+
+## 6. Docs Workflow (agent-docs, pnpm agentdocs)
+
+Follow `.agents/skills/agent-docs/SKILL.md` whenever you work in `packages/reference-docs`.
+
+The docs app is a thin Vite + React + TanStack Router shell around MDX. Reference UI compiles CSS at build time, so there is **no client-side code playground** — examples render the real components and show static, build-time-highlighted source.
+
+```bash
+pnpm dev:docs                 # serve :5174
+pnpm agentdocs q [paths]      # docs quality gate (Biome + strict tsc + suppressions)
+```
+
+The gate's fail line is cognitive complexity 20, `any` banned, file length 500, and every `tsc --noEmit` error; warnings (12 / 365) shout but do not block. Suppressions (`biome-ignore`, `@ts-ignore`, bare `@ts-expect-error`) fail immediately — fix the code. After the gate is green, do the reading pass: naming, no panda-isms, and nothing too complicated or weird-looking.
+
 
