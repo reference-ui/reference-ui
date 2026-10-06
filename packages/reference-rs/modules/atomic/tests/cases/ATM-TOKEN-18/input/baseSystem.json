@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "composite-token-ref",
+  "tokens": {
+    "colors": {
+      "gray": {
+        "900": {
+          "light": "#111827",
+          "dark": "#f9fafb"
+        }
+      },
+      "docs-control-bg": {
+        "value": "rgba(255, 255, 255, 0.72)",
+        "dark": "color-mix(in oklch, {colors.gray.900} 72%, transparent)"
+      },
+      "docs-line": {
+        "value": "1px solid {colors.gray.900}"
+      },
+      "docs-alias": {
+        "value": "{colors.gray.900}"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

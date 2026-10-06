@@ -185,9 +185,9 @@ impl<'a> LoweringContext<'a> {
     fn alias_graph(&self) -> IndexMap<String, Vec<String>> {
         let mut graph = IndexMap::new();
         for (key, entry) in &self.tokens {
-            push_alias(&mut graph, key, entry.light(), &self.tokens);
+            push_aliases(&mut graph, key, entry.light(), &self.tokens);
             if let Some(dark) = entry.dark() {
-                push_alias(&mut graph, key, dark, &self.tokens);
+                push_aliases(&mut graph, key, dark, &self.tokens);
             }
         }
         graph
@@ -219,32 +219,62 @@ impl CycleWalk<'_> {
     }
 }
 
-fn push_alias(
+fn push_aliases(
     graph: &mut IndexMap<String, Vec<String>>,
     from: &str,
     value: &str,
     tokens: &IndexMap<String, TokenEntry>,
 ) {
-    let Some(target) = alias_target(value) else {
-        return;
-    };
-    if tokens.contains_key(target) {
-        graph
-            .entry(from.to_string())
-            .or_default()
-            .push(target.to_string());
+    for target in alias_targets(value) {
+        if tokens.contains_key(target) {
+            graph
+                .entry(from.to_string())
+                .or_default()
+                .push(target.to_string());
+        }
     }
 }
 
-fn alias_target(value: &str) -> Option<&str> {
-    let inner = value.trim().strip_prefix('{')?.strip_suffix('}')?.trim();
+/// Every `{path}` target a token value references, whole or embedded.
+/// Opacity modifiers (`{path/50}`) contribute their base path; empty,
+/// unterminated, and malformed segments contribute nothing. Unknown paths
+/// yield no edge here; emission errors on them instead.
+fn alias_targets(value: &str) -> Vec<&str> {
+    let mut targets = Vec::new();
+    let mut rest = value;
+    while let Some(open) = rest.find('{') {
+        let after = &rest[open + 1..];
+        let Some(close) = after.find('}') else {
+            break;
+        };
+        if let Some(target) = alias_target(after[..close].trim()) {
+            targets.push(target);
+        }
+        rest = &after[close + 1..];
+    }
+    targets
+}
+
+fn alias_target(inner: &str) -> Option<&str> {
     if inner.is_empty() {
         return None;
     }
-    let ok = inner
+    let path = match inner.rsplit_once('/') {
+        Some((base, opacity)) if is_opacity_suffix(opacity) => base.trim(),
+        _ => inner,
+    };
+    if path.is_empty() {
+        return None;
+    }
+    let ok = path
         .chars()
         .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | '-'));
-    ok.then_some(inner)
+    ok.then_some(path)
+}
+
+fn is_opacity_suffix(opacity: &str) -> bool {
+    let digits = opacity.strip_suffix('%').unwrap_or(opacity);
+    !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit())
 }
 
 fn resolve_modes(

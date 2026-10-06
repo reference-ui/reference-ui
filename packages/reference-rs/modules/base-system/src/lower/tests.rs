@@ -139,6 +139,41 @@ fn bas_token_08_keeps_brace_aliases_and_detects_cycle() {
 }
 
 #[test]
+fn bas_token_09_composite_refs_join_cycle_detection() {
+    let cycle_json = spec_json(
+        r#"{"colors":{"a":{"value":"1px solid {colors.b}"},"b":{"value":"{colors.a}"}}}"#,
+    );
+    let cycle = crate::BaseSystem::from_json(&cycle_json).unwrap_err();
+    assert!(
+        matches!(cycle, FromJsonError::Cycle { .. }),
+        "composite ref cycles must fail like whole-value aliases"
+    );
+    let self_json = spec_json(r#"{"colors":{"a":{"value":"1px solid {colors.a}"}}}"#);
+    let slf = crate::BaseSystem::from_json(&self_json).unwrap_err();
+    assert!(
+        matches!(slf, FromJsonError::Cycle { .. }),
+        "composite self-references must fail like whole-value aliases"
+    );
+    let opacity_json = spec_json(
+        r#"{"colors":{"a":{"value":"{colors.b/50}"},"b":{"value":"{colors.a}"}}}"#,
+    );
+    let opacity = crate::BaseSystem::from_json(&opacity_json).unwrap_err();
+    assert!(
+        matches!(opacity, FromJsonError::Cycle { .. }),
+        "opacity modifiers must not hide the base-path edge"
+    );
+    let healthy_json = spec_json(
+        r##"{"colors":{"a":{"value":"1px solid {colors.b}"},"b":{"value":"#000"},"ghost":{"value":"1px solid {colors.missing}"}}}"##,
+    );
+    let healthy = crate::BaseSystem::from_json(&healthy_json).unwrap();
+    assert_eq!(
+        healthy.token_light("colors.a"),
+        Some("1px solid {colors.b}"),
+        "lowering stores composite values raw; emission expands them"
+    );
+}
+
+#[test]
 fn provenance_source_appears_on_token_diagnostic() {
     let json = r#"{
         "schemaVersion": 1,

@@ -1087,6 +1087,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-15` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-15/` |
 | `ATM-TOKEN-16` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-16/` |
 | `ATM-TOKEN-17` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-17/` |
+| `ATM-TOKEN-18` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-18/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |

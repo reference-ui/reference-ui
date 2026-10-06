@@ -18,7 +18,7 @@ mod scale;
 #[cfg(test)]
 mod tests;
 
-use interpolate::{expand_brace_segments, BraceExpansion};
+pub(crate) use interpolate::{expand_brace_segments, BraceExpansion};
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {

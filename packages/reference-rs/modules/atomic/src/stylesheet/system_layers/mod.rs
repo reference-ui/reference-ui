@@ -5,15 +5,17 @@
 //! Empty layers and empty keyframe tables are omitted; recipes and utilities stay separate.
 //! Keyframe bodies resolve aliases, units, `{token}` refs, and `r` units through
 //! the utility passes; unresolvable values print verbatim, mirroring tokens.
-//! Token values resolve whole-value `{aliases}` and `r` rhythm through the shared
-//! chains; the rhythm root itself refuses rhythm values with a diagnostic.
+//! Token values resolve `{refs}` — whole-value or embedded in a composite — through
+//! the shared brace pass, and `r` rhythm through the shared rhythm chain like
+//! keyframes; unknown refs print verbatim with an error diagnostic, and the
+//! rhythm root itself refuses rhythm values with a diagnostic.
 
 use base_system::{BaseSystem, KeyframeDefinition, StyleMap, TokenEntry};
 
 use crate::atom::AtomValue;
 use crate::diagnostics::{DiagnosticCode, DiagnosticLocation};
 use crate::resolve::rhythm::resolve_rhythm;
-use crate::resolve::tokens::resolve_token_value;
+use crate::resolve::tokens::{expand_brace_segments, resolve_token_value, BraceExpansion};
 use crate::resolve::unit::css_value_from_authored;
 use crate::resolve::ResolveSession;
 
@@ -310,11 +312,10 @@ fn write_token_entry(
     out.push_str(";\n");
 }
 
-/// Lower one token value for the tokens layer: whole-value `{brace}` aliases
-/// become `var(--…)`; engine-grammar `r` values resolve through the shared
-/// rhythm chain like keyframes; genuine CSS prints verbatim. Returns `None`
-/// — with an error diagnostic — only when the rhythm root itself carries a
-/// rhythm value, which would mint a self-referential `var(--spacing-root)`.
+/// Lower one token value: `{brace}` refs expand through the shared brace pass,
+/// `r` values through the shared rhythm chain; genuine CSS prints verbatim.
+/// Unknown refs print verbatim with an error. `None` — with an error — only
+/// when the rhythm root itself carries a rhythm value (self-reference).
 fn css_token_value(
     raw: &str,
     system: &BaseSystem,
@@ -322,16 +323,10 @@ fn css_token_value(
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> Option<String> {
     let trimmed = raw.trim();
-    if let Some(inner) = brace_path(trimmed) {
-        let aliased = match system.token(inner) {
-            Some(entry) => format!("var({})", entry.css_var()),
-            None => trimmed.to_string(),
-        };
-        return Some(aliased);
-    }
-    let resolved = resolve_rhythm(trimmed);
-    if resolved.as_ref() == trimmed {
-        return Some(trimmed.to_string());
+    let braced = expand_token_refs(trimmed, owner_var, system, diagnostics);
+    let resolved = resolve_rhythm(&braced);
+    if resolved.as_ref() == braced {
+        return Some(braced);
     }
     if owner_var == SPACING_ROOT_VAR {
         diagnostics.push(DiagnosticLocation::default().error(
@@ -345,10 +340,24 @@ fn css_token_value(
     Some(resolved.into_owned())
 }
 
-fn brace_path(trimmed: &str) -> Option<&str> {
-    if trimmed.starts_with('{') && trimmed.ends_with('}') && trimmed.len() >= 2 {
-        Some(&trimmed[1..trimmed.len() - 1])
-    } else {
-        None
+/// Expand `{path}` refs through the shared brace pass. Unknown refs keep the
+/// value verbatim with the pass's error already pushed; unterminated braces
+/// stay raw with a warning. Detached session like keyframes, but kept.
+fn expand_token_refs(
+    trimmed: &str,
+    owner_var: &str,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) -> String {
+    let mut session = ResolveSession {
+        system,
+        diagnostics,
+        location: DiagnosticLocation::default(),
+        sink: None,
+        want: None,
+    };
+    match expand_brace_segments(trimmed, owner_var, &mut session) {
+        BraceExpansion::Expanded(expanded) => expanded,
+        BraceExpansion::Absent | BraceExpansion::Missing => trimmed.to_string(),
     }
 }
