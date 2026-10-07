@@ -12,6 +12,7 @@ export interface GeneratedStats {
   deadFiles: number
   cssCalls: number
   recipes: number
+  mdxFiles: number
 }
 
 export function generateRepo(plan: LoadPlan, dir: string): GeneratedStats {

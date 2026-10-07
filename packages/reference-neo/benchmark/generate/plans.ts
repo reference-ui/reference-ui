@@ -16,6 +16,8 @@ export interface LoadPlan {
   tokenColors: number
   tokenSpacing: number
   recipes: number
+  /** MDX fragment files to emit (plus the same count of fence-only decoys). */
+  mdxFiles: number
   uniqueRatio: number
   conditionRatio: number
   responsiveRatio: number
@@ -26,6 +28,7 @@ export interface PlanOverrides {
   files?: number
   calls?: number
   unique?: number
+  mdx?: number
 }
 
 const PROFILES: Record<string, LoadPlan> = {
@@ -42,6 +45,7 @@ const PROFILES: Record<string, LoadPlan> = {
     tokenColors: 80,
     tokenSpacing: 30,
     recipes: 6,
+    mdxFiles: 0,
     uniqueRatio: 0.15,
     conditionRatio: 0.25,
     responsiveRatio: 0.2,
@@ -59,6 +63,7 @@ const PROFILES: Record<string, LoadPlan> = {
     tokenColors: 150,
     tokenSpacing: 48,
     recipes: 24,
+    mdxFiles: 0,
     uniqueRatio: 0.25,
     conditionRatio: 0.3,
     responsiveRatio: 0.25,
@@ -76,6 +81,7 @@ const PROFILES: Record<string, LoadPlan> = {
     tokenColors: 300,
     tokenSpacing: 64,
     recipes: 120,
+    mdxFiles: 0,
     uniqueRatio: 0.35,
     conditionRatio: 0.35,
     responsiveRatio: 0.3,
@@ -93,6 +99,7 @@ const PROFILES: Record<string, LoadPlan> = {
     tokenColors: 300,
     tokenSpacing: 64,
     recipes: 120,
+    mdxFiles: 0,
     uniqueRatio: 0.65,
     conditionRatio: 0.4,
     responsiveRatio: 0.3,
@@ -117,6 +124,7 @@ function applyNumericOverrides(plan: LoadPlan, overrides: PlanOverrides): LoadPl
   const next: LoadPlan = { ...plan }
   if (overrides.seed !== undefined) next.seed = clampInt(overrides.seed, plan.seed, 0)
   if (overrides.files !== undefined) next.files = clampInt(overrides.files, plan.files, 1)
+  if (overrides.mdx !== undefined) next.mdxFiles = clampInt(overrides.mdx, plan.mdxFiles, 0)
   if (overrides.calls !== undefined) {
     const calls = clampInt(overrides.calls, plan.minCalls, 1)
     next.minCalls = calls
@@ -131,6 +139,7 @@ function isCustom(overrides: PlanOverrides): boolean {
     || overrides.files !== undefined
     || overrides.calls !== undefined
     || overrides.unique !== undefined
+    || overrides.mdx !== undefined
   )
 }
 

@@ -86,6 +86,7 @@ function scaleSection(scale: ScaleResult): string[] {
     `- generator: ${scale.plan.generator}`,
     `- style files: ${formatCount(generated.styleFiles)} (+${formatCount(generated.deadFiles)} dead)`,
     `- css() calls: ${formatCount(generated.cssCalls)} · recipes: ${formatCount(generated.recipes)}`,
+    `- mdx fragments: ${formatCount(generated.mdxFiles)} (+${formatCount(generated.mdxFiles)} fence decoys)`,
     `- tokens: ${scale.plan.tokenColors} colors / ${scale.plan.tokenSpacing} spacing`,
     `- unique ratio: ${scale.plan.uniqueRatio} · conditions: ${scale.plan.conditionRatio} · responsive: ${scale.plan.responsiveRatio}`,
     '',

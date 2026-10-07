@@ -1,6 +1,8 @@
 // Churn generator: namer and atom-table stress, not an app.
 // It takes a load plan plus a directory and emits flat utility dumps.
 // Every one-off value draws a fresh hex, so uniqueness climbs with file count.
+// When the plan carries mdxFiles it also writes that many MDX fragments under
+// theme/mdx, each beside a fence-only decoy that must never collect.
 // Keep it for compiler fuzz; reach for the app generator for product-shaped load.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -14,6 +16,7 @@ import { globalFile } from '../templates/global.ts'
 import { recipeModule } from '../templates/recipe.ts'
 import { uniqueColor, uniqueSpace, type StyleContext, type ValueSampler } from '../templates/style.ts'
 import { colorName, spaceName, tokensFile } from '../templates/tokens.ts'
+import { writeMdxFiles } from './mdx-files.ts'
 
 export interface ChurnStats {
   projectDir: string
@@ -21,6 +24,7 @@ export interface ChurnStats {
   deadFiles: number
   cssCalls: number
   recipes: number
+  mdxFiles: number
 }
 
 function tokenColor(rng: Rng, plan: LoadPlan): string {
@@ -62,11 +66,13 @@ export function assembleChurnRepo(plan: LoadPlan, dir: string): ChurnStats {
   for (let i = 0; i < plan.deadFiles; i += 1) {
     writeSharded(dir, 'util', `util${i}.ts`, deadFile(i))
   }
+  const mdxFiles = writeMdxFiles(dir, plan.mdxFiles)
   return {
     projectDir: dir,
     styleFiles: plan.files,
     deadFiles: plan.deadFiles,
     cssCalls,
     recipes: plan.recipes,
+    mdxFiles,
   }
 }

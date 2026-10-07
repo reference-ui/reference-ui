@@ -2,6 +2,8 @@
 // It takes a load plan plus a directory and emits components, recipe groups, and dead majority.
 // One-off values collide through small Zipf pools: the same white and 16px recur by the thousand.
 // Tokens read like a palette, recipes fan variant axes to parts, and most files hold components.
+// When the plan carries mdxFiles it also writes that many MDX fragments under theme/mdx, each
+// beside a fence-only decoy that must never collect.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,6 +13,7 @@ import { componentModule, componentName, type RecipeHookup } from '../templates/
 import { configFile } from '../templates/config.ts'
 import { deadFile } from '../templates/dead.ts'
 import { globalFile } from '../templates/global.ts'
+import { writeMdxFiles } from './mdx-files.ts'
 import { groupRootName, recipeGroup } from '../templates/recipe.ts'
 import { APP_DIALECT, uniqueColor, uniqueSpace, type StyleContext, type ValueSampler } from '../templates/style.ts'
 import { appColorName, appSpaceName, appTokensFile } from '../templates/tokens.ts'
@@ -21,6 +24,7 @@ export interface AppStats {
   deadFiles: number
   cssCalls: number
   recipes: number
+  mdxFiles: number
 }
 
 const HOT_COLORS: readonly string[] = [
@@ -115,11 +119,13 @@ export function assembleAppRepo(plan: LoadPlan, dir: string): AppStats {
   for (let i = 0; i < plan.deadFiles; i += 1) {
     writeSharded(dir, 'util', `util${i}.ts`, deadFile(i))
   }
+  const mdxFiles = writeMdxFiles(dir, plan.mdxFiles)
   return {
     projectDir: dir,
     styleFiles: plan.files,
     deadFiles: plan.deadFiles,
     cssCalls,
     recipes: plan.recipes,
+    mdxFiles,
   }
 }
