@@ -1,10 +1,11 @@
 # WAVE1 — C1: unify documented paths on dist mode + freshness gate
 
-STATUS: DONE (implementation) / BAR FALSIFIED — cwd axis found (see report)
+STATUS: C1 LANDED (`490962c4d`, amended bar) — C2 (cwd canon) next per CWD.oracle
 
-Bar: documented lib `sync` reproduces the pinned dist hashes (empty pin diff);
-fresh-clone rebuilds neo automatically; steady-state gate ~nil; neo suites +
-`agentneo q` green; residual paragraph added. B2 CUT (Oracle DESIGN.oracle).
+Bar (amended per `CWD.oracle`): root-cwd documented-form sync reproduces the
+four lib pins (mode unification); package-cwd delta confined to banner lines;
+`ensure-dist` fresh-clone + steady-state + opt-out proofs; suites green. Full
+cwd-independence moves to C2.
 
 ## Entries
 
@@ -45,4 +46,23 @@ mtime (normal; rebuild needed).
   (`briefs/CWD.oracle.md`): choose the canon (root invocation / package-cwd
   re-baseline / canonical `absWorkingDir` + re-baseline), whether the gate +
   dist wiring land separately, and whether it folds with B3-depth.
+
+### Oracle CWD.oracle: canon = option (3), neo-root `absWorkingDir`; C1 lands now
+
+- Ruling: reject root-invocation (1) and package-cwd (2) canons; **adopt (3)**
+  `absWorkingDir` = **neo package root** (`import.meta.url`) set unconditionally
+  in `buildMicroBundleOptions`, plus resolve `config/bundle.ts` metafile keys
+  against the exported canon base (R3 edge — `bundle.test.ts` guards it).
+  Also: 6 pinned files affected (`baseSystem`+`types` × docs/lib/icons);
+  `react.mjs`/maps must not move; **two commits** (C2 code, then pins-only).
+- C1 **lands now on an amended bar** (mode unification; package-cwd delta
+  banner-only); cwd-independence is **C2**. C2 does **not** fold with B3-depth.
+  B2 stays CUT (the cwd canon is a new item, not B2 revived).
+- GATES step 3 amended: identity proof runs each package's documented sync
+  **from its package dir**.
+- Captain verified amended bar: root-cwd form = pins; package-cwd
+  banner-normalized **EQUAL** (280/280, 47/47 banner lines); `ensure-dist`
+  steady-state 45 ms, opt-out exit 0, quality 0/0; `verify-pins` PASS.
+- Landed **`490962c4d`**.
+
 
