@@ -9,12 +9,15 @@ land exposed exactly these weaknesses.
 
 ## Candidate backlog (from filed follow-ups + accepted arc risks)
 
-| id | topic | source | surface |
-| --- | --- | --- | --- |
-| **T1** | Emit-mode determinism: source- vs dist-invoked neo changes fragment-bundle bytes (esbuild `// path` banners) | `docs/bugs/NEO_EMIT_MODE_DRIFT.md` (W1-1) | `lib/microbundle/build-options.ts` (+ `collect/lib/bootstrap.ts`) |
-| **T2** | Silent stale upstream: the `./baseSystem` subpath reads lib's live `.reference-ui`; the hint covers **missing**, not **stale** | `reports/WAVE1.arc.md` W1-9 | `config/load.ts`, `config/errors.ts` |
-| **T3** | Proof-harness hardening: `verify-pins` staleness guard + dist-provenance attestation (deferred) | `GATES.md` (superseded note), `reports/WAVE0.oracle.md` W0-2/W0-3 | `.agents/missions/**/scripts` |
-| **T4** | Survey: other robustness gaps on config-load, exports, and the guard the Oracle flags | this plan | survey |
+Wave 0 recon (see `reports/WAVE0.recon.md`) confirmed and **expanded** these:
+
+| id | topic | status after recon |
+| --- | --- | --- |
+| **T1** | Emit-mode determinism | **Understated:** **4** files drift (`system/baseSystem.mjs`, `react/react.mjs`, `react/react.mjs.map`, `types/types.mjs`), **4** `import.meta.url` seams (`collect/lib/bootstrap.ts`, `packager/react.ts`, `packager/reference-types.ts`, `config/bundle.ts`). Not comments-only: `types.mjs` is a different module graph, `react.mjs` a different minified program, the map's `sources` differ. The pin is dist-mode; lib's documented `sync` is source-mode and **cannot reproduce it** (`verify-pins` FAILs 8). |
+| **T2** | Silent stale upstream | **Confirmed** with a live demo: an altered lib `baseSystem.mjs` was served by docs `loadUserConfig` with **no warning**. |
+| **T3** | Proof-harness hardening | **Confirmed:** `verify-pins` passes with no sync (vacuous); `capture-pins` crashes on a fresh clone (ENOENT); `measure-one-shot` measures an un-attested `dist`. |
+| **T4** | Survey | 13 cited candidates (see `WAVE0.recon.md` §T4) — including packed-tarball stale `.reference-ui`, `check:dist` not covering generated bundles, and no microbundle normalisation seam. |
+
 
 ## Doctrine
 

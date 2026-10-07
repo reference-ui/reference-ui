@@ -60,3 +60,32 @@ future alias producers.
 
 `reports/WAVE1.arc.md` W1-1; `reports/WAVE1.R1.md` §4. Voyage
 `.agents/missions/voyage-one-shot/`.
+
+## Correction (robustness voyage recon, 2026-10-07)
+
+Wave 0 of `voyage-robustness` (`reports/WAVE0.recon.md`) falsified two claims in
+this doc:
+
+1. **"Comments only" is false.** Four emitted files drift by invocation mode,
+   all four in the pin baseline: `system/baseSystem.mjs` (banners + one reflowed
+   destructuring), `react/react.mjs` (different minified program),
+   `react/react.mjs.map` (`sources`/`mappings` differ), and `types/types.mjs`
+   (**different module graph** — `react/jsx-runtime` vs
+   `react`/`createElement`; 2,202-line diff). Evaluated spec / manifest / CSS are
+   still byte-identical, so the "no semantic consumer" conclusion for those
+   holds — but the emitted runtime/types bytes are mode-dependent beyond
+   comments.
+2. **The suggested fix seam is insufficient.** `lib/microbundle/build-options.ts`
+   comment-stripping cannot remove the reflow, the minified-identifier drift,
+   the sourcemap `sources` paths, or the `types.mjs` graph difference. Root
+   cause spans **four** `import.meta.url` seams:
+   `collect/lib/bootstrap.ts:24-26`, `packager/react.ts:30-41`,
+   `packager/reference-types.ts:23-25`, `config/bundle.ts:36-39` (last inert).
+
+Real-world consequence: `packages/reference-lib/package.json` `sync`
+(`node ../reference-neo/bin/ref.ts sync`, source mode) is what `build`/`prepack`
+run, and it cannot reproduce the dist-mode pin — running it changes all four
+pinned lib artifacts (`verify-pins` FAILs 8). Byte-identity requires
+canonicalising resolution across all seams **or** canonicalising every emitted
+bundle (comments + formatting + sourcemap), **or** unifying the workspace on one
+mode. The strategy is open for the robustness voyage.
