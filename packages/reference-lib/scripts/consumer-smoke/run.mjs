@@ -84,8 +84,25 @@ try {
     throw new Error('smoke: scaffold npm install failed')
   }
 
+  // 3b. The ./baseSystem subpath must resolve from the packed tarball in both
+  // conditions: runtime import here, types via the tsc pass below.
+  step('baseSystem subpath')
+  const baseSystemProbe = run(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      "const m = await import('@reference-ui/lib/baseSystem'); " +
+        "if (!m.baseSystem || typeof m.baseSystem.name !== 'string') " +
+        "throw new Error('baseSystem subpath did not export a system'); " +
+        "console.log('baseSystem:', m.baseSystem.name)",
+    ],
+    { cwd: scaffold },
+  )
+  console.log(baseSystemProbe.trim())
+
   // 4. Types must resolve through the published exports map, including the
-  // new ./primitives types chain (B-13).
+  // new ./primitives types chain (B-13) and the ./baseSystem types probe.
   step('tsc --noEmit (consumer types)')
   try {
     run('npx', ['tsc', '--noEmit', '-p', 'tsconfig.json'], { cwd: scaffold })

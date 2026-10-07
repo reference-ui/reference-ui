@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/neo'
-import { baseSystem } from '@reference-ui/lib'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
 
 export default defineConfig({
   name: 'reference-docs',

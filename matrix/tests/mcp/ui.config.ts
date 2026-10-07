@@ -1,5 +1,5 @@
 import { defineConfig } from '@reference-ui/neo'
-import { baseSystem } from '@reference-ui/lib'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
 import { baseSystem as extendLibrary } from '@fixtures/extend-library/baseSystem'
 
 export default defineConfig({

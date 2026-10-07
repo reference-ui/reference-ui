@@ -16,6 +16,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
     },
+    "./baseSystem": {
+      "types": "./.reference-ui/system/baseSystem.d.mts",
+      "import": "./.reference-ui/system/baseSystem.mjs"
+    },
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.mjs"

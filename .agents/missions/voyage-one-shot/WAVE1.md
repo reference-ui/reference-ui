@@ -1,6 +1,6 @@
 # WAVE1 — R1: `@reference-ui/lib` `./baseSystem` subpath
 
-STATUS: DONE — VERDICT HOLD (identity-baseline conflict; see `reports/WAVE1.R1.md`)
+STATUS: LANDED — Oracle WAVE1.arc: LAND with captain re-baseline; R4 CUT
 
 Bar: config-import loads 7,728 → ~2; config phase 1548 ms → ~10–30 ms;
 byte-identity vs Wave 0 pins; config-touching suites green. R2 design note as
@@ -48,4 +48,29 @@ CUT-insurance.
   sync-mode emit nondeterminism a blocker or a separate topic, does
   normalized-equality hide semantic risk, and is R4 now CUT by evaporation.
 - R1 product files held **uncommitted** pending the ruling.
+
+### 2026-10-07 — Oracle WAVE1.arc: **LAND** with captain-owned re-baseline
+
+Ruling (`reports/WAVE1.arc.md`): HOLD was correct discipline; the conflict is
+an inert, pre-existing, mode-explained baseline artifact. **Canonical mode =
+dist** (the shipped `bin: ./dist/bin/ref.js`; `bin/ref.ts` source mode exists
+only in-workspace). Wave 0's baseline is **not** invalidated. Fragment preamble
+bytes have no semantic consumer (executed, never hashed; only `baseSystem.mjs`
+differs → evaluated spec, manifest, CSS byte-identical). **R4 = CUT by
+evaporation** (residual ~20 ms; a sound persistent key costs ~the prize).
+W1-5/W1-6 = Wave-1.5 fix tasks; W1-1 emit-stability = separate Neo topic.
+
+Re-baseline applied per protocol:
+
+1. Dist provenance attested: `pnpm --filter @reference-ui/neo build` →
+   `dist ready: 318 files`, wall **816 ms**, from tip `0a9008d59` (dist track).
+2. Fresh all-dist syncs (harness): icons → lib → docs; config 70 / 18 / 20 ms.
+3. `verify-pins` failed on exactly
+   `docs/.reference-ui/system/baseSystem.mjs` (`b7fece49…` → `3cf8397a…`).
+4. Replaced only line 31 of `pins/baseline.sha256` (old `b7fece49…` → new
+   `3cf8397a…`); the other 1,257 lines untouched.
+5. `verify-pins` → **PASS — 1,258 files byte-identical**.
+6. Captain gates: `agent vitest src/config` **27 passed**; `agentneo q`
+   **0 errors / 24 pre-existing warns**.
+
 
