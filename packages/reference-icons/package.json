@@ -36,7 +36,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf dist src/generated src/jsx-names.ts .reference-ui",
+    "clean": "rm -rf dist src/generated .reference-ui",
     "build": "node scripts/build.mjs",
     "prepack": "pnpm run build"
   },
