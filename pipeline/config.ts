@@ -32,6 +32,7 @@ export const REGISTRY_PACKAGE_NAMES = [
 	'@reference-ui/neo',
 	'@reference-ui/lib',
 	'@reference-ui/mcp',
+	'@fixtures/aliased-host-library',
 	'@fixtures/extend-library',
 	'@fixtures/extend-library-2',
 	'@fixtures/meta-extend-library',

@@ -81,7 +81,7 @@ interface RustTargetTarballPlan {
   tarballPath: string
 }
 
-const repoSourceExcludes = [
+export const repoSourceExcludes = [
   '.git',
   // Agent/session scratch (incl. foreign .muse/worktrees checkouts):
   // never referenced by the container build; sinking it into the
@@ -92,8 +92,21 @@ const repoSourceExcludes = [
   '**/.pnpm-store',
   '.pipeline',
   'target',
+  // Cargo target dirs and package build outputs at any depth. The
+  // container build compiles from sources and mounts a cache volume at
+  // packages/reference-rs/dist/cargo, so host build trees must not ride
+  // the snapshot: packages/reference-rs/dist alone holds the ~47G cargo
+  // target dir (dist/cargo/debug/incremental) that exhausted the 100GiB
+  // colima disk mid-run (copy_file_range ENOSPC). No dist/ or target/
+  // content is checked in, so these cannot starve the container build.
+  '**/target',
+  '**/dist',
   'packages/reference-docs/dist',
   'pipeline/node_modules',
+  // Repo-root scratch and report dirs: same story, never read by the build.
+  '.complexity-temp',
+  '.playwright-mcp',
+  '.reference-ui',
 ] as const
 
 interface EnsureReferenceRustGeneratedPackagesOptions {
