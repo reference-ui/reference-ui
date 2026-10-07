@@ -1,7 +1,6 @@
 # WAVE2 — C2: cwd canon (`absWorkingDir` = neo package root)
 
-STATUS: DONE (implementation + proof; 6-file delta classified; pins NOT edited
-— captain re-baselines)
+STATUS: C2 LANDED (`a65eecad7` code, `cec363eab` pins) — Oracle arc review in flight
 
 Bar (`GATES.md` C2): same entry under two cwds ⇒ identical bytes; `react.mjs`×3
 + maps×3 byte-identical (lever falsifier); 6-line pin delta banner-only
@@ -22,3 +21,11 @@ build green.
   suites 98/98 + `agentneo q` 0 errors (24 pre-existing warnings); mcp `tsup`
   build green + mcp vitest 90/90 + child build on lib OK. 8 files touched (incl.
   the vendored mcp R3 copy and the drift-doc canon statement). Pins untouched.
+
+- **Captain verification + re-baseline.** Re-ran the cross-cwd proof: documented
+  package-cwd (docs/lib/icons) vs root-cwd dir-arg syncs **IDENTICAL** (1258
+  files); `verify-pins` fails on exactly the **6** expected files; lib
+  `baseSystem`/`types` banner-normalized **EQUAL** (280/280, 47/47).
+  Re-baselined exactly **6 pin lines** → `verify-pins` **PASS**;
+  `agent vitest src/config + src/lib/microbundle` green; `agentneo q`
+  0 errors. Commits: `a65eecad7` (code), `cec363eab` (pins-only).
