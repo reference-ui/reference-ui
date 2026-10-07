@@ -2,14 +2,13 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use std::path::Path;
-
 use super::crawler::Crawler;
 use crate::scanner::model::Discovery;
+use crate::scanner::packages::ImportResolver;
 
 pub(super) fn discover_reachable_files(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     user_file_ids: Vec<String>,
 ) -> Result<Discovery, String> {
-    Crawler::new(root_dir, user_file_ids).run()
+    Crawler::new(resolver, user_file_ids).run()
 }

@@ -1,7 +1,6 @@
 //! Export statement collection: named exports, default exports, and bare type declarations.
 
 use std::collections::BTreeMap;
-use std::path::Path;
 
 use oxc_ast::ast::Statement;
 use oxc_span::GetSpan;
@@ -14,10 +13,10 @@ use super::super::module_bindings::{
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use crate::ast::model::{ImportBinding, SymbolShell};
-use crate::scanner::{resolve_import, ScannedFile};
+use crate::scanner::{ImportResolver, ScannedFile};
 
 pub(crate) fn exports_from_statement(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
@@ -29,7 +28,7 @@ pub(crate) fn exports_from_statement(
     exports: &mut Vec<SymbolShell>,
 ) {
     collect_named_export_statement(
-        root_dir,
+        resolver,
         file_id_set,
         scanned_file,
         statement,
@@ -40,7 +39,7 @@ pub(crate) fn exports_from_statement(
         exports,
     );
     collect_export_all_statement(
-        root_dir,
+        resolver,
         file_id_set,
         scanned_file,
         statement,
@@ -60,7 +59,7 @@ pub(crate) fn exports_from_statement(
 }
 
 fn collect_named_export_statement(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
@@ -76,11 +75,11 @@ fn collect_named_export_statement(
 
     if export_decl.declaration.is_none() {
         record_named_reexports(
+            resolver,
             export_decl,
             scanned_file.source.as_str(),
             export_bindings,
             reexport_target,
-            root_dir,
             &scanned_file.file_id,
             file_id_set,
         );
@@ -101,14 +100,14 @@ fn collect_named_export_statement(
         export_decl,
         export_bindings,
         reexport_target,
-        root_dir,
+        resolver,
         file_id_set,
         exports,
     );
 }
 
 fn collect_export_all_statement(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
@@ -125,7 +124,7 @@ fn collect_export_all_statement(
         .trim_matches('"')
         .trim_matches('\'');
     let Some(target_file_id) =
-        resolve_import(root_dir, &scanned_file.file_id, source_module, file_id_set)
+        resolver.resolve_import(&scanned_file.file_id, source_module, file_id_set)
     else {
         return;
     };

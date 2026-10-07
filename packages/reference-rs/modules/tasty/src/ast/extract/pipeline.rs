@@ -16,28 +16,22 @@ use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
 use crate::model::TypeRef;
 use crate::scanner::symbol_id;
-use crate::scanner::{ScannedFile, ScannedWorkspace};
+use crate::scanner::{ImportResolver, ScannedFile, ScannedWorkspace};
 
 pub(crate) fn extract_files(
     scanned_workspace: &ScannedWorkspace,
+    resolver: &ImportResolver,
     diagnostics: &mut Vec<TastyDiagnostic>,
 ) -> Result<Vec<ParsedFileAst>, DiagnosticError> {
     scanned_workspace
         .files
         .iter()
-        .map(|file| {
-            extract_file(
-                &scanned_workspace.root_dir,
-                file,
-                &scanned_workspace.file_ids,
-                diagnostics,
-            )
-        })
+        .map(|file| extract_file(resolver, file, &scanned_workspace.file_ids, diagnostics))
         .collect()
 }
 
 fn extract_file(
-    root_dir: &std::path::Path,
+    resolver: &ImportResolver,
     scanned_file: &ScannedFile,
     file_id_set: &std::collections::BTreeSet<String>,
     diagnostics: &mut Vec<TastyDiagnostic>,
@@ -52,7 +46,7 @@ fn extract_file(
     let mut bindings = FileBindings::default();
 
     for statement in parsed.program.body.iter() {
-        bindings.apply_statement(root_dir, scanned_file, file_id_set, statement, comments);
+        bindings.apply_statement(resolver, scanned_file, file_id_set, statement, comments);
     }
 
     bindings.materialize_library_export_closure(scanned_file, &parsed.program.body, comments);
@@ -84,14 +78,14 @@ struct FileBindings {
 impl FileBindings {
     fn apply_statement(
         &mut self,
-        root_dir: &std::path::Path,
+        resolver: &ImportResolver,
         scanned_file: &ScannedFile,
         file_id_set: &std::collections::BTreeSet<String>,
         statement: &Statement<'_>,
         comments: &[Comment],
     ) {
         import_bindings_from_statement(
-            root_dir,
+            resolver,
             scanned_file,
             statement,
             file_id_set,
@@ -106,7 +100,7 @@ impl FileBindings {
         };
         value_bindings_from_statement(statement, &value_ctx, &mut self.value_bindings);
         exports_from_statement(
-            root_dir,
+            resolver,
             file_id_set,
             scanned_file,
             statement,

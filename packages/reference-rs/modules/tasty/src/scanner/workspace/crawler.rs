@@ -2,7 +2,6 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
-use std::path::Path;
 
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::diagnostics::scan_failed;
@@ -10,10 +9,11 @@ use crate::diagnostics::scan_failed;
 use super::policy::{resolve_import_for_discovery, DiscoveryContext};
 use crate::scanner::imports::{extract_module_specifiers, extract_reexport_module_specifiers};
 use crate::scanner::model::{DiscoveredFile, Discovery, ResolvedModule};
+use crate::scanner::packages::ImportResolver;
 use crate::scanner::paths::module_specifier_for_file_id;
 
 pub(super) struct Crawler<'a> {
-    root_dir: &'a Path,
+    resolver: &'a ImportResolver,
     user_file_ids: BTreeSet<String>,
     discovered: BTreeMap<String, DiscoveredFile>,
     pending: VecDeque<String>,
@@ -21,7 +21,7 @@ pub(super) struct Crawler<'a> {
 }
 
 impl<'a> Crawler<'a> {
-    pub(super) fn new(root_dir: &'a Path, entry_points: Vec<String>) -> Self {
+    pub(super) fn new(resolver: &'a ImportResolver, entry_points: Vec<String>) -> Self {
         let user_file_ids = entry_points.iter().cloned().collect();
         let mut discovered = BTreeMap::new();
         let mut pending = VecDeque::new();
@@ -31,7 +31,7 @@ impl<'a> Crawler<'a> {
         }
 
         Self {
-            root_dir,
+            resolver,
             user_file_ids,
             discovered,
             pending,
@@ -70,7 +70,7 @@ impl<'a> Crawler<'a> {
         let reexport_specifiers = self.reexports_of(is_user_file, file_id, &source);
 
         let ctx = DiscoveryContext {
-            root_dir: self.root_dir,
+            resolver: self.resolver,
             file_id,
             is_user_file,
             current_library: &discovered.library,
@@ -91,7 +91,7 @@ impl<'a> Crawler<'a> {
     }
 
     fn read_source(&self, file_id: &str) -> Result<String, String> {
-        let absolute_path = self.root_dir.join(file_id);
+        let absolute_path = self.resolver.root_dir().join(file_id);
         fs::read_to_string(&absolute_path).map_err(|err| {
             scan_failed(format!(
                 "failed to read {}: {err}",

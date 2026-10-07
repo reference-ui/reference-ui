@@ -3,7 +3,9 @@
 //! `ParsedFileAst` adds import/value/export bindings and symbol shells after parsing.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::rc::Rc;
+
+use super::packages::ImportResolver;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ScannedFile {
@@ -15,13 +17,15 @@ pub(crate) struct ScannedFile {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ScannedWorkspace {
-    pub(crate) root_dir: PathBuf,
     pub(crate) files: Vec<ScannedFile>,
     pub(crate) file_ids: BTreeSet<String>,
     /// External libraries a user file re-exported from. Only these (plus
     /// user files) enter the manifest name index; other followed libraries
     /// emit chunks without name entries (followed-without-indexing).
     pub(crate) bridged_libraries: BTreeSet<String>,
+    /// The discovery resolver, retained so extraction reuses the same memo
+    /// instead of re-walking `node_modules` for every import.
+    pub(crate) resolver: Rc<ImportResolver>,
 }
 
 #[derive(Debug, Clone)]

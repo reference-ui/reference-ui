@@ -5,7 +5,7 @@
 use std::collections::BTreeSet;
 use std::fs;
 
-use super::{resolve_external_import, resolve_relative_import, FileLookup};
+use super::{resolve_external_import, resolve_relative_import, FileLookup, ImportResolver};
 use crate::scanner::paths::split_package_specifier;
 #[cfg(unix)]
 use crate::scanner::workspace::scan_workspace;
@@ -265,4 +265,92 @@ fn external_import_resolves_scoped_package_via_symlinked_node_modules_path() {
     let resolved = resolve_external_import(root.path(), "@scope/pkg").expect("scoped via symlink");
     assert_eq!(resolved.file_id, "node_modules/@scope/pkg/index.d.ts");
     assert_eq!(resolved.module_specifier, "@scope/pkg");
+}
+
+/// The resolver answers a repeat specifier from its memo, not the disk.
+#[test]
+fn external_resolution_is_memoized_per_resolver() {
+    let root = TempDir::new("scanner-packages-memo-positive");
+    root.write(
+        "node_modules/memo-lib/package.json",
+        r#"{ "name": "memo-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/memo-lib/index.d.ts",
+        "export interface Memo {}\n",
+    );
+
+    let resolver = ImportResolver::new(root.path());
+    let first = resolver
+        .resolve_external("memo-lib")
+        .expect("resolves on first call");
+
+    fs::remove_dir_all(root.path().join("node_modules/memo-lib")).expect("remove package");
+    let second = resolver
+        .resolve_external("memo-lib")
+        .expect("cached after removal");
+    assert_eq!(first.file_id, second.file_id);
+
+    let fresh = ImportResolver::new(root.path());
+    assert!(
+        fresh.resolve_external("memo-lib").is_none(),
+        "a fresh resolver re-walks the disk and finds no entry"
+    );
+}
+
+/// Negative outcomes are cached too, so one `None` does not re-walk forever.
+#[test]
+fn external_resolution_caches_negative_outcomes() {
+    let root = TempDir::new("scanner-packages-memo-negative");
+    let resolver = ImportResolver::new(root.path());
+    assert!(
+        resolver.resolve_external("ghost-lib").is_none(),
+        "absent package resolves to None"
+    );
+
+    root.write(
+        "node_modules/ghost-lib/package.json",
+        r#"{ "name": "ghost-lib", "types": "index.d.ts" }"#,
+    );
+    root.write(
+        "node_modules/ghost-lib/index.d.ts",
+        "export interface Ghost {}\n",
+    );
+    assert!(
+        resolver.resolve_external("ghost-lib").is_none(),
+        "negative outcome stays cached"
+    );
+
+    let fresh = ImportResolver::new(root.path());
+    assert!(
+        fresh.resolve_external("ghost-lib").is_some(),
+        "fresh resolver resolves the newly installed package"
+    );
+}
+
+/// `package.json` reads are memoized by absolute path.
+#[test]
+fn package_json_reads_are_memoized_by_path() {
+    let root = TempDir::new("scanner-packages-memo-package-json");
+    root.write(
+        "node_modules/read-lib/package.json",
+        r#"{ "name": "read-lib", "types": "index.d.ts" }"#,
+    );
+    let package_json_path = root.path().join("node_modules/read-lib/package.json");
+
+    let resolver = ImportResolver::new(root.path());
+    let first = resolver
+        .read_package_json(&package_json_path)
+        .expect("first read hits disk");
+    fs::remove_file(&package_json_path).expect("remove package.json");
+    let second = resolver
+        .read_package_json(&package_json_path)
+        .expect("cached read survives removal");
+    assert_eq!(first, second);
+
+    let fresh = ImportResolver::new(root.path());
+    assert!(
+        fresh.read_package_json(&package_json_path).is_none(),
+        "a fresh resolver sees the removed file"
+    );
 }

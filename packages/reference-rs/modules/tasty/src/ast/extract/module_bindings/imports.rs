@@ -3,7 +3,6 @@
 //! See module README for architecture details.
 
 use std::collections::BTreeMap;
-use std::path::Path;
 
 use oxc_ast::ast::{
     ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, ModuleExportName,
@@ -12,7 +11,7 @@ use oxc_span::GetSpan;
 
 use super::super::slice_span;
 use crate::ast::model::{ImportBinding, ImportBindingKind};
-use crate::scanner::resolve_import;
+use crate::scanner::ImportResolver;
 
 struct ImportBindingEntry {
     local_name: String,
@@ -20,7 +19,7 @@ struct ImportBindingEntry {
 }
 
 pub(in crate::ast::extract) fn collect_import_bindings(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     current_file_id: &str,
     import: &ImportDeclaration<'_>,
     source: &str,
@@ -42,7 +41,7 @@ pub(in crate::ast::extract) fn collect_import_bindings(
         .trim_matches('"')
         .trim_matches('\'')
         .to_string();
-    let target_file_id = resolve_import(root_dir, current_file_id, &source_module, file_id_set);
+    let target_file_id = resolver.resolve_import(current_file_id, &source_module, file_id_set);
 
     for specifier in specifiers {
         let entry = import_binding_from_specifier(

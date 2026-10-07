@@ -8,10 +8,10 @@ use oxc_ast::ast::Statement;
 
 use super::super::module_bindings::collect_import_bindings;
 use crate::ast::model::ImportBinding;
-use crate::scanner::ScannedFile;
+use crate::scanner::{ImportResolver, ScannedFile};
 
 pub(crate) fn import_bindings_from_statement(
-    root_dir: &std::path::Path,
+    resolver: &ImportResolver,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
     file_id_set: &std::collections::BTreeSet<String>,
@@ -22,7 +22,7 @@ pub(crate) fn import_bindings_from_statement(
     };
 
     collect_import_bindings(
-        root_dir,
+        resolver,
         &scanned_file.file_id,
         import,
         &scanned_file.source,

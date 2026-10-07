@@ -1,15 +1,19 @@
 //! Unit tests for `ast::extract` — `ScannedWorkspace` → `ParsedTypeScriptAst` without resolve/scan.
 
 use std::collections::BTreeSet;
-use std::path::PathBuf;
+use std::path::Path;
+use std::rc::Rc;
 
 use crate::ast::extract_ast;
 use crate::ast::model::ImportBindingKind;
 use crate::model::TypeRef;
-use crate::scanner::{ScannedFile, ScannedWorkspace};
+use crate::scanner::{ImportResolver, ScannedFile, ScannedWorkspace};
+
+fn test_resolver() -> Rc<ImportResolver> {
+    Rc::new(ImportResolver::new(Path::new(".")))
+}
 
 fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
-    let root_dir = PathBuf::from(".");
     let mut file_ids = BTreeSet::new();
     let mut out = Vec::new();
     for (file_id, source) in files {
@@ -22,7 +26,7 @@ fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
         });
     }
     ScannedWorkspace {
-        root_dir,
+        resolver: test_resolver(),
         files: out,
         file_ids,
         bridged_libraries: BTreeSet::new(),
@@ -39,11 +43,10 @@ fn single_library_file(
     library: &str,
     source: &str,
 ) -> ScannedWorkspace {
-    let root_dir = PathBuf::from(".");
     let mut file_ids = BTreeSet::new();
     file_ids.insert(file_id.to_string());
     ScannedWorkspace {
-        root_dir,
+        resolver: test_resolver(),
         files: vec![ScannedFile {
             file_id: file_id.to_string(),
             module_specifier: module_specifier.to_string(),

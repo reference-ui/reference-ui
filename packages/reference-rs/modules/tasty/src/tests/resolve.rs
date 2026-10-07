@@ -4,16 +4,20 @@
 //! import bindings and symbol shells match what the parser emits.
 
 use std::collections::BTreeSet;
-use std::path::PathBuf;
+use std::path::Path;
+use std::rc::Rc;
 
 use crate::ast::{extract_ast, resolve_ast};
 use crate::model::{TsSymbolKind, TypeRef};
-use crate::scanner::{scan_workspace, symbol_id, ScannedFile, ScannedWorkspace};
+use crate::scanner::{scan_workspace, symbol_id, ImportResolver, ScannedFile, ScannedWorkspace};
 
 use super::fixtures::TempDir;
 
+fn test_resolver() -> Rc<ImportResolver> {
+    Rc::new(ImportResolver::new(Path::new(".")))
+}
+
 fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
-    let root_dir = PathBuf::from(".");
     let mut file_ids = BTreeSet::new();
     let mut out = Vec::new();
     for (file_id, source) in files {
@@ -26,7 +30,7 @@ fn workspace(files: &[(&str, &str)]) -> ScannedWorkspace {
         });
     }
     ScannedWorkspace {
-        root_dir,
+        resolver: test_resolver(),
         files: out,
         file_ids,
         bridged_libraries: BTreeSet::new(),

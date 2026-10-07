@@ -3,7 +3,6 @@
 //! See module README for architecture details.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 use oxc_ast::ast::{
     Declaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportNamedDeclaration,
@@ -16,7 +15,7 @@ use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use super::imports::module_export_name_to_string;
 use crate::ast::model::SymbolShell;
-use crate::scanner::resolve_import;
+use crate::scanner::ImportResolver;
 
 pub(in crate::ast::extract) fn collect_exported_declaration(
     file_id: &str,
@@ -24,17 +23,17 @@ pub(in crate::ast::extract) fn collect_exported_declaration(
     export_decl: &ExportNamedDeclaration<'_>,
     export_bindings: &mut BTreeMap<String, String>,
     reexport_target: &mut BTreeMap<String, (String, String)>,
-    root_dir: &Path,
+    resolver: &ImportResolver,
     file_id_set: &BTreeSet<String>,
     exports: &mut Vec<SymbolShell>,
 ) {
     let Some(declaration) = export_decl.declaration.as_ref() else {
         record_named_reexports(
+            resolver,
             export_decl,
             ctx.source,
             export_bindings,
             reexport_target,
-            root_dir,
             file_id,
             file_id_set,
         );
@@ -121,11 +120,11 @@ impl<'a> ExportPass<'a> {
 }
 
 pub(in crate::ast::extract) fn record_named_reexports(
+    resolver: &ImportResolver,
     export_decl: &ExportNamedDeclaration<'_>,
     source: &str,
     export_bindings: &mut BTreeMap<String, String>,
     reexport_target: &mut BTreeMap<String, (String, String)>,
-    root_dir: &Path,
     current_file_id: &str,
     file_id_set: &BTreeSet<String>,
 ) {
@@ -134,7 +133,7 @@ pub(in crate::ast::extract) fn record_named_reexports(
             .trim_matches('"')
             .trim_matches('\'')
             .to_string();
-        resolve_import(root_dir, current_file_id, &source_module, file_id_set)
+        resolver.resolve_import(current_file_id, &source_module, file_id_set)
     });
 
     for spec in &export_decl.specifiers {

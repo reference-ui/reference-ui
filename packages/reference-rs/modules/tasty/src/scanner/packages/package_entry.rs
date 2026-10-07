@@ -7,24 +7,25 @@ use serde_json::Value;
 use crate::constants::scanner::{PACKAGE_INDEX_BASENAME, PACKAGE_JSON_FILENAME};
 
 use super::node_modules::{candidate_node_modules_dirs, installed_package_dirs};
-use super::package_json::{package_export_target, read_package_json};
+use super::package_json::package_export_target;
 use super::relative::declaration_candidates;
+use super::ImportResolver;
 use crate::scanner::model::ResolvedModule;
 use crate::scanner::paths::{
     module_specifier_for_file_id, package_name_from_file_id, path_to_unix,
 };
 
 pub(super) fn find_installed_declaration_provider(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     source_module: &str,
 ) -> Option<ResolvedModule> {
-    for package_dir in installed_package_dirs(root_dir) {
-        let package_json = read_package_json(&package_dir.join(PACKAGE_JSON_FILENAME));
+    for package_dir in installed_package_dirs(resolver.root_dir()) {
+        let package_json = resolver.read_package_json(&package_dir.join(PACKAGE_JSON_FILENAME));
         let Some(entry_path) = resolve_package_root_entry(&package_dir, package_json.as_ref())
         else {
             continue;
         };
-        let resolved = resolved_module_from_entry_path(root_dir, entry_path, None)?;
+        let resolved = resolved_module_from_entry_path(resolver.root_dir(), entry_path, None)?;
 
         if resolved.module_specifier == source_module {
             return Some(resolved);
@@ -35,13 +36,13 @@ pub(super) fn find_installed_declaration_provider(
 }
 
 pub(super) fn resolve_package_import_from_root(
-    root_dir: &Path,
+    resolver: &ImportResolver,
     package_name: &str,
     subpath: Option<&str>,
 ) -> Option<ResolvedModule> {
     let module_specifier = source_module_for_package_path(package_name, subpath);
 
-    candidate_node_modules_dirs(root_dir)
+    candidate_node_modules_dirs(resolver.root_dir())
         .into_iter()
         .find_map(|node_modules_dir| {
             let package_dir = node_modules_dir.join(package_name);
@@ -50,14 +51,18 @@ pub(super) fn resolve_package_import_from_root(
             }
 
             let package_json_path = package_dir.join(PACKAGE_JSON_FILENAME);
-            let package_json = read_package_json(&package_json_path);
+            let package_json = resolver.read_package_json(&package_json_path);
             let entry_path = if let Some(subpath) = subpath {
                 resolve_package_subpath(&package_dir, package_json.as_ref(), subpath)
             } else {
                 resolve_package_root_entry(&package_dir, package_json.as_ref())
             }?;
 
-            resolved_module_from_entry_path(root_dir, entry_path, Some(&module_specifier))
+            resolved_module_from_entry_path(
+                resolver.root_dir(),
+                entry_path,
+                Some(&module_specifier),
+            )
         })
 }
 

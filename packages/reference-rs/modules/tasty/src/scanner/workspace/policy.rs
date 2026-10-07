@@ -1,10 +1,9 @@
 //! Discovery-phase import policy: which imports to follow and when.
 
 use std::collections::BTreeSet;
-use std::path::Path;
 
 use crate::scanner::model::ResolvedModule;
-use crate::scanner::packages::{resolve_external_import, resolve_relative_import, FileLookup};
+use crate::scanner::packages::{resolve_relative_import, FileLookup, ImportResolver};
 use crate::scanner::paths::{
     is_external_file_id, module_specifier_for_file_id, package_name_from_file_id,
     split_package_specifier,
@@ -12,7 +11,7 @@ use crate::scanner::paths::{
 
 /// Everything known about the file currently being crawled.
 pub(super) struct DiscoveryContext<'a> {
-    pub(super) root_dir: &'a Path,
+    pub(super) resolver: &'a ImportResolver,
     pub(super) file_id: &'a str,
     pub(super) is_user_file: bool,
     pub(super) current_library: &'a str,
@@ -39,7 +38,7 @@ pub(super) fn resolve_import_for_discovery(
         return None;
     }
 
-    let resolved = resolve_external_import(ctx.root_dir, source_module)?;
+    let resolved = ctx.resolver.resolve_external(source_module)?;
     let external_depth = next_external_depth(ctx, &resolved.library)?;
 
     Some(ResolvedModule {
@@ -62,7 +61,7 @@ fn resolve_relative_import_for_discovery(
         (ctx.user_file_ids, FileLookup::Denied)
     };
     let file_id = resolve_relative_import(
-        ctx.root_dir,
+        ctx.resolver.root_dir(),
         ctx.file_id,
         source_module,
         file_ids,
