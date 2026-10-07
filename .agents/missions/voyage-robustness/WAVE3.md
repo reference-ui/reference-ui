@@ -1,7 +1,7 @@
 # WAVE3 — B3-depth: map live-relative sources (F-A)
 
-STATUS: B3-depth IMPLEMENTED + PROVEN (uncommitted; captain re-baselines the 3
-`.map` lines).
+STATUS: B3-depth LANDED (`4687076d1` code+test, `7dd862400` pins) — Oracle arc
+review in flight
 
 Bar (`GATES.md` B3-depth): every `react.mjs.map` source resolves to a real file
 from the live dir; `react.mjs`×3 byte-identical; `.map` pin delta = depth lines
@@ -28,6 +28,14 @@ only (captain re-baselines 3 lines); test falsifier; suites green.
   `agentneo q` 0 errors, NEO-SYNC-02/05/06 PASS. 5 files touched (4 + new
   `react.test.ts`); pins untouched.
 
-- **Captain verification.** _pending (re-baseline 3 `.map` lines, then commit
-  code+test separately from pins)._
+- **Captain verification.** Re-ran the documented package-cwd syncs, then read
+  the maps independently: 8 sources each, **7 resolve** against the live
+  `.reference-ui/react/` (6 externals now at `../../../`), only the disclosed
+  synthetic entry misses. `react.mjs`×3 equal to pins (`659664fd`/`9440758b`/
+  `6e742ed9`); falsifier `react.test.ts` 2/2. Re-baselined exactly the **3**
+  `.map` lines (+ comment refresh) → `verify-pins` **PASS (1258)**. Also added
+  the `sync.lock/` exclusion to the pin walk (`beea20e24`) — a live
+  `ref sync --watch` (the running docs dev server) was perturbing verification
+  with a runtime lock, never a shipped artifact. Commits: `4687076d1` (code),
+  `beea20e24` (pin-walk), `7dd862400` (pins-only).
 
