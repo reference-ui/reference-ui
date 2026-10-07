@@ -73,3 +73,6 @@ packages/reference-neo/playground/.captures/
 .playwright-mcp/
 .agents/case-index/.cache/
 
+
+# pack artifacts (npm pack / tarballs) — never committed
+*.tgz

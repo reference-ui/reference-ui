@@ -2,6 +2,8 @@
 
 Status as of 2026-09-29, HEAD `b764ee519`, branch `reference-system`, tree `CLEAN`.
 
+> Tracker role superseded by `FINALIZE.md`; retained for its component references.
+
 This is the single closeout doc. Everything automated that could be
 landed is landed; what follows is everything still needed before
 anyone may say "production-ready" — split into agent-doable legs

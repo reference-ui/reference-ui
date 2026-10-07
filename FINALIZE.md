@@ -116,10 +116,29 @@ files.
 - `sync-perf.html` — one-off perf page; candidate to move under `docs/PERF/` or
   delete once its numbers live in a report.
 
-**Next cleanup pass (needs a decision, not a delete):**
+**Done 2026-10-08 (cleanup pass 2, Oracle-triaged):**
 
-- [ ] The 20 `.agents/missions/*` dirs — archive/consolidate old missions so the
-  active ones (`voyage-robustness`, `font-weight-runtime-1008`, MDX) stand out.
-- [ ] `pipeline/src/registry/.store/**/*.tgz` and `.pipeline/**/.matrix-tarballs/*.tgz`
-  — generated pack artifacts; confirm both are ignored/regenerable and prune.
-- [ ] Root `target/`, `test-results/` — already gitignored; verify no committed strays.
+- Archived **7 unreferenced** mission dirs → `.agents/missions/archive/2026-10-08-<name>/`
+  with a `STATUS: closed` line each (`39931e410`): `cleanup-0925`,
+  `doom-night-0924`, `hints-0925`, `numberfield-wave2`, `red-team`, `seam-0925`,
+  `smoke-oracle`.
+- Kept in place (**live provenance refs**, verified by `git grep`): `quarantine-landing`
+  (27 refs from shipped component `DECISIONS.md`/`PATCHES.md`), `playtest` (4),
+  `finish-line` (2), `landing-sequence` (2), `continuity` (1), `sharp` (1).
+  *The Oracle's plan over-archived these — attribution fix recorded.*
+- Kept `sync-perf.html` **at root** — `docs/MISSIONS/LOG-2.md:9191` carries an
+  HQ standing order to keep it there (the Oracle's move would break it).
+- `FINISH.md` header now points at `FINALIZE.md` as the tracker.
+- Stray `reference-ui-lib-0.0.46.tgz` already gone; added `*.tgz` to `.gitignore`
+  so `npm pack` strays can never be committed (tracked `.tgz` count is 0).
+
+**Still open:**
+
+- [ ] **CLEANUP-3 ruling** — `styletrace_perf/plan.md` says "PLANNED" while
+  `LOG.md`/`dd0989ad7` say "landed"; owner must rule before that dir moves.
+- [ ] Archive `finalize/` (after MDX lands) and `voyage-one-shot/` (pins are live
+  until `voyage-robustness` closes) — per CLEANUP-1/CLEANUP-2.
+- [ ] Disk-only prune of ignored `.pipeline/**` (102 GB) and `.store/**` (259 MB)
+  — no tracked changes; skipped here (does not affect repo cleanliness).
+- [ ] `review.md` — delete once `reference-system` merges or it predates HEAD by
+  >14 days.
