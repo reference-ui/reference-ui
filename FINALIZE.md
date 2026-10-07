@@ -21,6 +21,7 @@ Last updated: 2026-10-08.
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
 | F-5 | **Native MDX support** | OPEN | Separate mission; durable plan `.agents/missions/finalize/PLAN-mdx.md` (Oracle-approved). Captain session dispatched 2026-10-08 (worktree `mdx-support`). |
 | F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. See "Cleanup backlog" below. |
+| F-7 | **Shared pin baseline under concurrent missions** | OPEN | `.agents/missions/voyage-one-shot/pins/baseline.sha256` is shared. Any mission that changes shipped bytes re-baselines (or the pin owner does once at the end). `font-weight-runtime-1008` has moved `types.mjs` twice (`977593fc6`, `69f0491d4`); a **single** re-baseline will follow its land — do not churn per-commit. Protocol: documented package-cwd syncs only; each diff shows only the claimed lines. |
 
 ## F-1 detail — dropping tsup / unifying package builds
 

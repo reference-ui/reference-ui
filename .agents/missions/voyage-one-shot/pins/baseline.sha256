@@ -1,5 +1,5 @@
 # voyage-one-shot — baseline byte-identity pins (Wave 0 / R1 identity bar)
-# pin: reference-system @ 977593fc6 (runtime Arc 1 byte changes re-baselined; supersedes 4687076d1)
+# pin: reference-system @ 2b376fd3d (WAVE5 tasty edge; docs types.mjs line pending dev-server restart; supersedes 977593fc6)
 # captured: 2026-10-07 (UTC session by wave0-recon)
 #
 # Exact commands (from repo root):
@@ -1116,8 +1116,8 @@ cf7f816b7d04435305cc75d9179dcb13880a782a5da2fd60a84909bb6f2aab28  lib/.reference
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  lib/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  lib/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  lib/.reference-ui/types/types.d.mts
-b94b75ef0085b85d4dc3fd633c227e6d0bd09d73f38b7cce70fe5bb4e722a662  lib/.reference-ui/types/types.mjs
-# lib aggregate: 122042bbed1000440b88cc1cb184ee056faaa05f07266de9866ddd0266a8cb75  files=580
+cf7b63ed4c4df59fe93d0d055a7de6e2abf6a4db4db1a6dfcdda8aa181922116  lib/.reference-ui/types/types.mjs
+# lib aggregate: 702cefbc339bd34f779aeefb6e30caabe0d0811cfc85e770ad9424f7d2a5ef28  files=580
 # icons — 156 files under packages/reference-icons/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  icons/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  icons/.reference-ui/react/react.d.mts
@@ -1274,5 +1274,5 @@ e9003251981cdb700f532fcfb2d8a4f703082eabad4f32a497ed8f100d75c461  icons/.referen
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  icons/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  icons/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  icons/.reference-ui/types/types.d.mts
-b9e91e4632e88b0543d2050780f9490829fc816abba870bf2e11eab8bb405c98  icons/.reference-ui/types/types.mjs
-# icons aggregate: 0e42aefcf2820e0a3d90a3c28cea614687331c9ce6209d459ccad35e182ad7c7  files=156
+feed3e6cc0fae6999a2f1b815fd3d02b33e2687abe509341c849fb447e2ca333  icons/.reference-ui/types/types.mjs
+# icons aggregate: 607ce39dacaea83b3d9a11db68b8bab791f2117ae9b1c7cca8a0cb85213d27e2  files=156
