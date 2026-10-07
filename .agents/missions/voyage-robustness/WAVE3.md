@@ -39,3 +39,16 @@ only (captain re-baselines 3 lines); test falsifier; suites green.
   with a runtime lock, never a shipped artifact. Commits: `4687076d1` (code),
   `beea20e24` (pin-walk), `7dd862400` (pins-only).
 
+- **Oracle `WAVE3.B3-depth.arc`: LAND, no blocker.** Mechanism complete for every
+  live input (plugin re-homes both staged within-folder inputs at their live
+  twins; `outfile` is derivation-only, `write:false` keeps bytes staged);
+  synthetic-source exception sound (fenced by NEO-SYNC-02 (d) and the 3-line
+  bar); `react.mjs` identity structural + pinned; threading correct at every
+  call site; re-baseline exactly the 3 `sources` lines; `sync.lock` exclusion
+  sound (purely transient; lock lives at `outDir/sync.lock/`, stage is a
+  sibling). Follow-ups → next fix line (after Wave 4): **B3D-P3-1** (`onResolve`
+  ignores `args.resolveDir`; relative staged imports would emit
+  `../sync.stage/…`), **B3D-P3-2** (stage-prefix test separator-sensitive on
+  Win32), **B3D-P4-1** (explicit throw on unknown staged loader), **B3D-P4-3**
+  (generic guard: absolutize every emitted `.map` source). P4-2/P4-4 = notes.
+
