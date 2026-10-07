@@ -1,6 +1,6 @@
 # ARC3 — Native MDX support via mdx-rs
 
-STATUS: PENDING
+STATUS: IN PROGRESS
 
 Context: MDX-to-JS is 12.6 ms/pass (`@mdx-js/mdx`) vs 2.9 ms/pass
 (`@rspress/mdx-rs`) on the 11-file docs corpus. Not the 15s cause. Legacy

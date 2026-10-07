@@ -1,6 +1,6 @@
 # ARC1 — Memoize external resolution (tasty diet)
 
-STATUS: IN PROGRESS
+STATUS: COMPLETE — landed `7a83e9fa7`; Oracle review pending
 
 Where: `packages/reference-rs/modules/tasty/src/scanner/packages.rs`
 (+ `scanner/packages/package_entry.rs`, `package_json.rs` as needed).
