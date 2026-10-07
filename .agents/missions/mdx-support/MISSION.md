@@ -17,6 +17,8 @@ bundle-loader + MDX-scoped discovery + proving case. `.md` stays excluded.
 | `601b72f41` | Phases 2–3 — microbundle MDX loader + MDX-scoped sync scan |
 | `d4a175f7f` | Arc-review fixes F1/F2/F3/F5/F6 |
 | `54f6c56dc` | Phase 4 — `NEO-MDX-01` proving case |
+| `c43f35591` | Phase 4 — `bench:neo` MDX load axis (`--mdx`, default 0) |
+| `571d307bc` | Phase 4 — pin the MDX-inclusive small run |
 
 ## Evidence
 
@@ -44,6 +46,22 @@ bundle-loader + MDX-scoped discovery + proving case. `.md` stays excluded.
   params 5 (the plan's additive matcher arg) and `scanner.ts` 381 lines (16 over
   the warn line; the MDX helpers were extracted to `scan/mdx.ts` +
   `scan/patterns.ts` to cut it from 487).
+- **Bench axis.** `pnpm bench:neo -- --scale small --files 5 --calls 1 --mdx 3
+  --keep` collects the 3 real fragments (`bench-mdx-0/1/2` faces in the sheet)
+  and never the 3 fence decoys. A clean-tree run
+  (`--scale small --mdx 120 --runs 3`) is pinned at `reports/c43f355918f7/`:
+  `small+custom`, sync ~918 ms, peak RSS ~133 MiB, bundle ~229 KiB.
+  `mdxFiles` defaults to 0, so the default config bytes and four-scale goldens
+  are unchanged (reproven after the change).
+- **Phase 5 docs cleanup — NO-OP (independently confirmed).** The `agent-docs`
+  role read the live files: no docs `.mdx` carries a real top-level fragment
+  needle (both `@reference-ui/system` occurrences sit inside ` ```ts ` fences,
+  so `stripMdxNoise` excludes them; a real scan returns zero `.mdx` matches —
+  the sole docs fragment source is `src/docs-theme.fragments.ts`). And
+  `fonts-sections.tsx` must stay: the Rust source gate
+  (`reference-rs/modules/atomic/src/sources.rs` `is_supported_extension`) parses
+  only `tsx|ts|jsx|js`, so inline JSX style props in MDX are still not
+  extracted — fragment collection is a bundle-only seam. No docs file changed.
 
 ## Oracle
 
@@ -55,25 +73,16 @@ bundle-loader + MDX-scoped discovery + proving case. `.md` stays excluded.
   deliberate, safe-direction divergence. F7/F8 informational.
 - Reports are gitignored under `reports/`; briefs are tracked.
 
-## Deferred (filed, not half-landed)
+## Deliberately not done (smaller, precisely filed)
 
-- **Bench axis (Phase 4, "if in reach").** Deferred. Adding an MDX knob means
-  editing golden-sealed `benchmark/generate/plans.ts`, `templates/config.ts`
-  (the include glob), and both generators, then pinning a `bench:neo` report.
-  The default output must stay byte-identical to avoid churning the four-scale
-  goldens, so it is a careful, report-producing change — out of comfortable
-  reach this pass. Entry points: `plans.ts` (`LoadPlan`, `PROFILES`),
-  `generate/generators/{app,churn}.ts`, `generate/templates/config.ts`,
-  `benchmark/reports/`. Oracle F7 already states the knob must default to 0.
-- **Docs cleanup (Phase 5).** Not applicable as written. Oracle F3: the target
-  `reference-docs/src/content/docs/system/fonts-sections.tsx` is an
-  **atomic-extraction** workaround (`SOURCE_EXTENSIONS` still excludes `mdx` —
-  plan §11), not a fragment-collection one; MDX fragments collecting does not
-  fix it. Removing it would regress the docs specimens. Also a docs dev server
-  is live. Left untouched.
-
-## Out of scope (unchanged)
-
-- `.md` stays excluded (legacy parity).
-- MDX atomic `css()` extraction (engine source scan) — not extended; would be a
-  `reference-rs` change.
+- **MDX atomic `css()` extraction** stays out of scope: the engine source scan
+  (`SOURCE_EXTENSIONS`) excludes `mdx`, so inline JSX style props in MDX are not
+  extracted — a `reference-rs` change (plan §11). This is exactly why the docs
+  workaround stays (above).
+- **`.md` stays excluded** (legacy parity).
+- **linux-arm64 / win32** mdx-rs binaries are pinned in the lock but were not
+  load-probed on this machine; Linux was probed on x64-gnu. arm64/win remain
+  CI / Dagger coverage.
+- **Oracle F2/F3/F4 hardening beyond the applied fixes** (indented code, HTML
+  blocks, `<pre>`, `export … from`, comment-in-import) remains future work —
+  all are safe-direction false-hits with negligible impact per the review.

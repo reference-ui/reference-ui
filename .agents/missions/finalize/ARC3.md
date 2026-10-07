@@ -54,7 +54,10 @@ and stop rather than half-land.
 - 2026-10-08 · **LANDED as mission `mdx-support`** (branch
   `openchamber/mdx-support`, base `a1afefbb0`). Phase 1 dep `30e3a3ae3`,
   Phases 2–3 seam `601b72f41`, arc-review fixes `d4a175f7f`, proving case
-  `NEO-MDX-01` `54f6c56dc`. Oracle: PLAN APPROVED WITH CHANGES; ARC PROCEED.
+  `NEO-MDX-01` `54f6c56dc`, bench MDX axis `c43f35591`, pinned MDX run
+  `571d307bc`. Oracle: PLAN APPROVED WITH CHANGES; ARC PROCEED.
   `NEO-MDX-01` fail-before/pass-after, decoy never collected, goldens clean,
   `pnpm agentneo q` 0 errors; install proven darwin-x64 + linux-x64 (Docker).
-  Bench axis and the docs cleanup deferred — see the mission log.
+  Phase 5 docs cleanup independently ruled **NO-OP** by agent-docs (the
+  workaround is atomic extraction, not fragment collection). See the mission
+  log.
