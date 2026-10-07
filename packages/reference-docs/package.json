@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "content-collections build --config src/collections/content-collections.ts && node ../reference-neo/tools/ensure-dist.mjs && ref sync && concurrently --kill-others-on-fail \"content-collections watch --config src/collections/content-collections.ts\" \"ref sync --watch\" \"vite\"",
+    "dev": "content-collections build --config src/collections/content-collections.ts && node ../reference-neo/tools/ensure-dist.mjs && ref sync && concurrently --kill-others --success first \"content-collections watch --config src/collections/content-collections.ts\" \"ref sync --watch\" \"vite\"",
     "build": "content-collections build --config src/collections/content-collections.ts && node ../reference-neo/tools/ensure-dist.mjs && ref sync && vite build",
     "build:pages": "pnpm build && cp dist/index.html dist/404.html",
     "preview": "vite preview",

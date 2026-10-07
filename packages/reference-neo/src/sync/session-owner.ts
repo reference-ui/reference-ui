@@ -44,7 +44,7 @@ export function getSyncPreemptPath(lockDir: string): string {
 }
 
 export function coveredByWatchMessage(watchPid: number): string {
-  return `[ref] sync covered by watch session pid ${watchPid}`
+  return `[ref] already watching this project (pid ${watchPid}) — using the running session`
 }
 
 export function supersededMessage(newcomerPid: number, newcomerKind: SyncSessionKind = 'one-shot'): string {

@@ -41,7 +41,7 @@ describe('session owner model', () => {
 
   it('accepts a well-formed owner and pins the exit-path messages', () => {
     expect(parseSyncSessionOwner(ownerDoc())).toEqual(ownerDoc())
-    expect(coveredByWatchMessage(4242)).toBe('[ref] sync covered by watch session pid 4242')
+    expect(coveredByWatchMessage(4242)).toBe('[ref] already watching this project (pid 4242) — using the running session')
     expect(supersededMessage(4243)).toBe('[ref] sync superseded by sync pid 4243')
     expect(SUPERSEDED_EXIT_CODE).toBe(75)
   })

@@ -100,10 +100,8 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
     return 0
   } catch (err) {
     if (err instanceof SyncCoveredByWatchError) {
-      say(
-        `[ref] another ref sync watch already owns this project (pid ${err.watchPid}); not starting a second`
-      )
-      return 1
+      say(err.message)
+      return 0
     }
     say(`[ref] watch failed: ${messageOf(err)}`)
     return 1
