@@ -48,6 +48,13 @@ const ASSETS = [
 ]
 
 function fail(message) {
+  // A failed build must never leave a fresh-mtime partial dist behind: tsc
+  // emits per-file despite type errors, and the neo freshness gate would then
+  // see a fresh bin and skip the retry, serving failed-build bytes. Wipe dist
+  // on every failure so the next gate run rebuilds.
+  try {
+    rmSync(DIST, { force: true, recursive: true })
+  } catch {}
   console.error(`[ref build] ${message}`)
   process.exit(1)
 }

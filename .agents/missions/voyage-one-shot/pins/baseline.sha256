@@ -1,5 +1,5 @@
 # voyage-one-shot — baseline byte-identity pins (Wave 0 / R1 identity bar)
-# pin: reference-system @ 50df627bd (product tree == c5fba023c)
+# pin: reference-system @ cec363eab (C2 cwd-canon re-baseline; supersedes 50df627bd)
 # captured: 2026-10-07 (UTC session by wave0-recon)
 #
 # Exact commands (from repo root):
@@ -535,7 +535,7 @@ c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  docs/.referenc
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  docs/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  docs/.reference-ui/types/types.d.mts
 0c65743e8834f142e4b69eda1ade572188dbb0ea20fa052b1f7785e1e2d5da36  docs/.reference-ui/types/types.mjs
-# docs aggregate: cfbf75c3fe7cf36e9eb86d6c3f8578c88b5f46900b781212e9db427cb2836d06  files=522
+# docs aggregate: dcef705b420ba5393c43fc8ecc78f3e60c5d22584619ea42705f8ecbc44182bc  files=522
 # lib — 580 files under packages/reference-lib/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  lib/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  lib/.reference-ui/react/react.d.mts
@@ -1117,7 +1117,7 @@ c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  lib/.reference
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  lib/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  lib/.reference-ui/types/types.d.mts
 7fc7863d9a459962f44d75d54bec89149b02fc51058fd2de956fc7a3b2df6329  lib/.reference-ui/types/types.mjs
-# lib aggregate: 85169ba54ed854e5149107cd20ae9e6779fc1f8313d02456f17aa46226627b66  files=580
+# lib aggregate: 83954bd009436404c0380becd3c4a1045ac6cd9506f3307ab38403393c570c37  files=580
 # icons — 156 files under packages/reference-icons/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  icons/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  icons/.reference-ui/react/react.d.mts
@@ -1275,4 +1275,4 @@ c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  icons/.referen
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  icons/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  icons/.reference-ui/types/types.d.mts
 e2aae277cc883ae6572d9a3e8d5a5782cf3caa0bf7c005bddf138679ebfe4092  icons/.reference-ui/types/types.mjs
-# icons aggregate: c8f0d68b040d1d0db35c110880e989db4646b3e6e17394149a521e2bc823cc97  files=156
+# icons aggregate: 2891421d29dd10829d98ccf8101f6d54df937ef1961fa832dd75b0fea6fa0eae  files=156

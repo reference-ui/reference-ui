@@ -649,7 +649,31 @@ function getLatestSrcMtime(dir) {
   return latest
 }
 
+// Neo's compiled dist is an input to every lib build: lib `sync` runs the
+// shipped `ref` CLI, and neo's own freshness gate exits without a stat walk
+// when REF_PIPELINE_SKIP_DEPENDENCY_BUILDS is set — the explicit opt-out the
+// gated lib build below relies on to skip the icons dep leg. Invoke that gate
+// with SKIP cleared first, so a neo-src edit can never be baked stale into lib
+// output. Steady state is one stat walk (~45 ms).
+async function ensureNeoDist() {
+  const gate = path.join(repoRoot, 'packages/reference-neo/tools/ensure-dist.mjs')
+  const res = await runCommand('node', [gate], {
+    env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '' },
+    skipQueue: true,
+  })
+  if (res.code !== 0) {
+    console.error('[agent] Error: Failed to ensure @reference-ui/neo dist freshness.')
+    return false
+  }
+  return true
+}
+
 async function ensureLibBuild(options = {}) {
+  // Neo dist freshness is a precondition of the lib build, not a dependency of
+  // the SKIP-gated leg: guarantee it before deciding what (if anything) to
+  // build so the mandated flows never test stale-neo lib output.
+  if (!(await ensureNeoDist())) return false
+
   const distPath = path.join(repoRoot, 'packages/reference-lib/dist/index.mjs')
   const distExists = fs.existsSync(distPath)
   let distMtime = 0

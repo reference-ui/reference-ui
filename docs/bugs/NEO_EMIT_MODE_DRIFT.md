@@ -1,5 +1,7 @@
 # Emitted fragment bundles are invocation-mode dependent
 
+> **Superseded in part:** the "Impact" and "Suggested fix" below read stale — current truth is the appended **Residual (robustness voyage C1)** and **Canon (C2)** sections at the bottom of this file.
+
 Status: filed 2026-10-07 (surfaced by the one-shot startup voyage R1; inert
 today). Severity P3. Separate topic — not part of the R1 land.
 
