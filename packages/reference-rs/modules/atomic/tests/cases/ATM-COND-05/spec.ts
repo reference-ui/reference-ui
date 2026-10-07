@@ -15,6 +15,12 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'font', 'sans')).toBe(true)
     expect(hasWant(result, 'font', 'test')).toBe(true)
     expect(hasWant(result, 'weight', 'bold')).toBe(true)
+    // Bare weights beside a family scope to that family's scale.
+    expect(hasWant(result, 'weight', 'sans.thin')).toBe(true)
+    expect(hasWant(result, 'weight', 'serif.normal')).toBe(true)
+    expect(hasWant(result, 'weight', 'mono.normal')).toBe(true)
+    expect(hasWant(result, 'weight', 'thin')).toBe(false)
+    expect(hasWant(result, 'weight', 'normal')).toBe(false)
     expect(hasWant(result, 'size', '20px')).toBe(true)
     expect(result.stylesheet).toContain('container-type: inline-size;')
     expect(result.stylesheet).toContain('container-name: sidebar;')
@@ -24,6 +30,10 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('font-family: var(--fonts-sans);')
     expect(result.stylesheet).toContain('letter-spacing: -0.01em;')
     expect(result.stylesheet).toContain('font-weight: 700;')
+    // Scoped weights render their family's scale value, not the keyword.
+    expect(result.stylesheet).toContain('font-weight: 200;')
+    expect(result.stylesheet).toContain('font-weight: 373;')
+    expect(result.stylesheet).toContain('font-weight: 393;')
     // Non-canon extras spell verbatim (doom-4 T3): no kebab, no vendor dash.
     expect(result.stylesheet).toContain('font-family: var(--fonts-test);')
     expect(result.stylesheet).toContain('font-weight: 500;')

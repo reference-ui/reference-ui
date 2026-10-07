@@ -22,6 +22,7 @@ use crate::extract::expressions::{
 };
 use crate::extract::fold::{merge_spread, spread_base_name, MergeSpread};
 use crate::extract::ExtractContext;
+use crate::resolve::font::scope;
 use canon::{is_condition_prop, is_known_style_prop};
 
 pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name};
@@ -40,11 +41,17 @@ struct StyleAttr<'a> {
 /// Extract style-bearing attributes from a JSX opening element.
 pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
     // <Div mt="2r" css={{ color: 'red' }} r={{ md: { p: '1r' } }} />
+    // One element, one family scope: bare weights resolve against this
+    // element's font once every attribute and spread has lowered. Authored
+    // plans stay bare: plan keys carry no family, so they keep serving
+    // dynamic lookups under keyword semantics exactly as today.
+    let wants_at = ctx.wants.len();
     let tag_name = format_jsx_element_name(&opening.name);
     if !ctx.allows_jsx_tag(&tag_name) {
         if !extract_threaded_wrapper(opening, &tag_name, ctx) {
             report_dropped_tag(opening, &tag_name, ctx);
         }
+        scope::apply_to_wants(&mut ctx.wants[wants_at..]);
         return;
     }
     let origin = Some(tag_name.as_str());
@@ -68,6 +75,7 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
             }
         }
     }
+    scope::apply_to_wants(&mut ctx.wants[wants_at..]);
 }
 
 /// Lower a threaded wrapper's direct `css` value as if written on the
@@ -597,6 +605,29 @@ mod tests {
         assert!(
             help[0].starts_with("pass a static style object to 'css' (got "),
             "unexpected help: {help:?}"
+        );
+    }
+
+    /// A bare weight beside a family resolves the family's scale, not keywords.
+    #[test]
+    fn jsx_bare_weight_resolves_against_element_font() {
+        let res = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             export const el = <Div font=\"sans\" weight=\"thin\" />;",
+        );
+        assert!(
+            res.stylesheet.contains("font-weight: 200;"),
+            "sans thin renders 200, not the 100 keyword: {}",
+            res.stylesheet
+        );
+        let lone = compile_logs(
+            "import { Div } from '@reference-ui/react';\
+             export const el = <Div weight=\"thin\" />;",
+        );
+        assert!(
+            lone.stylesheet.contains("font-weight: 100;"),
+            "family-less thin keeps the keyword: {}",
+            lone.stylesheet
         );
     }
 

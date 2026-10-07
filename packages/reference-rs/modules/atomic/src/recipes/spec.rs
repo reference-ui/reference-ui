@@ -13,6 +13,7 @@ use super::{Recipe, RecipeCompound};
 use crate::atom::{AtomValue, Want};
 use crate::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::extract::expressions::literal::split_important_flag;
+use crate::resolve::font::scope;
 
 /// Lower every spec recipe into `Recipe` IR keyed by its explicit className.
 pub fn from_spec(
@@ -45,12 +46,17 @@ fn from_definition(name: &str, definition: &RecipeDefinition) -> Recipe {
 }
 
 fn style_map_to_wants(map: &StyleMap) -> Vec<Want> {
-    map.iter()
+    // One style map, one family scope: bare weights in this block resolve
+    // against the block's own font before the wants reach the resolver.
+    let mut wants: Vec<Want> = map
+        .iter()
         .map(|(prop, value)| {
             let (clean, important) = split_important_flag(value);
             Want::new(prop.as_str(), AtomValue::String(clean.into())).with_important(important)
         })
-        .collect()
+        .collect();
+    scope::apply_to_wants(&mut wants);
+    wants
 }
 
 fn variants_to_wants(
@@ -141,6 +147,16 @@ mod tests {
             recipe.compounds[0].predicates.get("variant"),
             Some(&vec!["solid".to_string()])
         );
+    }
+
+    #[test]
+    fn bare_weight_scopes_to_block_font() {
+        let wants = style_map_to_wants(&style_map(&[("font", "sans"), ("weight", "thin")]));
+        let weight = wants.iter().find(|w| w.prop.as_ref() == "weight").expect("weight want");
+        assert_eq!(weight.value, AtomValue::String("sans.thin".into()));
+
+        let lone = style_map_to_wants(&style_map(&[("weight", "thin")]));
+        assert_eq!(lone[0].value, AtomValue::String("thin".into()));
     }
 
     #[test]

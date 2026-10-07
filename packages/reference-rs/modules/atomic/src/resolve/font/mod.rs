@@ -3,6 +3,7 @@
 //! The table lives on `BaseSystem`. Generic CSS families have no lib tracking; letter-spacing arrives from the fixture.
 
 pub(crate) mod family;
+pub(crate) mod scope;
 pub(crate) mod weight;
 
 pub use family::lower_font;

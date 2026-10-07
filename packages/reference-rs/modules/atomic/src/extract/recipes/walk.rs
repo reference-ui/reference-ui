@@ -14,6 +14,7 @@ use crate::atom::Want;
 use crate::extract::expressions::walk_style_object;
 use crate::extract::ExtractContext;
 use crate::recipes::RecipeCompound;
+use crate::resolve::font::scope;
 
 #[derive(Default)]
 pub(crate) struct RecipeDraft {
@@ -87,8 +88,12 @@ fn walk_style_into(
     let Expression::ObjectExpression(obj) = unwrap_expression(val) else {
         return;
     };
-    let mut obj_ctx = ctx.object_walk_into(Some(origin), wants);
+    // One style block, one family scope: bare weights in this block resolve
+    // against the block's own font, never the call site's.
+    let wants_at = wants.len();
+    let mut obj_ctx = ctx.object_walk_into(Some(origin), &mut *wants);
     walk_style_object(&mut obj_ctx, obj, &smallvec![]);
+    scope::apply_to_wants(&mut wants[wants_at..]);
 }
 
 fn handle_recipe_variants(

@@ -24,6 +24,7 @@ use crate::extract::expressions::{
 };
 use crate::extract::fold::{merge_spread, spread_base_name, MergeSpread};
 use crate::extract::ExtractContext;
+use crate::resolve::font::scope;
 
 /// Position of a `css()` argument for positioned diagnostics (1-based).
 #[derive(Clone, Copy)]
@@ -51,6 +52,10 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
     let Some(origin) = ctx.bindings.css_origin(&call.callee, ctx.shadowed) else {
         return;
     };
+    // One call, one family scope: args merge at runtime, so a font in any
+    // arg scopes bare weights across the call once every arg has lowered.
+    // Authored plans stay bare (plan keys carry no family).
+    let wants_at = ctx.wants.len();
     for (index, arg) in call.arguments.iter().enumerate() {
         let site = ArgSite::Arg(index + 1);
         match arg {
@@ -76,6 +81,7 @@ pub fn extract(call: &CallExpression<'_>, ctx: &mut ExtractContext<'_>) {
             }
         }
     }
+    scope::apply_to_wants(&mut ctx.wants[wants_at..]);
 }
 
 fn handle_css_arg(
@@ -400,6 +406,20 @@ mod tests {
             .filter(|diag| diag.code == code)
             .cloned()
             .collect()
+    }
+
+    /// A bare weight beside a family in one call resolves the family's scale.
+    #[test]
+    fn css_bare_weight_resolves_against_object_font() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             export const cls = css({ font: 'mono', weight: 'normal' });",
+        );
+        assert!(
+            res.stylesheet.contains("font-weight: 393;"),
+            "mono normal renders 393, not the 400 keyword: {}",
+            res.stylesheet
+        );
     }
 
     /// A non-object arg names the site and the got-kind in its fix.

@@ -210,3 +210,20 @@ fn test_recipe_duplicate_errors_at_second_call() {
     assert_eq!(diag.line, Some(3));
     assert_eq!(diag.column, Some(11));
 }
+
+#[test]
+fn test_recipe_variant_weight_resolves_against_variant_font() {
+    let res = compile_tsx(
+        "src/font-recipe.ts",
+        "import { recipe } from '@reference-ui/react'\n\
+         export const btn = recipe({ className: 'btn', base: { display: 'inline-flex' }, \
+         variants: { tone: { accent: { font: 'sans', weight: 'thin' } } } })\n\
+         export const cls = btn({ tone: 'accent' })\n",
+    );
+    assert!(res.diagnostics.is_empty(), "{:?}", res.diagnostics);
+    assert!(
+        res.stylesheet.contains("font-weight: 200;"),
+        "selected variant renders sans thin: {}",
+        res.stylesheet
+    );
+}

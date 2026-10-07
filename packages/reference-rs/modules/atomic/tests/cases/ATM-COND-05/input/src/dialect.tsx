@@ -20,6 +20,18 @@ export function Weights() {
   return <Div weight="bold" />
 }
 
+export function SansThin() {
+  return <Div font="sans" weight="thin" />
+}
+
+export function SerifNormal() {
+  return <Div font="serif" weight="normal" />
+}
+
+export function MonoNormal() {
+  return <Div font="mono" weight="normal" />
+}
+
 export function Sizes() {
   return <Div size="20px" />
 }

@@ -12,6 +12,7 @@ use indexmap::IndexMap;
 use super::value::{lower_declaration, ValueSession};
 use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, Policy};
 use crate::resolve::conditions::{breakpoint_media_query, is_bare_query_rule, pseudoselectors};
+use crate::resolve::font::scope;
 use crate::resolve::suggest;
 
 struct ListItemContext<'a> {
@@ -115,6 +116,9 @@ impl<'a> GlobalWalker<'a> {
     }
 
     pub fn walk_node(&mut self, selector: &str, node: &GlobalStyleNode) {
+        // One rule block, one family scope: bare scalar weights resolve
+        // against the block's own font; nested and list values stay bare.
+        let family = scope::block_family(node);
         for (key, val) in node {
             match val {
                 GlobalDeclarationValue::Nested(children) => {
@@ -124,9 +128,24 @@ impl<'a> GlobalWalker<'a> {
                     self.handle_list(selector, key, items);
                 }
                 _ => {
-                    self.handle_declaration(selector, key, val);
+                    self.handle_scalar(selector, key, val, family);
                 }
             }
+        }
+    }
+
+    /// Lower one scalar declaration, scoping a bare weight to the block font.
+    fn handle_scalar(
+        &mut self,
+        selector: &str,
+        key: &str,
+        val: &GlobalDeclarationValue,
+        family: Option<&str>,
+    ) {
+        if let Some(scoped) = scope::scope_weight_decl(key, val, family) {
+            self.handle_declaration(selector, key, &scoped);
+        } else {
+            self.handle_declaration(selector, key, val);
         }
     }
 

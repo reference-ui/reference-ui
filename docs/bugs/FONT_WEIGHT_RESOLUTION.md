@@ -1,15 +1,46 @@
 # Font Weight Should Resolve Against the Selected Family
 
-**Status:** Design-intent divergence — documented, not fixed
-**Owner:** unassigned (implementation lives in `reference-rs` `atomic` + `base_system`)
+**Status:** Fixed 2026-10-07 — bare weights resolve against the active family
+**Owner:** landed in `reference-rs` `atomic` (`resolve/font/scope.rs`)
 **Date:** 2026-10-07
 **Scope:** the `font()` subsystem and the atomic `font` / `weight` dialect
 **Related:** `CSS_COMPOSITION_INVESTIGATION.md` (another "emitted but not wired"
 class of bug in the same pipeline)
 
 > This note records the **original design intent** (per the design owner) next to
-> the **current behaviour**, and marks where they diverge. It does not prescribe
-> a rushed fix; it exists so the intent is not lost.
+> the **former behaviour**, and marks where they diverged. The divergence below
+> is now closed by the fix in §0; the rest is kept as the design record.
+
+---
+
+## 0. Resolution (2026-10-07)
+
+Fixed at extract time, not in the resolver: each style root (JSX element,
+`css()` call, recipe block, global rule) rewrites bare keyword weights to
+`family.name` form when the root names exactly one family
+(`packages/reference-rs/modules/atomic/src/resolve/font/scope.rs`).
+`lower_weight` and `FontScale` are untouched, so all pre-existing resolve
+behaviour — including the keyword fallback and the `test_bare_weight_uses_*`
+pins — stands.
+
+Deliberate boundaries, all covered by tests:
+
+- **Wants only; plans stay bare.** Runtime plan keys carry no family
+  dimension, so authored plans keep keyword values and dynamic lookups
+  behave exactly as before. The diagnostics proof join stays green with no
+  analysis-mirror change (verified: zero new warnings on the touched cases).
+- **Static/dynamic split.** Static `weight="thin"` beside `font="sans"`
+  now renders 200; dynamic `weight={x}` keeps keyword semantics. The
+  explicit `sans.thin` form works on both paths. Family-aware harvest is
+  follow-up work, not part of this fix.
+- **Conflicts decline to guess.** Two families in one scope, non-key
+  family values (stacks), dotted/numeric/unknown weight names, and
+  conditional/nested global values all keep today's behaviour.
+
+Proof: 9 `scope` unit tests, JSX + `css()` + TSX-recipe + spec-recipe
+compile tests, `ATM-COND-05` (sans 200 / serif 373 / mono 393) and
+`ATM-LAYER-15` (global rule) seam specs. Full `agentrs t` green, quality
+0 violations. User docs: System > Fonts (`/fonts`).
 
 ---
 

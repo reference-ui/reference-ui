@@ -20,7 +20,11 @@
   },
   "fonts": {
     "sans": {
-      "value": "\"Inter\", sans-serif"
+      "value": "\"Inter\", sans-serif",
+      "weights": {
+        "thin": "200",
+        "normal": "400"
+      }
     }
   },
   "globalCss": [
@@ -34,6 +38,10 @@
           "borderRadius": "md",
           "outlineColor": "ui.focus.ring",
           "display": "flex"
+        },
+        ".display": {
+          "fontFamily": "sans",
+          "weight": "thin"
         }
       }
     }
