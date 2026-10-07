@@ -13,6 +13,7 @@ import { scanFragmentSources } from './scanner.ts'
 
 const CSS = `import { css } from '@reference-ui/react'\nexport const a = css({ color: 'red' })\n`
 const NEO = `import '@reference-ui/neo'\n${CSS}`
+const MDX = `---\ntitle: Docs\n---\n\n\`\`\`ts\n${NEO}\`\`\`\n`
 
 // [relative path, content]: dotfiles, d.ts, every IGNORE dir, extension traps.
 const FIXTURE_FILES: Array<[string, string]> = [
@@ -24,6 +25,10 @@ const FIXTURE_FILES: Array<[string, string]> = [
   ['src/excluded/skip.ts', CSS],
   ['src/data.json', '{"note": "not a source"}\n'],
   ['src/frag-data.json', `{"note": "import '@reference-ui/neo'"}\n`],
+  ['src/doc.mdx', MDX],
+  ['src/frag.mjs', NEO],
+  ['src/frag.cjs', NEO],
+  ['src/frag.mts', NEO],
   ['theme/tokens.ts', NEO],
   ['dist/a.ts', CSS],
   ['dist/frag.ts', NEO],
@@ -56,8 +61,16 @@ const FIXTURE_FILES: Array<[string, string]> = [
   ['src/a/b/c/deep.ts', CSS],
 ]
 
-// Only the neo importers that survive dot:false plus the d.ts exclusion.
-const EXPECTED_MATCHES = ['dist/frag.ts', 'src/frag-data.json', 'theme/tokens.ts']
+// Only the neo importers that survive dot:false plus the d.ts exclusion,
+// gated to JS-bundleable extensions: the json and mdx needle-carriers stay
+// out (they cannot bundle as fragments) while mjs/cjs/mts still match.
+const EXPECTED_MATCHES = [
+  'dist/frag.ts',
+  'src/frag.cjs',
+  'src/frag.mjs',
+  'src/frag.mts',
+  'theme/tokens.ts',
+]
 
 // Live sources, dotfiles, and d.ts; IGNORE dirs and non-source extensions out.
 const EXPECTED_RETAINED = [
@@ -85,10 +98,11 @@ const OUTSIDE_FILES: Array<[string, string]> = [
   ['.hidden.ts', NEO],
   ['x.d.ts', NEO],
   ['data.json', `{"note": "import '@reference-ui/neo'"}\n`],
+  ['doc.mdx', MDX],
   ['node_modules/dropped.ts', NEO],
 ]
 
-const EXPECTED_OUTSIDE_MATCHES = ['data.json', 'o.ts']
+const EXPECTED_OUTSIDE_MATCHES = ['o.ts']
 const EXPECTED_OUTSIDE_RETAINED = ['.hidden.ts', 'o.ts', 'x.d.ts']
 
 function writeTree(root: string, files: Array<[string, string]>): void {

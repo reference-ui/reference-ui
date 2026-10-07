@@ -47,3 +47,19 @@ export const NATIVE_IGNORE_DIRS = new Set([
 // Engine-parsed extensions mirrored from sources.rs is_supported_extension:
 // the final extension decides, so foo.d.ts (ext ts) is a source.
 export const SOURCE_EXTENSIONS = new Set(['tsx', 'ts', 'jsx', 'js'])
+
+// Fragment-candidate extensions: every extension esbuild bundles as a JS
+// module. Matches feed the fragment bundler, so only these can ever match —
+// an .mdx/.json/.css hit carries no calls and crashes (or dead-weights) the
+// bundle. NOT a native mirror: native returns needle hits ungated and the
+// TS splitScan confirm applies this gate on both paths (native + fallback).
+export const FRAGMENT_EXTENSIONS = new Set([
+  'tsx',
+  'ts',
+  'jsx',
+  'js',
+  'mts',
+  'cts',
+  'mjs',
+  'cjs',
+])

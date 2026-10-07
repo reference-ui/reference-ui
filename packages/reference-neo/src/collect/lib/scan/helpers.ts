@@ -42,9 +42,11 @@ export const TRICKY_TREE: Array<[string, string]> = [
   ['src/a/b/c/deep.ts', CSS_RED],
 ]
 
-// Neo importers past dot:false plus the d.ts exclusion; IGNORE/extension
-// survivors (live, dotfiles, d.ts; decoys and traps out).
-export const TRICKY_MATCHES = ['dist/frag.ts', 'src/frag-data.json', 'src/ref.ts', 'theme/tokens.ts']
+// Neo importers past dot:false plus the d.ts exclusion, gated to
+// JS-bundleable extensions; IGNORE/extension survivors (live, dotfiles,
+// d.ts; decoys and traps out). The json needle-carrier stays in the tree
+// as a trap but never matches: it cannot bundle as a fragment.
+export const TRICKY_MATCHES = ['dist/frag.ts', 'src/ref.ts', 'theme/tokens.ts']
 export const TRICKY_RETAINED = [
   'dist.ts',
   'src/.hidden-ref.ts',

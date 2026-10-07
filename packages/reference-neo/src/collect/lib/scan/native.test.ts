@@ -167,7 +167,7 @@ describe('native scan outside cwd', () => {
       const native = await scanFragmentSourcesNative(options)
       try {
         expect(native.matches).toEqual(ts.matches)
-        expect(asRelative(outside, native.matches)).toEqual(['data.json', 'o.ts'])
+        expect(asRelative(outside, native.matches)).toEqual(['o.ts'])
         expect(native.retention.count).toBe(ts.scannedSources.length)
         expect(asRelative(outside, ts.scannedSources.map(source => source.path))).toEqual([
           '.hidden.ts',

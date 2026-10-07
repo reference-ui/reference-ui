@@ -101,8 +101,9 @@ function colorWants(result: TestCompileResult): string[] {
 }
 
 // GAPS-2 signals: fragment imports in files retention must drop (IGNORE
-// dir, non-source extension). Old semantics matched them; retention keeps
-// neither, so both compile sides stay bare of their signals.
+// dir, non-source extension). The dist carrier still matches (bundleable);
+// the json carrier matches nowhere. Retention keeps neither, so both
+// compile sides stay bare of their signals.
 function addUnretainedSignalFiles(root: string): { distFrag: string; jsonFrag: string } {
   const distFrag = join(root, 'dist', 'frag.ts')
   const jsonFrag = join(root, 'src', 'frag-data.json')
@@ -218,16 +219,17 @@ describe('retention scan differential', () => {
     expect(fromRoot.wants ?? []).toEqual([])
   })
 
-  it('match-before-filter: IGNORE-dir and non-source signals match but stay out of retention', async () => {
-    // GAPS-2: old semantics matched over every readable fg hit (dot/d.ts
-    // excluded only), so these carry the neo import yet compile from neither
-    // side. Runs last: it extends the shared root, so it must not precede
+  it('match-before-filter: IGNORE-dir signals match; non-source signals match nowhere', async () => {
+    // GAPS-2: matches cover every JS-bundleable fg hit (dot/d.ts excluded
+    // only), so the dist carrier matches yet compiles from neither side
+    // while the json carrier — unbundleable as a fragment — matches nowhere.
+    // Runs last: it extends the shared root, so it must not precede
     // the arms above.
     const { distFrag, jsonFrag } = addUnretainedSignalFiles(root)
     const { matches, scannedSources, fromFiles, fromRoot, production } = await compileArms(['**/*'])
     expect(matches).toContain(join(root, 'theme', 'tokens.ts'))
     expect(matches).toContain(distFrag)
-    expect(matches).toContain(jsonFrag)
+    expect(matches).not.toContain(jsonFrag)
     const retained = scannedSources.map(source => relative(root, source.path))
     expect(retained).not.toContain(join('dist', 'frag.ts'))
     expect(retained).not.toContain(join('src', 'frag-data.json'))

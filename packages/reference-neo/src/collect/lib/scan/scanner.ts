@@ -7,6 +7,7 @@ import { extname, relative, resolve, sep } from 'node:path'
 import fg from 'fast-glob'
 import type { ScanOptions } from '../types.ts'
 import {
+  FRAGMENT_EXTENSIONS,
   NATIVE_IGNORE_DIRS,
   RETENTION_EXCLUDE,
   SOURCE_EXTENSIONS,
@@ -96,6 +97,13 @@ function hasSourceExtension(relativePath: string): boolean {
   return SOURCE_EXTENSIONS.has(extname(relativePath).slice(1))
 }
 
+// True for fragment-candidate extensions; the final extension decides.
+// Matches feed the esbuild fragment bundler, so only JS-bundleable files
+// can ever match — never .mdx/.json/.css, whatever their bytes contain.
+function hasFragmentExtension(relativePath: string): boolean {
+  return FRAGMENT_EXTENSIONS.has(extname(relativePath).slice(1))
+}
+
 // Emulates fg dot:false for matches on the cwd-relative form: any REAL
 // segment starting with `.` drops. `.`/`..` are relative-form artifacts
 // of hits outside cwd, never dotfiles, so they never drop.
@@ -164,14 +172,20 @@ function isIgnoredSegment(value: string, start: number, end: number): boolean {
   return false
 }
 
-// True when the final segment carries an engine-parsed extension: the last
-// dot strictly inside the segment decides, exactly like extname().slice(1).
-function hasSourceExtensionTail(value: string, start: number, end: number): boolean {
+// True when the final segment's last dot names a member of extensions: the
+// last dot strictly inside the segment decides, exactly like
+// extname().slice(1). Both gates share the walk; only the set differs.
+function hasExtensionTail(
+  value: string,
+  start: number,
+  end: number,
+  extensions: ReadonlySet<string>
+): boolean {
   for (let index = end - 1; index >= start; index--) {
     if (value[index] !== '.') {
       continue
     }
-    return index > start && SOURCE_EXTENSIONS.has(value.slice(index + 1, end))
+    return index > start && extensions.has(value.slice(index + 1, end))
   }
   return false
 }
@@ -188,6 +202,7 @@ function classifyScanSuffix(absolutePath: string, start: number): number {
   let hasDot = false
   let hasIgnore = false
   let hasExt = false
+  let hasFragExt = false
   let isDts = false
   const length = absolutePath.length
   if (start >= length) {
@@ -207,7 +222,8 @@ function classifyScanSuffix(absolutePath: string, start: number): number {
       hasDot = true
     }
     if (index === length) {
-      hasExt = hasSourceExtensionTail(absolutePath, segmentStart, index)
+      hasExt = hasExtensionTail(absolutePath, segmentStart, index, SOURCE_EXTENSIONS)
+      hasFragExt = hasExtensionTail(absolutePath, segmentStart, index, FRAGMENT_EXTENSIONS)
       isDts = isDeclarationTail(absolutePath, segmentStart, index)
       break
     }
@@ -216,8 +232,23 @@ function classifyScanSuffix(absolutePath: string, start: number): number {
     }
     segmentStart = index + 1
   }
-  const matchable = !hasDot && !isDts
-  const retainable = !hasIgnore && hasExt
+  return scanFlagsOf({ hasDot, hasIgnore, hasExt, hasFragExt, isDts })
+}
+
+// Classified suffix gates: dot/ignore presence plus final-segment tails.
+interface SuffixGates {
+  hasDot: boolean
+  hasIgnore: boolean
+  hasExt: boolean
+  hasFragExt: boolean
+  isDts: boolean
+}
+
+// Combine one gate set into decision flags. Both suffix paths share this,
+// so the fast walk and the fallback cannot disagree on selection.
+function scanFlagsOf(gates: SuffixGates): number {
+  const matchable = !gates.hasDot && !gates.isDts && gates.hasFragExt
+  const retainable = !gates.hasIgnore && gates.hasExt
   return (matchable ? MATCHABLE_FLAG : 0) | (retainable ? RETAINABLE_FLAG : 0)
 }
 
@@ -225,9 +256,13 @@ function classifyScanSuffix(absolutePath: string, start: number): number {
 // relative() plus the split/extname helpers, with identical selection.
 function fallbackScanFlags(cwd: string, candidate: string): number {
   const rel = relative(cwd, candidate)
-  const matchable = !hasDotSegment(rel) && !isDeclarationFile(rel)
-  const retainable = !hasIgnoredDir(rel) && hasSourceExtension(rel)
-  return (matchable ? MATCHABLE_FLAG : 0) | (retainable ? RETAINABLE_FLAG : 0)
+  return scanFlagsOf({
+    hasDot: hasDotSegment(rel),
+    hasIgnore: hasIgnoredDir(rel),
+    hasExt: hasSourceExtension(rel),
+    hasFragExt: hasFragmentExtension(rel),
+    isDts: isDeclarationFile(rel),
+  })
 }
 
 // The resolved `cwd + sep` prefix: candidates joined lexically under cwd
@@ -251,8 +286,8 @@ function scanPrefixFor(cwd: string): string {
  * Single scan over the include globs: fragment matches plus the retained
  * compile set the engine would scan itself (dotfiles and d.ts included,
  * IGNORE dirs and non-source extensions mirrored out). One glob, one read
- * per file; matches cover every readable candidate with dot:false and the
- * *.d.ts exclusion emulated (exact old semantics), while retention is the
+ * per file; matches cover every JS-bundleable candidate with dot:false and
+ * the *.d.ts exclusion emulated, while retention is the
  * IGNORE/extension-filtered subset.
  */
 export async function scanFragmentSources(options: ScanOptions): Promise<FragmentScan> {
@@ -281,15 +316,15 @@ export async function scanFragmentSources(options: ScanOptions): Promise<Fragmen
     dot: true,
   })
 
-  // Match-before-filter (GAPS-2): read every candidate, match over all
-  // successes, retain the IGNORE/extension-filtered subset.
+  // Match-before-filter (GAPS-2): read every candidate, match over the
+  // JS-bundleable successes, retain the IGNORE/extension-filtered subset.
   const contents = await readAllOrdered(candidates)
   return splitScan(candidates, contents, cwd, discoveryPatterns)
 }
 
 // Split one ordered read into fragment matches plus retained sources:
-// unreadable files drop; matches cover every readable candidate (dot:false
-// + d.ts emulated, exact old semantics) while retention mirrors the native
+// unreadable files drop; matches cover every JS-bundleable candidate
+// (dot:false + d.ts emulated) while retention mirrors the native
 // IGNORE-dir + extension gates (sources.rs) on the cwd-relative form.
 export function splitScan(
   candidates: string[],
