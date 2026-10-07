@@ -73,4 +73,24 @@ Re-baseline applied per protocol:
 6. Captain gates: `agent vitest src/config` **27 passed**; `agentneo q`
    **0 errors / 24 pre-existing warns**.
 
+### 2026-10-07 — WAVE1.5.fix: Oracle W1-5 + W1-6 landed
+
+- **W1-5** (`errors.ts`): `UPSTREAM_MARKER` narrowed
+  `/@reference-ui\/|\.reference-ui\//` → `/\.reference-ui\//`; a genuinely
+  not-installed `@reference-ui/*` package (`Cannot find package '…'`) no longer
+  earns the "run sync" hint. Tests: wrapped case rebuilt on the realistic
+  **resolved path**; new **negative** (`stays quiet for a not-installed
+  Reference UI package`) covers the exact overmatch the old marker allowed.
+- **W1-6** (`base-system-import.test.ts`): `BARREL_IMPORT` broadened from
+  named-`baseSystem`-only to the exact barrel specifier in **any** module
+  position — static `from`, dynamic `import()`, `require()`, side-effect
+  `import` — rejecting `/baseSystem` subpaths and non-module strings (docs
+  `include: ['@reference-ui/lib']`). Detector self-test now drives 9 banned /
+  8 allowed shapes; runner test renamed to match. Anti-vacuous bound, pruning
+  walk, and the three-config migration pin unchanged.
+- Prove: `agent vitest src/config` **28 passed** (5 files); `agentneo q`
+  **0 errors / 24 pre-existing warns**. `git diff` = the three in-scope files
+  only. No commit. Report: `reports/WAVE1.5.fix.md`.
+
+
 

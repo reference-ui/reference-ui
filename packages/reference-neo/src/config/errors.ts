@@ -62,9 +62,11 @@ export class ConfigValidationError extends ConfigError {
 export { invalidBaseSystem } from '../system/base/validate.ts'
 
 const MODULE_NOT_FOUND = 'ERR_MODULE_NOT_FOUND'
-// Only a Reference UI-shaped miss earns the sync hint: a bare resolver
-// failure for some other package is the author's dependency to fix, not ours.
-const UPSTREAM_MARKER = /@reference-ui\/|\.reference-ui\//
+// Only an unsynced-upstream miss earns the sync hint: Node reports it as a
+// resolved path inside a package's `.reference-ui/` system dir. A genuinely
+// uninstalled package reports `Cannot find package '@reference-ui/...'` (no
+// `.reference-ui/` path) and must stay quiet — its remedy is install, not sync.
+const UPSTREAM_MARKER = /\.reference-ui\//
 const UPSTREAM_HINT =
   'This can happen when an upstream Reference UI package has not been synced. Run sync on the upstream package first.'
 
@@ -72,10 +74,10 @@ interface CodedError extends Error {
   code?: string
 }
 
-// Node reports an unsynced upstream two ways: the package specifier is
-// missing, or its exports map points at a `.reference-ui/` system file sync
-// has not written yet. Both arrive as ERR_MODULE_NOT_FOUND, sometimes wrapped,
-// so walk the cause chain and test each link's own message for the marker.
+// An unsynced upstream surfaces as ERR_MODULE_NOT_FOUND for the resolved
+// `.reference-ui/` system file its exports map points at. The failure can be
+// wrapped, so walk the cause chain and test each link's own message for the
+// marker.
 function missingUpstream(cause: unknown): boolean {
   let current: unknown = cause
   for (let depth = 0; depth < 5 && current instanceof Error; depth++) {

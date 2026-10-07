@@ -1,10 +1,11 @@
 // Guard for the @reference-ui/lib/baseSystem subpath migration.
 // It takes every in-repo ui.config under packages/ and matrix/ as data and
-// fails if any imports baseSystem from the lib barrel instead of the
-// zero-import subpath; the barrel drags the whole ~7.7k-module icons graph
-// into config evaluation (~1.5 s) while the subpath is one 512 KB module. It
-// also pins the three configs migrated off the barrel so a revert cannot land
-// silently. A pruning source walk, not a repo-wide glob: other checkouts under
+// fails if any reaches the lib barrel `@reference-ui/lib` at all — named,
+// namespace, side-effect, re-export, dynamic import, or require. The barrel
+// itself is the cost: it drags the whole ~7.7k-module icons graph into config
+// evaluation (~1.5 s) while the subpath is one 512 KB module. It also pins the
+// three configs migrated off the barrel so a revert cannot land silently. A
+// pruning source walk, not a repo-wide glob: other checkouts under
 // dot-directories must never be read.
 
 import { readdir, readFile } from 'node:fs/promises'
@@ -16,7 +17,12 @@ const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url))
 const ROOTS = ['packages', 'matrix']
 const CONFIG_FILE = /^ui\.config\.(ts|js|mts|mjs)$/
 const SKIP_DIR = new Set(['node_modules', 'dist', '.git', '.reference-ui', 'target', '.muse'])
-const BARREL_IMPORT = /import\s*\{[^}]*\bbaseSystem\b[^}]*\}\s*from\s*['"]@reference-ui\/lib['"]/
+// The exact barrel specifier in any module position. The trailing quote is
+// load-bearing: it admits `@reference-ui/lib` and rejects `@reference-ui/lib/…`
+// subpaths. A bare string in a config payload (e.g. `include:
+// ['@reference-ui/lib']`) is not a module position and must not trip the guard.
+const BARREL_IMPORT =
+  /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)['"]@reference-ui\/lib['"]/
 const SUBPATH_IMPORT = /from\s*['"]@reference-ui\/lib\/baseSystem['"]/
 const MIGRATED = [
   'packages/reference-docs/ui.config.ts',
@@ -43,14 +49,36 @@ async function configFiles(): Promise<string[]> {
 }
 
 describe('@reference-ui/lib/baseSystem subpath', () => {
-  it('detects the barrel shape it bans', () => {
-    expect(BARREL_IMPORT.test("import { baseSystem } from '@reference-ui/lib'")).toBe(true)
-    expect(BARREL_IMPORT.test("import { baseSystem as s } from '@reference-ui/lib'")).toBe(true)
-    expect(BARREL_IMPORT.test("import { baseSystem } from '@reference-ui/lib/baseSystem'")).toBe(false)
+  it('detects every barrel shape it bans', () => {
+    const banned = [
+      "import { baseSystem } from '@reference-ui/lib'",
+      "import { baseSystem as s } from '@reference-ui/lib'",
+      "import * as lib from '@reference-ui/lib'",
+      "import lib from '@reference-ui/lib'",
+      "import '@reference-ui/lib'",
+      "export { baseSystem } from '@reference-ui/lib'",
+      "export * from '@reference-ui/lib'",
+      "const lib = await import('@reference-ui/lib')",
+      "const lib = require('@reference-ui/lib')",
+    ]
+    for (const source of banned) expect(BARREL_IMPORT.test(source), source).toBe(true)
+
+    const allowed = [
+      "import { baseSystem } from '@reference-ui/lib/baseSystem'",
+      "import { baseSystem as s } from '@reference-ui/lib/baseSystem'",
+      "import * as lib from '@reference-ui/lib/baseSystem'",
+      "export { baseSystem } from '@reference-ui/lib/baseSystem'",
+      "export * from '@reference-ui/lib/baseSystem'",
+      "const lib = await import('@reference-ui/lib/baseSystem')",
+      "const lib = require('@reference-ui/lib/baseSystem')",
+      "mcp: { include: ['@reference-ui/lib'] }",
+    ]
+    for (const source of allowed) expect(BARREL_IMPORT.test(source), source).toBe(false)
+
     expect(SUBPATH_IMPORT.test("import { baseSystem } from '@reference-ui/lib/baseSystem'")).toBe(true)
   })
 
-  it('is the only way in-repo configs reach baseSystem from lib', async () => {
+  it('has no ui.config reaching the lib barrel', async () => {
     const files = await configFiles()
     // A scanner that finds nothing would pass vacuously; the repo has many.
     expect(files.length).toBeGreaterThan(10)
