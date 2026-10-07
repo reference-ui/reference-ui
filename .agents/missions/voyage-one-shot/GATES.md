@@ -50,3 +50,6 @@ step 5; do not leave "probably caught by suites."
 - Numeric gates + protocol: this file.
 - Harness hardening (verify-pins staleness guard, dist-provenance helper,
   mcp/T16 pins): Wave 1.5 crew, after R1 returns.
+  **Superseded (FINAL.oracle F7):** Wave 1.5 was repurposed to the W1-5/W1-6
+  fix tasks and this hardening never landed; moot because R4 is CUT and no
+  future wave needs it.

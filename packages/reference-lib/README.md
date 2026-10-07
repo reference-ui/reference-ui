@@ -4,7 +4,8 @@ Foundational design system package built on `@reference-ui/neo`.
 
 ## Exports
 
-- `@reference-ui/lib`: every component + `baseSystem` for downstream `extends: [baseSystem]`
+- `@reference-ui/lib`: every component
+- `@reference-ui/lib/baseSystem`: the design-system payload for downstream `extends: [baseSystem]` in `ui.config.ts` — a zero-import module; import this, not the component barrel
 - `@reference-ui/lib/theme`: the plain theme objects used to build that system
 - `@reference-ui/lib/styles.css`: the compiled stylesheet (import once at your app root)
 - `@reference-ui/lib/primitives`: layout/text primitives (`Div`, `Span`, `Button`, `Label`, …) plus `css`/`recipe`
@@ -30,7 +31,10 @@ Notes:
 - Styling your own values: the shipped CSS only contains rules for values used inside
   the library. App-only values (e.g. `maxW="140r"` when nothing in the lib uses `140r`)
   construct a class that paints nothing and dev-warns. Either reuse documented values or
-  run `ref sync` with `extends: [baseSystem]` to compile your own sheet.
+  run `ref sync` with `extends: [baseSystem]` to compile your own sheet. In
+  `ui.config.ts`, import it from `@reference-ui/lib/baseSystem`; importing the
+  component barrel instead evaluates ~3,900 icon modules (~1.5 s) on every
+  `ref sync` startup.
 
 ## Bundle & code-splitting
 
@@ -68,6 +72,7 @@ Book is the component playground for `@reference-ui/lib`. It lives at `packages/
 To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` within this package). Open [http://localhost:5000](http://localhost:5000). To capture component states via Playwright, use `pnpm capture <Component>`.
 
 ```ts
-import { baseSystem } from '@reference-ui/lib'
+// ui.config.ts — extends the library system
+import { baseSystem } from '@reference-ui/lib/baseSystem'
 import { colors, fonts } from '@reference-ui/lib/theme'
 ```

@@ -7,8 +7,8 @@ harness, arc, and (now) closeout.
 
 ## Headline
 
-One-shot `ref sync` on docs: **~1.9 s → ~295 ms** (~6.5×). The 1.5 s was
-`loadUserConfig` evaluating the `@reference-ui/lib` barrel — 99.85% of it the
+One-shot `ref sync` on docs: **~1.9 s → ~300 ms** (~6.5×). The 1.5 s was
+`loadUserConfig` evaluating the `@reference-ui/lib` barrel — 99.88% of it the
 icons fan-out (~7,728 module loads). R1 replaces that import with a zero-import
 `./baseSystem` subpath.
 
@@ -17,7 +17,7 @@ icons fan-out (~7,728 module loads). R1 replaces that import with a zero-import
 | config-import module loads | 7,728 | **2** |
 | docs config phase | 1,548 ms | **20 ms** |
 | atomic `syncTotal` | 1,673 ms | **146 ms** |
-| CLI `ref sync` ready-in | ~1,900 ms | **~295 ms** |
+| CLI `ref sync` ready-in | ~1,900 ms | **~300 ms** (296/294/313/313, first run warmer) |
 
 ## Outcomes
 
@@ -29,6 +29,7 @@ icons fan-out (~7,728 module loads). R1 replaces that import with a zero-import
 | Wave 1 (R1) | **LAND** (`5ea3dcdca`) with captain re-baseline | `reports/WAVE1.arc.md` |
 | R4 | **CUT by evaporation** (residual ~20 ms; sound key ≈ prize) | `WAVE1.arc.md §5` |
 | W1-1 emit-mode drift | **filed** separate topic | `docs/bugs/NEO_EMIT_MODE_DRIFT.md` |
+| R3 serialize baseSystem | **CUT by evaporation** (residual evaluate ~5 ms) | `WAVE1.arc.md` |
 | Wave 1.5 (W1-5/W1-6) | **LANDED** (`6c0527467`) | `reports/WAVE1.5.fix.md` |
 
 ## Commits
@@ -59,14 +60,18 @@ re-baseline of `docs/.reference-ui/system/baseSystem.mjs` (comment-only esbuild
 banner delta; canonical mode = dist). Evaluated spec / manifest / CSS
 byte-identical.
 
+Suites: config 28 tests; `agentneo q` 0 errors; matrix T16 4/4; lib
+`check:dist` OK; consumer smoke PASS; **mcp 8 failures pre-existing**
+(barrel/subpath identical outcomes, JSON-identical model).
+
 ## Follow-ups
 
 1. **`NEO_EMIT_MODE_DRIFT`** — make fragment-bundle emission mode-independent
    (source vs dist invocation); entry `lib/microbundle/build-options.ts`.
 2. R4 stays CUT; any future persistent-config-cache needs a ≥100 ms sustained
    cacheable phase and a sound key.
-3. R2 (alias-force lib into the bundle) remains the filed CUT-backup only if R1
-   is ever reverted.
+3. R2 (alias-force lib into the bundle) — filed, conditional, **no action**
+   unless R1 is ever reverted.
 
 ## Verification (reproducible)
 

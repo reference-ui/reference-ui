@@ -92,5 +92,21 @@ Re-baseline applied per protocol:
   **0 errors / 24 pre-existing warns**. `git diff` = the three in-scope files
   only. No commit. Report: `reports/WAVE1.5.fix.md`.
 
+### 2026-10-07 — Oracle FINAL: voyage correctly closed; P3 record-polish applied
+
+FINAL.oracle verdict: voyage correctly closed; the two P3s are record-polish,
+the eight P4s advisory. Applied:
+
+- **F1** — CLI ready line measured directly (was inferred): `cd
+  packages/reference-docs && pnpm exec ref sync` → **313 / 313 ms** (first run
+  581 warmup; earlier 296/294). Recorded in `CLOSEOUT.md`.
+- **F2** — `packages/reference-lib/README.md` now teaches the fast import
+  (`@reference-ui/lib/baseSystem` in `ui.config.ts`) instead of the barrel.
+- **F4** — closeout quotient corrected 99.85% → 99.88%.
+- **F6** — closeout now discloses the mcp 8 pre-existing failures.
+- **F7** — `GATES.md` hardening promise marked superseded.
+- **F8** — R3 recorded as CUT by evaporation; R2 reworded as no-action.
+
+
 
 
