@@ -103,4 +103,30 @@ STATUS: IN PROGRESS
   specs/corpus.spec.ts, world/index.html, world/src/app.ts, world/src/fonts.ts}`.
   No `scope.ts`/`css.ts`/`lower.ts` edits. Not committed.
 
+## 2026-10-08 — Arc 3 crew (docs bundle proof + F2 dynamic bullet)
+
+- **Bin rebuild (no-op, fresh):** `node ../reference-neo/tools/ensure-dist.mjs`
+  from `packages/reference-docs` → exit 0, no rebuild. `dist/bin/ref.js`
+  (00:30:43) is newer than every src input, and `dist/src/runtime/css/{css,scope}.js`
+  carry the pass. Parallel session's dirty packager files untouched.
+- **Docs bundle:** one-shot `ref sync` from `packages/reference-docs` →
+  `[ref] sync covered by watch session pid 55052`; the live watch resynced on
+  the SIGUSR2 poke (CPU 2.92s→3.09s, RSS +10 MB), but bytes were identical, so
+  the staged commit preserved `react.mjs` mtime (Oct 8 **00:18:20**, by design:
+  `sync/commit.ts` keeps mtime for identical bytes). Live watch/lock untouched.
+- **Independent proof:** a fresh `ref sync` into a temp copy of the project via
+  the current `dist/bin/ref.js` produced a `react.mjs` **byte-identical** to the
+  live bundle (`diff -q` → IDENTICAL), containing the six-keyword gate,
+  `[\p{L}\p{N}_-]` family regex, `.includes(".")` guard, `` `${t}.${e}` `` rewrite,
+  and the `prop!=="weight"||typeof t.value!="string")continue` invocation. Arc 1
+  already ships in the live bundle.
+- **F2 bullet rewritten** (`fonts.mdx`): "Dynamic values are scoped at runtime —
+  if the class is shipped" — runtime scopes string values (literal or
+  variable-held); the static authored-plan path keeps bare/keyword semantics; a
+  dynamic value needs its class sheet-backed (`staticCss` or a coincidental
+  static call site) or it is a miss; kept the scoped `sans.thin` advice.
+- **Gate:** `pnpm agentdocs q` → **0 errors, 0 warnings, 35 files**.
+- Files: only `packages/reference-docs/src/content/docs/system/fonts.mdx`. Not
+  committed. Evidence for the captain's live computed-style assertion.
+
 

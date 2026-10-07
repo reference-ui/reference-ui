@@ -79,10 +79,14 @@ Three rules cover the rest:
   element.
 - **Say the family twice to be explicit.** `weight="sans.thin"` always means
   sans thin (200), even with no `font` prop nearby. Use it to disambiguate.
-- **Dynamic values stay with keywords.** `weight={value}` cannot see the
-  element's family at compile time, so it keeps keyword semantics. When the
-  value must come from a family scale, pass the scoped form (`'sans.thin'`)
-  instead.
+- **Dynamic values are scoped at runtime — if the class is shipped.** At
+  runtime a string weight resolves against the element's family exactly like a
+  literal; a value arriving from a variable looks no different. The static
+  authored-plan path is unchanged — bare names keep their keyword semantics —
+  so the scoped class still has to be sheet-backed (a `staticCss` entry, or a
+  static call site that produced the same family and weight), or the value is
+  a miss. When the family scale must be guaranteed, pass the scoped form
+  (`'sans.thin'`) instead.
 
 ## `font` versus `fontFamily`
 
