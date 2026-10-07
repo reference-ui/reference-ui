@@ -28,7 +28,7 @@ a2187b1fac509d697518799372b58d054d4605175f628db294f530c2632ff015  docs/.referenc
 38a10a4bf48624ceaf05f93fa5968e30151e591962972c5c7e34a46f9030740b  docs/.reference-ui/styled/types/prop-type.d.ts
 80deeaa8b3e46be08fcb18a3dd3f905c03b697d68a4e7d872bf50602b0b581e7  docs/.reference-ui/styled/types/style-props.d.ts
 000608d87872f5c695bc8a54a8b985bd679c8103d9dfa8a21918a2f52dc49dcd  docs/.reference-ui/system/baseSystem.d.mts
-3cf8397a29cc0024aace14d507b88c915f36e66c6501d763d825bbfa9d803454  docs/.reference-ui/system/baseSystem.mjs
+fff857dc1793fe96e6c62074ee82830339cde4ce4cd3f829fafe632581a70b4b  docs/.reference-ui/system/baseSystem.mjs
 5e90a602df9dd9a1bcd195a3f1cbbdcce1ab795f98dcd026d9822a5c9bf7aeb9  docs/.reference-ui/system/compile-request.json
 e8425f92422db6e9babedaeb8288d655ddba70f58fa4182ffd5320d417361a15  docs/.reference-ui/system/evaluated-system.json
 c84b1048f232d63137c964d1f8a56554bb7327b905e0350e8dd874afc718a07a  docs/.reference-ui/system/jsx-elements.json
@@ -534,7 +534,7 @@ c5cc5ed639fd10fbaf733d3e3333dceaa45100623dbf2b40503de68913626751  docs/.referenc
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  docs/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  docs/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  docs/.reference-ui/types/types.d.mts
-2f2c456080451b6b729c478e93c9bc88adebf54fa2a1cf6c60eb8fe6e8e83b8a  docs/.reference-ui/types/types.mjs
+0c65743e8834f142e4b69eda1ade572188dbb0ea20fa052b1f7785e1e2d5da36  docs/.reference-ui/types/types.mjs
 # docs aggregate: cfbf75c3fe7cf36e9eb86d6c3f8578c88b5f46900b781212e9db427cb2836d06  files=522
 # lib — 580 files under packages/reference-lib/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  lib/.reference-ui/react/package.json
@@ -552,7 +552,7 @@ fdd106e89379c87414ad46be8c84bf6e90e3fa72d97ac119254e88e15b963cc4  lib/.reference
 38a10a4bf48624ceaf05f93fa5968e30151e591962972c5c7e34a46f9030740b  lib/.reference-ui/styled/types/prop-type.d.ts
 80deeaa8b3e46be08fcb18a3dd3f905c03b697d68a4e7d872bf50602b0b581e7  lib/.reference-ui/styled/types/style-props.d.ts
 000608d87872f5c695bc8a54a8b985bd679c8103d9dfa8a21918a2f52dc49dcd  lib/.reference-ui/system/baseSystem.d.mts
-e4099f206aba47f28a89caece324e94468b41a5ba699b1f3b4040b11ee88288a  lib/.reference-ui/system/baseSystem.mjs
+23738a264d9cb11b65d2e2c01e166fcfbd6d227deb119ecb3ab42607dbdddd44  lib/.reference-ui/system/baseSystem.mjs
 c921bb6c093279dbfd2b3b415aa1bb0ff8b6b5fdef0b2ead5636b1eeadc021a3  lib/.reference-ui/system/compile-request.json
 9a8a485b1be78cca9e79b208091bd756b6293c93959487a4be23b0fc5de28af3  lib/.reference-ui/system/evaluated-system.json
 3b5667f421cdd3020ca78c984acf0256773d2b911dedc63225462f07dd950251  lib/.reference-ui/system/jsx-elements.json
@@ -1116,7 +1116,7 @@ cf7f816b7d04435305cc75d9179dcb13880a782a5da2fd60a84909bb6f2aab28  lib/.reference
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  lib/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  lib/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  lib/.reference-ui/types/types.d.mts
-31d8786e2e81936c359e3baf75f15a59f0f941b82b724eff48577479a2d88dfb  lib/.reference-ui/types/types.mjs
+7fc7863d9a459962f44d75d54bec89149b02fc51058fd2de956fc7a3b2df6329  lib/.reference-ui/types/types.mjs
 # lib aggregate: 85169ba54ed854e5149107cd20ae9e6779fc1f8313d02456f17aa46226627b66  files=580
 # icons — 156 files under packages/reference-icons/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  icons/.reference-ui/react/package.json
@@ -1134,7 +1134,7 @@ f2be4681a79d1ee1324214d1cca9bff01e644f0ec708b0d334f057b11cecc859  icons/.referen
 38a10a4bf48624ceaf05f93fa5968e30151e591962972c5c7e34a46f9030740b  icons/.reference-ui/styled/types/prop-type.d.ts
 80deeaa8b3e46be08fcb18a3dd3f905c03b697d68a4e7d872bf50602b0b581e7  icons/.reference-ui/styled/types/style-props.d.ts
 000608d87872f5c695bc8a54a8b985bd679c8103d9dfa8a21918a2f52dc49dcd  icons/.reference-ui/system/baseSystem.d.mts
-10f2319bb863a7971a1881250cd402dfcffdc66657d5477bb38e86f5ecd7c476  icons/.reference-ui/system/baseSystem.mjs
+068a474c9b45358ae1707c660371cba0f60cbaf8f870502039201d15c046ec1a  icons/.reference-ui/system/baseSystem.mjs
 0969072e91aff95b508fa32607bf4475997b87a49251775cd37983f904b4ca83  icons/.reference-ui/system/compile-request.json
 b2f78d55a9a83d13182b8e3be581de1222ca49c2dfab0d986abe2af423eb9a22  icons/.reference-ui/system/evaluated-system.json
 78c17d9f6872f943d807a8920e79699089483ed8da0390215955c50be6bd7704  icons/.reference-ui/system/jsx-elements.json
@@ -1274,5 +1274,5 @@ e9003251981cdb700f532fcfb2d8a4f703082eabad4f32a497ed8f100d75c461  icons/.referen
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  icons/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  icons/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  icons/.reference-ui/types/types.d.mts
-08e9914fb46f2402caff9eadd1ae24661a42dbf7b5657d0a994a2552581abea1  icons/.reference-ui/types/types.mjs
+e2aae277cc883ae6572d9a3e8d5a5782cf3caa0bf7c005bddf138679ebfe4092  icons/.reference-ui/types/types.mjs
 # icons aggregate: c8f0d68b040d1d0db35c110880e989db4646b3e6e17394149a521e2bc823cc97  files=156
