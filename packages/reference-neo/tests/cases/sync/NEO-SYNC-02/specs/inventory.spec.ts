@@ -76,6 +76,30 @@ function assertNoNeedles(outDir: string, files: string[]): void {
   }
 }
 
+// A source is synthetic when it points into a `tmp/` segment: the generated
+// build entry is written to the stage, read by esbuild, and deleted before
+// commit, so it never exists post-sync (its bytes ride in `sourcesContent`).
+function isSyntheticSource(source: string): boolean {
+  return source.split(/[\\/]/).includes('tmp');
+}
+
+// B3D-P4-3: every non-synthetic source of every `.map` under the synced folder
+// must absolutize against the map's own dir to a real file. Generic on purpose
+// so a future map-emitting leg is covered without a new assertion row.
+function assertMapSourcesResolve(outDir: string, files: string[]): void {
+  for (const file of files) {
+    if (!file.endsWith('.map')) continue;
+    const mapDir = path.dirname(file);
+    const sources = (JSON.parse(fs.readFileSync(file, 'utf8')) as { sources?: unknown }).sources;
+    if (!Array.isArray(sources)) continue;
+    for (const source of sources) {
+      if (typeof source !== 'string' || isSyntheticSource(source)) continue;
+      const resolved = path.resolve(mapDir, source);
+      assert.ok(fs.existsSync(resolved), `${path.relative(outDir, file)} source ${source} resolves`);
+    }
+  }
+}
+
 // The runner synced this world before serving: the folder shape matches the
 // §4.1 inventory on disk, checked node-side without touching the browser.
 export default async function run({ case: c }: SpecInput): Promise<void> {
@@ -117,4 +141,5 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   walkFiles(outDir, files);
   assert.ok(files.length >= EXPECTED_FILES.length, `folder holds the inventory, got ${files.length} files`);
   assertNoNeedles(outDir, files);
+  assertMapSourcesResolve(outDir, files);
 }

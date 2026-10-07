@@ -52,3 +52,26 @@ only (captain re-baselines 3 lines); test falsifier; suites green.
   Win32), **B3D-P4-1** (explicit throw on unknown staged loader), **B3D-P4-3**
   (generic guard: absolutize every emitted `.map` source). P4-2/P4-4 = notes.
 
+- **WAVE3.fix (crew: general, DeepSeek V4.1 Flash)** —
+  `reports/WAVE3.fix.md`. **VERDICT: DONE** (my change), with a disclosed
+  environmental caveat. Landed all four B3-depth follow-ups in
+  `src/packager/react.ts`: **P3-1** `onResolve` joins a relative specifier
+  against `args.resolveDir` before the stage test (real esbuild repro, falsified
+  when the join is removed); **P3-2** exported `isStagedPath` normalizes both
+  separators and still rejects sibling prefixes; **P4-1** `stagedLoaderFor`
+  throws on an unknown staged extension instead of defaulting to `js`;
+  **P4-3** a generic guard resolves every non-synthetic `source` of every
+  `.map`, in `react.test.ts` and folded into the NEO-SYNC-02 inventory. Proof:
+  dist-mode A/B (committed `react.ts` vs the fix, same tree, `build-bin`
+  recompile validated) is **byte-identical over 736 lib+icons files** — my
+  change moves zero shipped bytes; `react.test.ts` 6/6, packager+sync 70/70,
+  `agentneo q` 0 errors (0 on touched files), NEO-SYNC-02 PASS.
+  **Caveat:** `verify-pins` reads **FAIL 9/9** because the concurrent runtime
+  commit `977593fc6` (`css.ts` + new `scope.ts`, bundled into the react entry)
+  landed mid-session and the baseline pin `4687076d1` predates it; reverting the
+  only other post-pin product change (`5b421e4ec` `config/errors.ts`) left the
+  new hashes untouched, so the 9 deltas (`react.mjs` + `.map` + `types.mjs` ×3)
+  are runtime-attributable, none mine. Baseline untouched; re-baseline belongs
+  to the runtime mission. 3 files touched (react.ts + react.test.ts +
+  NEO-SYNC-02 inventory spec); runtime/rs/docs/pipeline untouched.
+

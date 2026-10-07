@@ -14,7 +14,7 @@
 // must resolve after the commit, or devtools and IDEs read the wrong file.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { dirname, extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type * as esbuild from 'esbuild'
 import { microBundleWithResult } from '../lib/microbundle/index.ts'
@@ -72,6 +72,40 @@ const STAGED_LOADERS: Record<string, esbuild.Loader> = {
   '.js': 'js',
 }
 
+/** Forward-slash form of a path so a `/`-presented stage path matches a
+ * `\`-joined prefix and vice versa (B3D-P3-2). */
+function toForwardSlashes(value: string): string {
+  return value.replace(/\\/g, '/')
+}
+
+/**
+ * True when `path` sits under `stageDir`, comparing separator-insensitively so
+ * a `/`-presented plugin path still matches on Win32 and never silently
+ * no-ops the re-home (B3D-P3-2); `stageDir` itself counts as under. Exported
+ * for the separator unit test.
+ */
+export function isStagedPath(stageDir: string, path: string): boolean {
+  const stage = toForwardSlashes(stageDir)
+  const normalized = toForwardSlashes(path)
+  return normalized === stage || normalized.startsWith(`${stage}/`)
+}
+
+/**
+ * Loader for a staged input by extension. An unknown extension throws instead
+ * of silently loading as `js` (B3D-P4-1); live inputs are `.mts`/`.mjs` only,
+ * so this is defensive. Exported for the unit test.
+ */
+export function stagedLoaderFor(stagedPath: string): esbuild.Loader {
+  const ext = extname(stagedPath)
+  const loader = STAGED_LOADERS[ext]
+  if (loader === undefined) {
+    throw new Error(
+      `neo-live-map-paths: no staged loader for ${stagedPath} (extension "${ext}")`
+    )
+  }
+  return loader
+}
+
 /**
  * Re-home staged bundle inputs at their eventual live paths (F-A). Esbuild
  * derives the linked map's `sources` from each input's path relative to
@@ -79,21 +113,27 @@ const STAGED_LOADERS: Record<string, esbuild.Loader> = {
  * deeper than the live folder, so a live `outfile` base would orphan every
  * source it owns by one `../`. Reporting each staged input at its live twin
  * makes the shipped map resolve while the bytes stay staged. Only used when
- * the stage and live folders differ.
+ * the stage and live folders differ. Exported for the relative-import test.
  */
-function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Plugin {
+export function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Plugin {
   const stagedByLivePath = new Map<string, string>()
   const toLive = (path: string): string | undefined => {
-    if (path !== stageDir && !path.startsWith(stageDir + sep)) return undefined
+    if (!isStagedPath(stageDir, path)) return undefined
     return join(liveDir, relative(stageDir, path))
   }
   return {
     name: 'neo-live-map-paths',
     setup(build) {
       build.onResolve({ filter: /.*/ }, (args) => {
-        const live = toLive(args.path)
+        // A relative specifier is joined against the importer's dir before the
+        // stage test, or a staged relative import never re-homes (B3D-P3-1).
+        // Absolute specifiers pass through unchanged.
+        const staged = args.path.startsWith('.')
+          ? resolve(args.resolveDir, args.path)
+          : args.path
+        const live = toLive(staged)
         if (live === undefined) return undefined
-        stagedByLivePath.set(live, args.path)
+        stagedByLivePath.set(live, staged)
         return { path: live }
       })
       build.onLoad({ filter: /.*/ }, (args) => {
@@ -101,7 +141,7 @@ function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Plugin {
         if (staged === undefined) return undefined
         return {
           contents: readFileSync(staged, 'utf-8'),
-          loader: STAGED_LOADERS[extname(staged)] ?? 'js',
+          loader: stagedLoaderFor(staged),
           resolveDir: dirname(staged),
         }
       })
