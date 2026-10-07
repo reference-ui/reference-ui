@@ -1,6 +1,6 @@
 # voyage-one-shot — baseline byte-identity pins (Wave 0 / R1 identity bar)
-# pin: reference-system @ 2b376fd3d (WAVE5 tasty edge; docs types.mjs line pending dev-server restart; supersedes 977593fc6)
-# captured: 2026-10-07 (UTC session by wave0-recon)
+# pin: reference-system @ 9512fad32 (re-baseline: docs styles.css + system/baseSystem.mjs after docs-release CodeBlock + font-weight runtime landed; lib/icons unchanged)
+# captured: 2026-10-08
 #
 # Exact commands (from repo root):
 #   node .agents/missions/voyage-one-shot/scripts/measure-one-shot.mjs sync packages/reference-docs
@@ -17,18 +17,18 @@ ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  docs/.referenc
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  docs/.reference-ui/react/react.d.mts
 51ce546f8a4f581276e9569015c7162d0223fb03cfa034355ae09a5c5d24d799  docs/.reference-ui/react/react.mjs
 2b27b7fe70b920389e70f611eda69067f1547bb3f03d6e4d438045b446849e47  docs/.reference-ui/react/react.mjs.map
-27f38f828a89192d62ca0f6cdbeb60b6eecf99eeaad6ce73d5be42f1d92f4b3f  docs/.reference-ui/react/styles.css
+b59a1a71e6b0d696e34b906531b59f4012bbd726fdcaa5645bdc1393085d338e  docs/.reference-ui/react/styles.css
 74a304d01c9406be60c110d5bc832785bdd33149bbeeb9c6cc85a4fb5ccc296d  docs/.reference-ui/styled/index.d.ts
 86a7624edf41794c5a9f51ecb2fef58eed230073d25e26f9a497bf06b84ec32f  docs/.reference-ui/styled/package.json
 ae7231dab628829933702e7c327ccbdd899db2162a45e419b6f4f80dd664649a  docs/.reference-ui/styled/runtime-data.mjs
-27f38f828a89192d62ca0f6cdbeb60b6eecf99eeaad6ce73d5be42f1d92f4b3f  docs/.reference-ui/styled/styles.css
+b59a1a71e6b0d696e34b906531b59f4012bbd726fdcaa5645bdc1393085d338e  docs/.reference-ui/styled/styles.css
 74a304d01c9406be60c110d5bc832785bdd33149bbeeb9c6cc85a4fb5ccc296d  docs/.reference-ui/styled/tokens.d.ts
 f2be4681a79d1ee1324214d1cca9bff01e644f0ec708b0d334f057b11cecc859  docs/.reference-ui/styled/types/conditions.d.ts
 a2187b1fac509d697518799372b58d054d4605175f628db294f530c2632ff015  docs/.reference-ui/styled/types/index.d.ts
 38a10a4bf48624ceaf05f93fa5968e30151e591962972c5c7e34a46f9030740b  docs/.reference-ui/styled/types/prop-type.d.ts
 80deeaa8b3e46be08fcb18a3dd3f905c03b697d68a4e7d872bf50602b0b581e7  docs/.reference-ui/styled/types/style-props.d.ts
 000608d87872f5c695bc8a54a8b985bd679c8103d9dfa8a21918a2f52dc49dcd  docs/.reference-ui/system/baseSystem.d.mts
-fff857dc1793fe96e6c62074ee82830339cde4ce4cd3f829fafe632581a70b4b  docs/.reference-ui/system/baseSystem.mjs
+559a1078c9ca92c8a786e36ee14ff9a6e83790ddc4d926e578637a34240e0b97  docs/.reference-ui/system/baseSystem.mjs
 5e90a602df9dd9a1bcd195a3f1cbbdcce1ab795f98dcd026d9822a5c9bf7aeb9  docs/.reference-ui/system/compile-request.json
 e8425f92422db6e9babedaeb8288d655ddba70f58fa4182ffd5320d417361a15  docs/.reference-ui/system/evaluated-system.json
 c84b1048f232d63137c964d1f8a56554bb7327b905e0350e8dd874afc718a07a  docs/.reference-ui/system/jsx-elements.json
@@ -535,7 +535,7 @@ c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  docs/.referenc
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  docs/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  docs/.reference-ui/types/types.d.mts
 64f66545ef0ec6848a21c96d0ea4f00e272033be527627f219439da6c3bb87b9  docs/.reference-ui/types/types.mjs
-# docs aggregate: 28366e7a0231c187b676985f63c18cb46d7badfbc15e2f4aa14cf38e669dfc33  files=522
+# docs aggregate: 8b82c29c8834deec8ab8b291f60acf7f308b5e21e4a3460cd6dd35a7543bd15e  files=522
 # lib — 580 files under packages/reference-lib/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  lib/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  lib/.reference-ui/react/react.d.mts
