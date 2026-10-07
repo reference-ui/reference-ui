@@ -18,6 +18,31 @@ Wave 0 recon (see `reports/WAVE0.recon.md`) confirmed and **expanded** these:
 | **T3** | Proof-harness hardening | **Confirmed:** `verify-pins` passes with no sync (vacuous); `capture-pins` crashes on a fresh clone (ENOENT); `measure-one-shot` measures an un-attested `dist`. |
 | **T4** | Survey | 13 cited candidates (see `WAVE0.recon.md` §T4) — including packed-tarball stale `.reference-ui`, `check:dist` not covering generated bundles, and no microbundle normalisation seam. |
 
+## Oracle plan (PLAN.oracle, pin `1d556dae9`) — backlog
+
+Plan approved as restructured; T1 seams to `microbundle.ts:25-41` (`microBundleWithResult`,
+all six call sites), not `build-options.ts`. Alias canonicalization rejected as
+unsound. Line-preserving normalization required (react ships a linked map).
+
+| id | item | note |
+| --- | --- | --- |
+| B1 | Cross-mode characterization harness + frozen bars | Wave 0; decides B2/B3 scope |
+| B2 | Banner normalization at the `microbundle.ts` seam (blank column-0 `// <path>`, line-preserving) | first product land |
+| B3 | Map live-relative sources (fix staged-commit orphan F-A) | same-land candidate |
+| B4 | Producer freshness directness (`check:dist` += baseSystem; smoke requireFragment shape) | T2 remainder |
+| B5 | Barrel guard follows config helpers (test-only) | F-B |
+| B6 | `UPSTREAM_MARKER` Windows-tolerant | F-C |
+| CUT | T2 config-load guard; T3 script hardening; compile-request relativize; alias canonicalization | — |
+
+New survey finds: **F-A** staged commit orphans `react.mjs.map` sources;
+**F-B** barrel guard file-scoped (a config helper importing the barrel silently
+restores ~1.5 s); **F-C** Windows marker; **F-D** smoke asserts `name` only.
+
+**Open fork (DESIGN.oracle in flight):** the recon classified `types.mjs`,
+`react.mjs`, `react.mjs.map` as **content-class**, so B2's banner normalization
+cannot make all four byte-identical. The strategy (canonicalize resolution /
+normalize output / unify on dist / bounded scope) is being ruled on.
+
 
 ## Doctrine
 
