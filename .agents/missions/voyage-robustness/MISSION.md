@@ -38,10 +38,20 @@ New survey finds: **F-A** staged commit orphans `react.mjs.map` sources;
 **F-B** barrel guard file-scoped (a config helper importing the barrel silently
 restores ~1.5 s); **F-C** Windows marker; **F-D** smoke asserts `name` only.
 
-**Open fork (DESIGN.oracle in flight):** the recon classified `types.mjs`,
-`react.mjs`, `react.mjs.map` as **content-class**, so B2's banner normalization
-cannot make all four byte-identical. The strategy (canonicalize resolution /
-normalize output / unify on dist / bounded scope) is being ruled on.
+**Strategy ruled (DESIGN.oracle) — (C) unify the workspace on shipped dist
+mode; B2 CUT.** `react.mjs` (minify:true ⇒ no banners), `types.mjs` (tsc-emit
+twin vs raw-src graph), and the map's mappings are genuinely **content-class**;
+output normalization cannot meet byte-identity, and resolution canonicalization
+has no fresh-checkout-safe form. docs/icons already run dist; **only lib's
+scripts are source-mode** (`sync`/`typecheck`/`build`/`dev` →
+`node ../reference-neo/bin/ref.ts`). Rule: point lib's documented paths at the
+dist CLI behind a new neo-owned **dist freshness gate**, so dev == ship == pin
+with **zero emitted-byte change** (empty pin diff); content-class drift becomes
+a documented mode-scoped residual (source mode = neo inner-loop only).
+"Content surgery" rejected. Revised backlog: **C1** (core land) → **B3-depth**
+(map live-relative sources, F-A) → micros B4+B5+B6 → closeout. CUT reaffirmed:
+B2 blanking, B3-xmode, T2 config-load guard, T3 script hardening, alias
+canonicalization.
 
 
 ## Doctrine
