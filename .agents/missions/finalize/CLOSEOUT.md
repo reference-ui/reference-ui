@@ -3,7 +3,8 @@
 Mission: finalize the work listed in `FINALIZATION_REPORT.md` (archived beside
 this file). Branch `reference-system`. Crews ran DeepSeek V4.1 Flash
 (`deepseek/deepseek-flash#high`); the captain verified firsthand and committed,
-one arc per commit; every arc was reviewed by the Oracle (Muse Spark 1.3
+one arc per commit. Arcs 1 and 3 were reviewed by the Oracle standalone; the
+Arc 2 CUT was reviewed at the final mission review (Muse Spark 1.3
 Contributor, Max effort).
 
 ## Outcomes
@@ -50,6 +51,10 @@ tasty external-resolution memo (`7a83e9fa7`): 8,067 → 19 resolutions,
   NOT LANDED. Adopted R1/R2/R4; R5/R6 captain rulings (abort-with-attribution
   on compile failure; platform coverage via pnpm optionalDependencies);
   R7/R8 notes.
+- **FINAL.review** — mission correctly closed. Commit set and closeout ledger
+  verified; cross-arc seams clean; Arc 2 CUT upheld (drain ~6% of one-shot,
+  REF-10 pins the await); Arc 3 classification and `PLAN-mdx.md` faithful.
+  One editorial fixup applied (this reword). P4s advisory only.
 - Reports (gitignored): `.agents/missions/finalize/reports/*.md`.
 
 ## Follow-ups for a future mission
