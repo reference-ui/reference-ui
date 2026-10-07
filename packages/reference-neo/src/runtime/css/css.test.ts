@@ -15,27 +15,84 @@ const TABLES: NamerTables = {
     backgroundImage: 'background-image',
     color: 'c',
     content: 'content',
+    fontFamily: 'font-family',
+    fontWeight: 'font-weight',
     opacity: 'op',
     outlineColor: 'outline-c',
     padding: 'p',
     width: 'w',
     zIndex: 'z',
   },
-  lowerings: {},
+  lowerings: {
+    font: [{ macro: 'font' }],
+    weight: [{ macro: 'weight' }],
+  },
   keywords: {},
-  weightKeywords: [],
+  weightKeywords: [
+    ['thin', '100'],
+    ['light', '300'],
+    ['normal', '400'],
+    ['semibold', '600'],
+    ['bold', '700'],
+    ['black', '900'],
+  ],
   colorProps: ['backgroundColor', 'color', 'outlineColor'],
   breakpoints: ['base', 'sm', 'md'],
   breakpointWidths: { sm: '640', md: '768' },
   conditions: ['_dark', '_hover', 'dark', 'hover'],
-  fonts: {},
+  fonts: {
+    sans: {
+      weight: 'normal',
+      weights: {
+        thin: '200',
+        light: '300',
+        normal: '400',
+        semibold: '600',
+        bold: '700',
+        black: '900',
+      },
+      css: [
+        ['letterSpacing', '-0.01em'],
+        ['fontWeight', 'normal'],
+      ],
+    },
+    serif: {
+      weight: 'normal',
+      weights: {
+        thin: '100',
+        light: '300',
+        normal: '373',
+        semibold: '600',
+        bold: '700',
+        black: '900',
+      },
+      css: [
+        ['letterSpacing', 'normal'],
+        ['fontWeight', 'normal'],
+      ],
+    },
+    mono: {
+      weight: 'normal',
+      weights: {
+        thin: '100',
+        light: '300',
+        normal: '393',
+        semibold: '600',
+        bold: '700',
+      },
+      css: [
+        ['letterSpacing', '-0.04em'],
+        ['fontWeight', 'normal'],
+      ],
+    },
+  },
 }
 
 const ARTIFACT: NativeRuntimeArtifact = {
   schemaVersion: 2,
   namer: TABLES,
   recipes: {},
-  stylePropNames: ['color', 'p'],
+  stylePropNames: ['color', 'p', 'font', 'fontFamily', 'fontWeight', 'weight'],
 }
 
 const CONTAINER_CLASS = 'test__[@container_(min-width:_320px)]:c_paper'
@@ -130,6 +187,90 @@ describe('css() resolution', () => {
       'test__bg-c_color-mix(in_oklch,_currentColor_14%,_transparent)'
     )
     expect(css({ width: 'calc(100% - 8px)' })).toBe('test__w_calc(100%_-_8px)')
+  })
+})
+
+describe('css() family scoping', () => {
+  it('scopes a bare weight to the sibling font in one call', () => {
+    expect(css({ font: 'sans', weight: 'thin' })).toBe(
+      'test__font-family_sans test__font-weight_200 test__letterSpacing_-0.01em'
+    )
+  })
+
+  it('scopes across arguments: font in one, weight in another', () => {
+    expect(css({ fontFamily: 'sans' }, { weight: 'thin' })).toBe(
+      'test__font-family_sans test__font-weight_200'
+    )
+  })
+
+  it('resolves serif and mono normal to their scale weights', () => {
+    expect(css({ font: 'serif', weight: 'normal' })).toBe(
+      'test__font-family_serif test__font-weight_373 test__letterSpacing_normal'
+    )
+    expect(css({ fontFamily: 'serif', weight: 'normal' })).toBe(
+      'test__font-family_serif test__font-weight_373'
+    )
+    expect(css({ fontFamily: 'mono', weight: 'normal' })).toBe(
+      'test__font-family_mono test__font-weight_393'
+    )
+  })
+
+  it('falls a lone keyword weight back to the keyword table', () => {
+    expect(css({ weight: 'thin' })).toBe('test__font-weight_100')
+  })
+
+  it('keeps importance while scoping', () => {
+    expect(css({ fontFamily: 'sans', weight: 'thin!' })).toBe(
+      'test__font-family_sans test__font-weight_200!'
+    )
+  })
+
+  it('falls a conditional weight back to the base font', () => {
+    expect(css({ fontFamily: 'sans', _hover: { weight: 'normal' } })).toBe(
+      'test__font-family_sans test__hover:font-weight_400'
+    )
+  })
+
+  it('lets a same-condition font beat the base font', () => {
+    expect(css({ fontFamily: 'sans', _hover: { fontFamily: 'serif', weight: 'normal' } })).toBe(
+      'test__font-family_sans test__hover:font-family_serif test__hover:font-weight_373'
+    )
+  })
+
+  it('passes an explicit scoped weight through', () => {
+    expect(css({ fontFamily: 'sans', weight: 'sans.thin' })).toBe(
+      'test__font-family_sans test__font-weight_200'
+    )
+  })
+
+  it('passes numeric and unknown weights through', () => {
+    expect(css({ fontFamily: 'sans', weight: 393 })).toBe(
+      'test__font-family_sans test__font-weight_393'
+    )
+    expect(css({ fontFamily: 'sans', weight: 'extra-bold' })).toBe(
+      'test__font-family_sans test__font-weight_extra-bold'
+    )
+  })
+
+  it('declines to scope when two families conflict', () => {
+    expect(css({ fontFamily: 'sans' }, { fontFamily: 'mono', weight: 'thin' })).toBe(
+      'test__font-family_mono test__font-weight_100'
+    )
+  })
+
+  it('scopes a dynamic variable-held string like a literal', () => {
+    const dynamic = 'thin'
+    expect(css({ fontFamily: 'sans', weight: dynamic })).toBe(
+      'test__font-family_sans test__font-weight_200'
+    )
+  })
+
+  it('pins the responsive interim: object leaves stay keyword-scoped', () => {
+    // follow-up: leaf descent into responsive weight objects needs a
+    // breakpoint-`when` semantics decision (condWhen vs slotWhen).
+    expect(css({ fontFamily: 'sans', weight: { base: 'thin', md: 'bold' } })).toBe(
+      'test__font-family_sans test__font-weight_100 test__md:font-weight_700'
+    )
   })
 })
 

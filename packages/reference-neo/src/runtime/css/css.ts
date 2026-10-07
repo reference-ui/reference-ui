@@ -17,6 +17,7 @@ import {
   serializeCanonicalJson,
   type ScoredDeclaration,
 } from './plans.ts'
+import { applyFamilyScope } from './scope.ts'
 
 /** Author style object: flat declarations plus nested conditions. */
 export type SystemStyleObject = Record<string, unknown>
@@ -262,6 +263,7 @@ export function css(...styles: Array<CssStyles | CssStyles[]>): string {
   }
   const queries: NamerRequest[] = []
   for (const style of styles) collectStyle(style, active.styleProps, queries)
+  applyFamilyScope(queries)
   const scored: ScoredDeclaration[] = []
   const named: Array<{ query: NamerRequest; classes: string[] }> = []
   for (const query of queries) {
