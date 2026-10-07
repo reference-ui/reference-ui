@@ -1,6 +1,6 @@
 # Mission: voyage-one-shot — `ref sync` startup performance
 
-Status: Wave 0 (recon + harness) in flight.
+Status: COMPLETE — see `CLOSEOUT.md` (R1 landed; one-shot ~1.9s → ~295ms).
 
 Objective: cut the one-shot `ref sync` startup cost on the docs app. The
 measured headroom is concentrated in **config load** (`loadUserConfig`,
