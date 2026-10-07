@@ -1,0 +1,94 @@
+---
+title: Example
+section: Components
+order: 4
+slug: example
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { ExampleBadges, ExampleField, ExampleToolbar } from './example-sections'
+
+# Example
+
+A working page used to exercise the docs theme end to end: live specimens, code
+with a copy action, a data table, and a right-hand outline.
+
+## Toolbar
+
+Buttons carry the primary actions on a surface.
+
+<Preview>
+  <ExampleToolbar />
+</Preview>
+
+```tsx
+import { Button, Div } from '@reference-ui/react'
+
+export function Toolbar() {
+  return (
+    <Div display="flex" gap="3r" alignItems="center">
+      <Button variant="primary">Save changes</Button>
+      <Button variant="default">Cancel</Button>
+      <Button variant="ghost">Learn more</Button>
+    </Div>
+  )
+}
+```
+
+## Badges
+
+Small, flat labels that read as a set.
+
+<Preview>
+  <ExampleBadges />
+</Preview>
+
+## Form field
+
+Labels and inputs share the same rhythm as the rest of the page.
+
+<Preview>
+  <ExampleField />
+</Preview>
+
+## Props
+
+The reference table spells out the interface without shouting.
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `variant` | `"primary" \| "default" \| "ghost"` | `"default"` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` |
+| `disabled` | `boolean` | `false` |
+
+## Longer snippet
+
+Tall blocks start collapsed and reveal the rest on demand.
+
+```tsx
+import { Field, Input, Label } from '@reference-ui/react'
+
+type EmailFieldProps = {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+}
+
+export function EmailField({ value, onChange, error }: EmailFieldProps) {
+  const describedBy = error ? 'email-error' : undefined
+
+  return (
+    <Field invalid={Boolean(error)}>
+      <Label htmlFor="email">Email address</Label>
+      <Input
+        id="email"
+        type="email"
+        value={value}
+        aria-describedby={describedBy}
+        onChange={event => onChange(event.currentTarget.value)}
+      />
+      {error ? <Field.Error id="email-error">{error}</Field.Error> : null}
+    </Field>
+  )
+}
+```

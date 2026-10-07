@@ -8,6 +8,7 @@ import { DocHeader } from './DocHeader'
 import { DocMobileNav } from './DocMobileNav'
 import { DocPageNav } from './DocPageNav'
 import { DocSidebar } from './DocSidebar'
+import { DocToc } from './DocToc'
 
 /**
  * App shell: a full-height sidebar rail on the left that owns navigation and
@@ -44,20 +45,29 @@ export function DocLayout() {
         <DocHeader onOpenNav={() => setNavOpen(true)} />
         <Main flex="1" minHeight="0" overflowY="auto">
           <Div
-            maxWidth="48rem"
+            maxWidth="86rem"
             marginX="auto"
+            display="flex"
+            gap="12r"
+            justifyContent="center"
             paddingX="6r"
-            paddingTop="18r"
             paddingBottom="10r"
-            r={{
-              640: { paddingX: '10r' },
-              768: { paddingTop: '14r', paddingBottom: '14r' },
-            }}
+            r={{ 640: { paddingX: '10r' } }}
           >
-            <MDXProvider components={mdxComponents}>
-              <Outlet />
-            </MDXProvider>
-            <DocPageNav />
+            <Div
+              data-docs-content
+              flex="1"
+              minWidth="0"
+              maxWidth="46rem"
+              paddingTop="18r"
+              r={{ 768: { paddingTop: '14r' } }}
+            >
+              <MDXProvider components={mdxComponents}>
+                <Outlet />
+              </MDXProvider>
+              <DocPageNav />
+            </Div>
+            <DocToc />
           </Div>
         </Main>
       </Div>

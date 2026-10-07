@@ -13,9 +13,7 @@ function Tile({ label, children }: { label: string; children: ReactNode }) {
       alignItems="center"
       gap="3r"
       padding="4r"
-      border="1px solid"
-      borderColor="docsBorder"
-      borderRadius="lg"
+      borderRadius="md"
       bg="docsPanelBg"
     >
       <Div display="flex" alignItems="center" justifyContent="center" height="14r">

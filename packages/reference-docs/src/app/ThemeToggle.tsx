@@ -1,6 +1,6 @@
+import { DarkModeIcon, LightModeIcon } from '@reference-ui/lib'
 import { useDocsTheme } from '../shared/providers/DocsThemeContext'
 import { IconButton } from './IconButton'
-import { MoonIcon, SunIcon } from './icons'
 
 export function ThemeToggle() {
   const { colorMode, toggleColorMode } = useDocsTheme()
@@ -12,7 +12,7 @@ export function ThemeToggle() {
       label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       onClick={toggleColorMode}
     >
-      {isDark ? <SunIcon /> : <MoonIcon />}
+      {isDark ? <LightModeIcon /> : <DarkModeIcon />}
     </IconButton>
   )
 }

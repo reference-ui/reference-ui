@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Div } from '@reference-ui/react'
+import { CloseIcon } from '@reference-ui/lib'
 import { Brand } from './Brand'
 import { DocNav } from './DocSidebar'
 import { IconButton } from './IconButton'
-import { CloseIcon } from './icons'
 
 /**
  * Off-canvas navigation for small viewports. Mounts only while open and fades

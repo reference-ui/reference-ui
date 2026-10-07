@@ -109,7 +109,7 @@ export function ColorModeDemo() {
         color="docsText"
         border="1px solid"
         borderColor="docsBorder"
-        borderRadius="lg"
+        borderRadius="md"
         padding="8r"
         display="flex"
         flexDirection="column"

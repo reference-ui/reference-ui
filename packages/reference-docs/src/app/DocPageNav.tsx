@@ -1,7 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Div, Span, css } from '@reference-ui/react'
+import { ArrowBackIcon, ArrowForwardIcon } from '@reference-ui/lib'
 import { docs } from '../collections/runtime'
-import { ArrowLeftIcon, ArrowRightIcon } from './icons'
 
 /**
  * Previous / next pager under the article, derived from the flattened doc
@@ -14,15 +14,17 @@ const card = css({
   flex: '1 1 14rem',
   minWidth: '0',
   padding: '4r',
-  border: '1px solid',
-  borderColor: 'docsBorder',
-  borderRadius: 'lg',
+  borderRadius: 'md',
   textDecoration: 'none',
   color: 'docsText',
-  transition: 'border-color 0.15s ease, background 0.15s ease',
+  transition: 'background 0.15s ease, color 0.15s ease',
   _hover: {
-    borderColor: 'docsHighlight',
     background: 'docsPanelBg',
+  },
+  _focusVisible: {
+    outline: '2px solid',
+    outlineColor: 'docsRing',
+    outlineOffset: '2px',
   },
 })
 
@@ -58,9 +60,9 @@ function PagerCard({ direction, doc }: { direction: 'prev' | 'next'; doc: DocLin
         justifyContent={isPrev ? 'flex-start' : 'flex-end'}
         className={title}
       >
-        {isPrev ? <ArrowLeftIcon /> : null}
+        {isPrev ? <ArrowBackIcon /> : null}
         {doc.title}
-        {isPrev ? null : <ArrowRightIcon />}
+        {isPrev ? null : <ArrowForwardIcon />}
       </Span>
     </>
   )

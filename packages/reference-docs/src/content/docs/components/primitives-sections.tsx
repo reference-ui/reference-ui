@@ -11,9 +11,7 @@ export function PrimitiveCard() {
       display="grid"
       gap="3r"
       padding="4r"
-      border="1px solid"
-      borderColor="docsBorder"
-      borderRadius="lg"
+      borderRadius="md"
       bg="docsPanelBg"
     >
       <Span color="docsMuted">A primitive can be a layout container.</Span>

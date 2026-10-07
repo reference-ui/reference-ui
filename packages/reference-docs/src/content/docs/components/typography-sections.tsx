@@ -36,9 +36,8 @@ import {
 function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif' | 'mono'; sample: string }) {
   return (
     <Div
-      border="1px solid"
-      borderColor="docsBorder"
-      borderRadius="lg"
+      bg="docsPanelBg"
+      borderRadius="md"
       padding="4r"
       display="flex"
       flexDirection="column"
@@ -141,9 +140,7 @@ export function WordOverlay() {
       maxWidth="640px"
       height="110px"
       overflow="hidden"
-      border="1px solid"
-      borderColor="docsBorder"
-      borderRadius="lg"
+      borderRadius="md"
       bg="docsPanelBg"
     >
       <Div
@@ -200,9 +197,7 @@ export function SentenceOverlay() {
       maxWidth="640px"
       height="220px"
       overflow="hidden"
-      border="1px solid"
-      borderColor="docsBorder"
-      borderRadius="lg"
+      borderRadius="md"
       bg="docsPanelBg"
     >
       <Div
@@ -330,7 +325,7 @@ export function QuoteSamples() {
 
 export function PreSample() {
   return (
-    <Pre bg="docsPanelBg" color="docsText" border="1px solid" borderColor="docsBorder" borderRadius="lg" padding="4r" overflow="auto">
+    <Pre bg="docsPanelBg" color="docsText" borderRadius="md" padding="4r" overflow="auto">
       {`function greet() {
   return 'Hello'
 }`}

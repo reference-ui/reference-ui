@@ -15,4 +15,9 @@ export const controlSurface = css({
   _hover: {
     background: 'docsHoverBg',
   },
+  _focusVisible: {
+    outline: '2px solid',
+    outlineColor: 'docsRing',
+    outlineOffset: '2px',
+  },
 })

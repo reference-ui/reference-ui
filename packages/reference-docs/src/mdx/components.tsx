@@ -1,10 +1,16 @@
-import type { AnchorHTMLAttributes } from 'react'
+import {
+  isValidElement,
+  type AnchorHTMLAttributes,
+  type JSX,
+  type ReactNode,
+} from 'react'
 import type { MDXComponents } from 'mdx/types'
 import { Link } from '@tanstack/react-router'
 import {
   A,
   Blockquote,
   Code,
+  Div,
   H1,
   H2,
   H3,
@@ -16,6 +22,7 @@ import {
   Ul,
   css,
 } from '@reference-ui/react'
+import { CodeBlock } from './CodeBlock'
 
 const linkClass = css({
   color: 'docsHighlight',
@@ -29,23 +36,54 @@ const linkClass = css({
   },
 })
 
-/** Fenced blocks are highlighted at build time by rehype-pretty-code (shiki). */
-const preClass = css({
-  marginTop: '0',
-  marginBottom: '4r',
-  padding: '4r',
-  bg: 'docsPanelBg',
-  border: '1px solid',
-  borderColor: 'docsBorder',
-  borderRadius: 'lg',
-  fontSize: 'sm',
-  lineHeight: '1.6',
-  fontFamily: 'mono',
-  overflowX: 'auto',
+const headingAnchor = css({
+  marginLeft: '2r',
+  color: 'docsMuted',
+  fontWeight: '400',
+  textDecoration: 'none',
+  opacity: '0',
+  transition: 'opacity 0.15s ease, color 0.15s ease',
+  _hover: { color: 'docsText' },
+  _focusVisible: { outline: 'none', color: 'docsText' },
+})
+
+const headingHover = css({
+  _hover: { '& > a': { opacity: '1' } },
+  _focusWithin: { '& > a': { opacity: '1' } },
 })
 
 /** MDX native props minus legacy string-refs, which neo primitives don't take. */
 type MdxProps<T extends keyof JSX.IntrinsicElements> = Omit<JSX.IntrinsicElements[T], 'ref'>
+
+function toText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(toText).join('')
+  if (isValidElement(node)) return toText((node.props as { children?: ReactNode }).children)
+  return ''
+}
+
+function slugify(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+function Anchor({ id }: { id: string }) {
+  return (
+    <a
+      href={`#${id}`}
+      className={headingAnchor}
+      aria-label="Link to this section"
+      tabIndex={-1}
+    >
+      #
+    </a>
+  )
+}
 
 function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) {
   if (href === '' || /^(https?:|mailto:)/.test(href)) {
@@ -84,46 +122,93 @@ function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnch
   )
 }
 
+const tableWrap = css({
+  width: '100%',
+  overflowX: 'auto',
+  marginBottom: '6r',
+})
+
+const tableClass = css({
+  width: '100%',
+  borderCollapse: 'collapse',
+  fontSize: '0.875rem',
+  textAlign: 'left',
+})
+
+const thClass = css({
+  paddingY: '3r',
+  paddingX: '3r',
+  fontWeight: '500',
+  color: 'docsMuted',
+  whiteSpace: 'nowrap',
+  borderBottom: '1px solid',
+  borderBottomColor: 'docsBorder',
+})
+
+const tdClass = css({
+  paddingY: '3r',
+  paddingX: '3r',
+  verticalAlign: 'top',
+  borderBottom: '1px solid',
+  borderBottomColor: 'docsBorder',
+})
+
 export const mdxComponents = {
   h1: (props: MdxProps<'h1'>) => (
     <H1
       color="docsText"
       fontSize="8r"
+      fontWeight="600"
       letterSpacing="-0.025em"
       lineHeight="1.12"
       marginTop="0"
-      marginBottom="4r"
+      marginBottom="5r"
       scrollMarginTop="20r"
       {...props}
     />
   ),
-  h2: (props: MdxProps<'h2'>) => (
-    <H2
-      color="docsText"
-      fontSize="6r"
-      fontWeight="600"
-      letterSpacing="-0.02em"
-      marginTop="8r"
-      marginBottom="3r"
-      paddingBottom="2r"
-      borderBottom="1px solid"
-      borderBottomColor="docsBorder"
-      scrollMarginTop="18r"
-      {...props}
-    />
-  ),
-  h3: (props: MdxProps<'h3'>) => (
-    <H3
-      color="docsText"
-      fontSize="5r"
-      fontWeight="600"
-      letterSpacing="-0.01em"
-      marginTop="6r"
-      marginBottom="2r"
-      scrollMarginTop="18r"
-      {...props}
-    />
-  ),
+  h2: ({ children, ...props }: MdxProps<'h2'>) => {
+    const id = slugify(toText(children))
+    return (
+      <H2
+        id={id}
+        className={headingHover}
+        color="docsText"
+        fontSize="6r"
+        fontWeight="600"
+        letterSpacing="-0.02em"
+        lineHeight="1.25"
+        marginTop="12r"
+        marginBottom="4r"
+        scrollMarginTop="20r"
+        {...props}
+      >
+        {children}
+        <Anchor id={id} />
+      </H2>
+    )
+  },
+  h3: ({ children, ...props }: MdxProps<'h3'>) => {
+    const id = slugify(toText(children))
+    return (
+      <H3
+        id={id}
+        className={headingHover}
+        color="docsText"
+        fontSize="5r"
+        fontWeight="600"
+        letterSpacing="-0.01em"
+        lineHeight="1.3"
+        marginTop="8r"
+        marginBottom="3r"
+        scrollMarginTop="20r"
+        {...props}
+      >
+        {children}
+        <Anchor id={id} />
+      </H3>
+    )
+  },
   p: (props: MdxProps<'p'>) => (
     <P
       color="docsText"
@@ -143,7 +228,7 @@ export const mdxComponents = {
   ),
   li: (props: MdxProps<'li'>) => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
   strong: (props: MdxProps<'strong'>) => <Strong color="docsText" fontWeight="700" {...props} />,
-  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsBorder" marginY="8r" {...props} />,
+  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsBorder" marginY="10r" {...props} />,
   blockquote: (props: MdxProps<'blockquote'>) => (
     <Blockquote
       borderLeft="4px solid"
@@ -155,6 +240,15 @@ export const mdxComponents = {
       {...props}
     />
   ),
+  table: ({ children, ...rest }: MdxProps<'table'>) => (
+    <Div className={tableWrap}>
+      <table className={tableClass} {...rest}>
+        {children}
+      </table>
+    </Div>
+  ),
+  th: (props: MdxProps<'th'>) => <th className={thClass} {...props} />,
+  td: (props: MdxProps<'td'>) => <td className={tdClass} {...props} />,
   code: ({ className, children, ...rest }: MdxProps<'code'>) => {
     const isBlock =
       (typeof className === 'string' && className.includes('language-')) ||
@@ -182,9 +276,5 @@ export const mdxComponents = {
       </Code>
     )
   },
-  pre: ({ children, className, ...rest }: MdxProps<'pre'>) => (
-    <pre className={className ? `${preClass} ${className}` : preClass} {...rest}>
-      {children}
-    </pre>
-  ),
+  pre: CodeBlock,
 } satisfies MDXComponents

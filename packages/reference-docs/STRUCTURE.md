@@ -28,11 +28,12 @@ packages/reference-docs/
       DocHeader.tsx       floating header (menu, brand, repo link, theme)
       DocSidebar.tsx      full-height navigation rail (shared DocNav)
       DocMobileNav.tsx    off-canvas navigation for small viewports
+      DocToc.tsx          right-hand "On this page" outline (>=1280px)
       DocPageNav.tsx      previous / next article pager
       Brand.tsx           product wordmark
       IconButton.tsx      shared square icon button
       controlSurface.ts   frosted surface for floating controls
-      icons.tsx           inline shell glyphs
+      icons.tsx           GitHub brand mark (the one Material glyph we lack)
       DocPage.tsx         slug -> MDX module rendering
       ErrorBoundary.tsx   render-error fallback
       ThemeToggle.tsx     light/dark switch
@@ -45,6 +46,8 @@ packages/reference-docs/
       docs/...                all .mdx pages, grouped by section
     mdx/
       components.tsx          MDX -> docs visual system element mapping
+      CodeBlock.tsx           flat fenced block: copy + "View Code" reveal
+      Preview.tsx             flat specimen frame for live examples
     shared/
       providers/              cross-cutting React context
     main.tsx
@@ -55,10 +58,11 @@ packages/reference-docs/
 ### `src/app` (shell chrome)
 
 The shell is a row: a full-height `DocSidebar` rail that owns navigation and
-the wordmark, beside a column whose `Main` scrolls independently. There is no
-opaque header bar — `DocHeader` floats over the article with each control
-carrying its own `controlSurface`. Small viewports hide the rail (a container
-query) and reveal `DocMobileNav`.
+the wordmark, beside a `Main` that scrolls independently. Inside `Main`, the
+article and the `DocToc` outline share a centered row — the outline appears at
+`>=1280px`. There is no opaque header bar — `DocHeader` floats over the article
+with each control carrying its own `controlSurface`. Small viewports hide the
+rail (a container query) and reveal `DocMobileNav`.
 
 ## Directory Intent
 

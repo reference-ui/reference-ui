@@ -67,5 +67,9 @@ tokens({
       value: '{colors.gray.300}',
       dark: '{colors.gray.700}',
     },
+    docsRing: {
+      value: '{colors.gray.400}',
+      dark: '{colors.gray.600}',
+    },
   },
 })

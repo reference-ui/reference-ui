@@ -28,6 +28,11 @@ const plainSurface = css({
     background: 'docsHoverBg',
     color: 'docsText',
   },
+  _focusVisible: {
+    outline: '2px solid',
+    outlineColor: 'docsRing',
+    outlineOffset: '2px',
+  },
 })
 
 export function IconButton({

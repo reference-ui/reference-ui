@@ -18,6 +18,11 @@ const navLinkBase = css({
   lineHeight: '1.4',
   textDecoration: 'none',
   transition: 'color 0.15s ease',
+  _focusVisible: {
+    outline: '2px solid',
+    outlineColor: 'docsRing',
+    outlineOffset: '2px',
+  },
 })
 
 const navLinkIdle = css({

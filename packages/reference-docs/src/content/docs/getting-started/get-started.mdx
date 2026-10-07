@@ -6,6 +6,7 @@ slug: get-started
 ---
 
 import { ButtonRow } from './button-row'
+import { Preview } from '../../../mdx/Preview'
 
 # Get Started
 
@@ -19,7 +20,9 @@ pnpm add @reference-ui/lib react react-dom
 
 Reference UI compiles its CSS at build time, so this renders the real, shipped styles.
 
-<ButtonRow />
+<Preview>
+  <ButtonRow />
+</Preview>
 
 ```tsx
 <Div display="flex" gap="3r" alignItems="center">

@@ -1,9 +1,10 @@
 import { Div, Header, Span, css } from '@reference-ui/react'
+import { MenuIcon } from '@reference-ui/lib'
 import { Brand } from './Brand'
 import { IconButton } from './IconButton'
 import { ThemeToggle } from './ThemeToggle'
 import { controlSurface } from './controlSurface'
-import { GithubIcon, MenuIcon } from './icons'
+import { GithubIcon } from './icons'
 
 /**
  * Floating header. No bar and no fill of its own — it hovers over the article,
@@ -41,7 +42,7 @@ export function DocHeader({ onOpenNav }: { onOpenNav: () => void }) {
         alignItems="center"
         gap="1r"
         paddingRight="3r"
-        borderRadius="full"
+        borderRadius="md"
         pointerEvents="auto"
         r={{ 768: { display: 'none' } }}
       >
