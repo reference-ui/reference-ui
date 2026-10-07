@@ -495,7 +495,7 @@ function SelectionRow({
                 color="design.text.base"
                 _hover={{ bg: 'ui.button.mutedBackground' }}
               >
-                <KeyboardArrowDownIcon width="4r" height="4r" />
+                <KeyboardArrowDownIcon />
               </Button>
             </Field>
             <Combobox.Popover>

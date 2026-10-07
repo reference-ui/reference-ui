@@ -227,7 +227,7 @@ export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, Collapsibl
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         >
-          {icon ?? <KeyboardArrowDownIcon width="1.25em" height="1.25em" />}
+          {icon ?? <KeyboardArrowDownIcon />}
         </Span>
       )
     }

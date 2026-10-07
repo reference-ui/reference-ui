@@ -618,7 +618,7 @@ const ListboxOptionBase = React.forwardRef<HTMLDivElement, ListboxOptionProps>(
               flexShrink={0}
               color="inherit"
             >
-              <CheckIcon width="4r" height="4r" color="inherit" />
+              <CheckIcon />
             </Span>
           )}
         </>

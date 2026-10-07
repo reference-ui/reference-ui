@@ -157,7 +157,7 @@ export default {
                 Search Input (Prefix Icon)
               </Span>
               <Div data-reference-field display="flex" alignItems="center">
-                <SearchIcon color="{colors.design.text.light}" />
+                <SearchIcon />
                 <Input placeholder="Search records..." />
               </Div>
             </Div>
@@ -168,7 +168,7 @@ export default {
                 Input with Prefix & Clear Button
               </Span>
               <Div data-reference-field display="flex" alignItems="center">
-                <FilterListIcon color="{colors.design.text.light}" />
+                <FilterListIcon />
                 <Input placeholder="Filter by keyword..." defaultValue="Active Filter" />
                 <Button
                   type="button"
@@ -315,7 +315,7 @@ export default {
               fontSize="3r"
               color="design.text.base"
             >
-              <CheckIcon size="small" color="{colors.green.600}" />
+              <CheckIcon size="small" />
               <span>Active Status</span>
             </Div>
           </Div>
@@ -738,9 +738,11 @@ export default {
 
             {/* 3. Explicit Margin on Icon */}
             <Div display="flex" flexDirection="column" gap="1r">
-              <Span fontSize="2.5r" color="design.text.light">3. Explicit Icon Margin (ml="3r")</Span>
+              <Span fontSize="2.5r" color="design.text.light">3. Explicit Icon Margin (wrapper ml="3r")</Span>
               <Button>
-                <AddIcon ml="3r" />
+                <Span ml="3r">
+                  <AddIcon />
+                </Span>
                 <span>Pushed Icon</span>
               </Button>
             </Div>
