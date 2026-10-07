@@ -1,6 +1,6 @@
 # WAVE0 — recon, harness, census, pins
 
-STATUS: DONE (recon crew; awaiting Oracle harness/census review)
+STATUS: DONE — Oracle reviewed; harness approved conditionally (see GATES.md)
 
 Deliverables: baseline phase split; module-load census (per-package);
 byte-identity pins; `MEASURE.md`. No product changes.
@@ -38,4 +38,22 @@ code changed; no commit/push/stash; bench lock held, released in two steps.
   `pins/baseline.sha256` matches `.gitignore` `*.sha256` and `reports/` is
   ignored — `pins/README` + `MEASURE.md` carry the aggregates; `git add -f` the
   full pin file if it must commit.
+
+### 2026-10-07 — Oracle WAVE0.oracle: harness approved conditionally
+
+Method trusted (census slice valid + attribution error-free W0-9; pin set and
+full-file commit correct W0-6; timing sound W0-8; cold gap acceptable W0-7).
+But **R1's proof is not admissible** until four doc/protocol gaps close:
+
+- **W0-1 (P2)** freeze exact numeric gates (no unslotted "~2"/"~10–30 ms").
+- **W0-2 (P2)** ordered sync-then-verify protocol; a verify without a fresh
+  sync is vacuous.
+- **W0-3 (P2)** attest dist provenance / rebuild rule for the gitignored dist.
+- **W0-5 (P3)** mcp/T16 coverage decision (pins or named suites).
+- W0-4 (P3) counts necessary-but-not-sufficient; read with timing.
+- W0-8 (P4) residual agreement tolerance artifact; advisory.
+
+Response: `GATES.md` (frozen gates + ordered protocol) authored now; harness
+hardening (verify-pins staleness guard, dist helper, mcp/T16 pins) to follow R1.
+
 
