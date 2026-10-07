@@ -8,6 +8,7 @@
 // routes the flag to it.
 import type { ReferenceBuildResult } from '../reference/bridge/events.ts'
 import type { WatchHandle } from '../lib/watch/index.ts'
+import { SyncCoveredByWatchError } from '../sync/session-owner.ts'
 import {
   foldedWarningCount,
   formatJsonDiagnostics,
@@ -98,6 +99,12 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
     await new Promise<void>(() => {})
     return 0
   } catch (err) {
+    if (err instanceof SyncCoveredByWatchError) {
+      say(
+        `[ref] another ref sync watch already owns this project (pid ${err.watchPid}); not starting a second`
+      )
+      return 1
+    }
     say(`[ref] watch failed: ${messageOf(err)}`)
     return 1
   }

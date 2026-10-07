@@ -189,20 +189,20 @@ describe('sync session lock: control and kill legs', () => {
     expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
   }, 120000)
 
-  it.skipIf(!POSIX)('watch toward watch kills: old session exits 75, new session watches', async () => {
+  it.skipIf(!POSIX)('watch toward watch defers: the running watch keeps the project, the newcomer backs off', async () => {
     const dir = await writeWorld(0)
     const old = spawnBin(['sync', '--watch', dir], dir)
     await waitForOutput(old, () => old.output().includes('ready in'), 'the old boot block')
     const fresh = spawnBin(['sync', '--watch', dir], dir)
-    await waitForExit(old.child)
-    expect(old.child.exitCode).toBe(75)
-    expect(old.output()).toContain(`superseded by sync pid ${fresh.child.pid}`)
-    await waitForOutput(fresh, () => fresh.output().includes('ready in'), 'the new boot block')
-    expect(fresh.output()).toContain(`superseding sync pid ${old.child.pid}`)
-    expect(childDone(fresh.child)).toBe(false)
-    fresh.child.kill('SIGTERM')
+    // The newcomer must defer to the resident watch, never kill it.
+    await waitForOutput(fresh, () => /already owns this project|covered by watch/.test(fresh.output()), 'the newcomer back-off')
     await waitForExit(fresh.child)
-    expect(fresh.child.exitCode).toBe(0)
+    expect(fresh.child.exitCode).not.toBe(0)
+    expect(childDone(old.child)).toBe(false)
+    expect(old.output()).not.toContain('superseded')
+    old.child.kill('SIGTERM')
+    await waitForExit(old.child)
+    expect(old.child.exitCode).toBe(0)
   }, 120000)
 
 })

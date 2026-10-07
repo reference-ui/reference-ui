@@ -226,10 +226,19 @@ async function pokeWatchHolder(holder: SyncSessionOwner): Promise<'stale'> {
 // holder, so all four clean legs route to the kill branch with no carve-out.
 async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
-  if (!UNIFORM_KILL && mine.kind === 'one-shot' && holder.kind === 'watch') {
-    await pokeWatchHolder(holder)
-    notice(json, `[ref] ${tag}: stale lock (pid ${holder.pid} not running), taking over`)
-    return { action: 'take' }
+  // A resident watch OWNS the project: never kill it. A one-shot pokes it to
+  // rebuild and reports itself covered; a second watch defers outright, so
+  // starting a dev server (or `ref sync --watch`) twice can never tear down
+  // the one that is already running. `--break-lock` is the only forced takeover.
+  if (!UNIFORM_KILL && holder.kind === 'watch') {
+    if (mine.kind === 'one-shot') {
+      const poked = await pokeWatchHolder(holder)
+      if (poked === 'stale') {
+        notice(json, `[ref] ${tag}: stale lock (pid ${holder.pid} not running), taking over`)
+        return { action: 'take' }
+      }
+    }
+    throw new SyncCoveredByWatchError(holder.pid)
   }
   const killed = await killHolder(lockDir, holder, mine)
   if (killed === 'retry') return { action: 'retry' }
