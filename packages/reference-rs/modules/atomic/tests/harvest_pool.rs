@@ -37,15 +37,15 @@ const EXPECTED_POOL: &[(&str, usize)] = &[
 /// independently proves the real compile mints exactly these sinks.
 /// The evidence numbers, pinned.
 const EXPECTED_SINKS: &[(&str, &[&str], &str, usize)] = &[
-    ("backgroundColor", &[], "color", 154),
+    ("backgroundColor", &[], "color", 7),
     ("backgroundImage", &[], "url", 13),
-    ("bg", &[], "color", 162),
-    ("borderBottomColor", &[], "color", 154),
-    ("borderColor", &[], "color", 154),
-    ("color", &[], "color", 154),
-    ("color", &["_hover"], "color", 154),
+    ("bg", &[], "color", 15),
+    ("borderBottomColor", &[], "color", 7),
+    ("borderColor", &[], "color", 7),
+    ("color", &[], "color", 7),
+    ("color", &["_hover"], "color", 7),
     ("display", &[], "keyword", 6),
-    ("fill", &[], "color", 155),
+    ("fill", &[], "color", 8),
     ("fontSize", &[], "length", 175),
     ("height", &[], "length", 176),
     ("margin", &[], "length", 176),
@@ -57,7 +57,7 @@ const EXPECTED_SINKS: &[(&str, &[&str], &str, usize)] = &[
     ("marginTop", &[], "length", 176),
     ("maxWidth", &[], "length", 176),
     ("minWidth", &[], "length", 176),
-    ("outlineColor", &[], "color", 155),
+    ("outlineColor", &[], "color", 8),
     ("padding", &[], "length", 175),
     ("paddingBlock", &[], "length", 175),
     ("paddingBottom", &[], "length", 175),
@@ -65,14 +65,14 @@ const EXPECTED_SINKS: &[(&str, &[&str], &str, usize)] = &[
     ("paddingLeft", &[], "length", 175),
     ("paddingRight", &[], "length", 175),
     ("paddingTop", &[], "length", 175),
-    ("stroke", &[], "color", 155),
+    ("stroke", &[], "color", 8),
     ("transform", &[], "transform", 12),
     ("width", &[], "length", 176),
     ("width", &["md"], "length", 176),
 ];
 
 const EXPECTED_SINK_COUNT: usize = 32;
-const EXPECTED_GROSS: usize = 4938;
+const EXPECTED_GROSS: usize = 3615;
 
 #[test]
 fn harvest_pool_census() {

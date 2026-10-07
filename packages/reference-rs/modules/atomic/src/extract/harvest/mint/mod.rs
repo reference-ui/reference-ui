@@ -10,6 +10,7 @@
 //! harvest never emits a warning (A5). Pairs duplicating an existing want
 //! (exact or alias twin, see `twins`) are skipped; infos count net-new.
 
+mod allowlist;
 mod twins;
 mod validity;
 
@@ -82,7 +83,7 @@ pub fn mint(ctx: MintCtx<'_>) {
         if !when_lowers(&sink.when, system) {
             continue;
         }
-        let minted = mint_sink(pool, sink, &mut state);
+        let minted = mint_sink(pool, sink, &mut state, system);
         let report = HarvestReport {
             location: DiagnosticLocation {
                 file: Some(sink.file.to_string()),
@@ -125,7 +126,12 @@ struct SinkMint {
 /// Mint one sink's compatible pool values; the net-new count plus the
 /// kind-accepted offering. Twin-skipped values stay in the offering: they
 /// are what the pool contributed, even when a site want already held them.
-fn mint_sink(pool: &HarvestPool, sink: &Sink, state: &mut MintState<'_>) -> SinkMint {
+fn mint_sink(
+    pool: &HarvestPool,
+    sink: &Sink,
+    state: &mut MintState<'_>,
+    system: &BaseSystem,
+) -> SinkMint {
     let canonical = canon::resolve_canonical_prop(&sink.prop);
     let mut minted = SinkMint {
         count: 0,
@@ -136,7 +142,7 @@ fn mint_sink(pool: &HarvestPool, sink: &Sink, state: &mut MintState<'_>) -> Sink
             continue;
         };
         for value in values {
-            if !harvest_accepts(&sink.prop, canonical, kind, value) {
+            if !harvest_accepts(&sink.prop, kind, value, system) {
                 continue;
             }
             minted.offered.push(value.clone());
@@ -180,150 +186,4 @@ fn when_lowers(when: &[Box<str>], system: &BaseSystem) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use smallvec::SmallVec;
-
-    use super::super::sinks::SinkSite;
-    use super::*;
-
-    /// A bare `(prop, when)` sink for gate assertions.
-    fn sink_for(prop: &str) -> Sink {
-        Sink::for_site(SinkSite {
-            prop,
-            when: &SmallVec::new(),
-            file: "t.ts",
-            line: None,
-            column: None,
-            span: None,
-        })
-        .expect("known style prop sinks")
-    }
-
-    /// Mint the pool values onto one sink over the given wants; the count.
-    fn mint_count(pool_values: &[&str], sink: &Sink, wants: &mut Vec<Want>) -> usize {
-        let mut pool = HarvestPool::default();
-        for value in pool_values {
-            pool.insert(value);
-        }
-        let mut authored = Vec::new();
-        let mut state = MintState {
-            seen: wants.iter().map(twin_key_for).collect(),
-            wants,
-            authored: &mut authored,
-        };
-        mint_sink(&pool, sink, &mut state).count
-    }
-
-    #[test]
-    fn auto_none_gate_on_validity_tables() {
-        let order = sink_for("order");
-        let margin_top = sink_for("marginTop");
-        let mut wants = Vec::new();
-        assert_eq!(mint_count(&["auto"], &order, &mut wants), 0);
-        assert_eq!(mint_count(&["auto"], &margin_top, &mut wants), 1);
-        let display = sink_for("display");
-        let color = sink_for("color");
-        assert_eq!(mint_count(&["none"], &display, &mut wants), 1);
-        assert_eq!(mint_count(&["none"], &color, &mut wants), 0);
-    }
-
-    #[test]
-    fn css_wide_keywords_ride_everywhere() {
-        let order = sink_for("order");
-        let mut wants = Vec::new();
-        assert_eq!(mint_count(&["inherit"], &order, &mut wants), 1);
-        assert_eq!(mint_count(&["var(--x)"], &order, &mut wants), 1);
-    }
-
-    /// Mint the pool values onto one sink; the kind-accepted offering.
-    fn mint_offered(pool_values: &[&str], sink: &Sink, wants: &mut Vec<Want>) -> Vec<Box<str>> {
-        let mut pool = HarvestPool::default();
-        for value in pool_values {
-            pool.insert(value);
-        }
-        let mut authored = Vec::new();
-        let mut state = MintState {
-            seen: wants.iter().map(twin_key_for).collect(),
-            wants,
-            authored: &mut authored,
-        };
-        mint_sink(&pool, sink, &mut state).offered
-    }
-
-    #[test]
-    fn offering_keeps_twin_skipped_values() {
-        let color = sink_for("color");
-        let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
-        assert_eq!(mint_offered(&["red"], &color, &mut wants), vec!["red".into()]);
-        assert_eq!(
-            mint_offered(&["red"], &color, &mut Vec::new()),
-            vec!["red".into()]
-        );
-        let width = sink_for("width");
-        assert!(mint_offered(&["red"], &width, &mut Vec::new()).is_empty());
-    }
-
-    #[test]
-    fn alias_twins_and_exact_dupes_skip() {
-        let mt = sink_for("mt");
-        let mut wants = vec![Want::new("marginTop", AtomValue::String("1px".into()))];
-        assert_eq!(mint_count(&["1px", "2px"], &mt, &mut wants), 1);
-        let color = sink_for("color");
-        let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
-        assert_eq!(mint_count(&["red"], &color, &mut wants), 0);
-    }
-
-    #[test]
-    fn empty_sinks_skip_seed_without_effects() {
-        let pool = HarvestPool::default();
-        let system = BaseSystem::default();
-        let mut wants = vec![Want::new("color", AtomValue::String("red".into()))];
-        let mut authored = Vec::new();
-        let mut diagnostics = Vec::new();
-        let mut session = DiagnosticsSession::new();
-        mint(MintCtx {
-            pool: &pool,
-            sinks: &[],
-            system: &system,
-            wants: &mut wants,
-            authored: &mut authored,
-            diagnostics: &mut diagnostics,
-            sink: &mut session,
-        });
-        assert_eq!(wants.len(), 1);
-        assert!(authored.is_empty());
-        assert!(diagnostics.is_empty());
-        assert!(session.facts().is_empty());
-    }
-
-    #[test]
-    fn mint_reports_fact_and_legacy_info() {
-        let mut pool = HarvestPool::default();
-        pool.insert("red");
-        let sink = sink_for("color");
-        let system = BaseSystem::default();
-        let mut wants = Vec::new();
-        let mut authored = Vec::new();
-        let mut diagnostics = Vec::new();
-        let mut session = DiagnosticsSession::new();
-        mint(MintCtx {
-            pool: &pool,
-            sinks: std::slice::from_ref(&sink),
-            system: &system,
-            wants: &mut wants,
-            authored: &mut authored,
-            diagnostics: &mut diagnostics,
-            sink: &mut session,
-        });
-        assert!(matches!(
-            session.facts(),
-            [DiagnosticFact::HarvestOutcome { minted: 1, .. }]
-        ));
-        assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics[0].message,
-            "color under []: 1 harvested value minted"
-        );
-        assert_eq!(diagnostics[0].file.as_deref(), Some("t.ts"));
-    }
-}
+mod tests;

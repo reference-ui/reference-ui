@@ -31,16 +31,18 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'margin', '1r')).toBe(true)
     expect(hasWant(result, 'margin', '2r')).toBe(true)
 
-    // The refused init position harvests navy; red twins the site atom.
+    // The refused init position harvests nothing: navy is unlicensed
+    // (the color allowlist), so the sink infos zero while the refusal
+    // still diagnoses.
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(5)
-    expect(getWantsForProp(result, 'color')).toHaveLength(6)
+    expect(getWantsForProp(result, 'color')).toHaveLength(5)
     expect(getWantsForProp(result, 'margin')).toHaveLength(4)
-    expect(harvestWants(result)).toHaveLength(1)
-    expect(result.wants ?? []).toHaveLength(15)
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(14)
 
-    // Plans dedupe by value: red ×3, teal.600 ×2, navy ×2, and 13r ×2 each
-    // share one plan.
-    expect(result.stylePlans).toHaveLength(10)
+    // Plans dedupe by value: red ×3, teal.600 ×2, and 13r ×2 each share
+    // one plan; the harvested color-navy plan is gone with the allowlist.
+    expect(result.stylePlans).toHaveLength(9)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('color: red;')
@@ -64,7 +66,7 @@ const spec: AtomicCaseSpec = {
       expect.objectContaining({
         severity: 'info',
         code: 'ATM-I-HARVEST-SINK',
-        message: 'color under []: 1 harvested value minted',
+        message: 'color under []: 0 harvested values minted',
       }),
     ])
   },

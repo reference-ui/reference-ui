@@ -162,8 +162,8 @@ fn star_barrel_resolves_named_imports() {
 #[test]
 fn ambiguous_star_twin_refuses_the_import() {
     let res = compile_files_logs(&[
-        ("/v/src/a.ts", "export const tone = 'red'"),
-        ("/v/src/b.ts", "export const tone = 'blue'"),
+        ("/v/src/a.ts", "export const tone = 'inherit'"),
+        ("/v/src/b.ts", "export const tone = 'currentColor'"),
         (
             "/v/src/barrel.ts",
             "export * from './a'\nexport * from './b'",
@@ -175,10 +175,10 @@ fn ambiguous_star_twin_refuses_the_import() {
     ]);
     // The twin refuses at the site, but both literals harvest onto the
     // refused sink (Forge §1: harvest can hide the miss; the fold stands).
-    assert!(!has_site_want(&res, "color", "red"));
-    assert!(!has_site_want(&res, "color", "blue"));
-    assert!(has_want(&res, "color", "red"));
-    assert!(has_want(&res, "color", "blue"));
+    assert!(!has_site_want(&res, "color", "inherit"));
+    assert!(!has_site_want(&res, "color", "currentColor"));
+    assert!(has_want(&res, "color", "inherit"));
+    assert!(has_want(&res, "color", "currentColor"));
     assert!(
         !channel_messages_for(&res, crate::DiagnosticCode::DynamicIdentifier).is_empty(),
         "the refused import still diagnoses"
@@ -247,7 +247,7 @@ fn default_and_namespace_edges_refuse_values() {
     let res = compile_files_logs(&[
         (
             "/v/src/tokens.ts",
-            "export const brand = 'red'\nexport default { color: 'red' }",
+            "export const brand = 'inherit'\nexport default { color: 'inherit' }",
         ),
         (
             "/v/src/app.ts",
@@ -256,8 +256,8 @@ fn default_and_namespace_edges_refuse_values() {
     ]);
     // Namespace and default edges refuse at the site (§6), but the literal
     // harvests onto the refused member sink (Forge §2 floor).
-    assert!(!has_site_want(&res, "color", "red"));
-    assert!(has_want(&res, "color", "red"));
+    assert!(!has_site_want(&res, "color", "inherit"));
+    assert!(has_want(&res, "color", "inherit"));
     assert!(
         !channel_messages_for(&res, crate::DiagnosticCode::DynamicMember).is_empty(),
         "the refused member still diagnoses"

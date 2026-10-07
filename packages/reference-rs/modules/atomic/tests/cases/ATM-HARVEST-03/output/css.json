@@ -1,4 +1,4 @@
 {
-  "_hover:color:#0af": "@reference-ui/lib__hover:c_#0af",
-  "_hover:color:red": "@reference-ui/lib__hover:c_red"
+  "_hover:color:currentColor": "@reference-ui/lib__hover:c_currentColor",
+  "_hover:color:inherit": "@reference-ui/lib__hover:c_inherit"
 }

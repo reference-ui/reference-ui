@@ -10,31 +10,32 @@ use super::{channel_for, compile_code_logs, is_harvest};
 #[test]
 fn test_baked_object_entry_never_resolves_stale() {
     // Soundness net for the scope dep-strip (SPEC-V2-34 object half): the
-    // entry baked from `red` strips when `red` is written, so the stale
+    // entry baked from `inherit` strips when `tone` is written, so the stale
     // init never resolves at the site and the use diagnoses instead of
     // ghosting. Harvest still mints the program's literals onto the refused
-    // sink (Forge §2/§3: both colors harvest; which is live is a write
-    // question) — those wants carry the harvest origin, never the site's.
+    // sink (Forge §2/§3: both allowlisted colors harvest; which is live is
+    // a write question) — those wants carry the harvest origin, never the
+    // site's.
     let res = compile_code_logs(
         r#"import { css } from '@reference-ui/react';
-        let red = 'red';
-        const theme = { primary: red };
-        red = 'blue';
+        let tone = 'inherit';
+        const theme = { primary: tone };
+        tone = 'currentColor';
         export const a = css({ color: theme.primary });"#,
     );
     assert!(res
         .wants
         .iter()
         .filter(|w| !is_harvest(w))
-        .all(|w| w.value.to_string() != "red"));
+        .all(|w| w.value.to_string() != "inherit"));
     assert!(res
         .wants
         .iter()
-        .any(|w| is_harvest(w) && w.value.to_string() == "red"));
+        .any(|w| is_harvest(w) && w.value.to_string() == "inherit"));
     assert!(res
         .wants
         .iter()
-        .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
+        .any(|w| is_harvest(w) && w.value.to_string() == "currentColor"));
     assert!(res.diagnostics.is_empty());
     let members = channel_for(&res, crate::DiagnosticCode::DynamicMember);
     assert_eq!(members.len(), 1);
@@ -50,24 +51,24 @@ fn test_destructured_name_never_resolves_stale() {
     // refused sink (Forge §2/§3) under the harvest origin, never the site's.
     let res = compile_code_logs(
         r#"import { css } from '@reference-ui/react';
-        let theme = { primary: 'red' };
+        let theme = { primary: 'inherit' };
         const { primary } = theme;
-        theme.primary = 'blue';
+        theme.primary = 'currentColor';
         export const a = css({ color: primary });"#,
     );
     assert!(res
         .wants
         .iter()
         .filter(|w| !is_harvest(w))
-        .all(|w| w.value.to_string() != "red"));
+        .all(|w| w.value.to_string() != "inherit"));
     assert!(res
         .wants
         .iter()
-        .any(|w| is_harvest(w) && w.value.to_string() == "red"));
+        .any(|w| is_harvest(w) && w.value.to_string() == "inherit"));
     assert!(res
         .wants
         .iter()
-        .any(|w| is_harvest(w) && w.value.to_string() == "blue"));
+        .any(|w| is_harvest(w) && w.value.to_string() == "currentColor"));
     assert!(res.diagnostics.is_empty());
     let idents = channel_for(&res, crate::DiagnosticCode::DynamicIdentifier);
     assert_eq!(idents.len(), 1);

@@ -21,10 +21,12 @@ const spec: AtomicCaseSpec = {
     expect(siteWants(result).filter(w => w.prop === 'padding')).toHaveLength(1)
     expect(getWantsForProp(result, 'padding')).toHaveLength(2)
     // Leading dynamic slot: the static leaf still lands on sm, not base.
+    // The color sink harvests nothing ('black' is unlicensed); the padding
+    // sink still mints its length pair.
     expect(hasWant(result, 'color', 'black', ['sm'])).toBe(true)
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(1)
-    expect(getWantsForProp(result, 'color')).toHaveLength(2)
-    expect(harvestWants(result)).toHaveLength(2)
+    expect(getWantsForProp(result, 'color')).toHaveLength(1)
+    expect(harvestWants(result)).toHaveLength(1)
 
     // Slot refusals ride the opt-in channel now (S6 E8-class re-point);
     // the default is silent.

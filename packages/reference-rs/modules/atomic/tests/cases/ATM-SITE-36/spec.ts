@@ -23,20 +23,21 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
     // Refused callees leak nothing at the site; the literals they name
-    // still harvest onto the refused color sink (Forge §2 floor).
+    // are unlicensed (the color allowlist), so the refused color sink
+    // harvests nothing and infos zero.
     const siteColor = siteWants(result).filter(w => w.prop === 'color')
     for (const leaked of ['blue', 'green', 'purple']) {
       expect(siteColor.some(w =>
         (w.value as Record<string, string>).String === leaked)).toBe(false)
-      expect(hasWant(result, 'color', leaked)).toBe(true)
+      expect(hasWant(result, 'color', leaked)).toBe(false)
     }
     expect(siteColor).toHaveLength(1)
-    expect(getWantsForProp(result, 'color')).toHaveLength(4)
-    expect(harvestWants(result)).toHaveLength(3)
-    expect(result.wants ?? []).toHaveLength(10)
+    expect(getWantsForProp(result, 'color')).toHaveLength(1)
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(7)
 
     const plans = result.stylePlans
-    expect(plans).toHaveLength(10)
+    expect(plans).toHaveLength(7)
 
     // Callee refusals ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

@@ -11,6 +11,6 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__p_4px { padding: 4px; }
-  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_inherit { color: inherit; }
 }
 }

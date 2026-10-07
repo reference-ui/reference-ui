@@ -35,14 +35,16 @@ const spec: AtomicCaseSpec = {
     expect(tokenWant(result, 'color', 'colors.red.500')).toBe(true)
     expect(tokenWant(result, 'color', 'colors.nope.998')).toBe(true)
     expect(tokenWant(result, 'color', 'colors.nope.997')).toBe(true)
-    // The refused color position harvests the three fallback hexes.
+    // The refused color position harvests nothing: the fallback hexes
+    // are unlicensed (the color allowlist), so the sink infos zero while
+    // the refusals still diagnose.
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(13)
-    expect(getWantsForProp(result, 'color')).toHaveLength(16)
-    expect(harvestWants(result)).toHaveLength(3)
-    expect(result.wants ?? []).toHaveLength(32)
+    expect(getWantsForProp(result, 'color')).toHaveLength(13)
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(29)
 
     const plans = result.stylePlans
-    expect(plans).toHaveLength(22)
+    expect(plans).toHaveLength(19)
 
     const sheet = result.stylesheet
     expect(sheet).toContain('color: var(--colors-red-500);')

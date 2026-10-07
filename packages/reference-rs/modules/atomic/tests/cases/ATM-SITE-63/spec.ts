@@ -11,20 +11,21 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     expect(hasWant(result, 'color', 'black')).toBe(true)
     expect(hasWant(result, 'backgroundColor', 'white')).toBe(true)
-    // The two dynamic arms harvest the cross pairs (color white,
-    // backgroundColor black); the straight pairs twin site atoms.
-    expect(harvestWants(result)).toHaveLength(2)
-    expect(result.wants ?? []).toHaveLength(4)
+    // The two dynamic arms harvest nothing: black/white are unlicensed
+    // (the color allowlist), so both sinks info zero while the refusals
+    // still diagnose.
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(2)
 
     const plans = result.stylePlans
     expect(plans.find(p => p.prop === 'color' && p.value === 'black')).toBeDefined()
     expect(
       plans.find(p => p.prop === 'backgroundColor' && p.value === 'white'),
     ).toBeDefined()
-    expect(plans.find(p => p.prop === 'color' && p.value === 'white')).toBeDefined()
+    expect(plans.find(p => p.prop === 'color' && p.value === 'white')).toBeUndefined()
     expect(
       plans.find(p => p.prop === 'backgroundColor' && p.value === 'black'),
-    ).toBeDefined()
+    ).toBeUndefined()
 
     // Arm refusals ride the opt-in channel now (S6 E8-class re-point);
     // the default is silent.

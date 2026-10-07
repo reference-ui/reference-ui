@@ -10,6 +10,8 @@
   /* system tokens layer collapsed; pinned by ATM-SYS-01 */
 }
 @layer utilities {
-  .\@reference-ui\/lib__c_transparent { color: transparent; }
+  .\@reference-ui\/lib__c_inherit { color: inherit; }
+  .\@reference-ui\/lib__w_inherit { width: inherit; }
+  .\@reference-ui\/lib__w_var\(--spacing-4r\,_16px\) { width: var(--spacing-4r, 16px); }
 }
 }

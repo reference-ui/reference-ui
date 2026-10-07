@@ -22,16 +22,17 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'outline', '2px solid')).toBe(true)
     expect(hasWant(result, 'color', 'red')).toBe(true)
     // The `||` dead arm stays dead at the site: the site's single `blue`
-    // is the `??` fallback; harvest mints its own floor below.
+    // is the `??` fallback; the color allowlist mints no floor below it.
     expect(hasWant(result, 'color', 'blue')).toBe(true)
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(2)
-    expect(getWantsForProp(result, 'color')).toHaveLength(3)
+    expect(getWantsForProp(result, 'color')).toHaveLength(2)
     expect(hasWant(result, 'bg', 'green')).toBe(true)
     expect(hasWant(result, 'margin', '2r')).toBe(true)
-    // The three refused positions harvest net-new pairs only: bg blue/red
-    // plus color green (twins of site atoms skip).
-    expect(harvestWants(result)).toHaveLength(3)
-    expect(result.wants ?? []).toHaveLength(10)
+    // The three refused positions harvest nothing: the pool holds no
+    // allowlisted color (red/blue/green name no color token), so every
+    // sink infos zero while the refusals still diagnose.
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(7)
     // Refusals + sink infos ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)

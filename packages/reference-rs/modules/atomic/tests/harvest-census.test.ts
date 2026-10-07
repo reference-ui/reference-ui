@@ -43,15 +43,15 @@ type SinkRow = [prop: string, when: string[], kind: string, minted: number]
 
 /** Expected sink census, `(prop, when)` sorted: the evidence numbers, pinned. */
 const EXPECTED_SINKS: SinkRow[] = [
-  ['backgroundColor', [], 'color', 137],
+  ['backgroundColor', [], 'color', 7],
   ['backgroundImage', [], 'url', 11],
-  ['bg', [], 'color', 160],
-  ['borderBottomColor', [], 'color', 147],
-  ['borderColor', [], 'color', 141],
-  ['color', [], 'color', 128],
-  ['color', ['_hover'], 'color', 154],
+  ['bg', [], 'color', 15],
+  ['borderBottomColor', [], 'color', 7],
+  ['borderColor', [], 'color', 6],
+  ['color', [], 'color', 5],
+  ['color', ['_hover'], 'color', 7],
   ['display', [], 'keyword', 5],
-  ['fill', [], 'color', 151],
+  ['fill', [], 'color', 8],
   ['fontSize', [], 'length', 171],
   ['height', [], 'length', 172],
   ['margin', [], 'length', 173],
@@ -63,7 +63,7 @@ const EXPECTED_SINKS: SinkRow[] = [
   ['marginTop', [], 'length', 175],
   ['maxWidth', [], 'length', 172],
   ['minWidth', [], 'length', 172],
-  ['outlineColor', [], 'color', 150],
+  ['outlineColor', [], 'color', 7],
   ['padding', [], 'length', 168],
   ['paddingBlock', [], 'length', 173],
   ['paddingBottom', [], 'length', 173],
@@ -71,15 +71,15 @@ const EXPECTED_SINKS: SinkRow[] = [
   ['paddingLeft', [], 'length', 173],
   ['paddingRight', [], 'length', 173],
   ['paddingTop', [], 'length', 173],
-  ['stroke', [], 'color', 151],
+  ['stroke', [], 'color', 8],
   ['transform', [], 'transform', 10],
   ['width', [], 'length', 171],
   ['width', ['md'], 'length', 176],
 ]
 
-const EXPECTED_NET_NEW = 4803
+const EXPECTED_NET_NEW = 3554
 const EXPECTED_POOL = { color: 149, keyword: 7, length: 170, math: 0, transform: 6, url: 8 }
-const EXPECTED_GROSS = 4938
+const EXPECTED_GROSS = 3615
 
 /** Expected `(|P-L|, |P∩L|, |P|)` by kind: the D1 bound, pinned. */
 const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
@@ -96,10 +96,14 @@ const EXPECTED_BYTES = {
   // 2026-10-06 gray re-pin: gray.950 anchored to onyx #040711 with hue matched
   // up the ramp; token value string lengths moved -19 raw, +4 gzip, +82 brotli.
   // stylePlans/harvestWants unchanged.
-  cssRaw: 341070,
-  cssGzip: 41479,
-  cssBrotli: 21241,
-  stylePlans: 4938,
+  // 2026-10-07 color-allowlist re-pin: harvested colors narrow to token-
+  // licensed words + currentColor/transparent + CSS-wide keywords; the 1249
+  // unlicensed color wants leave the sheet (-100075 raw, -13055 gzip,
+  // -5656 brotli) and stylePlans one-for-one.
+  cssRaw: 240995,
+  cssGzip: 28424,
+  cssBrotli: 15585,
+  stylePlans: 3689,
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
   // compound ports); the fixture ships 0 recipes so its data bytes are 0.
@@ -113,7 +117,7 @@ const EXPECTED_BYTES = {
   // shipped probe. Re-verify if acceptance moves bytes.
   reactRaw: 158291,
   reactGzip: 39659,
-  fixtureRules: 4942,
+  fixtureRules: 3693,
   m500Rules: 33806,
 }
 

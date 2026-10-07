@@ -1,0 +1,5 @@
+{
+  "color:inherit": "@reference-ui/lib__c_inherit",
+  "width:inherit": "@reference-ui/lib__w_inherit",
+  "width:var(--spacing-4r, 16px)": "@reference-ui/lib__w_var(--spacing-4r,_16px)"
+}

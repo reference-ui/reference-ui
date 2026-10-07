@@ -41,18 +41,19 @@ const spec: AtomicCaseSpec = {
     ]) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
-    // The backgroundColor sink harvests red/blue; both color pairs twin
-    // site atoms and skip, so that sink infos zero.
+    // Both color sinks harvest nothing: red/blue are unlicensed (the
+    // color allowlist), so each sink infos zero while the refusals still
+    // diagnose.
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'fontSize')).toHaveLength(2)
     expect(hasWant(result, 'backgroundColor', 'missing')).toBe(false)
-    expect(harvestWants(result)).toHaveLength(2)
-    expect(result.wants ?? []).toHaveLength(24)
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(22)
 
     // Plans dedupe by leaf: the six (color, red) wants share one plan.
     const plans = result.stylePlans
-    expect(plans).toHaveLength(18)
+    expect(plans).toHaveLength(16)
 
     // Refusals + sink infos ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.
@@ -62,10 +63,9 @@ const spec: AtomicCaseSpec = {
     const channel = opted.compilerDiagnostics ?? []
     const warnings = channel.filter(d => d.severity === 'warning')
     const infos = channel.filter(d => d.code === 'ATM-I-HARVEST-SINK')
-    // The color sink is covered incidentally (every offered value is a
-    // static plan, zero net-new): silent on the default, but its four
-    // member refusals, one identifier refusal, and sink info are visible
-    // opt-in beside the uncovered backgroundColor pair.
+    // Both color sinks info zero (the allowlist offers nothing): silent
+    // on the default, but the four member refusals, one identifier
+    // refusal, and both sink infos are visible opt-in.
     expect(warnings).toHaveLength(6)
     const codes = warnings.map(d => d.code).sort()
     expect(codes).toEqual([

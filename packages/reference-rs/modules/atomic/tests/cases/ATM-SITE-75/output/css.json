@@ -1,6 +1,4 @@
 {
-  "borderColor:red": "@reference-ui/lib__bd-c_red",
-  "color:red": "@reference-ui/lib__c_red",
   "margin:12px": "@reference-ui/lib__m_12px",
   "margin:4px": "@reference-ui/lib__m_4px",
   "margin:8px": "@reference-ui/lib__m_8px",

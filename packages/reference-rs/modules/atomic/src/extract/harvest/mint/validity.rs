@@ -1,11 +1,15 @@
-//! Harvest `auto`/`none` validity tables and the kind gate.
+//! Harvest validity tables and the kind gate.
 //!
 //! `auto` and `none` are the only Keyword values that are not CSS-wide, so
 //! the canon kind gate narrows them to the props where each is valid CSS
-//! (the tables below). Every other pair rides the `prop_accepts` gate
-//! unchanged. Custom props pass: the validator skips `--*`, like resolve.
+//! (the tables below). Color pairs narrow through the allowlist in
+//! `allowlist`; every other pair rides the `prop_accepts` gate unchanged.
+//! Custom props pass: the validator skips `--*`, like resolve.
 
+use base_system::BaseSystem;
 use canon::ValueKind;
+
+use super::allowlist;
 
 /// Canonical props where `auto` is valid CSS, probed from css-tree's lexer —
 /// the same oracle as the cssIsValid standing gauge, so gate and gauge
@@ -277,22 +281,47 @@ const NONE_PROPS: &[&str] = &[
 ];
 
 /// True when the pool value may mint onto the sink prop: the canon kind
-/// gate, narrowed for `auto`/`none` (the only Keyword values that are not
-/// CSS-wide) to the props where each is valid CSS. Custom props pass: the
-/// validator skips `--*`, like resolve.
-pub(crate) fn harvest_accepts(prop: &str, canonical: &str, kind: ValueKind, value: &str) -> bool {
+/// gate, narrowed for colors (the allowlist) and for `auto`/`none` (the
+/// only Keyword values that are not CSS-wide) to the props where each is
+/// valid CSS. Custom props pass: the validator skips `--*`, like resolve.
+pub(crate) fn harvest_accepts(
+    prop: &str,
+    kind: ValueKind,
+    value: &str,
+    system: &BaseSystem,
+) -> bool {
     if !canon::prop_accepts(prop, kind) {
         return false;
     }
-    if kind != ValueKind::Keyword {
+    match kind {
+        ValueKind::Color => allowlist::is_allowlisted_color(value, system),
+        ValueKind::Keyword => keyword_accepts(prop, value),
+        _ => true,
+    }
+}
+
+/// True when a Keyword pool value mints onto the sink prop: `auto`/`none`
+/// stay on the oracle tables everywhere, and on color positions every other
+/// keyword must be CSS-wide — an opaque `var()`/`env()` reference never
+/// mints a color (`color: var(--spacing-4r, 16px)` is nonsense). Off color
+/// positions every other keyword rides, as before.
+fn keyword_accepts(prop: &str, value: &str) -> bool {
+    if value.eq_ignore_ascii_case("auto") || value.eq_ignore_ascii_case("none") {
+        return auto_none_accepts(prop, value);
+    }
+    if !canon::is_color_prop(prop) {
         return true;
     }
-    if !value.eq_ignore_ascii_case("auto") && !value.eq_ignore_ascii_case("none") {
-        return true;
-    }
+    allowlist::is_color_keyword(value)
+}
+
+/// True when `auto`/`none` mints onto the sink prop: the oracle tables, over
+/// the canonical prop. Custom props pass: the validator skips `--*`.
+fn auto_none_accepts(prop: &str, value: &str) -> bool {
     if prop.starts_with("--") {
         return true;
     }
+    let canonical = canon::resolve_canonical_prop(prop);
     let table = if value.eq_ignore_ascii_case("auto") {
         AUTO_PROPS
     } else {

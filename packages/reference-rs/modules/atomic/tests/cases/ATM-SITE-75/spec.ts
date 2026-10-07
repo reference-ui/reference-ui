@@ -15,9 +15,10 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'padding', '4px')).toBe(true)
     expect(hasWant(result, 'padding', '8px')).toBe(true)
     expect(hasWant(result, 'padding', '12px')).toBe(true)
-    // The three refused positions harvest red (color, borderColor) plus
-    // the three pool lengths onto the margin sink.
-    expect(harvestWants(result)).toHaveLength(5)
+    // The three refused positions harvest the three pool lengths onto
+    // the margin sink; the color sinks harvest nothing ('red' is
+    // unlicensed under the color allowlist) and info zero.
+    expect(harvestWants(result)).toHaveLength(3)
 
     // Import refusals ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

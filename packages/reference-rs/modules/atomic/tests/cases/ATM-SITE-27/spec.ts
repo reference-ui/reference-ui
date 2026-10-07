@@ -37,13 +37,14 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'padding', 3, ['md'])).toBe(true)
 
     expect(siteWants(result)).toHaveLength(12)
-    // The refused color position harvests black/white; red/blue twin the
-    // site's unscoped plans and skip.
-    expect(harvestWants(result)).toHaveLength(2)
-    expect(result.wants ?? []).toHaveLength(14)
+    // The refused color position harvests nothing: black/white/red/blue
+    // are unlicensed (the color allowlist), so the sink infos zero while
+    // the refusal still diagnoses.
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(12)
 
     const plans = result.stylePlans
-    expect(plans).toHaveLength(7)
+    expect(plans).toHaveLength(5)
     expect(plans.some(p => p.prop === 'color' && p.value === 'red')).toBe(true)
     expect(plans.some(p => p.prop === 'color' && p.value === 'blue')).toBe(true)
     expect(plans.some(
@@ -55,13 +56,14 @@ const spec: AtomicCaseSpec = {
     expect(plans.some(
       p => p.prop === 'padding' && JSON.stringify(p.value) === '[1,null,3]',
     )).toBe(true)
-    // Harvested black/white plan beside the red/blue site plans.
+    // No harvested black/white plans: the color allowlist licenses
+    // neither word, so only site plans remain.
     expect(plans.some(
       p => p.prop === 'color' && p.value === 'black' && p.when.length === 0,
-    )).toBe(true)
+    )).toBe(false)
     expect(plans.some(
       p => p.prop === 'color' && p.value === 'white' && p.when.length === 0,
-    )).toBe(true)
+    )).toBe(false)
 
     // Warns + sink info ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

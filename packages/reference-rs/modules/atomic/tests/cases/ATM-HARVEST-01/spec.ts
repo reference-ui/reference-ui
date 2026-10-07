@@ -1,9 +1,9 @@
 /**
- * Harvest floor station (Forge §2). `'red'` lives only in an array no site
- * reads, a dynamic `css({ color })` site exists, and `"color:red"` is in the
- * map anyway — minted by harvest onto the refused sink, with one
- * `ATM-I-HARVEST-SINK` counting it. The `'4px'` pool twin does not land on
- * the color sink (kind gate).
+ * Harvest floor station (Forge §2). `'inherit'` lives only in an array no
+ * site reads, a dynamic `css({ color })` site exists, and
+ * `"color:inherit"` is in the map anyway — minted by harvest onto the
+ * refused sink, with one `ATM-I-HARVEST-SINK` counting it. The `'4px'`
+ * pool twin does not land on the color sink (kind gate).
  */
 import { expect } from 'vitest'
 import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
@@ -13,21 +13,21 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     // The site mints padding; harvest mints the refused color.
     expect(hasWant(result, 'padding', '4px')).toBe(true)
-    expect(hasWant(result, 'color', 'red')).toBe(true)
+    expect(hasWant(result, 'color', 'inherit')).toBe(true)
     expect(result.wants ?? []).toHaveLength(2)
 
-    // `"color:red"` is in the map; the length pool twin minted nowhere.
+    // `"color:inherit"` is in the map; the length pool twin minted nowhere.
     const classes = result.css?.classes ?? {}
-    expect(classes['color:red']).toBeDefined()
-    expect(Object.keys(classes).sort()).toEqual(['color:red', 'padding:4px'])
+    expect(classes['color:inherit']).toBeDefined()
+    expect(Object.keys(classes).sort()).toEqual(['color:inherit', 'padding:4px'])
 
     const sheet = result.stylesheet
-    expect(sheet).toContain('color: red;')
+    expect(sheet).toContain('color: inherit;')
 
     // The runtime plan is the floor: the dynamic lookup hits precomputed data.
     const plans = result.stylePlans
     expect(
-      plans.some(p => p.prop === 'color' && p.value === 'red' && p.when.length === 0)
+      plans.some(p => p.prop === 'color' && p.value === 'inherit' && p.when.length === 0)
     ).toBe(true)
 
     // The site is dynamic but proves no exact miss, so the default is

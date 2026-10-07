@@ -1,6 +1,4 @@
 {
-  "color:blue": "@reference-ui/lib__c_blue",
-  "color:red": "@reference-ui/lib__c_red",
   "height:10px": "@reference-ui/lib__h_10px",
   "height:1r": "@reference-ui/lib__h_1r",
   "height:2r": "@reference-ui/lib__h_2r",

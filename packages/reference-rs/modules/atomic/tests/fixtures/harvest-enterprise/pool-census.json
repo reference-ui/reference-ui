@@ -355,7 +355,7 @@
   "sinks": [
     {
       "kind": "color",
-      "offered": 154,
+      "offered": 7,
       "prop": "backgroundColor",
       "when": []
     },
@@ -367,31 +367,31 @@
     },
     {
       "kind": "color",
-      "offered": 162,
+      "offered": 15,
       "prop": "bg",
       "when": []
     },
     {
       "kind": "color",
-      "offered": 154,
+      "offered": 7,
       "prop": "borderBottomColor",
       "when": []
     },
     {
       "kind": "color",
-      "offered": 154,
+      "offered": 7,
       "prop": "borderColor",
       "when": []
     },
     {
       "kind": "color",
-      "offered": 154,
+      "offered": 7,
       "prop": "color",
       "when": []
     },
     {
       "kind": "color",
-      "offered": 154,
+      "offered": 7,
       "prop": "color",
       "when": [
         "_hover"
@@ -405,7 +405,7 @@
     },
     {
       "kind": "color",
-      "offered": 155,
+      "offered": 8,
       "prop": "fill",
       "when": []
     },
@@ -477,7 +477,7 @@
     },
     {
       "kind": "color",
-      "offered": 155,
+      "offered": 8,
       "prop": "outlineColor",
       "when": []
     },
@@ -525,7 +525,7 @@
     },
     {
       "kind": "color",
-      "offered": 155,
+      "offered": 8,
       "prop": "stroke",
       "when": []
     },
@@ -550,5 +550,5 @@
       ]
     }
   ],
-  "gross": 4938
+  "gross": 3615
 }

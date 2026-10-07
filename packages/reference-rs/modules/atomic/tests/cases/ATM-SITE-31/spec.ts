@@ -48,12 +48,12 @@ const spec: AtomicCaseSpec = {
     // alias, re-export. Each resolves by binding, never the name bag.
     expect(hasWant(result, 'color', 'coral')).toBe(true)
     expect(hasWant(result, 'backgroundColor', 'gold')).toBe(true)
-    // Binding resolution still refuses the cross at the site; harvest mints
-    // `gold` onto the refused color sink below (no backgroundColor sink, so
-    // the coral cross stays absent everywhere).
+    // Binding resolution still refuses the cross at the site; the color
+    // allowlist licenses neither cross word, so `gold` stays absent below
+    // (no backgroundColor sink, so the coral cross stays absent everywhere).
     expect(siteWants(result).some(w => w.prop === 'color' &&
       (w.value as Record<string, string>).String === 'gold')).toBe(false)
-    expect(hasWant(result, 'color', 'gold')).toBe(true)
+    expect(hasWant(result, 'color', 'gold')).toBe(false)
     expect(hasWant(result, 'backgroundColor', 'coral')).toBe(false)
     expect(hasWant(result, 'color', '#aa1111')).toBe(true)
     expect(hasWant(result, 'backgroundColor', '#bb2222')).toBe(true)
@@ -64,19 +64,20 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'indigo.600')).toBe(true)
     expect(hasWant(result, 'backgroundColor', 'yellow.700')).toBe(true)
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(23)
-    expect(getWantsForProp(result, 'color')).toHaveLength(31)
-    // The refused color position harvests eight net-new named colors;
-    // black, coral, red, and white twin site atoms and skip.
-    expect(harvestWants(result)).toHaveLength(8)
-    expect(result.wants ?? []).toHaveLength(60)
+    expect(getWantsForProp(result, 'color')).toHaveLength(23)
+    // The refused color position harvests nothing: the pool's named colors
+    // are unlicensed (the color allowlist), so the sink infos zero while
+    // the refusal still diagnoses.
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(52)
 
     // Plans dedupe by value: 52 wants collapse to 37 unique plans (the f3
     // color reuses the red plan; the binary-arg width reuses the 4px plan;
     // each new margin mints its own; orange.600 and 14r mint theirs; the
     // walk arms mint 9: 8 fresh values plus backgroundColor yellow.700
-    // beside the color plan). Harvest adds 8: black, coral, red, and white
-    // reuse site plans.
-    expect(result.stylePlans).toHaveLength(45)
+    // beside the color plan). Harvest adds none: every named color is
+    // unlicensed.
+    expect(result.stylePlans).toHaveLength(37)
 
     // Fence refusals ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

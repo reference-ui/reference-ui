@@ -10,20 +10,20 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-03',
   async verify(result) {
     // Both pool colors mint under the sink's `_hover` scope.
-    expect(hasWant(result, 'color', 'red', ['_hover'])).toBe(true)
-    expect(hasWant(result, 'color', '#0af', ['_hover'])).toBe(true)
+    expect(hasWant(result, 'color', 'inherit', ['_hover'])).toBe(true)
+    expect(hasWant(result, 'color', 'currentColor', ['_hover'])).toBe(true)
     expect(result.wants ?? []).toHaveLength(2)
 
     // Conditioned twins only; nothing unconditioned.
     const classes = result.css?.classes ?? {}
-    expect(classes['_hover:color:red']).toBeDefined()
-    expect(classes['_hover:color:#0af']).toBeDefined()
-    expect(classes['color:red']).toBeUndefined()
-    expect(classes['color:#0af']).toBeUndefined()
+    expect(classes['_hover:color:inherit']).toBeDefined()
+    expect(classes['_hover:color:currentColor']).toBeDefined()
+    expect(classes['color:inherit']).toBeUndefined()
+    expect(classes['color:currentColor']).toBeUndefined()
 
     const sheet = result.stylesheet
-    expect(sheet).toContain('color: red;')
-    expect(sheet).toContain('color: #0af;')
+    expect(sheet).toContain('color: inherit;')
+    expect(sheet).toContain('color: currentColor;')
 
     // Warn + sink info ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

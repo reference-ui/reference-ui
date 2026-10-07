@@ -1,9 +1,5 @@
 {
   "borderColor:white": "@reference-ui/lib__bd-c_white",
-  "color:black": "@reference-ui/lib__c_black",
-  "color:blue": "@reference-ui/lib__c_blue",
-  "color:red": "@reference-ui/lib__c_red",
-  "color:white": "@reference-ui/lib__c_white",
   "height:10px": "@reference-ui/lib__h_10px",
   "height:1r": "@reference-ui/lib__h_1r",
   "height:2r": "@reference-ui/lib__h_2r",

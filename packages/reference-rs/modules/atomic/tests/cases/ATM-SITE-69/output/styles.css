@@ -11,7 +11,6 @@
 }
 @layer utilities {
   .\@reference-ui\/lib__p_4px { padding: 4px; }
-  .\@reference-ui\/lib__c_black { color: black; }
   @container (min-width: 640px) {
     .\@reference-ui\/lib__sm\:c_black { color: black; }
   }

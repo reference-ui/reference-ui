@@ -2,7 +2,8 @@
  * Per-shape refuse station (ATM-SITE-32, SPEC-V2-42). Ten impure shapes
  * each warn once and mint zero site wants while their static margin sibling
  * extracts with a runtime plan. Doom tripwires for the Ph3 fold table. The
- * refused color position harvests 'red' below (Forge §2 floor).
+ * refused color position harvests nothing below: 'red' is unlicensed (the
+ * color allowlist), so the sink infos zero.
  */
 import { expect } from 'vitest'
 import {
@@ -21,13 +22,13 @@ const spec: AtomicCaseSpec = {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
     expect(siteWants(result).filter(w => w.prop === 'color')).toHaveLength(0)
-    expect(getWantsForProp(result, 'color')).toHaveLength(1)
-    expect(harvestWants(result)).toHaveLength(1)
-    expect(result.wants ?? []).toHaveLength(11)
+    expect(getWantsForProp(result, 'color')).toHaveLength(0)
+    expect(harvestWants(result)).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(10)
 
     const plans = result.stylePlans
-    expect(plans).toHaveLength(11)
-    expect(plans.some(p => p.prop === 'color' && p.value === 'red')).toBe(true)
+    expect(plans).toHaveLength(10)
+    expect(plans.some(p => p.prop === 'color' && p.value === 'red')).toBe(false)
 
     // Per-shape refusals ride the opt-in channel now (S6 E8-class
     // re-point); the default is silent.

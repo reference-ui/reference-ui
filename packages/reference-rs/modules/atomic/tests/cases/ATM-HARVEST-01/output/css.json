@@ -1,4 +1,4 @@
 {
-  "color:red": "@reference-ui/lib__c_red",
+  "color:inherit": "@reference-ui/lib__c_inherit",
   "padding:4px": "@reference-ui/lib__p_4px"
 }
