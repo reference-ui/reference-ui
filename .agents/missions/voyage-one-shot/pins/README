@@ -1,0 +1,53 @@
+# voyage-one-shot — byte-identity pins (Wave 0 baseline)
+
+These pins are the R1 identity bar: the emitted system (manifest + CSS +
+`types/`, `system/`, `react/`, `styled/`) for **docs**, **lib**, and **icons**
+must be byte-identical after R1 to the hashes in `baseline.sha256`.
+
+## What is pinned
+
+| label | path | artifacts | files | aggregate sha256 |
+| --- | --- | --- | ---: | --- |
+| docs | `packages/reference-docs/.reference-ui/` | manifest + CSS + types + system + react + styled | 522 | `cfbf75c3fe7cf36e9eb86d6c3f8578c88b5f46900b781212e9db427cb2836d06` |
+| lib | `packages/reference-lib/.reference-ui/` | self-sync output | 580 | `85169ba54ed854e5149107cd20ae9e6779fc1f8313d02456f17aa46226627b66` |
+| icons | `packages/reference-icons/.reference-ui/` | self-sync output | 156 | `c8f0d68b040d1d0db35c110880e989db4646b3e6e17394149a521e2bc823cc97` |
+
+The transient `.reference-ui/tmp/` scratch dir is excluded. Paths in
+`baseline.sha256` are `<label>/.reference-ui/<relative-path>`.
+
+## Exact commands that produced the pins
+
+```bash
+# fresh syncs (one-shot atomic sync + tasty drain), from the repo root:
+node .agents/missions/voyage-one-shot/scripts/measure-one-shot.mjs sync packages/reference-docs
+node .agents/missions/voyage-one-shot/scripts/measure-one-shot.mjs sync packages/reference-lib
+node .agents/missions/voyage-one-shot/scripts/measure-one-shot.mjs sync packages/reference-icons
+
+# hash capture (repeat per target):
+node .agents/missions/voyage-one-shot/scripts/capture-pins.mjs packages/reference-docs docs
+node .agents/missions/voyage-one-shot/scripts/capture-pins.mjs packages/reference-lib lib
+node .agents/missions/voyage-one-shot/scripts/capture-pins.mjs packages/reference-icons icons
+```
+
+## Verify
+
+```bash
+node .agents/missions/voyage-one-shot/scripts/verify-pins.mjs
+# PASS — 1258 pinned files byte-identical (docs+lib+icons)
+```
+
+## Provenance / caveats
+
+- **Git-ignore note:** `baseline.sha256` matches the root `.gitignore` rule
+  `*.sha256` (line 20), and `reports/` is ignored (line 46). This README and
+  `MEASURE.md` (committable) carry the aggregate hashes; if the full per-file
+  pin must be committed, `git add -f` it. On the single shared working tree the
+  on-disk file persists regardless.
+- Pins captured on `reference-system` at `50df627bd` (product tree identical to
+  `c5fba023c`; `50df627bd` touched mission docs only).
+- Determinism proven: docs output was identical across 18 consecutive syncs;
+  lib and icons were identical across two consecutive fresh self-syncs.
+- The **pre-existing** lib/icons `.reference-ui/` dirs on disk were stale: a
+  fresh self-sync changed `system/baseSystem.mjs`, `types/types.mjs` (both) and
+  `react/react.mjs` + `react/react.mjs.map` (lib). The pins are the **fresh**
+  self-sync bytes, not those stale dirs.
