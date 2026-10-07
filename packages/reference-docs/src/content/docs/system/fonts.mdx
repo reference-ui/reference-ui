@@ -1,0 +1,176 @@
+---
+title: Fonts
+section: System
+order: 2
+slug: fonts
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { FamilyWeights, ShippedFamilies } from './fonts-sections'
+
+# Fonts
+
+Fonts are a first-class citizen in Reference UI. One declaration describes
+everything about a family — the stack, the weights, the files to download,
+and the finishing touches — and the system manages the rest: tokens,
+`@font-face` rules, and the `font` and `weight` props on every component.
+You never hand-write a `@font-face` block or a `font-family` stack twice.
+
+## The shipped families
+
+Every project starts with three families, ready to use:
+
+<Preview>
+  <ShippedFamilies />
+</Preview>
+
+- **Sans** — Inter, the default voice for interface text.
+- **Serif** — Literata, for editorial and long-form passages.
+- **Mono** — JetBrains Mono, for code and technical text.
+
+## Using a font
+
+Pick a family with the `font` prop. It applies the family stack, the
+family's default weight, and any finishing touches the family defines (sans,
+for example, tightens its letter spacing a touch):
+
+```tsx
+import { P } from '@reference-ui/react'
+
+<P font="serif">Set in Literata, with the family's own defaults.</P>
+```
+
+That is the whole API for the common case. The next sections explain what
+sits underneath, so custom families feel just as simple.
+
+## Weights belong to the family
+
+Here is the core idea: **a weight name means something different in each
+family.** When you write `weight="thin"` beside `font="sans"`, you get
+*sans* thin. The same name beside another family — or beside no family at
+all — resolves against a different scale:
+
+<Preview>
+  <FamilyWeights />
+</Preview>
+
+The full picture for the shipped families:
+
+| Name | No family | Sans | Serif | Mono |
+| --- | --- | --- | --- | --- |
+| `thin` | 100 | **200** | 100 | 100 |
+| `light` | 300 | 300 | 300 | 300 |
+| `normal` | 400 | 400 | **373** | **393** |
+| `semibold` | 600 | 600 | 600 | 600 |
+| `bold` | 700 | 700 | 700 | 700 |
+| `black` | 900 | 900 | 900 | 900 |
+
+The "no family" column is the plain CSS keyword table — the fallback when no
+family is in play. The bold cells are where a family deliberately disagrees
+with it: Inter's thin is 200, not 100, and Literata and JetBrains Mono tune
+their normals to 373 and 393 so running text lands at the right optical
+weight. (Mono lists no `black`, so its 900 arrives via the keyword
+fallback — same number, different road.)
+
+Three rules cover the rest:
+
+- **No family, no scale.** A lone `weight="thin"` renders the CSS keyword
+  (100). The scale only kicks in when a family is selected on the same
+  element.
+- **Say the family twice to be explicit.** `weight="sans.thin"` always means
+  sans thin (200), even with no `font` prop nearby. Use it to disambiguate.
+- **Dynamic values stay with keywords.** `weight={value}` cannot see the
+  element's family at compile time, so it keeps keyword semantics. When the
+  value must come from a family scale, pass the scoped form (`'sans.thin'`)
+  instead.
+
+## `font` versus `fontFamily`
+
+Two props select a family, with different jobs:
+
+- `font="sans"` is the macro: family stack, default weight, and the
+  family's extras, all at once. Reach for it first.
+- `fontFamily="sans"` sets only the family stack, through the
+  `--fonts-sans` token. Use it when something else already owns the weight
+  and spacing — small labels and annotations, for example.
+
+Both seed weight resolution: `weight="thin"` beside either one renders the
+family's thin.
+
+## Adding your own family
+
+A custom family is one `font()` call in any TypeScript file your `ui.config`
+`include` pattern covers — a `theme.fragments.ts` next to your tokens is the
+usual home. The next `ref sync` picks it up; there is nothing to register.
+
+```ts
+import { font } from '@reference-ui/system'
+
+font('display', {
+  value: '"Playfair Display", Georgia, serif',
+  fontFace: {
+    src: 'url(/fonts/playfair-display.woff2) format("woff2")',
+    fontWeight: '400 900',
+    fontStyle: 'normal',
+    fontDisplay: 'swap',
+  },
+  weights: {
+    normal: '400',
+    bold: '700',
+  },
+  css: {
+    letterSpacing: '-0.02em',
+  },
+})
+```
+
+Each field has one job:
+
+- `value` is the `font-family` stack, written exactly as it should appear
+  in CSS, quotes included.
+- `fontFace` describes the files to download: `src`, the weight range and
+  style they cover, and `fontDisplay` (use `swap` so text stays visible
+  while the file loads). Pass an array when one family needs several files.
+- `weights` maps the names your authors write (`normal`, `bold`, …) to the
+  numbers the font actually ships. Only the names you list exist for this
+  family — anything else falls back to the CSS keywords.
+- `css` holds finishing touches applied with the family, like letter
+  spacing. Keep it small: one or two declarations that define the family's
+  voice.
+
+From that moment, `font="display"` and `weight="normal"` work on every
+component, in every file the sync covers.
+
+## Loading the files
+
+Reference UI emits the `@font-face` rules for you, inside `@layer global`,
+from the `fontFace` entries you declare. You only decide where the files
+live:
+
+- **Self-hosted (recommended).** Drop the `.woff2` files in your app's
+  public folder and point `src` at them, as above. No third party, no
+  layout shift beyond the declared swap.
+- **Remote.** Point `src` at the foundry or CDN URL instead — the shipped
+  families load Inter, Literata, and JetBrains Mono from Google Fonts this
+  way. Same shape, different URL.
+
+Two optional descriptors help a custom family sit well beside the system
+stacks: `sizeAdjust` and `descentOverride` scale the metrics so fallback
+text occupies nearly the same box while the web font loads. Serif and mono
+both use them; start without, and reach for them if you see text jump on
+first paint.
+
+## What the system generates
+
+Declaring a family fans out into everything downstream needs, all from the
+single `font()` call:
+
+- `--fonts-display`, the family stack as a token.
+- `--font-weights-display-normal` and friends, one token per weight name.
+- The `@font-face` blocks in `@layer global`.
+- The `font` and `weight` props on every primitive, resolving through your
+  scale.
+
+Nothing is global by accident: every rule lands in a layer, every value
+rides a token, and removing the `font()` call removes all of it on the next
+sync.

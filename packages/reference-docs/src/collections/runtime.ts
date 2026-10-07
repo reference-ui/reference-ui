@@ -12,7 +12,7 @@ type CollectionDoc = (typeof allDocs)[number]
 export type DocMeta = CollectionDoc
 
 /** Sidebar section order; unknown sections sort last, then alphabetically. */
-const SECTION_ORDER = ['Getting Started', 'Foundations', 'Components', 'Reference']
+const SECTION_ORDER = ['Getting Started', 'System', 'Foundations', 'Components', 'Reference']
 
 function sectionRank(section: string): number {
   const rank = SECTION_ORDER.indexOf(section)
