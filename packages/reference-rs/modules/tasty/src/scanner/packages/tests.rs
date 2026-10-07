@@ -5,6 +5,8 @@
 use std::collections::BTreeSet;
 use std::fs;
 
+mod memo;
+
 use super::{resolve_external_import, resolve_relative_import, FileLookup, ImportResolver};
 use crate::scanner::paths::split_package_specifier;
 #[cfg(unix)]

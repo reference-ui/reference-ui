@@ -2,6 +2,8 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
+mod memo;
+
 use super::scan_workspace;
 use crate::tests::fixtures::TempDir;
 use std::fs;
