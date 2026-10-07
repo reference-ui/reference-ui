@@ -8,6 +8,7 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
+    "@fixtures/aliased-host-library",
     "@fixtures/extend-library",
     "@fixtures/extend-library-2",
     "@fixtures/meta-extend-library",
@@ -26,7 +27,7 @@
     "@matrix/chain-t11",
     "@matrix/chain-t12",
     "@matrix/chain-t13",
-    "@matrix/lib",
+    "@matrix/chain-t16",
     "@matrix/mcp",
     "@reference-ui/pipeline",
     "@reference-ui/reference-docs"
