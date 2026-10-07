@@ -9,6 +9,7 @@ import {
   RETENTION_EXCLUDE,
   createFunctionPatterns,
   createImportPatterns,
+  createMdxImportPatterns,
   scanFragmentSources,
   splitScan,
   type DiscoveryPattern,
@@ -208,12 +209,15 @@ async function scanNative(options: ScanOptions, retain: boolean): Promise<Fragme
   })
   // Hit-only confirm through the verbatim T1 splitScan: misses contribute no
   // matches (a regex match implies the needle bytes), and the scannedSources
-  // part is discarded (retention lives native-side behind the token).
+  // part is discarded (retention lives native-side behind the token). `.mdx`
+  // hits confirm through the same MDX-scoped matcher the TS path uses, so the
+  // two selections cannot drift.
   const { matches } = splitScan(
     response.hits.map(hit => hit.path),
     response.hits.map(hit => hit.content),
     cwd,
-    patterns
+    patterns,
+    createMdxImportPatterns(options.importFrom)
   )
   const retention: NativeScanRetention = retain
     ? { token: response.retentionToken, count: response.retainedCount }

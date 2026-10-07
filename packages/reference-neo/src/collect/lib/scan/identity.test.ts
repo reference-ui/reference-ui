@@ -62,8 +62,10 @@ const FIXTURE_FILES: Array<[string, string]> = [
 ]
 
 // Only the neo importers that survive dot:false plus the d.ts exclusion,
-// gated to JS-bundleable extensions: the json and mdx needle-carriers stay
-// out (they cannot bundle as fragments) while mjs/cjs/mts still match.
+// gated to JS-bundleable extensions. The json needle-carrier stays out (it
+// cannot bundle as a fragment) and the mdx needle-carrier stays out because
+// its needle lives only inside a fence, which the MDX matcher strips (the
+// positive MDX case lives in mdx.test.ts); mjs/cjs/mts still match.
 const EXPECTED_MATCHES = [
   'dist/frag.ts',
   'src/frag.cjs',

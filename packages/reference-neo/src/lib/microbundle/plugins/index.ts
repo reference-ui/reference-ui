@@ -5,6 +5,7 @@
 import type * as esbuild from 'esbuild'
 import type { MicroBundleOptions } from '../types.ts'
 import { aliasPlugin } from './alias.ts'
+import { mdxPlugin } from './mdx.ts'
 import { reactStubPlugin } from './react-stub.ts'
 
 /**
@@ -12,6 +13,9 @@ import { reactStubPlugin } from './react-stub.ts'
  */
 export function getPlugins(options: MicroBundleOptions): esbuild.Plugin[] {
   const plugins: esbuild.Plugin[] = []
+  // The MDX loader is inert without an `.mdx` entry, so it registers on every
+  // build: bundleFragments, runSingle, and runPlanner all reach it by default.
+  plugins.push(mdxPlugin())
   if (options.reactStub) {
     plugins.push(reactStubPlugin())
   }

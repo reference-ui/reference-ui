@@ -27,39 +27,17 @@ export interface FragmentScan {
   scannedSources: ScannedSource[]
 }
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+// Re-exported so native.ts and the tests keep one discovery surface: the
+// frozen global patterns, the MDX-scoped matcher, and the pattern types.
+import {
+  createFunctionPatterns,
+  createImportPatterns,
+  type DiscoveryPattern,
+} from './patterns.ts'
+import { createMdxImportPatterns, stripMdxNoise } from './mdx.ts'
 
-function toArray(value?: string | string[]): string[] {
-  if (!value) {
-    return []
-  }
-  return Array.isArray(value) ? value : [value]
-}
-
-export interface DiscoveryPattern {
-  pattern: RegExp
-  /** Literal bytes every match contains; the includes pre-gate. */
-  needle: string
-}
-
-export function createImportPatterns(importFrom?: string | string[]): DiscoveryPattern[] {
-  return toArray(importFrom).map((moduleId) => ({
-    pattern: new RegExp(
-      `\\bfrom\\s*['"]${escapeRegex(moduleId)}['"]|\\bimport\\s*['"]${escapeRegex(moduleId)}['"]`,
-      'm',
-    ),
-    needle: moduleId,
-  }))
-}
-
-export function createFunctionPatterns(functionNames?: string[]): DiscoveryPattern[] {
-  return (functionNames ?? []).map((name) => ({
-    pattern: new RegExp(`\\b${name}\\s*\\(`),
-    needle: name,
-  }))
-}
+export { createFunctionPatterns, createImportPatterns, createMdxImportPatterns, stripMdxNoise }
+export type { DiscoveryPattern }
 
 function readFileOrSkip(file: string): string | null {
   try {
@@ -98,8 +76,8 @@ function hasSourceExtension(relativePath: string): boolean {
 }
 
 // True for fragment-candidate extensions; the final extension decides.
-// Matches feed the esbuild fragment bundler, so only JS-bundleable files
-// can ever match — never .mdx/.json/.css, whatever their bytes contain.
+// Matches feed the esbuild fragment bundler, so only JS-bundleable files can
+// ever match — `.mdx` matches because a loader exists, never `.json`/`.css`.
 function hasFragmentExtension(relativePath: string): boolean {
   return FRAGMENT_EXTENSIONS.has(extname(relativePath).slice(1))
 }
@@ -307,6 +285,11 @@ export async function scanFragmentSources(options: ScanOptions): Promise<Fragmen
     throw new Error('scanForFragments: provide importFrom or functionNames')
   }
 
+  // MDX candidates select with their own anchored matcher over stripped
+  // content; function-name discovery leaves this empty, so `.mdx` never
+  // matches a bare function name (see splitScan).
+  const mdxPatterns = createMdxImportPatterns(importFrom)
+
   // Retention glob: dotfiles included (dot:true), node_modules pruned.
   // fg.sync: the async walker regressed the warm-cache scan (GAPS-1).
   const candidates = fg.sync(include, {
@@ -319,18 +302,21 @@ export async function scanFragmentSources(options: ScanOptions): Promise<Fragmen
   // Match-before-filter (GAPS-2): read every candidate, match over the
   // JS-bundleable successes, retain the IGNORE/extension-filtered subset.
   const contents = await readAllOrdered(candidates)
-  return splitScan(candidates, contents, cwd, discoveryPatterns)
+  return splitScan(candidates, contents, cwd, discoveryPatterns, mdxPatterns)
 }
 
 // Split one ordered read into fragment matches plus retained sources:
 // unreadable files drop; matches cover every JS-bundleable candidate
 // (dot:false + d.ts emulated) while retention mirrors the native
 // IGNORE-dir + extension gates (sources.rs) on the cwd-relative form.
+// `.mdx` candidates select with `mdxPatterns` over frontmatter/fence-stripped
+// content; every other candidate keeps the frozen `discoveryPatterns` match.
 export function splitScan(
   candidates: string[],
   contents: (string | null)[],
   cwd: string,
-  discoveryPatterns: DiscoveryPattern[]
+  discoveryPatterns: DiscoveryPattern[],
+  mdxPatterns: DiscoveryPattern[] = []
 ): FragmentScan {
   const matches: string[] = []
   const scannedSources: ScannedSource[] = []
@@ -353,7 +339,7 @@ export function splitScan(
       : stripped
     const matchable = (flags & MATCHABLE_FLAG) !== 0
     const retainable = (flags & RETAINABLE_FLAG) !== 0
-    if (matchable && matchesAnyPattern(content, discoveryPatterns)) {
+    if (matchable && matchesCandidate(candidate, content, discoveryPatterns, mdxPatterns)) {
       matches.push(candidate)
     }
     if (retainable) {
@@ -361,6 +347,22 @@ export function splitScan(
     }
   }
   return { matches, scannedSources }
+}
+
+// MDX selects only through the anchored matcher over stripped content; every
+// other JS-bundleable candidate keeps the exact old discovery match. Either
+// path first checks the needle bytes (a regex match implies them), so files
+// without the module id skip the regex.
+function matchesCandidate(
+  candidate: string,
+  content: string,
+  discoveryPatterns: DiscoveryPattern[],
+  mdxPatterns: DiscoveryPattern[]
+): boolean {
+  if (extname(candidate) === '.mdx') {
+    return mdxPatterns.length > 0 && matchesAnyPattern(stripMdxNoise(content), mdxPatterns)
+  }
+  return matchesAnyPattern(content, discoveryPatterns)
 }
 
 /**
