@@ -21,6 +21,14 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
 | Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (`pnpm agentperf`) |
 
+Independent architecture review is available as the **Oracle**
+(`.agents/skills/oracle/SKILL.md`): read-only Muse Spark 1.3 at the
+**Contributor** tier (Max effort), which is the right tier because Reference UI
+is open source. Muse Spark is not an OpenChamber model, so the `oracle` agent
+(`.opencode/agents/oracle.md`) carries the CLI call as a **context firewall**
+and returns one status line. The captain dispatches it; it never runs in the
+captain's session.
+
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
 
 ---

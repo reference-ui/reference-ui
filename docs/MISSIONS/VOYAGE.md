@@ -30,15 +30,15 @@ Autonomous objectives: each objective below is crewed and run to its
 own done-criteria. Objectives confirm nothing in advance — research
 crews determine root causes independently.
 
-## Command (star-captain, fully autonomous)
+## Command (captain, fully autonomous)
 
-One star-captain flies the whole voyage, all its objectives, in
+One captain flies the whole voyage, all its objectives, in
 order — start to finish, no HQ in the loop overnight. There are no
 start-gates: the captain clears one objective, then the next, on
 oracle word plus firsthand verification. Captain holds whole-voyage
 context; captain never hunts, maps, implements, or fortifies.
 
-Per objective, the bureaucratic shape (per the `star-captain` skill):
+Per objective, the bureaucratic shape (per the `captain` skill):
 cartographers map first (inventory, verdicts, plan — filed in the
 objective log), implementers build in strict scopes, reviewers verify
 (proofs, and UX sign-off where the objective orders it). Crews write

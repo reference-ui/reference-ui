@@ -1,6 +1,6 @@
 ---
 name: agent-perf
-description: Self-contained workflow for Reference serial sync() performance (diets, alloc kills, lookup restructure in packages/reference-rs): rolling star-captain swarm with verdict bars (LAND/BANK/CUT/HOLD), integrator sum-confirms, bench-lock protocol, and the perf-index (`pnpm agentperf`) carrying every verdict ever filed.
+description: Self-contained workflow for Reference serial sync() performance (diets, alloc kills, lookup restructure in packages/reference-rs): rolling captain swarm with verdict bars (LAND/BANK/CUT/HOLD), integrator sum-confirms, bench-lock protocol, and the perf-index (`pnpm agentperf`) carrying every verdict ever filed.
 ---
 
 # agent-perf — Reference serial-perf swarm skill

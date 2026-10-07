@@ -56,7 +56,7 @@ its own find. Each stage is a separate crew:
    Verdict: **VERIFIED** (commit-ready) or **GAPS** with
    file/line/expected/actual each.
 6. **Commit** — only on VERIFIED, by the orchestrator (cf.
-   star-captain), after firsthand suite re-runs. Then the cycle
+   captain), after firsthand suite re-runs. Then the cycle
    review: what broke, what held, what the next cycle probes.
 
 ## 3. Compounding memory

@@ -28,7 +28,7 @@ export default async function workflow(host) {
     }
   };
   const captain = await host.agent({
-    input: "You are star-captain recon for VOYAGE.md perf swarm. Use inherited Work tools. Steps: 1) call read_skill for star-captain, then agent-perf. 2) locate voyage.md (search workspace, likely root or docs or .agents). Read it fully. 3) read perf-index via pnpm agentperf (list/status) to map already-done levers. 4) inspect packages/reference-rs hot sync() path briefly. Return JSON complete/evidence/unresolved plus levers: 14 distinct single-lever hypotheses for fuzzy search (small tight optimizations, each one lever, no mega-levers). Each lever one line: name + file/symbol hint + ground fence + why small-win. All levers must sit inside the voyage fenced ground (reference-rs Rust + N-API seam + compile path through reference-neo, scored on bench:neo enterprise, unless voyage.md shows HQ widened scope) — drift without a ruling is forbidden. Mark already-done in evidence, exclude from levers. If voyage.md missing, still return 14 levers from agent-perf + code inspection and note unresolved.",
+    input: "You are captain recon for VOYAGE.md perf swarm. Use inherited Work tools. Steps: 1) call read_skill for captain, then agent-perf. 2) locate voyage.md (search workspace, likely root or docs or .agents). Read it fully. 3) read perf-index via pnpm agentperf (list/status) to map already-done levers. 4) inspect packages/reference-rs hot sync() path briefly. Return JSON complete/evidence/unresolved plus levers: 14 distinct single-lever hypotheses for fuzzy search (small tight optimizations, each one lever, no mega-levers). Each lever one line: name + file/symbol hint + ground fence + why small-win. All levers must sit inside the voyage fenced ground (reference-rs Rust + N-API seam + compile path through reference-neo, scored on bench:neo enterprise, unless voyage.md shows HQ widened scope) — drift without a ruling is forbidden. Mark already-done in evidence, exclude from levers. If voyage.md missing, still return 14 levers from agent-perf + code inspection and note unresolved.",
     schema: captainSchema,
     label: "captain-recon"
   });
@@ -71,7 +71,7 @@ export default async function workflow(host) {
   });
   host.phase("Integrate");
   const halves = await host.parallel([0, 1].map((h) => ({
-    input: "You are voyage integrator for workers " + (h*7+1) + "-" + (h*7+7) + " of 14. Inline worker reports (this is the complete evidence; there are no other refs to resolve): " + JSON.stringify(compact.slice(h*7, h*7+7)) + ". Rules: star-captain + agent-perf verdict bars LAND/BANK/CUT/HOLD. Adjudicate each verdict (agree/overrule with reason), flag duplicates/already-done, name stack candidates with bench deltas and files. Return complete/lever/verdict/evidence/unresolved where lever=integration-half, verdict=summary.",
+    input: "You are voyage integrator for workers " + (h*7+1) + "-" + (h*7+7) + " of 14. Inline worker reports (this is the complete evidence; there are no other refs to resolve): " + JSON.stringify(compact.slice(h*7, h*7+7)) + ". Rules: captain + agent-perf verdict bars LAND/BANK/CUT/HOLD. Adjudicate each verdict (agree/overrule with reason), flag duplicates/already-done, name stack candidates with bench deltas and files. Return complete/lever/verdict/evidence/unresolved where lever=integration-half, verdict=summary.",
     schema: workerSchema,
     label: "integrator-" + (h ? "B" : "A")
   })));
@@ -87,7 +87,7 @@ export default async function workflow(host) {
     };
   });
   const synthesis = await host.agent({
-    input: "You are voyage merge integrator. Two half-syntheses inline (complete evidence): " + JSON.stringify(halfCompact) + ". Full verdict table: " + JSON.stringify(compact.map(c => ({lever: c.lever, verdict: c.verdict}))) + ". Rules: star-captain + agent-perf bars. Produce the final verdict table, LAND order, stack/sum-confirm plan, and collision notes. Return complete/lever/verdict/evidence/unresolved where lever=integration, verdict=summary.",
+    input: "You are voyage merge integrator. Two half-syntheses inline (complete evidence): " + JSON.stringify(halfCompact) + ". Full verdict table: " + JSON.stringify(compact.map(c => ({lever: c.lever, verdict: c.verdict}))) + ". Rules: captain + agent-perf bars. Produce the final verdict table, LAND order, stack/sum-confirm plan, and collision notes. Return complete/lever/verdict/evidence/unresolved where lever=integration, verdict=summary.",
     schema: workerSchema,
     label: "integrator-merge"
   });
