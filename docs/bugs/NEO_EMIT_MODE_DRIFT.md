@@ -89,3 +89,31 @@ pinned lib artifacts (`verify-pins` FAILs 8). Byte-identity requires
 canonicalising resolution across all seams **or** canonicalising every emitted
 bundle (comments + formatting + sourcemap), **or** unifying the workspace on one
 mode. The strategy is open for the robustness voyage.
+
+## Residual (robustness voyage C1, 2026-10-07)
+
+Strategy (C) points every documented build path at the shipped dist mode: lib's
+`sync`/`dev`, docs' `dev`/`build`, and icons' `build` now invoke the dist CLI
+(`dist/bin/ref.js`) behind the neo-owned freshness gate
+(`packages/reference-neo/tools/ensure-dist.mjs`); `typecheck`/`build` inherit it
+through `sync`. Source mode is retained deliberately as the neo inner loop only
+(`bin/ref.ts`, `agentneo`, `tests/**` importing `src/sync/index.ts`) and is never
+a documented build path. The content-class graph drift — `types.mjs` (tsc-emit
+twin vs raw-src module graph), `react.mjs` (different minified program), and
+`react.mjs.map` mappings (minified columns plus staged twin paths) — is therefore
+an accepted, mode-scoped residual, not a bug to fix. Any future cross-mode byte
+gate must scope to dist mode; comparing a source-mode emit against a dist-mode
+pin is out of contract.
+
+**Caveat (C1 falsification).** Dist mode alone does not reproduce the committed
+lib pin. The fragment/types bundles also embed esbuild `// <path>` banner
+comments whose text is `process.cwd()`-relative (`react.mjs` is minified and
+banner-free, so it is unaffected, as is its map). The pin was captured by the
+voyage-one-shot harness with `process.cwd()` at the repo root, while lib's
+documented `sync` runs with `cwd = packages/reference-lib`; the two forms differ
+as `// packages/reference-neo/dist/...` (pin) vs `// ../reference-neo/dist/...`
+(documented) for `baseSystem.mjs`, and likewise across the 47 banner lines of
+`types.mjs`. Reconciling this cwd axis (choose a canonical invocation cwd, or
+set a canonical `absWorkingDir` in the microbundle seam and re-baseline) is a
+captain/Oracle decision and is not applied here; the zero-churn bar of C1 is
+open until it is made.
