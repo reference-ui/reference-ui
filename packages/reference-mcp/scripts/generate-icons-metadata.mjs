@@ -1,10 +1,10 @@
-import { writeFile } from 'node:fs/promises'
+import { writeFile, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const targetJsonPath = join(here, '../src/data/icons-metadata.json')
-const jsxNamesPath = join(here, '../../reference-icons/src/jsx-names.ts')
+const iconsBarrelPath = join(here, '../../reference-icons/src/generated/index.ts')
 
 function matchTokens(slug, ...tokens) {
   const parts = slug.split('_')
@@ -1802,7 +1802,14 @@ async function main() {
     }
   }
 
-  const { ICON_JSX_NAMES } = await import(jsxNamesPath)
+  // Icon-name source: parse the generated barrel (jsx-names.ts was removed;
+  // barrel export order is identical to the old ICON_JSX_NAMES list).
+  // Static parse keeps this plain-node script free of TS/TSX imports.
+  const barrelSource = await readFile(iconsBarrelPath, 'utf8')
+  const ICON_JSX_NAMES = [...barrelSource.matchAll(/^export \{ (\w+) \} from '\.\//gm)].map(m => m[1])
+  if (ICON_JSX_NAMES.length === 0) {
+    throw new Error(`No icon exports parsed from ${iconsBarrelPath}`)
+  }
 
   // Map indexes
   const bySlugSvg = new Map()
