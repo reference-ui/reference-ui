@@ -1,5 +1,5 @@
 # voyage-one-shot — baseline byte-identity pins (Wave 0 / R1 identity bar)
-# pin: reference-system @ 4687076d1 (B3-depth live map sources; supersedes cec363eab)
+# pin: reference-system @ 977593fc6 (runtime Arc 1 byte changes re-baselined; supersedes 4687076d1)
 # captured: 2026-10-07 (UTC session by wave0-recon)
 #
 # Exact commands (from repo root):
@@ -15,8 +15,8 @@
 # docs — 522 files under packages/reference-docs/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  docs/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  docs/.reference-ui/react/react.d.mts
-659664fdc8caa19a57636a48924378a8af8883b358b06823b699d40a9cf146a4  docs/.reference-ui/react/react.mjs
-eddb312a9cbf0d9d761295788a8e36dfd8d21c7999ba720427eb3951343afef4  docs/.reference-ui/react/react.mjs.map
+51ce546f8a4f581276e9569015c7162d0223fb03cfa034355ae09a5c5d24d799  docs/.reference-ui/react/react.mjs
+2b27b7fe70b920389e70f611eda69067f1547bb3f03d6e4d438045b446849e47  docs/.reference-ui/react/react.mjs.map
 27f38f828a89192d62ca0f6cdbeb60b6eecf99eeaad6ce73d5be42f1d92f4b3f  docs/.reference-ui/react/styles.css
 74a304d01c9406be60c110d5bc832785bdd33149bbeeb9c6cc85a4fb5ccc296d  docs/.reference-ui/styled/index.d.ts
 86a7624edf41794c5a9f51ecb2fef58eed230073d25e26f9a497bf06b84ec32f  docs/.reference-ui/styled/package.json
@@ -534,13 +534,13 @@ c5cc5ed639fd10fbaf733d3e3333dceaa45100623dbf2b40503de68913626751  docs/.referenc
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  docs/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  docs/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  docs/.reference-ui/types/types.d.mts
-0c65743e8834f142e4b69eda1ade572188dbb0ea20fa052b1f7785e1e2d5da36  docs/.reference-ui/types/types.mjs
-# docs aggregate: c57d2e69e2a9c34709c7ca5cd6d8e76ba7d0a816d1de7032fe561e8801c5ed45  files=522
+521c7b84dba83dd47766564c83be7161088aef1520144b906113c6ce45d6ef5d  docs/.reference-ui/types/types.mjs
+# docs aggregate: b0eeed4f0ed8188f7b7285f203a990f73db323cfe5d453b40cacf24bccfb6819  files=522
 # lib — 580 files under packages/reference-lib/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  lib/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  lib/.reference-ui/react/react.d.mts
-9440758b97b6c986b14dffcbe7fa222c4a733bd2042b3b15a47759169a06590d  lib/.reference-ui/react/react.mjs
-8ea30d9515a8ac09a3021e73287c5a24b89511235365e6a9a4f3efc569bda552  lib/.reference-ui/react/react.mjs.map
+4cdd7c8b222871acf0b3804ef5627ffd76af9852626998ccf53f1857d378779e  lib/.reference-ui/react/react.mjs
+dbdb68ab959f8bd23573d2a51d03eb91ffbfc94ff3c322bdc54bb6b6751490d7  lib/.reference-ui/react/react.mjs.map
 4f7230cc95d770496609df07fc6233f4c0b2737656007017a0b894a1bf74c3ed  lib/.reference-ui/react/styles.css
 74a304d01c9406be60c110d5bc832785bdd33149bbeeb9c6cc85a4fb5ccc296d  lib/.reference-ui/styled/index.d.ts
 86a7624edf41794c5a9f51ecb2fef58eed230073d25e26f9a497bf06b84ec32f  lib/.reference-ui/styled/package.json
@@ -1116,13 +1116,13 @@ cf7f816b7d04435305cc75d9179dcb13880a782a5da2fd60a84909bb6f2aab28  lib/.reference
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  lib/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  lib/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  lib/.reference-ui/types/types.d.mts
-7fc7863d9a459962f44d75d54bec89149b02fc51058fd2de956fc7a3b2df6329  lib/.reference-ui/types/types.mjs
-# lib aggregate: 3d8923473ba91f18c97d124758025cb032475b13e07192c8621659d693c7b5c7  files=580
+b94b75ef0085b85d4dc3fd633c227e6d0bd09d73f38b7cce70fe5bb4e722a662  lib/.reference-ui/types/types.mjs
+# lib aggregate: 122042bbed1000440b88cc1cb184ee056faaa05f07266de9866ddd0266a8cb75  files=580
 # icons — 156 files under packages/reference-icons/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  icons/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  icons/.reference-ui/react/react.d.mts
-6e742ed9e1f0cbd68b2bb0ca28e02086256649a2fd99559c8945236dfa05fa9c  icons/.reference-ui/react/react.mjs
-dd621d5032ede394a567da32e81a9bc63fd6eded98096b444c1ebdf90572847c  icons/.reference-ui/react/react.mjs.map
+da4216cef13dedf0fa5f5d1cf7d83115abf2a83801e00ff169eed34c1bd3ccdd  icons/.reference-ui/react/react.mjs
+144e0f22f7972dcdb9bf8c6364e702eda4d28eb1caf13d2fbf7db890c1e9929d  icons/.reference-ui/react/react.mjs.map
 e708b28a3f21f5a1099b9a71eb24517256c58ffcf9d454f956b957de66ffa4c0  icons/.reference-ui/react/styles.css
 74a304d01c9406be60c110d5bc832785bdd33149bbeeb9c6cc85a4fb5ccc296d  icons/.reference-ui/styled/index.d.ts
 86a7624edf41794c5a9f51ecb2fef58eed230073d25e26f9a497bf06b84ec32f  icons/.reference-ui/styled/package.json
@@ -1274,5 +1274,5 @@ e9003251981cdb700f532fcfb2d8a4f703082eabad4f32a497ed8f100d75c461  icons/.referen
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  icons/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  icons/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  icons/.reference-ui/types/types.d.mts
-e2aae277cc883ae6572d9a3e8d5a5782cf3caa0bf7c005bddf138679ebfe4092  icons/.reference-ui/types/types.mjs
-# icons aggregate: 1df7d165be7ee0ace82ceae9ce6eba2f4e932b48d2aeaf7604d1715405255fac  files=156
+b9e91e4632e88b0543d2050780f9490829fc816abba870bf2e11eab8bb405c98  icons/.reference-ui/types/types.mjs
+# icons aggregate: 0e42aefcf2820e0a3d90a3c28cea614687331c9ce6209d459ccad35e182ad7c7  files=156
