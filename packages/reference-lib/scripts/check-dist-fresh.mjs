@@ -4,10 +4,16 @@
 // consumer silently runs last week's behavior. CI runs build -> check:dist ->
 // pack -> smoke; humans run `pnpm check:dist`.
 import { readdir, stat } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// Upstream inputs live in a sibling package, so name them repo-relative; own
+// inputs stay package-relative, matching the long-standing message shape.
+const repoRoot = resolve(packageRoot, '..', '..')
+function label(file) {
+  return file.startsWith(`${packageRoot}/`) ? file.slice(packageRoot.length + 1) : relative(repoRoot, file)
+}
 
 const INPUT_ROOTS = ['src', 'book']
 const INPUT_FILES = [
@@ -33,15 +39,31 @@ const REQUIRED_OUTPUTS = [
   '.reference-ui/system/baseSystem.mjs',
   '.reference-ui/system/baseSystem.d.mts',
 ]
-// `sync/commit.ts` keeps an unchanged output's mtime, so the content-bearing
-// sync output is compared against the sync inputs (config + source) rather than
-// the packaging inputs above: a package.json edit must not false-fail a system
-// that is byte-identical. Only `baseSystem.mjs` carries the synced system and is
+// `sync/commit.ts` keeps an unchanged output's mtime, so the sync output is
+// compared against the *sync* inputs (config + source) rather than the
+// packaging inputs above: a package.json edit must not false-fail a system that
+// is byte-identical. Only `baseSystem.mjs` carries the synced system and is
 // rewritten when tokens change; `baseSystem.d.mts` is a fixed type declaration
 // that is required to exist but cannot drift, so freshness covers it by its
 // sibling.
 const SYNC_OUTPUT = '.reference-ui/system/baseSystem.mjs'
 const SYNC_INPUTS = ['ui.config.ts']
+// Upstream `extends`/`layers` systems embed their content in this package's
+// sync output: lib's `ui.config.ts` carries `layers: [iconsBaseSystem]`, so
+// icons streams travel inside lib's `baseSystem.mjs` / `styles.css`. Without
+// tracking the resolved upstream, an icons re-sync that changes bytes leaves
+// lib stale with this gate green (P3-1). Resolve the same package export the
+// config imports; an upstream that is not built yet resolves to a path the
+// walk simply skips, exactly like any missing input.
+const UPSTREAM_BASE_SYSTEMS = ['@reference-ui/icons/baseSystem']
+
+function resolveUpstream(specifier) {
+  try {
+    return fileURLToPath(import.meta.resolve(specifier))
+  } catch {
+    return null
+  }
+}
 
 // Only extensions that can change the artifact: tsup bundles code and
 // `ref sync` extracts style call-sites from code. Docs/assets (.md, .png,
@@ -93,8 +115,13 @@ async function rootInputs() {
 }
 
 const rootFiles = await rootInputs()
+const upstreamInputs = UPSTREAM_BASE_SYSTEMS.map(resolveUpstream).filter((file) => file !== null)
 const inputs = [...INPUT_FILES.map((f) => join(packageRoot, f)), ...rootFiles]
-const syncInputs = [...SYNC_INPUTS.map((f) => join(packageRoot, f)), ...rootFiles]
+const syncInputs = [
+  ...SYNC_INPUTS.map((f) => join(packageRoot, f)),
+  ...upstreamInputs,
+  ...rootFiles,
+]
 const newestInput = await newestOf(inputs)
 const newestSyncInput = await newestOf(syncInputs)
 
@@ -128,19 +155,35 @@ const stale = []
 if (newestInput.mtimeMs > oldestDist.mtimeMs) {
   stale.push({ input: newestInput, output: oldestDist.path })
 }
-if (newestSyncInput.mtimeMs > oldest.get(SYNC_OUTPUT)) {
+// Sync leg (P2-1): `ref sync` runs inside `pnpm build`, and `commit.ts`
+// preserves an unchanged output's mtime, so the sync output's mtime records
+// when its *bytes* last changed, not when it was last built. Comparing an input
+// mtime to it sticks red on any comment/whitespace/logic-only edit that leaves
+// the synced system byte-identical (the common lib-dev case), and no rebuild
+// can clear it because sync keeps preserving those bytes. The honest question
+// is "did a successful build consume the newest sync input?": every packaging
+// output is rewritten wholesale each build (tsup `clean`, tsc emit, materialize
+// rm+cp), so the newest dist output is the last build time. When it is at least
+// the newest sync input, sync ran after that input and `baseSystem.mjs` is
+// current by construction — old bytes were kept only because new bytes were
+// equal. A content edit with no build leaves the input newer than every dist
+// output and still fails by name.
+const buildStamp = Math.max(...distOutputs.map((rel) => oldest.get(rel)))
+if (newestSyncInput.mtimeMs > buildStamp) {
   stale.push({ input: newestSyncInput, output: SYNC_OUTPUT })
 }
 
 if (stale.length > 0) {
   console.error('check:dist FAIL — dist is stale (B-11):')
   for (const { input, output } of stale) {
-    console.error(`  ${input.path.slice(packageRoot.length + 1)} is newer than ${output}`)
+    console.error(`  ${label(input.path)} is newer than ${output}`)
   }
   console.error('Run: pnpm --dir packages/reference-lib run build')
   process.exit(1)
 }
 
 console.log(
-  `check:dist OK — ${inputs.length} inputs predate ${REQUIRED_OUTPUTS.length} generated outputs.`,
+  `check:dist OK — ${REQUIRED_OUTPUTS.length} generated outputs present and current ` +
+    `with ${inputs.length + upstreamInputs.length} inputs ` +
+    `(${upstreamInputs.length} upstream).`,
 )

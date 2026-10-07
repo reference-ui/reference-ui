@@ -38,3 +38,34 @@ Bars in `GATES.md`; no pin change expected.
   cause (`dist/index.mjs` lazy-imports `./tasty/runtime.js`;
   `materialize-runtime.mjs:13` copies only react/styled) and three fix options —
   escalated to the arc review for a scope ruling rather than fixed unilaterally.
+
+### 2026-10-08 — WAVE4.fix (P2-1 + P3-1 + P4-5) crew DONE
+
+- Report: `reports/WAVE4.fix.md`.
+- Touched: `packages/reference-lib/scripts/check-dist-fresh.mjs` only.
+- **P2-1** sync leg made content-honest: instead of `newestSyncInput >
+  baseSystem.mjs mtime` (which sticks red forever on any comment/whitespace/
+  logic-only edit, because `commit.ts` preserves unchanged mtimes), the leg now
+  asks "did a build consume the newest sync input?" — `newestSyncInput >
+  newest dist output`. Every dist output is rewritten each build, so that is the
+  last build time; sync runs inside `pnpm build`, so a build after the input
+  makes `baseSystem.mjs` current by construction. No output is touched; no
+  mtime bump in `commit.ts`.
+- **P3-1** closes the upstream hole: `@reference-ui/icons/baseSystem` resolved
+  via `import.meta.resolve` and tracked as a sync input (chose tracking over the
+  drift-doc note).
+- **P4-5** OK message reworded off the false "inputs predate outputs".
+- Bars reproduced: comment-only edit → build → `check:dist` **FAIL persists**
+  before / **OK** after (identical `baseSystem.mjs` bytes + mtime across two
+  builds is the evidence); `ui.config.ts` content change with no build →
+  FAIL naming `.reference-ui/system/baseSystem.mjs`; clean tree → OK; upstream
+  icons baseSystem newer → FAIL naming the upstream, healed by a lib build.
+- Gates: `pnpm agentneo q` **0 errors** (26 warnings); `check:dist` OK.
+  `verify-pins` is **RED before and after this change, identically** — 3
+  docs lines (`react/styles.css`, `styled/styles.css`, `system/baseSystem.mjs`)
+  drifted by the live docs dev server / docs-release commits; this crew's lib
+  script is outside the pinned set and adds **zero** pin delta. Baseline
+  untouched; captain owns the docs re-baseline.
+- Disclosed: two neo files modified by a parallel mission
+  (`src/cli/watch.ts`, `src/sync/session-owner.ts`) were not touched; WAVE5's
+  `dist/tasty/*` `REQUIRED_OUTPUTS` add still open (out of scope).
