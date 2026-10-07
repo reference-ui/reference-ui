@@ -534,8 +534,8 @@ c5cc5ed639fd10fbaf733d3e3333dceaa45100623dbf2b40503de68913626751  docs/.referenc
 c090f616f9fb495d2a2d8ff52df126d7e07d0681a99674ff94b0d787d0aedf8a  docs/.reference-ui/types/tasty/runtime.d.ts
 3b107e564f40d89aa7c974bba07380c650d3b5600e59a3c6693ef6517194752d  docs/.reference-ui/types/tasty/runtime.js
 a7cf426220cd82dca22acfe796fb1a9d536b34c9b20c4574d069ff86b07333c4  docs/.reference-ui/types/types.d.mts
-521c7b84dba83dd47766564c83be7161088aef1520144b906113c6ce45d6ef5d  docs/.reference-ui/types/types.mjs
-# docs aggregate: b0eeed4f0ed8188f7b7285f203a990f73db323cfe5d453b40cacf24bccfb6819  files=522
+64f66545ef0ec6848a21c96d0ea4f00e272033be527627f219439da6c3bb87b9  docs/.reference-ui/types/types.mjs
+# docs aggregate: 28366e7a0231c187b676985f63c18cb46d7badfbc15e2f4aa14cf38e669dfc33  files=522
 # lib — 580 files under packages/reference-lib/.reference-ui
 ff62bd585000964a524c309eacd62238c779756805006fed9c7101d8860a78f6  lib/.reference-ui/react/package.json
 07a03cea21f3f34a65deffe77fbeda005e1bb925460b8fc472dd7578b959da6d  lib/.reference-ui/react/react.d.mts
