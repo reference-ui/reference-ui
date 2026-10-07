@@ -143,3 +143,24 @@ files.
   — no tracked changes; skipped here (does not affect repo cleanliness).
 - [ ] `review.md` — delete once `reference-system` merges or it predates HEAD by
   >14 days.
+
+## Docs release — 2026-10-08
+
+- **WAVE5** closed `LIB_TASTY_RUNTIME_404`: the lib's lazy tasty edge is now a
+  plain, analyzable `import("./tasty/runtime.js")`, `dist/tasty/` ships (550
+  chunks), and the tsc helper no longer leaks. Unmodified consumer smoke
+  **FAIL→PASS** incl. `mount-reference`; **zero** Vite analyze warnings.
+- Docs dev server restarted onto the new neo dist; docs `types.mjs` is the WAVE5
+  form; **`verify-pins` PASS (1258)**.
+- Cleared the docs sync's **only** remaining warning (`src/mdx/CodeBlock.tsx`
+  fade: `background` → `backgroundImage`, `ATM-W-UNKNOWN-COLOR`). Docs quality
+  gate **0 errors / 0 warnings**.
+- Result: `pnpm dev:docs` (:5174) boots clean, `ref sync` warning-free, `vite`
+  emits no tasty/analyze warning. Release-ready.
+
+## Open after docs release
+
+- **MDX first version delivered** on branch `openchamber/mdx-support` (worktree
+  `mdx-support`); 5 commits, Oracle plan + arc reviewed. Merge is a deliberate
+  step (new native dep `@rspress/mdx-rs` + root lockfile) — pending decision.
+- WAVE4.fix (stuck freshness leg) in flight; then voyage closeout.
