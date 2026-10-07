@@ -32,6 +32,13 @@ Owner, 2026-10-08:
 > it. It's an unmaintained library, so if we could avoid using it, that would be
 > great."
 
+> "I don't know what the stable, vanilla packager we should use for this. Maybe
+> it's esbuild, maybe it's rollup — toss-up between those two."
+
+Decision axis: **esbuild vs rollup** (the Oracle rules). Both are stable and
+already in-tree — `reference-neo` uses `esbuild@^0.28`; `reference-icons` uses
+`rollup@^4.59` + `rollup-plugin-esbuild` (so esbuild is present either way).
+
 Recon (`package-unify-1008`):
 
 | package | bundler | types | notes |
