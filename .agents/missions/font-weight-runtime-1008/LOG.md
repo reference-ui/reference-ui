@@ -1,6 +1,6 @@
 # LOG — font-weight-runtime-1008
 
-STATUS: IN PROGRESS
+STATUS: COMPLETE
 
 ## 2026-10-08 — mission opened (captain)
 
@@ -54,6 +54,27 @@ STATUS: IN PROGRESS
   - Arc 2 seam must pin runtime==static; Arc 3 must rebuild docs bundle (fix ships
     in `react.mjs`, not CSS) and assert computed styles + no miss diagnostics.
 - Next: Arc 2 crew (strengthen ARC1-1..3 + seam test) and Arc 3 (docs proof).
+
+## 2026-10-08 — Arc 2 + Arc 3 landed; objective met
+
+- Arc 2 crew `ses_ee751444dffekO16P5mf0lwE6r`. Captain verified: runtime css
+  77/77; `agentneo run NEO-NAMER-02` PASS; `agentneo q` 0 errors.
+  Committed **`69f0491d4`** (css.test.ts strengthenings ARC1-1..3 + NEO-NAMER-02
+  seam).
+- Arc 3 crew `ses_ee747ca5fffe9BHXByufKGNeER`. Neo bin already current; one-shot
+  `ref sync` was covered by the live watch (no kill); the live
+  `.reference-ui/react/react.mjs` was byte-identical to a fresh regen from the
+  current bin and carries the scope pass. F2 bullet rewritten in
+  `system/fonts.mdx`. `agentdocs q` 0 errors. Committed **`ead4ce648`**.
+- **Captain live proof on :5174 (computed `font-weight`):**
+  - `/typography` ramp: thin **200** (was 100), light 300, normal 400, semibold
+    600, bold 700, black 900.
+  - `/fonts`: normal·sans **400**, normal·serif **373** (was 400), normal·mono
+    **393** (was 400), thin·sans **200** (was 100), thin·no-family **100**.
+- Parallel session re-baselined pins against `977593fc6` (`34ebcf959`) — no
+  conflict; their packaging work untouched.
+- Mission COMPLETE. No open tasks. Third Oracle review not warranted per
+  PLAN.oracle (Arc 2 corpus + Arc 3 computed-style proof; gates sufficed).
 
 ## 2026-10-08 — Arc 1 landed (crew)
 
