@@ -198,6 +198,7 @@ async function assembleAndCommit(input: PublishInput): Promise<void> {
   )
   await assembleSystem({
     outDir: input.stageDir,
+    liveOutDir: input.outDir,
     spec: input.spec,
     portableFragment: createPortableFragmentBundle(
       input.prepared.upstreamFragments,

@@ -27,6 +27,7 @@ export async function assembleSystem(input: AssemblyInput): Promise<void> {
   publishRuntimeBundle(input.outDir, input.spec.name, input.runtime)
   await publishReactBundle({
     outDir: input.outDir,
+    liveOutDir: input.liveOutDir,
     systemName: input.spec.name,
     stylePropNames: input.runtime.stylePropNames,
     recipes: input.spec.recipes,

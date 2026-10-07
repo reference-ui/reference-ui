@@ -20,4 +20,10 @@ export interface PublishInput {
 /** Full assembly input: the publish input plus the compiled runtime artifact the bundle legs bind. */
 export interface AssemblyInput extends PublishInput {
   runtime: NativeRuntimeArtifact
+  /**
+   * Live folder the stage commits into. The react map leg emits its sources
+   * relative to it so they resolve after the commit rename (F-A); every other
+   * leg writes the stage only.
+   */
+  liveOutDir: string
 }
