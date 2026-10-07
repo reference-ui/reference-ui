@@ -10,7 +10,9 @@ import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
+import { releaseToken } from './helpers.ts'
 import { createMdxImportPatterns, scanFragmentSources, stripMdxNoise } from './scanner.ts'
+import { scanFragmentSourcesNative } from './native.ts'
 
 const FENCE = '```'
 const SYSTEM = '@reference-ui/system'
@@ -73,6 +75,10 @@ describe('stripMdxNoise', () => {
     expect(crlf.includes('import')).toBe(false)
     expect(crlf.includes('a')).toBe(true)
   })
+
+  it('strips a frontmatter opener with trailing whitespace', () => {
+    expect(stripMdxNoise('---  \ntitle: x\n---\n# hi')).toBe('\n\n\n# hi')
+  })
 })
 
 describe('createMdxImportPatterns', () => {
@@ -87,6 +93,12 @@ describe('createMdxImportPatterns', () => {
   it('rejects prose that merely contains from the module id', () => {
     expect(matches(patterns, `the docs mention from '${SYSTEM}' in passing`)).toBe(false)
     expect(matches(patterns, `export { font } from '${SYSTEM}'`)).toBe(false)
+  })
+
+  it('does not span a blank line from a real import to prose', () => {
+    expect(
+      matches(patterns, `import x from 'other'\n\nsee from '${SYSTEM}' for details`),
+    ).toBe(false)
   })
 
   it('matches a top-level import behind a stripped BOM', () => {
@@ -121,6 +133,19 @@ describe('mdx scan decoy lock', () => {
       cwd: root,
     })
     expect(found.map(path => relative(root, path)).sort()).toEqual(['theme/doc.mdx'])
+  })
+
+  it('native confirm selects the same real MDX match as the TS scan', async () => {
+    const native = await scanFragmentSourcesNative({
+      include: ['theme/**/*.{ts,tsx,mdx}'],
+      importFrom: NEEDLES,
+      cwd: root,
+    })
+    try {
+      expect(native.matches.map(path => relative(root, path)).sort()).toEqual(['theme/doc.mdx'])
+    } finally {
+      await releaseToken(native.retention.token)
+    }
   })
 })
 

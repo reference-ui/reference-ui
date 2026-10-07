@@ -10,7 +10,7 @@ import { escapeRegex, toArray, type DiscoveryPattern } from './patterns.ts'
 // `...` closer (YAML's alternate end marker). No closer means the opener was a
 // thematic break, so nothing is stripped.
 function findFrontmatterEnd(lines: string[]): number {
-  if (lines[0]?.replace(/\r$/, '') !== '---') return -1
+  if (!/^---[ \t]*$/.test(lines[0]?.replace(/\r$/, '') ?? '')) return -1
   for (let index = 1; index < lines.length; index++) {
     if (/^(?:---|\.\.\.)[ \t]*$/.test(lines[index].replace(/\r$/, ''))) return index
   }
@@ -76,14 +76,15 @@ export function stripMdxNoise(content: string): string {
 
 // Line-anchored import matcher for `.mdx` only. A fenced block or prose can
 // carry `from 'id'` verbatim, so the global unanchored pattern would false-hit;
-// this anchors to a real `import` statement and tolerates a multiline binding
-// list (`import {\n  font\n} from 'id'`) plus the bare `import 'id'` side-effect
-// form. The needle stays the module id, so the includes pre-gate and the native
+// this anchors to a real `import` statement, tolerates a multiline binding list
+// (`import {\n  font\n} from 'id'`) and the bare `import 'id'` side-effect form,
+// and refuses to span a blank line so a real import cannot latch onto distant
+// prose. The needle stays the module id, so the includes pre-gate and the native
 // needle union are unchanged.
 export function createMdxImportPatterns(importFrom?: string | string[]): DiscoveryPattern[] {
   return toArray(importFrom).map((moduleId) => ({
     pattern: new RegExp(
-      `^[ \\t]*import\\b[ \\t]*(?:[\\s\\S]*?from[ \\t]*)?['"]${escapeRegex(moduleId)}['"]`,
+      `^[ \\t]*import\\b[ \\t]*(?:(?!\\n[ \\t]*\\n)[\\s\\S])*?from[ \\t]*['"]${escapeRegex(moduleId)}['"]|^[ \\t]*import\\b[ \\t]*['"]${escapeRegex(moduleId)}['"]`,
       'm',
     ),
     needle: moduleId,

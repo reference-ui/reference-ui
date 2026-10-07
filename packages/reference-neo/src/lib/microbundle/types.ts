@@ -30,6 +30,8 @@ export interface MicroBundleOptions {
   metafile?: boolean
   /** Intercept react/react-dom and replace with zero-runtime proxy stub. */
   reactStub?: boolean
+  /** JSX transform. Fragment bundles set `automatic` so compiled JSX resolves the stub's jsx-runtime. */
+  jsx?: esbuild.BuildOptions['jsx']
   /** Sourcemap shape. External/linked maps need `outfile` so esbuild can name the .map file. */
   sourcemap?: esbuild.BuildOptions['sourcemap']
   /** Output path naming the bundle; in-memory builds still honor it for map naming. */

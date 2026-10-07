@@ -27,6 +27,7 @@ export async function bundleFragments(
   const microOptions = {
     format: 'iife' as const,
     reactStub: true,
+    jsx: 'automatic' as const,
     ...(alias && { alias }),
     external: [...DEFAULT_EXTERNALS, ...external],
   }
@@ -69,6 +70,7 @@ async function runSingle<TInput, TOutput>(
 
   const microOptions = {
     reactStub: true,
+    jsx: 'automatic' as const,
     ...(alias && { alias }),
     external: [...DEFAULT_EXTERNALS, ...external],
   }
@@ -120,7 +122,7 @@ async function runPlanner(
     const tmpPath = uniqueTmpPath(tempDir)
     initAll(collectors)
     try {
-      const bundled = await microBundle(filePath, { reactStub: true })
+      const bundled = await microBundle(filePath, { reactStub: true, jsx: 'automatic' })
       writeFileSync(tmpPath, bundled, 'utf-8')
       await import(pathToFileURL(tmpPath).href)
       for (const c of collectors) {

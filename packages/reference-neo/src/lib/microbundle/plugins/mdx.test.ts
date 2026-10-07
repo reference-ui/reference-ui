@@ -1,15 +1,15 @@
 // Unit tests for the Neo MDX esbuild loader.
 // They compile a representative MDX source (frontmatter, top-level import and
-// export, JSX, and a fence) through the plugin plus the react stub and assert
-// the build resolves every emitted binding; a second case asserts a parse
-// failure throws the named diagnostic instead of the legacy empty fallback.
+// export, JSX, and a fence) through the production microbundle options and
+// assert the react stub resolves every emitted binding; a second case asserts a
+// parse failure throws the named diagnostic instead of the legacy empty
+// fallback. Routing through microBundle also pins that the fragment path's
+// automatic JSX never emits an unbound `React.createElement`.
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import * as esbuild from 'esbuild'
 import { describe, expect, it } from 'vitest'
-import { mdxPlugin } from './mdx.ts'
-import { reactStubPlugin } from './react-stub.ts'
+import { microBundle } from '../microbundle.ts'
 
 const FENCE = '```'
 const EXAMPLE = [
@@ -33,17 +33,11 @@ async function bundle(source: string): Promise<string> {
   const file = join(dir, 'doc.mdx')
   writeFileSync(file, source)
   try {
-    const result = await esbuild.build({
-      entryPoints: [file],
-      bundle: true,
-      format: 'esm',
-      platform: 'node',
+    return await microBundle(file, {
+      reactStub: true,
       jsx: 'automatic',
-      write: false,
       external: ['@reference-ui/system'],
-      plugins: [mdxPlugin(), reactStubPlugin()],
     })
-    return result.outputFiles[0].text
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -54,6 +48,7 @@ describe('mdxPlugin', () => {
     const output = await bundle(EXAMPLE)
     expect(output.length).toBeGreaterThan(0)
     expect(output).not.toMatch(/from\s+["']@mdx-js\/react["']/)
+    expect(output).not.toContain('React.createElement')
     expect(output).toContain('useMDXComponents')
   })
 

@@ -316,7 +316,7 @@ export function splitScan(
   contents: (string | null)[],
   cwd: string,
   discoveryPatterns: DiscoveryPattern[],
-  mdxPatterns: DiscoveryPattern[] = []
+  mdxPatterns: DiscoveryPattern[]
 ): FragmentScan {
   const matches: string[] = []
   const scannedSources: ScannedSource[] = []
