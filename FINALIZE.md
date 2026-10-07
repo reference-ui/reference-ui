@@ -15,12 +15,38 @@ Last updated: 2026-10-08.
 
 | # | item | status | where / notes |
 | --- | --- | --- | --- |
-| F-1 | **Evaluate dropping tsup** | NOTE | Owner note 2026-10-08: tsup was added to bundle types; with TypeScript 7 in play it may now be more hindrance than help. `packages/reference-lib/tsup.config.ts` builds `dist/index.mjs` + `dist/theme/index.mjs`. The WAVE5 helper leak traces to **tsc** (`tsconfig.build.json` `rewriteRelativeImportExtensions`), which tsup then bundles — so tsup inherits, not causes, that defect. Questions: can the lib ship tsc emit (or one tool) and delete a moving part? Watch build wall time, the `dist` shape the consumer smoke asserts, and `materialize-runtime.mjs` `bundleRewrites` (they assume tsup output). |
-| F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. |
+| F-1 | **Drop tsup — package every lib like icons/neo** | OPEN | Owner 2026-10-08: package every Reference lib the same way as `reference-icons`, modelled on the simplicity of `reference-neo`; strip tsup + its dependency baggage (unmaintained). See "## F-1 detail". |
+| F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Likely dissolves with F-1. |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
 | F-5 | **Native MDX support** | OPEN | Separate mission; durable plan `.agents/missions/finalize/PLAN-mdx.md` (Oracle-approved). Captain session dispatched 2026-10-08 (worktree `mdx-support`). |
 | F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. See "Cleanup backlog" below. |
+
+## F-1 detail — dropping tsup / unifying package builds
+
+Owner, 2026-10-08:
+
+> "Ideally, we package up every reference lib in the same way as we do
+> reference icons. … look at reference neo, it's such a simple thing. Strip away
+> all the bullshit and all the old stuff with tsup and all the dependency around
+> it. It's an unmaintained library, so if we could avoid using it, that would be
+> great."
+
+Recon (`package-unify-1008`):
+
+| package | bundler | types | notes |
+| --- | --- | --- | --- |
+| `reference-lib` | **tsup@^8.5.1** | `tsc -p tsconfig.build.json` | `dist/index.mjs` + `dist/theme/index.mjs`; `clean: true`; externals react/react-dom/@reference-ui/react+styled; `noExternal: gsap` |
+| `reference-icons` | **rollup@^4.59** + `@rollup/plugin-node-resolve` + `rollup-plugin-esbuild` | `tsc -p tsconfig.build.json` | the target shape |
+| `reference-neo` | **esbuild@^0.28** (`tools/build-bin.mjs`, 148 lines) | `tsc` | the "simple thing" model |
+
+Coupling to watch when removing tsup: `materialize-runtime.mjs` `bundleRewrites`
+and `build-package.mjs` assume the tsup output shape; `check-dist-fresh.mjs`
+references tsup; the consumer smoke asserts the packed `dist`; the helper leak
+traces to **tsc** (`rewriteRelativeImportExtensions`), not tsup.
+
+Oracle design consult: `briefs/TSUP.oracle.md` → report
+`reports/TSUP.oracle.md`.
 
 ## Known pre-existing reds (not ours; do not re-litigate)
 
