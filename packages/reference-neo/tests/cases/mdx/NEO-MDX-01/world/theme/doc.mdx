@@ -1,0 +1,18 @@
+---
+title: MDX fragments
+---
+
+import { font } from '@reference-ui/system'
+
+export const display = font('display', {
+  value: '"Playfair Display", Georgia, serif',
+  fontFace: { src: 'url(/fonts/playfair.woff2) format("woff2")', fontDisplay: 'swap' },
+  weights: { normal: '400', bold: '700' },
+})
+
+# MDX doc
+
+```ts
+import { font } from '@reference-ui/system'   // fence decoy: must NOT match
+font('fenceface', { value: 'Fence', fontFace: { src: 'url(/fonts/fence.woff2)' }, weights: { normal: '400' } })
+```
