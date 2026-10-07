@@ -35,6 +35,26 @@ STATUS: IN PROGRESS
   - **F10 (P3):** docs proof = computed style (Playwright), not CSS grep.
 - Next: dispatch Arc 1 crew (runtime scoping + tests).
 
+## 2026-10-08 — Arc 1 crew + ARC1.review landed
+
+- Crew `ses_ee75d51f0ffeeeKbaXW7OU30G6` implemented Arc 1. Captain verified
+  firsthand: `vitest run src/runtime/css` → 76/76, `agentneo q` 0 errors.
+- Committed **`977593fc6`** (scope.ts, scope.test.ts, css.ts, css.test.ts, mission
+  notes). Other session's B3-depth files (`packager/react.ts`,
+  `react.test.ts`, `NEO-SYNC-02/.../inventory.spec.ts`) left untouched/uncommitted.
+- ARC1.review carrier `ses_ee75816d3ffeqcFJfQcvG5mucj` → `STATUS: DONE`.
+  Verdict: **findings, slice may merge.** No product defect; port, wire-in, F1–F7
+  compliance verified against the static oracle. Next tasks:
+  - **ARC1-1 (P2):** base-fallback integration case vacuous (`sans.normal`==400==keyword);
+    use a discriminating pair (`serif.normal`→373 / `sans.thin`→200 under `_hover`).
+  - **ARC1-2 (P3):** conflict case can't tell decline from last-wins; add
+    `serif`+`mono`+`normal` → 400.
+  - **ARC1-3 (P3):** interim pins 1 of 4 responsive shapes (arrays, object+object,
+    font-object); pin or defer to Arc 2 KNOWN-DIVERGENT.
+  - Arc 2 seam must pin runtime==static; Arc 3 must rebuild docs bundle (fix ships
+    in `react.mjs`, not CSS) and assert computed styles + no miss diagnostics.
+- Next: Arc 2 crew (strengthen ARC1-1..3 + seam test) and Arc 3 (docs proof).
+
 ## 2026-10-08 — Arc 1 landed (crew)
 
 - New `packages/reference-neo/src/runtime/css/scope.ts`: 1:1 port of `scope.rs`
@@ -56,4 +76,31 @@ STATUS: IN PROGRESS
   `pnpm agentneo q` → **0 errors**, 26 warnings (both new warnings are
   `css.test.ts` over the 365-line / 80-line *warn* lines, non-failing).
 - Not committed; captain commits.
+
+## 2026-10-08 — Arc 2 crew (strengthen ARC1-1..3 + runtime↔static seam)
+
+- **ARC1-1:** `css.test.ts` conditional-fallback case now asserts discriminating
+  pairs (`serif`+`_hover.normal` → 373, `sans`+`_hover.thin` → 200) instead of
+  the keyword-equal `sans.normal`/400 that passed pre-fix.
+- **ARC1-2:** conflict case now `serif`+`mono`+`normal` → **400** (decline),
+  where first-wins=373 / last-wins=393 are both caught.
+- **ARC1-3:** added a KNOWN-DIVERGENT pin for the three remaining F3 shapes —
+  weight array, object+object, and font-object + string-weight — each with the
+  `// follow-up:` leaf-descent note. (c) pins `letterSpacing` too (font macro).
+- **Seam (`NEO-NAMER-02`):** world gains serif/mono/display scales (mirroring
+  `reference-lib` fonts.ts) and literal bare-weight call sites for all six
+  keywords × three families, lone keywords, a conflict, two conditionals, the
+  dynamic boundary, and the F3 shapes. Spec pins runtime DOM classes against the
+  static `ATM-COND-05` pins, asserts computed `font-weight` 200/373/393 is
+  sheet-backed, and asserts the dynamic `250` rule stays bare. Loop-generated
+  call sites had to be unrolled to literals: the static extractor folds no loop
+  variables, so the sheet was silently missing rules.
+- Findings pinned: a scale miss (`mono.black`) passes the scoped name through
+  **raw** on both sides (`font-weight_mono.black`), not the CSS keyword.
+- Proof: `pnpm agentneo run NEO-NAMER-02` → PASS; `vitest run src/runtime/css`
+  → 77 passed; `pnpm agentneo q` → **0 errors**, 26 warnings.
+- Files: `src/runtime/css/css.test.ts`, `tests/cases/namer/NEO-NAMER-02/{README.md,
+  specs/corpus.spec.ts, world/index.html, world/src/app.ts, world/src/fonts.ts}`.
+  No `scope.ts`/`css.ts`/`lower.ts` edits. Not committed.
+
 

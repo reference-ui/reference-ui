@@ -226,8 +226,14 @@ describe('css() family scoping', () => {
   })
 
   it('falls a conditional weight back to the base font', () => {
-    expect(css({ fontFamily: 'sans', _hover: { weight: 'normal' } })).toBe(
-      'test__font-family_sans test__hover:font-weight_400'
+    // Discriminating pairs: `serif.normal` is 373 and `sans.thin` is 200, so
+    // each class differs from the bare keyword (400 / 100) the base fallback
+    // would resolve to without scoping.
+    expect(css({ fontFamily: 'serif', _hover: { weight: 'normal' } })).toBe(
+      'test__font-family_serif test__hover:font-weight_373'
+    )
+    expect(css({ fontFamily: 'sans', _hover: { weight: 'thin' } })).toBe(
+      'test__font-family_sans test__hover:font-weight_200'
     )
   })
 
@@ -253,8 +259,11 @@ describe('css() family scoping', () => {
   })
 
   it('declines to scope when two families conflict', () => {
-    expect(css({ fontFamily: 'sans' }, { fontFamily: 'mono', weight: 'thin' })).toBe(
-      'test__font-family_mono test__font-weight_100'
+    // All three outcomes differ here: decline keeps the keyword 400, a
+    // first-family-wins bug would give 373 (`serif.normal`), and a
+    // last-family-wins bug would give 393 (`mono.normal`).
+    expect(css({ fontFamily: 'serif' }, { fontFamily: 'mono', weight: 'normal' })).toBe(
+      'test__font-family_mono test__font-weight_400'
     )
   })
 
@@ -270,6 +279,27 @@ describe('css() family scoping', () => {
     // breakpoint-`when` semantics decision (condWhen vs slotWhen).
     expect(css({ fontFamily: 'sans', weight: { base: 'thin', md: 'bold' } })).toBe(
       'test__font-family_sans test__font-weight_100 test__md:font-weight_700'
+    )
+  })
+
+  it('pins the remaining F3 shapes as KNOWN-DIVERGENT interim behavior', () => {
+    // follow-up: same leaf-descent follow-up as the object pin above. The
+    // static pass fans responsive values out into scalar wants before it
+    // scopes (F3), so it resolves each leaf against the family scale; the
+    // runtime scopes string queries only and falls these shapes to the
+    // keyword table. Runtime outputs here are the interim truth, not parity.
+    // (a) weight array: static `sans.thin` → 200, runtime keyword → 100.
+    expect(css({ fontFamily: 'sans', weight: ['thin'] })).toBe(
+      'test__font-family_sans test__font-weight_100'
+    )
+    // (b) object + object: static `sans.thin` → 200, runtime keyword → 100.
+    expect(css({ fontFamily: { base: 'sans' }, weight: { base: 'thin' } })).toBe(
+      'test__font-family_sans test__font-weight_100'
+    )
+    // (c) font-object + string-weight: unscoped on both sides (parity), so
+    // this is a tripwire against a naive future "fix" scoping one side only.
+    expect(css({ font: { base: 'sans' }, weight: 'thin' })).toBe(
+      'test__font-family_sans test__letterSpacing_-0.01em test__font-weight_100'
     )
   })
 })
