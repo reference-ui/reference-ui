@@ -1,6 +1,6 @@
 # ARC1 — Memoize external resolution (tasty diet)
 
-STATUS: PENDING
+STATUS: IN PROGRESS
 
 Where: `packages/reference-rs/modules/tasty/src/scanner/packages.rs`
 (+ `scanner/packages/package_entry.rs`, `package_json.rs` as needed).

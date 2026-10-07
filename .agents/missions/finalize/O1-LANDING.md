@@ -1,6 +1,6 @@
 # O1 — Land lingering verified work
 
-STATUS: IN PROGRESS
+STATUS: COMPLETE
 
 Chunks to land (from FINALIZATION_REPORT.md "Finalization state"):
 1. Font-weight divergence fix — `packages/reference-rs/modules/atomic/**`
@@ -20,6 +20,20 @@ Pre-existing failures to ignore (confirmed at HEAD): `bin/ref.test.ts`
 verbose-wording drift; flaky `clean-repro` / `session-repro` lock-kill tests.
 
 ## Entries
+
+- verify crew: report `reports/O1.verify.md`. Pin `8d8f5a710`. All three
+  chunks PASS (atomic 314 tests; neo scan vitest 8/38; docs q 0/0 + build 0).
+- captain re-ran decisive gates firsthand: `agentrs v atomic -t
+  "ATM-COND-05|ATM-LAYER-15"` 2/2, `agent vitest .../collect/lib/scan` 38/38,
+  `agentdocs q` 0 errors. All green at pin.
+- captain landed, 4 commits:
+  - `81af69d7a` fix(atomic): resolve bare weight against the active font family
+  - `06f031e7b` fix(neo): gate fragment matches to JS-bundleable extensions
+  - `1c9b894bd` docs(system): add System section and beginner Fonts guide
+  - `0429dbc91` chore(agents): land finalization mission layer; archive brief
+- note: report's "22 files" for the weight chunk was 16 in tree; no functional
+  discrepancy. `pipeline/src/registry/lock.*` + `paths.test.ts` left untouched
+  (pre-existing, not this mission).
 
 ### 2026-10-07 — O1.verify crew (DeepSeek V4.1 Flash) — VERIFIED, ready to commit
 
