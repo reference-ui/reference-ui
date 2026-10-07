@@ -43,7 +43,7 @@ const fade = css({
   bottom: '0',
   height: '8r',
   pointerEvents: 'none',
-  background: 'linear-gradient(to top, var(--colors-docs-panel-bg), transparent)',
+  backgroundImage: 'linear-gradient(to top, var(--colors-docs-panel-bg), transparent)',
 })
 
 const overlay = css({
