@@ -193,7 +193,23 @@ function fileLengthTier(files, texts) {
   return { errors, warnings }
 }
 
-async function tscTier(files) {
+function tscDiagnostic(line) {
+  const m = line.match(TSC_ERROR)
+  if (!m) return null
+  // tsc runs with cwd=DOCS_DIR, so diagnostics are relative to it, not the repo root.
+  return { file: path.resolve(DOCS_DIR, m[1]), line: Number(m[2]), message: `${m[3]}: ${m[4]}` }
+}
+
+function isProjectFile(file) {
+  return file.startsWith(`${DOCS_DIR}${path.sep}`) && !file.includes(`${path.sep}node_modules${path.sep}`)
+}
+
+function inTscScope(diag, scopeAll, wanted) {
+  if (!isProjectFile(diag.file)) return false
+  return scopeAll || wanted.has(diag.file)
+}
+
+async function tscTier(files, scopeAll) {
   const tsFiles = files.filter(f => TYPE_EXTS.has(path.extname(f).toLowerCase()))
   if (!tsFiles.length) return { errors: [], missing: null }
   const bin = resolveBin('typescript', 'bin/tsc')
@@ -202,8 +218,10 @@ async function tscTier(files) {
   const r = await runCmd(process.execPath, [bin, '--noEmit', '-p', DOCS_DIR], DOCS_DIR)
   const errors = []
   for (const line of `${r.out}\n${r.errOut}`.split('\n')) {
-    const m = line.match(TSC_ERROR)
-    if (m && wanted.has(path.resolve(m[1]))) errors.push({ file: path.resolve(m[1]), line: Number(m[2]), ruleId: 'docs/tsc', severity: 2, message: `${m[3]}: ${m[4]}` })
+    const diag = tscDiagnostic(line)
+    if (diag && inTscScope(diag, scopeAll, wanted)) {
+      errors.push({ ...diag, ruleId: 'docs/tsc', severity: 2 })
+    }
   }
   if (r.code !== 0 && r.code !== 1) return { errors, missing: 'typescript' }
   return { errors, missing: null }
@@ -229,7 +247,7 @@ async function main() {
   let missing = null
   const biome = await biomeTier(files)
   missing = biome.missing
-  const tsc = await tscTier(files)
+  const tsc = await tscTier(files, paths.length === 0)
   missing = tsc.missing ?? missing
   const length = fileLengthTier(files, texts)
   const suppressions = suppressionTier(files, texts)
