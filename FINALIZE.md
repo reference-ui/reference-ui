@@ -15,7 +15,7 @@ Last updated: 2026-10-08.
 
 | # | item | status | where / notes |
 | --- | --- | --- | --- |
-| F-1 | **Drop tsup — package every lib like icons/neo** | OPEN | Owner 2026-10-08: package every Reference lib the same way as `reference-icons`, modelled on the simplicity of `reference-neo`; strip tsup + its dependency baggage (unmaintained). See "## F-1 detail". |
+| F-1 | **Drop tsup — package every lib like icons/neo** | RULED (esbuild) | Oracle `TSUP.oracle`: use **raw esbuild** behind a small node script, not rollup/tsc-only. Census: lib + 8 matrix fixtures + mcp + rs. Arc A (lib) queued behind WAVE5. See "## F-1 detail". |
 | F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Likely dissolves with F-1. |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
@@ -54,6 +54,24 @@ traces to **tsc** (`rewriteRelativeImportExtensions`), not tsup.
 
 Oracle design consult: `briefs/TSUP.oracle.md` → report
 `reports/TSUP.oracle.md`.
+
+**Oracle ruling (2026-10-08): raw `esbuild` behind a small node script** — not
+rollup, not tsc-only. ~70-line `scripts/build-bundle.mjs`; keep the 2-entry
+fat-file `dist` contract (`index.mjs` ~2.1 MB + `theme/index.mjs` ~77 KB).
+Compute externals from `package.json` (bare **and** `/*` subpath form) — the trap
+is silently inlining `zustand` and `@reference-ui/icons`. Rollup is out (perf;
+it exists in icons only for `preserveModules` over hundreds of generated icon
+entries); tsc-only is out (path aliases need the bundle step, `gsap` inlining,
+multi-file contract). The helper leak is input-side (tsc) and WAVE5 fixes it
+bundler-agnostically.
+
+**Census:** `reference-lib` + 8 `matrix/fixtures` + `reference-mcp` +
+`reference-rs` use tsup; `reference-legacy` is workspace-excluded (leave inert).
+**Arcs:** A lib → B fixtures → C mcp → D rs → E prune the lockfile (`tsup` gone,
+esbuild deduped 0.27.3→0.28.2). **Bar (`TSUP-7`):** scripted dist-contract
+parity, unmodified consumer smoke green, docs build clean, perf ≤ baseline.
+Smallest first arc = **lib only**. **Queued behind WAVE5** (both edit
+`check-dist-fresh.mjs` — coordinate, don't merge).
 
 ## Known pre-existing reds (not ours; do not re-litigate)
 
