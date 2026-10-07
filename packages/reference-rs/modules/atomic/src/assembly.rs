@@ -34,6 +34,9 @@ pub(crate) struct AssembleCtx {
     pub(crate) proof: bool,
     /// Resolved recipe call-site selections gating responsive emission.
     pub(crate) selections: Vec<crate::extract::recipes::selection::RecipeSelection>,
+    /// True when an extends/layers upstream's published global CSS already
+    /// roots the page: the container-root check stays silent (Addendum B).
+    pub(crate) upstream_container_root: bool,
 }
 
 impl AssembleCtx {
@@ -62,14 +65,15 @@ impl AssembleCtx {
             traced,
             proof,
             selections,
+            upstream_container_root,
         } = self;
         let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
-        resolve::conditions::check_container_root(
+        let root_input = resolve::conditions::ContainerRootInput {
             system,
-            &atom_set,
-            &mut diagnostics,
-            Some(&mut *sink),
-        );
+            atoms: &atom_set,
+            upstream_root: upstream_container_root,
+        };
+        resolve::conditions::check_container_root(&root_input, &mut diagnostics, Some(&mut *sink));
         let compiled_recipes = compile_recipes(
             &RecipeInputs::new(&extracted_recipes, &selections),
             system,

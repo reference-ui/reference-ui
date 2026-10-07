@@ -129,6 +129,15 @@ export interface CompileRequest {
   retentionToken?: number
   baseSystem: EvaluatedSystemSpec
   /**
+   * True when an extends/layers upstream's published global CSS already
+   * establishes a container root (`:root`/`html`/`body` carrying
+   * `container-type`/`container`). Upstream global CSS ships via the
+   * streams merge, invisible to this compile, so the container-root
+   * check trusts this signal and stays silent. Absent means standalone:
+   * the check reads local global CSS only.
+   */
+  upstreamContainerRoot?: boolean
+  /**
    * Glob scope (RS-10, station ATM-SCAN-01) relative to `rootDir`: only
    * matching sources compile and the rest are skipped silently. Absent or
    * empty preserves the legacy scan-all behavior.

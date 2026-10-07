@@ -35,6 +35,11 @@ struct NativeCompileRequest {
     base_system: Option<serde_json::Value>,
     #[serde(default)]
     spec: Option<serde_json::Value>,
+    /// True when an extends/layers upstream's published global CSS already
+    /// roots the page: the container-root check stays silent. Absent means
+    /// standalone (local global CSS decides).
+    #[serde(default, alias = "upstream_container_root")]
+    upstream_container_root: bool,
 }
 
 #[napi]
@@ -67,6 +72,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
         files: req.files,
         retention_token: req.retention_token,
         base_system: system,
+        upstream_container_root: req.upstream_container_root,
         jsx_hosts: req.jsx_hosts,
         declaration_root: req.declaration_root,
         include: req.include,

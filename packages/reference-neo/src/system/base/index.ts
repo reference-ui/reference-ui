@@ -4,6 +4,7 @@
 // is the subsystem address.
 
 export type { BaseAssemblyInput, BaseSystem, ExtendsCarrier, SystemStreams } from './types.ts'
+export { hasUpstreamContainerRoot } from './container-root.ts'
 export { mergeStreams, type MergedSheets, type StreamUpstream } from './streams.ts'
 export { createPortableFragmentBundle } from './fragments.ts'
 export { resolveJsxElements, type JsxElementsArtifact } from './jsx.ts'

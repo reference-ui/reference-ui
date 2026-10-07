@@ -47,19 +47,36 @@ pub fn lower_when(raw: &str, system: &BaseSystem) -> LoweredWhen {
     LoweredWhen::Unknown
 }
 
+/// Inputs to the container-root check: the compiled atoms plus the local
+/// system and the upstream coverage signal the request carries.
+pub struct ContainerRootInput<'a> {
+    /// The compiling (local) system whose global CSS is visible here.
+    pub system: &'a BaseSystem,
+    /// The compile's resolved atoms, scanned for `@container` conditions.
+    pub atoms: &'a crate::atom::AtomSet,
+    /// True when an extends/layers upstream's published global CSS already
+    /// roots the page. Upstream global CSS ships via the streams merge,
+    /// invisible to this compile, so the check stays silent on this signal
+    /// instead of warning from local absence alone.
+    pub upstream_root: bool,
+}
+
 /// Check if any emitted atoms use @container conditions without a container root defined in globalCss.
 pub fn check_container_root(
-    system: &BaseSystem,
-    atom_set: &crate::atom::AtomSet,
+    input: &ContainerRootInput<'_>,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
     sink: Option<&mut DiagnosticsSession>,
 ) {
-    let has_cq = atom_set.iter().any(|atom| {
+    let has_cq = input.atoms.iter().any(|atom| {
         atom.conditions
             .iter()
             .any(|w| matches!(w.wrap(), crate::atom::WhenKind::Container(_)))
     });
-    if has_cq && !system.global_css.is_empty() && !has_container_root(system) {
+    if has_cq
+        && !input.upstream_root
+        && !input.system.global_css.is_empty()
+        && !has_container_root(input.system)
+    {
         let report = ResolveReport {
             location: DiagnosticLocation::default(),
             key: None,

@@ -145,6 +145,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         traced: resolved_hosts.traced,
         proof: request.wants_proof(),
         selections,
+        upstream_container_root: request.upstream_container_root,
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);

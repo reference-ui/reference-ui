@@ -1,8 +1,10 @@
 //! Lowering proofs for named `_` conditions, breakpoints, at-rules, and `&` selectors.
 //! Pins catalog wraps (`_file`, `_placeholder` twins), breakpoint container
 //! queries, `@supports`/`@container` passthrough, and unknown-key refusal with
-//! its resolve-time diagnostic. Sits beside `mod.rs` so that file stays under
-//! the line budget, mirroring the cascade tests.
+//! its resolve-time diagnostic. Also pins the missing-container-root warning
+//! end to end: rootless systems warn while local and upstream roots stay
+//! silent. Sits beside `mod.rs` so that file stays under the line budget,
+//! mirroring the cascade tests.
 
 use super::*;
 use crate::atom::{AtomSet, AtomValue, Want, WhenKind};
@@ -186,6 +188,70 @@ fn unknown_condition_keeps_sibling_and_does_not_wrap_nope() {
     assert!(css.contains(".\\@reference-ui\\/lib__c_red { color: red; }"));
     assert!(!css.contains(":nope"));
     assert!(!css.contains("nope:"));
+}
+
+/// A lib-scale system whose global CSS carries no container root: the
+/// docs-shaped consumer the check must warn for unless an upstream roots it.
+fn rootless_system() -> BaseSystem {
+    let mut system = BaseSystem::lib_fixture().clone();
+    let mut body_rule = indexmap::IndexMap::new();
+    body_rule.insert(
+        "margin".to_string(),
+        base_system::GlobalDeclarationValue::String("0".to_string()),
+    );
+    let mut rules = indexmap::IndexMap::new();
+    rules.insert("body".to_string(), body_rule);
+    system.global_css = vec![base_system::GlobalCssFragment {
+        source: "test".to_string(),
+        rules,
+    }];
+    system
+}
+
+/// Compile one responsive probe (fans out to `sm`/`md` container atoms)
+/// against `system`, with the upstream coverage signal set as given.
+fn compile_container_probe(system: BaseSystem, upstream_root: bool) -> crate::CompileResult {
+    let req = crate::CompileRequest {
+        files: Some(vec![crate::VirtualSource {
+            path: "test.tsx".to_string(),
+            content: "import { Div } from '@reference-ui/react'; export const Comp = () => <Div mt={['1r', '2r', '4r']} />"
+                .to_string(),
+        }]),
+        base_system: system,
+        upstream_container_root: upstream_root,
+        logs: Some(vec!["proof".to_string()]),
+        ..Default::default()
+    };
+    crate::compile(&req).expect("compile succeeds")
+}
+
+fn has_container_warning(res: &crate::CompileResult) -> bool {
+    res.diagnostics
+        .iter()
+        .any(|diag| diag.code == crate::DiagnosticCode::MissingContainerRoot)
+}
+
+#[test]
+fn container_atoms_without_root_warn() {
+    let res = compile_container_probe(rootless_system(), false);
+    assert!(res.stylesheet.contains("@container"));
+    assert!(has_container_warning(&res));
+}
+
+#[test]
+fn upstream_container_root_suppresses_warning() {
+    // Addendum B: the inherited `body` root arrives via the streams merge,
+    // invisible here, so the request signal stands in for the merged data.
+    let res = compile_container_probe(rootless_system(), true);
+    assert!(res.stylesheet.contains("@container"));
+    assert!(!has_container_warning(&res));
+}
+
+#[test]
+fn local_container_root_stays_silent() {
+    let res = compile_container_probe(BaseSystem::lib_fixture().clone(), false);
+    assert!(res.stylesheet.contains("@container"));
+    assert!(!has_container_warning(&res));
 }
 
 #[test]

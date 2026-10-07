@@ -38,6 +38,14 @@ pub struct CompileRequest {
     #[serde(default, alias = "retention_token")]
     pub retention_token: Option<u64>,
     pub base_system: BaseSystem,
+    /// True when an extends/layers upstream's published global CSS already
+    /// establishes a container root (`:root`/`html`/`body` carrying
+    /// `container-type`/`container`). Upstream global CSS ships via the
+    /// streams merge, invisible to this compile, so the container-root
+    /// check trusts this signal and stays silent. Absent means standalone:
+    /// the check reads local global CSS only.
+    #[serde(default, alias = "upstream_container_root")]
+    pub upstream_container_root: bool,
     #[serde(default)]
     pub jsx_hosts: Option<Vec<String>>,
     #[serde(default)]

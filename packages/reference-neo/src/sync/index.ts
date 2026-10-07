@@ -26,6 +26,7 @@ import {
   prepareFragments,
   type PreparedFragments,
 } from '../collect/index.ts'
+import { hasUpstreamContainerRoot } from '../system/base/container-root.ts'
 import { createPortableFragmentBundle } from '../system/base/fragments.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
@@ -151,6 +152,9 @@ async function evaluateAndCompile(
       declarationRoot: cwd,
       include: config.include,
       logs: config.logs,
+      upstreamContainerRoot:
+        hasUpstreamContainerRoot([...(config.extends ?? []), ...(config.layers ?? [])]) ||
+        undefined,
     })
     attachScanRetention(request, prepared)
     markPhase('evalEnd')

@@ -24,6 +24,12 @@ export interface CompileRequestInput {
   declarationRoot: string
   include: string[]
   logs?: LogChannel[]
+  /**
+   * Upstream container root verdict: set only when an extends/layers
+   * system roots one, so the key drops from the serialized request
+   * otherwise and the SYNC-04 pin stays byte-identical.
+   */
+  upstreamContainerRoot?: boolean
 }
 
 export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRequest {
@@ -35,5 +41,6 @@ export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRe
     declarationRoot: input.declarationRoot,
     include: input.include,
     logs: input.logs,
+    upstreamContainerRoot: input.upstreamContainerRoot || undefined,
   }
 }
