@@ -342,7 +342,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
             let matched = match &edge.target {
                 EdgeTarget::Primitive(name) => self.surface.primitives.contains(name),
                 EdgeTarget::Local(local_name) => self
-                    .component_is_traced(module_path, local_name, stack)?
+                    .local_target_is_traced(module_path, local_name, stack)?
                     .is_some(),
                 EdgeTarget::Imported {
                     source,
@@ -356,6 +356,22 @@ impl<'s> StyleTraceAnalyzer<'s> {
             }
         }
         Ok(None)
+    }
+
+    /// The owned props when a local edge target traces: a local component
+    /// or factory, else an ident alias chain (`const IconShell = Div`)
+    /// onto a primitive, an import, or another local. One walk serves
+    /// both: components classify local, aliases follow the chain.
+    fn local_target_is_traced(
+        &mut self,
+        module_path: &Path,
+        target: &str,
+        stack: &mut Vec<String>,
+    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+        let Some(module) = self.modules.get(module_path).cloned() else {
+            return Ok(None);
+        };
+        super::aliases::ident_alias_target_is_traced(self, module_path, &module, target, stack)
     }
 
     fn factory_target_is_traced(

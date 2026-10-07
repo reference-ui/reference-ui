@@ -5,7 +5,9 @@
 
 use std::collections::BTreeSet;
 
-use crate::{collect_reference_style_prop_names, collect_style_prop_names};
+use crate::{
+    SurfaceTrust, collect_reference_style_prop_names, collect_style_prop_names,
+};
 
 use super::fixtures::{reference_lib_sync_root, ScratchDir};
 
@@ -134,12 +136,17 @@ fn engine_surface_type_imports_resolve_without_files() {
         ),
     );
     let surface = BTreeSet::from(["color".to_string(), "mt".to_string()]);
+    let primitives = BTreeSet::new();
+    let trust = SurfaceTrust {
+        style_props: &surface,
+        primitives: &primitives,
+    };
 
     let names = collect_style_prop_names(
         scratch.root(),
         &scratch.root().join("src/card.ts"),
         "CardProps",
-        Some(&surface),
+        Some(trust),
     )
     .expect("expected surface-type import to resolve");
     assert_eq!(
@@ -151,10 +158,66 @@ fn engine_surface_type_imports_resolve_without_files() {
         scratch.root(),
         &scratch.root().join("src/card.ts"),
         "GhostCardProps",
-        Some(&surface),
+        Some(trust),
     )
     .expect("expected unknown imports to resolve tolerantly");
     assert!(ghost.is_empty());
+}
+
+#[test]
+fn omit_over_unresolvable_primitive_props_uses_trusted_surface() {
+    let scratch = ScratchDir::new("primitive-props-fallback");
+    scratch.write(
+        "src/types.ts",
+        concat!(
+            "import type { DivProps } from '@reference-ui/react'\n",
+            "export type IconProps = Omit<DivProps, 'size'> & { title?: string }\n",
+        ),
+    );
+    let style_props = BTreeSet::from(["color".to_string(), "size".to_string()]);
+    let primitives = BTreeSet::from(["Div".to_string()]);
+    let trust = SurfaceTrust {
+        style_props: &style_props,
+        primitives: &primitives,
+    };
+
+    let names = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/types.ts"),
+        "IconProps",
+        Some(trust),
+    )
+    .expect("expected trusted fallback to resolve");
+    assert_eq!(
+        names,
+        vec!["color".to_string(), "title".to_string()],
+        "trusted DivProps supplies color while Omit still removes size"
+    );
+}
+
+#[test]
+fn omit_over_unresolvable_primitive_props_without_trust_resolves_owned_only() {
+    let scratch = ScratchDir::new("primitive-props-strict");
+    scratch.write(
+        "src/types.ts",
+        concat!(
+            "import type { DivProps } from '@reference-ui/react'\n",
+            "export type IconProps = Omit<DivProps, 'size'> & { title?: string }\n",
+        ),
+    );
+
+    let names = collect_style_prop_names(
+        scratch.root(),
+        &scratch.root().join("src/types.ts"),
+        "IconProps",
+        None,
+    )
+    .expect("expected strict resolution to tolerate the missing import");
+    assert_eq!(
+        names,
+        vec!["title".to_string()],
+        "without trust, the unresolvable Omit member contributes nothing"
+    );
 }
 
 #[test]

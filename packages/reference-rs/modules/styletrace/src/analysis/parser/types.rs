@@ -12,7 +12,9 @@ use crate::analysis::model::PropBindings;
 use crate::analysis::util::{
     is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, slice_span,
 };
-use crate::resolver::{collect_declared_prop_names, collect_style_prop_names, StyleTraceError};
+use crate::resolver::{
+    SurfaceTrust, collect_declared_prop_names, collect_style_prop_names, StyleTraceError,
+};
 use oxc_ast::ast::{
     AssignmentTarget, BindingPattern, Expression, FormalParameter, Statement, TSType,
 };
@@ -323,15 +325,15 @@ fn resolve_type_reference(
     ctx: &ParserContext,
     reference: &oxc_ast::ast::TSTypeReference<'_>,
 ) -> Result<BTreeSet<String>, StyleTraceError> {
-    let fallback = ctx
-        .surface
-        .trusts_surface_type_names()
-        .then(|| &ctx.surface.style_props);
+    let trust = ctx.surface.trusts_surface_type_names().then(|| SurfaceTrust {
+        style_props: &ctx.surface.style_props,
+        primitives: &ctx.surface.primitives,
+    });
     Ok(collect_style_prop_names(
         ctx.workspace_root,
         ctx.path,
         slice_span(ctx.source, reference.type_name.span()),
-        fallback,
+        trust,
     )?
     .into_iter()
     .filter(|name| ctx.surface.style_props.contains(name))

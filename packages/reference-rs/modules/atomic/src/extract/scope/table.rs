@@ -32,6 +32,11 @@ pub struct Scope {
 pub struct ScopeTable {
     scopes: Vec<Scope>,
     bindings: Vec<Binding>,
+    /// Same-file ident alias edges by declaring scope: `const IconShell =
+    /// Div` records `(scope, IconShell) -> Div`. Values never read this;
+    /// only host re-admission follows it, so it stays beside the table
+    /// instead of riding `BindingInit`.
+    aliases: BTreeMap<(ScopeId, String), String>,
 }
 
 impl ScopeTable {
@@ -86,6 +91,27 @@ impl ScopeTable {
             cursor = self.parent_of(id);
         }
         None
+    }
+
+    /// Record one declarator's ident alias edge (`const X = Y`).
+    /// The collector calls this for every identifier init; kind gates at
+    /// read time, so `let`/`var` edges sit inert until then.
+    pub fn record_alias(&mut self, scope: ScopeId, name: &str, target: &str) {
+        self.aliases
+            .insert((scope, name.to_string()), target.to_string());
+    }
+
+    /// Innermost ident alias edge visible from a scope, with its declaring
+    /// scope. Only `const` declarators re-admit: params, functions, imports,
+    /// and `let`/`var` shadow without an edge, so `function f(X)` over a
+    /// top-level `const X = Div` resolves to the param and answers None.
+    pub fn alias_edge(&self, name: &str, scope: ScopeId) -> Option<(ScopeId, String)> {
+        let (decl, binding) = self.resolve_from(name, scope)?;
+        if !matches!(binding.kind, BindingKind::Const) {
+            return None;
+        }
+        let target = self.aliases.get(&(decl, name.to_string()))?;
+        Some((decl, target.clone()))
     }
 
     /// Attach a lowered pure-helper descriptor to a valueless binding.

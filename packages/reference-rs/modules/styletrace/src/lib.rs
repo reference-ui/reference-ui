@@ -22,5 +22,5 @@ pub use diagnostics::{StyletraceDiagnostic, StyletraceDiagnosticCode};
 pub use output::StyletraceDetailedResult;
 pub use resolver::{
     collect_declared_prop_names, collect_reference_style_prop_names, collect_style_prop_names,
-    StyleTraceError,
+    StyleTraceError, SurfaceTrust,
 };

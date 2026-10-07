@@ -127,6 +127,12 @@ impl<'a> ScopeChain<'a> {
     pub fn at(self, scope: ScopeId) -> Scoped<'a> {
         Scoped { chain: self, scope }
     }
+
+    /// Innermost ident alias edge (`const X = Y`) visible from a scope.
+    /// Host re-admission follows this; values never do.
+    pub fn alias_edge(self, name: &str, at: ScopeId) -> Option<(ScopeId, String)> {
+        self.table.alias_edge(name, at)
+    }
 }
 
 /// Classify a found binding as local or imported.

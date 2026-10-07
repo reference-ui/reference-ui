@@ -123,7 +123,11 @@ impl<'a> ExtractContext<'a> {
     /// `shadowed_member_admitted`), after which membership decides.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
         if bindings::is_shadowed(self.shadowed, name) {
-            return false;
+            // A shadowed plain tag is a host only through its alias chain;
+            // the chain verdict replaces membership below (the alias name
+            // itself is never configured). Dotted names never shadow, so
+            // member tags always fall through to the root check.
+            return self.shadowed_plain_admitted(name);
         }
         if let Some((root, member)) = name.split_once('.') {
             if bindings::is_shadowed(self.shadowed, root)
@@ -136,6 +140,32 @@ impl<'a> ExtractContext<'a> {
             return true;
         }
         name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+    }
+
+    /// True when a shadowed plain tag re-admits through a same-file const
+    /// ident alias chain: `const IconShell = Div` re-admits `<IconShell>`
+    /// exactly when the chain ends at an admitted, unshadowed host tag.
+    /// Hops resolve lexically (each target from its own declaring scope)
+    /// with a cycle guard, so `const A = B; const B = A` stays silent.
+    /// Member tags keep their object-literal path below.
+    fn shadowed_plain_admitted(&self, name: &str) -> bool {
+        if name.contains('.') {
+            return false;
+        }
+        let mut seen = FxHashSet::default();
+        let mut current = name.to_string();
+        let mut scope = self.scope;
+        loop {
+            if !seen.insert(current.clone()) {
+                return false;
+            }
+            let Some((decl, target)) = self.chain.alias_edge(&current, scope) else {
+                return !bindings::is_shadowed(self.shadowed, &current)
+                    && self.jsx_hosts.contains(&current);
+            };
+            current = target;
+            scope = decl;
+        }
     }
 
     /// True when a shadowed member root re-admits through the scope table:

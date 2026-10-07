@@ -24,3 +24,4 @@ pub(crate) use collect::collect_with;
 pub(crate) use fill::{OriginFill, SpreadResidue};
 pub use lookup::{ImportLookup, Lookup, ScopeChain, Scoped};
 pub use table::{ScopeId, ScopeTable, ROOT_SCOPE};
+pub(crate) use value::peel;

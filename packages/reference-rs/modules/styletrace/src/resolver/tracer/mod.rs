@@ -111,14 +111,27 @@ fn style_props_entry_candidates(declaration_root: &Path) -> Vec<(PathBuf, &'stat
     candidates
 }
 
+/// Engine-mode surface trust for wipe-state traces: when generated
+/// declarations are missing (cold trees, wiped outputs), an unresolvable
+/// surface-denoting import falls back to these style names instead of
+/// resolving empty. `None` keeps disk resolution strict.
+#[derive(Debug, Clone, Copy)]
+pub struct SurfaceTrust<'a> {
+    pub style_props: &'a BTreeSet<String>,
+    pub primitives: &'a BTreeSet<String>,
+}
+
 pub fn collect_style_prop_names(
     sync_root: &Path,
     entry_path: &Path,
     export_name: &str,
-    unresolved_style_props: Option<&BTreeSet<String>>,
+    trust: Option<SurfaceTrust<'_>>,
 ) -> Result<Vec<String>, StyleTraceError> {
     let mut session = TraceSession::new(sync_root);
-    session.unresolved_style_props = unresolved_style_props.cloned();
+    if let Some(trust) = trust {
+        session.unresolved_style_props = Some(trust.style_props.clone());
+        session.unresolved_primitive_names = Some(trust.primitives.clone());
+    }
     let mut visited = BTreeSet::new();
     let env = FxHashMap::default();
     let mut ctx = TraceContext {

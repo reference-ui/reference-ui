@@ -6,6 +6,7 @@
 //! helpers below build those programs and filter the compiler channel,
 //! so submodules assert on wants, sinks, and diagnostics alike.
 
+mod alias_hosts;
 mod branches;
 mod calls;
 mod gating;

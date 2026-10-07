@@ -6,7 +6,7 @@
 //! select. Every copied value carries a `Dep` on its source so a later write
 //! strips the copy instead of resolving stale.
 
-use oxc_ast::ast::{BindingPattern, VariableDeclarationKind, VariableDeclarator};
+use oxc_ast::ast::{BindingPattern, Expression, VariableDeclarationKind, VariableDeclarator};
 
 use super::super::binding::{Binding, BindingInit, BindingKind};
 use super::super::destructure::{bind_pattern, PatternCtx};
@@ -34,6 +34,7 @@ pub(crate) fn record_declarator(collector: &mut ScopeCollector<'_>, decl: &Varia
                 span: ident.span,
             },
         );
+        record_ident_alias(collector, decl.init.as_ref(), name);
         return;
     }
     // const { color } = theme  — each name carries the entry it selects
@@ -254,6 +255,30 @@ fn alias_init(
             src_key: None,
         }],
     ))
+}
+
+/// Record one declarator's ident edge (`const X = Y`) for host
+/// re-admission. Transparent wrappers peel (`as`, parens, satisfies,
+/// non-null); self-edges stay out (the declarator shadows its own scope,
+/// so the target is TDZ-dead at runtime).
+fn record_ident_alias(
+    collector: &mut ScopeCollector<'_>,
+    init: Option<&Expression<'_>>,
+    name: &str,
+) {
+    let Some(init) = init else {
+        return;
+    };
+    let Expression::Identifier(target) = value::peel(init) else {
+        return;
+    };
+    if target.name.as_str() == name {
+        return;
+    }
+    let scope = collector.current();
+    collector
+        .table
+        .record_alias(scope, name, target.name.as_str());
 }
 
 /// Map a declaration keyword to its binding kind.

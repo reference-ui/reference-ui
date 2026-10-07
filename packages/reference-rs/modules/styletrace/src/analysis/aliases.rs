@@ -77,6 +77,26 @@ pub(super) fn collect_alias_bindings(
     Ok(())
 }
 
+/// The owned props when a plain ident alias target traces: follows one
+/// `const Alias = Target` chain through locals, imports, and primitives
+/// with the member walk's cycle guard. Plain JSX edges (`<IconShell>`)
+/// resolve through this; member hosts keep their emit loop above.
+pub(super) fn ident_alias_target_is_traced(
+    analyzer: &mut StyleTraceAnalyzer<'_>,
+    path: &Path,
+    module: &TraceModule,
+    target: &str,
+    stack: &mut Vec<String>,
+) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    let walk = WalkModule {
+        path,
+        module,
+        rel: "",
+        aliases: &[],
+    };
+    alias_target_is_traced(analyzer, &walk, target, stack)
+}
+
 /// Outcome of one walk step: follow the next link, or finish with a verdict.
 enum WalkAction {
     Follow(String),

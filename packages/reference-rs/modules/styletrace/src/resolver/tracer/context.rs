@@ -27,6 +27,9 @@ pub struct TraceSession {
     /// Engine-mode fallback: names an unresolvable `@reference-ui/react`
     /// surface-type import denotes. `None` keeps disk resolution strict.
     pub unresolved_style_props: Option<BTreeSet<String>>,
+    /// Primitive names paired with the fallback above: `{Primitive}Props`
+    /// denotes the surface too. Always `Some` iff the fallback is `Some`.
+    pub unresolved_primitive_names: Option<BTreeSet<String>>,
     /// Owned-mode prune: references to the surface type names contribute
     /// no names, so the expansion is the host's own declared props.
     pub prune_surface: bool,
@@ -38,6 +41,7 @@ impl TraceSession {
             sync_root: sync_root.to_path_buf(),
             module_cache: FxHashMap::default(),
             unresolved_style_props: None,
+            unresolved_primitive_names: None,
             prune_surface: false,
         }
     }
@@ -270,19 +274,19 @@ impl<'a> TraceContext<'a> {
         self.resolve_declaration(&imported_module, &import_binding.imported_name)
     }
 
-    /// Engine-mode fallback: an unresolvable surface-type import
-    /// (`StyleProps`, `PrimitiveProps`) from `@reference-ui/react` denotes
-    /// the engine surface, so wipe-state traces resolve without file edges.
-    /// Real declarations always win (this runs only when module resolution
-    /// failed); disk sessions carry no fallback and other names keep
-    /// returning `None`.
+    /// Engine-mode fallback: an unresolvable surface-denoting import
+    /// (`StyleProps`, `PrimitiveProps`, `{Primitive}Props`) from
+    /// `@reference-ui/react` denotes the engine surface, so wipe-state
+    /// traces resolve without file edges. Real declarations always win
+    /// (this runs only when module resolution failed); disk sessions
+    /// carry no fallback and other names keep returning `None`.
     fn unresolved_surface_type_fallback(
         &self,
         source: &str,
         imported_name: &str,
         module_path: &Path,
     ) -> Option<(PathBuf, TypeDeclaration)> {
-        if source != "@reference-ui/react" || !is_surface_type_name(imported_name) {
+        if source != "@reference-ui/react" || !self.denotes_surface(imported_name) {
             return None;
         }
         let fallback = self.session.unresolved_style_props.clone()?;
@@ -294,6 +298,24 @@ impl<'a> TraceContext<'a> {
                 expr: TypeExpr::Object(fallback),
             }),
         ))
+    }
+
+    /// True when an unresolvable react import denotes the surface: the two
+    /// surface aliases, or a primitive's props (`DivProps` is native props
+    /// plus the surface by construction). Owned-mode pruning keeps its own
+    /// narrower predicate; this runs only under the engine fallback.
+    fn denotes_surface(&self, imported_name: &str) -> bool {
+        if is_surface_type_name(imported_name) {
+            return true;
+        }
+        self.session
+            .unresolved_primitive_names
+            .as_ref()
+            .is_some_and(|primitives| {
+                imported_name
+                    .strip_suffix("Props")
+                    .is_some_and(|stem| primitives.contains(stem))
+            })
     }
 }
 
