@@ -29,9 +29,10 @@ PORT/DROP verdicts; distro/watch/etc. decommissions stand).
 | `@matrix/chain-t11` | `matrix/tests/chain/T11` | Parallel extend chains: two independent transitive paths at one boundary. |
 | `@matrix/chain-t12` | `matrix/tests/chain/T12` | Diamond base with mixed branches: one branch layered, one extended. |
 | `@matrix/chain-t13` | `matrix/tests/chain/T13` | Parallel extend chains plus a shared app-level layer. |
+| `@matrix/chain-t16` | `matrix/tests/chain/T16` | Prebuilt aliased-host composition: extends lib (transitive icons layers) plus a direct `layers` leg on `@fixtures/aliased-host-library`; asserts every emitted class has a backing rule, zero `no compiled class` warnings, and shell computed styles. |
 | `@matrix/mcp` | `matrix/tests/mcp` (19 files) | The whole MCP standard against the shipped artifact: tools, resources, icons, project discovery/switching, paths/symlinks, registry lifecycle, resilient boot — including packed-boundary `_private` legs over `@fixtures/extend-library`. |
 
-Mixed tiers (T3/T9/T10/T12/T13) exercise `layers:` legs in
+Mixed tiers (T3/T9/T10/T12/T13/T16) exercise `layers:` legs in
 combination; T2 is the isolated single-mode proof. All chain tiers
 run over packed fixtures, so packed-boundary extends stays proven
 in matrix.
