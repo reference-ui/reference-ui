@@ -1,7 +1,8 @@
 # LIB_TASTY_RUNTIME_404 — packaged lib lazy-imports an unmaterialized `./tasty/runtime.js`
 
-STATUS: OPEN — filed 2026-10-08 by the robustness voyage (WAVE4), pre-existing,
-**not** repaired (needs a scope ruling).
+STATUS: FIXING — WAVE5 (combined materialize + analyzable), per Oracle
+`CONCLUSION.oracle` CONC-P2-1. Filed 2026-10-08 by the robustness voyage
+(WAVE4); prior to WAVE5 it was pre-existing and unrepaired.
 
 ## Symptom
 
