@@ -29,3 +29,10 @@ build green.
   Re-baselined exactly **6 pin lines** → `verify-pins` **PASS**;
   `agent vitest src/config + src/lib/microbundle` green; `agentneo q`
   0 errors. Commits: `a65eecad7` (code), `cec363eab` (pins-only).
+- **Oracle `WAVE2.C2.arc`: LAND, no blocker.** Confirmed every frozen bar and
+  the two-commit split. Follow-ups: **ARC-P2-1** (P2, prompt — test-core runner
+  exports the SKIP env into lib's build, so mandated agent flows can serve
+  stale-neo dist; fix the runner's freshness), **ARC-P3-1** (P3 — a failed
+  `build-bin` leaves a gate-fresh partial emit; remove `dist` on failure), and
+  P4 ledger items (pin aggregates, drift-doc top pointer). Fix line dispatched.
+
