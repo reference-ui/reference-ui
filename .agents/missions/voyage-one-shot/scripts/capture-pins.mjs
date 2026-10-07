@@ -1,6 +1,7 @@
 // Byte-identity pin capture for the voyage-one-shot mission (wave 0).
 // It takes a package directory, hashes every file under its `.reference-ui/`
-// sync output (excluding the transient `tmp/` scratch dir), and emits sorted
+// sync output (excluding the transient `tmp/` scratch dir and the `sync.lock/`
+// runtime lock a live `ref sync --watch` holds), and emits sorted
 // sha256 lines plus an aggregate tree hash. Deterministic: paths are relative
 // and forward-slashed, so the pin is comparable across runs and machines.
 //
@@ -20,6 +21,7 @@ function walk(current, acc = []) {
     const full = join(current, entry.name)
     const rel = relative(root, full).split(sep).join('/')
     if (rel === 'tmp' || rel.startsWith('tmp/')) continue
+    if (rel === 'sync.lock' || rel.startsWith('sync.lock/')) continue
     if (entry.isDirectory()) walk(full, acc)
     else if (entry.isFile()) acc.push(full)
   }
