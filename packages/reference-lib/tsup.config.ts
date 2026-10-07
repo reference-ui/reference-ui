@@ -3,6 +3,11 @@ import { defineConfig } from 'tsup'
 const external = [
   '@reference-ui/react',
   /^@reference-ui\/styled(\/.*)?$/,
+  // The generated types bundle lazy-imports its tasty runtime relative to
+  // dist/index.mjs; keep the edge external so esbuild does not eagerly inline
+  // the 550-chunk runtime, and the materialized dist/tasty/ payload resolves
+  // it at runtime (the lazy chunk graph ships beside index.mjs).
+  './tasty/runtime.js',
   'react',
   'react-dom',
 ]

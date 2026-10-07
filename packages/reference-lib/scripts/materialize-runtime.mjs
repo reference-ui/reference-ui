@@ -9,6 +9,8 @@ const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(packageRoot, 'dist')
 const generatedRoot = resolve(packageRoot, '.reference-ui')
 const packagedRuntimeDir = resolve(distDir, 'runtime/reference-ui')
+const generatedTastyDir = resolve(generatedRoot, 'types/tasty')
+const packagedTastyDir = resolve(distDir, 'tasty')
 
 const runtimePackages = ['react', 'styled']
 
@@ -59,6 +61,14 @@ for (const packageName of runtimePackages) {
   await rm(targetDir, { recursive: true, force: true })
   await cp(sourceDir, targetDir, { recursive: true })
 }
+
+// The packaged runtime lazy-imports `./tasty/runtime.js`, resolved relative
+// to dist/index.mjs. runtime.js statically imports ./chunk-registry.js and
+// ./manifest.js; its 550 ./chunks/*.js edges are runtime-computed, so the
+// whole generated dir is copied verbatim — runtime.js alone is insufficient.
+await access(generatedTastyDir, constants.F_OK)
+await rm(packagedTastyDir, { recursive: true, force: true })
+await cp(generatedTastyDir, packagedTastyDir, { recursive: true })
 
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.mjs'), runtimeRewrites)
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.d.mts'), runtimeRewrites)

@@ -65,14 +65,43 @@ function exportedNames(source: string): string[] {
   return names
 }
 
+// Dist-mode bundles carry tsc's helper wrapper before the placeholder is
+// rewritten; the real helper body (with its nested function braces) proves
+// the stripper finds the exact definition end.
+const HELPER_DEFINITION = `var __rewriteRelativeImportExtension = function(path, preserveJsx) {
+  if (typeof path === "string" && /^\\.\\.?\\//.test(path)) {
+    return path.replace(/\\.(tsx)$|((?:\\.d)?)((?:\\.[^./]+?)?)\\.([cm]?)ts$/i, function(m, tsx, d2, ext, cm) {
+      return tsx ? preserveJsx ? ".jsx" : ".js" : d2 && (!ext || !cm) ? m : d2 + ext + "." + cm.toLowerCase() + "js";
+    });
+  }
+  return path;
+};
+`
+
 describe('reference-types rewrite', () => {
-  it('rewrites the runtime placeholder to the literal tasty edge', () => {
+  it('rewrites a plain source-mode placeholder to the literal tasty edge', () => {
     expect(rewriteTypesRuntimeImport('import("__REFERENCE_UI_TYPES_RUNTIME__")')).toBe(
       'import("./tasty/runtime.js")'
     )
   })
 
-  it('rewrites every occurrence, not just the first', () => {
+  it('unwraps the double-quoted dist-mode helper call and strips the helper', () => {
+    const code = `${HELPER_DEFINITION}const load = () => import(__rewriteRelativeImportExtension("__REFERENCE_UI_TYPES_RUNTIME__"))\n`
+    const rewritten = rewriteTypesRuntimeImport(code)
+    expect(rewritten).toContain('import("./tasty/runtime.js")')
+    expect(rewritten).not.toContain('__rewriteRelativeImportExtension')
+    expect(rewritten).not.toContain('__REFERENCE_UI_TYPES_RUNTIME__')
+  })
+
+  it('unwraps the single-quoted dist-mode helper call and strips the helper', () => {
+    const code = `${HELPER_DEFINITION}const load = () => import(__rewriteRelativeImportExtension('__REFERENCE_UI_TYPES_RUNTIME__'))\n`
+    const rewritten = rewriteTypesRuntimeImport(code)
+    expect(rewritten).toContain('import("./tasty/runtime.js")')
+    expect(rewritten).not.toContain('__rewriteRelativeImportExtension')
+    expect(rewritten).not.toContain('__REFERENCE_UI_TYPES_RUNTIME__')
+  })
+
+  it('rewrites every plain occurrence, not just the first', () => {
     const code = 'a("__REFERENCE_UI_TYPES_RUNTIME__") + b("__REFERENCE_UI_TYPES_RUNTIME__")'
     const rewritten = rewriteTypesRuntimeImport(code)
     expect(rewritten).not.toContain('__REFERENCE_UI_TYPES_RUNTIME__')
@@ -82,6 +111,13 @@ describe('reference-types rewrite', () => {
   it('throws when the placeholder is absent before postprocess', () => {
     expect(() => rewriteTypesRuntimeImport('const empty = true')).toThrow(
       /contain __REFERENCE_UI_TYPES_RUNTIME__ before postprocess/
+    )
+  })
+
+  it('throws when a helper reference survives the rewrite', () => {
+    const code = `${HELPER_DEFINITION}const load = () => import(__rewriteRelativeImportExtension("__REFERENCE_UI_TYPES_RUNTIME__"))\nconst other = __rewriteRelativeImportExtension("kept.js")\n`
+    expect(() => rewriteTypesRuntimeImport(code)).toThrow(
+      /still references __rewriteRelativeImportExtension after rewrite/
     )
   })
 })

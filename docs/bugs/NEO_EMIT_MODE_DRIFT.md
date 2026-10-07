@@ -117,3 +117,5 @@ dist-mode banner form `// dist/src/…` regardless of the caller's
 outfile-relative). The one-shot pins change for exactly six banner-carrying
 files (`system/baseSystem.mjs` + `types/types.mjs` × docs/lib/icons); their
 banner-stripped bytes are unchanged and the re-baseline is captain-owned.
+
+**Canon (WAVE5).** The tasty runtime edge converges dist mode onto source mode: `rewriteTypesRuntimeImport` now unwraps tsc's `__rewriteRelativeImportExtension("<placeholder>")` call (both quote forms) to the same plain `import("./tasty/runtime.js")` source mode already emitted, strips the helper definition once unreferenced, and asserts zero helper residue — shrinking the accepted `types.mjs` content-class residual by that one edge (the re-baseline is exactly `types/types.mjs` × docs/lib/icons).

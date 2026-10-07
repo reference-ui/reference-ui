@@ -17,9 +17,15 @@ const requiredFiles = [
 
 // Landing Phase C (B5): Neo layout asserts — styled/ is data-only
 // (runtime-data.mjs + styles.css + types), no Panda css/jsx/patterns dirs.
+// The tasty runtime tripwire: the packaged bundle's lazy `./tasty/runtime.js`
+// edge must materialize beside the runtime files (runtime.js statically
+// imports manifest.js + chunk-registry.js), or consumers 404 the lazy chunk.
 const packagedRuntimeFiles = [
   resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
   resolve(distDir, 'runtime/reference-ui/styled/runtime-data.mjs'),
+  resolve(distDir, 'tasty/runtime.js'),
+  resolve(distDir, 'tasty/manifest.js'),
+  resolve(distDir, 'tasty/chunk-registry.js'),
 ]
 
 function run(command, args) {

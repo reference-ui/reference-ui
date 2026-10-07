@@ -1,8 +1,9 @@
 # LIB_TASTY_RUNTIME_404 — packaged lib lazy-imports an unmaterialized `./tasty/runtime.js`
 
-STATUS: FIXING — WAVE5 (combined materialize + analyzable), per Oracle
-`CONCLUSION.oracle` CONC-P2-1. Filed 2026-10-08 by the robustness voyage
-(WAVE4); prior to WAVE5 it was pre-existing and unrepaired.
+STATUS: FIXED — WAVE5 (combined materialize + analyzable), implemented and
+crew-verified 2026-10-08; captain re-run + pins-only re-baseline pending, per
+Oracle `CONCLUSION.oracle` CONC-P2-1. Filed 2026-10-08 by the robustness
+voyage (WAVE4); prior to WAVE5 it was pre-existing and unrepaired.
 
 ## Symptom
 
@@ -103,3 +104,38 @@ a live dev server never sees a half-written/missing entry.
   finding".
 - `dist/index.mjs` context @byte 888610; `materialize-runtime.mjs:13`;
   `.reference-ui/types/tasty/runtime.js` present, `dist/tasty/` absent.
+
+## Fix (WAVE5, 2026-10-08)
+
+Both halves landed; full crew report at
+`.agents/missions/voyage-robustness/reports/WAVE5.tasty.md`.
+
+1. **Analyzable edge.** `rewrite-types-runtime-import.ts` replaces the whole
+   tsc helper call `__rewriteRelativeImportExtension("<placeholder>")` (both
+   quote forms) with the literal `"./tasty/runtime.js"`, strips the helper
+   definition once unreferenced, keeps the plain-placeholder fallback and
+   triple-guard throws, and adds a zero-`__rewriteRelativeImportExtension`
+   assertion. `dist/index.mjs` @ 9315 now reads
+   `() => import("./tasty/runtime.js")` with **zero** helper references and no
+   helper body.
+2. **Materialized payload.** `materialize-runtime.mjs` copies
+   `.reference-ui/types/tasty/` → `dist/tasty/` verbatim (runtime.js,
+   manifest.js, chunk-registry.js, chunks/, d.ts); `build-package.mjs` asserts
+   `dist/tasty/{runtime,manifest,chunk-registry}.js` exist (permanent tripwire).
+3. **Lazy edge preserved.** Because an analyzable relative import is now
+   resolvable, the lib's tsup/esbuild eagerly inlined the whole 550-chunk
+   runtime (dist 2.15 MB → 4.16 MB) until `./tasty/runtime.js` was pinned
+   external in `packages/reference-lib/tsup.config.ts` (see WAVE5 report
+   §Disclosure). With the edge external, `dist/index.mjs` keeps the lazy
+   literal and stays 2.15 MB.
+4. **Evidence (crew).** Documented package-cwd lib build
+   (`REF_PIPELINE_SKIP_DEPENDENCY_BUILDS=1 pnpm --dir packages/reference-lib run
+   build`, after `node packages/reference-neo/tools/build-bin.mjs`): helper
+   count 0, plain `import("./tasty/runtime.js")` present, `dist/tasty/` complete,
+   6.8 s wall (no regression). Unmodified consumer smoke **PASS**
+   (`SMOKE-GATE PASS`, incl. `PASS mount-reference` +
+   `zero-unexpected-console-errors`); scaffold `vite build` emits zero
+   tasty/analyze warnings and code-splits the runtime. `pnpm agentneo q` 0
+   errors; neo packager+sync vitest 73/73. `verify-pins` shows exactly the one
+   on-disk delta (lib `types/types.mjs`); docs/icons recomputed byte-exactly,
+   captain re-baselines all three.
