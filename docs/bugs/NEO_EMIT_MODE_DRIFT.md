@@ -105,15 +105,13 @@ an accepted, mode-scoped residual, not a bug to fix. Any future cross-mode byte
 gate must scope to dist mode; comparing a source-mode emit against a dist-mode
 pin is out of contract.
 
-**Caveat (C1 falsification).** Dist mode alone does not reproduce the committed
-lib pin. The fragment/types bundles also embed esbuild `// <path>` banner
-comments whose text is `process.cwd()`-relative (`react.mjs` is minified and
-banner-free, so it is unaffected, as is its map). The pin was captured by the
-voyage-one-shot harness with `process.cwd()` at the repo root, while lib's
-documented `sync` runs with `cwd = packages/reference-lib`; the two forms differ
-as `// packages/reference-neo/dist/...` (pin) vs `// ../reference-neo/dist/...`
-(documented) for `baseSystem.mjs`, and likewise across the 47 banner lines of
-`types.mjs`. Reconciling this cwd axis (choose a canonical invocation cwd, or
-set a canonical `absWorkingDir` in the microbundle seam and re-baseline) is a
-captain/Oracle decision and is not applied here; the zero-churn bar of C1 is
-open until it is made.
+**Canon (C2).** The cwd axis is removed at the microbundle seam:
+`absWorkingDir` is pinned to the Neo package root (`NEO_PACKAGE_ROOT`, resolved
+from `import.meta.url`) in `lib/microbundle/build-options.ts`, and the config
+bundler resolves metafile keys against that same base. Every documented path —
+package cwd, root dir-arg, harness, watch, packed install — now emits the
+dist-mode banner form `// dist/src/…` regardless of the caller's
+`process.cwd()`; `react.mjs` and its map are unaffected (minified and
+outfile-relative). The one-shot pins change for exactly six banner-carrying
+files (`system/baseSystem.mjs` + `types/types.mjs` × docs/lib/icons); their
+banner-stripped bytes are unchanged and the re-baseline is captain-owned.

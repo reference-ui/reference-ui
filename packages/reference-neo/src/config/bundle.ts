@@ -2,7 +2,7 @@
 // It takes a config path and emits bundled code plus local dependency paths.
 // This module is a Neo-owned copy of the core config bundler with a Neo-local entry.
 
-import { microBundleWithResult } from '../lib/microbundle/index.ts'
+import { microBundleWithResult, NEO_PACKAGE_ROOT } from '../lib/microbundle/index.ts'
 import { CONFIG_EXTERNALS } from './constants.ts'
 import { existsSync, realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -19,13 +19,15 @@ export interface BundledConfig {
 }
 
 function normalizeConfigDependencyPaths(configPath: string, inputPaths: readonly string[]): string[] {
-  const configDir = dirname(resolve(configPath))
   const normalizePath = (filePath: string) => (existsSync(filePath) ? realpathSync(filePath) : filePath)
 
   return Array.from(
     new Set(
       inputPaths
-        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(configDir, inputPath)))
+        // Metafile inputs are relative to the canon base (absWorkingDir), not
+        // the config dir; resolving them from configDir would silently corrupt
+        // the watch dependency paths.
+        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(NEO_PACKAGE_ROOT, inputPath)))
         .map(normalizePath)
         .filter((inputPath) => !inputPath.includes('/node_modules/'))
         .concat(normalizePath(configPath)),

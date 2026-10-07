@@ -2,11 +2,12 @@
 // It takes a config path and emits bundled code plus local dependency paths.
 // Vendored (not retargeted) for one reason only: Neo resolves its author
 // entry from `import.meta.url`, which breaks once bundled into mcp dist
-// (F4). Everything else delegates to Neo's microbundle seam.
+// (F4). Everything else delegates to Neo's microbundle seam, including the
+// canon base that metafile keys resolve against.
 
 import { existsSync, realpathSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { microBundleWithResult } from '@reference-ui/neo/microbundle'
+import { resolve } from 'node:path'
+import { microBundleWithResult, NEO_PACKAGE_ROOT } from '@reference-ui/neo/microbundle'
 import { CONFIG_EXTERNALS } from '@reference-ui/neo/config/constants'
 import { getNeoAuthorImportMap } from './author-entry'
 
@@ -21,13 +22,15 @@ export interface BundledConfig {
 }
 
 function normalizeConfigDependencyPaths(configPath: string, inputPaths: readonly string[]): string[] {
-  const configDir = dirname(resolve(configPath))
   const normalizePath = (filePath: string) => (existsSync(filePath) ? realpathSync(filePath) : filePath)
 
   return Array.from(
     new Set(
       inputPaths
-        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(configDir, inputPath)))
+        // Metafile inputs are relative to the canon base (absWorkingDir), not
+        // the config dir; resolving them from configDir would silently corrupt
+        // the watch dependency paths.
+        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(NEO_PACKAGE_ROOT, inputPath)))
         .map(normalizePath)
         .filter((inputPath) => !inputPath.includes('/node_modules/'))
         .concat(normalizePath(configPath)),
