@@ -66,7 +66,9 @@ const MODULE_NOT_FOUND = 'ERR_MODULE_NOT_FOUND'
 // resolved path inside a package's `.reference-ui/` system dir. A genuinely
 // uninstalled package reports `Cannot find package '@reference-ui/...'` (no
 // `.reference-ui/` path) and must stay quiet — its remedy is install, not sync.
-const UPSTREAM_MARKER = /\.reference-ui\//
+// Both separators are accepted so a Windows path (`...\.reference-ui\...`)
+// earns the same hint as a POSIX one.
+const UPSTREAM_MARKER = /[\\/]\.reference-ui[\\/]/
 const UPSTREAM_HINT =
   'This can happen when an upstream Reference UI package has not been synced. Run sync on the upstream package first.'
 

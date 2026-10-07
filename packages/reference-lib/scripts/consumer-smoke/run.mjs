@@ -92,10 +92,13 @@ try {
     [
       '--input-type=module',
       '-e',
-      "const m = await import('@reference-ui/lib/baseSystem'); " +
-        "if (!m.baseSystem || typeof m.baseSystem.name !== 'string') " +
-        "throw new Error('baseSystem subpath did not export a system'); " +
-        "console.log('baseSystem:', m.baseSystem.name)",
+      "const s = (await import('@reference-ui/lib/baseSystem')).baseSystem; " +
+        "const hasFragment = typeof s?.fragment === 'string' && s.fragment.trim() !== ''; " +
+        "const hasStreams = Array.isArray(s?.streams) && s.streams.length > 0; " +
+        "const hasJsx = Array.isArray(s?.jsxElements) && s.jsxElements.length > 0; " +
+        "if (!s || typeof s.name !== 'string' || (!hasFragment && !hasStreams && !hasJsx)) " +
+        "throw new Error('baseSystem subpath did not export a synced system'); " +
+        "console.log('baseSystem:', s.name)",
     ],
     { cwd: scaffold },
   )

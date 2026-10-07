@@ -25,12 +25,20 @@ function packageNotFound(specifier: string): CodedError {
 }
 
 const RESOLVED_UPSTREAM = '/repo/node_modules/@reference-ui/lib/.reference-ui/system/baseSystem.mjs'
+const RESOLVED_UPSTREAM_WIN32 =
+  'C:\\repo\\node_modules\\@reference-ui\\lib\\.reference-ui\\system\\baseSystem.mjs'
 
 describe('LoadConfigError', () => {
   it('appends the upstream sync hint for a missing Reference UI system module', () => {
     const cause = moduleNotFound(RESOLVED_UPSTREAM)
     const error = new LoadConfigError('/repo/ui.config.ts', cause)
     expect(error.message).toContain('Failed to load /repo/ui.config.ts')
+    expect(error.message).toContain('Run sync on the upstream package first')
+  })
+
+  it('appends the hint for a Windows-shaped resolved path', () => {
+    const cause = moduleNotFound(RESOLVED_UPSTREAM_WIN32)
+    const error = new LoadConfigError('C:\\repo\\ui.config.ts', cause)
     expect(error.message).toContain('Run sync on the upstream package first')
   })
 
