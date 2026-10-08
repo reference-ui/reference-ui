@@ -1,7 +1,8 @@
 // Unit tests for the sync session lock over temp dirs, no child processes.
 // They take fake lock dirs plus owner docs and assert acquire, release,
-// re-entry, and validation. Real-process contention (kill, poke, stale,
-// malformed, signals) is proven live in session-repro.test.ts.
+// re-entry, attach, and validation. Real-process contention (kill, poke,
+// attach, stale, malformed, signals) is proven live in
+// session-repro.test.ts.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -15,7 +16,7 @@ import {
   parseSyncSessionOwner,
   supersededMessage,
 } from './session-owner.ts'
-import { acquireSyncSession } from './session.ts'
+import { acquireSyncSession, attachToWatchSession } from './session.ts'
 
 const tempDirs: string[] = []
 
@@ -97,6 +98,13 @@ describe('session acquire and release', () => {
     session.release()
     expect(existsSync(lockDir)).toBe(true)
     expect(JSON.parse(readFileSync(join(lockDir, 'owner.json'), 'utf8'))).toMatchObject({ lockNonce: 'foreign' })
+  })
+
+  it('attach resolves at once when the owner is already gone', async () => {
+    const before = [process.listenerCount('SIGINT'), process.listenerCount('SIGTERM'), process.listenerCount('SIGHUP')]
+    await attachToWatchSession(2 ** 30)
+    await attachToWatchSession(process.pid)
+    expect([process.listenerCount('SIGINT'), process.listenerCount('SIGTERM'), process.listenerCount('SIGHUP')]).toEqual(before)
   })
 
   it('takes a dead-pid lock with a warning and takes a torn owner too', async () => {

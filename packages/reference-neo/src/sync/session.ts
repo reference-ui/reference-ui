@@ -3,7 +3,9 @@
 // release removes the lock dir. One sync holds the folder at a time, so the
 // latest call wins: it preempts the holder (kill, or a SIGUSR2 poke when a
 // one-shot meets a resident watch) and takes over. The loser dies mid-stage
-// with the live folder untouched. The owner document model lives in
+// with the live folder untouched. A second watch never preempts: the CLI
+// attaches it to the owner here (block on the owner pid, forward signals)
+// instead of exiting. The owner document model lives in
 // session-owner.ts; this module owns the mkdir race, the preempt matrix,
 // and the hold with its signal handlers.
 
@@ -55,6 +57,7 @@ export interface SyncSession {
 const KILL_GRACE_MS = 5000
 const KILL_FORCE_GRACE_MS = 2000
 const EXIT_POLL_MS = 50
+const ATTACH_POLL_MS = 100
 const MISSING_OWNER_SETTLES_MS = [100, 500]
 const TAKE_SETTLE_MS = 50
 const MAX_ACQUIRE_ATTEMPTS = 25
@@ -312,6 +315,54 @@ export async function acquireSyncSession(options: AcquireSyncSessionOptions): Pr
     if (session !== null) return session
   }
   throw new Error('[ref] sync: lock contention did not settle')
+}
+
+/**
+ * Attach to the resident watch session instead of exiting: block until the
+ * owner pid exits while forwarding SIGINT/SIGTERM/SIGHUP to it, so Ctrl-C
+ * from any attached client stops the shared session and every attached
+ * client then exits on its own. Resolves at once when the owner is already
+ * gone. Only the owner syncs; attached clients hold no lock and do no work.
+ */
+export async function attachToWatchSession(watchPid: number): Promise<void> {
+  if (watchPid === process.pid || !pidAlive(watchPid)) return
+  await new Promise<void>((resolve) => {
+    let timer: ReturnType<typeof setInterval> | undefined
+    const done = (): void => {
+      if (timer !== undefined) {
+        clearInterval(timer)
+        timer = undefined
+      }
+      process.removeListener('SIGINT', onSigint)
+      process.removeListener('SIGTERM', onSigterm)
+      process.removeListener('SIGHUP', onSighup)
+      resolve()
+    }
+    const forward = (signal: 'SIGINT' | 'SIGTERM' | 'SIGHUP'): void => {
+      try {
+        process.kill(watchPid, signal)
+      } catch (error) {
+        // ESRCH means the owner died under us; anything else leaves the
+        // poll to decide, since the owner may still be alive.
+        if (errorCode(error) === 'ESRCH') done()
+      }
+    }
+    const onSigint = (): void => {
+      forward('SIGINT')
+    }
+    const onSigterm = (): void => {
+      forward('SIGTERM')
+    }
+    const onSighup = (): void => {
+      forward('SIGHUP')
+    }
+    process.on('SIGINT', onSigint)
+    process.on('SIGTERM', onSigterm)
+    process.on('SIGHUP', onSighup)
+    timer = setInterval(() => {
+      if (!pidAlive(watchPid)) done()
+    }, ATTACH_POLL_MS)
+  })
 }
 
 // Release removes only our own lock: a foreign nonce means the dir changed

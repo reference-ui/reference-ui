@@ -3,12 +3,15 @@
 // boot block, resync/error prints, signal shutdown, and the never-promise
 // that holds the process open. File events print only under --debug, the
 // dev-only channel; --json moves every human line to stderr and prints one
-// diagnostics array per sync event on stdout. The watch driver itself
-// (watchSync) lives in lib/watch per the WAVE4 verdict; this file only
-// routes the flag to it.
+// diagnostics array per sync event on stdout. A second watch covered by the
+// resident session attaches to it (block plus signal forwarding) instead of
+// exiting, so supervisors never read an early exit as completion. The watch
+// driver itself (watchSync) lives in lib/watch per the WAVE4 verdict; this
+// file only routes the flag to it.
 import type { ReferenceBuildResult } from '../reference/bridge/events.ts'
 import type { WatchHandle } from '../lib/watch/index.ts'
 import { SyncCoveredByWatchError } from '../sync/session-owner.ts'
+import { attachToWatchSession } from '../sync/session.ts'
 import {
   foldedWarningCount,
   formatJsonDiagnostics,
@@ -100,7 +103,12 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
     return 0
   } catch (err) {
     if (err instanceof SyncCoveredByWatchError) {
+      // Covered but not done: attach to the resident session (block while
+      // the owner runs, forwarding signals to it) instead of exiting, so a
+      // second `ref sync --watch` never reports early completion to a
+      // supervisor like `concurrently --success first`.
       say(err.message)
+      await attachToWatchSession(err.watchPid)
       return 0
     }
     say(`[ref] watch failed: ${messageOf(err)}`)

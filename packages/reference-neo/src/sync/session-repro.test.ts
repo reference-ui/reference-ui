@@ -1,9 +1,10 @@
 // Repro suite for the sync session lock: real `ref` child processes over
 // temp worlds, never the workspace. It takes spawned one-shots and watches
 // and asserts the last-wins contract: kill legs exit the victim 75 with the
-// superseded message, the watch poke covers the newcomer 0, stale and torn
-// locks take over with warnings, and signals release the lock. Signal legs
-// are POSIX-only; stale, torn, and break-lock run everywhere.
+// superseded message, the watch poke covers the newcomer 0, a second watch
+// attaches to the owner until it stops, stale and torn locks take over with
+// warnings, and signals release the lock. Signal legs are POSIX-only;
+// stale, torn, and break-lock run everywhere.
 
 import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -151,60 +152,96 @@ function sheetHasBrand(dir: string): boolean {
   return existsSync(sheet) && readFileSync(sheet, 'utf8').toLowerCase().includes('--colors-brand: #7c3aed')
 }
 
+async function loneOneShotSyncsUnchanged(): Promise<void> {
+  const dir = await writeWorld(0)
+  const run = await runBin(['sync', dir], dir)
+  expect(run.code).toBe(0)
+  expect(run.stdout).toMatch(BOOT_BLOCK_RE)
+  expect(run.stdout).not.toMatch(/stale lock|supersed|covered by|break-lock/)
+  expect(sheetHasBrand(dir)).toBe(true)
+  expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+}
+
+async function oneShotTowardOneShotKills(): Promise<void> {
+  const dir = await writeWorld(400)
+  const ownerPath = join(dir, '.reference-ui', 'sync.lock', 'owner.json')
+  const preemptPath = join(dir, '.reference-ui', 'sync.lock', 'preempt.json')
+  const slow = spawnBin(['sync', dir], dir)
+  // Stall the holder mid-sync; the preempt marker later proves B reached
+  // the kill leg before the holder is released to die.
+  await waitForFile(ownerPath, 'the holder lock')
+  if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall')
+  slow.child.kill('SIGSTOP')
+  await sleep(50)
+  if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall landed')
+  const fast = runBin(['sync', dir], dir)
+  await waitForFile(preemptPath, 'the preempt marker')
+  slow.child.kill('SIGCONT')
+  const [done, newcomer] = [slow, await fast]
+  await waitForExit(done.child)
+  if (done.child.exitCode === 0) throw new Error(`harness lost the race: A finished before the kill:\n${done.output()}`)
+  expect(done.child.exitCode).toBe(75)
+  expect(done.output()).toContain(`superseded by sync pid ${newcomer.pid}`)
+  expect(newcomer.code).toBe(0)
+  expect(newcomer.stdout).toContain(`superseding sync pid ${done.child.pid}`)
+  expect(newcomer.stdout).toMatch(BOOT_BLOCK_RE)
+  expect(sheetHasBrand(dir)).toBe(true)
+  expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+}
+
+async function watchTowardWatchAttaches(): Promise<void> {
+  const dir = await writeWorld(0)
+  const old = spawnBin(['sync', '--watch', dir], dir)
+  await waitForOutput(old, () => old.output().includes('ready in'), 'the old boot block')
+  const fresh = spawnBin(['sync', '--watch', dir], dir)
+  // The newcomer must defer to the resident watch, never kill it — and it
+  // must stay alive (never report early completion) while the owner runs.
+  await waitForOutput(fresh, () => /already watching this project/.test(fresh.output()), 'the newcomer attach line')
+  await sleep(1000)
+  expect(childDone(fresh.child)).toBe(false)
+  expect(childDone(old.child)).toBe(false)
+  expect(fresh.output()).not.toContain('ready in')
+  expect(old.output()).not.toContain('superseded')
+  const owner = JSON.parse(readFileSync(join(dir, '.reference-ui', 'sync.lock', 'owner.json'), 'utf8')) as { pid: number }
+  expect(owner.pid).toBe(old.child.pid)
+  old.child.kill('SIGTERM')
+  await waitForExit(old.child)
+  await waitForExit(fresh.child)
+  expect(old.child.exitCode).toBe(0)
+  expect(fresh.child.exitCode).toBe(0)
+  expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+}
+
+async function attachedForwardStopsOwner(signal: 'SIGINT' | 'SIGTERM'): Promise<void> {
+  const dir = await writeWorld(0)
+  const old = spawnBin(['sync', '--watch', dir], dir)
+  await waitForOutput(old, () => old.output().includes('ready in'), 'the old boot block')
+  const fresh = spawnBin(['sync', '--watch', dir], dir)
+  await waitForOutput(fresh, () => /already watching this project/.test(fresh.output()), 'the newcomer attach line')
+  // A signal to the attached client forwards to the owner, so the shared
+  // session stops cleanly and the attached client exits on its own.
+  fresh.child.kill(signal)
+  await waitForExit(old.child)
+  await waitForExit(fresh.child)
+  expect(old.child.exitCode).toBe(0)
+  expect(fresh.child.exitCode).toBe(0)
+  expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+}
+
 describe('sync session lock: control and kill legs', () => {
-  it('control: a lone one-shot syncs unchanged with no lock lines', async () => {
-    const dir = await writeWorld(0)
-    const run = await runBin(['sync', dir], dir)
-    expect(run.code).toBe(0)
-    expect(run.stdout).toMatch(BOOT_BLOCK_RE)
-    expect(run.stdout).not.toMatch(/stale lock|supersed|covered by|break-lock/)
-    expect(sheetHasBrand(dir)).toBe(true)
-    expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+  it('control: a lone one-shot syncs unchanged with no lock lines', loneOneShotSyncsUnchanged, 120000)
+
+  it.skipIf(!POSIX)('one-shot toward one-shot kills: victim exits 75, newcomer completes', oneShotTowardOneShotKills, 120000)
+
+  it.skipIf(!POSIX)('watch toward watch attaches: the newcomer stays alive on the running session and exits when the owner stops', watchTowardWatchAttaches, 120000)
+
+  it.skipIf(!POSIX)('attached watch forwards SIGTERM: killing the newcomer stops the owner cleanly', async () => {
+    await attachedForwardStopsOwner('SIGTERM')
   }, 120000)
 
-  it.skipIf(!POSIX)('one-shot toward one-shot kills: victim exits 75, newcomer completes', async () => {
-    const dir = await writeWorld(400)
-    const ownerPath = join(dir, '.reference-ui', 'sync.lock', 'owner.json')
-    const preemptPath = join(dir, '.reference-ui', 'sync.lock', 'preempt.json')
-    const slow = spawnBin(['sync', dir], dir)
-    // Stall the holder mid-sync; the preempt marker later proves B reached
-    // the kill leg before the holder is released to die.
-    await waitForFile(ownerPath, 'the holder lock')
-    if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall')
-    slow.child.kill('SIGSTOP')
-    await sleep(50)
-    if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall landed')
-    const fast = runBin(['sync', dir], dir)
-    await waitForFile(preemptPath, 'the preempt marker')
-    slow.child.kill('SIGCONT')
-    const [done, newcomer] = [slow, await fast]
-    await waitForExit(done.child)
-    if (done.child.exitCode === 0) throw new Error(`harness lost the race: A finished before the kill:\n${done.output()}`)
-    expect(done.child.exitCode).toBe(75)
-    expect(done.output()).toContain(`superseded by sync pid ${newcomer.pid}`)
-    expect(newcomer.code).toBe(0)
-    expect(newcomer.stdout).toContain(`superseding sync pid ${done.child.pid}`)
-    expect(newcomer.stdout).toMatch(BOOT_BLOCK_RE)
-    expect(sheetHasBrand(dir)).toBe(true)
-    expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+  it.skipIf(!POSIX)('attached watch forwards SIGINT: Ctrl-C on the newcomer stops the owner cleanly', async () => {
+    await attachedForwardStopsOwner('SIGINT')
   }, 120000)
-
-  it.skipIf(!POSIX)('watch toward watch defers: the running watch keeps the project, the newcomer backs off', async () => {
-    const dir = await writeWorld(0)
-    const old = spawnBin(['sync', '--watch', dir], dir)
-    await waitForOutput(old, () => old.output().includes('ready in'), 'the old boot block')
-    const fresh = spawnBin(['sync', '--watch', dir], dir)
-    // The newcomer must defer to the resident watch, never kill it.
-    await waitForOutput(fresh, () => /already watching this project/.test(fresh.output()), 'the newcomer back-off')
-    await waitForExit(fresh.child)
-    expect(fresh.child.exitCode).toBe(0)
-    expect(childDone(old.child)).toBe(false)
-    expect(old.output()).not.toContain('superseded')
-    old.child.kill('SIGTERM')
-    await waitForExit(old.child)
-    expect(old.child.exitCode).toBe(0)
-  }, 120000)
-
 })
 
 describe('sync session lock: cover, takeover, and release legs', () => {
