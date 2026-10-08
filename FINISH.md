@@ -396,9 +396,9 @@ not substitute. Record platform + version + per-item outcomes.
   NF-unit full-suite flakes CLOSED by RED-NF (PARSE-19 20s budget +
   signal.aborted guard; 956/956 two-in-a-row + captain re-proof);
   FINISH-03 hermetic infra (BLOCKED-infra-FINAL chain, `15b2c805b`).
-- [ ] Declare production-ready, propose `main` merge — USER'S CALL
-  (no merges to `main` without HQ; captain recommends READY
-  modulo the waivers above).
+- [x] Declare production-ready, propose `main` merge — DECLARED READY
+  by HQ 2026-10-08 at `425b67fbd` (re-proof wave 4 + census re-pin;
+  waivers above stand; no `main` merge without a separate HQ go).
 
 ## Appendix — vehicles (copy-paste)
 
