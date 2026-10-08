@@ -10,7 +10,7 @@ must be byte-identical after R1 to the hashes in `baseline.sha256`.
 | --- | --- | --- | ---: | --- |
 | docs | `packages/reference-docs/.reference-ui/` | manifest + CSS + types + system + react + styled | 522 | `cfbf75c3fe7cf36e9eb86d6c3f8578c88b5f46900b781212e9db427cb2836d06` |
 | lib | `packages/reference-lib/.reference-ui/` | self-sync output | 580 | `85169ba54ed854e5149107cd20ae9e6779fc1f8313d02456f17aa46226627b66` |
-| icons | `packages/reference-icons/.reference-ui/` | self-sync output | 156 | `c8f0d68b040d1d0db35c110880e989db4646b3e6e17394149a521e2bc823cc97` |
+| icons | `packages/reference-icons/.reference-ui/` | self-sync output | 156 | `20242dbdd5c3ce4316ab0a125277ed648cd23cd2031c07a6956d305d7d800a26` |
 
 The transient `.reference-ui/tmp/` scratch dir is excluded. Paths in
 `baseline.sha256` are `<label>/.reference-ui/<relative-path>`.
@@ -51,3 +51,9 @@ node .agents/missions/archive/2026-10-08-voyage-one-shot/scripts/verify-pins.mjs
   fresh self-sync changed `system/baseSystem.mjs`, `types/types.mjs` (both) and
   `react/react.mjs` + `react/react.mjs.map` (lib). The pins are the **fresh**
   self-sync bytes, not those stale dirs.
+
+- 2026-10-08 re-baseline (bundler voyage Arc D): 3 icons lines moved
+  (`react/react.mjs`, `react/react.mjs.map`, `types/types.mjs`). Cause: rs
+  `dist/primitives.mjs` slimmed (tsup/SWC `__name` wrappers + `node:` strip
+  dropped), flowing through `publishReactBundle` into sync output. Docs +
+  lib outputs byte-identical; no other lines touched.
