@@ -1,0 +1,27 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__c_purple\.500 { color: var(--colors-purple-500); }
+  .\@reference-ui\/lib__\[\&html\]\:c_amber\.500html { color: var(--colors-amber-500); }
+  body .\@reference-ui\/lib__\[body_\&\:hover_b\]\:c_blue\.500:hover b { color: var(--colors-blue-500); }
+  .\@reference-ui\/lib__\[\&h1\,_\&h2\]\:c_cyan\.500h1, .\@reference-ui\/lib__\[\&h1\,_\&h2\]\:c_cyan\.500h2 { color: var(--colors-cyan-500); }
+  .c .\@reference-ui\/lib__\[\&\:hover\]\:\[\&_\.b\]\:\[\.c_\&\]\:c_green\.500:hover .b { color: var(--colors-green-500); }
+  .foo.\@reference-ui\/lib__\[\.foo\&\]\:c_indigo\.500 { color: var(--colors-indigo-500); }
+  .\@reference-ui\/lib__\[\&\>\.bar\]\:c_lime\.500>.bar { color: var(--colors-lime-500); }
+  .\@reference-ui\/lib__\[\&\+\.baz\,_\&\.qux\]\:c_orange\.500+.baz, .\@reference-ui\/lib__\[\&\+\.baz\,_\&\.qux\]\:c_orange\.500.qux { color: var(--colors-orange-500); }
+  .\@reference-ui\/lib__\[\&\(\:focus\)\]\:c_pink\.500(:focus) { color: var(--colors-pink-500); }
+  .\@reference-ui\/lib__\[\&\]\:c_purple\.500 { color: var(--colors-purple-500); }
+  .\@reference-ui\/lib__\[\&_elem\]\:c_red\.500_elem { color: var(--colors-red-500); }
+  body.\@reference-ui\/lib__\[body\&\]\:c_teal\.500 { color: var(--colors-teal-500); }
+  html.\@reference-ui\/lib__\[html\&\]\:c_violet\.500 { color: var(--colors-violet-500); }
+}
+}

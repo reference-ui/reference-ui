@@ -4,7 +4,7 @@ This document describes the **Rust** side of Tasty: the crate layout, public fun
 
 ## Crate and features
 
-- **Package / crate name:** `reference-virtual-native` (Cargo), published to npm as `@reference-ui/rust`.
+- **Package / crate name:** `reference-native` (Cargo), published to npm as `@reference-ui/rust`.
 - **Library type:** `cdylib` + `rlib` — shared library for Node and Rust tests/embedders.
 - **Feature `napi` (default):** enables `napi` / `napi-derive` and exports Node-API functions from `src/lib.rs`. With `napi` off, you can build/link without the JS addon path (e.g. tests that only use `rlib`).
 
@@ -16,8 +16,6 @@ This document describes the **Rust** side of Tasty: the crate layout, public fun
 | --- | --- |
 | `scan_typescript_bundle` | `ScanRequest` → `TypeScriptBundle`. Full pipeline without emitting JS modules. |
 | `ScanRequest` | `root_dir: PathBuf`, `include: Vec<String>` (glob patterns for workspace files). |
-| `rewrite_css_imports` | **N-API only.** String in/out for virtual CSS import rewriting. |
-| `rewrite_cva_imports` | **N-API only.** String in/out for CVA import rewriting. |
 | `scan_and_emit_modules` | **N-API only.** Runs the Tasty pipeline and returns **JSON** with emitted module sources and diagnostics (see below). |
 
 Non-NAPI consumers use `scan_typescript_bundle` and the `tasty` module directly; the NAPI layer is a thin JSON adapter for Node.
@@ -47,10 +45,6 @@ High-level responsibilities:
 | `request.rs` | `ScanRequest` (root + include globs). |
 
 `scan_typescript_bundle` is the main **library** entry for “scan and build a `TypeScriptBundle`” without going through NAPI.
-
-## `virtualrs/` (non-Tasty natives)
-
-`src/virtualrs/` implements **virtual module** post-processing used elsewhere in the workspace (CSS and CVA import rewriting). The same functions are what N-API exposes as `rewrite_css_imports` / `rewrite_cva_imports`.
 
 ## Generated TypeScript contract
 

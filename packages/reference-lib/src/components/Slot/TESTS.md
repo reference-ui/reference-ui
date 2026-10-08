@@ -18,10 +18,12 @@ implementation:
 
 - `slots/core/core.test.ts` — register, overwrite by registration id,
   duplicate slot ids, unregister, `scanById` first match, `scanAll`,
-  `getAll` cache identity, metadata, subscribe / unsubscribe.
+  `getAll` cache identity, metadata, subscribe / unsubscribe. (Vendor
+  names; the kernel renamed them to `getById` / `select`.)
 - `slots/core/react.test.tsx` — `createSlotRootContext` Provider, custom
   root, isolated default roots, `useRoot` throw, mount/unmount
-  registration, metadata, `useScanById` / `useGetAll` updates.
+  registration, metadata, `useScanById` / `useGetAll` updates. (Vendor
+  names; the kernel renamed them to `useSlot` / `useSlots`.)
 - `slots/hooks/useSlotRegistration.ts` — live getters, `deps`, split
   register / unregister effects. No equivalent unit file; behaviour is
   proven here as kernel cases.
@@ -35,7 +37,7 @@ Contrast only:
 - `vendor/radix-primitives/packages/react/slot` — `asChild` merge. Not this
   primitive.
 - PageLayout `getRegisteredSlots`, sidebar pipelines, and product part
-  wrappers — consume `scanById` / `scanAll`; they are not Slot API.
+  wrappers — consume vendor `scanById` / `scanAll`; they are not Slot API.
 
 ## Required cases
 
@@ -46,8 +48,8 @@ Contrast only:
   results when `createSlotRootContext` is instantiated.**
   Compile `createSlotRootContext<{ icon: string; open?: boolean }>()` and
   pass `useSlotRegistration` an element, that meta, and a `SlotVisibility`
-  object. Assert `useScanById` is `SlotRegistration<{ icon: string;
-  open?: boolean }> | undefined`, `useGetAll` is an array of that
+  object. Assert `useSlot` is `SlotRegistration<{ icon: string;
+  open?: boolean }> | undefined`, `useSlots` is an array of that
   registration, `resolveSlotVisibility` accepts omitted/`undefined`
   visibility, and that a mismatched meta object and a non-element
   `element` fail type checking.
@@ -94,40 +96,40 @@ Contrast only:
   Register `r1`/`"slot-1"` and `r2`/`"slot-2"`, then unregister `r1`.
   Assert `getAll()` has length 1 and the survivor is `"slot-2"`.
 
-### Scan by id
+### Get by id
 
 - [x] `SL-SCAN-01` `[vendor]` `[unit]` —
   **SlotRoot should find a slot by exact id.**
-  Register `"target-slot"` and assert `scanById("target-slot")` returns
+  Register `"target-slot"` and assert `getById("target-slot")` returns
   that slot id and the same element.
 - [x] `SL-SCAN-02` `[vendor]` `[unit]` —
   **SlotRoot should return undefined for a non-existent id.**
-  Assert `scanById("non-existent")` is `undefined` on empty and on a root
+  Assert `getById("non-existent")` is `undefined` on empty and on a root
   that has other ids.
 - [x] `SL-SCAN-03` `[vendor]` `[unit]` —
   **SlotRoot should return the first match when multiple slots have the
   same id.**
   Register `r1` then `r2` both as `"duplicate"` with elements `"First"`
-  then `"Second"`. Assert `scanById("duplicate")` is `"First"`.
+  then `"Second"`. Assert `getById("duplicate")` is `"First"`.
 - [x] `SL-SCAN-04` `[reference]` `[unit]` —
   **SlotRoot should not treat a prefixed sibling as an exact id match.**
   Register `"title"`, `"title.extra"`, and `"body"`. Assert
-  `scanById("title")` returns only the exact `"title"` registration.
+  `getById("title")` returns only the exact `"title"` registration.
 
-### Scan all
+### Select
 
 - [x] `SL-SCANALL-01` `[vendor]` `[unit]` —
-  **SlotRoot should find all slots matching a predicate.**
+  **SlotRoot should find all slots matching a filter.**
   Register `"actions.primary"`, `"actions.secondary"`, and `"title"`.
-  Assert `scanAll(s => s.slotId.startsWith("actions"))` returns only the
+  Assert `select(s => s.slotId.startsWith("actions"))` returns only the
   two action slots in registration order.
 - [x] `SL-SCANALL-02` `[vendor]` `[unit]` —
   **SlotRoot should return an empty array when no matches.**
-  Assert `scanAll` with a failing predicate on a populated root is `[]`,
+  Assert `select` with a failing filter on a populated root is `[]`,
   not `undefined`.
 - [x] `SL-SCANALL-03` `[vendor]` `[unit]` —
-  **SlotRoot should return all slots when the predicate is always true.**
-  Assert `scanAll(() => true)` has the same order and length as `getAll()`
+  **SlotRoot should return all slots when the filter is always true.**
+  Assert `select(() => true)` has the same order and length as `getAll()`
   on a three-slot root, without sharing array identity with `getAll()`.
 
 ### Get all and snapshot identity
@@ -153,15 +155,15 @@ Contrast only:
 - [x] `SL-META-01` `[vendor]` `[unit]` —
   **SlotRoot should store and retrieve metadata.**
   Register with `{ priority: 1, label: "Test Item" }` on a typed root.
-  Assert `scanById` returns that meta.
+  Assert `getById` returns that meta.
 - [x] `SL-META-02` `[vendor]` `[unit]` —
   **SlotRoot should allow undefined metadata.**
-  Register with omitted `meta`. Assert `scanById` yields `undefined` meta
+  Register with omitted `meta`. Assert `getById` yields `undefined` meta
   and does not throw.
 - [x] `SL-META-03` `[vendor]` `[unit]` —
   **SlotRoot should filter slots by metadata.**
   Register `{ priority: 1 }` and `{ priority: 10 }`. Assert
-  `scanAll(s => (s.meta?.priority ?? 0) >= 5)` returns only the high
+  `select(s => (s.meta?.priority ?? 0) >= 5)` returns only the high
   entry.
 
 ### Subscriptions and version
@@ -212,7 +214,7 @@ Contrast only:
 - [x] `SL-VIS-02` `[reference]` `[unit]` —
   **SlotRoot should store visibility without dropping the registration.**
   Register with `{ visible: false }` and with `{ hidden: true }`. Assert
-  `scanById` still returns each slot and its flags, and that
+  `getById` still returns each slot and its flags, and that
   `resolveSlotVisibility` on those flags matches `SL-VIS-01`.
 
 ### Cache key and transform helpers
@@ -251,7 +253,7 @@ Contrast only:
   error and no implicit global root.
 - [x] `SL-USE-02` `[vendor]` `[unit]` —
   **`useRoot` should return the root instance.**
-  Assert the instance exposes `getAll`, `scanById`, and `scanAll`.
+  Assert the instance exposes `getAll`, `getById`, and `select`.
 
 ### useSlotRegistration
 
@@ -265,7 +267,7 @@ Contrast only:
 - [x] `SL-HOOK-03` `[vendor]` `[unit]` —
   **`useSlotRegistration` should handle metadata.**
   Register with `{ priority: 5 }` on a typed context. Assert
-  `scanById("test")?.meta` equals that object.
+  `getById("test")?.meta` equals that object.
 - [x] `SL-HOOK-04` `[reference]` `[unit]` —
   **`useSlotRegistration` should expose live element, meta, and
   visibility without re-registering.**
@@ -289,32 +291,57 @@ Contrast only:
   registration after replay, one live entry while mounted, and a clean
   empty root after final unmount.
 
-### useScanById and useGetAll
+### useSlot and useSlots
 
 - [x] `SL-READ-01` `[vendor]` `[unit]` —
-  **`useScanById` should return a slot by id.**
+  **`useSlot` should return a slot by id.**
   Pre-register `"target"` on a custom root. Assert the hook returns that
   slot.
 - [x] `SL-READ-02` `[vendor]` `[unit]` —
-  **`useScanById` should return undefined for a non-existent id.**
+  **`useSlot` should return undefined for a non-existent id.**
   Assert `undefined` on an empty root.
 - [x] `SL-READ-03` `[vendor]` `[unit]` —
-  **`useScanById` should update when a slot is registered.**
+  **`useSlot` should update when a slot is registered.**
   Render the hook on an empty root, then `register` that id. Assert the
   consumer rerenders from `undefined` to the registration.
 - [x] `SL-READ-04` `[vendor]` `[unit]` —
-  **`useGetAll` should return all slots.**
+  **`useSlots` should return all slots.**
   Pre-register two ids. Assert the hook's array has length 2.
 - [x] `SL-READ-05` `[vendor]` `[unit]` —
-  **`useGetAll` should return an empty array for an empty root.**
+  **`useSlots` should return an empty array for an empty root.**
   Assert `[]`, not `undefined`.
 - [x] `SL-READ-06` `[vendor]` `[unit]` —
-  **`useGetAll` should update when slots change.**
+  **`useSlots` should update when slots change.**
   Start empty, register one, unregister it. Assert length 0 → 1 → 0.
 - [x] `SL-READ-07` `[reference]` `[unit]` —
-  **`useGetAll` should keep array identity while only live content
+  **`useSlots` should keep array identity while only live content
   changes.**
   After `SL-HOOK-04`, assert the hook did not emit a new array.
+- [x] `SL-READ-08` `[reference]` `[unit]` —
+  **`useSlots(filter)` should return matches in registration order.**
+  Pre-register `"actions.primary"`, `"title"`, `"actions.secondary"`.
+  Assert the hook with an `"actions"` filter returns only the two action
+  slots, primary then secondary.
+- [x] `SL-READ-09` `[reference]` `[unit]` —
+  **`useSlots(filter)` should return an empty array when nothing matches.**
+  Assert `[]`, not `undefined`, on a populated root with a failing filter.
+- [x] `SL-READ-10` `[reference]` `[unit]` —
+  **`useSlots(filter)` should update when a matching slot registers and
+  unregisters.**
+  Start with only `"title"`. Register `"actions.primary"`, then unregister
+  it. Assert length 0 → 1 → 0.
+- [x] `SL-READ-11` `[reference]` `[unit]` —
+  **`useSlots(filter)` should keep array identity across unrelated
+  registrations.**
+  The `SL-READ-07` analog for the filtered path: register and unregister a
+  non-matching id, and assert every emitted array is strictly identical
+  (`===`). Contrast: a matching registration must emit a new array.
+- [x] `SL-READ-12` `[reference]` `[unit]` —
+  **`useSlots` should accept an inline filter without resubscribing.**
+  Render with an inline closure (fresh identity every render), rerender the
+  parent twice, and assert `subscribe` ran exactly once. Retarget the
+  closure over a new id with no store change and assert the selection
+  follows — no `useCallback` required.
 
 ## Composition gates
 
@@ -334,10 +361,10 @@ Contrast only:
   key. Assert the regions show `"B"`, the old text is gone, and a
   mount-counter inside the slotted body is still 1.
 - [x] `SL-COMP-03` `[reference]` `[browser]` —
-  **A host should scan a prefix of slot ids when several entries share
+  **A host should select a region of slot ids when several entries share
   a region kind.**
   Register `"actions.primary"` and `"actions.secondary"` plus an unrelated
-  `"title"`. From the layout, `scanAll` with an `"actions"` prefix. Assert
+  `"title"`. From the layout, `useSlots` with an `"actions"` filter. Assert
   only the action elements render in the actions region, in registration
   order, using `createSlotCacheKey` only as a memo input — not as a React
   child key that collapses duplicates.

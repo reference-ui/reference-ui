@@ -1,0 +1,33 @@
+---
+title: Light & Dark Mode
+section: Foundations
+order: 1
+slug: color-mode
+---
+
+import { ColorModeDemo } from './color-mode-demo'
+
+# Light & Dark Mode
+
+Theme-aware tokens resolve to different values without swapping components or
+styles. Toggle the preview scope: the same token names (`docsPageBg`,
+`docsText`, `docsBorder`, …) drive both modes.
+
+<ColorModeDemo />
+
+## How it works
+
+Scoping is set with the `colorMode` prop on a primitive, which writes the mode
+to the subtree. Tokens defined with a `dark` override then resolve accordingly —
+the markup is identical in both modes.
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div colorMode="dark" bg="docsPageBg" color="docsText">
+  <P color="docsMuted">Muted copy that adapts to the scope.</P>
+</Div>
+```
+
+The docs shell uses a single toggle that sets this at the root, so every page
+and every component inherits the active mode.

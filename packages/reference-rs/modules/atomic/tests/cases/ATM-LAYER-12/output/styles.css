@@ -1,0 +1,9 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer layer-top-at-rules {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+}

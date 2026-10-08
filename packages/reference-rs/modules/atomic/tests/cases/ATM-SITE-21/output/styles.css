@@ -1,0 +1,22 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__c_purple { color: purple; }
+  .\@reference-ui\/lib__c_yellow { color: yellow; }
+  .\@reference-ui\/lib__hover\:bg_gray:is(:hover, [data-hover]) { background: gray; }
+  .\@reference-ui\/lib__hover\:bd-c_black:is(:hover, [data-hover]) { border-color: black; }
+  .\@reference-ui\/lib__hover\:bg-c_blue:is(:hover, [data-hover]) { background-color: blue; }
+  .\@reference-ui\/lib__hover\:bg-c_red:is(:hover, [data-hover]) { background-color: red; }
+  .\@reference-ui\/lib__hover\:c_green:is(:hover, [data-hover]) { color: green; }
+  .\@reference-ui\/lib__hover\:c_white:is(:hover, [data-hover]) { color: white; }
+}
+}

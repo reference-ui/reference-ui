@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Div, Button, H3, H4, P, Span, Input } from '@reference-ui/react'
 import { Overlay } from './index'
-import { Popover } from '../Popover'
-import { Menu } from '../Menu'
+import { Popover, type PopoverTriggerProps } from '../Popover'
+import { Menu, useMenuTriggerKeys } from '../Menu'
 import { Tooltip } from '../Tooltip'
 
 const dialogChrome = {
@@ -42,6 +42,30 @@ function LayerBadge({ level, zIndex, type }: { level: number; zIndex: number; ty
   )
 }
 
+// Popover.Trigger with Menu keyboard-entry wiring.
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
+
 export default {
   Dialog: () => {
     const [open, setOpen] = React.useState(false)
@@ -62,7 +86,7 @@ export default {
             aria-modal="true"
             {...dialogChrome}
           >
-            <H3 fontSize="4.5r" fontWeight="600" m="0">
+            <H3 fontSize="4.5r" m="0">
               Confirm action
             </H3>
             <P fontSize="3r" color="design.text.light" mt="2r" mb="0">
@@ -148,7 +172,7 @@ export default {
     return (
       <Div p="6r" display="flex" flexDirection="column" gap="4r">
         <Div>
-          <H3 fontSize="4.5r" fontWeight="700" m="0">Stacked Modal Dialogs</H3>
+          <H3 fontSize="4.5r" m="0">Stacked Modal Dialogs</H3>
           <P fontSize="3r" color="design.text.light" mt="1r" mb="3r">
             Multi-tier modal confirmations. Each nested modal automatically receives an elevated z-index (z:100 → z:110 → z:120) with independent dark backdrops that dim previous levels. Escape dismisses only the topmost modal.
           </P>
@@ -171,7 +195,7 @@ export default {
             {...dialogChrome}
           >
             <LayerBadge level={1} zIndex={100} type="Root Modal" />
-            <H3 fontSize="4.5r" fontWeight="600" m="0">
+            <H3 fontSize="4.5r" m="0">
               Organization Settings
             </H3>
             <P fontSize="3r" color="design.text.light" mt="1.5r" mb="4r">
@@ -211,7 +235,7 @@ export default {
                 borderColor="ui.status.error.border"
               >
                 <LayerBadge level={2} zIndex={110} type="Nested Modal" />
-                <H3 fontSize="4.2r" fontWeight="600" m="0" color="ui.status.error.text">
+                <H3 fontSize="4.2r" m="0" color="ui.status.error.text">
                   Confirm Workspace Deletion
                 </H3>
                 <P fontSize="3r" color="design.text.light" mt="2r" mb="4r">
@@ -245,7 +269,7 @@ export default {
                     minW="55r"
                   >
                     <LayerBadge level={3} zIndex={120} type="Security Challenge" />
-                    <H3 fontSize="4r" fontWeight="600" m="0">
+                    <H3 fontSize="4r" m="0">
                       Two-Factor Authentication
                     </H3>
                     <P fontSize="2.8r" color="design.text.light" mt="1.5r" mb="3r">
@@ -300,7 +324,7 @@ export default {
     return (
       <Div p="6r" display="flex" flexDirection="column" gap="4r">
         <Div>
-          <H3 fontSize="4.5r" fontWeight="700" m="0">Modal Hosting Portaled Popover & Tooltips</H3>
+          <H3 fontSize="4.5r" m="0">Modal Hosting Portaled Popover & Tooltips</H3>
           <P fontSize="3r" color="design.text.light" mt="1r" mb="3r">
             Demonstrates an isolating modal dialog with active FocusLock hosting a portaled Popover and Tooltips. FocusLock respects portaled overlay children as valid shard targets and does not steal focus back to the dialog.
           </P>
@@ -323,7 +347,7 @@ export default {
             minW="80r"
           >
             <LayerBadge level={1} zIndex={100} type="Modal Dialog" />
-            <H3 fontSize="4.5r" fontWeight="600" m="0">
+            <H3 fontSize="4.5r" m="0">
               Cluster Access Policy
             </H3>
             <P fontSize="3r" color="design.text.light" mt="1.5r" mb="4r">
@@ -377,7 +401,7 @@ export default {
                   data-testid="tag-popover-content"
                 >
                   <LayerBadge level={2} zIndex={110} type="Portaled Popover" />
-                  <H4 fontSize="3.5r" fontWeight="600" m="0" mb="2r">
+                  <H4 fontSize="3.5r" m="0" mb="2r">
                     Select Available Tags
                   </H4>
                   <Div display="flex" flexDirection="column" gap="1.5r" mb="3r">
@@ -466,7 +490,7 @@ export default {
     return (
       <Div p="6r" display="flex" flexDirection="column" gap="4r">
         <Div>
-          <H3 fontSize="4.5r" fontWeight="700" m="0">Nested Cascading Popovers</H3>
+          <H3 fontSize="4.5r" m="0">Nested Cascading Popovers</H3>
           <P fontSize="3r" color="design.text.light" mt="1r" mb="3r">
             Three floating popovers anchored to each other. Popover 1 triggers Popover 2, which triggers Popover 3. Clicking outside or pressing Escape unwinds the layers in reverse order.
           </P>
@@ -488,7 +512,7 @@ export default {
               data-testid="popover-tier1-content"
             >
               <LayerBadge level={1} zIndex={100} type="Filter Popover" />
-              <H4 fontSize="3.5r" fontWeight="600" m="0" mb="2r">
+              <H4 fontSize="3.5r" m="0" mb="2r">
                 Query Filters
               </H4>
               <Div display="flex" flexDirection="column" gap="2r" mb="3r">
@@ -515,7 +539,7 @@ export default {
                   data-testid="popover-tier2-content"
                 >
                   <LayerBadge level={2} zIndex={110} type="Date Range Picker" />
-                  <H4 fontSize="3.5r" fontWeight="600" m="0" mb="2r">
+                  <H4 fontSize="3.5r" m="0" mb="2r">
                     Select Range
                   </H4>
                   <Div display="flex" flexDirection="column" gap="1.5r" mb="3r">
@@ -551,7 +575,7 @@ export default {
                       data-testid="popover-tier3-content"
                     >
                       <LayerBadge level={3} zIndex={120} type="Granularity Preset" />
-                      <H4 fontSize="3.2r" fontWeight="600" m="0" mb="2r">
+                      <H4 fontSize="3.2r" m="0" mb="2r">
                         Aggregation Buckets
                       </H4>
                       <Div display="flex" flexDirection="column" gap="1.5r">
@@ -590,7 +614,7 @@ export default {
     return (
       <Div p="6r" display="flex" flexDirection="column" gap="4r">
         <Div>
-          <H3 fontSize="4.5r" fontWeight="700" m="0">The Full Shebang (5-Tier Deep Cascade)</H3>
+          <H3 fontSize="4.5r" m="0">The Full Shebang (5-Tier Deep Cascade)</H3>
           <P fontSize="3r" color="design.text.light" mt="1r" mb="3r">
             The ultimate deep overlay stacking showcase. Tier 1 Modal Dialog → Tier 2 Anchored Popover → Tier 3 Actions Menu → Tier 4 Confirmation Modal Dialog → Tier 5 Tooltip. Stacks cleanly with dynamic z-indices (z:100 → z:110 → z:120 → z:130 → z:140) and flawless Escape unwinding.
           </P>
@@ -616,7 +640,7 @@ export default {
             <LayerBadge level={1} zIndex={100} type="Infrastructure Console" />
             <Div display="flex" justifyContent="space-between" alignItems="flex-start">
               <Div>
-                <H3 fontSize="4.5r" fontWeight="700" m="0">Cluster Controller</H3>
+                <H3 fontSize="4.5r" m="0">Cluster Controller</H3>
                 <P fontSize="3r" color="design.text.light" mt="1r" mb="0">
                   Real-time orchestrator for worker nodes.
                 </P>
@@ -657,7 +681,7 @@ export default {
                   data-testid="shebang-tier2-popover"
                 >
                   <LayerBadge level={2} zIndex={110} type="Node Inspector" />
-                  <H4 fontSize="3.5r" fontWeight="600" m="0" mb="2r">
+                  <H4 fontSize="3.5r" m="0" mb="2r">
                     Worker Node: worker-eu-04.k8s
                   </H4>
                   <P fontSize="2.8r" color="design.text.light" mb="3r">
@@ -675,27 +699,29 @@ export default {
 
                   {/* Tier 3 Menu Trigger inside Popover */}
                   <Div display="flex" justifyContent="space-between" alignItems="center">
-                    <Menu>
-                      <Menu.Trigger variant="secondary" data-testid="btn-open-shebang-tier3">
+                    <Popover>
+                      <EntryTrigger variant="secondary" data-testid="btn-open-shebang-tier3">
                         Node Operations Menu (Tier 3) ▾
-                      </Menu.Trigger>
-                      <Menu.Content data-testid="shebang-tier3-menu">
-                        <Menu.Item data-testid="menu-item-diagnostics" onClick={() => console.log('Diagnostics')}>
-                          Run Node Diagnostics
-                        </Menu.Item>
-                        <Menu.Item data-testid="menu-item-metrics" onClick={() => console.log('Metrics')}>
-                          Export Metrics (Prometheus)
-                        </Menu.Item>
-                        <Menu.Separator />
-                        <Menu.Item
-                          data-testid="menu-item-drain"
-                          color="ui.status.error.text"
-                          onClick={() => setConfirmModalOpen(true)}
-                        >
-                          ⚠️ Drain & Cordon Node...
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu>
+                      </EntryTrigger>
+                      <Popover.Content placement="bottom-start">
+                        <Menu data-testid="shebang-tier3-menu">
+                          <Menu.Item data-testid="menu-item-diagnostics" onClick={() => console.log('Diagnostics')}>
+                            Run Node Diagnostics
+                          </Menu.Item>
+                          <Menu.Item data-testid="menu-item-metrics" onClick={() => console.log('Metrics')}>
+                            Export Metrics (Prometheus)
+                          </Menu.Item>
+                          <Menu.Separator />
+                          <Menu.Item
+                            data-testid="menu-item-drain"
+                            color="ui.status.error.text"
+                            onClick={() => setConfirmModalOpen(true)}
+                          >
+                            ⚠️ Drain & Cordon Node...
+                          </Menu.Item>
+                        </Menu>
+                      </Popover.Content>
+                    </Popover>
 
                     <Button size="sm" onClick={() => setPopoverOpen(false)}>
                       Dismiss
@@ -728,7 +754,7 @@ export default {
                 borderColor="ui.status.error.border"
               >
                 <LayerBadge level={4} zIndex={130} type="Emergency Drain Confirmation" />
-                <H3 fontSize="4.2r" fontWeight="700" m="0" color="ui.status.error.text">
+                <H3 fontSize="4.2r" m="0" color="ui.status.error.text">
                   Drain Node: worker-eu-04.k8s
                 </H3>
                 <P fontSize="3r" color="design.text.light" mt="2r" mb="4r">
@@ -776,7 +802,7 @@ export default {
     return (
       <Div p="6r" display="flex" flexDirection="column" gap="4r">
         <Div>
-          <H3 fontSize="4.5r" fontWeight="700" m="0">Bottom Sheet / Drawer with Nested Overlays</H3>
+          <H3 fontSize="4.5r" m="0">Bottom Sheet / Drawer with Nested Overlays</H3>
           <P fontSize="3r" color="design.text.light" mt="1r" mb="3r">
             An edge sheet overlay (edge="bottom") hosting an anchored Popover, a Menu, and a nested confirmation Modal dialog.
           </P>
@@ -802,7 +828,7 @@ export default {
           >
             <Overlay.Handle />
             <LayerBadge level={1} zIndex={100} type="Edge Sheet (bottom)" />
-            <H3 fontSize="4.5r" fontWeight="700" m="0">
+            <H3 fontSize="4.5r" m="0">
               Drawer Control Panel
             </H3>
             <P fontSize="3r" color="design.text.light" mt="1r" mb="4r">
@@ -861,7 +887,7 @@ export default {
                 {...dialogChrome}
               >
                 <LayerBadge level={2} zIndex={110} type="Modal over Sheet" />
-                <H3 fontSize="4.2r" fontWeight="600" m="0">
+                <H3 fontSize="4.2r" m="0">
                   Confirmation Dialog
                 </H3>
                 <P fontSize="3r" color="design.text.light" mt="2r" mb="4r">

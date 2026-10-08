@@ -22,31 +22,24 @@ Coordinates a collection of Collapsibles: single/multiple expansion and optional
 ## Proposed API
 
 ```ts
-interface AccordionCommonProps
-  extends Omit<ReferencePartProps<"div">, "onChange"> {
+type AccordionValue = string | string[] | null
+
+interface AccordionProps
+  extends Omit<ReferencePartProps<"div">, "onChange" | "value"> {
   children?: React.ReactNode
-  keyboard?: "headers" | "none"
+  expansion?: "single" | "multiple"
+  value?: AccordionValue
+  onChange?: (value: AccordionValue) => void
+  keyboard?: "headers" | "none" | "arrows"
 }
-
-interface AccordionSingleProps extends AccordionCommonProps {
-  expansion?: "single"
-  value?: string | null
-  onChange?: (value: string | null) => void
-}
-
-interface AccordionMultipleProps extends AccordionCommonProps {
-  expansion: "multiple"
-  value?: string[]
-  onChange?: (value: string[]) => void
-}
-
-type AccordionProps = AccordionSingleProps | AccordionMultipleProps
 ```
 
 `Accordion` renders `div`. Nested Collapsible parts keep their native elements.
-Omitted expansion/value/keyboard means controlled single/null state with APG
-header arrow traversal. All enabled header buttons remain in the native Tab
-sequence.
+`value` is optional: omitted means self-managed state from the natural zero
+(single starts `null`, multiple starts `[]`); there is no seeding prop.
+`onChange` notifies in both modes. Omitted expansion/keyboard means single
+expansion with APG header arrow traversal. All enabled header buttons remain
+in the native Tab sequence.
 
 ---
 

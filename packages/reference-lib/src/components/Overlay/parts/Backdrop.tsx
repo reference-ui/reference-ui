@@ -7,21 +7,27 @@ import { overlayStackStore, isTopLiveLayer, useOverlayZIndex, isRecentlyRemoved,
 import { assignRef } from '../shared/refs'
 import { isPrimaryPointer, markEventConsumed, isEventConsumed } from '../shared/events'
 import { usePointerLock } from '../isolation/pointer-events'
+import { resolvePortalContainer } from './portal-container'
 
 export type OverlayBackdropProps = PrimitiveProps<'div'>
 
-export function OverlayBackdrop({
-  children,
-  style,
-  className,
-  onClick,
-  onPointerDown,
-  ...props
-}: OverlayBackdropProps) {
+export const OverlayBackdrop = React.forwardRef<HTMLDivElement, OverlayBackdropProps>(
+  function OverlayBackdrop(
+    {
+      children,
+      style,
+      className,
+      onClick,
+      onPointerDown,
+      ...props
+    }: OverlayBackdropProps,
+    forwardedRef
+  ) {
   const context = React.useContext(OverlayContext)
   const [nodeEl, setNodeEl] = React.useState<HTMLDivElement | null>(null)
   const zIndex = useOverlayZIndex(context?.id ?? '') - 1
-  const userRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const propsRef = (props as { ref?: React.Ref<HTMLDivElement> }).ref
+  const userRef = forwardedRef ?? propsRef
 
   usePointerLock(Boolean(nodeEl && context?.isolation?.inert), nodeEl?.ownerDocument)
   const pointerEventsLock = useLayerPointerEvents(context?.id ?? '', nodeEl?.ownerDocument)
@@ -88,5 +94,6 @@ export function OverlayBackdrop({
     </Presence>
   )
 
-  return <Portal container={context.portalContainer}>{node}</Portal>
-}
+  return <Portal container={resolvePortalContainer(context)}>{node}</Portal>
+  }
+)

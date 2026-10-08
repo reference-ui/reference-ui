@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-alias",
+  "tokens": {
+    "colors": {
+      "gray": {
+        "50": {
+          "light": "#f9fafb",
+          "dark": "#030712"
+        },
+        "950": {
+          "light": "#030712",
+          "dark": "#f9fafb"
+        }
+      },
+      "ui": {
+        "button": {
+          "background": {
+            "light": "{colors.gray.950}",
+            "dark": "{colors.gray.50}"
+          },
+          "foreground": {
+            "light": "{colors.gray.50}",
+            "dark": "{colors.gray.950}"
+          }
+        }
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

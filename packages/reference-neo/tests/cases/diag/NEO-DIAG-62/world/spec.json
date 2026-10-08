@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "tgn-repro",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {
+    "button": {
+      "variants": {
+        "tone": {
+          "quiet": {
+            "bg": "n100"
+          },
+          "loud": {
+            "bg": "n300"
+          }
+        }
+      },
+      "compoundVariants": [
+        {
+          "tone": "nope",
+          "css": {
+            "border": "1px"
+          }
+        }
+      ]
+    }
+  },
+  "staticCss": {},
+  "provenance": []
+}

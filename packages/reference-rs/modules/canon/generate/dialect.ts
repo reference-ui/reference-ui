@@ -1,0 +1,198 @@
+/**
+ * Dialect ingest module for Reference UI style engine contracts.
+ * Ingests authoritative overlay dictionaries of curated JSX primitives,
+ * StyleProps aliases, short class prefixes, macros, extensions, and named conditions.
+ * Joins the typed dialect overlay onto living @webref platform tables.
+ */
+
+import {
+  ALIASES,
+  EXTENSIONS,
+  NAMED_CONDITIONS,
+  PRIMITIVE_TAGS,
+  REFERENCE_ONLY_PROPS,
+  SHORT_PREFIXES,
+  UNITLESS_PROPS,
+  VENDOR_ALIASES,
+  VENDOR_EXTENSIONS,
+  VENDOR_UNITLESS,
+  type ExtensionProp,
+} from './overlay';
+
+export const EXTENSION_ALLOWLIST: readonly ExtensionProp[] = [
+  ...EXTENSIONS,
+  ...VENDOR_EXTENSIONS,
+];
+import type { PlatformCss } from './platform';
+
+export interface DialectElement {
+  html: string;
+  jsx: string;
+}
+
+export interface DialectProperty {
+  name: string;
+  css: string;
+  classPrefix: string;
+  longhands: string[];
+}
+
+export interface DialectAlias {
+  alias: string;
+  canonical: string;
+}
+
+export interface DialectData {
+  elements: DialectElement[];
+  primitiveJsx: string[];
+  canonicalProperties: DialectProperty[];
+  aliases: DialectAlias[];
+  referenceProps: string[];
+  conditions: string[];
+  colorProperties: string[];
+  unitlessProperties: string[];
+  extensions: readonly ExtensionProp[];
+  unrealizableExtensions: string[];
+}
+
+function toJsxName(tag: string): string {
+  if (tag === 'object') return 'Obj';
+  if (tag === 'var') return 'Var';
+  if (tag === 'clipPath') return 'ClipPath';
+  if (tag === 'linearGradient') return 'LinearGradient';
+  if (tag === 'radialGradient') return 'RadialGradient';
+  if (tag === 'foreignObject') return 'ForeignObject';
+  if (tag.length <= 1) return tag.toUpperCase();
+  return tag.charAt(0).toUpperCase() + tag.slice(1);
+}
+
+function buildElements(): DialectElement[] {
+  const elements = PRIMITIVE_TAGS.map((tag) => ({
+    html: tag.toLowerCase(),
+    jsx: toJsxName(tag),
+  }));
+  return elements.sort((a, b) => (a.html < b.html ? -1 : a.html > b.html ? 1 : 0));
+}
+
+function buildPropertiesAndAliases(platformCss: PlatformCss): {
+  canonicalProperties: DialectProperty[];
+  aliases: DialectAlias[];
+} {
+  const canonicalPropsMap = new Map<string, string>(Object.entries(SHORT_PREFIXES));
+  const aliasMap = new Map<string, string>(Object.entries(ALIASES));
+  for (const vendor of VENDOR_ALIASES) {
+    aliasMap.set(vendor.alias, vendor.canonical);
+  }
+  const propMap = new Map<string, DialectProperty>();
+
+  // 1. Emit all living CSS properties from @webref
+  for (const platformProp of platformCss.properties.values()) {
+    const classPrefix = canonicalPropsMap.get(platformProp.name) ?? platformProp.kebab;
+    propMap.set(platformProp.name, {
+      name: platformProp.name,
+      css: platformProp.kebab,
+      classPrefix,
+      longhands: platformProp.longhands,
+    });
+  }
+
+  // 2. Add explicit dialect extensions (plus vendor rows absent from webref)
+  for (const ext of EXTENSION_ALLOWLIST) {
+    if (!propMap.has(ext.name)) {
+      propMap.set(ext.name, {
+        name: ext.name,
+        css: ext.css,
+        classPrefix: ext.classPrefix,
+        longhands: ext.longhands ? [...ext.longhands] : [],
+      });
+    }
+  }
+
+  const canonicalProperties = Array.from(propMap.values()).sort((a, b) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+  );
+
+  const aliases: DialectAlias[] = [];
+  for (const [alias, canonical] of aliasMap.entries()) {
+    aliases.push({ alias, canonical });
+  }
+  aliases.sort((a, b) => (a.alias < b.alias ? -1 : a.alias > b.alias ? 1 : 0));
+
+  return {
+    canonicalProperties,
+    aliases,
+  };
+}
+
+function buildColorProperties(platformCss: PlatformCss): string[] {
+  const colorSet = new Set<string>();
+
+  // Standards-backed color-syntax properties from @webref
+  for (const prop of platformCss.colorProperties) {
+    if (!prop.includes('-') && !prop.startsWith('--')) {
+      colorSet.add(prop);
+    }
+  }
+
+  // Union dialect color extensions (plus vendor color rows)
+  for (const ext of EXTENSION_ALLOWLIST) {
+    if ('color' in ext) {
+      colorSet.add(ext.name);
+    }
+  }
+
+  return Array.from(colorSet).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+function buildUnitlessProperties(): string[] {
+  return Array.from(new Set([...UNITLESS_PROPS, ...VENDOR_UNITLESS])).sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0
+  );
+}
+
+/**
+ * Extension props no browser can honor by serving their `css` form: `EXTENSIONS`
+ * rows whose `css` is absent from live `@webref/css`, with no longhands and no
+ * platform row shadowing the name. `EXTENSIONS` only — vendor rows are real
+ * declarations webref happens not to list. Sorted for binary search.
+ */
+function buildUnrealizableExtensions(platformCss: PlatformCss): string[] {
+  const webrefKebab = new Set(
+    Array.from(platformCss.properties.values()).map((p) => p.kebab.toLowerCase())
+  );
+  return EXTENSIONS.filter(
+    (ext) =>
+      !platformCss.properties.has(ext.name) &&
+      (ext.longhands?.length ?? 0) === 0 &&
+      !webrefKebab.has(ext.css.toLowerCase())
+  )
+    .map((ext) => ext.name)
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+export function loadDialect(platformCss: PlatformCss): DialectData {
+  const elements = buildElements();
+  const primitiveJsx = Array.from(new Set(elements.map((e) => e.jsx))).sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0
+  );
+  const { canonicalProperties, aliases } = buildPropertiesAndAliases(platformCss);
+  const colorProperties = buildColorProperties(platformCss);
+  const unitlessProperties = buildUnitlessProperties();
+  const conditions = [...NAMED_CONDITIONS].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const unrealizableExtensions = buildUnrealizableExtensions(platformCss);
+
+  return {
+    elements,
+    primitiveJsx,
+    canonicalProperties,
+    aliases,
+    referenceProps: [...REFERENCE_ONLY_PROPS].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+    conditions,
+    colorProperties,
+    unitlessProperties,
+    extensions: EXTENSION_ALLOWLIST,
+    unrealizableExtensions,
+  };
+}
+
+

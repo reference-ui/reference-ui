@@ -1,0 +1,62 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS",
+    "file": "input/src/compare.ts",
+    "line": 11,
+    "column": 32,
+    "span": {
+      "start": 578,
+      "end": 583
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS",
+    "file": "input/src/compare.ts",
+    "line": 17,
+    "column": 32,
+    "span": {
+      "start": 793,
+      "end": 799
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS",
+    "file": "input/src/compare.ts",
+    "line": 18,
+    "column": 32,
+    "span": {
+      "start": 834,
+      "end": 841
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`zIndex` value `true` is not valid CSS",
+    "file": "input/src/compare.ts",
+    "line": 19,
+    "column": 32,
+    "span": {
+      "start": 876,
+      "end": 881
+    },
+    "help": [
+      "'zIndex' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
+  }
+]

@@ -16,9 +16,12 @@ order for deterministic controlled state.
 
 ## Freeze defaults
 
-`expansion`, `value`, and `keyboard` are optional with the documented omitted
-behavior: controlled single expansion, `value=null`, and APG header traversal
-enabled. Applications can opt out with `keyboard="none"`.
+`expansion` and `keyboard` are optional with the documented omitted
+behavior: single expansion and APG header traversal enabled. `value`
+is optional: omitted means self-managed state from the natural zero
+(single starts `null`, multiple starts `[]`); there is no seeding
+prop. `onChange` notifies in both modes. Applications can opt
+out of traversal with `keyboard="none"`.
 
 ## Source evidence
 
@@ -87,13 +90,12 @@ enabled. Applications can opt out with `keyboard="none"`.
   open without a corrective callback; temporary collection absence must not
   mutate parent state.
 - [x] `AC-DOM-07` `[reference]` `[browser]` —
-  **Accordion should default omitted policy to controlled single-null state
+  **Accordion should default omitted policy to uncontrolled single-null state
   with header traversal enabled.** Omit `expansion`, `value`, and `keyboard`,
   focus A, press ArrowDown, and activate focused B while recording
-  `onChange` but not updating props. Assert focus moves to B, one `"b"`
-  request is emitted, every item remains closed, and all enabled Triggers keep
-  native `tabIndex=0`; omission must not create uncontrolled expansion or a
-  roving tab stop.
+  `onChange`. Assert focus moves to B, one `"b"` request is emitted, B opens
+  via internal state, and all enabled Triggers keep native `tabIndex=0`;
+  omission creates uncontrolled expansion, never a roving tab stop.
 - [x] `AC-DOM-08` `[reference]` `[browser]` —
   **Accordion should remain the sole expansion authority when a child
   Collapsible supplies competing controlled props.** In development, render
@@ -196,12 +198,11 @@ enabled. Applications can opt out with `keyboard="none"`.
   commit does not guess an item or reinterpret characters as IDs; runtime
   validation must match the discriminated public type.
 - [x] `AC-MULTI-07` `[reference]` `[browser]` —
-  **A multiple Accordion should default an omitted value to a controlled empty
-  array.** Render `expansion="multiple"` without `value`, activate A with and
-  without an `onChange` callback in separate fixtures, and do not rerender
-  state. Assert the callback fixture requests `["a"]` once, both fixtures keep
-  every item closed, and no hidden array store appears; omitted value and
-  uncontrolled state are not synonyms.
+  **A multiple Accordion should default an omitted value to an uncontrolled
+  empty array.** Render `expansion="multiple"` without `value`, activate A
+  while recording `onChange` without rerendering state. Assert the callback
+  fixture requests `["a"]` once and A opens via internal state; an omitted
+  value means uncontrolled state.
 
 ### Header keyboard policy
 
@@ -371,6 +372,40 @@ enabled. Applications can opt out with `keyboard="none"`.
   and every Trigger/Content relationship is unique; this proves nested
   collection and standalone authority boundaries together.
 
+## Find expansion
+
+- [x] `AC-FIND-01` `[reference]` —
+  **A controlled single-mode match should request the matched item.**
+  Render controlled `value="a"` with a closed `hiddenUntilFound` item B
+  and dispatch `beforematch` on B's panel. Assert one `onChange("b")`
+  request fires while the held value stays put; the parent owns the swap.
+- [x] `AC-FIND-02` `[reference]` `[browser]` —
+  **A self-managed single-mode match should swap the open item with enter
+  motion skipped.** Open item A, then dispatch `beforematch` on closed
+  `hiddenUntilFound` item B. Assert B expands, A collapses back to
+  `hidden="until-found"` (stays mounted), and B's reveal runs with no
+  finite enter tween.
+- [x] `AC-FIND-03` `[reference]` —
+  **A multiple-mode match should add the item without closing others.**
+  Open item A, then dispatch `beforematch` on closed `hiddenUntilFound`
+  item B. Assert both items end expanded.
+- [x] `AC-FIND-04` `[reference]` —
+  **A cancelled match should not swap, and a match on the open item should
+  be a no-op.** Prevent the default of a `beforematch` on closed item B,
+  then open B and dispatch `beforematch` on its open panel. Assert no
+  request fires in either dispatch and the open item never toggles off.
+- [x] `AC-FIND-05` `[reference]` —
+  **A match inside a nested standalone Collapsible should open only the
+  inner disclosure.** Render an open item whose Content holds a closed
+  `hiddenUntilFound` standalone Collapsible and dispatch `beforematch` on
+  the inner panel. Assert the inner disclosure opens, the Accordion hears
+  no new request, and the item stays expanded.
+- [x] `AC-FIND-06` `[reference]` —
+  **Raw `Collapsible` id items should inherit `hiddenUntilFound` from the
+  root prop.** Render an Accordion whose item is a bare `<Collapsible id>`
+  with `hiddenUntilFound`. Assert its closed Content carries
+  `hidden="until-found"`.
+
 ## Owned elsewhere
 
 - Trigger/content ARIA and exit mounting: `Collapsible`.
@@ -382,5 +417,5 @@ enabled. Applications can opt out with `keyboard="none"`.
 ## Out of scope
 
 - A second Accordion-specific disclosure implementation.
-- Uncontrolled/default values, Provider APIs, horizontal orientation, or
-  vendor heading wrappers not present in the public API.
+- Provider APIs, horizontal orientation, or vendor heading wrappers not
+  present in the public API.

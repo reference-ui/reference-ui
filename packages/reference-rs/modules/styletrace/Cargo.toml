@@ -1,0 +1,21 @@
+[package]
+name = "styletrace"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+diagnostics.workspace = true
+shared.workspace = true
+module_graph.workspace = true
+tasty.workspace = true
+oxc_parser.workspace = true
+oxc_allocator.workspace = true
+oxc_ast.workspace = true
+oxc_span.workspace = true
+oxc_syntax = "0.115"
+serde.workspace = true
+serde_json.workspace = true
+regex.workspace = true
+globwalk.workspace = true
+rustc-hash = "2"

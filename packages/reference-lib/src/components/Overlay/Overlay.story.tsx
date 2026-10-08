@@ -11,6 +11,7 @@ import { FocusLockOverlayFixture } from './fixtures/focus-lock-overlay-fixture'
 import { AnchorFixture } from './fixtures/anchor-fixture'
 import { ExoticaFixture } from './fixtures/exotica-fixture'
 import { FrameFixture } from './fixtures/frame-fixture'
+import { AccountingFixture } from './fixtures/accounting-fixture'
 
 export const Dialog = () => <DialogFixture />
 export const Nested = () => <NestedFixture />
@@ -28,3 +29,4 @@ export const Focus = () => (
 export const Anchor = () => <AnchorFixture />
 export const Exotica = () => <ExoticaFixture />
 export const Frame = () => <FrameFixture />
+export const Accounting = () => <AccountingFixture />

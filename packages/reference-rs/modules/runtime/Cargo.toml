@@ -1,0 +1,32 @@
+[package]
+name = "reference-native"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+# Instrument build for `pnpm agentrs alloc`: counting global allocator plus a
+# per-compile span dump, with the counters living in the atomic crate so the
+# compile phases can mark themselves. Never enabled in the shipped `.node`.
+alloc-trace = ["atomic/alloc-trace"]
+# Instrument build for `pnpm agentrs counters`: Mach/rusage counter span at
+# compile entry/exit. Never enabled in the shipped `.node`.
+counters-trace = []
+
+[dependencies]
+napi = { workspace = true }
+napi-derive = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+atlas = { workspace = true }
+tasty = { workspace = true }
+styletrace = { workspace = true }
+atomic = { workspace = true }
+base_system = { workspace = true }
+typegen = { workspace = true }
+
+[build-dependencies]
+napi-build = { workspace = true }

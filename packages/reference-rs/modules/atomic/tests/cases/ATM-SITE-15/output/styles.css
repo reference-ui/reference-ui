@@ -1,0 +1,21 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__site15badge__base { font-weight: bold; }
+  .\@reference-ui\/lib__site15badge_s_sm { padding-inline: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__site15badge_s_md { padding-inline: calc(4 * var(--spacing-root)); }
+}
+@layer utilities {
+  .\@reference-ui\/lib__px_4r { padding-inline: calc(4 * var(--spacing-root)); }
+  .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}
+}

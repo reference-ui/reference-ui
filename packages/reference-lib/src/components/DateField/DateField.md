@@ -145,6 +145,14 @@ aria-autocomplete="none"
 Without `DateField.Picker`, it remains an ordinary `input[type=text]` with
 standard textbox semantics.
 
+### Accessible naming for the label-less default
+
+A bare `<DateField />` has no name of its own. Authors must associate a
+`Label` (via `htmlFor`/`id`) or pass `aria-label` / `aria-labelledby` to
+the input. Shipping an unnamed date input is author error, not a fallback
+the component repairs: `placeholder` is a format hint (e.g. `DD/MM/YYYY`),
+never an accessible name, and DateField never reflects it as one.
+
 ### Deliberate activation and opening policy
 
 Focus arrival alone does not open the popup, ensuring keyboard typists are
@@ -237,7 +245,7 @@ type ISOMonth = `${number}-${number}`
 
 type DateRangeValue = {
   start: ISODate
-  end: ISODate
+  end: ISODate | null
 } | null
 
 type DateRangeDraft = {
@@ -268,7 +276,7 @@ interface DateFieldProps
   > {
   children?: React.ReactNode
   value: ISODate | null
-  onChange?: (value: ISODate | null) => void
+  onChange: (value: ISODate | null) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -318,8 +326,8 @@ interface DateFieldRangeProps
     DateFieldManagedProp | "children"
   > {
   children?: React.ReactNode
-  value: DateRangeValue
-  onChange?: (value: DateRangeValue) => void
+  value: DateRangeValue | null
+  onChange: (value: DateRangeValue | null) => void
   locale: string
   min?: ISODate
   max?: ISODate
@@ -361,8 +369,9 @@ Calendar (`CA-ISO-01`). DateField never accepts or publishes JavaScript
 
 ## Defaults
 
-- `locale` and `value` are required. Locale has no environment-dependent
-  default. `null` is the controlled empty value.
+- `locale`, `value`, and `onChange` are required. Locale has no
+  environment-dependent default. `null` is the controlled empty value.
+  There is no `defaultValue` and no uncontrolled mode.
 - `min` and `max` are absent. Supplied bounds must be canonical ISO dates
   and `min <= max`.
 - `isDateUnavailable` is absent; every valid date in the domain is
@@ -430,6 +439,16 @@ Renders the shared `Field` bezel containing:
 - `canApply` validity checking (chronological, in-bounds, contiguous
   availability).
 - Apply / Cancel / Escape transactions on popup close and commit.
+
+Settled range takes (finish-line P2B): the folded picker applies on
+completion — there is no Apply button, and `canApply=false` blocks the
+commit, never the close. A pending Calendar anchor stays in the draft
+(never publishes); the anchor click restarts the draft and clears the
+end buffer, so the two-click gesture always completes. Only complete
+ranges and `null` reach `onChange`. An accepted live echo reformats
+both endpoints (when draft and committed agree semantically nothing is
+pending). The bezel exposes `data-can-apply` and `data-active-endpoint`
+for tests and styling.
 
 ---
 
@@ -518,10 +537,13 @@ Stepping is a commit boundary: it requests only the final ISO date and
 ends the dirty session by formatting accepted or rejected controlled
 state. From `null` or incomplete text, ArrowUp/Down are no-ops — DateField
 does not invent `today` (that would be timezone-dependent and SSR-unsafe).
-Disabled and read-only DateFields do not step.
+Disabled and read-only DateFields do not step. A step landing outside
+`min` / `max` or on an unavailable date is locked out like a disabled
+Calendar day: no publish, text kept.
 
 Caret on a literal/separator uses the nearest preceding numeric segment,
-or the following one at the start of the field.
+or the following one at the start of the field. Range endpoints step
+independently under the same contract.
 
 This is why DateField is a component rather than application parse code:
 locale parts, caret mapping, and Gregorian carry are one invariant.

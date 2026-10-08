@@ -52,10 +52,12 @@ test.describe('Showcase Suite', () => {
     await accordionItem2.click()
     await expect(component.getByText('Content inside Accordion item 2.')).toBeVisible()
 
-    // 5. Increment NumberField
+    // 5. Increment NumberField (B-26: plain textbox, never spinbutton;
+    // scoped to stepper root — page has multiple textboxes)
     const incrementBtn = component.getByRole('button', { name: 'Increment' })
     await incrementBtn.click()
-    await expect(component.getByRole('spinbutton')).toHaveValue('43')
+    const stepper = component.locator('[data-reference-number-field]')
+    await expect(stepper.getByRole('textbox')).toHaveValue('43')
 
     await page.waitForTimeout(600)
     await snap(page, 'showcase-active')

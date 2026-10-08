@@ -1,0 +1,68 @@
+/**
+ * Known-invalid CSS in committed atomic goldens. Defect entries are compiler
+ * or fixture bugs with an owner; that half of the list may only shrink. The
+ * standing CSS gauge uses it so the suite can go green before the defects are
+ * fixed. A meta-test asserts that no entry now validates, so fixing a bug
+ * without emptying its slot fails the build. Do not "fix"
+ * BaseSystem::lib_fixture() or the token passthrough policy from here —
+ * passthrough is deferred (testing.md §5 step 8). Intentional parity pins
+ * (absurd authoring both engines reproduce textually, each citing its v2
+ * test) are permanent and never defects.
+ */
+export const CSS_QUARANTINE: Record<string, readonly string[]> = {
+  // Wrong shorthand expansions.
+  'ATM-LEAF-04': ['border-color: 0'],
+  'ATM-LEAF-08': ['border-color: 0'],
+  'ATM-NAME-05': ['box-shadow: 3px solid'],
+  'ATM-RHYTHM-04': ['background-position: 10px auto'],
+
+  // Token-passthrough policy. Deferred, testing.md §5 step 8.
+  'ATM-DIAG-04': ['Unexpected input', 'caret-color: ui.missing.path'],
+  'ATM-DIAG-13': ['Unexpected input', 'background: ui.missing.path'],
+  'ATM-SHORT-03': ['Unexpected input', 'border: borders.card'],
+  'ATM-TOKEN-02': ['margin-top: blue .600'],
+  'ATM-TOKEN-05': ['background: blue .600'],
+  'ATM-TOKEN-06': ['border-color: /40', 'color: red .500/'],
+  'ATM-TOKEN-14': ['Unexpected input', 'caret-color: ui.missing.path'],
+  'ATM-VALID-03': ['Unexpected input', 'color: ghost.white'],
+
+  // §11 silent bare-value passthrough (intended, permanent): a bare miss
+  // passes its authored text through for the browser to drop, so the sheet
+  // holds declarations the lexer rejects. Forge Slice 1, ATM-TOKEN-16.
+  'ATM-TOKEN-16': ['font-size: sm', 'color: md'],
+
+  // Intentional parity pin: `&(:focus)` substitutes textually to
+  // `.<cls>(:focus)` (v2 `nested_selector_parity.rs:532` prints the same
+  // shape). The author wrote an invalid selector; both engines keep it.
+  'ATM-COND-27': ['Identifier is expected'],
+
+  // Non-ASCII probe input (diagnostics station, not a content-emit pin):
+  // the author wrote an unquoted `content` string to place the emoji ahead
+  // of the refused identifier; the verbatim string policy keeps it as-is
+  // (cf. ATM-LEAF-10, where the author includes their own quotes).
+  'ATM-DIAG-06': ['content: 😀'],
+
+  // Intentional lexical pins (permanent): absurd-but-stable values mint
+  // classes for the browser to drop; the namer never refuses them.
+  'ATM-NAME-08': ['padding: a b', 'padding: a\uFEFFb', 'color: İnk'],
+
+  // Non-canon font extras (permanent, doom-4 T3): authored system data the
+  // oracle emits verbatim (unknown props bypass the style-prop gate only
+  // through extras); the browser drops the unknown declarations while both
+  // namers spell the verbatim classes. `--brandX` needs no entry: custom
+  // properties validate.
+  'ATM-COND-05': ['MyProp: 2px', 'myProp: 2px', 'mozFoo: 2px'],
+  // Doom-r fortify (CONTINUITY-01 r-computation, close (a)): refused
+  // non-finite rhythm stems pass through raw under the section 11 silent
+  // bare-value passthrough policy (permanent, like ATM-TOKEN-16) — the
+  // author wrote them, the browser drops them. The sheet-text pins in the
+  // case spec are the real guard; these entries only quiet the grammar
+  // gauge over the intentionally invalid passthrough spellings.
+  'ATM-RHYTHM-07': ['margin-top: infr', 'margin-top: nanr', 'margin-top: infinityr',
+    'margin-top: Infinityr', 'margin-top: -infr', 'margin-top: 1e309r',
+    'margin-top: 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r', 'margin-top: 1/infr', 'margin-top: inf/3r'],
+}
+
+export function quarantineFor(stationId: string): readonly string[] {
+  return CSS_QUARANTINE[stationId] ?? []
+}

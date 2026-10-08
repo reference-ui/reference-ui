@@ -1,0 +1,147 @@
+{
+  "procedure": "agentrs-flame/3",
+  "procedureNote": "same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)",
+  "scale": "lib-styletrace",
+  "pin": {
+    "name": "ec4f6f725",
+    "hash": "ec4f6f72522e42ffacba93cd8ff77ce2e9feec5a",
+    "dirty": false
+  },
+  "plan": {
+    "scale": "lib-styletrace",
+    "target": "packages/reference-lib shape: 387 dense src + 12 book files via scratch copy",
+    "seed": null
+  },
+  "generated": {
+    "projectDir": "/tmp/styletrace-scratch",
+    "note": "scratch copy of src+book+ui.config.ts, symlinked node_modules; recipe byte-verified (261.8KB CSS identical)"
+  },
+  "worker": {
+    "syncMs": 1221.640379,
+    "wallMs": 1222,
+    "warnings": 3,
+    "scorer": "lib-world-probe/1"
+  },
+  "phases": {
+    "file": "phases.json",
+    "phases": {
+      "startup": 83.473831,
+      "config": 30.680825999999996,
+      "scan": 181.210086,
+      "evaluate": 9.511650000000031,
+      "compile": 936.4076480000001,
+      "publish": 61.493202999999994,
+      "syncTotal": 1221.640379,
+      "workerTotal": 1305.118211,
+      "workerTail": 0.004001000000016575,
+      "syncResidual": 2.3369659999998476
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "processStartDeltaMs": 208.16015625,
+    "preMainWeight": 69,
+    "postWorkerWeight": 1898,
+    "sampleCount": 2872,
+    "weightSum": 3263,
+    "buckets": [
+      {
+        "name": "startup",
+        "ms": 83.473831,
+        "weight": 83,
+        "topLib": "node",
+        "topLibWeight": 50
+      },
+      {
+        "name": "config",
+        "ms": 30.680825999999996,
+        "weight": 26,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 17
+      },
+      {
+        "name": "scan",
+        "ms": 181.210086,
+        "weight": 177,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 156
+      },
+      {
+        "name": "evaluate",
+        "ms": 9.511650000000031,
+        "weight": 10,
+        "topLib": "node",
+        "topLibWeight": 7
+      },
+      {
+        "name": "compile",
+        "ms": 936.4076480000001,
+        "weight": 935,
+        "topLib": "libsystem_malloc.dylib",
+        "topLibWeight": 318
+      },
+      {
+        "name": "publish",
+        "ms": 61.493202999999994,
+        "weight": 61,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 43
+      },
+      {
+        "name": "syncResidual",
+        "ms": 2.3369659999998476,
+        "weight": 4,
+        "topLib": "node",
+        "topLibWeight": 3
+      },
+      {
+        "name": "workerTail",
+        "ms": 0.004001000000016575,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      }
+    ]
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 293397,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-lib-Z5kosC/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/reference-native.darwin-x64.node",
+    "sha256": "0df747900e1ac5d5b704826dd06ee790424b61fbf7a5e56890fb42c875300c4e",
+    "profile": "release",
+    "builtVia": "landing captain: main-tree release build at landed commit"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "samply",
+    "record",
+    "--save-only",
+    "--unstable-presymbolicate",
+    "-o",
+    "/Users/ryn/Developer/reference-ui/docs/evidence/flamegraph/styletrace-lib8/profile.json.gz",
+    "-r",
+    "1000",
+    "--",
+    "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+    "--perf-basic-prof",
+    "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-lib-Z5kosC/v8.log",
+    "/tmp/styletrace-probe/sync-probe.mts",
+    "/tmp/styletrace-scratch"
+  ],
+  "createdAt": "2026-09-30T16:11:47.673Z",
+  "treeStatus": []
+}

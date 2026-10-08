@@ -1,0 +1,8 @@
+{
+  "description": "Neo cases — one doc per case from case.json + README + authorial specs.",
+  "kind": "neo",
+  "name": "cases",
+  "owner": "agent-neo skill",
+  "root": "packages/reference-neo/tests/cases",
+  "weights": { "id": 4, "title": 3 }
+}

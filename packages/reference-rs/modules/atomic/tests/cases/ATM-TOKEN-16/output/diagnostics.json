@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-COLOR",
+    "message": "`md` is neither a color token nor a CSS color",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 10,
+    "span": {
+      "start": 95,
+      "end": 99
+    },
+    "help": [
+      "did you mean `red`?",
+      "use a color token or CSS color"
+    ]
+  }
+]

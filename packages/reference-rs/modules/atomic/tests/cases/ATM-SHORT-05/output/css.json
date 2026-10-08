@@ -1,0 +1,9 @@
+{
+  "m:2r": "@reference-ui/lib__m_2r",
+  "p:1r": "@reference-ui/lib__p_1r",
+  "padding:10px": "@reference-ui/lib__p_10px",
+  "paddingBottom:10px": "@reference-ui/lib__pb_10px",
+  "paddingLeft:20px": "@reference-ui/lib__pl_20px",
+  "paddingRight:20px": "@reference-ui/lib__pr_20px",
+  "paddingTop:10px": "@reference-ui/lib__pt_10px"
+}

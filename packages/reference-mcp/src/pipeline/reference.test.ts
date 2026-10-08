@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 const createReferenceDocument = vi.fn(() => ({ id: 'doc' }))
 
-vi.mock('@reference-ui/core/reference', () => ({
+vi.mock('@reference-ui/neo/reference', () => ({
   createReferenceDocument,
 }))
 

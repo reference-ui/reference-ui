@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-INVALID-CSS-VALUE",
+    "message": "`order` value `true` is not valid CSS",
+    "file": "input/src/literal.ts",
+    "line": 5,
+    "column": 31,
+    "span": {
+      "start": 148,
+      "end": 150
+    },
+    "help": [
+      "'order' rejects 'true'; use a CSS keyword, token, or accepted value"
+    ]
+  }
+]

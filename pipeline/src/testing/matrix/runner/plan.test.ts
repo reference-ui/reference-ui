@@ -16,7 +16,6 @@ function createMultiReactPackage(): MatrixWorkspacePackage {
       bundlers: ['vite7'],
       react: 'react19',
       reactVersions: ['react19', 'react18', 'react17'],
-      runTypecheck: false,
     },
     configPath: '/tmp/matrix/lib/matrix.json',
     workspacePackage: {
@@ -38,7 +37,6 @@ function createCorePackage(): MatrixWorkspacePackage {
       bundlers: ['vite7', 'webpack5'],
       react: 'react19',
       reactVersions: ['react19'],
-      runTypecheck: false,
     },
     configPath: '/tmp/matrix/tokens/matrix.json',
     workspacePackage: {
@@ -123,19 +121,23 @@ describe('matrix execution plan', () => {
     )
   })
 
-  it('includes every matrix package in the default pipeline fanout', () => {
-    const names = planMatrixExecution().jobs.map(job => job.package.workspacePackage.name)
+  it('plans the kept chain-gate packages', () => {
+    // Filtered: unfiltered fanout over the live tree is phase-sensitive
+    // mid-migration (the retired watch suite still sits in the tree until
+    // Phase 3 deletes it). The kept gate exists in both trees.
+    const names = planMatrixExecution({ packageNames: ['@matrix/chain-t2', '@matrix/chain-t8', '@matrix/mcp'] }).jobs.map(job => job.package.workspacePackage.name)
 
-    assert.equal(names.includes('@matrix/lib'), true)
-    assert.equal(names.includes('@matrix/tokens'), true)
+    assert.equal(names.includes('@matrix/chain-t2'), true)
+    assert.equal(names.includes('@matrix/chain-t8'), true)
+    assert.equal(names.includes('@matrix/mcp'), true)
   })
 
   it('plans one job per selected package and React runtime', () => {
-    const plan = planMatrixExecution({ packageNames: ['@matrix/lib'], react: 'react17' })
+    const plan = planMatrixExecution({ packageNames: ['@matrix/chain-t2'] })
 
     assert.deepEqual(
       jobKeys(plan.jobs),
-      [{ bundlers: ['vite7'], name: '@matrix/lib', react: 'react17' }],
+      [{ bundlers: ['vite7'], name: '@matrix/chain-t2', react: 'react19' }],
     )
   })
 })

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "formatter": {
+    "enabled": true,
+    "lineWidth": 90,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "a11y": { "recommended": false },
+      "complexity": {
+        "recommended": false,
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": { "maxAllowedComplexity": 20 }
+        }
+      },
+      "correctness": { "recommended": true },
+      "nursery": { "recommended": false },
+      "performance": { "recommended": false },
+      "security": { "recommended": false },
+      "style": {
+        "recommended": false,
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@reference-ui/core": "Neo is self-contained: copy solved core code into a Neo-owned module instead of importing it.",
+              "@reference-ui/lib": "Neo is self-contained: copy solved lib code into a Neo-owned module instead of importing it.",
+              "reference-core": "Neo is self-contained: copy solved core code into a Neo-owned module instead of importing it.",
+              "reference-lib": "Neo is self-contained: copy solved lib code into a Neo-owned module instead of importing it."
+            },
+            "patterns": [
+              {
+                "group": [
+                  "@reference-ui/core/*",
+                  "@reference-ui/core/**",
+                  "@reference-ui/lib/*",
+                  "@reference-ui/lib/**",
+                  "reference-core/*",
+                  "reference-core/**",
+                  "reference-lib/*",
+                  "reference-lib/**",
+                  "**/reference-core",
+                  "**/reference-core/**",
+                  "**/reference-lib",
+                  "**/reference-lib/**"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "suspicious": { "recommended": true, "noExplicitAny": "error" }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "arrowParentheses": "asNeeded",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
+  "json": { "formatter": { "enabled": false } },
+  "css": { "formatter": { "enabled": false } },
+  "overrides": [
+    {
+      "includes": ["**/native/generated/primitives/primitives.d.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noShadowRestrictedNames": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/generated/**", "**/dist/**", "**/node_modules/**"],
+      "formatter": { "enabled": false }
+    }
+  ]
+}

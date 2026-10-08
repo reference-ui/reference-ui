@@ -1,0 +1,8 @@
+{
+  "description": "Perf verdicts — every diet/recon/CUT ever filed. Targeted search is exact substring-AND (never fuzzy) by design.",
+  "index": ".agents/skills/agent-perf/perf-index.json",
+  "kind": "perf",
+  "name": "perf",
+  "owner": "agent-perf skill",
+  "weights": { "id": 4, "log": 1, "meta": 1, "summary": 2, "topic": 5, "verdict": 2 }
+}

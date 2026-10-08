@@ -6,40 +6,58 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 ## Skills vs `test-core`
 
-`tweak-component` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
+`view-story` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
 
 **`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a manufacturing loop.
 
 | You changed | Use |
 | --- | --- |
-| `@reference-ui/lib` look/feel | `tweak-component` skill |
+| `@reference-ui/lib` look/feel | `view-story` skill |
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
+| `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
+| packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
+| `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
+| Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
+| Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (Memex `perf` collection) |
+| Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
+
+Independent architecture review is available as the **Oracle**
+(`.agents/skills/oracle/SKILL.md`): read-only Muse Spark 1.3 at the
+**Contributor** tier (Max effort), which is the right tier because Reference UI
+is open source. Muse Spark is not an OpenChamber model, so the `oracle` agent
+(`.opencode/agents/oracle.md`) carries the CLI call as a **context firewall**
+and returns one status line. The captain dispatches it; it never runs in the
+captain's session.
 
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
 
 ---
 
-## 0. Component Polishing & Tweaking Contract (`tweak-component`)
+## 0. Component Seeing Contract (`view-story`)
 
-Whenever a user prompt asks to fix, polish, style, improve, or adjust how any component in `@reference-ui/lib` feels or looks:
-- **Immediately activate the `tweak-component` skill** (`.agents/skills/tweak-component/SKILL.md`).
-- **Do NOT pause for speculative planning mode artifacts** (`implementation_plan.md`). Jump straight into the 5-step loop:
-  1. **Contract Ingestion**: Read `<Component>.md` and `SPEC.md` (driver). `TESTS.md` is the case catalog when SPEC points at it.
-  2. **Baseline Capture**: Run `pnpm capture <Component>` and embed the screenshot directly in chat.
-  3. **Implement & Tweak**: Apply changes in `packages/reference-lib/src/components/<Component>/`.
-  4. **Verification**: Follow the `test-component` skill (`pnpm agentct`). If `packages/reference-core` was also modified, switch to **test-core** (`pnpm agent`) — that is the pipeline runner, not a skill.
-  5. **Multi-State Visual Re-inspection**: Run `pnpm capture <Component> --states` and embed the markdown table into chat.
+Whenever an agent needs to SEE a component in `@reference-ui/lib`:
+- **Activate the `view-story` skill** (`.agents/skills/view-story/SKILL.md`).
+- Standard eyes are Playwright MCP against Book; `pnpm capture` is fallback.
+- Embed screenshots directly in chat. Seeing is not verifying — proof
+  belongs to `test-component` (`pnpm agentct`).
+
+When a user prompt asks to fix, polish, style, improve, or adjust a
+component: view it first (`view-story`), implement in
+`packages/reference-lib/src/components/<Component>/`, prove with
+`test-component` (`pnpm agentct`). If `packages/reference-core` was also
+modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 
 ---
 
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> **DO NOT start background `pnpm dev:lib` processes.**
-> The developer runs `pnpm dev:lib` locally in their terminal to monitor logs and avoid port collisions.
-> If the Book dev server on port 5000 is not reachable, politely ask the developer:
-> *"Please run `pnpm dev:lib` in your terminal so I can inspect and interact with the Book stories."*
+> Agents MAY run `pnpm dev:lib` themselves (HQ 2026-09-18 — rescinds the
+> former do-not-start rule). Single instance only: check port 5000 first
+> (`curl -s -o /dev/null -w '%{http_code}' localhost:5000`); if it is already
+> up, use it instead of starting a second. Prefer the managed background
+> session so logs stay inspectable, and stop only processes you started.
 
 ---
 
@@ -51,6 +69,8 @@ Whenever a user prompt asks to fix, polish, style, improve, or adjust how any co
 > `playwright` is NOT a root dependency; doing this causes `Cannot find module 'playwright'` errors and wastes tokens.
 
 ### The Canonical Capture Command
+Standard viewing is Playwright MCP via the `view-story` skill; below is the fallback capture client.
+
 Use the built-in capture tool from the workspace root to script and snapshot any component scenario:
 
 ```bash
@@ -72,7 +92,7 @@ pnpm capture <Component> [Fixture] -s path/to/script.mjs
 pnpm capture <Component> [Fixture]
 
 # 5. Or use the programmatic API from any node script:
-# import { captureFixture } from './.agents/skills/tweak-component/scripts/capture.mjs'
+# import { captureFixture } from './.agents/skills/view-story/scripts/capture.mjs'
 ```
 
 In scripts, you receive: `{ page, canvas, root, target, interactive, capture, pressTab, inspectStyles, wait, frame }`.
@@ -134,4 +154,86 @@ pnpm pipeline test --packages=@matrix/<package>
 > [!NOTE]
 > **Terminal Bridge Mode (Optional)**:
 > If you have an external terminal open, run `pnpm agent daemon`. The agent will automatically route heavy test runs through your native terminal session over a local socket (`/tmp/reference-ui-agent.sock`). If the daemon is inactive, `pnpm agent` executes directly with `taskpolicy -a` QoS elevation.
+
+---
+
+## 4. Reference RS Workflow (`agent-rs`, `pnpm agentrs`)
+
+Follow `.agents/skills/agent-rs/SKILL.md` whenever you work in `packages/reference-rs`.
+
+### The Core Commands
+```bash
+# Per-module seam verification (Vitest against N-API / TS wrappers):
+pnpm agentrs v                                               # all module vitest suites
+pnpm agentrs v atomic                                        # ONLY atomic tests (never runs tasty setup)
+pnpm agentrs v tasty                                         # ONLY tasty tests
+pnpm agentrs v atlas                                         # ONLY atlas tests
+pnpm agentrs v styletrace                                    # ONLY styletrace tests
+pnpm agentrs v atomic --update-goldens                       # updates atomic golden snapshots (CLI only, never env var)
+pnpm agentrs v <test-path>                                   # target single file
+
+# Fast domain Rust verification (cargo test):
+pnpm agentrs c                                               # all workspace tests
+pnpm agentrs c atomic                                        # auto-detects crate (-p atomic)
+pnpm agentrs c tasty                                         # -p tasty
+pnpm agentrs c atlas                                         # -p atlas
+pnpm agentrs c styletrace                                    # -p styletrace
+pnpm agentrs c <crate> -t "<pattern>"                        # crate + test filter
+
+# Code quality & comment check (MANDATORY after every generation):
+pnpm agentrs q                                               # smart check (changed files / system)
+pnpm agentrs q <file-or-dir>                                 # target specific file or directory
+pnpm agentrs <path-to-file>                                  # path shorthand runs quality automatically
+
+# Full verification:
+pnpm agentrs t                                               # runs build -> cargo -> vitest -> quality
+pnpm agentrs                                                 # bare command runs full dev loop
+```
+
+> [!IMPORTANT]
+> **Code Quality & Comment Standards for `reference-rs`**:
+> This is a compiler, not a toy. Write small enough to analyze, fail explicitly (`Result`/diagnostics, not `unwrap`), put pass state in a type, and never silence the analyzer. The numbered limits below are the checks; that is the taste.
+> 1. **Zero tolerance default**: 1 Code violations cause immediate failure (exit 1). Not an optional check.
+> 2. **File length**: Hard failure if a file exceeds **500 lines**; warning at **365 lines** (*"Can you split this up, please?"*).
+> 3. **Cyclomatic complexity**: Keep $\le 10$ (failure $> 15$). Cognitive complexity $\le 15$ (failure $> 20$).
+> 4. **Function length**: Keep $\le 80$ lines (failure $> 120$).
+> 5. **Function arguments**: Warning at $> 4$, failure at $> 5$. Introduce a context/session struct (e.g. `ExpressionWalk`, `ObjectWalk`, `ExtractContext`). **Never** `#[allow(clippy::too_many_arguments)]`.
+> 6. **Clippy allows & cheating are strictly banned**: `#[allow(clippy::…)]` / `#[expect(clippy::…)]` fail the quality gate immediately. Do NOT attempt syntactic workarounds or parameter soup tuples. Fix the architecture.
+> 7. **Top-of-file commentary**: 2–6 sentences at the top (`//!` / `/**`) describing what the file does, takes, and emits. Tiny types can be 2 sentences; a walker or lowering pass can be 4–6. No lazy one-liners, not an essay.
+> 8. **Inline comments stay terse**: Explain *why*, not *what*. The file header is the paragraph; function bodies are not.
+> 9. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
+> 10. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
+
+---
+
+## 5. Neo Runtime Workflow (agent-neo, pnpm agentneo)
+
+Follow `.agents/skills/agent-neo/SKILL.md` whenever you work in `packages/reference-neo`.
+
+Neo is the code word for the runtime portion of reference-rs — TypeScript above the cut (fragments, publish, runtime), Rust below. Neo is not a fork of core and never touches lib; its loop is cases plus Playwright in `packages/reference-neo/tests`, with no matrix and no Dagger in the inner loop.
+
+```bash
+pnpm agentneo list            # all cases: id, name, folder, README first line
+pnpm agentneo search <query>  # find cases by id, name, or README text
+pnpm agentneo run [case-id]   # run one case, or all cases when omitted
+pnpm agentneo q [paths]       # Biome quality gate (section 6 of the skill)
+```
+
+See the skill for Playwright policy, scope discipline, gate limits, and the retirement clause.
+
+---
+
+## 6. Docs Workflow (agent-docs, pnpm agentdocs)
+
+Follow `.agents/skills/agent-docs/SKILL.md` whenever you work in `packages/reference-docs`.
+
+The docs app is a thin Vite + React + TanStack Router shell around MDX. Reference UI compiles CSS at build time, so there is **no client-side code playground** — examples render the real components and show static, build-time-highlighted source.
+
+```bash
+pnpm dev:docs                 # serve :5174
+pnpm agentdocs q [paths]      # docs quality gate (Biome + strict tsc + suppressions)
+```
+
+The gate's fail line is cognitive complexity 20, `any` banned, file length 500, and every `tsc --noEmit` error; warnings (12 / 365) shout but do not block. Suppressions (`biome-ignore`, `@ts-ignore`, bare `@ts-expect-error`) fail immediately — fix the code. After the gate is green, do the reading pass: naming, no panda-isms, and nothing too complicated or weird-looking.
+
 

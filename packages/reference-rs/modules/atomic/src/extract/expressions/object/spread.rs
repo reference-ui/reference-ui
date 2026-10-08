@@ -1,0 +1,382 @@
+//! Spread arguments in style objects: inline, const, member, call, and branching.
+//! A spread unpacks whatever static object its argument names — an inline
+//! literal, a recorded const, a nested member path, or a folded pure-call
+//! return — lowering entries exactly as if written in place. Conditional and
+//! logical spreads lower every live arm; anything else warns once with its
+//! siblings kept, naming the write when the base was mutated.
+
+use oxc_ast::ast::{ConditionalExpression, Expression, SpreadElement};
+use oxc_span::{GetSpan, Span};
+use smallvec::SmallVec;
+
+use super::{lower_const_object, walk_style_object, ObjectWalk};
+use crate::diagnostics::DiagnosticCode;
+
+pub(crate) fn handle_spread_property(
+    ctx: &mut ObjectWalk<'_>,
+    spread: &SpreadElement<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    // ...{ margin: '10px' }
+    walk_spread_argument(ctx, &spread.argument, when);
+}
+
+/// Unpack a spread argument: inline objects, identifier local consts, or warn.
+pub fn walk_spread_argument(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    if walk_spread_value(ctx, expr, when) {
+        return;
+    }
+    if walk_spread_branching(ctx, expr, when) {
+        return;
+    }
+    // ...maybeFn()
+    ctx.warn(
+        expr.span(),
+        DiagnosticCode::UnfoldableSpread,
+        "Dynamic object spread encountered in style object; keeping sibling properties",
+    );
+}
+
+fn walk_spread_value(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
+    match expr {
+        Expression::ObjectExpression(inner_obj) => {
+            // ...{ margin: '10px' }
+            walk_style_object(ctx, inner_obj, when);
+            true
+        }
+        Expression::Identifier(ident) => {
+            // ...base  after  const base = { mt: '2r' }
+            unpack_local_const_object(ctx, ident.name.as_str(), when, ident.span);
+            true
+        }
+        Expression::ParenthesizedExpression(p) => {
+            // ...({ margin: '10px' })
+            walk_spread_argument(ctx, &p.expression, when);
+            true
+        }
+        Expression::StaticMemberExpression(mem) => {
+            // ...styles.hover  — member-hop spread over a nested const object
+            unpack_member_const_object(ctx, mem, when);
+            true
+        }
+        Expression::CallExpression(call) => {
+            // ...getStyles()  — the folded object lowers exactly as if spread
+            spread_pure_call(ctx, call, when);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Spread a pure-helper call: a folded object lowers entry by entry with
+/// plans, refused fragments warn, and anything else warns the generic
+/// spread diagnostic — naming the write for a reassigned callee.
+fn spread_pure_call(
+    ctx: &mut ObjectWalk<'_>,
+    call: &oxc_ast::ast::CallExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    let fold = crate::extract::fold::fold_pure_call(call, ctx.scopes);
+    if let Some(crate::extract::fold::FenceValue::Object(entries)) = fold.value {
+        // Slice 3 Q5b: spread-position call refusals warn here, NOT through
+        // the warn_dynamic sink hook. The refused fragment is interior to
+        // the call's arguments with no prop in scope, so it is not a
+        // mintable value position — recording a sink would mint pool values
+        // onto a position the author never refused. Spreads are never sinks.
+        for refusal in &fold.refusals {
+            ctx.warn_help(
+                refusal.span(),
+                DiagnosticCode::DynamicExpression,
+                refusal.message_for_spread(),
+                vec!["hoist the expression into a static literal or variant".to_string()],
+            );
+        }
+        emit_spread_residue(ctx, call.span, fold.residue.as_deref());
+        crate::extract::fold::lower_call_spread(ctx, &entries, when, call.span);
+        return;
+    }
+    if fold.value.is_some() {
+        // ...sizes()  — a spread needs an object, not leaves or an array
+        ctx.warn(
+            call.span,
+            DiagnosticCode::UnfoldableSpread,
+            "Dynamic object spread encountered in style object; keeping sibling properties",
+        );
+        return;
+    }
+    let mut callee = &call.callee;
+    while let Some(inner) = crate::extract::expressions::walk::unwrap_wrapper_target(callee) {
+        callee = inner;
+    }
+    if let Expression::Identifier(ident) = callee {
+        if let Some(write) = ctx.scopes.mutation(ident.name.as_str()) {
+            ctx.warn_help(
+                call.span,
+                DiagnosticCode::MutatedBinding,
+                format!(
+                    "Dynamic mutated binding '{}' spread in style object ({}; keeping sibling properties)",
+                    ident.name.as_str(),
+                    write.write_phrase()
+                ),
+                vec![format!(
+                    "hoist '{}' above the style call and stop reassigning it ({})",
+                    ident.name.as_str(),
+                    write.write_phrase()
+                )],
+            );
+            return;
+        }
+    }
+    // ...maybeFn()  — dynamic, warn, keep siblings
+    ctx.warn(
+        call.span,
+        DiagnosticCode::UnfoldableSpread,
+        "Dynamic object spread encountered in style object; keeping sibling properties",
+    );
+}
+
+/// Warn when a spread call's callee baked a dropped dynamic arm (Ph4
+/// residue channel). Runs only for folded object spreads, beside the refusals.
+fn emit_spread_residue(ctx: &mut ObjectWalk<'_>, span: Span, residue: Option<&str>) {
+    if let Some(subject) = residue {
+        ctx.warn_help(
+            span,
+            DiagnosticCode::PartialObjectProp,
+            format!("{subject} drops a dynamic arm with no static style value"),
+            vec![format!("make the dynamic arm of {subject} static or drop it")],
+        );
+    }
+}
+
+/// Unpack a member-hop spread over its nested entries, or diagnose the miss.
+///
+/// A miss names the write when the root is mutated, else warns the generic
+/// spread diagnostic — the same vocabulary as identifier spreads.
+fn unpack_member_const_object(
+    ctx: &mut ObjectWalk<'_>,
+    mem: &oxc_ast::ast::StaticMemberExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    if let Some(obj) = crate::extract::fold::member_path_object(mem, ctx.scopes) {
+        let name = crate::extract::fold::member_path_text(mem);
+        lower_const_object(ctx, &name, obj, when, mem.span);
+        return;
+    }
+    // ...styles.missing  — not a recorded object; a rootless base warns generic
+    let root = crate::extract::fold::member_root_name(mem).unwrap_or("");
+    spread_miss_warn(ctx, root, mem.span);
+}
+
+fn walk_spread_branching(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
+    match expr {
+        Expression::ConditionalExpression(cond) => {
+            // ...(on ? { padding: '10px' } : { gap: '8px' })  — both arms
+            // lower; a folded test lowers the live arm only and names the dead
+            spread_conditional(ctx, cond, when);
+            true
+        }
+        Expression::LogicalExpression(log) => {
+            // ...(unk && { padding: '10px' })  /  ...(unk || { margin: '20px' })
+            walk_spread_argument(ctx, &log.left, when);
+            walk_spread_argument(ctx, &log.right, when);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Lower a conditional spread: the live arm when the test folds, else both.
+fn spread_conditional(
+    ctx: &mut ObjectWalk<'_>,
+    cond: &ConditionalExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    let test = crate::extract::fold::fold_test(&cond.test, ctx.scopes);
+    emit_spread_dead_arms(ctx, &test.dead_arms);
+    let Some(pick) = test.value else {
+        walk_spread_argument(ctx, &cond.consequent, when);
+        walk_spread_argument(ctx, &cond.alternate, when);
+        return;
+    };
+    let (live, dead) = if pick {
+        (&cond.consequent, &cond.alternate)
+    } else {
+        (&cond.alternate, &cond.consequent)
+    };
+    let arm = crate::extract::fold::dead_arm(dead, pick, ctx.scopes);
+    emit_spread_dead_arms(ctx, std::slice::from_ref(&arm));
+    walk_spread_argument(ctx, live, when);
+}
+
+/// Report one info diagnostic per arm eliminated from a spread test.
+fn emit_spread_dead_arms(ctx: &mut ObjectWalk<'_>, arms: &[crate::extract::fold::DeadArm]) {
+    for arm in arms {
+        ctx.info(
+            arm.span,
+            DiagnosticCode::DeadBranch,
+            arm.message("in style object spread"),
+        );
+    }
+}
+
+/// Warn on an unresolvable spread, naming the write when the name is mutated.
+fn spread_miss_warn(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
+    if let Some(write) = ctx.scopes.mutation(name) {
+        // css({ ...palette })  after  palette.color = 'blue'
+        ctx.warn_help(
+            span,
+            DiagnosticCode::MutatedBinding,
+            format!(
+                "Dynamic mutated binding '{name}' spread in style object ({}; keeping sibling properties)",
+                write.write_phrase()
+            ),
+            vec![format!(
+                "hoist '{name}' above the style call and stop reassigning it ({})",
+                write.write_phrase()
+            )],
+        );
+        return;
+    }
+    if name.is_empty() {
+        // A rootless base names nothing; the static fallback answers.
+        ctx.warn(
+            span,
+            DiagnosticCode::UnfoldableSpread,
+            "Dynamic object spread encountered in style object; keeping sibling properties",
+        );
+        return;
+    }
+    ctx.warn_help(
+        span,
+        DiagnosticCode::UnfoldableSpread,
+        "Dynamic object spread encountered in style object; keeping sibling properties",
+        vec![format!(
+            "define '{name}' as a static style object or inline it"
+        )],
+    );
+}
+
+fn unpack_local_const_object(
+    ctx: &mut ObjectWalk<'_>,
+    name: &str,
+    when: &SmallVec<[Box<str>; 2]>,
+    span: Span,
+) {
+    let Some(obj) = ctx.scopes.object(name) else {
+        // ...unknown  — not a file-top const object
+        spread_miss_warn(ctx, name, span);
+        return;
+    };
+    emit_import_residue(ctx, name, span);
+    lower_const_object(ctx, name, obj, when, span);
+}
+
+/// Diagnose nested spreads the imported object could not unfold, one per
+/// marker, before its surviving entries lower.
+fn emit_import_residue(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
+    for marker in ctx.scopes.import_unfoldable(name) {
+        ctx.warn_help(
+            span,
+            DiagnosticCode::UnfoldableSpread,
+            marker.message(),
+            vec![format!(
+                "define '{}' as a static style object or inline it",
+                marker.local()
+            )],
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn channel_for(
+        res: &crate::CompileResult,
+        code: crate::diagnostics::DiagnosticCode,
+    ) -> Vec<crate::Diagnostic> {
+        res.compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|diag| diag.code == code)
+            .cloned()
+            .collect()
+    }
+
+    /// An unresolvable spread names the base in its define-or-inline fix.
+    #[test]
+    fn unknown_spread_help_names_the_base() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const unknown: object;\
+             export const cls = css({ ...unknown });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::UnfoldableSpread);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["define 'unknown' as a static style object or inline it".to_string()])
+        );
+    }
+
+    /// A mutated spread base names the hoist fix with its write phrase.
+    #[test]
+    fn mutated_spread_help_names_hoist_with_write() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             let palette = { color: 'red' };\
+             palette = { color: 'blue' };\
+             export const cls = css({ ...palette });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::MutatedBinding);
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("mutated spread carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("hoist 'palette' above the style call and stop reassigning it ("),
+            "unexpected help: {help:?}"
+        );
+        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
+    }
+
+    /// A refused call fragment inside a folded spread carries the hoist fix.
+    #[test]
+    fn spread_call_refusal_help_names_the_hoist_fix() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const dyn: string;\
+             function getStyles(n) { return { color: n }; }\
+             export const cls = css({ ...getStyles(flag ? 'red' : dyn) });",
+        );
+        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::DynamicExpression);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["hoist the expression into a static literal or variant".to_string()])
+        );
+    }
+}

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "procedure": "agentrs-phases/1",
+  "marks": {
+    "processStart": {
+      "unixMs": 1790080265914.513,
+      "monoMs": 0
+    },
+    "workerMain": {
+      "unixMs": 1790080265998,
+      "monoMs": 84.442804
+    },
+    "syncStart": {
+      "unixMs": 1790080265999,
+      "monoMs": 84.571304
+    },
+    "configEnd": {
+      "unixMs": 1790080266023,
+      "monoMs": 108.674063
+    },
+    "scanStart": {
+      "unixMs": 1790080266023,
+      "monoMs": 108.704222
+    },
+    "scanEnd": {
+      "unixMs": 1790080266381,
+      "monoMs": 466.65661
+    },
+    "evalEnd": {
+      "unixMs": 1790080266386,
+      "monoMs": 472.252244
+    },
+    "compileStart": {
+      "unixMs": 1790080266386,
+      "monoMs": 472.253728
+    },
+    "compileEnd": {
+      "unixMs": 1790080266895,
+      "monoMs": 981.288004
+    },
+    "publishEnd": {
+      "unixMs": 1790080266949,
+      "monoMs": 1034.915686
+    },
+    "syncEnd": {
+      "unixMs": 1790080266949,
+      "monoMs": 1034.928407
+    },
+    "workerEnd": {
+      "unixMs": 1790080266949,
+      "monoMs": 1034.931565
+    }
+  },
+  "phases": {
+    "startup": 84.571304,
+    "config": 24.102759000000006,
+    "scan": 357.952388,
+    "evaluate": 5.595634000000018,
+    "compile": 509.034276,
+    "publish": 53.62768200000005,
+    "syncTotal": 950.357103,
+    "workerTotal": 1034.931565,
+    "workerTail": 0.003157999999984895,
+    "syncResidual": 0.04436400000008689
+  }
+}

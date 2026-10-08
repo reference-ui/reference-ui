@@ -1,0 +1,38 @@
+{
+  "name": "@fixtures/layer-library",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    ".reference-ui/system/baseSystem.d.mts",
+    ".reference-ui/system/baseSystem.mjs",
+    "README.md"
+  ],
+  "scripts": {
+    "sync": "node scripts/bootstrap-runtime.mjs && ref sync",
+    "build": "pnpm --filter @reference-ui/lib run sync && pnpm run sync && node ../../../packages/reference-lib/scripts/build-bundle.mjs --entry index=src/index.ts && tsc -p tsconfig.build.json && node scripts/build-package.mjs",
+    "dev": "node scripts/bootstrap-runtime.mjs && ref sync --watch",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": ">=17 <20"
+  },
+  "devDependencies": {
+    "@reference-ui/neo": "workspace:*",
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "typescript": "~7.0.2",
+    "vitest": "^4.1.0"
+  }
+}

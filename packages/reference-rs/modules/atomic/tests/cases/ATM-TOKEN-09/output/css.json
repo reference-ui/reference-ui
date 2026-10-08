@@ -1,0 +1,10 @@
+{
+  "backgroundImage:hero": "category-breadth__background-image_hero",
+  "boxShadow:card": "category-breadth__shadow_card",
+  "mt:4": "category-breadth__mt_4",
+  "transitionDuration:fast": "category-breadth__trans-dur_fast",
+  "transitionTimingFunction:easeOut": "category-breadth__trans-tf_easeOut",
+  "width:content": "category-breadth__w_content",
+  "zIndex:2": "category-breadth__z_2",
+  "zIndex:modal": "category-breadth__z_modal"
+}

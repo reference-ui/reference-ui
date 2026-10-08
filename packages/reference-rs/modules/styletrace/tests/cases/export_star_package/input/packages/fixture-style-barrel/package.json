@@ -1,0 +1,8 @@
+{
+  "name": "fixture-style-barrel",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

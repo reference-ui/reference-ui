@@ -1,0 +1,5 @@
+{
+  "bg:blue.500": "@reference-ui/lib__bg_blue.500",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "px:4r": "@reference-ui/lib__px_4r"
+}

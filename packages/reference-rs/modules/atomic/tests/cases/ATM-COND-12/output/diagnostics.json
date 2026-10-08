@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "`color: red.500` has no compiled style plan; this lookup will emit no class. Unknown condition \"_hovr\"",
+    "file": "input/src/unknown.ts",
+    "line": 3,
+    "column": 23,
+    "span": {
+      "start": 65,
+      "end": 74
+    },
+    "help": [
+      "did you mean `_hover`?",
+      "use a condition from the theme"
+    ]
+  }
+]

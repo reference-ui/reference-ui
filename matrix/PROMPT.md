@@ -1,5 +1,11 @@
 # Matrix Coverage Agent Prompt
 
+> **Historical (VOYAGE Obj 2):** this prompt commissioned per-package
+> agents against the pre-cutover 19-suite matrix and its
+> `TEST_COVERAGE.md` section map. That matrix is retired — the kept
+> gate is T2/T8/mcp and behavior coverage lives in Neo cases (see
+> `TEST_COVERAGE.md`). Do not use to commission new matrix packages.
+
 Use this prompt for one agent working on one assigned matrix coverage section.
 
 ## Prompt

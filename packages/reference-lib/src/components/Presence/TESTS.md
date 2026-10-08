@@ -2,9 +2,8 @@
 
 Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
 
-Playwright: `matrix/lib/tests/e2e/presence.spec.ts`  
-Unit: `matrix/lib/tests/unit/presence.test.ts`
-Page: `/presence`
+Playwright CT: `__e2e__/Presence.ct.spec.ts` (`pnpm agentct Presence`)
+Unit: `Presence.test.tsx` + `elementRef.test.tsx` (colocated Vitest)
 
 Presence owns exit-lifecycle detection for CSS transitions and animations. It
 renders no host and does not set `data-state`; the consumer sets closed state
@@ -274,6 +273,54 @@ before Presence decides when to remove the child.
   unmount. Assert one effective descendant wait, no premature parent removal,
   one final subtree cleanup, and no duplicate listener, ref, or late-update
   warning in React 17, 18, or 19.
+- [x] `PR-NEST-05` `[convergence]` `[browser:all]` —
+  **Presence should complete a parent's animated exit when a nested descendant was born closed.**
+  Mount a nested pair with the child `present={false}` from birth (the
+  closed-overlay shape), then close the parent's 150ms transition. Assert the
+  parent removes on its own effect completion without waiting for a descendant
+  exit that never started, and no late removal or warning follows.
+- [x] `PR-NEST-06` `[convergence]` `[browser:all]` —
+  **Presence should coordinate a nested child that opens and closes during the parent's exit.**
+  Start a 150ms parent exit, open the born-closed child mid-exit, then close
+  its 350ms transition. Assert both nodes remain until the child's longer exit
+  completes, the parent removes exactly once afterward, and refs clean up.
+
+### Exit completion callback
+
+- [x] `PR-EXIT-01` `[reference]` `[browser]` —
+  **Presence should fire onExitComplete exactly once after a completed transition exit.**
+  Close a child with a finite two-property transition, then observe the
+  callback count past removal. Assert one fire after unmount and no second
+  fire from trailing end events.
+- [x] `PR-EXIT-02` `[reference]` `[browser]` —
+  **Presence should fire onExitComplete when an exit completes instantly.**
+  Close a child with no CSS effect. Assert same-commit removal and one fire.
+- [x] `PR-EXIT-03` `[reference]` `[browser:all]` —
+  **Presence should not fire onExitComplete for an interrupted exit.**
+  Start a finite exit, reopen before completion, and settle past the exit
+  duration. Assert the child stays mounted with zero fires; then close again
+  and assert exactly one fire for the completed exit.
+- [x] `PR-EXIT-04` `[reference]` `[browser]` —
+  **Presence should not fire onExitComplete on initial mount.**
+  Mount open, instant, interrupt, wedge, and coordinated fixtures. Assert all
+  callback counts are zero with no interaction.
+- [x] `PR-EXIT-05` `[reference]` `[browser:all]` —
+  **Presence should fire onExitComplete through a born-closed nested wedge.**
+  Close a 150ms parent containing a never-opened nested Presence (the B-01
+  closed-overlay shape). Assert the parent removes on its own effect and its
+  callback fires once, while the never-exited child callback stays silent.
+- [x] `PR-EXIT-06` `[reference]` `[browser:all]` —
+  **Presence should fire onExitComplete once per instance when nested exits coordinate.**
+  Close a 150ms parent and its 350ms child together. Assert both remove after
+  the longer exit and each callback fires exactly once.
+- [x] `PR-EXIT-07` `[reference]` `[react:all]` —
+  **Presence should fire onExitComplete exactly once per completed instant exit.**
+  In a DOM unit host with no CSS effects: stay present across rerenders (zero
+  fires), close (one fire), reopen (still one), close again (two fires).
+- [x] `PR-EXIT-08` `[reference]` `[react:all]` —
+  **Presence should not fire onExitComplete on initial mount.**
+  Mount born-closed and born-open instances in a DOM unit host. Assert zero
+  fires for each.
 
 ### Refs, React, and SSR
 
@@ -300,6 +347,12 @@ before Presence decides when to remove the child.
   an animated removal under React 17, 18, and 19, and record calls. Assert one
   attachment and exactly the version-appropriate cleanup callback or `null`
   notification, never both twice.
+- [x] `PR-REF-05` `[reference]` `[react:all]` —
+  **Presence should read the child ref without invoking React's version-specific warning getters.**
+  Exercise the shared ref reader with synthetic elements exposing only a ref
+  accessor, real elements with and without refs, and mounted/SSR children.
+  Assert the consumer ref is returned, no getter is ever invoked, and no
+  `element.ref` warning is logged on any major.
 - [x] `PR-ENV-01` `[reference]` `[ssr]` —
   **Presence should hydrate matching child markup when `present` is true on the server and client.**
   Server-render a marked present child, hydrate it with the same props, and
@@ -341,6 +394,16 @@ before Presence decides when to remove the child.
 
 Overlay and Popover prove only that they wire `data-state` and teardown to this
 kernel. Collapsible proves measured-height integration.
+
+### Third-party exit drivers
+
+- [x] `PR-GSAP-01` `[reference]` `[browser]` —
+  **Presence should retain an exiting child until its finite GSAP tweens complete, and skip the wait under reduced motion.**
+  Start a finite GSAP tween on an observed child with no CSS effect, set
+  `present` false, and observe retention through the tween and removal on its
+  completion with one exit callback. Then repeat with reduced motion and
+  assert instant removal with a second exit callback. Collapsible's
+  `animateCollapse` exit is the proven in-repo consumer of this wait.
 
 ## Out of scope
 

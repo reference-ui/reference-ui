@@ -20,19 +20,19 @@ function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest
     generatedAt: '2026-04-27T18:00:00.000Z',
     packages: [
       {
-        artifactHash: 'core-artifact-a',
-        hash: 'core-hash-a',
+        artifactHash: 'neo-artifact-a',
+        hash: 'neo-hash-a',
         internalDependencies: [],
-        name: '@reference-ui/core',
-        sourceDir: '/tmp/core',
-        tarballFileName: 'reference-ui-core-0.0.41.tgz',
-        tarballPath: '/tmp/core.tgz',
+        name: '@reference-ui/neo',
+        sourceDir: '/tmp/neo',
+        tarballFileName: 'reference-ui-neo-0.0.41.tgz',
+        tarballPath: '/tmp/neo.tgz',
         version: '0.0.41',
       },
       {
         artifactHash: 'lib-artifact-a',
         hash: 'lib-hash-a',
-        internalDependencies: ['@reference-ui/core'],
+        internalDependencies: ['@reference-ui/neo'],
         name: '@reference-ui/lib',
         sourceDir: '/tmp/lib',
         tarballFileName: 'reference-ui-lib-0.0.44.tgz',
@@ -51,7 +51,7 @@ function createManifest(overrides?: Partial<RegistryManifest>): RegistryManifest
 
 function selectInternalPackages(
   manifest: RegistryManifest,
-  packageNames: readonly string[] = ['@reference-ui/core', '@reference-ui/lib'],
+  packageNames: readonly string[] = ['@reference-ui/neo', '@reference-ui/lib'],
 ): RegistryManifestPackage[] {
   return manifest.packages.filter(pkg => packageNames.includes(pkg.name))
 }
@@ -59,7 +59,7 @@ function selectInternalPackages(
 function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>): MatrixFixturePackageJson {
   return {
     dependencies: {
-      '@reference-ui/core': 'workspace:*',
+      '@reference-ui/neo': 'workspace:*',
       '@reference-ui/lib': 'workspace:*',
       react: '^19.2.0',
       'react-dom': '^19.2.0',
@@ -82,17 +82,17 @@ describe('matrix node_modules cache helpers', () => {
     assert.deepEqual(
       replaceWorkspaceProtocolVersions({
         dependencies: {
-          '@reference-ui/core': 'workspace:*',
+          '@reference-ui/neo': 'workspace:*',
           '@reference-ui/lib': 'workspace:^',
           react: '^19.2.0',
         },
         versionOverrides: {
-          '@reference-ui/core': '0.0.41',
+          '@reference-ui/neo': '0.0.41',
           '@reference-ui/lib': '0.0.44',
         },
       }),
       {
-        '@reference-ui/core': '0.0.41',
+        '@reference-ui/neo': '0.0.41',
         '@reference-ui/lib': '0.0.44',
         react: '^19.2.0',
       },
@@ -116,14 +116,14 @@ describe('matrix node_modules cache helpers', () => {
     )
 
     const baselineNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(baseline),
       libVersion: '0.0.44',
     })
 
     const changedNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(changed),
       libVersion: '0.0.44',
@@ -143,14 +143,14 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     const baselineNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(baseline),
       libVersion: '0.0.44',
     })
 
     const changedNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(changed),
       libVersion: '0.0.44',
@@ -164,13 +164,13 @@ describe('matrix node_modules cache helpers', () => {
     const fixturePackageJson = createFixturePackageJson()
 
     const left = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
     })
     const right = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(createManifest()),
       libVersion: '0.0.44',
@@ -183,14 +183,14 @@ describe('matrix node_modules cache helpers', () => {
     const manifest = createManifest()
 
     const left = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/distro' }),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
     })
 
     const right = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/playwright' }),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -203,14 +203,14 @@ describe('matrix node_modules cache helpers', () => {
     const manifest = createManifest()
 
     const left = matrixSharedNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/distro' }),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
     })
 
     const right = matrixSharedNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({ name: '@matrix/playwright' }),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -222,14 +222,14 @@ describe('matrix node_modules cache helpers', () => {
   it('splits node_modules cache keys when the matrix dependency graph changes', () => {
     const manifest = createManifest()
     const baseline = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
     })
 
     const differentDevDependency = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson({
         devDependencies: {
           '@modelcontextprotocol/sdk': '^1.29.0',
@@ -244,7 +244,7 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     const differentPublishedVersion = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.42',
+      neoVersion: '0.0.42',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -268,7 +268,7 @@ describe('matrix node_modules cache helpers', () => {
 
     const nodeImage = matrixNodeModulesCacheKey({
       containerImage: MANAGED_NODE_IMAGE,
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -276,7 +276,7 @@ describe('matrix node_modules cache helpers', () => {
 
     const playwrightImage = matrixNodeModulesCacheKey({
       containerImage: managedPlaywrightContainerImage(),
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -310,14 +310,14 @@ describe('matrix node_modules cache helpers', () => {
     })
 
     const baselineNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(baseline),
       libVersion: '0.0.44',
     })
 
     const changedNodeModules = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson: createFixturePackageJson(),
       internalPackages: selectInternalPackages(changed),
       libVersion: '0.0.44',
@@ -331,13 +331,13 @@ describe('matrix node_modules cache helpers', () => {
     const fixturePackageJson = createFixturePackageJson()
 
     const implicit = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
     })
     const explicitReact19 = matrixNodeModulesCacheKey({
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',
@@ -351,7 +351,7 @@ describe('matrix node_modules cache helpers', () => {
     const manifest = createManifest()
     const fixturePackageJson = createFixturePackageJson()
     const sharedOptions = {
-      coreVersion: '0.0.41',
+      neoVersion: '0.0.41',
       fixturePackageJson,
       internalPackages: selectInternalPackages(manifest),
       libVersion: '0.0.44',

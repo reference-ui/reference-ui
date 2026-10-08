@@ -1,0 +1,9 @@
+{
+  "backgroundImage:linear-gradient(red, blue)": "@reference-ui/lib__background-image_linear-gradient(red,_blue)",
+  "borderEndStartRadius:4px": "@reference-ui/lib__border-end-start-radius_4px",
+  "borderStartStartRadius:4px": "@reference-ui/lib__border-start-start-radius_4px",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:transparent": "@reference-ui/lib__c_transparent",
+  "translate:10px": "@reference-ui/lib__translate_10px",
+  "webkitBackgroundClip:text": "@reference-ui/lib__-webkit-background-clip_text"
+}

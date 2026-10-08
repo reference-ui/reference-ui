@@ -1,0 +1,62 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `colors.nope.997`",
+    "file": "input/src/inits.ts",
+    "line": 9,
+    "column": 31,
+    "span": {
+      "start": 245,
+      "end": 250
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{colors.nope.996}`",
+    "file": "input/src/refusals.ts",
+    "line": 19,
+    "column": 33,
+    "span": {
+      "start": 844,
+      "end": 868
+    }
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `colors.nope.999`",
+    "file": "input/src/tokens.ts",
+    "line": 10,
+    "column": 31,
+    "span": {
+      "start": 358,
+      "end": 390
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `colors.nope.998`",
+    "file": "input/src/tokens.ts",
+    "line": 13,
+    "column": 31,
+    "span": {
+      "start": 534,
+      "end": 568
+    },
+    "help": [
+      "did you mean `colors.rose.900`?",
+      "point the path at an existing token"
+    ]
+  }
+]

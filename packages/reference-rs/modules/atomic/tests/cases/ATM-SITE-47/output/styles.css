@@ -1,0 +1,18 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__content_\"x__y\" { content: "x  y"; }
+  .\@reference-ui\/lib__font-family_\'Fira__Code\'\,_monospace { font-family: 'Fira  Code', monospace; }
+  .\@reference-ui\/lib__font-family_Fira_Sans { font-family: Fira Sans; }
+  .\@reference-ui\/lib__grid-areas_\"preview_name_delete\"_\"preview_size_delete\" { grid-template-areas: "preview name delete" "preview size delete"; }
+}
+}

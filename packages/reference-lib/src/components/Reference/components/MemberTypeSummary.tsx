@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type {
   ReferenceMemberTypeSummary,

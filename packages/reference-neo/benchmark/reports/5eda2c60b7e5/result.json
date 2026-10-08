@@ -1,0 +1,164 @@
+{
+  "revision": "5eda2c60b7e5",
+  "hash": "5eda2c60b7e5",
+  "dirty": false,
+  "createdAt": "2026-09-20T20:55:41.248Z",
+  "machine": {
+    "node": "v24.16.0",
+    "platform": "darwin x64",
+    "arch": "x64",
+    "totalMem": 68719476736
+  },
+  "scales": [
+    {
+      "plan": {
+        "scale": "small",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 3,
+        "files": 60,
+        "deadFiles": 240,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 80,
+        "tokenSpacing": 30,
+        "recipes": 6,
+        "uniqueRatio": 0.15,
+        "conditionRatio": 0.25,
+        "responsiveRatio": 0.2
+      },
+      "generated": {
+        "styleFiles": 60,
+        "deadFiles": 240,
+        "cssCalls": 171,
+        "recipes": 6
+      },
+      "genMs": 27.435680999999988,
+      "samples": [
+        {
+          "syncMs": 148.866649,
+          "rssBefore": 97685504,
+          "rssPeak": 131145728,
+          "rssAfter": 131145728
+        },
+        {
+          "syncMs": 149.916738,
+          "rssBefore": 98553856,
+          "rssPeak": 127688704,
+          "rssAfter": 127078400
+        },
+        {
+          "syncMs": 151.29979400000002,
+          "rssBefore": 99151872,
+          "rssPeak": 126935040,
+          "rssAfter": 126935040
+        }
+      ],
+      "bundle": {
+        "cssBytes": 550910,
+        "dataBytes": 255767,
+        "totalBytes": 806677,
+        "cssGzip": 34599,
+        "dataGzip": 30218,
+        "totalGzip": 64817
+      }
+    },
+    {
+      "plan": {
+        "scale": "medium",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 3,
+        "files": 250,
+        "deadFiles": 1000,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 150,
+        "tokenSpacing": 48,
+        "recipes": 24,
+        "uniqueRatio": 0.25,
+        "conditionRatio": 0.3,
+        "responsiveRatio": 0.25
+      },
+      "generated": {
+        "styleFiles": 250,
+        "deadFiles": 1000,
+        "cssCalls": 635,
+        "recipes": 24
+      },
+      "genMs": 100.43726700000002,
+      "samples": [
+        {
+          "syncMs": 451.626994,
+          "rssBefore": 99377152,
+          "rssPeak": 219516928,
+          "rssAfter": 209887232
+        },
+        {
+          "syncMs": 460.51083100000005,
+          "rssBefore": 100642816,
+          "rssPeak": 217681920,
+          "rssAfter": 201543680
+        },
+        {
+          "syncMs": 468.773781,
+          "rssBefore": 98103296,
+          "rssPeak": 212320256,
+          "rssAfter": 209235968
+        }
+      ],
+      "bundle": {
+        "cssBytes": 2554607,
+        "dataBytes": 808657,
+        "totalBytes": 3363264,
+        "cssGzip": 146093,
+        "dataGzip": 60225,
+        "totalGzip": 206318
+      }
+    },
+    {
+      "plan": {
+        "scale": "enterprise",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 1,
+        "files": 3000,
+        "deadFiles": 12000,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 300,
+        "tokenSpacing": 64,
+        "recipes": 120,
+        "uniqueRatio": 0.35,
+        "conditionRatio": 0.35,
+        "responsiveRatio": 0.3
+      },
+      "generated": {
+        "styleFiles": 3000,
+        "deadFiles": 12000,
+        "cssCalls": 7527,
+        "recipes": 120
+      },
+      "genMs": 1142.7794920000001,
+      "samples": [
+        {
+          "syncMs": 3506.500189,
+          "rssBefore": 99688448,
+          "rssPeak": 834711552,
+          "rssAfter": 834711552
+        }
+      ],
+      "bundle": {
+        "cssBytes": 15007762,
+        "dataBytes": 4090907,
+        "totalBytes": 19098669,
+        "cssGzip": 844849,
+        "dataGzip": 216404,
+        "totalGzip": 1061253
+      }
+    }
+  ]
+}

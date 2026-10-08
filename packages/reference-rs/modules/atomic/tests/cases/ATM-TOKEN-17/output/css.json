@@ -1,0 +1,8 @@
+{
+  "backgroundColor:-{colors.blue.600}/50": "negated-brace__bg-c_-{colors.blue.600}/50",
+  "borderColor:{colors.blue.600}": "negated-brace__bd-c_{colors.blue.600}",
+  "borderStyle:solid": "negated-brace__border-style_solid",
+  "borderWidth:-1px": "negated-brace__bd-w_-1px",
+  "color:-{colors.blue.600/50}": "negated-brace__c_-{colors.blue.600/50}",
+  "mt:-{spacing.4}": "negated-brace__mt_-{spacing.4}"
+}

@@ -9,7 +9,7 @@ import { computePackageBuildHashes, readBuildState, writeBuildState } from './ca
 import { ensureLocalRegistryAndStagePublicPackages } from '../registry/index.js'
 import { logSkip } from '../lib/log/index.js'
 import { REGISTRY_PACKAGE_NAMES } from '../../config.js'
-import type { VirtualNativeTarget } from '../../../packages/reference-rs/js/shared/targets.js'
+import type { ReferenceNativeTarget } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import {
   listRegistryWorkspacePackages,
   run,
@@ -18,7 +18,7 @@ import {
 import type { WorkspacePackage } from './types.js'
 
 export interface BuildWorkspacePackageOptions {
-  requiredRustTargets?: readonly VirtualNativeTarget[]
+  requiredRustTargets?: readonly ReferenceNativeTarget[]
   trace?: boolean
 }
 

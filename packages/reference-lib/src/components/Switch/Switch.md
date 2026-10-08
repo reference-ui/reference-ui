@@ -54,10 +54,12 @@ A wrapping label is also valid at either specificity:
 interface SwitchProps
   extends Omit<
     ReferencePartProps<"button">,
-    "onChange" | "type" | "role" | "aria-checked" | "aria-pressed"
+    | "onChange" | "type" | "role"
+    | "aria-checked" | "aria-pressed"
+    | "data-state" | "data-disabled"
   > {
   checked: boolean
-  onChange?: (checked: boolean) => void
+  onChange?: (checked: boolean, event: React.MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
 }
 
@@ -80,6 +82,11 @@ land on that thumb. Authoring `Switch.Thumb` replaces the default thumb;
 exactly one thumb exists. Other authored children are visual chrome and do
 not become extra thumbs.
 
+Extra children are clipped by the track, but clipping is visual only:
+their text still surfaces in the switch's accessible name. Keep extras
+decorative and `aria-hidden` — Switch does not filter them out of the
+name computation.
+
 Root owns `type`, `role`, `aria-checked`, and the absence of `aria-pressed`.
 `aria-checked` is `"true"` or `"false"`. Both parts publish
 `data-state="checked" | "unchecked"` and `data-disabled` when disabled.
@@ -87,7 +94,9 @@ Applications style thumb travel against `data-state`; Switch does not set
 transforms or publish geometry custom properties.
 
 Unprevented native `click` — including Space, Enter, and a click that lands
-on Thumb — requests the opposite boolean once. Consumer handlers run first;
+on Thumb — requests the opposite boolean once, delivered as
+`onChange(checked, event)` with the click's React mouse event for modifier
+keys, timestamps, and propagation. Consumer handlers run first;
 `preventDefault()` cancels the request. Disabled Switch does not request.
 Programmatic `checked` changes emit no callback.
 

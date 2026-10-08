@@ -1,0 +1,292 @@
+{
+  "function": "lowerCondition",
+  "rulesVersion": 6,
+  "cases": [
+    {
+      "input": "base",
+      "output": {
+        "status": "skip"
+      }
+    },
+    {
+      "input": "_hover",
+      "output": {
+        "status": "known",
+        "segment": "hover",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "_osDark",
+      "output": {
+        "status": "known",
+        "segment": "osDark",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "_wat",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "_x",
+      "output": {
+        "status": "known",
+        "segment": "x",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "__x",
+      "output": {
+        "status": "known",
+        "segment": "_x",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "x",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hover",
+      "output": {
+        "status": "known",
+        "segment": "hover",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "md",
+      "output": {
+        "status": "known",
+        "segment": "md",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "mdDown",
+      "output": {
+        "status": "known",
+        "segment": "mdDown",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "mdOnly",
+      "output": {
+        "status": "known",
+        "segment": "mdOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smToLg",
+      "output": {
+        "status": "known",
+        "segment": "smToLg",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smTolg",
+      "output": {
+        "status": "known",
+        "segment": "smTolg",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "SMTOLG",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "paddedDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hexDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "emptyDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "paddedOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "hexOnly",
+      "output": {
+        "status": "known",
+        "segment": "hexOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "pxnameOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "emptyOnly",
+      "output": {
+        "status": "known",
+        "segment": "emptyOnly",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "tablet",
+      "output": {
+        "status": "known",
+        "segment": "tablet",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "smTotablet",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "tabletTopxname",
+      "output": {
+        "status": "known",
+        "segment": "tabletTopxname",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "pxnameDown",
+      "output": {
+        "status": "known",
+        "segment": "pxnameDown",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "aToxDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "xDownDown",
+      "output": {
+        "status": "known",
+        "segment": "xDownDown",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "xDownOnly",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "aDown",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "@media (min-width: 1px)",
+      "output": {
+        "status": "known",
+        "segment": "[@media_(min-width:_1px)]",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "@supports",
+      "output": {
+        "status": "unknown"
+      }
+    },
+    {
+      "input": "@supports (display: grid)",
+      "output": {
+        "status": "known",
+        "segment": "[@supports_(display:_grid)]",
+        "kind": "supports"
+      }
+    },
+    {
+      "input": "@mediafoo",
+      "output": {
+        "status": "known",
+        "segment": "[@mediafoo]",
+        "kind": "media"
+      }
+    },
+    {
+      "input": "@container (min-width: 300px)",
+      "output": {
+        "status": "known",
+        "segment": "[@container_(min-width:_300px)]",
+        "kind": "container"
+      }
+    },
+    {
+      "input": "&:hover",
+      "output": {
+        "status": "known",
+        "segment": "[&:hover]",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "&[data-x]",
+      "output": {
+        "status": "known",
+        "segment": "[&[data-x]]",
+        "kind": "selector"
+      }
+    },
+    {
+      "input": "@layer utilities",
+      "output": {
+        "status": "known",
+        "segment": "[@layer_utilities]",
+        "kind": "selector"
+      }
+    }
+  ]
+}

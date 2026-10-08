@@ -4,7 +4,12 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["js/**/*.ts"]
+  "include": [
+    "modules/*/js/**/*.ts",
+    "modules/canon/generate/**/*.ts",
+    "modules/canon/generate/**/*.d.ts"
+  ]
 }

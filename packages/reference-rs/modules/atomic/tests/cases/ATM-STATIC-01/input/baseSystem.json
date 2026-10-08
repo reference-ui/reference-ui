@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "static-css",
+  "tokens": {
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n200": {
+        "light": "#e4e4e7",
+        "dark": "#27272a"
+      },
+      "n300": {
+        "light": "#d4d4d8",
+        "dark": "#3f3f46"
+      }
+    },
+    "radii": {
+      "md": {
+        "value": "0.4rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {
+    "color": ["*"],
+    "bg": ["n100", "n200", "n300"]
+  },
+  "provenance": []
+}

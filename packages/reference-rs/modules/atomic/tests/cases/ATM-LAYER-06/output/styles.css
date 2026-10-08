@@ -1,0 +1,16 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer layer-fontface {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .layer-fontface__font-family_sans { font-family: var(--fonts-sans); }
+  .layer-fontface__font-weight_400 { font-weight: 400; }
+}
+}

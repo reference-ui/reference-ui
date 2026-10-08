@@ -1,0 +1,21 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__background-image_linear-gradient\(red\,_blue\) { background-image: linear-gradient(red, blue); }
+  .\@reference-ui\/lib__border-end-start-radius_4px { border-end-start-radius: 4px; }
+  .\@reference-ui\/lib__border-start-start-radius_4px { border-start-start-radius: 4px; }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__c_transparent { color: transparent; }
+  .\@reference-ui\/lib__translate_10px { translate: 10px; }
+  .\@reference-ui\/lib__-webkit-background-clip_text { -webkit-background-clip: text; }
+}
+}

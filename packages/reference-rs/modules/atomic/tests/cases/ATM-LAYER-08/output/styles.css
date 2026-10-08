@@ -1,0 +1,16 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer layer-reset {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box }
+  body { margin: 0 }
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .layer-reset__c_primary { color: var(--colors-primary); }
+}
+}

@@ -13,7 +13,8 @@ const requiredFiles = [
   resolve(distDir, 'index.mjs'),
   resolve(distDir, 'index.d.ts'),
   resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
-  resolve(distDir, 'runtime/reference-ui/styled/css/index.js'),
+  resolve(distDir, 'runtime/reference-ui/styled/styles.css'),
+  resolve(distDir, 'runtime/reference-ui/styled/index.d.ts'),
 ]
 
 function run(command, args) {
@@ -22,10 +23,10 @@ function run(command, args) {
 
 await rm(distDir, { recursive: true, force: true })
 
-run(process.execPath, ['scripts/ensure-core-cli.mjs'])
 run(process.execPath, ['scripts/generate.mjs'])
-run('pnpm', ['exec', 'ref', 'build'])
-run('pnpm', ['exec', 'rollup', '-c'])
+run(process.execPath, [resolve(packageRoot, '../reference-neo/tools/ensure-dist.mjs')])
+run('pnpm', ['exec', 'ref', 'sync'])
+run(process.execPath, ['scripts/build-bundle.mjs'])
 run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])
 run(process.execPath, ['scripts/materialize-runtime.mjs'])
 

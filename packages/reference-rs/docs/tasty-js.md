@@ -20,11 +20,9 @@ At a high level:
 
 Lower-level **native** surface (requires the `.node` addon):
 
-- `rewriteCssImports(sourceCode, relativePath)`
-- `rewriteCvaImports(sourceCode, relativePath)`
 - `scanAndEmitModules(rootDir, include)` — returns a JSON string with emitted module sources and diagnostics
 
-Loader utilities (`getVirtualNative`, `loadVirtualNative`, path resolution, etc.) live in the same entry and are useful for tooling that integrates with the binary.
+Loader utilities (`getReferenceNative`, `loadReferenceNative`, path resolution, etc.) live in the same entry and are useful for tooling that integrates with the binary.
 
 ### `@reference-ui/rust/tasty`
 

@@ -1,0 +1,89 @@
+{
+  "procedure": "agentrs-flame/2",
+  "procedureNote": "merge same-function addresses by symbolized name; honor sample weights; publish self + inclusive costs (v1 keyed resource:address:func and counted +1 per sample)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "68b020b2f6a1",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-pTaHpS",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "worker": {
+    "syncMs": 1242.5886870000002,
+    "rssBefore": 111280128,
+    "rssPeak": 360747008,
+    "rssAfter": 337506304
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 108260,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-Q5WmGH/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "pnpm",
+    "agentrs",
+    "flame",
+    "--resummarize",
+    "docs/evidence/flamegraph/enterprise-latest",
+    "--out",
+    "docs/evidence/flamegraph/enterprise-flame2"
+  ],
+  "resummarizedFrom": {
+    "dir": "docs/evidence/flamegraph/enterprise-latest",
+    "procedure": "agentrs-flame/1",
+    "createdAt": "2026-09-21T08:32:39.039Z",
+    "profileSha256": "7a04faa34d816c1aee68bf3895d5c340b27e37b40850523f7d7d637093214091",
+    "sidecarSha256": "5678e96c6646168e095a8edc2e73fa1d21622a56ade9bfdf52f7e91d02ba3769"
+  },
+  "createdAt": "2026-09-21T11:12:25.859Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/flame-evidence.mjs",
+    " M .agents/skills/agent-rs/scripts/flame-summary.mjs",
+    " M .agents/skills/agent-rs/scripts/flame.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-correct-logs/cobj1-aggregation.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    "?? docs/evidence/flamegraph/enterprise-flame2/"
+  ]
+}

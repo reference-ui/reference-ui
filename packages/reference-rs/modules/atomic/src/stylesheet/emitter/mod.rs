@@ -1,0 +1,277 @@
+//! Stylesheet rule builder and CSS layer emitter.
+//! Generates valid, deterministic CSS declarations wrapped in cascade layers, selectors, and at-rules.
+//! Utility rules are sorted and grouped by `cascade`; this file prints the layer shells
+//! and closed recipe classes. Recipe at-rules nest the same wrap sequence as utilities.
+
+use super::cascade::{
+    at_rule_wraps, close_wraps, format_declaration, open_wraps, push_indent, write_utilities,
+};
+use super::layers::{wrap_package_layer, LAYER_PREAMBLE};
+
+mod streams;
+
+pub use streams::{StylesheetStreams, build_stylesheet_streams};
+use super::name;
+use super::system_layers::{append_portable_system_layers, append_system_layers};
+use crate::atom::{Atom, AtomSet, WhenKind};
+use crate::recipes::CompiledRecipe;
+use crate::resolve::conditions::nest_selector_condition;
+use base_system::BaseSystem;
+use indexmap::IndexMap;
+use rustc_hash::FxBuildHasher;
+
+type FxIndexMap<K, V> = IndexMap<K, V, FxBuildHasher>;
+
+fn extract_at_rules(atom: &Atom) -> Vec<String> {
+    at_rule_wraps(atom).map(str::to_string).collect()
+}
+
+/// Builds complete atomic stylesheet containing layer preambles and generated utility rules.
+pub fn build_stylesheet(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) -> String {
+    build_stylesheet_with(atom_set, system, &[], diagnostics)
+}
+
+/// Same as `build_stylesheet`, with closed recipe classes in `@layer recipes`.
+///
+/// Named systems nest the six layers inside their package layer so composed
+/// output keeps utilities above global; unnamed systems stay flat. Both shapes
+/// open with the baked root default ahead of the wrap, the lowest layer.
+pub fn build_stylesheet_with(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    recipes: &[CompiledRecipe],
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) -> String {
+    let mut inner = LAYER_PREAMBLE.to_string();
+    append_system_layers(&mut inner, system, diagnostics);
+    append_recipes_layer(&mut inner, recipes);
+    append_utilities_layer(&mut inner, atom_set, &system.name);
+    prepend_root_default(&wrap_package_layer(&system.name, &inner))
+}
+
+/// Same as `build_stylesheet_with`, with portable [data-layer] token selectors.
+pub fn build_portable_stylesheet_with(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    recipes: &[CompiledRecipe],
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) -> String {
+    let mut inner = LAYER_PREAMBLE.to_string();
+    append_portable_system_layers(&mut inner, system, diagnostics);
+    append_recipes_layer(&mut inner, recipes);
+    append_utilities_layer(&mut inner, atom_set, &system.name);
+    prepend_root_default(&wrap_package_layer(&system.name, &inner))
+}
+
+/// Prefix the baked root default ahead of a wrapped sheet. The default stays
+/// outside the package wrap so it keeps the lowest layer rank in any compose.
+fn prepend_root_default(wrapped: &str) -> String {
+    let mut out =
+        String::with_capacity(super::root_default::ROOT_DEFAULT_BLOCK.len() + wrapped.len());
+    super::root_default::append_root_default(&mut out);
+    out.push_str(wrapped);
+    out
+}
+
+/// Paired diagnostic sinks for the dual-sheet build. The primary sink is kept;
+/// the portable sink is dropped by the caller so global warnings surface once.
+pub struct StylesheetSinks<'a> {
+    pub primary: &'a mut Vec<crate::diagnostics::Diagnostic>,
+    pub portable: &'a mut Vec<crate::diagnostics::Diagnostic>,
+}
+
+/// Build both sheets via captured per-layer streams, then concatenate. Only
+/// the token selectors differ, so recipes+utilities print once and both sheets
+/// stay byte-identical to the paired single builds. Returns the streams first:
+/// S2 ships them verbatim alongside the joined sheets as the oracle channel.
+pub fn build_stylesheets_with(
+    atom_set: &AtomSet,
+    system: &BaseSystem,
+    recipes: &[CompiledRecipe],
+    sinks: StylesheetSinks<'_>,
+) -> (StylesheetStreams, String, String) {
+    let streams = build_stylesheet_streams(atom_set, system, recipes, sinks);
+    let sheet = streams.stylesheet();
+    let portable = streams.portable_stylesheet();
+    (streams, sheet, portable)
+}
+
+fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {
+    if atom_set.is_empty() {
+        return;
+    }
+    out.push_str("@layer utilities {\n");
+    write_utilities(out, atom_set, system);
+    out.push_str("}\n");
+}
+
+fn append_recipes_layer(out: &mut String, recipes: &[CompiledRecipe]) {
+    if !recipes.iter().any(|recipe| !recipe.rules.is_empty()) {
+        return;
+    }
+    out.push_str("@layer recipes {\n");
+    for recipe in recipes {
+        for rule in &recipe.rules {
+            emit_recipe_rule(out, rule);
+        }
+    }
+    out.push_str("}\n");
+}
+
+fn emit_recipe_rule(out: &mut String, rule: &crate::recipes::RecipeRule) {
+    let groups = group_recipe_atoms(rule);
+    let mut start = 0;
+    while start < groups.len() {
+        let mut end = start + 1;
+        while end < groups.len() && groups[end].at_rules == groups[start].at_rules {
+            end += 1;
+        }
+        write_recipe_block(out, &groups[start..end]);
+        start = end;
+    }
+}
+
+struct RecipeGroup {
+    at_rules: Vec<String>,
+    selector: String,
+    declarations: Vec<String>,
+}
+
+fn group_recipe_atoms(rule: &crate::recipes::RecipeRule) -> Vec<RecipeGroup> {
+    let mut groups: FxIndexMap<(Vec<String>, String), Vec<String>> = FxIndexMap::default();
+    for atom in &rule.atoms {
+        let at_rules = extract_at_rules(atom);
+        let selector = recipe_selector(&rule.class_name, atom);
+        groups
+            .entry((at_rules, selector))
+            .or_default()
+            .push(format_declaration(atom));
+    }
+    let base_selector = format!(".{}", name::escape::escape_css_selector(&rule.class_name));
+    let mut ordered: Vec<RecipeGroup> = groups
+        .into_iter()
+        .map(|((at_rules, selector), declarations)| RecipeGroup {
+            at_rules,
+            selector,
+            declarations,
+        })
+        .collect();
+    ordered.sort_by(|a, b| {
+        group_bucket(a, &base_selector)
+            .cmp(&group_bucket(b, &base_selector))
+            .then_with(|| first_wrap_kind(&a.at_rules).cmp(&first_wrap_kind(&b.at_rules)))
+            .then_with(|| first_wrap_width(&a.at_rules).cmp(&first_wrap_width(&b.at_rules)))
+            .then_with(|| a.at_rules.cmp(&b.at_rules))
+            .then_with(|| a.selector.cmp(&b.selector))
+    });
+    ordered
+}
+
+/// Cascade bucket for one recipe group: base, selector-only, at-rule.
+fn group_bucket(group: &RecipeGroup, base_selector: &str) -> u8 {
+    if !group.at_rules.is_empty() {
+        2
+    } else if group.selector != base_selector {
+        1
+    } else {
+        0
+    }
+}
+
+fn first_wrap_kind(wraps: &[String]) -> u8 {
+    wraps.first().map(|wrap| classify_wrap(wrap)).unwrap_or(0)
+}
+
+/// At-rule kind rank shared with the utility sorter: supports, media, container.
+fn classify_wrap(query: &str) -> u8 {
+    if query.starts_with("@supports") {
+        1
+    } else if query.starts_with("@media") {
+        2
+    } else if query.starts_with("@container") {
+        3
+    } else {
+        4
+    }
+}
+
+fn first_wrap_width(wraps: &[String]) -> (u8, i32) {
+    wraps
+        .first()
+        .map(|wrap| width_key(wrap))
+        .unwrap_or_default()
+}
+
+fn width_key(query: &str) -> (u8, i32) {
+    if let Some(rest) = after_feature(query, "min-width:") {
+        return (1, milli_px(rest));
+    }
+    if let Some(rest) = after_feature(query, "max-width:") {
+        return (2, -milli_px(rest));
+    }
+    (0, 0)
+}
+
+fn after_feature<'a>(query: &'a str, feature: &str) -> Option<&'a str> {
+    let idx = query.find(feature)?;
+    Some(&query[idx + feature.len()..])
+}
+
+fn milli_px(input: &str) -> i32 {
+    let text = input.trim_start();
+    let end = text
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(text.len());
+    let num: i32 = text[..end].parse().unwrap_or(0);
+    let unit = text[end..].trim_start();
+    let milli = num.saturating_mul(1000);
+    if unit.starts_with("em") || unit.starts_with("rem") {
+        milli.saturating_mul(16)
+    } else {
+        milli
+    }
+}
+
+fn recipe_selector(class_name: &str, atom: &Atom) -> String {
+    let escaped = name::escape::escape_css_selector(class_name);
+    let mut current = format!(".{escaped}");
+    for cond in &atom.conditions {
+        if let WhenKind::Selector(template) = cond.wrap() {
+            current = nest_selector_condition(&current, template);
+        }
+    }
+    current
+}
+
+/// Print consecutive same-wrap groups inside one at-rule block.
+///
+/// Groups arrive sorted so equal wraps are adjacent; merging keeps one
+/// rule's base selector and its condition descendants in a single block,
+/// mirroring the utility writer. Unwrapped groups print unchanged.
+fn write_recipe_block(out: &mut String, groups: &[RecipeGroup]) {
+    let Some(first) = groups.first() else {
+        return;
+    };
+    let wraps: Vec<&str> = first.at_rules.iter().map(String::as_str).collect();
+    open_wraps(out, &wraps);
+    let depth = wraps.len() + 1;
+    for group in groups {
+        let decls = group.declarations.join(" ");
+        push_indent(out, depth);
+        out.push_str(&group.selector);
+        out.push_str(" { ");
+        out.push_str(&decls);
+        out.push_str(" }\n");
+    }
+    close_wraps(out, wraps.len());
+}
+
+#[cfg(test)]
+mod emitter_ordering_tests;
+
+#[cfg(test)]
+mod tests;

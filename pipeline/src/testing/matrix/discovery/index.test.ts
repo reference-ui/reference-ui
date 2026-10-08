@@ -29,7 +29,7 @@ describe('readMatrixPackageConfig', () => {
     const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
 
     try {
-      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7","webpack5"],"react":"react19","runTypecheck":true}\n')
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"typescript","refSync":{"mode":"full"},"bundlers":["vite7","webpack5"],"react":"react19"}\n')
 
       assert.deepEqual(readMatrixPackageConfig(tempDir), {
         name: 'typescript',
@@ -39,7 +39,6 @@ describe('readMatrixPackageConfig', () => {
         bundlers: ['vite7', 'webpack5'],
         react: 'react19',
         reactVersions: ['react19'],
-        runTypecheck: true,
       })
     } finally {
       await rm(tempDir, { force: true, recursive: true })
@@ -54,7 +53,22 @@ describe('readMatrixPackageConfig', () => {
 
       assert.throws(
         () => readMatrixPackageConfig(tempDir),
-        /refSync\.mode as "full", "watch-ready", or "watch-full"/,
+        /refSync\.mode as "full" or "watch-ready"/,
+      )
+    } finally {
+      await rm(tempDir, { force: true, recursive: true })
+    }
+  })
+
+  it('rejects the retired watch-full refSync mode', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'ref-pipeline-matrix-'))
+
+    try {
+      await writeFile(join(tempDir, 'matrix.json'), '{"name":"watch","refSync":{"mode":"watch-full"},"bundlers":["vite7"],"react":"react19"}\n')
+
+      assert.throws(
+        () => readMatrixPackageConfig(tempDir),
+        /refSync\.mode as "full" or "watch-ready"/,
       )
     } finally {
       await rm(tempDir, { force: true, recursive: true })
@@ -141,7 +155,6 @@ describe('readMatrixPackageConfig', () => {
         bundlers: ['vite7'],
         react: 'react19',
         reactVersions: ['react19', 'react18', 'react17'],
-        runTypecheck: false,
       })
     } finally {
       await rm(tempDir, { force: true, recursive: true })
@@ -174,10 +187,10 @@ describe('readMatrixPackageConfig', () => {
 })
 
 describe('isMatrixWorkspacePackageDir', () => {
-  it('returns true only for workspace packages under the top-level matrix directory', () => {
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'distro')), true)
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'playwright')), true)
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'fixtures', 'extend-library')), false)
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'packages', 'reference-core')), false)
+  it('returns true only for workspace packages under the matrix tests directory', () => {
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'tests', 'chain', 'T2')), true)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'tests', 'mcp')), true)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'fixtures', 'extend-library')), false)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'packages', 'reference-neo')), false)
   })
 })

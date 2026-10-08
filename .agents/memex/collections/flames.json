@@ -1,0 +1,11 @@
+{
+  "description": "Measurement evidence — rs-index bundle notes (summary/callers/meta) + ledgers. Raw profiles stay out; sidecars carry the record.",
+  "id": "path",
+  "include": ["*.md", "**/summary.md", "**/callers.md", "**/meta.json", "**/phases.json"],
+  "kind": "markdown",
+  "name": "flames",
+  "owner": "agent-perf skill",
+  "roots": [".agents/rs-index"],
+  "suggest": ["tags"],
+  "weights": { "tags": 2, "title": 3 }
+}

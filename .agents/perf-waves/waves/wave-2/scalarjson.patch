@@ -1,0 +1,389 @@
+diff --git a/packages/reference-rs/modules/atomic/src/runtime/serializer.rs b/packages/reference-rs/modules/atomic/src/runtime/serializer.rs
+index 1668a8898..a1478d255 100644
+--- a/packages/reference-rs/modules/atomic/src/runtime/serializer.rs
++++ b/packages/reference-rs/modules/atomic/src/runtime/serializer.rs
+@@ -60,15 +60,160 @@ impl<'a> LookupKey<'a> {
+ /// Compute the stable lookup key string for an authored declaration.
+ /// Formats the tuple `(system, when, prop, canonical_value, important)` into compact JSON.
+ pub fn serialize_lookup_key(key: &LookupKey<'_>) -> String {
+-    let canonical_val = canonical_json_value(key.value);
+-    let tuple = (
+-        key.system,
+-        key.when,
+-        key.prop,
+-        &canonical_val,
+-        key.important,
+-    );
+-    serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
++    if is_fast_scalar(key.value) {
++        write_scalar_tuple(key)
++    } else {
++        let canonical_val = canonical_json_value(key.value);
++        let tuple = (
++            key.system,
++            key.when,
++            key.prop,
++            &canonical_val,
++            key.important,
++        );
++        serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
++    }
++}
++
++/// Scalar values need no canonicalization (identity) and no serde tuple
++/// machinery: the writer below emits their bytes directly.
++fn is_fast_scalar(value: &Value) -> bool {
++    matches!(
++        value,
++        Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_)
++    )
++}
++
++/// Hand-rolled five-tuple writer for scalar values. Byte-identical to the
++/// serde path: same `[` framing, same string escaping, same literals.
++fn write_scalar_tuple(key: &LookupKey<'_>) -> String {
++    let mut cap = key.system.len() + key.prop.len() + 20;
++    for step in key.when {
++        cap += step.len() + 3;
++    }
++    cap += scalar_len_hint(key.value);
++    let mut out = String::with_capacity(cap);
++    out.push('[');
++    push_json_string(&mut out, key.system);
++    out.push(',');
++    out.push('[');
++    for (index, step) in key.when.iter().enumerate() {
++        if index > 0 {
++            out.push(',');
++        }
++        push_json_string(&mut out, step);
++    }
++    out.push_str("],");
++    push_json_string(&mut out, key.prop);
++    out.push(',');
++    push_scalar_json(&mut out, key.value);
++    out.push(',');
++    out.push_str(if key.important { "true" } else { "false" });
++    out.push(']');
++    out
++}
++
++/// Capacity hint for the scalar slot: exact for strings, roomy for the
++/// rare literals (never reached on the bench corpus).
++fn scalar_len_hint(value: &Value) -> usize {
++    if let Value::String(text) = value {
++        text.len() + 2
++    } else {
++        8
++    }
++}
++
++/// Render one scalar slot exactly as serde_json would: quoted strings on
++/// the hot path, bare literals and the serde number printer off it.
++fn push_scalar_json(out: &mut String, value: &Value) {
++    if let Value::String(text) = value {
++        push_json_string(out, text);
++    } else {
++        push_scalar_literal(out, value);
++    }
++}
++
++/// Render a non-string scalar slot. Containers never reach here
++/// (`is_fast_scalar` guards the caller); the arm keeps the match exhaustive.
++fn push_scalar_literal(out: &mut String, value: &Value) {
++    match value {
++        Value::Bool(true) => out.push_str("true"),
++        Value::Bool(false) => out.push_str("false"),
++        Value::Null => out.push_str("null"),
++        Value::Number(_) => {
++            let rendered = serde_json::to_string(value).unwrap_or_else(|_| "null".to_string());
++            out.push_str(&rendered);
++        }
++        _ => out.push_str("null"),
++    }
++}
++
++/// Escapability per byte value, built at compile time: C0 controls plus
++/// `"` and `\`, exactly serde_json's escape set.
++const fn escapable_table() -> [bool; 256] {
++    let mut table = [false; 256];
++    let mut byte = 0;
++    while byte < 0x20 {
++        table[byte] = true;
++        byte += 1;
++    }
++    table[b'"' as usize] = true;
++    table[b'\\' as usize] = true;
++    table
++}
++
++static ESCAPABLE: [bool; 256] = escapable_table();
++
++/// Append one JSON string literal with serde_json's exact escaping: `\"`,
++/// `\\`, short forms for `\b \t \n \f \r`, `\u00xx` (lowercase hex) for
++/// other C0 controls, everything else verbatim.
++fn push_json_string(out: &mut String, text: &str) {
++    out.push('"');
++    let bytes = text.as_bytes();
++    let mut run_start = 0;
++    let mut cursor = 0;
++    while cursor < bytes.len() {
++        let byte = bytes[cursor];
++        if ESCAPABLE[byte as usize] {
++            out.push_str(&text[run_start..cursor]);
++            push_escape(out, byte);
++            run_start = cursor + 1;
++        }
++        cursor += 1;
++    }
++    out.push_str(&text[run_start..]);
++    out.push('"');
++}
++
++/// Short escape letter per byte value, built at compile time: 0 means
++/// no short form (generic `\u00xx`), otherwise the letter after `\`.
++const fn short_escape_table() -> [u8; 256] {
++    let mut table = [0; 256];
++    table[b'"' as usize] = b'"';
++    table[b'\\' as usize] = b'\\';
++    table[0x08] = b'b';
++    table[0x09] = b't';
++    table[0x0A] = b'n';
++    table[0x0C] = b'f';
++    table[0x0D] = b'r';
++    table
++}
++
++static SHORT_ESCAPE: [u8; 256] = short_escape_table();
++
++/// Append one escape sequence for a byte the caller already classified as
++/// escapable (`"`, `\`, or C0). Lowercase hex matches serde_json.
++fn push_escape(out: &mut String, byte: u8) {
++    const HEX: &[u8; 16] = b"0123456789abcdef";
++    let short = SHORT_ESCAPE[byte as usize];
++    if short != 0 {
++        out.push('\\');
++        out.push(short as char);
++    } else {
++        out.push_str("\\u00");
++        out.push(HEX[(byte >> 4) as usize] as char);
++        out.push(HEX[(byte & 0x0F) as usize] as char);
++    }
+ }
+ 
+ #[cfg(test)]
+@@ -112,4 +257,80 @@ mod tests {
+         );
+         assert_eq!(key, r#"["lib-test-system",[],"marginTop",{"$r":2},true]"#);
+     }
++
++    /// Pre-change body kept as the differential oracle: canonical clone plus
++    /// the general serde tuple writer.
++    fn serde_tuple(key: &LookupKey<'_>) -> String {
++        let canonical_val = canonical_json_value(key.value);
++        let tuple = (key.system, key.when, key.prop, &canonical_val, key.important);
++        serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
++    }
++
++    fn assert_parity(key: &LookupKey<'_>) {
++        let fast = serialize_lookup_key(key);
++        let want = serde_tuple(key);
++        assert_eq!(fast, want, "divergence for value {:?}", key.value);
++    }
++
++    #[test]
++    fn scalar_fast_path_matches_serde_on_every_byte_value() {
++        let when = ["_hover".to_string(), "a\"b".to_string()];
++        for byte in 0..=255u32 {
++            let ch = char::from_u32(byte).unwrap_or('\u{FFFD}');
++            for text in [
++                ch.to_string(),
++                format!("a{ch}"),
++                format!("{ch}b"),
++                format!("a{ch}b🦀{ch}"),
++            ] {
++                let value = Value::String(text);
++                assert_parity(&LookupKey::new("lib-test-system", &when, "color", &value));
++                assert_parity(
++                    &LookupKey::new("sys\"\\\n", &[], "p\x00\x1f", &value).with_important(true),
++                );
++            }
++        }
++    }
++
++    #[test]
++    fn scalar_fast_path_matches_serde_on_adversarial_cases() {
++        let num = |text: &str| serde_json::from_str::<Value>(text).unwrap_or(Value::Null);
++        let when = ["_hover".to_string(), "x\ny\x00z".to_string(), "🦀".to_string()];
++        let long = "x".repeat(8000);
++        let controls: String = (0..32u32).map(|b| char::from_u32(b).unwrap_or('?')).collect();
++        let cases: Vec<Value> = vec![
++            Value::String(String::new()),
++            Value::String("\"".to_string()),
++            Value::String("\\".to_string()),
++            Value::String("\"\\\"\\\\\\\"".to_string()),
++            Value::String(controls),
++            Value::String("\u{e9}\u{1f980}\u{0301}\u{6574}\u{4e2a}\u{2028}\u{2029}\x7f\u{9f}".to_string()),
++            Value::String(long),
++            Value::String("a\"b\\c\nd\te\rf\x08f\x0cg".to_string()),
++            Value::Null,
++            Value::Bool(true),
++            Value::Bool(false),
++            num("0.0"),
++            num("-0.0"),
++            num("1"),
++            num("1.0"),
++            num("1e300"),
++            num("5e-324"),
++            num("0.30000000000000004"),
++            num("123456789012345678901234567890"),
++            num("18446744073709551615"),
++            json!({}),
++            json!([]),
++            json!({"b": {"z": 9, "y": [1, {"a": null}]}, "a": true}),
++            json!({"a": true, "b": {"y": [1, {"a": null}], "z": 9}}),
++            json!(["1", null, "a\"b", {"k": "v\n"}]),
++        ];
++        for (index, value) in cases.iter().enumerate() {
++            assert_parity(
++                &LookupKey::new("s\"ys\\tem", &when, "pr\x00op", value)
++                    .with_important(index % 2 == 0),
++            );
++            assert_parity(&LookupKey::new("", &[], "", value).with_important(true));
++        }
++    }
+ }
+diff --git a/packages/reference-rs/modules/atomic/tests/serializer_parity.rs b/packages/reference-rs/modules/atomic/tests/serializer_parity.rs
+new file mode 100644
+index 000000000..b47f0d3e3
+--- /dev/null
++++ b/packages/reference-rs/modules/atomic/tests/serializer_parity.rs
+@@ -0,0 +1,128 @@
++//! Differential fuzzing for the scalar lookup-key fast path: seeded PRNG
++//! tuples plus container shapes, every case byte-compared against the
++//! pre-change serde body kept here as the oracle. Takes no inputs and
++//! emits only pass/fail; determinism comes from the fixed seed, so any
++//! failure reproduces exactly.
++
++use atomic::runtime::serializer::{canonical_json_value, serialize_lookup_key, LookupKey};
++use serde_json::Value;
++
++/// Pre-change body kept as the differential oracle.
++fn serde_tuple(key: &LookupKey<'_>) -> String {
++    let canonical_val = canonical_json_value(key.value);
++    let tuple = (key.system, key.when, key.prop, &canonical_val, key.important);
++    serde_json::to_string(&tuple).unwrap_or_else(|_| String::new())
++}
++
++/// Deterministic xorshift64* stream; fixed seed, no extra dependencies.
++struct Rng(u64);
++
++impl Rng {
++    fn next(&mut self) -> u64 {
++        let mut x = self.0;
++        x ^= x >> 12;
++        x ^= x << 25;
++        x ^= x >> 27;
++        self.0 = x;
++        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
++    }
++
++    fn below(&mut self, bound: usize) -> usize {
++        (self.next() % bound.max(1) as u64) as usize
++    }
++}
++
++const PIECES: &[&str] = &[
++    "a", "Z", "0", "9", "-", "_", ".", "/", ":", " ", "$", "{", "}", "[", "]", "\"", "\\",
++    "\n", "\t", "\r", "\x00", "\x08", "\x1f", "\x7f", "\u{9f}", "é", "🦀", "\u{0301}", "整个",
++    "\u{2028}", "\u{2029}",
++];
++
++const NUMBERS: &[&str] = &[
++    "0",
++    "1",
++    "-1",
++    "1.0",
++    "-0.0",
++    "0.0",
++    "1e300",
++    "5e-324",
++    "0.30000000000000004",
++    "3.141592653589793",
++    "123456789012345678901234567890",
++    "18446744073709551615",
++    "-9223372036854775808",
++];
++
++fn rand_text(rng: &mut Rng, max_pieces: usize) -> String {
++    let mut out = String::new();
++    for _ in 0..rng.below(max_pieces + 1) {
++        out.push_str(PIECES[rng.below(PIECES.len())]);
++    }
++    out
++}
++
++fn rand_scalar(rng: &mut Rng) -> Value {
++    match rng.below(100) {
++        0..=74 => Value::String(rand_text(rng, 24)),
++        75..=79 => Value::Bool(rng.below(2) == 0),
++        80..=82 => Value::Null,
++        _ => serde_json::from_str::<Value>(NUMBERS[rng.below(NUMBERS.len())])
++            .unwrap_or(Value::Null),
++    }
++}
++
++fn rand_container(rng: &mut Rng, depth: usize) -> Value {
++    if rng.below(2) == 0 {
++        let mut items = Vec::new();
++        for _ in 0..rng.below(5) {
++            items.push(rand_value(rng, depth));
++        }
++        return Value::Array(items);
++    }
++    let mut map = serde_json::Map::new();
++    for _ in 0..rng.below(5) {
++        map.insert(rand_text(rng, 6), rand_value(rng, depth));
++    }
++    Value::Object(map)
++}
++
++fn rand_value(rng: &mut Rng, depth: usize) -> Value {
++    if depth < 2 && rng.below(100) < 30 {
++        rand_container(rng, depth + 1)
++    } else {
++        rand_scalar(rng)
++    }
++}
++
++fn assert_parity(key: &LookupKey<'_>) {
++    let fast = serialize_lookup_key(key);
++    let want = serde_tuple(key);
++    assert_eq!(fast, want, "divergence for value {:?}", key.value);
++}
++
++#[test]
++fn scalar_fast_path_fuzz_matches_serde() {
++    let mut rng = Rng(0x51ED_4A50_4E9E_01u64);
++    for _ in 0..30_000 {
++        let system = rand_text(&mut rng, 8);
++        let when: Vec<String> = (0..rng.below(4)).map(|_| rand_text(&mut rng, 6)).collect();
++        let prop = rand_text(&mut rng, 8);
++        let value = rand_scalar(&mut rng);
++        let important = rng.below(2) == 0;
++        assert_parity(&LookupKey::new(&system, &when, &prop, &value).with_important(important));
++    }
++}
++
++#[test]
++fn container_fallback_fuzz_matches_serde() {
++    let mut rng = Rng(0x0B1E_C7A5_C04E_02u64);
++    for _ in 0..5_000 {
++        let system = rand_text(&mut rng, 8);
++        let when: Vec<String> = (0..rng.below(4)).map(|_| rand_text(&mut rng, 6)).collect();
++        let prop = rand_text(&mut rng, 8);
++        let value = rand_container(&mut rng, 0);
++        let important = rng.below(2) == 0;
++        assert_parity(&LookupKey::new(&system, &when, &prop, &value).with_important(important));
++    }
++}

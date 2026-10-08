@@ -1,0 +1,5 @@
+{
+  "&:last-child:& .divider:display:none": "@reference-ui/lib__[&:last-child]:[&_.divider]:d_none",
+  "&:not(:first-child), &:only-child:mt:0": "@reference-ui/lib__[&:not(:first-child),_&:only-child]:mt_0",
+  "&[data-x=\"a & b\"]:color:blue.600": "@reference-ui/lib__[&[data-x=\"a_&_b\"]]:c_blue.600"
+}

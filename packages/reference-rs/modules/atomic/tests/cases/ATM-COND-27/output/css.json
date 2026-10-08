@@ -1,0 +1,15 @@
+{
+  "&(:focus):color:pink.500": "@reference-ui/lib__[&(:focus)]:c_pink.500",
+  "&+.baz, &.qux:color:orange.500": "@reference-ui/lib__[&+.baz,_&.qux]:c_orange.500",
+  "&:color:purple.500": "@reference-ui/lib__[&]:c_purple.500",
+  "&:hover:& .b:.c &:color:green.500": "@reference-ui/lib__[&:hover]:[&_.b]:[.c_&]:c_green.500",
+  "&>.bar:color:lime.500": "@reference-ui/lib__[&>.bar]:c_lime.500",
+  "&_elem:color:red.500": "@reference-ui/lib__[&_elem]:c_red.500",
+  "&h1, &h2:color:cyan.500": "@reference-ui/lib__[&h1,_&h2]:c_cyan.500",
+  "&html:color:amber.500": "@reference-ui/lib__[&html]:c_amber.500",
+  ".foo&:color:indigo.500": "@reference-ui/lib__[.foo&]:c_indigo.500",
+  "body &:hover b:color:blue.500": "@reference-ui/lib__[body_&:hover_b]:c_blue.500",
+  "body&:color:teal.500": "@reference-ui/lib__[body&]:c_teal.500",
+  "color:purple.500": "@reference-ui/lib__c_purple.500",
+  "html&:color:violet.500": "@reference-ui/lib__[html&]:c_violet.500"
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="narrow" style="container-type: inline-size; width: 400px">
+      <div id="narrow-probe">narrow</div>
+    </div>
+    <div id="wide" style="container-type: inline-size; width: 800px">
+      <div id="wide-probe">wide</div>
+    </div>
+    <div id="live" style="container-type: inline-size; width: 400px">
+      <div id="live-probe">live</div>
+    </div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

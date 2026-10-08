@@ -1,0 +1,158 @@
+//! Call expressions in value position: the token surface, then the fence.
+//! A `token()` value pushes its want and a refused token shape warns against
+//! the surface; any other call tries the pure-helper fence, where a folded
+//! value lowers, refused fragments warn, and a refused call warns exactly
+//! like before — naming the write when the callee was reassigned.
+
+use oxc_ast::ast::{CallExpression, Expression};
+use oxc_span::Span;
+use smallvec::SmallVec;
+
+use super::{leaf::mutated_warn, util::unwrap_wrapper_target, DynamicRefusal, ExpressionWalk};
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, LeafDetail};
+
+/// Fold one call: a `token()` value pushes its want, a refused shape warns
+/// against the surface, and any other call tries the pure-helper fence.
+pub(crate) fn handle_token_call(
+    ctx: &mut ExpressionWalk<'_>,
+    call: &CallExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    let Some(fold) = crate::extract::fold::fold_token_call(call, ctx.scopes) else {
+        handle_pure_call(ctx, call, when);
+        return;
+    };
+    if let Some(value) = fold.value {
+        ctx.push_want(value, when.clone(), false, Some(call.span));
+    }
+    if let Some(refusal) = fold.refusal {
+        let prop = ctx.prop;
+        ctx.warn_help(
+            refusal.span(call.span),
+            refusal.code(),
+            refusal.message(prop),
+            vec![refusal.help(prop)],
+        );
+    }
+}
+
+/// Fold one non-token call through the pure-helper fence: a folded value
+/// lowers, refused fragments warn, and a refused call warns exactly like
+/// before — naming the write when the callee binding was reassigned.
+fn handle_pure_call(
+    ctx: &mut ExpressionWalk<'_>,
+    call: &CallExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    let fold = crate::extract::fold::fold_pure_call(call, ctx.scopes);
+    if let Some(value) = fold.value {
+        for refusal in &fold.refusals {
+            ctx.warn_dynamic(DynamicRefusal {
+                span: refusal.span(),
+                code: DiagnosticCode::DynamicExpression,
+                detail: ExtractDetail::Leaf(LeafDetail::CallArgument {
+                    detail: refusal.detail().into(),
+                }),
+                when,
+            });
+        }
+        if let Some(subject) = fold.residue.as_ref() {
+            ctx.warn_help(
+                call.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("{subject} drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of {subject} static or drop it")],
+            );
+        }
+        crate::extract::fold::lower_call_value(ctx, &value, when, call.span);
+        return;
+    }
+    let mut callee = &call.callee;
+    while let Some(inner) = unwrap_wrapper_target(callee) {
+        callee = inner;
+    }
+    if let Expression::Identifier(ident) = callee {
+        if mutated_warn(ctx, ident.name.as_str(), call.span, "callee was reassigned") {
+            return;
+        }
+    }
+    // width={pick()}  — dynamic, warn, keep siblings
+    warn_dynamic_expression(ctx, call.span, when);
+}
+
+/// The generic dynamic-expression warning for an unhandled value shape.
+pub(crate) fn warn_dynamic_expression(
+    ctx: &mut ExpressionWalk<'_>,
+    span: Span,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    ctx.warn_dynamic(DynamicRefusal {
+        span,
+        code: DiagnosticCode::DynamicExpression,
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
+        when,
+    });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A refused `token()` call carries its reason's fix on the channel.
+    #[test]
+    fn token_call_refused_help_names_the_reason_fix() {
+        let res = compile_logs(
+            "import { css, token } from '@reference-ui/react';\
+             export const cls = css({ color: token() });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::TokenCallRefused)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["pass a path and an optional fallback".to_string()])
+        );
+    }
+
+    /// A folded call beside a dropped arm names the subject in its fix.
+    #[test]
+    fn call_residue_help_names_the_subject() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const run: () => string;\
+             const theme = { primary: flag ? 'red' : run() };\
+             export const cls = css({ color: (() => theme.primary)() });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::PartialObjectProp)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        let help = hits[0].help.clone().expect("call residue carries help");
+        assert_eq!(help.len(), 1);
+        assert!(
+            help[0].starts_with("make the dynamic arm of ")
+                && help[0].ends_with(" static or drop it"),
+            "unexpected help: {help:?}"
+        );
+    }
+}

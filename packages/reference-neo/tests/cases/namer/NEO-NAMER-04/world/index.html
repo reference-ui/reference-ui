@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script id="late-sheet" type="text/plain">
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer neo-namer-04 {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important }
+  }
+  body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0 }
+  ul[role='list'], ol[role='list'] { list-style: none }
+  html:focus-within { scroll-behavior: smooth }
+  @media (prefers-reduced-motion: reduce) {
+    html:focus-within { scroll-behavior: auto }
+  }
+  body { min-height: 100vh; text-rendering: optimizeSpeed; line-height: 1.5 }
+  a:not([class]) { text-decoration-skip-ink: auto }
+  img, picture { display: block; max-width: 100% }
+  input, button, textarea, select { font-family: inherit; font-size: inherit; font-style: inherit; font-variant: inherit; font-weight: inherit; line-height: inherit }
+}
+@layer global {
+  body { color: #111111 }
+}
+@layer tokens {
+  :root, [data-color-mode=light] {
+    --colors-ember: #ef4444;
+  }
+}
+@layer utilities {
+  .neo-namer-04__c_\#111111 { color: #111111; }
+  .neo-namer-04__c_\#ef4444 { color: #ef4444; }
+  .neo-namer-04__c_ember { color: var(--colors-ember); }
+}
+}
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="live">namer live</div>
+    <div id="miss">namer miss</div>
+    <script type="module" src="./dist/src/app.js"></script>
+    <script type="module" src="./dist/src/injector.js"></script>
+  </body>
+</html>

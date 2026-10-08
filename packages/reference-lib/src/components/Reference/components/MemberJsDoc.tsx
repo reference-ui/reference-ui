@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div, P, Small } from '@reference-ui/react'
 import type { ReferenceJsDoc, ReferenceParamDoc } from '@reference-ui/types'
 import { JsDocParamChip } from './shared/JsDocParamChip'

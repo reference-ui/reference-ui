@@ -101,12 +101,44 @@ test.beforeEach(async ({ page }) => {
 
 export { expect }
 
-/** Settled visual snapshot of the CT viewport. Motion is covered by video, not this. */
+/**
+ * Engine-aware sequential keyboard traversal (FINISH-02F-WK vehicle).
+ *
+ * Playwright WebKit (= Safari defaults, full keyboard access off) skips
+ * natively-tabbable implicit controls (buttons/links) on plain Tab: focus
+ * leaves the document (document.hasFocus() === false) instead of landing on
+ * the next button. Destinations with an explicit tabindex=0 ARE reached.
+ * Option+Tab is Safari's traverse-all-controls chord and reaches implicit
+ * destinations in both directions (proven D8/D8b/D8c, r17+r18 WK).
+ * Non-WebKit engines keep the honest plain Tab.
+ */
+export async function pressTab(page: Page, direction: 'forward' | 'back' = 'forward'): Promise<void> {
+  const name = page.context().browser()?.browserType().name()
+  if (name === 'webkit') {
+    await page.keyboard.press(direction === 'back' ? 'Alt+Shift+Tab' : 'Alt+Tab')
+  } else if (direction === 'back') {
+    await page.keyboard.press('Shift+Tab')
+  } else {
+    await page.keyboard.press('Tab')
+  }
+}
+
+/** True when the page runs under Playwright WebKit (Safari-default traversal). */
+export function isWebKit(page: Page): boolean {
+  return page.context().browser()?.browserType().name() === 'webkit'
+}
+
+/** Settled visual snapshot of the CT viewport or targeted locator. Motion is covered by video, not this. */
 export async function snap(
-  page: Page,
+  target: Page | Locator,
   name: string,
   options?: Parameters<ReturnType<typeof expect>['toHaveScreenshot']>[1]
 ) {
+  const page = 'page' in target && typeof (target as Locator).page === 'function'
+    ? (target as Locator).page()
+    : (target as Page)
   if (!(await isReact19Gallery(page))) return
-  await expect(page).toHaveScreenshot(snapshotFileName(name), { fullPage: false, ...options })
+  await expect(target as any).toHaveScreenshot(snapshotFileName(name), {
+    ...options,
+  })
 }

@@ -1,0 +1,17 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__file\:c_blue\.500::file-selector-button { color: var(--colors-blue-500); }
+  .\@reference-ui\/lib__checked\:c_green\.500:is(:checked, [data-checked], [aria-checked=true], [data-state="checked"]) { color: var(--colors-green-500); }
+  .\@reference-ui\/lib__placeholder\:c_red\.500::placeholder, .\@reference-ui\/lib__placeholder\:c_red\.500[data-placeholder] { color: var(--colors-red-500); }
+}
+}

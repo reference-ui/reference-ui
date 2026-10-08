@@ -1,0 +1,56 @@
+{
+  "scale": "churn",
+  "seed": 7,
+  "plan": {
+    "scale": "churn",
+    "generator": "churn",
+    "optIn": true,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 4000,
+    "deadFiles": 2000,
+    "minCalls": 8,
+    "maxCalls": 14,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.65,
+    "conditionRatio": 0.4,
+    "responsiveRatio": 0.3
+  },
+  "repoStats": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/f1-seal-churn-a-2tkQpj",
+    "styleFiles": 4000,
+    "deadFiles": 2000,
+    "cssCalls": 43956,
+    "recipes": 120
+  },
+  "matches": [
+    "theme/global.ts",
+    "theme/tokens.ts"
+  ],
+  "retainedCount": 6122,
+  "manifestSha": "edfcfe1c05ea06a10a723af65770f81eeb8f0c7d2820d9f5c49494757aa04c26",
+  "manifestSample": [
+    [
+      "src/feat0/mod0.ts",
+      "e6f8089eddcbd26e"
+    ],
+    [
+      "src/feat0/mod1.ts",
+      "2123c04d6ae7bf11"
+    ],
+    [
+      "src/feat0/mod10.ts",
+      "0a78958ce0f62b4e"
+    ]
+  ],
+  "sourcesSha": "809d39af99ea9b7d9797cbbac7e50487e6852ccaad94a64977003291eaa1575d",
+  "stylesheetSha": "b85bb7fa358ad40430c4f6d1886a575dc3b5d820c602c9da168fe85ef870ef58",
+  "stylesheetBytes": 8289858,
+  "portableSha": "a0e2c6b6c8152a3249eb16ba33c25fc3091a632ef0a46f6d736297062300f33a",
+  "runtimeSha": "6ebc000e13912258cd97f9f0d07648e525a9cc88bbfd2c3a66f22a114e22813f",
+  "tracedJsxHosts": [],
+  "diagnostics": [],
+  "diagnosticsSha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

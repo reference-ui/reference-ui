@@ -1,4 +1,4 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
 import type { Locator } from '@playwright/test'
 
 test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
@@ -514,31 +514,69 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(page.getByTestId('sib-content-2')).toBeVisible()
       await expect(page.getByTestId('sib-content-3')).toBeVisible()
 
-      await page.screenshot({ path: 'all-open.png' })
-      console.log('All 3 visible')
-
       // We have 3 sibling layers open.
       // Unmount the middle layer (2)
       await page.getByTestId('btn-sib-close-2').click({ force: true })
       await expect(page.getByTestId('sib-content-2')).toHaveCount(0)
 
-      await page.screenshot({ path: 'layer2-closed.png' })
-      console.log('Layer 2 closed. Pressing Escape')
-
       // The top live layer is 3. Escape should close 3.
       await page.keyboard.press('Escape')
       await page.waitForTimeout(500)
-      await page.screenshot({ path: 'after-escape-1.png' })
       await expect(page.getByTestId('sib-content-3')).toHaveCount(0)
-
-      console.log('Layer 3 closed. Pressing Escape for 1')
 
       // The next live layer is 1.
       await expect(page.getByTestId('sib-content-1')).toBeVisible()
       await page.keyboard.press('Escape')
       await page.waitForTimeout(500)
-      await page.screenshot({ path: 'after-escape-2.png' })
       await expect(page.getByTestId('sib-content-1')).toHaveCount(0)
+    })
+
+    test('OV-LAYER-11 & OV-ESC-08 & OV-OUT-12: one layer entry per coordinator pair, branched; granular handlers receive real DOM events', async ({ mount, page, }) => {
+      await mount('components/Overlay/Overlay/Accounting')
+      await expect(page.getByTestId('accounting-fixture-root')).toBeVisible()
+
+      const layers = page.getByTestId('acct-layers')
+      const log = page.getByTestId('acct-log')
+      await expect(layers).toHaveText('count:0,open:0,roots:0,linked:true')
+
+      // One entry for the dialog pair.
+      await page.getByTestId('btn-open-acct-dialog').click()
+      const dialog = page.getByTestId('acct-dialog-content')
+      await expect(dialog).toBeVisible()
+      await expect(layers).toHaveText('count:1,open:1,roots:1,linked:true')
+
+      // A second entry for the popover pair, branched under the dialog —
+      // not a second root layer.
+      await page.getByTestId('btn-open-acct-pop').click()
+      const pop = page.getByTestId('acct-pop-content')
+      await expect(pop).toBeVisible()
+      await expect(layers).toHaveText('count:2,open:2,roots:1,linked:true')
+
+      // Escape: one granular-before-high-level sequence, real KeyboardEvent.
+      await page.keyboard.press('Escape')
+      await expect(pop).toHaveCount(0)
+      await expect(dialog).toBeVisible()
+      await expect(log).toHaveText('escape:KeyboardEvent,dismiss')
+      await expect(layers).toHaveText('count:1,open:1,roots:1,linked:true')
+
+      // Outside press inside the dialog but outside the popover: one
+      // outside→interact→dismiss sequence, real PointerEvents, popover only.
+      // (No UI log-clear: any light-DOM click lands on the modal backdrop.)
+      await page.getByTestId('btn-open-acct-pop').click()
+      await expect(pop).toBeVisible()
+      await expect(layers).toHaveText('count:2,open:2,roots:1,linked:true')
+      await page.getByTestId('acct-dialog-backdrop').click({ position: { x: 10, y: 10 } })
+      await expect(pop).toHaveCount(0)
+      await expect(dialog).toBeVisible()
+      await expect(log).toHaveText(
+        'escape:KeyboardEvent,dismiss,outside:PointerEvent,interact:PointerEvent,dismiss'
+      )
+      await expect(layers).toHaveText('count:1,open:1,roots:1,linked:true')
+
+      // Closing the dialog empties the stack.
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+      await expect(layers).toHaveText('count:0,open:0,roots:0,linked:true')
     })
 
   test.describe('4. Outside Press & Pointer Mechanics', () => {
@@ -1241,6 +1279,29 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(content).toHaveCount(0)
     })
 
+    test('OV-HND-VISUAL: Edge sheet renders visible pill handle with non-transparent background and snapshot proof', async ({
+      page,
+    }) => {
+      await page.getByTestId('btn-open-edge-bottom').click()
+      const content = page.getByTestId('edge-content')
+      await expect(content).toBeVisible()
+
+      const handle = page.getByTestId('edge-handle')
+      await expect(handle).toBeVisible()
+
+      // Handle pill background must be visible (not transparent or rgba(0,0,0,0))
+      const bg = await handle.evaluate((el) => {
+        const inner = (el.firstElementChild as HTMLElement) || el
+        return window.getComputedStyle(inner).backgroundColor
+      })
+      expect(bg).not.toBe('rgba(0, 0, 0, 0)')
+      expect(bg).not.toBe('transparent')
+
+      await page.waitForTimeout(300)
+      await snap(handle, 'edge-sheet-handle-pill', { maxDiffPixels: 5 })
+      await snap(content, 'edge-sheet-content-with-handle', { maxDiffPixelRatio: 0.002 })
+    })
+
     test('OV-HND-01: Dragging bottom handle past 25% requests dismiss', async ({
       page,
     }) => {
@@ -1542,7 +1603,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const darkMeta = await darkContent.evaluate(el => ({
         isBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         bg: window.getComputedStyle(el).backgroundColor,
       }))
       expect(darkMeta.isBodyChild).toBe(true)
@@ -1562,7 +1623,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const lightMeta = await lightContent.evaluate(el => ({
         isBodyChild: el.parentElement === document.body,
         dataLayer: el.getAttribute('data-layer'),
-        dataTheme: el.getAttribute('data-panda-theme'),
+        dataTheme: el.getAttribute('data-color-mode'),
         color: window.getComputedStyle(el).color,
       }))
       expect(lightMeta.isBodyChild).toBe(true)
@@ -1673,6 +1734,10 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Entering content activates trap
       await page.getByTestId('focus-no-initial-btn-1').click()
+      // FINISH-02F-VH (F54, F14 vehicle): WebKit clicks never focus buttons —
+      // deliver the Chromium focus state so the trap engages; the reclaim
+      // contract below runs identically.
+      if (isWebKit(page)) await page.getByTestId('focus-no-initial-btn-1').focus()
       await expect(page.getByTestId('focus-no-initial-btn-1')).toBeFocused()
 
       // Attempting programmatic escape outside must be reclaimed
@@ -2909,22 +2974,60 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Open modeless overlay from Trigger
       await openTrg.click()
+      // FINISH-02F-VH (F55, F14 vehicle): WebKit clicks never focus buttons —
+      // deliver the Chromium focus state; the Tab bridge starts from the trigger.
+      if (isWebKit(page)) await openTrg.focus()
       await expect(content).toBeVisible()
       await expect(openTrg).toBeFocused()
 
-      // Tab from Trigger into Content
-      await page.keyboard.press('Tab')
+      // Tab from Trigger into Content (pressTab: Option+Tab on WebKit reaches
+      // implicit destinations; the bridge handler keys on e.key === 'Tab').
+      await pressTab(page)
       await expect(inner1).toBeFocused()
 
       // Tab to second control
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(inner2).toBeFocused()
 
       // Tab past last control advances relative to Trigger (to afterTrg) and fires onDismiss
-      await page.keyboard.press('Tab')
+      await pressTab(page)
       await expect(afterTrg).toBeFocused()
       await expect(content).toHaveCount(0)
       await expect(dismissCountEl).toHaveText('1')
+    })
+
+    test('OV-TRG-05 reject: Tab-bridge exit stands on the after-Trigger stop when the parent rejects close (FEATURES #6)', async ({
+      page,
+    }) => {
+      const openTrg = page.getByTestId('btn-open-trg-05-reject')
+      const content = page.getByTestId('trg-05-reject-content')
+      const inner1 = page.getByTestId('btn-trg-05-reject-inner-1')
+      const inner2 = page.getByTestId('btn-trg-05-reject-inner-2')
+      const afterTrg = page.getByTestId('btn-after-trg-05-reject')
+      const dismissCountEl = page.getByTestId('trg-05-reject-dismiss-count')
+      const logEl = page.getByTestId('trg-05-reject-log')
+
+      await openTrg.click()
+      // FINISH-02F-VH (F55 reject, F14 vehicle): WebKit clicks never focus —
+      // deliver the Chromium focus state; the Tab bridge starts from the trigger.
+      if (isWebKit(page)) await openTrg.focus()
+      await expect(content).toBeVisible()
+      await expect(openTrg).toBeFocused()
+
+      // pressTab: Option+Tab on WebKit; bridge handler keys on e.key === 'Tab'.
+      await pressTab(page)
+      await expect(inner1).toBeFocused()
+
+      await pressTab(page)
+      await expect(inner2).toBeFocused()
+
+      // Optimistic-stands: one dismiss request, focus advances relative to
+      // the Trigger and stays there, open DOM is retained.
+      await pressTab(page)
+      await expect(afterTrg).toBeFocused()
+      await expect(content).toBeVisible()
+      await expect(dismissCountEl).toHaveText('1')
+      await expect(logEl).toHaveText('request:true,request:false')
     })
   })
 

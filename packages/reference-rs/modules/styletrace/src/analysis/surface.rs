@@ -1,0 +1,318 @@
+//! Prebuilt style surfaces and the entry-listed trace over them.
+//! A surface names which prop spellings are style props and which imported
+//! names are primitives; it is built from disk declarations
+//! (`from_declaration_root`) or from the engine (atomic, no file read).
+//! Entry-listed tracing parses explicit entries against a surface and
+//! returns bindings plus per-file diagnostics, so one unparsable file
+//! never fails its siblings. The root-based wrappers keep the historical
+//! disk path for the N-API names seam and the round-trip canaries.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
+
+use oxc_ast::ast::Program;
+use rustc_hash::FxHashMap;
+
+use crate::diagnostics::{push_skipped, unresolved_surface, StyletraceDiagnostic};
+use crate::output::StyletraceDetailedResult;
+use crate::resolver::{
+    collect_reference_style_prop_names, normalize_path, resolve_sync_root, StyleTraceError,
+};
+
+use super::analyzer::StyleTraceAnalyzer;
+use super::model::{TraceModule, TracedBinding};
+use super::parser::parse_trace_module;
+use super::primitive_metadata::collect_reference_primitive_jsx_names;
+use super::source_files::discover_source_files;
+
+/// Which prop names are style props and which imported names are primitives.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StyleSurface {
+    pub style_props: BTreeSet<String>,
+    pub primitives: BTreeSet<String>,
+    /// Per-host owned prop names: a host's own declared props shadow
+    /// style props on that host (§14). Seeds union with traced-owned.
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
+    trust_surface_type_names: bool,
+}
+
+impl StyleSurface {
+    pub fn new(style_props: BTreeSet<String>, primitives: BTreeSet<String>) -> Self {
+        Self {
+            style_props,
+            primitives,
+            owned_props: BTreeMap::new(),
+            trust_surface_type_names: false,
+        }
+    }
+
+    /// Seed per-host owned prop names; the trace unions these with the
+    /// owned props it reads from each traced host's declaration.
+    pub fn with_owned_props(mut self, owned_props: BTreeMap<String, BTreeSet<String>>) -> Self {
+        self.owned_props = owned_props;
+        self
+    }
+
+    /// Mark the surface engine-built: a surface-type reference
+    /// (`StyleProps`, `PrimitiveProps`) the declaration graph cannot
+    /// resolve denotes this surface instead of failing. Disk surfaces
+    /// keep graph resolution.
+    pub fn trust_surface_type_names(mut self) -> Self {
+        self.trust_surface_type_names = true;
+        self
+    }
+
+    pub(crate) fn trusts_surface_type_names(&self) -> bool {
+        self.trust_surface_type_names
+    }
+
+    /// Build the surface from a declaration root (disk path). A missing entrypoint,
+    /// malformed graph, or unreadable declaration refuses the request with
+    /// `STT-E-UNRESOLVED-SURFACE`.
+    pub fn from_declaration_root(root: &Path) -> Result<Self, StyleTraceError> {
+        let style_props = collect_reference_style_prop_names(root)
+            .map_err(|error| StyleTraceError::new(unresolved_surface(error.message())))?
+            .into_iter()
+            .collect::<BTreeSet<_>>();
+        let primitives = collect_reference_primitive_jsx_names(root)
+            .map_err(|error| StyleTraceError::new(unresolved_surface(error.message())))?;
+        Ok(Self::new(style_props, primitives))
+    }
+}
+
+/// Bindings plus per-file diagnostics from one entry-listed trace.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TraceOutcome {
+    pub bindings: Vec<TracedBinding>,
+    pub diagnostics: Vec<StyletraceDiagnostic>,
+    /// Each traced export name to its owned declared prop names (§14),
+    /// unioned with the input surface's seeds.
+    pub owned_props: BTreeMap<String, BTreeSet<String>>,
+}
+
+/// Caller-held module inputs for one entry-listed trace: staged bytes by
+/// path plus already-parsed programs by path. A path present in `programs`
+/// reuses its program instead of re-parsing; every other path parses from
+/// `staged` bytes (or disk) exactly as before. Reused programs must come
+/// from the same bytes with identical parser options, so the walk observes
+/// exactly what a fresh parse would produce.
+pub struct TraceSources<'a> {
+    pub staged: &'a FxHashMap<PathBuf, &'a str>,
+    pub programs: &'a FxHashMap<PathBuf, &'a Program<'a>>,
+}
+
+pub fn trace_style_jsx_names(root_dir: &Path) -> Result<Vec<String>, StyleTraceError> {
+    trace_style_jsx_names_with_hint(root_dir, None)
+}
+
+pub fn trace_style_jsx_names_with_hint(
+    root_dir: &Path,
+    sync_root_hint: Option<&Path>,
+) -> Result<Vec<String>, StyleTraceError> {
+    let bindings = trace_style_bindings_with_hint(root_dir, sync_root_hint)?;
+    Ok(bindings
+        .into_iter()
+        .map(|b| b.name)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect())
+}
+
+pub fn trace_style_bindings(
+    source_root: &Path,
+    declaration_root: &Path,
+) -> Result<Vec<TracedBinding>, StyleTraceError> {
+    trace_style_bindings_with_hint(source_root, Some(declaration_root))
+}
+
+pub fn trace_style_bindings_with_hint(
+    source_root: &Path,
+    declaration_root: Option<&Path>,
+) -> Result<Vec<TracedBinding>, StyleTraceError> {
+    // The names seam has no diagnostics channel; per-file skips stay silent
+    // here by shape. The detailed twin and compile() are the diagnosed paths.
+    Ok(trace_outcome_with_hint(source_root, declaration_root)?.bindings)
+}
+
+/// Trace a source root against a declaration root, keeping per-file diagnostics.
+/// Entries that fail to parse or read yield one `STT-W-SKIPPED-FILE` each with
+/// their siblings kept; an unusable surface or source root refuses the request
+/// with `STT-E-UNRESOLVED-SURFACE` or `STT-E-SCAN-FAILED`.
+pub fn trace_style_bindings_detailed(
+    source_root: &Path,
+    declaration_root: Option<&Path>,
+) -> Result<StyletraceDetailedResult, StyleTraceError> {
+    let outcome = trace_outcome_with_hint(source_root, declaration_root)?;
+    Ok(StyletraceDetailedResult {
+        bindings: outcome.bindings,
+        diagnostics: outcome.diagnostics,
+    })
+}
+
+/// One root-based trace: resolve the declaration root, build the surface,
+/// discover entries, and trace them. Request-level failures arrive coded
+/// from the surface and discovery boundaries below.
+fn trace_outcome_with_hint(
+    source_root: &Path,
+    declaration_root: Option<&Path>,
+) -> Result<TraceOutcome, StyleTraceError> {
+    let normalized_source = normalize_path(source_root);
+    let resolved_decl_root = match declaration_root {
+        Some(hint) => normalize_path(hint),
+        None => resolve_sync_root(&normalized_source, None)?,
+    };
+
+    let surface = StyleSurface::from_declaration_root(&resolved_decl_root)?;
+    let entries = discover_source_files(&normalized_source)?;
+    let staged = FxHashMap::default();
+    let programs = FxHashMap::default();
+    let sources = TraceSources {
+        staged: &staged,
+        programs: &programs,
+    };
+    Ok(trace_style_bindings_with_surface(
+        &entries,
+        &normalized_source,
+        &resolved_decl_root,
+        &surface,
+        &sources,
+    ))
+}
+
+/// Trace explicit entries against a prebuilt surface. Entries that fail to
+/// parse yield one diagnostic each and contribute no hosts; edge targets
+/// that fail to parse are recorded by the walker; siblings still trace.
+/// `package_root` anchors import resolution. `sources` carries the caller's
+/// file bytes plus already-parsed programs by path; absent paths parse
+/// from bytes (or disk) exactly as before.
+pub fn trace_style_bindings_with_surface(
+    entries: &[PathBuf],
+    source_root: &Path,
+    package_root: &Path,
+    surface: &StyleSurface,
+    sources: &TraceSources,
+) -> TraceOutcome {
+    SurfaceTraceSession {
+        source_root,
+        package_root,
+        surface,
+        sources,
+    }
+    .trace(entries)
+}
+
+/// Entries plus the pre-folded modules they trace against. A path present
+/// in `modules` is not parsed again; every other entry and edge parses
+/// from `sources` exactly as before.
+pub struct ModulesTraceInputs<'a> {
+    pub entries: &'a [PathBuf],
+    pub source_root: &'a Path,
+    pub package_root: &'a Path,
+    pub surface: &'a StyleSurface,
+    pub modules: BTreeMap<PathBuf, TraceModule>,
+    pub sources: &'a TraceSources<'a>,
+}
+
+/// Trace explicit entries against modules already folded from programs the
+/// caller still holds.
+pub fn trace_style_bindings_with_modules(inputs: ModulesTraceInputs<'_>) -> TraceOutcome {
+    SurfaceTraceSession {
+        source_root: inputs.source_root,
+        package_root: inputs.package_root,
+        surface: inputs.surface,
+        sources: inputs.sources,
+    }
+    .trace_with(inputs.entries, inputs.modules)
+}
+
+/// Session threading surface sets through entry parsing and the walk.
+struct SurfaceTraceSession<'a> {
+    source_root: &'a Path,
+    package_root: &'a Path,
+    surface: &'a StyleSurface,
+    sources: &'a TraceSources<'a>,
+}
+
+impl SurfaceTraceSession<'_> {
+    fn trace(&self, entries: &[PathBuf]) -> TraceOutcome {
+        self.trace_with(entries, BTreeMap::new())
+    }
+
+    /// Walk `modules` as already parsed, and parse only the entries they omit.
+    fn trace_with(
+        &self,
+        entries: &[PathBuf],
+        mut modules: BTreeMap<PathBuf, TraceModule>,
+    ) -> TraceOutcome {
+        let mut diagnostics = Vec::new();
+        self.parse_missing(entries, &mut modules, &mut diagnostics);
+        let (bindings, mut owned_props) = self.walk(modules, &mut diagnostics);
+        union_surface_props(&self.surface.owned_props, &mut owned_props);
+        TraceOutcome {
+            bindings,
+            diagnostics,
+            owned_props,
+        }
+    }
+
+    /// Parse entries the caller did not fold, recording one diagnostic per failure.
+    fn parse_missing(
+        &self,
+        entries: &[PathBuf],
+        modules: &mut BTreeMap<PathBuf, TraceModule>,
+        diagnostics: &mut Vec<StyletraceDiagnostic>,
+    ) {
+        for entry in entries {
+            if modules.contains_key(entry) {
+                continue;
+            }
+            match parse_trace_module(entry, self.package_root, self.surface, self.sources) {
+                Ok(module) => {
+                    modules.insert(entry.clone(), module);
+                }
+                Err(error) => {
+                    let file = entry.to_string_lossy().to_string();
+                    push_skipped(diagnostics, Some(&file), error.to_string());
+                }
+            }
+        }
+    }
+
+    /// Walk parsed entries, folding edge diagnostics behind entry ones.
+    fn walk(
+        &self,
+        modules: BTreeMap<PathBuf, TraceModule>,
+        diagnostics: &mut Vec<StyletraceDiagnostic>,
+    ) -> (Vec<TracedBinding>, BTreeMap<String, BTreeSet<String>>) {
+        let mut analyzer = StyleTraceAnalyzer::new(
+            modules,
+            self.surface.clone(),
+            self.package_root.to_path_buf(),
+            self.sources,
+        );
+        // Resolution is infallible in practice; a residual walker error
+        // becomes one diagnostic rather than failing resolved siblings.
+        let bindings = match analyzer.collect_exported_bindings(self.source_root) {
+            Ok(bindings) => bindings,
+            Err(error) => {
+                push_skipped(diagnostics, None, error.to_string());
+                Vec::new()
+            }
+        };
+        diagnostics.extend(analyzer.take_diagnostics());
+        (bindings, analyzer.take_owned_props())
+    }
+}
+
+/// Union the surface's seeded owned props into the traced map.
+fn union_surface_props(
+    seeds: &BTreeMap<String, BTreeSet<String>>,
+    owned_props: &mut BTreeMap<String, BTreeSet<String>>,
+) {
+    for (host, names) in seeds {
+        owned_props
+            .entry(host.clone())
+            .or_default()
+            .extend(names.iter().cloned());
+    }
+}

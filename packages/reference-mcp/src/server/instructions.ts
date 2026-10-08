@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { log } from './logger'
-import { resolveCorePackageDir } from '@reference-ui/core/paths'
 
 export const REFERENCE_UI_INSTRUCTIONS_FALLBACK = `# Reference UI Agent Instructions & Guiding Principles
 
@@ -35,14 +34,8 @@ export function loadReferenceMcpInstructions(cwd: string): string {
         return content
       }
     }
-
-    const coreDir = resolveCorePackageDir(cwd)
-    const coreCandidate = resolve(coreDir, 'src', 'mcp', 'instructions.md')
-    if (existsSync(coreCandidate)) {
-      const content = readFileSync(coreCandidate, 'utf8')
-      instructionsCache.set(cwd, content)
-      return content
-    }
+    // No core fallback: core is retired, and its instructions copy never
+    // existed in-tree. The mcp-local candidates plus the constant suffice.
   } catch (error) {
     log.warn('[mcp] Failed to load instructions.md; using fallback instructions.', error)
   }

@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useState, type ComponentProps, type CSSProperties } from 'react'
 import { Div, Small } from '@reference-ui/react'
 import type { ReferenceMemberDocument, ReferenceSymbolRef } from '@reference-ui/types'

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "digit-dash-escape",
+  "tokens": {},
+  "fonts": {},
+  "breakpoints": {
+    "2xl": "1536px"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

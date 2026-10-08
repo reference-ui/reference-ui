@@ -94,6 +94,16 @@ Never pass `--update-snapshots` during this loop. Snapshot writes are a separate
 
 The runner unthrottles Darwin QoS (`PRI 46`), runs colocated Vitest under `packages/reference-lib`, then Playwright CT against `packages/reference-lib/playwright/playwright.config.ts`. There is **no need** for `pnpm dev:lib` on port 5000 — CT uses the daemon's gallery on `http://localhost:3101`. A global `beforeEach` resets `window.scrollTo(0, 0)` so large fixtures cannot leak scroll into the next test. Do not kill port 3101 between agentct jobs; the daemon owns that process. Use `pnpm agentct stop` when you want it gone.
 
+> [!CAUTION]
+> **Styles staleness (proven 2026-09-27, B-08):** `agentct` e2e does NOT
+> regenerate the stylesheet — after ANY edit that affects styles (recipe,
+> `css()`, style prop, token), run `pnpm --dir packages/reference-lib sync`
+> FIRST and confirm your rule in
+> `packages/reference-lib/.reference-ui/react/styles.css` before trusting
+> e2e. Without the sync, e2e verifies stale CSS and a visual fix shows a
+> false green (observed: 11/11 pass on pre-fix CSS, intended snapshot red
+> only after sync).
+
 ### React runtimes (no pipeline)
 
 Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **not**. `--react` points the CT Vite gallery at isolated `@ct-runtime/react-*` packages under `packages/reference-lib/playwright/runtimes`:
@@ -261,3 +271,35 @@ pnpm playbook
 ```
 
 Native Playwright UI with live story rendering, locators, and time-travel.
+
+---
+
+## Memex (`cases` + `surfaces` collections)
+
+Memex is the one agent CLI over every collection
+(`.agents/memex/README.md`): neo cases live in `cases`, RS module
+surfaces in `surfaces`. Use it to find **related neo coverage for
+the component behavior being verified**, instead of grepping.
+
+```bash
+node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
+node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
+node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                      # full doc + related
+```
+
+Terms are stemmed (`queries` matches `query`) and typo-tolerant
+(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
+Resolve ids with `show`, not `search`. There is no metadata sidecar —
+enrich the index by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case/station ids (cited ids surface as
+`related`). Everything reads live: new docs are searchable immediately,
+no rebuild step.
+
+Example (RS surface hit):
+
+```text
+$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
+6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
+        packages/reference-rs/modules/atlas
+        > Search terms: call-site snippets, namespace package, […]
+```

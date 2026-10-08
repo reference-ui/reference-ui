@@ -16,7 +16,6 @@ import {
 import { isInsideLayer } from './inside'
 
 type DocEntry = {
-  escape: (event: KeyboardEvent) => void
   pointerDown: (event: PointerEvent) => void
   pointerMove: (event: PointerEvent) => void
   pointerUp: (event: PointerEvent) => void
@@ -25,6 +24,7 @@ type DocEntry = {
 }
 
 const bound = new WeakMap<Document, DocEntry>()
+const escapeBound = new WeakSet<Document>()
 const pendingByDoc = new WeakMap<Document, { layerId: string; pointerId: number }>()
 const attachTimers = new WeakMap<Document, number>()
 
@@ -143,17 +143,30 @@ function onPointerUp(event: PointerEvent) {
   })
 }
 
+function bindEscapeSync(doc: Document) {
+  // Escape binds synchronously: openers are pointer gestures, so there is no
+  // same-tick opener hazard for keydown, and a fast post-open Escape must
+  // never fall into the deferred-bind window (02-F59).
+  if (escapeBound.has(doc)) return
+  doc.addEventListener('keydown', onEscape)
+  escapeBound.add(doc)
+}
+
+function unbindEscape(doc: Document) {
+  if (!escapeBound.has(doc)) return
+  doc.removeEventListener('keydown', onEscape)
+  escapeBound.delete(doc)
+}
+
 function bind(doc: Document) {
   if (bound.has(doc)) return
   const entry: DocEntry = {
-    escape: onEscape,
     pointerDown: onPointerDown,
     pointerMove: onPointerMove,
     pointerUp: onPointerUp,
     click: onClick,
     pointerCancel: onPointerCancel,
   }
-  doc.addEventListener('keydown', entry.escape)
   doc.addEventListener('pointerdown', entry.pointerDown)
   doc.addEventListener('pointermove', entry.pointerMove)
   doc.addEventListener('pointerup', entry.pointerUp)
@@ -168,7 +181,6 @@ function bind(doc: Document) {
 function unbind(doc: Document) {
   const entry = bound.get(doc)
   if (!entry) return
-  doc.removeEventListener('keydown', entry.escape)
   doc.removeEventListener('pointerdown', entry.pointerDown)
   doc.removeEventListener('pointermove', entry.pointerMove)
   doc.removeEventListener('pointerup', entry.pointerUp)
@@ -210,6 +222,7 @@ export function syncDismissListeners() {
 
   for (const doc of known) {
     if (needed.has(doc)) {
+      bindEscapeSync(doc)
       if (bound.has(doc) || attachTimers.has(doc)) continue
       // Next task: the opening pointerdown must not bind as an outside press.
       const timer = window.setTimeout(() => {
@@ -224,6 +237,7 @@ export function syncDismissListeners() {
         attachTimers.delete(doc)
       }
       unbind(doc)
+      unbindEscape(doc)
     }
   }
 }

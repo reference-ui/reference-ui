@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  @supports (display: grid) {
+    @container (min-width: 640px) {
+      .\@reference-ui\/lib__\[\@supports_\(display\:_grid\)\]\:sm\:\[\&\:hover\]\:c_red\.500:hover { color: var(--colors-red-500); }
+    }
+  }
+}
+}

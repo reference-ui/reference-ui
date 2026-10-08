@@ -1,0 +1,18 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__bg_rgb\(251_146_60_\/_0\.3\) { background: rgb(251 146 60 / 0.3); }
+  .\@reference-ui\/lib__bd-c_\/40 { border-color: /40; }
+  .\@reference-ui\/lib__c_red\.500\/ { color: red.500/; }
+  .\@reference-ui\/lib__outline-c_colors\.blue\.600\/50 { outline-color: color-mix(in srgb, var(--colors-blue-600) 50%, transparent); }
+}
+}

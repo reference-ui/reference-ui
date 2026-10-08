@@ -1,0 +1,179 @@
+{
+  "revision": "ec4f6f72522e",
+  "hash": "ec4f6f72522e",
+  "dirty": false,
+  "createdAt": "2026-09-30T16:11:32.235Z",
+  "scorer": "bench-worker/2",
+  "machine": {
+    "node": "v24.16.0",
+    "platform": "darwin x64",
+    "arch": "x64",
+    "totalMem": 68719476736
+  },
+  "scales": [
+    {
+      "plan": {
+        "scale": "small",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 3,
+        "files": 60,
+        "deadFiles": 240,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 80,
+        "tokenSpacing": 30,
+        "recipes": 6,
+        "uniqueRatio": 0.15,
+        "conditionRatio": 0.25,
+        "responsiveRatio": 0.2
+      },
+      "generated": {
+        "styleFiles": 60,
+        "deadFiles": 240,
+        "cssCalls": 171,
+        "recipes": 6
+      },
+      "genMs": 26.993706000000003,
+      "samples": [
+        {
+          "syncMs": 324.799899,
+          "rssBefore": 106708992,
+          "rssPeak": 122904576,
+          "rssAfter": 122904576,
+          "rssPeakHw": 122904576,
+          "scorer": "bench-worker/2"
+        },
+        {
+          "syncMs": 132.251956,
+          "rssBefore": 104108032,
+          "rssPeak": 119599104,
+          "rssAfter": 119599104,
+          "rssPeakHw": 119599104,
+          "scorer": "bench-worker/2"
+        },
+        {
+          "syncMs": 134.669354,
+          "rssBefore": 104075264,
+          "rssPeak": 123875328,
+          "rssAfter": 123875328,
+          "rssPeakHw": 123875328,
+          "scorer": "bench-worker/2"
+        }
+      ],
+      "bundle": {
+        "cssBytes": 92703,
+        "dataBytes": 91160,
+        "totalBytes": 183863,
+        "cssGzip": 12576,
+        "dataGzip": 18750,
+        "totalGzip": 31326
+      }
+    },
+    {
+      "plan": {
+        "scale": "medium",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 3,
+        "files": 250,
+        "deadFiles": 1000,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 150,
+        "tokenSpacing": 48,
+        "recipes": 24,
+        "uniqueRatio": 0.25,
+        "conditionRatio": 0.3,
+        "responsiveRatio": 0.25
+      },
+      "generated": {
+        "styleFiles": 250,
+        "deadFiles": 1000,
+        "cssCalls": 635,
+        "recipes": 24
+      },
+      "genMs": 99.54874100000006,
+      "samples": [
+        {
+          "syncMs": 191.043543,
+          "rssBefore": 108224512,
+          "rssPeak": 137498624,
+          "rssAfter": 136863744,
+          "rssPeakHw": 138199040,
+          "scorer": "bench-worker/2"
+        },
+        {
+          "syncMs": 198.178571,
+          "rssBefore": 104562688,
+          "rssPeak": 138522624,
+          "rssAfter": 138522624,
+          "rssPeakHw": 138522624,
+          "scorer": "bench-worker/2"
+        },
+        {
+          "syncMs": 195.93596300000002,
+          "rssBefore": 101810176,
+          "rssPeak": 133046272,
+          "rssAfter": 133046272,
+          "rssPeakHw": 133046272,
+          "scorer": "bench-worker/2"
+        }
+      ],
+      "bundle": {
+        "cssBytes": 348832,
+        "dataBytes": 110371,
+        "totalBytes": 459203,
+        "cssGzip": 40683,
+        "dataGzip": 19689,
+        "totalGzip": 60372
+      }
+    },
+    {
+      "plan": {
+        "scale": "enterprise",
+        "generator": "app",
+        "optIn": false,
+        "seed": 7,
+        "defaultRuns": 1,
+        "files": 3000,
+        "deadFiles": 12000,
+        "minCalls": 1,
+        "maxCalls": 4,
+        "tokenColors": 300,
+        "tokenSpacing": 64,
+        "recipes": 120,
+        "uniqueRatio": 0.35,
+        "conditionRatio": 0.35,
+        "responsiveRatio": 0.3
+      },
+      "generated": {
+        "styleFiles": 3000,
+        "deadFiles": 12000,
+        "cssCalls": 7527,
+        "recipes": 120
+      },
+      "genMs": 1168.5965019999999,
+      "samples": [
+        {
+          "syncMs": 950.4321520000001,
+          "rssBefore": 103387136,
+          "rssPeak": 309551104,
+          "rssAfter": 304824320,
+          "rssPeakHw": 364236800,
+          "scorer": "bench-worker/2"
+        }
+      ],
+      "bundle": {
+        "cssBytes": 2867977,
+        "dataBytes": 214596,
+        "totalBytes": 3082573,
+        "cssGzip": 270522,
+        "dataGzip": 22127,
+        "totalGzip": 292649
+      }
+    }
+  ]
+}

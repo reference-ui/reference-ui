@@ -1,0 +1,14 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer cond-15 {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  @container (min-width: 768px) {
+    .cond-15__\[\@container_\(min-width\:_768px\)\]\:p_1r { padding: var(--spacing-root); }
+  }
+}
+}

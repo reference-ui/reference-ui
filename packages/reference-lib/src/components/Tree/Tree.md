@@ -42,8 +42,8 @@ Keyboard (APG tree):
 interface TreeProps
   extends Omit<ReferencePartProps<"div">, "onChange"> {
   children?: React.ReactNode
-  value?: string | null
-  onChange?: (value: string | null) => void
+  value: string | null
+  onChange: (value: string | null) => void
   expanded?: string[]
   onExpandedChange?: (expanded: string[]) => void
 }
@@ -67,7 +67,10 @@ interface TreeExpanderProps
 without selecting the item, while the focused treeitem retains APG arrow-key
 expansion.
 
-Omitted value/expanded means controlled null/empty state.
+Selection is fully controlled: `value` and `onChange` are required
+(`null` is the empty value); omitting either fails fast. Omitted
+`expanded` means `[]` via `defaultExpanded` (still uncontrolled —
+pending the HQ call on sibling default props).
 
 ---
 

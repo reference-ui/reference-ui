@@ -6,11 +6,11 @@
  */
 
 import {
-  getVirtualNativeTriple,
-  getVirtualNativePackageName,
-  SUPPORTED_VIRTUAL_NATIVE_TARGETS,
-  type VirtualNativeTarget,
-} from '../../../../packages/reference-rs/js/shared/targets.js'
+  getReferenceNativeTriple,
+  getReferenceNativePackageName,
+  SUPPORTED_REFERENCE_NATIVE_TARGETS,
+  type ReferenceNativeTarget,
+} from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 
 export type RustTargetTarballStrategy =
   | 'pack-local-binary'
@@ -28,22 +28,22 @@ export type LocalReferenceRustTargetBuildStrategy =
 export interface ShouldBuildLinuxReferenceRustTargetWithDaggerOptions {
   forceBuild: boolean
   publishedOnNpm: boolean
-  requiredTargets: readonly VirtualNativeTarget[]
+  requiredTargets: readonly ReferenceNativeTarget[]
   targetPackage: Pick<{ hasLocalBinary: boolean; name: string }, 'hasLocalBinary' | 'name'> | undefined
 }
 
 export interface FindMissingRequiredReferenceRustTargetsOptions {
-  artifactTargets: readonly VirtualNativeTarget[]
-  cachedTarballTargets: readonly VirtualNativeTarget[]
-  locallyBuildableTargets: readonly VirtualNativeTarget[]
-  publishedTargets: readonly VirtualNativeTarget[]
-  requiredTargets: readonly VirtualNativeTarget[]
+  artifactTargets: readonly ReferenceNativeTarget[]
+  cachedTarballTargets: readonly ReferenceNativeTarget[]
+  locallyBuildableTargets: readonly ReferenceNativeTarget[]
+  publishedTargets: readonly ReferenceNativeTarget[]
+  requiredTargets: readonly ReferenceNativeTarget[]
 }
 
 export interface ResolveLocalReferenceRustTargetBuildStrategyOptions {
   hostPlatform?: NodeJS.Platform
-  hostTarget?: VirtualNativeTarget | null
-  target: VirtualNativeTarget
+  hostTarget?: ReferenceNativeTarget | null
+  target: ReferenceNativeTarget
 }
 
 export function shouldBuildLinuxReferenceRustTargetWithDagger(
@@ -57,7 +57,7 @@ export function shouldBuildLinuxReferenceRustTargetWithDagger(
     return false
   }
 
-  if (options.targetPackage.name !== getVirtualNativePackageName('linux-x64-gnu')) {
+  if (options.targetPackage.name !== getReferenceNativePackageName('linux-x64-gnu')) {
     return false
   }
 
@@ -72,7 +72,7 @@ export function resolveLocalReferenceRustTargetBuildStrategy(
   options: ResolveLocalReferenceRustTargetBuildStrategyOptions,
 ): LocalReferenceRustTargetBuildStrategy {
   const hostPlatform = options.hostPlatform ?? process.platform
-  const hostTarget = options.hostTarget ?? getVirtualNativeTriple(hostPlatform, process.arch)
+  const hostTarget = options.hostTarget ?? getReferenceNativeTriple(hostPlatform, process.arch)
 
   if (hostTarget && options.target === hostTarget) {
     return 'reuse-host-binary'
@@ -97,10 +97,10 @@ export function resolveLocalReferenceRustTargetBuildStrategy(
 }
 
 export function getLocallyBuildableReferenceRustTargets(
-  hostTarget: VirtualNativeTarget | null = getVirtualNativeTriple(),
+  hostTarget: ReferenceNativeTarget | null = getReferenceNativeTriple(),
   hostPlatform: NodeJS.Platform = process.platform,
-): VirtualNativeTarget[] {
-  return SUPPORTED_VIRTUAL_NATIVE_TARGETS.filter(
+): ReferenceNativeTarget[] {
+  return SUPPORTED_REFERENCE_NATIVE_TARGETS.filter(
     (target) => resolveLocalReferenceRustTargetBuildStrategy({
       hostPlatform,
       hostTarget,
@@ -111,8 +111,8 @@ export function getLocallyBuildableReferenceRustTargets(
 
 export function findMissingRequiredReferenceRustTargets(
   options: FindMissingRequiredReferenceRustTargetsOptions,
-): VirtualNativeTarget[] {
-  const availableTargets = new Set<VirtualNativeTarget>([
+): ReferenceNativeTarget[] {
+  const availableTargets = new Set<ReferenceNativeTarget>([
     ...options.locallyBuildableTargets,
     ...options.artifactTargets,
     ...options.cachedTarballTargets,

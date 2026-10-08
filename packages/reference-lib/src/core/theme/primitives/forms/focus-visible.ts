@@ -42,6 +42,14 @@ function isTextInputElement(element: Element | EventTarget | null): boolean {
 const TEXT_INPUT_FOCUS_VISIBLE_KEYS = new Set(['Tab', 'Escape'])
 
 function handleKeyDown(e: KeyboardEvent) {
+  // Tab is always keyboard-driven focus movement — including Safari's
+  // Option+Tab / Option+Shift+Tab traverse-all-controls chords. Treat it as
+  // keyboard modality before the modifier guard so real Option+Tab users get
+  // focus-visible rings (FINISH-02F-MOD).
+  if (e.key === 'Tab') {
+    currentModality = 'keyboard'
+    return
+  }
   if (e.metaKey || e.altKey || e.ctrlKey) return
 
   const active = typeof document !== 'undefined' ? document.activeElement : null

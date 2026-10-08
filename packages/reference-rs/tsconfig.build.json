@@ -1,10 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "js",
+    "rootDir": ".",
     "emitDeclarationOnly": true,
     "declaration": true,
     "outDir": "dist"
   },
-  "include": ["js/**/*.ts"]
+  "include": [
+    "modules/*/js/**/*.ts",
+    "modules/primitives/generated/*.d.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts"
+  ]
 }

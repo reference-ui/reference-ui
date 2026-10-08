@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="probe">private token</div>
+    <div id="ref-probe">private token ref</div>
+    <div id="color-ref" style="color: #ff00ff">private token color ref</div>
+    <div id="bg-ref" style="background-color: #ff00ff">private token bg ref</div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer category-breadth {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .category-breadth__shadow_card { box-shadow: var(--shadows-card); }
+  .category-breadth__background-image_hero { background-image: var(--gradients-hero); }
+  .category-breadth__mt_4 { margin-top: var(--spacing-4); }
+  .category-breadth__trans-dur_fast { transition-duration: var(--durations-fast); }
+  .category-breadth__trans-tf_easeOut { transition-timing-function: var(--easings-ease-out); }
+  .category-breadth__w_content { width: var(--sizes-content); }
+  .category-breadth__z_2 { z-index: 2; }
+  .category-breadth__z_modal { z-index: var(--z-index-modal); }
+}
+}

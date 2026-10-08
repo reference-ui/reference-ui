@@ -1,5 +1,5 @@
 // Folders in the workspace that contain packages.
-export const WORKSPACE_PACKAGE_ROOTS = ['packages', 'fixtures', 'matrix'] as const
+export const WORKSPACE_PACKAGE_ROOTS = ['packages', 'matrix'] as const
 
 // Managed local registry coordinates shared across registry and matrix flows.
 export const MANAGED_REGISTRY_HOST = '127.0.0.1' as const
@@ -29,9 +29,10 @@ export const MATRIX_CONFIG = {
 export const REGISTRY_PACKAGE_NAMES = [
 	'@reference-ui/icons',
 	'@reference-ui/rust',
-	'@reference-ui/core',
+	'@reference-ui/neo',
 	'@reference-ui/lib',
 	'@reference-ui/mcp',
+	'@fixtures/aliased-host-library',
 	'@fixtures/extend-library',
 	'@fixtures/extend-library-2',
 	'@fixtures/meta-extend-library',
@@ -45,7 +46,6 @@ export const REGISTRY_PACKAGE_NAMES = [
 export const RELEASE_PACKAGE_NAMES = [
 	'@reference-ui/icons',
 	'@reference-ui/rust',
-	'@reference-ui/core',
 	'@reference-ui/lib',
 	'@reference-ui/mcp',
 ] as const

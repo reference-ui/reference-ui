@@ -1,0 +1,7 @@
+{
+  "borderColor:{colors.gray.800}": "@reference-ui/lib__bd-c_{colors.gray.800}",
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "boxShadow:0 1px 2px {colors.gray.200}": "@reference-ui/lib__shadow_0_1px_2px_{colors.gray.200}",
+  "content:\"{oops\"": "@reference-ui/lib__content_\"{oops\""
+}

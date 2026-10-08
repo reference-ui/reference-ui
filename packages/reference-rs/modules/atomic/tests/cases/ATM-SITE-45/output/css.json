@@ -1,0 +1,21 @@
+{
+  "backgroundColor:{colors.red.500}": "@reference-ui/lib__bg-c_{colors.red.500}",
+  "color:colors.nope.997": "@reference-ui/lib__c_colors.nope.997",
+  "color:colors.nope.998": "@reference-ui/lib__c_colors.nope.998",
+  "color:colors.nope.999": "@reference-ui/lib__c_colors.nope.999",
+  "color:colors.red.500": "@reference-ui/lib__c_colors.red.500",
+  "color:{colors.gray.800}": "@reference-ui/lib__c_{colors.gray.800}",
+  "color:{colors.red.500}": "@reference-ui/lib__c_{colors.red.500}",
+  "margin:10r": "@reference-ui/lib__m_10r",
+  "margin:11r": "@reference-ui/lib__m_11r",
+  "margin:12r": "@reference-ui/lib__m_12r",
+  "margin:1r": "@reference-ui/lib__m_1r",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "margin:3r": "@reference-ui/lib__m_3r",
+  "margin:4r": "@reference-ui/lib__m_4r",
+  "margin:5r": "@reference-ui/lib__m_5r",
+  "margin:6r": "@reference-ui/lib__m_6r",
+  "margin:7r": "@reference-ui/lib__m_7r",
+  "margin:8r": "@reference-ui/lib__m_8r",
+  "margin:9r": "@reference-ui/lib__m_9r"
+}

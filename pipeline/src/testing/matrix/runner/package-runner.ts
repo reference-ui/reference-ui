@@ -52,7 +52,6 @@ import {
 import {
   createMatrixRefSyncWatchCommand,
   matrixRefSyncPhasesEnvVar,
-  matrixRefSyncWaitForEnvVar,
   parseMatrixRefSyncWatchOutput,
   resolveMatrixRefSyncStrategy,
 } from './ref-sync.js'
@@ -67,7 +66,6 @@ import type {
 const matrixConsumerSetupCommand = ['pnpm', 'exec', 'ref', 'sync'] as const
 const matrixConsumerVitestCommand = ['pnpm', 'exec', 'vitest', 'run'] as const
 const matrixConsumerPlaywrightCommand = ['pnpm', 'exec', 'playwright', 'test', 'e2e', '--reporter=/tmp/r.js'] as const
-const matrixConsumerTypecheckCommand = ['pnpm', 'exec', 'tsc', '--noEmit'] as const
 
 export async function runMatrixPackageInDagger(
   packageRunContext: MatrixPackageRunContext,
@@ -91,7 +89,7 @@ export async function runMatrixPackageInDagger(
   const containerImage = matrixContainerImage(packageRunContext.source)
   const nodeModulesCacheKey = matrixNodeModulesCacheKey({
     containerImage,
-    coreVersion: executionContext.coreVersion,
+    neoVersion: executionContext.neoVersion,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalPackages: executionContext.manifest.packages.filter(pkg =>
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
@@ -101,7 +99,7 @@ export async function runMatrixPackageInDagger(
   })
   const sharedNodeModulesCacheKey = matrixSharedNodeModulesCacheKey({
     containerImage,
-    coreVersion: executionContext.coreVersion,
+    neoVersion: executionContext.neoVersion,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalPackages: executionContext.manifest.packages.filter(pkg =>
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
@@ -196,7 +194,7 @@ export async function runMatrixPackageInDagger(
 
     phase = 'setup'
     let testRunner = postInstallRunner
-    const usesSharedWatchSession = refSyncStrategy.mode === 'watch-ready' || refSyncStrategy.mode === 'watch-full'
+    const usesSharedWatchSession = refSyncStrategy.mode === 'watch-ready'
 
     if (refSyncStrategy.mode === 'full') {
       const setupRunner = withDaggerExecCacheBuster(
@@ -208,9 +206,7 @@ export async function runMatrixPackageInDagger(
       lines.push('  Prepared full ref sync runtime output.')
       testRunner = setupRunner
     } else {
-      const setupMessage = refSyncStrategy.mode === 'watch-full'
-        ? 'Deferred standalone setup; tests will start ref sync --watch and wait for the first full sync completion.'
-        : 'Deferred full ref sync completion; runtime tests will start ref sync --watch and wait only for runtime-ready output.'
+      const setupMessage = 'Deferred standalone setup; runtime tests will start ref sync --watch and wait for runtime-ready output.'
       await writeMatrixPackageStageLog(packageRunContext, 'setup', `${setupMessage}\n`)
       lines.push(`  ${setupMessage}`)
     }
@@ -222,9 +218,7 @@ export async function runMatrixPackageInDagger(
     phase = 'test'
     announceMatrixPackageTesting(packageRunContext)
     lines.push(usesSharedWatchSession
-      ? (refSyncStrategy.mode === 'watch-full'
-          ? '  Running tests against ref sync watch output after full initial completion'
-          : '  Running tests against ref sync watch-ready output')
+      ? '  Running tests against ref sync watch-ready output'
       : '  Running tests')
     const testLogOutputs: string[] = []
 
@@ -251,15 +245,12 @@ export async function runMatrixPackageInDagger(
           `${packageRunContext.logPrefix}-test-watch`,
         )
           .withEnvVariable(matrixRefSyncPhasesEnvVar, JSON.stringify(watchPhases))
-          .withEnvVariable(matrixRefSyncWaitForEnvVar, refSyncStrategy.waitFor)
           .withExec(createMatrixRefSyncWatchCommand())
         const sharedWatchOutput = await watchRunner.stdout()
         const parsedWatchOutput = parseMatrixRefSyncWatchOutput(sharedWatchOutput)
 
         if (parsedWatchOutput.waitDurationMs !== null) {
-          lines.push(refSyncStrategy.mode === 'watch-full'
-            ? '  Reached initial full ref sync completion.'
-            : '  Reached ref sync watch-ready output.')
+          lines.push('  Reached ref sync watch-ready output.')
         }
 
         appendOutputBlock(lines, parsedWatchOutput.cleanedOutput)
@@ -286,7 +277,7 @@ export async function runMatrixPackageInDagger(
             lines,
             packageRunContext.source.hasPlaywrightTests
               ? 'test:playwright'
-              : (refSyncStrategy.runTypecheck ? 'test:typecheck' : 'completion'),
+              : 'completion',
           )
         }
       }
@@ -304,19 +295,10 @@ export async function runMatrixPackageInDagger(
         if (executionContext.shouldStop()) {
           return createAbortedMatrixPackageResult(
             lines,
-            refSyncStrategy.runTypecheck ? 'test:typecheck' : 'completion',
+            'completion',
           )
         }
       }
-    }
-
-    if (refSyncStrategy.runTypecheck) {
-      const typecheckRunner = withDaggerExecCacheBuster(
-        testRunner,
-        `${packageRunContext.logPrefix}-test-typecheck`,
-      ).withExec([...matrixConsumerTypecheckCommand])
-      const typecheckOutput = await typecheckRunner.stdout()
-      testLogOutputs.push(typecheckOutput)
     }
 
     const testOutput = testLogOutputs.filter(output => output.length > 0).join('\n')

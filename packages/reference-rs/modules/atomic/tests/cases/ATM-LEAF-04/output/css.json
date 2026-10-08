@@ -1,0 +1,11 @@
+{
+  "bg:green": "@reference-ui/lib__bg_green",
+  "borderColor:0": "@reference-ui/lib__bd-c_0",
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:red": "@reference-ui/lib__c_red",
+  "margin:2r": "@reference-ui/lib__m_2r",
+  "outlineStyle:solid": "@reference-ui/lib__outline-s_solid",
+  "outlineWidth:2px": "@reference-ui/lib__outline-w_2px"
+}

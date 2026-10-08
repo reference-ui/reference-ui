@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="probe">token mix</div>
+    <div id="mix-ref" style="background-color: color-mix(in srgb, var(--colors-red-500) 40%, transparent)">token mix ref</div>
+    <div id="passthrough">token passthrough</div>
+    <div id="pass-ref" style="background-color: rgb(251 146 60 / 0.3)">token pass ref</div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

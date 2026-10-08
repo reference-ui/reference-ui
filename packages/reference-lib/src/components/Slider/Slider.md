@@ -66,6 +66,10 @@ publishes its clamped percentage as
 `--reference-slider-thumb-position`; Range publishes
 `--reference-slider-range-start`/`--reference-slider-range-end`. Applications
 consume those values in CSS; Slider never overwrites their transforms.
+Thumbs bind value slots by mount order (no `index` prop). Root and the
+active Thumb carry `data-dragging` for a drag session's duration;
+`data-active` coexists. Each thumb's invisible hit-area reaches 24px on
+the cross axis while the painted cap stays 24×16.
 
 ---
 

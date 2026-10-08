@@ -1,0 +1,65 @@
+name: Rust Test
+
+on:
+  push:
+    paths:
+      - packages/reference-rs/**
+      - .github/workflows/rust-test.yml
+  pull_request:
+    paths:
+      - packages/reference-rs/**
+      - .github/workflows/rust-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.29.3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Cache cargo
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.napi-rs
+            packages/reference-rs/dist/cargo/
+          key: ${{ runner.os }}-x86_64-unknown-linux-gnu-cargo-${{ hashFiles('packages/reference-rs/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build native addon
+        run: pnpm --filter @reference-ui/rust run ensure-native
+
+      - name: Run cargo tests
+        working-directory: packages/reference-rs
+        run: cargo test --workspace
+
+      - name: Run vitest
+        working-directory: packages/reference-rs
+        run: pnpm exec vitest run

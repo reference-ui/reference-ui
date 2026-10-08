@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__button__base { font-weight: bold; }
+  .\@reference-ui\/lib__button_s_sm { font-size: 12px; }
+  .\@reference-ui\/lib__button_s_md { font-size: 16px; }
+  .\@reference-ui\/lib__button_m_true { opacity: 0.5; }
+  .\@reference-ui\/lib__button_m_false { opacity: 1; }
+}
+}

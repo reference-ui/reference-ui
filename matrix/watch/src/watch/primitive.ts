@@ -1,1 +1,0 @@
-export const watchPrimitiveColor = 'red.600'

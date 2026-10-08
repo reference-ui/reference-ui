@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { Div, Small } from '@reference-ui/react'
 import { SummarySnippet } from './shared/SummarySnippet'
 

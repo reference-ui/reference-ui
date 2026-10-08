@@ -1,0 +1,15 @@
+//! Every-depth `const` index for style extraction.
+//! Collects literal scalars, branching-initializer leaves, and simple style objects so the expression walker can substitute them.
+//! Not a fourth extract host: jsx / css / recipes still find the expression; this only answers `theme.primary`.
+
+mod collect;
+mod entries;
+mod index;
+mod mutate;
+
+pub use collect::collect_local_constants;
+pub(crate) use entries::union_entry;
+pub use entries::{
+    canonical_numeric_key, object_entries, strip_member_refs, ConstObject, ObjectProp,
+};
+pub use index::{ConstArrayElement, LocalConstants, MutatedBinding};

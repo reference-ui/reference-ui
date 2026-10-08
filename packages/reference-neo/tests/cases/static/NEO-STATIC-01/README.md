@@ -1,0 +1,25 @@
+# NEO-STATIC-01 — declared static values × conditions exist in the sheet with no call site, and runtime `css()` paints from them
+
+The world declares `ember`/`gold` tokens and a `staticCss` map of two
+base colors plus a hover color, with no static `css()` want for any of
+them. The app paints a base probe and a `data-hover` twin through runtime
+values (function parameters the extractor cannot see). The spec checks the
+sheet carries exactly the three declared atoms with one hover `:is()`
+wrap, then checks computed: the base probe paints ember and the twin
+paints hover gold — so the atoms exist purely from the declaration.
+
+Evidence: `[panda-v1]`
+`packages/core/__tests__/static-css.test.ts` "works" (properties ×
+conditions, `color: ['*']`); `[atm]` ATM-STATIC-01 (third want source),
+ATM-STATIC-02 (dedup); `[atm]` P1 #14
+(`docs/evidence/atomic-claims.md:315`).
+
+Repin (Forge Slice 3): the twin paints CSS `gold` (rgb(255, 215, 0)),
+not the world's `gold` token (#f59e0b). Per the signed §9 fence and H1,
+a bare value the alphabet accepts is complete CSS — never a token
+path, never warned — so the `staticCss`-declared `gold` atom lowers to
+the literal while the `ember` atom still resolves through `var()`. The
+token stays declared deliberately: this case now pins CSS-over-token
+precedence for declaration-only static atoms.
+
+> Search terms: pre-generated, :hover, pseudo-class, zero wants, unreferenced, zero-usage static, callsite-free, static/declaration-only, static/conditions, NEO-STATIC-02

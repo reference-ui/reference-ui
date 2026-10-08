@@ -115,7 +115,7 @@ function SectionCard({
       gap="3r"
     >
       <Div display="flex" flexDirection="column" gap="0.5r">
-        <H3 fontSize="4r" fontWeight="600" m="0" color="design.text.base">
+        <H3 fontSize="4r" m="0" color="design.text.base">
           {title}
         </H3>
         {description && (
@@ -480,12 +480,12 @@ function TypographySection() {
     >
       <Div display="flex" flexDirection="column" gap="3r">
         <Div display="flex" flexDirection="column" gap="1r">
-          <H1>Heading 1 (9r / sans.semibold)</H1>
-          <H2>Heading 2 (6r / sans.semibold)</H2>
-          <H3>Heading 3 (5r / sans.semibold)</H3>
-          <H4>Heading 4 (4.5r / sans.semibold)</H4>
-          <H5>Heading 5 (4.5r / 500)</H5>
-          <H6>Heading 6 (3.5r / uppercase)</H6>
+          <H1>Heading 1 (9r / semibold)</H1>
+          <H2>Heading 2 (6r / semibold)</H2>
+          <H3>Heading 3 (5r / semibold)</H3>
+          <H4>Heading 4 (4.5r / semibold)</H4>
+          <H5>Heading 5 (4.5r / semibold)</H5>
+          <H6>Heading 6 (3.5r / semibold / uppercase)</H6>
         </Div>
 
         <Hr />
@@ -606,7 +606,7 @@ function ListsSection() {
         gridTemplateColumns="repeat(auto-fit, minmax(45r, 1fr))"
       >
         <Div>
-          <H4 fontSize="3.5r" fontWeight="600" mb="2r">Unordered (&lt;Ul&gt;)</H4>
+          <H4 fontSize="3.5r" mb="2r">Unordered (&lt;Ul&gt;)</H4>
           <Ul>
             <Li>Zero-runtime token styling</Li>
             <Li>
@@ -621,7 +621,7 @@ function ListsSection() {
         </Div>
 
         <Div>
-          <H4 fontSize="3.5r" fontWeight="600" mb="2r">Ordered (&lt;Ol&gt;)</H4>
+          <H4 fontSize="3.5r" mb="2r">Ordered (&lt;Ol&gt;)</H4>
           <Ol>
             <Li>Run build dependencies</Li>
             <Li>Execute style prop sync</Li>
@@ -630,7 +630,7 @@ function ListsSection() {
         </Div>
 
         <Div>
-          <H4 fontSize="3.5r" fontWeight="600" mb="2r">Description List (&lt;Dl&gt;)</H4>
+          <H4 fontSize="3.5r" mb="2r">Description List (&lt;Dl&gt;)</H4>
           <Dl>
             <Dt fontWeight="600">Primitive</Dt>
             <Dd ml="3r" mb="1.5r" color="design.text.light">A capitalized native HTML tag with style props.</Dd>
@@ -679,7 +679,7 @@ function DisclosureAndDialogSection() {
             width="100%"
             boxShadow="0 4px 16px rgba(0,0,0,0.12)"
           >
-            <H4 fontSize="4r" fontWeight="600" m="0">
+            <H4 fontSize="4r" m="0">
               Static Dialog Surface
             </H4>
             <P fontSize="3r" color="design.text.light" mt="1.5r" mb="3r">
@@ -743,7 +743,7 @@ export function PrimitivesOverview() {
         borderColor="ui.dialog.border"
         boxShadow="0 4px 20px rgba(0,0,0,0.08)"
       >
-        <H2 fontSize="7r" fontWeight="700" m="0" color="design.text.base">
+        <H2 fontSize="7r" m="0" color="design.text.base">
           Reference UI Styled Primitives
         </H2>
         <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">

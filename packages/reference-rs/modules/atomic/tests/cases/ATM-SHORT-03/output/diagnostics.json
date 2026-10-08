@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `borders.card`",
+    "file": "input/src/App.tsx",
+    "line": 10,
+    "column": 19,
+    "span": {
+      "start": 214,
+      "end": 228
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
+  }
+]

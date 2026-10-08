@@ -53,7 +53,7 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
       gap="4r"
     >
       <Div>
-        <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+        <H4 fontSize="3.5r" m="0" color="design.text.base">
           {title}
         </H4>
         {subtitle && (
@@ -69,11 +69,13 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
 
 export default {
   Overview: () => {
+    const [dateVal, setDateVal] = React.useState<string | null>('2026-09-05')
+    const [comboVal, setComboVal] = React.useState<string | null>('option-1')
     return (
       <Div maxW="220r" mx="auto" p="6r" display="flex" flexDirection="column" gap="5r">
         {/* Header */}
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Icon Sizing & Control Integration
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
@@ -155,7 +157,7 @@ export default {
                 Search Input (Prefix Icon)
               </Span>
               <Div data-reference-field display="flex" alignItems="center">
-                <SearchIcon color="{colors.design.text.light}" />
+                <SearchIcon />
                 <Input placeholder="Search records..." />
               </Div>
             </Div>
@@ -166,7 +168,7 @@ export default {
                 Input with Prefix & Clear Button
               </Span>
               <Div data-reference-field display="flex" alignItems="center">
-                <FilterListIcon color="{colors.design.text.light}" />
+                <FilterListIcon />
                 <Input placeholder="Filter by keyword..." defaultValue="Active Filter" />
                 <Button
                   type="button"
@@ -204,7 +206,7 @@ export default {
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
                 DateField with FoldedPicker Trigger
               </Span>
-              <DateField defaultValue="2026-09-05">
+              <DateField locale="en-US" value={dateVal} onChange={setDateVal}>
                 <DateField.Picker />
               </DateField>
             </Div>
@@ -214,7 +216,7 @@ export default {
               <Span fontSize="2.5r" fontWeight="500" color="design.text.light">
                 Combobox with Chevron Trigger
               </Span>
-              <Combobox defaultValue="option-1">
+              <Combobox value={comboVal} onChange={setComboVal}>
                 <Field width="100%">
                   <Combobox.Input placeholder="Select an option..." />
                   <Button
@@ -313,7 +315,7 @@ export default {
               fontSize="3r"
               color="design.text.base"
             >
-              <CheckIcon size="small" color="{colors.green.600}" />
+              <CheckIcon size="small" />
               <span>Active Status</span>
             </Div>
           </Div>
@@ -418,7 +420,7 @@ export default {
     return (
       <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Button Optical Behavior Across Varying Heights
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
@@ -736,9 +738,11 @@ export default {
 
             {/* 3. Explicit Margin on Icon */}
             <Div display="flex" flexDirection="column" gap="1r">
-              <Span fontSize="2.5r" color="design.text.light">3. Explicit Icon Margin (ml="3r")</Span>
+              <Span fontSize="2.5r" color="design.text.light">3. Explicit Icon Margin (wrapper ml="3r")</Span>
               <Button>
-                <AddIcon ml="3r" />
+                <Span ml="3r">
+                  <AddIcon />
+                </Span>
                 <span>Pushed Icon</span>
               </Button>
             </Div>
@@ -792,7 +796,7 @@ export default {
         {/* Header & Batch Navigation */}
         <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="4r">
           <Div>
-            <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+            <H3 fontSize="5r" m="0" color="design.text.base">
               Icon Contact Sheet (Batch #{current + 1} of {totalBatches})
             </H3>
             <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">

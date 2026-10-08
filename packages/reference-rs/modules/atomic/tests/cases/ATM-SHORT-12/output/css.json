@@ -1,0 +1,6 @@
+{
+  "marginX:2r": "@reference-ui/lib__mx_2r",
+  "marginY:8r": "@reference-ui/lib__my_8r",
+  "paddingX:1r": "@reference-ui/lib__px_1r",
+  "paddingY:0.5r": "@reference-ui/lib__py_0.5r"
+}

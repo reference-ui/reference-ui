@@ -1,0 +1,4 @@
+{
+  "borderBottomStyle:solid": "@reference-ui/lib__bd-b-s_solid",
+  "borderBottomWidth:3px": "@reference-ui/lib__bd-b-w_3px"
+}

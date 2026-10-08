@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"css\"",
+    "file": "input/src/App.tsx",
+    "line": 42,
+    "column": 30,
+    "span": {
+      "start": 948,
+      "end": 951
+    },
+    "help": [
+      "did you mean `cue`?",
+      "remove 'css' or check its spelling"
+    ]
+  }
+]

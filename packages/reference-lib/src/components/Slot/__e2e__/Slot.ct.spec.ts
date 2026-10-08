@@ -35,7 +35,7 @@ test.describe('Slot Composition Gates & Browser Proofs', () => {
     await snap(page, 'updated-title-in-place')
   })
 
-  test('SL-COMP-03: A host scans a prefix of slot ids when several entries share a region kind', async ({
+  test('SL-COMP-03: A host selects a region of slot ids when several entries share a region kind', async ({
     page,
   }) => {
     const header = page.getByTestId('region-header')

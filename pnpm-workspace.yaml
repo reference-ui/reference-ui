@@ -2,9 +2,9 @@ packages:
   - pipeline
   - packages/*
   - packages/reference-lib/playwright/runtimes/*
-  - fixtures/*
-  - matrix/*
-  - matrix/*/*
+  - matrix/tests/*
+  - matrix/tests/*/*
+  - matrix/fixtures/*
   - panda-playground
   - '!packages/old/**'
 

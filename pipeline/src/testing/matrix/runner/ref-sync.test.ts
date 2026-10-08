@@ -15,7 +15,6 @@ import {
 function createMatrixPackageConfig(
   name: string,
   mode: MatrixPackageConfig['refSync']['mode'],
-  runTypecheck = false,
 ): MatrixPackageConfig {
   return {
     name,
@@ -25,7 +24,6 @@ function createMatrixPackageConfig(
     bundlers: ['vite7'],
     react: 'react19',
     reactVersions: ['react19'],
-    runTypecheck,
   }
 }
 
@@ -33,34 +31,15 @@ describe('matrix runner ref sync helpers', () => {
   it('keeps explicitly configured full-sync packages on full mode', () => {
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('install', 'full')), {
       mode: 'full',
-      runTypecheck: false,
-      waitFor: 'ready',
     })
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('mcp', 'full')), {
       mode: 'full',
-      runTypecheck: false,
-      waitFor: 'ready',
-    })
-    assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('typescript', 'full', true)), {
-      mode: 'full',
-      runTypecheck: true,
-      waitFor: 'ready',
     })
   })
 
   it('uses watch-ready sync when matrix.json opts into runtime-ready output', () => {
     assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('playwright', 'watch-ready')), {
       mode: 'watch-ready',
-      runTypecheck: false,
-      waitFor: 'ready',
-    })
-  })
-
-  it('uses watch-full sync when matrix.json opts into full initial watch completion', () => {
-    assert.deepEqual(resolveMatrixRefSyncStrategy(createMatrixPackageConfig('watch', 'watch-full')), {
-      mode: 'watch-full',
-      runTypecheck: false,
-      waitFor: 'complete',
     })
   })
 

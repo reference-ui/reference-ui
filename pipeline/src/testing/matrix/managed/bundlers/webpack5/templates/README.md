@@ -5,4 +5,4 @@ This folder contains the Liquid templates used by the managed `webpack5` bundler
 - `index.html.liquid` renders the managed HTML shell for webpack-backed matrix fixtures and generated consumers.
   It defines the React mount node that the managed `src/main.tsx` entrypoint targets.
 - `webpack.config.cjs.liquid` renders the managed webpack development config used by the matrix runner.
-  It wires TypeScript, CSS handling, the shared HTML shell, and `referenceWebpack()`.
+  It wires TypeScript, CSS handling, and the shared HTML shell.

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "expression-table",
+  "tokens": {
+    "colors": {
+      "n100": {
+        "light": "#f4f4f5",
+        "dark": "#18181b"
+      },
+      "n200": {
+        "light": "#e4e4e7",
+        "dark": "#27272a"
+      },
+      "primary": {
+        "light": "#3b82f6",
+        "dark": "#60a5fa"
+      }
+    },
+    "radii": {
+      "full": {
+        "value": "9999px"
+      },
+      "md": {
+        "value": "0.4rem"
+      }
+    }
+  },
+  "fonts": {},
+  "breakpoints": {
+    "sm": "640px",
+    "md": "768px",
+    "lg": "1024px"
+  },
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

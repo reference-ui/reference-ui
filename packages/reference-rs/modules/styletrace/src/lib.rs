@@ -1,0 +1,26 @@
+//! The primary entry point for the styletrace crate, exposing the core API for component style analysis.
+//! It is split into two internal subsystems: a synced type-surface resolver for Reference style props,
+//! and a JSX wrapper analyzer that traces public components back to Reference primitives.
+//! It takes a workspace path or file paths as input and coordinates the analysis process.
+//! The output is a set of collected style properties or analyzed component graph representations.
+
+mod analysis;
+pub(crate) mod diagnostics;
+mod output;
+mod resolver;
+
+#[cfg(test)]
+mod tests;
+
+pub use analysis::{
+    fold_trace_module, trace_style_bindings, trace_style_bindings_detailed,
+    trace_style_bindings_with_hint, trace_style_bindings_with_modules,
+    trace_style_bindings_with_surface, trace_style_jsx_names, trace_style_jsx_names_with_hint,
+    ModulesTraceInputs, StyleSurface, TraceModule, TraceOutcome, TraceSources, TracedBinding,
+};
+pub use diagnostics::{StyletraceDiagnostic, StyletraceDiagnosticCode};
+pub use output::StyletraceDetailedResult;
+pub use resolver::{
+    collect_declared_prop_names, collect_reference_style_prop_names, collect_style_prop_names,
+    StyleTraceError, SurfaceTrust,
+};

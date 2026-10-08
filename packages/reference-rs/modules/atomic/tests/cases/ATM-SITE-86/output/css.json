@@ -1,0 +1,12 @@
+{
+  "borderBottomColor:transparent": "@reference-ui/lib__bd-b-c_transparent",
+  "borderBottomStyle:solid": "@reference-ui/lib__bd-b-s_solid",
+  "borderBottomWidth:3px": "@reference-ui/lib__bd-b-w_3px",
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "color:green.500": "@reference-ui/lib__c_green.500",
+  "color:red.500": "@reference-ui/lib__c_red.500",
+  "cursor:not-allowed": "@reference-ui/lib__cursor_not-allowed",
+  "cursor:pointer": "@reference-ui/lib__cursor_pointer",
+  "opacity:0.5": "@reference-ui/lib__op_0.5",
+  "opacity:1": "@reference-ui/lib__op_1"
+}

@@ -1,0 +1,23 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  @media (prefers-color-scheme: dark) {
+    .\@reference-ui\/lib__osDark\:c_blue\.600 { color: var(--colors-blue-600); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .\@reference-ui\/lib__motionReduce\:anim_none { animation: none; }
+  }
+  @media print {
+    .\@reference-ui\/lib__print\:d_none { display: none; }
+  }
+}
+}

@@ -1,0 +1,22 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__flex_0_0_auto { flex: 0 0 auto; }
+  .\@reference-ui\/lib__flex_0_1_auto { flex: 0 1 auto; }
+  .\@reference-ui\/lib__flex_1_1_0\% { flex: 1 1 0%; }
+  .\@reference-ui\/lib__flex_1_1_auto { flex: 1 1 auto; }
+  .\@reference-ui\/lib__flex_2 { flex: 2; }
+  .\@reference-ui\/lib__flex_2_30px { flex: 2 30px; }
+  .\@reference-ui\/lib__flex_inherit { flex: inherit; }
+  .\@reference-ui\/lib__flex_none { flex: none; }
+}
+}

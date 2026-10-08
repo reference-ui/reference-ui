@@ -1,0 +1,5 @@
+{
+  "color:red": "@reference-ui/lib__c_red",
+  "md:width:60px": "@reference-ui/lib__md:w_60px",
+  "width:50px": "@reference-ui/lib__w_50px"
+}

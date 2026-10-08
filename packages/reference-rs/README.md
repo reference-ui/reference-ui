@@ -1,71 +1,80 @@
 # @reference-ui/rust
 
-Rust-backed native tooling for `reference-ui`. This package ships a **Node-API (N-API) native addon** built with **[napi-rs](https://github.com/napi-rs/napi-rs)** plus TypeScript in **`js/`** that loads the `.node` binary and provides **higher-level APIs** on top of those low-level bindings.
+High-performance Rust compiler and native runtime tooling for Reference UI. Ships a single **Node-API (N-API) native addon** built with **[napi-rs](https://github.com/napi-rs/napi-rs)**, orchestrated via a shared runtime loader and typed TypeScript modules under `modules/`.
 
-## What lives here
+The **atomic style engine** is a stack of sibling crates under `modules/` — TypeScript above the cut, Rust below. Campaign: [`PLAN.md`](./PLAN.md). Architecture: [`docs/atomic.md`](./docs/atomic.md). Interactive map: [`modules/map.html`](./modules/map.html).
 
-| Piece | Role |
-| --- | --- |
-| **Rust crate** (`reference-virtual-native`) | Workspace features implemented in Rust (parsers, transforms, emitters). Built as a `cdylib` for Node and as `rlib` for tests and embedding. |
-| **napi-rs** | Binds selected Rust entrypoints to JavaScript via `#[napi]` on `src/lib.rs` (see **What napi-rs does here**). |
-| **TypeScript (`js/`)** | Loads the `.node` addon, wraps it with ergonomic/higher-level APIs (runtimes, builders, helpers), and ships bundled ESM/DTS per public subpath (`tsup` → `dist/`). |
+## Architecture & Responsibilities
 
-New capabilities will typically add a **`src/<module>/`** tree (and often a matching **`js/<module>/`** surface) and extend `lib.rs`, `package.json` `exports`, and `tsup.config.ts` as needed.
+| Subsystem | Location | Role |
+| --- | --- | --- |
+| **Native Addon** | `modules/runtime` | The sole `cdylib` crate (`reference-native`) compiling to `.node`. Thin switchboard exposing domain capabilities through `#[napi]` functions with zero business logic. |
+| **Runtime Infrastructure** | `modules/runtime/js` | Shared TypeScript layer providing platform detection, addon binary loading (`loader.ts`), and JSON call bridging (`native.ts`). Not the browser `css()` / `recipe()` contract. |
+| **Shared Rust Helpers** | `modules/shared` | Internal compiler utilities (Oxc parser helpers, span conversions, unquoting). |
+| **Product Modules** | `modules/*` | Self-contained feature modules, each with a pure domain Rust crate, TypeScript API wrappers where needed, and tests. |
 
-## Documentation
+## Atomic style engine
 
-Feature-specific docs live under **`docs/`** (e.g. Tasty: [tasty-rs.md](./docs/tasty-rs.md), [tasty-js.md](./docs/tasty-js.md)).
+Sibling crates. Each verifies itself with `pnpm agentrs c <crate>`.
 
-## How it is bootstrapped
+| Module | What it is | Verify |
+| --- | --- | --- |
+| **canon** | The language: tags, CSS properties, `mt` / `r` / conditions. `@webref` + dialect. | `pnpm agentrs c canon` |
+| **base-system** | The definition. Fragment dump from TypeScript. Tokens, fonts, keyframes, globals, recipes. | `pnpm agentrs c base_system` |
+| **atomic** | Extract → atoms → stylesheet + class map. One namer. Was `modules/system`. | `pnpm agentrs c atomic` · `pnpm agentrs v atomic` |
+| **typegen** | `.d.ts` unions from base-system + canon. Not a jsx farm. | `pnpm agentrs c typegen` |
+| **styletrace** | Which JSX names still carry StyleProps. Atomic extract calls this. | `pnpm agentrs c styletrace` · `pnpm agentrs v styletrace` |
 
-1. **Install** dependencies from the repo root (this package is part of the workspace).
-2. **Build the native addon** so the `.node` binary exists for your platform:
+Other products in this package (`tasty`, `atlas`) are not this engine.
 
-   ```sh
-   pnpm --filter @reference-ui/rust run build
-   ```
-
-   or only ensure the binary is present:
-
-   ```sh
-   pnpm --filter @reference-ui/rust run ensure-native
-   ```
-
-3. **Run tests** (Rust + Vitest):
-
-   ```sh
-   pnpm --filter @reference-ui/rust run test
-   ```
-
-`package.json` declares **napi-rs targets** (e.g. `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`). The compiled artifact is named `virtual-native` and is loaded from `native/virtual-native.<triple>.node` (see `js/runtime/loader.ts`).
-
-## What napi-rs does here
-
-[napi-rs](https://napi.rs/) generates Node-API bindings from Rust:
-
-- **`#[napi]`** exports in `src/lib.rs` are included when the `napi` **Cargo feature** is enabled (it is **on by default**).
-- **`build.rs`** calls `napi_build::setup()` when `CARGO_FEATURE_NAPI` is set so the linker produces a loadable addon.
-
-From JavaScript, `js/runtime/loader.ts` resolves the package directory, finds the correct `.node` file for the current OS/arch, and `require()`s it (`VirtualNativeBinding`). Feature code in **`js/`** then builds on that — thin direct exports in `js/runtime/index.ts`, richer layers under paths like `js/tasty/`.
-
-## Package entrypoints
-
-Exports are defined in `package.json` and built from `tsup.config.ts`.
-
-| Subpath | Role |
-| --- | --- |
-| `@reference-ui/rust` | Native addon: rewrites, scanners, and other functions exposed from `lib.rs`; loader helpers. |
-| `@reference-ui/rust/tasty` | Tasty runtime (TypeScript). |
-| `@reference-ui/rust/tasty/browser` | Tasty browser-oriented entry. |
-| `@reference-ui/rust/tasty/build` | Tasty build helpers (emit + filesystem). |
-| `@reference-ui/rust/styletrace` | Styletrace wrapper analysis for discovering exported JSX names linked to Reference primitives through style props. |
-
-Additional **`exports`** entries will appear as new modules ship.
+JS face for the compiler: `import { compile } from '@reference-ui/rust/atomic'`. Core's live wire is still `@reference-ui/rust/system` (same module).
 
 ## Layout
 
-- `src/lib.rs` — N-API exports and crate re-exports.
-- `src/<module>/` — per-feature Rust code (e.g. `tasty/`, `virtualrs/`).
-- `js/<module>/` — per-feature TypeScript: wrappers and higher-level APIs over the native addon where applicable.
+```text
+packages/reference-rs/
+├── Cargo.toml                              # Workspace manifest (members = modules/*)
+├── package.json                            # Package exports and scripts
+├── docs/atomic.md                          # Engine architecture (from the map)
+│
+├── modules/
+│   ├── map.html                            # Interactive stack — hover to see rests-on
+│   ├── runtime/                            # Sole cdylib + JS loader
+│   ├── shared/                             # Shared Rust helpers
+│   ├── canon/                              # Language dictionary (@webref + dialect)
+│   ├── base-system/                        # Design-system definition (fragment spec)
+│   ├── atomic/                             # Stylesheet compiler (was system)
+│   ├── typegen/                            # Token unions / StyleProps .d.ts
+│   ├── styletrace/                         # StyleProps names + wrapper graph
+│   ├── tasty/                              # AST extraction, type contracts, emitters
+│   └── atlas/                              # Component and token usage analyzer
+│
+└── dist/                                   # All generated outputs (gitignored)
+```
 
-For details on a given feature, see **`docs/`** or the module’s own notes under `src/`.
+## How It Is Bootstrapped
+
+1. **Build the native addon** with exclusive concurrency lock:
+
+   ```sh
+   pnpm agentrs b
+   ```
+
+2. **Run tests across modules or workspace**:
+
+   ```sh
+   # Rust workspace unit tests:
+   pnpm agentrs c
+
+   # Per-module:
+   pnpm agentrs c canon
+   pnpm agentrs c atomic
+   pnpm agentrs v atomic
+
+   pnpm agentrs v tasty
+   pnpm agentrs v atlas
+   pnpm agentrs v styletrace
+
+   # Full verification pipeline (build -> cargo -> vitest -> quality):
+   pnpm agentrs t
+   ```

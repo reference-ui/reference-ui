@@ -1,0 +1,15 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  [data-color-mode=dark] .\@reference-ui\/lib__dark\:bg_gray\.900 { background: var(--colors-gray-900); }
+}
+}

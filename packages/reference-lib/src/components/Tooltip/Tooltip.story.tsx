@@ -54,6 +54,25 @@ export const KeyboardFocus = () => (
   </ReferenceLibrary>
 )
 
+export const SpanInDefaultContent = () => (
+  <ReferenceLibrary>
+    <Div p="6r" colorMode="light" display="flex" justifyContent="center" style={{ paddingTop: 120 }}>
+      <Tooltip openDelay={0} closeDelay={0}>
+        <Tooltip.Trigger>
+          <button type="button" data-testid="btn-span-tip">
+            Span tip trigger
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Content data-testid="tooltip-span-content" placement="top">
+          <Span fontSize="3r" data-testid="tooltip-span-text">
+            Helpful tooltip information
+          </Span>
+        </Tooltip.Content>
+      </Tooltip>
+    </Div>
+  </ReferenceLibrary>
+)
+
 const tipStyle: React.CSSProperties = {
   background: '#333',
   color: '#fff',
@@ -163,6 +182,28 @@ export const NestedOverlay = () => {
                 Nested tooltip
               </Tooltip.Content>
             </Tooltip>
+            {/* Second trap tabbable (RED-TT): a single-tabbable trap wraps Tab
+                to self with NO focus event, and the lock synchronously reclaims
+                .blur() — so no keyboard focus arrival exists to open the tip.
+                This sr-only control (zero painted pixels, snapshots unaffected)
+                makes Tab-away / Shift+Tab-back honest focus events. */}
+            <button
+              type="button"
+              data-testid="nested-dialog-sr-next"
+              style={{
+                position: 'absolute',
+                width: 1,
+                height: 1,
+                padding: 0,
+                margin: -1,
+                overflow: 'hidden',
+                clipPath: 'inset(50%)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              Skip nested tip
+            </button>
           </Overlay.Content>
         </Overlay>
       </div>

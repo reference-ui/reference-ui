@@ -197,26 +197,20 @@ export const TOAST_HOST_STYLES = `
   cursor: pointer;
 }
 
+/* B-37: the default-toast close is an inline trailing circle, fully inside the
+   card. (The data-corner hook name is historical; kept for back-compat.) In-flow
+   placement makes RTL automatic, so there are no directional overrides. */
 [data-reference-toast-close][data-corner] {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: static;
+  flex-shrink: 0;
+  align-self: center;
   box-sizing: border-box;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  transform: translate(-35%, -35%);
   padding: 0;
   border: 1px solid var(--reference-toast-close-border);
   background: var(--reference-toast-close-bg);
-  z-index: 2;
-}
-
-[data-reference-toast-host][dir="rtl"] [data-reference-toast-close][data-corner],
-[data-reference-toast-position][dir="rtl"] [data-reference-toast-close][data-corner] {
-  left: auto;
-  right: 0;
-  transform: translate(35%, -35%);
 }
 
 [data-reference-toast-close][data-corner]:hover {

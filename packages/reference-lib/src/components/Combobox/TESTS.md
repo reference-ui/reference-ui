@@ -40,8 +40,9 @@ port; Popover owns Trigger/hover/`closeOnScroll` policy.
   composition, not a virtual Combobox adapter.
 
 Omitted `autocomplete`, `allowCustomValue`, and `closeOnBlur` mean
-`"list"`, false, and true respectively. Omitted `value`/`inputValue` mean
-controlled `null`/`""`, never hidden uncontrolled state.
+`"list"`, false, and true respectively. `value`/`onChange` are required
+(controlled-only, no `defaultValue`); omitted `inputValue` means
+controlled `""`, never hidden uncontrolled state.
 
 These are API details inside Combobox, not reasons for separate Select,
 Autocomplete, or CommandPalette primitives.
@@ -132,8 +133,9 @@ Autocomplete, or CommandPalette primitives.
   background inerting occurs; Combobox remains nonmodal.
 - [x] `CB-DOM-10` `[reference]` `[browser]` —
   **Combobox should apply deterministic controlled defaults when optional behavior props are omitted.**
-  Omit `value`, `inputValue`, `autocomplete`, `allowCustomValue`, and
-  `closeOnBlur`, type unmatched `Zulu`, then blur while callbacks are ignored.
+  Pass explicit `value={null}`, omit `inputValue`, `autocomplete`,
+  `allowCustomValue`, and `closeOnBlur`, type unmatched `Zulu`, then blur
+  while callbacks are ignored.
   Assert controlled `null`/`""`, `aria-autocomplete=list`, a request to restore
   committed-only text and dismiss on blur, and no hidden state change;
   truthiness cannot choose defaults.
@@ -400,6 +402,13 @@ Autocomplete, or CommandPalette primitives.
   change, `onInputValueChange` and `onChange` remain silent, controlled
   `inputValue` stays at the user's prefix, and Combobox.Popover remains open; callbacks
   distinguish preview from authored state.
+- [x] `CB-MODE-08` `[reference]` `[browser]` —
+  **Combobox autocomplete inline should complete the suffix with suffix-only selection.**
+  Render `autocomplete="inline"`, type controlled prefix `Al`, and make
+  `Alpha` active. Assert `aria-autocomplete="inline"`, displayed `Alpha`
+  with selection range `[2,5]`, the next native edit replaces only that
+  suffix, and no value commit occurs; `inline` shares `both` completion
+  mechanics while announcing no list contract.
 
 ### Commit, revert, Tab, and blur
 

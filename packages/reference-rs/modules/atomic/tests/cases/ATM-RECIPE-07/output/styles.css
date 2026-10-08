@@ -1,0 +1,71 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__buttonStyle__base { align-items: center; display: inline-flex; justify-content: center; }
+  .\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+  .\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+  .\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  .\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+  .\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+  .\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+    .sm\:\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+    .sm\:\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+    .md\:\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+    .md\:\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+    .lg\:\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+    .lg\:\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+    .xl\:\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+    .xl\:\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_solid { background-color: blue; color: white; }
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_solid:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { background-color: gray; color: black; }
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_solid:is(:hover, [data-hover]) { background-color: darkblue; }
+  }
+  @container (min-width: 640px) {
+    .sm\:\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+    .sm\:\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+    .sm\:\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  }
+  @container (min-width: 768px) {
+    .md\:\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+    .md\:\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+    .md\:\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  }
+  @container (min-width: 1024px) {
+    .lg\:\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+    .lg\:\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+    .lg\:\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  }
+  @container (min-width: 1280px) {
+    .xl\:\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+    .xl\:\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+    .xl\:\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  }
+  @container (min-width: 1536px) {
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_outline { background-color: transparent; border-style: solid; border-width: 1px; color: blue; }
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_outline:is(:disabled, [disabled], [data-disabled], [aria-disabled=true]) { border-color: gray; color: gray; }
+    .\32 xl\:\@reference-ui\/lib__buttonStyle_v_outline:is(:hover, [data-hover]) { background-color: blue; color: white; }
+  }
+}
+}

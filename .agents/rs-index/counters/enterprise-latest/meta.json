@@ -1,0 +1,249 @@
+{
+  "procedure": "agentrs-counters/1",
+  "scale": "enterprise",
+  "pin": {
+    "name": "latest",
+    "hash": "2b875a154fe6",
+    "dirty": true
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-iRWsRr",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "spanLeg": {
+    "sample": {
+      "syncMs": 1182.0570519999999,
+      "rssBefore": 100257792,
+      "rssPeak": 322244608,
+      "rssAfter": 302940160
+    },
+    "nodeArgs": [],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-iRWsRr",
+      "10"
+    ],
+    "env": {
+      "REFERENCE_UI_NATIVE_PATH": "/Users/ryn/Developer/reference-ui/packages/reference-rs/dist/native-trace/a33f89c47dea-counters/virtual-native.darwin-x64.node",
+      "COUNTERS_TRACE_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-latest/counters-span.json"
+    },
+    "spanWallMs": 725.6954169999999,
+    "spans": 1
+  },
+  "censusLeg": {
+    "sample": {
+      "syncMs": 1198.4740000000002,
+      "rssBefore": 99713024,
+      "rssPeak": 342728704,
+      "rssAfter": 319684608
+    },
+    "nodeArgs": [],
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "/Users/ryn/Developer/reference-ui/packages/reference-neo/benchmark/measure/worker.ts",
+      "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-iRWsRr",
+      "10"
+    ],
+    "env": {
+      "DYLD_INSERT_LIBRARIES": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-counters-shim-625euw/libcounters-interpose.dylib",
+      "COUNTERS_CENSUS_OUT": "/Users/ryn/Developer/reference-ui/docs/evidence/counters/enterprise-latest/census.json"
+    }
+  },
+  "startupLeg": {
+    "command": [
+      "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+      "-e",
+      ""
+    ]
+  },
+  "censusNet": {
+    "schema": 1,
+    "calls": {
+      "open": {
+        "count": 15407,
+        "totalNs": 239352838
+      },
+      "openat": {
+        "count": 27,
+        "totalNs": 127584
+      },
+      "close": {
+        "count": 15405,
+        "totalNs": 11615333
+      },
+      "read": {
+        "count": 30529,
+        "totalNs": 25721990,
+        "bytes": 5885471
+      },
+      "pread": {
+        "count": 439,
+        "totalNs": 465044,
+        "bytes": 2940999
+      },
+      "readv": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "write": {
+        "count": 389,
+        "totalNs": 3829665,
+        "bytes": 10577084
+      },
+      "pwrite": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "writev": {
+        "count": 0,
+        "totalNs": 0,
+        "bytes": 0
+      },
+      "stat": {
+        "count": 3882,
+        "totalNs": 9542808
+      },
+      "lstat": {
+        "count": 324,
+        "totalNs": 723986
+      },
+      "fstat": {
+        "count": 70,
+        "totalNs": 64548
+      },
+      "lseek": {
+        "count": 0,
+        "totalNs": 0
+      },
+      "mmap": {
+        "count": 336,
+        "totalNs": 919835,
+        "bytes": 8795586560
+      },
+      "munmap": {
+        "count": 651,
+        "totalNs": 4561077
+      }
+    }
+  },
+  "derived": {
+    "wallMs": 725.6954169999999,
+    "spans": 1,
+    "events": {
+      "faults": 48519,
+      "pageins": 0,
+      "cowFaults": 0,
+      "messagesSent": 64,
+      "messagesReceived": 32,
+      "syscallsMach": 116,
+      "syscallsUnix": 13751,
+      "csw": 11
+    },
+    "info": {
+      "userNs": 638969162,
+      "systemNs": 86629017,
+      "interruptWkups": 0,
+      "pageins": 0,
+      "residentSize": 126181376,
+      "physFootprint": 22753280,
+      "diskioBytesRead": 0,
+      "diskioBytesWritten": 0,
+      "instructions": 9509354919,
+      "cycles": 3978907872,
+      "runnableNs": 728104408
+    },
+    "rusage": {
+      "userUsec": 638969,
+      "systemUsec": 86630,
+      "minorFaults": 48519,
+      "majorFaults": 0,
+      "inBlock": 0,
+      "outBlock": 0,
+      "voluntaryCsw": 0,
+      "involuntaryCsw": 11
+    },
+    "threads": {
+      "enterCount": 11,
+      "exitCount": 11,
+      "userUsecDelta": 638969,
+      "sysUsecDelta": 86631,
+      "windowTopShare": 1
+    },
+    "exitWaters": {
+      "lifetimeMaxPhysFootprint": 207527936,
+      "maxRss": 333537280
+    },
+    "instructions": 9509354919,
+    "cycles": 3978907872,
+    "ipc": 2.3899409649362195,
+    "stallWidth": 4,
+    "stallCycles": 1601569142.25,
+    "stallShare": 0.4025147587659451
+  },
+  "node": {
+    "version": "v24.16.0"
+  },
+  "nativeShipped": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "5ac6c07e9f8d4a67c9563ce35534d36a8130a43df6a3899478d83fd160f22ec0",
+    "profile": "release",
+    "builtVia": "napi build --release via ensure-native"
+  },
+  "nativeCounters": {
+    "path": "packages/reference-rs/dist/native-trace/a33f89c47dea-counters/virtual-native.darwin-x64.node",
+    "sha256": "d54c6b3d6ca548debc05f591a6199594c9d10fd5586a6311eaabf951f007cae6",
+    "profile": "release+counters-trace",
+    "builtVia": "napi build --release --features counters-trace",
+    "inputsHash": "a33f89c47deac87ad7009765e170b3e020993563478e75b14b6a74d4fd17463e",
+    "bytes": 8909532
+  },
+  "shim": {
+    "source": ".agents/skills/agent-rs/scripts/counters-interpose.c",
+    "sourceSha256": "94c7e5d1ad71307302d70c7366b98ca8565db34f24b58dabc5efda61940ed04a",
+    "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)"
+  },
+  "platform": "darwin-x64",
+  "createdAt": "2026-09-21T10:33:59.534Z",
+  "treeStatus": [
+    "M .agents/skills/agent-rs/scripts/alloc-build.mjs",
+    " M .agents/skills/agent-rs/scripts/run.mjs",
+    " M docs/missions/flamegraph-logs/obj4-counters.md",
+    " M docs/missions/operation-fasthull.md",
+    " M packages/reference-neo/benchmark/reports/latest/report.md",
+    " M packages/reference-neo/benchmark/reports/latest/result.json",
+    " M packages/reference-rs/modules/atomic/native.rs",
+    " M packages/reference-rs/modules/runtime/Cargo.toml",
+    " M packages/reference-rs/modules/runtime/src/lib.rs",
+    "?? .agents/skills/agent-rs/scripts/counters-census.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters-evidence.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters-interpose.c",
+    "?? .agents/skills/agent-rs/scripts/counters-summary.mjs",
+    "?? .agents/skills/agent-rs/scripts/counters.mjs",
+    "?? docs/evidence/counters/",
+    "?? packages/reference-rs/modules/runtime/src/counters_abi.rs",
+    "?? packages/reference-rs/modules/runtime/src/counters_trace.rs"
+  ]
+}

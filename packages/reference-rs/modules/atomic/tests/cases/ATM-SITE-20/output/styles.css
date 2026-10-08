@@ -1,0 +1,13 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer site-unknown-prop-policy {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .site-unknown-prop-policy__c_green { color: green; }
+  .site-unknown-prop-policy__c_red { color: red; }
+}
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "`color: red` has no compiled style plan; this lookup will emit no class. Unknown condition \"_nope\"",
+    "file": "input/src/nope.ts",
+    "line": 3,
+    "column": 23,
+    "span": {
+      "start": 65,
+      "end": 70
+    },
+    "help": [
+      "did you mean `_open`?",
+      "use a condition from the theme"
+    ]
+  }
+]

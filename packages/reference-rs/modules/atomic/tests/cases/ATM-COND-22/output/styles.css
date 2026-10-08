@@ -1,0 +1,15 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__\[\&\:where\(\:has\(\>_\[data-slot\=\"icon\"\]\:only-child\,_\>_svg\:only-child\)\)\]\:px_0:where(:has(> [data-slot="icon"]:only-child, > svg:only-child)) { padding-inline: 0; }
+}
+}

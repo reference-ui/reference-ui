@@ -1,0 +1,17 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__\[\&\:hover\:\:before\]\:c_blue:hover::before { color: blue; }
+  .\@reference-ui\/lib__\[\&\:\:before\,_\&\:\:after\]\:c_green::before, .\@reference-ui\/lib__\[\&\:\:before\,_\&\:\:after\]\:c_green::after { color: green; }
+  .\@reference-ui\/lib__\[\&\:\:after\]\:c_red::after { color: red; }
+}
+}

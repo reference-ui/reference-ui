@@ -4,6 +4,14 @@
 **Scope:** Build out and validate the rest of the chain matrix per `CHAIN.md`,
 treating it as the last release gate for the chainable design-system compiler.
 
+> **Cutover note (VOYAGE Obj 2):** build-out record of the 11-tier
+> gate; results and findings stand as run. The gate is live again
+> at `matrix/tests/chain/T*` (HQ reversal — all tiers restored),
+> and path spellings below use post-cutover locations
+> (`matrix/tests/chain/T*`, `matrix/fixtures/*`) — see
+> `TEST_COVERAGE.md` for the live gate table. Mechanism detail
+> (`ref sync`) describes the pre-cutover run.
+
 ---
 
 ## 1. Result summary
@@ -30,7 +38,7 @@ treating it as the last release gate for the chainable design-system compiler.
 
 ## 2. What was built
 
-### 2.1 New fixture libraries (under `fixtures/`)
+### 2.1 New fixture libraries (under `fixtures/`, now `matrix/fixtures/`)
 
 To compose chains we needed more fixture libraries than the original two
 (`extend-library`, `layer-library`):
@@ -59,7 +67,7 @@ generated runtime.
 
 ### 2.3 New chain matrix entries
 
-`matrix/chain/{T6,T7,T8,T9,T10,T11,T12,T13}/` each scaffolded with:
+`matrix/tests/chain/T{6,7,8,9,10,11,12,13}/` were each scaffolded with:
 - `package.json` (managed by pipeline; deps preserved by `createManagedMatrixPackageJson`)
 - `matrix.json` (`bundlers: ["vite7"]`, `react: "react19"`)
 - `tsconfig.json`
@@ -146,16 +154,20 @@ Options, ordered by user-facing improvement:
    for re-exported JSX elements declared in `jsxElements`. Requires a runtime
    contract change but eliminates the sharp edge entirely.
 3. **Documentation** — at minimum, add a "Layered adoption contract" section to
-   `docs/CORE.md` and `docs/LAYERS.md`. (Doc-only fix; lowest effort, lowest
-   reach.)
+   `docs/ARCHITECTURE.MD` (the ONE arch doc; the `docs/HIST_*` maps this item
+   named were deleted 2026-09-23 per docs milspec — history lives in git).
+   (Doc-only fix; lowest effort, lowest reach.)
 
 ### 4.2 Promote the chain matrix into a release gate (priority: high)
 
 The 11 chain entries plus `matrix/reference`, `matrix/primitives`, etc. should be
-the release-blocking smoke set. Concretely:
+the release-blocking smoke set (the live gate is the restored 11-tier
+chain set + `matrix/tests/mcp` per `TEST_COVERAGE.md`;
+`matrix/reference`, `matrix/primitives`, etc. stay decommissioned).
+Concretely:
 
 - Add a `pnpm chain:gate` script that runs `pipeline setup --sync` + playwright
-  for every `matrix/chain/T*` entry and reports pass/fail in a single line
+  for every `matrix/tests/chain/T*` entry and reports pass/fail in a single line
   per entry. CI can `time` it as a single gate.
 - Tag the chain matrix in `.changeset/config.json` so a release cannot ship
   without it being green.
@@ -187,7 +199,7 @@ or to `=== 1` if the compiler should de-dupe.
 
 ### 4.6 Capture component-author guidance (priority: medium)
 
-`fixtures/extend-library` and `fixtures/layer-library` are de-facto reference
+`matrix/fixtures/extend-library` and `matrix/fixtures/layer-library` are de-facto reference
 implementations for fixture authors. Consider hoisting them into
 `docs/FIXTURE_AUTHORING.md` (or a `templates/` directory) so external library
 authors have a single canonical pattern to copy:
@@ -220,7 +232,77 @@ authors have a single canonical pattern to copy:
 
 ## 6. Files of record
 
-- New fixtures: `fixtures/{meta-extend-library,meta-extend-library-sibling,extend-library-2,meta-extend-library-2,layer-library-2}/`
-- New chain entries: `matrix/chain/{T6,T7,T8,T9,T10,T11,T12,T13}/`
+- New fixtures: `matrix/fixtures/{meta-extend-library,meta-extend-library-sibling,extend-library-2,meta-extend-library-2,layer-library-2}/`
+- New chain entries: `matrix/tests/chain/{T6,T7,T8,T9,T10,T11,T12,T13}/`
 - Updated configs: `tsconfig.base.json`, `.changeset/config.json`, `pipeline/config.ts`
 - Repo memory: `/memories/repo/matrix-chain-layered-token-scope.md`
+
+---
+
+## 7. Addendum 2026-10-07 — T16: prebuilt aliased-host composition
+
+**Cause:** the CSS composition investigation (`CSS_COMPOSITION_INVESTIGATION.md`,
+since removed): `@reference-ui/icons` emitted `reference-icons__*` shell
+classes backed by no stylesheet anywhere, and docs logged six `css(): no
+compiled class` runtime warnings. Two independent failures compounded: the
+icons system's own CSS omitted its shell utilities (tracer dropped the
+`as`-cast aliased `IconShell` host), and no transitive closure carried
+dependency CSS to consumers.
+
+**Result:** T16 green, 6/6 e2e hermetic (`pnpm agent test
+--packages=@matrix/chain-t16`, exit 0) plus 4/4 unit — 12th chain entry.
+Gate total becomes 39 e2e / 12 entries.
+
+| Entry | Topology | Tests | Status |
+|---|---|---:|:---:|
+| T16 | Extend lib (transitive icons layers) + layer prebuilt aliased-host fixture | 6/6 | ✅ |
+
+**What was built:** `matrix/fixtures/aliased-host-library/` (the icons
+`createIcon` shape in miniature: `as`-cast shell, `forwardRef` factory,
+two products, deliberately no `jsxElements`) and
+`matrix/tests/chain/T16/` (extends the real lib, layers the fixture,
+renders icons via lib re-export and direct import plus both badges).
+Contract: every emitted class has a backing rule, zero `no compiled
+class` console warnings, shell computed styles on all four shells.
+
+**Falsification record (H1–H6):**
+
+- H1 (aliased host not traced) — **confirmed**, then fixed: the `Div`-swap
+  probe flipped icons CSS from empty to populated. Fix: atomic gate
+  re-admits same-file `const` aliases whose chain ends at an admitted
+  host; StyleTrace follows identifier aliases in edge resolution.
+- H2 (`jsxElements` would mask the miss) — **confirmed as diagnostic
+  only**, then retired: `jsxElements` removed from the icons config;
+  StyleTrace covers the generated tags natively.
+- H3 (no cross-system flow without extends/layers) — **confirmed as the
+  model, closed by wiring**: lib `layers: [iconsBaseSystem]`; the
+  published streams already carry layered entries downstream, so docs
+  (extends lib) inherits icons CSS transitively. No compiler change
+  needed — the gap was a stale lib dist, not the merge.
+- H4 (icons baseSystem utilities genuinely empty) — **confirmed**, fixed
+  by the H1 tracer fix (220 rules incl. all six shell utilities).
+- H5 (same failure inside lib) — **falsified**: sweep found no other
+  aliased-host call-sites in lib; the fix is general and unit-pinned.
+- H6 (consumer compiling dependency call-sites) — **out of scope by
+  design**: node_modules scanning stays off; composition flows through
+  published systems.
+
+**Decision:** A+C from the brief's options. Each package ships complete
+CSS (StyleTrace host detection, no `jsxElements`), and consumers adopt
+dependency CSS through the extends/layers system graph — transitively,
+via published streams. Q4's public contract: extend the baseSystem (or
+layer its css); never scan node_modules.
+
+**Follow-ups (not blockers):** the brief's Webpack/React-17/18 axes have
+no harness support anywhere in matrix (all chain tiers are vite7/react19)
+— a harness project, not a T16 gap. Harvest over-mint (dynamic
+`color={color}` → 215 `c_*` rules incl. `c_var`) is bloat worth a later
+pass. Two docs sync warnings (`ATM-W-UNKNOWN-COLOR` in CodeBlock,
+`ATM-W-MISSING-CONTAINER-ROOT`) are pre-existing and unrelated.
+
+**Infra note:** hermetic `pipeline test` was ENOSPC-broken during this
+campaign: Dagger snapshotted the whole repo root including the ~47G
+cargo tree at `packages/reference-rs/dist/cargo` into a 100GiB colima
+disk. Fixed by extending `repoSourceExcludes` in
+`pipeline/src/build/rust/targets.ts` (`**/target`, `**/dist`, scratch
+dirs) with a regression test — snapshot 48GiB → 0.64GiB.

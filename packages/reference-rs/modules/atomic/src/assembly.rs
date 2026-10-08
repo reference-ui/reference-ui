@@ -1,0 +1,293 @@
+//! Assembly of the compile's filled sinks into the artifact bundle.
+//! Takes the wants, recipes, diagnostics, and authored declarations that
+//! extraction filled, appends static CSS, then builds the atom set, runtime
+//! plans, stylesheets, and runtime map. The portable sheet shares the printed
+//! suffix and sinks its own system-layer diagnostics so warnings surface once.
+
+use std::collections::BTreeSet;
+
+use rustc_hash::FxHashSet;
+
+use crate::{
+    atom::{AtomSet, When},
+    diagnostics::DiagnosticsSession,
+    lanes::{Lanes, WorkKind},
+    recipes, resolve, runtime, static_css, stylesheet, BaseSystem, CompileResult, Diagnostic,
+    DiagnosticCode, DiagnosticLocation, NativeRuntimeArtifact,
+};
+
+/// The compile's filled sinks, assembled into the artifact bundle.
+pub(crate) struct AssembleCtx {
+    /// Style wants from extraction, plus static CSS.
+    pub(crate) wants: Vec<crate::atom::Want>,
+    /// Recipes extracted from sources.
+    pub(crate) extracted_recipes: Vec<recipes::Recipe>,
+    /// Diagnostics from every phase.
+    pub(crate) diagnostics: Vec<Diagnostic>,
+    /// Authored declarations for runtime plans.
+    pub(crate) authored: Vec<runtime::AuthoredDeclaration>,
+    /// Component names StyleTrace discovered (sorted, unique).
+    pub(crate) traced: Vec<String>,
+    /// True when the proof channel is requested: materialize the
+    /// compile-internal rows (plans, css map, wants, top-level tables)
+    /// the slim serde drops on the default path.
+    pub(crate) proof: bool,
+    /// Resolved recipe call-site selections gating responsive emission.
+    pub(crate) selections: Vec<crate::extract::recipes::selection::RecipeSelection>,
+    /// True when an extends/layers upstream's published global CSS already
+    /// roots the page: the container-root check stays silent (Addendum B).
+    pub(crate) upstream_container_root: bool,
+}
+
+impl AssembleCtx {
+    /// Append static CSS wants before the atom set builds.
+    pub(crate) fn append_static(&mut self, system: &BaseSystem) {
+        let mut static_ctx = static_css::StaticCssContext {
+            system,
+            wants: &mut self.wants,
+            authored: &mut self.authored,
+            diagnostics: &mut self.diagnostics,
+        };
+        static_css::append_static_css(&mut static_ctx);
+    }
+
+    /// Build the atom set, plans, sheets, and runtime map into the result.
+    pub(crate) fn finish(
+        self,
+        system: &BaseSystem,
+        sink: &mut DiagnosticsSession,
+    ) -> CompileResult {
+        let Self {
+            wants,
+            extracted_recipes,
+            mut diagnostics,
+            authored,
+            traced,
+            proof,
+            selections,
+            upstream_container_root,
+        } = self;
+        let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
+        let root_input = resolve::conditions::ContainerRootInput {
+            system,
+            atoms: &atom_set,
+            upstream_root: upstream_container_root,
+        };
+        resolve::conditions::check_container_root(&root_input, &mut diagnostics, Some(&mut *sink));
+        let compiled_recipes = compile_recipes(
+            &RecipeInputs::new(&extracted_recipes, &selections),
+            system,
+            &mut diagnostics,
+            Some(&mut *sink),
+        );
+        // Plans stay unconditional: the S4 render joins verdicts against
+        // them, and the diagnostics sweep killed proof-gating here (the
+        // "no compiled style plan" prefix rides render_session output).
+        // On `!proof` the diet path carries placeholder declarations (slim
+        // drops plans) plus the canonical keys, skipping render's second
+        // serialization; proof restores full plans and the legacy join.
+        let mut plan_builder =
+            runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
+        let (style_plans, carried_keys) = build_plans(&mut plan_builder, &authored, proof);
+        let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
+        let runtime = NativeRuntimeArtifact {
+            schema_version: 2,
+            namer: runtime::NamerTables::for_system(system),
+            recipes: runtime_recipes,
+            style_prop_names: runtime::get_style_prop_names(),
+        };
+
+        let atom_count = atom_set.len();
+        let css = proof.then(|| build_css_runtime(&atom_set, &system.name));
+        // Dual-sheet build shares one recipes+utilities suffix; the portable
+        // diagnostics sink here so global warnings surface once, as before.
+        let mut portable_sink = Vec::new();
+        let (streams, stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
+            &atom_set,
+            system,
+            &compiled_recipes,
+            stylesheet::StylesheetSinks {
+                primary: &mut diagnostics,
+                portable: &mut portable_sink,
+            },
+        );
+        // The top-level tables duplicate the shipped runtime map; slim drops
+        // them, so the default path drops the second in-memory copy too.
+        let recipe_tables: Vec<recipes::RecipeTable> = if proof {
+            compiled_recipes
+                .into_iter()
+                .map(|recipe| recipe.table)
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        // Final-plan proof (S4): join the session's analysis expectations
+        // against the emitted plans and render the verdicts in place.
+        match carried_keys {
+            Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
+                sink.facts(),
+                emitted,
+                &system.name,
+                &mut diagnostics,
+            ),
+            None => crate::diagnostics::proof::render::render_session(
+                sink.facts(),
+                &style_plans,
+                &system.name,
+                &mut diagnostics,
+            ),
+        };
+
+        CompileResult {
+            stylesheet,
+            portable_stylesheet,
+            streams,
+            runtime,
+            style_plans,
+            css,
+            diagnostics,
+            wants: if proof { wants } else { Vec::new() },
+            recipes: recipe_tables,
+            atom_count,
+            traced_jsx_hosts: traced,
+            compiler_diagnostics: None,
+        }
+    }
+}
+
+/// Build plans plus the carried emitted-key set. Proof builds full plans
+/// and no keys (render re-serializes as today); `!proof` builds diet plans
+/// whose carried keys become the render join set, serialization-free.
+fn build_plans(
+    builder: &mut runtime::PlanBuilder<'_>,
+    authored: &[runtime::AuthoredDeclaration],
+    proof: bool,
+) -> (Vec<runtime::RuntimeStylePlan>, Option<BTreeSet<String>>) {
+    if proof {
+        (builder.build(authored), None)
+    } else {
+        let (plans, keys) = builder.build_diet(authored);
+        let emitted: BTreeSet<String> = keys.into_iter().collect();
+        (plans, Some(emitted))
+    }
+}
+
+/// Resolve every want into the compile's atom set, reporting resolve facts.
+fn build_atom_set(
+    wants: &[crate::atom::Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    mut sink: Option<&mut DiagnosticsSession>,
+) -> AtomSet {
+    if let Some(pooled) = build_atom_set_pooled(wants, system, diagnostics, &mut sink) {
+        return pooled;
+    }
+    let mut atom_set = AtomSet::new();
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+        location: DiagnosticLocation::default(),
+        sink,
+        want: None,
+    };
+    for want in wants {
+        for atom in resolve::resolve_want_with(want, &mut session) {
+            atom_set.insert(atom);
+        }
+    }
+    atom_set
+}
+
+/// Resolve every want on the tail pool, committing atoms in input order.
+/// Returns `None` when the lane guard declines so the caller runs serial.
+fn build_atom_set_pooled(
+    wants: &[crate::atom::Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    sink: &mut Option<&mut DiagnosticsSession>,
+) -> Option<AtomSet> {
+    let guard = Lanes::Auto.guard(WorkKind::TailWants, wants.len())?;
+    let mut atom_set = AtomSet::new();
+    for item in crate::resolve_pool::resolve_wants(wants, system, &guard) {
+        if let Some(slot) = sink.as_deref_mut() {
+            slot.extend_facts(item.facts);
+        }
+        diagnostics.extend(item.diagnostics);
+        for atom in item.atoms {
+            atom_set.insert(atom);
+        }
+    }
+    Some(atom_set)
+}
+
+/// Recipe definitions plus the observed selections gating their emission.
+struct RecipeInputs<'a> {
+    extracted: &'a [recipes::Recipe],
+    selections: &'a [crate::extract::recipes::selection::RecipeSelection],
+}
+
+impl<'a> RecipeInputs<'a> {
+    fn new(
+        extracted: &'a [recipes::Recipe],
+        selections: &'a [crate::extract::recipes::selection::RecipeSelection],
+    ) -> Self {
+        Self {
+            extracted,
+            selections,
+        }
+    }
+}
+
+/// Deduplicate spec and extracted recipes, then compile them to rules.
+/// Selections join by className; spec recipes stay open by construction.
+fn compile_recipes(
+    inputs: &RecipeInputs<'_>,
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    sink: Option<&mut DiagnosticsSession>,
+) -> Vec<recipes::CompiledRecipe> {
+    let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
+    let mut seen = FxHashSet::default();
+    let mut valid = Vec::new();
+    for recipe in spec_recipes.iter().chain(inputs.extracted.iter()) {
+        if !seen.insert(&recipe.class_name) {
+            diagnostics.push(recipe.location.error(
+                DiagnosticCode::DuplicateRecipe,
+                format!(
+                    "Duplicate recipe className '{}' within system '{}'",
+                    recipe.class_name, system.name
+                ),
+            ));
+        } else {
+            valid.push(recipe.clone());
+        }
+    }
+    let mut session = resolve::ResolveSession {
+        system,
+        diagnostics,
+        location: DiagnosticLocation::default(),
+        sink,
+        want: None,
+    };
+    let index =
+        crate::extract::recipes::selection::SelectionIndex::new(inputs.selections, &spec_recipes);
+    recipes::compile(&valid, &system.name, &mut session, &index)
+}
+
+/// Index the atom set's class names by their runtime lookup shape.
+fn build_css_runtime(atom_set: &AtomSet, system: &str) -> runtime::CssRuntime {
+    let mut runtime = runtime::CssRuntime::new();
+    for atom in atom_set {
+        let c_name = stylesheet::name::class_name_with_system(atom, system);
+        let val_key = atom.value.class_name_str();
+        let key = if atom.conditions.is_empty() {
+            format!("{}:{}", atom.prop, val_key)
+        } else {
+            let conds: Vec<&str> = atom.conditions.iter().map(When::authored).collect();
+            format!("{}:{}:{}", conds.join(":"), atom.prop, val_key)
+        };
+        runtime.insert(key, c_name);
+    }
+    runtime
+}

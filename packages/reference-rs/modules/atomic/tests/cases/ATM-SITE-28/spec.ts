@@ -1,0 +1,150 @@
+/**
+ * Mutation station (ATM-SITE-28, Overmatch Ph1). A `let`/`var` with any
+ * assignment drops to a diagnostic naming the write; unmutated `let`/`var`
+ * (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53) resolve like `const`.
+ */
+import { expect } from 'vitest'
+import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+
+const EXPECTED: Array<{ prop: string; value: string }> = [
+  { prop: 'color', value: 'blue.600' },
+  { prop: 'padding', value: '4px' },
+  { prop: 'color', value: 'green' },
+  { prop: 'color', value: 'amber.500' },
+]
+
+// SPEC-V2-34 object half (Overmatch Ph3): const objects record identifier
+// values and static spreads. Pure reads only — every source here is an
+// unmutated const.
+const OBJECTS: Array<{ prop: string; value: string }> = [
+  { prop: 'color', value: 'amber.600' },
+  { prop: 'color', value: 'teal' },
+  { prop: 'padding', value: '6px' },
+  { prop: 'margin', value: '8px' },
+  { prop: 'color', value: 'blue' },
+  { prop: 'margin', value: '2px' },
+  { prop: 'padding', value: '1px' },
+]
+
+// SPEC-V2-34 cross-file (R3b): the imported spread object resolves both
+// entries, whole-object and spread uses alike — each value wants twice.
+const CROSS: Array<{ prop: string; value: string }> = [
+  { prop: 'color', value: 'plum' },
+  { prop: 'padding', value: '9px' },
+]
+
+const MUTATED: Array<{ name: string; site: string }> = [
+  { name: 'color', site: 'mutated.ts:5:1' },
+  { name: 'count', site: 'mutated.ts:10:1' },
+  { name: 'bump', site: 'mutated.ts:15:1' },
+  { name: 'theme', site: 'mutated.ts:20:1' },
+  { name: 'picked', site: 'mutated.ts:25:6' },
+  { name: 'palette', site: 'mutated.ts:31:1' },
+  { name: 'shifted', site: 'tokens.ts:5:1' },
+]
+
+// SPEC-V2-81 (oracle follow-up on 35): `delete` poisons like an
+// assignment. The sibling margin survives; every deleted read drops.
+const DELETE_WANTS: Array<{ prop: string; value: string }> = [
+  { prop: 'margin', value: '3px' },
+]
+
+const DELETED: Array<{ name: string; site: string }> = [
+  { name: 'delMember', site: 'delete.ts:5:8' },
+  { name: 'delKey', site: 'delete.ts:10:8' },
+  { name: 'delSpread', site: 'delete.ts:15:8' },
+]
+
+const spec: AtomicCaseSpec = {
+  id: 'ATM-SITE-28',
+  async verify(result) {
+    for (const { prop, value } of EXPECTED) {
+      expect(hasWant(result, prop, value)).toBe(true)
+    }
+    for (const { prop, value } of OBJECTS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+    }
+    for (const { prop, value } of CROSS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+      expect(
+        (result.wants ?? []).filter(
+          w => w.prop === prop && (w.value as { String: string }).String === value
+        )
+      ).toHaveLength(2)
+    }
+    for (const { prop, value } of DELETE_WANTS) {
+      expect(hasWant(result, prop, value)).toBe(true)
+    }
+    expect(result.wants ?? []).toHaveLength(
+      5 + OBJECTS.length + CROSS.length * 2 + DELETE_WANTS.length
+    )
+
+    // Stale inits never emit: no `red` color, no numeric order.
+    expect(hasWant(result, 'color', 'red')).toBe(false)
+    expect(getWantsForProp(result, 'order')).toHaveLength(0)
+
+    // One runtime plan per unique leaf (the two `padding: 4px` wants share one).
+    const plans = result.stylePlans
+    expect(plans).toHaveLength(4 + OBJECTS.length + CROSS.length + DELETE_WANTS.length)
+    for (const { prop, value } of EXPECTED) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+    for (const { prop, value } of OBJECTS) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+    for (const { prop, value } of CROSS) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+    for (const { prop, value } of DELETE_WANTS) {
+      expect(plans.some(p => p.prop === prop && p.value === value)).toBe(true)
+    }
+
+    // Every mutated use warns once and names its write site — on the
+    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    expect(result.diagnostics ?? []).toHaveLength(0)
+    const opted = await compileCase('ATM-SITE-28', { logs: ['compiler'] })
+    expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
+    const diagnostics = (opted.compilerDiagnostics ?? []).filter(
+      d => d.code === 'ATM-W-MUTATED-BINDING'
+    )
+    expect(diagnostics).toHaveLength(MUTATED.length + DELETED.length)
+    for (const { name, site } of MUTATED) {
+      const match = diagnostics.find(d =>
+        d.message.includes(`Dynamic mutated binding '${name}'`),
+      )
+      expect(match, `missing mutated diagnostic for '${name}'`).toBeDefined()
+      expect(match!.severity).toBe('warning')
+      expect(match!.message).toContain('reassigned at')
+      expect(match!.message).toContain(site)
+    }
+
+    // Every deleted use warns once and names its delete site.
+    for (const { name, site } of DELETED) {
+      const match = diagnostics.find(d =>
+        d.message.includes(`Dynamic mutated binding '${name}'`),
+      )
+      expect(match, `missing deleted diagnostic for '${name}'`).toBeDefined()
+      expect(match!.severity).toBe('warning')
+      expect(match!.code).toBe('ATM-W-MUTATED-BINDING')
+      expect(match!.message).toContain('deleted at')
+      expect(match!.message).not.toContain('reassigned at')
+      expect(match!.message).toContain(site)
+    }
+
+    expect(result.stylesheet).toContain('color: var(--colors-blue-600);')
+    expect(result.stylesheet).toContain('color: green;')
+    expect(result.stylesheet).toContain('color: var(--colors-amber-500);')
+    expect(result.stylesheet).toContain('padding: 4px;')
+    expect(result.stylesheet).toContain('color: var(--colors-amber-600);')
+    expect(result.stylesheet).toContain('color: teal;')
+    expect(result.stylesheet).toContain('color: blue;')
+    expect(result.stylesheet).toContain('padding: 6px;')
+    expect(result.stylesheet).toContain('margin: 8px;')
+    expect(result.stylesheet).toContain('color: plum;')
+    expect(result.stylesheet).toContain('padding: 9px;')
+    expect(result.stylesheet).toContain('margin: 3px;')
+    expect(result.stylesheet).not.toContain('color: red')
+  },
+}
+
+export default spec

@@ -1,0 +1,148 @@
+{
+  "caseName": "ATL-WRAP-01-memo-forwardref",
+  "analyses": {
+    "default": [
+      {
+        "name": "DirectForwardRef",
+        "interface": {
+          "name": "DirectForwardRefProps",
+          "source": "./components/DirectForwardRef.tsx"
+        },
+        "source": "./components/DirectForwardRef.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "size",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "md": "very common",
+              "sm": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<DirectRefBox size=\"sm\">",
+          "<DirectRefBox size=\"md\">"
+        ],
+        "usedWith": {
+          "DirectMemo": "very common"
+        }
+      },
+      {
+        "name": "DirectMemo",
+        "interface": {
+          "name": "DirectMemoProps",
+          "source": "./components/DirectMemo.tsx"
+        },
+        "source": "./components/DirectMemo.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "tone",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "loud": "very common",
+              "quiet": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<DirectMemo tone=\"loud\">",
+          "<DirectMemo tone=\"quiet\">"
+        ],
+        "usedWith": {
+          "DirectForwardRef": "very common"
+        }
+      },
+      {
+        "name": "FancyButton",
+        "interface": {
+          "name": "FancyButtonProps",
+          "source": "./components/FancyButton.tsx"
+        },
+        "source": "./components/FancyButton.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "disabled",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "true": "very common"
+            }
+          },
+          {
+            "name": "variant",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "ghost": "very common",
+              "solid": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<CTAButton variant=\"solid\">",
+          "<CTAButton variant=\"ghost\" disabled>"
+        ],
+        "usedWith": {
+          "SearchInput": "very common"
+        }
+      },
+      {
+        "name": "SearchInput",
+        "interface": {
+          "name": "SearchInputProps",
+          "source": "./components/SearchInput.tsx"
+        },
+        "source": "./components/SearchInput.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "size",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "md": "very common",
+              "sm": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<SearchBox size=\"sm\">",
+          "<SearchBox size=\"md\">"
+        ],
+        "usedWith": {
+          "FancyButton": "very common"
+        }
+      }
+    ],
+    "withIncludes": {}
+  }
+}

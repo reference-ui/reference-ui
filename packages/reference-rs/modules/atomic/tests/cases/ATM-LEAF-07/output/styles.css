@@ -1,0 +1,18 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__c_black { color: black; }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__h_100px { height: 100px; }
+  .\@reference-ui\/lib__w_100px { width: 100px; }
+}
+}

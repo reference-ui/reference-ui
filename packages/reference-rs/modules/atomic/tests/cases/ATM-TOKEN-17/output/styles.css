@@ -1,0 +1,20 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer negated-brace {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .negated-brace__bd-c_\{colors\.blue\.600\} { border-color: var(--colors-blue-600); }
+  .negated-brace__border-style_solid { border-style: solid; }
+  .negated-brace__bd-w_-1px { border-width: -1px; }
+  .negated-brace__bg-c_-\{colors\.blue\.600\}\/50 { background-color: calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent)); }
+  .negated-brace__c_-\{colors\.blue\.600\/50\} { color: calc(-1 * color-mix(in srgb, var(--colors-blue-600) 50%, transparent)); }
+  .negated-brace__mt_-\{spacing\.4\} { margin-top: calc(-1 * var(--spacing-4)); }
+}
+}

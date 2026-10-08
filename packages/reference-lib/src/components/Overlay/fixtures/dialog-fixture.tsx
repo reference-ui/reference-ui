@@ -63,6 +63,12 @@ export function DialogFixture() {
   const [trg05Open, setTrg05Open] = React.useState(false)
   const [trg05DismissCount, setTrg05DismissCount] = React.useState(0)
 
+  // OV-TRG-05 reject (FEATURES #6, OPTIMISTIC-STANDS): the controlled
+  // parent logs close requests but stays open.
+  const [trg05RejectOpen, setTrg05RejectOpen] = React.useState(false)
+  const [trg05RejectDismissCount, setTrg05RejectDismissCount] = React.useState(0)
+  const [trg05RejectLog, setTrg05RejectLog] = React.useState<string[]>([])
+
   // Step 7: OV-DOM-04, OV-EDGE-02, OV-INERT-02
   const [customPortalOpen, setCustomPortalOpen] = React.useState(false)
   const customContainerRef = React.useRef<HTMLDivElement | null>(null)
@@ -1317,6 +1323,47 @@ export function DialogFixture() {
             After Trigger
           </button>
           <span data-testid="trg-05-dismiss-count">{trg05DismissCount}</span>
+        </div>
+
+        {/* OV-TRG-05 reject: Tab-bridge exit against a parent that stays open */}
+        <div style={{ marginTop: 24, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Overlay
+            open={trg05RejectOpen}
+            onOpenChange={next => {
+              setTrg05RejectLog(l => [...l, `request:${next}`])
+              if (next) setTrg05RejectOpen(true)
+            }}
+            isolation={false}
+            onDismiss={() => setTrg05RejectDismissCount(c => c + 1)}
+          >
+            <Overlay.Trigger data-testid="btn-open-trg-05-reject">
+              Trigger Reject Bridge
+            </Overlay.Trigger>
+            <Overlay.Content
+              data-testid="trg-05-reject-content"
+              style={{
+                position: 'fixed',
+                top: 380,
+                left: 100,
+                background: '#fff',
+                border: '1px solid #ccc',
+                padding: 16,
+                zIndex: 1001,
+              }}
+            >
+              <button type="button" data-testid="btn-trg-05-reject-inner-1">
+                Reject Inner 1
+              </button>
+              <button type="button" data-testid="btn-trg-05-reject-inner-2">
+                Reject Inner 2
+              </button>
+            </Overlay.Content>
+          </Overlay>
+          <button type="button" data-testid="btn-after-trg-05-reject">
+            After Reject Trigger
+          </button>
+          <span data-testid="trg-05-reject-dismiss-count">{trg05RejectDismissCount}</span>
+          <span data-testid="trg-05-reject-log">{trg05RejectLog.join(',')}</span>
         </div>
       </section>
 

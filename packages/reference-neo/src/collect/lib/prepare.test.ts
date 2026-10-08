@@ -1,0 +1,230 @@
+// Unit tests for the Neo fragment prepare flow over mocked scan and bundle.
+// They take fake file lists and assert upstream filtering, prepare output,
+// plus merge-time private scoping over source-tagged token fragments.
+// This file adapts the core base fragments tests minus config templating.
+
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { join } from 'node:path'
+import { CONFIG_FRAGMENT_SOURCE_PROPERTY } from '../constants.ts'
+import { UPSTREAM_FRAGMENT_SOURCE, scopeUpstreamTokenFragment } from './evaluate.ts'
+
+async function importFragmentsModule(options?: {
+  scannedFiles?: string[]
+  scannedSources?: Array<{ path: string; content: string }>
+  retentionToken?: number
+  bundledFragments?: Array<{ file: string; bundle: string }>
+}) {
+  vi.resetModules()
+
+  const matches = options?.scannedFiles ?? ['/workspace/app/src/theme.ts']
+  const scannedSources = options?.scannedSources ?? []
+  const retention =
+    options?.retentionToken === undefined
+      ? { count: scannedSources.length, files: scannedSources }
+      : { token: options.retentionToken, count: scannedSources.length }
+  const scanFragmentSourcesNative = vi.fn(async () => ({ matches, retention }))
+  const bundleFragments = vi.fn(async () =>
+    options?.bundledFragments ?? [{ file: '/workspace/app/src/theme.ts', bundle: 'localOne()' }]
+  )
+
+  vi.doMock('./scan/native.ts', () => ({ scanFragmentSourcesNative }))
+  vi.doMock('./runner.ts', () => ({ bundleFragments }))
+
+  const mod = await import('./evaluate.ts')
+  return {
+    ...mod,
+    scanFragmentSourcesNative,
+    bundleFragments,
+  }
+}
+
+afterEach(() => {
+  vi.resetModules()
+  vi.doUnmock('./scan/native.ts')
+  vi.doUnmock('./runner.ts')
+  vi.restoreAllMocks()
+})
+
+function tagSource(fragment: Record<string, unknown>, source: string): Record<string, unknown> {
+  Object.defineProperty(fragment, CONFIG_FRAGMENT_SOURCE_PROPERTY, {
+    configurable: true,
+    enumerable: false,
+    value: source,
+  })
+  return fragment
+}
+
+function upstreamTokens(): Record<string, unknown> {
+  return {
+    colors: {
+      up: { value: '#ffffff' },
+      _private: { upstreamSecret: { value: '#999999' } },
+    },
+    _private: { vault: { value: '#123456' } },
+  }
+}
+
+describe('scopeUpstreamTokenFragment', () => {
+  const names = ['upstream-one', 'upstream-two']
+
+  it.each([['upstream-one'], ['upstream-two']])(
+    'strips _private from fragments tagged with the upstream name %s',
+    source => {
+      expect(scopeUpstreamTokenFragment(tagSource(upstreamTokens(), source), names)).toEqual({
+        colors: { up: { value: '#ffffff' } },
+      })
+    }
+  )
+
+  it('strips fragments tagged with the unnamed-upstream fallback literal', () => {
+    expect(
+      scopeUpstreamTokenFragment(tagSource(upstreamTokens(), UPSTREAM_FRAGMENT_SOURCE), names)
+    ).toEqual({ colors: { up: { value: '#ffffff' } } })
+  })
+
+  it('passes local fragments through untouched by reference', () => {
+    const local = tagSource(
+      { colors: { own: { value: '#222222' }, _private: { ownSecret: { value: '#ff00ff' } } } },
+      'theme/tokens.ts'
+    )
+
+    expect(scopeUpstreamTokenFragment(local, names)).toBe(local)
+  })
+
+  it('passes untagged and non-object fragments through', () => {
+    const untagged = { colors: { up: { value: '#ffffff' } } }
+
+    expect(scopeUpstreamTokenFragment(untagged, names)).toBe(untagged)
+    expect(scopeUpstreamTokenFragment('tokens()', names)).toBe('tokens()')
+    expect(scopeUpstreamTokenFragment(undefined, names)).toBe(undefined)
+  })
+
+  it('keeps the non-enumerable source tag on the stripped copy', () => {
+    const stripped = scopeUpstreamTokenFragment(
+      tagSource(upstreamTokens(), 'upstream-one'),
+      names
+    ) as Record<string, unknown>
+
+    expect(stripped[CONFIG_FRAGMENT_SOURCE_PROPERTY]).toBe('upstream-one')
+    expect(Object.keys(stripped)).not.toContain(CONFIG_FRAGMENT_SOURCE_PROPERTY)
+  })
+})
+
+describe('fragments prepare flow', () => {
+  it('filters upstream fragments to non-empty strings only', async () => {
+    const { getUpstreamFragments } = await importFragmentsModule()
+
+    expect(
+      getUpstreamFragments([
+        { name: 'good-one', fragment: 'one()' },
+        { name: 'blank', fragment: '   ' },
+        { name: 'missing' } as never,
+        { name: 'good-two', fragment: 'two()' },
+      ])
+    ).toEqual(['one()', 'two()'])
+    expect(getUpstreamFragments(undefined)).toEqual([])
+  })
+
+  it('maps bootstrap fragment imports back to Neo source entries', async () => {
+    await importFragmentsModule()
+    const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
+
+    const authorEntry = join(import.meta.dirname, '..', '..', 'index.ts')
+    const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react-unbound.ts')
+    expect(getFragmentBootstrapImportMap()).toEqual({
+      '@reference-ui/neo': authorEntry,
+      '@reference-ui/neo/config': authorEntry,
+      '@reference-ui/system': authorEntry,
+      '@reference-ui/core/config': authorEntry,
+      '@reference-ui/cli/config': authorEntry,
+      '@reference-ui/react': reactEntry,
+    })
+  })
+
+})
+
+describe('fragments prepare output: native token', () => {
+  it('prepares fragments from the native scan retention token', async () => {
+    const {
+      prepareFragments,
+      scanFragmentSourcesNative,
+      bundleFragments,
+    } = await importFragmentsModule({
+      scannedFiles: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
+      retentionToken: 7,
+      bundledFragments: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
+    })
+    const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
+
+    const result = await prepareFragments('/workspace/app', {
+      name: 'app-system',
+      include: ['src/**/*.{ts,tsx}'],
+      extends: [
+        { name: 'upstream-one', fragment: 'upstreamOne()' },
+        { name: 'empty', fragment: '' },
+      ],
+    })
+
+    expect(scanFragmentSourcesNative).toHaveBeenCalledWith({
+      include: ['src/**/*.{ts,tsx}'],
+      importFrom: [
+        '@reference-ui/neo',
+        '@reference-ui/neo/config',
+        '@reference-ui/system',
+        '@reference-ui/core/config',
+        '@reference-ui/cli/config',
+      ],
+      cwd: '/workspace/app',
+    })
+    expect(bundleFragments).toHaveBeenCalledWith({
+      files: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
+      alias: getFragmentBootstrapImportMap(),
+    })
+    expect(result).toEqual({
+      upstreamFragments: ['upstreamOne()'],
+      localFragmentBundles: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
+      scannedSources: [],
+      retentionToken: 7,
+    })
+  })
+
+})
+
+describe('fragments prepare output: TS fallback', () => {
+  it('prepares fragments from TS-fallback bytes when retention has no token', async () => {
+    const scannedSources = [
+      { path: '/workspace/app/src/theme.ts', content: 'tokens()' },
+      { path: '/workspace/app/src/recipes.ts', content: 'recipe()' },
+    ]
+    const { prepareFragments } = await importFragmentsModule({
+      scannedFiles: ['/workspace/app/src/theme.ts', '/workspace/app/src/recipes.ts'],
+      scannedSources,
+      bundledFragments: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
+    })
+
+    const result = await prepareFragments('/workspace/app', {
+      name: 'app-system',
+      include: ['src/**/*.{ts,tsx}'],
+    })
+
+    expect(result).toEqual({
+      upstreamFragments: [],
+      localFragmentBundles: [
+        { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
+        { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },
+      ],
+      scannedSources,
+    })
+    expect(result.retentionToken).toBeUndefined()
+  })
+
+})

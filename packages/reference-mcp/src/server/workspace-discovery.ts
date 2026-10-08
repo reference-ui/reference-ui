@@ -1,7 +1,8 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import fg from 'fast-glob'
-import { resolveRefConfigFile, GlobalProjectRegistry } from '@reference-ui/core/paths'
+import { resolveRefConfigFile } from '../neo/paths'
+import { GlobalProjectRegistry } from './project-registry'
 
 export const SCAN_EXCLUDE_DIRS = new Set([
   'node_modules',

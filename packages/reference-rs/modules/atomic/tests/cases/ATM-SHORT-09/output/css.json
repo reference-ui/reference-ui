@@ -1,0 +1,12 @@
+{
+  "borderBottomLeftRadius:2r": "@reference-ui/lib__rounded-bl_2r",
+  "borderBottomRightRadius:2r": "@reference-ui/lib__rounded-br_2r",
+  "borderEndEndRadius:2r": "@reference-ui/lib__border-end-end-radius_2r",
+  "borderEndStartRadius:2r": "@reference-ui/lib__border-end-start-radius_2r",
+  "borderRadius:1r": "@reference-ui/lib__rounded_1r",
+  "borderStartEndRadius:2r": "@reference-ui/lib__border-start-end-radius_2r",
+  "borderStartStartRadius:2r": "@reference-ui/lib__border-start-start-radius_2r",
+  "borderTopLeftRadius:2r": "@reference-ui/lib__rounded-tl_2r",
+  "borderTopLeftRadius:3r": "@reference-ui/lib__rounded-tl_3r",
+  "borderTopRightRadius:2r": "@reference-ui/lib__rounded-tr_2r"
+}

@@ -1,5 +1,13 @@
 # CHAIN — topology sketches
 
+> **Cutover note (VOYAGE Obj 2):** the topology semantics below stand.
+> All 12 tiers are live matrix provers at `matrix/tests/chain/T*`
+> (HQ reversal: chain stays in one place to test
+> between-packages / between-environments composition; the Neo
+> `NEO-CHAIN-01..05` tier ports were deleted as duplicates — one
+> home is matrix). T4/T5 still have no tiers. The execution-order
+> list at the end records the original build-out order.
+
 `extends` and `layers` are different compiler modes.
 
 - `extends` pulls an upstream `fragment` into config generation. Tokens, keyframes, fonts, global CSS, JSX elements, and TypeScript surface flow into the consumer.
@@ -162,6 +170,26 @@ Compiler question: does the compiler compose multiple transitive upstreams plus 
 
 ---
 
+### T16: Extend a layering library + layer a prebuilt aliased-host library
+
+Compiler question: does a consumer inherit transitively-layered CSS through
+an extends chain, and does a prebuilt package whose components render style
+props on aliased hosts (`const Shell = Div as …`) ship complete CSS without
+any `jsxElements` crutch?
+
+```
+  @reference-ui/icons ──▶ layer ──▶ @reference-ui/lib ──▶ extend ──┐
+                                                                      ├──▶ User space
+  @fixtures/aliased-host-library ──▶ layer  ───────────────────────┘
+```
+
+Contract (the CSS composition prover): every class under the test root has
+a backing rule, zero `no compiled class` console warnings during render,
+and the shell computed styles apply on icons (lib re-export and direct
+import) and fixture badges alike.
+
+---
+
 ## Derived / reduced sketches
 
 These are useful naming shortcuts, but they are not separate heavy-fixture requirements once the core proof set is green.
@@ -278,6 +306,7 @@ We can reasonably say "we have a chainable design system compiler" once all of t
 7. T13
 8. T7
 9. T8
+10. T16
 
 **Stop rule**
 

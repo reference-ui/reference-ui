@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `blue.600`",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 39,
+    "span": {
+      "start": 105,
+      "end": 115
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
+  }
+]

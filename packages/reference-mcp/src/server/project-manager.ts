@@ -1,9 +1,7 @@
 import { existsSync, realpathSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
-import {
-  GlobalProjectRegistry,
-  resolveRefConfigFile,
-} from '@reference-ui/core/paths'
+import { resolveRefConfigFile } from '../neo/paths'
+import { GlobalProjectRegistry } from './project-registry'
 import {
   discoverProjects,
   type DiscoveredProject,

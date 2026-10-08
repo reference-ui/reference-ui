@@ -1,0 +1,36 @@
+/* Build-time syntax highlighting (rehype-pretty-code + shiki).
+   Shiki writes both themes as CSS variables on each token; we select the
+   active one here, following the docs root's data-color-mode. */
+
+[data-rehype-pretty-code-figure] {
+  margin: 0;
+}
+
+/* The system styles every <code> as an inline pill; fenced blocks opt out. */
+pre code {
+  display: grid;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+}
+
+pre[data-theme] code {
+  display: grid;
+}
+
+pre[data-theme] code [data-line] {
+  min-height: 1.5em;
+}
+
+pre[data-theme] span {
+  color: var(--shiki-light);
+}
+
+[data-color-mode='dark'] pre[data-theme] span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}

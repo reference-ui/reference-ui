@@ -1,0 +1,38 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__--brandX_2px { --brandX: 2px; }
+  .\@reference-ui\/lib__MyProp_2px { MyProp: 2px; }
+  .\@reference-ui\/lib__cq-n_sidebar { container-name: sidebar; }
+  .\@reference-ui\/lib__cq-n_true_ { container-name: true ; }
+  .\@reference-ui\/lib__cq-t_inline-size { container-type: inline-size; }
+  .\@reference-ui\/lib__font-family_mono { font-family: var(--fonts-mono); }
+  .\@reference-ui\/lib__font-family_sans { font-family: var(--fonts-sans); }
+  .\@reference-ui\/lib__font-family_serif { font-family: var(--fonts-serif); }
+  .\@reference-ui\/lib__font-family_test { font-family: var(--fonts-test); }
+  .\@reference-ui\/lib__font-weight_100 { font-weight: 100; }
+  .\@reference-ui\/lib__font-weight_200 { font-weight: 200; }
+  .\@reference-ui\/lib__font-weight_373 { font-weight: 373; }
+  .\@reference-ui\/lib__font-weight_393 { font-weight: 393; }
+  .\@reference-ui\/lib__font-weight_400 { font-weight: 400; }
+  .\@reference-ui\/lib__font-weight_500 { font-weight: 500; }
+  .\@reference-ui\/lib__font-weight_700 { font-weight: 700; }
+  .\@reference-ui\/lib__font-weight_normal { font-weight: normal; }
+  .\@reference-ui\/lib__h_20px { height: 20px; }
+  .\@reference-ui\/lib__tracking_-0\.01em { letter-spacing: -0.01em; }
+  .\@reference-ui\/lib__tracking_-0\.04em { letter-spacing: -0.04em; }
+  .\@reference-ui\/lib__tracking_normal { letter-spacing: normal; }
+  .\@reference-ui\/lib__mozFoo_2px { mozFoo: 2px; }
+  .\@reference-ui\/lib__myProp_2px { myProp: 2px; }
+  .\@reference-ui\/lib__w_20px { width: 20px; }
+}
+}

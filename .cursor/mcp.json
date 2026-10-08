@@ -11,6 +11,13 @@
         "mcp"
       ],
       "cwd": "${workspaceFolder}"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
     }
   }
 }

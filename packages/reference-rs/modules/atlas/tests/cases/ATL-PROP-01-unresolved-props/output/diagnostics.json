@@ -1,0 +1,19 @@
+{
+  "caseName": "ATL-PROP-01-unresolved-props",
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "ATL-W-UNRESOLVED-PROPS-TYPE",
+      "message": "Component `BrokenCard` references props type `MissingProps` which Atlas could not resolve.",
+      "file": "./components/BrokenCard.tsx",
+      "help": [
+        "import `MissingProps` for `BrokenCard` or define it in scope"
+      ]
+    }
+  ],
+  "notes": [
+    "Atlas currently emits usage and interface mapping only.",
+    "Rich prop/member metadata is expected to be resolved by Tasty in an upper layer.",
+    "Use analyzeDetailed() when callers need both partial results and diagnostics."
+  ]
+}

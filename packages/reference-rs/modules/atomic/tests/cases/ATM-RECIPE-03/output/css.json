@@ -1,0 +1,4 @@
+{
+  "bg:red.500": "@reference-ui/lib__bg_red.500",
+  "mt:2r": "@reference-ui/lib__mt_2r"
+}

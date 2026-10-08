@@ -1,0 +1,6 @@
+{
+  "bg:currentColor": "@reference-ui/lib__bg_currentColor",
+  "borderColor:black": "@reference-ui/lib__bd-c_black",
+  "color:transparent": "@reference-ui/lib__c_transparent",
+  "outlineColor:white": "@reference-ui/lib__outline-c_white"
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- GLOBAL-12 world. It links the synced stylesheet and stages mix twins plus hex references. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+  </head>
+  <body>
+    <button type="button" class="ref-button" id="base">base</button>
+    <button type="button" class="ref-button" id="hovered" data-hover>hot</button>
+    <button type="button" class="ref-button" id="pressed" data-active>press</button>
+    <div
+      id="hover-ref"
+      style="background-color: color-mix(in oklch, #f3f4f6 80%, #d1d5db); width: 20px; height: 20px"
+    >
+      h
+    </div>
+    <div
+      id="press-ref"
+      style="box-shadow: 0 0 0 4px color-mix(in oklch, #f3f4f6 15.2%, transparent); width: 20px; height: 20px"
+    >
+      p
+    </div>
+  </body>
+</html>

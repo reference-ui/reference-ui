@@ -1,0 +1,17 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__\[\&_\.one\,_\.two\]\:c_red\.500 .one, .\@reference-ui\/lib__\[\&_\.one\,_\.two\]\:c_red\.500 .two { color: var(--colors-red-500); }
+  .\@reference-ui\/lib__\[\&\:not\(\:first-child\)\,_\:only-child\]\:d_none:not(:first-child), .\@reference-ui\/lib__\[\&\:not\(\:first-child\)\,_\:only-child\]\:d_none :only-child { display: none; }
+  .\@reference-ui\/lib__\[\&\:not\(\:first-child\)\,_\:only-child\]\:\[\&_\.left-border\]\:d_none:not(:first-child) .left-border, .\@reference-ui\/lib__\[\&\:not\(\:first-child\)\,_\:only-child\]\:\[\&_\.left-border\]\:d_none :only-child .left-border { display: none; }
+}
+}

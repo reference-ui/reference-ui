@@ -1,0 +1,176 @@
+//! Member reads in value position: static paths, computed keys, and chains.
+//! Static member paths resolve through the recorded const objects, computed
+//! reads fold each resolving key with one diagnostic per refusal, and
+//! optional chains fold their computed links while member links unwrap over
+//! known bases. A mutated root names its write; anything else warns exactly
+//! like any other dynamic leaf, with siblings kept.
+
+use oxc_ast::ast::{ChainExpression, ComputedMemberExpression, StaticMemberExpression};
+use smallvec::SmallVec;
+
+use super::{branch::push_folded_want, leaf::mutated_warn, DynamicRefusal, ExpressionWalk};
+use crate::diagnostics::{DiagnosticCode, ExtractDetail, LeafDetail};
+
+pub(crate) fn handle_static_member(
+    ctx: &mut ExpressionWalk<'_>,
+    mem: &StaticMemberExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    let leaves = crate::extract::fold::member_path_leaves(mem, ctx.scopes);
+    if !leaves.is_empty() {
+        // color={theme.primary}  /  color={tokens.colors.red}  /  tokens!.color
+        for val in leaves {
+            // Recorded leaves split `!` exactly like inline literals (S5-2).
+            push_folded_want(ctx, &val, when, mem.span);
+        }
+        if crate::extract::fold::member_path_residue(mem, ctx.scopes) {
+            let path = crate::extract::fold::member_path_text(mem);
+            ctx.warn_help(
+                mem.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("property '{path}' drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of '{path}' static or drop it")],
+            );
+        }
+        return;
+    }
+    if let Some(root) = crate::extract::fold::member_root_name(mem) {
+        let path = crate::extract::fold::member_path_text(mem);
+        if mutated_warn(ctx, root, mem.span, &format!("'{path}' is stale")) {
+            // color={theme.primary}  after  theme.primary = 'blue'
+            return;
+        }
+    }
+    // width={props.w}
+    ctx.warn_dynamic(DynamicRefusal {
+        span: mem.span,
+        code: DiagnosticCode::DynamicMember,
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
+        when,
+    });
+}
+
+/// Fold one computed read: each resolving key pushes its leaves, each
+/// refusal warns once with the key or side named. Holes omit silently.
+pub(crate) fn handle_computed_member(
+    ctx: &mut ExpressionWalk<'_>,
+    mem: &ComputedMemberExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    use crate::extract::fold::{describe_base, describe_snippet, fold_element_access};
+    let fold = fold_element_access(&mem.object, &mem.expression, ctx.scopes);
+    for val in &fold.values {
+        // Recorded leaves split `!` exactly like inline literals (S5-2).
+        push_folded_want(ctx, val, when, mem.span);
+    }
+    if fold.residue {
+        let prop = ctx.prop;
+        let base = describe_base(&mem.object);
+        let index = describe_snippet(&mem.expression, ctx.source);
+        ctx.warn_help(
+            mem.span,
+            DiagnosticCode::PartialObjectProp,
+            format!(
+                "Element access '{base}[{index}]' drops a dynamic arm with no static style value for prop '{prop}'"
+            ),
+            vec![format!(
+                "make the dynamic arm of '{base}[{index}]' static or drop it"
+            )],
+        );
+    }
+    if fold.refusals.is_empty() {
+        return;
+    }
+    let base = describe_base(&mem.object);
+    let index = describe_snippet(&mem.expression, ctx.source);
+    for refusal in &fold.refusals {
+        ctx.warn_dynamic(DynamicRefusal {
+            span: refusal.span(mem.span),
+            code: refusal.code(),
+            detail: ExtractDetail::Element {
+                refusal: refusal.clone(),
+                base: base.clone().into(),
+                index: index.clone().into(),
+            },
+            when,
+        });
+    }
+}
+
+/// Fold an optional chain: computed links fold at SITE-48, static member
+/// links unwrap over known bases (SITE-34), and every other chain shape
+/// warns exactly like any other dynamic leaf.
+pub(crate) fn handle_chain(
+    ctx: &mut ExpressionWalk<'_>,
+    chain: &ChainExpression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) {
+    if let oxc_ast::ast::ChainElement::ComputedMemberExpression(mem) = &chain.expression {
+        // sizes?.[k]  — optionality never changes the static fold
+        handle_computed_member(ctx, mem, when);
+        return;
+    }
+    // tokens?.color  /  t?.colors?.red  — transparent over known bases
+    let values = crate::extract::fold::fold_chain(chain, ctx.scopes);
+    if !values.is_empty() {
+        for val in &values {
+            // Recorded leaves split `!` exactly like inline literals (S5-2).
+            push_folded_want(ctx, val, when, chain.span);
+        }
+        if let Some(path) = crate::extract::fold::chain_residue_path(chain, ctx.scopes) {
+            ctx.warn_help(
+                chain.span,
+                DiagnosticCode::PartialObjectProp,
+                format!("property '{path}' drops a dynamic arm with no static style value"),
+                vec![format!("make the dynamic arm of '{path}' static or drop it")],
+            );
+        }
+        return;
+    }
+    // maybe?.foo  /  getColor?.()  — dynamic, warn, keep siblings
+    ctx.warn_dynamic(DynamicRefusal {
+        span: chain.span,
+        code: DiagnosticCode::DynamicExpression,
+        detail: ExtractDetail::Leaf(LeafDetail::Generic),
+        when,
+    });
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{compile, CompileRequest, VirtualSource};
+
+    fn compile_logs(code: &str) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            base_system: crate::BaseSystem::lib_fixture().clone(),
+            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    /// A member read beside a dropped arm names the path in its fix.
+    #[test]
+    fn member_residue_help_names_the_path() {
+        let res = compile_logs(
+            "import { css } from '@reference-ui/react';\
+             declare const flag: boolean;\
+             declare const run: () => string;\
+             const theme = { primary: flag ? 'red' : run() };\
+             export const cls = css({ color: theme.primary });",
+        );
+        let hits: Vec<_> = res
+            .compiler_diagnostics
+            .as_deref()
+            .expect("compiler channel requested")
+            .iter()
+            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::PartialObjectProp)
+            .collect();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].help,
+            Some(vec!["make the dynamic arm of 'theme.primary' static or drop it".to_string()])
+        );
+    }
+}

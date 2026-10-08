@@ -1,0 +1,16 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__c_blue\.600 { color: var(--colors-blue-600); }
+  .\@reference-ui\/lib__mt_1r { margin-top: var(--spacing-root); }
+}
+}

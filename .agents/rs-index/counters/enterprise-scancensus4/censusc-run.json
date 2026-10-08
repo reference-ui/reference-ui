@@ -1,0 +1,40 @@
+{
+  "tag": "censusc",
+  "code": 0,
+  "sample": {
+    "syncMs": 952.1508509999999,
+    "rssBefore": 101507072,
+    "rssPeak": 313896960,
+    "rssAfter": 303706112,
+    "rssPeakHw": 338378752,
+    "scorer": "bench-worker/2"
+  },
+  "repoDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-scan-census-QgzYnL",
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-scan-census-QgzYnL",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "repoStats": {
+    "style": {
+      "files": 3000,
+      "bytes": 1770077
+    },
+    "dead": {
+      "files": 12000,
+      "bytes": 1669350
+    },
+    "recipe": {
+      "files": 120,
+      "bytes": 905428
+    },
+    "other": {
+      "files": 3,
+      "bytes": 14113
+    },
+    "dirs": 34
+  },
+  "stderrTail": ""
+}

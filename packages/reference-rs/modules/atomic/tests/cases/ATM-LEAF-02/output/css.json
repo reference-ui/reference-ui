@@ -1,0 +1,9 @@
+{
+  "borderBottomColor:transparent": "@reference-ui/lib__bd-b-c_transparent",
+  "borderBottomStyle:solid": "@reference-ui/lib__bd-b-s_solid",
+  "borderBottomWidth:3px": "@reference-ui/lib__bd-b-w_3px",
+  "fontSize:12px": "@reference-ui/lib__fs_12px",
+  "fontSize:14px": "@reference-ui/lib__fs_14px",
+  "fontSize:16px": "@reference-ui/lib__fs_16px",
+  "fontSize:18px": "@reference-ui/lib__fs_18px"
+}

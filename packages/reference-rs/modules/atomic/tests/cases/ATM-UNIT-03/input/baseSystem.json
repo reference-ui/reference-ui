@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "unit-global-numerics",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "rs-26",
+      "rules": {
+        "body > p, body > ul": {
+          "margin": 0,
+          "& ~ &": { "marginTop": 10 }
+        },
+        ".dims": {
+          "width": 42,
+          "zIndex": 5,
+          "lineHeight": 2,
+          "opacity": 1,
+          "--foo": 42
+        },
+        ".strs": {
+          "marginTop": "10",
+          "width": "42",
+          "zIndex": "5",
+          "opacity": "1",
+          "--bar": "42"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

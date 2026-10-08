@@ -1,0 +1,14 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "Unknown condition in global CSS: \"_bogus\"",
+    "file": "input/baseSystem.json",
+    "line": 1,
+    "column": 1,
+    "help": [
+      "did you mean `_focus`?",
+      "use a condition from the theme"
+    ]
+  }
+]

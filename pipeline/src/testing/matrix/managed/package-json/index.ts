@@ -48,7 +48,7 @@ interface ManagedMatrixPackageJsonOptions {
 }
 
 const managedDependencies = {
-  '@reference-ui/core': 'workspace:*',
+  '@reference-ui/neo': 'workspace:*',
   '@reference-ui/lib': 'workspace:*',
 } as const
 

@@ -44,7 +44,7 @@ function withFileMutex(action) {
   }
 }
 
-function readLocks() {
+export function readLocks() {
   if (!fs.existsSync(LOCK_FILE)) return []
   try {
     const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
@@ -87,9 +87,11 @@ export async function acquireCpuGate(holderClass, taskName = '') {
       
       if (holderClass === 'exclusive') {
         const hasCt = locks.some(l => l.class === 'ct')
+        const hasRs = locks.some(l => l.class === 'rs')
+        const hasRsBuild = locks.some(l => l.class === 'rs:build')
         const hasExclusive = locks.some(l => l.class === 'exclusive' && l.pid !== myPid)
         
-        if (!hasCt && !hasExclusive) {
+        if (!hasCt && !hasRs && !hasRsBuild && !hasExclusive) {
           if (!locks.find(l => l.pid === myPid)) {
             locks.push({ pid: myPid, class: 'exclusive', name: taskName })
             writeLocks(locks)
@@ -101,6 +103,27 @@ export async function acquireCpuGate(holderClass, taskName = '') {
         if (!hasExclusive) {
           if (!locks.find(l => l.pid === myPid)) {
             locks.push({ pid: myPid, class: 'ct', name: taskName })
+            writeLocks(locks)
+          }
+          acquired = true
+        }
+      } else if (holderClass === 'rs:build') {
+        const hasExclusive = locks.some(l => l.class === 'exclusive')
+        const hasRsBuild = locks.some(l => l.class === 'rs:build' && l.pid !== myPid)
+        if (!hasExclusive && !hasRsBuild) {
+          if (!locks.find(l => l.pid === myPid)) {
+            locks.push({ pid: myPid, class: 'rs:build', name: taskName })
+            writeLocks(locks)
+          }
+          acquired = true
+        }
+      } else if (holderClass === 'rs') {
+        const hasExclusive = locks.some(l => l.class === 'exclusive')
+        const hasRsBuild = locks.some(l => l.class === 'rs:build')
+        const activeRs = locks.filter(l => l.class === 'rs' && l.pid !== myPid)
+        if (!hasExclusive && !hasRsBuild && activeRs.length < 2) {
+          if (!locks.find(l => l.pid === myPid)) {
+            locks.push({ pid: myPid, class: 'rs', name: taskName })
             writeLocks(locks)
           }
           acquired = true
@@ -152,13 +175,14 @@ export async function acquireCpuGate(holderClass, taskName = '') {
 export async function withCpuGate(holderClass, taskName, fn) {
   const release = await acquireCpuGate(holderClass, taskName)
   const prevEnv = process.env.REFERENCE_UI_CPU_GATE_HELD
-  if (holderClass === 'exclusive') {
-    process.env.REFERENCE_UI_CPU_GATE_HELD = `exclusive:${process.pid}`
+  const isExclusiveType = holderClass === 'exclusive' || holderClass === 'rs:build'
+  if (isExclusiveType) {
+    process.env.REFERENCE_UI_CPU_GATE_HELD = `${holderClass}:${process.pid}`
   }
   try {
     return await fn()
   } finally {
-    if (holderClass === 'exclusive') {
+    if (isExclusiveType) {
       if (prevEnv) process.env.REFERENCE_UI_CPU_GATE_HELD = prevEnv
       else delete process.env.REFERENCE_UI_CPU_GATE_HELD
     }

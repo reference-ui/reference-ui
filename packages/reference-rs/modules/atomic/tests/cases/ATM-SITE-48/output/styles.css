@@ -1,0 +1,39 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__m_0 { margin: 0; }
+  .\@reference-ui\/lib__m_12px { margin: 12px; }
+  .\@reference-ui\/lib__m_16px { margin: 16px; }
+  .\@reference-ui\/lib__m_20px { margin: 20px; }
+  .\@reference-ui\/lib__m_24px { margin: 24px; }
+  .\@reference-ui\/lib__m_28px { margin: 28px; }
+  .\@reference-ui\/lib__m_2px { margin: 2px; }
+  .\@reference-ui\/lib__m_32px { margin: 32px; }
+  .\@reference-ui\/lib__m_36px { margin: 36px; }
+  .\@reference-ui\/lib__m_4px { margin: 4px; }
+  .\@reference-ui\/lib__m_8px { margin: 8px; }
+  .\@reference-ui\/lib__m_r { margin: var(--spacing-root); }
+  .\@reference-ui\/lib__p_12px { padding: 12px; }
+  .\@reference-ui\/lib__p_16px { padding: 16px; }
+  .\@reference-ui\/lib__p_20px { padding: 20px; }
+  .\@reference-ui\/lib__p_24px { padding: 24px; }
+  .\@reference-ui\/lib__p_28px { padding: 28px; }
+  .\@reference-ui\/lib__p_2px { padding: 2px; }
+  .\@reference-ui\/lib__p_32px { padding: 32px; }
+  .\@reference-ui\/lib__p_36px { padding: 36px; }
+  .\@reference-ui\/lib__p_4px { padding: 4px; }
+  .\@reference-ui\/lib__p_8px { padding: 8px; }
+  .\@reference-ui\/lib__c_blue { color: blue; }
+  .\@reference-ui\/lib__c_red { color: red; }
+  .\@reference-ui\/lib__hover\:c_blue:is(:hover, [data-hover]) { color: blue; }
+}
+}

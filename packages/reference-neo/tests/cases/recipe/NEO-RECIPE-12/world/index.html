@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="shell-narrow" style="container-type: inline-size; width: 280px">
+      <div id="target-narrow">Responsive container recipe branch</div>
+    </div>
+    <div id="shell-wide" style="container-type: inline-size; width: 400px">
+      <div id="target-wide">Responsive container recipe branch</div>
+    </div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

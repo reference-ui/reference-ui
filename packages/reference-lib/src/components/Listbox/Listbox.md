@@ -19,32 +19,52 @@ scroll callback; Reference UI still does not render or measure the window.
 ## Proposed API
 
 ```ts
-type ListboxValue = string | string[]
+type ListboxValue<TValue extends string = string> = TValue | TValue[]
 
-interface VirtualFocusItem {
-  value: string
+interface VirtualFocusItem<TValue extends string = string> {
+  value: TValue
   textValue: string
   disabled?: boolean
 }
 
-interface VirtualFocusAdapter {
-  items: readonly VirtualFocusItem[]
+interface VirtualFocusAdapter<TValue extends string = string> {
+  items: readonly VirtualFocusItem<TValue>[]
   scrollToIndex(index: number): void
 }
 
-type ListboxVirtualAdapter = VirtualFocusAdapter
+type ListboxVirtualAdapter<TValue extends string = string> =
+  VirtualFocusAdapter<TValue>
 
-interface ListboxProps
-  extends Omit<ReferencePartProps<"div">, "onChange"> {
-  selection?: "single" | "multiple"
-  value?: ListboxValue | null
-  onChange?: (value: ListboxValue | null) => void
+type ListboxBaseProps = Omit<
+  ReferencePartProps<"div">,
+  "onChange" | "value" | "defaultValue"
+> & {
   orientation?: "vertical" | "horizontal"
-  virtual?: ListboxVirtualAdapter
+  disabled?: boolean
 }
 
-interface ListboxOptionProps extends ReferencePartProps<"div"> {
-  value: string
+// Discriminated overloads keyed on `selection`; TValue infers per use site.
+type ListboxSingleProps<TValue extends string = string> = ListboxBaseProps & {
+  selection?: "single"
+  value?: TValue | null
+  onChange?: (value: TValue | null) => void
+  virtual?: ListboxVirtualAdapter<TValue>
+}
+
+type ListboxMultipleProps<TValue extends string = string> = ListboxBaseProps & {
+  selection: "multiple"
+  value?: TValue[]
+  onChange?: (value: TValue[]) => void
+  virtual?: ListboxVirtualAdapter<TValue>
+}
+
+type ListboxProps<TValue extends string = string> =
+  | ListboxSingleProps<TValue>
+  | ListboxMultipleProps<TValue>
+
+interface ListboxOptionProps<TValue extends string = string>
+  extends ReferencePartProps<"div"> {
+  value: TValue
   disabled?: boolean
   textValue?: string
   index?: number

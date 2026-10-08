@@ -1,0 +1,18 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__\[\&_\.one\,_\&_\.two\]\:c_blue .one, .\@reference-ui\/lib__\[\&_\.one\,_\&_\.two\]\:c_blue .two { color: blue; }
+  .\@reference-ui\/lib__\[\&_\>_p\]\:\[\&\:hover\]\:c_red > p:hover { color: red; }
+  .\@reference-ui\/lib__\[\&_\+_\&\]\:mt_2r + .\@reference-ui\/lib__\[\&_\+_\&\]\:mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__\[\&_\~_\&\]\:mt_4r ~ .\@reference-ui\/lib__\[\&_\~_\&\]\:mt_4r { margin-top: calc(4 * var(--spacing-root)); }
+}
+}

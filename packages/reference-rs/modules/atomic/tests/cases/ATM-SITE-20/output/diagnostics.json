@@ -1,0 +1,59 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"fooBar\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 24,
+    "span": {
+      "start": 66,
+      "end": 72
+    },
+    "help": [
+      "did you mean `float`?",
+      "remove 'fooBar' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"divideX\"",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 37,
+    "span": {
+      "start": 79,
+      "end": 86
+    },
+    "help": [
+      "remove 'divideX' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property \"frobnicate\"",
+    "file": "input/src/App.tsx",
+    "line": 7,
+    "column": 27,
+    "span": {
+      "start": 191,
+      "end": 197
+    },
+    "help": [
+      "remove 'frobnicate' or check its spelling"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-PROPERTY",
+    "message": "Unknown style property in global CSS: \"divideX\"",
+    "file": "n12",
+    "line": 1,
+    "column": 1,
+    "help": [
+      "remove 'divideX' or check its spelling"
+    ]
+  }
+]

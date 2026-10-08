@@ -1,0 +1,411 @@
+//! Source and site identity for compiler diagnostics, plus owned locations.
+//!
+//! A [`SourceSite`] names one author position (source id, span, surface,
+//! property, conditions) without borrowing AST or phase state, so facts can
+//! outlive the pass that reported them. [`DiagnosticLocation`] is the owned
+//! file/line/column form rendered on the wire; [`line_col`] resolves byte
+//! offsets to 1-based UTF-16 positions matching editor carets.
+
+use oxc_span::Span;
+use serde::{Deserialize, Serialize};
+
+use super::{Diagnostic, DiagnosticCode};
+use diagnostics::ByteSpan;
+
+/// Opaque identity for one compile input within a [`DiagnosticsSession`](super::DiagnosticsSession).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct SourceId(pub u32);
+
+/// The authored surface a diagnostic site belongs to. Policy needs the site,
+/// not just the code: one legacy code can be userspace on one surface and
+/// compiler-only on another (ledger "one code, two verdicts").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum StyleSurfaceKind {
+    /// Imported `css()` style objects.
+    Css,
+    /// Traced JSX style props and JSX `css` objects.
+    JsxStyle,
+    /// `BaseSystem.static_css` entries.
+    StaticCss,
+    /// `BaseSystem.global_css` fragments.
+    GlobalCss,
+    /// `recipe()` tables (spec or extracted).
+    Recipe,
+    /// StyleTrace host discovery.
+    Host,
+}
+
+/// One author location that can carry facts. Owns its data (`SourceId` plus a
+/// copyable span); it never retains an Oxc node or borrows a phase context.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceSite {
+    pub source: SourceId,
+    pub span: Span,
+    pub surface: StyleSurfaceKind,
+    pub prop: Box<str>,
+    pub when: Vec<Box<str>>,
+}
+
+/// Index from analysis [`SourceId`] back to path and text, so the
+/// compiler channel can locate analysis facts that proof left unplaced.
+/// Positions resolve against the compile's collected sources in `SourceId`
+/// order; the catalog borrows them and outlives nothing.
+pub struct SourceCatalog<'a> {
+    sources: Vec<(&'a str, &'a str)>,
+}
+
+impl<'a> SourceCatalog<'a> {
+    /// One `(path, content)` pair per [`SourceId`] index, in compile order.
+    pub fn new(sources: Vec<(&'a str, &'a str)>) -> Self {
+        Self { sources }
+    }
+
+    /// The file position of one analysis span: file plus 1-based line/column
+    /// of the span start plus the byte offsets themselves. Unknown ids and
+    /// unresolvable offsets fall back to an honest unlocated position; the
+    /// line is never skipped.
+    pub fn locate(&self, source: SourceId, span: Span) -> DiagnosticLocation {
+        let Some((path, content)) = self.sources.get(source.0 as usize) else {
+            return DiagnosticLocation::default();
+        };
+        let Some((line, column)) = line_col(content, span.start) else {
+            return DiagnosticLocation::default();
+        };
+        DiagnosticLocation {
+            file: Some((*path).to_string()),
+            line: Some(line),
+            column: Some(column),
+            span: Some(byte_span(span)),
+        }
+    }
+}
+
+/// File/line/column plus byte offsets carried from extract to resolve for located diagnostics.
+/// Extract populates it from literal spans; resolve attaches it to warnings
+/// and errors. Empty when the want was synthesized rather than authored in
+/// source (harvest, static CSS, plan rebuilds), in which case the diagnostic
+/// stays unlocated exactly as before.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct DiagnosticLocation {
+    pub file: Option<String>,
+    pub line: Option<u32>,
+    pub column: Option<u32>,
+    pub span: Option<ByteSpan>,
+}
+
+impl DiagnosticLocation {
+    /// Build an error diagnostic carrying this location, when known.
+    pub fn error(&self, code: DiagnosticCode, message: impl Into<String>) -> Diagnostic {
+        self.with_severity(Diagnostic::error(code, message))
+    }
+
+    /// Build a warning diagnostic carrying this location, when known.
+    pub fn warning(&self, code: DiagnosticCode, message: impl Into<String>) -> Diagnostic {
+        self.with_severity(Diagnostic::warning(code, message))
+    }
+
+    /// Build an info diagnostic carrying this location, when known.
+    pub fn info(&self, code: DiagnosticCode, message: impl Into<String>) -> Diagnostic {
+        self.with_severity(Diagnostic::info(code, message))
+    }
+
+    fn with_severity(&self, mut diagnostic: Diagnostic) -> Diagnostic {
+        if let Some(file) = &self.file {
+            diagnostic.file = Some(file.clone());
+            diagnostic.line = self.line;
+            diagnostic.column = self.column;
+            diagnostic.span = self.span;
+        }
+        diagnostic
+    }
+}
+
+/// The template span for one Oxc span: byte offsets copied verbatim, no line math.
+/// Oxc spans are ordered by construction, so the literal is infallible; reversed
+/// ranges from anywhere else still refuse at the template's wire boundary.
+pub fn byte_span(span: Span) -> ByteSpan {
+    ByteSpan {
+        start: span.start,
+        end: span.end,
+    }
+}
+
+/// 1-based (line, column) for a byte offset, or None past the end.
+/// Columns count UTF-16 code units so positions match editor carets.
+pub fn line_col(source: &str, offset: u32) -> Option<(u32, u32)> {
+    let prefix = source.get(..offset as usize)?;
+    let line = prefix.bytes().filter(|byte| *byte == b'\n').count() as u32 + 1;
+    let tail = prefix.rsplit('\n').next().unwrap_or(prefix);
+    let column = tail.chars().map(|ch| ch.len_utf16() as u32).sum::<u32>() + 1;
+    Some((line, column))
+}
+
+/// Line-start table for one file: the byte offset where each line begins.
+/// One O(file) build replaces one O(offset) scan per lookup, so per-want
+/// positions drop to a binary search plus the UTF-16 tail walk. Results
+/// are identical to [`line_col`]; the fuzz below pins offset-for-offset
+/// equivalence, including past-end and mid-character offsets.
+#[derive(Debug, Clone)]
+pub struct LineIndex {
+    starts: Vec<u32>,
+}
+
+impl LineIndex {
+    /// Record the byte after every newline in a single pass.
+    pub fn for_source(source: &str) -> Self {
+        let mut starts = vec![0u32];
+        for (index, byte) in source.bytes().enumerate() {
+            if byte == b'\n' {
+                starts.push(index as u32 + 1);
+            }
+        }
+        Self { starts }
+    }
+
+    /// 1-based (line, column) for a byte offset, or None past the end.
+    /// The binary search finds the line; the tail walk counts UTF-16
+    /// units exactly as [`line_col`]; non-boundary offsets reject.
+    /// ASCII tails skip the walk: every byte is one UTF-16 unit, so the
+    /// column is the tail length. The word scan is exact; anything with a
+    /// high bit falls through to the walk unchanged.
+    pub fn line_col(&self, source: &str, offset: u32) -> Option<(u32, u32)> {
+        let end = offset as usize;
+        if end > source.len() || !source.is_char_boundary(end) {
+            return None;
+        }
+        let line = self.starts.partition_point(|start| *start <= offset);
+        let start = self.starts[line - 1] as usize;
+        if tail_is_ascii(&source.as_bytes()[start..end]) {
+            return Some((line as u32, (end - start) as u32 + 1));
+        }
+        let tail = source.get(start..end)?;
+        let column = tail.chars().map(|ch| ch.len_utf16() as u32).sum::<u32>() + 1;
+        Some((line as u32, column))
+    }
+}
+
+/// True when no byte has the high bit: one AND per 8-byte word plus the
+/// scalar remainder. Early-exits on the first non-ASCII word; the copy
+/// keeps the word load alignment-safe and optimizes to one unaligned read.
+fn tail_is_ascii(tail: &[u8]) -> bool {
+    const HIGH_BITS: u64 = 0x8080_8080_8080_8080;
+    let mut chunks = tail.chunks_exact(8);
+    for chunk in &mut chunks {
+        let mut word = [0u8; 8];
+        word.copy_from_slice(chunk);
+        if u64::from_ne_bytes(word) & HIGH_BITS != 0 {
+            return false;
+        }
+    }
+    chunks.remainder().iter().all(|byte| *byte < 0x80)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diagnostics::DiagnosticSeverity;
+
+    #[test]
+    fn line_col_counts_from_one() {
+        assert_eq!(line_col("ab\ncd", 0), Some((1, 1)));
+        assert_eq!(line_col("ab\ncd", 3), Some((2, 1)));
+        assert_eq!(line_col("ab\ncd", 4), Some((2, 2)));
+    }
+
+    #[test]
+    fn line_col_counts_columns_in_utf16_units() {
+        assert_eq!(line_col("a😀b", 5), Some((1, 4)));
+    }
+
+    #[test]
+    fn line_col_rejects_offsets_past_the_end() {
+        assert_eq!(line_col("ab", 3), None);
+    }
+
+    fn assert_index_matches_scan(source: &str) {
+        let index = LineIndex::for_source(source);
+        for offset in 0..=source.len() as u32 + 1 {
+            assert_eq!(
+                index.line_col(source, offset),
+                line_col(source, offset),
+                "offset {offset} of {source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn line_index_matches_scan_on_edge_shapes() {
+        for source in [
+            "",
+            "ab",
+            "ab\ncd",
+            "\n",
+            "\n\n\n",
+            "trailing\n",
+            "\r\nmixed\nendings\r\n",
+            "a😀b\n😀😀\nend",
+            "line one\nline two is longer\nx",
+        ] {
+            assert_index_matches_scan(source);
+        }
+    }
+
+    #[test]
+    fn tail_is_ascii_checks_every_word_position() {
+        for len in 0..40 {
+            assert!(tail_is_ascii(&vec![b'a'; len]), "len {len}");
+        }
+        for pos in 0..24 {
+            let mut bytes = vec![b'a'; 24];
+            bytes[pos] = 0x80;
+            assert!(!tail_is_ascii(&bytes), "high bit at {pos}");
+            bytes[pos] = 0x7f;
+            assert!(tail_is_ascii(&bytes), "DEL at {pos}");
+        }
+        assert!(!tail_is_ascii("a\u{e9}b".as_bytes()));
+        assert!(tail_is_ascii(b""));
+    }
+
+    #[test]
+    fn line_index_ascii_tail_matches_scan() {
+        // ASCII edges through the arithmetic path, offset-for-offset vs the
+        // scan; the mixed tail falls through to the walk on the same queries.
+        for source in [
+            "",
+            "ab",
+            "ab\ncd",
+            "\n",
+            "\n\n\n",
+            "trailing\n",
+            "a\r\nb\r\n",
+            "prefix \u{1f600} tail\nsecond line here",
+        ] {
+            let index = LineIndex::for_source(source);
+            for offset in 0..=source.len() as u32 + 1 {
+                assert_eq!(
+                    index.line_col(source, offset),
+                    line_col(source, offset),
+                    "offset {offset} of {source:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn line_index_matches_scan_on_generated_text() {
+        let alphabet = ["a", "bb", "\n", "😀", "\r\n", "z", "\n\n", "é"];
+        let mut seed = 0x1234_5678u64;
+        let mut text = String::new();
+        for _ in 0..400 {
+            seed = seed
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            text.push_str(alphabet[(seed >> 33) as usize % alphabet.len()]);
+        }
+        assert_index_matches_scan(&text);
+    }
+
+    #[test]
+    fn located_error_carries_file_and_position() {
+        let loc = DiagnosticLocation {
+            file: Some("a.tsx".to_string()),
+            line: Some(4),
+            column: Some(12),
+            span: None,
+        };
+        let diagnostic = loc.error(
+            DiagnosticCode::UnknownTokenReference,
+            "unknown token reference `{colors.nope}`",
+        );
+        assert_eq!(diagnostic.severity, DiagnosticSeverity::Error);
+        assert_eq!(diagnostic.code, DiagnosticCode::UnknownTokenReference);
+        assert_eq!(diagnostic.file.as_deref(), Some("a.tsx"));
+        assert_eq!(diagnostic.line, Some(4));
+        assert_eq!(diagnostic.column, Some(12));
+    }
+
+    #[test]
+    fn located_warning_carries_file_and_position() {
+        let loc = DiagnosticLocation {
+            file: Some("located.ts".to_string()),
+            line: Some(5),
+            column: Some(15),
+            span: Some(ByteSpan::new(60, 63).unwrap()),
+        };
+        let diagnostic = loc.warning(DiagnosticCode::UnknownTokenPath, "unknown token path `x.y`");
+        assert_eq!(diagnostic.severity, DiagnosticSeverity::Warning);
+        assert_eq!(diagnostic.file.as_deref(), Some("located.ts"));
+        assert_eq!(diagnostic.line, Some(5));
+        assert_eq!(diagnostic.column, Some(15));
+        assert_eq!(diagnostic.span, Some(ByteSpan::new(60, 63).unwrap()));
+    }
+
+    #[test]
+    fn empty_location_warns_without_position() {
+        let diagnostic = DiagnosticLocation::default().warning(
+            DiagnosticCode::UnknownCondition,
+            "unknown condition `_nope`",
+        );
+        assert_eq!(diagnostic.file, None);
+        assert_eq!(diagnostic.line, None);
+        assert_eq!(diagnostic.column, None);
+    }
+
+    #[test]
+    fn empty_location_errors_without_position() {
+        let diagnostic = DiagnosticLocation::default().error(DiagnosticCode::ParseError, "boom");
+        assert_eq!(diagnostic.file, None);
+        assert_eq!(diagnostic.line, None);
+    }
+
+    #[test]
+    fn catalog_locates_span_starts_by_source_index() {
+        let catalog = SourceCatalog::new(vec![("a.ts", "ab\ncd"), ("b.ts", "xy")]);
+        let located = catalog.locate(SourceId(0), Span::new(3, 4));
+        assert_eq!(located.file.as_deref(), Some("a.ts"));
+        assert_eq!(located.line, Some(2));
+        assert_eq!(located.column, Some(1));
+        assert_eq!(located.span, Some(ByteSpan::new(3, 4).unwrap()));
+        let second = catalog.locate(SourceId(1), Span::new(1, 2));
+        assert_eq!(second.file.as_deref(), Some("b.ts"));
+        assert_eq!(second.line, Some(1));
+        assert_eq!(second.column, Some(2));
+        assert_eq!(second.span, Some(ByteSpan::new(1, 2).unwrap()));
+    }
+
+    #[test]
+    fn catalog_columns_count_emoji_in_utf16_units() {
+        let catalog = SourceCatalog::new(vec![("e.ts", "a😀b")]);
+        let located = catalog.locate(SourceId(0), Span::new(5, 6));
+        assert_eq!(located.file.as_deref(), Some("e.ts"));
+        assert_eq!(located.line, Some(1));
+        assert_eq!(located.column, Some(4));
+    }
+
+    #[test]
+    fn catalog_falls_back_honestly_instead_of_skipping() {
+        let catalog = SourceCatalog::new(vec![("a.ts", "ab")]);
+        assert_eq!(
+            catalog.locate(SourceId(7), Span::new(0, 1)),
+            DiagnosticLocation::default()
+        );
+        assert_eq!(
+            catalog.locate(SourceId(0), Span::new(99, 100)),
+            DiagnosticLocation::default()
+        );
+    }
+
+    #[test]
+    fn source_site_owns_no_borrows() {
+        let site = SourceSite {
+            source: SourceId(7),
+            span: Span::new(10, 20),
+            surface: StyleSurfaceKind::Css,
+            prop: "color".into(),
+            when: vec!["md".into()],
+        };
+        assert_eq!(site.source, SourceId(7));
+        assert_eq!(site.surface, StyleSurfaceKind::Css);
+        assert_eq!(site.span.start, 10);
+    }
+}

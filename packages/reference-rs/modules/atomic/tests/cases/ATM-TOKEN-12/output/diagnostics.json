@@ -1,0 +1,46 @@
+[
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{}}`",
+    "file": "input/src/braceless.tsx",
+    "line": 9,
+    "column": 38,
+    "span": {
+      "start": 490,
+      "end": 505
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{colors.nope}`",
+    "file": "input/src/missing-ref.tsx",
+    "line": 4,
+    "column": 10,
+    "span": {
+      "start": 77,
+      "end": 92
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown token reference `{colors.nope}`",
+    "file": "input/src/missing-ref.tsx",
+    "line": 5,
+    "column": 11,
+    "span": {
+      "start": 104,
+      "end": 129
+    }
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`color: {colors.nope}` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'color: {colors.nope}' lookup static so the plan can serve it"
+    ]
+  }
+]

@@ -167,19 +167,28 @@ function listConfiguredPackageJsonPaths(): string[] {
         continue
       }
 
-      // For the matrix root, support one level of grouping (e.g. matrix/chain/T1).
-      // A first-level directory without a package.json acts as a group container.
+      // For the matrix root, descend recursively through group containers
+      // (e.g. matrix/tests/chain/T2). A directory without a package.json acts
+      // as a group container; node_modules and dot-directories are never groups.
       if (packageRoot === 'matrix') {
-        for (const subEntry of readdirSync(childDir, { withFileTypes: true })) {
-          if (!subEntry.isDirectory()) {
-            continue
-          }
+        const collectGroupPackages = (groupDir: string): void => {
+          for (const subEntry of readdirSync(groupDir, { withFileTypes: true })) {
+            if (!subEntry.isDirectory() || subEntry.name === 'node_modules' || subEntry.name.startsWith('.')) {
+              continue
+            }
 
-          const subPackageJsonPath = join(childDir, subEntry.name, 'package.json')
-          if (existsSync(subPackageJsonPath)) {
-            packageJsonPaths.add(subPackageJsonPath)
+            const subDir = join(groupDir, subEntry.name)
+            const subPackageJsonPath = join(subDir, 'package.json')
+
+            if (existsSync(subPackageJsonPath)) {
+              packageJsonPaths.add(subPackageJsonPath)
+            } else {
+              collectGroupPackages(subDir)
+            }
           }
         }
+
+        collectGroupPackages(childDir)
       }
     }
   }
@@ -324,7 +333,16 @@ export function sortPackagesForInternalDependencyOrder(
   const dependents = new Map(packages.map((pkg) => [pkg.name, [] as string[]]))
 
   for (const pkg of packages) {
-    for (const dependencyName of Object.keys(pkg.dependencies)) {
+    // devDependencies are build-order edges too: fixtures and icons consume
+    // @reference-ui/neo's dist at build time via a devDep. The self-edge
+    // (neo devDepends on itself) cannot order and would wedge the sort.
+    const orderingDependencyNames = new Set([
+      ...Object.keys(pkg.dependencies),
+      ...Object.keys((pkg.packageJson?.devDependencies as Record<string, string> | undefined) ?? {}),
+    ])
+    orderingDependencyNames.delete(pkg.name)
+
+    for (const dependencyName of orderingDependencyNames) {
       if (!packageMap.has(dependencyName)) {
         continue
       }

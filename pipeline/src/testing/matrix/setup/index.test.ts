@@ -34,10 +34,9 @@ describe('setupMatrixPackages package generation', () => {
         bundlers: ['vite7', 'webpack5'],
         react: 'react19',
         reactVersions: ['react19'],
-        runTypecheck: false,
       },
-      configPath: '/Users/ryn/Developer/reference-ui/matrix/mcp/matrix.json',
-      dir: '/Users/ryn/Developer/reference-ui/matrix/mcp',
+      configPath: '/Users/ryn/Developer/reference-ui/matrix/tests/mcp/matrix.json',
+      dir: '/Users/ryn/Developer/reference-ui/matrix/tests/mcp',
       packageName: '@matrix/mcp',
     })
 

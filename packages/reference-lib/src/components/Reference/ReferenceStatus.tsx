@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { ReferenceNotice } from './components/ReferenceNotice'
 import { MonoText } from './components/shared/MonoText'
 

@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer escape-allowlist {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .escape-allowlist__content_\"\$\" { content: "$"; }
+  .escape-allowlist__content_\"\*\" { content: "*"; }
+  .escape-allowlist__content_\"\;\" { content: ";"; }
+  .escape-allowlist__content_\"\<\" { content: "<"; }
+  .escape-allowlist__content_\"\?\" { content: "?"; }
+  .escape-allowlist__content_\"\\\\\" { content: "\\"; }
+  .escape-allowlist__content_\"\^\" { content: "^"; }
+  .escape-allowlist__content_\"\`\" { content: "`"; }
+  .escape-allowlist__content_\"\|\" { content: "|"; }
+  .escape-allowlist__content_\"\é\" { content: "é"; }
+  .escape-allowlist__\[\&_\>_\*\]\:p_1r > * { padding: var(--spacing-root); }
+}
+}

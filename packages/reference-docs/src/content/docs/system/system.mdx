@@ -1,0 +1,49 @@
+---
+title: System
+section: System
+order: 1
+slug: system
+---
+
+# System
+
+Components are the top of the stack. Underneath them sits the system: the
+design definition your whole project shares, and the compiler that turns it
+into CSS and types. This section documents that baseline — the part you
+configure once and every component inherits.
+
+## Fragments in, CSS out
+
+You describe the system with small declarations called fragments, written in
+plain TypeScript:
+
+```ts
+import { font, tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    brand: { value: '#4f46e5' },
+  },
+})
+
+font('display', {
+  value: '"Playfair Display", Georgia, serif',
+  fontFace: {
+    src: 'url(/fonts/playfair-display.woff2) format("woff2")',
+    fontWeight: '400 900',
+    fontDisplay: 'swap',
+  },
+  weights: { normal: '400', bold: '700' },
+})
+```
+
+Any file your `ui.config` `include` pattern covers can hold fragments. When
+you run `ref sync`, the system collects them all and emits two things: the
+stylesheet (tokens, utilities, `@font-face`, keyframes) and the TypeScript
+types that keep your style props honest. Components then consume all of it
+through props like `color="brand"` and `font="display"` — they never import
+a CSS file.
+
+## What lives here
+
+- [Fonts](/fonts) — families, weights, and loading, start to finish.

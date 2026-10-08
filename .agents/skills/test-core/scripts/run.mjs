@@ -649,7 +649,31 @@ function getLatestSrcMtime(dir) {
   return latest
 }
 
+// Neo's compiled dist is an input to every lib build: lib `sync` runs the
+// shipped `ref` CLI, and neo's own freshness gate exits without a stat walk
+// when REF_PIPELINE_SKIP_DEPENDENCY_BUILDS is set — the explicit opt-out the
+// gated lib build below relies on to skip the icons dep leg. Invoke that gate
+// with SKIP cleared first, so a neo-src edit can never be baked stale into lib
+// output. Steady state is one stat walk (~45 ms).
+async function ensureNeoDist() {
+  const gate = path.join(repoRoot, 'packages/reference-neo/tools/ensure-dist.mjs')
+  const res = await runCommand('node', [gate], {
+    env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '' },
+    skipQueue: true,
+  })
+  if (res.code !== 0) {
+    console.error('[agent] Error: Failed to ensure @reference-ui/neo dist freshness.')
+    return false
+  }
+  return true
+}
+
 async function ensureLibBuild(options = {}) {
+  // Neo dist freshness is a precondition of the lib build, not a dependency of
+  // the SKIP-gated leg: guarantee it before deciding what (if anything) to
+  // build so the mandated flows never test stale-neo lib output.
+  if (!(await ensureNeoDist())) return false
+
   const distPath = path.join(repoRoot, 'packages/reference-lib/dist/index.mjs')
   const distExists = fs.existsSync(distPath)
   let distMtime = 0
@@ -1056,7 +1080,40 @@ function clearServerState() {
 export function isKnownPackage(name) {
   if (!name || typeof name !== 'string') return false
   const clean = name.trim().replace(/^@matrix\//, '').replace(/^matrix\//, '')
-  return fs.existsSync(path.join(repoRoot, 'matrix', clean))
+  const candidates = clean.startsWith('tests/')
+    ? [path.join(repoRoot, 'matrix', clean)]
+    : [
+      path.join(repoRoot, 'matrix', 'tests', clean),
+      path.join(repoRoot, 'matrix', 'tests', 'chain', clean),
+    ]
+  return candidates.some(dir => fs.existsSync(dir))
+}
+
+function matrixSuiteDirFor(clean) {
+  if (clean.startsWith('matrix/')) return clean
+  if (fs.existsSync(path.join(repoRoot, 'matrix', 'tests', clean))) return `matrix/tests/${clean}`
+  if (fs.existsSync(path.join(repoRoot, 'matrix', 'tests', 'chain', clean))) return `matrix/tests/chain/${clean}`
+  return `matrix/${clean}`
+}
+
+function listMatrixSuiteDirs() {
+  const testsRoot = path.join(repoRoot, 'matrix', 'tests')
+  if (!fs.existsSync(testsRoot)) return []
+  const suites = []
+  const walk = (dir, rel) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) continue
+      const full = path.join(dir, entry.name)
+      const relPath = `${rel}/${entry.name}`
+      if (fs.existsSync(path.join(full, 'tests', 'e2e'))) {
+        suites.push({ pkg: relPath, e2eDir: path.join(full, 'tests', 'e2e') })
+      } else {
+        walk(full, relPath)
+      }
+    }
+  }
+  walk(testsRoot, 'matrix/tests')
+  return suites
 }
 
 function findSpecByTestId(testId) {
@@ -1066,27 +1123,24 @@ function findSpecByTestId(testId) {
   const isCaseId = /^[A-Z]{2,}(?:-[A-Z0-9]+)+$/i.test(clean) || clean.toUpperCase().startsWith('OV-')
   if (!isCaseId) return null
 
-  const matrixDir = path.join(repoRoot, 'matrix')
-  if (!fs.existsSync(matrixDir)) return null
-  const pkgs = fs.readdirSync(matrixDir)
-  for (const pkg of pkgs) {
-    const e2eDir = path.join(matrixDir, pkg, 'tests', 'e2e')
-    if (fs.existsSync(e2eDir)) {
-      const files = fs.readdirSync(e2eDir).filter(f => f.endsWith('.spec.ts') || f.endsWith('.spec.js'))
-      for (const f of files) {
-        const fullPath = path.join(e2eDir, f)
-        const content = fs.readFileSync(fullPath, 'utf-8')
-        const lines = content.split('\n')
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i]
-          if (line.includes(clean) && (line.includes('test(') || line.includes('test.only(') || line.includes('test.describe('))) {
-            return {
-              pkg: `matrix/${pkg}`,
-              target: `tests/e2e/${f}:${i + 1}`,
-              file: `tests/e2e/${f}`,
-              line: i + 1,
-              testTitle: line.trim(),
-            }
+  const suites = listMatrixSuiteDirs()
+  if (suites.length === 0) return null
+  for (const suite of suites) {
+    const e2eDir = suite.e2eDir
+    const files = fs.readdirSync(e2eDir).filter(f => f.endsWith('.spec.ts') || f.endsWith('.spec.js'))
+    for (const f of files) {
+      const fullPath = path.join(e2eDir, f)
+      const content = fs.readFileSync(fullPath, 'utf-8')
+      const lines = content.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.includes(clean) && (line.includes('test(') || line.includes('test.only(') || line.includes('test.describe('))) {
+          return {
+            pkg: suite.pkg,
+            target: `tests/e2e/${f}:${i + 1}`,
+            file: `tests/e2e/${f}`,
+            line: i + 1,
+            testTitle: line.trim(),
           }
         }
       }
@@ -1101,9 +1155,12 @@ function findSpecByPathOrName(query) {
   let filePart = targetPath
   if (targetPath.includes('/')) {
     const segments = targetPath.split('/')
-    if (segments[0] === 'matrix') {
+    if (segments[0] === 'matrix' && segments.length > 2) {
+      pkgHint = segments.slice(0, -1).join('/')
+      filePart = segments[segments.length - 1]
+    } else if (segments[0] === 'matrix') {
       pkgHint = segments[1]
-      filePart = segments.slice(2).join('/')
+      filePart = ''
     } else {
       pkgHint = segments[0]
       filePart = segments.slice(1).join('/')
@@ -1111,42 +1168,48 @@ function findSpecByPathOrName(query) {
   }
 
   const cleanName = filePart.replace(/\.spec\.(ts|js)$/, '').replace(/^.*[/\\]/, '').toLowerCase()
-  const matrixDir = path.join(repoRoot, 'matrix')
-  if (!fs.existsSync(matrixDir)) return null
-  const pkgs = fs.readdirSync(matrixDir)
+  const suites = listMatrixSuiteDirs()
+  if (suites.length === 0) return null
 
-  const sortedPkgs = pkgHint
-    ? pkgs.sort((a, b) => (a === pkgHint ? -1 : b === pkgHint ? 1 : 0))
-    : pkgs
+  const matchRank = (rel) => {
+    if (!pkgHint) return 0
+    const base = rel.split('/').pop()
+    if (rel === pkgHint || base === pkgHint) return 0
+    if (rel.endsWith(`/${pkgHint}`)) return 1
+    if (base.includes(pkgHint)) return 2
+    return -1
+  }
 
-  for (const pkg of sortedPkgs) {
-    if (pkgHint && pkg !== pkgHint && !pkg.includes(pkgHint)) continue
-    const e2eDir = path.join(matrixDir, pkg, 'tests', 'e2e')
-    if (fs.existsSync(e2eDir)) {
-      const files = fs.readdirSync(e2eDir).filter(f => f.endsWith('.spec.ts') || f.endsWith('.spec.js'))
-      for (const f of files) {
-        const base = f.replace(/\.spec\.(ts|js)$/, '').toLowerCase()
-        if (f === filePart || base === cleanName || base.includes(cleanName)) {
-          if (linePart) {
-            const fullPath = path.join(e2eDir, f)
-            const content = fs.readFileSync(fullPath, 'utf-8')
-            const lines = content.split('\n')
-            const targetLine = parseInt(linePart, 10)
-            if (targetLine > 0 && targetLine <= lines.length) {
-              return {
-                pkg: `matrix/${pkg}`,
-                target: `tests/e2e/${f}:${targetLine}`,
-                file: `tests/e2e/${f}`,
-                line: targetLine,
-              }
-            }
-          } else {
+  const sortedSuites = suites
+    .map(suite => ({ suite, rank: matchRank(suite.pkg) }))
+    .filter(entry => entry.rank >= 0)
+    .sort((a, b) => a.rank - b.rank || a.suite.pkg.localeCompare(b.suite.pkg))
+
+  for (const { suite } of sortedSuites) {
+    const e2eDir = suite.e2eDir
+    const files = fs.readdirSync(e2eDir).filter(f => f.endsWith('.spec.ts') || f.endsWith('.spec.js'))
+    for (const f of files) {
+      const base = f.replace(/\.spec\.(ts|js)$/, '').toLowerCase()
+      if (f === filePart || base === cleanName || base.includes(cleanName)) {
+        if (linePart) {
+          const fullPath = path.join(e2eDir, f)
+          const content = fs.readFileSync(fullPath, 'utf-8')
+          const lines = content.split('\n')
+          const targetLine = parseInt(linePart, 10)
+          if (targetLine > 0 && targetLine <= lines.length) {
             return {
-              pkg: `matrix/${pkg}`,
-              target: `tests/e2e/${f}`,
+              pkg: suite.pkg,
+              target: `tests/e2e/${f}:${targetLine}`,
               file: `tests/e2e/${f}`,
-              line: null,
+              line: targetLine,
             }
+          }
+        } else {
+          return {
+            pkg: suite.pkg,
+            target: `tests/e2e/${f}`,
+            file: `tests/e2e/${f}`,
+            line: null,
           }
         }
       }
@@ -1308,6 +1371,8 @@ async function actionPlaywright(rawArgs = []) {
     else if (clean === 'lib') resolvedTarget = 'matrix/lib'
     else if (clean === 'primitives') resolvedTarget = 'matrix/primitives'
     else if (clean.startsWith('matrix/')) resolvedTarget = clean
+    else if (fs.existsSync(path.join(repoRoot, 'matrix', 'tests', clean))) resolvedTarget = `matrix/tests/${clean}`
+    else if (fs.existsSync(path.join(repoRoot, 'matrix', 'tests', 'chain', clean))) resolvedTarget = `matrix/tests/chain/${clean}`
     else if (fs.existsSync(path.join(repoRoot, 'matrix', clean))) resolvedTarget = `matrix/${clean}`
     else if (fs.existsSync(path.join(repoRoot, clean))) resolvedTarget = clean
   }
@@ -1543,7 +1608,7 @@ async function actionVitest(rawArgs = []) {
   if (targetPackage) {
     if (isKnownPackage(targetPackage)) {
       const clean = targetPackage.trim().replace(/^@matrix\//, '')
-      resolvedTarget = clean.startsWith('matrix/') ? clean : `matrix/${clean}`
+      resolvedTarget = matrixSuiteDirFor(clean)
     } else {
       // 1. Direct file or component match
       const match = findVitestTarget(targetPackage)
@@ -1632,6 +1697,8 @@ export {
   actionVitest,
   acquireQueueLock,
   withQueueLock,
+  findSpecByPathOrName,
+  findSpecByTestId,
 }
 
 export async function runPlaywright(args = []) {

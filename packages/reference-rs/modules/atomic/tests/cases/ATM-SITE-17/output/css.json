@@ -1,0 +1,7 @@
+{
+  "color:amber.500": "@reference-ui/lib__c_amber.500",
+  "color:blue.500": "@reference-ui/lib__c_blue.500",
+  "color:green.500": "@reference-ui/lib__c_green.500",
+  "color:red.500": "@reference-ui/lib__c_red.500",
+  "mt:2r": "@reference-ui/lib__mt_2r"
+}

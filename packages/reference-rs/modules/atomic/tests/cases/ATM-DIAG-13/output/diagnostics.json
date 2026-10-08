@@ -1,0 +1,32 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `ui.missing.path`",
+    "file": "input/src/hover.ts",
+    "line": 4,
+    "column": 17,
+    "span": {
+      "start": 87,
+      "end": 104
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `ui.missing.path`",
+    "file": "input/src/hover.ts",
+    "line": 5,
+    "column": 17,
+    "span": {
+      "start": 124,
+      "end": 141
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
+  }
+]

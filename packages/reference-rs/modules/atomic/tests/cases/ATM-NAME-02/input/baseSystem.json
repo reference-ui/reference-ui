@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "condition-prefix",
+  "tokens": {
+    "colors": {
+      "n300": {
+        "light": "#d4d4d8",
+        "dark": "#3f3f46"
+      }
+    }
+  },
+  "fonts": {},
+  "conditions": {
+    "_hover": "&:is(:hover, [data-hover])",
+    "_dark": "[data-color-mode=dark] &",
+    "__x": "[data-x] &"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

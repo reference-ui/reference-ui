@@ -1,0 +1,8 @@
+{
+  "&:hover:backgroundImage:linear-gradient({colors.red.500}, {colors.blue.500})": "@reference-ui/lib__[&:hover]:background-image_linear-gradient({colors.red.500},_{colors.blue.500})",
+  "&:hover:color:transparent": "@reference-ui/lib__[&:hover]:c_transparent",
+  "&:hover:webkitBackgroundClip:text": "@reference-ui/lib__[&:hover]:-webkit-background-clip_text",
+  "backgroundImage:linear-gradient({colors.red.200}, {colors.blue.300})": "@reference-ui/lib__background-image_linear-gradient({colors.red.200},_{colors.blue.300})",
+  "color:transparent": "@reference-ui/lib__c_transparent",
+  "webkitBackgroundClip:text": "@reference-ui/lib__-webkit-background-clip_text"
+}

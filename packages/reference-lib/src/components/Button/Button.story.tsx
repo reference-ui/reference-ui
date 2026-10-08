@@ -162,3 +162,16 @@ export function ButtonStatesFixture() {
     </Div>
   )
 }
+
+export function ButtonBlockDefault() {
+  return (
+    <Div data-testid="button-block-root" p="6r" maxW="600px">
+      <Button type="button" data-testid="btn-bare">
+        Bare Button
+      </Button>{' '}
+      <button type="button" data-testid="btn-native">
+        Native button
+      </button>
+    </Div>
+  )
+}

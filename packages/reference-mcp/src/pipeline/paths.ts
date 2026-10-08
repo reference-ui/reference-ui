@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { getOutDirPath } from '@reference-ui/core/paths'
+import { getOutDirPath } from '../neo/paths'
 
 export function getMcpDirPath(cwd: string): string {
   return join(getOutDirPath(cwd), 'mcp')

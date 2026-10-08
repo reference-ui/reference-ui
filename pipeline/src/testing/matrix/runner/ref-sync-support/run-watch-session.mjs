@@ -13,7 +13,6 @@ import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 
 const matrixRefSyncPhasesEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_PHASES_JSON'
-const matrixRefSyncWaitForEnvVar = 'REFERENCE_UI_MATRIX_REF_SYNC_WAIT_FOR'
 const waitReadyScriptPath = resolve(process.cwd(), '.matrix-support/ref-sync/wait-ready.mjs')
 const watchLogPath = resolve(process.cwd(), '.matrix-support/ref-sync/watch.log')
 const watchCommand = ['pnpm', 'exec', 'ref', 'sync', '--watch']

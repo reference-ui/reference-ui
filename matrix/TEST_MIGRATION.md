@@ -1,5 +1,11 @@
 
 
+> **Historical (VOYAGE Obj 2):** migration record of the
+> reference-unit/e2e → matrix-package move. The suite map below
+> describes the pre-cutover matrix; all suites listed are retired
+> except chain T2/T8 (now `matrix/tests/chain/T2|T8`) — see
+> `TEST_COVERAGE.md` for the live gate and Neo homes.
+
 ## Unified suites (reference-unit + reference-e2e)
 
 `packages/reference-unit` and `packages/reference-e2e` are converging into **one matrix-oriented suite** per concern area. The same scenarios can be exercised with **Vitest** or **Playwright** depending on what you are proving:

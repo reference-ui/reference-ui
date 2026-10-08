@@ -70,7 +70,9 @@ numeric value domain:
 ## Proposed API
 
 ```ts
-type NumberFieldCommitBehavior = "snap" | "validate"
+type NumberFieldCommitBehavior = "snap" | "validate" | "none"
+
+type NumberFieldInvalidCommitReason = "off-step" | "out-of-range"
 
 interface NumberFieldProps
   extends Omit<ReferencePartProps<"div">, "onChange" | "defaultValue"> {
@@ -82,6 +84,7 @@ interface NumberFieldProps
   max?: number
   step?: number
   commitBehavior?: NumberFieldCommitBehavior
+  onInvalidCommit?: (attempted: number, reason: NumberFieldInvalidCommitReason) => void
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
@@ -172,9 +175,11 @@ type NumberFieldDecrementProps =
 ```
 
 There is no `NumberField.Root`, `defaultValue`, uncontrolled mode, controlled
-text prop, raw-text callback, commit callback, parser/formatter function,
+text prop, raw-text callback, parser/formatter function,
 configurable fine/coarse step, wheel option, or polymorphic `as` prop.
-`NumberField.onChange` is the only numeric request authority. Input retains
+`NumberField.onChange` is the only numeric request authority; `onInvalidCommit`
+is an advisory report fired alongside `onChange` when a validate-mode commit
+violates constraints, and never requests a value. Input retains
 native edit, clipboard, composition, selection, focus, keyboard, and wheel
 handlers so applications can observe text and native wheel behavior without
 creating another store.
@@ -192,7 +197,14 @@ results before publishing DOM state or callbacks.
 - `min` and `max` are absent. Supplied bounds must be finite and `min <= max`.
 - `step` defaults to `0.01` for `style: "percent"` and `1` otherwise. It must
   be finite and greater than zero.
-- `commitBehavior` defaults to `"snap"`.
+- `commitBehavior` defaults to `"none"` (clamp at commit, never snap, no
+  owned invalid state). `"snap"` commits through the zero-anchored step
+  lattice with away-from-zero midpoint ties and exact/exceeded non-grid
+  endpoint preservation (order: endpoint → lattice → authored rounding →
+  final clamp). `"validate"` retains finite underflow, overflow, and off-step
+  candidates (requests the rounded raw candidate via `onChange`; managed
+  invalid state reports each applicable constraint and blocks submit) with
+  advisory `onInvalidCommit` alongside `onChange`.
 - `disabled`, `readOnly`, `required`, and `invalid` default to `false`.
 - Increment and Decrement are optional. Each renders
   `button[type=button][tabindex=-1]` and requires a nonempty authored
@@ -553,11 +565,13 @@ skin.
 - `NumberField.ScrubArea`, pointer lock, acceleration, and virtual cursors.
   These duplicate Slider's continuous-pointer territory and are not needed by
   the frozen compositions.
-- Uncontrolled/default values, raw-text or commit callbacks, reason/detail
-  objects, imperative methods, parser/formatter functions, render props,
+- Uncontrolled/default values, raw-text callbacks, second numeric channels,
+  imperative methods, parser/formatter functions, render props,
   Provider/Field *context* contracts (Base UI / Aria form wiring), and
-  polymorphic hosts. Visual `Field` is the bezel recipe Group consumes;
-  do not nest `<Field>` in Group or wrap Group in Field.
+  polymorphic hosts. The advisory `onInvalidCommit(attempted, reason)` report
+  is the one shipped commit callback; it never requests a value. Visual
+  `Field` is the bezel recipe Group consumes; do not nest `<Field>` in
+  Group or wrap Group in Field.
 - Arbitrary precision, bigint, expressions, compact/hidden-sign editing,
   unsupported algorithmic numbering systems, locale guessing, permissive
   malformed separators, and cross-ShadowRoot form association.

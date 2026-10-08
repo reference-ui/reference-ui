@@ -1,8 +1,17 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { createPortal } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { Overlay } from '../index'
 import { FrameFixture } from './frame-fixture'
+
+type LegacyDom = {
+  render: (node: React.ReactNode, container: Element) => void
+  unmountComponentAtNode: (container: Element) => boolean
+}
+
+// The react-17 CT runtime aliases react-dom/client to a shim without
+// createRoot: fall back to legacy render there. Same tree either way.
 
 function MiniRootOverlay({
   id,
@@ -121,6 +130,11 @@ export function ExoticaFixture() {
   const env03HostRef = React.useRef<HTMLDivElement | null>(null)
   const [env03Dest, setEnv03Dest] = React.useState<HTMLElement | null>(null)
 
+  const [env05Open, setEnv05Open] = React.useState(false)
+  const env05HostRef = React.useRef<HTMLDivElement | null>(null)
+  const [env05Root, setEnv05Root] = React.useState<ShadowRoot | null>(null)
+  const [env05Log, setEnv05Log] = React.useState<string[]>([])
+
   const [pos10Open, setPos10Open] = React.useState(false)
   const pos10AnchorRef = React.useRef<HTMLButtonElement | null>(null)
   const pos10RtlRef = React.useRef<HTMLDivElement | null>(null)
@@ -198,6 +212,12 @@ export function ExoticaFixture() {
   }, [])
 
   React.useEffect(() => {
+    const host = env05HostRef.current
+    if (!host || host.shadowRoot) return
+    setEnv05Root(host.attachShadow({ mode: 'open' }))
+  }, [])
+
+  React.useEffect(() => {
     const host = scroll09HostRef.current
     if (!host || host.shadowRoot) return
     const shadow = host.attachShadow({ mode: 'open' })
@@ -234,11 +254,41 @@ export function ExoticaFixture() {
     setPos12Dest(dest)
   }, [])
 
+  // Twin roots are STABLE across openA/openB toggles (update, don't
+  // remount): legacy ReactDOM roots must not be torn down mid-open or the
+  // exiting portal outlives the unmount and the fresh mount duplicates it.
+  const twinRootsRef = React.useRef<{ a: unknown; b: unknown } | null>(null)
   React.useEffect(() => {
-    if (!hostARef.current || !hostBRef.current) return
-    const a = createRoot(hostARef.current)
-    const b = createRoot(hostBRef.current)
-    a.render(
+    const hostA = hostARef.current
+    const hostB = hostBRef.current
+    if (!hostA || !hostB) return
+    let roots = twinRootsRef.current as {
+      a: { render: (n: React.ReactNode) => void; unmount: () => void }
+      b: { render: (n: React.ReactNode) => void; unmount: () => void }
+    } | null
+    if (!roots) {
+      if (typeof createRoot === 'function') {
+        roots = { a: createRoot(hostA), b: createRoot(hostB) }
+      } else {
+        const legacy = ReactDOM as unknown as LegacyDom
+        roots = {
+          a: {
+            render: (n: React.ReactNode) => legacy.render(n, hostA),
+            unmount: () => {
+              legacy.unmountComponentAtNode(hostA)
+            },
+          },
+          b: {
+            render: (n: React.ReactNode) => legacy.render(n, hostB),
+            unmount: () => {
+              legacy.unmountComponentAtNode(hostB)
+            },
+          },
+        }
+      }
+      twinRootsRef.current = roots
+    }
+    roots.a.render(
       <MiniRootOverlay
         id="root-a"
         open={openA}
@@ -249,7 +299,7 @@ export function ExoticaFixture() {
         }}
       />
     )
-    b.render(
+    roots.b.render(
       <MiniRootOverlay
         id="root-b"
         open={openB}
@@ -260,11 +310,18 @@ export function ExoticaFixture() {
         }}
       />
     )
-    return () => {
-      a.unmount()
-      b.unmount()
-    }
   }, [openA, openB])
+  React.useEffect(() => {
+    return () => {
+      const roots = twinRootsRef.current as {
+        a: { unmount: () => void }
+        b: { unmount: () => void }
+      } | null
+      twinRootsRef.current = null
+      roots?.a.unmount()
+      roots?.b.unmount()
+    }
+  }, [])
 
   const layer09Container =
     layer09Host === 'a' ? layer09ARef.current : layer09BRef.current
@@ -953,6 +1010,50 @@ export function ExoticaFixture() {
                 Shadow pos
               </Overlay.Content>
             </Overlay.Portal>
+          </Overlay>
+        )}
+      </section>
+
+      <section data-testid="section-ov-env-05" style={{ marginBottom: 24 }}>
+        <h3>OV-ENV-05 automatic shadow destination</h3>
+        <div ref={env05HostRef} data-testid="env05-host" />
+        <button type="button" data-testid="btn-env-05-light-outside">
+          Env05 light outside
+        </button>
+        <pre data-testid="env-05-log">{env05Log.join(',')}</pre>
+        {env05Root && (
+          <Overlay
+            open={env05Open}
+            onOpenChange={setEnv05Open}
+            onEscape={() => setEnv05Log(l => [...l, 'escape'])}
+            onOutsidePress={() => setEnv05Log(l => [...l, 'outside'])}
+            onDismiss={() => {
+              setEnv05Log(l => [...l, 'dismiss'])
+              setEnv05Open(false)
+            }}
+          >
+            {createPortal(
+              <Overlay.Trigger data-testid="btn-open-env-05">
+                Open ENV-05
+              </Overlay.Trigger>,
+              env05Root
+            )}
+            <Overlay.Content
+              data-testid="env-05-content"
+              role="dialog"
+              style={{
+                position: 'fixed',
+                top: '30%',
+                left: '30%',
+                background: '#fff',
+                padding: 16,
+                zIndex: 1001,
+              }}
+            >
+              <button type="button" data-testid="btn-close-env-05" onClick={() => setEnv05Open(false)}>
+                Close
+              </button>
+            </Overlay.Content>
           </Overlay>
         )}
       </section>

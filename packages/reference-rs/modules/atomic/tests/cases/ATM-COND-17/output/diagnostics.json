@@ -1,0 +1,18 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-CONDITION",
+    "message": "Unknown condition \"wat\"",
+    "file": "input/src/unknown.ts",
+    "line": 3,
+    "column": 54,
+    "span": {
+      "start": 96,
+      "end": 102
+    },
+    "help": [
+      "did you mean `_last`?",
+      "use a condition from the theme"
+    ]
+  }
+]

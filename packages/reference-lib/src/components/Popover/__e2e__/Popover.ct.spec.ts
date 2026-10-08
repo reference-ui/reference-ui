@@ -1,4 +1,5 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, pressTab, isWebKit } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Locator } from '@playwright/test'
 
 test.describe('Popover Composition Gates & Browser Proofs', () => {
@@ -39,6 +40,11 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     const content = page.getByTestId('popover-content')
 
     await trigger.click()
+    // FINISH-02F-WK (F14, DIAG D1/D5): WebKit clicks never focus buttons, so
+    // the opener chain is empty and restore no-ops. Deliver the Chromium focus
+    // state directly (FocusLock DIAG-D1 precedent) — Escape-dismiss + restore
+    // below are the product contract and run identically.
+    if (isWebKit(page)) await trigger.focus()
     await expect(content).toBeVisible()
     await page.waitForTimeout(300)
     await snap(page, 'escape-open')
@@ -365,7 +371,7 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     const away = page.getByTestId('hover-away')
 
     await page.getByTestId('hover-before').focus()
-    await page.keyboard.press('Tab')
+    await pressTab(page)
     await expect(content).toBeVisible()
     await expect(log).toHaveText('open')
     await inside.focus()
@@ -404,6 +410,29 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     await expect(popover).toHaveCount(0)
     await expect(dialog).toBeVisible()
     await expect(count).toHaveText('1')
+  })
+
+  test('PO-A11Y-01 scan: axe reports zero violations on the open popover', async ({
+    mount,
+    page,
+  }) => {
+    // Scanner half of PO-A11Y-01 (assertion half is PO-DOM-01/02 per
+    // SPEC's coverage line): Basic exercises Trigger ARIA plus open
+    // Content in one mount. Whole-page scope: Content
+    // portals to document.body, so #root-scoping would miss
+    // component-owned content; the gallery holds one story per mount.
+    // AXE: `aria-dialog-name` is scoped out — the dialog name is
+    // application-owned (Content defaults to role=dialog and passes
+    // aria-label/aria-labelledby through; the component must not invent
+    // a name), and Basic deliberately renders unnamed content. Raw:
+    // `aria-dialog-name [serious]` on #popover-content-1.
+    await mount('components/Popover/Popover/Basic')
+    const trigger = page.getByTestId('btn-popover-trigger')
+    const content = page.getByTestId('popover-content')
+    await trigger.click()
+    await expect(content).toBeVisible()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await expectNoAxeViolations(page, { disableRules: ['aria-dialog-name'] })
   })
 })
 

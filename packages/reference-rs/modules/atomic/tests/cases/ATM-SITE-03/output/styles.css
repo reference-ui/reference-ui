@@ -1,0 +1,18 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__badge__base { font-weight: bold; }
+  .\@reference-ui\/lib__badge_v_solid { background: blue; color: white; }
+  .\@reference-ui\/lib__badge_v_outline { border-style: solid; border-width: 1px; }
+  .\@reference-ui\/lib__badge_c_solid { opacity: 0.9; }
+}
+}

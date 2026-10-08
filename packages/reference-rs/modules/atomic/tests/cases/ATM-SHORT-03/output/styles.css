@@ -1,0 +1,20 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__bd_borders\.card { border: borders.card; }
+  .\@reference-ui\/lib__bd_inherit { border: inherit; }
+  .\@reference-ui\/lib__bd_none { border: none; }
+  .\@reference-ui\/lib__bd-w_0px { border-width: 0px; }
+  .\@reference-ui\/lib__outline_none { outline: #000; }
+  .\@reference-ui\/lib__outline_colors\.red\.500 { outline: var(--colors-red-500); }
+}
+}

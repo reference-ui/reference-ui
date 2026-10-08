@@ -8,7 +8,7 @@ export default {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
       <Div width="60r" maxW="60r" display="flex" flexDirection="column" gap="3r">
-        <DateField value={value} onChange={setValue} placeholder="YYYY-MM-DD" />
+        <DateField locale="en-US" value={value} onChange={setValue} placeholder="YYYY-MM-DD" />
         <Span fontSize="3r" color="design.text.light">Chosen date: {value ?? 'None'}</Span>
       </Div>
     )
@@ -17,7 +17,7 @@ export default {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
       <Div width="80r" maxW="80r" display="flex" flexDirection="column" gap="3r">
-        <DateField value={value} onChange={setValue}>
+        <DateField locale="en-US" value={value} onChange={setValue}>
           <DateField.Picker />
         </DateField>
         <Span fontSize="3r" color="design.text.light">Chosen date: {value ?? 'None'}</Span>
@@ -28,11 +28,11 @@ export default {
     const [value, setValue] = React.useState<string | null>('2026-08-31')
     return (
       <Div width="80r" maxW="80r" display="flex" flexDirection="column" gap="3r">
-        <DateField value={value} onChange={setValue}>
+        <DateField locale="en-US" value={value} onChange={setValue}>
           <DateField.Input />
           <DateField.Trigger />
           <DateField.Picker>
-            <Calendar value={value} onChange={setValue}>
+            <Calendar locale="en-US" value={value} onChange={setValue}>
               <Calendar.Header>
                 <Calendar.PrevButton />
                 <Calendar.Heading />

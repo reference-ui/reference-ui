@@ -1,0 +1,152 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`translateY: 10px` has no compiled style plan; this lookup will emit no class. `translateY` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/App.tsx",
+    "line": 3,
+    "column": 44,
+    "span": {
+      "start": 86,
+      "end": 92
+    },
+    "help": [
+      "drop 'translateY'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`translateX: 10px` has no compiled style plan; this lookup will emit no class. `translateX` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 4,
+    "column": 15,
+    "span": {
+      "start": 86,
+      "end": 92
+    },
+    "help": [
+      "drop 'translateX'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`boxSize: 10px` has no compiled style plan; this lookup will emit no class. `boxSize` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 5,
+    "column": 12,
+    "span": {
+      "start": 105,
+      "end": 111
+    },
+    "help": [
+      "drop 'boxSize'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`spaceX: 10px` has no compiled style plan; this lookup will emit no class. `spaceX` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 6,
+    "column": 11,
+    "span": {
+      "start": 123,
+      "end": 129
+    },
+    "help": [
+      "drop 'spaceX'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`truncate: ellipsis` has no compiled style plan; this lookup will emit no class. `truncate` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 7,
+    "column": 13,
+    "span": {
+      "start": 143,
+      "end": 153
+    },
+    "help": [
+      "drop 'truncate'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`hideFrom: md` has no compiled style plan; this lookup will emit no class. `hideFrom` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 8,
+    "column": 13,
+    "span": {
+      "start": 167,
+      "end": 171
+    },
+    "help": [
+      "drop 'hideFrom'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`gradientFrom: red` has no compiled style plan; this lookup will emit no class. `gradientFrom` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 9,
+    "column": 17,
+    "span": {
+      "start": 189,
+      "end": 194
+    },
+    "help": [
+      "drop 'gradientFrom'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`textStyle: body` has no compiled style plan; this lookup will emit no class. `textStyle` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 10,
+    "column": 14,
+    "span": {
+      "start": 209,
+      "end": 215
+    },
+    "help": [
+      "drop 'textStyle'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`scrollSnapStrictness: proximity` has no compiled style plan; this lookup will emit no class. `scrollSnapStrictness` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 11,
+    "column": 25,
+    "span": {
+      "start": 241,
+      "end": 252
+    },
+    "help": [
+      "drop 'scrollSnapStrictness'; the dialect has no served css form"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNREALIZABLE-EXTENSION",
+    "message": "`spaceY: 4px` has no compiled style plan; this lookup will emit no class. `spaceY` has no CSS lowering; the declaration was dropped",
+    "file": "input/src/css.ts",
+    "line": 12,
+    "column": 24,
+    "span": {
+      "start": 277,
+      "end": 282
+    },
+    "help": [
+      "drop 'spaceY'; the dialect has no served css form"
+    ]
+  }
+]

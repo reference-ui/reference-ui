@@ -1,0 +1,8 @@
+{
+  "borderStyle:solid": "short-07__border-style_solid",
+  "borderWidth:calc(1px + 1px)": "short-07__bd-w_calc(1px_+_1px)",
+  "marginBottom:calc(1r * 2)": "short-07__mb_calc(1r_*_2)",
+  "marginLeft:3r": "short-07__ml_3r",
+  "marginRight:3r": "short-07__mr_3r",
+  "marginTop:calc(1r * 2)": "short-07__mt_calc(1r_*_2)"
+}

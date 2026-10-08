@@ -1,0 +1,165 @@
+{
+  "procedure": "agentrs-flame/3",
+  "procedureNote": "same-run phase boundaries + per-phase sample buckets, startup measured in-run (v2 merged addresses by name with weights; v1 keyed resource:address:func and counted +1 per sample)",
+  "scale": "enterprise",
+  "pin": {
+    "name": "6f4cf1ba392f",
+    "hash": "6f4cf1ba392f",
+    "dirty": false
+  },
+  "plan": {
+    "scale": "enterprise",
+    "generator": "app",
+    "optIn": false,
+    "seed": 7,
+    "defaultRuns": 1,
+    "files": 3000,
+    "deadFiles": 12000,
+    "minCalls": 1,
+    "maxCalls": 4,
+    "tokenColors": 300,
+    "tokenSpacing": 64,
+    "recipes": 120,
+    "uniqueRatio": 0.35,
+    "conditionRatio": 0.35,
+    "responsiveRatio": 0.3
+  },
+  "generated": {
+    "projectDir": "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-ncUqMy",
+    "styleFiles": 3000,
+    "deadFiles": 12000,
+    "cssCalls": 7527,
+    "recipes": 120
+  },
+  "worker": {
+    "syncMs": 972.6545429999999,
+    "rssBefore": 104873984,
+    "rssPeak": 352882688,
+    "rssAfter": 342802432,
+    "rssPeakHw": 360513536,
+    "scorer": "bench-worker/2"
+  },
+  "phases": {
+    "file": "phases.json",
+    "phases": {
+      "startup": 165.264413,
+      "config": 28.144419999999997,
+      "scan": 365.83096300000005,
+      "evaluate": 5.979693999999995,
+      "compile": 520.091157,
+      "publish": 52.48150600000008,
+      "syncTotal": 972.571139,
+      "workerTotal": 1137.838752,
+      "workerTail": 0.003200000000106229,
+      "syncResidual": 0.04339899999990848
+    },
+    "reconcile": {
+      "syncDeltaMs": 0,
+      "workerDeltaMs": 0,
+      "ok": true
+    },
+    "processStartDeltaMs": 139.491943359375,
+    "preMainWeight": 0,
+    "postWorkerWeight": 8,
+    "sampleCount": 1085,
+    "weightSum": 1106,
+    "buckets": [
+      {
+        "name": "startup",
+        "ms": 165.264413,
+        "weight": 132,
+        "topLib": "node",
+        "topLibWeight": 81
+      },
+      {
+        "name": "config",
+        "ms": 28.144419999999997,
+        "weight": 24,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 14
+      },
+      {
+        "name": "scan",
+        "ms": 365.83096300000005,
+        "weight": 366,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 297
+      },
+      {
+        "name": "evaluate",
+        "ms": 5.979693999999995,
+        "weight": 6,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 5
+      },
+      {
+        "name": "compile",
+        "ms": 520.091157,
+        "weight": 518,
+        "topLib": "virtual-native.darwin-x64.node",
+        "topLibWeight": 220
+      },
+      {
+        "name": "publish",
+        "ms": 52.48150600000008,
+        "weight": 52,
+        "topLib": "libsystem_kernel.dylib",
+        "topLibWeight": 28
+      },
+      {
+        "name": "syncResidual",
+        "ms": 0.04339899999990848,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      },
+      {
+        "name": "workerTail",
+        "ms": 0.003200000000106229,
+        "weight": 0,
+        "topLib": "—",
+        "topLibWeight": 0
+      }
+    ]
+  },
+  "profile": {
+    "file": "profile.json.gz",
+    "bytes": 102194,
+    "rateHz": 1000,
+    "presymbolicated": true
+  },
+  "node": {
+    "version": "v24.16.0",
+    "args": [
+      "--perf-basic-prof",
+      "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-7ZrYLp/v8.log"
+    ]
+  },
+  "native": {
+    "path": "packages/reference-rs/dist/native/virtual-native.darwin-x64.node",
+    "sha256": "a5b9117d3d5a4b66e300bf60669aaec1d1ff7c42aad6503c57dfa53964d85c68",
+    "profile": "release",
+    "builtVia": "prebuilt (ensure-native skipped with --no-build)"
+  },
+  "samply": "samply 0.13.1",
+  "platform": "darwin-x64",
+  "command": [
+    "samply",
+    "record",
+    "--save-only",
+    "--unstable-presymbolicate",
+    "-o",
+    "/tmp/swarm-repro3-flame/enterprise-repro4b/profile.json.gz",
+    "-r",
+    "1000",
+    "--",
+    "/Users/ryn/.nvm/versions/node/v24.16.0/bin/node",
+    "--perf-basic-prof",
+    "--logfile=/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-run-7ZrYLp/v8.log",
+    "/Users/ryn/Developer/reference-ui/.muse/worktrees/subagent-v2-01a0c845-7d0d-76d0-9b93-2adddf2b6855-01a0c847-5e9c-7c22-b3e9-0e06b6b62788/packages/reference-neo/benchmark/measure/worker.ts",
+    "/var/folders/r_/j2qpyfhj4kv9tnqc2kfhyhwh0000gn/T/neo-flame-ncUqMy",
+    "10"
+  ],
+  "createdAt": "2026-09-22T08:44:35.340Z",
+  "treeStatus": []
+}

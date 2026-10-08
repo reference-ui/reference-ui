@@ -1,0 +1,28 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__mt_-infr { margin-top: -infr; }
+  .\@reference-ui\/lib__mt_1\/infr { margin-top: 1/infr; }
+  .\@reference-ui\/lib__mt_1e309r { margin-top: 1e309r; }
+  .\@reference-ui\/lib__mt_999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r { margin-top: 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r; }
+  .\@reference-ui\/lib__mt_Infinityr { margin-top: Infinityr; }
+  .\@reference-ui\/lib__mt_1e-3r { margin-top: calc(0.001 * var(--spacing-root)); }
+  .\@reference-ui\/lib__mt_0\.5r { margin-top: calc(0.5 * var(--spacing-root)); }
+  .\@reference-ui\/lib__mt_1e308r { margin-top: calc(100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 * var(--spacing-root)); }
+  .\@reference-ui\/lib__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+  .\@reference-ui\/lib__mt_1\/3r { margin-top: calc(var(--spacing-root) / 3); }
+  .\@reference-ui\/lib__mt_inf\/3r { margin-top: inf/3r; }
+  .\@reference-ui\/lib__mt_infinityr { margin-top: infinityr; }
+  .\@reference-ui\/lib__mt_infr { margin-top: infr; }
+  .\@reference-ui\/lib__mt_nanr { margin-top: nanr; }
+}
+}

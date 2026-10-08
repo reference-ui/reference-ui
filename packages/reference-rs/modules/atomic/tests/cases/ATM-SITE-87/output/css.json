@@ -1,0 +1,9 @@
+{
+  "mb:-1px": "@reference-ui/lib__mb_-1px",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "mt:3r": "@reference-ui/lib__mt_3r",
+  "mt:5r": "@reference-ui/lib__mt_5r",
+  "mt:7r": "@reference-ui/lib__mt_7r",
+  "pb:3.5r": "@reference-ui/lib__pb_3.5r",
+  "py:5r": "@reference-ui/lib__py_5r"
+}

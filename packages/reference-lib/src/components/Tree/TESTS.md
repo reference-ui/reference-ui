@@ -322,6 +322,18 @@ Tree state.
   Assert the consumer handler runs first, prevented Tree movement emits no
   callback, unsupported combinations retain native `defaultPrevented=false`,
   and focus/state remain stable.
+- [x] `TR-KEY-12` `[reference]` `[browser]` `[rtl]` —
+  **Tree asterisk key should expand per APG across closed branch, open branch, and leaf.**
+  Focus a closed branch and press `*`: it expands with focus unmoved. Focus an
+  open branch and press `*`: every closed sibling branch expands in a single
+  deterministic `onExpandedChange` emission. Collapse all, focus a leaf, press
+  `*`: only the first closed sibling branch expands. Repeat closed/open under
+  `dir=rtl` and assert identical behavior; disabled sibling branches are skipped.
+- [x] `TR-KEY-13` `[reference]` `[browser]` —
+  **Tree asterisk key should never enter the typeahead buffer.**
+  Collapse all, focus a leaf, and press `*`, `c`, `h` back-to-back (inside one
+  buffer window). Assert the leaf's first closed sibling branch expanded and
+  focus landed on the `ch` typeahead match — proving `*` left the buffer empty.
 
 ### Visible-only typeahead
 
@@ -361,15 +373,21 @@ Tree state.
 
 ### Dynamic hierarchy
 
-- [x] `TR-DYNAMIC-01` `[vendor]` `[unit]` —
+- [x] `TR-DYNAMIC-01` `[vendor]` `[browser]` —
   **Tree's hierarchy model should recompute metadata and traversal after structural edits.**
+  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
+  note: the shipped engine traverses live DOM, so the metadata/traversal
+  recompute is proven end-to-end through the real component.)
   Insert, remove, and reorder both leaves and branches at root and nested
   levels, including empty and single-branch trees. Assert parent lookup,
   one-based level/sibling position, set size, first/last node, and depth-first
   next/previous traversal after each mutation; this ports Zag's tree
   collection traversal/remove/replace cases.
-- [x] `TR-DYNAMIC-02` `[vendor]` `[unit]` —
+- [x] `TR-DYNAMIC-02` `[vendor]` `[browser]` —
   **Tree's hierarchy model should preserve value identity when moving a branch with descendants.**
+  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
+  note: branch moves with identity preserved are proven end-to-end
+  through the real component.)
   Move a multi-level branch within its parent and then to another parent while
   retaining the same values. Assert every descendant's parent path, level,
   sibling position, and traversal order updates while lookups by value still
@@ -482,6 +500,13 @@ Tree state.
   violations plus exact tree/treeitem/group names, levels, positions,
   expansion, selection, and controls; automation supplements the keyboard and
   focus proofs.
+- [x] `TR-CSS-01` `[reference]` `[browser]` —
+  **Tree branch focus ring should resolve to a real token with no template placeholder.**
+  Mount the Basic fixture and scan the injected stylesheets for the branch
+  `:focus-visible > [data-slot="row"]` rule. Assert the rule exists, declares
+  `outline-color`, and contains no `{...}` theme placeholder (H-2: a literal
+  `{colors…}` in a component-level `css()` value ships verbatim and is
+  unresolvable at runtime).
 
 ## Composition gates
 

@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__mt_-2\.5r { margin-top: calc(-2.5 * var(--spacing-root)); }
+  .\@reference-ui\/lib__max-w_220r { max-width: calc(220 * var(--spacing-root)); }
+  .\@reference-ui\/lib__max-w_140r { max-width: calc(140 * var(--spacing-root)); }
+  .\@reference-ui\/lib__min-h_12\.5r { min-height: calc(12.5 * var(--spacing-root)); }
+  .\@reference-ui\/lib__min-w_137\.5r { min-width: calc(137.5 * var(--spacing-root)); }
+}
+}

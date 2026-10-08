@@ -497,6 +497,7 @@ export type PopoverTriggerProps = OverlayTriggerProps
 export function PopoverTrigger({
   children,
   id,
+  'aria-haspopup': ariaHasPopup = 'dialog',
   onPointerEnter,
   onPointerLeave,
   onPointerDown,
@@ -546,7 +547,7 @@ export function PopoverTrigger({
     <Overlay.Trigger
       {...props}
       id={id}
-      aria-haspopup="dialog"
+      aria-haspopup={ariaHasPopup}
       aria-controls={context?.isOpen ? context.contentId : undefined}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
@@ -569,6 +570,7 @@ export type PopoverContentProps = OverlayContentProps
 export function PopoverContent({
   children,
   id,
+  role = 'dialog',
   onPointerEnter,
   onPointerLeave,
   onFocus,
@@ -585,7 +587,7 @@ export function PopoverContent({
     <Overlay.Content
       {...props}
       id={contentId}
-      role="dialog"
+      role={role}
       tabIndex={-1}
       onPointerEnter={(e: React.PointerEvent<HTMLDivElement>) => {
         onPointerEnter?.(e)

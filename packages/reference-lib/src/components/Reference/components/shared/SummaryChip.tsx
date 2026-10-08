@@ -3,6 +3,7 @@ import { Span, recipe, type RecipeVariantProps } from '@reference-ui/react'
 import { MonoText } from './MonoText'
 
 const summaryChipRecipe = recipe({
+  className: 'summaryChip',
   base: {
     fontSize: '4r',
     fontWeight: '550',

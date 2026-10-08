@@ -16,7 +16,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
     ],
-    "binaryName": "virtual-native"
+    "binaryName": "reference-native"
   },
   "exports": {
     ".": {
@@ -42,28 +42,83 @@
     "./styletrace": {
       "types": "./dist/styletrace.d.ts",
       "import": "./dist/styletrace.mjs"
+    },
+    "./atomic": {
+      "types": "./dist/atomic.d.ts",
+      "import": "./dist/atomic.mjs"
+    },
+    "./namer": {
+      "types": "./dist/namer.d.ts",
+      "import": "./dist/namer.mjs"
+    },
+    "./system": {
+      "types": "./dist/system.d.ts",
+      "import": "./dist/system.mjs"
+    },
+    "./typegen": {
+      "types": "./dist/typegen.d.ts",
+      "import": "./dist/typegen.mjs"
+    },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.mjs"
+    },
+    "./primitives": {
+      "types": "./dist/primitives.d.ts",
+      "import": "./dist/primitives.mjs"
+    },
+    "./contracts": {
+      "types": "./dist/contracts/types.d.ts"
     }
   },
   "files": [
-    "dist",
-    "native",
+    "dist/atlas.d.ts",
+    "dist/atlas.mjs",
+    "dist/atomic.d.ts",
+    "dist/atomic.mjs",
+    "dist/contracts",
+    "dist/diagnostics.d.ts",
+    "dist/diagnostics.mjs",
+    "dist/index.d.ts",
+    "dist/index.mjs",
+    "dist/modules",
+    "dist/namer.d.ts",
+    "dist/namer.mjs",
+    "dist/native",
+    "dist/primitives.d.ts",
+    "dist/primitives.mjs",
+    "dist/styletrace.d.ts",
+    "dist/styletrace.mjs",
+    "dist/system.d.ts",
+    "dist/system.mjs",
+    "dist/tasty",
+    "dist/tasty.d.ts",
+    "dist/tasty.mjs",
+    "dist/typegen.d.ts",
+    "dist/typegen.mjs",
     "README.md",
-    "docs",
-    "npm"
+    "docs"
   ],
   "scripts": {
-    "artifacts": "pnpm exec napi artifacts --output-dir artifacts",
+    "agentrs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
+    "rs": "node ../../.agents/skills/agent-rs/scripts/run.mjs",
+    "canon": "pnpm exec tsx ./modules/canon/generate/generate.ts",
+    "primitives": "pnpm exec tsx ./modules/primitives/generate/generate.ts",
+    "base-system": "pnpm exec tsx ./modules/base-system/generate/generate.ts",
+    "artifacts": "pnpm exec napi artifacts --output-dir dist/artifacts --npm-dir dist/npm",
     "build": "pnpm run ensure-native && pnpm run build:js",
-    "build:js": "tsup && tsc -p tsconfig.build.json && node ./js/tools/create-dts-entrypoints.mjs",
-    "build:native": "pnpm exec napi build --platform --release --output-dir native --no-js",
-    "create-npm-dirs": "pnpm exec napi create-npm-dirs",
-    "ensure-native": "pnpm exec tsx ./js/tools/ensure-native.ts",
-    "prepack": "pnpm run build:js",
-    "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm",
-    "publish:native": "pnpm exec tsx ./js/tools/publish-native.ts",
-    "stage-local-artifacts": "pnpm exec tsx ./js/tools/stage-local-artifacts.ts",
-    "test": "pnpm run ensure-native && cargo test && vitest run",
-    "test:rust": "cargo test",
+    "build:js": "node ./scripts/build-bundle.mjs && tsc -p tsconfig.build.json && node ./modules/runtime/js/tools/create-dts-entrypoints.mjs",
+    "build:native": "pnpm exec napi build --package reference-native --platform --release --output-dir dist/native --no-js",
+    "create-npm-dirs": "pnpm exec napi create-npm-dirs --npm-dir dist/npm",
+    "ensure-native": "pnpm exec tsx ./modules/runtime/js/tools/ensure-native.ts",
+    "verify:native": "pnpm exec tsx ./modules/runtime/js/tools/verify-native-freshness.ts",
+    "write-native-stamp": "pnpm exec tsx ./modules/runtime/js/tools/write-native-stamp.ts",
+    "prepack": "pnpm run verify:native && pnpm run build:js",
+    "prepublish:npm": "pnpm exec napi prepublish --no-gh-release -t npm --npm-dir dist/npm",
+    "publish:native": "pnpm exec tsx ./modules/runtime/js/tools/publish-native.ts",
+    "stage-local-artifacts": "pnpm exec tsx ./modules/runtime/js/tools/stage-local-artifacts.ts",
+    "test": "pnpm run ensure-native && cargo test --workspace && vitest run",
+    "test:rust": "cargo test --workspace --exclude reference-native",
     "test:vitest": "vitest run",
     "test:watch": "vitest"
   },
@@ -72,7 +127,18 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
-    "tsup": "^8.5.1",
+    "@types/css-tree": "3.2.0",
+    "@types/json-schema": "^7.0.15",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@webref/css": "8.7.4",
+    "@webref/elements": "2.8.0",
+    "css-tree": "3.2.1",
+    "csstype": "^3.2.3",
+    "esbuild": "^0.28.2",
+    "json-schema": "^0.4.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "tsx": "^4.21.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.0"

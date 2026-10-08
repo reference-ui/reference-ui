@@ -9,9 +9,8 @@ import {
 const {
   Provider: SlotFixtureProvider,
   useSlotRegistration,
-  useScanById,
-  useGetAll,
-  useRoot,
+  useSlot,
+  useSlots,
 } = createSlotRootContext<{ testMeta?: string }>()
 
 export function SlotFixture() {
@@ -186,11 +185,10 @@ function ActionSecondaryFiller() {
 }
 
 function HostLayout() {
-  const root = useRoot()
-  const titleSlot = useScanById('title')
-  const allSlots = useGetAll()
+  const titleSlot = useSlot('title')
+  const allSlots = useSlots()
 
-  const actionSlots = root.scanAll(s => s.slotId.startsWith('actions'))
+  const actionSlots = useSlots(s => s.slotId.startsWith('actions'))
   const cacheKey = createSlotCacheKey(actionSlots)
 
   const titleVisibility = resolveSlotVisibility(titleSlot?.visibility)

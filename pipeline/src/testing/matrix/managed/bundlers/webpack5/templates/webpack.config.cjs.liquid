@@ -4,9 +4,7 @@
 const path = require('node:path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
-module.exports = async () => {
-  const { referenceWebpack } = await import('@reference-ui/core')
-
+module.exports = () => {
   return {
     mode: 'development',
     devtool: 'eval-cheap-module-source-map',
@@ -43,7 +41,6 @@ module.exports = async () => {
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, 'index.html'),
       }),
-      referenceWebpack(),
     ],
     devServer: {
       port: 4173,

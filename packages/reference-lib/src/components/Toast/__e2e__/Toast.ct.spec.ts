@@ -1,4 +1,5 @@
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap, isWebKit } from '../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'
 
 async function setDocumentHidden(page: Page, hidden: boolean) {
@@ -683,7 +684,7 @@ test.describe('Toast Gate 7', () => {
     await snap(page, 'gate7-custom-resting')
   })
 
-  test('TO-RIVAL-CLOSE: The close control should be an overlapping corner button, off unless asked', async ({
+  test('TO-RIVAL-CLOSE: The close control should be an inline trailing button fully inside the card, off unless asked', async ({
     mount,
     page,
   }) => {
@@ -703,8 +704,13 @@ test.describe('Toast Gate 7', () => {
     expect(closeBox && cardBox).toBeTruthy()
     expect(Math.round(closeBox!.width)).toBe(20)
     expect(Math.round(closeBox!.height)).toBe(20)
-    expect(closeBox!.x).toBeLessThan(cardBox!.x + 8)
-    expect(closeBox!.y).toBeLessThan(cardBox!.y + 8)
+    // B-37: fully inside the card — never straddling the corner (1px rounding slop).
+    expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
+    expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
+    expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
+    expect(closeBox!.y + closeBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1)
+    // Trailing end of the row (LTR: right half).
+    expect(closeBox!.x + closeBox!.width / 2).toBeGreaterThan(cardBox!.x + cardBox!.width / 2)
     await page.waitForTimeout(300)
     await snap(page, 'gate7-close-button')
 
@@ -861,10 +867,16 @@ test('TO-RIVAL-DIR: dir should flip chrome and the meaning of start and end', as
   await page.getByTestId('btn-close').click()
   const close = page.locator('[data-reference-toast-close]')
   const root = page.locator('[data-reference-toast-root]')
+  await expect(close).toBeVisible()
   const closeBox = await close.boundingBox()
   const cardBox = await root.boundingBox()
   expect(closeBox && cardBox).toBeTruthy()
-  expect(closeBox!.x + closeBox!.width).toBeGreaterThan(cardBox!.x + cardBox!.width - 12)
+  // B-37: fully inside the card in RTL too, at the trailing (inline-end) side.
+  expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
+  expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
+  expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
+  expect(closeBox!.y + closeBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1)
+  expect(closeBox!.x + closeBox!.width / 2).toBeLessThan(cardBox!.x + cardBox!.width / 2)
   await page.waitForTimeout(300)
   await snap(page, 'gate7-rtl-layout')
 })
@@ -1050,8 +1062,8 @@ test.describe('Toast hardening', () => {
     await mount('components/Toast/Toast/Harden')
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
-    const polite = page.getByTestId('polite-announcer')
-    const assertive = page.getByTestId('assertive-announcer')
+    const polite = page.locator('[data-reference-announcer="polite"]')
+    const assertive = page.locator('[data-reference-announcer="assertive"]')
     await page.getByTestId('btn-announce-polite').click()
     await expect(polite).toHaveText('Project saved')
     await expect(page.locator('[data-reference-toast-id]')).toHaveCount(0)
@@ -1085,6 +1097,11 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
+    // FINISH-02F-VH (F18, F14 vehicle): WebKit clicks never focus buttons, so
+    // the focusin-recorded opener chain stays empty and restore no-ops.
+    // Deliver the Chromium focus state; dismiss + restore below are the
+    // product contract and run identically.
+    if (isWebKit(page)) await page.getByTestId('btn-show').focus()
     await expect(page.getByTestId('dismiss')).toBeVisible()
     await page.waitForTimeout(300)
     await page.getByTestId('dismiss').focus()
@@ -1099,6 +1116,9 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
+    // FINISH-02F-VH (F19, F14 vehicle): same WebKit click-focus delivery as
+    // F18 — records the opener so the invalid-opener fallback below is tested.
+    if (isWebKit(page)) await page.getByTestId('btn-show').focus()
     await expect(page.getByTestId('dismiss')).toBeVisible()
     await page.waitForTimeout(300)
     await page.getByTestId('dismiss').focus()
@@ -1127,7 +1147,7 @@ test.describe('Toast hardening', () => {
     await page.getByTestId('btn-open-overlay').click()
     await expect(page.getByTestId('harden-modal')).toBeVisible()
     await expect(host).not.toHaveAttribute('inert')
-    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    await expect(page.locator('[data-reference-announcer="polite"]')).toBeVisible()
     await page.getByTestId('toast-input').click()
     await page.getByTestId('toast-input').fill('kept')
     await expect(page.getByTestId('harden-modal')).toBeVisible()
@@ -1139,6 +1159,10 @@ test.describe('Toast hardening', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator('[data-reference-toast-id="untimed"]')).toBeVisible()
     await page.getByTestId('btn-away').click()
+    // FINISH-02F-VH (F20, F14 vehicle): WebKit never focuses on click — deliver
+    // the focus state directly. The contract (toast is not modal; an outside
+    // control stays reachable while the toast is exposed) still runs.
+    if (isWebKit(page)) await page.getByTestId('btn-away').focus()
     await expect(page.getByTestId('btn-away')).toBeFocused()
   })
 
@@ -1169,7 +1193,7 @@ test.describe('Toast hardening', () => {
 
     await page.getByTestId('btn-interactive').click()
     await expect(page.getByTestId('toast-form')).toBeVisible()
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Draft was saved')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Draft was saved')
     await page.getByTestId('toast-form-close').click()
 
     await page.evaluate(() => {
@@ -1325,13 +1349,13 @@ test.describe('Toast hardening', () => {
     await page.getByTestId('btn-announce-both').click()
     const host = page.locator('[data-reference-toast-host]')
     await expect(host).toHaveAttribute('role', 'region')
-    await expect(page.getByTestId('polite-announcer')).toHaveAttribute('aria-live', 'polite')
-    await expect(page.getByTestId('assertive-announcer')).toHaveAttribute('aria-live', 'assertive')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveAttribute('aria-live', 'polite')
+    await expect(page.locator('[data-reference-announcer="assertive"]')).toHaveAttribute('aria-live', 'assertive')
     await expect(page.locator('[data-reference-toast-id="interactive"]')).not.toHaveAttribute('role')
     await page.getByTestId('btn-open-overlay').click()
     await expect(page.getByTestId('harden-modal')).toBeVisible()
     await expect(host).not.toHaveAttribute('inert')
-    await expect(page.getByTestId('polite-announcer')).toBeVisible()
+    await expect(page.locator('[data-reference-announcer="polite"]')).toBeVisible()
     const snapshot = typeof (page as any).accessibility?.snapshot === 'function'
       ? await (page as any).accessibility.snapshot()
       : null
@@ -1342,6 +1366,20 @@ test.describe('Toast hardening', () => {
       expect(snapshotText).toContain('Session expired')
       expect(snapshotText).toContain('Modal')
     }
+
+    // Scanner half: the Harden mount holds all positions, an interactive
+    // toast, both announcers, and the open modal in one settled state;
+    // #root scoping covers it whole (the toast host renders in place,
+    // no portals). Narrowed past the app-authored custom-toast input:
+    // toast.custom() renders whatever the app passes, and the story's
+    // raw <input> carries no label or authored colors of its own —
+    // excluding that one node keeps label/contrast coverage on every
+    // component-owned node. Raw: `color-contrast [serious]` +
+    // `label [critical]`, both on input[data-testid="toast-input"] only.
+    await expectNoAxeViolations(page, {
+      include: '#root',
+      exclude: '[data-testid="toast-input"]',
+    })
   })
 })
 
@@ -1376,7 +1414,7 @@ test.describe('Toast hardening premount', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
     await page.getByTestId('btn-premount-queue').click()
     await expect(page.locator('[data-reference-toast-host]')).toHaveCount(0)
-    await expect(page.getByTestId('polite-announcer')).toHaveCount(0)
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveCount(0)
     await page.evaluate(() => {
       ;(window as unknown as { __ann?: string[] }).__ann = []
       const seen = (window as unknown as { __ann: string[] }).__ann
@@ -1391,7 +1429,7 @@ test.describe('Toast hardening premount', () => {
     })
     await page.getByTestId('btn-premount-mount').click()
     await expect(page.locator('[data-reference-toast-id="pre"]')).toHaveCount(1)
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Ready')
     await expect.poll(async () => page.evaluate(() => (window as unknown as { __ann?: string[] }).__ann ?? [])).toEqual(
       expect.arrayContaining(['Saved', 'Ready'])
     )
@@ -1420,10 +1458,10 @@ test.describe('Toast hardening shadow', () => {
     await page.getByTestId('btn-shadow-update').click()
     await expect(page.locator('[data-reference-toast-id="shadow-toast"]')).toContainText('shadow updated')
     await page.getByTestId('btn-shadow-announce').click()
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Shadow ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Shadow ready')
     const announcerInShadow = await page.evaluate(() => {
       const shadowHost = document.querySelector('[data-testid="shadow-host"]') as HTMLElement | null
-      return Boolean(shadowHost?.shadowRoot?.querySelector('[data-testid="polite-announcer"]'))
+      return Boolean(shadowHost?.shadowRoot?.querySelector('[data-reference-announcer="polite"]'))
     })
     expect(announcerInShadow).toBe(true)
     await page.getByTestId('btn-shadow-dismiss').click()
@@ -1438,7 +1476,7 @@ test.describe('Toast hardening StrictMode', () => {
     const item = page.locator('[data-reference-toast-id="compat"]')
     await expect(item).toHaveCount(1)
     await expect(item).toContainText('Saved')
-    await expect(page.getByTestId('polite-announcer')).toHaveText('Ready')
+    await expect(page.locator('[data-reference-announcer="polite"]')).toHaveText('Ready')
     await page.getByTestId('btn-strict-update').click()
     await expect(item).toHaveCount(1)
     await page.getByTestId('btn-strict-dismiss').click()

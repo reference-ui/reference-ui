@@ -18,7 +18,6 @@ cosmos-export
 *.node
 *.inputs.sha256
 *.sha256
-packages/reference-rs/native/
 
 # IDE
 .cursor/*
@@ -32,6 +31,7 @@ packages/reference-rs/native/
 
 # Misc
 .DS_Store
+.muse/
 .env.local
 .env.development.local
 .env.test.local
@@ -45,6 +45,8 @@ pnpm-debug.log*
 packages/reference-icons/src/generated/
 .complexity-temp
 reports/
+# Bench pins are the committed log, not scratch (see benchmark/README.md).
+!packages/reference-neo/benchmark/reports/
 .eslint-result.txt
 .reference
 packages/.sandbox
@@ -55,6 +57,7 @@ packages/.sandbox
 pipeline/src/registry/.store
 packages/reference-core/src/system/styled
 packages/reference-core/src/reference/browser-component/
+packages/reference-neo/src/reference/browser-component/
 
 # Nx
 .nx
@@ -65,4 +68,12 @@ test-results/
 playwright-report/
 playwright/.cache/
 blob-report/
+packages/reference-neo/tests/.artifacts/
+packages/reference-neo/tests/cases/**/dist/
+packages/reference-neo/playground/.captures/
+.playwright-mcp/
+.agents/case-index/.cache/
 
+
+# pack artifacts (npm pack / tarballs) — never committed
+*.tgz

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-bare",
+  "tokens": {
+    "radii": {
+      "sm": {
+        "value": "0.125rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

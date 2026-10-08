@@ -1,0 +1,10 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer root-default {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer utilities {
+  .root-default__p_8px { padding: 8px; }
+  .root-default__c_red { color: red; }
+}
+}

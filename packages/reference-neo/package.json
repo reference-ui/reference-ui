@@ -1,0 +1,57 @@
+{
+  "name": "@reference-ui/neo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Successor host for Reference UI. TypeScript above the cut. Not a fork of core.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reference-ui/reference-ui",
+    "directory": "packages/reference-neo"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./runtime": "./dist/src/runtime/index.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "ref": "./dist/bin/ref.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node tools/build-bin.mjs",
+    "prepack": "node tools/build-bin.mjs",
+    "prepublishOnly": "node tools/build-bin.mjs"
+  },
+  "dependencies": {
+    "@parcel/watcher": "^2.6.0",
+    "@reference-ui/rust": "workspace:*",
+    "@rspress/mdx-rs": "^0.6.6",
+    "commander": "^14.0.3",
+    "esbuild": "^0.28.1",
+    "fast-glob": "^3.3.2",
+    "picomatch": "^4.0.4",
+    "symlink-dir": "^10.0.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@reference-ui/neo": "workspace:*",
+    "@types/node": "^25.1.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.63.0",
+    "pngjs": "^7.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "scheduler": "0.27.0",
+    "typescript": "~7.0.2",
+    "vite": "^7.3.5",
+    "vitest": "^4.1.0"
+  }
+}

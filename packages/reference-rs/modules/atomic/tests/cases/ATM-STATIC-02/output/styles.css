@@ -1,0 +1,13 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer static-css-overlap {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .static-css-overlap__bg_n100 { background: var(--colors-n100); }
+  .static-css-overlap__bg_n300 { background: var(--colors-n300); }
+}
+}

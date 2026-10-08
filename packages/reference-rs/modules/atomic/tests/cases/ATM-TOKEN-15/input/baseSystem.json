@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-radii",
+  "tokens": {
+    "radii": {
+      "full": {
+        "value": "9999px"
+      },
+      "md": {
+        "value": "0.375rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

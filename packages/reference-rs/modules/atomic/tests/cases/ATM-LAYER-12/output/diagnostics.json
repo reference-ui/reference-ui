@@ -1,0 +1,13 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-EMPTY-AT-RULE",
+    "message": "Empty at-rule query in global CSS: \"@supports\"",
+    "file": "rs-27",
+    "line": 1,
+    "column": 1,
+    "help": [
+      "fill in the query on '@supports' or drop the key"
+    ]
+  }
+]

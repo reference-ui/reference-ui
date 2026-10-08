@@ -1,0 +1,17 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer token-bare {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .token-bare__rounded_sm { border-radius: var(--radii-sm); }
+  .token-bare__c_md { color: md; }
+  .token-bare__fs_sm { font-size: sm; }
+}
+}

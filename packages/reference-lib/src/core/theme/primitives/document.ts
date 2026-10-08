@@ -2,10 +2,17 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText, focusRingStyles } from './shared'
 
 export const documentPrimitiveStyles = {
-  '.ref-div, .ref-span, .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
+  '.ref-div, .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
     {
       ...baseTypography,
     },
+
+  // B-09/W-03: Span inherits instead of pinning the body text color, so it stays
+  // legible on dark/colored surfaces (e.g. the default Tooltip chip) with zero overrides.
+  '.ref-span': {
+    ...baseTypography,
+    color: 'inherit',
+  },
 
   '.ref-article, .ref-section, .ref-aside, .ref-header, .ref-footer, .ref-nav, .ref-main':
     {

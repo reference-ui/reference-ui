@@ -1,0 +1,5 @@
+{
+  "bg:ui.progress.track.mixBackground": "token-kebab__bg_ui.progress.track.mixBackground",
+  "borderColor:ui.meter.evenLessGood.foreground": "token-kebab__bd-c_ui.meter.evenLessGood.foreground",
+  "color:ui.progress.track.mixForeground": "token-kebab__c_ui.progress.track.mixForeground"
+}

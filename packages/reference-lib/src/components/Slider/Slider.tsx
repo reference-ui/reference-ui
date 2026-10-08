@@ -9,21 +9,35 @@ import {
   sliderThumb,
 } from '../../core/theme/primitives/shared'
 import { isFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
+import {
+  validateSliderConfig,
+  snapValueToStep,
+  stepValue,
+  getPageStep,
+  getThumbBounds,
+  valueToPercent,
+} from './slider-math'
 
 export type SliderOrientation = 'horizontal' | 'vertical'
 export type SliderValue = number | number[]
 
-export type SliderProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
-  value?: SliderValue
-  defaultValue?: SliderValue
+const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+
+function warnSlider(message: string) {
+  if (globalProcess?.env?.NODE_ENV === 'production') return
+  console.error(`[Reference UI Slider] ${message}`)
+}
+
+export type SliderProps<T extends SliderValue = SliderValue> = Omit<PrimitiveProps<'div'>, 'onChange' | 'defaultValue'> & {
+  value: T
   min?: number
   max?: number
   step?: number
   minStepsBetweenThumbs?: number
   orientation?: SliderOrientation
   disabled?: boolean
-  onChange?: (value: any) => void
-  onChangeEnd?: (value: any) => void
+  onChange?: (value: T) => void
+  onChangeEnd?: (value: T) => void
 }
 
 interface SliderContextValue {
@@ -34,14 +48,26 @@ interface SliderContextValue {
   minStepsBetweenThumbs: number
   orientation: SliderOrientation
   disabled: boolean
+  isRtl: boolean
   draggingIndex: number | null
   focusVisibleIndex: number | null
+  activeThumbIndex: number | null
   trackRef: React.RefObject<HTMLDivElement | null>
-  updateThumbValue: (index: number, nextVal: number) => void
-  commitThumbValue: (index: number, nextVal: number) => void
-  setDraggingIndex: (index: number | null) => void
+  registerTrack: (node: HTMLDivElement | null) => void
+  registerRange: (node: HTMLDivElement | null) => void
+  claimThumbId: () => number
+  registerThumb: (id: number, node: HTMLDivElement | null) => void
+  getThumbIndex: (id: number) => number
+  startPointerDrag: (
+    e: React.PointerEvent<HTMLDivElement>,
+    targetIndex: number,
+    fromThumb: boolean
+  ) => void
+  handleThumbKeyDown: (e: React.KeyboardEvent<HTMLDivElement>, index: number) => void
+  handleThumbKeyUp: (e: React.KeyboardEvent<HTMLDivElement>, index: number) => void
+  handleThumbFocus: (e: React.FocusEvent<HTMLDivElement>, index: number) => void
+  handleThumbBlur: (e: React.FocusEvent<HTMLDivElement>, index: number) => void
   setFocusVisibleIndex: (index: number | null) => void
-  registerThumb: (index: number, node: HTMLDivElement | null) => void
 }
 
 const SliderContext = React.createContext<SliderContextValue | null>(null)
@@ -54,6 +80,7 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
       children,
       className,
       style,
+      onPointerDown,
       ...props
     },
     forwardedRef
@@ -65,6 +92,7 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
     const handleRef = React.useCallback(
       (node: HTMLDivElement | null) => {
         if (context) {
+          context.registerTrack(node)
           ;(context.trackRef as React.MutableRefObject<HTMLDivElement | null>).current = node
         }
         if (typeof forwardedRef === 'function') {
@@ -75,6 +103,84 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
       },
       [context, forwardedRef]
     )
+
+    const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      onPointerDown?.(e)
+      if (!context || e.defaultPrevented || context.disabled) return
+      if (e.button !== 0 || (e.isPrimary !== undefined && !e.isPrimary)) return
+
+      const {
+        trackRef,
+        startPointerDrag,
+        values,
+        min,
+        max,
+        step,
+        minStepsBetweenThumbs,
+        isRtl,
+        activeThumbIndex,
+      } = context
+
+      const trackEl = trackRef.current
+      if (!trackEl) return
+
+      const rect = trackEl.getBoundingClientRect()
+      if (isHorizontal && rect.width === 0) return
+      if (!isHorizontal && rect.height === 0) return
+
+      let clickPercent: number
+      if (isHorizontal) {
+        clickPercent = isRtl
+          ? (rect.right - e.clientX) / rect.width
+          : (e.clientX - rect.left) / rect.width
+      } else {
+        clickPercent = (rect.bottom - e.clientY) / rect.height
+      }
+      clickPercent = Math.max(0, Math.min(1, clickPercent))
+      const rawVal = min + clickPercent * (max - min)
+      const snapped = snapValueToStep(rawVal, min, max, step)
+
+      // Frozen tie rule: nearest movable thumb; ties choose the most recently
+      // active thumb, then the lower DOM index.
+      let chosenIndex = 0
+      if (values.length > 1) {
+        const candidates: { index: number; dist: number; movable: boolean }[] = []
+        for (let i = 0; i < values.length; i++) {
+          const bounds = getThumbBounds(values, i, min, max, step, minStepsBetweenThumbs)
+          const cur = values[i]
+          let movable = false
+          if (snapped > cur && cur < bounds.max) movable = true
+          else if (snapped < cur && cur > bounds.min) movable = true
+          else if (snapped === cur) movable = true
+
+          candidates.push({
+            index: i,
+            dist: Math.abs(cur - snapped),
+            movable,
+          })
+        }
+
+        const movableCandidates = candidates.filter(c => c.movable)
+        const pool = movableCandidates.length > 0 ? movableCandidates : candidates
+
+        let minDist = Infinity
+        for (const c of pool) {
+          if (c.dist < minDist) minDist = c.dist
+        }
+        const closest = pool.filter(c => Math.abs(c.dist - minDist) < 1e-9)
+
+        if (
+          activeThumbIndex !== null &&
+          closest.some(c => c.index === activeThumbIndex)
+        ) {
+          chosenIndex = activeThumbIndex
+        } else {
+          chosenIndex = closest[0].index
+        }
+      }
+
+      startPointerDrag(e, chosenIndex, false)
+    }
 
     return (
       <Div
@@ -88,6 +194,7 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
         height={isHorizontal ? sliderTrack.height : '100%'}
         width={orientation === 'vertical' ? sliderTrack.height : '100%'}
         className={className}
+        onPointerDown={handleTrackPointerDown}
         style={{
           height: isHorizontal ? sliderTrack.heightPx : '100%',
           width: orientation === 'vertical' ? sliderTrack.heightPx : '100%',
@@ -105,35 +212,54 @@ export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
 
 export type SliderRangeProps = PrimitiveProps<'div'>
 
-export function SliderRange({
-  className,
-  style,
-  ...props
-}: SliderRangeProps) {
-  const context = React.useContext(SliderContext)
-  if (!context) return null
+export const SliderRange = React.forwardRef<HTMLDivElement, SliderRangeProps>(
+  function SliderRange(
+    {
+      className,
+      style,
+      ...props
+    },
+    forwardedRef
+  ) {
+    const context = React.useContext(SliderContext)
+    const registerRange = context?.registerRange
 
-  const { values, min, max, orientation } = context
-  const startVal = values.length > 1 ? Math.min(...values) : min
-  const endVal = values.length > 1 ? Math.max(...values) : values[0] ?? min
-  const range = max - min || 1
+    const handleRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        registerRange?.(node)
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node)
+        } else if (forwardedRef) {
+          ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }
+      },
+      [registerRange, forwardedRef]
+    )
 
-  const startPercent = Math.max(0, Math.min(100, ((startVal - min) / range) * 100))
-  const endPercent = Math.max(0, Math.min(100, ((endVal - min) / range) * 100))
-  const sizePercent = endPercent - startPercent
+    if (!context) return null
 
-  const isHorizontal = orientation === 'horizontal'
+    const { values, min, max, orientation, isRtl } = context
+    const startVal = values.length > 1 ? Math.min(...values) : min
+    const endVal = values.length > 1 ? Math.max(...values) : values[0] ?? min
 
-  return (
-    <Div
-      data-reference-slider-range=""
+    const startPercent = valueToPercent(startVal, min, max)
+    const endPercent = valueToPercent(endVal, min, max)
+    const sizePercent = endPercent - startPercent
+
+    const isHorizontal = orientation === 'horizontal'
+
+    return (
+      <Div
+        ref={handleRef}
+        data-reference-slider-range=""
       position="absolute"
       bg="ui.progress.bar.foreground"
       borderRadius="full"
       pointerEvents="none"
       className={className}
       style={{
-        left: isHorizontal ? `${startPercent}%` : 0,
+        left: isHorizontal ? (isRtl ? undefined : `${startPercent}%`) : 0,
+        right: isHorizontal && isRtl ? `${startPercent}%` : undefined,
         bottom: !isHorizontal ? `${startPercent}%` : undefined,
         top: isHorizontal ? 0 : undefined,
         width: isHorizontal ? `${sizePercent}%` : '100%',
@@ -144,27 +270,43 @@ export function SliderRange({
       }}
       {...props}
     />
-  )
-}
+    )
+  }
+)
 
 export type SliderThumbProps = PrimitiveProps<'div'> & {
-  index?: number
   valueText?: string
   formatValue?: (value: number) => string
 }
 
-export function SliderThumb({
-  index = 0,
-  valueText,
-  formatValue,
-  className,
-  style,
-  onKeyDown,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  ...props
-}: SliderThumbProps) {
+// Invisible WCAG 2.5.8 hit-area: the painted DSP fader cap stays 24x16
+// (cross axis grows to 24 via the pseudo element, which paints nothing).
+const thumbHitAreaHorizontal = {
+  content: '""',
+  position: 'absolute',
+  inset: '-4px 0',
+} as const
+const thumbHitAreaVertical = {
+  content: '""',
+  position: 'absolute',
+  inset: '0 -4px',
+} as const
+
+export const SliderThumb = React.forwardRef<HTMLDivElement, SliderThumbProps>(function SliderThumb(
+  {
+    valueText,
+    formatValue,
+    className,
+    style,
+    onKeyDown,
+    onKeyUp,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    ...props
+  }: SliderThumbProps,
+  forwardedRef
+) {
   const context = React.useContext(SliderContext)
   if (!context) return null
 
@@ -172,16 +314,26 @@ export function SliderThumb({
     values,
     min,
     max,
-    step,
-    minStepsBetweenThumbs,
     orientation,
     disabled,
-    updateThumbValue,
-    commitThumbValue,
-    registerThumb,
+    isRtl,
+    draggingIndex,
     focusVisibleIndex,
+    activeThumbIndex,
+    claimThumbId,
+    registerThumb,
+    getThumbIndex,
+    startPointerDrag,
+    handleThumbKeyDown,
+    handleThumbKeyUp,
+    handleThumbFocus,
+    handleThumbBlur,
     setFocusVisibleIndex,
   } = context
+  // Auto mount-order identity: the claim order is the DOM order on first
+  // paint and SSR; getThumbIndex reconciles to DOM order after commit.
+  const [mountId] = React.useState(claimThumbId)
+  const index = getThumbIndex(mountId)
   const [localFocusVisible, setLocalFocusVisible] = React.useState(false)
   const isFocusVisibleManaged =
     focusVisibleIndex !== undefined
@@ -189,139 +341,101 @@ export function SliderThumb({
       : localFocusVisible
 
   const val = values[index] ?? min
-  const range = max - min || 1
-  const percent = Math.max(0, Math.min(100, ((val - min) / range) * 100))
+  const percent = valueToPercent(val, min, max)
   const isHorizontal = orientation === 'horizontal'
-  const isDraggingRef = React.useRef(false)
   const [isThumbPressed, setIsThumbPressed] = React.useState(false)
-  const isDragging = context.draggingIndex === index
+  const isDragging = draggingIndex === index
   const isActive = isDragging || isThumbPressed
 
+  // Keep retained local pressed/focus state coherent with the owned session:
+  // every session end (release, cancel, disable, unmount) clears draggingIndex.
+  React.useEffect(() => {
+    if (draggingIndex !== index) {
+      setIsThumbPressed(false)
+    }
+  }, [draggingIndex, index])
+  React.useEffect(() => {
+    setLocalFocusVisible(focusVisibleIndex === index)
+  }, [focusVisibleIndex, index])
+
+  // Composed ref: registration must survive a consumer ref. (A plain
+  // function component lets React 19 ref-as-prop overwrite registration
+  // via the {...props} spread below, silently breaking interaction.)
   const setThumbRef = React.useCallback(
     (node: HTMLDivElement | null) => {
-      registerThumb(index, node)
+      registerThumb(mountId, node)
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(node)
+      } else if (forwardedRef) {
+        ;(forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }
     },
-    [registerThumb, index]
+    [registerThumb, mountId, forwardedRef]
   )
 
-  const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-  const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
+  // Out-of-range thumbs render global bounds so no ARIA attribute ever
+  // contains NaN; the count mismatch itself throws when interaction begins.
+  const inRange = index >= 0 && index < values.length
+  const thumbBounds = inRange
+    ? getThumbBounds(values, index, min, max, context.step, context.minStepsBetweenThumbs)
+    : { min, max }
+  // B-29: the render path clamps ARIA to the feasible window, exactly like
+  // the visual position — a controlled value=999/max=24 exposes 24, never
+  // a now/min/max triple AT would reject.
+  const thumbMin = Math.max(min, Math.min(max, thumbBounds.min))
+  const thumbMax = Math.max(min, Math.min(max, thumbBounds.max))
+  const ariaNow = Math.max(thumbMin, Math.min(thumbMax, val))
+
+  // The most recently active thumb paints on top so a direct stack press hits
+  // the tie-rule winner; with no active thumb the lower index paints above.
+  let zIndex = 1
+  if (activeThumbIndex === index) {
+    zIndex = 2
+  } else if (activeThumbIndex === null) {
+    zIndex = Math.max(1, values.length - index)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e)
     if (e.defaultPrevented || disabled) return
+    handleThumbKeyDown(e, index)
+  }
 
-    setFocusVisibleIndex(index)
-    setLocalFocusVisible(true)
-
-    const pageStep = Math.max(step, Math.ceil((max - min) / 10 / step) * step)
-    const stepAmount = e.shiftKey ? pageStep : step
-
-    let nextVal = val
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      nextVal = Math.min(thumbMax, val + stepAmount)
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      nextVal = Math.max(thumbMin, val - stepAmount)
-    } else if (e.key === 'Home') {
-      nextVal = thumbMin
-    } else if (e.key === 'End') {
-      nextVal = thumbMax
-    } else if (e.key === 'PageUp') {
-      nextVal = Math.min(thumbMax, val + pageStep)
-    } else if (e.key === 'PageDown') {
-      nextVal = Math.max(thumbMin, val - pageStep)
-    }
-
-    if (nextVal !== val) {
-      e.preventDefault()
-      updateThumbValue(index, nextVal)
-      commitThumbValue(index, nextVal)
-    }
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyUp?.(e)
+    if (e.defaultPrevented || disabled) return
+    handleThumbKeyUp(e, index)
   }
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerDown?.(e)
     if (e.defaultPrevented || disabled) return
+    if (e.button !== 0 || (e.isPrimary !== undefined && !e.isPrimary)) return
     e.stopPropagation()
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId)
-    } catch {}
-    isDraggingRef.current = true
     setIsThumbPressed(true)
-    setFocusVisibleIndex(null)
-    setLocalFocusVisible(false)
-    context.setDraggingIndex(index)
-    e.currentTarget.focus()
+    startPointerDrag(e, index, true)
   }
 
   const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     props.onFocus?.(e)
     if (e.defaultPrevented) return
-
-    if (!isDraggingRef.current && context.draggingIndex === null && isFocusVisible()) {
-      setFocusVisibleIndex(index)
-      setLocalFocusVisible(true)
-    } else {
-      setFocusVisibleIndex(null)
-      setLocalFocusVisible(false)
-    }
+    handleThumbFocus(e, index)
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     props.onBlur?.(e)
     if (e.defaultPrevented) return
-
-    if (focusVisibleIndex === index) {
-      setFocusVisibleIndex(null)
-    }
-    setLocalFocusVisible(false)
+    handleThumbBlur(e, index)
   }
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  // Consumer move/up handlers stay attached to the element; internal drag
+  // math runs on owned window listeners so drags survive leaving the track.
+  const handleConsumerPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerMove?.(e)
-    if (!isDraggingRef.current || disabled) return
-    setFocusVisibleIndex(null)
-    const trackEl = context.trackRef.current
-    if (!trackEl) return
-
-    const rect = trackEl.getBoundingClientRect()
-    let nextPercent: number
-    if (isHorizontal) {
-      nextPercent = (e.clientX - rect.left) / rect.width
-    } else {
-      nextPercent = (rect.bottom - e.clientY) / rect.height
-    }
-    nextPercent = Math.max(0, Math.min(1, nextPercent))
-    const rawVal = min + nextPercent * (max - min)
-    updateThumbValue(index, rawVal)
   }
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleConsumerPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerUp?.(e)
-    if (!isDraggingRef.current) return
-    isDraggingRef.current = false
-    setIsThumbPressed(false)
-    setFocusVisibleIndex(null)
-    setLocalFocusVisible(false)
-    context.setDraggingIndex(null)
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId)
-      }
-    } catch {}
-    const trackEl = context.trackRef.current
-    if (trackEl) {
-      const rect = trackEl.getBoundingClientRect()
-      let nextPercent: number
-      if (isHorizontal) {
-        nextPercent = (e.clientX - rect.left) / rect.width
-      } else {
-        nextPercent = (rect.bottom - e.clientY) / rect.height
-      }
-      nextPercent = Math.max(0, Math.min(1, nextPercent))
-      const rawVal = min + nextPercent * (max - min)
-      commitThumbValue(index, rawVal)
-    }
   }
 
   const defaultAriaLabel =
@@ -339,7 +453,7 @@ export function SliderThumb({
     (props['aria-valuenow'] !== undefined
       ? undefined
       : formatValue
-      ? formatValue(val)
+      ? formatValue(ariaNow)
       : undefined)
 
   return (
@@ -350,7 +464,7 @@ export function SliderThumb({
       aria-label={props['aria-label'] ?? defaultAriaLabel}
       aria-valuemin={thumbMin}
       aria-valuemax={thumbMax}
-      aria-valuenow={val}
+      aria-valuenow={ariaNow}
       aria-valuetext={ariaValueText}
       aria-orientation={orientation}
       aria-disabled={disabled ? true : undefined}
@@ -358,11 +472,13 @@ export function SliderThumb({
       data-orientation={orientation}
       data-disabled={disabled ? '' : undefined}
       data-active={isActive ? '' : undefined}
+      data-dragging={isDragging ? '' : undefined}
       data-focus-visible={!isActive && isFocusVisibleManaged ? '' : undefined}
       onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      onPointerMove={handleConsumerPointerMove}
+      onPointerUp={handleConsumerPointerUp}
       onFocus={handleFocus}
       onBlur={handleBlur}
       position="absolute"
@@ -375,8 +491,10 @@ export function SliderThumb({
       touchAction="none"
       transition="box-shadow 200ms ease, transform 200ms ease"
       _focusVisible={focusRing}
+      _before={isHorizontal ? thumbHitAreaHorizontal : thumbHitAreaVertical}
       className={className}
       style={{
+        zIndex,
         width: isHorizontal ? sliderThumb.lengthPx : sliderThumb.crossPx,
         height: isHorizontal ? sliderThumb.crossPx : sliderThumb.lengthPx,
         borderRadius: sliderThumb.borderRadiusPx,
@@ -384,16 +502,49 @@ export function SliderThumb({
           ? '0 0 0 4px color-mix(in oklch, var(--colors-ui-progress-bar-foreground, currentColor) 15.2%, transparent)'
           : undefined,
         outline: !isActive && isFocusVisibleManaged ? undefined : 'none',
-        left: isHorizontal ? `${percent}%` : '50%',
+        left: isHorizontal ? (isRtl ? undefined : `${percent}%`) : '50%',
+        right: isHorizontal && isRtl ? `${percent}%` : undefined,
         bottom: !isHorizontal ? `${percent}%` : undefined,
         top: isHorizontal ? '50%' : undefined,
-        transform: isHorizontal ? 'translate(-50%, -50%)' : 'translate(-50%, 50%)',
+        transform: isHorizontal
+          ? isRtl
+            ? 'translate(50%, -50%)'
+            : 'translate(-50%, -50%)'
+          : 'translate(-50%, 50%)',
         ['--reference-slider-thumb-position' as any]: `${percent}%`,
         ...style,
       }}
       {...props}
     />
   )
+})
+
+SliderThumb.displayName = 'SliderThumb'
+
+function countMismatchMessage(valueLength: number, thumbCount: number): string {
+  return (
+    `[Slider] Value-to-Thumb count mismatch: value has ${valueLength} ` +
+    `${valueLength === 1 ? 'entry' : 'entries'} but ${thumbCount} ` +
+    `${thumbCount === 1 ? 'Thumb is' : 'Thumbs are'} registered`
+  )
+}
+
+// Mount ids in DOM order; disconnected or incomparable nodes keep
+// registration order so identity never depends on layout availability.
+function sortThumbIdsByDomOrder(registry: Map<number, HTMLDivElement>): number[] {
+  const entries = [...registry.entries()]
+  try {
+    entries.sort(([, a], [, b]) => {
+      if (a === b) return 0
+      const pos = a.compareDocumentPosition(b)
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+      if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+      return 0
+    })
+  } catch {
+    // Conservatively keep registration order.
+  }
+  return entries.map(([id]) => id)
 }
 
 export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
@@ -401,7 +552,6 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     {
       children,
       value: valueProp,
-      defaultValue = 0,
       min = 0,
       max = 100,
       step = 1,
@@ -412,62 +562,544 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       onChangeEnd,
       className,
       style,
+      onPointerDown,
       ...props
     },
     ref
   ) {
-    const isControlled = valueProp !== undefined
-    const [internalValue, setInternalValue] = React.useState<SliderValue>(defaultValue)
-    const currentValue = isControlled ? valueProp : internalValue
+    const currentValue = valueProp
 
+    // Fail fast on malformed configuration before any ARIA or CSS publishes.
+    validateSliderConfig({
+      min,
+      max,
+      step,
+      minStepsBetweenThumbs,
+      value: currentValue,
+    })
+
+    const isRange = Array.isArray(currentValue)
     const values = React.useMemo(() => {
-      if (Array.isArray(currentValue)) return currentValue
+      if (Array.isArray(currentValue)) return [...currentValue]
       return [typeof currentValue === 'number' ? currentValue : min]
     }, [currentValue, min])
 
-    const trackRef = React.useRef<HTMLDivElement | null>(null)
-
-    const updateThumbValue = React.useCallback(
-      (index: number, nextVal: number) => {
-        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
-        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
-        const nextValues = [...values]
-        nextValues[index] = clampedVal
-
-        const result = Array.isArray(currentValue) ? nextValues : clampedVal
-        if (!isControlled) {
-          setInternalValue(result)
+    // W-35 clamp-or-warn: an out-of-range controlled value clamps (render +
+    // ARIA agree — see the B-29 ariaNow clamp in SliderThumb) AND dev-warns
+    // naming component, prop, value, and valid range. Clamp-silently matches
+    // Radix/RAC/native; the dev warning is our addition.
+    if (globalProcess?.env?.NODE_ENV !== 'production') {
+      values.forEach((entry, entryIndex) => {
+        if (entry < min || entry > max) {
+          warnSlider(
+            `value${isRange ? ` at index ${entryIndex}` : ''} (${entry}) is outside [${min}, ${max}]; rendering and ARIA are clamped to the range.`
+          )
         }
-        onChange?.(result)
-      },
-      [values, currentValue, min, max, step, minStepsBetweenThumbs, isControlled, onChange]
-    )
+      })
+    }
 
-    const commitThumbValue = React.useCallback(
-      (index: number, nextVal: number) => {
-        const thumbMin = index > 0 && values.length > 1 ? values[index - 1] + minStepsBetweenThumbs * step : min
-        const thumbMax = index < values.length - 1 && values.length > 1 ? values[index + 1] - minStepsBetweenThumbs * step : max
-        const clampedVal = Math.max(thumbMin, Math.min(thumbMax, Math.round(nextVal / step) * step))
-        const nextValues = [...values]
-        nextValues[index] = clampedVal
-        const result = Array.isArray(currentValue) ? nextValues : clampedVal
-        onChangeEnd?.(result)
-      },
-      [values, currentValue, min, max, step, minStepsBetweenThumbs, onChangeEnd]
-    )
+    const rootRef = React.useRef<HTMLDivElement | null>(null)
+    const trackRef = React.useRef<HTMLDivElement | null>(null)
+    // Thumb registry keyed by mount id (claim order = mount order); the
+    // version rerenders Thumbs when membership changes so DOM-order ranks
+    // refresh after mount/unmount/reorder commits.
+    const thumbNodesRef = React.useRef<Map<number, HTMLDivElement>>(new Map())
+    const nextThumbIdRef = React.useRef(0)
+    const firstThumbIdRef = React.useRef<number | null>(null)
+    const [thumbRegistryVersion, setThumbRegistryVersion] = React.useState(0)
+
+    const claimThumbId = React.useCallback(() => {
+      const id = nextThumbIdRef.current
+      nextThumbIdRef.current += 1
+      if (firstThumbIdRef.current === null) {
+        firstThumbIdRef.current = id
+      }
+      return id
+    }, [])
+
+    const getThumbIndex = React.useCallback((id: number): number => {
+      const ordered = sortThumbIdsByDomOrder(thumbNodesRef.current)
+      const rank = ordered.indexOf(id)
+      if (rank !== -1) return rank
+      // Unregistered (first paint, SSR, StrictMode remount): claim order is
+      // the DOM order, so the offset from the first claim is the index.
+      return id - (firstThumbIdRef.current ?? id)
+    }, [])
+
+    const registeredTrackNodeRef = React.useRef<HTMLDivElement | null>(null)
+    const registerTrack = React.useCallback((node: HTMLDivElement | null) => {
+      if (node) {
+        if (registeredTrackNodeRef.current && registeredTrackNodeRef.current !== node) {
+          throw new Error('[Slider] Exactly one Slider.Track is permitted, found duplicate')
+        }
+        registeredTrackNodeRef.current = node
+      } else {
+        registeredTrackNodeRef.current = null
+      }
+    }, [])
+
+    const registeredRangeNodeRef = React.useRef<HTMLDivElement | null>(null)
+    const registerRange = React.useCallback((node: HTMLDivElement | null) => {
+      if (node) {
+        if (registeredRangeNodeRef.current && registeredRangeNodeRef.current !== node) {
+          throw new Error('[Slider] At most one Slider.Range is permitted, found duplicate')
+        }
+        registeredRangeNodeRef.current = node
+      } else {
+        registeredRangeNodeRef.current = null
+      }
+    }, [])
 
     const [draggingIndex, setDraggingIndex] = React.useState<number | null>(null)
     const [focusVisibleIndex, setFocusVisibleIndex] = React.useState<number | null>(null)
-    const thumbNodesRef = React.useRef<Map<number, HTMLDivElement>>(new Map())
+    const [activeThumbIndex, setActiveThumbIndex] = React.useState<number | null>(null)
 
-    const registerThumb = React.useCallback((index: number, node: HTMLDivElement | null) => {
-      if (node) {
-        thumbNodesRef.current.set(index, node)
-      } else {
-        thumbNodesRef.current.delete(index)
-      }
+    // Owned-pointer session refs. Exactly one pointer owns a session; window
+    // listeners drive it so drags survive leaving the track and viewport.
+    const activePointerIdRef = React.useRef<number | null>(null)
+    const activeDragIndexRef = React.useRef<number | null>(null)
+    const sessionLengthRef = React.useRef<number | null>(null)
+    const grabOffsetRef = React.useRef(0)
+    const lastRequestedValueRef = React.useRef<SliderValue>(currentValue)
+    const hasChangedInSessionRef = React.useRef(false)
+    const hasChangedInKeySessionRef = React.useRef(false)
+    const activeKeyRef = React.useRef<string | null>(null)
+
+    const latestPropsRef = React.useRef({
+      min,
+      max,
+      step,
+      minStepsBetweenThumbs,
+      orientation,
+      disabled,
+      isRange,
+      values,
+      onChange,
+      onChangeEnd,
+    })
+    latestPropsRef.current = {
+      min,
+      max,
+      step,
+      minStepsBetweenThumbs,
+      orientation,
+      disabled,
+      isRange,
+      values,
+      onChange,
+      onChangeEnd,
+    }
+
+    const cancelPointerSession = React.useCallback(() => {
+      activePointerIdRef.current = null
+      activeDragIndexRef.current = null
+      sessionLengthRef.current = null
+      hasChangedInSessionRef.current = false
+      setDraggingIndex(null)
     }, [])
+
+    const registerThumb = React.useCallback(
+      (id: number, node: HTMLDivElement | null) => {
+        if (node) {
+          if (thumbNodesRef.current.get(id) !== node) {
+            thumbNodesRef.current.set(id, node)
+            setThumbRegistryVersion(v => v + 1)
+          }
+        } else {
+          // Resolve before delete: removing the dragged thumb invalidates
+          // its session with no end report.
+          const removedIndex = getThumbIndex(id)
+          if (thumbNodesRef.current.delete(id)) {
+            setThumbRegistryVersion(v => v + 1)
+          }
+          if (removedIndex === activeDragIndexRef.current) {
+            cancelPointerSession()
+          }
+        }
+      },
+      [cancelPointerSession, getThumbIndex]
+    )
+
+    // Inherited direction: an explicit dir ancestor wins, otherwise the
+    // computed direction (which also crosses ShadowRoot boundaries).
+    const [isRtl, setIsRtl] = React.useState(false)
+    React.useLayoutEffect(() => {
+      const rootNode = rootRef.current
+      if (!rootNode) return
+      const dirAttr = rootNode.closest('[dir]')?.getAttribute('dir')
+      if (dirAttr) {
+        setIsRtl(dirAttr.toLowerCase() === 'rtl')
+      } else if (typeof window !== 'undefined') {
+        const computed = window.getComputedStyle(rootNode).direction
+        setIsRtl(computed === 'rtl')
+      }
+    })
+
+    // Cardinality changes invalidate the active drag: the old release commits
+    // nothing and later moves issue no stale request.
+    React.useEffect(() => {
+      if (
+        sessionLengthRef.current !== null &&
+        values.length !== sessionLengthRef.current
+      ) {
+        cancelPointerSession()
+      }
+    }, [values.length, cancelPointerSession])
+
+    // Disabling cancels every active interaction without an end report.
+    React.useEffect(() => {
+      if (disabled) {
+        cancelPointerSession()
+        hasChangedInKeySessionRef.current = false
+        activeKeyRef.current = null
+        setFocusVisibleIndex(null)
+      }
+    }, [disabled, cancelPointerSession])
+
+    // Snaps, neighbor-clamps, and requests a candidate; returns whether the
+    // candidate differed. Tracks the last request for end-of-session summary.
+    const requestThumbValue = React.useCallback((index: number, raw: number): boolean => {
+      const {
+        min: curMin,
+        max: curMax,
+        step: curStep,
+        minStepsBetweenThumbs: curMinSteps,
+        values: curValues,
+        isRange: curIsRange,
+        onChange: curOnChange,
+      } = latestPropsRef.current
+      if (index < 0 || index >= curValues.length) return false
+      const snapped = snapValueToStep(raw, curMin, curMax, curStep)
+      const bounds = getThumbBounds(curValues, index, curMin, curMax, curStep, curMinSteps)
+      const clamped = Math.max(bounds.min, Math.min(bounds.max, snapped))
+      if (clamped === curValues[index]) return false
+      const nextValues = [...curValues]
+      nextValues[index] = clamped
+      const emitted: SliderValue = curIsRange ? nextValues : clamped
+      lastRequestedValueRef.current = emitted
+      curOnChange?.(emitted)
+      return true
+    }, [])
+
+    const computePointerPercent = React.useCallback(
+      (clientX: number, clientY: number): number | null => {
+        const trackEl = trackRef.current
+        if (!trackEl) return null
+        const rect = trackEl.getBoundingClientRect()
+        const { orientation: currentOrientation } = latestPropsRef.current
+        const isHoriz = currentOrientation === 'horizontal'
+        if (isHoriz && rect.width === 0) return null
+        if (!isHoriz && rect.height === 0) return null
+
+        let percent: number
+        if (isHoriz) {
+          const adjustedX = clientX - grabOffsetRef.current
+          percent = isRtl
+            ? (rect.right - adjustedX) / rect.width
+            : (adjustedX - rect.left) / rect.width
+        } else {
+          const adjustedY = clientY - grabOffsetRef.current
+          percent = (rect.bottom - adjustedY) / rect.height
+        }
+        if (!Number.isFinite(percent)) return null
+        return Math.max(0, Math.min(1, percent))
+      },
+      [isRtl]
+    )
+
+    const handlePointerMove = React.useCallback(
+      (e: PointerEvent) => {
+        if (activePointerIdRef.current === null || e.pointerId !== activePointerIdRef.current) {
+          return
+        }
+        if (e.buttons === 0) {
+          // Dropped mouseup / released touch contact: cancel, never commit.
+          cancelPointerSession()
+          return
+        }
+
+        const dragIndex = activeDragIndexRef.current
+        const { values: curValues, min: curMin, max: curMax } = latestPropsRef.current
+        if (dragIndex === null || dragIndex < 0 || dragIndex >= curValues.length) return
+
+        const percent = computePointerPercent(e.clientX, e.clientY)
+        if (percent === null) return
+        const raw = curMin + percent * (curMax - curMin)
+        if (requestThumbValue(dragIndex, raw)) {
+          hasChangedInSessionRef.current = true
+        }
+      },
+      [computePointerPercent, requestThumbValue, cancelPointerSession]
+    )
+
+    const getThumbNode = React.useCallback((index: number): HTMLDivElement | undefined => {
+      const ordered = sortThumbIdsByDomOrder(thumbNodesRef.current)
+      const id = ordered[index]
+      return id === undefined ? undefined : thumbNodesRef.current.get(id)
+    }, [])
+
+    const handlePointerUp = React.useCallback(
+      (e: PointerEvent) => {
+        if (activePointerIdRef.current === null || e.pointerId !== activePointerIdRef.current) {
+          return
+        }
+        const dragIndex = activeDragIndexRef.current
+        const changed = hasChangedInSessionRef.current
+        const lastRequested = lastRequestedValueRef.current
+        cancelPointerSession()
+
+        // Exactly one end per changed session, before capture cleanup.
+        if (changed) {
+          const { onChangeEnd: curOnChangeEnd } = latestPropsRef.current
+          curOnChangeEnd?.(lastRequested)
+        }
+
+        if (dragIndex !== null) {
+          getThumbNode(dragIndex)?.focus()
+        }
+      },
+      [cancelPointerSession, getThumbNode]
+    )
+
+    const handlePointerCancel = React.useCallback(
+      (e: PointerEvent) => {
+        if (activePointerIdRef.current === null || e.pointerId !== activePointerIdRef.current) {
+          return
+        }
+        cancelPointerSession()
+      },
+      [cancelPointerSession]
+    )
+
+    React.useEffect(() => {
+      const onLostCapture = () => {
+        if (activePointerIdRef.current !== null) {
+          cancelPointerSession()
+        }
+      }
+      const onBlur = () => {
+        if (activePointerIdRef.current !== null) {
+          cancelPointerSession()
+        }
+        if (hasChangedInKeySessionRef.current) {
+          hasChangedInKeySessionRef.current = false
+          activeKeyRef.current = null
+        }
+      }
+
+      window.addEventListener('pointermove', handlePointerMove)
+      window.addEventListener('pointerup', handlePointerUp)
+      window.addEventListener('pointercancel', handlePointerCancel)
+      window.addEventListener('lostpointercapture', onLostCapture)
+      window.addEventListener('blur', onBlur)
+
+      return () => {
+        window.removeEventListener('pointermove', handlePointerMove)
+        window.removeEventListener('pointerup', handlePointerUp)
+        window.removeEventListener('pointercancel', handlePointerCancel)
+        window.removeEventListener('lostpointercapture', onLostCapture)
+        window.removeEventListener('blur', onBlur)
+      }
+    }, [handlePointerMove, handlePointerUp, handlePointerCancel, cancelPointerSession])
+
+    const startPointerDrag = React.useCallback(
+      (
+        e: React.PointerEvent<HTMLDivElement>,
+        targetIndex: number,
+        fromThumb: boolean
+      ) => {
+        if (disabled) return
+
+        if (
+          thumbNodesRef.current.size !== values.length ||
+          targetIndex < 0 ||
+          targetIndex >= values.length
+        ) {
+          throw new Error(countMismatchMessage(values.length, thumbNodesRef.current.size))
+        }
+
+        const trackEl = trackRef.current
+        if (!trackEl) {
+          throw new Error('[Slider] Slider requires a Slider.Track component')
+        }
+
+        activePointerIdRef.current = e.pointerId
+        activeDragIndexRef.current = targetIndex
+        sessionLengthRef.current = values.length
+        setActiveThumbIndex(targetIndex)
+        setDraggingIndex(targetIndex)
+        setFocusVisibleIndex(null)
+        hasChangedInSessionRef.current = false
+
+        const thumbNode = getThumbNode(targetIndex)
+        if (thumbNode && document.activeElement !== thumbNode) {
+          thumbNode.focus()
+        }
+
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId)
+        } catch {}
+
+        const rect = trackEl.getBoundingClientRect()
+        const isHoriz = orientation === 'horizontal'
+        const currentVal = values[targetIndex]
+        const currentPercent = valueToPercent(currentVal, min, max)
+
+        if (fromThumb) {
+          let thumbCenter: number
+          if (isHoriz) {
+            thumbCenter = isRtl
+              ? rect.right - (currentPercent / 100) * rect.width
+              : rect.left + (currentPercent / 100) * rect.width
+            grabOffsetRef.current = e.clientX - thumbCenter
+          } else {
+            thumbCenter = rect.bottom - (currentPercent / 100) * rect.height
+            grabOffsetRef.current = e.clientY - thumbCenter
+          }
+          // Thumb presses never emit on their own; the session does.
+        } else {
+          grabOffsetRef.current = 0
+          const percent = computePointerPercent(e.clientX, e.clientY)
+          if (percent !== null) {
+            const raw = min + percent * (max - min)
+            if (requestThumbValue(targetIndex, raw)) {
+              hasChangedInSessionRef.current = true
+            }
+          }
+        }
+
+        getThumbNode(targetIndex)?.focus()
+      },
+      [
+        disabled,
+        values,
+        orientation,
+        min,
+        max,
+        isRtl,
+        computePointerPercent,
+        requestThumbValue,
+        getThumbNode,
+      ]
+    )
+
+    const handleThumbKeyDown = React.useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>, index: number) => {
+        if (disabled) return
+        // Modified keys pass through untouched: Page keys own large steps,
+        // and the application keeps every modified shortcut (SD-KEY-07).
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return
+
+        const {
+          min: curMin,
+          max: curMax,
+          step: curStep,
+          minStepsBetweenThumbs: curMinSteps,
+          orientation: curOrientation,
+          values: curValues,
+        } = latestPropsRef.current
+
+        if (
+          thumbNodesRef.current.size !== curValues.length ||
+          index < 0 ||
+          index >= curValues.length
+        ) {
+          throw new Error(countMismatchMessage(curValues.length, thumbNodesRef.current.size))
+        }
+
+        const isHoriz = curOrientation === 'horizontal'
+        const curVal = curValues[index]
+        const bounds = getThumbBounds(curValues, index, curMin, curMax, curStep, curMinSteps)
+        const pageStep = getPageStep(curMin, curMax, curStep)
+
+        let targetVal: number | null = null
+
+        // Horizontal RTL reverses Left/Right only; vertical ignores direction.
+        if (isHoriz) {
+          if (isRtl) {
+            if (e.key === 'ArrowLeft') targetVal = stepValue(curVal, 1, curMin, curMax, curStep)
+            else if (e.key === 'ArrowRight') targetVal = stepValue(curVal, -1, curMin, curMax, curStep)
+            else if (e.key === 'ArrowUp') targetVal = stepValue(curVal, 1, curMin, curMax, curStep)
+            else if (e.key === 'ArrowDown') targetVal = stepValue(curVal, -1, curMin, curMax, curStep)
+          } else {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp')
+              targetVal = stepValue(curVal, 1, curMin, curMax, curStep)
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown')
+              targetVal = stepValue(curVal, -1, curMin, curMax, curStep)
+          }
+        } else {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowRight')
+            targetVal = stepValue(curVal, 1, curMin, curMax, curStep)
+          else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft')
+            targetVal = stepValue(curVal, -1, curMin, curMax, curStep)
+        }
+
+        if (e.key === 'PageUp') {
+          targetVal = snapValueToStep(curVal + pageStep, curMin, curMax, curStep)
+        } else if (e.key === 'PageDown') {
+          targetVal = snapValueToStep(curVal - pageStep, curMin, curMax, curStep)
+        }
+
+        if (e.key === 'Home') {
+          targetVal = bounds.min
+        } else if (e.key === 'End') {
+          targetVal = bounds.max
+        }
+
+        if (targetVal === null) return
+
+        setFocusVisibleIndex(index)
+        setActiveThumbIndex(index)
+
+        const clamped = Math.max(bounds.min, Math.min(bounds.max, targetVal))
+        if (clamped !== curVal) {
+          e.preventDefault()
+          if (requestThumbValue(index, clamped)) {
+            hasChangedInKeySessionRef.current = true
+            activeKeyRef.current = e.key
+          }
+        } else {
+          e.preventDefault()
+        }
+      },
+      [disabled, isRtl, requestThumbValue]
+    )
+
+    const handleThumbKeyUp = React.useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>, _index: number) => {
+        if (disabled) return
+        if (hasChangedInKeySessionRef.current && e.key === activeKeyRef.current) {
+          hasChangedInKeySessionRef.current = false
+          activeKeyRef.current = null
+          const { onChangeEnd: curOnChangeEnd } = latestPropsRef.current
+          curOnChangeEnd?.(lastRequestedValueRef.current)
+        }
+      },
+      [disabled]
+    )
+
+    const handleThumbFocus = React.useCallback(
+      (_e: React.FocusEvent<HTMLDivElement>, index: number) => {
+        setActiveThumbIndex(index)
+        if (activePointerIdRef.current === null && isFocusVisible()) {
+          setFocusVisibleIndex(index)
+        } else if (activePointerIdRef.current !== null) {
+          setFocusVisibleIndex(null)
+        }
+      },
+      []
+    )
+
+    const handleThumbBlur = React.useCallback(
+      (_e: React.FocusEvent<HTMLDivElement>, index: number) => {
+        setFocusVisibleIndex(current => (current === index ? null : current))
+        if (hasChangedInKeySessionRef.current) {
+          hasChangedInKeySessionRef.current = false
+          activeKeyRef.current = null
+        }
+      },
+      []
+    )
 
     const contextValue = React.useMemo<SliderContextValue>(
       () => ({
@@ -478,95 +1110,71 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         minStepsBetweenThumbs,
         orientation,
         disabled,
+        isRtl,
         draggingIndex,
         focusVisibleIndex,
+        activeThumbIndex,
         trackRef,
-        updateThumbValue,
-        commitThumbValue,
-        setDraggingIndex,
-        setFocusVisibleIndex,
+        registerTrack,
+        registerRange,
+        claimThumbId,
         registerThumb,
+        getThumbIndex,
+        startPointerDrag,
+        handleThumbKeyDown,
+        handleThumbKeyUp,
+        handleThumbFocus,
+        handleThumbBlur,
+        setFocusVisibleIndex,
       }),
-      [values, min, max, step, minStepsBetweenThumbs, orientation, disabled, draggingIndex, focusVisibleIndex, updateThumbValue, commitThumbValue, registerThumb]
+      [
+        values,
+        min,
+        max,
+        step,
+        minStepsBetweenThumbs,
+        orientation,
+        disabled,
+        isRtl,
+        draggingIndex,
+        focusVisibleIndex,
+        activeThumbIndex,
+        registerTrack,
+        registerRange,
+        claimThumbId,
+        registerThumb,
+        getThumbIndex,
+        thumbRegistryVersion,
+        startPointerDrag,
+        handleThumbKeyDown,
+        handleThumbKeyUp,
+        handleThumbFocus,
+        handleThumbBlur,
+      ]
     )
 
     const isHorizontal = orientation === 'horizontal'
-    const isDraggingRef = React.useRef(false)
-    const activeThumbIndexRef = React.useRef(0)
 
-    const getValueFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
-      const trackEl = trackRef.current ?? e.currentTarget
-      const rect = trackEl.getBoundingClientRect()
-      let nextPercent: number
-      if (isHorizontal) {
-        nextPercent = (e.clientX - rect.left) / rect.width
-      } else {
-        nextPercent = (rect.bottom - e.clientY) / rect.height
-      }
-      nextPercent = Math.max(0, Math.min(1, nextPercent))
-      return min + nextPercent * (max - min)
-    }
-
-    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-      props.onPointerDown?.(e)
-      if (e.defaultPrevented || disabled) return
-
-      try {
-        e.currentTarget.setPointerCapture(e.pointerId)
-      } catch {}
-      isDraggingRef.current = true
-      setFocusVisibleIndex(null)
-
-      const rawVal = getValueFromPointer(e)
-      let closestIndex = 0
-      if (values.length > 1) {
-        let minDiff = Infinity
-        values.forEach((v, i) => {
-          const diff = Math.abs(v - rawVal)
-          if (diff < minDiff) {
-            minDiff = diff
-            closestIndex = i
-          }
-        })
-      }
-      activeThumbIndexRef.current = closestIndex
-      setDraggingIndex(closestIndex)
-      updateThumbValue(closestIndex, rawVal)
-      commitThumbValue(closestIndex, rawVal)
-      thumbNodesRef.current.get(closestIndex)?.focus()
-    }
-
-    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-      props.onPointerMove?.(e)
-      if (!isDraggingRef.current || disabled) return
-      setFocusVisibleIndex(null)
-      const rawVal = getValueFromPointer(e)
-      updateThumbValue(activeThumbIndexRef.current, rawVal)
-    }
-
-    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-      props.onPointerUp?.(e)
-      if (!isDraggingRef.current) return
-      isDraggingRef.current = false
-      setDraggingIndex(null)
-      setFocusVisibleIndex(null)
-      try {
-        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-          e.currentTarget.releasePointerCapture(e.pointerId)
+    const handleRootRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        rootRef.current = node
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = node
         }
-      } catch {}
-      const rawVal = getValueFromPointer(e)
-      commitThumbValue(activeThumbIndexRef.current, rawVal)
-      thumbNodesRef.current.get(activeThumbIndexRef.current)?.focus()
-    }
+      },
+      [ref]
+    )
 
     return (
       <SliderContext.Provider value={contextValue}>
         <Div
-          ref={ref}
+          ref={handleRootRef}
           data-reference-slider=""
           data-orientation={orientation}
           data-disabled={disabled ? '' : undefined}
+          data-dragging={draggingIndex !== null ? '' : undefined}
           position="relative"
           display="flex"
           flexDirection={isHorizontal ? 'row' : 'column'}
@@ -575,9 +1183,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           userSelect="none"
           touchAction="none"
           cursor={disabled ? 'not-allowed' : 'pointer'}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
+          onPointerDown={onPointerDown}
           width={isHorizontal ? '100%' : '6r'}
           height={isHorizontal ? '6r' : '100%'}
           className={className}
@@ -587,14 +1193,18 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           {children ?? (
             <SliderTrack>
               <SliderRange />
-              <SliderThumb />
+              {values.map((_, i) => (
+                <SliderThumb key={i} />
+              ))}
             </SliderTrack>
           )}
         </Div>
       </SliderContext.Provider>
     )
   }
-) as React.ForwardRefExoticComponent<SliderProps & React.RefAttributes<HTMLDivElement>> & {
+) as unknown as (<T extends SliderValue = SliderValue>(
+  props: SliderProps<T> & React.RefAttributes<HTMLDivElement>
+) => React.ReactElement | null) & {
   Track: typeof SliderTrack
   Range: typeof SliderRange
   Thumb: typeof SliderThumb

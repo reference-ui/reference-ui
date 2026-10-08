@@ -1,8 +1,35 @@
 import * as React from 'react'
 import { Div, Span, H3, H4, P } from '@reference-ui/react'
 import { KeyboardArrowDownIcon } from '@reference-ui/icons'
-import { Menu } from './index'
+import { Popover, type PopoverTriggerProps } from '../Popover'
+import { Menu, useMenuTriggerKeys } from './index'
 import { toast } from '../Toast'
+
+// Popover.Trigger with Menu keyboard-entry wiring (ArrowDown/Enter/Space open
+// on the first item, ArrowUp on the last; pointer opens focus the menu).
+const EntryTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(function EntryTrigger(
+  { children, onKeyDown, onClick, 'aria-haspopup': ariaHasPopup = 'menu', ...props }: PopoverTriggerProps,
+  ref
+) {
+  const keys = useMenuTriggerKeys()
+  const triggerProps = { ...props, ref: ref as React.Ref<HTMLButtonElement> }
+  return (
+    <Popover.Trigger
+      onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e)
+        keys.onKeyDown(e)
+      }}
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e)
+        keys.onClick(e)
+      }}
+      {...triggerProps}
+      aria-haspopup={ariaHasPopup}
+    >
+      {children}
+    </Popover.Trigger>
+  )
+})
 
 function SectionCard({
   title,
@@ -27,7 +54,7 @@ function SectionCard({
       gap="4r"
     >
       <Div>
-        <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+        <H4 fontSize="3.5r" m="0" color="design.text.base">
           {title}
         </H4>
         {subtitle && (
@@ -43,13 +70,13 @@ function SectionCard({
 
 function MenuItemsList() {
   return (
-    <Menu.Content>
+    <Menu>
       <Menu.Item onClick={() => toast.show('Cut clicked')}>Cut</Menu.Item>
       <Menu.Item onClick={() => toast.show('Copy clicked')}>Copy</Menu.Item>
       <Menu.Item onClick={() => toast.show('Paste clicked')}>Paste</Menu.Item>
       <Menu.Separator />
       <Menu.Item disabled>Delete (Disabled)</Menu.Item>
-    </Menu.Content>
+    </Menu>
   )
 }
 
@@ -59,16 +86,18 @@ export default {
       <Div p="6r" maxW="200r">
         <SectionCard
           title="Standard Menu Dropdown"
-          subtitle="Menu.Trigger uses native Button styling with zero-specificity default variant. Accessible keyboard navigation (ArrowDown/ArrowUp/Enter/Space to open, roving arrows, Tab/Escape to close)."
+          subtitle="Popover.Trigger uses native Button styling with zero-specificity default variant. Accessible keyboard navigation (ArrowDown/ArrowUp/Enter/Space to open, roving arrows, Tab/Escape to close)."
         >
           <Div display="flex" gap="4r" alignItems="center">
-            <Menu>
-              <Menu.Trigger>
+            <Popover>
+              <EntryTrigger>
                 <span>Actions</span>
                 <KeyboardArrowDownIcon />
-              </Menu.Trigger>
-              <MenuItemsList />
-            </Menu>
+              </EntryTrigger>
+              <Popover.Content placement="bottom-start">
+                <MenuItemsList />
+              </Popover.Content>
+            </Popover>
           </Div>
         </SectionCard>
       </Div>
@@ -79,11 +108,11 @@ export default {
     return (
       <Div p="6r" maxW="220r" display="flex" flexDirection="column" gap="5r">
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Menu Trigger Button Variants
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
-            Menu.Trigger directly inherits the Button primitive's variants without requiring custom styling overrides.
+            Popover.Trigger directly inherits the Button primitive's variants without requiring custom styling overrides.
           </P>
         </Div>
 
@@ -96,40 +125,119 @@ export default {
               <Span fontSize="2.5r" color="design.text.light">
                 Default Variant
               </Span>
-              <Menu>
-                <Menu.Trigger>
+              <Popover>
+                <EntryTrigger>
                   <span>Options Menu</span>
                   <KeyboardArrowDownIcon />
-                </Menu.Trigger>
-                <MenuItemsList />
-              </Menu>
+                </EntryTrigger>
+                <Popover.Content placement="bottom-start">
+                  <MenuItemsList />
+                </Popover.Content>
+              </Popover>
             </Div>
 
             <Div display="flex" flexDirection="column" gap="1.5r" alignItems="flex-start">
               <Span fontSize="2.5r" color="design.text.light">
                 Primary Variant
               </Span>
-              <Menu>
-                <Menu.Trigger variant="primary">
+              <Popover>
+                <EntryTrigger variant="primary">
                   <span>Create New</span>
                   <KeyboardArrowDownIcon />
-                </Menu.Trigger>
-                <MenuItemsList />
-              </Menu>
+                </EntryTrigger>
+                <Popover.Content placement="bottom-start">
+                  <MenuItemsList />
+                </Popover.Content>
+              </Popover>
             </Div>
 
             <Div display="flex" flexDirection="column" gap="1.5r" alignItems="flex-start">
               <Span fontSize="2.5r" color="design.text.light">
                 Ghost Variant
               </Span>
-              <Menu>
-                <Menu.Trigger variant="ghost">
+              <Popover>
+                <EntryTrigger variant="ghost">
                   <span>More Actions</span>
                   <KeyboardArrowDownIcon />
-                </Menu.Trigger>
-                <MenuItemsList />
-              </Menu>
+                </EntryTrigger>
+                <Popover.Content placement="bottom-start">
+                  <MenuItemsList />
+                </Popover.Content>
+              </Popover>
             </Div>
+          </Div>
+        </SectionCard>
+      </Div>
+    )
+  },
+
+  NestedSubmenu: () => {
+    const [shareOpen, setShareOpen] = React.useState(false)
+    return (
+      <Div p="6r" maxW="200r">
+        <SectionCard
+          title="Nested Submenu"
+          subtitle="Recursive Menu: Right/Enter/Space open, Left closes one level, hover intent opens after 100ms."
+        >
+          <Div display="flex" gap="4r" alignItems="center">
+            <Popover>
+              <EntryTrigger>
+                <span>File</span>
+                <KeyboardArrowDownIcon />
+              </EntryTrigger>
+              <Popover.Content placement="bottom-start">
+                <Menu>
+                  <Menu.Item onClick={() => toast.show('New clicked')}>New</Menu.Item>
+                  <Menu.Item onClick={() => toast.show('Open clicked')}>Open</Menu.Item>
+                  <Menu.Separator />
+                  <Menu
+                    open={shareOpen}
+                    onOpen={() => setShareOpen(true)}
+                    onDismiss={() => setShareOpen(false)}
+                  >
+                    <Menu.Trigger>Share</Menu.Trigger>
+                    <Menu.Content>
+                      <Menu.Item onClick={() => toast.show('Email clicked')}>Email</Menu.Item>
+                      <Menu.Item onClick={() => toast.show('Copy link clicked')}>
+                        Copy link
+                      </Menu.Item>
+                    </Menu.Content>
+                  </Menu>
+                </Menu>
+              </Popover.Content>
+            </Popover>
+          </Div>
+        </SectionCard>
+      </Div>
+    )
+  },
+
+  LinkItems: () => {
+    return (
+      <Div p="6r" maxW="200r">
+        <SectionCard
+          title="Link Items"
+          subtitle="Real anchors with menuitem semantics: native navigation preserved, dismissed by default."
+        >
+          <Div display="flex" gap="4r" alignItems="center">
+            <Popover>
+              <EntryTrigger>
+                <span>Docs</span>
+                <KeyboardArrowDownIcon />
+              </EntryTrigger>
+              <Popover.Content placement="bottom-start">
+                <Menu>
+                  <Menu.LinkItem href="#getting-started">Getting started</Menu.LinkItem>
+                  <Menu.LinkItem href="#api" target="_blank" rel="noreferrer">
+                    API reference
+                  </Menu.LinkItem>
+                  <Menu.Separator />
+                  <Menu.LinkItem href="#archived" disabled>
+                    Archived (Disabled)
+                  </Menu.LinkItem>
+                </Menu>
+              </Popover.Content>
+            </Popover>
           </Div>
         </SectionCard>
       </Div>

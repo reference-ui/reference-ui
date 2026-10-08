@@ -1,0 +1,23 @@
+{
+  "name": "@fixtures/aliased-host-library",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "matrix/fixtures/aliased-host-library/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run build",
+        "cwd": "matrix/fixtures/aliased-host-library"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run test",
+        "cwd": "matrix/fixtures/aliased-host-library"
+      }
+    }
+  },
+  "tags": []
+}

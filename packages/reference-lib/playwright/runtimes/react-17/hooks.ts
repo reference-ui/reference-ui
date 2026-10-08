@@ -4,7 +4,11 @@ import * as React from './node_modules/react/index.js'
 let count = 0
 
 export function useId() {
-  return `:ct${++count}:`
+  // Stable for the component's lifetime (React useId contract): the old
+  // `:ct${++count}:`-per-render broke every id-keyed registry on r17
+  // (Overlay stack layers, parentId nesting links) on each re-render.
+  const [id] = React.useState(() => `:ct${++count}:`)
+  return id
 }
 
 export function useSyncExternalStore<T>(

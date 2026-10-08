@@ -31,6 +31,30 @@ export function Example() {
 }
 ```
 
+## Styling icons from another package: wrap, don't prop
+
+An icon's style props mint icon-system classes (`reference-icons__*`)
+that only the icons compile can back. A design-system style prop passed
+at a foreign call-site (`color`, `width`, `ml`, …) therefore resolves to
+nothing — the runtime warns `no compiled class` and the prop is dead.
+(This compiles: the prop types still extend the `Div` surface for
+ref/DOM props. It just has no styling effect cross-package.)
+
+From a consuming library, style an icon with `size`, `variant`, `style`,
+`className`, or a wrapper element:
+
+```tsx
+import { Span } from '@reference-ui/react'
+
+// ❌ dead — `ml` mints a class no compile backs
+<CheckIcon ml="3r" />
+
+// ✅ wrap the icon and put style props on your own host
+<Span ml="3r">
+	<CheckIcon />
+</Span>
+```
+
 ## Build
 
 Generated sources live under `src/generated/` and are intentionally not committed. Run `pnpm run build` to regenerate icon sources, refresh the packaged base system, bundle the package, and emit declarations.

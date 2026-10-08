@@ -1,0 +1,6 @@
+{
+  "& + &:mt:2r": "@reference-ui/lib__[&_+_&]:mt_2r",
+  "& .one, & .two:color:blue": "@reference-ui/lib__[&_.one,_&_.two]:c_blue",
+  "& > p:&:hover:color:red": "@reference-ui/lib__[&_>_p]:[&:hover]:c_red",
+  "& ~ &:mt:4r": "@reference-ui/lib__[&_~_&]:mt_4r"
+}

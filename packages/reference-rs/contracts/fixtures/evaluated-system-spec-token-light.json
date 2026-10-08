@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-light-system",
+  "tokens": {
+    "radii": {
+      "sm": {
+        "value": "2px"
+      }
+    }
+  },
+  "fonts": {},
+  "breakpoints": {
+    "sm": "640px"
+  },
+  "conditions": {
+    "_hover": "&:hover"
+  },
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {
+    "color": [
+      "*"
+    ],
+    "spacing": [
+      "*"
+    ]
+  },
+  "provenance": [
+    {
+      "source": "src/tokens/radii.ts",
+      "kind": "tokens",
+      "keys": [
+        "radii.sm"
+      ]
+    }
+  ]
+}

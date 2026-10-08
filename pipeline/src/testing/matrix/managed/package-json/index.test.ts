@@ -11,7 +11,7 @@ import {
 import { createManagedMatrixPackageJson, createMatrixConsumerPackageJson, type MatrixFixturePackageJson } from './index.js'
 
 const internalTarballSpecifiers = {
-  '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+  '@reference-ui/neo': 'file:.matrix-tarballs/reference-ui-neo-0.0.16-neohash.tgz',
   '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
 } as const
 
@@ -131,7 +131,7 @@ describe('createMatrixConsumerPackageJson', () => {
   it('drops scripts for synthetic consumers and rewrites workspace dependencies to staged tarball specs', () => {
     const fixturePackageJson: MatrixFixturePackageJson = {
       dependencies: {
-        '@reference-ui/core': 'workspace:*',
+        '@reference-ui/neo': 'workspace:*',
         '@reference-ui/lib': 'workspace:*',
         react: '^19.2.0',
       },
@@ -166,7 +166,7 @@ describe('createMatrixConsumerPackageJson', () => {
     }
 
     assert.deepEqual(packageJson.dependencies, {
-      '@reference-ui/core': 'file:.matrix-tarballs/reference-ui-core-0.0.16-corehash.tgz',
+      '@reference-ui/neo': 'file:.matrix-tarballs/reference-ui-neo-0.0.16-neohash.tgz',
       '@reference-ui/lib': 'file:.matrix-tarballs/reference-ui-lib-0.0.19-libhash.tgz',
       react: '^19.2.0',
     })

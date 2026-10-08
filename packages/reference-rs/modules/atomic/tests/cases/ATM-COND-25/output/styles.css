@@ -1,0 +1,22 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__\[\&\.b\:not\(\&_\+_\&\)\]\:c_amber\.500.b:not(.\@reference-ui\/lib__\[\&\.b\:not\(\&_\+_\&\)\]\:c_amber\.500 + .\@reference-ui\/lib__\[\&\.b\:not\(\&_\+_\&\)\]\:c_amber\.500) { color: var(--colors-amber-500); }
+  .\@reference-ui\/lib__\[\&\:has\(\&\,_\:not\(\&\)\)\]\:c_blue\.500:has(.\@reference-ui\/lib__\[\&\:has\(\&\,_\:not\(\&\)\)\]\:c_blue\.500, :not(.\@reference-ui\/lib__\[\&\:has\(\&\,_\:not\(\&\)\)\]\:c_blue\.500)) { color: var(--colors-blue-500); }
+  .\@reference-ui\/lib__\[\&\.b\:is\(\&\)\]\:c_cyan\.500.b:is(.\@reference-ui\/lib__\[\&\.b\:is\(\&\)\]\:c_cyan\.500) { color: var(--colors-cyan-500); }
+  .\@reference-ui\/lib__\[\&\.b_\:not\(\&_\+_\&\)\]\:c_green\.500.b :not(.\@reference-ui\/lib__\[\&\.b_\:not\(\&_\+_\&\)\]\:c_green\.500 + .\@reference-ui\/lib__\[\&\.b_\:not\(\&_\+_\&\)\]\:c_green\.500) { color: var(--colors-green-500); }
+  .\@reference-ui\/lib__\[\&\:not\(\&\)\]\:c_orange\.500:not(.\@reference-ui\/lib__\[\&\:not\(\&\)\]\:c_orange\.500) { color: var(--colors-orange-500); }
+  .\@reference-ui\/lib__\[\&\:is\(\.bar\,_\&\.baz\)\]\:c_pink\.500:is(.bar, .\@reference-ui\/lib__\[\&\:is\(\.bar\,_\&\.baz\)\]\:c_pink\.500.baz) { color: var(--colors-pink-500); }
+  .\@reference-ui\/lib__\[\&\:not\(\&\.no\)\]\:c_red\.500:not(.\@reference-ui\/lib__\[\&\:not\(\&\.no\)\]\:c_red\.500.no) { color: var(--colors-red-500); }
+  .\@reference-ui\/lib__\[\&\.b_\:is\(\&\)\]\:c_violet\.500.b :is(.\@reference-ui\/lib__\[\&\.b_\:is\(\&\)\]\:c_violet\.500) { color: var(--colors-violet-500); }
+}
+}

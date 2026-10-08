@@ -1,0 +1,30 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__p_0 { padding: 0; }
+  .\@reference-ui\/lib__p_a_b { padding: a b; }
+  .\@reference-ui\/lib__p_a\﻿b { padding: a﻿b; }
+  .\@reference-ui\/lib__bd-t-c_red { border-top-color: red; }
+  .\@reference-ui\/lib__bd-t-s_solid { border-top-style: solid; }
+  .\@reference-ui\/lib__bd-t-w_3px { border-top-width: 3px; }
+  .\@reference-ui\/lib__c_\İnk { color: İnk; }
+  .\@reference-ui\/lib__content_\"a\d b\" { content: "a\d b"; }
+  .\@reference-ui\/lib__w_1r { width: var(--spacing-root); }
+  [data-two] .\@reference-ui\/lib__2\:c_blue { color: blue; }
+  [data-two] .\@reference-ui\/lib__2\:c_green { color: green; }
+  [data-ten] .\@reference-ui\/lib__10\:c_red { color: red; }
+  [data-ten] .\@reference-ui\/lib__10\:c_yellow { color: yellow; }
+  @container (min-width: 768px) {
+    .\@reference-ui\/lib__md\:w_2r { width: calc(2 * var(--spacing-root)); }
+  }
+}
+}

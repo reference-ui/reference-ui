@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "unknown-field-system",
+  "unexpectedProperty": "should-fail-closed",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

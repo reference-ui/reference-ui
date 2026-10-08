@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "span": {
+    "wallMs": 994.1685249999999,
+    "startUnixMs": 1789990862197,
+    "endUnixMs": 1789990863191,
+    "allocBytes": 992618628,
+    "allocBlocks": 8259538,
+    "freeBytes": 984175525,
+    "freeBlocks": 8258147,
+    "liveAtEnter": 6155360,
+    "liveAtExit": 14598463,
+    "netGrowth": 8443103,
+    "peakLive": 159569554,
+    "reallocs": 1117428,
+    "requestJsonBytes": 6153775,
+    "fileCount": 15122,
+    "filesContentBytes": 4358806,
+    "filesPathBytes": 1303532,
+    "zoneAtEnter": {
+      "sizeAllocated": 86376448,
+      "sizeInUse": 25034816,
+      "slack": 61341632
+    },
+    "zoneAtExit": {
+      "sizeAllocated": 95911936,
+      "sizeInUse": 40156416,
+      "slack": 55755520
+    }
+  },
+  "process": {
+    "spans": 1,
+    "allocBytes": 998776166,
+    "allocBlocks": 8259558,
+    "freeBytes": 984177703,
+    "freeBlocks": 8258161,
+    "liveBytes": 14598463,
+    "peakLiveBytes": 165724914,
+    "buckets": [
+      {
+        "maxSize": 32,
+        "allocBytes": 49708152,
+        "allocBlocks": 5421025,
+        "liveBytes": 21470
+      },
+      {
+        "maxSize": 128,
+        "allocBytes": 164866321,
+        "allocBlocks": 2189014,
+        "liveBytes": 536
+      },
+      {
+        "maxSize": 512,
+        "allocBytes": 101784319,
+        "allocBlocks": 501116,
+        "liveBytes": 1860
+      },
+      {
+        "maxSize": 2048,
+        "allocBytes": 100643030,
+        "allocBlocks": 115819,
+        "liveBytes": 6544
+      },
+      {
+        "maxSize": 8192,
+        "allocBytes": 46139054,
+        "allocBlocks": 13075,
+        "liveBytes": 0
+      },
+      {
+        "maxSize": 32768,
+        "allocBytes": 316308872,
+        "allocBlocks": 19036,
+        "liveBytes": 0
+      },
+      {
+        "maxSize": 131072,
+        "allocBytes": 29807224,
+        "allocBlocks": 451,
+        "liveBytes": 33336
+      },
+      {
+        "maxSize": 18446744073709551615,
+        "allocBytes": 189535646,
+        "allocBlocks": 128,
+        "liveBytes": 14542384
+      }
+    ]
+  }
+}

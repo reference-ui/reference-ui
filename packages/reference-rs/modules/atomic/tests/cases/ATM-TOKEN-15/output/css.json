@@ -1,0 +1,15 @@
+{
+  "borderBottomLeftRadius:full": "token-radii__rounded-bl_full",
+  "borderBottomLeftRadius:md": "token-radii__rounded-bl_md",
+  "borderBottomRightRadius:full": "token-radii__rounded-br_full",
+  "borderBottomRightRadius:md": "token-radii__rounded-br_md",
+  "borderEndEndRadius:full": "token-radii__border-end-end-radius_full",
+  "borderEndStartRadius:full": "token-radii__border-end-start-radius_full",
+  "borderRadius:full": "token-radii__rounded_full",
+  "borderStartEndRadius:full": "token-radii__border-start-end-radius_full",
+  "borderStartStartRadius:full": "token-radii__border-start-start-radius_full",
+  "borderTopLeftRadius:full": "token-radii__rounded-tl_full",
+  "borderTopLeftRadius:md": "token-radii__rounded-tl_md",
+  "borderTopRightRadius:full": "token-radii__rounded-tr_full",
+  "borderTopRightRadius:md": "token-radii__rounded-tr_md"
+}

@@ -1,0 +1,8 @@
+{
+  "description": "RS module surfaces — one doc per module from its README + suite/case inventory.",
+  "kind": "rs",
+  "name": "surfaces",
+  "owner": "agent-rs skill",
+  "root": "packages/reference-rs/modules",
+  "weights": { "id": 4, "title": 3 }
+}

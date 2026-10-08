@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer recipes {
+  .\@reference-ui\/lib__chip__base { align-items: center; display: inline-flex; }
+  .\@reference-ui\/lib__chip_t_soft { background-color: blue; color: white; }
+  .\@reference-ui\/lib__chip_t_accent { background-color: black; color: yellow; }
+  .\@reference-ui\/lib__chip_r_pill { border-radius: 9999px; }
+  .\@reference-ui\/lib__chip_r_rounded { border-radius: 4px; }
+}
+}

@@ -1,6 +1,6 @@
 import fg from 'fast-glob'
 import { readFile } from 'node:fs/promises'
-import type { ReferenceUIConfig } from '@reference-ui/core/config'
+import type { McpAwareConfig } from './config'
 import {
   REFERENCE_UI_PRIMITIVE_NAMES,
   type ReferenceUiPrimitiveObservation,
@@ -45,13 +45,13 @@ function increment(map: Map<string, number>, key: string, amount = 1): void {
   map.set(key, (map.get(key) ?? 0) + amount)
 }
 
-function getInclude(config: ReferenceUIConfig | undefined): string[] {
+function getInclude(config: McpAwareConfig | undefined): string[] {
   if (config?.mcp?.include?.length) return config.mcp.include
   if (config?.include?.length) return config.include
   return DEFAULT_INCLUDE
 }
 
-function getExclude(config: ReferenceUIConfig | undefined): string[] {
+function getExclude(config: McpAwareConfig | undefined): string[] {
   return config?.mcp?.exclude?.length ? config.mcp.exclude : DEFAULT_EXCLUDE
 }
 
@@ -564,7 +564,7 @@ function observePrimitiveUsageInContent(
 
 export async function collectReferenceUiPrimitiveUsage(
   cwd: string,
-  config: ReferenceUIConfig | undefined
+  config: McpAwareConfig | undefined
 ): Promise<ReferenceUiPrimitiveObservation[]> {
   const files = await fg(getInclude(config), {
     cwd,

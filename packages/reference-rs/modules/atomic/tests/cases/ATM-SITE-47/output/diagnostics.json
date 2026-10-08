@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`gridTemplateAreas: \n    \"preview name delete\"\n    \"preview size delete\"` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'gridTemplateAreas: \n    \"preview name delete\"\n    \"preview size delete\"' lookup static so the plan can serve it"
+    ]
+  }
+]

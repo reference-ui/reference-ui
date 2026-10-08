@@ -1,0 +1,8 @@
+{
+  "color:red": "@reference-ui/lib__c_red",
+  "height:10px": "@reference-ui/lib__h_10px",
+  "mt:2r": "@reference-ui/lib__mt_2r",
+  "padding:3px": "@reference-ui/lib__p_3px",
+  "top:9px": "@reference-ui/lib__top_9px",
+  "width:5px": "@reference-ui/lib__w_5px"
+}

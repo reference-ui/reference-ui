@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "spec": {
+    "schemaVersion": 1,
+    "profile": "reference-ui",
+    "name": "lib-test-system",
+    "tokens": {},
+    "fonts": {},
+    "globalCss": [],
+    "keyframes": {},
+    "recipes": {},
+    "staticCss": {},
+    "provenance": []
+  },
+  "jsxHosts": [
+    "Box",
+    "IllegalLayerHost"
+  ],
+  "sourceRoot": "packages/reference-lib/src",
+  "declarationRoot": "packages/reference-lib/.reference-ui/staging/declarations"
+}

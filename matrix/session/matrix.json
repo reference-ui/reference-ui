@@ -1,8 +1,0 @@
-{
-  "name": "session",
-  "refSync": {
-    "mode": "full"
-  },
-  "bundlers": ["vite7", "webpack5"],
-  "react": "react19"
-}

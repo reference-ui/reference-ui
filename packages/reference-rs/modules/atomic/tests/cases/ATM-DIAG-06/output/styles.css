@@ -1,0 +1,13 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer diag-unicode {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .diag-unicode__content_\😀 { content: 😀; }
+  .diag-unicode__mt_2r { margin-top: calc(2 * var(--spacing-root)); }
+}
+}

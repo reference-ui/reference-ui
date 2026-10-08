@@ -5,7 +5,7 @@ description: Core and matrix verification runner for Reference UI (the pipeline 
 
 # Core / Matrix Test Runner (`test-core`)
 
-**This is not a skill.** `tweak-component` and `test-component` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
+**This is not a skill.** `view-story` and `test-component` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
 
 The docs live under `.agents/skills/test-core` only so agents can find the runner. Treat it as infrastructure, not a manufacturing loop.
 
@@ -142,3 +142,36 @@ When multiple agents or processes request matrix tests or component verification
 - **Zero Parallel Crashes**: Prevents concurrent Docker / Dagger engine or port collisions by pausing CT while Matrix runs, and vice versa.
 - **Cross-Process File Lock**: Uses an atomic file-based ticket lock across all OS subshells and agent sessions.
 - **Live Status Reporting**: Waiting agents and developers receive regular updates (`[cpu-gate] Waiting for cpu gate (exclusive). Active: ct(12345)`).
+
+---
+
+## 5. Memex (`cases` + `surfaces` collections)
+
+Memex is the one agent CLI over every collection
+(`.agents/memex/README.md`): neo cases live in `cases`, RS module
+surfaces in `surfaces`. Use it to find **which neo cases / RS
+surfaces cover a changed surface** when scoping verification, instead of
+grepping.
+
+```bash
+node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
+node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
+node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                      # full doc + related
+```
+
+Terms are stemmed (`queries` matches `query`) and typo-tolerant
+(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
+Resolve ids with `show`, not `search`. There is no metadata sidecar —
+enrich the index by writing a detailed README: describe the behavior,
+name the symbols, cite sibling case/station ids (cited ids surface as
+`related`). Everything reads live: new docs are searchable immediately,
+no rebuild step.
+
+Example (RS surface hit):
+
+```text
+$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
+6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
+        packages/reference-rs/modules/atlas
+        > Search terms: call-site snippets, namespace package, […]
+```

@@ -1,0 +1,16 @@
+{
+  "_dark:color:indigo": "@reference-ui/lib__dark:c_indigo",
+  "_hover:color:blue": "@reference-ui/lib__hover:c_blue",
+  "_hover:color:red": "@reference-ui/lib__hover:c_red",
+  "bg:#f00": "@reference-ui/lib__bg_#f00",
+  "color:#f00": "@reference-ui/lib__c_#f00",
+  "color:black": "@reference-ui/lib__c_black",
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:crimson": "@reference-ui/lib__c_crimson",
+  "color:red": "@reference-ui/lib__c_red",
+  "color:teal": "@reference-ui/lib__c_teal",
+  "margin:6px": "@reference-ui/lib__m_6px",
+  "md:padding:2r": "@reference-ui/lib__md:p_2r",
+  "order:2": "@reference-ui/lib__order_2",
+  "padding:1r": "@reference-ui/lib__p_1r"
+}

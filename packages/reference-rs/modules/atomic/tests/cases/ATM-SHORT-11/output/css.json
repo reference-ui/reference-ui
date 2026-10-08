@@ -1,0 +1,10 @@
+{
+  "flex:0 0 auto": "@reference-ui/lib__flex_0_0_auto",
+  "flex:0 1 auto": "@reference-ui/lib__flex_0_1_auto",
+  "flex:1 1 0%": "@reference-ui/lib__flex_1_1_0%",
+  "flex:1 1 auto": "@reference-ui/lib__flex_1_1_auto",
+  "flex:2": "@reference-ui/lib__flex_2",
+  "flex:2 30px": "@reference-ui/lib__flex_2_30px",
+  "flex:inherit": "@reference-ui/lib__flex_inherit",
+  "flex:none": "@reference-ui/lib__flex_none"
+}

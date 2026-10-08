@@ -1,0 +1,15 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer spacing-scale {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .spacing-scale__m_4 { margin: var(--spacing-4); }
+}
+}

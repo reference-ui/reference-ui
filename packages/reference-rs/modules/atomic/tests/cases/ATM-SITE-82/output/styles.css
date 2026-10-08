@@ -1,0 +1,13 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer site-null {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .site-null__m_2px { margin: 2px; }
+  .site-null__p_4px { padding: 4px; }
+}
+}

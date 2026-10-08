@@ -56,7 +56,7 @@ export class SlotRoot<TMeta = unknown> {
     return this._version
   }
 
-  public scanById(slotId: string): SlotRegistration<TMeta> | undefined {
+  public getById(slotId: string): SlotRegistration<TMeta> | undefined {
     for (const entry of this._entries.values()) {
       if (entry.slotId === slotId) {
         return entry
@@ -65,10 +65,10 @@ export class SlotRoot<TMeta = unknown> {
     return undefined
   }
 
-  public scanAll(predicate: (slot: SlotRegistration<TMeta>) => boolean): SlotRegistration<TMeta>[] {
+  public select(filter: (slot: SlotRegistration<TMeta>) => boolean): SlotRegistration<TMeta>[] {
     const results: SlotRegistration<TMeta>[] = []
     for (const entry of this._entries.values()) {
-      if (predicate(entry)) {
+      if (filter(entry)) {
         results.push(entry)
       }
     }
@@ -146,8 +146,8 @@ export interface SlotRootContext<TMeta = unknown> {
     options: UseSlotRegistrationOptions<TMeta>,
     deps?: React.DependencyList
   ): void
-  useScanById(slotId: string): SlotRegistration<TMeta> | undefined
-  useGetAll(): SlotRegistration<TMeta>[]
+  useSlot(slotId: string): SlotRegistration<TMeta> | undefined
+  useSlots(filter?: (slot: SlotRegistration<TMeta>) => boolean): SlotRegistration<TMeta>[]
 }
 
 let registrationCounter = 0
@@ -230,7 +230,7 @@ export function createSlotRootContext<TMeta = unknown>(): SlotRootContext<TMeta>
     }, [root, regId])
   }
 
-  function useScanById(slotId: string): SlotRegistration<TMeta> | undefined {
+  function useSlot(slotId: string): SlotRegistration<TMeta> | undefined {
     const root = useRoot()
     const subscribe = React.useCallback(
       (onStoreChange: () => void) => root.subscribe(onStoreChange),
@@ -241,16 +241,41 @@ export function createSlotRootContext<TMeta = unknown>(): SlotRootContext<TMeta>
     // Subscribe to version changes to trigger re-renders
     React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
-    return root.scanById(slotId)
+    return root.getById(slotId)
   }
 
-  function useGetAll(): SlotRegistration<TMeta>[] {
+  function useSlots(
+    filter?: (slot: SlotRegistration<TMeta>) => boolean
+  ): SlotRegistration<TMeta>[] {
     const root = useRoot()
+    // Latest-filter ref: inline closures need no useCallback. The store
+    // subscription is version-based, so a new closure identity never
+    // resubscribes — the filter is applied at snapshot time.
+    const filterRef = React.useRef(filter)
+    filterRef.current = filter
     const subscribe = React.useCallback(
       (onStoreChange: () => void) => root.subscribe(onStoreChange),
       [root]
     )
-    const getSnapshot = React.useCallback(() => root.getAll(), [root])
+    // Identity cache for the filtered path: the match set is compared
+    // element-wise so unrelated registrations keep returning the same array.
+    const cacheRef = React.useRef<SlotRegistration<TMeta>[]>([])
+    const getSnapshot = React.useCallback(() => {
+      const currentFilter = filterRef.current
+      if (!currentFilter) {
+        return root.getAll()
+      }
+      const next = root.select(currentFilter)
+      const cached = cacheRef.current
+      if (
+        next.length === cached.length &&
+        next.every((slot, index) => slot === cached[index])
+      ) {
+        return cached
+      }
+      cacheRef.current = next
+      return next
+    }, [root])
 
     return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   }
@@ -259,7 +284,7 @@ export function createSlotRootContext<TMeta = unknown>(): SlotRootContext<TMeta>
     Provider,
     useRoot,
     useSlotRegistration,
-    useScanById,
-    useGetAll,
+    useSlot,
+    useSlots,
   }
 }

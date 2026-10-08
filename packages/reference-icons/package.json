@@ -36,7 +36,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf dist src/generated src/jsx-names.ts .reference-ui",
+    "clean": "rm -rf dist src/generated .reference-ui",
     "build": "node scripts/build.mjs",
     "prepack": "pnpm run build"
   },
@@ -47,17 +47,14 @@
     "@material-symbols-svg/react": "^0.5.0"
   },
   "peerDependencies": {
-    "@reference-ui/core": "*",
     "react": ">=18"
   },
   "devDependencies": {
-    "@reference-ui/core": "workspace:*",
-    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@reference-ui/neo": "workspace:*",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.14",
+    "esbuild": "^0.28.2",
     "react": "^19.2.4",
-    "rollup": "^4.59.0",
-    "rollup-plugin-esbuild": "^6.2.1",
     "typescript": "~7.0.2"
   }
 }
