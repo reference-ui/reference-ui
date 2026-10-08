@@ -263,7 +263,7 @@ Prior art:
 
 ## Closeout amendments (2026-09-29, captain's rulings under user autonomy directive — all reversible by veto)
 
-Full record: `FINISH.md` change control + `.agents/missions/finish-line/`.
+Full record: `docs/archive/FINISH.md` change control + `.agents/missions/finish-line/`.
 
 - **§1 Handler naming → RULED 1a, LANDED.** House `onChange`
   everywhere; Radix aliases stripped (Menu), Menubar's prop renamed

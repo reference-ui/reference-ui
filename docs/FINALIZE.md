@@ -15,7 +15,7 @@ Last updated: 2026-10-08.
 
 | # | item | status | where / notes |
 | --- | --- | --- | --- |
-| F-1 | **Drop tsup — package every lib like icons/neo** | DONE | Landed 2026-10-08 per `BUNDLER_UNIFICATION.md`: Arc A lib+fixtures `c4113e569`, Arc B icons `3a43fcb14`, Arc C mcp `f7d000845`, Arc D rs `646ffe584` (+ pins `1d822d617`, B-35 anchor `673b73375`). tsup/rollup out everywhere except inert legacy. Tick and remove. |
+| F-1 | **Drop tsup — package every lib like icons/neo** | DONE | Landed 2026-10-08 per `docs/archive/BUNDLER_UNIFICATION.md`: Arc A lib+fixtures `c4113e569`, Arc B icons `3a43fcb14`, Arc C mcp `f7d000845`, Arc D rs `646ffe584` (+ pins `1d822d617`, B-35 anchor `673b73375`). tsup/rollup out everywhere except inert legacy. Tick and remove. |
 | F-2 | **Non-atomic `dist` rebuild** | DONE | Dissolved with **F-1** as predicted 2026-10-08: all four arcs write via staged atomic rename (assemble aside, rename in). Bar met: 20002 reqs, 0 failures over 6 live lib rebuilds. Tick and remove. |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
@@ -106,14 +106,12 @@ files.
 
 - `test-script.mjs` — 4-line throwaway (read a Playwright results.json).
 - `test-standalone.spec.ts` — 7-line throwaway spec hitting `localhost:3101`.
-- `REPORT.md` — explicitly marked *SUPERSEDED 2026-09-29 by `FINISH.md`*.
 - `.agents/missions/voyage-robustness/FOLLOWUPS.md` — folded into this file.
 
 **Reviewed, kept (intentional HQ/docs history):**
 
-- `DECISIONS.md`, `WANTS.md`, `DIAGNOSTICS.md`, `FINISH.md` — HQ working docs.
-- `LOG.md` — 14-line live stub pointing at a `docs/PERF` archive; decide later.
-- `review.md` — 2026-10-07 working-tree review; recent, keep until superseded.
+- `docs/MISSIONS/DECISIONS.md`, `docs/MISSIONS/WANTS.md`, `docs/DIAGNOSTICS.md`, `docs/archive/FINISH.md` — HQ working docs.
+- `docs/archive/LOG.md` — 14-line stub pointing at a `docs/PERF` archive; decide later.
 - `sync-perf.html` — one-off perf page; candidate to move under `docs/PERF/` or
   delete once its numbers live in a report.
 
@@ -129,7 +127,7 @@ files.
   *The Oracle's plan over-archived these — attribution fix recorded.*
 - Kept `sync-perf.html` **at root** — `docs/MISSIONS/LOG-2.md:9191` carries an
   HQ standing order to keep it there (the Oracle's move would break it).
-- `FINISH.md` header now points at `FINALIZE.md` as the tracker.
+- `docs/archive/FINISH.md` header now points at `docs/FINALIZE.md` as the tracker.
 - Stray `reference-ui-lib-0.0.46.tgz` already gone; added `*.tgz` to `.gitignore`
   so `npm pack` strays can never be committed (tracked `.tgz` count is 0).
 
@@ -139,7 +137,7 @@ files.
   the wave it scoped ran and landed 2026-09-30 — `e9387f5ec` (rc −647.5 ms),
   `84faa918f` (alloc −111.5 ms), `ec4f6f725` (cow reserve), filed by `dd0989ad7`
   (sum −777 ms / −42.1% whole-sync 8/8, index 109); all four commits are
-  ancestors of HEAD and `LOG.md:3` records the landing. The plan reads stale
+  ancestors of HEAD and `docs/archive/LOG.md:3` records the landing. The plan reads stale
   because it was filed late (`4fbf15c97`, Oct 6, after the Sep 30 landing).
   Archived → `.agents/missions/archive/2026-10-08-styletrace_perf/` (`STATUS:
   closed 2026-10-08 dd0989ad7`). Caveat: the plan's §5 unranked threads (e.g.
@@ -165,9 +163,6 @@ files.
   bookkeeping: `registry/verdaccio.pid` (= running pid 87202),
   `registry/verdaccio.log`, `registry/loaded-state.json` (describes the kept
   `.store`). `git status` gate: prune introduced zero tracked changes.
-- `review.md` **kept**: 1 day old (2026-10-07 vs HEAD 2026-10-08) and
-  `reference-system` is 828 commits ahead of `origin/main` (not merged) —
-  neither ledger expiry condition met.
 
 **Done 2026-10-08 (MDX merge crew — CLEANUP-1 now met, staged, uncommitted):**
 
@@ -193,8 +188,6 @@ files.
   (pid 87202, `config.yaml:1` `storage: ../.store/storage`) and it sits under
   `pipeline/src/` (explicit no-touch). No root-level `.store/` exists. Revisit
   once the registry is stopped or the exclusion lifts.
-- [ ] `review.md` — delete once `reference-system` merges or it predates HEAD by
-  >14 days (checked 2026-10-08: 1 day old, 828 ahead — keep).
 
 ## Docs release — 2026-10-08
 

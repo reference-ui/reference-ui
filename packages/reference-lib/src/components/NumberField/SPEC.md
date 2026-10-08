@@ -38,7 +38,7 @@ Visual polish is not this gate. Current e2e **encodes the wrong host**.
 | | |
 | :--- | :--- |
 | Engine | Controlled textbox + dirty draft/commit, Group host, hidden form pipeline. |
-| Production | **Pending FINISH closeout** (rulings (a)(b)(c) + Intl i–xvi landed per FINISH.md captain rulings 2026-09-29; 4 manual gates remain). |
+| Production | **Pending FINISH closeout** (rulings (a)(b)(c) + Intl i–xvi landed per docs/archive/FINISH.md captain rulings 2026-09-29; 4 manual gates remain). |
 | Named `[x]` | 144 / 148 |
 | Playwright | 57/57 CT on React 17/18/19 + Firefox + WebKit (NFLAST-4: EDIT-07, DYNAMIC-05, ENV-06, ENV-02, COMP-04) |
 | Vitest | 131 green across unit + type files (NFLAST-2 slices A–E: +16 Intl titles EDIT-05/PARSE-01/02/03/06/08/09/10/11/12/13/15/16/17/18/19; NFLAST-4: ENV-02) |

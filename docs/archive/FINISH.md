@@ -2,7 +2,7 @@
 
 Status as of 2026-09-29, HEAD `b764ee519`, branch `reference-system`, tree `CLEAN`.
 
-> Tracker role superseded by `FINALIZE.md`; retained for its component references.
+> Tracker role superseded by `docs/FINALIZE.md`; retained for its component references.
 
 This is the single closeout doc. Everything automated that could be
 landed is landed; what follows is everything still needed before
@@ -113,7 +113,7 @@ never silently, never by chat alone:
   (FINISH-04 ruling), executed LAST among flips (rides the regen);
   C-SWITCH/SLIDER/DATE → VACUOUS (no written takes exist anywhere;
   only references to them). F30 note: F30 fixed by flushSync arc,
-  not a ruling. Provenance: DECISIONS.md §§1–5 +
+  not a ruling. Provenance: docs/MISSIONS/DECISIONS.md §§1–5 +
   NumberField/DECISIONS.md, surveyed firsthand by captain.
 
 ## Crew law (every FINISH leg)
@@ -145,7 +145,7 @@ never silently, never by chat alone:
 **A1. API/productionization read-through (HQ).** Naming 1a, W-02
 sub-rulings (i–vi), snapshot policy (5a/5b/5c + P6 pick), Switch /
 Slider / Date takes, NumberField live-requests vs B-19. No crew
-touches API surfaces until ruled. Source: `DECISIONS.md` §§1–5.
+touches API surfaces until ruled. Source: `docs/MISSIONS/DECISIONS.md` §§1–5.
 
 **A2. NumberField least-surprise flags (HQ confirm).** Engine
 rulings (a) FREEZE lattice (zero-anchored, away-from-zero ties),
@@ -381,12 +381,12 @@ not substitute. Record platform + version + per-item outcomes.
   much about device work") — steps preserved in Part D for
   hands-on runs; no owner/date (user to schedule post-release).
 - [x] Sign-off lines present (captain-ruled, reversible): P6 =
-  explicit 19-only (`DECISIONS.md` amendments); per-browser =
+  explicit 19-only (`docs/MISSIONS/DECISIONS.md` amendments); per-browser =
   DEFERRED with rationale (`FINISH-04.md`); anomaly ACCEPTED
   (`9d0f92684`, transient proven).
 - [x] FINISH-07 measurement delivered before the item-5 ruling
   (`154599d2f` → 0.001 ruling cites it).
-- [x] `REPORT.md` (superseded banner) + `DECISIONS.md` (closeout
+- [x] `REPORT.md` (superseded banner) + `docs/MISSIONS/DECISIONS.md` (closeout
   amendments) current; this file's boxes checked with HEAD refs.
 - [x] WAIVERS (all pre-existing, proof-linked, reversible):
   Menubar majors 18 CLOSED by RED-MB (getNode seam, 46/46;
@@ -426,4 +426,4 @@ git status --porcelain; git log --oneline -5
 
 Prior art: `.agents/missions/landing-sequence/SWEEP.md` (vehicle +
 P0 rule + all 68 findings), `NFLAST4.md` (anomaly repro),
-`REPORT.md` (live issues), `DECISIONS.md` (HQ pile).
+`REPORT.md` (live issues), `docs/MISSIONS/DECISIONS.md` (HQ pile).

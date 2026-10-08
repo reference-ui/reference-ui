@@ -154,13 +154,13 @@ Full text now lives in PATCHES.md (mechanical, test-pinnable) and FEATURES.md
 ## NFLAST engine rulings (HQ-delegated, 2026-09-28)
 
 HQ delegated the three open engine calls to the NFLAST mission (rule the
-obvious answers, least-surprise the rest). Root `DECISIONS.md` §3 shows HQ
+obvious answers, least-surprise the rest). Root `docs/MISSIONS/DECISIONS.md` §3 shows HQ
 never ruled the six W-02 sub-items ("ruling after the write-up"), and
-WANTS.md W-02 signs off only the prop/policy level ("snap coerces to the
+`docs/MISSIONS/WANTS.md` W-02 signs off only the prop/policy level ("snap coerces to the
 nearest step", "validate rejects off-step values") — never the lattice
 anchor, tie direction, endpoint, retain, or publish-timing math. Each
 ruling below cites its evidence; flips re-pin tests + docs per the
-pre-release-cheap doctrine (root `DECISIONS.md` §3: "Anything flipped gets
+pre-release-cheap doctrine (root `docs/MISSIONS/DECISIONS.md` §3: "Anything flipped gets
 re-pinned (tests + docs, pre-release cheap)").
 
 ### Ruling (a): snap lattice — ADOPT FREEZE (least-surprise: no flag, obvious)
@@ -203,11 +203,11 @@ range/step flags stay false; no `setCustomValidity`.
   against controlled values), `NF-COMMIT-06`, `NF-FORM-05`,
   `NF-COMP-04` ("accept off-step invalid value"). Prior art: native
   `stepMismatch` (never coerces, blocks submit) and RAC
-  publish-and-mark-invalid (root `DECISIONS.md` §3 prior art).
+  publish-and-mark-invalid (root `docs/MISSIONS/DECISIONS.md` §3 prior art).
 - **Why obvious:** the engine already computes owned invalid state for
   retained controlled values (`NF-MATH-15` green) — reject-at-commit
   makes that state reachable only programmatically, which is incoherent.
-  W-02's "validate rejects off-step values" (WANTS.md) is read as
+  W-02's "validate rejects off-step values" (`docs/MISSIONS/WANTS.md`) is read as
   rejects-as-valid (marks invalid, blocks submit): the value flows,
   validity rejects. ⚠ LEAST-SURPRISE FLAG: that reading is ours, not
   HQ-signed; if HQ meant revert, this ruling flips back cheaply.

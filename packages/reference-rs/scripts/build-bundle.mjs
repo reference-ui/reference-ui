@@ -1,5 +1,5 @@
 /**
- * JS bundle step for @reference-ui/rust (BUNDLER_UNIFICATION.md Arc D): raw
+ * JS bundle step for @reference-ui/rust (docs/archive/BUNDLER_UNIFICATION.md Arc D): raw
  * esbuild over the 12 tsup-parity entries, ESM-only, no dts or splitting. It
  * takes the package checkout and emits staged .mjs outputs, cleaning stale JS
  * from dist/ only after a successful build and renaming each output in

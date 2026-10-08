@@ -1,6 +1,6 @@
 # Clamp-or-warn contract for out-of-range controlled values (W-35)
 
-One shared contract, stated once. Source: `WANTS.md` W-35,
+One shared contract, stated once. Source: `docs/MISSIONS/WANTS.md` W-35,
 `docs/MISSIONS/PLAYTEST-REQUIREMENTS.md` Part 2 W-35. Landed for
 Slider/Splitter by the wants-contract crew; the audit table below is the
 handoff for follow-up crews.

@@ -44,7 +44,7 @@ function roundToStepPrecision(value: number, step: number): number {
 
 // NFLAST ruling (a): the TESTS.md freeze lattice, replacing the signed-off
 // W-02 RAC math (min-anchored, half-up ties, lattice-clamped max) — re-pinned
-// pre-release-cheap per root DECISIONS.md §3. Zero-anchored nearest lattice
+// pre-release-cheap per root docs/MISSIONS/DECISIONS.md §3. Zero-anchored nearest lattice
 // with away-from-zero midpoint ties; exact/exceeded non-grid bounds are
 // preserved as endpoints. Order: endpoint-preservation → nearest-lattice →
 // authored rounding (the caller applies displayRoundTrip) → final clamp
@@ -571,7 +571,7 @@ function parseDraftNumber(
   return hasPermille ? parsed / 1000 : parsed / 100
 }
 
-// W-02 commit policy as ruled (FINISH.md captain rulings adopting NFLAST
+// W-02 commit policy as ruled (docs/archive/FINISH.md captain rulings adopting NFLAST
 // (a)(b)): 'snap' commits via the zero-anchored lattice with endpoint
 // preservation (order endpoint→lattice→rounding→final clamp); 'validate'
 // retains finite under/over/off-step candidates (requests the rounded raw
@@ -579,7 +579,7 @@ function parseDraftNumber(
 // onInvalidCommit alongside onChange; 'none' clamps at commit, never snaps,
 // and owns no invalid state. Prop name and snap/validate pair mirror React
 // Aria NumberField verbatim; the default ('none') and third value are ours
-// (WANTS.md W-02).
+// (docs/MISSIONS/WANTS.md W-02).
 export type NumberFieldCommitBehavior = 'snap' | 'validate' | 'none'
 
 export type NumberFieldInvalidCommitReason = 'off-step' | 'out-of-range'

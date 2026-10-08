@@ -27,3 +27,6 @@ Current campaign: [packages/reference-neo/PLAN.md](../../packages/reference-neo/
 | [VOYAGE-PERF-SWARM.md](./VOYAGE-PERF-SWARM.md) | Rolling perf-swarm brief (1198ms → 744ms, target 700). Campaign complete. |
 | [VOYAGE-PERF-SWARM-LOG.md](./VOYAGE-PERF-SWARM-LOG.md) | Perf-swarm record and scoreboard (744ms vs Panda 645ms = 1.15x). Complete. |
 | [REFERENCE_UI.md](./REFERENCE_UI.md) | Pre-cutover monorepo orientation (filed from root 2026-09-23 per docs milspec; engine internals map the retired core). |
+| [BUNDLER_UNIFICATION.md](./BUNDLER_UNIFICATION.md) | Retired bundler-unification plan (raw esbuild behind per-package scripts, tsup/rollup out). Landed 2026-10-08. |
+| [FINISH.md](./FINISH.md) | Pre-production closeout plan and change control. Tracker role superseded by [FINALIZE.md](../FINALIZE.md); retained for component references. |
+| [LOG.md](./LOG.md) | Voyage/perf scoreboard stub. Live log cleared to a pointer at the styletrace-perf archive. |

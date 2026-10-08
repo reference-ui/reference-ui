@@ -1,8 +1,8 @@
 // Shared bundle step for @reference-ui/lib and the 8 matrix fixtures
-// (BUNDLER_UNIFICATION.md Arc A): raw esbuild, ESM-only, no dts/splitting.
+// (docs/archive/BUNDLER_UNIFICATION.md Arc A): raw esbuild, ESM-only, no dts/splitting.
 // It takes a package dir + entries and emits staged .mjs outputs, renaming
 // each into dist/ atomically so a rebuild during a live dev server never
-// 404s (FINALIZE.md F-2). Externals are computed from the consumer's own
+// 404s (docs/FINALIZE.md F-2). Externals are computed from the consumer's own
 // package.json (dependencies + peerDependencies, bare and /* subpath forms)
 // plus explicit extras; devDependencies always bundle. Run from the package
 // dir: node scripts/build-bundle.mjs --entry index=src/index.ts

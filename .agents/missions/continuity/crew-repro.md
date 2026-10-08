@@ -11,7 +11,7 @@ executed against fixtures in `/tmp/continuity-repro/` (outside the repo tree).
   → `src/sync/index.ts` (`sync()`), then the Rust `compile()` handshake.
 - `@reference-ui/lib` itself builds through it:
   `packages/reference-lib/package.json` → `"sync": "node ../reference-neo/bin/ref.ts sync"`,
-  and `dev`/`build` both run `sync` first. THEMING.md Approach 4's "collection
+  and `dev`/`build` both run `sync` first. `docs/THEMING.md` Approach 4's "collection
   law" describes this same command.
 - Collection covers both `css()`/`recipe()` literal call sites (Neo scan) and
   JSX StyleProps on known hosts (Rust atomic `extract/jsx` + `extract/css`).

@@ -7,7 +7,7 @@ so that anyone opening the repo after the reference-system PR can see the
 packaging story is deliberate, not accidental.
 
 Status: LANDED 2026-10-08 (all four arcs + pins re-baseline + B-35
-anchor fix). Ledger: `FINALIZE.md` F-1/F-2 DONE. This doc stays as the
+anchor fix). Ledger: `docs/FINALIZE.md` F-1/F-2 DONE. This doc is an archived
 record of what was decided and why.
 
 ## Why
@@ -21,7 +21,7 @@ record of what was decided and why.
   technical basis. Lib's tsup config is already just esbuild options; mcp's
   tsup plugins are already native esbuild plugins; icons' rollup run shells
   out to esbuild for the actual transform.
-- Unification also dissolves `FINALIZE.md` F-2: tsup's `clean: true` wipes
+- Unification also dissolves `docs/FINALIZE.md` F-2: tsup's `clean: true` wipes
   `dist/` before rewriting it, so a lib rebuild during a live dev server
   briefly 404s. A staged esbuild write (assemble aside, atomic rename in)
   removes the window everywhere at once.
@@ -217,4 +217,4 @@ workspace evidence cited.
 - [esbuild API docs — outbase/outdir semantics](https://esbuild.github.io/api/#outbase)
   (inspected 2026-10-08; grounds the Arc B layout claim).
 - Everything else is workspace evidence: the configs, build scripts, and
-  `FINALIZE.md` F-1 cited inline by path.
+  `docs/FINALIZE.md` F-1 cited inline by path.
