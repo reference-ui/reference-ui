@@ -39,14 +39,14 @@
     "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.30.0",
-    "@swc-node/register": "~1.9.1",
-    "@swc/core": "~1.5.7",
-    "@swc/helpers": "~0.5.11",
-    "@types/node": "^25.1.0",
+    "@changesets/cli": "^3.0.3",
+    "@swc-node/register": "~1.12.1",
+    "@swc/core": "~1.16.13",
+    "@swc/helpers": "~0.5.23",
+    "@types/node": "^26.6.4",
     "minisearch": "^7.2.0",
-    "nx": "^22.4.4",
-    "prettier": "~3.8.1",
+    "nx": "^23.2.1",
+    "prettier": "~3.9.9",
     "typescript": "~7.0.2"
   },
   "packageManager": "pnpm@10.29.3"
