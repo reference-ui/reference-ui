@@ -19,8 +19,8 @@ Last updated: 2026-10-08.
 | F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Expected to dissolve with **F-1** (tsup→esbuild). |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
-| F-5 | **Native MDX support** | OPEN | Separate mission; durable plan `.agents/missions/finalize/PLAN-mdx.md` (Oracle-approved). Captain session dispatched 2026-10-08 (worktree `mdx-support`). |
-| F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. Pass 3 done 2026-10-08 (staged, uncommitted); 2 holds left. See "Cleanup backlog" below. |
+| F-5 | **Native MDX support** | DONE | First version LANDED then merged: `openchamber/mdx-support` (8 commits, head `354766bc2`) merged into `reference-system` 2026-10-08 (staged, captain commits). Proof: `pnpm install --frozen-lockfile` clean, `NEO-MDX-01` PASS, `agentneo q` 0 errors, `bench:neo --mdx 3` collects 3 faces / 0 decoys. Plan now at `.agents/missions/archive/2026-10-08-finalize/PLAN-mdx.md`; mission log `.agents/missions/mdx-support/MISSION.md`. Tick and remove. |
+| F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. Pass 3 done 2026-10-08 (staged, uncommitted); CLEANUP-1 now met — `finalize/` archived (see below). 1 hold left (`.store`). See "Cleanup backlog" below. |
 | F-7 | **Shared pin baseline under concurrent missions** | DONE | Retired 2026-10-08: the single re-baseline already happened — docs `1accad80f` moved 3 docs lines (`react/styles.css`, `styled/styles.css`, `system/baseSystem.mjs`) ← docs-release `5e8ff3a72`; lib/icons unchanged. `69f0491d4` is **test-only** (`--stat` verified), not a second `types.mjs` mover (`977593fc6` was the runtime mover). `verify-pins` PASS (1258). Reopen only if a fresh mover lands. |
 
 ## F-1 detail — dropping tsup / unifying package builds
@@ -169,16 +169,25 @@ files.
   `reference-system` is 828 commits ahead of `origin/main` (not merged) —
   neither ledger expiry condition met.
 
-**Still open (2 holds):**
+**Done 2026-10-08 (MDX merge crew — CLEANUP-1 now met, staged, uncommitted):**
 
-- [ ] Archive `finalize/` **HELD — CLEANUP-1 condition unmet.** MDX has not
-  landed: `openchamber/mdx-support` (@ `354766bc2`, mission-closed on its
-  branch) is **not merged** into `reference-system`, the `mdx-support` worktree
-  is live, and OPEN F-5 names `.agents/missions/finalize/PLAN-mdx.md` as the
-  durable plan. Archive only after the MDX merge decision lands (the F-6 order
-  named `finalize/` for archiving, but the ledger's own "after MDX lands"
-  condition + the never-touch exclusion for OPEN-item refs hold it — needs an
-  explicit override to proceed).
+- Archived **`finalize/`** →
+  `.agents/missions/archive/2026-10-08-finalize/` (`STATUS: closed 2026-10-08
+  354766bc2`, the merged `openchamber/mdx-support` head; merge staged, captain
+  commits) — the MDX merge decision landed, so the hold lifts: F-5 is DONE and
+  its plan pointer moves to the archive path. 17 renames, 0 content churn
+  (16 pure renames; `ARC3.md` is byte-identical to the branch head — its delta
+  is the merge itself, not the move; ignored `reports/` carried along). No
+  scripts/pins live under `finalize/`, so no path math needed repair; the only
+  live pointer was this ledger (updated here + F-5/F-6 lines). Frozen
+  historical refs keep the old path by convention (`mdx-support/MISSION.md`
+  plan pointer, its `PLAN.oracle.md` brief, `voyage-robustness`
+  `CONCLUSION.oracle.md`). Proof the move disturbed nothing: `pnpm agent
+  vitest packages/reference-neo/src/collect/lib/scan` (the CLOSEOUT-cited neo
+  suite) → green from the archived tree; `NEO-MDX-01` PASS + `bench:neo --mdx
+  3` (3 faces / 0 decoys) already proven on the merged tree before the move.
+
+**Still open (1 hold):**
 - [ ] Disk-only prune of `pipeline/src/registry/.store/` (259 MB) **HELD.** It
   is ignored/untracked, but it is the **live storage of the running verdaccio**
   (pid 87202, `config.yaml:1` `storage: ../.store/storage`) and it sits under
@@ -203,9 +212,10 @@ files.
 
 ## Open after docs release
 
-- **MDX first version delivered** on branch `openchamber/mdx-support` (worktree
-  `mdx-support`); 5 commits, Oracle plan + arc reviewed. Merge is a deliberate
-  step (new native dep `@rspress/mdx-rs` + root lockfile) — pending decision.
+- **MDX first version MERGED** 2026-10-08: `openchamber/mdx-support` (8 commits
+  through `354766bc2`, Oracle plan + arc reviewed) into `reference-system`
+  (staged, captain commits; native dep `@rspress/mdx-rs` + root lockfile).
+  `finalize/` archived; F-5 DONE.
 - WAVE4.fix **LANDED** (`9512fad32`); **voyage-robustness CONCLUDED** 2026-10-08
   (Oracle FINAL `e7b67341e`).
 
