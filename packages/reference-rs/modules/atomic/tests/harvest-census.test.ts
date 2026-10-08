@@ -117,9 +117,13 @@ const EXPECTED_BYTES = {
   // shipped probe. 2026-10-08 font-weight runtime -> 159077/39933
   // (+786/+274): scope.ts family scoping ships in react.mjs via css();
   // A/B without scope.ts reproduces 158291/39659 exactly, CSS pins green
-  // throughout. Re-verify if acceptance moves bytes.
-  reactRaw: 159077,
-  reactGzip: 39933,
+  // throughout. 2026-10-08 bundler unification Arc D -> 153457/37735
+  // (-5620/-2198): the probe bundles dist/primitives.mjs (minified) in, and
+  // the raw-esbuild leg drops tsup's SWC __name wrappers plus the node:
+  // strip from it; A/B with the tsup-built dist reproduces 159077/39933
+  // exactly. Re-verify if acceptance moves bytes.
+  reactRaw: 153457,
+  reactGzip: 37735,
   fixtureRules: 3693,
   m500Rules: 33806,
 }

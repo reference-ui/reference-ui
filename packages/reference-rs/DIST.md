@@ -12,7 +12,7 @@ Opening `packages/reference-rs/` still looks like four (really five) product fol
 
 | Folder today | What it actually is | Ships? |
 | --- | --- | --- |
-| `dist/` | tsup JS (`index.mjs`, `system.mjs`, …) — `package.json` `"exports"` | yes |
+| `dist/` | esbuild JS (`index.mjs`, `system.mjs`, …) — `package.json` `"exports"` | yes |
 | `native/*.node` | napi `--output-dir native` copy of the addon + sha256 stamp | local load; optional-dep packages on npm |
 | `target/` | Cargo default scratch (`debug/`, `release/`, `.rlib`) | **never** |
 | `npm/` | napi `create-npm-dirs` per-platform package stubs (`@reference-ui/rust-darwin-arm64`, …) | publish staging, not the root tarball |
@@ -29,7 +29,7 @@ Cargo’s default name is `target/`. That is reserved-by-convention, not a law. 
 - **One npm package** `@reference-ui/rust`, **one `.node`**, public subpaths unchanged.
 - **Cdylib crate source is `modules/runtime` (PT3).** This pass only moves **generated** `.node` / cargo / npm / artifacts. Do not move `native.rs` product ABIs here.
 - **`dist/cargo` never ships.** Not in `"files"`, not in the tarball, not in optional-dep packages.
-- **tsup `clean: true` must not delete cargo cache or `.node`.** If `outDir` is `dist`, configure clean (or split `dist/js`) so a JS rebuild does not wipe `dist/cargo`.
+- **The bundle clean must not delete cargo cache or `.node`.** If `outDir` is `dist`, configure the clean (or split `dist/js`) so a JS rebuild does not wipe `dist/cargo`.
 - Do not start `pnpm dev:lib`. Do not commit unless asked.
 - Follow `agent-rs`. Do not “fix” generated binaries with file headers.
 
@@ -46,7 +46,7 @@ packages/reference-rs/
 │
 └── dist/                           ALL generated output. gitignored as a tree,
                                     except we already gitignore `dist` at repo root.
-    ├── index.mjs                   tsup (today’s dist/ root)
+    ├── index.mjs                   esbuild (today’s dist/ root)
     ├── tasty.mjs
     ├── atlas.mjs
     ├── styletrace.mjs
@@ -75,19 +75,19 @@ packages/reference-rs/
 
 ### Why subfolders under `dist/` (not a flat pile)
 
-`dist/` is already tsup’s `outDir` with `clean: true`. Dumping cargo incremental output into that same directory without a subdirectory **will get deleted on every `build:js`**. Same for `.node` if you are not careful.
+`dist/` is already the bundle step’s `outDir` with a JS-only clean. Dumping cargo incremental output into that same directory without a subdirectory **will get deleted on every `build:js`**. Same for `.node` if you are not careful.
 
 Three consumers, three subtrees:
 
 | Subtree | Producer | Consumer |
 | --- | --- | --- |
-| `dist/*.mjs` | tsup | `"exports"`, published root package |
+| `dist/*.mjs` | esbuild (`scripts/build-bundle.mjs`) | `"exports"`, published root package |
 | `dist/native/*.node` | `napi build --output-dir dist/native` | `runtime/loader.ts` (contributor checkout) |
 | `dist/cargo/` | rustc via `target-dir` | cargo / napi compile; rust-analyzer |
 | `dist/npm/` | `napi create-npm-dirs` + artifacts copy | `publish-native.ts` optionalDeps |
 | `dist/artifacts/` | `napi artifacts --output-dir dist/artifacts` | CI collect → optional packages |
 
-If tsup cannot clean only JS, set tsup `outDir` to `dist/js` and point `"exports"` there. Prefer **not** doing that if `clean` can ignore `cargo/`, `native/`, `npm/`, `artifacts/`. One `dist/` name is the point; an extra `dist/js` is allowed if tools fight.
+If the bundler cannot clean only JS, set the bundle `outDir` to `dist/js` and point `"exports"` there. Prefer **not** doing that if `clean` can ignore `cargo/`, `native/`, `npm/`, `artifacts/`. One `dist/` name is the point; an extra `dist/js` is allowed if tools fight.
 
 ---
 
@@ -166,7 +166,7 @@ Intent: generated tree is invisible; crate source is not.
 1. **Cargo target-dir → `dist/cargo`**. `pnpm agentrs c`. Confirm no new `packages/reference-rs/target/` (or only a leftover you then delete).
 2. **napi `--output-dir dist/native`**. Point loader + ensure-native + CI + pipeline at it. Delete leftover `native/*.node`.
 3. **`artifacts/` and `npm/` → `dist/artifacts`, `dist/npm`.** Publish scripts and pipeline.
-4. **tsup clean** does not wipe 1–3. Then `pnpm agentrs t`.
+4. **bundle clean** does not wipe 1–3. Then `pnpm agentrs t`.
 5. **README** — it still says `native/` is gitignored `.node` output. Lie.
 
 ---
@@ -188,7 +188,7 @@ Intent: generated tree is invisible; crate source is not.
 
 - Do not undo the dist nest (host vs dump)
 - `packages/reference-rs/package.json` (`build:native`, `files`, `napi`)
-- `packages/reference-rs/tsup.config.ts` (`outDir`, `clean`)
+- `packages/reference-rs/scripts/build-bundle.mjs` (`outDir`, `clean`)
 - `packages/reference-rs/.cargo/config.toml`
 - `packages/reference-rs/modules/runtime/js/loader.ts`
 - `packages/reference-rs/modules/runtime/js/tools/ensure-native.ts`
@@ -196,4 +196,4 @@ Intent: generated tree is invisible; crate source is not.
 - `.github/workflows/rust-compile.yml`
 - `pipeline/src/build/rust/targets.ts`
 
-Then cargo dir. Then `.node` dir. Then npm/artifacts. Then prove tsup cannot delete them.
+Then cargo dir. Then `.node` dir. Then npm/artifacts. Then prove the bundle clean cannot delete them.
