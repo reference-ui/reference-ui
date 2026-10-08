@@ -1,1 +1,0 @@
-export { installPackagesTs } from './packages'

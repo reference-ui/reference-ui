@@ -20,9 +20,6 @@
   fixture's own runtime natively, the consumer's in-container).
 - Operation Tokyo ([brief](../../docs/MISSIONS/OPERATION_TOKYO.md)) owns
   what comes next.
-- Evidence museum: `packages/reference-legacy/` (frozen `main` core,
-  read-only law in its README). Tokyo steals solved structure from it;
-  nothing imports it.
 
 ## 1. HQ's thesis (the shape of the rethink)
 

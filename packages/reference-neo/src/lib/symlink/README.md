@@ -6,8 +6,8 @@ a directory up front, junctions behave differently from POSIX symlinks,
 and stale scope links survive renames — so every sharp edge lives here,
 behind three functions, instead of scattered as ad-hoc fs calls.
 
-Ported from `packages/reference-legacy/src/lib/symlink/` (file motion
-with renames): `prepare-link-path-for-symlink.ts` is now `prepare.ts`,
+Ported from the retired core's `src/lib/symlink/` (file motion
+with renames, since removed): `prepare-link-path-for-symlink.ts` is now `prepare.ts`,
 and the `symlink-dir` call follows the v10 named export
 (`symlinkDirSync`) — legacy pins v9, whose default-export-plus-`.sync`
 shape no longer exists. `removeGeneratedLink` is new in Neo: legacy's

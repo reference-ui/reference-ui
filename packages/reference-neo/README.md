@@ -48,7 +48,6 @@ somewhere to live.
 | Thing | Job |
 | :--- | :--- |
 | `reference-rs` | The engine below the cut. |
-| `reference-legacy` | Frozen old core. Museum — read, never import. |
 | `reference-lib` | Components. Proof a package can own a fast harness. |
 | `matrix/*` | External boundaries: install, bundlers, chain. |
 
