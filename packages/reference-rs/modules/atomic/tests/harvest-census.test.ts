@@ -114,9 +114,12 @@ const EXPECTED_BYTES = {
   // 2026-09-28 landing -> 158317/39664 (+244/+69), react.mjs-only with all
   // CSS pins green (red since before root-var). 2026-09-28 NAMER ->
   // 158291/39659 (-26/-5): miss.ts comma-split deletion shrinks the
-  // shipped probe. Re-verify if acceptance moves bytes.
-  reactRaw: 158291,
-  reactGzip: 39659,
+  // shipped probe. 2026-10-08 font-weight runtime -> 159077/39933
+  // (+786/+274): scope.ts family scoping ships in react.mjs via css();
+  // A/B without scope.ts reproduces 158291/39659 exactly, CSS pins green
+  // throughout. Re-verify if acceptance moves bytes.
+  reactRaw: 159077,
+  reactGzip: 39933,
   fixtureRules: 3693,
   m500Rules: 33806,
 }
