@@ -6,9 +6,9 @@ by `tsc`. No tsup, no rollup. This doc is the map for getting there. It exists
 so that anyone opening the repo after the reference-system PR can see the
 packaging story is deliberate, not accidental.
 
-Status: planned, post-PR voyage work. Ledger: `FINALIZE.md` F-1 (RULED
-esbuild; Arc A unblocked since WAVE5 landed 2026-10-08). This doc carries the
-full scope, including icons (ruled in by HQ 2026-10-08).
+Status: LANDED 2026-10-08 (all four arcs + pins re-baseline + B-35
+anchor fix). Ledger: `FINALIZE.md` F-1/F-2 DONE. This doc stays as the
+record of what was decided and why.
 
 ## Why
 
