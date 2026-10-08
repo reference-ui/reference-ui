@@ -15,13 +15,13 @@ Last updated: 2026-10-08.
 
 | # | item | status | where / notes |
 | --- | --- | --- | --- |
-| F-1 | **Drop tsup — package every lib like icons/neo** | RULED (esbuild) | Oracle `TSUP.oracle`: use **raw esbuild** behind a small node script, not rollup/tsc-only. Census: lib + 8 matrix fixtures + mcp + rs. Arc A (lib) queued behind WAVE5. See "## F-1 detail". |
-| F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Likely dissolves with F-1. |
+| F-1 | **Drop tsup — package every lib like icons/neo** | RULED (esbuild) | Oracle `TSUP.oracle`: use **raw esbuild** behind a small node script, not rollup/tsc-only. Census: lib + 8 matrix fixtures + mcp + rs. **Next voyage**; Arc A (lib) unblocked (WAVE5 landed 2026-10-08). See "## F-1 detail". |
+| F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Expected to dissolve with **F-1** (tsup→esbuild). |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
 | F-5 | **Native MDX support** | OPEN | Separate mission; durable plan `.agents/missions/finalize/PLAN-mdx.md` (Oracle-approved). Captain session dispatched 2026-10-08 (worktree `mdx-support`). |
 | F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. See "Cleanup backlog" below. |
-| F-7 | **Shared pin baseline under concurrent missions** | OPEN | `.agents/missions/voyage-one-shot/pins/baseline.sha256` is shared. Any mission that changes shipped bytes re-baselines (or the pin owner does once at the end). `font-weight-runtime-1008` has moved `types.mjs` twice (`977593fc6`, `69f0491d4`); a **single** re-baseline will follow its land — do not churn per-commit. Protocol: documented package-cwd syncs only; each diff shows only the claimed lines. |
+| F-7 | **Shared pin baseline under concurrent missions** | DONE | Retired 2026-10-08: the single re-baseline already happened — docs `1accad80f` moved 3 docs lines (`react/styles.css`, `styled/styles.css`, `system/baseSystem.mjs`) ← docs-release `5e8ff3a72`; lib/icons unchanged. `69f0491d4` is **test-only** (`--stat` verified), not a second `types.mjs` mover (`977593fc6` was the runtime mover). `verify-pins` PASS (1258). Reopen only if a fresh mover lands. |
 
 ## F-1 detail — dropping tsup / unifying package builds
 
@@ -71,8 +71,8 @@ bundler-agnostically.
 **Arcs:** A lib → B fixtures → C mcp → D rs → E prune the lockfile (`tsup` gone,
 esbuild deduped 0.27.3→0.28.2). **Bar (`TSUP-7`):** scripted dist-contract
 parity, unmodified consumer smoke green, docs build clean, perf ≤ baseline.
-Smallest first arc = **lib only**. **Queued behind WAVE5** (both edit
-`check-dist-fresh.mjs` — coordinate, don't merge).
+Smallest first arc = **lib only** — now the next voyage (WAVE5 landed
+2026-10-08); both edit `check-dist-fresh.mjs` (coordinate, don't merge).
 
 ## Known pre-existing reds (not ours; do not re-litigate)
 
@@ -163,4 +163,18 @@ files.
 - **MDX first version delivered** on branch `openchamber/mdx-support` (worktree
   `mdx-support`); 5 commits, Oracle plan + arc reviewed. Merge is a deliberate
   step (new native dep `@rspress/mdx-rs` + root lockfile) — pending decision.
-- WAVE4.fix (stuck freshness leg) in flight; then voyage closeout.
+- WAVE4.fix **LANDED** (`9512fad32`); **voyage-robustness CONCLUDED** 2026-10-08
+  (Oracle FINAL `e7b67341e`).
+
+## Concluded 2026-10-08 — `voyage-robustness`
+
+Oracle FINAL closeout review **CONCLUDED** (pin `e7b67341e`; report
+`.agents/missions/voyage-robustness/reports/FINAL.closeout.md`). Every arc landed:
+C1 (`490962c4d`), C2 (`a65eecad7`+`cec363eab`), B3-depth
+(`4687076d1`+`beea20e24`+`7dd862400`), W3.fix (`60c407a47`), WAVE4 micros
+(`5b421e4ec`), WAVE4.fix (`9512fad32`), WAVE5
+(`2b376fd3d`+`e75b4c31c`+`c82052096`), docs re-baseline (`1accad80f`);
+`verify-pins` **PASS (1258)**. Three P3 record-corrections landed as a docs
+follow-up (`CLOSEOUT.md` §15); no LAND body reopened. Known pre-existing reds
+(`bin/ref.test.ts` wording; flaky `clean-repro`/`session-repro` lock-kill) remain
+as listed above.

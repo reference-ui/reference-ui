@@ -1,5 +1,9 @@
 # voyage-robustness — CLOSEOUT
 
+> **Oracle FINAL review — CONCLUDED** (pin `e7b67341e`): report
+> `.agents/missions/voyage-robustness/reports/FINAL.closeout.md`. The three P3
+> record-corrections and the P4 advisories are landed in §15 below; no HOLD.
+
 **Mission.** Harden the config-load / emit / exports path of the one-shot
 `ref sync`: deterministic bytes, no silent staleness, and proof machinery that
 cannot pass vacuously. Follows `voyage-one-shot`.
@@ -42,7 +46,7 @@ citations are named inline where a wave's own proof is the evidence.
 | CUT | B2 blanking, B3-xmode, T2 guard, T3 hardening, compile-request relativize, alias canonicalization, narrow-bootstrap, content surgery | **CUT** | — | §4; `GATES.md`, `reports/DESIGN.oracle.md` §2 |
 | FILED | content-class residual; `LIB_DIST_ATOMIC_BUILD`; `normalizeConfigDependencyPaths` Win32; mcp dist tripwire | FILED/CUT | — | §4 |
 
-### Commit list (voyage-owned)
+### Commit list (product + pin commits)
 
 ```
 490962c4d  build(neo): run documented syncs in dist mode behind a dist-freshness gate
@@ -53,6 +57,7 @@ a2aa41af6  fix(neo,agent): close stale-neo holes (Oracle ARC-P2-1/P3-1)
 beea20e24  chore(mission): ignore sync.lock in the pin walk
 7dd862400  chore(pins): re-baseline 3 react.mjs.map lines (B3-depth live sources)
 5b421e4ec  test(neo,lib): B4/B5/B6 freshness, guard, and Windows marker
+60c407a47  test(neo): B3-depth follow-ups (relative re-home, separators, loaders, map guard)
 2b376fd3d  fix(neo,lib): materialize + de-leak the tasty runtime edge (WAVE5)
 e75b4c31c  chore(pins): re-baseline lib+icons types.mjs (WAVE5); add F-7 pin protocol
 c82052096  chore(pins): re-baseline docs types.mjs after dev-server restart (WAVE5 complete)
@@ -60,10 +65,13 @@ c82052096  chore(pins): re-baseline docs types.mjs after dev-server restart (WAV
 1accad80f  chore(pins): re-baseline docs styles.css + baseSystem.mjs
 ```
 
-Interleaved commits by other missions on the same branch (`977593fc6`,
-`34ebcf959`, `48c2a7e22`, `daa992fef`, `5e8ff3a72`, `07e130810`, cleanup and
-`package-unify-1008` docs) are **not** voyage commits; they are attributed in §3
-and §7.
+This list is **product + pin commits** only (Oracle FC-P3-2). The W3.fix product
+commit `60c407a47` is included; the mission-layer `chore(robustness)` /
+`docs(robustness)` bookkeeping commits that also fall in `1d556dae9..1accad80f`
+are evidence, not product lands, and are not enumerated here. Interleaved commits
+by other missions on the same branch (`977593fc6`, `34ebcf959`, `48c2a7e22`,
+`daa992fef`, `5e8ff3a72`, `07e130810`, cleanup and `package-unify-1008` docs) are
+**not** voyage commits; they are attributed in §3 and §7.
 
 ---
 
@@ -92,7 +100,7 @@ and §7.
 
 ```
 $ (cd packages/reference-docs)   node ../reference-neo/tools/ensure-dist.mjs && pnpm exec ref sync
-  [ref] already watching this project (pid 46014) — using the running session   # poke→watch rebuilds; see §8
+  [ref] already watching this project (pid 46014) — using the running session   # poke→watch rebuilds; see §12
 
 $ pnpm --dir packages/reference-lib run sync
   node ../reference-neo/tools/ensure-dist.mjs && node ../reference-neo/dist/bin/ref.js sync
@@ -182,7 +190,7 @@ edge lazy and the 2.15 MB size.
 | W3.fix | neo `vitest run src/packager src/sync` | 70/70 (report); re-run @ tip = 73 tests, see below |
 | W4 | neo `vitest run src/config` | **31 passed (5 files)** (re-run @ tip) |
 | W4 | `check:dist` + `verify-pins` + smoke step 3b | OK / PASS (1258) / PASS (re-run) |
-| W5 | neo `vitest run src/packager src/sync` | 73 tests, 14 files (report). Re-run @ tip: **72–71 passed, 1–2 failed** — the flaky lock-kill repros only (§7) |
+| W5 | neo `vitest run src/packager src/sync` | 73 tests, 14 files (report). Re-run @ tip: **72–71 passed, 1–2 failed** — the flaky lock-kill repros only (§10) |
 
 Re-run detail @ tip (they are not all flake-free under the live watcher, so
 stated exactly):
@@ -196,7 +204,7 @@ neo vitest run src/sync/clean-repro.test.ts   (alone)      → 1 failed | 1 pass
 neo vitest run (full, FORCE_COLOR unset)                   → 2 failed | 601 passed (603)
 ```
 
-The failures are the documented pre-existing reds (§7), not the voyage's suites.
+The failures are the documented pre-existing reds (§10), not the voyage's suites.
 
 Mutation-based bars (B4 token-touch `check:dist` FAIL naming
 `.reference-ui/system/baseSystem.mjs`; dataless fixture smoke FAIL at step 3b;
@@ -257,12 +265,18 @@ Every baseline commit shows **only** its claimed hash lines (checked with
 ```
 
 lib and icons lines are unchanged; only the three docs emitted files + the docs
-aggregate + the two provenance/header comment lines move. The commit message
-records the attribution: the **docs-release CodeBlock fix** (`5e8ff3a72`, the
-`.reference-ui/*/styles.css` fade) and the **font-weight runtime landing**
-(`system/baseSystem.mjs`); a clean one-shot `ref sync` in `packages/reference-docs`
-reproduced the live bytes exactly, so this is deterministic drift, not a
-stale-server artifact.
+aggregate + the two provenance/header comment lines move. **Attribution
+correction (Oracle FC-P3-1):** all three docs lines — `.reference-ui/react/styles.css`,
+`.reference-ui/styled/styles.css`, `.reference-ui/system/baseSystem.mjs` — trace to
+**`5e8ff3a72`** (the docs-release `CodeBlock.tsx` `background`→`backgroundImage`
+collected style-call change, which moves both the fragment and the stylesheets),
+**not** to a "font-weight runtime landing": there is no font-weight product commit
+in `(c82052096, 1accad80f]` (`4453611c1` is log-only, `69f0491d4` is test-only).
+The `1accad80f` commit *message* names the runtime for `baseSystem.mjs`; the
+re-baseline bytes themselves are correct — only that causal parenthetical was
+wrong (`WAVE4.fix.md` independently attributed the same 3-line red to the docs
+release). A clean one-shot `ref sync` in `packages/reference-docs` reproduced the
+live bytes exactly, so this is deterministic drift, not a stale-server artifact.
 
 ---
 
@@ -417,8 +431,8 @@ pnpm agentneo run NEO-SYNC-02 && pnpm agentneo run NEO-SYNC-05 && pnpm agentneo 
 Every LAND carries its frozen bar, the command, the result, and dist
 provenance; the final `verify-pins` is **PASS (1258)** from fresh **documented
 package-cwd** syncs; every pin re-baseline diff shows only its claimed lines
-(the `1accad80f` docs-only release drift attributed to the docs-release CodeBlock
-fix + font-weight runtime); the residual/CUT/advisory ledger and all four
+(the `1accad80f` docs-only release drift, all three docs lines ← the docs-release
+CodeBlock fix `5e8ff3a72` per the §7 FC-P3-1 correction); the residual/CUT/advisory ledger and all four
 pre-existing reds are enumerated with scope-untouched git arguments; every
 `FINALIZE.md` open item is covered or explicitly carried; and the WAVE5
 acceptance (plain analyzable edge, materialized `dist/tasty/` with 550 chunks,
@@ -429,6 +443,60 @@ build time) holds on the live tree.
 the closeout handoff's "not running" assumption. It is another session's
 process, was not touched, and does not bear on any LAND or on the WAVE5
 acceptance; it is recorded here so nothing reads as silently dropped. The
-remaining external step is the Oracle `FINAL.closeout` review of this document.
+remaining external step was the Oracle `FINAL.closeout` review of this document;
+it has since run (pin `e7b67341e`) and returned **CONCLUDED** — see §15.
+
+---
+
+## 15. Oracle FINAL review — CONCLUDED
+
+Report: `.agents/missions/voyage-robustness/reports/FINAL.closeout.md` (pin
+`e7b67341e`; product tip `1accad80f`). Verdict **CONCLUDED**: every LAND evidenced,
+every pin diff shows only its claimed lines with unbroken hash continuity,
+`verify-pins` **PASS (1258)**, residual/CUT/advisory ledgers and all four
+pre-existing reds check out, no open item silently dropped, and WAVE5 acceptance
+holds live. Three P3 record-corrections and several P4 advisories, all landed here
+as docs-only corrections — no LAND body reopened.
+
+- **FC-P3-1 — attribution corrected in §7.** All three `1accad80f` docs lines trace
+  to `5e8ff3a72`; the "font-weight runtime landing" parenthetical was wrong (no
+  font-weight product commit in `(c82052096, 1accad80f]`). History is not rewritten
+  — the re-baseline bytes were already correct.
+- **FC-P3-2 — commit list fixed in §1.** Added `60c407a47` (W3.fix product commit,
+  already in the outcomes table) and retitled the list "product + pin commits" so a
+  reader diffing `1d556dae9..1accad80f` is not surprised by unlisted mission-layer
+  `chore(robustness)`/`docs(robustness)` entries.
+- **FC-P3-3 — required WAVE5 Oracle arc review never ran; this FINAL review covered
+  it.** There is no WAVE5-arc brief or report (`briefs/` holds 17 files, none
+  WAVE5-arc). The skipped step is now on record so the *omission*, not the
+  substance, remains. The FINAL review's mitigation, quoted: *"I read the WAVE5
+  mechanism bodies at the pin — `rewrite-types-runtime-import.ts` (whole-call
+  replace both quote forms, bare-placeholder fallback, strip-then-triple-guard with
+  loud throws …), `reference-types.test.ts` (both shapes + literal assert + survives
+  reference throw), `materialize-runtime.mjs` (verbatim whole-dir copy, loud
+  `access` guard, `rm+cp` every build), `build-package.mjs` tripwire (all three
+  files), `tsup.config.ts` external (correct lazy-edge seam, consumer-verified by
+  code-split) … Pin move verified to the hash … acceptance verified live."* No
+  redundant review needed.
+- **FC-P4-2 — arc P4 residual ledger (previously unmentioned).** Carried for the
+  next re-baseline: `WAVE2.C2.arc` **P4-2** (gate/tsconfig boundary — re-check on
+  layout change), **P4-5** (no-`tsconfigRaw` standing guard), **P4-6** (unit-test
+  residual), **P4-7** (banner-normalization predicate + the docs/lib 13-line gap
+  accounting); `WAVE4.micros.arc` **P4-1/P4-3** (accepted). None affects a verdict.
+- **FC-P4-3 — `dist/tasty/*` in `REQUIRED_OUTPUTS` is not an open item.** The
+  requiring bar was the W4-arc §5 option-1 sketch, **superseded by `CONC-P2-1`**,
+  which deliberately scoped the tripwire to `build-package.mjs`. The `WAVE4.md:71` /
+  `WAVE4.fix.md` disclosure #5 "still open" resolves here — no follow-up.
+- **FC-P4-4 — paper-trail fork noted.** `WAVE4.micros.arc.md` §5 verdict (404
+  FILED out-of-voyage, option 1) was **overruled** by the later `CONCLUSION`
+  (`CONC-P4-4`) fix-in-body path the mission executed; the closeout follows
+  CONCLUSION throughout.
+- **FC-P4-5/8/9 — recorded observations only (no repair).** "Sync time flat" is
+  evidenced by the lib build wall + mechanism, not a sync A/B; `e75b4c31c` is not
+  strictly pins-only (+1 `FINALIZE.md` row, disclosed); the brace-scan in
+  `rewrite-types-runtime-import.ts:70-74` assumes no unbalanced braces in tsc's
+  helper strings — any drift moves `types.mjs` bytes and `verify-pins` trips.
+
+---
 
 *No commit / push / stash performed. Only this file was written.*

@@ -1,7 +1,9 @@
 # WAVE5 — close `LIB_TASTY_RUNTIME_404` (materialize + analyzable)
 
-STATUS: CREW DONE (`reference-system` @ `917203f18` + uncommitted changes) —
-code + tests + evidence landed; captain re-run + pins-only re-baseline pending.
+STATUS: LANDED (`2b376fd3d` code; `e75b4c31c`/`c82052096` pins) — captain re-run +
+pins-only re-baseline done. Voyage CONCLUDED — see `CLOSEOUT.md` §15. (The
+required WAVE5 Oracle arc review never ran; the FINAL closeout review covered the
+WAVE5 mechanism + pin move — FC-P3-3.)
 
 Both halves per Oracle `CONCLUSION.oracle` CONC-P2-1: make the packaged tasty
 edge analyzable and materialize its payload. Full report:

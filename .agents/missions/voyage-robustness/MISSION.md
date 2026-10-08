@@ -1,6 +1,7 @@
 # Mission: voyage-robustness — harden the config/emit/exports surfaces
 
-Status: planning (Oracle `PLAN.oracle` in flight).
+Status: CONCLUDED 2026-10-08 (Oracle FINAL `e7b67341e` —
+`.agents/missions/voyage-robustness/reports/FINAL.closeout.md`). See `CLOSEOUT.md`.
 
 Objective: make the one-shot `ref sync` / config-load / emission path robust —
 deterministic bytes, no silent staleness, and proof machinery that cannot pass

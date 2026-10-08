@@ -1,6 +1,7 @@
 # WAVE4 — micro-batch B4 + B5 + B6
 
-STATUS: LANDED (`5b421e4ec`) — Oracle arc review in flight; one gap filed
+STATUS: WAVE4 LANDED (`5b421e4ec`); WAVE4.fix LANDED (`9512fad32`); both arcs
+Oracle-reviewed. Voyage CONCLUDED — see `CLOSEOUT.md` §15.
 
 B4: `check:dist` covers baseSystem; smoke asserts fragment shape.
 B5: barrel guard follows config helpers transitively.
@@ -68,4 +69,6 @@ Bars in `GATES.md`; no pin change expected.
   untouched; captain owns the docs re-baseline.
 - Disclosed: two neo files modified by a parallel mission
   (`src/cli/watch.ts`, `src/sync/session-owner.ts`) were not touched; WAVE5's
-  `dist/tasty/*` `REQUIRED_OUTPUTS` add still open (out of scope).
+  `dist/tasty/*` `REQUIRED_OUTPUTS` requiring bar was the W4-arc §5 option-1
+  sketch, superseded by `CONC-P2-1` (tripwire scoped to `build-package.mjs`) —
+  resolved, no open item (CLOSEOUT §15 FC-P4-3).

@@ -1,7 +1,8 @@
 # WAVE3 — B3-depth: map live-relative sources (F-A)
 
-STATUS: B3-depth LANDED (`4687076d1` code+test, `7dd862400` pins) — Oracle arc
-review in flight
+STATUS: B3-depth LANDED (`4687076d1` code+test, `7dd862400` pins); W3.fix
+(`60c407a47`) LANDED; both arcs Oracle-reviewed (LAND). Voyage CONCLUDED — see
+`CLOSEOUT.md` §15.
 
 Bar (`GATES.md` B3-depth): every `react.mjs.map` source resolves to a real file
 from the live dir; `react.mjs`×3 byte-identical; `.map` pin delta = depth lines
