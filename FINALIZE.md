@@ -15,7 +15,7 @@ Last updated: 2026-10-08.
 
 | # | item | status | where / notes |
 | --- | --- | --- | --- |
-| F-1 | **Drop tsup — package every lib like icons/neo** | RULED (esbuild) | Oracle `TSUP.oracle`: use **raw esbuild** behind a small node script, not rollup/tsc-only. Census: lib + 8 matrix fixtures + mcp + rs. **Next voyage**; Arc A (lib) unblocked (WAVE5 landed 2026-10-08). See "## F-1 detail". |
+| F-1 | **Drop tsup — package every lib like icons/neo** | RULED (esbuild) | Oracle `TSUP.oracle`: use **raw esbuild** behind a small node script, not rollup/tsc-only. Census: lib + 8 matrix fixtures + mcp + rs + icons (in per HQ 2026-10-08). Plan: `BUNDLER_UNIFICATION.md` (Arcs A–D). **Voyage running**; Arc A (lib) unblocked (WAVE5 landed 2026-10-08). See "## F-1 detail". |
 | F-2 | **Non-atomic `dist` rebuild** | FILED | `LIB_DIST_ATOMIC_BUILD` (Oracle CONC-P3-1). tsup `clean: true` wipes `dist/` before rewrite → a live dev server briefly 404s `dist/index.mjs`. Bar: "lib rebuild during a live dev server produces zero 404 windows." See `docs/bugs/LIB_TASTY_RUNTIME_404.md` symptom 3. Expected to dissolve with **F-1** (tsup→esbuild). |
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
