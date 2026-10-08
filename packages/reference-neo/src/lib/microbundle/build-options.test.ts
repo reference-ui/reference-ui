@@ -35,7 +35,9 @@ describe('buildMicroBundleOptions defaults', () => {
       mainFields: ['module', 'main'],
       conditions: ['import', 'node'],
     })
-    expect(result.plugins).toEqual([])
+    // The MDX loader is registered unconditionally (inert without an `.mdx`
+    // entry); no react stub or alias option was passed, so it stands alone.
+    expect(result.plugins?.map(plugin => plugin.name)).toEqual(['mdx'])
   })
 })
 
@@ -104,7 +106,7 @@ describe('buildMicroBundleOptions overrides', () => {
       mainFields: ['main'],
       conditions: ['browser'],
     })
-    expect(result.plugins).toHaveLength(1)
+    expect(result.plugins?.map(plugin => plugin.name)).toEqual(['mdx', 'alias'])
   })
 
   it('forwards package externalization to esbuild', () => {

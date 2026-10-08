@@ -27,6 +27,8 @@ export const forwardRef = (fn) => fn;
 export const memo = (fn) => fn;
 export const Children = proxy;
 export const version = '0.0.0-stub';
+export const useMDXComponents = () => ({});
+export const MDXProvider = proxy;
 `
 
 /**
@@ -42,7 +44,8 @@ export function reactStubPlugin(): esbuild.Plugin {
   return {
     name: 'react-stub',
     setup(build) {
-      const filter = /^(react|react-dom|react\/jsx-runtime|react\/jsx-dev-runtime)(?:[/\\].*)?$/
+      const filter =
+        /^(react|react-dom|react\/jsx-runtime|react\/jsx-dev-runtime|@mdx-js\/react)(?:[/\\].*)?$/
       build.onResolve({ filter }, (args) => ({
         path: args.path,
         namespace: 'react-stub',

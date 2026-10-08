@@ -91,6 +91,7 @@ export function buildMicroBundleOptions(
     external: normalizeExternal(resolvedOptions.external),
     packages: resolvedOptions.packages,
     plugins: getPlugins(options),
+    jsx: resolvedOptions.jsx,
     minify: resolvedOptions.minify,
     keepNames: resolvedOptions.keepNames,
     treeShaking: resolvedOptions.treeShaking,

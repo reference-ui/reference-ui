@@ -33,8 +33,12 @@ assembles them into a repo. Two generators, different physics:
 
 `uniqueRatio` means “not a token” under both generators. Under app the
 one-offs collide; under churn each is a new value. Overrides (`--files`,
-`--calls`, `--unique`, `--seed`) bend the selected scale's knobs without
-switching its generator.
+`--calls`, `--unique`, `--seed`, `--mdx`) bend the selected scale's knobs
+without switching its generator. `--mdx N` writes N real MDX fragments under
+`theme/mdx` (each a top-level `font()` behind a real import), beside N
+fence-only decoys that must never collect, and widens the config include to
+`theme/**/*.{ts,mdx}`; the default plan keeps `mdxFiles` 0, so the sealed
+goldens never churn.
 
 ## Scales
 
@@ -75,6 +79,7 @@ pnpm bench:neo -- --scale small,medium --runs 3
 pnpm bench:neo -- --scale churn       # opt-in uniqueness stress
 pnpm bench:neo -- --list              # show the named scales
 pnpm bench:neo -- --scale medium --files 50 --calls 4 --runs 1 --keep
+pnpm bench:neo -- --scale small --mdx 120 --runs 3   # MDX-inclusive load
 ```
 
 Each run syncs in a fresh child process, so every RSS sample starts from a

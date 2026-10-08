@@ -49,10 +49,13 @@ export const NATIVE_IGNORE_DIRS = new Set([
 export const SOURCE_EXTENSIONS = new Set(['tsx', 'ts', 'jsx', 'js'])
 
 // Fragment-candidate extensions: every extension esbuild bundles as a JS
-// module. Matches feed the fragment bundler, so only these can ever match —
-// an .mdx/.json/.css hit carries no calls and crashes (or dead-weights) the
-// bundle. NOT a native mirror: native returns needle hits ungated and the
-// TS splitScan confirm applies this gate on both paths (native + fallback).
+// module. Matches feed the fragment bundler, so only these can ever match.
+// `.mdx` is bundleable only because the microbundle registers an mdx-rs loader
+// (plugins/mdx.ts); `.json`/`.css` hits still carry no calls and dead-weight the
+// bundle. NOT a native mirror: native returns needle hits ungated and the TS
+// splitScan confirm applies this gate on both paths (native + fallback). The
+// `.mdx` confirm additionally selects with the MDX-scoped matcher in scanner.ts,
+// never with the global import patterns.
 export const FRAGMENT_EXTENSIONS = new Set([
   'tsx',
   'ts',
@@ -62,4 +65,5 @@ export const FRAGMENT_EXTENSIONS = new Set([
   'cts',
   'mjs',
   'cjs',
+  'mdx',
 ])

@@ -36,7 +36,7 @@ interface ScaleContext {
 
 const USAGE = [
   'usage: bench:neo [--scale name[,name]] [--runs N] [--seed N]',
-  '               [--files N] [--calls N] [--unique 0..1] [--keep] [--json]',
+  '               [--files N] [--calls N] [--unique 0..1] [--mdx N] [--keep] [--json]',
   '       bench:neo --list   (default suite: small,medium,enterprise; churn is opt-in)',
 ].join('\n')
 
@@ -71,6 +71,9 @@ function applyValueFlag(options: CliOptions, argv: string[], index: number): num
       return index + 2
     case '--unique':
       options.overrides.unique = parseNumberFlag(argv, index, '--unique')
+      return index + 2
+    case '--mdx':
+      options.overrides.mdx = parseNumberFlag(argv, index, '--mdx')
       return index + 2
     default:
       return null
@@ -118,7 +121,8 @@ function printProfiles(): void {
     const optIn = plan.optIn ? ' (opt-in)' : ''
     console.log(
       `${plan.scale} [${plan.generator}]${optIn}: ${plan.files} files x ${calls} calls, `
-        + `${plan.deadFiles} dead, ${plan.recipes} recipes, unique ${plan.uniqueRatio}, ${plan.defaultRuns} run(s)`,
+        + `${plan.deadFiles} dead, ${plan.recipes} recipes, ${plan.mdxFiles} mdx, `
+        + `unique ${plan.uniqueRatio}, ${plan.defaultRuns} run(s)`,
     )
   }
 }
@@ -150,7 +154,7 @@ async function runScale(name: string, ctx: ScaleContext): Promise<ScaleResult> {
     const genMs = performance.now() - genStarted
     console.log(
       `[bench] ${plan.scale}: ${generated.styleFiles} files, `
-        + `${generated.cssCalls} css() calls, ${runs} run(s), seed ${plan.seed}`,
+        + `${generated.cssCalls} css() calls, ${generated.mdxFiles} mdx, ${runs} run(s), seed ${plan.seed}`,
     )
     const samples = await collectSamples(projectDir, runs)
     const bundle = readBundleSizes(getOutDirPath(projectDir))
@@ -162,6 +166,7 @@ async function runScale(name: string, ctx: ScaleContext): Promise<ScaleResult> {
         deadFiles: generated.deadFiles,
         cssCalls: generated.cssCalls,
         recipes: generated.recipes,
+        mdxFiles: generated.mdxFiles,
       },
       genMs,
       samples,
