@@ -20,7 +20,7 @@ Last updated: 2026-10-08.
 | F-3 | **`normalizeConfigDependencyPaths` Win32 gap** | FILED | `packages/reference-neo/src/config/bundle.ts:30` treats only `/`-absolute metafile keys as absolute. Needs a real Windows runner to verify (a POSIX-hosted Win32 unit test would mislead). |
 | F-4 | **mcp dist-content tripwire** | NOTE | Oracle ARC-P4-1 / CONC-P4-3: assert mcp `dist` carries no unexpected content. Cheap tripwire, not a gate. |
 | F-5 | **Native MDX support** | OPEN | Separate mission; durable plan `.agents/missions/finalize/PLAN-mdx.md` (Oracle-approved). Captain session dispatched 2026-10-08 (worktree `mdx-support`). |
-| F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. See "Cleanup backlog" below. |
+| F-6 | **Repo loose-file cleanup** | OPEN | Owner note 2026-10-08: the repo is getting messy — remove stray/marked-out files. Pass 3 done 2026-10-08 (staged, uncommitted); 2 holds left. See "Cleanup backlog" below. |
 | F-7 | **Shared pin baseline under concurrent missions** | DONE | Retired 2026-10-08: the single re-baseline already happened — docs `1accad80f` moved 3 docs lines (`react/styles.css`, `styled/styles.css`, `system/baseSystem.mjs`) ← docs-release `5e8ff3a72`; lib/icons unchanged. `69f0491d4` is **test-only** (`--stat` verified), not a second `types.mjs` mover (`977593fc6` was the runtime mover). `verify-pins` PASS (1258). Reopen only if a fresh mover lands. |
 
 ## F-1 detail — dropping tsup / unifying package builds
@@ -133,16 +133,59 @@ files.
 - Stray `reference-ui-lib-0.0.46.tgz` already gone; added `*.tgz` to `.gitignore`
   so `npm pack` strays can never be committed (tracked `.tgz` count is 0).
 
-**Still open:**
+**Done 2026-10-08 (cleanup pass 3, F-6 crew — staged, uncommitted):**
 
-- [ ] **CLEANUP-3 ruling** — `styletrace_perf/plan.md` says "PLANNED" while
-  `LOG.md`/`dd0989ad7` say "landed"; owner must rule before that dir moves.
-- [ ] Archive `finalize/` (after MDX lands) and `voyage-one-shot/` (pins are live
-  until `voyage-robustness` closes) — per CLEANUP-1/CLEANUP-2.
-- [ ] Disk-only prune of ignored `.pipeline/**` (102 GB) and `.store/**` (259 MB)
-  — no tracked changes; skipped here (does not affect repo cleanliness).
+- **CLEANUP-3 RULED: LANDED.** `styletrace_perf/plan.md:1` "PLANNED" is stale:
+  the wave it scoped ran and landed 2026-09-30 — `e9387f5ec` (rc −647.5 ms),
+  `84faa918f` (alloc −111.5 ms), `ec4f6f725` (cow reserve), filed by `dd0989ad7`
+  (sum −777 ms / −42.1% whole-sync 8/8, index 109); all four commits are
+  ancestors of HEAD and `LOG.md:3` records the landing. The plan reads stale
+  because it was filed late (`4fbf15c97`, Oct 6, after the Sep 30 landing).
+  Archived → `.agents/missions/archive/2026-10-08-styletrace_perf/` (`STATUS:
+  closed 2026-10-08 dd0989ad7`). Caveat: the plan's §5 unranked threads (e.g.
+  barrel re-export edges) were scoping notes, never briefed facts — any
+  follow-up needs a new plan, not this status line.
+- Archived **`voyage-one-shot/`** →
+  `.agents/missions/archive/2026-10-08-voyage-one-shot/` (`STATUS: closed
+  2026-10-08 ba4832e8c`) — CLEANUP-2 condition met: `voyage-robustness`
+  CONCLUDED 2026-10-08 (Oracle Final `e7b67341e`), pins safe. `pins/` +
+  `scripts/` + `MEASURE.md` moved together (23 renames, 0 content churn;
+  ignored `reports/` carried along). The move broke the scripts' path math
+  (repo-root `../` chains + two hardcoded mission paths), so the archived
+  scripts were repaired in place: `verify-pins`/`run-samples` now resolve
+  siblings self-relatively, `capture`/`measure`/`census` chains bumped one
+  level, `pins/README` Verify block repointed. Proof: `node
+  .agents/missions/archive/2026-10-08-voyage-one-shot/scripts/verify-pins.mjs`
+  → **PASS (1258)** on the live tree. (Robustness CLOSEOUT's §3/§13 command
+  lines keep the old path as the frozen historical record.)
+- Disk-only prune: **`.pipeline/` 102 GB → 656 KB** (deleted
+  `registry/tarballs/`, `registry/staging/`, `registry/manifest.json`,
+  `build/`, `testing/`, `dev/`; all ignored per `.gitignore:54`, zero tracked
+  files, regenerable by the next pipeline run). Kept the live verdaccio
+  bookkeeping: `registry/verdaccio.pid` (= running pid 87202),
+  `registry/verdaccio.log`, `registry/loaded-state.json` (describes the kept
+  `.store`). `git status` gate: prune introduced zero tracked changes.
+- `review.md` **kept**: 1 day old (2026-10-07 vs HEAD 2026-10-08) and
+  `reference-system` is 828 commits ahead of `origin/main` (not merged) —
+  neither ledger expiry condition met.
+
+**Still open (2 holds):**
+
+- [ ] Archive `finalize/` **HELD — CLEANUP-1 condition unmet.** MDX has not
+  landed: `openchamber/mdx-support` (@ `354766bc2`, mission-closed on its
+  branch) is **not merged** into `reference-system`, the `mdx-support` worktree
+  is live, and OPEN F-5 names `.agents/missions/finalize/PLAN-mdx.md` as the
+  durable plan. Archive only after the MDX merge decision lands (the F-6 order
+  named `finalize/` for archiving, but the ledger's own "after MDX lands"
+  condition + the never-touch exclusion for OPEN-item refs hold it — needs an
+  explicit override to proceed).
+- [ ] Disk-only prune of `pipeline/src/registry/.store/` (259 MB) **HELD.** It
+  is ignored/untracked, but it is the **live storage of the running verdaccio**
+  (pid 87202, `config.yaml:1` `storage: ../.store/storage`) and it sits under
+  `pipeline/src/` (explicit no-touch). No root-level `.store/` exists. Revisit
+  once the registry is stopped or the exclusion lifts.
 - [ ] `review.md` — delete once `reference-system` merges or it predates HEAD by
-  >14 days.
+  >14 days (checked 2026-10-08: 1 day old, 828 ahead — keep).
 
 ## Docs release — 2026-10-08
 

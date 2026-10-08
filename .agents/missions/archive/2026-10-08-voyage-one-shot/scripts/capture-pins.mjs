@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
-const ROOT = new URL('../../../../', import.meta.url).pathname.replace(/\/$/, '')
+const ROOT = new URL('../../../../../', import.meta.url).pathname.replace(/\/$/, '')
 const dir = join(ROOT, process.argv[2] ?? '')
 const label = process.argv[3] ?? process.argv[2]
 const root = join(dir, '.reference-ui')

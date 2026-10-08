@@ -8,9 +8,9 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const ROOT = new URL('../../../../', import.meta.url).pathname.replace(/\/$/, '')
-const cap = join(ROOT, '.agents/missions/voyage-one-shot/scripts/capture-pins.mjs')
-const pinsPath = join(ROOT, '.agents/missions/voyage-one-shot/pins/baseline.sha256')
+const HERE = new URL('.', import.meta.url).pathname
+const cap = join(HERE, 'capture-pins.mjs')
+const pinsPath = join(HERE, '../pins/baseline.sha256')
 const targets = [
   ['packages/reference-docs', 'docs'],
   ['packages/reference-lib', 'lib'],

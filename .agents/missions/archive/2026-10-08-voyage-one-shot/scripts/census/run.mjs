@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = new URL('../../../../../', import.meta.url).pathname.replace(/\/$/, '')
+const ROOT = new URL('../../../../../../', import.meta.url).pathname.replace(/\/$/, '')
 const dist = `${ROOT}/packages/reference-neo/dist/src`
 
 const [cwdArg, mode = 'config', outJson] = process.argv.slice(2)

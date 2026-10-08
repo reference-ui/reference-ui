@@ -16,7 +16,7 @@ import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const ROOT = new URL('../../../../', import.meta.url).pathname.replace(/\/$/, '')
+const ROOT = new URL('../../../../../', import.meta.url).pathname.replace(/\/$/, '')
 const [mode = 'sync', pkgDir] = process.argv.slice(2)
 if (!pkgDir) {
   console.error('usage: measure-one-shot.mjs <sync|config> <package-dir>')

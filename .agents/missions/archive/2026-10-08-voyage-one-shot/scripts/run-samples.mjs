@@ -8,8 +8,8 @@ import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const ROOT = new URL('../../../../', import.meta.url).pathname.replace(/\/$/, '')
-const harness = join(ROOT, '.agents/missions/voyage-one-shot/scripts/measure-one-shot.mjs')
+const ROOT = new URL('../../../../../', import.meta.url).pathname.replace(/\/$/, '')
+const harness = join(new URL('.', import.meta.url).pathname, 'measure-one-shot.mjs')
 const [mode, pkgDir, countArg, outJson] = process.argv.slice(2)
 const count = Number(countArg ?? 8)
 

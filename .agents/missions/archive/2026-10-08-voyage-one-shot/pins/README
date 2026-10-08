@@ -32,7 +32,7 @@ node .agents/missions/voyage-one-shot/scripts/capture-pins.mjs packages/referenc
 ## Verify
 
 ```bash
-node .agents/missions/voyage-one-shot/scripts/verify-pins.mjs
+node .agents/missions/archive/2026-10-08-voyage-one-shot/scripts/verify-pins.mjs
 # PASS — 1258 pinned files byte-identical (docs+lib+icons)
 ```
 
