@@ -23,7 +23,7 @@ export const FLAME_PROCEDURE_NOTE = 'same-run phase boundaries + per-phase sampl
 
 export function resolveEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
-  return path.join(repoRoot, 'docs', 'evidence', 'flamegraph', `${options.scale}-${pin.name}`)
+  return path.join(repoRoot, '.agents', 'rs-index', 'flamegraph', `${options.scale}-${pin.name}`)
 }
 
 function gitStatusExcerpt(repoRoot) {

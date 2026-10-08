@@ -543,10 +543,10 @@ function printHelp() {
   \x1b[32mvitest, vt\x1b[0m                 Run seam Vitest tests against N-API and TS wrappers
   \x1b[32mquality, check, lint\x1b[0m       Code quality, file length (<365 / <500), and cyclomatic complexity
   \x1b[32mbuild, ensure-native\x1b[0m       Build or ensure native .node binary with exclusive queue lock
-  \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to docs/evidence/flamegraph/)
-  \x1b[32malloc\x1b[0m                     File an allocation report of the real sync path (evidence to docs/evidence/alloc/)
-  \x1b[32mcounters\x1b[0m                  File a hardware-counters pass of the real sync path (evidence to docs/evidence/counters/)
-  \x1b[32mdecompose\x1b[0m                 Join flame+counters+alloc bundles into the reconciled phase decomposition (docs/evidence/phases/)
+  \x1b[32mflame\x1b[0m                     Record a samply CPU profile of the real sync path (evidence to .agents/rs-index/flamegraph/)
+  \x1b[32malloc\x1b[0m                     File an allocation report of the real sync path (evidence to .agents/rs-index/alloc/)
+  \x1b[32mcounters\x1b[0m                  File a hardware-counters pass of the real sync path (evidence to .agents/rs-index/counters/)
+  \x1b[32mdecompose\x1b[0m                 Join flame+counters+alloc bundles into the reconciled phase decomposition (.agents/rs-index/phases/)
   \x1b[32mfmt\x1b[0m                        Format Rust (cargo fmt) and JS/TS (prettier)
   \x1b[32mstatus\x1b[0m                     Display toolchain versions, native binary state, and CPU gate locks
   \x1b[32mhelp, --help\x1b[0m               Show this help message
@@ -571,7 +571,7 @@ function printHelp() {
 
 \x1b[1mOPTIONS FOR 'flame':\x1b[0m
   \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
-  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/flamegraph/<scale>-<pin>/)
+  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: .agents/rs-index/flamegraph/<scale>-<pin>/)
   \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
   \x1b[33m--rate <hz>\x1b[0m               Samply sampling rate, 10..10000 (default: 1000)
   \x1b[33m--no-build\x1b[0m                Skip ensure-native; profile the prebuilt .node as-is
@@ -584,14 +584,14 @@ function printHelp() {
 
 \x1b[1mOPTIONS FOR 'alloc':\x1b[0m
   \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
-  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/alloc/<scale>-<pin>/)
+  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: .agents/rs-index/alloc/<scale>-<pin>/)
   \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
   \x1b[33m--no-build\x1b[0m                Skip ensure-native and the trace build; both binaries must exist
   \x1b[33m--list\x1b[0m                    List frozen scales
 
 \x1b[1mOPTIONS FOR 'counters':\x1b[0m
   \x1b[33m[scale]\x1b[0m                   Frozen bench scale (default: enterprise). Pinned load: no seed/size overrides.
-  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: docs/evidence/counters/<scale>-<pin>/)
+  \x1b[33m--out <dir>\x1b[0m               Evidence directory (default: .agents/rs-index/counters/<scale>-<pin>/)
   \x1b[33m--keep\x1b[0m                    Keep the generated synthetic repo
   \x1b[33m--no-build\x1b[0m                Skip ensure-native and the counters build; both binaries must exist
   \x1b[33m--resummarize <dir>\x1b[0m         Reprocess a filed bundle's raw dumps (no rebuild, no re-record)

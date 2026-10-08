@@ -6,7 +6,7 @@
  * release `.node`) re-measuring R1's whole-run census, then a trace leg (the
  * release+alloc-trace instrument build) dumping the Rust compile-span ledger
  * while its own same-process GC log places each full GC against the measured
- * window. Evidence lands under docs/evidence/alloc/ as meta, both GC logs
+ * window. Evidence lands under .agents/rs-index/alloc/ as meta, both GC logs
  * plus censuses, the Rust span dump, and summary. The load stays locked:
  * scale names only, the bench generator and worker run verbatim, dist/native
  * is never touched.

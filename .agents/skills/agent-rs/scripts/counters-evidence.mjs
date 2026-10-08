@@ -20,7 +20,7 @@ import { censusPhasesMeta, spanPhasesMeta } from './counters-phases.mjs'
 
 export function resolveCountersEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
-  return path.join(repoRoot, 'docs', 'evidence', 'counters', `${options.scale}-${pin.name}`)
+  return path.join(repoRoot, '.agents', 'rs-index', 'counters', `${options.scale}-${pin.name}`)
 }
 
 export function gitStatusExcerpt(repoRoot) {

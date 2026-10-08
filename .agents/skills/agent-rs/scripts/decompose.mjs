@@ -332,7 +332,7 @@ export async function runDecomposeCommand(args, repoRoot) {
     decomp.pin = pinModule.resolvePin(benchDir)
     const evidenceDir = options.outDir
       ? path.resolve(options.outDir)
-      : path.join(repoRoot, 'docs', 'evidence', 'phases', `${decomp.scale}-${decomp.pin.name}`)
+      : path.join(repoRoot, '.agents', 'rs-index', 'phases', `${decomp.scale}-${decomp.pin.name}`)
     writeDecomposeEvidence(evidenceDir, repoRoot, options, metas, decomp)
     printDecomposeReport(evidenceDir, decomp)
   } catch (err) {

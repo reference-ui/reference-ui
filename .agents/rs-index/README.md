@@ -1,10 +1,15 @@
-# Filed measurement evidence
+# rs-index — filed reference-rs measurement evidence
 
-This tree holds filed profiler output: every number a recon report or voyage
-brief cites must resolve to a file under here. Bundles are immutable once
-filed; newer procedures re-derive from preserved raws into new bundles rather
-than overwriting. Nothing here is live state — regenerate with the commands
-below instead of editing.
+Agent context store behind the reference-rs perf program: every number a recon
+report or voyage brief cites must resolve to a file under here. Bundles are
+immutable once filed; newer procedures re-derive from preserved raws into new
+bundles rather than overwriting. Nothing here is live state — regenerate with
+the commands below instead of editing.
+
+Moved here from `docs/evidence/` (2026-10-08): bundles are agent context, not
+prose. Siblings under `.agents/` are `case-index/` (test-case index) and
+`doom/logs/` (forensic reports). Historical mission logs and wave reports still
+cite the old `docs/evidence/` path; those records are frozen as written.
 
 ## Canonical bundles (enterprise)
 

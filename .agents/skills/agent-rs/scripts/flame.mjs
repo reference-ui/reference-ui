@@ -5,7 +5,7 @@
  * sync path: the benchmark generator builds the repo, then samply records the
  * benchmark worker (release `.node`, `--perf-basic-prof` so JS frames resolve)
  * straight through the N-API boundary. Evidence lands under
- * docs/evidence/flamegraph/ as profile, presymbolicated sidecar, meta, summary.
+ * .agents/rs-index/flamegraph/ as profile, presymbolicated sidecar, meta, summary.
  * The load stays locked: scale names only, no seed or size overrides, ever.
  * A filed bundle can be reprocessed without re-recording via --resummarize.
  */

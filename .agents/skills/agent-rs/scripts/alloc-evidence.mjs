@@ -18,7 +18,7 @@ import { checkReconciled } from './phases.mjs'
 
 export function resolveAllocEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
-  return path.join(repoRoot, 'docs', 'evidence', 'alloc', `${options.scale}-${pin.name}`)
+  return path.join(repoRoot, '.agents', 'rs-index', 'alloc', `${options.scale}-${pin.name}`)
 }
 
 function gitStatusExcerpt(repoRoot) {

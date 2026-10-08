@@ -817,8 +817,8 @@ Filed by five research crews; primary sources only, summarized here.
 Internal grounding: `PERF-W2-SLICE1B` (E0.1–E0.5),
 `docs/ARCHIVE/VOYAGE-WARPDRIVE.md` §10 (Objective 3 memo requirements),
 `docs/PERF/waves/wave-4/report-swarm-reflame7.md` (rings),
-`docs/EVIDENCE/flamegraph/enterprise-repro7a,b` (the serial captures
-partitioned in §0.1), `docs/EVIDENCE/alloc/enterprise-alloc3/summary.md`,
+`.agents/rs-index/flamegraph/enterprise-repro7a,b` (the serial captures
+partitioned in §0.1), `.agents/rs-index/alloc/enterprise-alloc3/summary.md`,
 `docs/PERF/waves/wave-2/panda-v2-threading.md`, `sync-perf.html`.
 
 ## B. Census procedure (reproducible; nothing here lands)

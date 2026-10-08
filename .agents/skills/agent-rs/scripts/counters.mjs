@@ -7,7 +7,7 @@
  * census leg (the shipped release `.node` under a DYLD interpose shim counting
  * libc file calls, with a bare-node startup baseline for subtraction). The
  * bench generator and worker run verbatim on every leg; evidence lands under
- * docs/evidence/counters/ as meta, raw dumps, the net census, and summary.
+ * .agents/rs-index/counters/ as meta, raw dumps, the net census, and summary.
  * A filed bundle can be reprocessed without re-recording via --resummarize.
  */
 

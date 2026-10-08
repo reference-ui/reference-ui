@@ -26,7 +26,7 @@ reporting (`benchmark` — that skill *reads* numbers, this one *moves* them).
 
 1. **Fresh flames first.** Every wave opens with a repro crew on the
    current tip (2+ reconciled captures, filed under
-   `docs/EVIDENCE/flamegraph/enterprise-repro*/`). No wave starts on
+   `.agents/rs-index/flamegraph/enterprise-repro*/`). No wave starts on
    stale flames — landed diets move every room.
 2. **Ranked backlog from the burndown.** Topics carry: exact functions,
    flame weight, fantasy ceiling + realistic capture, fences vs
