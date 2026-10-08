@@ -35,8 +35,8 @@
   },
   "scripts": {
     "build:index": "node scripts/build-icons-index.mjs",
-    "build": "node scripts/build-icons-index.mjs && tsup",
-    "dev": "tsup --watch",
+    "build": "node scripts/build-icons-index.mjs && node scripts/build-bundle.mjs",
+    "dev": "node scripts/build-bundle.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run"
   },
@@ -48,6 +48,7 @@
     "@reference-ui/icons": "0.0.43",
     "@reference-ui/lib": "workspace:*",
     "@reference-ui/rust": "workspace:*",
+    "@rspress/mdx-rs": "^0.6.6",
     "commander": "^14.0.3",
     "esbuild": "^0.28.1",
     "fast-glob": "^3.3.2",
@@ -57,7 +58,6 @@
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
-    "tsup": "^8.4.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.0"
   }
