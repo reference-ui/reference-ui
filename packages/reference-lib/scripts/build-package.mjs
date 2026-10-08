@@ -58,8 +58,10 @@ for (const filePath of packagedRuntimeFiles) {
 // isUrlLike guard returns first. Replace it with an explicit error so the
 // shipped bundle holds zero node-builtin specifiers; a Node fs-path caller
 // (none exists in practice) fails loudly instead of cryptically.
+// Matches both `import("url")` (tsup stripped the prefix) and
+// `import("node:url")` (esbuild preserves the source form since Arc D).
 const NODE_URL_BRANCH_PATTERN =
-  /const \{ pathToFileURL \} = await import\("url"\);\n(\s*)return pathToFileURL\(([^)]+)\)\.href;/g
+  /const \{ pathToFileURL \} = await import\("(?:node:)?url"\);\n(\s*)return pathToFileURL\(([^)]+)\)\.href;/g
 const NODE_BUILTIN_SPECIFIER_PATTERN =
   /\bimport\s*\(\s*["'](?:node:)?(?:url|fs|path|module|os)["']\s*\)|\bfrom\s+["'](?:node:)?(?:url|fs|path|module|os)["']|\brequire\s*\(\s*["'](?:node:)?(?:url|fs|path)["']\s*\)/g
 
