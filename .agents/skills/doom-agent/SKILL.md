@@ -134,11 +134,11 @@ logs, no research diaries: the index already holds past hunts,
 and the report holds this one. Detail compounds: future agents
 inherit your map.
 
-Consult before hunting — the CLI re-indexes from `logs/` on every
-call, so it is never stale:
+Consult before hunting via Memex (`.agents/memex/README.md`) — the
+`doom` collection reads `logs/` live on every call, so it is never stale:
 
 ```sh
-node .agents/doom/cli.mjs search "<module, behavior, or gap>" --limit 5
+node .agents/memex/cli.mjs search "<module, behavior, or gap>" --in doom --limit 5
 ```
 
 If a gap was already explored, its red test and verdict are in the

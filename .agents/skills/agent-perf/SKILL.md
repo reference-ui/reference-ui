@@ -1,6 +1,6 @@
 ---
 name: agent-perf
-description: Self-contained workflow for Reference serial sync() performance (diets, alloc kills, lookup restructure in packages/reference-rs): rolling captain swarm with verdict bars (LAND/BANK/CUT/HOLD), integrator sum-confirms, bench-lock protocol, and the perf-index (`pnpm agentperf`) carrying every verdict ever filed.
+description: Self-contained workflow for Reference serial sync() performance (diets, alloc kills, lookup restructure in packages/reference-rs): rolling captain swarm with verdict bars (LAND/BANK/CUT/HOLD), integrator sum-confirms, bench-lock protocol, and the perf-index (Memex `perf` collection) carrying every verdict ever filed.
 ---
 
 # agent-perf — Reference serial-perf swarm skill
@@ -136,31 +136,37 @@ authoritative). Integrators judge and prove — no new work.
   the section 3 bar to the surface's own denominator, captain
   sign-off required.
 
-## 7. Perf index (institutional memory)
+## 7. Perf index (institutional memory, via Memex)
+
+Memex is the one agent CLI over every collection
+(`.agents/memex/README.md`): every diet, recon, CUT, integration,
+memo, and dead end is one entry in the `perf` collection — verdict,
+effect, files, report path (+ patch path while unlanded — landed
+patches are deleted, their file lists snapshotted in the builder),
+summary, the captain's LOG.md entry, filler flag. Always `search`
+before scoping new work — re-litigating a closed topic without new
+filed evidence is a protocol violation. Overrules are flagged on the
+entry (`show perf:INT-W2-SET4`). Wave `log` holds DEAD-* dead ends
+mined from LOG.md (verdict CUT, report LOG.md) — check them before
+re-opening a closed topic. On ground with zero index coverage (no
+hits across topic synonyms), file one line (`index: 0/N`) and
+proceed; grinding queries to prove a negative is busywork. File
+off-scope BANKs so the index grows onto new ground instead of
+staying sync()-only.
 
 ```bash
-pnpm agentperf list [--wave wave-2] [--verdict BANK] [--limit n]
-pnpm agentperf search <query...> [--limit n|--all]  # substring-AND over topic/id/verdict/summary/log
-pnpm agentperf show <PERF-W2-..>  # full entry: files, numbers, LOG text
-pnpm agentperf stats              # counts by wave/verdict
-pnpm agentperf rebuild            # regenerate from filings + LOG.md (never takes args)
-pnpm agentperf --help [<command>] # help; unknown flags/args are rejected, never swallowed
+node .agents/memex/cli.mjs search "<query...>" --in perf [--limit n]  # substring-AND over topic/id/verdict/summary/log — exact, never fuzzy
+node .agents/memex/cli.mjs search "verdict:BANK wave:wave-2" --in perf  # exact field filters (verdict/wave/kind), combinable with words
+node .agents/memex/cli.mjs show perf:PERF-W2-..                       # full entry: files, numbers, LOG text
+node .agents/memex/cli.mjs search --in perf                           # roster + wave/verdict counts
+node .agents/skills/agent-perf/scripts/build-index.mjs                # regenerate perf-index.json after new filings (never takes args)
 ```
 
-Every diet, recon, CUT, integration, memo, and dead end is one entry:
-verdict, effect, files, report path (+ patch path while unlanded —
-landed patches are deleted, their file lists snapshotted in the
-builder), summary, the captain's LOG.md entry, filler flag. Always
-`search` before scoping new work —
-re-litigating a closed topic without new filed evidence is a protocol
-violation. Overrules are flagged on the entry (`show INT-W2-SET4`).
-Wave `log` holds DEAD-* dead ends mined from LOG.md (verdict CUT,
-report LOG.md) — check them before re-opening a closed topic. On
-ground with zero index coverage (no hits across topic synonyms —
-the CLI reports counts, so one search proves it), file one line
-(`index: 0/N, built <date>`) and proceed; grinding queries to prove
-a negative is busywork. File off-scope BANKs so the index grows
-onto new ground instead of staying sync()-only.
+Targeted `--in perf` search keeps the exact substring-AND semantics: a
+query word must appear verbatim in at least one field. Wave/verdict
+filtering is exact field syntax (`verdict:BANK wave:wave-2`), not flags
+— plain words like `BANK wave-2` also match prose mentions. Overruled
+entries carry a `† superseded by <id>` marker and answer to `overruled`.
 
 ## 8. Closeout (per commit + per wave, non-optional)
 
@@ -168,7 +174,7 @@ Per commit: committed bench:neo report + scoreboard row + flame refresh, same ti
 Per wave:
 
 1. Land or HOLD every open member; integrators file INTEGRATE.md.
-2. `pnpm agentperf rebuild` — the index absorbs the wave.
+2. `node .agents/skills/agent-perf/scripts/build-index.mjs` — the index absorbs the wave.
 3. Archive the wave log to `docs/PERF/waves/<wave>/` and clear the live
    LOG.md wave section to a stub (scoreboard + pointers). Nothing is
    lost: index entries carry the LOG text, the archive carries the rest.

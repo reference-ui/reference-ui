@@ -19,7 +19,8 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
-| Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (`pnpm agentperf`) |
+| Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (Memex `perf` collection) |
+| Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
 
 Independent architecture review is available as the **Oracle**
 (`.agents/skills/oracle/SKILL.md`): read-only Muse Spark 1.3 at the

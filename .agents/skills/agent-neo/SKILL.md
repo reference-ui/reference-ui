@@ -209,38 +209,33 @@ If the user ever says to change Neo into core — to promote or rename Neo
 as the installed core — the code word **retires**: update this skill, the
 `AGENTS.md` routing table, and the package names, and **stop saying Neo**.
 
-## 10. Case index
+## 10. Memex (`cases` + `surfaces` collections)
 
-Full-text index over neo cases + RS module surfaces (names, full README
-text, `specs/*.spec.ts`, RS suite/case inventory). The README is the
-index: write it detailed and the index is good.
-Use it to find **cases by feature** instead
+Memex is the one agent CLI over every collection
+(`.agents/memex/README.md`): neo cases live in `cases`, RS module
+surfaces in `surfaces`. Use it to find **cases by feature** instead
 of grepping — it reaches terms `agentneo search` (id/name/README text) misses,
 and surfaces the RS surfaces a case proves.
 
 ```bash
-pnpm agent:cases search "<query>" [--limit=N] [--json] [--compact]  # search cases + surfaces
-pnpm agent:cases list [--kind=neo|rs] [--json]          # list indexed docs (auto-rebuilds if stale)
-pnpm agent:cases reindex [--json]                       # force rebuild
-# direct: node .agents/case-index/cli.mjs search <query> | list [--kind=neo|rs] | reindex
+node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]     # all collections, hits labeled
+node .agents/memex/cli.mjs search "<query>" --in cases [--limit=N]   # neo cases only
+node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                    # full doc + related
 ```
 
 Terms are stemmed (`queries` matches `query`) and typo-tolerant
-(fuzzy+prefix, with "did you mean" on zero hits); `search` caps at 15
-hits unless `--limit=N` raises it; `--compact` prints headers only, and an exact id query returns just that doc. There is no metadata sidecar —
+(fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
+Resolve ids with `show`, not `search`. There is no metadata sidecar —
 enrich the index by writing a detailed README: describe the behavior,
 name the symbols, cite sibling case/station ids (cited ids surface as
-`related`).
+`related`). Everything reads live: new docs are searchable immediately,
+no rebuild step.
 
 Example (RS surface hit):
 
 ```text
-$ pnpm agent:cases search "barrels" --limit=1
-11.241  rs:atlas — Atlas Module [rs:atlas] (matched: barrel)
+$ node .agents/memex/cli.mjs search "barrels" --in surfaces --limit 1
+6.465 surfaces:rs:atlas — Atlas Module  6 suites, 15 cases
         packages/reference-rs/modules/atlas
-        related: rs:tasty, rs:styletrace, rs:shared
-# Atlas Module
-Atlas is the component discovery, props interface mapping, […]
-> Search terms: discovery, call-site analysis, barrels, […]
-[…]
+        > Search terms: call-site snippets, namespace package, […]
 ```

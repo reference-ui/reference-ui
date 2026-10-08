@@ -36,9 +36,7 @@
     "agentdocs": "node packages/reference-docs/tools/quality/run.mjs",
     "bench:neo": "node packages/reference-neo/benchmark/cli.ts",
     "playground": "node packages/reference-neo/playground/tools/serve.mjs",
-    "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs",
-    "agent:cases": "node .agents/case-index/cli.mjs",
-    "agentperf": "node .agents/skills/agent-perf/scripts/perf.mjs"
+    "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
