@@ -229,11 +229,15 @@ async function pokeWatchHolder(holder: SyncSessionOwner): Promise<'stale'> {
 // holder, so all four clean legs route to the kill branch with no carve-out.
 async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
-  // A resident watch OWNS the project: never kill it. A one-shot pokes it to
-  // rebuild and reports itself covered; a second watch defers outright, so
-  // starting a dev server (or `ref sync --watch`) twice can never tear down
-  // the one that is already running. `--break-lock` is the only forced takeover.
-  if (!UNIFORM_KILL && holder.kind === 'watch') {
+  // A resident watch OWNS the project against sync newcomers: never kill
+  // it. A one-shot pokes it to rebuild and reports itself covered; a second
+  // watch defers outright (the CLI attaches it to the owner instead of
+  // exiting), so starting a dev server (or `ref sync --watch`) twice can
+  // never tear down the one that is already running. `--break-lock` is the
+  // only forced sync takeover. Clean is the exception: an explicit `ref
+  // clean` kills any live holder including a watch (clean-kills-always), as
+  // a wipe cannot proceed under a live writer and clean has no --break-lock.
+  if (!UNIFORM_KILL && holder.kind === 'watch' && mine.kind !== 'clean') {
     if (mine.kind === 'one-shot') {
       const poked = await pokeWatchHolder(holder)
       if (poked === 'stale') {
