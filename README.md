@@ -53,15 +53,14 @@ Most package-level dev and test flows build on top of that sync pipeline.
 
 ## Documentation
 
-Engineering notes live in [`docs/`](./docs/). Start with [`docs/README.MD`](./docs/README.MD).
+Product docs live in the docs site and the package READMEs:
 
-- [`docs/ARCHIVE/REFERENCE_UI.md`](./docs/ARCHIVE/REFERENCE_UI.md) — monorepo orientation
-- [`docs/FEATURES/`](./docs/FEATURES/) — supported capabilities
-- [`docs/BUGS/`](./docs/BUGS/) — open MCP / Atlas / core issues
-- [`docs/ARCHIVE/`](./docs/ARCHIVE/) — retired specs and RFCs
+- [`packages/reference-docs`](./packages/reference-docs/) — the documentation site
 - [`packages/reference-neo/README.md`](./packages/reference-neo/README.md)
 - [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
 
+Open issues under investigation live in [`docs/bugs/`](./docs/bugs/).
+
 ## Status
 
-The repo is in active development with implemented build, sync, docs, test, and release workflows. Expect ongoing iteration, but the platform is already operational.
+Production system. `ref sync` builds and synchronizes design-system output, with working build, test, docs, and release workflows (see Getting started above).

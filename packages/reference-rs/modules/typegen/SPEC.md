@@ -1,6 +1,6 @@
 # Typegen SPEC
 
-Current freeze, cases, and proof. Architectural design: [REFERENCE_SYSTEM.md](../../../../docs/ARCHIVE/REFERENCE_SYSTEM.md) (§3.2, §4.3, §4.5, §7 B) and [atomic.md](../../docs/atomic.md).
+Current freeze, cases, and proof. Architectural design: [atomic.md](../../docs/atomic.md).
 Sequencing: [PLAN.md](./PLAN.md) (crate) and [../../PLAN.md](../../PLAN.md) § Reference UI Track T (host).
 Public types architecture: [plan.md](../../../reference-core/src/types/plan.md).
 Module README: [README.md](./README.md).

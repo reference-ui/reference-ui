@@ -2,7 +2,7 @@
 
 Current freeze, cases, and proof. Design narrative: [README.md](./README.md).
 Sequencing: [PLAN.md](./PLAN.md) (stations) and [../../PLAN.md](../../PLAN.md) § Reference UI (host).
-Mandate and architecture: [REFERENCE_SYSTEM.md](../../../../docs/ARCHIVE/REFERENCE_SYSTEM.md), [atomic.md](../../docs/atomic.md), and [PANDA.md](./PANDA.md) (vendor example / process map).
+Mandate and architecture: [atomic.md](../../docs/atomic.md) and [PANDA.md](./PANDA.md) (vendor example / process map).
 
 Harness / Runner: `pnpm agentrs c atomic` (Cargo unit tests) | `pnpm agentrs v atomic` (Vitest seam tests)
 

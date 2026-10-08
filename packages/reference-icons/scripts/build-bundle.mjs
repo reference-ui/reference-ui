@@ -1,11 +1,11 @@
-// Bundle step for @reference-ui/icons (docs/archive/BUNDLER_UNIFICATION.md Arc B): raw
+// Bundle step for @reference-ui/icons: raw
 // esbuild multi-entry replacing rollup preserveModules. Entries mirror
 // rollup.config.mjs exactly (index + createIcon + constants + every file in
 // src/generated); outbase 'src' reproduces the mirrored dist layout with
 // .mjs out-extension. Externals are marked up front — including the
 // @material-symbols-svg/react subpath form — so nothing resolves that would
 // need rewriting (no resolve-then-rewrite). Output assembles in a stage dir
-// and renames into dist/ file-by-file (docs/FINALIZE.md F-2 shape, as Arc A).
+// and renames into dist/ file-by-file (staged, then atomic rename per file).
 // Run from the package dir: node scripts/build-bundle.mjs
 
 import { build } from 'esbuild'

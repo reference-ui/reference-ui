@@ -571,8 +571,7 @@ function parseDraftNumber(
   return hasPermille ? parsed / 1000 : parsed / 100
 }
 
-// W-02 commit policy as ruled (docs/archive/FINISH.md captain rulings adopting NFLAST
-// (a)(b)): 'snap' commits via the zero-anchored lattice with endpoint
+// W-02 commit policy: 'snap' commits via the zero-anchored lattice with endpoint
 // preservation (order endpoint→lattice→rounding→final clamp); 'validate'
 // retains finite under/over/off-step candidates (requests the rounded raw
 // candidate, managed invalid state blocks submit) with advisory

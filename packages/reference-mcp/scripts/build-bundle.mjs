@@ -1,7 +1,7 @@
-// Bundle step for @reference-ui/mcp (docs/archive/BUNDLER_UNIFICATION.md Arc C): raw
+// Bundle step for @reference-ui/mcp: raw
 // esbuild, ESM-only, no dts/splitting, sourcemaps on. It takes the 4 tsup
 // entries and emits staged .mjs outputs, renaming each into dist/ atomically
-// so a rebuild during a live dev server never 404s (docs/FINALIZE.md F-2).
+// so a rebuild during a live dev server never 404s.
 // Externals are computed from this package's package.json (dependencies,
 // bare and /* subpath forms) — including @rspress/mdx-rs, whose per-platform
 // native bindings tsup's native-node-modules plugin choked on (the red-at-HEAD

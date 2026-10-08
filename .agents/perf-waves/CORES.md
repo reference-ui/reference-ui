@@ -747,7 +747,7 @@ squeeze crew added strided shards on the stabilized tree:
 787). Vs the serial tip pin (872/281): **−110 ms (−12.6%)**,
 +106 MiB. Mechanism confirmed: assignment, not lane count, was the
 gap — rendezvous amplifies the slowest lane ×3 rounds, stride-1
-minimizes that max. Full table: `docs/PERF/cores/overnight/REPORT-stride.md`.
+minimizes that max. Full table: `.agents/perf-waves/cores/overnight/REPORT-stride.md`.
 
 ### 12.3 Proof filed
 
@@ -758,7 +758,7 @@ minimizes that max. Full table: `docs/PERF/cores/overnight/REPORT-stride.md`.
 - Adversary 19/19 HOLDS: 1/2/3/8/16 sweep byte-identical (P2
   evidence), 20× repeat hash-identical (P3 evidence), panic injection
   → prompt `Err`, hang guards never fired.
-- Packet: `docs/PERF/cores/overnight/` (4 crew REPORTs, INTEGRATE,
+- Packet: `.agents/perf-waves/cores/overnight/` (4 crew REPORTs, INTEGRATE,
   VERIFY with GO, BREAK-REPORT, MISSION-REPORT, REPORT-stride).
 
 ### 12.4 Stage status after landing
@@ -769,7 +769,7 @@ minimizes that max. Full table: `docs/PERF/cores/overnight/REPORT-stride.md`.
 | S1.1 | SHARDS DONE (stride), ledger refactor still pending |
 | S0.5 | RUST SIDE DONE (`lanes.rs`); napi seam + TS request type pending |
 | S0.3 | P2/P3 evidence filed; P5 insertion-sequence test still open |
-| S2.3 | DONE 2026-09-22 — backfill skip-by-contract landed `2fdf14ec1` (−17.6ms/−2.12%, 8/8, packet `docs/PERF/cores/backfill/`) |
+| S2.3 | DONE 2026-09-22 — backfill skip-by-contract landed `2fdf14ec1` (−17.6ms/−2.12%, 8/8, packet `.agents/perf-waves/cores/backfill/`) |
 | sources.rs split | OWED — 871 lines after the diet (length warn pre-existing in kind; gate enforces 1500, docs say 500 — drift noted) |
 | §5 HW band | OPEN — 387 vs ~280; needs D2 answer with S0.4 attribution |
 | §5 CPU guard | UNMEASURED — needs S0.4 CPU series |
@@ -815,11 +815,10 @@ Filed by five research crews; primary sources only, summarized here.
   fully serial by its own design notes ("Parallelism ... not built").
 
 Internal grounding: `PERF-W2-SLICE1B` (E0.1–E0.5),
-`docs/ARCHIVE/VOYAGE-WARPDRIVE.md` §10 (Objective 3 memo requirements),
-`docs/PERF/waves/wave-4/report-swarm-reflame7.md` (rings),
+`.agents/perf-waves/waves/wave-4/report-swarm-reflame7.md` (rings),
 `.agents/rs-index/flamegraph/enterprise-repro7a,b` (the serial captures
 partitioned in §0.1), `.agents/rs-index/alloc/enterprise-alloc3/summary.md`,
-`docs/PERF/waves/wave-2/panda-v2-threading.md`, `sync-perf.html`.
+`.agents/perf-waves/waves/wave-2/panda-v2-threading.md`.
 
 ## B. Census procedure (reproducible; nothing here lands)
 

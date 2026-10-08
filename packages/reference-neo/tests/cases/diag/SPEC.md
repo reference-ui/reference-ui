@@ -3,8 +3,7 @@
 Purpose: one indexed reference-neo case per live diagnostic code, code in
 the name, reproducing it through the whole compiler — so
 `agentneo search <CODE>` lands on the repro and agents (human or
-otherwise) can audit the suite trivially. The case index from
-`docs/DIAGNOSTICS.md`, made real.
+otherwise) can audit the suite trivially. The diagnostic case index, made real.
 
 ## Contract
 

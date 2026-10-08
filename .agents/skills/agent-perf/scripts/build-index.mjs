@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
-const WAVES = path.join(ROOT, 'docs/perf/waves');
+const WAVES = path.join(ROOT, '.agents/perf-waves/waves');
 // Mission waves beyond the numbered series (styletrace-perf files here until HQ lands it).
 const isWaveDir = (d) => /^wave-\d+$/.test(d) || d === 'styletrace-perf';
 const waveTag = (wave) => wave === 'styletrace-perf' ? 'STPERF' : wave.replace('wave-', 'W').toUpperCase();
@@ -263,7 +263,7 @@ for (const d of deadEnds()) {
 }
 
 entries.sort((a, b) => a.id.localeCompare(b.id));
-const index = { built: new Date().toISOString(), root: 'docs/perf/waves', count: entries.length, entries };
+const index = { built: new Date().toISOString(), root: '.agents/perf-waves/waves', count: entries.length, entries };
 fs.writeFileSync(OUT, JSON.stringify(index, null, 1) + '\n');
 const kinds = {};
 for (const e of entries) kinds[e.kind] = (kinds[e.kind] || 0) + 1;

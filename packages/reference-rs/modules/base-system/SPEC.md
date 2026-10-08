@@ -1,6 +1,6 @@
 # Base System SPEC
 
-Current freeze, cases, and proof. Design narrative: [REFERENCE_SYSTEM.md](../../../../docs/ARCHIVE/REFERENCE_SYSTEM.md) (§6 The missing contract: compile against a base system, and §3.4).
+Current freeze, cases, and proof. Design narrative: compile against a base system (the missing contract).
 Sequencing: [PLAN.md](./PLAN.md). Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
 
 Harness: `cargo test -p base_system` (or `pnpm agentrs c base_system`)

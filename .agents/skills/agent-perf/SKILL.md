@@ -8,7 +8,7 @@ description: Self-contained workflow for Reference serial sync() performance (di
 Self-contained workflow for cutting enterprise `sync()` milliseconds with
 disconnected implementor crews, short-lived integrators, and a captain who
 lands verified arcs. This skill runs serial diets; parallel implementation
-follows CORES.md (unbanned 2026-09-22, stable-and-proven only).
+follows `.agents/perf-waves/CORES.md` (unbanned 2026-09-22, stable-and-proven only).
 
 ## 1. Activate when
 
@@ -44,7 +44,7 @@ reporting (`benchmark` — that skill *reads* numbers, this one *moves* them).
    rotations that landing-confirms need).
 4. **Integrate banked sets.** 3–7 banks → one integrator (own worktree,
    INTEGRATE.md). Solo LAND claims → single-hypothesis integrator.
-   BANKs file patches under `docs/PERF/waves/<wave>/*.patch` while
+   BANKs file patches under `.agents/perf-waves/waves/<wave>/*.patch` while
    unlanded; landed patches are deleted, file lists snapshotted.
 5. **Captain lands, reports, re-profiles — per commit.** Firsthand
    suites + quality on the exact tree, then one verified arc per
@@ -175,7 +175,7 @@ Per wave:
 
 1. Land or HOLD every open member; integrators file INTEGRATE.md.
 2. `node .agents/skills/agent-perf/scripts/build-index.mjs` — the index absorbs the wave.
-3. Archive the wave log to `docs/PERF/waves/<wave>/` and clear the live
+3. Archive the wave log to `.agents/perf-waves/waves/<wave>/` and clear the live
    LOG.md wave section to a stub (scoreboard + pointers). Nothing is
    lost: index entries carry the LOG text, the archive carries the rest.
    Scoreboard rows are never cleared — they are the voyage timeline.
