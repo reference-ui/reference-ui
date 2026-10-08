@@ -44,17 +44,17 @@
     "access": "public"
   },
   "dependencies": {
-    "@material-symbols-svg/react": "^0.5.0"
+    "@material-symbols-svg/react": "^0.15.0"
   },
   "peerDependencies": {
     "react": ">=18"
   },
   "devDependencies": {
     "@reference-ui/neo": "workspace:*",
-    "@types/node": "^25.1.0",
-    "@types/react": "^19.2.14",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
     "esbuild": "^0.28.2",
-    "react": "^19.2.4",
+    "react": "^19.3.0",
     "typescript": "~7.0.2"
   }
 }
