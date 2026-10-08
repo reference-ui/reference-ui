@@ -15,7 +15,7 @@ export function ColorsDemo() {
     <Div display="flex" flexDirection="column" gap="8r">
       {palettes.map(([name, scale]) => (
         <Div key={name} display="flex" flexDirection="column" gap="3r">
-          <H3 margin="0" fontSize="5r" fontWeight="600" textTransform="capitalize" color="docsText">
+          <H3 margin="0" fontSize="5r" textTransform="capitalize" color="docsText">
             {name}
           </H3>
           <Div

@@ -46,7 +46,7 @@ fn lib_fixture_has_lib_tokens_fonts_and_host_conditions() {
     assert!(system.is_token("radii.md"));
     assert_eq!(system.token_css_var("radii.md"), Some("--radii-md"));
     assert!(system.fonts().has_family("sans"));
-    assert_eq!(system.fonts().scoped_weight("sans.bold"), Some("700"));
+    assert_eq!(system.fonts().scoped_weight("sans.bold"), Some("650"));
     assert_eq!(
         system.get_condition("_hover"),
         Some("&:is(:hover, [data-hover])")

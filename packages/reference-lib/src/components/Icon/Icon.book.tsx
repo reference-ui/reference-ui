@@ -53,7 +53,7 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
       gap="4r"
     >
       <Div>
-        <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+        <H4 fontSize="3.5r" m="0" color="design.text.base">
           {title}
         </H4>
         {subtitle && (
@@ -75,7 +75,7 @@ export default {
       <Div maxW="220r" mx="auto" p="6r" display="flex" flexDirection="column" gap="5r">
         {/* Header */}
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Icon Sizing & Control Integration
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
@@ -420,7 +420,7 @@ export default {
     return (
       <Div maxW="240r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Button Optical Behavior Across Varying Heights
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
@@ -796,7 +796,7 @@ export default {
         {/* Header & Batch Navigation */}
         <Div display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="4r">
           <Div>
-            <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+            <H3 fontSize="5r" m="0" color="design.text.base">
               Icon Contact Sheet (Batch #{current + 1} of {totalBatches})
             </H3>
             <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">

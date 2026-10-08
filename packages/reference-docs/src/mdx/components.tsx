@@ -153,12 +153,14 @@ const tdClass = css({
   borderBottomColor: 'docsBorder',
 })
 
-export const mdxComponents = {
-  h1: (props: MdxProps<'h1'>) => (
+// Every mapping is a capitalised component so the object reads as a compound
+// component to React Fast Refresh. Lowercase keys stay on the map; the values
+// carry the component identity.
+function MdxH1(props: MdxProps<'h1'>) {
+  return (
     <H1
       color="docsText"
       fontSize="8r"
-      fontWeight="600"
       letterSpacing="-0.025em"
       lineHeight="1.12"
       marginTop="0"
@@ -166,50 +168,53 @@ export const mdxComponents = {
       scrollMarginTop="20r"
       {...props}
     />
-  ),
-  h2: ({ children, ...props }: MdxProps<'h2'>) => {
-    const id = slugify(toText(children))
-    return (
-      <H2
-        id={id}
-        className={headingHover}
-        color="docsText"
-        fontSize="6r"
-        fontWeight="600"
-        letterSpacing="-0.02em"
-        lineHeight="1.25"
-        marginTop="12r"
-        marginBottom="4r"
-        scrollMarginTop="20r"
-        {...props}
-      >
-        {children}
-        <Anchor id={id} />
-      </H2>
-    )
-  },
-  h3: ({ children, ...props }: MdxProps<'h3'>) => {
-    const id = slugify(toText(children))
-    return (
-      <H3
-        id={id}
-        className={headingHover}
-        color="docsText"
-        fontSize="5r"
-        fontWeight="600"
-        letterSpacing="-0.01em"
-        lineHeight="1.3"
-        marginTop="8r"
-        marginBottom="3r"
-        scrollMarginTop="20r"
-        {...props}
-      >
-        {children}
-        <Anchor id={id} />
-      </H3>
-    )
-  },
-  p: (props: MdxProps<'p'>) => (
+  )
+}
+
+function MdxH2({ children, ...props }: MdxProps<'h2'>) {
+  const id = slugify(toText(children))
+  return (
+    <H2
+      id={id}
+      className={headingHover}
+      color="docsText"
+      fontSize="6r"
+      letterSpacing="-0.02em"
+      lineHeight="1.25"
+      marginTop="12r"
+      marginBottom="4r"
+      scrollMarginTop="20r"
+      {...props}
+    >
+      {children}
+      <Anchor id={id} />
+    </H2>
+  )
+}
+
+function MdxH3({ children, ...props }: MdxProps<'h3'>) {
+  const id = slugify(toText(children))
+  return (
+    <H3
+      id={id}
+      className={headingHover}
+      color="docsText"
+      fontSize="5r"
+      letterSpacing="-0.01em"
+      lineHeight="1.3"
+      marginTop="8r"
+      marginBottom="3r"
+      scrollMarginTop="20r"
+      {...props}
+    >
+      {children}
+      <Anchor id={id} />
+    </H3>
+  )
+}
+
+function MdxP(props: MdxProps<'p'>) {
+  return (
     <P
       color="docsText"
       fontSize="md"
@@ -218,18 +223,31 @@ export const mdxComponents = {
       marginBottom="4r"
       {...props}
     />
-  ),
-  a: MdxLink,
-  ul: (props: MdxProps<'ul'>) => (
-    <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
-  ),
-  ol: (props: MdxProps<'ol'>) => (
-    <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
-  ),
-  li: (props: MdxProps<'li'>) => <Li marginBottom="1r" lineHeight="1.6" {...props} />,
-  strong: (props: MdxProps<'strong'>) => <Strong color="docsText" fontWeight="700" {...props} />,
-  hr: (props: MdxProps<'hr'>) => <Hr borderColor="docsBorder" marginY="10r" {...props} />,
-  blockquote: (props: MdxProps<'blockquote'>) => (
+  )
+}
+
+function MdxUl(props: MdxProps<'ul'>) {
+  return <Ul marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+}
+
+function MdxOl(props: MdxProps<'ol'>) {
+  return <Ol marginTop="0" marginBottom="4r" paddingLeft="5r" color="docsText" {...props} />
+}
+
+function MdxLi(props: MdxProps<'li'>) {
+  return <Li marginBottom="1r" lineHeight="1.6" {...props} />
+}
+
+function MdxStrong(props: MdxProps<'strong'>) {
+  return <Strong color="docsText" fontWeight="700" {...props} />
+}
+
+function MdxHr(props: MdxProps<'hr'>) {
+  return <Hr borderColor="docsBorder" marginY="10r" {...props} />
+}
+
+function MdxBlockquote(props: MdxProps<'blockquote'>) {
+  return (
     <Blockquote
       borderLeft="4px solid"
       borderLeftColor="docsBlockquoteBorder"
@@ -239,42 +257,70 @@ export const mdxComponents = {
       fontStyle="italic"
       {...props}
     />
-  ),
-  table: ({ children, ...rest }: MdxProps<'table'>) => (
+  )
+}
+
+function MdxTable({ children, ...rest }: MdxProps<'table'>) {
+  return (
     <Div className={tableWrap}>
       <table className={tableClass} {...rest}>
         {children}
       </table>
     </Div>
-  ),
-  th: (props: MdxProps<'th'>) => <th className={thClass} {...props} />,
-  td: (props: MdxProps<'td'>) => <td className={tdClass} {...props} />,
-  code: ({ className, children, ...rest }: MdxProps<'code'>) => {
-    const isBlock =
-      (typeof className === 'string' && className.includes('language-')) ||
-      'data-language' in rest
-    if (isBlock) {
-      return (
-        <code className={className} {...rest}>
-          {children}
-        </code>
-      )
-    }
+  )
+}
+
+function MdxTh(props: MdxProps<'th'>) {
+  return <th className={thClass} {...props} />
+}
+
+function MdxTd(props: MdxProps<'td'>) {
+  return <td className={tdClass} {...props} />
+}
+
+function MdxCode({ className, children, ...rest }: MdxProps<'code'>) {
+  const isBlock =
+    (typeof className === 'string' && className.includes('language-')) ||
+    'data-language' in rest
+  if (isBlock) {
     return (
-      <Code
-        fontSize="0.875em"
-        fontFamily="mono"
-        bg="docsInlineCodeBg"
-        color="docsText"
-        paddingX="1r"
-        paddingY="0.5r"
-        borderRadius="sm"
-        className={className}
-        {...rest}
-      >
+      <code className={className} {...rest}>
         {children}
-      </Code>
+      </code>
     )
-  },
+  }
+  return (
+    <Code
+      fontSize="0.875em"
+      fontFamily="mono"
+      bg="docsInlineCodeBg"
+      color="docsText"
+      paddingX="1r"
+      paddingY="0.5r"
+      borderRadius="sm"
+      className={className}
+      {...rest}
+    >
+      {children}
+    </Code>
+  )
+}
+
+export const mdxComponents = {
+  h1: MdxH1,
+  h2: MdxH2,
+  h3: MdxH3,
+  p: MdxP,
+  a: MdxLink,
+  ul: MdxUl,
+  ol: MdxOl,
+  li: MdxLi,
+  strong: MdxStrong,
+  hr: MdxHr,
+  blockquote: MdxBlockquote,
+  table: MdxTable,
+  th: MdxTh,
+  td: MdxTd,
+  code: MdxCode,
   pre: CodeBlock,
 } satisfies MDXComponents

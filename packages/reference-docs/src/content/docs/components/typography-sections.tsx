@@ -6,12 +6,6 @@ import {
   Code,
   Div,
   Em,
-  H1,
-  H2,
-  H3,
-  H4,
-  H5,
-  H6,
   I,
   Kbd,
   Mark,
@@ -53,19 +47,6 @@ function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif'
   )
 }
 
-export function HeadingSamples() {
-  return (
-    <Div display="flex" flexDirection="column" gap="2r">
-      <H1 margin="0">Heading 1</H1>
-      <H2 margin="0">Heading 2</H2>
-      <H3 margin="0">Heading 3</H3>
-      <H4 margin="0">Heading 4</H4>
-      <H5 margin="0">Heading 5</H5>
-      <H6 margin="0">Heading 6</H6>
-    </Div>
-  )
-}
-
 export function FontFamilies() {
   const sample = 'The quick brown fox jumps over the lazy dog.'
   return (
@@ -78,56 +59,6 @@ export function FontFamilies() {
       <FontCard name="Sans · Inter" font="sans" sample={sample} />
       <FontCard name="Serif · Literata" font="serif" sample={sample} />
       <FontCard name="Mono · JetBrains Mono" font="mono" sample={sample} />
-    </Div>
-  )
-}
-
-const labelStyle = {
-  width: '16r',
-  fontSize: 'sm',
-  color: 'docsMuted',
-  fontFamily: 'mono',
-} as const
-
-export function WeightRamp() {
-  return (
-    <Div display="flex" flexDirection="column" gap="3r">
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>thin</Span>
-        <Span font="sans" weight="thin" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>light</Span>
-        <Span font="sans" weight="light" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>normal</Span>
-        <Span font="sans" weight="normal" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>semibold</Span>
-        <Span font="sans" weight="semibold" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>bold</Span>
-        <Span font="sans" weight="bold" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
-      <Div display="flex" alignItems="baseline" gap="4r">
-        <Span {...labelStyle}>black</Span>
-        <Span font="sans" weight="black" fontSize="6r" color="docsText">
-          The quick brown fox
-        </Span>
-      </Div>
     </Div>
   )
 }

@@ -23,7 +23,7 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-b': {
     ...baseTypography,
-    fontWeight: 'sans.bold',
+    weight: 'bold',
   },
   '.ref-del': {
     ...baseTypography,
@@ -75,7 +75,7 @@ export const inlinePrimitiveStyles = {
   },
   '.ref-strong': {
     ...baseTypography,
-    fontWeight: 'sans.bold',
+    weight: 'bold',
   },
   '.ref-u': {
     ...baseTypography,

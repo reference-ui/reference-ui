@@ -54,7 +54,7 @@ function SectionCard({
       gap="4r"
     >
       <Div>
-        <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+        <H4 fontSize="3.5r" m="0" color="design.text.base">
           {title}
         </H4>
         {subtitle && (
@@ -108,7 +108,7 @@ export default {
     return (
       <Div p="6r" maxW="220r" display="flex" flexDirection="column" gap="5r">
         <Div>
-          <H3 fontSize="5r" fontWeight="700" m="0" color="design.text.base">
+          <H3 fontSize="5r" m="0" color="design.text.base">
             Menu Trigger Button Variants
           </H3>
           <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">

@@ -61,7 +61,7 @@ function WeightRow({ spec, children }: { spec: string; children: ReactNode }) {
 export function FamilyWeights() {
   return (
     <Div display="flex" flexDirection="column" gap="3r">
-      <WeightRow spec={'normal · sans → 400'}>
+      <WeightRow spec={'normal · sans → 385'}>
         <Span font="sans" weight="normal" fontSize="6r" color="docsText">
           The quick brown fox
         </Span>

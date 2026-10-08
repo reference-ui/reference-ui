@@ -11,11 +11,10 @@ export const fonts = {
     },
     weights: {
       thin: '200',
-      light: '300',
-      normal: '400',
-      semibold: '600',
-      bold: '700',
-      black: '900',
+      light: '285',
+      normal: '385',
+      semibold: '550',
+      bold: '650',
     },
     css: {
       letterSpacing: '-0.01em',
@@ -33,12 +32,11 @@ export const fonts = {
       descentOverride: '47%',
     },
     weights: {
-      thin: '100',
+      thin: '200',
       light: '300',
       normal: '373',
-      semibold: '600',
-      bold: '700',
-      black: '900',
+      semibold: '550',
+      bold: '633',
     },
     css: {
       letterSpacing: 'normal',
@@ -58,7 +56,7 @@ export const fonts = {
       thin: '100',
       light: '300',
       normal: '393',
-      semibold: '600',
+      semibold: '590',
       bold: '700',
     },
     css: {

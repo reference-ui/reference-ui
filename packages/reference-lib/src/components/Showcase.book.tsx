@@ -77,7 +77,7 @@ function SectionCard({
       gap="4r"
     >
       <Div display="flex" flexDirection="column" gap="0.5r">
-        <H3 fontSize="4r" fontWeight="600" m="0" color="design.text.base">
+        <H3 fontSize="4r" m="0" color="design.text.base">
           {title}
         </H3>
         {description && (
@@ -102,7 +102,7 @@ function DemoCell({ label, children }: { label: string; children: React.ReactNod
       flexDirection="column"
       gap="3r"
     >
-      <H4 fontSize="3.5r" fontWeight="600" m="0" color="design.text.base">
+      <H4 fontSize="3.5r" m="0" color="design.text.base">
         {label}
       </H4>
       <Div display="flex" flexDirection="column" gap="3r">
@@ -332,7 +332,7 @@ function FloatingUIRow({
               boxShadow="0 10px 40px rgba(0,0,0,0.25)"
               minW="70r"
             >
-              <H3 fontSize="4.5r" fontWeight="600" m="0">Modal Dialog</H3>
+              <H3 fontSize="4.5r" m="0">Modal Dialog</H3>
               <P fontSize="3r" color="design.text.light" mt="2r">
                 Modal dialog overlay with backdrop and focus trap.
               </P>
@@ -620,7 +620,7 @@ export default function ShowcaseFixture() {
         borderColor="ui.dialog.border"
         boxShadow="0 4px 20px rgba(0,0,0,0.08)"
       >
-        <H2 fontSize="7r" fontWeight="700" m="0" color="design.text.base">
+        <H2 fontSize="7r" m="0" color="design.text.base">
           Reference UI Component Suite
         </H2>
         <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">

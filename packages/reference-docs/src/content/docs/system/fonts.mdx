@@ -58,19 +58,21 @@ The full picture for the shipped families:
 
 | Name | No family | Sans | Serif | Mono |
 | --- | --- | --- | --- | --- |
-| `thin` | 100 | **200** | 100 | 100 |
-| `light` | 300 | 300 | 300 | 300 |
-| `normal` | 400 | 400 | **373** | **393** |
-| `semibold` | 600 | 600 | 600 | 600 |
-| `bold` | 700 | 700 | 700 | 700 |
-| `black` | 900 | 900 | 900 | 900 |
+| `thin` | 100 | **200** | **200** | 100 |
+| `light` | 300 | **285** | 300 | 300 |
+| `normal` | 400 | **385** | **373** | **393** |
+| `semibold` | 600 | **550** | **550** | **590** |
+| `bold` | 700 | **650** | **633** | 700 |
 
 The "no family" column is the plain CSS keyword table — the fallback when no
 family is in play. The bold cells are where a family deliberately disagrees
-with it: Inter's thin is 200, not 100, and Literata and JetBrains Mono tune
-their normals to 373 and 393 so running text lands at the right optical
-weight. (Mono lists no `black`, so its 900 arrives via the keyword
-fallback — same number, different road.)
+with it: Inter runs a touch lighter than the keywords — thin, light, normal,
+semibold and bold sit at 200, 285, 385, 550 and 650. Literata's thin is 200, as light as
+its axis goes, and Literata and JetBrains Mono tune their normals to 373 and
+393 and their semibolds to 550 and 590, and Literata's bold to 633, so running
+text lands at the right optical weight. The shipped scales stop
+at `bold` — none of the three reads well at 900, so `black` is not part of the
+default set. A custom family can still declare one.
 
 Three rules cover the rest:
 

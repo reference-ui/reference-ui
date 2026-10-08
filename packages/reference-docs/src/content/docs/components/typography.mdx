@@ -8,23 +8,26 @@ slug: typography
 import {
   EmphasisSamples,
   FontFamilies,
-  HeadingSamples,
   PreSample,
   QuoteSamples,
   SentenceOverlay,
   TechnicalSamples,
-  WeightRamp,
   WordOverlay,
 } from './typography-sections'
+import { HeadingFamilies } from './typography-heading-families'
+import { WeightRamp } from './typography-weight-ramp'
 
 # Typography
 
-One grayscale system, three shipped families, and a full weight ramp. Every text
-primitive is token-aware, so the same markup reads correctly in light and dark.
+One grayscale system, three shipped families, and a full weight ramp for each.
+Every text primitive is token-aware, so the same markup reads correctly in light
+and dark.
 
 ## Headings
 
-<HeadingSamples />
+Each level in all three families, stacked so their baselines can be compared.
+
+<HeadingFamilies />
 
 ## Font families
 
@@ -32,7 +35,13 @@ primitive is token-aware, so the same markup reads correctly in light and dark.
 
 ## Weight ramp
 
+Grouped by weight, each family stacked so the same weight can be compared
+across all three. The number is what that weight resolves to in the family.
+
 <WeightRamp />
+
+`bold` is the heaviest shipped weight. The `font()` API can still define a
+`black` stop for a custom family.
 
 ## Word overlay
 
