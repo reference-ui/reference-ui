@@ -514,30 +514,20 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       await expect(page.getByTestId('sib-content-2')).toBeVisible()
       await expect(page.getByTestId('sib-content-3')).toBeVisible()
 
-      await page.screenshot({ path: 'all-open.png' })
-      console.log('All 3 visible')
-
       // We have 3 sibling layers open.
       // Unmount the middle layer (2)
       await page.getByTestId('btn-sib-close-2').click({ force: true })
       await expect(page.getByTestId('sib-content-2')).toHaveCount(0)
 
-      await page.screenshot({ path: 'layer2-closed.png' })
-      console.log('Layer 2 closed. Pressing Escape')
-
       // The top live layer is 3. Escape should close 3.
       await page.keyboard.press('Escape')
       await page.waitForTimeout(500)
-      await page.screenshot({ path: 'after-escape-1.png' })
       await expect(page.getByTestId('sib-content-3')).toHaveCount(0)
-
-      console.log('Layer 3 closed. Pressing Escape for 1')
 
       // The next live layer is 1.
       await expect(page.getByTestId('sib-content-1')).toBeVisible()
       await page.keyboard.press('Escape')
       await page.waitForTimeout(500)
-      await page.screenshot({ path: 'after-escape-2.png' })
       await expect(page.getByTestId('sib-content-1')).toHaveCount(0)
     })
 
