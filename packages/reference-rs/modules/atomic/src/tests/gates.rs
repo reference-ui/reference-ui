@@ -224,7 +224,7 @@ fn analyze_with_panic(contents: &[&str], panicked: Option<usize>) -> Vec<Diagnos
         sources: &sources,
         parsed: &parsed,
     };
-    let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test");
+    let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test", &[]);
     crate::diagnostics::analysis::analyze(&input)
 }
 

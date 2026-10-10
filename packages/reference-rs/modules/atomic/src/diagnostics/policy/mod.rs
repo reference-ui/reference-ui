@@ -234,6 +234,7 @@ mod tests {
                 key: Some(key()),
                 outcome: invalid_reject("true"),
                 suggestion: None,
+                external: false,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -245,6 +246,7 @@ mod tests {
                     }),
                 },
                 suggestion: None,
+                external: false,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -256,6 +258,7 @@ mod tests {
                     )),
                 },
                 suggestion: None,
+                external: false,
             },
             DiagnosticFact::HostOutcome {
                 file: None,
@@ -273,6 +276,7 @@ mod tests {
             DiagnosticFact::ExactLookupExpected {
                 site: site(),
                 key: key(),
+                external: false,
             },
             DiagnosticFact::DynamicSlot {
                 site: site(),
@@ -301,12 +305,14 @@ mod tests {
                 when: Vec::new(),
                 minted: 2,
                 offered: Vec::new(),
+                external: false,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
                 key: Some(key()),
                 outcome: invalid_reject("false"),
                 suggestion: None,
+                external: false,
             },
         ];
         for fact in &facts {

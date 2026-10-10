@@ -44,6 +44,13 @@ export interface Want {
   value: { String: string } | { Number: string } | { Bool: boolean } | 'Null' | unknown
   when: string[]
   important: boolean
+  /**
+   * True when the want was authored on an external (capitalized non-host) JSX
+   * tag. Absent on the wire when false, so the own path serializes unchanged.
+   * External wants resolve into the separate partition and stay out of the own
+   * css map, so `atomCount` (own + external) exceeds the emitted class count.
+   */
+  external?: boolean
   origin?: string
   file?: string
   line?: number

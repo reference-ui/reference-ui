@@ -117,6 +117,7 @@ mod tests {
             prop: "width".to_string(),
             value: serde_json::json!({"md": "60px", "base": "50px"}),
             important: true,
+            external: false,
         };
         let plan = RuntimeStylePlan {
             system: "lib".to_string(),
@@ -140,6 +141,7 @@ mod tests {
                 prop: "color".to_string(),
                 value: serde_json::json!("red.500"),
                 important: false,
+                external: false,
             },
             // Exact duplicate: dedupes to no second plan and no second key.
             AuthoredDeclaration {
@@ -147,12 +149,14 @@ mod tests {
                 prop: "color".to_string(),
                 value: serde_json::json!("red.500"),
                 important: false,
+                external: false,
             },
             AuthoredDeclaration {
                 when: vec!["_hover".to_string()],
                 prop: "width".to_string(),
                 value: serde_json::json!({"md": "60px", "base": "50px"}),
                 important: true,
+                external: false,
             },
             // Unknown prop resolves zero atoms: no plan and no key.
             AuthoredDeclaration {
@@ -160,6 +164,7 @@ mod tests {
                 prop: "fooBar".to_string(),
                 value: serde_json::json!("x"),
                 important: false,
+                external: false,
             },
         ]
     }
@@ -172,7 +177,15 @@ mod tests {
         let decls = keyed_fixture_decls();
         let mut atom_set = AtomSet::new();
         let mut diagnostics = Vec::new();
-        let mut builder = PlanBuilder::new("lib", system, &mut atom_set, &mut diagnostics);
+        let mut external_atom_set = AtomSet::new();
+        let mut builder = PlanBuilder::new(
+            "lib",
+            system,
+            &mut atom_set,
+            &mut external_atom_set,
+            &[],
+            &mut diagnostics,
+        );
         let (plans, keys) = builder.build_with_keys(&decls);
         assert_eq!(plans.len(), 2);
         assert_eq!(
@@ -191,8 +204,15 @@ mod tests {
         let decls = keyed_fixture_decls();
         let mut diet_set = AtomSet::new();
         let mut diet_diagnostics = Vec::new();
-        let mut diet_builder =
-            PlanBuilder::new("lib", system, &mut diet_set, &mut diet_diagnostics);
+        let mut diet_external = AtomSet::new();
+        let mut diet_builder = PlanBuilder::new(
+            "lib",
+            system,
+            &mut diet_set,
+            &mut diet_external,
+            &[],
+            &mut diet_diagnostics,
+        );
         let (plans, keys) = diet_builder.build_diet(&decls);
         assert_eq!(plans.len(), 2);
         assert_eq!(
@@ -210,8 +230,15 @@ mod tests {
         // Inserts restored (LEAF-11 hole): diet and full feed identical sets.
         let mut full_set = AtomSet::new();
         let mut full_diagnostics = Vec::new();
-        let mut full_builder =
-            PlanBuilder::new("lib", system, &mut full_set, &mut full_diagnostics);
+        let mut full_external = AtomSet::new();
+        let mut full_builder = PlanBuilder::new(
+            "lib",
+            system,
+            &mut full_set,
+            &mut full_external,
+            &[],
+            &mut full_diagnostics,
+        );
         let (full_plans, _) = full_builder.build_with_keys(&decls);
         assert_eq!(diet_set.len(), full_set.len());
         for atom in diet_set.iter() {

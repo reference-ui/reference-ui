@@ -17,7 +17,7 @@ const spec: AtomicCaseSpec = {
     // Only the unshadowed control tag extracts; the param-shadowed tag
     // contributes nothing.
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect(result.wants).toHaveLength(1)
+    expect(result.wants).toHaveLength(2)
 
     const plans = result.stylePlans
     expect(plans).toHaveLength(1)

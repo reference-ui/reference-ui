@@ -39,6 +39,7 @@ pub struct ExpressionWalk<'a> {
     pub prop: &'a str,
     pub origin: Option<&'a str>,
     pub important: bool,
+    pub external: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
     pub line_index: Option<&'a LineIndex>,
@@ -80,6 +81,7 @@ impl<'a> ExpressionWalk<'a> {
             .with_important(self.important || important)
             .with_origin(self.origin)
             .with_oxc_span(span);
+        want.external = self.external;
         want.file = Some(self.file.into());
         if let Some(position) = self.span_position(span) {
             want.line = Some(position.0);
@@ -203,6 +205,7 @@ impl<'a> ExpressionWalk<'a> {
                 line,
                 column,
                 span: Some(byte_span(span)),
+                external: self.external,
             }) {
                 self.sinks.push(sink);
                 sink_recorded = true;
@@ -363,6 +366,7 @@ mod tests {
                 prop: "mt",
                 origin: None,
                 important: false,
+                external: false,
                 file: "t.ts",
                 source: Some(code),
                 line_index: None,
@@ -439,6 +443,7 @@ mod tests {
                 prop: "mt",
                 origin: None,
                 important: false,
+                external: false,
                 file: "t.ts",
                 source: Some(code),
                 line_index: None,

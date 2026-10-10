@@ -25,12 +25,16 @@ use crate::extract::constants::LocalConstants;
 
 /// The shared walk state for one style object: the fact sink plus the
 /// identities (source, surface, system) and the name truth (style props,
-/// const values, shadows) every entry consults.
+/// const values, shadows) every entry consults. `external` marks a block on
+/// an external component; `qualifiers` is the composed-system list whose
+/// foreign tail an external block's exact keys target.
 pub struct WalkCtx<'a> {
     pub facts: &'a mut Vec<DiagnosticFact>,
     pub source: SourceId,
     pub surface: StyleSurfaceKind,
     pub system: &'a str,
+    pub external: bool,
+    pub qualifiers: &'a [String],
     pub style_props: &'a FxHashSet<String>,
     pub constants: &'a LocalConstants,
     pub shadows: &'a [FxHashSet<String>],
@@ -66,7 +70,10 @@ impl WalkCtx<'_> {
         }
     }
 
-    /// Record one exact expected lookup at `site`.
+    /// Record one exact expected lookup at `site`, one fact per applicable
+    /// system: an own block targets `[own]`; an external block targets the
+    /// foreign qualifiers only. The push order is own-then-foreign, so the
+    /// own path keeps the single-fact shape byte for byte.
     pub fn expect(&mut self, site: Site<'_>, value: serde_json::Value, important: bool) {
         let source = SourceSite {
             source: self.source,
@@ -75,15 +82,35 @@ impl WalkCtx<'_> {
             prop: site.prop.into(),
             when: site.when.to_vec(),
         };
-        let key = OwnedLookupKey {
-            system: self.system.into(),
-            when: site.when.to_vec(),
-            prop: site.prop.into(),
-            value,
-            important,
-        };
-        self.facts
-            .push(DiagnosticFact::ExactLookupExpected { site: source, key });
+        if !self.external {
+            let key = OwnedLookupKey {
+                system: self.system.into(),
+                when: site.when.to_vec(),
+                prop: site.prop.into(),
+                value,
+                important,
+            };
+            self.facts.push(DiagnosticFact::ExactLookupExpected {
+                site: source,
+                key,
+                external: false,
+            });
+            return;
+        }
+        for system in crate::diagnostics::target_systems(true, self.system, self.qualifiers) {
+            let key = OwnedLookupKey {
+                system: system.into(),
+                when: site.when.to_vec(),
+                prop: site.prop.into(),
+                value: value.clone(),
+                important,
+            };
+            self.facts.push(DiagnosticFact::ExactLookupExpected {
+                site: source.clone(),
+                key,
+                external: true,
+            });
+        }
     }
 
     /// Record one dynamic slot at `site`: runtime queries here, but the key

@@ -1,6 +1,7 @@
 //! Host gating tests: configured hosts admit unimported tags, empty hosts match legacy.
-//! Proves explicit `jsxHosts` widen extraction without a file-local import while
-//! absent and empty host lists compile identically to the pre-hosts baseline.
+//! Proves explicit `jsxHosts` promote an unimported tag from an external
+//! component (capital, no file-local import — G0 §D/C8) to a host, while
+//! absent and empty host lists compile identically to each other.
 
 use super::*;
 use crate::{compile, BaseSystem, VirtualSource};
@@ -30,11 +31,24 @@ fn has_mt(wants: &[crate::Want], value: &str) -> bool {
 #[test]
 fn test_explicit_hosts_admit_unimported_tags() {
     let gated = compile(&host_request(None)).expect("compile succeeds");
-    assert!(!has_mt(&gated.wants, "4r"));
+    // Unconfigured, the capital tag is an external component (G0 §D/C8):
+    // its want is external, never a host want.
+    assert!(
+        !gated.wants.is_empty() && gated.wants.iter().all(|w| w.external),
+        "unconfigured tag is external, not a host: {:?}",
+        gated.wants
+    );
 
     let admitted =
         compile(&host_request(Some(vec!["ConfiguredHost".to_string()]))).expect("compile succeeds");
     assert!(has_mt(&admitted.wants, "4r"));
+    assert!(
+        admitted
+            .wants
+            .iter()
+            .any(|w| &*w.prop == "mt" && !w.external),
+        "a configured host collects a host want"
+    );
     assert!(admitted.stylesheet.contains("mt_4r"));
 }
 

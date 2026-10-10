@@ -30,6 +30,12 @@ export interface CompileRequestInput {
    * otherwise and the SYNC-04 pin stays byte-identical.
    */
   upstreamContainerRoot?: boolean
+  /**
+   * Upstream system names (extends then layers, self excluded) for external
+   * want qualification. Set only when non-empty so the key drops from the
+   * serialized request otherwise and the SYNC-04 pin stays byte-identical.
+   */
+  upstreamSystems?: string[]
 }
 
 export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRequest {
@@ -42,5 +48,8 @@ export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRe
     include: input.include,
     logs: input.logs,
     upstreamContainerRoot: input.upstreamContainerRoot || undefined,
+    // Arrays are truthy: `|| undefined` would keep the key present-empty and
+    // break the SYNC-04 byte-diff, so length-gate instead.
+    upstreamSystems: input.upstreamSystems?.length ? [...input.upstreamSystems] : undefined,
   }
 }

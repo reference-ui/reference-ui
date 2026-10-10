@@ -32,12 +32,14 @@ use crate::hosts::ResolvedHosts;
 
 /// One compile input offered to analysis: path, text, and the borrowed parse
 /// owned by `atomic::compile`, plus the resolved host surface, the shared
-/// const values, and the compiling system name for expected keys.
+/// const values, the compiling system name for expected keys, and the
+/// composed-system qualifier list (`[own, …foreign]`) external blocks target.
 pub struct AnalysisInput<'a> {
     pub sources: Vec<AnalyzedSource<'a>>,
     pub hosts: &'a ResolvedHosts,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
+    pub qualifiers: &'a [String],
 }
 
 /// The borrowed compile inputs analysis walks: collected sources plus
@@ -55,6 +57,7 @@ impl<'a> AnalysisInput<'a> {
         hosts: &'a ResolvedHosts,
         constants: &'a LocalConstants,
         system: &'a str,
+        qualifiers: &'a [String],
     ) -> Self {
         let analyzed = parse
             .sources
@@ -72,6 +75,7 @@ impl<'a> AnalysisInput<'a> {
             hosts,
             constants,
             system,
+            qualifiers,
         }
     }
 }
@@ -84,20 +88,27 @@ pub struct AnalyzedSource<'a> {
 }
 
 /// The per-compile context both surfaces share: host names, host-owned
-/// props, const values, the system name, and the exact runtime style-prop
-/// set that decides responsive-value vs condition positions.
+/// props, const values, the system name, the composed-system qualifier list,
+/// and the exact runtime style-prop set that decides responsive-value vs
+/// condition positions.
 pub struct AnalysisCtx<'a> {
     pub hosts: FxHashSet<String>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
+    pub qualifiers: &'a [String],
     pub style_props: FxHashSet<String>,
 }
 
 /// Predict exact expected lookups plus dynamic-shape facts for every source.
 /// Sources keep their input order and each becomes one [`SourceId`] by index.
 pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
-    let ctx = context(input.hosts, input.constants, input.system);
+    let ctx = context(
+        input.hosts,
+        input.constants,
+        input.system,
+        input.qualifiers,
+    );
     let mut facts = Vec::new();
     for (index, source) in input.sources.iter().enumerate() {
         let source_id = SourceId(index as u32);
@@ -111,11 +122,13 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
     facts
 }
 
-/// Hosts, constants, and system name shared by every per-file analysis.
+/// Hosts, constants, system name, and qualifiers shared by every per-file
+/// analysis.
 pub(crate) fn context<'a>(
     hosts: &'a ResolvedHosts,
     constants: &'a LocalConstants,
     system: &'a str,
+    qualifiers: &'a [String],
 ) -> AnalysisCtx<'a> {
     let mut names = FxHashSet::default();
     names.extend(hosts.traced.iter().cloned());
@@ -125,6 +138,7 @@ pub(crate) fn context<'a>(
         owned_props: &hosts.owned_props,
         constants,
         system,
+        qualifiers,
         style_props: crate::runtime::get_style_prop_names().into_iter().collect(),
     }
 }
@@ -273,6 +287,7 @@ mod tests {
             hosts: &hosts,
             constants: &constants,
             system: "test",
+            qualifiers: &[],
         };
         assert!(analyze(&input).is_empty());
     }
@@ -307,6 +322,7 @@ mod tests {
             hosts: &hosts,
             constants: &constants,
             system: "test",
+            qualifiers: &[],
         };
         let ids: Vec<SourceId> = analyze(&input)
             .iter()
@@ -333,7 +349,7 @@ mod tests {
             sources: &sources,
             parsed: &parsed,
         };
-        let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test");
+        let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test", &[]);
         assert_eq!(input.sources.len(), 1);
         assert_eq!(input.sources[0].path, "a.ts");
     }

@@ -19,6 +19,7 @@ fn sink_for(prop: &str) -> Sink {
         line: None,
         column: None,
         span: None,
+        external: false,
     })
     .expect("known style prop sinks")
 }

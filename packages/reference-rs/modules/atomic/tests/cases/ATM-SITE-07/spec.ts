@@ -14,7 +14,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'onClick', true)).toBe(false)
     expect(hasWant(result, 'tabIndex', 0)).toBe(false)
     expect(hasWant(result, 'aria-label', 'hello')).toBe(false)
-    expect(hasWant(result, 'color', 'red')).toBe(false)
+    expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(result.diagnostics).toEqual([])
   },
 }

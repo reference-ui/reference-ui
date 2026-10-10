@@ -40,6 +40,10 @@ struct NativeCompileRequest {
     /// standalone (local global CSS decides).
     #[serde(default, alias = "upstream_container_root")]
     upstream_container_root: bool,
+    /// Upstream system names this compile consumes (extends/layers), in
+    /// authored order. Absent means standalone.
+    #[serde(default)]
+    upstream_systems: Option<Vec<String>>,
 }
 
 #[napi]
@@ -73,6 +77,7 @@ pub fn compile_system(request_json: String) -> Result<String> {
         retention_token: req.retention_token,
         base_system: system,
         upstream_container_root: req.upstream_container_root,
+        upstream_systems: req.upstream_systems.unwrap_or_default(),
         jsx_hosts: req.jsx_hosts,
         declaration_root: req.declaration_root,
         include: req.include,

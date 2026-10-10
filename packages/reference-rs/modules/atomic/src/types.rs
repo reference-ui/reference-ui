@@ -46,6 +46,14 @@ pub struct CompileRequest {
     /// the check reads local global CSS only.
     #[serde(default, alias = "upstream_container_root")]
     pub upstream_container_root: bool,
+    /// Names of the upstream systems this compile consumes (extends/layers),
+    /// in authored order. Empty means standalone. The compiler builds the
+    /// qualifier list as `[own, …deduped-minus-own]` from these names;
+    /// absent from the wire when empty so the standalone request stays
+    /// byte-identical. No alias: the struct-level camelCase yields
+    /// `upstreamSystems`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub upstream_systems: Vec<String>,
     #[serde(default)]
     pub jsx_hosts: Option<Vec<String>>,
     #[serde(default)]

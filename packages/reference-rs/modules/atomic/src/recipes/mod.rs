@@ -339,6 +339,7 @@ mod tests {
             value: AtomValue::String(value.into()),
             when: when.iter().map(|key| (*key).into()).collect(),
             important: false,
+            external: false,
             origin: None,
             file: None,
             line: None,

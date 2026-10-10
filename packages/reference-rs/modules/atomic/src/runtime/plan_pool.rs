@@ -6,7 +6,9 @@ use std::thread::Scope;
 
 use rustc_hash::{FxBuildHasher, FxHashSet};
 
-use super::builder::{AuthoredDeclaration, DetachedDecl, PlanBuilder};
+use super::builder::{
+    fresh_targets, insert_resolved, plan_for_system, AuthoredDeclaration, DetachedDecl, PlanBuilder,
+};
 use super::plan::RuntimeStylePlan;
 use super::values::is_duplicate;
 use crate::extract_parallel::shard_strides;
@@ -19,7 +21,7 @@ pub(crate) fn build_keyed(
     diet: bool,
     guard: &PoolGuard,
 ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
-    let work = first_seen(builder.system, decls);
+    let work = first_seen(builder.system, builder.qualifiers, decls);
     let ctx = PlanCtx {
         builder,
         decls,
@@ -28,15 +30,21 @@ pub(crate) fn build_keyed(
         workers: guard.workers().get(),
     };
     let resolved = resolve_seen(&ctx);
-    commit(builder, decls, resolved)
+    commit(builder, decls, resolved, diet)
 }
 
-/// Indexes of the first declaration for each lookup key, in decl order.
-fn first_seen(system: &str, decls: &[AuthoredDeclaration]) -> Vec<usize> {
+/// Indexes of the first declaration for each `(external, own-key)` identity, in
+/// decl order. External declarations with no foreign qualifier emit nothing, so
+/// they never resolve. The marker keeps an own declaration and an external one
+/// with identical identity from collapsing into a single plan.
+fn first_seen(system: &str, qualifiers: &[String], decls: &[AuthoredDeclaration]) -> Vec<usize> {
     let mut seen = FxHashSet::with_capacity_and_hasher(decls.len(), FxBuildHasher);
     let mut work = Vec::new();
     for (index, decl) in decls.iter().enumerate() {
-        if seen.insert(decl.lookup_key(system)) {
+        if decl.external && qualifiers.len() < 2 {
+            continue;
+        }
+        if seen.insert((decl.external, decl.lookup_key(system))) {
             work.push(index);
         }
     }
@@ -110,46 +118,44 @@ fn commit(
     builder: &mut PlanBuilder<'_>,
     decls: &[AuthoredDeclaration],
     mut resolved: Vec<Option<DetachedDecl>>,
+    diet: bool,
 ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
     let mut plans = Vec::with_capacity(decls.len());
     let mut keys = Vec::with_capacity(decls.len());
     let mut seen = FxHashSet::with_capacity_and_hasher(decls.len(), FxBuildHasher);
     for (index, decl) in decls.iter().enumerate() {
-        let lookup_key = decl.lookup_key(builder.system);
-        if seen.contains(&lookup_key) {
-            continue;
-        }
-        let Some(resolved) = resolved[index].take() else {
+        let Some(detached) = resolved[index].take() else {
             continue;
         };
-        let declarations = absorb(builder, resolved);
-        if declarations.is_empty() {
-            seen.insert(lookup_key);
-            continue;
+        absorb_diagnostics(builder, detached.diagnostics);
+        for (system, key) in fresh_targets(builder.system, builder.qualifiers, decl, &seen) {
+            let plan = plan_for_system(decl, &detached.resolved, &system, diet);
+            if plan.declarations.is_empty() {
+                seen.insert(key);
+            } else {
+                seen.insert(key.clone());
+                keys.push(key);
+                plans.push(plan);
+            }
         }
-        seen.insert(lookup_key.clone());
-        keys.push(lookup_key);
-        plans.push(RuntimeStylePlan {
-            system: builder.system.to_string(),
-            when: decl.when.clone(),
-            prop: decl.prop.clone(),
-            value: decl.value.clone(),
-            important: decl.important,
-            declarations,
-        });
+        insert_resolved(
+            detached.resolved,
+            decl.external,
+            builder.atom_set,
+            builder.external_atom_set,
+        );
     }
     (plans, keys)
 }
 
-/// Move one declaration's atoms and lines into the shared builder.
-fn absorb(builder: &mut PlanBuilder<'_>, resolved: DetachedDecl) -> Vec<super::plan::RuntimeDeclaration> {
-    for diagnostic in resolved.diagnostics {
+/// Merge one declaration's diagnostics into the shared builder, dropping repeats.
+fn absorb_diagnostics(
+    builder: &mut PlanBuilder<'_>,
+    diagnostics: Vec<crate::diagnostics::Diagnostic>,
+) {
+    for diagnostic in diagnostics {
         if !is_duplicate(builder.diagnostics, &diagnostic) {
             builder.diagnostics.push(diagnostic);
         }
     }
-    for atom in resolved.atoms {
-        builder.atom_set.insert(atom);
-    }
-    resolved.declarations
 }

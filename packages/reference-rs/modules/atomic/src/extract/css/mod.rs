@@ -184,7 +184,7 @@ fn lower_block_arg(
     match resolve_block_target(ctx.scoped(), expr) {
         BlockLookup::Hit(name, obj) => {
             emit_import_residue(ctx, &name, expr.span());
-            let mut obj_ctx = ctx.object_walk(origin, false);
+            let mut obj_ctx = ctx.object_walk(origin, false, false);
             lower_const_object(&mut obj_ctx, &name, obj, &smallvec![], expr.span());
         }
         BlockLookup::Miss(base) => {
@@ -265,7 +265,7 @@ fn walk_object_expr(
     origin: Option<&str>,
     ctx: &mut ExtractContext<'_>,
 ) {
-    let mut obj_ctx = ctx.object_walk(origin, false);
+    let mut obj_ctx = ctx.object_walk(origin, false, false);
     walk_style_object(&mut obj_ctx, obj, &smallvec![]);
 }
 
@@ -363,7 +363,7 @@ fn lower_merge_const(
     let name = spread_base_name(arg).unwrap_or("array");
     for element in elements {
         if let ConstArrayElement::Object(map) = element {
-            let mut obj_ctx = ctx.object_walk(origin, false);
+            let mut obj_ctx = ctx.object_walk(origin, false, false);
             lower_array_object(&mut obj_ctx, name, map, &smallvec![], arg.span());
         }
     }

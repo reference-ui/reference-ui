@@ -40,6 +40,13 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    * engine drains the retained bytes. Neither means the legacy disk scan.
    */
   retentionToken?: number
+  /**
+   * Upstream system names (extends then layers, self excluded) the engine
+   * qualifies external wants against. Carried structurally like `include`:
+   * undefined drops from the serialized request, so a no-upstream compile
+   * gains no key and the Rust default `[]` keeps the old path.
+   */
+  upstreamSystems?: string[]
 }
 
 export interface NativeDiagnosticSpan {

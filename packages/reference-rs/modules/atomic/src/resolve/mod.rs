@@ -42,10 +42,13 @@ pub struct ResolveSession<'a, 'w> {
 /// The authored want behind the current lowering: condition stack and
 /// importance, carried so refusals can name the exact runtime lookup key.
 /// The stack is borrowed from the live want: it cannot change mid-resolve,
-/// so every read sees the same bytes the old per-want clone carried.
+/// so every read sees the same bytes the old per-want clone carried. The
+/// `external` marker rides along so a refusal on an external component
+/// block joins against foreign-qualified plans.
 pub struct WantContext<'w> {
     pub when: &'w [Box<str>],
     pub important: bool,
+    pub external: bool,
 }
 
 impl<'a, 'w> ResolveSession<'a, 'w> {
@@ -55,11 +58,13 @@ impl<'a, 'w> ResolveSession<'a, 'w> {
     /// live system is in reach, so both renders share one ranking.
     pub fn emit(&mut self, key: Option<OwnedLookupKey>, outcome: ResolveOutcome) {
         let suggestion = suggest::suggestion_for_outcome(&outcome, self.system);
+        let external = self.want.as_ref().is_some_and(|want| want.external);
         let report = ResolveReport {
             location: self.location.clone(),
             key,
             outcome,
             suggestion,
+            external,
         };
         let diagnostic = Policy::render_resolve(&report);
         if let Some(sink) = self.sink.as_deref_mut() {
@@ -146,6 +151,7 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_, '_>) -> V
         want: Some(WantContext {
             when: want.when.as_slice(),
             important: want.important,
+            external: want.external,
         }),
     };
     let session = &mut inner;

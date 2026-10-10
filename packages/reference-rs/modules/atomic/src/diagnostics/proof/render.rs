@@ -12,7 +12,9 @@ use std::collections::BTreeSet;
 
 use rustc_hash::FxHashSet;
 
-use super::super::{Diagnostic, DiagnosticFact, OwnedLookupKey, Policy};
+use super::super::{
+    Diagnostic, DiagnosticFact, DiagnosticLocation, OwnedLookupKey, Policy, ResolveOutcome,
+};
 use super::lines::{find_line, remove_line};
 use super::plans::{is_hole_value, same_position};
 use canon::is_known_style_prop;
@@ -23,16 +25,20 @@ use crate::runtime::RuntimeStylePlan;
 use super::memo::SerialMemo;
 
 /// Render the compile session's proof verdicts onto the default channel.
-/// Facts stay borrowed; only `diagnostics` mutates, in place.
+/// Facts stay borrowed; only `diagnostics` mutates, in place. `qualifiers`
+/// is the composed-system list (`[own, …foreign]`); external facts expand
+/// their keys across the foreign tail.
 pub fn render_session(
     facts: &[DiagnosticFact],
     plans: &[RuntimeStylePlan],
+    qualifiers: &[String],
     system: &str,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     render_with(
-        Proof::collect(facts, emitted_keys(plans)),
+        Proof::collect(facts, emitted_keys(plans), qualifiers),
         facts,
+        qualifiers,
         system,
         diagnostics,
     );
@@ -43,23 +49,31 @@ pub fn render_session(
 pub fn render_session_with_keys(
     facts: &[DiagnosticFact],
     emitted: BTreeSet<String>,
+    qualifiers: &[String],
     system: &str,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    render_with(Proof::collect(facts, emitted), facts, system, diagnostics);
+    render_with(
+        Proof::collect(facts, emitted, qualifiers),
+        facts,
+        qualifiers,
+        system,
+        diagnostics,
+    );
 }
 
 /// Run the partitioned join inputs against the covered-sink render.
 fn render_with(
     proof: Proof<'_>,
     facts: &[DiagnosticFact],
+    qualifiers: &[String],
     system: &str,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let sinks = Sinks::collect(facts);
     proof.render_rejects(diagnostics);
     proof.render_causeless(diagnostics);
-    sinks.render_covered(system, &proof.emitted, diagnostics);
+    sinks.render_covered(system, qualifiers, &proof.emitted, diagnostics);
 }
 
 /// The dictionary answer for one prop, memoized per session: the answer
@@ -81,7 +95,11 @@ impl<'a> Proof<'a> {
     /// The expectation set builds only when rejections exist to join
     /// against it: with no rejections the join loop is vacuous and the set
     /// is never consulted, so building it is pure waste.
-    fn collect(facts: &'a [DiagnosticFact], emitted: BTreeSet<String>) -> Self {
+    fn collect(
+        facts: &'a [DiagnosticFact],
+        emitted: BTreeSet<String>,
+        qualifiers: &[String],
+    ) -> Self {
         let mut proof = Self {
             emitted,
             exacts: Vec::new(),
@@ -90,7 +108,7 @@ impl<'a> Proof<'a> {
         };
         let mut memo = SerialMemo::new();
         for fact in facts {
-            proof.collect_one(fact, &mut memo);
+            proof.collect_one(fact, qualifiers, &mut memo);
         }
         if !proof.rejects.is_empty() {
             proof.build_exact_set();
@@ -101,16 +119,47 @@ impl<'a> Proof<'a> {
     /// Sort one session fact into the join inputs it feeds: expectations
     /// collect their serials, keyed resolve outcomes collect rejections,
     /// every other fact family belongs to a different render.
-    fn collect_one(&mut self, fact: &'a DiagnosticFact, memo: &mut SerialMemo<'a>) {
+    fn collect_one(
+        &mut self,
+        fact: &'a DiagnosticFact,
+        qualifiers: &[String],
+        memo: &mut SerialMemo<'a>,
+    ) {
         match fact {
             DiagnosticFact::ExactLookupExpected { key, .. } => self.collect_exact(key, memo),
             DiagnosticFact::ResolveOutcome {
                 location,
                 key: Some(key),
                 outcome,
+                external,
                 ..
-            } => collect_reject(&mut self.rejects, location, key, outcome),
+            } => self.collect_reject(location, key, outcome, *external, qualifiers),
             _ => {}
+        }
+    }
+
+    /// Collect one keyed rejection at each applicable system: an own
+    /// rejection joins on its own key; an external rejection re-targets the
+    /// key across the foreign qualifiers (its resolver key is own-system, so
+    /// only the qualifier list can place it against the foreign plans).
+    fn collect_reject(
+        &mut self,
+        location: &'a DiagnosticLocation,
+        key: &OwnedLookupKey,
+        outcome: &'a ResolveOutcome,
+        external: bool,
+        qualifiers: &[String],
+    ) {
+        if !external {
+            collect_reject(&mut self.rejects, location, key, outcome);
+            return;
+        }
+        for system in crate::diagnostics::target_systems(true, &key.system, qualifiers) {
+            let retargeted = OwnedLookupKey {
+                system: system.into(),
+                ..key.clone()
+            };
+            collect_reject(&mut self.rejects, location, &retargeted, outcome);
         }
     }
 
@@ -164,7 +213,7 @@ impl<'a> Proof<'a> {
                 &reject.legacy_message,
             ) {
                 line.message = Policy::render_proof(
-                    reject.key,
+                    &reject.key,
                     reject.location,
                     reject.code,
                     &reject.legacy_message,
@@ -218,7 +267,7 @@ impl<'a> Proof<'a> {
     /// position (a spelling divergence must not double-warn).
     fn is_explained(&self, key: &OwnedLookupKey, key_string: &str) -> bool {
         self.rejects.iter().any(|reject| {
-            reject.key_string == key_string || same_position(reject.key, key)
+            reject.key_string == key_string || same_position(&reject.key, key)
         })
     }
 }
@@ -286,6 +335,7 @@ mod tests {
                 )),
             },
             suggestion: Some("_hover".into()),
+            external: false,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -305,13 +355,18 @@ mod tests {
                 )),
             },
             suggestion: None,
+            external: false,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
     }
 
     fn exact(key: OwnedLookupKey) -> DiagnosticFact {
-        DiagnosticFact::ExactLookupExpected { site: site(), key }
+        DiagnosticFact::ExactLookupExpected {
+            site: site(),
+            key,
+            external: false,
+        }
     }
 
     #[test]
@@ -319,7 +374,7 @@ mod tests {
         let key = key("color", serde_json::json!("red.500"));
         let (fact, line) = condition_reject(key.clone());
         let mut diagnostics = vec![line];
-        render_session(&[exact(key), fact], &[], "lib", &mut diagnostics);
+        render_session(&[exact(key), fact], &[], &[], "lib", &mut diagnostics);
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownCondition);
         assert!(diagnostics[0].message.contains("red.500"));
@@ -340,7 +395,7 @@ mod tests {
         let (fact, line) = condition_reject(key.clone());
         let mut diagnostics = vec![line];
         let plans = vec![plan("color", serde_json::json!("red"))];
-        render_session(&[exact(key), fact], &plans, "lib", &mut diagnostics);
+        render_session(&[exact(key), fact], &plans, &[], "lib", &mut diagnostics);
         assert!(diagnostics.is_empty());
     }
 
@@ -348,7 +403,7 @@ mod tests {
     fn rejection_without_an_expectation_keeps_its_line() {
         let (fact, line) = condition_reject(key("color", serde_json::json!("red")));
         let mut diagnostics = vec![line.clone()];
-        render_session(&[fact], &[], "lib", &mut diagnostics);
+        render_session(&[fact], &[], &[], "lib", &mut diagnostics);
         assert_eq!(diagnostics, vec![line]);
     }
 
@@ -358,6 +413,7 @@ mod tests {
         let mut diagnostics = Vec::new();
         render_session(
             &[exact(key.clone()), exact(key)],
+            &[],
             &[],
             "lib",
             &mut diagnostics,
@@ -379,7 +435,7 @@ mod tests {
         let second = key("width", serde_json::Value::Object(second_map));
         assert_eq!(first.lookup_key(), second.lookup_key());
         let mut diagnostics = Vec::new();
-        render_session(&[exact(first), exact(second)], &[], "lib", &mut diagnostics);
+        render_session(&[exact(first), exact(second)], &[], &[], "lib", &mut diagnostics);
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code, DiagnosticCode::MissingStylePlan);
     }
@@ -392,6 +448,7 @@ mod tests {
         let mut diagnostics = vec![line];
         render_session(
             &[exact(first), exact(second), fact],
+            &[],
             &[],
             "lib",
             &mut diagnostics,
@@ -418,11 +475,13 @@ mod tests {
                 )),
             },
             suggestion: None,
+            external: false,
         };
         let line = Policy::render_resolve(&report);
         let mut diagnostics = vec![line.clone()];
         render_session(
             &[exact(exact_key), DiagnosticFact::from(report)],
+            &[],
             &[],
             "lib",
             &mut diagnostics,
@@ -435,7 +494,7 @@ mod tests {
         let key = key("display", serde_json::json!(false));
         let (fact, line) = invalid_reject("false", key.clone());
         let mut diagnostics = vec![line.clone()];
-        render_session(&[exact(key), fact], &[], "lib", &mut diagnostics);
+        render_session(&[exact(key), fact], &[], &[], "lib", &mut diagnostics);
         assert_eq!(diagnostics, vec![line]);
     }
 
@@ -447,6 +506,7 @@ mod tests {
                 exact(key("fooBar", serde_json::json!("x"))),
                 exact(key("_hover", serde_json::json!("red"))),
             ],
+            &[],
             &[],
             "lib",
             &mut diagnostics,
@@ -463,6 +523,7 @@ mod tests {
                 exact(key("color", serde_json::Value::Null)),
             ],
             &[],
+            &[],
             "lib",
             &mut diagnostics,
         );
@@ -474,10 +535,122 @@ mod tests {
         let key = key("display", serde_json::json!(true));
         let (fact, line) = invalid_reject("true", key.clone());
         let mut diagnostics = vec![line];
-        render_session(&[exact(key), fact], &[], "lib", &mut diagnostics);
+        render_session(&[exact(key), fact], &[], &[], "lib", &mut diagnostics);
         assert_eq!(diagnostics.len(), 1);
         assert!(diagnostics[0].message.contains("display"));
         assert!(diagnostics[0].message.contains("true"));
+    }
+
+    /// An expectation recorded on an external block carries a foreign system;
+    /// with no matching plan it warns exactly once.
+    fn external_exact(system: &str, prop: &str, value: serde_json::Value) -> DiagnosticFact {
+        DiagnosticFact::ExactLookupExpected {
+            site: site(),
+            key: OwnedLookupKey {
+                system: system.into(),
+                when: Vec::new(),
+                prop: prop.into(),
+                value,
+                important: false,
+            },
+            external: true,
+        }
+    }
+
+    fn qualifiers() -> Vec<String> {
+        vec!["lib".to_string(), "icons".to_string()]
+    }
+
+    #[test]
+    fn covered_external_expectation_is_silent() {
+        let facts = [external_exact("icons", "color", serde_json::json!("red"))];
+        let plans = [RuntimeStylePlan {
+            system: "icons".to_string(),
+            ..plan("color", serde_json::json!("red"))
+        }];
+        let mut diagnostics = Vec::new();
+        render_session(&facts, &plans, &qualifiers(), "lib", &mut diagnostics);
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+    }
+
+    #[test]
+    fn missing_external_expectation_warns_once() {
+        let facts = [external_exact("icons", "color", serde_json::json!("red"))];
+        let mut diagnostics = Vec::new();
+        render_session(&facts, &[], &qualifiers(), "lib", &mut diagnostics);
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+        assert_eq!(diagnostics[0].code, DiagnosticCode::MissingStylePlan);
+        assert!(diagnostics[0].message.contains("color"));
+    }
+
+    /// An external rejection (its resolver key is own-system) joins the
+    /// foreign-qualified expectation, so it rewrites its legacy line and
+    /// never double-warns.
+    #[test]
+    fn external_rejection_joins_its_foreign_qualifier() {
+        let resolve_key = key("color", serde_json::json!("red.500"));
+        let report = ResolveReport {
+            location: located(),
+            key: Some(resolve_key.clone()),
+            outcome: ResolveOutcome::Rejected {
+                code: DiagnosticCode::UnknownCondition,
+                detail: ResolveDetail::Declaration(DeclarationDetail::Name(
+                    NameDetail::Condition {
+                        name: "_nope".into(),
+                    },
+                )),
+            },
+            suggestion: None,
+            external: true,
+        };
+        let line = Policy::render_resolve(&report);
+        let mut diagnostics = vec![line];
+        let expected = external_exact("icons", "color", serde_json::json!("red.500"));
+        let facts = [expected, DiagnosticFact::from(report)];
+        render_session(&facts, &[], &qualifiers(), "lib", &mut diagnostics);
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+        assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownCondition);
+    }
+
+    /// The diet path (carried keys) and the proof path (re-serialized plans)
+    /// join identically for external facts — the S4 join parity.
+    #[test]
+    fn diet_and_proof_joins_agree_for_external() {
+        let own = key("color", serde_json::json!("red"));
+        let foreign = OwnedLookupKey {
+            system: "icons".into(),
+            ..own.clone()
+        };
+        let facts = [
+            DiagnosticFact::ExactLookupExpected {
+                site: site(),
+                key: foreign,
+                external: true,
+            },
+            DiagnosticFact::ExactLookupExpected {
+                site: site(),
+                key: own,
+                external: false,
+            },
+        ];
+        let plans = [RuntimeStylePlan {
+            system: "icons".to_string(),
+            ..plan("color", serde_json::json!("red"))
+        }];
+        let mut proof_diags = Vec::new();
+        render_session(&facts, &plans, &qualifiers(), "lib", &mut proof_diags);
+        let mut diet_diags = Vec::new();
+        render_session_with_keys(
+            &facts,
+            emitted_keys(&plans),
+            &qualifiers(),
+            "lib",
+            &mut diet_diags,
+        );
+        assert_eq!(proof_diags, diet_diags);
+        // The foreign key is backed; the own key is a single causeless miss.
+        assert_eq!(proof_diags.len(), 1, "{proof_diags:?}");
+        assert_eq!(proof_diags[0].code, DiagnosticCode::MissingStylePlan);
     }
 
 }

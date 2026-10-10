@@ -219,6 +219,7 @@ fn push_static_item(ctx: &mut StaticCssContext<'_>, when: &[String], prop: &str,
         prop: prop.to_string(),
         value: serde_json::Value::String(value.to_string()),
         important: false,
+        external: false,
     });
 }
 

@@ -320,6 +320,7 @@ fn authored_key_carries_the_five_tuple() {
     let context = WantContext {
         when: when.as_slice(),
         important: true,
+        external: false,
     };
     let key = authored_key(
         "test",

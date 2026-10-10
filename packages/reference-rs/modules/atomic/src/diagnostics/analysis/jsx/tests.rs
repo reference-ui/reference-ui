@@ -4,9 +4,40 @@
 //! refusals, and shadowed tags staying silent — including params and
 //! `let` rebinds over an alias name, mirroring the extract gate.
 
-use super::super::support::{analyze_source, dynamic_count, exact_keys};
+use super::super::support::{analyze_source, analyze_source_external, dynamic_count, exact_keys};
 
 const IMPORT: &str = "import { Div } from '@reference-ui/react';";
+
+#[test]
+fn external_tag_predicts_foreign_qualified_keys() {
+    // An external component's exact keys target the foreign qualifiers only
+    // (G0 §I): a host stays on the own system.
+    let facts = analyze_source_external(&format!(
+        "{IMPORT} const el = <BoltIcon color=\"red\" />;"
+    ));
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["foreign",[],"color","red",false]"#.to_string()]
+    );
+    let facts = analyze_source_external(&format!(
+        "{IMPORT} const el = <Div color=\"red\" />;"
+    ));
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["test",[],"color","red",false]"#.to_string()]
+    );
+}
+
+#[test]
+fn external_tag_without_a_foreign_qualifier_predicts_nothing() {
+    // The standalone path (no upstream) has no foreign target, so an
+    // external block predicts no exact key — the byte-identity default.
+    let facts = analyze_source(&format!(
+        "{IMPORT} const el = <BoltIcon color=\"red\" />;"
+    ));
+    assert!(exact_keys(&facts).is_empty());
+    assert_eq!(dynamic_count(&facts), 0);
+}
 
 #[test]
 fn traced_hosts_predict_literal_attrs() {

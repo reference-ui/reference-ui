@@ -33,6 +33,7 @@ pub fn expectations(
         facts: Vec::new(),
         source: source_id,
         system: ctx.system,
+        qualifiers: ctx.qualifiers,
         style_props: &ctx.style_props,
         constants: ctx.constants,
         shadows: Vec::new(),
@@ -43,11 +44,13 @@ pub fn expectations(
 }
 
 /// One source's `css()` walk: bindings gate the calls, shadows disqualify
-/// them, and the shared walker lowers the arguments.
+/// them, and the shared walker lowers the arguments. The `css()` surface is
+/// never external: its keys target the own system only.
 struct CssVisitor<'a, 'b> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
+    qualifiers: &'a [String],
     style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
     shadows: Vec<FxHashSet<String>>,
@@ -55,13 +58,16 @@ struct CssVisitor<'a, 'b> {
 }
 
 impl<'a, 'b> CssVisitor<'a, 'b> {
-    /// The shared walk context over this visitor's facts and name truth.
+    /// The shared walk context over this visitor's facts and name truth. The
+    /// `css()` surface is always own, so `external` is fixed false.
     fn walk_ctx(&mut self) -> WalkCtx<'_> {
         WalkCtx {
             facts: &mut self.facts,
             source: self.source,
             surface: StyleSurfaceKind::Css,
             system: self.system,
+            external: false,
+            qualifiers: self.qualifiers,
             style_props: self.style_props,
             constants: self.constants,
             shadows: &self.shadows,

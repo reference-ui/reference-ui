@@ -75,6 +75,33 @@ function wrapPackageLayer(pkg: string, inner: string): string {
   return `@layer ${escapeSelector(pkg)} {\n${inner}}\n`
 }
 
+const FOREIGN_OPEN = /^\s*\/\* foreign .+ \*\/\s*$/
+const FOREIGN_CLOSE = /^\s*\/\* end foreign .+ \*\/\s*$/
+
+/**
+ * Drop every engine-delimited foreign section from a utilities block: the
+ * `foreign <q>` open marker through its `end foreign <q>` close, inclusive.
+ * Foreign-qualified rules resolve against the consumer's tokens, so they are
+ * valid only on the resolving page: an entry a downstream compose copies must
+ * contribute own-qualified rules only. Missing markers pass through
+ * byte-identical, so every no-external entry is untouched.
+ */
+function stripForeignSections(utilities: string): string {
+  if (!utilities.includes('/* foreign ')) return utilities
+  const kept: string[] = []
+  let inside = false
+  for (const line of utilities.split('\n')) {
+    if (FOREIGN_OPEN.test(line)) {
+      inside = true
+    } else if (FOREIGN_CLOSE.test(line)) {
+      inside = false
+    } else if (!inside) {
+      kept.push(line)
+    }
+  }
+  return kept.join('\n')
+}
+
 /** Reprint one upstream entry portable, resetless, and rootless: reset and root drop, never concat. */
 function printUpstreamBlock(entry: SystemStreams): string {
   return wrapPackageLayer(
@@ -83,7 +110,7 @@ function printUpstreamBlock(entry: SystemStreams): string {
       (entry.global ?? '') +
       (entry.tokensPortable ?? '') +
       (entry.recipes ?? '') +
-      (entry.utilities ?? '')
+      stripForeignSections(entry.utilities ?? '')
   )
 }
 
@@ -125,7 +152,9 @@ function appendBlock(assembled: string, block: string): string {
   return `${assembled}${gap}${block}`
 }
 
-/** Project the N-API own object onto its published entry: tokens never ship. */
+/** Project the N-API own object onto its published entry: tokens never ship, and
+ *  the own foreign groups are stripped — a published entry contributes
+ *  own-qualified rules only (the resolving page keeps them via `printOwnInner`). */
 export function toPublishedEntry(own: SystemStreams): SystemStreams {
   return {
     name: own.name,
@@ -135,7 +164,7 @@ export function toPublishedEntry(own: SystemStreams): SystemStreams {
     global: own.global,
     tokensPortable: own.tokensPortable,
     recipes: own.recipes,
-    utilities: own.utilities,
+    utilities: own.utilities === undefined ? undefined : stripForeignSections(own.utilities),
     package: own.package,
   }
 }

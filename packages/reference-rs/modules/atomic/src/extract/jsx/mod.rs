@@ -25,17 +25,30 @@ use crate::extract::ExtractContext;
 use crate::resolve::font::scope;
 use canon::{is_condition_prop, is_known_style_prop};
 
-pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name};
+pub(crate) use names::{format_jsx_attribute_name, format_jsx_element_name, is_external_tag};
 
 mod names;
 
 #[cfg(test)]
 mod bare_attr_tests;
 
+#[cfg(test)]
+mod external_tag_tests;
+
 /// A JSX style-block prop site (`css`, `r`, or a condition prop) under walk.
 struct StyleAttr<'a> {
     prop: &'a str,
     origin: Option<&'a str>,
+    external: bool,
+}
+
+/// The tag a style attribute is written on: its origin spelling plus whether
+/// it is an **external** component (a capitalized non-host tag) whose wants
+/// the consumer resolves and backs. Host tags stay `external: false`.
+#[derive(Clone, Copy)]
+struct TagSite<'a> {
+    origin: Option<&'a str>,
+    external: bool,
 }
 
 /// Extract style-bearing attributes from a JSX opening element.
@@ -47,35 +60,57 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
     // dynamic lookups under keyword semantics exactly as today.
     let wants_at = ctx.wants.len();
     let tag_name = format_jsx_element_name(&opening.name);
-    if !ctx.allows_jsx_tag(&tag_name) {
-        if !extract_threaded_wrapper(opening, &tag_name, ctx) {
-            report_dropped_tag(opening, &tag_name, ctx);
-        }
-        scope::apply_to_wants(&mut ctx.wants[wants_at..]);
-        return;
-    }
-    let origin = Some(tag_name.as_str());
-
-    for item in &opening.attributes {
-        match item {
-            JSXAttributeItem::Attribute(attr) => {
-                // <Div mt="2r" />
-                handle_jsx_attribute(attr, origin, ctx);
-            }
-            JSXAttributeItem::SpreadAttribute(spread) => {
-                // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
-                // A spread bag names attributes, not style positions (§12).
-                let mut obj_ctx = ctx.object_walk(origin, false);
-                obj_ctx.bag = BagSemantics::JsxAttributes;
-                crate::extract::expressions::walk_spread_argument(
-                    &mut obj_ctx,
-                    &spread.argument,
-                    &smallvec![],
-                );
+    if let Some(external) = tag_gate(opening, &tag_name, ctx) {
+        let site = TagSite {
+            origin: Some(tag_name.as_str()),
+            external,
+        };
+        for item in &opening.attributes {
+            match item {
+                JSXAttributeItem::Attribute(attr) => {
+                    // <Div mt="2r" />  /  <BoltIcon color="red" />
+                    handle_jsx_attribute(attr, site, ctx);
+                }
+                JSXAttributeItem::SpreadAttribute(spread) => {
+                    // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
+                    // A spread bag names attributes, not style positions (§12).
+                    let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+                    obj_ctx.bag = BagSemantics::JsxAttributes;
+                    crate::extract::expressions::walk_spread_argument(
+                        &mut obj_ctx,
+                        &spread.argument,
+                        &smallvec![],
+                    );
+                }
             }
         }
     }
     scope::apply_to_wants(&mut ctx.wants[wants_at..]);
+}
+
+/// Resolve the tag gate: `Some(external)` when the attributes should lower,
+/// `None` when the tag is a threaded wrapper (already lowered) or dropped.
+///
+/// Order is pinned (G0 §D): a threaded wrapper lowers its `css` first,
+/// unchanged; then a capitalized non-host tag is an external component — but
+/// only once the host graph resolved, so an empty graph still reports the
+/// missing graph; every other tag takes today's drop path.
+fn tag_gate(
+    opening: &JSXOpeningElement<'_>,
+    tag_name: &str,
+    ctx: &mut ExtractContext<'_>,
+) -> Option<bool> {
+    if ctx.allows_jsx_tag(tag_name) {
+        return Some(false);
+    }
+    if extract_threaded_wrapper(opening, tag_name, ctx) {
+        return None;
+    }
+    if !ctx.jsx_hosts.is_empty() && is_external_tag(tag_name) {
+        return Some(true);
+    }
+    report_dropped_tag(opening, tag_name, ctx);
+    None
 }
 
 /// Lower a threaded wrapper's direct `css` value as if written on the
@@ -113,17 +148,23 @@ fn lower_threaded_item(
         return;
     }
     if let Some(val) = &attr.value {
-        handle_attribute_value("css", val, origin, ctx);
+        // A threaded wrapper's `css` is the wrapper's own lowering, never
+        // external (G0 §D: the wrapper path is unchanged).
+        let site = TagSite {
+            origin,
+            external: false,
+        };
+        handle_attribute_value("css", val, site, ctx);
     }
 }
 
 fn handle_jsx_attribute(
     attr: &JSXAttribute<'_>,
-    origin: Option<&str>,
+    site: TagSite<'_>,
     ctx: &mut ExtractContext<'_>,
 ) {
     let name = format_jsx_attribute_name(&attr.name);
-    if origin.is_some_and(|tag| ctx.host_owns(tag, &name)) {
+    if site.origin.is_some_and(|tag| ctx.host_owns(tag, &name)) {
         // A host's own declared prop is an attribute on that host (§14),
         // never a style — the resolver never sees it.
         return;
@@ -132,7 +173,7 @@ fn handle_jsx_attribute(
         // <Div truncate />
         if is_known_style_prop(&name) {
             // Bare attrs mint located, like string attrs (ATM-DIAG-05).
-            let mut expr_ctx = ctx.expression_walk(&name, origin, false);
+            let mut expr_ctx = ctx.expression_walk(&name, site.origin, false, site.external);
             let span = Some(attr.name.span());
             expr_ctx.push_want(crate::atom::AtomValue::Bool(true), smallvec![], false, span);
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
@@ -140,33 +181,34 @@ fn handle_jsx_attribute(
                 prop: name,
                 value: serde_json::Value::Bool(true),
                 important: false,
+                external: site.external,
             });
         }
         return;
     };
 
-    handle_attribute_value(&name, val, origin, ctx);
+    handle_attribute_value(&name, val, site, ctx);
 }
 
 fn handle_attribute_value(
     name: &str,
     val: &JSXAttributeValue<'_>,
-    origin: Option<&str>,
+    site: TagSite<'_>,
     ctx: &mut ExtractContext<'_>,
 ) {
     match val {
         JSXAttributeValue::StringLiteral(lit) => {
             // <Div mt="2r" />
-            handle_attribute_string(name, lit, origin, ctx);
+            handle_attribute_string(name, lit, site, ctx);
         }
         JSXAttributeValue::ExpressionContainer(c) => {
             // <Div bg={on ? 'n300' : 'n100'} />
-            handle_attribute_container(name, c, origin, ctx);
+            handle_attribute_container(name, c, site, ctx);
         }
         _ => {
             // <Div mt=<span /> /> — element values are never styles; DOM attrs
             // share the namespace and stay silent (SITE-07/08 stands).
-            if is_style_attr_name(ctx, origin.unwrap_or(""), name) {
+            if is_style_attr_name(ctx, site.origin.unwrap_or(""), name) {
                 ctx.warn_help(
                     val.span(),
                     DiagnosticCode::NonObjectJsxStyle,
@@ -192,12 +234,12 @@ fn is_style_attr_name(ctx: &ExtractContext<'_>, tag: &str, name: &str) -> bool {
 fn handle_attribute_string(
     name: &str,
     lit: &StringLiteral<'_>,
-    origin: Option<&str>,
+    site: TagSite<'_>,
     ctx: &mut ExtractContext<'_>,
 ) {
     // <Div color="blue.600" />
     if is_known_style_prop(name) {
-        let mut expr_ctx = ctx.expression_walk(name, origin, false);
+        let mut expr_ctx = ctx.expression_walk(name, site.origin, false, site.external);
         crate::extract::expressions::literal::push_string_want(&mut expr_ctx, lit, &smallvec![]);
         let (clean, imp) =
             crate::extract::expressions::literal::split_important_flag(lit.value.as_str());
@@ -206,6 +248,7 @@ fn handle_attribute_string(
             prop: name.to_string(),
             value: serde_json::Value::String(clean.to_string()),
             important: imp,
+            external: site.external,
         });
     }
 }
@@ -213,42 +256,44 @@ fn handle_attribute_string(
 fn handle_attribute_container(
     name: &str,
     container: &JSXExpressionContainer<'_>,
-    origin: Option<&str>,
+    site: TagSite<'_>,
     ctx: &mut ExtractContext<'_>,
 ) {
     // <Div bg={...} />
     if let Some(expr) = container.expression.as_expression() {
-        dispatch_attribute_expression(name, expr, origin, ctx);
+        dispatch_attribute_expression(name, expr, site, ctx);
     }
 }
 
 fn dispatch_attribute_expression(
     name: &str,
     expr: &Expression<'_>,
-    origin: Option<&str>,
+    site: TagSite<'_>,
     ctx: &mut ExtractContext<'_>,
 ) {
+    let attr = StyleAttr {
+        prop: name,
+        origin: site.origin,
+        external: site.external,
+    };
     if name == "css" {
         // <Div css={{ color: 'red', _hover: { bg: 'n200' } }} />
-        let site = StyleAttr { prop: name, origin };
-        walk_style_attr(expr, &site, ctx, &smallvec![]);
+        walk_style_attr(expr, &attr, ctx, &smallvec![]);
         return;
     }
     if name == "r" {
         // <Div r={{ 300: { p: '1r' }, md: { mt: '2r' } }} />
-        let site = StyleAttr { prop: name, origin };
-        walk_r_attr(expr, &site, ctx);
+        walk_r_attr(expr, &attr, ctx);
         return;
     }
     if is_condition_prop(name) {
         // <Div _hover={{ color: 'red.500' }} />
-        let site = StyleAttr { prop: name, origin };
-        walk_style_attr(expr, &site, ctx, &smallvec![name.into()]);
+        walk_style_attr(expr, &attr, ctx, &smallvec![name.into()]);
         return;
     }
     if is_known_style_prop(name) {
         // <Div bg={on ? 'n300' : 'n100'} />
-        let mut expr_ctx = ctx.expression_walk(name, origin, false);
+        let mut expr_ctx = ctx.expression_walk(name, site.origin, false, site.external);
         crate::extract::expressions::walk_expression(&mut expr_ctx, expr, &smallvec![]);
         for (val, imp) in crate::extract::expressions::ast_to_json_values(expr, ctx.scoped()) {
             ctx.authored.push(crate::runtime::AuthoredDeclaration {
@@ -256,6 +301,7 @@ fn dispatch_attribute_expression(
                 prop: name.to_string(),
                 value: val,
                 important: imp,
+                external: site.external,
             });
         }
     }
@@ -270,7 +316,7 @@ fn walk_r_attr(expr: &Expression<'_>, site: &StyleAttr<'_>, ctx: &mut ExtractCon
     }
     match expr {
         Expression::ObjectExpression(obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
             crate::extract::expressions::walk_r_object(&mut obj_ctx, obj, &smallvec![]);
         }
         Expression::ConditionalExpression(cond) => {
@@ -300,7 +346,7 @@ fn walk_style_attr(
     }
     match expr {
         Expression::ObjectExpression(obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
             crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
         }
         Expression::ArrayExpression(arr) => walk_style_attr_array(arr, site, ctx, when),
@@ -351,7 +397,7 @@ fn lower_block_attr(
 ) {
     match resolve_block_target(ctx.scoped(), expr) {
         BlockLookup::Hit(name, obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
             lower_const_object(&mut obj_ctx, &name, obj, when, expr.span());
         }
         BlockLookup::Miss(base) => {
@@ -522,7 +568,7 @@ fn lower_attr_const(
     let name = spread_base_name(arg).unwrap_or("array");
     for element in elements {
         if let ConstArrayElement::Object(map) = element {
-            let mut obj_ctx = ctx.object_walk(site.origin, false);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
             lower_array_object(&mut obj_ctx, name, map, when, arg.span());
         }
     }

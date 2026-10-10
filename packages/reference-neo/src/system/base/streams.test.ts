@@ -358,3 +358,44 @@ describe('mergeStreams root default', () => {
     expect(merged.stylesheet).not.toContain('@layer root {')
   })
 })
+
+describe('mergeStreams foreign strip', () => {
+  const FOREIGN_UPSTREAM: SystemStreams = {
+    name: 'lib',
+    preamble: PREAMBLE,
+    utilities:
+      '@layer utilities {\n  .lib__c_red { color: red; }\n  /* foreign beta */\n  .beta__w_1r { width: 1r; }\n  /* end foreign beta */\n}\n',
+    package: 'lib',
+  }
+  const OWN_WITH_FOREIGN: SystemStreams = {
+    ...T1_OWN,
+    utilities:
+      '@layer utilities {\n  .app__c_red { color: red; }\n  /* foreign alpha */\n  .alpha__w_1r { width: 1r; }\n  /* end foreign alpha */\n}\n',
+    package: 'app',
+  }
+
+  it('drops upstream foreign sections but keeps the own page foreign rules', () => {
+    const merged = mergeStreams(
+      [{ name: 'lib', streams: [FOREIGN_UPSTREAM] }],
+      OWN_WITH_FOREIGN,
+      'app'
+    )
+    expect(merged.stylesheet).not.toContain('beta__w_1r')
+    expect(merged.portableStylesheet).not.toContain('beta__w_1r')
+    expect(merged.stylesheet).not.toContain('/* foreign beta */')
+    expect(merged.stylesheet).toContain('.lib__c_red')
+    // The resolving consumer's own foreign rules stay on its page.
+    expect(merged.stylesheet).toContain('.alpha__w_1r')
+    expect(merged.stylesheet).toContain('/* foreign alpha */')
+  })
+
+  it('strips the published own entry and leaves unsentineled entries untouched', () => {
+    const merged = mergeStreams([], OWN_WITH_FOREIGN, 'app')
+    const publishedOwn = merged.streams[merged.streams.length - 1]
+    expect(publishedOwn.utilities).not.toContain('alpha__w_1r')
+    expect(publishedOwn.utilities).toContain('.app__c_red')
+
+    const untouched = mergeStreams([], T1_OWN, 'chain-t1')
+    expect(untouched.streams[0].utilities).toBe(T1_OWN.utilities)
+  })
+})

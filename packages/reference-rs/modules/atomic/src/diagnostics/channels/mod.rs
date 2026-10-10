@@ -217,6 +217,7 @@ mod tests {
             when: Vec::new(),
             minted: 2,
             offered: Vec::new(),
+            external: false,
         };
         let line = Policy::render_harvest(&report);
         (DiagnosticFact::from(report), line)
@@ -252,6 +253,7 @@ mod tests {
                 )),
             },
             suggestion: None,
+            external: false,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -268,6 +270,7 @@ mod tests {
                 })),
             },
             suggestion: Some("_hover".into()),
+            external: false,
         };
         let line = Policy::render_resolve(&report);
         (DiagnosticFact::from(report), line)
@@ -397,7 +400,11 @@ mod tests {
 
     #[test]
     fn analysis_facts_render_fresh_without_stripping() {
-        let exact = DiagnosticFact::ExactLookupExpected { site: site(), key: key() };
+        let exact = DiagnosticFact::ExactLookupExpected {
+            site: site(),
+            key: key(),
+            external: false,
+        };
         let dynamic = DiagnosticFact::DynamicSlot { site: site(), shape: DynamicShape::UnknownValue };
         let facts = vec![exact, dynamic];
         let channels = DiagnosticChannels::partition(&facts, Vec::new(), &catalog(), true);
@@ -412,7 +419,11 @@ mod tests {
 
     #[test]
     fn unrequested_backchannel_leaves_default_untouched_by_analysis() {
-        let exact = DiagnosticFact::ExactLookupExpected { site: site(), key: key() };
+        let exact = DiagnosticFact::ExactLookupExpected {
+            site: site(),
+            key: key(),
+            external: false,
+        };
         let dynamic = DiagnosticFact::DynamicSlot { site: site(), shape: DynamicShape::UnknownValue };
         let kept = warning("stays");
         let channels =
@@ -425,7 +436,11 @@ mod tests {
     fn empty_default_and_unrequested_backchannel_render_nothing() {
         let (funnel_fact, _) = funnel_pair();
         let (false_fact, _) = invalid_pair("false");
-        let exact = DiagnosticFact::ExactLookupExpected { site: site(), key: key() };
+        let exact = DiagnosticFact::ExactLookupExpected {
+            site: site(),
+            key: key(),
+            external: false,
+        };
         let facts = vec![funnel_fact, false_fact, exact];
         let channels = DiagnosticChannels::partition(&facts, Vec::new(), &catalog(), false);
         assert!(channels.userspace.is_empty());

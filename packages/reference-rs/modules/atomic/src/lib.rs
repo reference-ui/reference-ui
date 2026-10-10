@@ -146,6 +146,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         proof: request.wants_proof(),
         selections,
         upstream_container_root: request.upstream_container_root,
+        upstream_systems: request.upstream_systems.clone(),
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);
@@ -309,11 +310,16 @@ fn run_parse_serial(
             }
         })
         .collect();
+    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls, called
+    // here too so analysis and assembly cannot diverge.
+    let qualifiers =
+        assembly::qualifiers_for(&request.base_system.name, &request.upstream_systems);
     let analysis = diagnostics::analysis::AnalysisInput {
         sources: analyzed,
         hosts: &hosts,
         constants: &project_constants,
         system: &request.base_system.name,
+        qualifiers: &qualifiers,
     };
     report_analysis_expectations(&analysis, session);
     stream::report_parse_errors(sources, &transient.errors, diagnostics);

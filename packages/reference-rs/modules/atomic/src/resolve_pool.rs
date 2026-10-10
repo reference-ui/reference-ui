@@ -22,7 +22,7 @@ pub(crate) struct ResolvedWant {
 /// Resolve every want across the guarded lanes, strided for balance. Each
 /// shard reports its positions; the caller places them back in input order.
 pub(crate) fn resolve_wants(
-    wants: &[Want],
+    wants: &[&Want],
     system: &BaseSystem,
     guard: &PoolGuard,
 ) -> Vec<ResolvedWant> {
@@ -42,12 +42,15 @@ pub(crate) fn resolve_wants(
     })
 }
 
-fn spawn<'scope, 'env>(
+fn spawn<'scope, 'env, 'w>(
     scope: &'scope Scope<'scope, 'env>,
-    wants: &'env [Want],
+    wants: &'env [&'w Want],
     system: &'env BaseSystem,
     workers: usize,
-) -> Vec<std::thread::ScopedJoinHandle<'scope, Vec<(usize, ResolvedWant)>>> {
+) -> Vec<std::thread::ScopedJoinHandle<'scope, Vec<(usize, ResolvedWant)>>>
+where
+    'w: 'env,
+{
     let mut handles = Vec::with_capacity(workers);
     for shard in shard_strides(wants.len(), workers) {
         handles.push(scope.spawn(move || resolve_shard(wants, system, &shard)));
@@ -56,13 +59,13 @@ fn spawn<'scope, 'env>(
 }
 
 fn resolve_shard(
-    wants: &[Want],
+    wants: &[&Want],
     system: &BaseSystem,
     indexes: &[usize],
 ) -> Vec<(usize, ResolvedWant)> {
     indexes
         .iter()
-        .map(|&index| (index, resolve_one(&wants[index], system)))
+        .map(|&index| (index, resolve_one(wants[index], system)))
         .collect()
 }
 

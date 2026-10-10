@@ -38,7 +38,7 @@ const spec: AtomicCaseSpec = {
     expect(spreads[0]!.file).toMatch(/Card\.tsx$/)
     expect(result.tracedJsxHosts ?? []).toEqual(['Card'])
     expect(hasWant(result, 'mt', '4r')).toBe(true)
-    expect(hasWant(result, 'mt', '2r')).toBe(false)
+    expect(hasWant(result, 'mt', '2r')).toBe(true)
 
     const sourceRoot = path.resolve(getCaseInputDir(CASE))
     const hosted = await compile({

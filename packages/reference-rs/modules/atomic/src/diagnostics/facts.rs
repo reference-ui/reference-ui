@@ -40,6 +40,30 @@ impl OwnedLookupKey {
     }
 }
 
+/// The systems one block's exact key targets. An own block resolves to
+/// `[own]`; an external block resolves to `qualifiers[1..]` — the foreign
+/// qualifiers only, matching the one-plan-per-foreign-qualifier emission.
+/// This is the single expansion rule shared by expectations (analysis),
+/// rejections, and sink coverage, so the join uses per-target keys on both
+/// sides and grows no second canonicalizer. Nothing is allocated: the own
+/// target is yielded as a once-iterator and the foreign targets slice the
+/// borrowed qualifier list.
+pub fn target_systems<'a>(
+    external: bool,
+    own: &'a str,
+    qualifiers: &'a [String],
+) -> impl Iterator<Item = &'a str> {
+    // Own blocks target only the own system; external blocks target the
+    // foreign qualifiers. The `skip` length for the own case is the whole
+    // list, so the foreign half is empty.
+    let own_target = std::iter::once(own).take(usize::from(!external));
+    let foreign = qualifiers
+        .iter()
+        .skip(if external { 1 } else { qualifiers.len() })
+        .map(String::as_str);
+    own_target.chain(foreign)
+}
+
 /// Which part of a runtime lookup key is statically unknown. A dynamic slot
 /// can never prove an absent key, so it stays compiler-channel at most.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -201,10 +225,14 @@ pub enum DiagnosticFact {
     /// A pre-protocol diagnostic, preserved with its severity. Carries
     /// dependency-built lines (host traces) and, later, fatal pass-throughs.
     ExistingDiagnostic(Diagnostic),
-    /// Analysis predicts runtime will request exactly this key here.
+    /// Analysis predicts runtime will request exactly this key here. One
+    /// fact lands per applicable system (see [`target_systems`]); `external`
+    /// marks a fact recorded on an external component block, whose `key`
+    /// then carries a foreign qualifier.
     ExactLookupExpected {
         site: SourceSite,
         key: OwnedLookupKey,
+        external: bool,
     },
     /// A runtime style slot whose key is not statically known.
     DynamicSlot {
@@ -232,22 +260,27 @@ pub enum DiagnosticFact {
     },
     /// How many net-new pairs harvest minted onto one located sink, plus
     /// every kind-accepted pool value (pre-twin-skip) for coverage proof.
+    /// `external` marks a sink on an external component: its offered values
+    /// join against foreign-qualified plans.
     HarvestOutcome {
         location: DiagnosticLocation,
         prop: Box<str>,
         when: Vec<Box<str>>,
         minted: usize,
         offered: Vec<Box<str>>,
+        external: bool,
     },
     /// What resolve did with one authored declaration: the exact key when a
     /// want context is in hand, the outcome always. The precomputed
     /// did-you-mean suggestion rides along so the compiler re-render keeps
-    /// the pushed line's help byte for byte.
+    /// the pushed line's help byte for byte. `external` marks a rejection on
+    /// an external component block, whose join target is foreign.
     ResolveOutcome {
         location: DiagnosticLocation,
         key: Option<OwnedLookupKey>,
         outcome: ResolveOutcome,
         suggestion: Option<Box<str>>,
+        external: bool,
     },
     /// One skipped host trace: a file-only line with a dependency message.
     HostOutcome {
@@ -303,10 +336,32 @@ mod tests {
         sink.report(DiagnosticFact::ExactLookupExpected {
             site: site(),
             key: key(),
+            external: false,
         });
         assert_eq!(sink.len(), 2);
         assert!(matches!(sink[0], DiagnosticFact::DynamicSlot { .. }));
         assert!(matches!(sink[1], DiagnosticFact::ExactLookupExpected { .. }));
+    }
+
+    #[test]
+    fn target_systems_is_own_only_for_own_blocks() {
+        let qualifiers = vec!["own".to_string(), "icons".to_string()];
+        let own: Vec<&str> = target_systems(false, "own", &qualifiers).collect();
+        assert_eq!(own, vec!["own"]);
+        // An empty qualifier list still yields the own system only.
+        let bare: Vec<&str> = target_systems(false, "own", &[]).collect();
+        assert_eq!(bare, vec!["own"]);
+    }
+
+    #[test]
+    fn target_systems_is_foreign_only_for_external_blocks() {
+        let qualifiers = vec!["own".to_string(), "icons".to_string(), "bench".to_string()];
+        let foreign: Vec<&str> = target_systems(true, "own", &qualifiers).collect();
+        assert_eq!(foreign, vec!["icons", "bench"]);
+        // With no foreign qualifier there is nothing to target.
+        let lone = vec!["own".to_string()];
+        let bare: Vec<&str> = target_systems(true, "own", &lone).collect();
+        assert!(bare.is_empty());
     }
 
     #[test]

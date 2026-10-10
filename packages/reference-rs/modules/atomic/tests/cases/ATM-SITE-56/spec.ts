@@ -17,8 +17,8 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     expect(result.tracedJsxHosts ?? []).toEqual(['Card'])
     expect(hasWant(result, 'mt', '4r')).toBe(true)
-    expect(result.wants ?? []).toHaveLength(1)
-    expect(getWantsForProp(result, 'color')).toHaveLength(0)
+    expect(result.wants ?? []).toHaveLength(2)
+    expect(getWantsForProp(result, 'color')).toHaveLength(1)
     expect(result.stylesheet).toContain('mt_4r')
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     // Discovery itself is silent here; extraction's rest-spread note for

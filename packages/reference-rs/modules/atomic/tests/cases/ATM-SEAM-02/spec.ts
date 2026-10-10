@@ -21,7 +21,7 @@ const spec: AtomicCaseSpec = {
   async verify(result) {
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect(hasWant(result, 'mt', '4r')).toBe(false)
+    expect(hasWant(result, 'mt', '4r')).toBe(true)
 
     const sourceRoot = path.resolve(getCaseInputDir(CASE))
     const frozenBase = {

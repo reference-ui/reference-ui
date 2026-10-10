@@ -239,7 +239,15 @@ fn integer_case(
 fn build_output(system: &BaseSystem, name: &str, decl: &AuthoredDeclaration) -> Value {
     let mut atom_set = AtomSet::new();
     let mut diagnostics = Vec::new();
-    let mut builder = PlanBuilder::new(name, system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        name,
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(std::slice::from_ref(decl));
     let declarations: Vec<Value> = plans
         .iter()

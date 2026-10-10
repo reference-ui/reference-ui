@@ -22,6 +22,7 @@ pub(crate) fn decl(
         prop: prop.to_string(),
         value,
         important,
+        external: false,
     }
 }
 

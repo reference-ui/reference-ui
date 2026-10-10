@@ -11,19 +11,22 @@ use smallvec::SmallVec;
 use crate::atom::{AtomValue, Want};
 
 /// Canonical identity of a want for alias-twin suppression: the canonical
-/// prop (aliases collapse), the authored text, the scope, and importance.
-/// Two wants sharing it would take one class name for two atoms (GHOST-04).
-pub(crate) type TwinKey = (Box<str>, Box<str>, SmallVec<[Box<str>; 2]>, bool);
+/// prop (aliases collapse), the authored text, the scope, importance, and
+/// the external marker — twins only collide within one scope. Two wants
+/// sharing it would take one class name for two atoms (GHOST-04).
+pub(crate) type TwinKey = (Box<str>, Box<str>, SmallVec<[Box<str>; 2]>, bool, bool);
 
 /// The twin key a want occupies: canonical prop, authored text, scope,
-/// importance. A `Token` keys by path (classes derive from the path, never
-/// the resolved value), so a harvested fallback hex never twins its token.
+/// importance, and external. A `Token` keys by path (classes derive from the
+/// path, never the resolved value), so a harvested fallback hex never twins
+/// its token.
 pub(crate) fn twin_key_for(want: &Want) -> TwinKey {
     (
         canon::resolve_canonical_prop(&want.prop).into(),
         twin_text(&want.value).into(),
         want.when.clone(),
         want.important,
+        want.external,
     )
 }
 

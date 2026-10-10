@@ -16,6 +16,11 @@ pub struct Want {
     pub value: AtomValue,
     pub when: SmallVec<[Box<str>; 2]>,
     pub important: bool,
+    /// True when the want was authored on an external (capitalized non-host)
+    /// JSX tag; false for every own/standalone site. Absent from the wire
+    /// when false so the own path serializes byte-identically.
+    #[serde(default, skip_serializing_if = "crate::atom::is_false")]
+    pub external: bool,
     pub origin: Option<Box<str>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file: Option<Box<str>>,
@@ -34,6 +39,7 @@ impl Want {
             value,
             when: SmallVec::new(),
             important: false,
+            external: false,
             origin: None,
             file: None,
             line: None,

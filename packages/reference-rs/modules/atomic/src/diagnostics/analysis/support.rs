@@ -46,6 +46,36 @@ pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
         hosts: &hosts,
         constants: &constants,
         system: "test",
+        qualifiers: &[],
+    };
+    super::analyze(&input)
+}
+
+/// Analyze one inline source with a foreign qualifier present, so external
+/// blocks materialize their per-target expectations. The own system is
+/// `"test"` and the foreign qualifier is `"foreign"`.
+pub(crate) fn analyze_source_external(source: &str) -> Vec<DiagnosticFact> {
+    let qualifiers = vec!["test".to_string(), "foreign".to_string()];
+    let allocator = oxc_allocator::Allocator::default();
+    let program = parse_for_test(&allocator, source);
+    let constants =
+        crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
+    let hosts = ResolvedHosts {
+        traced: Vec::new(),
+        configured: Vec::new(),
+        owned_props: BTreeMap::new(),
+    };
+    let analyzed = AnalyzedSource {
+        path: "test.ts",
+        content: source,
+        program: &program,
+    };
+    let input = AnalysisInput {
+        sources: vec![analyzed],
+        hosts: &hosts,
+        constants: &constants,
+        system: "test",
+        qualifiers: &qualifiers,
     };
     super::analyze(&input)
 }
@@ -158,6 +188,8 @@ pub(crate) fn walk_first_object(
         source: SourceId(0),
         surface,
         system: "test",
+        external: false,
+        qualifiers: &[],
         style_props: &style,
         constants: &constants,
         shadows: &shadows,

@@ -85,6 +85,7 @@ pub fn check_container_root(
                 detail: ResolveDetail::Declaration(DeclarationDetail::ContainerRoot),
             },
             suggestion: None,
+            external: false,
         };
         let diagnostic = Policy::render_resolve(&report);
         if let Some(sink) = sink {

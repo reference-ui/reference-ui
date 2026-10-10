@@ -10,8 +10,8 @@ const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-08',
   verify(result) {
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect(hasWant(result, 'mt', '4r')).toBe(false)
-    expect(hasWant(result, 'color', 'red')).toBe(false)
+    expect(hasWant(result, 'mt', '4r')).toBe(true)
+    expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(result.diagnostics).toEqual([])
   },
 }

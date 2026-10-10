@@ -16,7 +16,7 @@ pub struct Reject<'a> {
     /// Where the dropped declaration was written.
     pub location: &'a DiagnosticLocation,
     /// The exact runtime key the declaration would have queried.
-    pub key: &'a OwnedLookupKey,
+    pub key: OwnedLookupKey,
     /// The serialized key, computed once for both joins.
     pub key_string: String,
     /// The resolver's code, kept on the proof warning.
@@ -29,7 +29,7 @@ pub struct Reject<'a> {
 pub fn collect<'a>(
     rejects: &mut Vec<Reject<'a>>,
     location: &'a DiagnosticLocation,
-    key: &'a OwnedLookupKey,
+    key: &OwnedLookupKey,
     outcome: &'a ResolveOutcome,
 ) {
     let ResolveOutcome::Rejected { code, detail } = outcome else {
@@ -44,11 +44,12 @@ pub fn collect<'a>(
         outcome: outcome.clone(),
         // Proof re-derives the legacy sentence only; help never joins.
         suggestion: None,
+        external: false,
     };
     rejects.push(Reject {
         location,
-        key,
         key_string: key.lookup_key(),
+        key: key.clone(),
         code: *code,
         legacy_message: Policy::render_resolve(&report).message,
     });

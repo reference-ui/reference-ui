@@ -62,10 +62,13 @@ pub(crate) fn walk_retained(shared: &Shared<'_>, indices: &[usize], parsed: &[Pa
         return;
     };
     let identity = IdentityGraph::from_shared(shared.sources, &published.maps);
+    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls.
+    let qualifiers = crate::assembly::qualifiers_for(shared.system, &shared.request.upstream_systems);
     let ctx = analysis::context(
         &published.hosts,
         published.constants.as_ref(),
         shared.system,
+        &qualifiers,
     );
     let env = WalkEnv {
         shared,

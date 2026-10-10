@@ -12,6 +12,11 @@ fn empty_system() -> BaseSystem {
     BaseSystem::default()
 }
 
+/// Own-first qualifier list for the single-set builders: just the system name.
+fn own_qualifiers(system: &BaseSystem) -> Vec<String> {
+    vec![system.name.clone()]
+}
+
 fn when(raw: &str) -> crate::atom::When {
     match lower_when(raw, &empty_system()) {
         LoweredWhen::Known(w) => w,
@@ -61,8 +66,14 @@ fn test_named_system_nests_internal_layers_in_package() {
     assert_eq!(root, 0);
     assert!(package < global && global < utilities);
     assert!(css.ends_with("}\n"));
-    let portable =
-        build_portable_stylesheet_with(&set, BaseSystem::lib_fixture(), &[], &mut Vec::new());
+    let portable = build_portable_stylesheet_with(
+        &set,
+        &AtomSet::new(),
+        &own_qualifiers(BaseSystem::lib_fixture()),
+        BaseSystem::lib_fixture(),
+        &[],
+        &mut Vec::new(),
+    );
     assert!(portable.starts_with(ROOT_DEFAULT_BLOCK));
     assert!(portable.ends_with("}\n"));
 }
@@ -106,7 +117,14 @@ fn test_utility_selectors_carry_system_segment() {
     let system = BaseSystem::lib_fixture();
     let css = build_stylesheet(&set, system, &mut Vec::new());
     assert!(css.contains(".\\@reference-ui\\/lib__c_blue\\.600"));
-    let portable = build_portable_stylesheet_with(&set, system, &[], &mut Vec::new());
+    let portable = build_portable_stylesheet_with(
+        &set,
+        &AtomSet::new(),
+        &own_qualifiers(system),
+        system,
+        &[],
+        &mut Vec::new(),
+    );
     assert!(portable.contains(".\\@reference-ui\\/lib__c_blue\\.600"));
 }
 
@@ -122,17 +140,27 @@ fn test_every_plan_class_name_matches_a_stylesheet_selector() {
             prop: "color".to_string(),
             value: json!("blue.600"),
             important: false,
+            external: false,
         },
         AuthoredDeclaration {
             when: vec!["_hover".to_string()],
             prop: "color".to_string(),
             value: json!("red.500"),
             important: false,
+            external: false,
         },
     ];
     let mut atom_set = AtomSet::new();
     let mut diagnostics = Vec::new();
-    let mut builder = PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        &system.name,
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
     assert_eq!(plans.len(), 2);
 
@@ -163,6 +191,8 @@ fn test_streams_concatenate_to_paired_single_builds() {
     let mut portable_sink = Vec::new();
     let streams = build_stylesheet_streams(
         &set,
+        &AtomSet::new(),
+        &own_qualifiers(system),
         system,
         &[],
         StylesheetSinks {
@@ -174,11 +204,25 @@ fn test_streams_concatenate_to_paired_single_builds() {
     let mut single_portable = Vec::new();
     assert_eq!(
         streams.stylesheet(),
-        build_stylesheet_with(&set, system, &[], &mut single_primary)
+        build_stylesheet_with(
+            &set,
+            &AtomSet::new(),
+            &own_qualifiers(system),
+            system,
+            &[],
+            &mut single_primary,
+        )
     );
     assert_eq!(
         streams.portable_stylesheet(),
-        build_portable_stylesheet_with(&set, system, &[], &mut single_portable)
+        build_portable_stylesheet_with(
+            &set,
+            &AtomSet::new(),
+            &own_qualifiers(system),
+            system,
+            &[],
+            &mut single_portable,
+        )
     );
     assert_eq!(primary, single_primary);
     assert_eq!(portable_sink, single_portable);
@@ -214,6 +258,8 @@ fn test_dual_build_matches_paired_single_builds() {
     let mut portable_sink = Vec::new();
     let (streams, sheet, portable) = build_stylesheets_with(
         &set,
+        &AtomSet::new(),
+        &own_qualifiers(system),
         system,
         &[],
         StylesheetSinks {
@@ -225,11 +271,25 @@ fn test_dual_build_matches_paired_single_builds() {
     let mut single_portable = Vec::new();
     assert_eq!(
         sheet,
-        build_stylesheet_with(&set, system, &[], &mut single_primary)
+        build_stylesheet_with(
+            &set,
+            &AtomSet::new(),
+            &own_qualifiers(system),
+            system,
+            &[],
+            &mut single_primary,
+        )
     );
     assert_eq!(
         portable,
-        build_portable_stylesheet_with(&set, system, &[], &mut single_portable)
+        build_portable_stylesheet_with(
+            &set,
+            &AtomSet::new(),
+            &own_qualifiers(system),
+            system,
+            &[],
+            &mut single_portable,
+        )
     );
     assert_eq!(primary, single_primary);
     assert_eq!(portable_sink, single_portable);
@@ -252,6 +312,8 @@ fn test_streams_serialize_to_ten_wire_keys() {
     let mut portable_sink = Vec::new();
     let streams = build_stylesheet_streams(
         &set,
+        &AtomSet::new(),
+        &own_qualifiers(system),
         system,
         &[],
         StylesheetSinks {
@@ -297,4 +359,90 @@ fn test_preamble_only_reprints_to_bare_preamble() {
     assert!(streams.name.is_empty());
     assert_eq!(streams.stylesheet(), LAYER_PREAMBLE);
     assert_eq!(streams.portable_stylesheet(), LAYER_PREAMBLE);
+}
+
+/// Grouped emission rides both sheets: the own group prints as before and each
+/// foreign qualifier contributes one appended group, and the portable sheet
+/// agrees with the grouped single-build exactly.
+#[test]
+fn test_grouped_foreign_rules_ride_both_sheets() {
+    let own_atom = Atom::new(
+        "color".into(),
+        CssValue::String("blue.600".into()),
+        smallvec![],
+        false,
+    );
+    let ext_atom = Atom::new(
+        "padding".into(),
+        CssValue::String("2r".into()),
+        smallvec![],
+        false,
+    );
+    let mut own = AtomSet::new();
+    own.insert(own_atom.clone());
+    let mut external = AtomSet::new();
+    external.insert(ext_atom.clone());
+
+    let system = BaseSystem::lib_fixture();
+    let qualifiers = vec![system.name.clone(), "alpha".to_string()];
+    let mut primary = Vec::new();
+    let mut portable_sink = Vec::new();
+    let (streams, sheet, portable) = build_stylesheets_with(
+        &own,
+        &external,
+        &qualifiers,
+        system,
+        &[],
+        StylesheetSinks {
+            primary: &mut primary,
+            portable: &mut portable_sink,
+        },
+    );
+
+    let own_sel = name::selector_with_system(&own_atom, &system.name);
+    let foreign_sel = name::selector_with_system(&ext_atom, "alpha");
+    for sheet in [&sheet, &portable] {
+        assert!(sheet.contains(&own_sel), "own rule missing:\n{sheet}");
+        assert!(sheet.contains(&foreign_sel), "foreign rule missing:\n{sheet}");
+    }
+    assert!(
+        streams.utilities.find(&own_sel) < streams.utilities.find(&foreign_sel),
+        "own group must precede the foreign group:\n{}",
+        streams.utilities
+    );
+    assert_eq!(
+        portable,
+        build_portable_stylesheet_with(
+            &own,
+            &external,
+            &qualifiers,
+            system,
+            &[],
+            &mut Vec::new(),
+        )
+    );
+}
+
+/// No empty blocks: an external set with no foreign qualifier prints nothing,
+/// and an empty own set never opens an empty `@layer utilities`.
+#[test]
+fn test_no_empty_utilities_block_without_foreign_qualifier() {
+    let mut external = AtomSet::new();
+    external.insert(Atom::new(
+        "padding".into(),
+        CssValue::String("2r".into()),
+        smallvec![],
+        false,
+    ));
+    let system = BaseSystem::lib_fixture();
+    let own = AtomSet::new();
+    let no_foreign = vec![system.name.clone()];
+    let css = build_stylesheet_with(&own, &external, &no_foreign, system, &[], &mut Vec::new());
+    assert!(!css.contains("@layer utilities"), "{css}");
+
+    // With a foreign qualifier the block appears and carries the foreign rule.
+    let with_foreign = vec![system.name.clone(), "alpha".to_string()];
+    let css = build_stylesheet_with(&own, &external, &with_foreign, system, &[], &mut Vec::new());
+    assert!(css.contains("@layer utilities {"), "{css}");
+    assert!(css.contains(".alpha__p_2r"), "{css}");
 }

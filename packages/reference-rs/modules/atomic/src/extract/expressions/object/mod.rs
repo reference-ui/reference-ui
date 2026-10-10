@@ -53,6 +53,9 @@ pub enum BagSemantics {
 pub struct ObjectWalk<'a> {
     pub origin: Option<&'a str>,
     pub important: bool,
+    /// True when this object was authored on an external component; child
+    /// expression walks and authored plans inherit it.
+    pub external: bool,
     pub file: &'a str,
     pub source: Option<&'a str>,
     pub line_index: Option<&'a LineIndex>,
@@ -75,6 +78,7 @@ impl<'a> ObjectWalk<'a> {
             prop,
             origin: self.origin,
             important: self.important,
+            external: self.external,
             file: self.file,
             source: self.source,
             line_index: self.line_index,
@@ -281,6 +285,7 @@ fn handle_known_style_prop(
                 prop: key.to_string(),
                 value: val,
                 important: ctx.important || imp,
+                external: ctx.external,
             });
         }
     }
@@ -332,6 +337,7 @@ mod tests {
             let mut ctx = ObjectWalk {
                 origin: None,
                 important: false,
+                external: false,
                 file: "t.ts",
                 source: Some(code),
                 line_index: None,

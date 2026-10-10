@@ -40,7 +40,7 @@ const spec: AtomicCaseSpec = {
     expect(scoped.tracedJsxHosts ?? []).toEqual(['Card', 'Wrapper'])
     expect(hasWant(scoped, 'mt', '4r')).toBe(true)
     expect(hasWant(scoped, 'mt', '2r')).toBe(true)
-    expect(hasWant(scoped, 'p', '1r')).toBe(false)
+    expect(hasWant(scoped, 'p', '1r')).toBe(true)
     expect(scoped.diagnostics.filter(d => d.severity === 'error')).toEqual([])
   },
 }

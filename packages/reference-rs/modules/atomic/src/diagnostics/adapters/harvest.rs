@@ -15,6 +15,9 @@ pub struct HarvestReport {
     /// Every kind-accepted pool value (pre-twin-skip), in acceptance order.
     /// Proof joins these against final plans; wording never reads them.
     pub offered: Vec<Box<str>>,
+    /// True when the sink sat on an external component block: its offered
+    /// values join against foreign-qualified plans.
+    pub external: bool,
 }
 
 impl From<HarvestReport> for DiagnosticFact {
@@ -25,6 +28,7 @@ impl From<HarvestReport> for DiagnosticFact {
             when: report.when,
             minted: report.minted,
             offered: report.offered,
+            external: report.external,
         }
     }
 }
@@ -46,6 +50,7 @@ mod tests {
             when: vec!["_hover".into()],
             minted: 3,
             offered: vec!["red".into(), "blue".into()],
+            external: false,
         };
         let fact = DiagnosticFact::from(report);
         assert!(matches!(

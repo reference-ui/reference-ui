@@ -24,6 +24,7 @@ pub use facts::{
     FoldDetail, LeafDetail, NameDetail, OwnedLookupKey, ResolveDetail, ResolveOutcome, TokenDetail,
     ValueDetail,
 };
+pub(crate) use facts::target_systems;
 pub use policy::{Audience, Policy};
 pub use render::render;
 pub use session::DiagnosticsSession;

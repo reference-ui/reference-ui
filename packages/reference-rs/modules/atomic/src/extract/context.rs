@@ -323,11 +323,13 @@ impl<'a> ExtractContext<'a> {
         &'b mut self,
         origin: Option<&'b str>,
         important: bool,
+        external: bool,
     ) -> ObjectWalk<'b> {
         self.ensure_line_index();
         ObjectWalk {
             origin,
             important,
+            external,
             file: self.file,
             source: self.source,
             line_index: self.line_index.as_ref(),
@@ -347,11 +349,13 @@ impl<'a> ExtractContext<'a> {
         &'b mut self,
         origin: Option<&'b str>,
         wants: &'b mut Vec<Want>,
+        external: bool,
     ) -> ObjectWalk<'b> {
         self.ensure_line_index();
         ObjectWalk {
             origin,
             important: false,
+            external,
             file: self.file,
             source: self.source,
             line_index: self.line_index.as_ref(),
@@ -372,12 +376,14 @@ impl<'a> ExtractContext<'a> {
         prop: &'b str,
         origin: Option<&'b str>,
         important: bool,
+        external: bool,
     ) -> ExpressionWalk<'b> {
         self.ensure_line_index();
         ExpressionWalk {
             prop,
             origin,
             important,
+            external,
             file: self.file,
             source: self.source,
             line_index: self.line_index.as_ref(),

@@ -31,7 +31,7 @@ pub(super) fn render_fact(
 /// Render one analysis observation through the source catalog.
 fn render_analysis(fact: &DiagnosticFact, catalog: &SourceCatalog) -> Option<Diagnostic> {
     match fact {
-        DiagnosticFact::ExactLookupExpected { site, key } => {
+        DiagnosticFact::ExactLookupExpected { site, key, .. } => {
             let location = catalog.locate(site.source, site.span);
             Some(Policy::render_expected(key, &location))
         }
@@ -89,12 +89,14 @@ fn render_producer(fact: &DiagnosticFact) -> Option<Diagnostic> {
             when,
             minted,
             offered,
+            external,
         } => Some(Policy::render_harvest(&HarvestReport {
             location: location.clone(),
             prop: prop.clone(),
             when: when.clone(),
             minted: *minted,
             offered: offered.clone(),
+            external: *external,
         })),
         _ => None,
     }
@@ -108,6 +110,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         key,
         outcome,
         suggestion,
+        external,
     } = fact
     else {
         return None;
@@ -120,6 +123,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         key: key.clone(),
         outcome: outcome.clone(),
         suggestion: suggestion.clone(),
+        external: *external,
     }))
 }
 

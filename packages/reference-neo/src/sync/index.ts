@@ -121,6 +121,13 @@ interface CompiledSystem {
   request: ScopedCompileRequest
 }
 
+// First-occurrence dedupe, preserving request order: the engine's qualifier
+// list is own-first then this order (extends then layers), so a Set's
+// insertion order is exactly the wire order the engine expects.
+function deduped(names: readonly string[]): string[] {
+  return [...new Set(names)]
+}
+
 // Evaluate-once plus the one native compile: fragments become the spec, the
 // frozen request carries it across the cut, and the engine drains the live
 // scan retention. The finally releases retention when eval or compile throws;
@@ -144,6 +151,22 @@ async function evaluateAndCompile(
     // records what the author asked for: discovery reaches the publish below,
     // never this list.
     const requested = resolveJsxElements(config)
+    // Self excluded: the wire list never carries the consumer's own name; the
+    // engine constructs own-first itself (G0 §E/§F). Each upstream contributes
+    // its transitively-expanded `streams` names (own entry last, per the
+    // published shape), so a system reached only through a nested stream —
+    // icons under lib — still becomes a qualifier; `.name` is the fallback
+    // for hand-authored baseSystems that never carried `streams`. Mirrors the
+    // existing transitive readers (mergeStreams, hasUpstreamContainerRoot).
+    const upstreamSystems = deduped(
+      [...(config.extends ?? []), ...(config.layers ?? [])]
+        .flatMap((system) =>
+          system.streams && system.streams.length > 0
+            ? system.streams.map((stream) => stream.name)
+            : [system.name]
+        )
+        .filter((name) => name !== spec.name)
+    )
     const request = buildCompileRequest({
       spec,
       requested: requested.merged,
@@ -155,6 +178,7 @@ async function evaluateAndCompile(
       upstreamContainerRoot:
         hasUpstreamContainerRoot([...(config.extends ?? []), ...(config.layers ?? [])]) ||
         undefined,
+      upstreamSystems,
     })
     attachScanRetention(request, prepared)
     markPhase('evalEnd')

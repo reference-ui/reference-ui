@@ -33,10 +33,11 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'mb', '-1px')).toBe(true)
     // List-coincidence control still collects.
     expect(hasWant(result, 'mt', '5r')).toBe(true)
-    // Alias-to-untraced negative: Tabs.Plain mints no host, its site is silent.
-    expect(hasWant(result, 'mt', '11r')).toBe(false)
-    expect(getWantsForProp(result, 'mt')).toHaveLength(4)
-    expect(result.wants ?? []).toHaveLength(7)
+    // Alias-to-untraced negative: Tabs.Plain mints no host; its site is still a
+    // capitalized non-host tag, so its prop extracts as an external want.
+    expect(hasWant(result, 'mt', '11r')).toBe(true)
+    expect(getWantsForProp(result, 'mt')).toHaveLength(5)
+    expect(result.wants ?? []).toHaveLength(8)
     expect(result.stylesheet).toContain('mt_3r')
     expect(result.stylesheet).toContain('mt_7r')
     expect(result.stylesheet).toContain('py_5r')

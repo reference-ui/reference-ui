@@ -132,10 +132,11 @@ fn test_arrow_wrapper_prop_threading_emits() {
     assert!(has_last_child_utility(&res), "arrow-threaded css mints the utility");
 }
 
-/// A same-file component that never forwards `css` stays silent: the
-/// wrapper fallback must not turn unknown tags into style positions.
+/// A same-file component that never forwards `css` is not threaded, so under
+/// the external-tag contract (G0 §D/C8) its `css` block extracts as external
+/// wants — never host wants, and never via the wrapper fallback.
 #[test]
-fn test_non_forwarding_wrapper_stays_silent() {
+fn test_non_forwarding_wrapper_is_external_not_host() {
     let res = compile_code(
         r#"
         import { Div } from '@reference-ui/react';
@@ -147,11 +148,11 @@ fn test_non_forwarding_wrapper_stays_silent() {
         "#,
     );
     assert!(
-        res.wants.is_empty(),
-        "non-forwarding wrapper extracts nothing: {:?}",
+        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
+        "non-forwarding wrapper extracts only external wants: {:?}",
         res.wants
             .iter()
-            .map(|w| (&w.prop, w.value.to_string()))
+            .map(|w| (&w.prop, w.value.to_string(), w.external))
             .collect::<Vec<_>>()
     );
 }

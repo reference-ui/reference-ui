@@ -1,8 +1,12 @@
 //! Assembly of the compile's filled sinks into the artifact bundle.
 //! Takes the wants, recipes, diagnostics, and authored declarations that
 //! extraction filled, appends static CSS, then builds the atom set, runtime
-//! plans, stylesheets, and runtime map. The portable sheet shares the printed
-//! suffix and sinks its own system-layer diagnostics so warnings surface once.
+//! plans, stylesheets, and runtime map. Wants partition into own and external
+//! sets by the external marker, both resolved with the consumer `BaseSystem`;
+//! the proof map stays own-only while the utilities layer emits the own group
+//! plus one appended group per foreign qualifier. The portable sheet shares the
+//! printed suffix and sinks its own system-layer diagnostics so warnings
+//! surface once.
 
 use std::collections::BTreeSet;
 
@@ -37,6 +41,25 @@ pub(crate) struct AssembleCtx {
     /// True when an extends/layers upstream's published global CSS already
     /// roots the page: the container-root check stays silent (Addendum B).
     pub(crate) upstream_container_root: bool,
+    /// Upstream system names this compile consumes (extends/layers), in
+    /// authored order; empty for standalone. `finish` turns these into the
+    /// qualifier list `[own, …deduped-minus-own]`.
+    pub(crate) upstream_systems: Vec<String>,
+}
+
+/// Build the composed-system qualifier list: the compiling system first, then
+/// each upstream name in request order, deduped and with the compiling system
+/// removed. Own-first keeps the standalone path's qualifier `[own]`, so the
+/// zero-upstream compile takes the untouched old path.
+pub(crate) fn qualifiers_for(own: &str, upstream: &[String]) -> Vec<String> {
+    let mut qualifiers = Vec::with_capacity(1 + upstream.len());
+    qualifiers.push(own.to_string());
+    for name in upstream {
+        if name != own && !qualifiers.iter().any(|seen| seen == name) {
+            qualifiers.push(name.clone());
+        }
+    }
+    qualifiers
 }
 
 impl AssembleCtx {
@@ -66,8 +89,11 @@ impl AssembleCtx {
             proof,
             selections,
             upstream_container_root,
+            upstream_systems,
         } = self;
-        let mut atom_set = build_atom_set(&wants, system, &mut diagnostics, Some(&mut *sink));
+        let qualifiers = qualifiers_for(&system.name, &upstream_systems);
+        let (mut atom_set, mut external_atom_set) =
+            build_atom_sets(&wants, system, &mut diagnostics, Some(&mut *sink));
         let root_input = resolve::conditions::ContainerRootInput {
             system,
             atoms: &atom_set,
@@ -86,8 +112,14 @@ impl AssembleCtx {
         // On `!proof` the diet path carries placeholder declarations (slim
         // drops plans) plus the canonical keys, skipping render's second
         // serialization; proof restores full plans and the legacy join.
-        let mut plan_builder =
-            runtime::PlanBuilder::new(&system.name, system, &mut atom_set, &mut diagnostics);
+        let mut plan_builder = runtime::PlanBuilder::new(
+            &system.name,
+            system,
+            &mut atom_set,
+            &mut external_atom_set,
+            &qualifiers,
+            &mut diagnostics,
+        );
         let (style_plans, carried_keys) = build_plans(&mut plan_builder, &authored, proof);
         let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
         let runtime = NativeRuntimeArtifact {
@@ -97,13 +129,17 @@ impl AssembleCtx {
             style_prop_names: runtime::get_style_prop_names(),
         };
 
-        let atom_count = atom_set.len();
+        // Own + external atoms both count (G0 D6/§J); the proof css map stays
+        // own-only while the sheets group foreign rules per qualifier (T04).
+        let atom_count = atom_set.len() + external_atom_set.len();
         let css = proof.then(|| build_css_runtime(&atom_set, &system.name));
         // Dual-sheet build shares one recipes+utilities suffix; the portable
         // diagnostics sink here so global warnings surface once, as before.
         let mut portable_sink = Vec::new();
         let (streams, stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
             &atom_set,
+            &external_atom_set,
+            &qualifiers,
             system,
             &compiled_recipes,
             stylesheet::StylesheetSinks {
@@ -128,12 +164,14 @@ impl AssembleCtx {
             Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
                 sink.facts(),
                 emitted,
+                &qualifiers,
                 &system.name,
                 &mut diagnostics,
             ),
             None => crate::diagnostics::proof::render::render_session(
                 sink.facts(),
                 &style_plans,
+                &qualifiers,
                 &system.name,
                 &mut diagnostics,
             ),
@@ -173,9 +211,27 @@ fn build_plans(
     }
 }
 
-/// Resolve every want into the compile's atom set, reporting resolve facts.
-fn build_atom_set(
+/// Partition wants by the external marker, then resolve each partition into
+/// its own atom set with the consumer `BaseSystem`. Every want resolves with
+/// the same system; the partition only decides which set an atom lands in.
+/// The pooled guard runs per partition, so an empty external partition makes
+/// the own decision byte-identical to the pre-partition single-set call.
+fn build_atom_sets(
     wants: &[crate::atom::Want],
+    system: &BaseSystem,
+    diagnostics: &mut Vec<Diagnostic>,
+    mut sink: Option<&mut DiagnosticsSession>,
+) -> (AtomSet, AtomSet) {
+    let (own_wants, external_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
+        wants.iter().partition(|want| !want.external);
+    let own = build_atom_set(&own_wants, system, diagnostics, sink.as_deref_mut());
+    let external = build_atom_set(&external_wants, system, diagnostics, sink.as_deref_mut());
+    (own, external)
+}
+
+/// Resolve one partition's wants into an atom set, reporting resolve facts.
+fn build_atom_set(
+    wants: &[&crate::atom::Want],
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     mut sink: Option<&mut DiagnosticsSession>,
@@ -191,7 +247,7 @@ fn build_atom_set(
         sink,
         want: None,
     };
-    for want in wants {
+    for &want in wants {
         for atom in resolve::resolve_want_with(want, &mut session) {
             atom_set.insert(atom);
         }
@@ -199,10 +255,10 @@ fn build_atom_set(
     atom_set
 }
 
-/// Resolve every want on the tail pool, committing atoms in input order.
-/// Returns `None` when the lane guard declines so the caller runs serial.
+/// Resolve one partition's wants on the tail pool, committing atoms in input
+/// order. Returns `None` when the lane guard declines so the caller runs serial.
 fn build_atom_set_pooled(
-    wants: &[crate::atom::Want],
+    wants: &[&crate::atom::Want],
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     sink: &mut Option<&mut DiagnosticsSession>,
@@ -290,4 +346,151 @@ fn build_css_runtime(atom_set: &AtomSet, system: &str) -> runtime::CssRuntime {
         runtime.insert(key, c_name);
     }
     runtime
+}
+
+#[cfg(test)]
+mod tests {
+    use super::qualifiers_for;
+    use crate::diagnostics::DiagnosticCode;
+    use crate::{compile, BaseSystem, CompileRequest, VirtualSource};
+
+    #[test]
+    fn qualifiers_are_own_first_deduped_and_minus_own() {
+        let upstream = vec![
+            "@reference-ui/lib".to_string(),
+            "bench".to_string(),
+            "@reference-ui/lib".to_string(),
+            "own".to_string(),
+        ];
+        assert_eq!(
+            qualifiers_for("own", &upstream),
+            vec!["own", "@reference-ui/lib", "bench"]
+        );
+    }
+
+    #[test]
+    fn qualifiers_solo_own_when_standalone() {
+        assert_eq!(qualifiers_for("own", &[]), vec!["own"]);
+    }
+
+    fn compile_props(upstream: Vec<String>) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource {
+                path: "test.tsx".into(),
+                content: "import { Div } from '@reference-ui/react';\
+                          export const a = <Div mt=\"2r\" />;\
+                          export const b = <BoltIcon color=\"red\" />;"
+                    .into(),
+            }]),
+            base_system: BaseSystem::lib_fixture().clone(),
+            upstream_systems: upstream,
+            logs: Some(vec!["proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    fn compile_code(code: &str, upstream: Vec<String>) -> crate::CompileResult {
+        let req = CompileRequest {
+            files: Some(vec![VirtualSource {
+                path: "test.tsx".into(),
+                content: code.into(),
+            }]),
+            base_system: BaseSystem::lib_fixture().clone(),
+            upstream_systems: upstream,
+            logs: Some(vec!["proof".to_string()]),
+            ..Default::default()
+        };
+        compile(&req).expect("compile succeeds")
+    }
+
+    #[test]
+    fn external_decl_expands_one_plan_per_foreign_qualifier() {
+        let res = compile_props(vec!["@reference-ui/icons".to_string()]);
+        // Own declaration keeps exactly one plan on the own system.
+        let own: Vec<_> = res.style_plans.iter().filter(|plan| plan.prop == "mt").collect();
+        assert_eq!(own.len(), 1, "{:?}", res.style_plans);
+        assert_eq!(own[0].system, "@reference-ui/lib");
+        // External declaration takes one plan on the foreign qualifier.
+        let external: Vec<_> = res
+            .style_plans
+            .iter()
+            .filter(|plan| plan.prop == "color")
+            .collect();
+        assert_eq!(external.len(), 1, "{:?}", res.style_plans);
+        assert_eq!(external[0].system, "@reference-ui/icons");
+        assert_eq!(
+            external[0].declarations[0].class_name,
+            "@reference-ui/icons__c_red"
+        );
+        // The proof css map stays own-only: the external class is not indexed.
+        let css = res.css.expect("proof css map");
+        assert_eq!(
+            css.classes.get("color:red"),
+            None,
+            "external atom stays out of the own css map"
+        );
+        // atom_count counts both partitions.
+        assert_eq!(res.atom_count, 2);
+    }
+
+    #[test]
+    fn external_decl_needs_a_foreign_qualifier_to_plan() {
+        let res = compile_props(Vec::new());
+        assert!(
+            res.style_plans.iter().all(|plan| plan.prop != "color"),
+            "no foreign qualifier means no external plan: {:?}",
+            res.style_plans
+        );
+        // The external atom still resolves and counts.
+        assert_eq!(res.atom_count, 2);
+    }
+
+    /// A covered external expectation is silent: analysis predicts the
+    /// foreign-qualified key and the foreign plan backs it, so the S4 join
+    /// proves nothing absent.
+    #[test]
+    fn covered_external_expectation_is_silent() {
+        let res = compile_props(vec!["@reference-ui/icons".to_string()]);
+        assert!(
+            res.diagnostics.is_empty(),
+            "covered external key stays silent: {:?}",
+            res.diagnostics
+        );
+        assert!(
+            res.style_plans
+                .iter()
+                .any(|plan| plan.prop == "color" && plan.system == "@reference-ui/icons"),
+            "the foreign plan is present: {:?}",
+            res.style_plans
+        );
+    }
+
+    /// A missing external key warns once: the external rejection joins the
+    /// foreign-qualified expectation (no double-warn from a causeless miss).
+    #[test]
+    fn missing_external_key_warns_once() {
+        let res = compile_code(
+            "import { Div } from '@reference-ui/react';\
+             export const el = <BoltIcon _nope={{ color: 'red' }} />;",
+            vec!["@reference-ui/icons".to_string()],
+        );
+        let misses: Vec<_> = res
+            .diagnostics
+            .iter()
+            .filter(|diag| {
+                matches!(
+                    diag.code,
+                    DiagnosticCode::UnknownCondition | DiagnosticCode::MissingStylePlan
+                )
+            })
+            .collect();
+        assert_eq!(
+            misses.len(),
+            1,
+            "exactly one miss warning, not a double-warn: {:?}",
+            res.diagnostics
+        );
+        assert_eq!(misses[0].code, DiagnosticCode::UnknownCondition);
+    }
 }

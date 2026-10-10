@@ -104,7 +104,9 @@ impl StylesheetStreams {
 /// once; each pass still runs against its own sink so diagnostics land exactly
 /// where the sequential build put them.
 pub fn build_stylesheet_streams(
-    atom_set: &AtomSet,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     sinks: StylesheetSinks<'_>,
@@ -137,7 +139,7 @@ pub fn build_stylesheet_streams(
         tokens,
         tokens_portable,
         recipes: recipes_layer(recipes),
-        utilities: utilities_layer(atom_set, &system.name),
+        utilities: utilities_layer(own, external, qualifiers),
         package: system.name.clone(),
     }
 }
@@ -149,16 +151,20 @@ fn recipes_layer(recipes: &[CompiledRecipe]) -> String {
     out
 }
 
-/// Capture `@layer utilities {…}`; empty when the atom set is empty.
-fn utilities_layer(atom_set: &AtomSet, system: &str) -> String {
-    let mut out = String::with_capacity(utilities_capacity(atom_set));
-    super::append_utilities_layer(&mut out, atom_set, system);
+/// Capture `@layer utilities {…}`; empty when nothing would print (no own rule
+/// and no foreign group).
+fn utilities_layer(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> String {
+    let mut out = String::with_capacity(utilities_capacity(own, external, qualifiers));
+    super::append_utilities_layer(&mut out, own, external, qualifiers);
     out
 }
 
-/// Pre-size the utilities buffer: ~128 bytes per rule covers the selector,
-/// declaration, indent, and wrap lines with room to spare, so the pushes
-/// below never regrow. Overshoot is one transient allocation.
-fn utilities_capacity(atom_set: &AtomSet) -> usize {
-    atom_set.len().saturating_mul(128).saturating_add(1024)
+/// Pre-size the utilities buffer: the own rules once plus the external rules
+/// once per foreign qualifier, ~128 bytes per rule covering selector,
+/// declaration, indent, and wrap lines with room to spare, so the pushes below
+/// never regrow. Overshoot is one transient allocation.
+fn utilities_capacity(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> usize {
+    let foreign = qualifiers.len().saturating_sub(1);
+    let rules = own.len().saturating_add(external.len().saturating_mul(foreign));
+    rules.saturating_mul(128).saturating_add(1024)
 }

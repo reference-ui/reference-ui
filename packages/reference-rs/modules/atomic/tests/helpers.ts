@@ -216,6 +216,18 @@ function namerIsInjective(result: CompileResult, context: StationContext): void 
     ).not.toBe(atoms)
     return
   }
+  // Fan-out partition (G0 §J/D6): external wants resolve but stay out of the
+  // own css map until grouped emission, while `atomCount` counts own + external.
+  // The strict coverage identity holds only when no external want is present;
+  // otherwise every emitted (own) class name must still be distinct.
+  const hasExternal = (result.wants ?? []).some(want => want.external === true)
+  if (hasExternal) {
+    expect(
+      distinct,
+      `${owner}: emitted class names collide (${distinct} distinct of ${names.length})`
+    ).toBe(names.length)
+    return
+  }
   expect(distinct, `${owner}: ${atoms} atoms but ${distinct} class names`).toBe(atoms)
 }
 

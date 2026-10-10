@@ -170,3 +170,98 @@ fn dual_at_rules_nest_in_author_order() {
         "inner container dropped: {css}"
     );
 }
+
+fn grouped_sheet(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> String {
+    let mut out = String::new();
+    write_utilities_grouped(&mut out, own, external, qualifiers);
+    out
+}
+
+/// Oracle (G0 §K/T04): an empty external set reprints the flat `write_utilities`
+/// bytes exactly, so the default path cannot drift.
+#[test]
+fn grouped_empty_external_is_byte_identical_to_flat_write_utilities() {
+    let mut set = AtomSet::new();
+    for atom in [
+        atom("color", "red", &[]),
+        atom("padding", "2r", &["@container (min-width: 640px)"]),
+        atom("marginTop", "4r", &["_hover"]),
+        atom("display", "flex", &[]),
+    ] {
+        set.insert(atom);
+    }
+    let system = "@reference-ui/lib";
+    let mut flat = String::new();
+    write_utilities(&mut flat, &set, system);
+    let grouped = grouped_sheet(&set, &AtomSet::new(), &[system.to_string()]);
+    assert_eq!(grouped, flat, "empty external must reprint the flat bytes");
+}
+
+/// Grouped emission: own first, then one appended group per foreign qualifier,
+/// each carrying the whole external set under `SelectorPrefix::for_system(q)`.
+#[test]
+fn grouped_emits_own_then_one_group_per_foreign_qualifier() {
+    let own_color = atom("color", "red", &[]);
+    let own_display = atom("display", "flex", &[]);
+    let ext_pad = atom("padding", "2r", &[]);
+    let ext_mt = atom("marginTop", "1r", &["_hover"]);
+
+    let mut own = AtomSet::new();
+    own.insert(own_color.clone());
+    own.insert(own_display);
+    let mut external = AtomSet::new();
+    external.insert(ext_pad.clone());
+    external.insert(ext_mt.clone());
+
+    let qualifiers = vec!["lib".to_string(), "alpha".to_string(), "beta".to_string()];
+    let css = grouped_sheet(&own, &external, &qualifiers);
+
+    let own_sel = name::selector_with_system(&own_color, "lib");
+    let alpha_sel = name::selector_with_system(&ext_pad, "alpha");
+    let beta_sel = name::selector_with_system(&ext_pad, "beta");
+    let own_at = css.find(&own_sel).expect("own rule");
+    let alpha_at = css.find(&alpha_sel).expect("alpha rule");
+    let beta_at = css.find(&beta_sel).expect("beta rule");
+    assert!(own_at < alpha_at, "own group precedes foreign:\n{css}");
+    assert!(alpha_at < beta_at, "qualifier order:\n{css}");
+
+    for qualifier in ["alpha", "beta"] {
+        let pad = name::selector_with_system(&ext_pad, qualifier);
+        let mt = name::selector_with_system(&ext_mt, qualifier);
+        assert_eq!(css.matches(&pad).count(), 1, "one pad rule for {qualifier}");
+        assert_eq!(css.matches(&mt).count(), 1, "one mt rule for {qualifier}");
+    }
+    assert_eq!(css.matches(&own_sel).count(), 1, "own rule prints once");
+    assert_eq!(
+        css.matches(&name::selector_with_system(&ext_pad, "lib"))
+            .count(),
+        0,
+        "external never rides the own prefix"
+    );
+}
+
+/// Foreign groups carry open/close sentinels so a downstream compose can strip
+/// them wholesale; the empty-external path emits no marker bytes (byte-identity).
+#[test]
+fn grouped_foreign_groups_are_sentinel_delimited() {
+    let own_color = atom("color", "red", &[]);
+    let ext_pad = atom("padding", "2r", &[]);
+    let mut own = AtomSet::new();
+    own.insert(own_color);
+    let mut external = AtomSet::new();
+    external.insert(ext_pad.clone());
+
+    let qualifiers = vec!["lib".to_string(), "alpha".to_string()];
+    let css = grouped_sheet(&own, &external, &qualifiers);
+    assert!(css.contains("  /* foreign alpha */\n"), "{css}");
+    assert!(css.contains("  /* end foreign alpha */\n"), "{css}");
+
+    let open = css.find("/* foreign alpha */").expect("open marker");
+    let close = css.find("/* end foreign alpha */").expect("close marker");
+    let pad = name::selector_with_system(&ext_pad, "alpha");
+    let pad_at = css.find(&pad).expect("alpha rule");
+    assert!(open < pad_at && pad_at < close, "rule inside markers:\n{css}");
+
+    let flat = grouped_sheet(&own, &AtomSet::new(), &["lib".to_string()]);
+    assert!(!flat.contains("/* foreign"), "no markers without external:\n{flat}");
+}

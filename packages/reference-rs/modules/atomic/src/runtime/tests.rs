@@ -32,25 +32,36 @@ fn test_build_runtime_style_plans_macro() {
             prop: "color".to_string(),
             value: json!("blue.500"),
             important: false,
+            external: false,
         },
         AuthoredDeclaration {
             when: vec!["_hover".to_string()],
             prop: "color".to_string(),
             value: json!("red.500"),
             important: false,
+            external: false,
         },
         AuthoredDeclaration {
             when: vec![],
             prop: "p".to_string(),
             value: json!("2"),
             important: false,
+            external: false,
         },
     ];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 3);
@@ -91,8 +102,17 @@ fn test_build_runtime_style_plans_dimensional_shorthand() {
         prop: "padding".to_string(),
         value: json!("1r 2r"),
         important: false,
+        external: false,
     }];
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let dim_plans = builder.build(&dimensional_decls);
     let slots: Vec<&str> = dim_plans[0]
         .declarations
@@ -113,12 +133,21 @@ fn test_build_runtime_style_plans_responsive_array() {
         prop: "padding".to_string(),
         value: json!(["1", null, "4"]),
         important: false,
+        external: false,
     }];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);
@@ -137,12 +166,21 @@ fn test_build_runtime_style_plans_responsive_object() {
         prop: "width".to_string(),
         value: json!({"base": "50px", "md": "60px"}),
         important: false,
+        external: false,
     }];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);
@@ -167,12 +205,21 @@ fn test_responsive_object_condition_key_matches_nested_slot() {
         prop: "width".to_string(),
         value: json!({"_hover": "50px"}),
         important: false,
+        external: false,
     }];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);
@@ -189,12 +236,21 @@ fn test_responsive_object_unknown_key_warns_and_skips() {
         prop: "width".to_string(),
         value: json!({"base": "51px", "wat": "61px"}),
         important: false,
+        external: false,
     }];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);
@@ -224,12 +280,21 @@ fn test_resolve_object_keeps_author_order_reverse_alpha() {
         prop: "width".to_string(),
         value: json!({"md": "2r", "base": "1r"}),
         important: false,
+        external: false,
     }];
 
     let mut atom_set = crate::atom::AtomSet::new();
     let mut diagnostics = Vec::new();
 
-    let mut builder = PlanBuilder::new("lib-test-system", system, &mut atom_set, &mut diagnostics);
+    let mut external_atom_set = crate::atom::AtomSet::new();
+    let mut builder = PlanBuilder::new(
+        "lib-test-system",
+        system,
+        &mut atom_set,
+        &mut external_atom_set,
+        &[],
+        &mut diagnostics,
+    );
     let plans = builder.build(&decls);
 
     assert_eq!(plans.len(), 1);

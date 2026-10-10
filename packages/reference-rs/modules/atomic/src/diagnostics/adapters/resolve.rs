@@ -16,6 +16,9 @@ pub struct ResolveReport {
     pub key: Option<OwnedLookupKey>,
     pub outcome: ResolveOutcome,
     pub suggestion: Option<Box<str>>,
+    /// True when the rejected declaration sat on an external component
+    /// block: its key joins against foreign-qualified plans.
+    pub external: bool,
 }
 
 impl From<ResolveReport> for DiagnosticFact {
@@ -25,6 +28,7 @@ impl From<ResolveReport> for DiagnosticFact {
             key: report.key,
             outcome: report.outcome,
             suggestion: report.suggestion,
+            external: report.external,
         }
     }
 }
@@ -48,6 +52,7 @@ mod tests {
                 )),
             },
             suggestion: Some("_hover".into()),
+            external: false,
         };
         let fact = DiagnosticFact::from(report);
         let DiagnosticFact::ResolveOutcome { outcome, suggestion, .. } = fact else {

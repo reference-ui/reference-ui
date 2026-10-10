@@ -2,8 +2,10 @@
 //! file-local component imports plus the traced and configured host names,
 //! then lowers every style-bearing attribute: literals predict exact lookups,
 //! `css` and condition blocks walk, and dynamic shapes become dynamic-slot
-//! facts. Native `style` is excluded: it never uses the runtime style-plan
-//! lookup. Unknown tags and DOM attributes emit nothing.
+//! facts. A capitalized non-host tag is an external component: its block is
+//! marked external and its exact keys target the composed foreign qualifiers
+//! only. Native `style` is excluded: it never uses the runtime style-plan
+//! lookup. Lowercase DOM tags and attributes emit nothing.
 
 use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -46,6 +48,7 @@ pub fn expectations(
         facts: Vec::new(),
         source: source_id,
         system: ctx.system,
+        qualifiers: ctx.qualifiers,
         style_props: &ctx.style_props,
         constants: ctx.constants,
         hosts: &ctx.hosts,
@@ -126,6 +129,7 @@ struct JsxVisitor<'a, 'b> {
     facts: Vec<DiagnosticFact>,
     source: SourceId,
     system: &'a str,
+    qualifiers: &'a [String],
     style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
     hosts: &'a FxHashSet<String>,
@@ -145,12 +149,16 @@ struct JsxVisitor<'a, 'b> {
 
 impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// The shared walk context over this visitor's facts and name truth.
-    fn walk_ctx(&mut self) -> WalkCtx<'_> {
+    /// `external` is the per-block tag verdict: the `css()` surface is always
+    /// own, but a JSX host is own and a capitalized non-host is external.
+    fn walk_ctx(&mut self, external: bool) -> WalkCtx<'_> {
         WalkCtx {
             facts: &mut self.facts,
             source: self.source,
             surface: StyleSurfaceKind::JsxStyle,
             system: self.system,
+            external,
+            qualifiers: self.qualifiers,
             style_props: self.style_props,
             constants: self.constants,
             shadows: &self.shadows,
@@ -251,17 +259,34 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         self.bindings.jsx.contains(value) || self.hosts.contains(value)
     }
 
-    /// Lower one opening element's attributes when the tag is a host.
+    /// Resolve the tag to its block verdict: `Some(false)` when the tag is a
+    /// StyleProps host, `Some(true)` when it is a capitalized external
+    /// component, `None` when it is dropped. Host membership decides first;
+    /// then a capital tag becomes external only once the host graph resolved
+    /// (a file-local import or a traced/configured host), mirroring the
+    /// extract gate's missing-graph guard so no phantom expectations arise.
+    fn tag_site(&self, tag: &str) -> Option<bool> {
+        if self.allows_tag(tag) {
+            return Some(false);
+        }
+        let graph_resolved = !self.bindings.jsx.is_empty() || !self.hosts.is_empty();
+        if graph_resolved && crate::extract::jsx::is_external_tag(tag) {
+            return Some(true);
+        }
+        None
+    }
+
+    /// Lower one opening element's attributes when the tag is admitted.
     fn handle_opening(&mut self, elem: &JSXOpeningElement<'_>) {
         let tag = format_element_name(&elem.name);
-        if !self.allows_tag(&tag) {
+        let Some(external) = self.tag_site(&tag) else {
             return;
-        }
+        };
         for item in &elem.attributes {
             match item {
-                JSXAttributeItem::Attribute(attr) => self.handle_attr(&tag, attr),
+                JSXAttributeItem::Attribute(attr) => self.handle_attr(&tag, external, attr),
                 JSXAttributeItem::SpreadAttribute(spread) => {
-                    self.handle_spread(&tag, &spread.argument, spread.span);
+                    self.handle_spread(&tag, external, &spread.argument, spread.span);
                 }
             }
         }
@@ -269,7 +294,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
 
     /// Lower one attribute: gated names map to inputs, element values and
     /// empty containers emit nothing (they never query).
-    fn handle_attr(&mut self, tag: &str, attr: &oxc_ast::ast::JSXAttribute<'_>) {
+    fn handle_attr(&mut self, tag: &str, external: bool, attr: &oxc_ast::ast::JSXAttribute<'_>) {
         let name = format_attribute_name(&attr.name);
         let gate = AttrGate {
             tag,
@@ -279,13 +304,13 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             return;
         }
         let Some(value) = &attr.value else {
-            walk_attr_input(&mut self.walk_ctx(), &name, AttrInput::Bare, attr.span);
+            walk_attr_input(&mut self.walk_ctx(external), &name, AttrInput::Bare, attr.span);
             return;
         };
         match value {
             JSXAttributeValue::StringLiteral(lit) => {
                 walk_attr_input(
-                    &mut self.walk_ctx(),
+                    &mut self.walk_ctx(external),
                     &name,
                     AttrInput::Text(lit.value.as_str()),
                     lit.span,
@@ -294,7 +319,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             JSXAttributeValue::ExpressionContainer(container) => {
                 if let Some(expr) = container.expression.as_expression() {
                     walk_attr_input(
-                        &mut self.walk_ctx(),
+                        &mut self.walk_ctx(external),
                         &name,
                         AttrInput::Expr(expr),
                         container.span,
@@ -308,33 +333,39 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// Lower one spread attribute: inline objects walk as bags, const
     /// objects unfold, const scalars and arrays vanish, and anything else
     /// stays a dynamic spread.
-    fn handle_spread(&mut self, tag: &str, arg: &Expression<'_>, span: Span) {
+    fn handle_spread(&mut self, tag: &str, external: bool, arg: &Expression<'_>, span: Span) {
         let gate = AttrGate {
             tag,
             owned: self.owned,
         };
         let arg = super::values::unwrap_value(arg);
         if let Expression::ObjectExpression(obj) = arg {
-            walk_bag_object(&mut self.walk_ctx(), &gate, obj);
+            walk_bag_object(&mut self.walk_ctx(external), &gate, obj);
             return;
         }
         if let Expression::Identifier(ident) = arg {
-            if self.handle_bag_ident(&gate, ident.name.as_str(), span) {
+            if self.handle_bag_ident(external, &gate, ident.name.as_str(), span) {
                 return;
             }
         }
-        self.walk_ctx()
+        self.walk_ctx(external)
             .dynamic(Site::bare(span, &[]), DynamicShape::Spread);
     }
 
     /// Lower one identifier spread from the const recording. True when the
     /// name resolved; false stays a dynamic spread.
-    fn handle_bag_ident(&mut self, gate: &AttrGate<'_>, name: &str, span: Span) -> bool {
+    fn handle_bag_ident(
+        &mut self,
+        external: bool,
+        gate: &AttrGate<'_>,
+        name: &str,
+        span: Span,
+    ) -> bool {
         if is_shadowed(&self.shadows, name) || self.constants.mutation(name).is_some() {
             return false;
         }
         if let Some(obj) = self.constants.get_object(name) {
-            walk_const_attrs(&mut self.walk_ctx(), gate, obj, Site::bare(span, &[]));
+            walk_const_attrs(&mut self.walk_ctx(external), gate, obj, Site::bare(span, &[]));
             return true;
         }
         if self.constants.get_array(name).is_some() {

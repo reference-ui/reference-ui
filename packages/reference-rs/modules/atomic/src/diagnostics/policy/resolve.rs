@@ -194,6 +194,7 @@ mod tests {
             key: None,
             outcome,
             suggestion,
+            external: false,
         }
     }
 

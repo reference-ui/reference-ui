@@ -113,8 +113,78 @@ fn push_escaped_value(out: &mut String, value: &str) {
 /// `{system}__{stem}` segment as runtime plan class names so every plan
 /// declaration matches a stylesheet rule.
 pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str) {
-    let mut ranks: FxHashMap<&str, u8> = FxHashMap::default();
-    let mut ranked: Vec<(&Atom, CascadeKey<'_>)> = atom_set
+    let prefix = name::SelectorPrefix::for_system(system);
+    write_ranked(out, atom_set, &prefix);
+}
+
+/// Emit the own group, then one delimited group per foreign qualifier.
+///
+/// `qualifiers` is own-first: `qualifiers[0]` is the compiling system, so the own
+/// group is byte-identical to a flat `write_utilities` call by construction. An
+/// empty external set short-circuits to that flat path, so no-external bytes are
+/// untouched. Otherwise the external set is ranked **once** and replayed under
+/// each foreign qualifier's `SelectorPrefix`; the groups are N, one per
+/// qualifier, each wrapped in `/* foreign <q> */` … `/* end foreign <q> */`
+/// markers. The markers let a downstream compose strip a foreign group whole:
+/// foreign rules are consumer-local (resolved with the consumer's tokens), so a
+/// published entry must contribute own-qualified rules only. A foreign group is
+/// uniformly non-empty whenever the external set is, so there is no per-group
+/// emptiness check.
+pub(crate) fn write_utilities_grouped(
+    out: &mut String,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
+) {
+    debug_assert!(
+        !qualifiers.is_empty(),
+        "grouped emission requires an own-first qualifier list"
+    );
+    if external.is_empty() {
+        return write_utilities(out, own, &qualifiers[0]);
+    }
+    write_ranked(out, own, &name::SelectorPrefix::for_system(&qualifiers[0]));
+    let ranked = rank_atoms(external);
+    for qualifier in qualifiers.iter().skip(1) {
+        write_foreign_group(out, &ranked, qualifier);
+    }
+}
+
+/// One foreign qualifier's ranked rules bounded by open/close sentinels. The
+/// markers are the only bytes distinguishing a grouped build from the flat own
+/// path, and they exist solely to be removed at composition.
+fn write_foreign_group(
+    out: &mut String,
+    ranked: &[(&Atom, CascadeKey<'_>)],
+    qualifier: &str,
+) {
+    push_foreign_marker(out, "foreign", qualifier);
+    write_groups(out, ranked, &name::SelectorPrefix::for_system(qualifier));
+    push_foreign_marker(out, "end foreign", qualifier);
+}
+
+/// `  /* <label> <q> */` on its own line, indented to the utilities rules.
+fn push_foreign_marker(out: &mut String, label: &str, qualifier: &str) {
+    out.push_str("  /* ");
+    out.push_str(label);
+    out.push(' ');
+    out.push_str(qualifier);
+    out.push_str(" */\n");
+}
+
+/// The one shared sort+group writer: rank `atom_set`, then print its at-rule
+/// groups under `prefix`. Flat and grouped emission both funnel through it, so a
+/// grouped own group is structurally the flat owner's bytes.
+fn write_ranked(out: &mut String, atom_set: &AtomSet, prefix: &name::SelectorPrefix) {
+    let ranked = rank_atoms(atom_set);
+    write_groups(out, &ranked, prefix);
+}
+
+/// Rank every atom in `atom_set` by `CascadeKey`, with the authored-when
+/// tiebreak. Grouped emission ranks the external set once and replays it.
+fn rank_atoms<'a>(atom_set: &'a AtomSet) -> Vec<(&'a Atom, CascadeKey<'a>)> {
+    let mut ranks: FxHashMap<&'a str, u8> = FxHashMap::default();
+    let mut ranked: Vec<(&'a Atom, CascadeKey<'a>)> = atom_set
         .iter()
         .map(|atom| (atom, CascadeKey::from_atom_cached(atom, &mut ranks)))
         .collect();
@@ -122,8 +192,7 @@ pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str
         a.1.cmp(&b.1)
             .then_with(|| cmp_whens(a.0.conditions(), b.0.conditions()))
     });
-    let prefix = name::SelectorPrefix::for_system(system);
-    write_groups(out, &ranked, &prefix);
+    ranked
 }
 
 impl<'a> CascadeKey<'a> {

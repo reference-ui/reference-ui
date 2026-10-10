@@ -4,7 +4,8 @@
 //! and closed recipe classes. Recipe at-rules nest the same wrap sequence as utilities.
 
 use super::cascade::{
-    at_rule_wraps, close_wraps, format_declaration, open_wraps, push_indent, write_utilities,
+    at_rule_wraps, close_wraps, format_declaration, open_wraps, push_indent,
+    write_utilities_grouped,
 };
 use super::layers::{wrap_package_layer, LAYER_PREAMBLE};
 
@@ -32,16 +33,30 @@ pub fn build_stylesheet(
     system: &BaseSystem,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> String {
-    build_stylesheet_with(atom_set, system, &[], diagnostics)
+    let qualifiers = [system.name.clone()];
+    build_stylesheet_with(
+        atom_set,
+        &AtomSet::new(),
+        &qualifiers,
+        system,
+        &[],
+        diagnostics,
+    )
 }
 
-/// Same as `build_stylesheet`, with closed recipe classes in `@layer recipes`.
+/// Same as `build_stylesheet`, with closed recipe classes in `@layer recipes`
+/// and grouped foreign utility rules for the `external` set.
+///
+/// `qualifiers` is own-first (`qualifiers[0]` is `system.name`); an empty
+/// `external` set reprints the flat single-set bytes exactly.
 ///
 /// Named systems nest the six layers inside their package layer so composed
 /// output keeps utilities above global; unnamed systems stay flat. Both shapes
 /// open with the baked root default ahead of the wrap, the lowest layer.
 pub fn build_stylesheet_with(
-    atom_set: &AtomSet,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
@@ -49,13 +64,15 @@ pub fn build_stylesheet_with(
     let mut inner = LAYER_PREAMBLE.to_string();
     append_system_layers(&mut inner, system, diagnostics);
     append_recipes_layer(&mut inner, recipes);
-    append_utilities_layer(&mut inner, atom_set, &system.name);
+    append_utilities_layer(&mut inner, own, external, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))
 }
 
 /// Same as `build_stylesheet_with`, with portable [data-layer] token selectors.
 pub fn build_portable_stylesheet_with(
-    atom_set: &AtomSet,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
@@ -63,7 +80,7 @@ pub fn build_portable_stylesheet_with(
     let mut inner = LAYER_PREAMBLE.to_string();
     append_portable_system_layers(&mut inner, system, diagnostics);
     append_recipes_layer(&mut inner, recipes);
-    append_utilities_layer(&mut inner, atom_set, &system.name);
+    append_utilities_layer(&mut inner, own, external, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))
 }
 
@@ -89,23 +106,33 @@ pub struct StylesheetSinks<'a> {
 /// stay byte-identical to the paired single builds. Returns the streams first:
 /// S2 ships them verbatim alongside the joined sheets as the oracle channel.
 pub fn build_stylesheets_with(
-    atom_set: &AtomSet,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
     system: &BaseSystem,
     recipes: &[CompiledRecipe],
     sinks: StylesheetSinks<'_>,
 ) -> (StylesheetStreams, String, String) {
-    let streams = build_stylesheet_streams(atom_set, system, recipes, sinks);
+    let streams = build_stylesheet_streams(own, external, qualifiers, system, recipes, sinks);
     let sheet = streams.stylesheet();
     let portable = streams.portable_stylesheet();
     (streams, sheet, portable)
 }
 
-fn append_utilities_layer(out: &mut String, atom_set: &AtomSet, system: &str) {
-    if atom_set.is_empty() {
+fn append_utilities_layer(
+    out: &mut String,
+    own: &AtomSet,
+    external: &AtomSet,
+    qualifiers: &[String],
+) {
+    // A foreign set only prints under a foreign qualifier; with an empty own set
+    // and no foreign qualifier the layer would be an empty block, so skip it.
+    let prints_foreign = !external.is_empty() && qualifiers.len() > 1;
+    if own.is_empty() && !prints_foreign {
         return;
     }
     out.push_str("@layer utilities {\n");
-    write_utilities(out, atom_set, system);
+    write_utilities_grouped(out, own, external, qualifiers);
     out.push_str("}\n");
 }
 

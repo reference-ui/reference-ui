@@ -41,6 +41,7 @@ mod tests {
             when: when.iter().map(|part| (*part).into()).collect(),
             minted,
             offered: Vec::new(),
+            external: false,
         }
     }
 

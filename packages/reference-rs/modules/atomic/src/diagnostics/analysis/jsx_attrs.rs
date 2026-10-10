@@ -346,6 +346,8 @@ mod tests {
             source: SourceId(0),
             surface: StyleSurfaceKind::JsxStyle,
             system: "test",
+            external: false,
+            qualifiers: &[],
             style_props: &style_props,
             constants: &constants,
             shadows: &shadows,

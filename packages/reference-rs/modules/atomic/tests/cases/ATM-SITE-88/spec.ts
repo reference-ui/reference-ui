@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'minW', '40r')).toBe(true)
     expect(hasWant(result, 'bg', 'red')).toBe(true)
     expect(hasWant(result, 'mt', '2r')).toBe(true)
-    expect(hasWant(result, 'p', '4r')).toBe(false)
+    expect(hasWant(result, 'p', '4r')).toBe(true)
 
     expect(result.css?.classes?.['minW:40r']).toBe(`${SYSTEM}__min-w_40r`)
     expect(result.css?.classes?.['bg:red']).toBe(`${SYSTEM}__bg_red`)

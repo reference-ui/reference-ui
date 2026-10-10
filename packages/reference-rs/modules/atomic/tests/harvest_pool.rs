@@ -216,6 +216,7 @@ fn build_sinks() -> Vec<Sink> {
             line: None,
             column: None,
             span: None,
+            external: false,
         };
         assert!(Sink::for_site(site).is_none(), "{prop} records no sink");
     }
@@ -231,6 +232,7 @@ fn build_sinks() -> Vec<Sink> {
                 line: None,
                 column: None,
                 span: None,
+                external: false,
             };
             Sink::for_site(site).expect("designed hole records a sink")
         })

@@ -95,6 +95,7 @@ pub fn mint(ctx: MintCtx<'_>) {
             when: sink.when.iter().cloned().collect(),
             minted: minted.count,
             offered: minted.offered,
+            external: sink.external,
         };
         let diagnostic = Policy::render_harvest(&report);
         session.report(DiagnosticFact::from(report));
@@ -146,7 +147,13 @@ fn mint_sink(
                 continue;
             }
             minted.offered.push(value.clone());
-            let twin = (canonical.into(), value.clone(), sink.when.clone(), false);
+            let twin = (
+                canonical.into(),
+                value.clone(),
+                sink.when.clone(),
+                false,
+                sink.external,
+            );
             if !state.seen.insert(twin) {
                 continue;
             }
@@ -166,16 +173,17 @@ fn push_harvested(
     sink: &Sink,
     value: &str,
 ) {
-    wants.push(
-        Want::new(sink.prop.clone(), AtomValue::String(value.into()))
-            .with_when(sink.when.clone())
-            .with_origin(Some(HARVEST_ORIGIN)),
-    );
+    let mut want = Want::new(sink.prop.clone(), AtomValue::String(value.into()))
+        .with_when(sink.when.clone())
+        .with_origin(Some(HARVEST_ORIGIN));
+    want.external = sink.external;
+    wants.push(want);
     authored.push(AuthoredDeclaration {
         when: sink.when.iter().map(|w| w.to_string()).collect(),
         prop: sink.prop.to_string(),
         value: serde_json::Value::String(value.to_string()),
         important: false,
+        external: sink.external,
     });
 }
 
