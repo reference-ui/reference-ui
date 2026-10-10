@@ -29,11 +29,11 @@ const cardName = css({
 const cardUse = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
 
 const toneIcon: Record<Exclude<DiagramTone, 'neutral'>, ReactNode> = {
-  blue: <DeployedCodeIcon size="lg" className={css({ color: 'diagramBlueText' })} />,
-  green: <CheckCircleIcon size="lg" className={css({ color: 'diagramGreenText' })} />,
-  amber: <ShieldIcon size="lg" className={css({ color: 'diagramAmberText' })} />,
-  red: <BoltIcon size="lg" className={css({ color: 'diagramRedText' })} />,
-  violet: <PaletteIcon size="lg" className={css({ color: 'diagramVioletText' })} />,
+  blue: <DeployedCodeIcon size="lg" color="diagramBlueText" />,
+  green: <CheckCircleIcon size="lg" color="diagramGreenText" />,
+  amber: <ShieldIcon size="lg" color="diagramAmberText" />,
+  red: <BoltIcon size="lg" color="diagramRedText" />,
+  violet: <PaletteIcon size="lg" color="diagramVioletText" />,
 }
 
 function ToneCard({
@@ -49,7 +49,7 @@ function ToneCard({
 }) {
   const icon =
     tone === 'neutral' ? (
-      <WidgetsIcon size="lg" className={css({ color: 'docsMuted' })} />
+      <WidgetsIcon size="lg" color="docsMuted" />
     ) : (
       toneIcon[tone]
     )
@@ -86,7 +86,7 @@ export function ToneGallery() {
           <Span className={cardUse}>Dashed grouping without emphasis</Span>
         </Diagram.Panel>
         <Diagram.Panel tone="amber" variant="outline" align="center">
-          <ShieldIcon size="lg" className={css({ color: 'diagramAmberText' })} />
+          <ShieldIcon size="lg" color="diagramAmberText" />
           <Span className={cardName}>Outline · amber</Span>
           <Span className={cardUse}>A boundary with consequences</Span>
         </Diagram.Panel>
