@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-color-license",
+  "tokens": {
+    "colors": {
+      "red": {
+        "value": "red"
+      },
+      "blue": {
+        "value": "blue"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

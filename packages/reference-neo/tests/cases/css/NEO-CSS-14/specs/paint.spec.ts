@@ -2,7 +2,7 @@
 // { page, case } from the runner with the world freshly synced and the page
 // already navigated to it. Emits nothing on success; throws naming the
 // unpainted palette color, the classed miss, the missing or doubled
-// diagnostic, or the bundle that failed to fan the floor out.
+// diagnostic, or the bundle that leaked a per-atom row.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,7 +53,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   assert.ok(styles.includes('.neo-css14__c_red {'), 'sheet carries the harvested red floor');
   assert.ok(styles.includes('.neo-css14__c_blue {'), 'sheet carries the harvested blue floor');
   const utilityCount = styles.match(/\.neo-css14__/g)?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries the palette floor plus the ink floor, got ${utilityCount}`);
+  assert.equal(utilityCount, 2, `sheet carries only the licensed palette floor, got ${utilityCount}`);
 
   const probe = page.locator('#probe');
   await probe.waitFor();
@@ -125,5 +125,5 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   }
   assert.equal(infos.length, 1, `one sink info, got ${JSON.stringify(channel)}`);
   assert.equal(infos[0]?.code, 'ATM-I-HARVEST-SINK');
-  assert.equal(infos[0]?.message, 'color under []: 3 harvested values minted');
+  assert.equal(infos[0]?.message, 'color under []: 2 harvested values minted');
 }
