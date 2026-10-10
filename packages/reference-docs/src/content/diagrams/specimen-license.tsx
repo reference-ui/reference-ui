@@ -31,7 +31,7 @@ const pillGreen = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramGreenText',
-  bg: 'color-mix(in oklch, var(--colors-green-500) 14%, transparent)',
+  bg: 'color-mix(in oklab, var(--colors-green-500) 18%, var(--colors-diagram-panel))',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -61,7 +61,7 @@ export function LicenseGallery() {
     <Diagram>
       <Diagram.Column>
         <Diagram.Panel align="center">
-          <KeyIcon size="lg" color="docsText" />
+          <KeyIcon size="lg" className={css({ color: 'docsText' })} />
           <Span className={cardTitle}>Atrium Licence</Span>
           <Span className={keyChip}>XXXX-XXXX-XXXX-XXXX</Span>
           <Span className={pillGreen}>2 activations allowed</Span>
@@ -69,13 +69,13 @@ export function LicenseGallery() {
 
         <Diagram.Row>
           <Diagram.Panel tone="green" align="center">
-            <ComputerIcon size="lg" color="diagramGreenText" />
+            <ComputerIcon size="lg" className={css({ color: 'diagramGreenText' })} />
             <Span className={machineName}>Studio PC</Span>
             <Span className={pillGreen}>Activated</Span>
             <Span className={cardSub}>Windows</Span>
           </Diagram.Panel>
           <Diagram.Panel tone="green" align="center">
-            <LaptopMacIcon size="lg" color="diagramGreenText" />
+            <LaptopMacIcon size="lg" className={css({ color: 'diagramGreenText' })} />
             <Span className={machineName}>MacBook</Span>
             <Span className={pillGreen}>Activated</Span>
             <Span className={cardSub}>macOS</Span>
@@ -84,7 +84,7 @@ export function LicenseGallery() {
 
         <Diagram.Panel align="center">
           <Div className={titleRow}>
-            <MonitorIcon size="md" color="docsMuted" />
+            <MonitorIcon size="md" className={css({ color: 'docsMuted' })} />
             <Span className={limitTitle}>Third computer</Span>
           </Div>
           <Span className={cardSub}>Activation limit reached. Deactivate an existing machine first.</Span>

@@ -21,7 +21,7 @@ const chip = css({
   fontFamily: 'mono',
   fontSize: 'sm',
   color: 'docsText',
-  bg: 'color-mix(in oklch, black 18%, var(--colors-diagram-panel))',
+  bg: 'diagramChip',
   paddingX: '2r',
   paddingY: '1r',
   borderRadius: 'sm',
@@ -33,7 +33,7 @@ const pill = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramBlueText',
-  bg: 'color-mix(in oklch, var(--colors-blue-500) 14%, transparent)',
+  bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-diagram-panel))',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -46,7 +46,7 @@ export function ApiExample() {
     <Diagram>
       <Diagram.Row>
         <Diagram.Panel>
-          <CodeIcon size="lg" color="docsMuted" />
+          <CodeIcon size="lg" className={css({ color: 'docsMuted' })} />
           <Span className={title}>Source</Span>
           <Code className={chip}>{'css({ color: "red.500" })'}</Code>
         </Diagram.Panel>
@@ -54,7 +54,7 @@ export function ApiExample() {
         <Diagram.Arrow direction="right" />
 
         <Diagram.Panel>
-          <PackageIcon size="lg" color="docsMuted" />
+          <PackageIcon size="lg" className={css({ color: 'docsMuted' })} />
           <Span className={title}>Compiled output</Span>
           <Span className={pill}>Atomic CSS</Span>
         </Diagram.Panel>

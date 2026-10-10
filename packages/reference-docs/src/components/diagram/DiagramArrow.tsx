@@ -1,134 +1,235 @@
-import { Div, Span, Svg, css } from '@reference-ui/react'
+import { Div, Span, css } from '@reference-ui/react'
 import type { DiagramDirection } from './Diagram'
 
 /**
- * Diagram arrow: the connection. A fixed shaft-plus-head glyph with an
- * optional short label — the verb of the handoff. Vertical arrows stack the
- * label past the glyph; horizontal arrows set it beside. Always self-centers
- * on the cross axis, so it sits quietly between stretched panels and rows.
+ * Diagram arrow: the connection. A fixed-length rail — a hairline shaft closed
+ * by a solid triangular head — with the label set as a pill straddling the
+ * shaft's centre. Length never varies with content, so a stack of arrows reads
+ * as one clean column instead of growing with its neighbours.
+ *
+ * The rail stays neutral; the pill borrows the panel surface and hairline, so
+ * the label reads as a stop on the line and ties back to the panels it joins.
+ * Every value is a static `css()` call site; the geometry is plain DOM so no
+ * intrinsic-size prop can be dropped by the style engine.
  */
 
-const arrowDownClass = css({
+/** Total rail length, identical for every direction. */
+const RAIL = '4rem'
+/** Hairline shaft thickness, across the flow. */
+const SHAFT = '2px'
+/** Head depth along the flow. */
+const HEAD = '9px'
+/** Head width across the flow. */
+const HEAD_WIDE = '12px'
+
+/*
+ * Each rail repeats the shared frame verbatim: `css()` returns a class name,
+ * not a style object, so spreading a base class would spread a string and drop
+ * the frame — including the `position` the absolute shaft depends on.
+ */
+/* Vertical rails fix the height; width hugs the pill (floored at the head). */
+const railDown = css({
+  position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  gap: '1r',
-  minWidth: '0',
+  height: RAIL,
+  minWidth: HEAD_WIDE,
 })
 
-const arrowUpClass = css({
+const railUp = css({
+  position: 'relative',
   display: 'flex',
-  flexDirection: 'column-reverse',
+  flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  gap: '1r',
-  minWidth: '0',
+  height: RAIL,
+  minWidth: HEAD_WIDE,
 })
 
-const arrowRightClass = css({
+/* Horizontal rails fix the width; height hugs the head. */
+const railRight = css({
+  position: 'relative',
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
+  justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  gap: '2r',
-  minWidth: '0',
+  minWidth: RAIL,
+  minHeight: HEAD_WIDE,
 })
 
-const arrowLeftClass = css({
+const railLeft = css({
+  position: 'relative',
   display: 'flex',
-  flexDirection: 'row-reverse',
+  flexDirection: 'row',
   alignItems: 'center',
+  justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  gap: '2r',
-  minWidth: '0',
+  minWidth: RAIL,
+  minHeight: HEAD_WIDE,
 })
 
-const arrowClass: Record<DiagramDirection, string> = {
-  down: arrowDownClass,
-  up: arrowUpClass,
-  right: arrowRightClass,
-  left: arrowLeftClass,
+const railClass: Record<DiagramDirection, string> = {
+  down: railDown,
+  up: railUp,
+  right: railRight,
+  left: railLeft,
 }
 
-const arrowLabelDown = css({
-  fontSize: 'sm',
-  color: 'docsMuted',
-  textAlign: 'center',
-  lineHeight: '1.4',
+/* Shaft stops exactly where the head's base begins, so the two meet cleanly. */
+const shaftDown = css({
+  position: 'absolute',
+  top: '0',
+  bottom: HEAD,
+  left: '50%',
+  width: SHAFT,
+  transform: 'translateX(-50%)',
+  bg: 'diagramArrow',
+  borderRadius: 'full',
 })
 
-const arrowLabelUp = css({
-  fontSize: 'sm',
-  color: 'docsMuted',
-  textAlign: 'center',
-  lineHeight: '1.4',
+const shaftUp = css({
+  position: 'absolute',
+  top: HEAD,
+  bottom: '0',
+  left: '50%',
+  width: SHAFT,
+  transform: 'translateX(-50%)',
+  bg: 'diagramArrow',
+  borderRadius: 'full',
 })
 
-const arrowLabelRight = css({
-  fontSize: 'sm',
-  color: 'docsMuted',
-  textAlign: 'left',
-  lineHeight: '1.4',
+const shaftRight = css({
+  position: 'absolute',
+  left: '0',
+  right: HEAD,
+  top: '50%',
+  height: SHAFT,
+  transform: 'translateY(-50%)',
+  bg: 'diagramArrow',
+  borderRadius: 'full',
 })
 
-const arrowLabelLeft = css({
-  fontSize: 'sm',
-  color: 'docsMuted',
-  textAlign: 'right',
-  lineHeight: '1.4',
+const shaftLeft = css({
+  position: 'absolute',
+  left: HEAD,
+  right: '0',
+  top: '50%',
+  height: SHAFT,
+  transform: 'translateY(-50%)',
+  bg: 'diagramArrow',
+  borderRadius: 'full',
 })
 
-const arrowLabelClass: Record<DiagramDirection, string> = {
-  down: arrowLabelDown,
-  up: arrowLabelUp,
-  right: arrowLabelRight,
-  left: arrowLabelLeft,
+const shaftClass: Record<DiagramDirection, string> = {
+  down: shaftDown,
+  up: shaftUp,
+  right: shaftRight,
+  left: shaftLeft,
 }
 
-type ArrowGlyph = {
-  viewBox: string
-  width: number
-  height: number
-  shaft: { x: number; y: number; width: number; height: number }
-  head: string
+/*
+ * Heads are CSS border triangles. `border-style: solid` switches on every
+ * side, so each class pins all four widths: the unused side collapses to 0,
+ * otherwise it paints a stray `currentColor` edge.
+ */
+const headDown = css({
+  position: 'absolute',
+  bottom: '0',
+  left: '50%',
+  width: '0',
+  height: '0',
+  borderStyle: 'solid',
+  borderTopWidth: HEAD,
+  borderTopColor: 'diagramArrow',
+  borderRightWidth: '6px',
+  borderRightColor: 'transparent',
+  borderBottomWidth: '0',
+  borderLeftWidth: '6px',
+  borderLeftColor: 'transparent',
+  transform: 'translateX(-50%)',
+})
+
+const headUp = css({
+  position: 'absolute',
+  top: '0',
+  left: '50%',
+  width: '0',
+  height: '0',
+  borderStyle: 'solid',
+  borderBottomWidth: HEAD,
+  borderBottomColor: 'diagramArrow',
+  borderLeftWidth: '6px',
+  borderLeftColor: 'transparent',
+  borderRightWidth: '6px',
+  borderRightColor: 'transparent',
+  borderTopWidth: '0',
+  transform: 'translateX(-50%)',
+})
+
+const headRight = css({
+  position: 'absolute',
+  right: '0',
+  top: '50%',
+  width: '0',
+  height: '0',
+  borderStyle: 'solid',
+  borderLeftWidth: HEAD,
+  borderLeftColor: 'diagramArrow',
+  borderTopWidth: '6px',
+  borderTopColor: 'transparent',
+  borderBottomWidth: '6px',
+  borderBottomColor: 'transparent',
+  borderRightWidth: '0',
+  transform: 'translateY(-50%)',
+})
+
+const headLeft = css({
+  position: 'absolute',
+  left: '0',
+  top: '50%',
+  width: '0',
+  height: '0',
+  borderStyle: 'solid',
+  borderRightWidth: HEAD,
+  borderRightColor: 'diagramArrow',
+  borderTopWidth: '6px',
+  borderTopColor: 'transparent',
+  borderBottomWidth: '6px',
+  borderBottomColor: 'transparent',
+  borderLeftWidth: '0',
+  transform: 'translateY(-50%)',
+})
+
+const headClass: Record<DiagramDirection, string> = {
+  down: headDown,
+  up: headUp,
+  right: headRight,
+  left: headLeft,
 }
 
-/** Shaft-plus-head geometry per direction. Plain SVG attributes, safe to select at runtime. */
-const arrowGlyph: Record<DiagramDirection, ArrowGlyph> = {
-  down: {
-    viewBox: '0 0 10 26',
-    width: 10,
-    height: 26,
-    shaft: { x: 4, y: 0, width: 2, height: 17 },
-    head: 'M1 17 L9 17 L5 25 Z',
-  },
-  up: {
-    viewBox: '0 0 10 26',
-    width: 10,
-    height: 26,
-    shaft: { x: 4, y: 9, width: 2, height: 17 },
-    head: 'M1 9 L9 9 L5 1 Z',
-  },
-  right: {
-    viewBox: '0 0 26 10',
-    width: 26,
-    height: 10,
-    shaft: { x: 0, y: 4, width: 17, height: 2 },
-    head: 'M17 1 L17 9 L25 5 Z',
-  },
-  left: {
-    viewBox: '0 0 26 10',
-    width: 26,
-    height: 10,
-    shaft: { x: 9, y: 4, width: 17, height: 2 },
-    head: 'M9 1 L9 9 L1 5 Z',
-  },
-}
+const pillClass = css({
+  position: 'relative',
+  bg: 'diagramPanel',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'diagramBorder',
+  borderRadius: 'full',
+  paddingX: '3r',
+  paddingY: '1r',
+  fontSize: 'sm',
+  lineHeight: '1.2',
+  color: 'docsMuted',
+  whiteSpace: 'nowrap',
+})
 
 export type DiagramArrowProps = {
   direction?: DiagramDirection
@@ -136,26 +237,11 @@ export type DiagramArrowProps = {
 }
 
 export function DiagramArrow({ direction = 'down', label }: DiagramArrowProps) {
-  const glyph = arrowGlyph[direction]
   return (
-    <Div className={arrowClass[direction]}>
-      <Svg
-        viewBox={glyph.viewBox}
-        width={glyph.width}
-        height={glyph.height}
-        color="diagramArrow"
-        aria-hidden="true"
-      >
-        <rect
-          x={glyph.shaft.x}
-          y={glyph.shaft.y}
-          width={glyph.shaft.width}
-          height={glyph.shaft.height}
-          fill="currentColor"
-        />
-        <path d={glyph.head} fill="currentColor" />
-      </Svg>
-      {label ? <Span className={arrowLabelClass[direction]}>{label}</Span> : null}
+    <Div className={railClass[direction]}>
+      <Div className={shaftClass[direction]} />
+      <Div className={headClass[direction]} />
+      {label ? <Span className={pillClass}>{label}</Span> : null}
     </Div>
   )
 }

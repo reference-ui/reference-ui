@@ -6,7 +6,7 @@ import { useDocsTheme } from '../../shared/providers/DocsThemeContext'
 import { ApiExample } from './specimen-api'
 import { ArrowGallery } from './specimen-arrows'
 import { LicenseGallery } from './specimen-license'
-import { PipelineExcerpt } from './specimen-pipeline'
+import { ReferencePipeline } from './specimen-pipeline'
 import { SyncOverview } from './specimen-sync'
 import { ToneGallery } from './specimen-tones'
 
@@ -97,7 +97,7 @@ export function DiagramPage() {
 
         <Section
           title="Panel tones"
-          lede="Six tones plus the dashed outline variant. Reach for tone when the panel's meaning needs it, never for decoration alone."
+          lede="Six semantic tones across three intensities, plus the dashed outline variant. Tone says what a panel means; emphasis says how loudly — subtle is the default, so reach past it only when a panel earns it."
         >
           <ToneGallery />
         </Section>
@@ -124,10 +124,10 @@ export function DiagramPage() {
         </Section>
 
         <Section
-          title="Gallery · pipeline excerpt"
-          lede="Nested panels, code blocks, a dashed compilation boundary, and a result strip. Panels nest; the canvas never does."
+          title="Gallery · reference pipeline"
+          lede="The whole pipeline: staged panels, icon headers, a nested analysis surface, the build-time canon engine, a browser-runtime mock, and the result strip. Tone carries meaning at the default intensity; panels nest, the canvas never does."
         >
-          <PipelineExcerpt />
+          <ReferencePipeline />
         </Section>
 
         <Section

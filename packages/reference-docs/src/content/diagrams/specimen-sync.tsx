@@ -51,12 +51,12 @@ export function SyncOverview() {
 
         <Diagram.Row>
           <Diagram.Panel align="center">
-            <WidgetsIcon size="lg" color="docsText" />
+            <WidgetsIcon size="lg" className={css({ color: 'docsText' })} />
             <Span className={cardTitle}>Components</Span>
             <Span className={cardSub}>Ready to use</Span>
           </Diagram.Panel>
           <Diagram.Panel align="center">
-            <PaletteIcon size="lg" color="docsText" />
+            <PaletteIcon size="lg" className={css({ color: 'docsText' })} />
             <Span className={cardTitle}>Styles</Span>
             <Span className={cardSub}>Generated for your app</Span>
           </Diagram.Panel>
@@ -64,12 +64,12 @@ export function SyncOverview() {
 
         <Diagram.Row>
           <Diagram.Panel align="center">
-            <TuneIcon size="lg" color="docsText" />
+            <TuneIcon size="lg" className={css({ color: 'docsText' })} />
             <Span className={cardTitle}>Tokens</Span>
             <Span className={cardSub}>Consistent design values</Span>
           </Diagram.Panel>
           <Diagram.Panel align="center">
-            <HandymanIcon size="lg" color="docsText" />
+            <HandymanIcon size="lg" className={css({ color: 'docsText' })} />
             <Span className={cardTitle}>Tooling</Span>
             <Span className={cardSub}>Integrated workflow</Span>
           </Diagram.Panel>

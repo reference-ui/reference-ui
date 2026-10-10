@@ -22,7 +22,7 @@ const chip = css({
   fontFamily: 'mono',
   fontSize: 'sm',
   color: 'docsText',
-  bg: 'color-mix(in oklch, black 18%, var(--colors-diagram-panel))',
+  bg: 'diagramChip',
   paddingX: '2r',
   paddingY: '1r',
   borderRadius: 'sm',
