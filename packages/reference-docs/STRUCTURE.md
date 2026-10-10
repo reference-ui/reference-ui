@@ -42,8 +42,11 @@ packages/reference-docs/
       docs.ts                 collection schema + transform
       index.ts                content-collections config
       runtime.ts              slug lookup for the Vite MDX runtime
+    components/
+      diagram/                shared Diagram kit (canvas, panel, arrow, tokens)
     content/
       docs/...                all .mdx pages, grouped by section
+      diagrams/               private /diagram gallery (routed, not collected)
     mdx/
       components.tsx          MDX -> docs visual system element mapping
       CodeBlock.tsx           flat fenced block: copy + "View Code" reveal
@@ -72,6 +75,11 @@ The center of gravity. All `.mdx` pages live here, grouped by section. A demo
 or helper used by a single page belongs next to that page, not in a shared
 bucket.
 
+`src/content/diagrams/` is the one non-MDX sibling: the specimens and the
+`DiagramPage` gallery. It is content with its own route (`/diagram`, outside
+the doc shell and the sidebar) rather than a collected section, so it stays
+with the content it serves instead of becoming a shared bucket.
+
 ### `src/app`
 
 The docs shell: routing, layout, sidebar, page rendering, error boundary, and
@@ -93,6 +101,13 @@ adapters, and slug lookup. Content plumbing, not app UI.
 
 Truly shared, non-UI support code only when it is neither content-specific nor
 shell-specific.
+
+### `src/components`
+
+Shared UI kits owned by docs, one folder per kit. A kit moves here only when
+it serves present and future pages alike — single-page helpers stay colocated
+under `src/content`. `diagram/` (canvas, panel, arrow, docs-only tokens) is
+the first resident; future diagrams everywhere will compose it.
 
 ## Naming Rules
 

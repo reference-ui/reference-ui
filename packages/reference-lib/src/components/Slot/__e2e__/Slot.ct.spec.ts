@@ -1,3 +1,8 @@
+/**
+ * Slot browser gates: named-region rendering, in-place live refresh
+ * without remount, prefix-region selection, and visibility honors
+ * (SL-COMP-01–04). Snapshots pin settled paint; videos carry motion.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 test.describe('Slot Composition Gates & Browser Proofs', () => {

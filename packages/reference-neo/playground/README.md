@@ -7,10 +7,12 @@ covers playground sources, so keep it green — delete it before letting it rot.
 
 ```bash
 pnpm playground                         # sync fresh, serve at http://localhost:5199/
-pnpm playground:capture                 # every route, dark, to .captures/
-pnpm playground:capture kitchen         # one route
-pnpm playground:capture --theme both    # dark + light (<route>.<theme>.png)
 ```
+
+View it through Chrome DevTools MCP against the serving instance:
+`navigate_page` to `http://localhost:5199/?theme=dark#/<route>`,
+`take_screenshot`, then `list_console_messages`. Screenshots come back
+inline; theme flips via `?theme=light`.
 
 Routes are hash pages auto-discovered from `src/pages/*.tsx` (filename is
 the route) with a Book-like side menu (search with `/`, theme toggle in the
@@ -26,15 +28,15 @@ The shell stamps `data-color-mode` on `<html>` (dark by default, synced to
 lib's radii. `src/motion.ts` holds the keyframes those animation tokens
 name, and `src/global.ts` the tag recipes.
 
-Capture starts its own server; `pnpm playground` is only for interactive
-poking in a browser.
+There is no capture client: `pnpm playground` serves, and DevTools MCP
+does the looking (`navigate_page`, `take_screenshot`,
+`list_console_messages`).
 
 Layout: `index.html` is the minimal vite entry (no inline style or
 script — the undercoat lives in `src/base.css`, the pre-paint theme
 stamp in `src/theme-init.js`). `src/` holds the app (shell, tokens,
-motion, pages). `tools/` holds the harness (`serve.mjs`, `capture.mjs`,
-`lib.mjs` shared boot); both npm scripts point there. Sync output and
-screenshots (`.reference-ui/`, `.captures/`) stay gitignored at root.
+motion, pages). `tools/` holds the harness (`serve.mjs`, `lib.mjs` shared boot).
+Sync output (`.reference-ui/`) stays gitignored at root.
 
 Why no `public/`: vite serves the entry from the project root and only
 processes scripts, styles, and aliases from that entry. Files under

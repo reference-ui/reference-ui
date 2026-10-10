@@ -113,3 +113,25 @@ Toast owns visual queue, identity, and `{announce}` passthrough. ReferenceLibrar
 owns election, failover, and where the host is painted. Announcer owns the
 live-region machine: channels, tokens, pending replay, clear delay, and AT-safe
 DOM.
+
+## Architecture
+
+The root is composition only: `Announcer.tsx` renders the hidden live-region
+pair from a session hook, and `store.ts` owns every message decision. The
+hook claims the single-host election, registers the document, subscribes to
+the store, and replays pending speech; the election arbitrates which mount
+speaks per document; shared holds the development warning they all ask.
+Pure decisions carry colocated unit tests; AT behavior proves out in CT.
+
+| Module | Role |
+| :--- | :--- |
+| [`store.ts`](./store.ts) | Per-document stores, token writes, pending replay, `announce` |
+| [`host/`](./host) | Single-host election per document |
+| [`hooks/`](./hooks) | Host lifecycle session |
+| [`shared/`](./shared) | Development warning |
+| [`types.ts`](./types.ts) | Public options and store shapes, no logic |
+
+There is no `parts/` — the host has one fixed rendering, owned by the
+root — and no `context.ts`: with no compound parts, there is no subtree
+to scope. `internal.ts` keeps its path because ReferenceLibrary imports
+the host entry directly; it re-exports, it is not a shim.

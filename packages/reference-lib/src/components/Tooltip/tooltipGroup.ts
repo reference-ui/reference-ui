@@ -1,3 +1,10 @@
+/**
+ * Tooltip group store: one skip-delay substrate per document. Tracks the
+ * active tip, the pending handoff, and the warm window after a close so a
+ * second hover opens instantly; ReferenceLibrary warmup tunes `skipDelay`
+ * through this same module. Stays at root because that importer lives
+ * outside the component — see the README.
+ */
 import { createStore } from 'zustand/vanilla'
 
 export interface TooltipGroupState {

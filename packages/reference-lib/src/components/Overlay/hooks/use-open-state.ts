@@ -1,7 +1,10 @@
+/**
+ * Controlled / uncontrolled `open` with edge callbacks. `onOpen` fires on
+ * closed→open, `onDismiss` on open→closed; uncontrolled instances hold
+ * their own state. Used only by `Overlay.tsx`.
+ */
 import * as React from 'react'
 import type { OverlayProps } from '../types'
-
-/** Controlled / uncontrolled `open` with `onOpen` / `onDismiss` edges. */
 
 export function useOverlayOpenState({
   open: openProp,

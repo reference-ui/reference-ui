@@ -1,3 +1,8 @@
+/**
+ * Full-viewport scrim beneath Content. Portals itself, rides Presence for
+ * exit, and turns top-layer primary-pointer presses into outside-press
+ * dismissal requests — touch excluded, consumed events respected.
+ */
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { Portal } from '../../Portal'

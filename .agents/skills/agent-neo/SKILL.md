@@ -171,15 +171,18 @@ Nothing here gates anything.
 
 ```bash
 pnpm playground                                # sync fresh, serve :5199 until killed
-pnpm playground:capture                        # every route, dark, to .captures/
-pnpm playground:capture kitchen                # one route
-pnpm playground:capture --theme both           # dark + light (files: <route>.<theme>.png)
 ```
+
+View it through Chrome DevTools MCP against the serving instance:
+`navigate_page` to `http://localhost:5199/?theme=dark#/<route>`,
+`take_screenshot`, then `list_console_messages` — a throwing page
+renders a lie. Theme flips via `?theme=light`; routes come from
+`src/pages/*.tsx`.
 
 - The shell is dark by default with a light/dark toggle in the sidebar
   header. It stamps `data-color-mode` on `<html>` and syncs `?theme=`, so the
-  engine's token islands and `_dark` wraps respond; capture starts its own
-  server, asserts the stamp, and prints any page errors per route.
+  engine's token islands and `_dark` wraps respond. Confirm the stamp
+  and the console yourself via `evaluate_script` / `list_console_messages`.
 - Mini token set (`src/tokens.ts`): tailwind's palette verbatim (oklch),
   plus `ink`/`paper`/`brand` with dark leaves (they flip automatically —
   no twins needed), spacing, and lib's radii.
@@ -194,14 +197,14 @@ pnpm playground:capture --theme both           # dark + light (files: <route>.<t
   the token set. The captain owns those.
 - Presentation duty: the playground is HQ's window into the voyage. After a
   slice lands, its cook adds or extends a page showing the landed behavior,
-  named for the case id, screenshots it via capture, and takes pride in it:
+  named for the case id, screenshots it via DevTools, and takes pride in it:
   make it sharp and futuristic with whatever the system can do today — states,
   hovers, animations as they land — so HQ sees the engine showing off, not
   demos in a shabby shell. Surface polish to the shell itself (menu, demo
   list, toggle) is welcome slice by slice; architecture stays the captain's.
   This is presentation, not process: verify with cases and Playwright however
   works — nothing here gates anything. Oracles confirm the page exists,
-  matches the claim, and captured clean.
+  matches the claim, and the console is clean.
 
 ## 9. Retirement Clause
 

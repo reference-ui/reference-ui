@@ -1,6 +1,3 @@
-import type { PortalProps } from '../../Portal'
-import type { OverlayContextValue } from '../context'
-
 /**
  * Shadow destination rule (FEATURES #1, decided AUTOMATIC).
  *
@@ -16,6 +13,8 @@ import type { OverlayContextValue } from '../context'
  * contract. Popover and Menu inherit the rule — they forward an omitted
  * container as `undefined`.
  */
+import type { PortalProps } from '../../Portal'
+import type { OverlayContextValue } from '../context'
 export function resolvePortalContainer(
   context: OverlayContextValue
 ): PortalProps['container'] {

@@ -1,6 +1,6 @@
 ---
 name: view-story
-description: Standard eyes for @reference-ui/lib. View a Book story as a user would — screenshot, CSS, click, console — via Playwright MCP, with pnpm capture as fallback. Activate whenever an agent needs to see a component.
+description: Standard eyes for @reference-ui/lib. View a Book story as a user would — screenshot, CSS, click, console — via native Chrome DevTools MCP. Activate whenever an agent needs to see a component.
 ---
 
 # Story Viewing Skill (`view-story`)
@@ -9,6 +9,11 @@ Use this skill whenever you need to SEE a component in `@reference-ui/lib`:
 what it looks like, what CSS it computes, how it responds to input.
 Seeing only — implementation belongs to engineer crews, proof belongs
 to `test-component` (`pnpm agentct`).
+
+Eyes are the native Chrome DevTools MCP (`.cursor/mcp.json`
+`chrome-devtools`): real Chrome, no hand-rolled clients. Never write
+ad-hoc Playwright scripts or one-liners — the MCP tools cover navigate,
+snapshot, screenshot, evaluate, click, type, and console.
 
 ## 1. Ensure the Book server (autonomous)
 
@@ -24,25 +29,26 @@ developer to boot it. Single instance only.
 4. If the server dies mid-loop, restart it and re-run. Report the flap;
    do not ask for permission.
 
-## 2. View the story (standard: Playwright MCP)
+## 2. View the story
 
 Stories live at:
 `http://localhost:5000/?book=<Component>&story=<Story>&theme=dark&chrome=0`
-Discover components and stories with `pnpm capture --list` (discovery
-only; viewing goes through MCP).
 
-Moves, in order: navigate → snapshot (a11y tree + refs) → screenshot →
-evaluate (computed CSS, boxes) → click/type/hover → re-snapshot →
-console messages. Full crew manual:
-[docs/MISSIONS/MCP_BOOK_SEEING.md](../../../docs/MISSIONS/MCP_BOOK_SEEING.md).
+Discover components and stories by globbing
+`packages/reference-lib/src/**/*.{book,fixture}.tsx` and reading the
+book file — its exports are the story names.
 
-## 3. Fallback: pnpm capture
+Moves, in order: `navigate_page` → `take_snapshot` (refs) →
+`take_screenshot` → `evaluate_script` (computed CSS, boxes) →
+`click` / `fill` / `press_key` / `hover` → re-snapshot →
+`list_console_messages` / `get_console_message`.
 
-If MCP cannot reach the story, use the capture client against the same
-server (`pnpm capture <Component> [Fixture]`, states via `--states`).
-Same screenshots, narrower pipe. Report that you fell back and why.
+Theme via `&theme=dark|light`. Viewport via `resize_page`. A story
+that throws renders a lie — read the console section before trusting
+pixels.
 
-## 4. Report
+## 3. Report
 
-Embed screenshots in chat. Note CSS and console findings. Hand off to
-`test-component` for proof — seeing is not verifying.
+Screenshots come back inline from `take_screenshot` — embed them in
+chat. Note CSS and console findings. Hand off to `test-component`
+for proof — seeing is not verifying.

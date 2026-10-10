@@ -3,7 +3,7 @@
 Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
 
 Playwright: `packages/reference-lib/src/components/FocusLock/__e2e__/FocusLock.ct.spec.ts` (44 tests) · `packages/reference-lib/src/components/Overlay/__e2e__/OverlayFocus.ct.spec.ts` (FL-OV-01–05 + combined seam IDs)
-Unit: `candidates.test.ts` · `types.test.ts` · `FocusLock.ref.test.tsx` · `ssr.test.tsx`
+Unit: `catalog/candidates.test.ts` · `catalog/eligibility.test.ts` · `catalog/radio.test.ts` · `catalog/traversal.test.ts` · `restore/proximity.test.ts` · `restore/decision.test.ts` · `restore/pointer-origin.test.ts` · `stack/stack.test.ts` · `containment/tab-loop.test.ts` · `containment/fallback.test.ts` · `shared/{targets,focus,inside,refs,ids}.test.ts` · `types.test.ts` · `FocusLock.ref.test.tsx` · `ssr.test.tsx`
 Story: `FocusLock.story.tsx`
 
 FocusLock owns Tab, reclaim, shard solving, and where restore lands. Overlay

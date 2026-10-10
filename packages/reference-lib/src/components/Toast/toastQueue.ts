@@ -1,3 +1,10 @@
+/**
+ * Toast queue kernel: visibility windows, countdown arithmetic, pause
+ * arbitration, swipe physics, promise-result splitting, and hotkey
+ * matching, with the library defaults both the store and the host read.
+ * It stays at this path because ReferenceLibrary deep-imports
+ * DEFAULT_TOAST_HOTKEY from here — see the root README coupling note.
+ */
 export const LIBRARY_TOAST_DURATION = 5000
 export const LIBRARY_TOAST_POSITION = 'bottom-end'
 export const LIBRARY_TOAST_LIMIT = 4

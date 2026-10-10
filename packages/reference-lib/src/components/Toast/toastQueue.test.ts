@@ -1,3 +1,4 @@
+/** Isolation proof for the queue kernel: windows, countdowns, pause, swipe, promise splits, hotkeys. */
 import { describe, expect, it } from 'vitest'
 import {
   dampenSwipe,
@@ -124,5 +125,17 @@ describe('toast hotkey', () => {
     expect(matchesHotkey(altT, false)).toBe(false)
     expect(matchesHotkey(altT, [])).toBe(false)
     expect(matchesHotkey({ ...altT, altKey: false }, ['altKey', 'KeyT'])).toBe(false)
+  })
+})
+
+describe('TO-TIME-06 pause and resume', () => {
+  it('TO-TIME-06: pause/resume accumulates only active elapsed time', () => {
+    let remaining: number | false = 5000
+    remaining = remainingAfterElapsed(remaining, 1000) as number
+    remaining = remainingAfterElapsed(remaining, 0) as number
+    remaining = remainingAfterElapsed(remaining, 1000) as number
+    expect(remaining).toBe(3000)
+    expect(shouldAutoDismiss(remainingAfterElapsed(remaining, 2999))).toBe(false)
+    expect(shouldAutoDismiss(remainingAfterElapsed(remaining, 3000))).toBe(true)
   })
 })

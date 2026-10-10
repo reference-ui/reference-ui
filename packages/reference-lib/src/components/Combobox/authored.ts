@@ -1,4 +1,6 @@
 import * as React from 'react'
+import type { VirtualFocusAdapter } from '../Listbox'
+import type { ComboboxGridAdapter } from './combobox-context'
 
 /**
  * Authored-children inspection for Combobox (#10 content gate, CB-ADAPTER-02/03/08
@@ -11,6 +13,8 @@ import * as React from 'react'
  * (no import cycle with Combobox.tsx). Fragments and arrays are transparent;
  * wrapped popovers/collections (HOCs obscuring the element type) are out of
  * contract and read as absent — direct authorship is the documented shape.
+ * The adapter shape guards below are type-only imports, so the runtime
+ * stays dependency-free too.
  */
 
 export interface AuthoredCollectionRefs {
@@ -148,4 +152,26 @@ export function scanAuthoredCollections(
 export function scanHasPopoverContent(scan: AuthoredCollectionScan): boolean {
   if (scan.popovers.length === 0) return false
   return scan.authoredItemCount > 0 || scan.metadataItemCount > 0
+}
+
+/** Authored-adapter shape check (#5): role/items/getNextIndex/scrollToIndex. */
+export function isGridAdapter(value: unknown): value is ComboboxGridAdapter {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Record<string, unknown>
+  return (
+    candidate.role === 'grid' &&
+    Array.isArray(candidate.items) &&
+    typeof candidate.getNextIndex === 'function' &&
+    typeof candidate.scrollToIndex === 'function'
+  )
+}
+
+/** Nested-Listbox `virtual` shape check (CB-VIRT): items/scrollToIndex. */
+export function isWindowedListAdapter(value: unknown): value is VirtualFocusAdapter {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Record<string, unknown>
+  return (
+    Array.isArray(candidate.items) &&
+    typeof candidate.scrollToIndex === 'function'
+  )
 }

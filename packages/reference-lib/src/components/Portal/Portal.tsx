@@ -1,110 +1,23 @@
+/**
+ * Portal root: composition only. `Portal` asks `hooks/use-destination` for
+ * the mount gate and the resolved destination node, renders nothing until
+ * mount, children, and node are all present, and otherwise relays the
+ * children through `ReactDOM.createPortal` wrapped in `scope/PortalScope`.
+ * No resolution math, no lifecycle, and no providers live here — only the
+ * decision to portal and the single `createPortal` call that does it.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { LayerScopeContext, DocumentContext } from '@reference-ui/react'
-
-export type PortalContainer = Element | DocumentFragment
-
-export type PortalContainerRef = {
-  current: PortalContainer | null
-}
-
-export interface PortalProps {
-  children?: React.ReactNode
-  container?:
-    | PortalContainer
-    | PortalContainerRef
-    | (() => PortalContainer | null)
-    | null
-}
-
-function resolveContainer(
-  containerProp?:
-    | PortalContainer
-    | PortalContainerRef
-    | (() => PortalContainer | null)
-    | null
-): PortalContainer | null {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return null
-  }
-
-  // 1. Omitted or explicitly null -> default to document.body
-  if (containerProp === undefined || containerProp === null) {
-    return document.body
-  }
-
-  // 2. Ref object ({ current: ... })
-  if (typeof containerProp === 'object' && 'current' in containerProp) {
-    return containerProp.current
-  }
-
-  // 3. Resolver function (() => ...)
-  if (typeof containerProp === 'function') {
-    return containerProp()
-  }
-
-  // 4. Direct Element or DocumentFragment. Realm-safe nodeType check:
-  // an element from an iframe document fails `instanceof` against this
-  // realm's globals, so identity must come from the node itself (PT-ENV-04).
-  const nodeType = (containerProp as Node).nodeType
-  if (nodeType === 1 || nodeType === 11) {
-    return containerProp as PortalContainer
-  }
-
-  return null
-}
+import type { PortalProps } from './types'
+import { useDestination } from './hooks/use-destination'
+import { PortalScope } from './scope/PortalScope'
 
 export function Portal({ children, container: containerProp }: PortalProps) {
-  const [mounted, setMounted] = React.useState(false)
-  const [resolvedNode, setResolvedNode] = React.useState<PortalContainer | null>(null)
+  const { mounted, node } = useDestination(containerProp)
 
-  React.useLayoutEffect(() => {
-    setMounted(true)
-    const node = resolveContainer(containerProp)
-    setResolvedNode(node)
-  }, [containerProp])
-
-  // Synchronize on commit
-  React.useLayoutEffect(() => {
-    const node = resolveContainer(containerProp)
-    if (node !== resolvedNode) {
-      setResolvedNode(node)
-    }
-  })
-
-  // Frame check for late-attaching RefObject destinations
-  React.useEffect(() => {
-    if (
-      typeof containerProp === 'object' &&
-      containerProp !== null &&
-      'current' in containerProp &&
-      !resolvedNode
-    ) {
-      const raf = requestAnimationFrame(() => {
-        const node = resolveContainer(containerProp)
-        if (node && node !== resolvedNode) {
-          setResolvedNode(node)
-        }
-      })
-      return () => cancelAnimationFrame(raf)
-    }
-  })
-
-  if (!mounted || !children || !resolvedNode) {
+  if (!mounted || !children || !node) {
     return null
   }
 
-  const destinationDoc =
-    resolvedNode instanceof Document
-      ? resolvedNode
-      : (resolvedNode as Node).ownerDocument ?? null
-
-  return ReactDOM.createPortal(
-    <LayerScopeContext.Provider value={false}>
-      <DocumentContext.Provider value={destinationDoc}>
-        {children}
-      </DocumentContext.Provider>
-    </LayerScopeContext.Provider>,
-    resolvedNode,
-  )
+  return ReactDOM.createPortal(<PortalScope node={node}>{children}</PortalScope>, node)
 }

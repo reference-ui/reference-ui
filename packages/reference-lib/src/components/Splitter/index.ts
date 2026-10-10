@@ -1,2 +1,2 @@
 export * from './Splitter'
-export * from './splitter-math'
+export * from './math/splitter-math'

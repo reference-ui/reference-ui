@@ -1,3 +1,8 @@
+/**
+ * The layer's switch: a styleable button toggling open state on click,
+ * publishing the trigger node for geometry and dismissal, and exposing
+ * expanded state to assistive tech.
+ */
 import * as React from 'react'
 import { Button, type PrimitiveProps } from '@reference-ui/react'
 import { OverlayContext } from '../context'

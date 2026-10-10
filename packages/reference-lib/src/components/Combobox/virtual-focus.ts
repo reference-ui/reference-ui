@@ -91,3 +91,41 @@ export function directionForElement(el: HTMLElement | null | undefined): 'ltr' |
   if (typeof document !== 'undefined' && document.dir === 'rtl') return 'rtl'
   return 'ltr'
 }
+
+/**
+ * 1-D logical step for the windowed-Listbox driver (CB-VIRT-01): wraps
+ * through enabled logical items from the current logical index. Null
+ * current starts at the directional edge; empty/all-disabled yields null.
+ */
+export function stepWindowedIndex(args: {
+  items: readonly VirtualFocusItem[]
+  currentIndex: number | null
+  direction: 1 | -1
+}): number | null {
+  const { items, currentIndex, direction } = args
+  if (items.length === 0) return null
+  if (currentIndex == null) {
+    const order =
+      direction === 1
+        ? items.map((item, at) => ({ item, at }))
+        : items.map((item, at) => ({ item, at })).reverse()
+    return order.find(entry => !entry.item.disabled)?.at ?? null
+  }
+  for (let step = 1; step <= items.length; step += 1) {
+    const at = (currentIndex + direction * step + items.length * step) % items.length
+    if (!items[at]?.disabled) return at
+  }
+  return null
+}
+
+/** First/last enabled logical index for the windowed driver (Home/End). */
+export function edgeWindowedIndex(
+  items: readonly VirtualFocusItem[],
+  which: 'first' | 'last'
+): number | null {
+  const order =
+    which === 'first'
+      ? items.map((item, at) => ({ item, at }))
+      : items.map((item, at) => ({ item, at })).reverse()
+  return order.find(entry => !entry.item.disabled)?.at ?? null
+}

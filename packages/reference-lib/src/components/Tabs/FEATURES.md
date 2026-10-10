@@ -45,7 +45,7 @@ SYSTEM-level prop — `TabsVariant` (`line`/`pill`) prepackaged as kernel
 type open (`TabsVariantProp`) so author names typecheck and render through
 the author's own recipe classes; unknown names resolve to kernel base +
 axis classes with no built-in paint. No variants prop, no theme registry.
-Worked proof: `MyTabs.tsx` + `MyTabs` story + `TB-SYS-01` (custom `underline`
+Worked proof: `examples/MyTabs.tsx` + `MyTabs` story + `TB-SYS-01` (custom `underline`
 name + `css()` override of a built-in). Line/pill pixel-identical (22/22
 snapshots). Lib-wide pattern per HQ.
 

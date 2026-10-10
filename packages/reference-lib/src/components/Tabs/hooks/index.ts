@@ -1,0 +1,10 @@
+/** Tabs hooks: registry, order, value, diagnostics, focus rescue, handoff. */
+export { useTabsRegistry } from './use-tabs-registry'
+export type { TabsRegistry } from './use-tabs-registry'
+export { useTabsOrder } from './use-tabs-order'
+export { useTabsValue } from './use-tabs-value'
+export { useTabsDiagnostics } from './use-tabs-diagnostics'
+export { useFocusRescue } from './use-focus-rescue'
+export { useFocusTrails } from './use-focus-trails'
+export type { FocusTrails } from './use-focus-trails'
+export { useTabHandoff } from './use-tab-handoff'

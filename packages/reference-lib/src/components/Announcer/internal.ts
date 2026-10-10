@@ -6,14 +6,14 @@
  * is the only supported host. Direct `AnnouncerHost` mounts outside tests
  * double-speak. See FEATURES.md #2 (export freeze) and #3 (topology (a)).
  */
+export { AnnouncerHost } from './Announcer'
 export {
   ANNOUNCE_CLEAR_DELAY,
   MAX_PENDING_ANNOUNCEMENTS,
-  AnnouncerHost,
-  announcerDiagnostic,
   getAnnouncerSnapshot,
   getAnnouncerStore,
   registerAnnouncerDocument,
   resolveAnnouncerDocument,
   unregisterAnnouncerDocument,
-} from './Announcer'
+} from './store'
+export { announcerDiagnostic } from './shared/warn'

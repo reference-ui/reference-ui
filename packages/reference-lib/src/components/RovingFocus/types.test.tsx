@@ -1,3 +1,8 @@
+/** Type-level proof for RovingFocus (RF-API-01): the Root and Item slot
+ * intersections expose exactly one element child plus the documented kernel
+ * options, and reject omitted, nullish, primitive, multi-element, and
+ * mistyped children at compile time. */
+
 import * as React from 'react'
 import { describe, expectTypeOf, it } from 'vitest'
 import {

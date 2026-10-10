@@ -69,7 +69,7 @@ Component primitives are implemented in this package and proven in `matrix/lib` 
 
 Book is the component playground for `@reference-ui/lib`. It lives at `packages/reference-lib/book/` and serves on port 5000 as a single-document Fast Refresh app. Component stories are authored alongside components in `src/components/**/*.book.tsx`. Core stories (for example `useMeasure`) live next to their source in `src/core/**/*.book.tsx`.
 
-To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` within this package). Open [http://localhost:5000](http://localhost:5000). To capture component states via Playwright, use `pnpm capture <Component>`.
+To launch Book: run `pnpm dev:lib` from the repository root (or `pnpm run dev` within this package). Open [http://localhost:5000](http://localhost:5000). To view component states, drive it with Chrome DevTools MCP (`navigate_page` to `?book=<Component>&story=<Story>`, then `take_screenshot`).
 
 ```ts
 // ui.config.ts — extends the library system

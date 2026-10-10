@@ -1,3 +1,8 @@
+/**
+ * Positioned arrow pointing at the trigger. Registers the arrow part,
+ * publishes its node for geometry to read, and renders a styleable box —
+ * the nub shape and rotation stay in application CSS.
+ */
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { OverlayContext } from '../context'

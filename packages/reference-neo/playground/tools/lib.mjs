@@ -1,6 +1,6 @@
 // Playground task harness: sync the playground project, then serve it.
 // Takes an optional port and emits { url, close } once vite is listening.
-// serve.mjs blocks on it for humans; capture.mjs drives it headless.
+// serve.mjs blocks on it for humans and DevTools-driven agents alike.
 // Lives in tools/, so DIR climbs one level to the playground root it syncs
 // and serves (pages, tokens, vite config, capture output all hang off DIR).
 import { createServer } from 'vite';

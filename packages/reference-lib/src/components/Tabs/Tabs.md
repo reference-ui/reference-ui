@@ -65,7 +65,7 @@ List and Tab render the signed line look by default and the pill look
 under `variant="pill"` (also settable per List/Tab). `variant` is a
 permanent system-level kernel prop: line/pill ship prepackaged as
 exported recipes (`tabsListRecipe`/`tabsTabRecipe`), and authors add
-their own typed names with their own `recipe()` (see `MyTabs.tsx`) or
+their own typed names with their own `recipe()` (see `examples/MyTabs.tsx`) or
 override built-ins with `css()` — no variants prop, no theme registry.
 A `keepMounted` panel keeps inactive children alive under
 `hidden`; the default still unmounts them. `keepMounted` on `Tabs` itself

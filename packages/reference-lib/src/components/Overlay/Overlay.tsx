@@ -1,3 +1,9 @@
+/**
+ * Overlay root: open state, part registry, stack registration, and the
+ * context value parts consume — plus the compound part assignments and the
+ * public type surface. Geometry, isolation, and dismissal live in sibling
+ * folders; the root only assembles them.
+ */
 import * as React from 'react'
 import type { PortalProps } from '../Portal'
 import { OverlayContext, useOverlay } from './context'
@@ -38,10 +44,6 @@ export type { OverlayArrowProps } from './parts/Arrow'
 export type { OverlayHandleProps } from './parts/Handle'
 export { useOverlay }
 
-/**
- * Overlay root: open state, part registry, stack registration, context.
- * Geometry, isolation, and dismiss live beside this file; the root only assembles them.
- */
 export function Overlay({
   children,
   open: openProp,

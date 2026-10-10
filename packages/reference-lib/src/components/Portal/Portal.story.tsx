@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
-import { Portal, type PortalContainer } from './Portal'
+import { Portal, type PortalContainer } from './index'
 
 const TestContext = React.createContext('default')
 

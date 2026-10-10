@@ -13,8 +13,8 @@ contract; this skill is your method.
 
 ## Eyes
 
-See through `view-story` (Playwright MCP against Book; capture as
-fallback) and `test-component` artifacts (CT videos, visual snapshot
+See through `view-story` (Chrome DevTools MCP against Book)
+and `test-component` artifacts (CT videos, visual snapshot
 expected/actual/diff). Spin the component up, play with it, watch the
 video, read the diff. Never rule from a test count.
 

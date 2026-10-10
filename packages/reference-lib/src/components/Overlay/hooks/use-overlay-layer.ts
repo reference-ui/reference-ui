@@ -1,3 +1,8 @@
+/**
+ * Registers the Overlay on the document stack while open: adds the layer
+ * with dismiss handlers on open, cascades closed descendants on close, and
+ * always removes on unmount. Used only by `Overlay.tsx`.
+ */
 import * as React from 'react'
 import type { IsolationFlags, OverlayEdge, OverlayProps } from '../types'
 import { overlayStackStore, setLayerHandlers } from '../stack'

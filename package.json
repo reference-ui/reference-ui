@@ -16,8 +16,6 @@
     "dev:lib:native": "REF_SYSTEM_ENGINE=native pnpm dev:lib",
     "test:lib": "pnpm agentct",
     "test:rs": "pnpm --filter @reference-ui/rust test",
-    "capture": "node .agents/skills/view-story/scripts/capture.mjs",
-    "capture:states": "node .agents/skills/view-story/scripts/capture.mjs --states",
     "agentct": "node .agents/skills/test-component/scripts/test-component.mjs",
     "ct": "node .agents/skills/test-component/scripts/test-component.mjs",
     "playbook": "pnpm --filter @reference-ui/lib run playbook",
@@ -35,8 +33,7 @@
     "agentneo": "node packages/reference-neo/tests/shared/cli.ts",
     "agentdocs": "node packages/reference-docs/tools/quality/run.mjs",
     "bench:neo": "node packages/reference-neo/benchmark/cli.ts",
-    "playground": "node packages/reference-neo/playground/tools/serve.mjs",
-    "playground:capture": "node packages/reference-neo/playground/tools/capture.mjs"
+    "playground": "node packages/reference-neo/playground/tools/serve.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

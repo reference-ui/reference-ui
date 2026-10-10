@@ -1,200 +1,28 @@
+/**
+ * Announcer's root: the AnnouncerHost live-region pair plus the module's
+ * historical export surface. The host renders two hidden AT regions
+ * (polite status, assertive alert) from the elected document's store and
+ * stays null when unelected or document-less. All behavior lives in the
+ * store, the host election, and the session hook; the re-exports below
+ * keep the deep `./Announcer` import path stable for tests.
+ */
 import * as React from 'react'
-import { flushSync } from 'react-dom'
+import { getPrimaryHost } from './host/election'
+import { useAnnouncerHost } from './hooks/use-announcer-host'
+import { getAnnouncerStore } from './store'
 
-export const ANNOUNCE_CLEAR_DELAY = 7000
-export const MAX_PENDING_ANNOUNCEMENTS = 50
-
-export interface AnnounceOptions {
-  politeness?: 'polite' | 'assertive'
-  document?: Document
-}
-
-interface PendingAnnouncement {
-  politeness: 'polite' | 'assertive'
-  message: string
-}
-
-interface AnnouncerStore {
-  politeAnnouncement: string
-  assertiveAnnouncement: string
-  subscribers: Set<() => void>
-  politeTimer: ReturnType<typeof setTimeout> | null
-  assertiveTimer: ReturnType<typeof setTimeout> | null
-  politeToken: number
-  assertiveToken: number
-  pending: PendingAnnouncement[]
-  activated: boolean
-}
-
-const announcerStores = new WeakMap<Document, AnnouncerStore>()
-const mountedAnnouncerDocuments = new Set<Document>()
-const activePrimaryHosts = new WeakMap<Document, string>()
-
-export function registerAnnouncerDocument(doc: Document) {
-  mountedAnnouncerDocuments.add(doc)
-}
-
-export function unregisterAnnouncerDocument(doc: Document) {
-  mountedAnnouncerDocuments.delete(doc)
-}
-
-function safeGetGlobalDocument(): Document | undefined {
-  try {
-    return typeof document !== 'undefined' ? document : undefined
-  } catch {
-    return undefined
-  }
-}
-
-// The package declares no node types, so the bare `process` global is
-// unresolvable in the narrow build program — read it through globalThis
-// with a file-local shape instead. Semantics identical in every state.
-const globalProcess = (globalThis as { process?: { env: { NODE_ENV?: string } } }).process
-const warnedAnnouncerDiagnostics = new Set<string>()
-
-export function announcerDiagnostic(message: string) {
-  if (typeof globalProcess === 'undefined' || globalProcess.env.NODE_ENV === 'production') return
-  if (warnedAnnouncerDiagnostics.has(message)) return
-  warnedAnnouncerDiagnostics.add(message)
-  console.warn(`[reference-ui] ${message}`)
-}
-
-export function resolveAnnouncerDocument(explicit?: Document): Document | undefined {
-  if (explicit) return explicit
-  if (mountedAnnouncerDocuments.size > 1) {
-    announcerDiagnostic('announce: ambiguous untargeted call with multiple documents; pass { document }')
-    return undefined
-  }
-  if (mountedAnnouncerDocuments.size === 1) {
-    return mountedAnnouncerDocuments.values().next().value
-  }
-  return safeGetGlobalDocument()
-}
-
-function createAnnouncerStore(): AnnouncerStore {
-  return {
-    politeAnnouncement: '',
-    assertiveAnnouncement: '',
-    subscribers: new Set(),
-    politeTimer: null,
-    assertiveTimer: null,
-    politeToken: 0,
-    assertiveToken: 0,
-    pending: [],
-    activated: false,
-  }
-}
-
-export function getAnnouncerStore(doc?: Document): AnnouncerStore {
-  const targetDoc = doc ?? safeGetGlobalDocument()
-  if (!targetDoc) return createAnnouncerStore()
-  let store = announcerStores.get(targetDoc)
-  if (!store) {
-    store = createAnnouncerStore()
-    announcerStores.set(targetDoc, store)
-  }
-  return store
-}
-
-function notifyAnnouncerStore(store: AnnouncerStore, sync = false) {
-  const run = () => {
-    for (const sub of Array.from(store.subscribers)) {
-      try {
-        sub()
-      } catch {
-        // ignore
-      }
-    }
-  }
-  if (sync) {
-    try {
-      flushSync(run)
-      return
-    } catch {
-      // ignore environments without a React flush target
-    }
-  }
-  run()
-}
-
-function isBlank(message: string) {
-  return message.trim().length === 0
-}
-
-function setLiveMessage(
-  store: AnnouncerStore,
-  politeness: 'polite' | 'assertive',
-  message: string,
-  options: { recordPending?: boolean; flush?: boolean } = {}
-) {
-  if (!store.activated && options.recordPending !== false) {
-    store.pending.push({ politeness, message })
-    if (store.pending.length > MAX_PENDING_ANNOUNCEMENTS) {
-      store.pending.shift()
-    }
-  }
-  const tokenKey = politeness === 'assertive' ? 'assertiveToken' : 'politeToken'
-  const textKey = politeness === 'assertive' ? 'assertiveAnnouncement' : 'politeAnnouncement'
-  const timerKey = politeness === 'assertive' ? 'assertiveTimer' : 'politeTimer'
-  const token = store[tokenKey] + 1
-  store[tokenKey] = token
-  if (store[timerKey]) {
-    clearTimeout(store[timerKey]!)
-    store[timerKey] = null
-  }
-
-  store[textKey] = ''
-  notifyAnnouncerStore(store, true)
-
-  queueMicrotask(() => {
-    if (store[tokenKey] !== token) return
-    store[textKey] = message
-    notifyAnnouncerStore(store, true)
-    store[timerKey] = setTimeout(() => {
-      if (store[tokenKey] !== token) return
-      store[textKey] = ''
-      store[timerKey] = null
-      notifyAnnouncerStore(store, true)
-    }, ANNOUNCE_CLEAR_DELAY)
-  })
-}
-
-export function getAnnouncerSnapshot(doc?: Document) {
-  const store = getAnnouncerStore(doc)
-  return {
-    polite: store.politeAnnouncement,
-    assertive: store.assertiveAnnouncement,
-    pending: store.pending.map(item => ({ ...item })),
-  }
-}
-
-async function replayPendingAnnouncements(store: AnnouncerStore) {
-  if (store.activated) return
-  store.activated = true
-  const queue = store.pending.splice(0)
-  if (queue.length === 0) return
-  for (const item of queue) {
-    if (store.subscribers.size === 0) break
-    setLiveMessage(store, item.politeness, item.message, { recordPending: false, flush: true })
-    await Promise.resolve()
-    await new Promise<void>(resolve => {
-      if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-        return
-      }
-      resolve()
-    })
-  }
-}
-
-export function announce(message: string, options: AnnounceOptions = {}) {
-  if (isBlank(message)) return
-  const doc = resolveAnnouncerDocument(options.document)
-  if (!doc) return
-  const store = getAnnouncerStore(doc)
-  const politeness = options.politeness ?? 'polite'
-  setLiveMessage(store, politeness, message)
-}
+export {
+  ANNOUNCE_CLEAR_DELAY,
+  MAX_PENDING_ANNOUNCEMENTS,
+  announce,
+  getAnnouncerSnapshot,
+  getAnnouncerStore,
+  registerAnnouncerDocument,
+  resolveAnnouncerDocument,
+  unregisterAnnouncerDocument,
+} from './store'
+export { announcerDiagnostic } from './shared/warn'
+export type { AnnounceOptions } from './types'
 
 const HOST_STYLE: React.CSSProperties = {
   position: 'absolute',
@@ -208,62 +36,12 @@ const HOST_STYLE: React.CSSProperties = {
   border: 0,
 }
 
-let announcerHostIdCounter = 0
-
 export function AnnouncerHost({ document: docProp }: { document?: Document } = {}) {
-  const hostRef = React.useRef<HTMLDivElement>(null)
-  // Render-stable election id without useId: the id never reaches the DOM,
-  // and useId shims may mint per render (React 17 CT), which drops the host.
-  const [hostId] = React.useState(() => `announcer-host-${(announcerHostIdCounter += 1)}`)
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
-  const resolvedDoc = docProp ?? safeGetGlobalDocument()
-  const docRef = React.useRef<Document | undefined>(resolvedDoc)
-  const isPrimaryRef = React.useRef<boolean>(false)
+  const { hostRef, hostId, targetDoc } = useAnnouncerHost(docProp)
 
-  React.useLayoutEffect(() => {
-    const doc = docProp ?? hostRef.current?.ownerDocument ?? safeGetGlobalDocument()
-    if (!doc) return
-    docRef.current = doc
-
-    const currentPrimary = activePrimaryHosts.get(doc)
-    if (!currentPrimary) {
-      activePrimaryHosts.set(doc, hostId)
-      isPrimaryRef.current = true
-    } else if (currentPrimary === hostId) {
-      isPrimaryRef.current = true
-    } else {
-      isPrimaryRef.current = false
-      return
-    }
-
-    registerAnnouncerDocument(doc)
-    const store = getAnnouncerStore(doc)
-    const onStoreChange = () => forceUpdate()
-    store.subscribers.add(onStoreChange)
-
-    void replayPendingAnnouncements(store)
-
-    return () => {
-      if (isPrimaryRef.current) {
-        if (activePrimaryHosts.get(doc) === hostId) {
-          activePrimaryHosts.delete(doc)
-        }
-        isPrimaryRef.current = false
-      }
-      store.subscribers.delete(onStoreChange)
-      unregisterAnnouncerDocument(doc)
-      if (store.subscribers.size === 0) {
-        store.activated = false
-        store.politeAnnouncement = ''
-        store.assertiveAnnouncement = ''
-      }
-    }
-  }, [docProp, hostId])
-
-  const targetDoc = docRef.current
   if (!targetDoc) return null
 
-  const currentPrimary = activePrimaryHosts.get(targetDoc)
+  const currentPrimary = getPrimaryHost(targetDoc)
   if (currentPrimary && currentPrimary !== hostId) {
     return null
   }

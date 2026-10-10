@@ -1,3 +1,8 @@
+/**
+ * Configuration part, not a wrapper: publishes the portal container for
+ * Backdrop and Content and renders only its children. An omitted container
+ * follows the trigger's root via `portal-container`.
+ */
 import * as React from 'react'
 import type { PortalProps } from '../../Portal'
 import { OverlayContext } from '../context'

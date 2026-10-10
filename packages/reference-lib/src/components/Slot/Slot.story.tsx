@@ -1,10 +1,16 @@
+/**
+ * Slot CT fixture: fillers register a live title plus two action regions
+ * while the host reads them back through `useSlot` / `useSlots`;
+ * buttons drive in-place updates, visibility toggles, and filler
+ * unmounts for the SL-COMP browser gates.
+ */
 import * as React from 'react'
 import {
   createSlotRootContext,
   resolveSlotVisibility,
   createSlotCacheKey,
   type SlotVisibility,
-} from './Slot'
+} from './index'
 
 const {
   Provider: SlotFixtureProvider,

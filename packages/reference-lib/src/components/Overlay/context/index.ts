@@ -1,3 +1,10 @@
+/**
+ * Private subtree scoping: parts find their owning Overlay through
+ * `OverlayContext`, never through props. Owns the part-registry names, the
+ * context value shape (refs, isolation, dismiss handlers), and the
+ * `useOverlay` reader. State coordination lives in Zustand (`stack/`),
+ * not here.
+ */
 import * as React from 'react'
 import type { PortalProps } from '../../Portal'
 import type {

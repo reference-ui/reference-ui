@@ -1,0 +1,33 @@
+# Combobox
+
+Controlled combobox coordinator with editable Input and select-only
+Trigger focus sources, a popover shell over a nested Listbox, Tree, or
+virtual grid, and single-authority resolution across all three. Text
+sessions support inline completion, custom values, and committed-text
+revert; status routes through the shared announcer.
+
+Contract: [Combobox.md](./Combobox.md). Cases: [TESTS.md](./TESTS.md).
+
+The root is composition only: a session hook owns every ref and state
+cell, behavior hooks add registry, authority, active, open, virtual,
+bridge, text, commit, resolver, and announcement decisions, and the
+scope they provide feeds five parts. Beneath the hooks, each problem
+owns a module. Authored scans the collection children and guards
+adapter shapes. Autocomplete decides inline completion. Virtual-focus
+validates and searches logical items. Navigation steps mounted arrows.
+Shared holds the diagnostic and id hygiene. Pure decisions carry
+colocated unit tests; browser behavior proves out in CT.
+
+| Module | Role |
+| :--- | :--- |
+| [`parts/`](./parts) | Input, Trigger, Popover, Option, VirtualItem |
+| [`hooks/`](./hooks) | Session, registry, authority, active, open, virtual, text, commits, resolver |
+| [`authored.ts`](./authored.ts) | Authored-children scan and adapter guards |
+| [`autocomplete.ts`](./autocomplete.ts) | Inline-completion decisions |
+| [`virtual-focus.ts`](./virtual-focus.ts) | Logical validation, search, stepping |
+| [`navigation/`](./navigation) | Mounted arrow stepping and commit guard |
+| [`shared/`](./shared) | Diagnostic and id hygiene |
+| [`combobox-context.ts`](./combobox-context.ts) | Shared scope (the Law 3 allowance) |
+
+`combobox-context.ts` keeps its path because Listbox and Tree import the
+shared scope directly; its name is the exception that proves the shape.

@@ -1,6 +1,6 @@
 export * from './Calendar'
-// Gregorian ISO kit (ported verbatim from quarantine b19c73bee; see iso.ts).
-// Curated — NOT `export *` — because iso.ts also declares ISODate and
+// Gregorian ISO kit (ported verbatim from quarantine b19c73bee; see dates/iso.ts).
+// Curated — NOT `export *` — because dates/iso.ts also declares ISODate and
 // CalendarMode, and star-export ambiguity would silently drop both names,
 // breaking DateField's `import { type ISODate } from '../Calendar'`.
 // Calendar.tsx remains the owner of the public ISODate (= string),
@@ -32,12 +32,12 @@ export {
   compareISODate,
   normalizeDateRange,
   isDateInRange,
-} from './iso'
+} from './dates/iso'
 export {
   weekStartData,
   validateLocale,
   getWeekStart,
   type WeekdayHeader,
   getWeekdayHeaders,
-} from './week'
-export { type GridDay, type MonthGrid, buildMonthGrid } from './grid'
+} from './dates/week'
+export { type GridDay, type MonthGrid, buildMonthGrid } from './dates/grid'

@@ -1,9 +1,12 @@
+/**
+ * One-of-each part registry with corruption diagnostics. Duplicate parts,
+ * Handle-without-edge, and mixed edge+anchor geometries warn and corrupt
+ * the instance. Used only by `Overlay.tsx`.
+ */
 import * as React from 'react'
 import type { OverlayPartName } from '../context'
 import type { OverlayEdge } from '../types'
 import { overlayWarn } from '../shared/warn'
-
-/** One of each part. Duplicate parts or Handle-without-edge corrupt the instance. */
 
 export function usePartRegistry(edge?: OverlayEdge, mixedGeometry = false) {
   const registeredParts = React.useRef(new Map<string, number>())

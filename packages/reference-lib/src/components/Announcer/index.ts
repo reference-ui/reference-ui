@@ -5,5 +5,5 @@
  * constants, document registry, diagnostics, store) lives in `./internal`
  * for ReferenceLibrary and tests. No shims: pre-release breaking.
  */
-export { announce } from './Announcer'
-export type { AnnounceOptions } from './Announcer'
+export { announce } from './store'
+export type { AnnounceOptions } from './types'

@@ -1,2 +1,2 @@
 export * from './Slider'
-export * from './slider-math'
+export * from './math/slider-math'

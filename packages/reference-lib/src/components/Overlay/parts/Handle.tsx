@@ -1,3 +1,8 @@
+/**
+ * Drag handle for edge sheets (Vaul kernel). Tracks pointer swipes into
+ * progress CSS state and dismisses past the velocity/distance thresholds
+ * in `gesture/` — no edge, no drag.
+ */
 import * as React from 'react'
 import { Div, type PrimitiveProps } from '@reference-ui/react'
 import { OverlayContext } from '../context'

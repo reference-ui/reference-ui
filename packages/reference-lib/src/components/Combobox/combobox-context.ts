@@ -1,3 +1,10 @@
+/**
+ * Combobox's shared scope: the context object nested Listbox, Tree, and
+ * the focus-source parts read for selection, active state, adapters,
+ * and commits — plus the option-entry, adapter, and navigation vocabulary
+ * those consumers share. This file keeps its path because Listbox and
+ * Tree import it directly; the component props live in types.ts.
+ */
 import * as React from 'react'
 import type { VirtualFocusAdapter } from '../Listbox'
 
