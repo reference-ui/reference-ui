@@ -32,6 +32,10 @@ export const OverlayArrow = React.forwardRef<HTMLDivElement, OverlayArrowProps>(
 
   return (
     <Div
+      position="absolute"
+      width="2r"
+      height="2r"
+      pointerEvents="none"
       {...props}
       data-reference-overlay-arrow=""
       data-edge-padding={edgePadding}
@@ -39,10 +43,6 @@ export const OverlayArrow = React.forwardRef<HTMLDivElement, OverlayArrowProps>(
         if (context) context.arrowRef.current = node
         assignRef(userRef, node)
       }}
-      position="absolute"
-      width="2r"
-      height="2r"
-      pointerEvents="none"
       className={className}
       style={style}
     />

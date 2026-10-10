@@ -90,13 +90,6 @@ export const OverlayHandle = React.forwardRef<HTMLDivElement, OverlayHandleProps
 
   return (
     <Div
-      {...props}
-      data-reference-overlay-handle=""
-      ref={(node: HTMLDivElement | null) => assignRef(userRef, node)}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
       width="8r"
       height="1r"
       borderRadius="full"
@@ -105,6 +98,13 @@ export const OverlayHandle = React.forwardRef<HTMLDivElement, OverlayHandleProps
       my="2r"
       cursor="grab"
       touchAction="none"
+      {...props}
+      data-reference-overlay-handle=""
+      ref={(node: HTMLDivElement | null) => assignRef(userRef, node)}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className={className}
       style={style}
     />
