@@ -48,6 +48,7 @@ import {
   collectMatrixFailureDetails,
   createAbortedMatrixPackageResult,
   formatMatrixPackageHeading,
+  readErrorOutput,
 } from './reporting.js'
 import {
   createMatrixRefSyncWatchCommand,
@@ -311,7 +312,15 @@ export async function runMatrixPackageInDagger(
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    await writeMatrixPackageStageLog(packageRunContext, phase, errorMessage)
+    // The exec throws on a non-zero exit and the streamed reporter output is
+    // otherwise lost with the container. Persist it beside the exit message so
+    // the stage log names the failing test and its assertion, not just a code.
+    const errorStdout = readErrorOutput((error as { stdout?: unknown })?.stdout).trim()
+    const errorStderr = readErrorOutput((error as { stderr?: unknown })?.stderr).trim()
+    const stageLogOutput = [errorMessage, errorStdout, errorStderr]
+      .filter((part) => part.length > 0)
+      .join('\n')
+    await writeMatrixPackageStageLog(packageRunContext, phase, stageLogOutput)
     lines.push(`  Failed during ${phase}. See ${resolve(matrixLogDir, `${packageRunContext.logPrefix}-${phase}.log`)}`)
     lines.push(...collectMatrixFailureDetails(error))
 

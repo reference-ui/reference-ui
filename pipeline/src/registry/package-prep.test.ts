@@ -6,11 +6,62 @@ import { resolve } from 'node:path'
 import { describe, it } from 'node:test'
 import type { WorkspacePackage } from '../build/types.js'
 import {
+  canStagePackagePath,
   collectDeclaredPackagedPaths,
   ensurePreparedPackageIncludesDeclaredOutputs,
   preparePackageJsonForLocalRegistry,
   resolveWorkspaceProtocolVersion,
 } from './package-prep.js'
+
+describe('canStagePackagePath', () => {
+  const packageDir = '/repo/packages/reference-rs'
+
+  it('prunes cargo build outputs so staging never sweeps tens of GB', () => {
+    // Regression guard for the 77G `.pipeline/registry/staging`: the whole
+    // package dir used to be copied, dragging `dist/cargo` (debug) along.
+    for (const excluded of [
+      '/repo/packages/reference-rs/target',
+      '/repo/packages/reference-rs/target/debug/deps',
+      '/repo/packages/reference-rs/dist/cargo',
+      '/repo/packages/reference-rs/dist/cargo/debug/incremental',
+    ]) {
+      assert.equal(canStagePackagePath(packageDir, excluded), false, `expected to prune ${excluded}`)
+    }
+  })
+
+  it('prunes tooling scratch dirs at the package root', () => {
+    for (const excluded of [
+      '/repo/packages/reference-rs/coverage',
+      '/repo/packages/reference-rs/coverage/lcov.info',
+      '/repo/packages/reference-rs/.turbo',
+      '/repo/packages/reference-rs/.turbo/cache',
+    ]) {
+      assert.equal(canStagePackagePath(packageDir, excluded), false, `expected to prune ${excluded}`)
+    }
+  })
+
+  it('prunes vcs and dependency dirs anywhere in the tree', () => {
+    for (const excluded of [
+      '/repo/packages/reference-rs/.git',
+      '/repo/packages/reference-rs/node_modules',
+      '/repo/packages/reference-rs/dist/native/node_modules',
+    ]) {
+      assert.equal(canStagePackagePath(packageDir, excluded), false, `expected to prune ${excluded}`)
+    }
+  })
+
+  it('keeps the publishable artifact tree', () => {
+    for (const kept of [
+      '/repo/packages/reference-rs/package.json',
+      '/repo/packages/reference-rs/README.md',
+      '/repo/packages/reference-rs/dist/native/reference-native.darwin-x64.node',
+      '/repo/packages/reference-rs/dist/npm/linux-x64-gnu/package.json',
+      '/repo/packages/reference-rs/dist/index.mjs',
+    ]) {
+      assert.equal(canStagePackagePath(packageDir, kept), true, `expected to keep ${kept}`)
+    }
+  })
+})
 
 describe('resolveWorkspaceProtocolVersion', () => {
   it('rewrites workspace:* to the concrete workspace version', () => {

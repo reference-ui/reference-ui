@@ -8,9 +8,34 @@
 
 import { existsSync } from 'node:fs'
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
+import { basename, relative, resolve, sep } from 'node:path'
 import type { WorkspacePackage } from '../build/types.js'
 import { packedTarballName, stagingDir } from './paths.js'
+
+// Build scratch that is never part of a published package and must never be
+// copied into `.pipeline/registry/staging`. `dist/cargo` is the Rust target dir
+// (`.cargo/config.toml`) and is the big one: copied whole it drags tens of GB of
+// incremental debug output that `pnpm pack` never ships. Excludes are matched on
+// paths RELATIVE to the package root, never bare basenames, because core/lib/
+// mcp/icons ship their whole `dist/` via `files` (see pipeline/performance.md).
+const stagingCopyExcludedPathSegments = new Set(['.git', 'node_modules'])
+const stagingCopyExcludedRelativePaths = ['target', 'dist/cargo', '.turbo', 'coverage'] as const
+
+function hasExcludedPathSegment(relativePath: string): boolean {
+  return relativePath.split('/').some((segment) => stagingCopyExcludedPathSegments.has(segment))
+}
+
+export function canStagePackagePath(sourcePackageDir: string, sourcePath: string): boolean {
+  const relativePath = relative(sourcePackageDir, sourcePath).split(sep).join('/')
+
+  if (hasExcludedPathSegment(relativePath)) {
+    return false
+  }
+
+  return !stagingCopyExcludedRelativePaths.some(
+    (excluded) => relativePath === excluded || relativePath.startsWith(`${excluded}/`),
+  )
+}
 
 export interface PackageJsonLike {
   dependencies?: Record<string, string>
@@ -222,10 +247,7 @@ export async function prepareWorkspacePackageForLocalRegistry(
   await mkdir(stagingDir, { recursive: true })
 
   await cp(pkg.dir, preparedPackageDir, {
-    filter: (sourcePath) => {
-      const sourceName = basename(sourcePath)
-      return sourceName !== '.git' && sourceName !== 'node_modules'
-    },
+    filter: (sourcePath) => canStagePackagePath(pkg.dir, sourcePath),
     recursive: true,
   })
 
