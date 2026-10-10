@@ -109,11 +109,24 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 
 function warnedMessages(): string[] {
   return vi.mocked(console.warn).mock.calls.map(args => String(args[0]))
+}
+
+/**
+ * Give the miss probe a settled, empty sheet list so it proceeds to warn.
+ * Without a document the probe stays silent in Node; this stub stands in for
+ * a browser whose `@layer utilities` never received the constructed class.
+ */
+function installCompleteDocument(): void {
+  vi.stubGlobal('document', {
+    readyState: 'complete',
+    styleSheets: { length: 0, item: () => null },
+  })
 }
 
 describe('css() resolution', () => {
@@ -370,6 +383,40 @@ describe('css() miss diagnostics', () => {
 
     expect(css({ color: 'shade-m6pd' })).toBe('test__c_shade-m6pd')
     expect(warnedMessages()).toHaveLength(0)
+  })
+})
+
+describe('css() miss diagnostic message', () => {
+  it('names the class and system at the best-effort call site', async () => {
+    installCompleteDocument()
+
+    expect(css({ color: 'shade-msg01' })).toBe('test__c_shade-msg01')
+    await vi.waitFor(() => expect(warnedMessages()).toHaveLength(1))
+
+    const message = warnedMessages()[0] ?? ''
+    expect(message).toContain('no compiled class')
+    expect(message).toContain('for `color: "shade-msg01"`')
+    // The system rides inside the constructed class prefix; no separate token.
+    expect(message).toContain('(class test__c_shade-msg01, called at ')
+    expect(message).toContain('Add a static call site or staticCss entry')
+  })
+
+  it('stays silent in production builds even with a document', async () => {
+    installCompleteDocument()
+    vi.stubEnv('NODE_ENV', 'production')
+
+    expect(css({ color: 'shade-msg02' })).toBe('test__c_shade-msg02')
+    await Promise.resolve()
+    expect(warnedMessages()).toHaveLength(0)
+  })
+
+  it('dedups a repeated identical miss to a single candidate', async () => {
+    installCompleteDocument()
+
+    for (let round = 0; round < 2; round += 1) {
+      expect(css({ color: 'shade-msg03' })).toBe('test__c_shade-msg03')
+    }
+    await vi.waitFor(() => expect(warnedMessages()).toHaveLength(1))
   })
 })
 

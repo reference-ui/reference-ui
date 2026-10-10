@@ -121,9 +121,12 @@ const EXPECTED_BYTES = {
   // (-5620/-2198): the probe bundles dist/primitives.mjs (minified) in, and
   // the raw-esbuild leg drops tsup's SWC __name wrappers plus the node:
   // strip from it; A/B with the tsup-built dist reproduces 159077/39933
-  // exactly. Re-verify if acceptance moves bytes.
-  reactRaw: 153457,
-  reactGzip: 37735,
+  // exactly. 2026-10-10 F2 diagnostic miss-message change -> 153469/37738
+  // (+12/+3): the css() miss message carries the class name and the call
+  // site, react.mjs-only with all CSS pins green.
+  // Re-verify if acceptance moves bytes.
+  reactRaw: 153469,
+  reactGzip: 37738,
   fixtureRules: 3693,
   m500Rules: 33806,
 }

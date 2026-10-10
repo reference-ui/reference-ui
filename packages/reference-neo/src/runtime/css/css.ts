@@ -121,6 +121,14 @@ function flushHeldMissCandidates(): void {
  * refused queries name nothing to check, so every candidate is a class the
  * probe confirms against `@layer utilities`: a dynamic value, a typo, or a
  * missing staticCss entry. Node stays silent (no document); the probe warns.
+ *
+ * The message names the constructed class (which already carries the system
+ * as its `system__stem` prefix, so the system needs no separate token) and
+ * the css() call site. That site is best-effort: captureMissSite walks the
+ * stack, so a bundled or minified `react.mjs` can only report the nearest
+ * frame it still recognizes. Dedup keys on the full message, so repeats of
+ * the same class from the same site stay silent while a different site (or
+ * a different class) still warns.
  */
 function reportStyleMisses(named: Array<{ query: NamerRequest; classes: string[] }>): void {
   if (isProductionBuild()) {
@@ -133,7 +141,8 @@ function reportStyleMisses(named: Array<{ query: NamerRequest; classes: string[]
       site ??= captureMissSite()
       const message =
         `[reference-ui] css(): no compiled class for \`${formatMissTarget(query)}\` ` +
-        `(called at ${site}). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.`
+        `(class ${className}, called at ${site}). Add a static call site or staticCss entry; ` +
+        `miss class emitted but unbacked, paints nothing.`
       if (reportedMissDiagnostics.has(message)) {
         continue
       }
