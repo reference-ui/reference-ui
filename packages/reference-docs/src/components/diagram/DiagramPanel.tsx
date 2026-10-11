@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Div, css } from '@reference-ui/react'
 import type {
-  DiagramEmphasis,
+  DiagramIntensity,
   DiagramPanelAlign,
   DiagramPanelVariant,
   DiagramTone,
@@ -17,8 +17,12 @@ import type {
  * opaque slab, so a toned panel still belongs to the diagram's environment. The
  * composite is `color-mix(in oklab, …)` — oklch rotates hue, which swung amber
  * to magenta and green to cyan. `var(--colors-diagram-panel)` resolves per mode,
- * so one literal serves both light and dark. `emphasis` is the intensity
- * vocabulary — subtle is the default; reach past it only when a panel earns it.
+ * so one literal serves both light and dark.
+ *
+ * Intensity is local to the diagram and mirrors Arc's `arcIntensity` vocabulary
+ * — ghost 4 · medium 10 · firm 14 · strong 18. `medium` is the resting tint, so
+ * a toned panel needs no intensity prop; reach past it only when a panel earns
+ * it. These are deliberately not Reference UI tokens yet.
  */
 
 type TonefulTone = Exclude<DiagramTone, 'neutral'>
@@ -43,91 +47,125 @@ const panelNeutralFill = css({ bg: 'diagramPanel', borderColor: 'diagramBorder' 
 const panelNeutralOutline = css({ bg: 'transparent', borderColor: 'diagramBorder' })
 
 /*
- * Tone surfaces: the family at 500 composited over the neutral panel, three
+ * Tone surfaces: the family at 500 composited over the neutral panel, four
  * intensities each. Surface and hairline share one family; only the amount
  * changes, so the hue is identical at every intensity.
+ *
+ * The convention: a resting surface is `medium`, which is the default, so a
+ * panel asks for a tone and nothing else. A panel stacked inside a stage steps
+ * up to `firm`; `strong` is for a surface that must read as coloured. Context
+ * decides, to taste. Hairlines climb in even twelve-point steps so an edge
+ * stays legible without becoming a line.
  */
-const toneSurface: Record<TonefulTone, Record<DiagramEmphasis, string>> = {
+const toneSurface: Record<TonefulTone, Record<DiagramIntensity, string>> = {
   blue: {
-    subtle: css({
-      bg: 'color-mix(in oklab, var(--colors-blue-500) 8%, var(--colors-diagram-panel))',
+    ghost: css({
+      bg: 'color-mix(in oklab, var(--colors-blue-500) 4%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-blue-500) 30%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-blue-500) 22%, var(--colors-diagram-border))',
     }),
-    moderate: css({
-      bg: 'color-mix(in oklab, var(--colors-blue-500) 13%, var(--colors-diagram-panel))',
+    medium: css({
+      bg: 'color-mix(in oklab, var(--colors-blue-500) 10%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-blue-500) 34%, var(--colors-diagram-border))',
+    }),
+    firm: css({
+      bg: 'color-mix(in oklab, var(--colors-blue-500) 14%, var(--colors-diagram-panel))',
       borderColor:
         'color-mix(in oklab, var(--colors-blue-500) 46%, var(--colors-diagram-border))',
     }),
     strong: css({
-      bg: 'color-mix(in oklab, var(--colors-blue-500) 26%, var(--colors-diagram-panel))',
+      bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-blue-500) 66%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-blue-500) 58%, var(--colors-diagram-border))',
     }),
   },
   green: {
-    subtle: css({
-      bg: 'color-mix(in oklab, var(--colors-green-500) 8%, var(--colors-diagram-panel))',
+    ghost: css({
+      bg: 'color-mix(in oklab, var(--colors-green-500) 4%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-green-500) 30%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-green-500) 22%, var(--colors-diagram-border))',
     }),
-    moderate: css({
-      bg: 'color-mix(in oklab, var(--colors-green-500) 13%, var(--colors-diagram-panel))',
+    medium: css({
+      bg: 'color-mix(in oklab, var(--colors-green-500) 10%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-green-500) 34%, var(--colors-diagram-border))',
+    }),
+    firm: css({
+      bg: 'color-mix(in oklab, var(--colors-green-500) 14%, var(--colors-diagram-panel))',
       borderColor:
         'color-mix(in oklab, var(--colors-green-500) 46%, var(--colors-diagram-border))',
     }),
     strong: css({
-      bg: 'color-mix(in oklab, var(--colors-green-500) 26%, var(--colors-diagram-panel))',
+      bg: 'color-mix(in oklab, var(--colors-green-500) 18%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-green-500) 66%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-green-500) 58%, var(--colors-diagram-border))',
     }),
   },
   amber: {
-    subtle: css({
-      bg: 'color-mix(in oklab, var(--colors-amber-500) 8%, var(--colors-diagram-panel))',
+    ghost: css({
+      bg: 'color-mix(in oklab, var(--colors-amber-500) 4%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-amber-500) 30%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-amber-500) 22%, var(--colors-diagram-border))',
     }),
-    moderate: css({
-      bg: 'color-mix(in oklab, var(--colors-amber-500) 13%, var(--colors-diagram-panel))',
+    medium: css({
+      bg: 'color-mix(in oklab, var(--colors-amber-500) 10%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-amber-500) 34%, var(--colors-diagram-border))',
+    }),
+    firm: css({
+      bg: 'color-mix(in oklab, var(--colors-amber-500) 14%, var(--colors-diagram-panel))',
       borderColor:
         'color-mix(in oklab, var(--colors-amber-500) 46%, var(--colors-diagram-border))',
     }),
     strong: css({
-      bg: 'color-mix(in oklab, var(--colors-amber-500) 26%, var(--colors-diagram-panel))',
+      bg: 'color-mix(in oklab, var(--colors-amber-500) 18%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-amber-500) 66%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-amber-500) 58%, var(--colors-diagram-border))',
     }),
   },
   red: {
-    subtle: css({
-      bg: 'color-mix(in oklab, var(--colors-red-500) 8%, var(--colors-diagram-panel))',
-      borderColor: 'color-mix(in oklab, var(--colors-red-500) 30%, var(--colors-diagram-border))',
+    ghost: css({
+      bg: 'color-mix(in oklab, var(--colors-red-500) 4%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-red-500) 22%, var(--colors-diagram-border))',
     }),
-    moderate: css({
-      bg: 'color-mix(in oklab, var(--colors-red-500) 13%, var(--colors-diagram-panel))',
-      borderColor: 'color-mix(in oklab, var(--colors-red-500) 46%, var(--colors-diagram-border))',
+    medium: css({
+      bg: 'color-mix(in oklab, var(--colors-red-500) 10%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-red-500) 34%, var(--colors-diagram-border))',
+    }),
+    firm: css({
+      bg: 'color-mix(in oklab, var(--colors-red-500) 14%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-red-500) 46%, var(--colors-diagram-border))',
     }),
     strong: css({
-      bg: 'color-mix(in oklab, var(--colors-red-500) 26%, var(--colors-diagram-panel))',
-      borderColor: 'color-mix(in oklab, var(--colors-red-500) 66%, var(--colors-diagram-border))',
+      bg: 'color-mix(in oklab, var(--colors-red-500) 18%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-red-500) 58%, var(--colors-diagram-border))',
     }),
   },
   violet: {
-    subtle: css({
-      bg: 'color-mix(in oklab, var(--colors-violet-500) 8%, var(--colors-diagram-panel))',
+    ghost: css({
+      bg: 'color-mix(in oklab, var(--colors-violet-500) 4%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-violet-500) 30%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-violet-500) 22%, var(--colors-diagram-border))',
     }),
-    moderate: css({
-      bg: 'color-mix(in oklab, var(--colors-violet-500) 13%, var(--colors-diagram-panel))',
+    medium: css({
+      bg: 'color-mix(in oklab, var(--colors-violet-500) 10%, var(--colors-diagram-panel))',
+      borderColor:
+        'color-mix(in oklab, var(--colors-violet-500) 34%, var(--colors-diagram-border))',
+    }),
+    firm: css({
+      bg: 'color-mix(in oklab, var(--colors-violet-500) 14%, var(--colors-diagram-panel))',
       borderColor:
         'color-mix(in oklab, var(--colors-violet-500) 46%, var(--colors-diagram-border))',
     }),
     strong: css({
-      bg: 'color-mix(in oklab, var(--colors-violet-500) 26%, var(--colors-diagram-panel))',
+      bg: 'color-mix(in oklab, var(--colors-violet-500) 18%, var(--colors-diagram-panel))',
       borderColor:
-        'color-mix(in oklab, var(--colors-violet-500) 66%, var(--colors-diagram-border))',
+        'color-mix(in oklab, var(--colors-violet-500) 58%, var(--colors-diagram-border))',
     }),
   },
 }
@@ -142,7 +180,7 @@ const panelAlignClass: Record<DiagramPanelAlign, string> = {
 export type DiagramPanelProps = {
   children: ReactNode
   tone?: DiagramTone
-  emphasis?: DiagramEmphasis
+  intensity?: DiagramIntensity
   variant?: DiagramPanelVariant
   align?: DiagramPanelAlign
   className?: string
@@ -151,7 +189,7 @@ export type DiagramPanelProps = {
 export function DiagramPanel({
   children,
   tone = 'neutral',
-  emphasis = 'subtle',
+  intensity = 'medium',
   variant = 'fill',
   align = 'stretch',
   className,
@@ -161,7 +199,7 @@ export function DiagramPanel({
       ? variant === 'fill'
         ? panelNeutralFill
         : panelNeutralOutline
-      : toneSurface[tone][emphasis]
+      : toneSurface[tone][intensity]
   const composed = `${panelFrame} ${variant === 'fill' ? borderSolid : borderDashed} ${
     panelAlignClass[align]
   } ${surface}`

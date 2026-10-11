@@ -72,7 +72,7 @@ import {
  * output, the build boundary, the browser runtime, the result. Every stage is a
  * panel, every handoff an arrow, every surface an ordinary Div inside a panel.
  * Tone marks meaning — blue builds, green generates and confirms, amber fences
- * — at the default intensity. A toned panel titles in its own lighter shade;
+ * — at the resting intensity. A toned panel titles in its own lighter shade;
  * body text stays near-white.
  */
 
@@ -137,7 +137,7 @@ export function ReferencePipeline() {
             <Span className={tagPillBlue}>Rust + Oxc</Span>
           </Div>
 
-          <Diagram.Panel tone="blue" emphasis="moderate" align="center">
+          <Diagram.Panel tone="blue" intensity="firm" align="center">
             <Div className={cardHead}>
               <ScanIcon size="md" className={inkBlue} />
               <Span className={`${analysisTitle} ${textBlue}`}>Source analysis</Span>
@@ -173,7 +173,7 @@ export function ReferencePipeline() {
 
           <Diagram.Arrow direction="down" />
 
-          <Diagram.Panel tone="blue" emphasis="moderate">
+          <Diagram.Panel tone="blue" intensity="firm">
             <Div className={stageHead}>
               <MemoryIcon size="md" className={inkBlue} />
               <Span className={`${cardTitle} ${textBlue}`}>Canon CSS engine</Span>
@@ -200,7 +200,7 @@ export function ReferencePipeline() {
             <Span className={stageTag}>Build artifacts</Span>
           </Div>
           <Diagram.Row>
-            <Diagram.Panel tone="green" emphasis="moderate">
+            <Diagram.Panel tone="green" intensity="firm">
               <Div className={cardHead}>
                 <FormatPaintIcon size="md" className={inkGreen} />
                 <Span className={`${cardTitle} ${textGreen}`}>Atomic stylesheet</Span>
@@ -208,7 +208,7 @@ export function ReferencePipeline() {
               <Div className={`${codeBlock} ${trayGreen}`}>{'.a1{padding:16px}\n.b2{color:#f3f4f6}'}</Div>
               <Span className={pillGreen}>Static CSS</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" emphasis="moderate">
+            <Diagram.Panel tone="green" intensity="firm">
               <Div className={cardHead}>
                 <Package2Icon size="md" className={inkGreen} />
                 <Span className={`${cardTitle} ${textGreen}`}>Component integration</Span>
@@ -303,17 +303,17 @@ export function ReferencePipeline() {
             <CheckCircleIcon size="md" className={inkGreen} />
           </Div>
           <Diagram.Row>
-            <Diagram.Panel tone="green" emphasis="moderate" align="center">
+            <Diagram.Panel tone="green" intensity="firm" align="center">
               <BoltIcon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Precompiled</Span>
               <Span className={cardSub}>Styling</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" emphasis="moderate" align="center">
+            <Diagram.Panel tone="green" intensity="firm" align="center">
               <Package2Icon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Compact</Span>
               <Span className={cardSub}>Output</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" emphasis="moderate" align="center">
+            <Diagram.Panel tone="green" intensity="firm" align="center">
               <FormatPaintIcon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Native</Span>
               <Span className={cardSub}>Rendering</Span>

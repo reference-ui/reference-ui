@@ -8,11 +8,11 @@ import {
 } from '@reference-ui/lib'
 import type { ReactNode } from 'react'
 import { Span, css } from '@reference-ui/react'
-import { Diagram, type DiagramEmphasis, type DiagramTone } from '../../components/diagram/Diagram'
+import { Diagram, type DiagramIntensity, type DiagramTone } from '../../components/diagram/Diagram'
 
 /**
- * The tone vocabulary. Six semantic tones at the default intensity, then the
- * same tone across the three intensities so the difference is legible. Tones
+ * The tone vocabulary. Six semantic tones at the resting intensity, then the
+ * same tone across the four intensities so the difference is legible. Tones
  * carry meaning — neutral structures, blue builds, green confirms, amber warns,
  * red blocks, violet transforms — and intensity decides how loudly. The dashed
  * outline draws a boundary the reader should notice before crossing.
@@ -38,12 +38,12 @@ const toneIcon: Record<Exclude<DiagramTone, 'neutral'>, ReactNode> = {
 
 function ToneCard({
   tone,
-  emphasis,
+  intensity,
   name,
   use,
 }: {
   tone: DiagramTone
-  emphasis?: DiagramEmphasis
+  intensity?: DiagramIntensity
   name: string
   use: string
 }) {
@@ -54,7 +54,7 @@ function ToneCard({
       toneIcon[tone]
     )
   return (
-    <Diagram.Panel tone={tone} emphasis={emphasis} align="center">
+    <Diagram.Panel tone={tone} intensity={intensity} align="center">
       {icon}
       <Span className={cardName}>{name}</Span>
       <Span className={cardUse}>{use}</Span>
@@ -76,9 +76,10 @@ export function ToneGallery() {
         <ToneCard tone="violet" name="Violet" use="Transforms and derived state" />
       </Diagram.Row>
       <Diagram.Row>
-        <ToneCard tone="amber" emphasis="subtle" name="Subtle" use="The default tint" />
-        <ToneCard tone="amber" emphasis="moderate" name="Moderate" use="Worth a glance" />
-        <ToneCard tone="amber" emphasis="strong" name="Strong" use="Demands the eye" />
+        <ToneCard tone="amber" intensity="ghost" name="Ghost" use="Barely-there wash" />
+        <ToneCard tone="amber" intensity="medium" name="Medium" use="The resting tint" />
+        <ToneCard tone="amber" intensity="firm" name="Firm" use="A step above rest" />
+        <ToneCard tone="amber" intensity="strong" name="Strong" use="Reads as coloured" />
       </Diagram.Row>
       <Diagram.Row>
         <Diagram.Panel variant="outline" align="center">

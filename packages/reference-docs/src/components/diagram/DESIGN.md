@@ -25,10 +25,13 @@ Two orthogonal axes, both owned by the primitive, not the caller's judgement:
 - **`tone`** — `neutral | blue | green | amber | red | violet`. What the panel
   *means*: blue builds, green generates/confirms, amber fences, red blocks,
   violet transforms, neutral structures.
-- **`emphasis`** — `subtle` (default) `| moderate | strong`. How *loudly*.
+- **`intensity`** — `ghost | medium | firm | strong`. How *loudly*. `medium` is
+  the resting tint and the default.
 
-Agents write `tone="green"` and, only when a panel earns it, `emphasis="strong"`.
-Subtle is the default; the palette does not shout.
+The four intensities are Arc's `arcIntensity` vocabulary (ghost 4 · medium 10 ·
+firm 14 · strong 18), kept local to the diagram kit rather than promoted to
+Reference UI tokens. Agents write `tone="green"` and, only when a panel earns it,
+`intensity="strong"`. The palette does not shout.
 
 ## Composition, not opaque colour
 
@@ -41,11 +44,21 @@ surface:  color-mix(in oklab, var(--colors-<family>-500) N%, var(--colors-diagra
 hairline: color-mix(in oklab, var(--colors-<family>-500) M%, var(--colors-diagram-border))
 ```
 
-| emphasis | surface N | hairline M |
+| intensity | surface N | hairline M |
 | --- | --- | --- |
-| subtle | 8% | 30% |
-| moderate | 13% | 46% |
-| strong | 26% | 66% |
+| ghost | 4% | 22% |
+| medium | 10% | 34% |
+| firm | 14% | 46% |
+| strong | 18% | 58% |
+
+Hairlines climb in even twelve-point steps, so a tint stays legible as an edge
+without becoming a line.
+
+**The resting surface is `medium`.** It is the default, so a panel asks for a
+tone and nothing else, and the whole kit sits at one tint. Context then decides
+the rest, to taste: a panel *stacked inside* a stage steps up to `firm` so it
+reads as depth, and `strong` is reserved for a surface that must read as
+coloured.
 
 **Use `in oklab`, never `in oklch`.** oklch interpolates hue around the wheel:
 mixing a near-neutral (hue ~265) with amber (~70) swings through magenta, green
@@ -102,9 +115,10 @@ bg-only tray class (`trayNeutral` / `trayBlue` / `trayGreen`).
 1. **Toned base brightness.** Toned surfaces mix into `diagramPanel` (`slate.900`),
    so a toned panel is always a shade brighter than a neutral one. Consider
    mixing into `slate.950` instead, so a toned panel sits *darker* than neutral.
-2. **`emphasis` is doing double duty.** Nested cards inside a stage use
-   `emphasis="moderate"` purely to read *lighter than their parent* — that is
-   depth, not loudness. A dedicated `raised` surface variant may be cleaner.
+2. **`intensity` carries depth as well as loudness.** A panel stacked inside a
+   stage uses `intensity="firm"` to read as depth — that is now the convention,
+   not an anomaly. A dedicated `raised` variant would split the two axes if they
+   ever need to move independently.
 3. **Trays are hard-coded per family** (`trayBlue`, `trayGreen`). Add one per
    tone, or a general mechanism, when amber/violet sections appear.
 4. **Body text in toned sections** is still `docsText`. Decide whether prose
