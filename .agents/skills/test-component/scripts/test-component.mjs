@@ -8,20 +8,25 @@
  * Visual snapshots run on React 19 only. Snapshot writes need --update-snapshots --confirm.
  *
  * Persistent daemon owns ONE Vite gallery on :3101. Concurrent `pnpm agentct`
- * invocations route specs to that warm server through a 3-slot queue.
+ * invocations queue one job at a time, with at most two test workers.
  */
 
 import { spawn, spawnSync, execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import os from 'node:os'
 import net from 'node:net'
+import { loadCatalog, searchCases, selectCase } from './cases/catalog.mjs'
+import { evidenceErrors } from './cases/results.mjs'
+import { unitDirectory, artifactsDirectory } from './cases/targets.mjs'
+import { resolveSelection, selectLegacyTarget, executionArguments } from './cases/selection.mjs'
+import { parseCatalogInvocation, formatCatalogJson, formatCatalogHuman, listingExitCode, writeCatalogOutput } from './cases/output.mjs'
+import { canAcquireJob, MAX_ACTIVE_JOBS, workerBudget, selectOwnedGroups, isListenerOwnedByGroups } from './cases/resources.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import { acquireCpuGate, withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
+import { acquireCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
 
 function ensureQosJailbreak() {
   if (process.platform !== 'darwin') return false
@@ -75,14 +80,20 @@ function isSnapshotName(name = '') {
 const SOCKET_PATH = '/tmp/ref-ct-agent.sock'
 const DAEMON_PID_FILE = '/tmp/ref-ct-agent.pid'
 const DAEMON_SPAWN_LOCK = '/tmp/ref-ct-agent.spawn.lock'
+const DAEMON_START_LOCK = '/tmp/ref-ct-agent.start.lock'
 const DAEMON_LOG_FILE = '/tmp/ref-ct-agent.log'
 const QUEUE_DIR = '/tmp/ref-ct-agent-queue'
 const LOCK_FILE = path.join(QUEUE_DIR, 'active.lock')
-const MAX_CONCURRENCY = 3
-const WORKERS_PER_SLOT = Math.max(1, Math.floor(os.cpus().length / 3))
+const MAX_CONCURRENCY = MAX_ACTIVE_JOBS
+const WORKERS_PER_SLOT = workerBudget(process.env.CT_WORKERS)
 const DAEMON_IDLE_MS = 5 * 60 * 1000
 const IS_INNER = process.env.AGENTCT_INNER === '1'
 const DAEMON_OWNS_VITE = process.env.AGENTCT_VITE_OWNED_BY_DAEMON === '1'
+
+// Bounded POSIX inspection. Both `ps` and `lsof` must stay short and capped so a
+// hung or noisy system can never stall the runner or blow the process heap.
+const INSPECT_TIMEOUT_MS = 1000
+const INSPECT_MAX_BUFFER = 4 * 1024 * 1024
 
 // Queue Lock Logic
 function isPidAlive(pid) {
@@ -102,31 +113,35 @@ function withFileMutex(action) {
   while (!acquired && Date.now() - startTime < 5000) {
     try {
       fs.mkdirSync(mutexPath)
+      fs.writeFileSync(path.join(mutexPath, 'pid'), String(process.pid))
       acquired = true
-    } catch {
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error
       try {
-        const stat = fs.statSync(mutexPath)
-        if (Date.now() - stat.mtimeMs > 5000) {
-          fs.rmdirSync(mutexPath)
-        }
-      } catch {}
-      const end = Date.now() + 20
-      while (Date.now() < end) {}
+        const owner = Number(fs.readFileSync(path.join(mutexPath, 'pid'), 'utf-8'))
+        if (Number.isInteger(owner) && owner > 0 && !isPidAlive(owner)) fs.rmSync(mutexPath, { recursive: true })
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+      }
+      sleepSync(20)
     }
   }
+  if (!acquired) throw new Error('Component queue mutex timed out; execution was not started.')
   try {
     return action()
   } finally {
     if (acquired) {
-      try { fs.rmdirSync(mutexPath) } catch {}
+      try { fs.rmSync(mutexPath, { recursive: true, force: true }) } catch {}
     }
   }
 }
 
-async function acquireQueueLock(taskInfo = {}) {
-  try {
-    fs.mkdirSync(QUEUE_DIR, { recursive: true })
-  } catch {}
+async function acquireQueueLock(taskInfo = {}, { isCanceled } = {}) {
+  const canceled = () => typeof isCanceled === 'function' && isCanceled()
+  const canceledResult = () => ({ slotIndex: -1, canceled: true, release: async () => {} })
+  if (canceled()) return canceledResult()
+
+  fs.mkdirSync(QUEUE_DIR, { recursive: true })
 
   const now = Date.now().toString().padStart(16, '0')
   const myPid = process.pid
@@ -140,11 +155,7 @@ async function acquireQueueLock(taskInfo = {}) {
     task: taskInfo,
   }
 
-  try {
-    fs.writeFileSync(entryPath, JSON.stringify(entryData, null, 2))
-  } catch (err) {
-    console.warn(`[agent-queue] Warning: Could not write queue entry: ${err.message}`)
-  }
+  fs.writeFileSync(entryPath, JSON.stringify(entryData, null, 2))
 
   let cleanUpDone = false
   const cleanup = () => {
@@ -169,124 +180,122 @@ async function acquireQueueLock(taskInfo = {}) {
     } catch {}
   }
 
-  process.on('SIGINT', cleanup)
-  process.on('SIGTERM', cleanup)
+  // Signals tear down children before the exit hook releases the execution slot.
   process.on('exit', cleanup)
+
+  // Canceled waiters must not hold a slot or queue entry: drop our own entry
+  // without touching the active owner's lock, and release the exit listener.
+  const releaseCanceled = () => {
+    cleanup()
+    process.off('exit', cleanup)
+    return canceledResult()
+  }
 
   let loggedWait = false
   let lastLogTime = 0
 
-  while (true) {
-    let files = []
-    try {
-      files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
-    } catch {}
+  try {
+    while (true) {
+      if (canceled()) return releaseCanceled()
 
-    const validEntries = []
-    for (const f of files) {
-      const fPath = path.join(QUEUE_DIR, f)
-      try {
-        const data = JSON.parse(fs.readFileSync(fPath, 'utf-8'))
-        if (isPidAlive(data.pid)) {
-          validEntries.push({ file: f, data })
-        } else {
-          try { fs.unlinkSync(fPath) } catch {}
-        }
-      } catch {}
-    }
+      const files = fs.readdirSync(QUEUE_DIR).filter(f => f.endsWith('.json'))
 
-    validEntries.sort((a, b) => a.file.localeCompare(b.file))
-    const myIndex = validEntries.findIndex(e => e.file === entryFilename)
-
-    let acquired = false
-    let activeLocks = []
-    let assignedSlot = 0
-    withFileMutex(() => {
-      if (fs.existsSync(LOCK_FILE)) {
+      const validEntries = []
+      for (const f of files) {
+        const fPath = path.join(QUEUE_DIR, f)
         try {
-          const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
-          const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
-          const aliveLocks = parsed.filter(l => isPidAlive(l.pid))
-          if (aliveLocks.length !== parsed.length) {
-            if (aliveLocks.length === 0) {
-              try { fs.unlinkSync(LOCK_FILE) } catch {}
-            } else {
-              try { fs.writeFileSync(LOCK_FILE, JSON.stringify(aliveLocks, null, 2)) } catch {}
+          const data = JSON.parse(fs.readFileSync(fPath, 'utf-8'))
+          if (isPidAlive(data.pid)) {
+            validEntries.push({ file: f, data })
+          } else {
+            try { fs.unlinkSync(fPath) } catch {}
+          }
+        } catch {}
+      }
+
+      validEntries.sort((a, b) => a.file.localeCompare(b.file))
+      const myIndex = validEntries.findIndex(e => e.file === entryFilename)
+
+      let acquired = false
+      let activeLocks = []
+      let assignedSlot = 0
+      withFileMutex(() => {
+        if (fs.existsSync(LOCK_FILE)) {
+          try {
+            const raw = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8'))
+            const parsed = Array.isArray(raw) ? raw : (raw && raw.pid ? [raw] : [])
+            const aliveLocks = parsed.filter(l => isPidAlive(l.pid))
+            if (aliveLocks.length !== parsed.length) {
+              if (aliveLocks.length === 0) {
+                try { fs.unlinkSync(LOCK_FILE) } catch {}
+              } else {
+                fs.writeFileSync(LOCK_FILE, JSON.stringify(aliveLocks, null, 2))
+              }
+            }
+            activeLocks = aliveLocks
+          } catch (error) {
+            throw new Error(`Cannot read component execution lock: ${error.message}`)
+          }
+        }
+
+        if (canAcquireJob(myIndex, activeLocks.length)) {
+          const usedSlots = new Set(activeLocks.map(l => l.slotIndex))
+          for (let i = 0; i < MAX_CONCURRENCY; i++) {
+            if (!usedSlots.has(i)) {
+              assignedSlot = i
+              break
             }
           }
-          activeLocks = aliveLocks
-        } catch {
-          try { fs.unlinkSync(LOCK_FILE) } catch {}
-        }
-      }
 
-      if (myIndex >= 0 && myIndex < MAX_CONCURRENCY) {
-        const usedSlots = new Set(activeLocks.map(l => l.slotIndex))
-        for (let i = 0; i < MAX_CONCURRENCY; i++) {
-          if (!usedSlots.has(i)) {
-            assignedSlot = i
-            break
+          const lockPayload = {
+            pid: myPid,
+            entryFile: entryFilename,
+            acquiredAt: Date.now(),
+            task: taskInfo,
+            slotIndex: assignedSlot
+          }
+          const existingIdx = activeLocks.findIndex(l => l.pid === myPid)
+          if (existingIdx >= 0) {
+            activeLocks[existingIdx] = lockPayload
+            assignedSlot = activeLocks[existingIdx].slotIndex
+          } else {
+            activeLocks.push(lockPayload)
+          }
+          fs.writeFileSync(LOCK_FILE, JSON.stringify(activeLocks, null, 2))
+          acquired = true
+        }
+      })
+
+      if (acquired) {
+        if (loggedWait) {
+          console.log(`[agent-queue] Turn reached (PID ${myPid}, slot ${assignedSlot + 1}/${MAX_CONCURRENCY}). Starting execution...`)
+        }
+        return {
+          slotIndex: assignedSlot,
+          release: async () => {
+            cleanup()
+            process.off('exit', cleanup)
           }
         }
-        
-        const lockPayload = {
-          pid: myPid,
-          entryFile: entryFilename,
-          acquiredAt: Date.now(),
-          task: taskInfo,
-          slotIndex: assignedSlot
-        }
-        const existingIdx = activeLocks.findIndex(l => l.pid === myPid)
-        if (existingIdx >= 0) {
-          activeLocks[existingIdx] = lockPayload
-          assignedSlot = activeLocks[existingIdx].slotIndex
-        } else {
-          activeLocks.push(lockPayload)
-        }
-        try {
-          fs.writeFileSync(LOCK_FILE, JSON.stringify(activeLocks, null, 2))
-        } catch {}
-        acquired = true
       }
-    })
 
-    if (acquired) {
-      if (loggedWait) {
-        console.log(`[agent-queue] Turn reached (PID ${myPid}, slot ${assignedSlot + 1}/${MAX_CONCURRENCY}). Starting execution...`)
+      const queuePos = myIndex >= 0 ? myIndex + 1 : validEntries.length + 1
+      const activePids = activeLocks.map(l => l.pid).join(', ') || 'none'
+      const nowMs = Date.now()
+
+      if (!loggedWait || nowMs - lastLogTime > 10000) {
+        console.log(`[agent-queue] Maximum concurrency reached (${activeLocks.length}/${MAX_CONCURRENCY} active PIDs: ${activePids}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
+        loggedWait = true
+        lastLogTime = nowMs
       }
-      return {
-        slotIndex: assignedSlot,
-        release: async () => {
-          cleanup()
-          process.off('SIGINT', cleanup)
-          process.off('SIGTERM', cleanup)
-          process.off('exit', cleanup)
-        }
-      }
+
+      await new Promise(r => setTimeout(r, 1000))
     }
-
-    const queuePos = myIndex >= 0 ? myIndex + 1 : validEntries.length + 1
-    const activePids = activeLocks.map(l => l.pid).join(', ') || 'none'
-    const nowMs = Date.now()
-
-    if (!loggedWait || nowMs - lastLogTime > 10000) {
-      console.log(`[agent-queue] Maximum concurrency reached (${activeLocks.length}/${MAX_CONCURRENCY} active PIDs: ${activePids}). Waiting in queue (position ${queuePos} of ${validEntries.length || 1})...`)
-      loggedWait = true
-      lastLogTime = nowMs
-    }
-
-    await new Promise(r => setTimeout(r, 1000))
-  }
-}
-
-async function withQueueLock(taskInfo, fn) {
-  const { slotIndex, release } = await acquireQueueLock(taskInfo)
-  try {
-    return await withCpuGate('ct', taskInfo.cmd || 'agentct fallback', async () => {
-      return await fn(slotIndex)
-    })
-  } finally {
-    await release()
+  } catch (error) {
+    // Never strand our queue entry or lock payload when acquisition fails.
+    cleanup()
+    process.off('exit', cleanup)
+    throw error
   }
 }
 
@@ -299,8 +308,29 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// `acquireCpuGate` registers SIGINT/SIGTERM release listeners by default, which
+// would release the gate on signal before this runner's children have stopped.
+// Wrapper: snapshot the signal listeners immediately before the actual
+// acquisition, then drop only the callbacks this acquisition added, preserving
+// the module's own `exit` fallback. Declared as a hoisted function so the
+// daemon CLI can call it before later top-level consts initialize (no TDZ).
+function acquireCpuGateHoldingSignals(holderClass, taskName = '') {
+  const signals = ['SIGINT', 'SIGTERM', 'SIGHUP']
+  const before = new Map()
+  for (const signal of signals) before.set(signal, new Set(process.listeners(signal)))
+  return acquireCpuGate(holderClass, taskName).then((release) => {
+    for (const signal of signals) {
+      const prior = before.get(signal)
+      for (const listener of process.listeners(signal)) {
+        if (!prior.has(listener)) process.removeListener(signal, listener)
+      }
+    }
+    return release
+  })
+}
+
 function probeDaemon(timeoutMs = 400) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const probe = net.createConnection(SOCKET_PATH)
     const timer = setTimeout(() => {
       probe.destroy()
@@ -311,21 +341,62 @@ function probeDaemon(timeoutMs = 400) {
       probe.destroy()
       resolve(true)
     })
-    probe.on('error', () => {
+    probe.on('error', error => {
       clearTimeout(timer)
+      if (['EPERM', 'EACCES'].includes(error.code)) {
+        reject(new Error(`Daemon socket access denied (${error.code}); existing daemon state was preserved. Run agentct with socket access.`))
+        return
+      }
       resolve(false)
     })
   })
 }
 
 async function isDaemonAlive() {
-  if (!fs.existsSync(SOCKET_PATH)) return false
+  const pid = readDaemonPid()
+  if (!fs.existsSync(SOCKET_PATH)) {
+    if (isPidAlive(pid)) throw new Error(`Daemon PID ${pid} is alive but its socket is unavailable; existing state was preserved.`)
+    return false
+  }
   const alive = await probeDaemon()
   if (!alive) {
-    try { fs.unlinkSync(SOCKET_PATH) } catch {}
-    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    const currentPid = readDaemonPid()
+    if (isPidAlive(currentPid)) throw new Error(`Daemon PID ${currentPid} did not respond; existing state was preserved.`)
   }
   return alive
+}
+
+function readDaemonPid() {
+  try { return Number(fs.readFileSync(DAEMON_PID_FILE, 'utf-8')) } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+    return 0
+  }
+}
+
+async function acquireDaemonStartLock() {
+  const started = Date.now()
+  while (Date.now() - started < 10000) {
+    try {
+      fs.mkdirSync(DAEMON_START_LOCK)
+      fs.writeFileSync(path.join(DAEMON_START_LOCK, 'pid'), String(process.pid))
+      const release = () => {
+        fs.rmSync(DAEMON_START_LOCK, { recursive: true, force: true })
+        process.off('exit', release)
+      }
+      process.on('exit', release)
+      return release
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error
+      try {
+        const owner = Number(fs.readFileSync(path.join(DAEMON_START_LOCK, 'pid'), 'utf-8'))
+        if (Number.isInteger(owner) && owner > 0 && !isPidAlive(owner)) fs.rmSync(DAEMON_START_LOCK, { recursive: true })
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+      }
+      await sleep(150)
+    }
+  }
+  throw new Error('Daemon startup is already in progress; existing state was preserved.')
 }
 
 function parseJobRuntime(argv = []) {
@@ -341,30 +412,51 @@ function parseJobRuntime(argv = []) {
 }
 
 async function stopDaemonProcess() {
-  let pid = 0
+  const releaseStartLock = await acquireDaemonStartLock()
   try {
-    pid = parseInt(fs.readFileSync(DAEMON_PID_FILE, 'utf-8'), 10)
-  } catch {}
-  if (isPidAlive(pid)) {
-    try { process.kill(pid, 'SIGTERM') } catch {}
-    const start = Date.now()
-    while (Date.now() - start < 3000 && isPidAlive(pid)) {
-      await sleep(50)
-    }
+    const pid = readDaemonPid()
     if (isPidAlive(pid)) {
-      try { process.kill(pid, 'SIGKILL') } catch {}
+      // Retain the daemon's owned descendant groups before signaling, so an
+      // unresponsive daemon cannot leave its job/gallery groups behind. The
+      // daemon's own group is excluded: a foreground daemon may share the
+      // supervisor's terminal group, which must never be signaled.
+      const owned = collectOwnedGroups(pid, { includeRootGroup: false })
+      try { process.kill(pid, 'SIGTERM') } catch (error) {
+        if (error.code !== 'ESRCH') throw new Error(`Cannot stop daemon (${error.code}); existing state was preserved.`)
+      }
+      const start = Date.now()
+      while (Date.now() - start < 3000 && isPidAlive(pid)) {
+        await sleep(50)
+      }
+      if (isPidAlive(pid)) {
+        try { process.kill(pid, 'SIGKILL') } catch (error) {
+          if (error.code !== 'ESRCH') throw new Error(`Cannot stop daemon (${error.code}); existing state was preserved.`)
+        }
+        await sleep(100)
+      }
+      if (isPidAlive(pid)) throw new Error(`Daemon PID ${pid} remains alive; existing state was preserved.`)
+      // Hold the startup mutex until every owned descendant is confirmed gone.
+      await waitUntilStopped(owned, { label: 'daemon descendants' })
+    } else if (fs.existsSync(SOCKET_PATH) && await probeDaemon()) {
+      throw new Error('Daemon socket is live without a known PID; existing state was preserved.')
     }
+    try { fs.unlinkSync(SOCKET_PATH) } catch {}
+    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    console.log('[agentct] Daemon stopped.')
+  } finally {
+    releaseStartLock()
   }
-  try { fs.unlinkSync(SOCKET_PATH) } catch {}
-  try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
-  console.log('[agentct] Daemon stopped.')
 }
 
 async function startDaemon({ auto = false } = {}) {
+  const releaseStartLock = await acquireDaemonStartLock()
   if (await isDaemonAlive()) {
     console.log(`[agentct-daemon] An agentct daemon is already running at ${SOCKET_PATH}.`)
     process.exit(0)
   }
+  // Only the startup owner can remove stale state before binding the socket.
+  fs.rmSync(SOCKET_PATH, { force: true })
+  fs.rmSync(DAEMON_PID_FILE, { force: true })
 
   const daemonRoot = findRepoRoot(__dirname)
   const daemonLibDir = path.join(daemonRoot, 'packages/reference-lib')
@@ -373,10 +465,14 @@ async function startDaemon({ auto = false } = {}) {
   const queue = []
   const activeJobs = new Set()
   let viteChild = null
+  let viteClosePromise = null
   let viteRuntime = null
+  let viteCaptureTimer = null
+  let viteOwnedGroups = new Set()
   let pumping = false
   let idleTimer = null
   let viteLock = Promise.resolve()
+  let ownsDaemonState = false
 
   function withViteLock(fn) {
     const run = viteLock.then(fn, fn)
@@ -398,37 +494,66 @@ async function startDaemon({ auto = false } = {}) {
   }
 
   async function stopViteUnlocked() {
-    if (!viteChild?.pid) {
+    if (viteCaptureTimer) {
+      clearInterval(viteCaptureTimer)
+      viteCaptureTimer = null
+    }
+    // Retain the gallery reference, its groups, and its close promise until both
+    // the real close/drain and a positive group stop have happened. A natural
+    // close nulls nothing here: its retained groups must still be stopped.
+    const child = viteChild
+    const closePromise = viteClosePromise
+    const owned = new Set(viteOwnedGroups)
+    if (!child?.pid && owned.size === 0 && !closePromise) {
       viteChild = null
       viteRuntime = null
+      viteClosePromise = null
+      viteOwnedGroups = new Set()
       return
     }
-    const pid = viteChild.pid
+    if (child?.pid) {
+      if (process.platform !== 'win32') owned.add(child.pid)
+      for (const pgid of collectOwnedGroups(child.pid)) owned.add(pgid)
+      try { process.kill(-child.pid, 'SIGTERM') } catch {
+        try { process.kill(child.pid, 'SIGTERM') } catch {}
+      }
+    }
+    // Bounded graceful window, then escalate and hold until the gallery's groups
+    // are positively gone. Await the real close/drain in parallel so retained
+    // groups are never discarded while the child is still winding down.
+    await waitForOwnedGroups(owned, 1000)
+    const stopped = waitUntilStopped(owned, { label: 'vite gallery' })
+    if (closePromise) await Promise.all([closePromise, stopped])
+    else await stopped
+    // Both conditions met: only now release the gallery reference and groups.
     viteChild = null
     viteRuntime = null
-    try { process.kill(-pid, 'SIGTERM') } catch {
-      try { process.kill(pid, 'SIGTERM') } catch {}
-    }
-    await sleep(250)
-    try { process.kill(-pid, 'SIGKILL') } catch {
-      try { process.kill(pid, 'SIGKILL') } catch {}
-    }
-    try { freePort(vitePort, '[agentct-daemon]') } catch {}
+    viteClosePromise = null
+    viteOwnedGroups = new Set()
   }
 
   async function stopVite() {
     return withViteLock(() => stopViteUnlocked())
   }
 
-  async function ensureVite(runtime) {
+  async function ensureVite(runtime, { isCanceled } = {}) {
     return withViteLock(async () => {
+      const canceled = () => isCleaningUp || (typeof isCanceled === 'function' && isCanceled())
       const target = runtime || '19'
+      if (canceled()) return false
       if (viteChild?.pid && viteRuntime === target && isPidAlive(viteChild.pid) && await isViteUp()) {
-        return
+        // A live warm child plus an HTTP 200 is not enough: the listener must
+        // still be held by the warm child's own groups, or we restart it.
+        const warmOwned = collectOwnedGroups(viteChild.pid)
+        warmOwned.add(viteChild.pid)
+        for (const pgid of warmOwned) viteOwnedGroups.add(pgid)
+        if (portOwnedByProcessGroups(vitePort, warmOwned)) return true
       }
       await stopViteUnlocked()
+      // A canceled job must not spawn a gallery it will immediately orphan.
+      if (canceled()) return false
       console.log(`[agentct-daemon] Starting persistent Vite on :${vitePort} (react ${target})...`)
-      viteChild = spawn(daemonPnpm, ['exec', 'vite', '--config', 'playwright/vite.config.ts'], {
+      const child = spawn(daemonPnpm, ['exec', 'vite', '--config', 'playwright/vite.config.ts'], {
         cwd: daemonLibDir,
         env: {
           ...process.env,
@@ -439,29 +564,78 @@ async function startDaemon({ auto = false } = {}) {
         stdio: ['ignore', 'pipe', 'pipe'],
         detached: process.platform !== 'win32',
       })
+      viteChild = child
       viteRuntime = target
-      const child = viteChild
+      viteOwnedGroups = new Set()
+      if (child.pid && process.platform !== 'win32') viteOwnedGroups.add(child.pid)
+      // One close promise per gallery, established at spawn. Stop awaits it so a
+      // natural close cannot discard retained groups before cleanup drains them.
+      let resolveViteClose
+      viteClosePromise = new Promise((resolve) => { resolveViteClose = resolve })
+      // Drain stdout; keep the existing stderr error passthrough.
+      child.stdout?.resume()
       child.stderr?.on('data', (data) => {
         const text = data.toString()
         if (/error|failed|EADDRINUSE/i.test(text)) process.stderr.write(text)
       })
-      child.on('exit', (code) => {
+      let spawnError = null
+      let exited = false
+      child.on('error', (err) => { spawnError = err })
+      child.on('exit', () => { exited = true })
+      // Tracking persists through close, when stdio is fully drained; exit alone
+      // is too early to drop the gallery from ownership. Retained owned groups
+      // stay until stopViteUnlocked positively stops them.
+      child.on('close', (code) => {
+        // Only this child owns the capture timer; a later gallery must not have
+        // its timer cleared by a stale close.
         if (viteChild === child) {
-          console.log(`[agentct-daemon] Vite exited (${code ?? 0})`)
-          viteChild = null
-          viteRuntime = null
+          if (viteCaptureTimer) {
+            clearInterval(viteCaptureTimer)
+            viteCaptureTimer = null
+          }
+          console.log(`[agentct-daemon] Vite stopped (${code ?? 0})`)
         }
+        resolveViteClose()
       })
-      const start = Date.now()
-      while (Date.now() - start < 90_000) {
-        if (await isViteUp()) {
-          console.log(`[agentct-daemon] Vite ready ${viteUrl} (react ${target})`)
-          return
+
+      // Retain observed detached descendants while the root is alive; once the
+      // leader exits they can no longer be discovered.
+      if (child.pid && process.platform !== 'win32') {
+        const captureVite = () => {
+          if (!child.pid) return
+          for (const pgid of collectOwnedGroups(child.pid)) viteOwnedGroups.add(pgid)
         }
-        if (!isPidAlive(child.pid)) break
-        await sleep(200)
+        captureVite()
+        viteCaptureTimer = setInterval(captureVite, 1000)
+        viteCaptureTimer.unref?.()
       }
-      throw new Error(`Vite failed to become ready at ${viteUrl}`)
+      try {
+        const start = Date.now()
+        while (Date.now() - start < 90_000) {
+          if (spawnError) throw new Error(`Vite failed to spawn: ${spawnError.message}`)
+          if (canceled()) throw new Error('Vite start canceled')
+          if (exited || !isPidAlive(child.pid)) break
+          if (await isViteUp()) {
+            for (const pgid of collectOwnedGroups(child.pid)) viteOwnedGroups.add(pgid)
+            // Accept readiness only while the spawned Vite is alive and actually
+            // owns the port, so an unrelated or exiting listener cannot fool us.
+            if (viteChild === child && !spawnError && !exited && portOwnedByProcessGroups(vitePort, viteOwnedGroups)) {
+              console.log(`[agentct-daemon] Vite ready ${viteUrl} (react ${target})`)
+              return true
+            }
+          }
+          await sleep(200)
+        }
+        throw new Error(`Vite failed to become ready at ${viteUrl}`)
+      } catch (err) {
+        // Same cleanup as any stop: signal, await close/drain, positively stop
+        // retained groups, and only then release tracking. Covers a pid-less
+        // failed spawn whose close would otherwise be lost.
+        await stopViteUnlocked()
+        // Aborting on cancellation cleans the owned gallery and reports no start.
+        if (err.message === 'Vite start canceled') return false
+        throw err
+      }
     })
   }
 
@@ -497,120 +671,172 @@ async function startDaemon({ auto = false } = {}) {
     const { socket, req } = job
     const exclusive = job.runtime === 'exclusive'
     const label = describeJob(job)
-    const prevGateEnv = process.env.REFERENCE_UI_CPU_GATE_HELD
-    if (req.env && req.env.REFERENCE_UI_CPU_GATE_HELD) {
-      process.env.REFERENCE_UI_CPU_GATE_HELD = req.env.REFERENCE_UI_CPU_GATE_HELD
-    }
-
+    const workers = Math.min(WORKERS_PER_SLOT, workerBudget(req.env?.CT_WORKERS))
+    let releaseQueue = async () => {}
     let releaseGate = async () => {}
-    try {
-      releaseGate = await acquireCpuGate('ct', label)
-    } catch(e) {
-      console.error(`[agentct-daemon] Failed to acquire CPU gate:`, e)
-    } finally {
-      if (prevGateEnv !== undefined) {
-        process.env.REFERENCE_UI_CPU_GATE_HELD = prevGateEnv
-      } else {
-        delete process.env.REFERENCE_UI_CPU_GATE_HELD
-      }
-    }
+    let cancelTimer = null
+    let captureTimer = null
+    let restoreVite = false
 
-    console.log(`[agentct-daemon] Starting (${activeJobs.size}/${MAX_CONCURRENCY} slots, workers=${WORKERS_PER_SLOT}): ${label}`)
-    try {
-      socket.write(JSON.stringify({ type: 'start', workers: WORKERS_PER_SLOT, port: vitePort }) + '\n')
-    } catch {}
+    // Completion is established before the first await/spawn and resolves only
+    // after the child has closed, retained owned descendants are positively
+    // stopped, and both leases are released, so shutdown can await the real end.
+    let resolveCompletion
+    job.completion = new Promise((resolve) => { resolveCompletion = resolve })
 
-    let child = null
-    let settled = false
-
-    const finishJob = async () => {
-      if (settled) return
-      settled = true
-      activeJobs.delete(job)
-      await releaseGate()
-      if (exclusive) {
-        try { await ensureVite('19') } catch (err) {
-          console.error(`[agentct-daemon] Failed to restore Vite 19: ${err.message}`)
+    const finishJob = () => {
+      if (job.finishPromise) return job.finishPromise
+      job.finishPromise = (async () => {
+        try {
+          if (cancelTimer) clearTimeout(cancelTimer)
+          if (captureTimer) {
+            clearInterval(captureTimer)
+            captureTimer = null
+          }
+          // A finished or canceled job must not free its slot while any retained
+          // owned group survives; hold until they are positively stopped.
+          if (job.ownedGroups?.size) {
+            await waitUntilStopped(job.ownedGroups, { label: `job ${label}` })
+          }
+          // A canceled job never restores a gallery it declined to keep.
+          if (restoreVite && !isCleaningUp && !job.canceled) {
+            try { await ensureVite('19', { isCanceled: () => isCleaningUp || job.canceled }) } catch (err) {
+              console.error('[agentct-daemon] Failed to restore Vite 19: ' + err.message)
+            }
+          }
+          await releaseGate()
+          await releaseQueue()
+          // Positively stopped and fully released: only now leave the active set.
+          activeJobs.delete(job)
+          bumpIdle()
+          if (!isCleaningUp) processQueue()
+          resolveCompletion()
+        } catch (err) {
+          // Hold the job, its slot, and its state. An unclean group or failed
+          // release must never be reported complete or let shutdown proceed and
+          // release the queue via the exit hook before cleanup has finished.
+          console.error('[agentct-daemon] Job cleanup failed (' + label + '); holding slot: ' + err.message)
         }
-      }
-      bumpIdle()
-      processQueue()
+      })()
+      return job.finishPromise
+    }
+
+    job.cancel = () => {
+      job.canceled = true
+      if (!job.child?.pid || job.finishPromise) return
+      // Merge the owned descendant groups captured while the root was alive;
+      // detached Playwright leaders cannot be found once this job's root dies.
+      if (!job.ownedGroups) job.ownedGroups = new Set()
+      for (const pgid of collectOwnedGroups(job.child.pid)) job.ownedGroups.add(pgid)
+      job.ownedGroups.add(job.child.pid)
+      if (cancelTimer) return
+      console.log('[agentct-daemon] Client disconnected. Terminating child...')
+      killProcessGroup(job.child.pid, 'SIGTERM')
+      // Keep the slot until the child closes, even when graceful shutdown stalls.
+      cancelTimer = setTimeout(() => {
+        signalOwnedGroups(job.ownedGroups, 'SIGKILL')
+        killProcessGroup(job.child.pid, 'SIGKILL')
+      }, 400)
     }
 
     try {
-      child = spawn(process.execPath, [__filename, ...(req.argv || [])], {
+      const lock = await acquireQueueLock(
+        { cmd: 'agentct', component: label },
+        { isCanceled: () => job.canceled || socket.destroyed || isCleaningUp },
+      )
+      releaseQueue = lock.release
+      if (lock.canceled || job.canceled || socket.destroyed || isCleaningUp) {
+        await finishJob()
+        return
+      }
+      const prevGateEnv = process.env.REFERENCE_UI_CPU_GATE_HELD
+      if (req.env?.REFERENCE_UI_CPU_GATE_HELD) {
+        process.env.REFERENCE_UI_CPU_GATE_HELD = req.env.REFERENCE_UI_CPU_GATE_HELD
+      }
+      try {
+        releaseGate = await acquireCpuGateHoldingSignals('ct', label)
+      } finally {
+        if (prevGateEnv !== undefined) process.env.REFERENCE_UI_CPU_GATE_HELD = prevGateEnv
+        else delete process.env.REFERENCE_UI_CPU_GATE_HELD
+      }
+      if (job.canceled || socket.destroyed || isCleaningUp) {
+        await finishJob()
+        return
+      }
+      if (exclusive) {
+        restoreVite = Boolean(viteChild)
+        await stopVite()
+      } else if (job.runtime) await ensureVite(job.runtime, { isCanceled: () => job.canceled || socket.destroyed })
+      if (job.canceled || socket.destroyed || isCleaningUp) {
+        await finishJob()
+        return
+      }
+
+      console.log('[agentct-daemon] Starting (1 active job, workers=' + workers + '): ' + label)
+      socket.write(JSON.stringify({ type: 'start', workers, port: vitePort }) + '\n')
+      const child = spawn(process.execPath, [__filename, ...(req.argv || [])], {
         stdio: ['ignore', 'pipe', 'pipe'],
         cwd: req.cwd || daemonRoot,
         env: {
           ...process.env,
           ...req.env,
           AGENTCT_INNER: '1',
+          AGENTCT_JOB_SLOT_HELD: '1',
           AGENTCT_VITE_OWNED_BY_DAEMON: exclusive ? '0' : '1',
           CT_PORT: String(vitePort),
-          CT_WORKERS: String(WORKERS_PER_SLOT),
+          CT_WORKERS: String(workers),
           __AGENT_CLI_JAILBROKEN: '1',
           FORCE_COLOR: '1',
         },
         detached: process.platform !== 'win32',
       })
-
-      child.stdout.on('data', (data) => {
-        process.stdout.write(data)
-        try {
-          socket.write(JSON.stringify({ type: 'stdout', data: data.toString() }) + '\n')
-        } catch {}
-      })
-
-      child.stderr.on('data', (data) => {
-        process.stderr.write(data)
-        try {
-          socket.write(JSON.stringify({ type: 'stderr', data: data.toString() }) + '\n')
-        } catch {}
-      })
-
-      const onJobEnd = (code, signal) => {
-        console.log(`[agentct-daemon] Finished (${label}) code ${code ?? 0}`)
-        try {
-          socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
-          socket.end()
-        } catch {}
-        finishJob()
+      job.child = child
+      job.ownedGroups = new Set()
+      // Capture observed detached descendants periodically while the root is
+      // alive; after the leader exits they can no longer be discovered.
+      if (child.pid && process.platform !== 'win32') {
+        job.ownedGroups.add(child.pid)
+        const capture = () => {
+          if (!child.pid) return
+          for (const pgid of collectOwnedGroups(child.pid)) job.ownedGroups.add(pgid)
+        }
+        capture()
+        captureTimer = setInterval(capture, 1000)
+        captureTimer.unref?.()
       }
-
-      child.on('exit', onJobEnd)
-      child.on('error', (err) => {
-        console.error(`[agentct-daemon] Process error:`, err)
-        try {
-          socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-          socket.end()
-        } catch {}
+      if (job.canceled || socket.destroyed || isCleaningUp) {
+        job.cancel()
+      }
+      for (const [stream, type] of [[child.stdout, 'stdout'], [child.stderr, 'stderr']]) {
+        stream.on('data', data => {
+          if (type === 'stdout') process.stdout.write(data)
+          else process.stderr.write(data)
+          if (!socket.destroyed) socket.write(JSON.stringify({ type, data: data.toString() }) + '\n')
+        })
+      }
+      child.on('close', (code, signal) => {
+        console.log('[agentct-daemon] Finished (' + label + ') code ' + (code ?? 1))
+        if (!socket.destroyed) {
+          socket.end(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
+        }
         finishJob()
+      })
+      child.on('error', err => {
+        console.error('[agentct-daemon] Process error:', err)
+        if (!socket.destroyed) socket.end(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+        // Failed spawns still emit close; that event releases the slot.
       })
     } catch (err) {
-      try {
-        socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-        socket.end()
-      } catch {}
-      finishJob()
+      if (!socket.destroyed) socket.end(JSON.stringify({ type: 'error', error: err.message }) + '\n')
+      await finishJob()
     }
-
-    socket.on('close', () => {
-      if (activeJobs.has(job) && child) {
-        console.log(`[agentct-daemon] Client disconnected. Terminating child...`)
-        try {
-          if (child.pid) process.kill(-child.pid, 'SIGTERM')
-        } catch {}
-        try { child.kill('SIGTERM') } catch {}
-        finishJob()
-      }
-    })
   }
 
   async function processQueue() {
-    if (pumping) return
+    if (pumping || isCleaningUp) return
     pumping = true
     try {
-      while (true) {
+      while (!isCleaningUp) {
         const idx = queue.findIndex((job) => canStart(job))
         if (idx < 0) break
         const job = queue.splice(idx, 1)[0]
@@ -620,20 +846,7 @@ async function startDaemon({ auto = false } = {}) {
             item.socket.write(JSON.stringify({ type: 'queue', position: i + 1, total: queue.length }) + '\n')
           } catch {}
         })
-        try {
-          if (job.runtime === 'exclusive') {
-            await stopVite()
-          } else if (job.runtime) {
-            await ensureVite(job.runtime)
-          }
-          startJob(job)
-        } catch (err) {
-          activeJobs.delete(job)
-          try {
-            job.socket.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
-            job.socket.end()
-          } catch {}
-        }
+        startJob(job)
       }
     } finally {
       pumping = false
@@ -641,6 +854,7 @@ async function startDaemon({ auto = false } = {}) {
   }
 
   const server = net.createServer((socket) => {
+    socket.on('error', () => socket.destroy())
     let buffer = ''
     socket.on('data', async (chunk) => {
       buffer += chunk.toString()
@@ -654,7 +868,9 @@ async function startDaemon({ auto = false } = {}) {
           const job = {
             socket,
             req: { ...req, argv },
-            runtime: parseJobRuntime(argv),
+            runtime: req.runtime === null ? null : parseJobRuntime(argv),
+            canceled: false,
+            child: null,
           }
           queue.push(job)
           bumpIdle()
@@ -669,6 +885,8 @@ async function startDaemon({ auto = false } = {}) {
           }
 
           socket.on('close', () => {
+            job.canceled = true
+            job.cancel?.()
             const idx = queue.indexOf(job)
             if (idx !== -1) {
               queue.splice(idx, 1)
@@ -686,20 +904,52 @@ async function startDaemon({ auto = false } = {}) {
   })
 
   let isCleaningUp = false
-  const cleanup = (code = 0) => {
-    if (isCleaningUp) return
-    isCleaningUp = true
-    if (idleTimer) clearTimeout(idleTimer)
-    if (viteChild?.pid) {
-      const pid = viteChild.pid
-      try { process.kill(-pid, 'SIGKILL') } catch {
-        try { process.kill(pid, 'SIGKILL') } catch {}
-      }
-      viteChild = null
-    }
-    try { freePort(vitePort, '[agentct-daemon]') } catch {}
+  const removeDaemonState = () => {
+    if (!ownsDaemonState || readDaemonPid() !== process.pid) return
     try { fs.unlinkSync(SOCKET_PATH) } catch {}
     try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+  }
+  const cleanup = async (code = 0) => {
+    if (isCleaningUp) return
+    // Shutdown owns the flag first so no completion can enqueue more work.
+    isCleaningUp = true
+    if (idleTimer) clearTimeout(idleTimer)
+    const jobs = [...activeJobs]
+    // Inner runners receive TERM first so they can tear down their detached tests.
+    for (const job of jobs) job.cancel?.()
+    for (const job of queue) job.socket.destroy()
+    queue.length = 0
+    // Every active job carries a real completion promise; a missing one is a
+    // broken invariant, so fail closed instead of letting shutdown race ahead
+    // and release the queue before cleanup has finished.
+    for (const job of jobs) {
+      if (!job.completion) {
+        console.error('[agentct-daemon] Invariant violation: active job without completion; holding daemon shutdown.')
+        return
+      }
+    }
+    // Await each job's real completion: child close/drain, owned-descendant
+    // cleanup, and lease release. No fixed sleep and no exit before the work ends.
+    await Promise.all(jobs.map((job) => job.completion))
+    // Stop the shared gallery through the serialized lock and positively confirm;
+    // a failure must hold the daemon, never exit into a released queue.
+    try {
+      await stopVite()
+    } catch (err) {
+      console.error('[agentct-daemon] Gallery shutdown failed; holding daemon: ' + err.message)
+      return
+    }
+    // Belt-and-braces for any group a completion could not observe while alive.
+    for (const job of jobs) {
+      if (job.ownedGroups?.size) {
+        await waitUntilStopped(job.ownedGroups, { label: `job ${describeJob(job)}` })
+      } else if (job.child?.pid) {
+        const owned = collectOwnedGroups(job.child.pid)
+        owned.add(job.child.pid)
+        await waitUntilStopped(owned, { label: `job ${describeJob(job)}` })
+      }
+    }
+    removeDaemonState()
     try { server.close() } catch {}
     process.exit(code)
   }
@@ -708,16 +958,16 @@ async function startDaemon({ auto = false } = {}) {
   process.on('SIGTERM', () => cleanup(0))
   process.on('SIGHUP', () => cleanup(0))
   process.on('exit', () => {
-    try { fs.unlinkSync(SOCKET_PATH) } catch {}
-    try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    removeDaemonState()
   })
 
   await new Promise((resolve, reject) => {
     server.listen(SOCKET_PATH, () => {
       fs.writeFileSync(DAEMON_PID_FILE, String(process.pid))
+      ownsDaemonState = true
       console.log(`[agentct-daemon] Listening at ${SOCKET_PATH}`)
       console.log(`[agentct-daemon] PID: ${process.pid}`)
-      console.log(`[agentct-daemon] Queue: ${MAX_CONCURRENCY} slots × ${WORKERS_PER_SLOT} Playwright workers (cpus=${os.cpus().length})`)
+      console.log(`[agentct-daemon] Queue: one active job, at most ${WORKERS_PER_SLOT} test workers`)
       console.log(auto
         ? `[agentct-daemon] Auto mode: idle timeout ${Math.round(DAEMON_IDLE_MS / 1000)}s`
         : `[agentct-daemon] Keep this terminal open. Persistent Vite on :${vitePort}.`)
@@ -725,12 +975,8 @@ async function startDaemon({ auto = false } = {}) {
     })
     server.on('error', reject)
   })
+  releaseStartLock()
 
-  try {
-    await ensureVite('19')
-  } catch (err) {
-    console.error(`[agentct-daemon] Failed to start Vite: ${err.message}`)
-  }
   bumpIdle()
 }
 
@@ -750,13 +996,17 @@ function spawnAutoDaemon() {
     },
     cwd: findRepoRoot(__dirname),
   })
+  child.on('error', error => console.error(`[agentct] Daemon launch failed: ${error.message}`))
   child.unref()
+  fs.closeSync(out)
+  return child
 }
 
 async function ensureDaemon() {
   if (await isDaemonAlive()) return true
 
   let spawnedHere = false
+  let spawnedDaemon = null
   try {
     fs.mkdirSync(DAEMON_SPAWN_LOCK)
     spawnedHere = true
@@ -776,12 +1026,15 @@ async function ensureDaemon() {
     if (await isDaemonAlive()) return true
     if (spawnedHere) {
       console.log(`[agentct] Auto-starting persistent daemon (Vite :3101, ${MAX_CONCURRENCY} slots × ${WORKERS_PER_SLOT} workers)...`)
-      spawnAutoDaemon()
+      spawnedDaemon = spawnAutoDaemon()
     }
     const start = Date.now()
     while (Date.now() - start < 25_000) {
       if (await isDaemonAlive()) return true
       await sleep(150)
+    }
+    if (!spawnedHere || isPidAlive(spawnedDaemon?.pid)) {
+      throw new Error('Daemon startup has not completed; refusing overlapping fallback execution.')
     }
     return false
   } finally {
@@ -800,10 +1053,12 @@ function sendToDaemon(argv) {
       client.write(JSON.stringify({
         type: 'run',
         argv,
+        runtime: runE2e ? parseJobRuntime(argv) : null,
         cwd: process.cwd(),
         env: {
           FORCE_COLOR: '1',
-          REFERENCE_UI_CPU_GATE_HELD: process.env.REFERENCE_UI_CPU_GATE_HELD
+          REFERENCE_UI_CPU_GATE_HELD: process.env.REFERENCE_UI_CPU_GATE_HELD,
+          CT_WORKERS: String(WORKERS_PER_SLOT),
         },
         pid: process.pid,
       }) + '\n')
@@ -856,11 +1111,16 @@ async function delegateToDaemon(argv) {
   try {
     return await sendToDaemon(argv)
   } catch (err) {
-    console.warn(`[agentct] Daemon handoff failed (${err.message}). Falling back to direct execution.`)
-    if (!(await isDaemonAlive())) {
-      try { fs.unlinkSync(SOCKET_PATH) } catch {}
-      try { fs.unlinkSync(DAEMON_PID_FILE) } catch {}
+    let daemonStillLive = false
+    try {
+      daemonStillLive = await isDaemonAlive()
+    } catch {
+      daemonStillLive = true
     }
+    if (daemonStillLive) {
+      throw new Error(`Daemon handoff failed (${err.message}) while the daemon is still live. Refusing to fall back and take over its Vite; run 'pnpm agentct stop' or retry.`)
+    }
+    console.warn(`[agentct] Daemon handoff failed (${err.message}). Daemon is gone; falling back to direct execution.`)
     return null
   }
 }
@@ -868,12 +1128,13 @@ async function delegateToDaemon(argv) {
 const repoRoot = findRepoRoot(__dirname)
 const libDir = path.join(repoRoot, 'packages/reference-lib')
 const playwrightDir = path.join(libDir, 'playwright')
-const resultsDir = path.join(playwrightDir, 'test-results')
+const resultsDir = artifactsDirectory(playwrightDir, process.pid)
 const resultsJsonPath = path.join(resultsDir, 'results.json')
 const vitestJsonPath = path.join(resultsDir, `vitest-${process.pid}.json`)
 const configPath = path.join(playwrightDir, 'playwright.config.ts')
 const CT_PORT = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const activeChildPids = new Set()
+const ownedGalleryGroups = new Set()
 let ctGalleryOwned = false
 let activeSlotPort = null
 
@@ -881,6 +1142,12 @@ function usage() {
   console.log(`
 Usage: pnpm agentct [Component] [options]
 
+  pnpm agentct list [--json]         List the validated component case catalog
+  pnpm agentct search "focus" [--json]   Search case IDs, names, titles, and files
+  pnpm agentct --search "focus" --json   Flag alias for the positional search form
+  pnpm agentct Button --list --json  Scope a JSON listing to one component
+  pnpm agentct check                 Check catalog conformity without running tests
+  pnpm agentct run LIB-POPOVER-001    Execute the precise registered evidence
   pnpm agentct Popover                 Unit then e2e on React 19 (snapshots on)
   pnpm agentct Popover --unit        Vitest only (always workspace React 19)
   pnpm agentct Popover --e2e        Playwright CT only
@@ -888,16 +1155,17 @@ Usage: pnpm agentct [Component] [options]
   pnpm agentct Popover --react all   CT on 17, then 18, then 19
   pnpm agentct Popover -g "escape"   Name filter (unit -t and Playwright -g)
 
-  pnpm agentct daemon               Persistent Vite + 3-slot queue in this terminal
+  pnpm agentct daemon               Shared Vite + one-job queue in this terminal
   pnpm agentct stop                 Stop the persistent daemon and Vite :3101
 
   --headed                     Playwright headed
-  --clean                      Wipe playwright/test-results
+  --clean                      Clear this run's isolated artifact directory
   --json                       Machine-readable summary
   --update-snapshots --confirm   Rewrite React 19 baselines (human yes required)
 
 Concurrent agentct invocations share ONE Vite gallery on :3101.
-Global queue is ${MAX_CONCURRENCY} slots; each Playwright run uses ${WORKERS_PER_SLOT} workers (floor(cpus/3)).
+Global queue permits one active job; Vitest and Playwright each use at most two workers.
+CT_WORKERS=1 lowers the budget; higher overrides are capped at two.
 React 17/18/19 are isolated @ct-runtime packages. Not the matrix pipeline.
 Visual snapshots are React 19 only. Do not combine --update-snapshots with --react 17 or 18.
 `)
@@ -911,7 +1179,8 @@ let isClean = false
 let isList = false
 let targetId = null
 let targetLine = null
-let exactPlaywrightTarget = null
+let unitSelector = ''
+let ctTargets = []
 let exactVitestTarget = null
 let isHeaded = false
 let updateSnapshots = false
@@ -921,10 +1190,32 @@ let runE2e = true
 let unitOnly = false
 let e2eOnly = false
 let reactArg = ''
+let catalogCommand = ''
+let catalogQuery = ''
+let catalogSelector = ''
+let registeredCase = null
+let selectedCases = []
+
+let catalogInvocation
+try {
+  catalogInvocation = parseCatalogInvocation(args)
+} catch (error) {
+  console.error(`[agentct] ${error.message}`)
+  process.exit(2)
+}
+catalogCommand = catalogInvocation.command
+catalogQuery = catalogInvocation.query
+catalogSelector = catalogInvocation.selector
+if (catalogInvocation.json) isJson = true
+if (catalogInvocation.list) isList = true
 
 for (let i = 0; i < args.length; i++) {
   const arg = args[i]
-  if (arg === 'daemon') {
+  if (i === 0 && ['list', 'search', 'check', 'run'].includes(arg)) {
+    if (arg === 'search' || arg === 'run') i++
+  } else if (arg === '--search') {
+    i++
+  } else if (arg === 'daemon') {
     const rest = args.slice(i + 1)
     if (rest.includes('stop') || rest.includes('--stop')) {
       await stopDaemonProcess()
@@ -943,9 +1234,19 @@ for (let i = 0; i < args.length; i++) {
   } else if (arg === '--list') {
     isList = true
   } else if (arg === '--line') {
-    targetLine = parseInt(args[++i], 10)
+    const value = Number(args[++i])
+    if (!Number.isInteger(value) || value <= 0) {
+      console.error('[agentct] --line needs a positive line number.')
+      process.exit(2)
+    }
+    targetLine = value
   } else if (arg === '--id') {
-    targetId = args[++i]
+    const value = args[++i]
+    if (!value || value.startsWith('-')) {
+      console.error('[agentct] --id needs a case ID or declaration target.')
+      process.exit(2)
+    }
+    targetId = value
   } else if (arg === '--json') {
     isJson = true
   } else if (arg === '--clean') {
@@ -968,7 +1269,12 @@ for (let i = 0; i < args.length; i++) {
     }
     reactArg = args[++i]
   } else if (arg === '-g' || arg === '--grep') {
-    grep = args[++i] || ''
+    const value = args[++i]
+    if (value === undefined) {
+      console.error('[agentct] -g/--grep needs a pattern.')
+      process.exit(2)
+    }
+    grep = value
   } else if (!arg.startsWith('-')) {
     if (!component) {
       component = arg
@@ -1003,6 +1309,83 @@ Only update snapshots if they are genuinely updating styling, and it always has 
 
 if (unitOnly && !e2eOnly) runE2e = false
 if (e2eOnly && !unitOnly) runUnit = false
+
+let catalog
+try {
+  catalog = loadCatalog(libDir)
+
+  if (catalogCommand === 'check') {
+    console.log(`[agentct] Case conformity passed: ${catalog.components.length} components, ${catalog.cases.length} cases, ${catalog.cases.reduce((count, entry) => count + entry.rows, 0)} executable rows.`)
+    process.exit(0)
+  }
+
+  if (catalogCommand === 'list' || catalogCommand === 'search' || isList) {
+    const found = searchCases(catalog, catalogQuery, component)
+    const output = isJson ? formatCatalogJson(found) : [formatCatalogHuman(found),
+      `[agentct] ${found.length} registered cases; catalog conformity passed.`].filter(Boolean).join('\n')
+    await writeCatalogOutput(process.stdout, output)
+    process.exit(listingExitCode(catalogCommand, found.length))
+  }
+
+  if (catalogSelector && !catalogSelector.startsWith('LIB-')) component = catalogSelector
+  const caseId = catalogSelector.startsWith('LIB-') ? catalogSelector
+    : component.startsWith('LIB-') ? component : targetId?.startsWith('LIB-') ? targetId : ''
+  if (caseId) {
+    registeredCase = selectCase(catalog, caseId, component.startsWith('LIB-') ? '' : component)
+    component = registeredCase.component
+    if (grep || targetLine || (targetId && targetId !== caseId)) throw new Error('Catalog case selection cannot be combined with grep or legacy --id/--line targeting.')
+    selectedCases = [registeredCase]
+  } else if (component && !catalog.components.some(entry => entry.component === component)) {
+    throw new Error(`Unknown component ${component}`)
+  }
+
+  const requestedKinds = unitOnly && !e2eOnly ? ['unit'] : e2eOnly && !unitOnly ? ['ct'] : null
+  const filteredSelection = Boolean(registeredCase || grep || targetId || Number.isInteger(targetLine))
+
+  if (!registeredCase && (targetId || Number.isInteger(targetLine))) {
+    if (grep) throw new Error('Cannot combine grep with legacy --id/--line targeting.')
+    selectedCases = selectLegacyTarget(catalog.cases, { id: targetId, line: targetLine, component })
+  } else if (!registeredCase) {
+    const resolved = resolveSelection(catalog, { component, grep, kinds: requestedKinds })
+    selectedCases = resolved.cases
+  }
+
+  if (registeredCase || targetId || Number.isInteger(targetLine)) {
+    const entry = selectedCases[0]
+    component = entry.component
+    if (entry.kind === 'unit') {
+      if (e2eOnly && !unitOnly) throw new Error(`${entry.id} is a unit case; remove --e2e.`)
+      runUnit = true
+      runE2e = false
+      exactVitestTarget = `src/components/${entry.component}/${entry.file}`
+    } else {
+      if (unitOnly && !e2eOnly) throw new Error(`${entry.id} is a CT case; remove --unit.`)
+      runUnit = false
+      runE2e = true
+    }
+    targetId = null
+    targetLine = null
+  }
+
+  const plan = executionArguments(selectedCases, { filtered: filteredSelection, catalogCases: catalog.cases })
+  unitSelector = plan.unitSelector
+  ctTargets = plan.ctTargets
+
+  if (selectedCases.length === 0) throw new Error(`${component || 'Catalog'} has no executable cases; use agentct check to inspect internal entries.`)
+  if (runUnit && !selectedCases.some(entry => entry.kind === 'unit')) {
+    if (unitOnly) throw new Error(`${component || 'Catalog'} has no registered unit evidence.`)
+    runUnit = false
+    console.log(`[agentct] ${component || 'Catalog'}: no unit declarations selected; executing its CT evidence.`)
+  }
+  if (runE2e && !selectedCases.some(entry => entry.kind === 'ct')) {
+    if (e2eOnly) throw new Error(`${component || 'Catalog'} has no registered CT evidence.`)
+    runE2e = false
+    console.log(`[agentct] ${component || 'Catalog'}: no CT declarations selected; executing its unit evidence.`)
+  }
+} catch (error) {
+  console.error(`[agentct] ${error.message}`)
+  process.exit(2)
+}
 
 const CT_REACT_ALL = ['17', '18', '19']
 
@@ -1055,40 +1438,41 @@ if (runE2e) {
 }
 
 if (!IS_INNER) {
-  const delegated = await delegateToDaemon(process.argv.slice(2))
-  if (delegated !== null) process.exit(delegated)
+  try {
+    const delegated = await delegateToDaemon(process.argv.slice(2))
+    if (delegated !== null) process.exit(delegated)
+  } catch (error) {
+    console.error(`[agentct] ${error.message}`)
+    process.exit(2)
+  }
 }
 
 function sleepSync(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 }
 
+// Bounded listener inspection. Returns { known, pids }: `known:false` means the
+// port could not be inspected (missing `lsof`, permission error, timeout, or
+// any other failure) and must never be read as "no listener". A normal `lsof`
+// exit 1 with no stdout/stderr is a real empty result and is `known:true`.
 function getPidsOnPort(port) {
   try {
-    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t`, { encoding: 'utf-8' }).trim()
-    if (!out) return []
-    return out.split(/\s+/).map((p) => parseInt(p, 10)).filter((p) => !Number.isNaN(p) && p > 0)
-  } catch {
-    return []
-  }
-}
-
-function freePort(port, logPrefix = '[agentct]') {
-  const pids = getPidsOnPort(port)
-  if (pids.length === 0) return
-  for (const pid of pids) {
-    try { process.kill(pid, 'SIGTERM') } catch {}
-  }
-  sleepSync(150)
-  for (const pid of getPidsOnPort(port)) {
-    try { process.kill(pid, 'SIGKILL') } catch {}
-  }
-  const start = Date.now()
-  while (Date.now() - start < 2000 && getPidsOnPort(port).length > 0) {
-    sleepSync(50)
-  }
-  if (!isJson) {
-    console.log(`${logPrefix} Cleared stale listener on port ${port} (terminated PID ${pids.join(', ')})`)
+    const out = execSync(`lsof -nP -iTCP:${port} -sTCP:LISTEN -t`, {
+      encoding: 'utf-8',
+      timeout: INSPECT_TIMEOUT_MS,
+      maxBuffer: INSPECT_MAX_BUFFER,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim()
+    if (!out) return { known: true, pids: [] }
+    const pids = out.split(/\s+/).map((p) => parseInt(p, 10)).filter((p) => Number.isInteger(p) && p > 0)
+    return { known: true, pids }
+  } catch (error) {
+    const empty =
+      error?.status === 1 &&
+      !String(error.stdout || '').trim() &&
+      !String(error.stderr || '').trim()
+    if (empty) return { known: true, pids: [] }
+    return { known: false, pids: [] }
   }
 }
 
@@ -1103,6 +1487,125 @@ function killProcessGroup(pid, signal = 'SIGTERM') {
   } catch {
     try { process.kill(pid, signal) } catch {}
   }
+}
+
+// Bounded POSIX process inventory: pid -> { ppid, pgid }. Returns null where the
+// platform or `ps` is unavailable, so callers can degrade without guessing.
+function readProcessInventory() {
+  if (process.platform === 'win32') return null
+  try {
+    const out = execSync('ps -A -o pid=,ppid=,pgid=', {
+      encoding: 'utf-8',
+      timeout: INSPECT_TIMEOUT_MS,
+      maxBuffer: INSPECT_MAX_BUFFER,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+    const inventory = new Map()
+    for (const line of out.split('\n')) {
+      const parts = line.trim().split(/\s+/)
+      if (parts.length < 3) continue
+      const pid = Number(parts[0])
+      const ppid = Number(parts[1])
+      const pgid = Number(parts[2])
+      if (!Number.isInteger(pid) || pid <= 0) continue
+      inventory.set(pid, {
+        pid,
+        ppid: Number.isInteger(ppid) ? ppid : 0,
+        pgid: Number.isInteger(pgid) ? pgid : 0,
+      })
+    }
+    return inventory
+  } catch {
+    return null
+  }
+}
+
+// Thin wrapper: read the process inventory, then delegate the pure ownership
+// selection to resources.mjs. Only groups led by a pid observed inside the
+// root's own subtree survive, so an ancestor (supervisor/terminal) or a merely
+// port-associated group can never be signaled. Callers that must not signal the
+// root's own group (a foreground daemon may share the supervisor's terminal
+// group) pass includeRootGroup: false.
+function collectOwnedGroups(rootPid, options) {
+  if (process.platform === 'win32' || !rootPid || rootPid <= 0) return new Set()
+  return selectOwnedGroups(readProcessInventory(), rootPid, options)
+}
+
+function signalOwnedGroups(groups, signal) {
+  if (!groups || process.platform === 'win32') return
+  for (const pgid of groups) {
+    if (!Number.isInteger(pgid) || pgid <= 0) continue
+    try { process.kill(-pgid, signal) } catch {}
+  }
+}
+
+// Only ESRCH positively means a process group is gone. EPERM or any unknown
+// error means it may still exist and must be treated as alive so a group is
+// never reported stopped while it survives.
+function isGroupAlive(pgid) {
+  try {
+    process.kill(-pgid, 0)
+    return true
+  } catch (error) {
+    return error.code !== 'ESRCH'
+  }
+}
+
+async function waitForOwnedGroups(groups, timeoutMs) {
+  if (!groups || groups.size === 0 || process.platform === 'win32') return true
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    let alive = false
+    for (const pgid of groups) {
+      if (isGroupAlive(pgid)) { alive = true; break }
+    }
+    if (!alive) return true
+    await sleep(50)
+  }
+  return false
+}
+
+// Escalate an owned group set to SIGKILL and hold until every group is gone.
+// Resolves true only once the groups are positively stopped: a set that survives
+// the first bounded wait is polled with async delays (never a blocking spin),
+// a single diagnostic is emitted, and the caller can retain its slot instead of
+// claiming a stop that has not happened.
+async function waitUntilStopped(groups, { label = '' } = {}) {
+  if (!groups || groups.size === 0 || process.platform === 'win32') return true
+  signalOwnedGroups(groups, 'SIGKILL')
+  let stopped = await waitForOwnedGroups(groups, 1500)
+  if (!stopped) {
+    console.error(`[agentct] Owned process groups survived SIGKILL${label ? ` (${label})` : ''}; holding until they exit.`)
+    do {
+      // Keep polling with async delays; never block the event loop.
+      stopped = await waitForOwnedGroups(groups, 2000)
+    } while (!stopped)
+  }
+  return true
+}
+
+function waitForOwnedGroupsSync(groups, timeoutMs) {
+  if (!groups || groups.size === 0 || process.platform === 'win32') return true
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    let alive = false
+    for (const pgid of groups) {
+      if (isGroupAlive(pgid)) { alive = true; break }
+    }
+    if (!alive) return true
+    sleepSync(50)
+  }
+  return false
+}
+
+// Fail-closed port ownership: true only when the listener set and inventory are
+// both inspectable and every listener pid belongs to a supplied owned group.
+// An empty, unknown, or partially inspected result is false, so a missing
+// `lsof`/`ps` can never be mistaken for the spawned Vite holding the port.
+function portOwnedByProcessGroups(port, groups) {
+  const inspected = getPidsOnPort(port)
+  if (!inspected.known) return false
+  return isListenerOwnedByGroups(inspected.pids, readProcessInventory(), groups)
 }
 
 function teardownActiveChildren(signal = 'SIGKILL') {
@@ -1137,7 +1640,8 @@ function cleanupCtGallery() {
   teardownActiveChildren('SIGKILL')
   if (DAEMON_OWNS_VITE) return
   if (!ctGalleryOwned) return
-  try { freePort(CT_PORT) } catch {}
+  signalOwnedGroups(ownedGalleryGroups, 'SIGKILL')
+  waitForOwnedGroupsSync(ownedGalleryGroups, 1500)
 }
 
 if (isClean && fs.existsSync(resultsDir)) {
@@ -1158,139 +1662,17 @@ try {
   pnpmCmd = execSync('which pnpm', { encoding: 'utf-8' }).trim() || 'pnpm'
 } catch {}
 
-if (isList || targetId || targetLine) {
-  const list = []
-  
-  if (runE2e) {
-    let pwOutput = ''
-    try {
-      const pwCmd = ['exec', 'playwright', 'test', '-c', configPath, '--list']
-      if (component) pwCmd.push(`${component}/__e2e__`)
-      pwOutput = execSync(`${pnpmCmd} ${pwCmd.join(' ')}`, { cwd: libDir, encoding: 'utf-8' })
-    } catch (err) {
-      pwOutput = err.stdout?.toString() || ''
-    }
-    
-    for (const line of pwOutput.split('\n')) {
-      const m = line.match(/^\s*\[.*?\]\s+›\s+(.+?):(\d+):(\d+)\s+›\s+(.*)$/)
-      if (m) {
-        const [, file, lineNum, col, titleChain] = m
-        let id = null
-        const idMatch = titleChain.match(/([A-Z]{1,4}(?:-[A-Z0-9]+)+)/)
-        if (idMatch) id = idMatch[1]
-        
-        list.push({
-          id: id || titleChain.split('›').pop().trim(),
-          file,
-          line: parseInt(lineNum, 10),
-          title: titleChain.split('›').pop().trim(),
-          fullTitle: titleChain,
-          type: 'e2e'
-        })
-      }
-    }
-  }
-
-  if (runUnit) {
-    let vtOutput = ''
-    try {
-      const vtCmd = ['exec', 'vitest', 'list']
-      if (component) vtCmd.push(`src/components/${component}`)
-      vtOutput = execSync(`${pnpmCmd} ${vtCmd.join(' ')}`, { cwd: libDir, encoding: 'utf-8' })
-    } catch (err) {
-      vtOutput = err.stdout?.toString() || ''
-    }
-
-    for (const line of vtOutput.split('\n')) {
-      const m = line.match(/^([a-zA-Z0-9/_-]+\.test\.tsx?)\s+>\s+(.*)$/)
-      if (m) {
-        const [, file, titleChain] = m
-        list.push({
-          id: titleChain.split('>').pop().trim(),
-          file,
-          line: null,
-          title: titleChain.split('>').pop().trim(),
-          fullTitle: titleChain.split('>').map(s => s.trim()).join(' > '),
-          type: 'unit'
-        })
-      }
-    }
-  }
-
-  if (isList) {
-    if (isJson) {
-      console.log(JSON.stringify(list, null, 2))
-    } else {
-      console.log(`\n=== Found ${list.length} specs ===\n`)
-      for (const t of list) {
-        if (t.type === 'e2e') {
-          console.log(`- ${t.id} [CT] (${t.file}:${t.line})\n  ${t.fullTitle}`)
-        } else {
-          console.log(`- ${t.id} [Unit] (${t.file})\n  ${t.fullTitle}`)
-        }
-      }
-    }
-    process.exit(0)
-  }
-
-  let found = null
-  if (targetLine) {
-    const matches = list.filter(t => t.line === targetLine)
-    if (matches.length === 0) {
-      console.error(`[agentct] Error: No e2e spec found on line ${targetLine}`)
-      process.exit(1)
-    }
-    if (matches.length > 1) {
-      console.error(`[agentct] Error: Multiple specs found on line ${targetLine}`)
-      process.exit(1)
-    }
-    found = matches[0]
-  } else if (targetId) {
-    const matches = list.filter(t => t.id === targetId || t.title.includes(targetId) || t.fullTitle.includes(targetId))
-    if (matches.length === 0) {
-      console.error(`[agentct] Error: No spec found matching ID or title '${targetId}'`)
-      process.exit(1)
-    }
-    if (matches.length > 1) {
-      console.error(`[agentct] Error: Multiple specs matched '${targetId}'. Be more specific.`)
-      process.exit(1)
-    }
-    found = matches[0]
-  }
-
-  if (found) {
-    if (found.type === 'e2e') {
-      runUnit = false
-      exactPlaywrightTarget = `${found.file}:${found.line}`
-      component = found.file.split('/')[0] // Keep component name for logs
-      grep = ''
-    } else {
-      runE2e = false
-      exactVitestTarget = found.file
-      component = found.file.split('/')[2] || found.file.split('/')[0] // src/components/Toast or Toast
-      const escaped = found.fullTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      grep = `^${escaped}$`
-    }
-  }
-}
-
-function spawnPnpm(pnpmArgs, { cwd, extraEnv = {} } = {}) {
-  return spawnSync(pnpmCmd, pnpmArgs, {
-    cwd,
-    env: {
-      ...process.env,
-      FORCE_COLOR: '1',
-      ...extraEnv,
-    },
-    stdio: isJson ? ['ignore', 'pipe', 'pipe'] : 'inherit',
-    encoding: 'utf-8',
-  })
-}
 
 let interrupted = false
 
 function spawnPnpmDetached(pnpmArgs, { cwd, extraEnv = {} } = {}) {
   return new Promise((resolve) => {
+    // Never spawn a verification child once the run is interrupted; report a
+    // failed, non-spawning result so the caller unwinds through cleanup.
+    if (interrupted) {
+      resolve({ status: 1, ownedGroups: new Set() })
+      return
+    }
     const child = spawn(pnpmCmd, pnpmArgs, {
       cwd,
       env: {
@@ -1299,38 +1681,82 @@ function spawnPnpmDetached(pnpmArgs, { cwd, extraEnv = {} } = {}) {
         ...extraEnv,
       },
       stdio: isJson ? ['ignore', 'pipe', 'pipe'] : 'inherit',
-      detached: process.platform !== 'win32',
+      // Direct runners own a detached group for their tests. Inner runners are
+      // already their own group leader; their tests inherit that daemon-owned
+      // group so a single group signal reaches the whole job.
+      detached: process.platform !== 'win32' && !IS_INNER,
     })
 
     if (child.pid) activeChildPids.add(child.pid)
-    const parentDeathWatch = startParentDeathWatch(child.pid)
+    // Consume piped output so a noisy JSON-mode child cannot block on a full
+    // pipe; nothing is forwarded into the machine-readable stdout verdict.
+    if (isJson) {
+      child.stdout?.resume()
+      child.stderr?.resume()
+    }
+
+    const ownedGroups = new Set()
+    if (child.pid && process.platform !== 'win32' && !IS_INNER) ownedGroups.add(child.pid)
+
+    // Watch the group we actually own: our own group for an inner runner (the
+    // daemon's job group), the detached child group for a direct runner.
+    const parentDeathWatch = startParentDeathWatch(IS_INNER ? process.pid : child.pid)
     let settled = false
+    let killTimer = null
+    let captureTimer = null
+    let spawnError = null
+
+    const captureDescendants = () => {
+      if (process.platform === 'win32' || !child.pid) return
+      for (const pgid of collectOwnedGroups(child.pid)) ownedGroups.add(pgid)
+    }
 
     const killTree = (sig = 'SIGTERM') => {
+      if (IS_INNER) {
+        // The daemon group-signals this job; re-signaling our own group would
+        // recurse into this handler, so forward only to the direct child.
+        try { child.kill(sig) } catch {}
+        return
+      }
+      captureDescendants()
       if (child.pid) killProcessGroup(child.pid, sig)
       try { child.kill(sig) } catch {}
     }
 
-    const finish = (status) => {
+    const finish = async (status) => {
       if (settled) return
       settled = true
+      if (killTimer) clearTimeout(killTimer)
+      if (captureTimer) clearInterval(captureTimer)
+      if (interrupted) {
+        killTree('SIGKILL')
+        signalOwnedGroups(ownedGroups, 'SIGKILL')
+      }
+      // Hold active tracking, parent-death watch, and the pid until any retained
+      // owned detached descendants are positively stopped, so the caller cannot
+      // release its execution slot before descendants stop. Inner runners carry
+      // an empty owned set and return immediately (never self-signal).
+      await waitUntilStopped(ownedGroups, { label: 'direct run' })
+      if (killTimer) {
+        clearTimeout(killTimer)
+        killTimer = null
+      }
       stopParentDeathWatch(parentDeathWatch)
       if (child.pid) activeChildPids.delete(child.pid)
       process.off('SIGINT', onSig)
       process.off('SIGTERM', onSig)
       process.off('SIGHUP', onSig)
-      resolve({ status: typeof status === 'number' ? status : 1 })
+      resolve({ status: typeof status === 'number' ? status : 1, ownedGroups })
     }
 
     const onSig = () => {
       interrupted = true
+      if (killTimer) return
       killTree('SIGTERM')
-      setTimeout(() => {
+      killTimer = setTimeout(() => {
         killTree('SIGKILL')
-        if (!DAEMON_OWNS_VITE && activeSlotPort) {
-          try { freePort(activeSlotPort) } catch {}
-          activeSlotPort = null
-        }
+        signalOwnedGroups(ownedGroups, 'SIGKILL')
+        activeSlotPort = null
       }, 400)
     }
 
@@ -1338,14 +1764,53 @@ function spawnPnpmDetached(pnpmArgs, { cwd, extraEnv = {} } = {}) {
     process.on('SIGTERM', onSig)
     process.on('SIGHUP', onSig)
 
-    child.on('exit', (code) => finish(code ?? 1))
-    child.on('error', () => finish(1))
+    // Best-effort capture of detached descendants (Playwright webServer/browser
+    // leaders) while the job is alive; after the leader dies they cannot be found.
+    if (!IS_INNER && process.platform !== 'win32' && child.pid) {
+      captureDescendants()
+      captureTimer = setInterval(captureDescendants, 1000)
+      captureTimer.unref?.()
+    }
+
+    // Settle once on close: it follows both exit and a failed spawn, and it
+    // guarantees stdio descendants have stopped before tracking is released.
+    child.on('close', (code) => finish(spawnError ? (numericExitCode(code) || 1) : (code ?? 1)))
+    child.on('error', (err) => {
+      // A failed spawn still emits 'close' afterwards, which drains stdio before
+      // tracking is released; settle only on close, never on the error event.
+      spawnError = err
+    })
   })
 }
 
 process.on('exit', () => {
   cleanupCtGallery()
 })
+
+const onInterruptBetweenChildren = () => {
+  // Do not exit here: a hard exit between children bypasses async lease release
+  // and owned-group cleanup. Mark the run interrupted and let the main flow
+  // unwind, stop children, then release explicitly.
+  interrupted = true
+}
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, onInterruptBetweenChildren)
+
+// `acquireCpuGate` releases on signal by default; this runner must keep the gate
+// held until its children have actually stopped. `acquireCpuGateHoldingSignals`
+// (hoisted above) drops only the listeners that acquisition added while
+// retaining the module's own `exit` fallback. The shared cpu-gate module is
+// untouched, and the same wrapper is used by daemon startJob.
+const releaseExecution = IS_INNER && process.env.AGENTCT_JOB_SLOT_HELD === '1'
+  ? async () => {}
+  : (await acquireQueueLock({ cmd: 'agentct', component: component || 'all' }, { isCanceled: () => interrupted })).release
+const releaseExecutionGate = IS_INNER ? async () => {} : await acquireCpuGateHoldingSignals('ct', component || 'all')
+
+// A cancellation while acquiring the leases must release without spawning.
+if (interrupted) {
+  await releaseExecutionGate()
+  await releaseExecution()
+  process.exit(130)
+}
 
 let unitResult = {
   ran: false,
@@ -1358,14 +1823,14 @@ let unitResult = {
 }
 
 if (runUnit) {
-  const vitestArgs = ['exec', 'vitest', 'run', '--reporter=default', '--reporter=json', '--outputFile', vitestJsonPath]
+  const vitestArgs = ['exec', 'vitest', 'run', '--maxWorkers', String(WORKERS_PER_SLOT), '--reporter=default', '--reporter=json', '--outputFile', vitestJsonPath]
   if (exactVitestTarget) {
     vitestArgs.push(exactVitestTarget)
   } else if (component) {
-    vitestArgs.push(`src/components/${component}`)
+    vitestArgs.push(unitDirectory(component))
   }
-  if (grep) {
-    vitestArgs.push('-t', grep)
+  if (unitSelector) {
+    vitestArgs.push('-t', unitSelector)
   }
 
   if (!isJson) {
@@ -1374,7 +1839,7 @@ if (runUnit) {
     console.log('=======================================================')
   }
 
-  const child = spawnPnpm(vitestArgs, { cwd: libDir })
+  const child = await spawnPnpmDetached(vitestArgs, { cwd: libDir })
   unitResult.ran = true
   unitResult.ok = child.status === 0
 
@@ -1389,6 +1854,7 @@ if (runUnit) {
           for (const t of suite.assertionResults) {
             tests.push({
               title: t.title || t.fullName,
+              fullTitle: t.fullName || [...(t.ancestorTitles || []), t.title].join(' '),
               file: suite.name || suite.file,
               status: t.status,
               durationMs: t.duration,
@@ -1410,6 +1876,15 @@ if (runUnit) {
     }
   }
 
+  const unitErrors = unitResult.error ? [unitResult.error] : []
+  if (!fs.existsSync(vitestJsonPath)) unitErrors.push('Unit execution did not produce a readable result report.')
+  unitErrors.push(...evidenceErrors(unitResult.tests, selectedCases.filter(entry => entry.kind === 'unit')))
+  if (unitErrors.length) {
+    unitResult.ok = false
+    unitResult.error = unitErrors.join('\n')
+    console.error(`[agentct] Incomplete unit evidence:\n${unitResult.error}`)
+  }
+
   if (!unitResult.ok && !isJson) {
     console.log('\n✖ Unit tests failed. Continuing to e2e unless --unit was passed.')
   }
@@ -1419,8 +1894,9 @@ const e2eRuns = []
 let e2eChildStatus = 0
 let e2eRan = false
 
-function extractTests(suite, react) {
+function extractTests(suite, react, parents = []) {
   if (!suite) return
+  const titles = suite.title && !suite.title.endsWith('.ct.spec.ts') ? [...parents, suite.title] : parents
   if (suite.specs) {
     for (const spec of suite.specs) {
       for (const t of spec.tests || []) {
@@ -1477,6 +1953,7 @@ function extractTests(suite, react) {
 
           e2eRuns.push({
             title: spec.title,
+            fullTitle: [...titles, spec.title].join(' '),
             file: spec.file,
             react,
             status: result.status,
@@ -1494,7 +1971,7 @@ function extractTests(suite, react) {
   }
 
   for (const childSuite of suite.suites || []) {
-    extractTests(childSuite, react)
+    extractTests(childSuite, react, titles)
   }
 }
 
@@ -1503,29 +1980,46 @@ async function runE2eSuites() {
 
   const e2eTargets = reactRuntimes.length > 0 ? reactRuntimes : [null]
   ctGalleryOwned = !DAEMON_OWNS_VITE
-  const workerCount = process.env.CT_WORKERS || String(WORKERS_PER_SLOT)
+  const workerCount = workerBudget(process.env.CT_WORKERS)
+
+  // Direct fallback owns its own gallery. Now that the shared execution lock is
+  // held, refuse to take over an existing listener instead of killing it — and
+  // refuse just as hard when the port cannot be inspected, never assuming an
+  // unknown inspection means the port is free.
+  if (ctGalleryOwned) {
+    const inspection = getPidsOnPort(CT_PORT)
+    if (!inspection.known) {
+      e2eRan = true
+      e2eChildStatus = 1
+      console.error(`[agentct] CT port ${CT_PORT} availability could not be inspected; refusing to start direct CT. Run 'pnpm agentct stop' or free the port.`)
+      return
+    }
+    if (inspection.pids.length > 0) {
+      e2eRan = true
+      e2eChildStatus = 1
+      console.error(`[agentct] CT port ${CT_PORT} is already owned by PID ${inspection.pids.join(', ')}; refusing to take over another owner's Vite. Run 'pnpm agentct stop' or free the port.`)
+      return
+    }
+  }
 
   for (const runtime of e2eTargets) {
     if (interrupted) break
 
     const pwArgs = ['exec', 'playwright', 'test', '-c', configPath, '--workers', String(workerCount)]
-    if (exactPlaywrightTarget) {
-      pwArgs.push(exactPlaywrightTarget)
-    } else if (component) {
-      pwArgs.push(`${component}/__e2e__`)
-    }
-    if (grep) {
-      pwArgs.push('-g', grep)
-    }
+    pwArgs.push(...ctTargets)
     if (isHeaded) {
       pwArgs.push('--headed')
     }
     if (updateSnapshots) {
       pwArgs.push('--update-snapshots')
+    } else {
+      pwArgs.push('--update-snapshots=none')
     }
 
     const label = runtime ? `react${runtime}` : 'react19'
     const runtimeResultsPath = path.join(resultsDir, `results-${component || 'all'}-${label}-${process.pid}.json`)
+    const runtimeOutputDir = artifactsDirectory(playwrightDir, process.pid, label)
+    pwArgs.push('--output', runtimeOutputDir, '--reporter', `json,list,${path.join(playwrightDir, 'snapshot-telemetry-reporter.ts')}`)
 
     if (!isJson) {
       console.log('\n=======================================================')
@@ -1538,10 +2032,7 @@ async function runE2eSuites() {
     }
 
     const executePin = async () => {
-      if (!DAEMON_OWNS_VITE) {
-        activeSlotPort = CT_PORT
-        freePort(CT_PORT)
-      }
+      if (ctGalleryOwned) activeSlotPort = CT_PORT
 
       const extraEnv = {
         PLAYWRIGHT_JSON_OUTPUT_NAME: runtimeResultsPath,
@@ -1559,17 +2050,16 @@ async function runE2eSuites() {
       e2eRan = true
       if ((child.status ?? 0) !== 0) e2eChildStatus = child.status ?? 1
 
-      if (!DAEMON_OWNS_VITE) {
-        freePort(CT_PORT)
+      if (ctGalleryOwned) {
+        for (const pgid of child.ownedGroups || []) ownedGalleryGroups.add(pgid)
+        // Hold the execution slot until the gallery's owned groups are
+        // positively stopped, not merely signaled.
+        await waitUntilStopped(child.ownedGroups, { label: `${component || 'all'} ${label} gallery` })
         activeSlotPort = null
       }
     }
 
-    if (IS_INNER) {
-      await executePin()
-    } else {
-      await withQueueLock({ cmd: 'playwright', component }, executePin)
-    }
+    await executePin()
 
     let parsedResults = null
     if (fs.existsSync(runtimeResultsPath)) {
@@ -1587,10 +2077,18 @@ async function runE2eSuites() {
         extractTests(s, label)
       }
     }
+    const reportErrors = parsedResults?.suites ? [] : ['CT execution did not produce a readable result report.']
+    reportErrors.push(...evidenceErrors(e2eRuns, selectedCases.filter(entry => entry.kind === 'ct'), { runtime: label }))
+    if (reportErrors.length) {
+      e2eChildStatus = 1
+      console.error(`[agentct] Incomplete CT evidence [${label}]:\n${reportErrors.join('\n')}`)
+    }
   }
 }
 
 await runE2eSuites()
+await releaseExecutionGate()
+await releaseExecution()
 
 const e2ePassed = e2eRuns.filter((t) => t.status === 'passed').length
 const e2eFailed = e2eRuns.filter((t) => t.status === 'failed' || t.status === 'timedOut').length
@@ -1598,7 +2096,7 @@ const e2eOk = !e2eRan || (!interrupted && e2eChildStatus === 0 && e2eFailed === 
 const ok = unitResult.ok && e2eOk
 
 if (isJson) {
-  console.log(
+  await writeCatalogOutput(process.stdout,
     JSON.stringify(
       {
         ok,
@@ -1664,7 +2162,7 @@ if (isJson) {
         console.log(`  ${key}: ${row.passed} passed | ${row.failed} failed`)
       }
       if (unitResult.ran) {
-        console.log(`Unit: ${unitResult.ok ? 'passed' : 'failed'} | ${unitResult.total} tests (workspace React 19)`)
+        console.log(`Unit: ${unitResult.ok ? 'passed' : 'failed'} | ${unitResult.passed} passed | ${unitResult.failed} failed | ${unitResult.total - unitResult.passed - unitResult.failed} skipped/excluded (workspace React 19)`)
       }
       console.log('-------------------------------------------------------')
 
@@ -1682,7 +2180,7 @@ if (isJson) {
     }
   } else if (unitResult.ran) {
     console.log('\n-------------------------------------------------------')
-    console.log(`Unit: ${unitResult.ok ? 'passed' : 'failed'} | ${unitResult.total} tests`)
+    console.log(`Unit: ${unitResult.ok ? 'passed' : 'failed'} | ${unitResult.passed} passed | ${unitResult.failed} failed | ${unitResult.total - unitResult.passed - unitResult.failed} skipped/excluded`)
     console.log('-------------------------------------------------------')
   }
 }

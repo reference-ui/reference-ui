@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "component": "Reference",
+  "scope": "public",
+  "description": "Executable Reference contracts covering logic and server-rendering evidence. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-REFERENCE-001",
+      "name": "Reference server rendering contracts public Reference installs its runtime and renders a loading state without fetching during SSR",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts public Reference installs its runtime and renders a loading state without fetching during SSR"
+    },
+    {
+      "id": "LIB-REFERENCE-002",
+      "name": "Reference server rendering contracts ReferenceView fails explicitly when its runtime provider is missing",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts ReferenceView fails explicitly when its runtime provider is missing"
+    },
+    {
+      "id": "LIB-REFERENCE-003",
+      "name": "Reference server rendering contracts loading and empty states distinguish pending work from an absent document",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts loading and empty states distinguish pending work from an absent document"
+    },
+    {
+      "id": "LIB-REFERENCE-004",
+      "name": "Reference server rendering contracts runtime errors and requested names are rendered as escaped text",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts runtime errors and requested names are rendered as escaped text"
+    },
+    {
+      "id": "LIB-REFERENCE-005",
+      "name": "Reference server rendering contracts memberless aliases show their type definition rather than an empty interface notice",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts memberless aliases show their type definition rather than an empty interface notice"
+    },
+    {
+      "id": "LIB-REFERENCE-006",
+      "name": "Reference server rendering contracts memberless interfaces show an explicit empty member notice rather than the alias definition",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts memberless interfaces show an explicit empty member notice rather than the alias definition"
+    },
+    {
+      "id": "LIB-REFERENCE-007",
+      "name": "Reference server rendering contracts a missing alias definition falls back to unknown and escapes authored definition text",
+      "kind": "unit",
+      "file": "Reference.test.tsx",
+      "title": "Reference server rendering contracts a missing alias definition falls back to unknown and escapes authored definition text"
+    }
+  ]
+}

@@ -315,3 +315,73 @@ export const Disabled = () => {
     </ReferenceLibrary>
   )
 }
+
+/** Exercises consumer event ownership and live controlled/collection updates. */
+export function ContractHarness({
+  menus = ['file', 'edit', 'view'],
+  disabledMenus = [],
+  heldValue,
+  cancelTrigger = false,
+  cancelContent = false,
+  handlerVersion = 'initial',
+  dir = 'ltr',
+}: {
+  menus?: string[]
+  disabledMenus?: string[]
+  heldValue?: string | null
+  cancelTrigger?: boolean
+  cancelContent?: boolean
+  handlerVersion?: string
+  dir?: 'ltr' | 'rtl'
+}) {
+  const [localValue, setLocalValue] = React.useState<string | null>(null)
+  const [requests, setRequests] = React.useState<string[]>([])
+  const [events, setEvents] = React.useState<string[]>([])
+  const value = heldValue === undefined ? localValue : heldValue
+
+  return (
+    <ReferenceLibrary>
+      <Div p="6r" colorMode="dark" dir={dir}>
+        <Menubar
+          data-testid="contract-bar"
+          value={value}
+          onChange={next => {
+            setRequests(previous => [...previous, `${handlerVersion}:${next ?? 'null'}`])
+            setLocalValue(next)
+          }}
+        >
+          {menus.map(menu => (
+            <Menubar.Menu key={menu} value={menu}>
+              <Menubar.Trigger
+                data-testid={`contract-trigger-${menu}`}
+                disabled={disabledMenus.includes(menu)}
+                onClick={event => {
+                  setEvents(previous => [...previous, `${menu}:click:${value ?? 'null'}`])
+                  if (cancelTrigger) event.preventDefault()
+                }}
+                onKeyDown={event => {
+                  setEvents(previous => [...previous, `${menu}:${event.key}:${value ?? 'null'}`])
+                  if (cancelTrigger) event.preventDefault()
+                }}
+              >
+                {menu}
+              </Menubar.Trigger>
+              <Menubar.Content
+                data-testid={`contract-content-${menu}`}
+                aria-label={menu}
+                onKeyDown={event => {
+                  if (cancelContent) event.preventDefault()
+                }}
+              >
+                <Menu.Item data-testid={`contract-${menu}-first`}>First {menu}</Menu.Item>
+                <Menu.Item data-testid={`contract-${menu}-last`}>Last {menu}</Menu.Item>
+              </Menubar.Content>
+            </Menubar.Menu>
+          ))}
+        </Menubar>
+        <div data-testid="contract-requests">{requests.join(',')}</div>
+        <div data-testid="contract-events">{events.join(',')}</div>
+      </Div>
+    </ReferenceLibrary>
+  )
+}

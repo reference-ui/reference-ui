@@ -30,6 +30,31 @@ Unit tests sit beside the code they cover. `__e2e__` is separate because those f
 
 Matrix contract tests in `matrix/*/tests/e2e` are a different layer (cross-bundler/runtime). Do not put component CT there.
 
+## Case catalog and conformity
+
+Each component directory has a `case.json` indexing every executable unit and CT
+declaration with a stable `LIB-COMPONENT-NNN` ID. `pnpm agentct` validates the full
+catalog before verification; missing manifests, stale or unindexed declarations,
+duplicate IDs/evidence, disabled tests, and empty public/support coverage fail.
+The manifest format and authoring rules live in
+`packages/reference-lib/testing/README.md`.
+
+```bash
+pnpm agentct check                    # Conformity only; no execution proof
+pnpm agentct list                     # Registered cases; no daemon needed
+pnpm agentct search "focus"
+pnpm agentct run LIB-POPOVER-001       # Precise registered unit/CT declaration
+```
+
+Static `it.each` tables are registered once using their unexpanded declaration
+title; selecting a case requires all expected rows to pass. Missing reports,
+zero-pass executions, skipped selected cases, and incomplete row counts cannot
+produce a passing verdict. A component without a requested evidence layer fails
+explicitly. Component targets match the exact directory, and concurrent jobs keep
+artifacts in separate `playwright/test-results/agentct-<pid>/<react-major>/` paths.
+Ordinary CT runs use `--update-snapshots=none`, so verification never creates
+missing PNG baselines.
+
 ---
 
 ## What To Write Where
@@ -64,7 +89,7 @@ flowchart LR
 Always run **unit first**, then e2e on React 19, then inspect artifacts. From the repository root:
 
 ```bash
-pnpm agentct                         # Run ALL components through the 3-slot daemon
+pnpm agentct                         # Run ALL components through the single-job daemon
 pnpm agentct Popover                 # unit → e2e (React 19 + snapshots)
 pnpm agentct Popover --unit
 pnpm agentct Popover --e2e
@@ -83,12 +108,12 @@ pnpm agentct --help
 
 > [!IMPORTANT] 
 > **AGENTIC FLOW & PERSISTENT DAEMON:**
-> - **NEVER pass the `--json` flag.** The user wants to see the human-readable progress in the task logs. Run `pnpm agentct` natively and parse the terminal output.
-> - **One Vite, three slots:** `agentct` auto-starts a persistent Unix-socket daemon (`/tmp/ref-ct-agent.sock`) that owns a single CT Vite gallery on `http://localhost:3101`. Concurrent `pnpm agentct <Component>` invocations from subagents **must** go through this daemon — they must not boot their own Vite servers.
-> - **Global queue:** hard-capped at **3** parallel execution slots. Each Playwright run gets `Math.floor(os.cpus().length / 3)` workers so three concurrent slots cannot exceed 100% CPU.
-> - **You CAN and SHOULD** invoke multiple `pnpm agentct <Component>` runs concurrently in separate subagents. They queue on the warm server; extra jobs wait for a free slot.
+> - **Human-readable verification output:** Do not pass `--json` for unit/CT jobs. Run `pnpm agentct` natively and parse the progress in the task logs. Catalog-only `list` and `search` may use JSON; invoke `pnpm --silent agentct ... --json` to keep package-script banners out of machine-readable stdout.
+> - **One Vite, one active job:** `agentct` auto-starts a persistent Unix-socket daemon (`/tmp/ref-ct-agent.sock`) that owns a single CT Vite gallery on `http://localhost:3101`. The gallery starts when browser evidence is needed and stays warm for later jobs. Unit-only selections do not start Vite. Concurrent invocations share this daemon and wait their turn.
+> - **Resource budget:** the global queue permits **one** active verification job, including its units and all React browser runs. Vitest and Playwright use at most **two** workers. `CT_WORKERS=1` lowers the job budget; higher overrides are capped at two. The direct fallback shares the same execution lock.
+> - **Scheduling:** run one local verification job at a time. Queue additional component work instead of launching independent browser servers or test fleets. Cancellation keeps the execution slot until the child stops and escalates the job's owned process groups, so detached Playwright server/browser leaders cannot outlive their slot. The direct fallback never takes over an existing listener on the CT port; `pnpm agentct stop` terminates active jobs and the daemon's owned groups.
 > - **Snapshot telemetry:** when `toHaveScreenshot` fails, the reporter prints bounding box (`x: min..max`, `y: min..max`) and the dominant color hex difference. Use that before writing image-parsing scripts.
-> - **Triaging Full Suite Failures:** To run the whole suite, execute `pnpm agentct` (no arguments). Once finished, read the console failures, then spawn an independent subagent PER FAILED COMPONENT to fix it, run `pnpm agentct <FailedComponent>` to verify, and report back.
+> - **Triaging Full Suite Failures:** Run `pnpm agentct` (no arguments) only when full-suite proof is needed. Read the failures, fix the relevant components, then verify each affected component through the same single-job queue.
 
 Never pass `--update-snapshots` during this loop. Snapshot writes are a separate, human-gated step (see below).
 
@@ -274,23 +299,27 @@ Native Playwright UI with live story rendering, locators, and time-travel.
 
 ---
 
-## Memex (`cases` + `surfaces` collections)
+## Memex (`components`, `cases`, and `surfaces` collections)
 
 Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): neo cases live in `cases`, RS module
-surfaces in `surfaces`. Use it to find **related neo coverage for
-the component behavior being verified**, instead of grepping.
+(`.agents/memex/README.md`): component declarations live in `components`,
+neo cases in `cases`, and RS module surfaces in `surfaces`. Component entries
+index registered manifest declarations, not executed verdicts. Use component
+entries to select evidence and neo entries to find related behavior coverage.
 
 ```bash
 node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
 node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
 node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                      # full doc + related
+node .agents/memex/cli.mjs search 'focus' --in components                # registered declarations
+node .agents/memex/cli.mjs show components:LIB-FIELD-026                # manifest metadata, not a verdict
 ```
 
 Terms are stemmed (`queries` matches `query`) and typo-tolerant
 (fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
-Resolve ids with `show`, not `search`. There is no metadata sidecar —
-enrich the index by writing a detailed README: describe the behavior,
+Resolve ids with `show`, not `search`. Component metadata comes from colocated
+`case.json` manifests. For the documentation collections, enrich the index by
+writing a detailed README: describe the behavior,
 name the symbols, cite sibling case/station ids (cited ids surface as
 `related`). Everything reads live: new docs are searchable immediately,
 no rebuild step.

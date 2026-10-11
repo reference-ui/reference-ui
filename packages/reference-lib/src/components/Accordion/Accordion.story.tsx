@@ -1,9 +1,54 @@
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
-import { Accordion } from './index'
+import { Accordion, type AccordionValue } from './index'
 import { Collapsible } from '../Collapsible'
 import { dividerContent, dividerTrigger } from '../disclosureChrome'
+
+/** Keeps application values authoritative while recording native activation requests. */
+export function ControlledContract({
+  expansion = 'single',
+  value = 'a',
+  items = ['a', 'b', 'c'],
+  cancelActivation = false,
+}: {
+  expansion?: 'single' | 'multiple'
+  value?: AccordionValue
+  items?: string[]
+  cancelActivation?: boolean
+}) {
+  const [requests, setRequests] = React.useState<AccordionValue[]>([])
+  const [consumerCalls, setConsumerCalls] = React.useState<string[]>([])
+  return (
+    <ReferenceLibrary>
+      <Accordion
+        data-testid="controlled-contract-root"
+        expansion={expansion}
+        value={value}
+        onChange={next => setRequests(previous => [...previous, next])}
+      >
+        {items.map(id => (
+          <Accordion.Item key={id} id={id}>
+            <Accordion.Trigger
+              data-testid={`controlled-trigger-${id}`}
+              onClick={event => {
+                setConsumerCalls(previous => [...previous, id])
+                if (cancelActivation) event.preventDefault()
+              }}
+            >
+              Section {id}
+            </Accordion.Trigger>
+            <Accordion.Content data-testid={`controlled-content-${id}`}>
+              Content {id}
+            </Accordion.Content>
+          </Accordion.Item>
+        ))}
+      </Accordion>
+      <div data-testid="controlled-requests">{JSON.stringify(requests)}</div>
+      <div data-testid="controlled-consumer-calls">{consumerCalls.join(',')}</div>
+    </ReferenceLibrary>
+  )
+}
 
 export const Single = () => {
   const [value, setValue] = React.useState<string | null>('item-1')

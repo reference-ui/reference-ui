@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "component": "Showcase",
+  "scope": "internal",
+  "description": "Internal composition gallery testing interactions and visual stability across the public component suite.",
+  "cases": [
+    {
+      "id": "LIB-SHOWCASE-001",
+      "name": "Showcase Suite showcase mounts resting and renders all primary sections",
+      "kind": "ct",
+      "file": "__e2e__/Showcase.ct.spec.ts",
+      "title": "Showcase Suite showcase mounts resting and renders all primary sections"
+    },
+    {
+      "id": "LIB-SHOWCASE-002",
+      "name": "Showcase Suite showcase active interactions across multiple components",
+      "kind": "ct",
+      "file": "__e2e__/Showcase.ct.spec.ts",
+      "title": "Showcase Suite showcase active interactions across multiple components"
+    },
+    {
+      "id": "LIB-SHOWCASE-003",
+      "name": "Showcase Suite full shebang cascade 5-tier overlay stacking and unwinding",
+      "kind": "ct",
+      "file": "__e2e__/Showcase.ct.spec.ts",
+      "title": "Showcase Suite full shebang cascade 5-tier overlay stacking and unwinding"
+    }
+  ]
+}

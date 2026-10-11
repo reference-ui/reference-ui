@@ -1,0 +1,8 @@
+{
+  "description": "Component contracts — stable cases from the lib manifests with exact unit/browser evidence selectors.",
+  "kind": "component",
+  "name": "components",
+  "owner": "test-component skill",
+  "root": "packages/reference-lib/src/components",
+  "weights": { "id": 4, "title": 3, "component": 2 }
+}

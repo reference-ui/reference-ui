@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 1,
+  "component": "Collapsible",
+  "scope": "public",
+  "description": "Executable Collapsible contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-COLLAPSIBLE-001",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-01: closed hidden-until-found content stays mounted, hidden, inert, and linked",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-01: closed hidden-until-found content stays mounted, hidden, inert, and linked"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-002",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-02: root hiddenUntilFound is inherited; Content false overrides root true",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-02: root hiddenUntilFound is inherited; Content false overrides root true"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-003",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-03: hidden-until-found close shuts instantly with no tween and upgrades hidden",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-03: hidden-until-found close shuts instantly with no tween and upgrades hidden"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-004",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-04: beforematch on closed hidden-until-found content opens instantly with no enter motion",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-04: beforematch on closed hidden-until-found content opens instantly with no enter motion"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-005",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-05: cancelled beforematch stays closed; the next trigger open still animates",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-05: cancelled beforematch stays closed; the next trigger open still animates"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-006",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-06: forceMount closed content stays mounted, visible, and interactive with focus kept",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-06: forceMount closed content stays mounted, visible, and interactive with focus kept"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-007",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-07: hiddenUntilFound wins over forceMount",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-07: hiddenUntilFound wins over forceMount"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-008",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-08: a rejected beforematch arms the skip consumed by the next committed open",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-08: a rejected beforematch arms the skip consumed by the next committed open"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-009",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-09: default close still evacuates focus from exiting content (no forceMount)",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-09: default close still evacuates focus from exiting content (no forceMount)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-010",
+      "name": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-10: beforematch while open is a no-op",
+      "kind": "unit",
+      "file": "Collapsible.mount.test.tsx",
+      "title": "Collapsible Mount Contract (CO-MOUNT) CO-MOUNT-10: beforematch while open is a no-op"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-011",
+      "name": "Collapsible Unit Contract CO-DOM-05: Collapsible should honor an explicit Content ID as the control target",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-05: Collapsible should honor an explicit Content ID as the control target"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-012",
+      "name": "Collapsible Unit Contract CO-DOM-06: Collapsible should update generated linkage atomically when an explicit Content ID changes or disappears",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-06: Collapsible should update generated linkage atomically when an explicit Content ID changes or disappears"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-013",
+      "name": "Collapsible Unit Contract CO-DOM-07: Collapsible should generate instance-safe linkage for disclosures with identical content",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-07: Collapsible should generate instance-safe linkage for disclosures with identical content"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-014",
+      "name": "Collapsible Unit Contract CO-DOM-08: Collapsible should forward native props and refs to the fixed Trigger and Content elements",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-08: Collapsible should forward native props and refs to the fixed Trigger and Content elements"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-015",
+      "name": "Collapsible Unit Contract CO-DOM-09: Collapsible should tolerate either authored part being absent without inventing markup",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-09: Collapsible should tolerate either authored part being absent without inventing markup"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-016",
+      "name": "Collapsible Unit Contract CO-DOM-10: Collapsible should keep its trigger non-submitting unless the application explicitly chooses submission",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-DOM-10: Collapsible should keep its trigger non-submitting unless the application explicitly chooses submission"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-017",
+      "name": "Collapsible Unit Contract CO-ACT-04: Collapsible should leave controlled rendering unchanged when its parent ignores a toggle request",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-04: Collapsible should leave controlled rendering unchanged when its parent ignores a toggle request"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-018",
+      "name": "Collapsible Unit Contract CO-ACT-05: Collapsible should follow programmatic controlled state without echoing a change request",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-05: Collapsible should follow programmatic controlled state without echoing a change request"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-019",
+      "name": "Collapsible Unit Contract CO-ACT-06: Collapsible should run the consumer Trigger click handler before deciding whether to request a toggle",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-06: Collapsible should run the consumer Trigger click handler before deciding whether to request a toggle"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-020",
+      "name": "Collapsible Unit Contract CO-ACT-07: Collapsible should block activation without overriding a controlled open value when disabled",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-07: Collapsible should block activation without overriding a controlled open value when disabled"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-021",
+      "name": "Collapsible Unit Contract CO-ACT-08: Collapsible should ignore input that is not native trigger activation",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-08: Collapsible should ignore input that is not native trigger activation"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-022",
+      "name": "Collapsible Unit Contract CO-ACT-09: Collapsible should activate against the latest controlled value and callback after rerender",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-09: Collapsible should activate against the latest controlled value and callback after rerender"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-023",
+      "name": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: quarantine controlled-only does not apply, uncontrolled API preserved)",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: quarantine controlled-only does not apply, uncontrolled API preserved)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-024",
+      "name": "Collapsible Unit Contract CO-PRES-06: Collapsible should clean up immediately when the whole disclosure disappears during exit",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-PRES-06: Collapsible should clean up immediately when the whole disclosure disappears during exit"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-025",
+      "name": "Collapsible Unit Contract CO-SIZE-04: Collapsible should defer layout measurements until after hydration",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-SIZE-04: Collapsible should defer layout measurements until after hydration"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-026",
+      "name": "Collapsible Unit Contract CO-NEST-01: Nested standalone Collapsibles should keep state, callbacks, and linkage independent",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-NEST-01: Nested standalone Collapsibles should keep state, callbacks, and linkage independent"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-027",
+      "name": "Collapsible Unit Contract CO-NEST-02: A Collapsible inside Accordion should defer expansion authority to the Accordion root while preserving disclosure anatomy",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-NEST-02: A Collapsible inside Accordion should defer expansion authority to the Accordion root while preserving disclosure anatomy"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-028",
+      "name": "Collapsible Unit Contract CO-ENV-01: Collapsible should hydrate open and closed disclosure relationships without changing identity",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ENV-01: Collapsible should hydrate open and closed disclosure relationships without changing identity"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-029",
+      "name": "Collapsible Unit Contract CO-ENV-02: Collapsible should keep one registration and request across supported React versions and StrictMode replay",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract CO-ENV-02: Collapsible should keep one registration and request across supported React versions and StrictMode replay"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-030",
+      "name": "Collapsible Unit Contract B-12: Collapsible should fire both onChange and onOpenChange when both are passed",
+      "kind": "unit",
+      "file": "Collapsible.test.tsx",
+      "title": "Collapsible Unit Contract B-12: Collapsible should fire both onChange and onOpenChange when both are passed"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-031",
+      "name": "Collapsible Composition Gates & Browser Proofs CO-DOM-01, CO-DOM-02 & CO-DOM-04: Toggles Collapsible open/closed and updates ARIA attributes",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Composition Gates & Browser Proofs CO-DOM-01, CO-DOM-02 & CO-DOM-04: Toggles Collapsible open/closed and updates ARIA attributes"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-032",
+      "name": "Collapsible Composition Gates & Browser Proofs CO-SIZE-01: Open Content publishes border-box measurement CSS variables",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Composition Gates & Browser Proofs CO-SIZE-01: Open Content publishes border-box measurement CSS variables"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-033",
+      "name": "Collapsible Composition Gates & Browser Proofs CO-DEFAULT-OPEN: Starts expanded with defaultOpen and can be collapsed",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Composition Gates & Browser Proofs CO-DEFAULT-OPEN: Starts expanded with defaultOpen and can be collapsed"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-034",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-035",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-036",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-037",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-038",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-039",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-040",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-041",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-042",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-043",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-044",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-045",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-046",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-047",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-048",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-049",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-050",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-051",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-052",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-053",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-054",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-055",
+      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it",
+      "kind": "ct",
+      "file": "__e2e__/Collapsible.ct.spec.ts",
+      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-056",
+      "name": "resolveCollapseSkip tweens a plain open and a plain close",
+      "kind": "unit",
+      "file": "collapse/skip.test.ts",
+      "title": "resolveCollapseSkip tweens a plain open and a plain close"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-057",
+      "name": "resolveCollapseSkip skips the open reveal while an enter or beforematch skip is armed",
+      "kind": "unit",
+      "file": "collapse/skip.test.ts",
+      "title": "resolveCollapseSkip skips the open reveal while an enter or beforematch skip is armed"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-058",
+      "name": "resolveCollapseSkip shuts hidden-until-found content instantly but still tweens its open",
+      "kind": "unit",
+      "file": "collapse/skip.test.ts",
+      "title": "resolveCollapseSkip shuts hidden-until-found content instantly but still tweens its open"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-059",
+      "name": "resolveCollapseSkip never tweens force-mount-alone content, open or closed (CO-MOUNT)",
+      "kind": "unit",
+      "file": "collapse/skip.test.ts",
+      "title": "resolveCollapseSkip never tweens force-mount-alone content, open or closed (CO-MOUNT)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-060",
+      "name": "resolveContentIsolation isolates visually exiting closed content (CO-PRES-08)",
+      "kind": "unit",
+      "file": "isolation/state.test.ts",
+      "title": "resolveContentIsolation isolates visually exiting closed content (CO-PRES-08)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-061",
+      "name": "resolveContentIsolation leaves open content alone",
+      "kind": "unit",
+      "file": "isolation/state.test.ts",
+      "title": "resolveContentIsolation leaves open content alone"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-062",
+      "name": "resolveContentIsolation keeps force-mount-alone closed content interactive (CO-MOUNT)",
+      "kind": "unit",
+      "file": "isolation/state.test.ts",
+      "title": "resolveContentIsolation keeps force-mount-alone closed content interactive (CO-MOUNT)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-063",
+      "name": "resolveContentIsolation passes author inert and aria-hidden through on open content",
+      "kind": "unit",
+      "file": "isolation/state.test.ts",
+      "title": "resolveContentIsolation passes author inert and aria-hidden through on open content"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-064",
+      "name": "resolveTriggerLinkage links an open trigger to the mounted content id",
+      "kind": "unit",
+      "file": "linkage/state.test.ts",
+      "title": "resolveTriggerLinkage links an open trigger to the mounted content id"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-065",
+      "name": "resolveTriggerLinkage keeps the link through exit and drops it after unmount (CO-DOM-03)",
+      "kind": "unit",
+      "file": "linkage/state.test.ts",
+      "title": "resolveTriggerLinkage keeps the link through exit and drops it after unmount (CO-DOM-03)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-066",
+      "name": "resolveTriggerLinkage never dangles aria-controls when Content is absent (CO-DOM-09)",
+      "kind": "unit",
+      "file": "linkage/state.test.ts",
+      "title": "resolveTriggerLinkage never dangles aria-controls when Content is absent (CO-DOM-09)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-067",
+      "name": "resolveTriggerStyle kills the bottom border while content shows beneath the trigger",
+      "kind": "unit",
+      "file": "linkage/state.test.ts",
+      "title": "resolveTriggerStyle kills the bottom border while content shows beneath the trigger"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-068",
+      "name": "resolveTriggerStyle passes author styles through untouched when closed or absent",
+      "kind": "unit",
+      "file": "linkage/state.test.ts",
+      "title": "resolveTriggerStyle passes author styles through untouched when closed or absent"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-069",
+      "name": "resolveMountPolicy lets the Content prop win over the root default either way",
+      "kind": "unit",
+      "file": "mount/policy.test.ts",
+      "title": "resolveMountPolicy lets the Content prop win over the root default either way"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-070",
+      "name": "resolveMountPolicy lets hidden-until-found win over force-mount (CO-MOUNT)",
+      "kind": "unit",
+      "file": "mount/policy.test.ts",
+      "title": "resolveMountPolicy lets hidden-until-found win over force-mount (CO-MOUNT)"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-071",
+      "name": "resolvePresent keeps open, findable, or force-mounted content in the tree",
+      "kind": "unit",
+      "file": "mount/policy.test.ts",
+      "title": "resolvePresent keeps open, findable, or force-mounted content in the tree"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-072",
+      "name": "shouldRevealOnBeforeMatch reveals only a live, still-closed panel the consumer did not cancel",
+      "kind": "unit",
+      "file": "mount/policy.test.ts",
+      "title": "shouldRevealOnBeforeMatch reveals only a live, still-closed panel the consumer did not cancel"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-073",
+      "name": "setRef writes the node into an object ref and clears on null",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef writes the node into an object ref and clears on null"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-074",
+      "name": "setRef passes the node to a function ref and returns its cleanup",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef passes the node to a function ref and returns its cleanup"
+    },
+    {
+      "id": "LIB-COLLAPSIBLE-075",
+      "name": "setRef ignores a missing ref",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef ignores a missing ref"
+    }
+  ]
+}

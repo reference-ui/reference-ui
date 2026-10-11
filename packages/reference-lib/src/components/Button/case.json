@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "component": "Button",
+  "scope": "support",
+  "description": "Executable Button contracts covering real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-BUTTON-001",
+      "name": "BT-FORM-01: default submission respects native validity and includes the clicked submitter",
+      "kind": "ct",
+      "file": "__e2e__/Button.contracts.ct.spec.ts",
+      "title": "BT-FORM-01: default submission respects native validity and includes the clicked submitter"
+    },
+    {
+      "id": "LIB-BUTTON-002",
+      "name": "BT-FORM-02: externally associated submit and reset buttons act on their owner form",
+      "kind": "ct",
+      "file": "__e2e__/Button.contracts.ct.spec.ts",
+      "title": "BT-FORM-02: externally associated submit and reset buttons act on their owner form"
+    },
+    {
+      "id": "LIB-BUTTON-003",
+      "name": "BT-EVENT-01: consumer cancellation prevents native submit for click and keyboard activation",
+      "kind": "ct",
+      "file": "__e2e__/Button.contracts.ct.spec.ts",
+      "title": "BT-EVENT-01: consumer cancellation prevents native submit for click and keyboard activation"
+    },
+    {
+      "id": "LIB-BUTTON-004",
+      "name": "BT-KEY-01: native Enter and Space activate once while disabled fieldset buttons are skipped",
+      "kind": "ct",
+      "file": "__e2e__/Button.contracts.ct.spec.ts",
+      "title": "BT-KEY-01: native Enter and Space activate once while disabled fieldset buttons are skipped"
+    },
+    {
+      "id": "LIB-BUTTON-005",
+      "name": "Button Component BT-REST-01: Renders all button variants, icon configurations, and disabled states in resting state",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-REST-01: Renders all button variants, icon configurations, and disabled states in resting state"
+    },
+    {
+      "id": "LIB-BUTTON-006",
+      "name": "Button Component BT-STATE-01: Default variant hover, active, focus, and click states",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-STATE-01: Default variant hover, active, focus, and click states"
+    },
+    {
+      "id": "LIB-BUTTON-007",
+      "name": "Button Component BT-STATE-02: Primary variant hover, active, focus, and click states",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-STATE-02: Primary variant hover, active, focus, and click states"
+    },
+    {
+      "id": "LIB-BUTTON-008",
+      "name": "Button Component BT-STATE-03: Ghost variant hover, active, focus, and click states",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-STATE-03: Ghost variant hover, active, focus, and click states"
+    },
+    {
+      "id": "LIB-BUTTON-009",
+      "name": "Button Component BT-STATE-04: Icon button variants hover and focus states",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-STATE-04: Icon button variants hover and focus states"
+    },
+    {
+      "id": "LIB-BUTTON-010",
+      "name": "Button Component BT-DIS-01: Disabled buttons do not fire clicks and show disabled styles",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Button Component BT-DIS-01: Disabled buttons do not fire clicks and show disabled styles"
+    },
+    {
+      "id": "LIB-BUTTON-011",
+      "name": "B-40: bare primitive Button is inline shrink-to-fit, matching native button",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "B-40: bare primitive Button is inline shrink-to-fit, matching native button"
+    }
+  ]
+}

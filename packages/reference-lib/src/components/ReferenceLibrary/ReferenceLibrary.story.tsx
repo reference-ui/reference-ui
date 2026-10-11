@@ -108,3 +108,48 @@ export function ReferenceLibraryFixture() {
     </div>
   )
 }
+
+interface StrictRuntimeHarnessProps {
+  revision?: string
+  closeButton?: boolean
+}
+
+export function StrictRuntimeHarness({
+  revision = 'initial',
+  closeButton = false,
+}: StrictRuntimeHarnessProps) {
+  const [mounted, setMounted] = React.useState(false)
+
+  return (
+    <div data-testid="library-strict-root">
+      <button
+        type="button"
+        data-testid="library-strict-queue"
+        onClick={() => {
+          toast.show(<span>Queued strict toast</span>, {
+            id: 'library-strict-toast',
+            duration: false,
+            document,
+          })
+          announce('Queued strict announcement', { politeness: 'polite', document })
+        }}
+      >
+        Queue runtime work
+      </button>
+      <button
+        type="button"
+        data-testid="library-strict-toggle"
+        onClick={() => setMounted(previous => !previous)}
+      >
+        Toggle strict runtime
+      </button>
+      {mounted && (
+        <React.StrictMode>
+          <ReferenceLibrary toaster={{ defaultDuration: false, closeButton }}>
+            <main data-testid="library-strict-app">Application {revision}</main>
+          </ReferenceLibrary>
+        </React.StrictMode>
+      )}
+    </div>
+  )
+}

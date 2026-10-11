@@ -1068,3 +1068,64 @@ export const A11yMatrix = () => {
     </ReferenceLibrary>
   )
 }
+
+interface TabsControlledContractProps {
+  heldValue?: string
+  reject?: boolean
+  callbackLabel?: string
+  cancelPress?: boolean
+  cancelClick?: boolean
+  activation?: 'automatic' | 'manual'
+}
+
+export function ControlledContract({
+  heldValue,
+  reject = false,
+  callbackLabel = 'initial',
+  cancelPress = false,
+  cancelClick = false,
+  activation = 'automatic',
+}: TabsControlledContractProps) {
+  const [localValue, setLocalValue] = React.useState('general')
+  const [requests, setRequests] = React.useState<string[]>([])
+  const [events, setEvents] = React.useState<string[]>([])
+  const value = heldValue ?? localValue
+  const recordEvent = (event: React.SyntheticEvent, name: string, canceled: boolean) => {
+    if (!canceled) return
+    setEvents(previous => [...previous, `${name}:${value}`])
+    event.preventDefault()
+  }
+
+  return (
+    <div data-testid="tabs-contract-root">
+      <Tabs
+        value={value}
+        activation={activation}
+        onChange={next => {
+          setRequests(previous => [...previous, `${callbackLabel}:change:${next}`])
+          setEvents(previous => [...previous, `change:${value}:${next}`])
+          if (!reject) setLocalValue(next)
+        }}
+      >
+        <Tabs.List data-testid="tabs-contract-list">
+          <Tabs.Tab value="general" data-testid="tabs-contract-general">General</Tabs.Tab>
+          <Tabs.Tab
+            value="billing"
+            data-testid="tabs-contract-billing"
+            onPointerDown={event => recordEvent(event, 'pointerdown', cancelPress)}
+            onMouseDown={event => recordEvent(event, 'mousedown', cancelPress)}
+            onClick={event => recordEvent(event, 'click', cancelClick)}
+          >
+            Billing
+          </Tabs.Tab>
+          <Tabs.Tab value="security" data-testid="tabs-contract-security">Security</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="general" data-testid="tabs-contract-panel-general">General settings</Tabs.Panel>
+        <Tabs.Panel value="billing" data-testid="tabs-contract-panel-billing">Billing settings</Tabs.Panel>
+        <Tabs.Panel value="security" data-testid="tabs-contract-panel-security">Security settings</Tabs.Panel>
+      </Tabs>
+      <output data-testid="tabs-contract-requests">{requests.join('|')}</output>
+      <output data-testid="tabs-contract-events">{events.join('|')}</output>
+    </div>
+  )
+}

@@ -34,12 +34,13 @@ never across invocations or collections.
 | ---------- | -------- | ------------------------------------------------------------------ | ---------------- |
 | `doom`     | markdown | `.agents/doom/logs/*.md`                                           | doom-agent skill |
 | `cases`    | neo      | `packages/reference-neo/tests/cases` (case.json + README + specs)  | agent-neo skill  |
+| `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
 | `perf`     | perf     | `.agents/skills/agent-perf/perf-index.json` (committed)            | agent-perf skill |
 | `flames`   | markdown | `.agents/rs-index` (bundle notes + ledgers; raw profiles excluded) | agent-perf skill |
 | `graph`    | system   | built in: every README.md + every file-top header                  | memex itself     |
 
-Global `search` ranks the five manifest collections with a prior for
+Global `search` ranks the manifest collections with a prior for
 authoritative docs (surfaces ×3, cases ×2) over evidence logs. The
 graph is targeted-only (`--in graph`): thousands of harvested headers
 would drown curated hits in a global rank. `show <path>` always walks
@@ -121,7 +122,7 @@ the max per field across collections.
 ```
 
 Kinds are memex built-ins: `markdown` (.md plus small .json sidecars),
-`neo` (one doc per case), `rs` (one doc per module), `perf`
+`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `perf`
 (perf-index.json entries). New markdown knowledge needs only a manifest —
 no code, no CLI change.
 

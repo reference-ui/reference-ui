@@ -1,0 +1,757 @@
+{
+  "schemaVersion": 1,
+  "component": "Tabs",
+  "scope": "public",
+  "description": "Executable Tabs contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-TABS-001",
+      "name": "Tabs finish-line cases (SELECT) TB-SELECT-01: a primary pointer press and release requests the tab exactly once with focus on it",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (SELECT) TB-SELECT-01: a primary pointer press and release requests the tab exactly once with focus on it"
+    },
+    {
+      "id": "LIB-TABS-002",
+      "name": "Tabs finish-line cases (SELECT) TB-SELECT-02: a rejected pointer request retains controlled selection",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (SELECT) TB-SELECT-02: a rejected pointer request retains controlled selection"
+    },
+    {
+      "id": "LIB-TABS-003",
+      "name": "Tabs finish-line cases (SELECT) TB-SELECT-05: a consumer click preventDefault cancels pointer selection",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (SELECT) TB-SELECT-05: a consumer click preventDefault cancels pointer selection"
+    },
+    {
+      "id": "LIB-TABS-004",
+      "name": "Tabs finish-line cases (SELECT) TB-SELECT-06: pointer selection blurs panel content before the new tab focus and request",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (SELECT) TB-SELECT-06: pointer selection blurs panel content before the new tab focus and request"
+    },
+    {
+      "id": "LIB-TABS-005",
+      "name": "Tabs finish-line cases (SELECT) TB-SELECT-08: a primary press requests before the click completes, and the click dedupes",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (SELECT) TB-SELECT-08: a primary press requests before the click completes, and the click dedupes"
+    },
+    {
+      "id": "LIB-TABS-006",
+      "name": "Tabs finish-line cases (AUTO) TB-AUTO-01: horizontal arrows move focus, stop, selection, and panel together",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (AUTO) TB-AUTO-01: horizontal arrows move focus, stop, selection, and panel together"
+    },
+    {
+      "id": "LIB-TABS-007",
+      "name": "Tabs finish-line cases (AUTO) TB-AUTO-03: vertical tabs use only vertical arrows in LTR and RTL",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (AUTO) TB-AUTO-03: vertical tabs use only vertical arrows in LTR and RTL"
+    },
+    {
+      "id": "LIB-TABS-008",
+      "name": "Tabs finish-line cases (AUTO) TB-AUTO-04: automatic navigation wraps, skips disabled, and honors Home/End",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (AUTO) TB-AUTO-04: automatic navigation wraps, skips disabled, and honors Home/End"
+    },
+    {
+      "id": "LIB-TABS-009",
+      "name": "Tabs finish-line cases (AUTO) TB-AUTO-05: rejected automatic navigation keeps selection while focus roves",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (AUTO) TB-AUTO-05: rejected automatic navigation keeps selection while focus roves"
+    },
+    {
+      "id": "LIB-TABS-010",
+      "name": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-02: Space requests the focused manual tab on release, never on hold",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-02: Space requests the focused manual tab on release, never on hold"
+    },
+    {
+      "id": "LIB-TABS-011",
+      "name": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-03: Enter requests the focused manual tab without keyup duplicates",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-03: Enter requests the focused manual tab without keyup duplicates"
+    },
+    {
+      "id": "LIB-TABS-012",
+      "name": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-05: a consumer keydown preventDefault cancels manual movement",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-MANUAL-05: a consumer keydown preventDefault cancels manual movement"
+    },
+    {
+      "id": "LIB-TABS-013",
+      "name": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-EVENT-01: activation keys in a nested editable do not select the tab",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-EVENT-01: activation keys in a nested editable do not select the tab"
+    },
+    {
+      "id": "LIB-TABS-014",
+      "name": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-EVENT-02: activation keys in a portalled editable do not select the tab",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (MANUAL funnel + EVENT) TB-EVENT-02: activation keys in a portalled editable do not select the tab"
+    },
+    {
+      "id": "LIB-TABS-015",
+      "name": "Tabs finish-line cases (DOM-09 refs + DOM-13 diagnostics) TB-DOM-09: native customization, refs, and managed state coexist on every part",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (DOM-09 refs + DOM-13 diagnostics) TB-DOM-09: native customization, refs, and managed state coexist on every part"
+    },
+    {
+      "id": "LIB-TABS-016",
+      "name": "Tabs finish-line cases (DOM-09 refs + DOM-13 diagnostics) TB-DOM-13: incomplete anatomy warns the exact mismatch with no dangling ARIA",
+      "kind": "unit",
+      "file": "Tabs.cases.test.tsx",
+      "title": "Tabs finish-line cases (DOM-09 refs + DOM-13 diagnostics) TB-DOM-13: incomplete anatomy warns the exact mismatch with no dangling ARIA"
+    },
+    {
+      "id": "LIB-TABS-017",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: omitted value self-manages from the first tab",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: omitted value self-manages from the first tab"
+    },
+    {
+      "id": "LIB-TABS-018",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: omitted value seeds first-enabled past a disabled lead tab",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: omitted value seeds first-enabled past a disabled lead tab"
+    },
+    {
+      "id": "LIB-TABS-019",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: automatic arrows self-select through the same funnel",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: automatic arrows self-select through the same funnel"
+    },
+    {
+      "id": "LIB-TABS-020",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: user selection sticks across re-renders, never reseeded",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) uncontrolled: user selection sticks across re-renders, never reseeded"
+    },
+    {
+      "id": "LIB-TABS-021",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) controlled: value selects exactly that tab",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) controlled: value selects exactly that tab"
+    },
+    {
+      "id": "LIB-TABS-022",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) types: no seeding prop exists on TabsProps",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) types: no seeding prop exists on TabsProps"
+    },
+    {
+      "id": "LIB-TABS-023",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) renders tabs with 3px indicator on active tab and table-border baseline on list",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) renders tabs with 3px indicator on active tab and table-border baseline on list"
+    },
+    {
+      "id": "LIB-TABS-024",
+      "name": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) renders pill variant tabs with primary button styling on active tab",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception) renders pill variant tabs with primary button styling on active tab"
+    },
+    {
+      "id": "LIB-TABS-025",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-03: exactly one tab stop tracks the controlled selection",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-03: exactly one tab stop tracks the controlled selection"
+    },
+    {
+      "id": "LIB-TABS-026",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-07: separate instances reusing values keep unique stable IDs",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-07: separate instances reusing values keep unique stable IDs"
+    },
+    {
+      "id": "LIB-TABS-027",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-08: a disabled tab is inert to clicks and skipped by arrows",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-08: a disabled tab is inert to clicks and skipped by arrows"
+    },
+    {
+      "id": "LIB-TABS-028",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-10: duplicate Tab or Panel values throw a descriptive error",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-10: duplicate Tab or Panel values throw a descriptive error"
+    },
+    {
+      "id": "LIB-TABS-029",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-11: all-disabled tabs expose no tab stop and emit nothing",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-11: all-disabled tabs expose no tab stop and emit nothing"
+    },
+    {
+      "id": "LIB-TABS-030",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-12: omitted orientation and activation default to horizontal automatic",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-12: omitted orientation and activation default to horizontal automatic"
+    },
+    {
+      "id": "LIB-TABS-031",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-DOM-14: tabs default to type=button and honor an explicit type override",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-DOM-14: tabs default to type=button and honor an explicit type override"
+    },
+    {
+      "id": "LIB-TABS-032",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-SELECT-04: clicks on the selected or a disabled tab request nothing",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-SELECT-04: clicks on the selected or a disabled tab request nothing"
+    },
+    {
+      "id": "LIB-TABS-033",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-MANUAL-01: manual arrows move focus and the tab stop without selecting",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-MANUAL-01: manual arrows move focus and the tab stop without selecting"
+    },
+    {
+      "id": "LIB-TABS-034",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-MANUAL-04: manual activation of the selected tab requests nothing",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-MANUAL-04: manual activation of the selected tab requests nothing"
+    },
+    {
+      "id": "LIB-TABS-035",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-AUTO-02 + TB-AUTO-06: horizontal arrows reverse under inherited RTL, live",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-AUTO-02 + TB-AUTO-06: horizontal arrows reverse under inherited RTL, live"
+    },
+    {
+      "id": "LIB-TABS-036",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-NEST-01: nested instances isolate arrow movement in both directions",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-NEST-01: nested instances isolate arrow movement in both directions"
+    },
+    {
+      "id": "LIB-TABS-037",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-EVENT-03: printable keys move neither focus nor selection",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-EVENT-03: printable keys move neither focus nor selection"
+    },
+    {
+      "id": "LIB-TABS-038",
+      "name": "Tabs stability proofs (quarantine-landing ports) TB-ENV-01: server render emits deterministic linked markup",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs stability proofs (quarantine-landing ports) TB-ENV-01: server render emits deterministic linked markup"
+    },
+    {
+      "id": "LIB-TABS-039",
+      "name": "Tabs FEATURES #3 proofs (keepMounted opt-in) keepMounted keeps inactive children alive under hidden; default still unmounts",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #3 proofs (keepMounted opt-in) keepMounted keeps inactive children alive under hidden; default still unmounts"
+    },
+    {
+      "id": "LIB-TABS-040",
+      "name": "Tabs FEATURES #3 proofs (keepMounted opt-in) keepMounted preserves form state across tab switches",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #3 proofs (keepMounted opt-in) keepMounted preserves form state across tab switches"
+    },
+    {
+      "id": "LIB-TABS-041",
+      "name": "Tabs FEATURES #8 proofs (tab-stop fallback) TB-SELECT-03: programmatic value change moves the preferred tab stop without onChange",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #8 proofs (tab-stop fallback) TB-SELECT-03: programmatic value change moves the preferred tab stop without onChange"
+    },
+    {
+      "id": "LIB-TABS-042",
+      "name": "Tabs FEATURES #8 proofs (tab-stop fallback) FEATURES #8: disabled selection falls back to the first-enabled tab stop",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #8 proofs (tab-stop fallback) FEATURES #8: disabled selection falls back to the first-enabled tab stop"
+    },
+    {
+      "id": "LIB-TABS-043",
+      "name": "Tabs FEATURES #8 proofs (tab-stop fallback) FEATURES #8: removing the selected value moves the stop without selecting",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #8 proofs (tab-stop fallback) FEATURES #8: removing the selected value moves the stop without selecting"
+    },
+    {
+      "id": "LIB-TABS-044",
+      "name": "Tabs FEATURES #4 proofs (focus rescue) TB-SELECT-07: hiding the focused panel rescues focus to the new tab without onChange",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #4 proofs (focus rescue) TB-SELECT-07: hiding the focused panel rescues focus to the new tab without onChange"
+    },
+    {
+      "id": "LIB-TABS-045",
+      "name": "Tabs FEATURES #4 proofs (focus rescue) TB-SELECT-07: rescue falls back to nearest-enabled when the new tab is disabled",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #4 proofs (focus rescue) TB-SELECT-07: rescue falls back to nearest-enabled when the new tab is disabled"
+    },
+    {
+      "id": "LIB-TABS-046",
+      "name": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie"
+    },
+    {
+      "id": "LIB-TABS-047",
+      "name": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: disabling the first focused tab hands off to the nearest follower",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: disabling the first focused tab hands off to the nearest follower"
+    },
+    {
+      "id": "LIB-TABS-048",
+      "name": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: removing the focused tab hands off from its former position",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs FEATURES #6 proofs (disabled/removed handoff) TB-DYNAMIC-03: removing the focused tab hands off from its former position"
+    },
+    {
+      "id": "LIB-TABS-049",
+      "name": "Tabs PATCHES proofs (identity registry) TB-DOM-06: explicit Tab and Panel IDs win on both sides of the linkage",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs PATCHES proofs (identity registry) TB-DOM-06: explicit Tab and Panel IDs win on both sides of the linkage"
+    },
+    {
+      "id": "LIB-TABS-050",
+      "name": "Tabs PATCHES proofs (identity registry) TB-DYNAMIC-01: insert and reorder keep selection, IDs, and focus on survivors",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs PATCHES proofs (identity registry) TB-DYNAMIC-01: insert and reorder keep selection, IDs, and focus on survivors"
+    },
+    {
+      "id": "LIB-TABS-051",
+      "name": "Tabs PATCHES proofs (identity registry) TB-DYNAMIC-02: removing the controlled value selects no fallback and requests nothing",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs PATCHES proofs (identity registry) TB-DYNAMIC-02: removing the controlled value selects no fallback and requests nothing"
+    },
+    {
+      "id": "LIB-TABS-052",
+      "name": "Tabs W-15 proofs (root keepMounted) root keepMounted keeps every inactive panel mounted under hidden",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-15 proofs (root keepMounted) root keepMounted keeps every inactive panel mounted under hidden"
+    },
+    {
+      "id": "LIB-TABS-053",
+      "name": "Tabs W-15 proofs (root keepMounted) root keepMounted preserves form state across round-trips (controlled + uncontrolled)",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-15 proofs (root keepMounted) root keepMounted preserves form state across round-trips (controlled + uncontrolled)"
+    },
+    {
+      "id": "LIB-TABS-054",
+      "name": "Tabs W-15 proofs (root keepMounted) omitted root keepMounted still unmounts (default law preserved)",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-15 proofs (root keepMounted) omitted root keepMounted still unmounts (default law preserved)"
+    },
+    {
+      "id": "LIB-TABS-055",
+      "name": "Tabs W-15 proofs (root keepMounted) roving scope and tab order are unchanged under root keepMounted",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-15 proofs (root keepMounted) roving scope and tab order are unchanged under root keepMounted"
+    },
+    {
+      "id": "LIB-TABS-056",
+      "name": "Tabs W-16 proofs (dev warning on unmatched controlled value) warns naming the component, the bad value, and the registered values",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-16 proofs (dev warning on unmatched controlled value) warns naming the component, the bad value, and the registered values"
+    },
+    {
+      "id": "LIB-TABS-057",
+      "name": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent for valid values and uncontrolled mode",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent for valid values and uncontrolled mode"
+    },
+    {
+      "id": "LIB-TABS-058",
+      "name": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent for async-registered tabs that resolve, warns when they do not",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent for async-registered tabs that resolve, warns when they do not"
+    },
+    {
+      "id": "LIB-TABS-059",
+      "name": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent in production",
+      "kind": "unit",
+      "file": "Tabs.test.tsx",
+      "title": "Tabs W-16 proofs (dev warning on unmatched controlled value) stays silent in production"
+    },
+    {
+      "id": "LIB-TABS-060",
+      "name": "Tabs Composition Gates & Browser Proofs TB-DOM-01, TB-DOM-03 & TB-DOM-04: Renders tablist, tabs and panels with active selection, hover, ARIA linkage and keyboard roving",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-DOM-01, TB-DOM-03 & TB-DOM-04: Renders tablist, tabs and panels with active selection, hover, ARIA linkage and keyboard roving"
+    },
+    {
+      "id": "LIB-TABS-061",
+      "name": "Tabs Composition Gates & Browser Proofs TB-DOM-02: Vertical orientation renders vertical tablist and navigates via ArrowDown/Up",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-DOM-02: Vertical orientation renders vertical tablist and navigates via ArrowDown/Up"
+    },
+    {
+      "id": "LIB-TABS-062",
+      "name": "Tabs Composition Gates & Browser Proofs TB-DOM-05: Pill variant renders with pill styling and handles selection",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-DOM-05: Pill variant renders with pill styling and handles selection"
+    },
+    {
+      "id": "LIB-TABS-063",
+      "name": "Tabs Composition Gates & Browser Proofs TB-MANUAL-01: Manual arrows move focus and the tab stop without selecting",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-MANUAL-01: Manual arrows move focus and the tab stop without selecting"
+    },
+    {
+      "id": "LIB-TABS-064",
+      "name": "Tabs Composition Gates & Browser Proofs TB-AUTO-02: Horizontal arrows reverse under inherited RTL",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-AUTO-02: Horizontal arrows reverse under inherited RTL"
+    },
+    {
+      "id": "LIB-TABS-065",
+      "name": "Tabs Composition Gates & Browser Proofs TB-NEST-01: Nested instances isolate arrow movement in both directions",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-NEST-01: Nested instances isolate arrow movement in both directions"
+    },
+    {
+      "id": "LIB-TABS-066",
+      "name": "Tabs Composition Gates & Browser Proofs TB-SELECT-07: hiding the focused panel rescues focus to the new tab",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-SELECT-07: hiding the focused panel rescues focus to the new tab"
+    },
+    {
+      "id": "LIB-TABS-067",
+      "name": "Tabs Composition Gates & Browser Proofs TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-DYNAMIC-03: disabling the focused tab hands off to the preceding tab on a tie"
+    },
+    {
+      "id": "LIB-TABS-068",
+      "name": "Tabs Composition Gates & Browser Proofs TB-DYNAMIC-03: removing the focused tab hands off from its former position",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-DYNAMIC-03: removing the focused tab hands off from its former position"
+    },
+    {
+      "id": "LIB-TABS-069",
+      "name": "Tabs Composition Gates & Browser Proofs TB-SYS-01: MyTabs custom variant renders through author recipes + kernel base",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-SYS-01: MyTabs custom variant renders through author recipes + kernel base"
+    },
+    {
+      "id": "LIB-TABS-070",
+      "name": "Tabs Composition Gates & Browser Proofs TB-ENV-03: Tabs keep focus and linkage local inside a ShadowRoot",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-ENV-03: Tabs keep focus and linkage local inside a ShadowRoot"
+    },
+    {
+      "id": "LIB-TABS-071",
+      "name": "Tabs Composition Gates & Browser Proofs W-15: root keepMounted keeps inactive panels in the DOM and preserves form state",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs W-15: root keepMounted keeps inactive panels in the DOM and preserves form state"
+    },
+    {
+      "id": "LIB-TABS-072",
+      "name": "Tabs Composition Gates & Browser Proofs TB-SELECT-06: real pointer selection blurs panel content before tab focus and request",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-SELECT-06: real pointer selection blurs panel content before tab focus and request"
+    },
+    {
+      "id": "LIB-TABS-073",
+      "name": "Tabs Composition Gates & Browser Proofs TB-SELECT-08: real press requests before click completes, completing click dedupes",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-SELECT-08: real press requests before click completes, completing click dedupes"
+    },
+    {
+      "id": "LIB-TABS-074",
+      "name": "Tabs Composition Gates & Browser Proofs TB-MANUAL-02: real Space hold requests nothing, release requests once",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-MANUAL-02: real Space hold requests nothing, release requests once"
+    },
+    {
+      "id": "LIB-TABS-075",
+      "name": "Tabs Composition Gates & Browser Proofs TB-MANUAL-03: real Enter requests once with no keyup duplicate",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-MANUAL-03: real Enter requests once with no keyup duplicate"
+    },
+    {
+      "id": "LIB-TABS-076",
+      "name": "Tabs Composition Gates & Browser Proofs TB-MANUAL-05: consumer preventDefault cancels manual movement and activation keys",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-MANUAL-05: consumer preventDefault cancels manual movement and activation keys"
+    },
+    {
+      "id": "LIB-TABS-077",
+      "name": "Tabs Composition Gates & Browser Proofs TB-MANUAL-06: vertical manual tabs ignore direction and require explicit activation",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-MANUAL-06: vertical manual tabs ignore direction and require explicit activation"
+    },
+    {
+      "id": "LIB-TABS-078",
+      "name": "Tabs Composition Gates & Browser Proofs TB-EVENT-01: typing Space and Enter in a nested editable never selects",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-EVENT-01: typing Space and Enter in a nested editable never selects"
+    },
+    {
+      "id": "LIB-TABS-079",
+      "name": "Tabs Composition Gates & Browser Proofs TB-EVENT-02: typing Space and Enter in a portalled editable never selects",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-EVENT-02: typing Space and Enter in a portalled editable never selects"
+    },
+    {
+      "id": "LIB-TABS-080",
+      "name": "Tabs Composition Gates & Browser Proofs TB-ENV-02: registration stays single and stable across reorder, click, and arrows",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-ENV-02: registration stays single and stable across reorder, click, and arrows"
+    },
+    {
+      "id": "LIB-TABS-081",
+      "name": "Tabs Composition Gates & Browser Proofs TB-COMP-01: automatic settings composition coordinates selection without app glue",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-COMP-01: automatic settings composition coordinates selection without app glue"
+    },
+    {
+      "id": "LIB-TABS-082",
+      "name": "Tabs Composition Gates & Browser Proofs TB-COMP-02: manual vertical editor separates focus, skip, blur, and reveal",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-COMP-02: manual vertical editor separates focus, skip, blur, and reveal"
+    },
+    {
+      "id": "LIB-TABS-083",
+      "name": "Tabs Composition Gates & Browser Proofs TB-NEST-02: popups inside a panel operate without disturbing tabs",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-NEST-02: popups inside a panel operate without disturbing tabs"
+    },
+    {
+      "id": "LIB-TABS-084",
+      "name": "Tabs Composition Gates & Browser Proofs TB-COMP-03: nested manual tabs and popups stay independent under outer arrows",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-COMP-03: nested manual tabs and popups stay independent under outer arrows"
+    },
+    {
+      "id": "LIB-TABS-085",
+      "name": "Tabs Composition Gates & Browser Proofs TB-A11Y-01: every frozen shape keeps honest tablist relationships",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.ct.spec.ts",
+      "title": "Tabs Composition Gates & Browser Proofs TB-A11Y-01: every frozen shape keeps honest tablist relationships"
+    },
+    {
+      "id": "LIB-TABS-086",
+      "name": "Tabs system variants (HQ mechanism) types: custom names are typed by the author recipe, carried by the open kernel prop",
+      "kind": "unit",
+      "file": "examples/MyTabs.test.tsx",
+      "title": "Tabs system variants (HQ mechanism) types: custom names are typed by the author recipe, carried by the open kernel prop"
+    },
+    {
+      "id": "LIB-TABS-087",
+      "name": "Tabs system variants (HQ mechanism) renders the custom variant through author recipe classes + kernel base",
+      "kind": "unit",
+      "file": "examples/MyTabs.test.tsx",
+      "title": "Tabs system variants (HQ mechanism) renders the custom variant through author recipe classes + kernel base"
+    },
+    {
+      "id": "LIB-TABS-088",
+      "name": "Tabs system variants (HQ mechanism) overrides a built-in through css(), composed over the kernel recipe",
+      "kind": "unit",
+      "file": "examples/MyTabs.test.tsx",
+      "title": "Tabs system variants (HQ mechanism) overrides a built-in through css(), composed over the kernel recipe"
+    },
+    {
+      "id": "LIB-TABS-089",
+      "name": "getDeepActiveElement returns document.activeElement in light DOM",
+      "kind": "unit",
+      "file": "focus/deep-active.test.ts",
+      "title": "getDeepActiveElement returns document.activeElement in light DOM"
+    },
+    {
+      "id": "LIB-TABS-090",
+      "name": "getDeepActiveElement descends through open shadow roots",
+      "kind": "unit",
+      "file": "focus/deep-active.test.ts",
+      "title": "getDeepActiveElement descends through open shadow roots"
+    },
+    {
+      "id": "LIB-TABS-091",
+      "name": "isEditableClickTarget matches inputs, selects, textareas, and contenteditables",
+      "kind": "unit",
+      "file": "focus/editable.test.ts",
+      "title": "isEditableClickTarget matches inputs, selects, textareas, and contenteditables"
+    },
+    {
+      "id": "LIB-TABS-092",
+      "name": "nearestEnabledValue returns the value itself when enabled",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue returns the value itself when enabled"
+    },
+    {
+      "id": "LIB-TABS-093",
+      "name": "nearestEnabledValue walks outward with ties going to the preceding tab",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue walks outward with ties going to the preceding tab"
+    },
+    {
+      "id": "LIB-TABS-094",
+      "name": "nearestEnabledValue falls to the follower when nothing precedes",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue falls to the follower when nothing precedes"
+    },
+    {
+      "id": "LIB-TABS-095",
+      "name": "nearestEnabledValue falls back to first-enabled for unknown values",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue falls back to first-enabled for unknown values"
+    },
+    {
+      "id": "LIB-TABS-096",
+      "name": "nearestEnabledValue returns undefined when nothing is enabled",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue returns undefined when nothing is enabled"
+    },
+    {
+      "id": "LIB-TABS-097",
+      "name": "nearestEnabledValue walks an override order for removals",
+      "kind": "unit",
+      "file": "registry/nearest.test.ts",
+      "title": "nearestEnabledValue walks an override order for removals"
+    },
+    {
+      "id": "LIB-TABS-098",
+      "name": "isLiveElement treats null as live (unmeasured entries keep order)",
+      "kind": "unit",
+      "file": "registry/order.test.ts",
+      "title": "isLiveElement treats null as live (unmeasured entries keep order)"
+    },
+    {
+      "id": "LIB-TABS-099",
+      "name": "isLiveElement treats connected elements as live and detached as dead",
+      "kind": "unit",
+      "file": "registry/order.test.ts",
+      "title": "isLiveElement treats connected elements as live and detached as dead"
+    },
+    {
+      "id": "LIB-TABS-100",
+      "name": "byDocumentPosition sorts entries by live document position",
+      "kind": "unit",
+      "file": "registry/order.test.ts",
+      "title": "byDocumentPosition sorts entries by live document position"
+    },
+    {
+      "id": "LIB-TABS-101",
+      "name": "byDocumentPosition keeps unmeasured and identical entries stable",
+      "kind": "unit",
+      "file": "registry/order.test.ts",
+      "title": "byDocumentPosition keeps unmeasured and identical entries stable"
+    },
+    {
+      "id": "LIB-TABS-102",
+      "name": "warnTabs names Tabs and the mismatch in dev",
+      "kind": "unit",
+      "file": "shared/warn.test.ts",
+      "title": "warnTabs names Tabs and the mismatch in dev"
+    },
+    {
+      "id": "LIB-TABS-103",
+      "name": "warnTabs stays silent in production",
+      "kind": "unit",
+      "file": "shared/warn.test.ts",
+      "title": "warnTabs stays silent in production"
+    },
+    {
+      "id": "LIB-TABS-104",
+      "name": "Real rejected Tabs pointer gestures request once and preserve controlled panels",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.hardening.ct.spec.ts",
+      "title": "Tabs controlled gesture contracts TB-CTRL-01: real rejected pointer gestures request once and preserve controlled panels"
+    },
+    {
+      "id": "LIB-TABS-105",
+      "name": "Rejected Tabs automatic navigation roves focus with current callbacks",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.hardening.ct.spec.ts",
+      "title": "Tabs controlled gesture contracts TB-CTRL-02: rejected automatic navigation roves focus with current callbacks"
+    },
+    {
+      "id": "LIB-TABS-106",
+      "name": "Canceled Tabs native press suppresses its click and allows the next gesture",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.hardening.ct.spec.ts",
+      "title": "Tabs controlled gesture contracts TB-EVENT-03: canceled native press suppresses its click and allows the next gesture"
+    },
+    {
+      "id": "LIB-TABS-107",
+      "name": "Tabs click cancellation governs keyboard activation while native press requests remain authoritative",
+      "kind": "ct",
+      "file": "__e2e__/Tabs.hardening.ct.spec.ts",
+      "title": "Tabs controlled gesture contracts TB-SELECT-05: click cancellation stops keyboard activation but cannot undo an earlier press request"
+    }
+  ]
+}

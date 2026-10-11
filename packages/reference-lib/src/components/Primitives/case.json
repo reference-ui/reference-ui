@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "component": "Primitives",
+  "scope": "support",
+  "description": "Executable Primitives contracts covering real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-PRIMITIVES-001",
+      "name": "Primitives Suite (Lib Smoke) library harness boots, renders fixture root, and reports valid React version",
+      "kind": "ct",
+      "file": "__e2e__/Primitives.ct.spec.ts",
+      "title": "Primitives Suite (Lib Smoke) library harness boots, renders fixture root, and reports valid React version"
+    },
+    {
+      "id": "LIB-PRIMITIVES-002",
+      "name": "Primitives Suite (Lib Smoke) form controls render and handle input interactions",
+      "kind": "ct",
+      "file": "__e2e__/Primitives.ct.spec.ts",
+      "title": "Primitives Suite (Lib Smoke) form controls render and handle input interactions"
+    },
+    {
+      "id": "LIB-PRIMITIVES-003",
+      "name": "Primitives Suite (Lib Smoke) button states: default, primary hover, active, and disabled",
+      "kind": "ct",
+      "file": "__e2e__/Primitives.ct.spec.ts",
+      "title": "Primitives Suite (Lib Smoke) button states: default, primary hover, active, and disabled"
+    },
+    {
+      "id": "LIB-PRIMITIVES-004",
+      "name": "Primitives Suite (Lib Smoke) disclosure and native summary expand interactions",
+      "kind": "ct",
+      "file": "__e2e__/Primitives.ct.spec.ts",
+      "title": "Primitives Suite (Lib Smoke) disclosure and native summary expand interactions"
+    }
+  ]
+}

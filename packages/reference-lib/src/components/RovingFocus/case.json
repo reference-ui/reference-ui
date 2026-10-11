@@ -1,0 +1,967 @@
+{
+  "schemaVersion": 1,
+  "component": "RovingFocus",
+  "scope": "public",
+  "description": "Executable RovingFocus contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-ROVINGFOCUS-001",
+      "name": "RovingFocus Unit Tests RF-ENV-01: RovingFocus should hydrate the same sole tab stop when server and client collections match",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "RovingFocus Unit Tests RF-ENV-01: RovingFocus should hydrate the same sole tab stop when server and client collections match"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-002",
+      "name": "RF-DOM-06 single-element anatomy errors (FEATURES #3) Root throws a descriptive error for $name children",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "RF-DOM-06 single-element anatomy errors (FEATURES #3) Root throws a descriptive error for $name children"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-003",
+      "name": "RF-DOM-06 single-element anatomy errors (FEATURES #3) Item throws a descriptive error for $name children",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "RF-DOM-06 single-element anatomy errors (FEATURES #3) Item throws a descriptive error for $name children"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-004",
+      "name": "RF-DOM-06 single-element anatomy errors (FEATURES #3) leaves no partial DOM or stale registration after a rejected render",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "RF-DOM-06 single-element anatomy errors (FEATURES #3) leaves no partial DOM or stale registration after a rejected render"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-005",
+      "name": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) combines className, merges style child-wins, and chains refs onto the one child",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) combines className, merges style child-wins, and chains refs onto the one child"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-006",
+      "name": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) compiles the css prop onto the child and concatenates aria-describedby",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) compiles the css prop onto the child and concatenates aria-describedby"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-007",
+      "name": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) runs handlers child-first and gates the kernel on consumer prevention (RF-KEY-08 mechanics)",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) runs handlers child-first and gates the kernel on consumer prevention (RF-KEY-08 mechanics)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-008",
+      "name": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) keeps tabIndex authoritative over conflicting consumer values (RF-TAB-08 mechanics)",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) keeps tabIndex authoritative over conflicting consumer values (RF-TAB-08 mechanics)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-009",
+      "name": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) lets child native props win while the part fills gaps",
+      "kind": "unit",
+      "file": "RovingFocus.test.tsx",
+      "title": "transparent slot merge (FEATURES #2, RF-DOM-02 mechanics) lets child native props win while the part fills gaps"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-010",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-TAB-01 & RF-TAB-02: Exposes one tabIndex=0 stop and moves in/out via Tab",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-TAB-01 & RF-TAB-02: Exposes one tabIndex=0 stop and moves in/out via Tab"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-011",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-KEY-01 & RF-KEY-07: Moves between enabled items and skips disabled items",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-KEY-01 & RF-KEY-07: Moves between enabled items and skips disabled items"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-012",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-KEY-06: Loops around boundary when loop=true",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-KEY-06: Loops around boundary when loop=true"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-013",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-KEY-04: Home and End navigate to first and last enabled items",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-KEY-04: Home and End navigate to first and last enabled items"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-014",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-TAB-04: Pointer press sets current without stealing focus; Tab re-enters on pressed item",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-TAB-04: Pointer press sets current without stealing focus; Tab re-enters on pressed item"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-015",
+      "name": "RovingFocus Composition Gates & Browser Proofs RF-TYPE-02 & RF-TYPE-03: Typeahead matches item prefix and moves focus",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Composition Gates & Browser Proofs RF-TYPE-02 & RF-TYPE-03: Typeahead matches item prefix and moves focus"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-016",
+      "name": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-017",
+      "name": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06 complement: Space with an empty buffer keeps native button activation",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06 complement: Space with an empty buffer keeps native button activation"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-018",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-01: orientation=both follows visual rows and columns in a regular grid",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-01: orientation=both follows visual rows and columns in a regular grid"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-019",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-02: vertical moves choose nearest center, ties break by DOM order",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-02: vertical moves choose nearest center, ties break by DOM order"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-020",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-03: grid arrows skip disabled cells for valid targets on the axis",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-03: grid arrows skip disabled cells for valid targets on the axis"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-021",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-04: grid focus stays at edges without loop",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-04: grid focus stays at edges without loop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-022",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-05: grid wraps within geometry with loop",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-05: grid wraps within geometry with loop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-023",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-06: RTL reverses only the horizontal grid axis",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-06: RTL reverses only the horizontal grid axis"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-024",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-07: vertical moves follow post-reflow rectangles",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-07: vertical moves follow post-reflow rectangles"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-025",
+      "name": "RovingFocus visual grid (FEATURES #1) RF-GRID-08 & RF-KEY-12: Home/End/PageUp/PageDown are whole-composite in grids",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus visual grid (FEATURES #1) RF-GRID-08 & RF-KEY-12: Home/End/PageUp/PageDown are whole-composite in grids"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-026",
+      "name": "RovingFocus one-dimensional keys RF-KEY-02: horizontal arrows reverse under inherited RTL",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-02: horizontal arrows reverse under inherited RTL"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-027",
+      "name": "RovingFocus one-dimensional keys RF-KEY-03: vertical orientation uses only vertical arrows in LTR and RTL",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-03: vertical orientation uses only vertical arrows in LTR and RTL"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-028",
+      "name": "RovingFocus one-dimensional keys RF-KEY-05: one-dimensional boundaries hold without loop",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-05: one-dimensional boundaries hold without loop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-029",
+      "name": "RovingFocus one-dimensional keys RF-KEY-08: consumer prevention stops movement, propagation stopping does not",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-08: consumer prevention stops movement, propagation stopping does not"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-030",
+      "name": "RovingFocus one-dimensional keys RF-KEY-09: modified navigation keys preserve application shortcuts",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-09: modified navigation keys preserve application shortcuts"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-031",
+      "name": "RovingFocus one-dimensional keys RF-KEY-10: dir changes apply without remounting",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-10: dir changes apply without remounting"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-032",
+      "name": "RovingFocus one-dimensional keys RF-KEY-11: omitted behavior props mean horizontal bounded non-typeahead",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-11: omitted behavior props mean horizontal bounded non-typeahead"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-033",
+      "name": "RovingFocus one-dimensional keys RF-KEY-12: PageUp and PageDown match Home and End in one dimension",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus one-dimensional keys RF-KEY-12: PageUp and PageDown match Home and End in one dimension"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-034",
+      "name": "RovingFocus tab stops and currentness RF-TAB-03: Shift+Tab enters and leaves through the current Item",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus tab stops and currentness RF-TAB-03: Shift+Tab enters and leaves through the current Item"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-035",
+      "name": "RovingFocus tab stops and currentness RF-TAB-05: unrelated rerenders preserve the current Item and nodes",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus tab stops and currentness RF-TAB-05: unrelated rerenders preserve the current Item and nodes"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-036",
+      "name": "RovingFocus tab stops and currentness RF-TAB-06: current falls next-then-previous when unavailable",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus tab stops and currentness RF-TAB-06: current falls next-then-previous when unavailable"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-037",
+      "name": "RovingFocus tab stops and currentness RF-TAB-07: no tab stop when every Item is unavailable",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus tab stops and currentness RF-TAB-07: no tab stop when every Item is unavailable"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-038",
+      "name": "RovingFocus tab stops and currentness RF-TAB-08: kernel tabIndex wins over conflicting consumer values",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus tab stops and currentness RF-TAB-08: kernel tabIndex wins over conflicting consumer values"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-039",
+      "name": "RovingFocus transparent DOM RF-DOM-01: Root and Item preserve authored tags with no wrappers",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus transparent DOM RF-DOM-01: Root and Item preserve authored tags with no wrappers"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-040",
+      "name": "RovingFocus transparent DOM RF-DOM-02: Item merges css, handlers, and ref onto its single child",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus transparent DOM RF-DOM-02: Item merges css, handlers, and ref onto its single child"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-041",
+      "name": "RovingFocus transparent DOM RF-DOM-03: empty composite renders safely and captures nothing",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus transparent DOM RF-DOM-03: empty composite renders safely and captures nothing"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-042",
+      "name": "RovingFocus transparent DOM RF-DOM-04: navigation tracks insert, reorder, and remove in DOM order",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus transparent DOM RF-DOM-04: navigation tracks insert, reorder, and remove in DOM order"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-043",
+      "name": "RovingFocus transparent DOM RF-DOM-05: StrictMode plus ref rerenders register once with one stop",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus transparent DOM RF-DOM-05: StrictMode plus ref rerenders register once with one stop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-044",
+      "name": "RovingFocus typeahead browser behavior RF-TYPE-01: typeahead off leaves printable keys and Space untouched",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus typeahead browser behavior RF-TYPE-01: typeahead off leaves printable keys and Space untouched"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-045",
+      "name": "RovingFocus typeahead browser behavior RF-TYPE-09: searches use textValue, aria-label, then rendered text live",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus typeahead browser behavior RF-TYPE-09: searches use textValue, aria-label, then rendered text live"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-046",
+      "name": "RovingFocus typeahead browser behavior RF-TYPE-10: typeahead ignores editable targets and modified shortcuts",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus typeahead browser behavior RF-TYPE-10: typeahead ignores editable targets and modified shortcuts"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-047",
+      "name": "RovingFocus typeahead browser behavior RF-TYPE-11: buffered search skips newly disabled or unmounted matches",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus typeahead browser behavior RF-TYPE-11: buffered search skips newly disabled or unmounted matches"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-048",
+      "name": "RovingFocus typeahead browser behavior RF-TYPE-12: searchable text skips decorative glyphs and collapses whitespace",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus typeahead browser behavior RF-TYPE-12: searchable text skips decorative glyphs and collapses whitespace"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-049",
+      "name": "RovingFocus nesting RF-NEST-01: nested composite handles supported keys alone",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus nesting RF-NEST-01: nested composite handles supported keys alone"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-050",
+      "name": "RovingFocus nesting RF-NEST-02: unsupported inner keys bubble to the outer composite",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus nesting RF-NEST-02: unsupported inner keys bubble to the outer composite"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-051",
+      "name": "RovingFocus composition gates RF-COMP-01: looping toolbar with a disabled control",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus composition gates RF-COMP-01: looping toolbar with a disabled control"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-052",
+      "name": "RovingFocus composition gates RF-COMP-02: bounded vertical tag list with current removal",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus composition gates RF-COMP-02: bounded vertical tag list with current removal"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-053",
+      "name": "RovingFocus composition gates RF-COMP-03: responsive picker grid combines geometry, RTL, and typeahead",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.ct.spec.ts",
+      "title": "RovingFocus composition gates RF-COMP-03: responsive picker grid combines geometry, RTL, and typeahead"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-136",
+      "name": "RovingFocus instance lifetime RF-ISOLATE-01: sibling roots with repeated item identities keep focus stops and typeahead buffers independent",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.hardening.ct.spec.ts",
+      "title": "RovingFocus instance lifetime RF-ISOLATE-01: sibling roots with repeated item identities keep focus stops and typeahead buffers independent"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-137",
+      "name": "RovingFocus instance lifetime RF-LIFETIME-01: remount resets one root search and current item while the surviving sibling retains both",
+      "kind": "ct",
+      "file": "__e2e__/RovingFocus.hardening.ct.spec.ts",
+      "title": "RovingFocus instance lifetime RF-LIFETIME-01: remount resets one root search and current item while the surviving sibling retains both"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-054",
+      "name": "isItemAvailable treats an enabled mounted item as available",
+      "kind": "unit",
+      "file": "collection/availability.test.ts",
+      "title": "isItemAvailable treats an enabled mounted item as available"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-055",
+      "name": "isItemAvailable treats an unmounted entry as available so settlement can claim it",
+      "kind": "unit",
+      "file": "collection/availability.test.ts",
+      "title": "isItemAvailable treats an unmounted entry as available so settlement can claim it"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-056",
+      "name": "isItemAvailable rejects prop-disabled and natively disabled items",
+      "kind": "unit",
+      "file": "collection/availability.test.ts",
+      "title": "isItemAvailable rejects prop-disabled and natively disabled items"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-057",
+      "name": "isItemAvailable rejects hidden and aria-hidden items",
+      "kind": "unit",
+      "file": "collection/availability.test.ts",
+      "title": "isItemAvailable rejects hidden and aria-hidden items"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-058",
+      "name": "isItemAvailable rejects display:none and visibility:hidden items",
+      "kind": "unit",
+      "file": "collection/availability.test.ts",
+      "title": "isItemAvailable rejects display:none and visibility:hidden items"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-059",
+      "name": "orderEntriesByDom (RF-DOM-04) sorts entries by document position regardless of input order",
+      "kind": "unit",
+      "file": "collection/order.test.ts",
+      "title": "orderEntriesByDom (RF-DOM-04) sorts entries by document position regardless of input order"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-060",
+      "name": "orderEntriesByDom (RF-DOM-04) follows keyed reorder through live node moves",
+      "kind": "unit",
+      "file": "collection/order.test.ts",
+      "title": "orderEntriesByDom (RF-DOM-04) follows keyed reorder through live node moves"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-061",
+      "name": "orderEntriesByDom (RF-DOM-04) drops disconnected entries",
+      "kind": "unit",
+      "file": "collection/order.test.ts",
+      "title": "orderEntriesByDom (RF-DOM-04) drops disconnected entries"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-062",
+      "name": "resolveRepairTarget (RF-TAB-06) chooses the removed current item successor",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) chooses the removed current item successor"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-063",
+      "name": "resolveRepairTarget (RF-TAB-06) falls back to the previous item when no successor is available",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) falls back to the previous item when no successor is available"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-064",
+      "name": "resolveRepairTarget (RF-TAB-06) skips unavailable items in both scan directions",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) skips unavailable items in both scan directions"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-065",
+      "name": "resolveRepairTarget (RF-TAB-06) falls back to the first available item when the stale id is unknown",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) falls back to the first available item when the stale id is unknown"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-066",
+      "name": "resolveRepairTarget (RF-TAB-06) returns null when no item is available",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) returns null when no item is available"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-067",
+      "name": "resolveRepairTarget (RF-TAB-06) repairs within the live collection when the stale id survives there",
+      "kind": "unit",
+      "file": "collection/repair.test.ts",
+      "title": "resolveRepairTarget (RF-TAB-06) repairs within the live collection when the stale id survives there"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-068",
+      "name": "groupGridRows groups a regular grid into top-ordered rows",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "groupGridRows groups a regular grid into top-ordered rows"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-069",
+      "name": "groupGridRows keeps same-row cells with uneven tops together",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "groupGridRows keeps same-row cells with uneven tops together"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-070",
+      "name": "groupGridRows opens a new row for exactly touching rows",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "groupGridRows opens a new row for exactly touching rows"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-071",
+      "name": "findGridTarget horizontal (RF-GRID-01) moves within the rendered row by visual x order",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget horizontal (RF-GRID-01) moves within the rendered row by visual x order"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-072",
+      "name": "findGridTarget horizontal (RF-GRID-01) returns null at row edges without loop (RF-GRID-04)",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget horizontal (RF-GRID-01) returns null at row edges without loop (RF-GRID-04)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-073",
+      "name": "findGridTarget horizontal (RF-GRID-01) wraps within geometry with loop (RF-GRID-05)",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget horizontal (RF-GRID-01) wraps within geometry with loop (RF-GRID-05)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-074",
+      "name": "findGridTarget ragged rows (RF-GRID-02) resolves exact ties to the earliest candidate in DOM order",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget ragged rows (RF-GRID-02) resolves exact ties to the earliest candidate in DOM order"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-075",
+      "name": "findGridTarget ragged rows (RF-GRID-02) chooses the geometrically nearest center on ragged rows",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget ragged rows (RF-GRID-02) chooses the geometrically nearest center on ragged rows"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-076",
+      "name": "findGridTarget disabled skip (RF-GRID-03) skips disabled cells within the row",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget disabled skip (RF-GRID-03) skips disabled cells within the row"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-077",
+      "name": "findGridTarget disabled skip (RF-GRID-03) stays when the adjacent visual row has no available cell",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget disabled skip (RF-GRID-03) stays when the adjacent visual row has no available cell"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-078",
+      "name": "findGridTarget disabled skip (RF-GRID-03) chooses the nearest available center in the adjacent row",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget disabled skip (RF-GRID-03) chooses the nearest available center in the adjacent row"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-079",
+      "name": "findGridTarget edge cases returns null for unknown or unavailable current ids",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget edge cases returns null for unknown or unavailable current ids"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-080",
+      "name": "findGridTarget edge cases orders stacked same-x cells deterministically",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget edge cases orders stacked same-x cells deterministically"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-081",
+      "name": "findGridTarget edge cases wraps vertically to the opposite edge row nearest center (RF-GRID-05)",
+      "kind": "unit",
+      "file": "movement/grid.test.ts",
+      "title": "findGridTarget edge cases wraps vertically to the opposite edge row nearest center (RF-GRID-05)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-082",
+      "name": "resolveLinearTarget horizontal (RF-KEY-01) advances on ArrowRight and retreats on ArrowLeft in LTR",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget horizontal (RF-KEY-01) advances on ArrowRight and retreats on ArrowLeft in LTR"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-083",
+      "name": "resolveLinearTarget horizontal (RF-KEY-01) leaves vertical arrows unhandled",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget horizontal (RF-KEY-01) leaves vertical arrows unhandled"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-084",
+      "name": "resolveLinearTarget RTL (RF-KEY-02) reverses horizontal arrows under RTL",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget RTL (RF-KEY-02) reverses horizontal arrows under RTL"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-085",
+      "name": "resolveLinearTarget vertical (RF-KEY-03) moves only on Up/Down in both directions",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget vertical (RF-KEY-03) moves only on Up/Down in both directions"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-086",
+      "name": "resolveLinearTarget endpoints (RF-KEY-04, RF-KEY-12) sends Home/PageUp to first and End/PageDown to last in every orientation",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget endpoints (RF-KEY-04, RF-KEY-12) sends Home/PageUp to first and End/PageDown to last in every orientation"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-087",
+      "name": "resolveLinearTarget boundaries (RF-KEY-05, RF-KEY-06) stays handled-but-clamped at boundaries without loop",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget boundaries (RF-KEY-05, RF-KEY-06) stays handled-but-clamped at boundaries without loop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-088",
+      "name": "resolveLinearTarget boundaries (RF-KEY-05, RF-KEY-06) wraps across boundaries with loop",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget boundaries (RF-KEY-05, RF-KEY-06) wraps across boundaries with loop"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-089",
+      "name": "resolveLinearTarget grid orientation leaves arrows unhandled for orientation=\"both\" (the grid path owns them)",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget grid orientation leaves arrows unhandled for orientation=\"both\" (the grid path owns them)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-090",
+      "name": "resolveLinearTarget grid orientation ignores unrelated keys",
+      "kind": "unit",
+      "file": "movement/linear.test.ts",
+      "title": "resolveLinearTarget grid orientation ignores unrelated keys"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-091",
+      "name": "getDirection getDirection defaults to ltr without an element",
+      "kind": "unit",
+      "file": "shared/direction.test.ts",
+      "title": "getDirection getDirection defaults to ltr without an element"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-092",
+      "name": "getDirection reads ltr for a plain element and rtl for an rtl-directed element",
+      "kind": "unit",
+      "file": "shared/direction.test.ts",
+      "title": "getDirection reads ltr for a plain element and rtl for an rtl-directed element"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-093",
+      "name": "isHandlerKey recognizes onXxx function props only",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "isHandlerKey recognizes onXxx function props only"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-094",
+      "name": "eventWasPrevented reads defaultPrevented defensively",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "eventWasPrevented reads defaultPrevented defensively"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-095",
+      "name": "chainSlotHandlers returns undefined when no handler exists and passes a single handler through",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "chainSlotHandlers returns undefined when no handler exists and passes a single handler through"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-096",
+      "name": "chainSlotHandlers runs child, part, then kernel in order with shared args (RF-KEY-08 mechanics)",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "chainSlotHandlers runs child, part, then kernel in order with shared args (RF-KEY-08 mechanics)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-097",
+      "name": "chainSlotHandlers gates part and kernel once the child prevents default",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "chainSlotHandlers gates part and kernel once the child prevents default"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-098",
+      "name": "chainSlotHandlers gates the kernel once the part prevents default (RF-NEST-01 mechanics)",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "chainSlotHandlers gates the kernel once the part prevents default (RF-NEST-01 mechanics)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-099",
+      "name": "chainSlotHandlers ignores stopPropagation: the manual chain is not the DOM chain",
+      "kind": "unit",
+      "file": "shared/events.test.ts",
+      "title": "chainSlotHandlers ignores stopPropagation: the manual chain is not the DOM chain"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-100",
+      "name": "setSlotRef writes callback and object refs and ignores the rest",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setSlotRef writes callback and object refs and ignores the rest"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-101",
+      "name": "chainSlotRefs fans the node out to every ref in the chain",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "chainSlotRefs fans the node out to every ref in the chain"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-102",
+      "name": "chainSlotRefs passes null through on unmount",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "chainSlotRefs passes null through on unmount"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-103",
+      "name": "assertSingleElementChild accepts exactly one element child",
+      "kind": "unit",
+      "file": "slot/anatomy.test.ts",
+      "title": "assertSingleElementChild accepts exactly one element child"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-104",
+      "name": "assertSingleElementChild throws a descriptive error for $name children",
+      "kind": "unit",
+      "file": "slot/anatomy.test.ts",
+      "title": "assertSingleElementChild throws a descriptive error for $name children"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-105",
+      "name": "mergeSlotProps precedence lets child native props win while the part fills gaps",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps precedence lets child native props win while the part fills gaps"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-106",
+      "name": "mergeSlotProps precedence never spreads excluded part props onto the child",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps precedence never spreads excluded part props onto the child"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-107",
+      "name": "mergeSlotProps precedence drops children and ref from the child props",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps precedence drops children and ref from the child props"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-108",
+      "name": "mergeSlotProps className and style combines compiled css, part, and child classNames",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps className and style combines compiled css, part, and child classNames"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-109",
+      "name": "mergeSlotProps className and style merges style shallow with the child winning",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps className and style merges style shallow with the child winning"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-110",
+      "name": "mergeSlotProps className and style passes single-sided style through untouched",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps className and style passes single-sided style through untouched"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-111",
+      "name": "mergeSlotProps handlers and describedby chains handlers child-first and gates on prevention",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps handlers and describedby chains handlers child-first and gates on prevention"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-112",
+      "name": "mergeSlotProps handlers and describedby runs the kernel when nobody prevents",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps handlers and describedby runs the kernel when nobody prevents"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-113",
+      "name": "mergeSlotProps handlers and describedby concatenates aria-describedby child-first",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps handlers and describedby concatenates aria-describedby child-first"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-114",
+      "name": "mergeSlotProps overrides applies kernel overrides last so tabIndex stays authoritative (RF-TAB-08)",
+      "kind": "unit",
+      "file": "slot/merge.test.ts",
+      "title": "mergeSlotProps overrides applies kernel overrides last so tabIndex stays authoritative (RF-TAB-08)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-115",
+      "name": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey accepts a plain printable key",
+      "kind": "unit",
+      "file": "typeahead/guard.test.ts",
+      "title": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey accepts a plain printable key"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-116",
+      "name": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores modified and multi-character keys",
+      "kind": "unit",
+      "file": "typeahead/guard.test.ts",
+      "title": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores modified and multi-character keys"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-117",
+      "name": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores IME-composing keys (the Listbox live bug)",
+      "kind": "unit",
+      "file": "typeahead/guard.test.ts",
+      "title": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores IME-composing keys (the Listbox live bug)"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-118",
+      "name": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores keys from editable targets",
+      "kind": "unit",
+      "file": "typeahead/guard.test.ts",
+      "title": "shouldIgnoreTypeaheadKey (FEATURES #7) shouldIgnoreTypeaheadKey ignores keys from editable targets"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-119",
+      "name": "TypeaheadModel RF-TYPE-02: RovingFocus should choose the next case-insensitive prefix match when typeahead receives one printable character",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-02: RovingFocus should choose the next case-insensitive prefix match when typeahead receives one printable character"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-120",
+      "name": "TypeaheadModel RF-TYPE-03: RovingFocus should build a multi-character prefix when different printable keys arrive consecutively",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-03: RovingFocus should build a multi-character prefix when different printable keys arrive consecutively"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-121",
+      "name": "TypeaheadModel RF-TYPE-04: RovingFocus should cycle same-letter matches when one printable character repeats within the buffer window",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-04: RovingFocus should cycle same-letter matches when one printable character repeats within the buffer window"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-122",
+      "name": "TypeaheadModel RF-TYPE-05: RovingFocus should start a new search when one second of typeahead inactivity has elapsed",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-05: RovingFocus should start a new search when one second of typeahead inactivity has elapsed"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-123",
+      "name": "TypeaheadModel RF-TYPE-07: RovingFocus should match Unicode case and canonically equivalent diacritics when typeahead compares labels",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-07: RovingFocus should match Unicode case and canonically equivalent diacritics when typeahead compares labels"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-124",
+      "name": "TypeaheadModel RF-TYPE-08: RovingFocus should skip unavailable matches when typeahead searches the collection",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel RF-TYPE-08: RovingFocus should skip unavailable matches when typeahead searches the collection"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-125",
+      "name": "TypeaheadModel ignores multi-character keys and resets the buffer on demand",
+      "kind": "unit",
+      "file": "typeahead/model.test.ts",
+      "title": "TypeaheadModel ignores multi-character keys and resets the buffer on demand"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-126",
+      "name": "getItemSearchText (RF-TYPE-09) prefers explicit textValue over aria-label and rendered text",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText (RF-TYPE-09) prefers explicit textValue over aria-label and rendered text"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-127",
+      "name": "getItemSearchText (RF-TYPE-09) falls back to child aria-label when no textValue wins",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText (RF-TYPE-09) falls back to child aria-label when no textValue wins"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-128",
+      "name": "getItemSearchText (RF-TYPE-09) falls back to rendered text when neither textValue nor aria-label wins",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText (RF-TYPE-09) falls back to rendered text when neither textValue nor aria-label wins"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-129",
+      "name": "getItemSearchText (RF-TYPE-09) returns empty text when no source resolves",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText (RF-TYPE-09) returns empty text when no source resolves"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-130",
+      "name": "getItemSearchText decoration handling (RF-TYPE-12) excludes aria-hidden and hidden subtrees from the match string",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText decoration handling (RF-TYPE-12) excludes aria-hidden and hidden subtrees from the match string"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-131",
+      "name": "getItemSearchText decoration handling (RF-TYPE-12) collapses irregular whitespace to single spaces",
+      "kind": "unit",
+      "file": "typeahead/text.test.ts",
+      "title": "getItemSearchText decoration handling (RF-TYPE-12) collapses irregular whitespace to single spaces"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-132",
+      "name": "RF-API-01 strict slot intersections exposes exactly one element child plus the documented kernel options",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "RF-API-01 strict slot intersections exposes exactly one element child plus the documented kernel options"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-133",
+      "name": "RF-API-01 strict slot intersections compiles representative StyleProps, one element, and documented options",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "RF-API-01 strict slot intersections compiles representative StyleProps, one element, and documented options"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-134",
+      "name": "RF-API-01 strict slot intersections rejects invalid Root children and orientation values",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "RF-API-01 strict slot intersections rejects invalid Root children and orientation values"
+    },
+    {
+      "id": "LIB-ROVINGFOCUS-135",
+      "name": "RF-API-01 strict slot intersections rejects invalid Item children and orientation-shaped values",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "RF-API-01 strict slot intersections rejects invalid Item children and orientation-shaped values"
+    }
+  ]
+}

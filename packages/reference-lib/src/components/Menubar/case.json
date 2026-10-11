@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 1,
+  "component": "Menubar",
+  "scope": "public",
+  "description": "Executable Menubar contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-MENUBAR-001",
+      "name": "Menubar value coordination renders a menubar row of menuitem triggers with one tab stop",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination renders a menubar row of menuitem triggers with one tab stop"
+    },
+    {
+      "id": "LIB-MENUBAR-002",
+      "name": "Menubar value coordination opens one menu per click and closes the others",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination opens one menu per click and closes the others"
+    },
+    {
+      "id": "LIB-MENUBAR-003",
+      "name": "Menubar value coordination MB-OPEN-04: never emits redundant identical values",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-OPEN-04: never emits redundant identical values"
+    },
+    {
+      "id": "LIB-MENUBAR-004",
+      "name": "Menubar value coordination MB-OPEN-04: drops a controlled same-value request without emitting",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-OPEN-04: drops a controlled same-value request without emitting"
+    },
+    {
+      "id": "LIB-MENUBAR-005",
+      "name": "Menubar value coordination MB-DOM-03: forwards refs to the documented hosts",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-DOM-03: forwards refs to the documented hosts"
+    },
+    {
+      "id": "LIB-MENUBAR-006",
+      "name": "Menubar value coordination MB-DOM-04: dev-warns on duplicate menu values",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-DOM-04: dev-warns on duplicate menu values"
+    },
+    {
+      "id": "LIB-MENUBAR-007",
+      "name": "Menubar value coordination MB-DOM-05: defaults omitted menu values to stable generated ids",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-DOM-05: defaults omitted menu values to stable generated ids"
+    },
+    {
+      "id": "LIB-MENUBAR-008",
+      "name": "Menubar value coordination MB-ENV-01: SSRs closed triggers and hydrates into a working bar",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-ENV-01: SSRs closed triggers and hydrates into a working bar"
+    },
+    {
+      "id": "LIB-MENUBAR-009",
+      "name": "Menubar value coordination MB-ENV-02: keeps one action and one value request across StrictMode replay",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar value coordination MB-ENV-02: keeps one action and one value request across StrictMode replay"
+    },
+    {
+      "id": "LIB-MENUBAR-010",
+      "name": "Menubar stale entry intent pins P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar stale entry intent pins P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first"
+    },
+    {
+      "id": "LIB-MENUBAR-011",
+      "name": "Menubar stale entry intent pins P2: content-arrow switch after Up-on-open-trigger lands container-or-first",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar stale entry intent pins P2: content-arrow switch after Up-on-open-trigger lands container-or-first"
+    },
+    {
+      "id": "LIB-MENUBAR-012",
+      "name": "Menubar stale entry intent pins P3: programmatic open after Up-on-open-trigger lands container-or-first",
+      "kind": "unit",
+      "file": "Menubar.test.tsx",
+      "title": "Menubar stale entry intent pins P3: programmatic open after Up-on-open-trigger lands container-or-first"
+    },
+    {
+      "id": "LIB-MENUBAR-013",
+      "name": "Menubar coordination MB-DOM-01: renders a menubar row of menuitem triggers with one tab stop",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-DOM-01: renders a menubar row of menuitem triggers with one tab stop"
+    },
+    {
+      "id": "LIB-MENUBAR-014",
+      "name": "Menubar coordination MB-DOM-02: exposes controlled expansion on exactly the open menu",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-DOM-02: exposes controlled expansion on exactly the open menu"
+    },
+    {
+      "id": "LIB-MENUBAR-015",
+      "name": "Menubar coordination MB-DOM-03: preserves native contracts through interaction",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-DOM-03: preserves native contracts through interaction"
+    },
+    {
+      "id": "LIB-MENUBAR-016",
+      "name": "Menubar coordination MB-OPEN-01: keeps at most one menu open across trigger clicks",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-OPEN-01: keeps at most one menu open across trigger clicks"
+    },
+    {
+      "id": "LIB-MENUBAR-017",
+      "name": "Menubar coordination MB-OPEN-02: toggles the open menu closed on trigger re-click",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-OPEN-02: toggles the open menu closed on trigger re-click"
+    },
+    {
+      "id": "LIB-MENUBAR-018",
+      "name": "Menubar coordination MB-OPEN-03: stays visibly controlled when value updates are rejected",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-OPEN-03: stays visibly controlled when value updates are rejected"
+    },
+    {
+      "id": "LIB-MENUBAR-019",
+      "name": "Menubar coordination MB-OPEN-05: closes the open menu on outside press",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-OPEN-05: closes the open menu on outside press"
+    },
+    {
+      "id": "LIB-MENUBAR-020",
+      "name": "Menubar coordination MB-OPEN-06: closes the whole bar and restores the trigger after selection",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-OPEN-06: closes the whole bar and restores the trigger after selection"
+    },
+    {
+      "id": "LIB-MENUBAR-021",
+      "name": "Menubar coordination MB-KEY-01: opens on Down/Enter/Space (first item) and Up (last item)",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-01: opens on Down/Enter/Space (first item) and Up (last item)"
+    },
+    {
+      "id": "LIB-MENUBAR-022",
+      "name": "Menubar coordination MB-KEY-02: moves trigger focus only when no menu is open",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-02: moves trigger focus only when no menu is open"
+    },
+    {
+      "id": "LIB-MENUBAR-023",
+      "name": "Menubar coordination MB-KEY-03: moves trigger focus and switches the open menu when a menu is open",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-03: moves trigger focus and switches the open menu when a menu is open"
+    },
+    {
+      "id": "LIB-MENUBAR-024",
+      "name": "Menubar coordination MB-KEY-04: Home/End move trigger focus without switching menus",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-04: Home/End move trigger focus without switching menus"
+    },
+    {
+      "id": "LIB-MENUBAR-025",
+      "name": "Menubar coordination MB-KEY-05: clamps trigger arrows at the edges unless loop is set",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-05: clamps trigger arrows at the edges unless loop is set"
+    },
+    {
+      "id": "LIB-MENUBAR-026",
+      "name": "Menubar coordination MB-KEY-05: loop wraps trigger focus and switching",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-05: loop wraps trigger focus and switching"
+    },
+    {
+      "id": "LIB-MENUBAR-027",
+      "name": "Menubar coordination MB-KEY-06: switches menus on Left/Right from a root-level item",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-06: switches menus on Left/Right from a root-level item"
+    },
+    {
+      "id": "LIB-MENUBAR-028",
+      "name": "Menubar coordination MB-KEY-07: opens a submenu parent on the open-direction arrow instead of switching",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-07: opens a submenu parent on the open-direction arrow instead of switching"
+    },
+    {
+      "id": "LIB-MENUBAR-029",
+      "name": "Menubar coordination MB-KEY-08: never switches menus from inside a nested submenu",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-08: never switches menus from inside a nested submenu"
+    },
+    {
+      "id": "LIB-MENUBAR-030",
+      "name": "Menubar coordination MB-KEY-09: skips disabled menus in focus and switching",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-KEY-09: skips disabled menus in focus and switching"
+    },
+    {
+      "id": "LIB-MENUBAR-031",
+      "name": "Menubar coordination MB-ESC-01: closes the root menu and restores its trigger on Escape",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-ESC-01: closes the root menu and restores its trigger on Escape"
+    },
+    {
+      "id": "LIB-MENUBAR-032",
+      "name": "Menubar coordination MB-ESC-02: closes one submenu level per Escape with trigger restore",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-ESC-02: closes one submenu level per Escape with trigger restore"
+    },
+    {
+      "id": "LIB-MENUBAR-033",
+      "name": "Menubar coordination MB-FOCUS-01: switches land focus inside the newly opened menu",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-FOCUS-01: switches land focus inside the newly opened menu"
+    },
+    {
+      "id": "LIB-MENUBAR-034",
+      "name": "Menubar coordination MB-RTL-01: mirrors Left/Right under RTL",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-RTL-01: mirrors Left/Right under RTL"
+    },
+    {
+      "id": "LIB-MENUBAR-035",
+      "name": "Menubar coordination MB-A11Y-01: keeps expansion and control relationships correct in every state",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.ct.spec.ts",
+      "title": "Menubar coordination MB-A11Y-01: keeps expansion and control relationships correct in every state"
+    },
+    {
+      "id": "LIB-MENUBAR-036",
+      "name": "Menubar consumer and lifecycle contracts MB-EVENT-01: consumer cancellation prevents pointer and native keyboard opening before value requests",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.hardening.ct.spec.ts",
+      "title": "Menubar consumer and lifecycle contracts MB-EVENT-01: consumer cancellation prevents pointer and native keyboard opening before value requests"
+    },
+    {
+      "id": "LIB-MENUBAR-037",
+      "name": "Menubar consumer and lifecycle contracts MB-EVENT-02: consumer cancellation prevents closed roving and open trigger or content switching",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.hardening.ct.spec.ts",
+      "title": "Menubar consumer and lifecycle contracts MB-EVENT-02: consumer cancellation prevents closed roving and open trigger or content switching"
+    },
+    {
+      "id": "LIB-MENUBAR-038",
+      "name": "Menubar consumer and lifecycle contracts MB-CTRL-01: programmatic values update mounted relationships silently and do not inherit stale entry intent",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.hardening.ct.spec.ts",
+      "title": "Menubar consumer and lifecycle contracts MB-CTRL-01: programmatic values update mounted relationships silently and do not inherit stale entry intent"
+    },
+    {
+      "id": "LIB-MENUBAR-039",
+      "name": "Menubar consumer and lifecycle contracts MB-DYNAMIC-01: live menu reorder insertion removal and disabling drive one current navigation registry",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.hardening.ct.spec.ts",
+      "title": "Menubar consumer and lifecycle contracts MB-DYNAMIC-01: live menu reorder insertion removal and disabling drive one current navigation registry"
+    },
+    {
+      "id": "LIB-MENUBAR-040",
+      "name": "Menubar consumer and lifecycle contracts MB-DYNAMIC-02: mounted direction and callback updates apply to the next switch without stale emissions",
+      "kind": "ct",
+      "file": "__e2e__/Menubar.hardening.ct.spec.ts",
+      "title": "Menubar consumer and lifecycle contracts MB-DYNAMIC-02: mounted direction and callback updates apply to the next switch without stale emissions"
+    },
+    {
+      "id": "LIB-MENUBAR-041",
+      "name": "MB-NAV-01: menubar nav helpers maps horizontal arrows to directions, mirrored in RTL",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers maps horizontal arrows to directions, mirrored in RTL"
+    },
+    {
+      "id": "LIB-MENUBAR-042",
+      "name": "MB-NAV-01: menubar nav helpers ignores non-horizontal keys",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers ignores non-horizontal keys"
+    },
+    {
+      "id": "LIB-MENUBAR-043",
+      "name": "MB-NAV-01: menubar nav helpers advances and retreats within the row",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers advances and retreats within the row"
+    },
+    {
+      "id": "LIB-MENUBAR-044",
+      "name": "MB-NAV-01: menubar nav helpers clamps at the edges without loop",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers clamps at the edges without loop"
+    },
+    {
+      "id": "LIB-MENUBAR-045",
+      "name": "MB-NAV-01: menubar nav helpers wraps at the edges with loop",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers wraps at the edges with loop"
+    },
+    {
+      "id": "LIB-MENUBAR-046",
+      "name": "MB-NAV-01: menubar nav helpers returns null when there is nowhere to move",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers returns null when there is nowhere to move"
+    },
+    {
+      "id": "LIB-MENUBAR-047",
+      "name": "MB-NAV-01: menubar nav helpers lands on the headed edge for null or unknown anchors",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers lands on the headed edge for null or unknown anchors"
+    },
+    {
+      "id": "LIB-MENUBAR-048",
+      "name": "MB-NAV-01: menubar nav helpers holds a single menu at both edges",
+      "kind": "unit",
+      "file": "nav/menubar-nav.test.ts",
+      "title": "MB-NAV-01: menubar nav helpers holds a single menu at both edges"
+    },
+    {
+      "id": "LIB-MENUBAR-049",
+      "name": "devWarn prefixes structural misuse with Reference UI in dev",
+      "kind": "unit",
+      "file": "shared/warn.test.ts",
+      "title": "devWarn prefixes structural misuse with Reference UI in dev"
+    },
+    {
+      "id": "LIB-MENUBAR-050",
+      "name": "devWarn stays silent in production",
+      "kind": "unit",
+      "file": "shared/warn.test.ts",
+      "title": "devWarn stays silent in production"
+    }
+  ]
+}

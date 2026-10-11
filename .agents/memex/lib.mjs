@@ -25,6 +25,7 @@ import {
   substringSearch,
 } from './adapters.mjs'
 import { GRAPH_NAME, chainShow, collectGraph } from './graph.mjs'
+import { collectComponents } from './components.mjs'
 import { processTerm, snippet, snippetNeedles, tokenize } from './text.mjs'
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
@@ -95,6 +96,8 @@ export function collectCollection(manifest, root = ROOT) {
     }
     case 'neo':
       return collectNeo(join(root, manifest.root), root, manifest.name)
+    case 'component':
+      return collectComponents(join(root, manifest.root), root, manifest.name)
     case 'rs':
       return collectRs(join(root, manifest.root), root, manifest.name)
     case 'perf':

@@ -1,0 +1,785 @@
+{
+  "schemaVersion": 1,
+  "component": "FocusLock",
+  "scope": "public",
+  "description": "Executable FocusLock contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-FOCUSLOCK-001",
+      "name": "FL-REF-01 reads the child ref without a React ref warning",
+      "kind": "unit",
+      "file": "FocusLock.ref.test.tsx",
+      "title": "FL-REF-01 reads the child ref without a React ref warning"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-002",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-01: Focuses the first enabled tabbable descendant on activation",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-01: Focuses the first enabled tabbable descendant on activation"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-003",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-02 & FL-TAB-03: Wraps Tab on last candidate and Shift+Tab on first candidate",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-02 & FL-TAB-03: Wraps Tab on last candidate and Shift+Tab on first candidate"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-004",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-01: Reclaims focus when outside focus is attempted",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-01: Reclaims focus when outside focus is attempted"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-005",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-SHARD-01: Permits focus inside registered outside shard",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-SHARD-01: Permits focus inside registered outside shard"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-006",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-01 & FL-CAND-01 & FL-CAND-02 & FL-CAND-03 & FL-CAND-04 & FL-CAND-05 & FL-CAND-06 & FL-CAND-10 & FL-CAND-11 & FL-CAND-12: catalog visits native tabbables and native exclusions",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-01 & FL-CAND-01 & FL-CAND-02 & FL-CAND-03 & FL-CAND-04 & FL-CAND-05 & FL-CAND-06 & FL-CAND-10 & FL-CAND-11 & FL-CAND-12: catalog visits native tabbables and native exclusions"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-007",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-CAND-08: Tab order includes open shadow descendants",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-CAND-08: Tab order includes open shadow descendants"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-008",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-NEST-01 & FL-NEST-02 & FL-NEST-03: nested standalone locks pause and resume",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-NEST-01 & FL-NEST-02 & FL-NEST-03: nested standalone locks pause and resume"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-009",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-03: restores to the right sibling when the opener is removed",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-03: restores to the right sibling when the opener is removed"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-010",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-01: Restores focus to the trigger element on deactivation",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-01: Restores focus to the trigger element on deactivation"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-011",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-DOM-01: preserves the authored container without wrapper or guards",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-DOM-01: preserves the authored container without wrapper or guards"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-012",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-DOM-02 & FL-INIT-02 & FL-TAB-07: empty container gets fallback tabindex only while locked",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-DOM-02 & FL-INIT-02 & FL-TAB-07: empty container gets fallback tabindex only while locked"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-013",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-DOM-03: invalid children throw the single-element error",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-DOM-03: invalid children throw the single-element error"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-014",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-DOM-04: callback-ref rerenders settle without an attach loop",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-DOM-04: callback-ref rerenders settle without an attach loop"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-015",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-03: initialFocus ref skips the first candidate",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-03: initialFocus ref skips the first candidate"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-016",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-04: initialFocus can target a tabindex=-1 descendant",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-04: initialFocus can target a tabindex=-1 descendant"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-017",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-05: invalid initialFocus falls back to the first tabbable",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-05: invalid initialFocus falls back to the first tabbable"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-018",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-06: initialFocus false skips the activation move then traps",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-06: initialFocus false skips the activation move then traps"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-019",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-07: activation preserves focus already inside",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-07: activation preserves focus already inside"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-020",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-INIT-08: disabled lock stays inert",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-INIT-08: disabled lock stays inert"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-021",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-04: wrap emits blur then focus once",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-04: wrap emits blur then focus once"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-022",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-05: positive tabIndex keeps DOM order",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-05: positive tabIndex keeps DOM order"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-023",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-06: consumer preventDefault suppresses the lock Tab move",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-06: consumer preventDefault suppresses the lock Tab move"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-024",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-08: live insert/remove/reorder updates the next Tab target",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-08: live insert/remove/reorder updates the next Tab target"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-025",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TAB-09: modifier Tab is not trapped",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TAB-09: modifier Tab is not trapped"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-026",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-CAND-09: runtime tabbability changes apply on the next Tab",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-CAND-09: runtime tabbability changes apply on the next Tab"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-027",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-CAND-13 & FL-SHARD-06 & FL-ENV-03: host/slot tabindex, closed roots, portalled and nested shadow",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-CAND-13 & FL-SHARD-06 & FL-ENV-03: host/slot tabindex, closed roots, portalled and nested shadow"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-028",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-02: pointer on an outside control is not cancelled",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-02: pointer on an outside control is not cancelled"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-029",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-03: null relatedTarget does not storm",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-03: null relatedTarget does not storm"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-030",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-04: removing the focused node falls back inside",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-04: removing the focused node falls back inside"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-031",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-05: disabling the focused node moves once to a valid candidate",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-05: disabling the focused node moves once to a valid candidate"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-032",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-06: pending reclaim is cancelled on disable",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-06: pending reclaim is cancelled on disable"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-033",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-07: re-entering the document restores the last inside target",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-07: re-entering the document restores the last inside target"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-034",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-SHARD-02: a null shard ref joins after it resolves",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-SHARD-02: a null shard ref joins after it resolves"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-035",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-SHARD-04: overlapping shard registrations dedupe",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-SHARD-04: overlapping shard registrations dedupe"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-036",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-SHARD-05: removing the focused shard reclaims inside the lock",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-SHARD-05: removing the focused shard reclaims inside the lock"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-037",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-NEST-04: out-of-order deactivate keeps the live top lock",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-NEST-04: out-of-order deactivate keeps the live top lock"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-038",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-NEST-06: one lock stack per Document",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-NEST-06: one lock stack per Document"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-039",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-06: stale restore does not overwrite a newer explicit focus",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-06: stale restore does not overwrite a newer explicit focus"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-040",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-09: invalid explicit restore falls back to the captured origin",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-09: invalid explicit restore falls back to the captured origin"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-041",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-10: the latest restore target wins when replaced at close",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-RESTORE-10: the latest restore target wins when replaced at close"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-042",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-CAND-14: click focus may enter an in-lock iframe without cross-document traversal",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-CAND-14: click focus may enter an in-lock iframe without cross-document traversal"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-043",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-COMP-01: mixed native catalog, wrap, reclaim, and restore",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-COMP-01: mixed native catalog, wrap, reclaim, and restore"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-044",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-COMP-02: portalled shard plus open shadow is one lock",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-COMP-02: portalled shard plus open shadow is one lock"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-045",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-COMP-03: nested restore uses proximity when the opener is gone",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-COMP-03: nested restore uses proximity when the opener is gone"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-046",
+      "name": "FocusLock candidates visits native tabbable kinds in composed DOM order",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates visits native tabbable kinds in composed DOM order"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-047",
+      "name": "FocusLock candidates skips disabled, negative tabindex, hidden, and inert",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates skips disabled, negative tabindex, hidden, and inert"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-048",
+      "name": "FocusLock candidates keeps only the checked radio in a named group",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates keeps only the checked radio in a named group"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-049",
+      "name": "FocusLock candidates keeps first summary only while details are closed",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates keeps first summary only while details are closed"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-050",
+      "name": "FocusLock candidates keeps first-legend controls in a disabled fieldset",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates keeps first-legend controls in a disabled fieldset"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-051",
+      "name": "FocusLock candidates walks open shadow roots and assigned slots",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates walks open shadow roots and assigned slots"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-052",
+      "name": "FocusLock candidates sorts shard candidates in document order",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates sorts shard candidates in document order"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-053",
+      "name": "FocusLock candidates walks right then left then ancestor for restore proximity",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates walks right then left then ancestor for restore proximity"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-054",
+      "name": "FocusLock candidates FL-CAND-02 excludes native non-tabbable kinds",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-02 excludes native non-tabbable kinds"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-055",
+      "name": "FocusLock candidates FL-CAND-03 excludes hidden and inert ancestor subtrees",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-03 excludes hidden and inert ancestor subtrees"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-056",
+      "name": "FocusLock candidates FL-CAND-07 skips zero-area nodes and keeps positioned boxes",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-07 skips zero-area nodes and keeps positioned boxes"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-057",
+      "name": "FocusLock candidates FL-CAND-10 keeps opacity-clipped rendered nodes and drops display-none",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-10 keeps opacity-clipped rendered nodes and drops display-none"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-058",
+      "name": "FocusLock candidates FL-CAND-11 keeps aria-hidden until inert",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-11 keeps aria-hidden until inert"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-059",
+      "name": "FocusLock candidates FL-CAND-12 treats iframe as one opaque stop",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-12 treats iframe as one opaque stop"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-060",
+      "name": "FocusLock candidates FL-CAND-13 respects host/slot tabindex and closed roots",
+      "kind": "unit",
+      "file": "catalog/candidates.test.ts",
+      "title": "FocusLock candidates FL-CAND-13 respects host/slot tabindex and closed roots"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-061",
+      "name": "eligibility accepts a rendered native candidate for focus and Tab",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility accepts a rendered native candidate for focus and Tab"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-062",
+      "name": "eligibility keeps tabindex=-1 nodes focusable but off the Tab order",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility keeps tabindex=-1 nodes focusable but off the Tab order"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-063",
+      "name": "eligibility rejects disabled, hidden, and inert nodes outright",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility rejects disabled, hidden, and inert nodes outright"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-064",
+      "name": "eligibility rejects display-none while keeping rendered zero-opacity nodes",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility rejects display-none while keeping rendered zero-opacity nodes"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-065",
+      "name": "eligibility rejects non-tabbable native kinds",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility rejects non-tabbable native kinds"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-066",
+      "name": "eligibility protects first-legend controls in a disabled fieldset",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility protects first-legend controls in a disabled fieldset"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-067",
+      "name": "eligibility exposes only the summary while details stay closed",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility exposes only the summary while details stay closed"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-068",
+      "name": "eligibility drops zero-area nodes from Tab but not from focus",
+      "kind": "unit",
+      "file": "catalog/eligibility.test.ts",
+      "title": "eligibility drops zero-area nodes from Tab but not from focus"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-069",
+      "name": "radio collapsing keeps only the checked member of a named group",
+      "kind": "unit",
+      "file": "catalog/radio.test.ts",
+      "title": "radio collapsing keeps only the checked member of a named group"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-070",
+      "name": "radio collapsing keeps every member while no one is checked",
+      "kind": "unit",
+      "file": "catalog/radio.test.ts",
+      "title": "radio collapsing keeps every member while no one is checked"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-071",
+      "name": "radio collapsing leaves unnamed radios and other elements alone",
+      "kind": "unit",
+      "file": "catalog/radio.test.ts",
+      "title": "radio collapsing leaves unnamed radios and other elements alone"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-072",
+      "name": "collectComposedCandidates walks open shadow roots at their slotted positions",
+      "kind": "unit",
+      "file": "catalog/traversal.test.ts",
+      "title": "collectComposedCandidates walks open shadow roots at their slotted positions"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-073",
+      "name": "collectComposedCandidates treats iframes and closed roots as opaque",
+      "kind": "unit",
+      "file": "catalog/traversal.test.ts",
+      "title": "collectComposedCandidates treats iframes and closed roots as opaque"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-074",
+      "name": "collectComposedCandidates prunes closed details and tabindex=-1 shadow hosts",
+      "kind": "unit",
+      "file": "catalog/traversal.test.ts",
+      "title": "collectComposedCandidates prunes closed details and tabindex=-1 shadow hosts"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-075",
+      "name": "documentOrder sorts by host document position and treats shared hosts as equal",
+      "kind": "unit",
+      "file": "catalog/traversal.test.ts",
+      "title": "documentOrder sorts by host document position and treats shared hosts as equal"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-076",
+      "name": "pickFallbackTarget prefers the last live inside node, then its predecessor",
+      "kind": "unit",
+      "file": "containment/fallback.test.ts",
+      "title": "pickFallbackTarget prefers the last live inside node, then its predecessor"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-077",
+      "name": "pickFallbackTarget falls back to the first candidate when memory is unusable",
+      "kind": "unit",
+      "file": "containment/fallback.test.ts",
+      "title": "pickFallbackTarget falls back to the first candidate when memory is unusable"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-078",
+      "name": "resolveTabTarget steps through the list and wraps at both edges",
+      "kind": "unit",
+      "file": "containment/tab-loop.test.ts",
+      "title": "resolveTabTarget steps through the list and wraps at both edges"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-079",
+      "name": "resolveTabTarget re-enters at the near edge when focus starts outside",
+      "kind": "unit",
+      "file": "containment/tab-loop.test.ts",
+      "title": "resolveTabTarget re-enters at the near edge when focus starts outside"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-080",
+      "name": "captureRestoreOrigin snapshots outside focus with its surroundings",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "captureRestoreOrigin snapshots outside focus with its surroundings"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-081",
+      "name": "captureRestoreOrigin prefers the default target, then the pointer, then active body",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "captureRestoreOrigin prefers the default target, then the pointer, then active body"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-082",
+      "name": "captureRestoreOrigin ignores an inside pointer and an unfocusable default",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "captureRestoreOrigin ignores an inside pointer and an unfocusable default"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-083",
+      "name": "captureRestoreOrigin falls back to an outside pointer when focus starts inside",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "captureRestoreOrigin falls back to an outside pointer when focus starts inside"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-084",
+      "name": "resolveRestoreTarget skips restore when the application already moved focus outside",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "resolveRestoreTarget skips restore when the application already moved focus outside"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-085",
+      "name": "resolveRestoreTarget prefers explicit, then captured, then proximity, then default",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "resolveRestoreTarget prefers explicit, then captured, then proximity, then default"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-086",
+      "name": "resolveRestoreTarget falls back to the default when proximity finds nothing",
+      "kind": "unit",
+      "file": "restore/decision.test.ts",
+      "title": "resolveRestoreTarget falls back to the default when proximity finds nothing"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-087",
+      "name": "pointer origin records the last pointerdown target per document",
+      "kind": "unit",
+      "file": "restore/pointer-origin.test.ts",
+      "title": "pointer origin records the last pointerdown target per document"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-088",
+      "name": "pointer origin forgets targets once they disconnect",
+      "kind": "unit",
+      "file": "restore/pointer-origin.test.ts",
+      "title": "pointer origin forgets targets once they disconnect"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-089",
+      "name": "findFocusableProximity returns the node itself while it stays connected and focusable",
+      "kind": "unit",
+      "file": "restore/proximity.test.ts",
+      "title": "findFocusableProximity returns the node itself while it stays connected and focusable"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-090",
+      "name": "findFocusableProximity walks right, then left, then ancestor for a removed node",
+      "kind": "unit",
+      "file": "restore/proximity.test.ts",
+      "title": "findFocusableProximity walks right, then left, then ancestor for a removed node"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-091",
+      "name": "findFocusableProximity descends into surviving sibling subtrees",
+      "kind": "unit",
+      "file": "restore/proximity.test.ts",
+      "title": "findFocusableProximity descends into surviving sibling subtrees"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-092",
+      "name": "findFocusableProximity returns null when no live replacement exists",
+      "kind": "unit",
+      "file": "restore/proximity.test.ts",
+      "title": "findFocusableProximity returns null when no live replacement exists"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-093",
+      "name": "deepActiveElement reads the document active element",
+      "kind": "unit",
+      "file": "shared/focus.test.ts",
+      "title": "deepActiveElement reads the document active element"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-094",
+      "name": "deepActiveElement descends into open shadow roots",
+      "kind": "unit",
+      "file": "shared/focus.test.ts",
+      "title": "deepActiveElement descends into open shadow roots"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-095",
+      "name": "safeFocus ignores null and disconnected nodes",
+      "kind": "unit",
+      "file": "shared/focus.test.ts",
+      "title": "safeFocus ignores null and disconnected nodes"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-096",
+      "name": "safeFocus focuses a connected node and skips the already-active one",
+      "kind": "unit",
+      "file": "shared/focus.test.ts",
+      "title": "safeFocus focuses a connected node and skips the already-active one"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-097",
+      "name": "lock ids hands out unique lock-N tokens",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "lock ids hands out unique lock-N tokens"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-098",
+      "name": "isInsideLock accepts the container, its descendants, and shard descendants",
+      "kind": "unit",
+      "file": "shared/inside.test.ts",
+      "title": "isInsideLock accepts the container, its descendants, and shard descendants"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-099",
+      "name": "assignRef calls function refs with the node and with null",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "assignRef calls function refs with the node and with null"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-100",
+      "name": "assignRef writes object refs in place",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "assignRef writes object refs in place"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-101",
+      "name": "assignRef ignores null and undefined refs",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "assignRef ignores null and undefined refs"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-102",
+      "name": "resolveFocusTarget resolves elements, refs, and resolvers",
+      "kind": "unit",
+      "file": "shared/targets.test.ts",
+      "title": "resolveFocusTarget resolves elements, refs, and resolvers"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-103",
+      "name": "resolveFocusTarget collapses empty and boolean forms to null",
+      "kind": "unit",
+      "file": "shared/targets.test.ts",
+      "title": "resolveFocusTarget collapses empty and boolean forms to null"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-104",
+      "name": "resolveShardElements keeps only connected elements and resolved refs",
+      "kind": "unit",
+      "file": "shared/targets.test.ts",
+      "title": "resolveShardElements keeps only connected elements and resolved refs"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-105",
+      "name": "resolveShardElements resolves missing shards to an empty list",
+      "kind": "unit",
+      "file": "shared/targets.test.ts",
+      "title": "resolveShardElements resolves missing shards to an empty list"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-106",
+      "name": "FocusLock SSR FL-ENV-01: server-renders the authored child with no extra markup or document access",
+      "kind": "unit",
+      "file": "ssr.test.tsx",
+      "title": "FocusLock SSR FL-ENV-01: server-renders the authored child with no extra markup or document access"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-107",
+      "name": "lock stack keeps last-active on top within one document",
+      "kind": "unit",
+      "file": "stack/stack.test.ts",
+      "title": "lock stack keeps last-active on top within one document"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-108",
+      "name": "lock stack does not let one document pause another",
+      "kind": "unit",
+      "file": "stack/stack.test.ts",
+      "title": "lock stack does not let one document pause another"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-109",
+      "name": "lock stack prunes detached containers on read and resumes the survivor",
+      "kind": "unit",
+      "file": "stack/stack.test.ts",
+      "title": "lock stack prunes detached containers on read and resumes the survivor"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-110",
+      "name": "lock stack ignores unknown unregistrations",
+      "kind": "unit",
+      "file": "stack/stack.test.ts",
+      "title": "lock stack ignores unknown unregistrations"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-111",
+      "name": "FL-TYPE-01 exposes the documented child shape and focus option unions",
+      "kind": "unit",
+      "file": "types.test.ts",
+      "title": "FL-TYPE-01 exposes the documented child shape and focus option unions"
+    }
+  ]
+}

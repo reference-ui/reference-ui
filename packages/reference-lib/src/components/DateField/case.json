@@ -1,0 +1,722 @@
+{
+  "schemaVersion": 1,
+  "component": "DateField",
+  "scope": "public",
+  "description": "Executable DateField contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-DATEFIELD-001",
+      "name": "DateField caret stepping carry (PATCHES #2) DF-KEY-02: day overflow carries with Gregorian constrain",
+      "kind": "unit",
+      "file": "DateField.step.test.tsx",
+      "title": "DateField caret stepping carry (PATCHES #2) DF-KEY-02: day overflow carries with Gregorian constrain"
+    },
+    {
+      "id": "LIB-DATEFIELD-002",
+      "name": "DateField caret stepping carry (PATCHES #2) DF-KEY-03: month and year carry constrain like Calendar",
+      "kind": "unit",
+      "file": "DateField.step.test.tsx",
+      "title": "DateField caret stepping carry (PATCHES #2) DF-KEY-03: month and year carry constrain like Calendar"
+    },
+    {
+      "id": "LIB-DATEFIELD-003",
+      "name": "DateField required locale (FEATURES #1) DF-FMT-06: DateField should require an explicit locale and skip environment defaults",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField required locale (FEATURES #1) DF-FMT-06: DateField should require an explicit locale and skip environment defaults"
+    },
+    {
+      "id": "LIB-DATEFIELD-004",
+      "name": "DateField required value + onChange (controlled-only) DF-CTL-01: DateField should throw without an explicit value (null is the empty value)",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField required value + onChange (controlled-only) DF-CTL-01: DateField should throw without an explicit value (null is the empty value)"
+    },
+    {
+      "id": "LIB-DATEFIELD-005",
+      "name": "DateField required value + onChange (controlled-only) DF-CTL-02: DateField should throw without onChange (no silent-frozen controlled)",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField required value + onChange (controlled-only) DF-CTL-02: DateField should throw without onChange (no silent-frozen controlled)"
+    },
+    {
+      "id": "LIB-DATEFIELD-006",
+      "name": "DateField.Range required props (FEATURES #2) Range should throw without locale, value, or onChange (throw-for-all)",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField.Range required props (FEATURES #2) Range should throw without locale, value, or onChange (throw-for-all)"
+    },
+    {
+      "id": "LIB-DATEFIELD-007",
+      "name": "DateField constraint bounds (FEATURES #3) DF-BND-04: DateField should fail when min is after max or either is not canonical ISO",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField constraint bounds (FEATURES #3) DF-BND-04: DateField should fail when min is after max or either is not canonical ISO"
+    },
+    {
+      "id": "LIB-DATEFIELD-008",
+      "name": "DateField constraint bounds (FEATURES #3) programmatic out-of-range value renders display plus managed invalid (DF-BND-02 logic; ID proven in CT)",
+      "kind": "unit",
+      "file": "DateField.test.tsx",
+      "title": "DateField constraint bounds (FEATURES #3) programmatic out-of-range value renders display plus managed invalid (DF-BND-02 logic; ID proven in CT)"
+    },
+    {
+      "id": "LIB-DATEFIELD-009",
+      "name": "DateField CT renders compound DateField, opens picker on trigger click, selects date and updates",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField CT renders compound DateField, opens picker on trigger click, selects date and updates"
+    },
+    {
+      "id": "LIB-DATEFIELD-010",
+      "name": "DateField CT renders exactly one input and one trigger without duplicate synthesis",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField CT renders exactly one input and one trigger without duplicate synthesis"
+    },
+    {
+      "id": "LIB-DATEFIELD-011",
+      "name": "DateField CT opens picker via Alt+ArrowDown and deliberate input click",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField CT opens picker via Alt+ArrowDown and deliberate input click"
+    },
+    {
+      "id": "LIB-DATEFIELD-012",
+      "name": "DateField quarantine re-targets DF-DOM-01: childless DateField resolves directly to one visible text input",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-DOM-01: childless DateField resolves directly to one visible text input"
+    },
+    {
+      "id": "LIB-DATEFIELD-013",
+      "name": "DateField quarantine re-targets DF-DOM-02: folded picker renders Field bezel with synthesized input and trigger",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-DOM-02: folded picker renders Field bezel with synthesized input and trigger"
+    },
+    {
+      "id": "LIB-DATEFIELD-014",
+      "name": "DateField quarantine re-targets DF-DOM-03: part-resolution merge law for root and explicit props",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-DOM-03: part-resolution merge law for root and explicit props"
+    },
+    {
+      "id": "LIB-DATEFIELD-015",
+      "name": "DateField quarantine re-targets DF-DOM-04: hidden input serializes only when name is supplied",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-DOM-04: hidden input serializes only when name is supplied"
+    },
+    {
+      "id": "LIB-DATEFIELD-016",
+      "name": "DateField quarantine re-targets DF-DOM-05: display follows only the controlled ISO prop",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-DOM-05: display follows only the controlled ISO prop"
+    },
+    {
+      "id": "LIB-DATEFIELD-017",
+      "name": "DateField quarantine re-targets DF-KEY-05: ArrowUp/Down no-op on null text",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-KEY-05: ArrowUp/Down no-op on null text"
+    },
+    {
+      "id": "LIB-DATEFIELD-018",
+      "name": "DateField quarantine re-targets DF-KEY-06: ArrowUp/Down do not step when disabled or read-only",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-KEY-06: ArrowUp/Down do not step when disabled or read-only"
+    },
+    {
+      "id": "LIB-DATEFIELD-019",
+      "name": "DateField quarantine re-targets DF-CAL-01: picker upgrades input to the APG combobox contract with deliberate activation",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-CAL-01: picker upgrades input to the APG combobox contract with deliberate activation"
+    },
+    {
+      "id": "LIB-DATEFIELD-020",
+      "name": "DateField quarantine re-targets DF-CAL-03: trigger is an auxiliary tabIndex -1 toggle",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-CAL-03: trigger is an auxiliary tabIndex -1 toggle"
+    },
+    {
+      "id": "LIB-DATEFIELD-021",
+      "name": "DateField quarantine re-targets DF-FRM-01: submit sends canonical ISO, not display text",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-FRM-01: submit sends canonical ISO, not display text"
+    },
+    {
+      "id": "LIB-DATEFIELD-022",
+      "name": "DateField quarantine re-targets DF-FRM-02: submit sends empty value for controlled null",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-FRM-02: submit sends empty value for controlled null"
+    },
+    {
+      "id": "LIB-DATEFIELD-023",
+      "name": "DateField quarantine re-targets DF-FRM-04: required empty field reports platform valueMissing on both hosts",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-FRM-04: required empty field reports platform valueMissing on both hosts"
+    },
+    {
+      "id": "LIB-DATEFIELD-024",
+      "name": "DateField quarantine re-targets DF-COMP-02: birthday serializes through htmlFor labeling and canonical form data",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-COMP-02: birthday serializes through htmlFor labeling and canonical form data"
+    },
+    {
+      "id": "LIB-DATEFIELD-025",
+      "name": "DateField quarantine re-targets DF-BND-02: programmatic out-of-range value displays with managed invalid",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-BND-02: programmatic out-of-range value displays with managed invalid"
+    },
+    {
+      "id": "LIB-DATEFIELD-026",
+      "name": "DateField quarantine re-targets constrained picker selection outside bounds or unavailable is rejected without commit (FEATURES #3)",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets constrained picker selection outside bounds or unavailable is rejected without commit (FEATURES #3)"
+    },
+    {
+      "id": "LIB-DATEFIELD-027",
+      "name": "DateField quarantine re-targets click-while-open positions caret without toggling (FEATURES #4b)",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets click-while-open positions caret without toggling (FEATURES #4b)"
+    },
+    {
+      "id": "LIB-DATEFIELD-028",
+      "name": "DateField quarantine re-targets DF-ENV-03: onChange never passes a Date instance",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-ENV-03: onChange never passes a Date instance"
+    },
+    {
+      "id": "LIB-DATEFIELD-029",
+      "name": "DateField quarantine re-targets DF-ENV-01: DateField associates form and events inside an open ShadowRoot",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-ENV-01: DateField associates form and events inside an open ShadowRoot"
+    },
+    {
+      "id": "LIB-DATEFIELD-030",
+      "name": "DateField quarantine re-targets DF-CMT-07: composition suspends parsing and a stale end after value replace is ignored",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-CMT-07: composition suspends parsing and a stale end after value replace is ignored"
+    },
+    {
+      "id": "LIB-DATEFIELD-031",
+      "name": "DateField quarantine re-targets DF-COMP-04: DateField picker composes inside an open ShadowRoot",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField quarantine re-targets DF-COMP-04: DateField picker composes inside an open ShadowRoot"
+    },
+    {
+      "id": "LIB-DATEFIELD-032",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-01/DF-EDT-03/DF-EDT-07: en-GB displays day/month/year and a complete valid edit requests once",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-01/DF-EDT-03/DF-EDT-07: en-GB displays day/month/year and a complete valid edit requests once"
+    },
+    {
+      "id": "LIB-DATEFIELD-033",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-02/DF-EDT-09: en-US parses the same keystrokes as month/day/year — never guessed",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-02/DF-EDT-09: en-US parses the same keystrokes as month/day/year — never guessed"
+    },
+    {
+      "id": "LIB-DATEFIELD-034",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-09: 01/02/2024 is 1 February under en-GB",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-09: 01/02/2024 is 1 February under en-GB"
+    },
+    {
+      "id": "LIB-DATEFIELD-035",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-03/DF-COMP-01: de-DE honors dot separators for display, typing, and picker commit",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-03/DF-COMP-01: de-DE honors dot separators for display, typing, and picker commit"
+    },
+    {
+      "id": "LIB-DATEFIELD-036",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-03: sv-SE round-trips its ISO-like year-first grammar",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-03: sv-SE round-trips its ISO-like year-first grammar"
+    },
+    {
+      "id": "LIB-DATEFIELD-037",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-04/DF-COMP-03: ja-JP keeps numeric literals in display and accepts omitted literals while typing",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-04/DF-COMP-03: ja-JP keeps numeric literals in display and accepts omitted literals while typing"
+    },
+    {
+      "id": "LIB-DATEFIELD-038",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-05: ar-EG accepts ASCII mixed with one locale digit set",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-FMT-05: ar-EG accepts ASCII mixed with one locale digit set"
+    },
+    {
+      "id": "LIB-DATEFIELD-039",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-01: partial text stays visible and silent with data-editing",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-01: partial text stays visible and silent with data-editing"
+    },
+    {
+      "id": "LIB-DATEFIELD-040",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-02: clearing requests null once and never re-requests it",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-02: clearing requests null once and never re-requests it"
+    },
+    {
+      "id": "LIB-DATEFIELD-041",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-04/DF-EDT-05/DF-EDT-06: impossible dates and two-digit years never publish; commit reverts with managed invalid",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-04/DF-EDT-05/DF-EDT-06: impossible dates and two-digit years never publish; commit reverts with managed invalid"
+    },
+    {
+      "id": "LIB-DATEFIELD-042",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-08: complete canonical ISO is interchange in any locale",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-EDT-08: complete canonical ISO is interchange in any locale"
+    },
+    {
+      "id": "LIB-DATEFIELD-043",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) B-15: garbage, out-of-shape, and impossible text never publishes",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) B-15: garbage, out-of-shape, and impossible text never publishes"
+    },
+    {
+      "id": "LIB-DATEFIELD-044",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-01: blur and Enter commit without duplicate requests",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-01: blur and Enter commit without duplicate requests"
+    },
+    {
+      "id": "LIB-DATEFIELD-045",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-02: blur from incomplete or rejected text reverts with managed invalid",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-02: blur from incomplete or rejected text reverts with managed invalid"
+    },
+    {
+      "id": "LIB-DATEFIELD-046",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-03: preventDefault on blur keeps the dirty buffer and refocus resumes the session",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-03: preventDefault on blur keeps the dirty buffer and refocus resumes the session"
+    },
+    {
+      "id": "LIB-DATEFIELD-047",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-04: an accepted live echo preserves the buffer",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-04: an accepted live echo preserves the buffer"
+    },
+    {
+      "id": "LIB-DATEFIELD-048",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-05: a parent value replace reformats, ends the session, and stays silent",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-05: a parent value replace reformats, ends the session, and stays silent"
+    },
+    {
+      "id": "LIB-DATEFIELD-049",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-06: a locale change reorders the formatted value without publishing",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CMT-06: a locale change reorders the formatted value without publishing"
+    },
+    {
+      "id": "LIB-DATEFIELD-050",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-BND-01: typed out-of-range dates never publish; commit reverts without clamping",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-BND-01: typed out-of-range dates never publish; commit reverts without clamping"
+    },
+    {
+      "id": "LIB-DATEFIELD-051",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-BND-03: isDateUnavailable rejects typed dates exactly like min/max",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-BND-03: isDateUnavailable rejects typed dates exactly like min/max"
+    },
+    {
+      "id": "LIB-DATEFIELD-052",
+      "name": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CAL-02: typing a complete date moves the open grid without dismissing",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField engine (PATCHES #1: B-15/B-16/B-24) DF-CAL-02: typing a complete date moves the open grid without dismissing"
+    },
+    {
+      "id": "LIB-DATEFIELD-053",
+      "name": "DateField stepping (PATCHES #2) DF-KEY-01: ArrowUp/Down step the caret day/month/year segment and commit one ISO",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField stepping (PATCHES #2) DF-KEY-01: ArrowUp/Down step the caret day/month/year segment and commit one ISO"
+    },
+    {
+      "id": "LIB-DATEFIELD-054",
+      "name": "DateField stepping (PATCHES #2) DF-KEY-04: Shift steps 10x of the caret segment",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField stepping (PATCHES #2) DF-KEY-04: Shift steps 10x of the caret segment"
+    },
+    {
+      "id": "LIB-DATEFIELD-055",
+      "name": "DateField stepping (PATCHES #2) DF-KEY-07: a caret on a separator steps the nearest numeric segment",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField stepping (PATCHES #2) DF-KEY-07: a caret on a separator steps the nearest numeric segment"
+    },
+    {
+      "id": "LIB-DATEFIELD-056",
+      "name": "DateField submit/reset (PATCHES #5) DF-FRM-03: requestSubmit blocks on a failed commit boundary until resolution",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField submit/reset (PATCHES #5) DF-FRM-03: requestSubmit blocks on a failed commit boundary until resolution"
+    },
+    {
+      "id": "LIB-DATEFIELD-057",
+      "name": "DateField submit/reset (PATCHES #5) DF-FRM-05: unprevented reset reformats without changing controlled ISO",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField submit/reset (PATCHES #5) DF-FRM-05: unprevented reset reformats without changing controlled ISO"
+    },
+    {
+      "id": "LIB-DATEFIELD-058",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-01: Range manages two endpoint sessions over one range value",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-01: Range manages two endpoint sessions over one range value"
+    },
+    {
+      "id": "LIB-DATEFIELD-059",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-02: end-only drafts hold without reaching onChange or Calendar",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-02: end-only drafts hold without reaching onChange or Calendar"
+    },
+    {
+      "id": "LIB-DATEFIELD-060",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-03: the Calendar pane follows the focused endpoint",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-03: the Calendar pane follows the focused endpoint"
+    },
+    {
+      "id": "LIB-DATEFIELD-061",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-04: typed inversion is preserved until Calendar completion normalizes",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-04: typed inversion is preserved until Calendar completion normalizes"
+    },
+    {
+      "id": "LIB-DATEFIELD-062",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-05: Escape restores the draft; completing the draft publishes",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-05: Escape restores the draft; completing the draft publishes"
+    },
+    {
+      "id": "LIB-DATEFIELD-063",
+      "name": "DateField.Range (FEATURES #2) DF-RANGE-06: Start and End unfold with their own props",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-RANGE-06: Start and End unfold with their own props"
+    },
+    {
+      "id": "LIB-DATEFIELD-064",
+      "name": "DateField.Range (FEATURES #2) DF-COMP-05: unfolded range picker edits, syncs, and transacts end to end",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-COMP-05: unfolded range picker edits, syncs, and transacts end to end"
+    },
+    {
+      "id": "LIB-DATEFIELD-065",
+      "name": "DateField.Range (FEATURES #2) DF-COMP-06: unfolding every part preserves managed invariants",
+      "kind": "ct",
+      "file": "__e2e__/DateField.ct.spec.ts",
+      "title": "DateField.Range (FEATURES #2) DF-COMP-06: unfolding every part preserves managed invariants"
+    },
+    {
+      "id": "LIB-DATEFIELD-066",
+      "name": "resolveRangeDraft shows the committed range when clean",
+      "kind": "unit",
+      "file": "engine/draft.test.ts",
+      "title": "resolveRangeDraft shows the committed range when clean"
+    },
+    {
+      "id": "LIB-DATEFIELD-067",
+      "name": "resolveRangeDraft shows the draft as a range when dirty, complete, and ordered",
+      "kind": "unit",
+      "file": "engine/draft.test.ts",
+      "title": "resolveRangeDraft shows the draft as a range when dirty, complete, and ordered"
+    },
+    {
+      "id": "LIB-DATEFIELD-068",
+      "name": "resolveRangeDraft anchors a start-only draft and never an end-only draft",
+      "kind": "unit",
+      "file": "engine/draft.test.ts",
+      "title": "resolveRangeDraft anchors a start-only draft and never an end-only draft"
+    },
+    {
+      "id": "LIB-DATEFIELD-069",
+      "name": "resolveRangeDraft rejects inverted and out-of-constraints drafts",
+      "kind": "unit",
+      "file": "engine/draft.test.ts",
+      "title": "resolveRangeDraft rejects inverted and out-of-constraints drafts"
+    },
+    {
+      "id": "LIB-DATEFIELD-070",
+      "name": "resolveRangeDraft resolves the failed session as a draft, not the committed value",
+      "kind": "unit",
+      "file": "engine/draft.test.ts",
+      "title": "resolveRangeDraft resolves the failed session as a draft, not the committed value"
+    },
+    {
+      "id": "LIB-DATEFIELD-071",
+      "name": "parse-kit locale format formats en-GB as day/month/year",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale format formats en-GB as day/month/year"
+    },
+    {
+      "id": "LIB-DATEFIELD-072",
+      "name": "parse-kit locale format formats en-US as month/day/year",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale format formats en-US as month/day/year"
+    },
+    {
+      "id": "LIB-DATEFIELD-073",
+      "name": "parse-kit locale format formats de-DE with dot separators and sv-SE as ISO-like",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale format formats de-DE with dot separators and sv-SE as ISO-like"
+    },
+    {
+      "id": "LIB-DATEFIELD-074",
+      "name": "parse-kit locale format formats ja-JP with year/month/day literals",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale format formats ja-JP with year/month/day literals"
+    },
+    {
+      "id": "LIB-DATEFIELD-075",
+      "name": "parse-kit locale format orders segments per locale grammar",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale format orders segments per locale grammar"
+    },
+    {
+      "id": "LIB-DATEFIELD-076",
+      "name": "parse-kit locale parse parses 01/02/2024 as Feb 1 under en-GB and Jan 2 under en-US",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse parses 01/02/2024 as Feb 1 under en-GB and Jan 2 under en-US"
+    },
+    {
+      "id": "LIB-DATEFIELD-077",
+      "name": "parse-kit locale parse round-trips de-DE dots and sv-SE dashes",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse round-trips de-DE dots and sv-SE dashes"
+    },
+    {
+      "id": "LIB-DATEFIELD-078",
+      "name": "parse-kit locale parse accepts Japanese digits with omitted literals while typing",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse accepts Japanese digits with omitted literals while typing"
+    },
+    {
+      "id": "LIB-DATEFIELD-079",
+      "name": "parse-kit locale parse accepts ASCII mixed with one locale digit set",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse accepts ASCII mixed with one locale digit set"
+    },
+    {
+      "id": "LIB-DATEFIELD-080",
+      "name": "parse-kit locale parse rejects mixing two non-ASCII digit scripts",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse rejects mixing two non-ASCII digit scripts"
+    },
+    {
+      "id": "LIB-DATEFIELD-081",
+      "name": "parse-kit locale parse treats empty text as valid null and partial text as incomplete",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse treats empty text as valid null and partial text as incomplete"
+    },
+    {
+      "id": "LIB-DATEFIELD-082",
+      "name": "parse-kit locale parse treats two-digit years as incomplete",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse treats two-digit years as incomplete"
+    },
+    {
+      "id": "LIB-DATEFIELD-083",
+      "name": "parse-kit locale parse rejects impossible Gregorian dates without overflow",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse rejects impossible Gregorian dates without overflow"
+    },
+    {
+      "id": "LIB-DATEFIELD-084",
+      "name": "parse-kit locale parse accepts 29 February only on Gregorian leap years",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse accepts 29 February only on Gregorian leap years"
+    },
+    {
+      "id": "LIB-DATEFIELD-085",
+      "name": "parse-kit locale parse allows omitted leading zeros",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse allows omitted leading zeros"
+    },
+    {
+      "id": "LIB-DATEFIELD-086",
+      "name": "parse-kit locale parse accepts canonical ISO as interchange in any locale",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit locale parse accepts canonical ISO as interchange in any locale"
+    },
+    {
+      "id": "LIB-DATEFIELD-087",
+      "name": "parse-kit caret segments and stepping resolves the caret segment from en-GB digit spans",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit caret segments and stepping resolves the caret segment from en-GB digit spans"
+    },
+    {
+      "id": "LIB-DATEFIELD-088",
+      "name": "parse-kit caret segments and stepping treats a caret on a separator as the preceding numeric segment",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit caret segments and stepping treats a caret on a separator as the preceding numeric segment"
+    },
+    {
+      "id": "LIB-DATEFIELD-089",
+      "name": "parse-kit caret segments and stepping carries day overflow with Gregorian constrain",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit caret segments and stepping carries day overflow with Gregorian constrain"
+    },
+    {
+      "id": "LIB-DATEFIELD-090",
+      "name": "parse-kit caret segments and stepping constrains month and year carry like Calendar",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit caret segments and stepping constrains month and year carry like Calendar"
+    },
+    {
+      "id": "LIB-DATEFIELD-091",
+      "name": "parse-kit caret segments and stepping refuses to step outside years 0001-9999",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit caret segments and stepping refuses to step outside years 0001-9999"
+    },
+    {
+      "id": "LIB-DATEFIELD-092",
+      "name": "parse-kit constraints flags out-of-range dates without coercing",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit constraints flags out-of-range dates without coercing"
+    },
+    {
+      "id": "LIB-DATEFIELD-093",
+      "name": "parse-kit constraints applies isDateUnavailable the same way as min/max",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit constraints applies isDateUnavailable the same way as min/max"
+    },
+    {
+      "id": "LIB-DATEFIELD-094",
+      "name": "parse-kit constraints throws loudly for min after max or non-canonical bounds",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit constraints throws loudly for min after max or non-canonical bounds"
+    },
+    {
+      "id": "LIB-DATEFIELD-095",
+      "name": "parse-kit constraints accepts absent, open-ended, and equal bounds",
+      "kind": "unit",
+      "file": "engine/parse.test.ts",
+      "title": "parse-kit constraints accepts absent, open-ended, and equal bounds"
+    },
+    {
+      "id": "LIB-DATEFIELD-096",
+      "name": "resolveStep steps the segment under the caret with Gregorian carry",
+      "kind": "unit",
+      "file": "engine/stepping.test.ts",
+      "title": "resolveStep steps the segment under the caret with Gregorian carry"
+    },
+    {
+      "id": "LIB-DATEFIELD-097",
+      "name": "resolveStep steps ±10 with Shift",
+      "kind": "unit",
+      "file": "engine/stepping.test.ts",
+      "title": "resolveStep steps ±10 with Shift"
+    },
+    {
+      "id": "LIB-DATEFIELD-098",
+      "name": "resolveStep returns null without a base, past the domain, or off constraints",
+      "kind": "unit",
+      "file": "engine/stepping.test.ts",
+      "title": "resolveStep returns null without a base, past the domain, or off constraints"
+    },
+    {
+      "id": "LIB-DATEFIELD-099",
+      "name": "restoreCaretAt restores the caret position",
+      "kind": "unit",
+      "file": "shared/caret.test.ts",
+      "title": "restoreCaretAt restores the caret position"
+    },
+    {
+      "id": "LIB-DATEFIELD-100",
+      "name": "restoreCaretAt silently ignores a null target or a throwing context",
+      "kind": "unit",
+      "file": "shared/caret.test.ts",
+      "title": "restoreCaretAt silently ignores a null target or a throwing context"
+    },
+    {
+      "id": "LIB-DATEFIELD-101",
+      "name": "prop merging joins the defined class legs, undefined when all are empty",
+      "kind": "unit",
+      "file": "shared/merge.test.ts",
+      "title": "prop merging joins the defined class legs, undefined when all are empty"
+    },
+    {
+      "id": "LIB-DATEFIELD-102",
+      "name": "prop merging layers the defined style legs, later legs winning",
+      "kind": "unit",
+      "file": "shared/merge.test.ts",
+      "title": "prop merging layers the defined style legs, later legs winning"
+    }
+  ]
+}

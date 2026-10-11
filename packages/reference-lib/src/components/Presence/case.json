@@ -1,0 +1,736 @@
+{
+  "schemaVersion": 1,
+  "component": "Presence",
+  "scope": "public",
+  "description": "Executable Presence contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-PRESENCE-001",
+      "name": "Presence Component Unit Contract PR-DOM-06: Presence should reject child shapes that cannot expose one observable element when they are nonempty",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-DOM-06: Presence should reject child shapes that cannot expose one observable element when they are nonempty"
+    },
+    {
+      "id": "LIB-PRESENCE-002",
+      "name": "Presence Component Unit Contract PR-DOM-07: Presence should observe one eventual native node when its child is ref-forwarding or lazy",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-DOM-07: Presence should observe one eventual native node when its child is ref-forwarding or lazy"
+    },
+    {
+      "id": "LIB-PRESENCE-003",
+      "name": "Presence Component Unit Contract PR-DOM-08: Presence should fail descriptively when a custom child does not expose one observable native node",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-DOM-08: Presence should fail descriptively when a custom child does not expose one observable native node"
+    },
+    {
+      "id": "LIB-PRESENCE-004",
+      "name": "Presence Component Unit Contract PR-REF-01: Presence should forward an object ref to the exact observed child when that child is present",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-REF-01: Presence should forward an object ref to the exact observed child when that child is present"
+    },
+    {
+      "id": "LIB-PRESENCE-005",
+      "name": "Presence Component Unit Contract PR-REF-02: Presence should settle without an infinite loop when an inline callback ref schedules a render on attach",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-REF-02: Presence should settle without an infinite loop when an inline callback ref schedules a render on attach"
+    },
+    {
+      "id": "LIB-PRESENCE-006",
+      "name": "Presence Component Unit Contract PR-REF-03: Presence should keep its composed ref identity stable when inputs remain unchanged across rerenders",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-REF-03: Presence should keep its composed ref identity stable when inputs remain unchanged across rerenders"
+    },
+    {
+      "id": "LIB-PRESENCE-007",
+      "name": "Presence Component Unit Contract PR-REF-04: Presence should apply the supported React cleanup contract when its child is finally removed",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-REF-04: Presence should apply the supported React cleanup contract when its child is finally removed"
+    },
+    {
+      "id": "LIB-PRESENCE-008",
+      "name": "Presence Component Unit Contract PR-ENV-01: Presence should hydrate matching child markup when present is true on the server and client",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-ENV-01: Presence should hydrate matching child markup when present is true on the server and client"
+    },
+    {
+      "id": "LIB-PRESENCE-009",
+      "name": "Presence Component Unit Contract PR-ENV-02: Presence should emit no child markup when present is false during server rendering",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-ENV-02: Presence should emit no child markup when present is false during server rendering"
+    },
+    {
+      "id": "LIB-PRESENCE-010",
+      "name": "Presence Component Unit Contract PR-ENV-03: Presence should maintain one observed child when StrictMode replays effects",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-ENV-03: Presence should maintain one observed child when StrictMode replays effects"
+    },
+    {
+      "id": "LIB-PRESENCE-011",
+      "name": "Presence Component Unit Contract PR-NEST-04: Presence should coordinate one descendant exit when StrictMode replays nested registration and cleanup",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-NEST-04: Presence should coordinate one descendant exit when StrictMode replays nested registration and cleanup"
+    },
+    {
+      "id": "LIB-PRESENCE-012",
+      "name": "Presence Component Unit Contract PR-EXIT-07: Presence should fire onExitComplete exactly once per completed instant exit",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-EXIT-07: Presence should fire onExitComplete exactly once per completed instant exit"
+    },
+    {
+      "id": "LIB-PRESENCE-013",
+      "name": "Presence Component Unit Contract PR-EXIT-08: Presence should not fire onExitComplete on initial mount",
+      "kind": "unit",
+      "file": "Presence.test.tsx",
+      "title": "Presence Component Unit Contract PR-EXIT-08: Presence should not fire onExitComplete on initial mount"
+    },
+    {
+      "id": "LIB-PRESENCE-014",
+      "name": "Presence PR-DOM-01 & PR-INSTANT-01: Renders child when present, removes immediately on instant close",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-DOM-01 & PR-INSTANT-01: Renders child when present, removes immediately on instant close"
+    },
+    {
+      "id": "LIB-PRESENCE-015",
+      "name": "Presence PR-TRANSITION-01: Retains closing child during CSS transition and removes after completion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-TRANSITION-01: Retains closing child during CSS transition and removes after completion"
+    },
+    {
+      "id": "LIB-PRESENCE-016",
+      "name": "Presence PR-ANIMATION-01: Retains closing child during CSS animation and removes after completion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-ANIMATION-01: Retains closing child during CSS animation and removes after completion"
+    },
+    {
+      "id": "LIB-PRESENCE-017",
+      "name": "Presence PR-RACE-02: Preserves child when present returns true before exit completion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-RACE-02: Preserves child when present returns true before exit completion"
+    },
+    {
+      "id": "LIB-PRESENCE-018",
+      "name": "Presence PR-NEST-01: Coordinates nested Presence instances and waits for child completion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-NEST-01: Coordinates nested Presence instances and waits for child completion"
+    },
+    {
+      "id": "LIB-PRESENCE-019",
+      "name": "Presence PR-NEST-05: Exits a parent with an animated exit when a nested Presence was born closed",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-NEST-05: Exits a parent with an animated exit when a nested Presence was born closed"
+    },
+    {
+      "id": "LIB-PRESENCE-020",
+      "name": "Presence PR-NEST-06: Coordinates a nested child that opens and closes during the parent exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence PR-NEST-06: Coordinates a nested child that opens and closes during the parent exit"
+    },
+    {
+      "id": "LIB-PRESENCE-021",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit"
+    },
+    {
+      "id": "LIB-PRESENCE-022",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-02: Fires onExitComplete for instant exits",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-02: Fires onExitComplete for instant exits"
+    },
+    {
+      "id": "LIB-PRESENCE-023",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-03: Does not fire onExitComplete on interrupted exits",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-03: Does not fire onExitComplete on interrupted exits"
+    },
+    {
+      "id": "LIB-PRESENCE-024",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-04: Does not fire onExitComplete on initial mount",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-04: Does not fire onExitComplete on initial mount"
+    },
+    {
+      "id": "LIB-PRESENCE-025",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-05: Fires through the born-closed nested wedge (B-01 overlay shape)",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-05: Fires through the born-closed nested wedge (B-01 overlay shape)"
+    },
+    {
+      "id": "LIB-PRESENCE-026",
+      "name": "Presence onExitComplete (W-09) PR-EXIT-06: Fires once per Presence when nested parent and child exit together",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence onExitComplete (W-09) PR-EXIT-06: Fires once per Presence when nested parent and child exit together"
+    },
+    {
+      "id": "LIB-PRESENCE-027",
+      "name": "Presence DOM contract (browser re-proof) PR-DOM-02: Omits its child when it first mounts with present false",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence DOM contract (browser re-proof) PR-DOM-02: Omits its child when it first mounts with present false"
+    },
+    {
+      "id": "LIB-PRESENCE-028",
+      "name": "Presence DOM contract (browser re-proof) PR-DOM-03: Renders no host when its child is empty or falsy",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence DOM contract (browser re-proof) PR-DOM-03: Renders no host when its child is empty or falsy"
+    },
+    {
+      "id": "LIB-PRESENCE-029",
+      "name": "Presence DOM contract (browser re-proof) PR-DOM-04: Leaves consumer props and behavior untouched when it observes a present child",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence DOM contract (browser re-proof) PR-DOM-04: Leaves consumer props and behavior untouched when it observes a present child"
+    },
+    {
+      "id": "LIB-PRESENCE-030",
+      "name": "Presence DOM contract (browser re-proof) PR-DOM-05: Observes only the current keyed child when a present child is replaced",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence DOM contract (browser re-proof) PR-DOM-05: Observes only the current keyed child when a present child is replaced"
+    },
+    {
+      "id": "LIB-PRESENCE-031",
+      "name": "Presence immediate removal PR-INSTANT-02: Removes immediately when the closed state has a zero-duration transition",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-02: Removes immediately when the closed state has a zero-duration transition"
+    },
+    {
+      "id": "LIB-PRESENCE-032",
+      "name": "Presence immediate removal PR-INSTANT-03: Removes immediately when the closed state has no effective CSS animation",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-03: Removes immediately when the closed state has no effective CSS animation"
+    },
+    {
+      "id": "LIB-PRESENCE-033",
+      "name": "Presence immediate removal PR-INSTANT-04: Avoids suspension when every comma-separated CSS effect has zero total duration",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-04: Avoids suspension when every comma-separated CSS effect has zero total duration"
+    },
+    {
+      "id": "LIB-PRESENCE-034",
+      "name": "Presence immediate removal PR-INSTANT-05: Removes immediately when reduced-motion CSS computes every exit duration to zero",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-05: Removes immediately when reduced-motion CSS computes every exit duration to zero"
+    },
+    {
+      "id": "LIB-PRESENCE-035",
+      "name": "Presence immediate removal PR-INSTANT-06: Does not strand an exiting child when the owner document is hidden",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-06: Does not strand an exiting child when the owner document is hidden"
+    },
+    {
+      "id": "LIB-PRESENCE-036",
+      "name": "Presence immediate removal PR-INSTANT-07: Removes immediately when the closed state sets the observed child to display:none",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence immediate removal PR-INSTANT-07: Removes immediately when the closed state sets the observed child to display:none"
+    },
+    {
+      "id": "LIB-PRESENCE-037",
+      "name": "Presence CSS transition exits PR-TRANSITION-02: Waits for both transition delay and duration when the closed effect is delayed",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS transition exits PR-TRANSITION-02: Waits for both transition delay and duration when the closed effect is delayed"
+    },
+    {
+      "id": "LIB-PRESENCE-038",
+      "name": "Presence CSS transition exits PR-TRANSITION-03: Waits for the last property when a closing child transitions multiple properties",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS transition exits PR-TRANSITION-03: Waits for the last property when a closing child transitions multiple properties"
+    },
+    {
+      "id": "LIB-PRESENCE-039",
+      "name": "Presence CSS transition exits PR-TRANSITION-04: Ignores descendant transition events when it observes a transitioning parent child",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS transition exits PR-TRANSITION-04: Ignores descendant transition events when it observes a transitioning parent child"
+    },
+    {
+      "id": "LIB-PRESENCE-040",
+      "name": "Presence CSS transition exits PR-TRANSITION-05: Completes a suspended exit when the observed transition is canceled",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS transition exits PR-TRANSITION-05: Completes a suspended exit when the observed transition is canceled"
+    },
+    {
+      "id": "LIB-PRESENCE-041",
+      "name": "Presence CSS transition exits PR-TRANSITION-06: Ignores unrelated perpetual transitions when only a finite close-state change defines the exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS transition exits PR-TRANSITION-06: Ignores unrelated perpetual transitions when only a finite close-state change defines the exit"
+    },
+    {
+      "id": "LIB-PRESENCE-042",
+      "name": "Presence CSS animation exits PR-ANIMATION-02: Avoids a final-frame flash when an exit animation has delay, iterations, and fill mode",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-02: Avoids a final-frame flash when an exit animation has delay, iterations, and fill mode"
+    },
+    {
+      "id": "LIB-PRESENCE-043",
+      "name": "Presence CSS animation exits PR-ANIMATION-03: Waits for all finite animations when a closing child runs more than one",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-03: Waits for all finite animations when a closing child runs more than one"
+    },
+    {
+      "id": "LIB-PRESENCE-044",
+      "name": "Presence CSS animation exits PR-ANIMATION-04: Removes immediately when the animation name does not change for the closed state",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-04: Removes immediately when the animation name does not change for the closed state"
+    },
+    {
+      "id": "LIB-PRESENCE-045",
+      "name": "Presence CSS animation exits PR-ANIMATION-05: Completes a suspended exit when the observed animation is canceled",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-05: Completes a suspended exit when the observed animation is canceled"
+    },
+    {
+      "id": "LIB-PRESENCE-046",
+      "name": "Presence CSS animation exits PR-ANIMATION-06: Ignores a descendant animation completion when the observed child is still exiting",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-06: Ignores a descendant animation completion when the observed child is still exiting"
+    },
+    {
+      "id": "LIB-PRESENCE-047",
+      "name": "Presence CSS animation exits PR-ANIMATION-07: Ignores infinite animations when a closing child also has finite exit effects",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence CSS animation exits PR-ANIMATION-07: Ignores infinite animations when a closing child also has finite exit effects"
+    },
+    {
+      "id": "LIB-PRESENCE-048",
+      "name": "Presence mixed and interrupted lifecycles PR-RACE-01: Waits for both effect types when a closing child runs a transition and an animation",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence mixed and interrupted lifecycles PR-RACE-01: Waits for both effect types when a closing child runs a transition and an animation"
+    },
+    {
+      "id": "LIB-PRESENCE-049",
+      "name": "Presence mixed and interrupted lifecycles PR-RACE-03: Creates a fresh completion set when a child closes again after reopening",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence mixed and interrupted lifecycles PR-RACE-03: Creates a fresh completion set when a child closes again after reopening"
+    },
+    {
+      "id": "LIB-PRESENCE-050",
+      "name": "Presence mixed and interrupted lifecycles PR-RACE-04: Ignores an entering animation completion when it races with a close commit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence mixed and interrupted lifecycles PR-RACE-04: Ignores an entering animation completion when it races with a close commit"
+    },
+    {
+      "id": "LIB-PRESENCE-051",
+      "name": "Presence mixed and interrupted lifecycles PR-RACE-05: Releases lifecycle work when its observed child disappears externally during a suspended exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence mixed and interrupted lifecycles PR-RACE-05: Releases lifecycle work when its observed child disappears externally during a suspended exit"
+    },
+    {
+      "id": "LIB-PRESENCE-052",
+      "name": "Presence mixed and interrupted lifecycles PR-RACE-06: Cleans up immediately when Presence itself unmounts during an exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence mixed and interrupted lifecycles PR-RACE-06: Cleans up immediately when Presence itself unmounts during an exit"
+    },
+    {
+      "id": "LIB-PRESENCE-053",
+      "name": "Presence nested exit coordination (interrupt and removal) PR-NEST-02: Releases a descendant wait when that descendant returns to present during the parent exit",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence nested exit coordination (interrupt and removal) PR-NEST-02: Releases a descendant wait when that descendant returns to present during the parent exit"
+    },
+    {
+      "id": "LIB-PRESENCE-054",
+      "name": "Presence nested exit coordination (interrupt and removal) PR-NEST-03: Releases a descendant registration when the exiting child is removed before completion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence nested exit coordination (interrupt and removal) PR-NEST-03: Releases a descendant registration when the exiting child is removed before completion"
+    },
+    {
+      "id": "LIB-PRESENCE-055",
+      "name": "Presence composition gates PR-COMP-01: Retains a fading composition when it exits through CSS keyframes",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence composition gates PR-COMP-01: Retains a fading composition when it exits through CSS keyframes"
+    },
+    {
+      "id": "LIB-PRESENCE-056",
+      "name": "Presence composition gates PR-COMP-02: Retains a drawer composition when its closed state uses a transform transition",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence composition gates PR-COMP-02: Retains a drawer composition when its closed state uses a transform transition"
+    },
+    {
+      "id": "LIB-PRESENCE-057",
+      "name": "Presence composition gates PR-COMP-03: Preserves a reopened composition when reduced motion makes an interrupted exit instantaneous",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence composition gates PR-COMP-03: Preserves a reopened composition when reduced motion makes an interrupted exit instantaneous"
+    },
+    {
+      "id": "LIB-PRESENCE-058",
+      "name": "Presence GSAP extension PR-GSAP-01: Retains an exiting child until its finite GSAP tweens complete, and skips the wait under reduced motion",
+      "kind": "ct",
+      "file": "__e2e__/Presence.ct.spec.ts",
+      "title": "Presence GSAP extension PR-GSAP-01: Retains an exiting child until its finite GSAP tweens complete, and skips the wait under reduced motion"
+    },
+    {
+      "id": "LIB-PRESENCE-059",
+      "name": "CoordinatorLedger notifies once every registered part reports while closed",
+      "kind": "unit",
+      "file": "coordination/ledger.test.ts",
+      "title": "CoordinatorLedger notifies once every registered part reports while closed"
+    },
+    {
+      "id": "LIB-PRESENCE-060",
+      "name": "CoordinatorLedger stays silent while present and after an unsubscribe",
+      "kind": "unit",
+      "file": "coordination/ledger.test.ts",
+      "title": "CoordinatorLedger stays silent while present and after an unsubscribe"
+    },
+    {
+      "id": "LIB-PRESENCE-061",
+      "name": "CoordinatorLedger completes early when a part unmounts mid-exit",
+      "kind": "unit",
+      "file": "coordination/ledger.test.ts",
+      "title": "CoordinatorLedger completes early when a part unmounts mid-exit"
+    },
+    {
+      "id": "LIB-PRESENCE-062",
+      "name": "CoordinatorLedger resets finished reports when the cycle reopens",
+      "kind": "unit",
+      "file": "coordination/ledger.test.ts",
+      "title": "CoordinatorLedger resets finished reports when the cycle reopens"
+    },
+    {
+      "id": "LIB-PRESENCE-063",
+      "name": "CoordinatorLedger is active only while closed with more than one part",
+      "kind": "unit",
+      "file": "coordination/ledger.test.ts",
+      "title": "CoordinatorLedger is active only while closed with more than one part"
+    },
+    {
+      "id": "LIB-PRESENCE-064",
+      "name": "isActiveFiniteAnimation holds the exit for a running finite animation with duration",
+      "kind": "unit",
+      "file": "exit/animations.test.ts",
+      "title": "isActiveFiniteAnimation holds the exit for a running finite animation with duration"
+    },
+    {
+      "id": "LIB-PRESENCE-065",
+      "name": "isActiveFiniteAnimation releases finished, infinite, timeless, and timing-less animations",
+      "kind": "unit",
+      "file": "exit/animations.test.ts",
+      "title": "isActiveFiniteAnimation releases finished, infinite, timeless, and timing-less animations"
+    },
+    {
+      "id": "LIB-PRESENCE-066",
+      "name": "isActiveFiniteAnimation counts delay toward the finite total",
+      "kind": "unit",
+      "file": "exit/animations.test.ts",
+      "title": "isActiveFiniteAnimation counts delay toward the finite total"
+    },
+    {
+      "id": "LIB-PRESENCE-067",
+      "name": "hasActiveFiniteAnimations scans a list for any exit-holding animation",
+      "kind": "unit",
+      "file": "exit/animations.test.ts",
+      "title": "hasActiveFiniteAnimations scans a list for any exit-holding animation"
+    },
+    {
+      "id": "LIB-PRESENCE-068",
+      "name": "isWaitableAnimation attaches to everything except infinite iterations",
+      "kind": "unit",
+      "file": "exit/animations.test.ts",
+      "title": "isWaitableAnimation attaches to everything except infinite iterations"
+    },
+    {
+      "id": "LIB-PRESENCE-069",
+      "name": "detectExitEffects reports no finite effects for a bare element",
+      "kind": "unit",
+      "file": "exit/detect.test.ts",
+      "title": "detectExitEffects reports no finite effects for a bare element"
+    },
+    {
+      "id": "LIB-PRESENCE-070",
+      "name": "parseDuration parses millisecond tokens as-is",
+      "kind": "unit",
+      "file": "exit/duration.test.ts",
+      "title": "parseDuration parses millisecond tokens as-is"
+    },
+    {
+      "id": "LIB-PRESENCE-071",
+      "name": "parseDuration converts second tokens to milliseconds",
+      "kind": "unit",
+      "file": "exit/duration.test.ts",
+      "title": "parseDuration converts second tokens to milliseconds"
+    },
+    {
+      "id": "LIB-PRESENCE-072",
+      "name": "parseDuration treats blank and unparseable tokens as zero",
+      "kind": "unit",
+      "file": "exit/duration.test.ts",
+      "title": "parseDuration treats blank and unparseable tokens as zero"
+    },
+    {
+      "id": "LIB-PRESENCE-073",
+      "name": "parseDuration tolerates surrounding whitespace",
+      "kind": "unit",
+      "file": "exit/duration.test.ts",
+      "title": "parseDuration tolerates surrounding whitespace"
+    },
+    {
+      "id": "LIB-PRESENCE-074",
+      "name": "hasFiniteExitAnimation reports finite when a newly named animation has positive duration",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation reports finite when a newly named animation has positive duration"
+    },
+    {
+      "id": "LIB-PRESENCE-075",
+      "name": "hasFiniteExitAnimation reports finite when delay alone makes the total positive",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation reports finite when delay alone makes the total positive"
+    },
+    {
+      "id": "LIB-PRESENCE-076",
+      "name": "hasFiniteExitAnimation ignores a preexisting animation whose name did not change",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation ignores a preexisting animation whose name did not change"
+    },
+    {
+      "id": "LIB-PRESENCE-077",
+      "name": "hasFiniteExitAnimation ignores `none` and zero-duration animations",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation ignores `none` and zero-duration animations"
+    },
+    {
+      "id": "LIB-PRESENCE-078",
+      "name": "hasFiniteExitAnimation ignores infinite iterations",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation ignores infinite iterations"
+    },
+    {
+      "id": "LIB-PRESENCE-079",
+      "name": "hasFiniteExitAnimation finds one finite entry among comma-separated lists",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitAnimation finds one finite entry among comma-separated lists"
+    },
+    {
+      "id": "LIB-PRESENCE-080",
+      "name": "hasFiniteExitTransition reports finite for a positive-duration property transition",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitTransition reports finite for a positive-duration property transition"
+    },
+    {
+      "id": "LIB-PRESENCE-081",
+      "name": "hasFiniteExitTransition reports instant when every entry totals zero",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitTransition reports instant when every entry totals zero"
+    },
+    {
+      "id": "LIB-PRESENCE-082",
+      "name": "hasFiniteExitTransition reports instant for `none` properties",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitTransition reports instant for `none` properties"
+    },
+    {
+      "id": "LIB-PRESENCE-083",
+      "name": "hasFiniteExitTransition counts delay toward the finite total",
+      "kind": "unit",
+      "file": "exit/effects.test.ts",
+      "title": "hasFiniteExitTransition counts delay toward the finite total"
+    },
+    {
+      "id": "LIB-PRESENCE-084",
+      "name": "ExitGuard completes exactly once per epoch",
+      "kind": "unit",
+      "file": "exit/guard.test.ts",
+      "title": "ExitGuard completes exactly once per epoch"
+    },
+    {
+      "id": "LIB-PRESENCE-085",
+      "name": "ExitGuard never completes before an exit begins",
+      "kind": "unit",
+      "file": "exit/guard.test.ts",
+      "title": "ExitGuard never completes before an exit begins"
+    },
+    {
+      "id": "LIB-PRESENCE-086",
+      "name": "ExitGuard voids the live epoch on cancel so interrupted exits stay silent",
+      "kind": "unit",
+      "file": "exit/guard.test.ts",
+      "title": "ExitGuard voids the live epoch on cancel so interrupted exits stay silent"
+    },
+    {
+      "id": "LIB-PRESENCE-087",
+      "name": "ExitGuard opens a fresh claimable epoch after reopen and reclose",
+      "kind": "unit",
+      "file": "exit/guard.test.ts",
+      "title": "ExitGuard opens a fresh claimable epoch after reopen and reclose"
+    },
+    {
+      "id": "LIB-PRESENCE-088",
+      "name": "watchExitCompletion signals on end and cancel events targeted at the node",
+      "kind": "unit",
+      "file": "exit/watch.test.ts",
+      "title": "watchExitCompletion signals on end and cancel events targeted at the node"
+    },
+    {
+      "id": "LIB-PRESENCE-089",
+      "name": "watchExitCompletion ignores descendant events bubbling through the node",
+      "kind": "unit",
+      "file": "exit/watch.test.ts",
+      "title": "watchExitCompletion ignores descendant events bubbling through the node"
+    },
+    {
+      "id": "LIB-PRESENCE-090",
+      "name": "watchExitCompletion stays silent after cleanup",
+      "kind": "unit",
+      "file": "exit/watch.test.ts",
+      "title": "watchExitCompletion stays silent after cleanup"
+    },
+    {
+      "id": "LIB-PRESENCE-091",
+      "name": "createDescendantRegistry tracks pending descendants until each settles",
+      "kind": "unit",
+      "file": "nesting/registry.test.ts",
+      "title": "createDescendantRegistry tracks pending descendants until each settles"
+    },
+    {
+      "id": "LIB-PRESENCE-092",
+      "name": "createDescendantRegistry settles unconditionally so interrupted or removed exits release the parent",
+      "kind": "unit",
+      "file": "nesting/registry.test.ts",
+      "title": "createDescendantRegistry settles unconditionally so interrupted or removed exits release the parent"
+    },
+    {
+      "id": "LIB-PRESENCE-093",
+      "name": "createDescendantRegistry registers each descendant once",
+      "kind": "unit",
+      "file": "nesting/registry.test.ts",
+      "title": "createDescendantRegistry registers each descendant once"
+    },
+    {
+      "id": "LIB-PRESENCE-094",
+      "name": "PR-REF-05: element ref reads stay silent on every React major never invokes a ref accessor, even when the element only exposes one",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major never invokes a ref accessor, even when the element only exposes one"
+    },
+    {
+      "id": "LIB-PRESENCE-095",
+      "name": "PR-REF-05: element ref reads stay silent on every React major prefers a props ref value without touching an element ref accessor",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major prefers a props ref value without touching an element ref accessor"
+    },
+    {
+      "id": "LIB-PRESENCE-096",
+      "name": "PR-REF-05: element ref reads stay silent on every React major reads a plain element ref value when props carry no ref",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major reads a plain element ref value when props carry no ref"
+    },
+    {
+      "id": "LIB-PRESENCE-097",
+      "name": "PR-REF-05: element ref reads stay silent on every React major reads the element ref when props carry only a warning getter",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major reads the element ref when props carry only a warning getter"
+    },
+    {
+      "id": "LIB-PRESENCE-098",
+      "name": "PR-REF-05: element ref reads stay silent on every React major reads real React elements with and without refs and logs no ref warning",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major reads real React elements with and without refs and logs no ref warning"
+    },
+    {
+      "id": "LIB-PRESENCE-099",
+      "name": "PR-REF-05: element ref reads stay silent on every React major server-renders ref-less children without a ref warning",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major server-renders ref-less children without a ref warning"
+    },
+    {
+      "id": "LIB-PRESENCE-100",
+      "name": "PR-REF-05: element ref reads stay silent on every React major mounts ref-less and ref-ful children without a ref warning",
+      "kind": "unit",
+      "file": "shared/element-ref.test.tsx",
+      "title": "PR-REF-05: element ref reads stay silent on every React major mounts ref-less and ref-ful children without a ref warning"
+    },
+    {
+      "id": "LIB-PRESENCE-101",
+      "name": "nextPresenceId mints unique presence ids",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "nextPresenceId mints unique presence ids"
+    },
+    {
+      "id": "LIB-PRESENCE-102",
+      "name": "setRef assigns object refs and tolerates null",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef assigns object refs and tolerates null"
+    },
+    {
+      "id": "LIB-PRESENCE-103",
+      "name": "setRef calls callback refs and returns their cleanup",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef calls callback refs and returns their cleanup"
+    },
+    {
+      "id": "LIB-PRESENCE-104",
+      "name": "setRef ignores undefined refs",
+      "kind": "unit",
+      "file": "shared/refs.test.ts",
+      "title": "setRef ignores undefined refs"
+    }
+  ]
+}

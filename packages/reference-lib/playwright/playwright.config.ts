@@ -1,5 +1,4 @@
 import path from 'node:path'
-import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 import { resolveMajor } from './runtimes'
@@ -9,8 +8,8 @@ const port = process.env.CT_PORT ? parseInt(process.env.CT_PORT, 10) : 3101
 const origin = `http://localhost:${port}`
 const hostURL = `${origin}/playwright/index.html`
 const major = resolveMajor()
-const workersPerSlot = Math.max(1, Math.floor(os.cpus().length / 3))
-const workers = process.env.CT_WORKERS ? parseInt(process.env.CT_WORKERS, 10) || workersPerSlot : workersPerSlot
+const requestedWorkers = Number(process.env.CT_WORKERS)
+const workers = Number.isInteger(requestedWorkers) && requestedWorkers > 0 ? Math.min(requestedWorkers, 2) : 2
 
 export default defineConfig({
   testDir: '../src/components',

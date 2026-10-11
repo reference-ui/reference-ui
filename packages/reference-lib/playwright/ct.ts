@@ -1,12 +1,19 @@
-import { test as base, expect, type Locator, type Page } from '@playwright/test'
+import {
+  test as base,
+  expect,
+  type Locator,
+  type Page,
+  type PageAssertionsToHaveScreenshotOptions,
+  type PlaywrightTestArgs,
+} from '@playwright/test'
 import { defaultMajor, isDefaultMajor } from './runtimes'
 
+export type MountFn = PlaywrightTestArgs['mount']
+
 export type MountResult = Locator & {
-  update: (newProps: Record<string, unknown>) => Promise<void>
+  update: (newProps?: Record<string, unknown>) => Promise<void>
   unmount: () => Promise<void>
 }
-
-export type MountFn = (story: string, props?: any) => Promise<MountResult>
 
 async function resetViewportState(page: Page) {
   await page.mouse.move(0, 0)
@@ -30,17 +37,17 @@ async function gotoGallery(page: Page) {
   await resetViewportState(page)
 }
 
-async function callMount(page: Page, story: string, props?: Record<string, unknown>) {
+async function callMount(page: Page, story: string, props?: unknown) {
   try {
     await page.evaluate(async ({ story, props }) => {
       await window.mount({ story, props })
-    }, { story, props })
+    }, { story, props: props as Record<string, unknown> | undefined })
   } catch (err: any) {
     if (err?.message?.includes('Execution context was destroyed')) {
       await page.waitForFunction(() => typeof window.mount === 'function')
       await page.evaluate(async ({ story, props }) => {
         await window.mount({ story, props })
-      }, { story, props })
+      }, { story, props: props as Record<string, unknown> | undefined })
       return
     }
     throw err
@@ -53,21 +60,17 @@ async function callUnmount(page: Page) {
   })
 }
 
-function asMountResult(page: Page, story: string, root: Locator): MountResult {
-  return Object.assign(root, {
-    update: async (newProps: Record<string, unknown>) => {
-      await callMount(page, story, newProps)
-    },
-    unmount: async () => {
-      await callUnmount(page)
-    },
-  })
-}
-
 function createMount(page: Page): MountFn {
   return async (story, props) => {
     await callMount(page, story, props)
-    return asMountResult(page, story, page.locator('#root'))
+    return Object.assign(page.locator('#root'), {
+      update: async (newProps?: typeof props) => {
+        await callMount(page, story, newProps)
+      },
+      unmount: async () => {
+        await callUnmount(page)
+      },
+    })
   }
 }
 
@@ -128,17 +131,21 @@ export function isWebKit(page: Page): boolean {
   return page.context().browser()?.browserType().name() === 'webkit'
 }
 
+function isLocator(target: Page | Locator): target is Locator {
+  return 'page' in target && typeof (target as Locator).page === 'function'
+}
+
 /** Settled visual snapshot of the CT viewport or targeted locator. Motion is covered by video, not this. */
 export async function snap(
   target: Page | Locator,
   name: string,
-  options?: Parameters<ReturnType<typeof expect>['toHaveScreenshot']>[1]
+  options?: PageAssertionsToHaveScreenshotOptions,
 ) {
-  const page = 'page' in target && typeof (target as Locator).page === 'function'
-    ? (target as Locator).page()
-    : (target as Page)
+  const page = isLocator(target) ? target.page() : target
   if (!(await isReact19Gallery(page))) return
-  await expect(target as any).toHaveScreenshot(snapshotFileName(name), {
-    ...options,
-  })
+  if (isLocator(target)) {
+    await expect(target).toHaveScreenshot(snapshotFileName(name), { ...options })
+  } else {
+    await expect(target).toHaveScreenshot(snapshotFileName(name), { ...options })
+  }
 }

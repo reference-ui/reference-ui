@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "component": "Tooltip",
+  "scope": "public",
+  "description": "Executable Tooltip contracts covering real-browser behavior and existing visual baselines plus logic and server-rendering evidence. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-TOOLTIP-001",
+      "name": "Tooltip consumer and lifecycle contracts TT-CONTRACT-01: authored descriptions survive open and close with one live tooltip reference",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.contract.ct.spec.ts",
+      "title": "Tooltip consumer and lifecycle contracts TT-CONTRACT-01: authored descriptions survive open and close with one live tooltip reference"
+    },
+    {
+      "id": "LIB-TOOLTIP-002",
+      "name": "Tooltip consumer and lifecycle contracts TT-CONTRACT-02: consumer prevention cancels pointer and keyboard focus opening",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.contract.ct.spec.ts",
+      "title": "Tooltip consumer and lifecycle contracts TT-CONTRACT-02: consumer prevention cancels pointer and keyboard focus opening"
+    },
+    {
+      "id": "LIB-TOOLTIP-003",
+      "name": "Tooltip consumer and lifecycle contracts TT-CONTRACT-03: controlled requests stay closed until the owner updates and updates emit no requests",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.contract.ct.spec.ts",
+      "title": "Tooltip consumer and lifecycle contracts TT-CONTRACT-03: controlled requests stay closed until the owner updates and updates emit no requests"
+    },
+    {
+      "id": "LIB-TOOLTIP-004",
+      "name": "Tooltip consumer and lifecycle contracts TT-CONTRACT-04: unmount cancels delayed opening and remount starts a fresh session",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.contract.ct.spec.ts",
+      "title": "Tooltip consumer and lifecycle contracts TT-CONTRACT-04: unmount cancels delayed opening and remount starts a fresh session"
+    },
+    {
+      "id": "LIB-TOOLTIP-005",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-DOM-01 & TT-DOM-02: Slotted Trigger gains aria-describedby and shows Content on focus",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-DOM-01 & TT-DOM-02: Slotted Trigger gains aria-describedby and shows Content on focus"
+    },
+    {
+      "id": "LIB-TOOLTIP-006",
+      "name": "Tooltip Composition Gates & Browser Proofs Hovering over trigger opens tooltip next to the trigger",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs Hovering over trigger opens tooltip next to the trigger"
+    },
+    {
+      "id": "LIB-TOOLTIP-007",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-POS: focused tooltip is anchored to the trigger, not hardcoded",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-POS: focused tooltip is anchored to the trigger, not hardcoded"
+    },
+    {
+      "id": "LIB-TOOLTIP-008",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-GROUP-01: Tooltip should request a neighbor immediately within the warm skip window",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-GROUP-01: Tooltip should request a neighbor immediately within the warm skip window"
+    },
+    {
+      "id": "LIB-TOOLTIP-009",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-GROUP-02: Tooltip should close the current instance before requesting its neighbor",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-GROUP-02: Tooltip should close the current instance before requesting its neighbor"
+    },
+    {
+      "id": "LIB-TOOLTIP-010",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-GROUP-03: Tooltip should return to cold delay when the skip window has expired",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-GROUP-03: Tooltip should return to cold delay when the skip window has expired"
+    },
+    {
+      "id": "LIB-TOOLTIP-011",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-CLOSE-01: Tooltip should request one dismissal on Escape without closing a parent Overlay",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-CLOSE-01: Tooltip should request one dismissal on Escape without closing a parent Overlay"
+    },
+    {
+      "id": "LIB-TOOLTIP-012",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-FOCUS-03: Tooltip should stay shut on mouse-opened dialog autofocus, then open on Tab with a ring",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-FOCUS-03: Tooltip should stay shut on mouse-opened dialog autofocus, then open on Tab with a ring"
+    },
+    {
+      "id": "LIB-TOOLTIP-013",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-CLOSE-03: Tooltip should dismiss and suppress hover reopening when its open Trigger is clicked",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-CLOSE-03: Tooltip should dismiss and suppress hover reopening when its open Trigger is clicked"
+    },
+    {
+      "id": "LIB-TOOLTIP-014",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-SCROLL-01: Tooltip should request close once when an ancestor scroll moves its Trigger",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-SCROLL-01: Tooltip should request close once when an ancestor scroll moves its Trigger"
+    },
+    {
+      "id": "LIB-TOOLTIP-015",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-SCROLL-03: Tooltip should remain open when scrolling occurs inside an input or textarea Trigger",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-SCROLL-03: Tooltip should remain open when scrolling occurs inside an input or textarea Trigger"
+    },
+    {
+      "id": "LIB-TOOLTIP-016",
+      "name": "Tooltip Composition Gates & Browser Proofs Component story: HoverTrigger",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs Component story: HoverTrigger"
+    },
+    {
+      "id": "LIB-TOOLTIP-017",
+      "name": "Tooltip Composition Gates & Browser Proofs Component story: KeyboardFocus",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs Component story: KeyboardFocus"
+    },
+    {
+      "id": "LIB-TOOLTIP-018",
+      "name": "Tooltip Composition Gates & Browser Proofs B-09: Span inside default Tooltip.Content inherits a legible color with zero overrides",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs B-09: Span inside default Tooltip.Content inherits a legible color with zero overrides"
+    },
+    {
+      "id": "LIB-TOOLTIP-019",
+      "name": "Tooltip Composition Gates & Browser Proofs TT-A11Y-01 scan: axe reports zero violations on the open tooltip",
+      "kind": "ct",
+      "file": "__e2e__/Tooltip.ct.spec.ts",
+      "title": "Tooltip Composition Gates & Browser Proofs TT-A11Y-01 scan: axe reports zero violations on the open tooltip"
+    },
+    {
+      "id": "LIB-TOOLTIP-020",
+      "name": "nested tooltip trigger ignores non-element targets",
+      "kind": "unit",
+      "file": "shared/nested-trigger.test.ts",
+      "title": "nested tooltip trigger ignores non-element targets"
+    },
+    {
+      "id": "LIB-TOOLTIP-021",
+      "name": "nested tooltip trigger treats the owning trigger itself as not nested",
+      "kind": "unit",
+      "file": "shared/nested-trigger.test.ts",
+      "title": "nested tooltip trigger treats the owning trigger itself as not nested"
+    },
+    {
+      "id": "LIB-TOOLTIP-022",
+      "name": "nested tooltip trigger treats an inner trigger target as nested",
+      "kind": "unit",
+      "file": "shared/nested-trigger.test.ts",
+      "title": "nested tooltip trigger treats an inner trigger target as nested"
+    },
+    {
+      "id": "LIB-TOOLTIP-023",
+      "name": "nested tooltip trigger treats plain content inside the owning trigger as not nested",
+      "kind": "unit",
+      "file": "shared/nested-trigger.test.ts",
+      "title": "nested tooltip trigger treats plain content inside the owning trigger as not nested"
+    },
+    {
+      "id": "LIB-TOOLTIP-024",
+      "name": "Tooltip SSR server-renders a closed Trigger without tooltip Content",
+      "kind": "unit",
+      "file": "ssr.test.tsx",
+      "title": "Tooltip SSR server-renders a closed Trigger without tooltip Content"
+    },
+    {
+      "id": "LIB-TOOLTIP-025",
+      "name": "tooltipGroup skip-delay is cold until an instance is active or the skip window is live",
+      "kind": "unit",
+      "file": "tooltipGroup.test.ts",
+      "title": "tooltipGroup skip-delay is cold until an instance is active or the skip window is live"
+    },
+    {
+      "id": "LIB-TOOLTIP-026",
+      "name": "tooltipGroup skip-delay never enters an instant phase when skipDelay is 0",
+      "kind": "unit",
+      "file": "tooltipGroup.test.ts",
+      "title": "tooltipGroup skip-delay never enters an instant phase when skipDelay is 0"
+    }
+  ]
+}

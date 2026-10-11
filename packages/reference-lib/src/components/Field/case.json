@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "component": "Field",
+  "scope": "public",
+  "description": "Executable Field contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-FIELD-001",
+      "name": "Field Unit Contract FI-TYPE-01: Field should omit role and validity ARIA from its public type",
+      "kind": "unit",
+      "file": "Field.test.tsx",
+      "title": "Field Unit Contract FI-TYPE-01: Field should omit role and validity ARIA from its public type"
+    },
+    {
+      "id": "LIB-FIELD-026",
+      "name": "FI-FORM-01: enclosed native controls preserve validation, serialization and reset semantics",
+      "kind": "ct",
+      "file": "__e2e__/Field.contracts.ct.spec.ts",
+      "title": "FI-FORM-01: enclosed native controls preserve validation, serialization and reset semantics"
+    },
+    {
+      "id": "LIB-FIELD-027",
+      "name": "FI-LIFECYCLE-01: status rerenders preserve native dirty text, focus and selection without affecting sibling controls",
+      "kind": "ct",
+      "file": "__e2e__/Field.contracts.ct.spec.ts",
+      "title": "FI-LIFECYCLE-01: status rerenders preserve native dirty text, focus and selection without affecting sibling controls"
+    },
+    {
+      "id": "LIB-FIELD-002",
+      "name": "Field CT FI-DOM-01: Field should render a wrapping div with no role and data-reference-field",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-DOM-01: Field should render a wrapping div with no role and data-reference-field"
+    },
+    {
+      "id": "LIB-FIELD-003",
+      "name": "Field CT FI-DOM-02: Field should not receive ARIA validity when the enclosed input is invalid",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-DOM-02: Field should not receive ARIA validity when the enclosed input is invalid"
+    },
+    {
+      "id": "LIB-FIELD-004",
+      "name": "Field CT FI-DOM-02 (runtime): Field strips prohibited role and ARIA props from JS callers",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-DOM-02 (runtime): Field strips prohibited role and ARIA props from JS callers"
+    },
+    {
+      "id": "LIB-FIELD-005",
+      "name": "Field CT FI-DOM-03: Field should set data-status=\"warning\" only when status is warning",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-DOM-03: Field should set data-status=\"warning\" only when status is warning"
+    },
+    {
+      "id": "LIB-FIELD-006",
+      "name": "Field CT FI-CSS-01: Field should put a descendant Input into embedded mode",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-01: Field should put a descendant Input into embedded mode"
+    },
+    {
+      "id": "LIB-FIELD-007",
+      "name": "Field CT FI-CSS-02: Field should leave a sibling Input outside Field fully chromed",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-02: Field should leave a sibling Input outside Field fully chromed"
+    },
+    {
+      "id": "LIB-FIELD-008",
+      "name": "Field CT FI-CSS-03: Field should embed Textarea and Select with the same descendant selector",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-03: Field should embed Textarea and Select with the same descendant selector"
+    },
+    {
+      "id": "LIB-FIELD-009",
+      "name": "Field CT FI-CSS-04: Field-surface hosts should embed DateField, Combobox.Input, and NumberField.Input",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-04: Field-surface hosts should embed DateField, Combobox.Input, and NumberField.Input"
+    },
+    {
+      "id": "LIB-FIELD-010",
+      "name": "Field CT FI-CSS-05: mouse click changes border color without outline ring; keyboard tab applies focus ring",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-05: mouse click changes border color without outline ring; keyboard tab applies focus ring"
+    },
+    {
+      "id": "LIB-FIELD-011",
+      "name": "Field CT FI-CSS-07: Field should match invalid chrome through :has([aria-invalid=\"true\"])",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-07: Field should match invalid chrome through :has([aria-invalid=\"true\"])"
+    },
+    {
+      "id": "LIB-FIELD-012",
+      "name": "Field CT FI-CSS-08: Field should match disabled chrome from the enclosed control, not a nested Button",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-08: Field should match disabled chrome from the enclosed control, not a nested Button"
+    },
+    {
+      "id": "LIB-FIELD-013",
+      "name": "Field CT FI-CSS-09: Field should match read-only chrome from [readonly] on the enclosed input",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-09: Field should match read-only chrome from [readonly] on the enclosed input"
+    },
+    {
+      "id": "LIB-FIELD-014",
+      "name": "Field CT FI-CSS-10: Field should show warning chrome from data-status without implying invalid",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-CSS-10: Field should show warning chrome from data-status without implying invalid"
+    },
+    {
+      "id": "LIB-FIELD-015",
+      "name": "Field CT FI-SURF-01: Field-surface hosts should share one bezel recipe across the documented compositions",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-SURF-01: Field-surface hosts should share one bezel recipe across the documented compositions"
+    },
+    {
+      "id": "LIB-FIELD-016",
+      "name": "Field CT FI-LAY-01: Field should arrange prefix, control, and action in authored order",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-LAY-01: Field should arrange prefix, control, and action in authored order"
+    },
+    {
+      "id": "LIB-FIELD-017",
+      "name": "Field CT FI-COMP-01: Field should keep Label htmlFor on the input in the amount composition",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-COMP-01: Field should keep Label htmlFor on the input in the amount composition"
+    },
+    {
+      "id": "LIB-FIELD-018",
+      "name": "Field CT FI-COMP-02: Field hosts the DateField compound bezel without owning its state",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-COMP-02: Field hosts the DateField compound bezel without owning its state"
+    },
+    {
+      "id": "LIB-FIELD-019",
+      "name": "Field CT FI-COMP-02 (range bezel): Field-surface hosts two range inputs in one bezel",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-COMP-02 (range bezel): Field-surface hosts two range inputs in one bezel"
+    },
+    {
+      "id": "LIB-FIELD-020",
+      "name": "Field CT FI-COMP-03: NumberField.Group should consume the Field recipe without a nested Field",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-COMP-03: NumberField.Group should consume the Field recipe without a nested Field"
+    },
+    {
+      "id": "LIB-FIELD-021",
+      "name": "Field CT FI-COMP-04: Field hosts a Combobox token picker without owning Combobox or chips",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT FI-COMP-04: Field hosts a Combobox token picker without owning Combobox or chips"
+    },
+    {
+      "id": "LIB-FIELD-022",
+      "name": "Field CT renders field with prefix and suffix",
+      "kind": "ct",
+      "file": "__e2e__/Field.ct.spec.ts",
+      "title": "Field CT renders field with prefix and suffix"
+    },
+    {
+      "id": "LIB-FIELD-023",
+      "name": "stripProhibitedFieldProps removes the six prohibited keys and keeps everything else",
+      "kind": "unit",
+      "file": "shared/strip-prohibited.test.ts",
+      "title": "stripProhibitedFieldProps removes the six prohibited keys and keeps everything else"
+    },
+    {
+      "id": "LIB-FIELD-024",
+      "name": "stripProhibitedFieldProps returns a fresh object and leaves the input untouched",
+      "kind": "unit",
+      "file": "shared/strip-prohibited.test.ts",
+      "title": "stripProhibitedFieldProps returns a fresh object and leaves the input untouched"
+    },
+    {
+      "id": "LIB-FIELD-025",
+      "name": "stripProhibitedFieldProps passes an already-clean record through by value",
+      "kind": "unit",
+      "file": "shared/strip-prohibited.test.ts",
+      "title": "stripProhibitedFieldProps passes an already-clean record through by value"
+    }
+  ]
+}

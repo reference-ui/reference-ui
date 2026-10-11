@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "component": "Icon",
+  "scope": "internal",
+  "description": "Internal Book gallery for icons provided by @reference-ui/icons; no component implementation is owned here.",
+  "cases": []
+}

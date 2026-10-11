@@ -1,0 +1,1562 @@
+{
+  "schemaVersion": 1,
+  "component": "Combobox",
+  "scope": "public",
+  "description": "Executable Combobox contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-COMBOBOX-001",
+      "name": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-02/CB-DOM-05: highlights selected item by default when opened and renders checkmark",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-02/CB-DOM-05: highlights selected item by default when opened and renders checkmark"
+    },
+    {
+      "id": "LIB-COMBOBOX-002",
+      "name": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-05 hover: moves highlight with mouse pointer and preserves checkmark on selected item",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-05 hover: moves highlight with mouse pointer and preserves checkmark on selected item"
+    },
+    {
+      "id": "LIB-COMBOBOX-003",
+      "name": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-01/CB-COMMIT-01/CB-EDIT-01: navigates highlight via ArrowDown / ArrowUp and commits with Enter",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox & Listbox React Spectrum theming and active navigation CB-NAV-01/CB-COMMIT-01/CB-EDIT-01: navigates highlight via ArrowDown / ArrowUp and commits with Enter"
+    },
+    {
+      "id": "LIB-COMBOBOX-004",
+      "name": "Combobox & Listbox React Spectrum theming and active navigation CB-EDIT-03/CB-COMMIT-04: leaves Home/End native, commits with Tab, and skips disabled options",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox & Listbox React Spectrum theming and active navigation CB-EDIT-03/CB-COMMIT-04: leaves Home/End native, commits with Tab, and skips disabled options"
+    },
+    {
+      "id": "LIB-COMBOBOX-005",
+      "name": "Combobox & Listbox React Spectrum theming and active navigation renders Listbox.Section header and Listbox.Empty states",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox & Listbox React Spectrum theming and active navigation renders Listbox.Section header and Listbox.Empty states"
+    },
+    {
+      "id": "LIB-COMBOBOX-006",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-01/CB-A11Y-01: renders a transparent coordinator with honest roles across shapes",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-01/CB-A11Y-01: renders a transparent coordinator with honest roles across shapes"
+    },
+    {
+      "id": "LIB-COMBOBOX-007",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-05: exposes an active descendant only for a real mounted option while open",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-05: exposes an active descendant only for a real mounted option while open"
+    },
+    {
+      "id": "LIB-COMBOBOX-008",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-06: honors explicit IDs and keeps generated peers unique",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-06: honors explicit IDs and keeps generated peers unique"
+    },
+    {
+      "id": "LIB-COMBOBOX-009",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-07: preserves native props, editing attributes, events, and refs",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-07: preserves native props, editing attributes, events, and refs"
+    },
+    {
+      "id": "LIB-COMBOBOX-010",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-08: diagnoses ambiguous focus-source or popup anatomy",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-08: diagnoses ambiguous focus-source or popup anatomy"
+    },
+    {
+      "id": "LIB-COMBOBOX-011",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-09: keeps popover content absent while closed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-09: keeps popover content absent while closed"
+    },
+    {
+      "id": "LIB-COMBOBOX-012",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-10 partial: applies list autocomplete and empty-text defaults",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-10 partial: applies list autocomplete and empty-text defaults"
+    },
+    {
+      "id": "LIB-COMBOBOX-013",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-11: root inputValue wins over forbidden Input value props with a diagnostic",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-DOM-11: root inputValue wins over forbidden Input value props with a diagnostic"
+    },
+    {
+      "id": "LIB-COMBOBOX-014",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-05: keeps expanded ARIA and popover DOM controlled when open requests are rejected",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-05: keeps expanded ARIA and popover DOM controlled when open requests are rejected"
+    },
+    {
+      "id": "LIB-COMBOBOX-015",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-06: applies programmatic open and close without user callbacks",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-06: applies programmatic open and close without user callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-016",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-07: lets consumer preventDefault cancel an ArrowDown open",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-07: lets consumer preventDefault cancel an ArrowDown open"
+    },
+    {
+      "id": "LIB-COMBOBOX-017",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-08: keeps readOnly and disabled sources from requesting open",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-08: keeps readOnly and disabled sources from requesting open"
+    },
+    {
+      "id": "LIB-COMBOBOX-018",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-01: keeps DOM focus in the input while arrows move the active option",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-01: keeps DOM focus in the input while arrows move the active option"
+    },
+    {
+      "id": "LIB-COMBOBOX-019",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-02: routes a native edit through one inputValue request, never onChange",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-02: routes a native edit through one inputValue request, never onChange"
+    },
+    {
+      "id": "LIB-COMBOBOX-020",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-05/CB-EDIT-06/CB-EDIT-09: suppresses option commands during IME composition, resumes after",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-05/CB-EDIT-06/CB-EDIT-09: suppresses option commands during IME composition, resumes after"
+    },
+    {
+      "id": "LIB-COMBOBOX-021",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-07: restores rejected controlled text without a split DOM value",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-EDIT-07: restores rejected controlled text without a split DOM value"
+    },
+    {
+      "id": "LIB-COMBOBOX-022",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-03: exposes no active ID for empty or all-disabled collections",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-03: exposes no active ID for empty or all-disabled collections"
+    },
+    {
+      "id": "LIB-COMBOBOX-023",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-04: leaves PageUp and PageDown native instead of jumping suggestions",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-04: leaves PageUp and PageDown native instead of jumping suggestions"
+    },
+    {
+      "id": "LIB-COMBOBOX-024",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-06: preserves active identity as the selection changes",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-06: preserves active identity as the selection changes"
+    },
+    {
+      "id": "LIB-COMBOBOX-025",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-07: clears a stale active descendant whose option unmounted; Enter commits nothing",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-07: clears a stale active descendant whose option unmounted; Enter commits nothing"
+    },
+    {
+      "id": "LIB-COMBOBOX-026",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-MODE-02 default: navigation preserves typed text in list mode",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-MODE-02 default: navigation preserves typed text in list mode"
+    },
+    {
+      "id": "LIB-COMBOBOX-027",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-01: commits the active option on Enter with one ordered callback sequence",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-01: commits the active option on Enter with one ordered callback sequence"
+    },
+    {
+      "id": "LIB-COMBOBOX-028",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-06/CB-REVERT-03 committed: accepted commit retains Bravo across focus-out and Tab runs",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-06/CB-REVERT-03 committed: accepted commit retains Bravo across focus-out and Tab runs"
+    },
+    {
+      "id": "LIB-COMBOBOX-029",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-08: prevents an open Enter commit from submitting its containing form",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-08: prevents an open Enter commit from submitting its containing form"
+    },
+    {
+      "id": "LIB-COMBOBOX-030",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-09: leaves Tab entirely native when the popup is closed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-09: leaves Tab entirely native when the popup is closed"
+    },
+    {
+      "id": "LIB-COMBOBOX-031",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-01: restores the last committed text and dismisses on open Escape",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-01: restores the last committed text and dismisses on open Escape"
+    },
+    {
+      "id": "LIB-COMBOBOX-032",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-04: leaves committed state and Escape propagation untouched while closed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-04: leaves committed state and Escape propagation untouched while closed"
+    },
+    {
+      "id": "LIB-COMBOBOX-033",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-05: exposes commit intent without mutating rejected controlled state",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-05: exposes commit intent without mutating rejected controlled state"
+    },
+    {
+      "id": "LIB-COMBOBOX-034",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-06: never rewrites controlled inputValue from a programmatic value change",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-06: never rewrites controlled inputValue from a programmatic value change"
+    },
+    {
+      "id": "LIB-COMBOBOX-035",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-06/CB-SELECT-07: trigger defaults to type button and ignores disabled activation",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-06/CB-SELECT-07: trigger defaults to type button and ignores disabled activation"
+    },
+    {
+      "id": "LIB-COMBOBOX-036",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-CLOSE-04: clears open and active semantics immediately on close",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-CLOSE-04: clears open and active semantics immediately on close"
+    },
+    {
+      "id": "LIB-COMBOBOX-037",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-01: hydrates closed anatomy and IDs without a mounted active descendant",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-01: hydrates closed anatomy and IDs without a mounted active descendant"
+    },
+    {
+      "id": "LIB-COMBOBOX-038",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-01 hydrate: closed SSR is deterministic and hydrates warning-free, then navigates post-mount",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-01 hydrate: closed SSR is deterministic and hydrates warning-free, then navigates post-mount"
+    },
+    {
+      "id": "LIB-COMBOBOX-039",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-02: issues one registration and one request per action under StrictMode",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-02: issues one registration and one request per action under StrictMode"
+    },
+    {
+      "id": "LIB-COMBOBOX-040",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-05: keeps collection registration bounded with inline-rendered options",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-ENV-05: keeps collection registration bounded with inline-rendered options"
+    },
+    {
+      "id": "LIB-COMBOBOX-041",
+      "name": "Combobox quarantine reconciliation (CB case IDs) LB-CB-03 valid shape: option activation calls only Combobox onChange once",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) LB-CB-03 valid shape: option activation calls only Combobox onChange once"
+    },
+    {
+      "id": "LIB-COMBOBOX-042",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-05 leave half: popover leave clears pointer-derived active to the committed value",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-05 leave half: popover leave clears pointer-derived active to the committed value"
+    },
+    {
+      "id": "LIB-COMBOBOX-043",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-05/CB-COMMIT-07: keyboard intent survives leave-restore; Tab after leave commits nothing",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-NAV-05/CB-COMMIT-07: keyboard intent survives leave-restore; Tab after leave commits nothing"
+    },
+    {
+      "id": "LIB-COMBOBOX-044",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-04 narrow: Tab never commits a stale pointer preview",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-04 narrow: Tab never commits a stale pointer preview"
+    },
+    {
+      "id": "LIB-COMBOBOX-045",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-05: Tab with no active option reverts unmatched text and closes natively",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-COMMIT-05: Tab with no active option reverts unmatched text and closes natively"
+    },
+    {
+      "id": "LIB-COMBOBOX-046",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03: blur outside reverts unmatched text before dismissal",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03: blur outside reverts unmatched text before dismissal"
+    },
+    {
+      "id": "LIB-COMBOBOX-047",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03 null-target: blur to a non-focusable outside target still reverts and closes",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03 null-target: blur to a non-focusable outside target still reverts and closes"
+    },
+    {
+      "id": "LIB-COMBOBOX-048",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03 inside: blur into the popover keeps the session open",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-03 inside: blur into the popover keeps the session open"
+    },
+    {
+      "id": "LIB-COMBOBOX-049",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-07: closeOnBlur=false preserves open and text on blur; Escape still closes",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-REVERT-07: closeOnBlur=false preserves open and text on blur; Escape still closes"
+    },
+    {
+      "id": "LIB-COMBOBOX-050",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-02 direction: closed editable arrows pend first/last enabled without a valid selection",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-OPEN-02 direction: closed editable arrows pend first/last enabled without a valid selection"
+    },
+    {
+      "id": "LIB-COMBOBOX-051",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-02: closed Trigger arrows open with the selected or first/last enabled option pending",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-02: closed Trigger arrows open with the selected or first/last enabled option pending"
+    },
+    {
+      "id": "LIB-COMBOBOX-052",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-03: Trigger typeahead cycles enabled matches without committing",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-03: Trigger typeahead cycles enabled matches without committing"
+    },
+    {
+      "id": "LIB-COMBOBOX-053",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-08: Trigger Home and End jump to first and last enabled options",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-08: Trigger Home and End jump to first and last enabled options"
+    },
+    {
+      "id": "LIB-COMBOBOX-054",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-04: Enter and Space open closed Triggers and commit open ones exactly once",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-04: Enter and Space open closed Triggers and commit open ones exactly once"
+    },
+    {
+      "id": "LIB-COMBOBOX-055",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-05: select-only Escape/Tab/blur mirror commit-or-close with zero text callbacks",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-05: select-only Escape/Tab/blur mirror commit-or-close with zero text callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-056",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-07 trigger half: disabled Trigger ignores arrows, typeahead, and activation",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-07 trigger half: disabled Trigger ignores arrows, typeahead, and activation"
+    },
+    {
+      "id": "LIB-COMBOBOX-057",
+      "name": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-07 selected half: a disabled selected option never activates or commits; fallback navigation wins",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) CB-SELECT-07 selected half: a disabled selected option never activates or commits; fallback navigation wins"
+    },
+    {
+      "id": "LIB-COMBOBOX-058",
+      "name": "Combobox quarantine reconciliation (CB case IDs) controlled value with uncontrolled input/open works end-to-end (API freeze pin)",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox quarantine reconciliation (CB case IDs) controlled value with uncontrolled input/open works end-to-end (API freeze pin)"
+    },
+    {
+      "id": "LIB-COMBOBOX-059",
+      "name": "Combobox PATCHES #1: shadow portal destination shadowContainerForSource resolves the containing open ShadowRoot, nothing otherwise",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox PATCHES #1: shadow portal destination shadowContainerForSource resolves the containing open ShadowRoot, nothing otherwise"
+    },
+    {
+      "id": "LIB-COMBOBOX-060",
+      "name": "Combobox cluster B: inline-completion decision matrix completionForPrefix completes exact-case prefixes and matches case-insensitively",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: inline-completion decision matrix completionForPrefix completes exact-case prefixes and matches case-insensitively"
+    },
+    {
+      "id": "LIB-COMBOBOX-061",
+      "name": "Combobox cluster B: inline-completion decision matrix completionForPrefix returns null when there is nothing to complete or select",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: inline-completion decision matrix completionForPrefix returns null when there is nothing to complete or select"
+    },
+    {
+      "id": "LIB-COMBOBOX-062",
+      "name": "Combobox cluster B: virtual-focus helpers findDuplicateValue reports the first duplicated logical value",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers findDuplicateValue reports the first duplicated logical value"
+    },
+    {
+      "id": "LIB-COMBOBOX-063",
+      "name": "Combobox cluster B: virtual-focus helpers currentVirtualIndex resolves the active value to a logical index",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers currentVirtualIndex resolves the active value to a logical index"
+    },
+    {
+      "id": "LIB-COMBOBOX-064",
+      "name": "Combobox cluster B: virtual-focus helpers validateVirtualTarget enforces in-range enabled navigation targets",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers validateVirtualTarget enforces in-range enabled navigation targets"
+    },
+    {
+      "id": "LIB-COMBOBOX-065",
+      "name": "Combobox cluster B: virtual-focus helpers validateVirtualMount enforces range only; disabled cells mount",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers validateVirtualMount enforces range only; disabled cells mount"
+    },
+    {
+      "id": "LIB-COMBOBOX-066",
+      "name": "Combobox cluster B: virtual-focus helpers findVirtualMatch searches labels case-insensitively and skips disabled items",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers findVirtualMatch searches labels case-insensitively and skips disabled items"
+    },
+    {
+      "id": "LIB-COMBOBOX-067",
+      "name": "Combobox cluster B: virtual-focus helpers directionForElement reads element direction with document and SSR fallbacks",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: virtual-focus helpers directionForElement reads element direction with document and SSR fallbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-068",
+      "name": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: populated popover has content; missing or empty popover does not",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: populated popover has content; missing or empty popover does not"
+    },
+    {
+      "id": "LIB-COMBOBOX-069",
+      "name": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: adapter metadata counts as content without mounted elements",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: adapter metadata counts as content without mounted elements"
+    },
+    {
+      "id": "LIB-COMBOBOX-070",
+      "name": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: fragments and arrays are transparent to the scan",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: authored-children scan (gate + authority diagnostics) gate: fragments and arrays are transparent to the scan"
+    },
+    {
+      "id": "LIB-COMBOBOX-071",
+      "name": "Combobox cluster B: authored-children scan (gate + authority diagnostics) ADAPTER-02/03: nested onChange and multiple selection are detected",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: authored-children scan (gate + authority diagnostics) ADAPTER-02/03: nested onChange and multiple selection are detected"
+    },
+    {
+      "id": "LIB-COMBOBOX-072",
+      "name": "Combobox cluster B: SSR attribute mapping (autocomplete + haspopup) maps autocomplete none/list/both to aria-autocomplete",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: SSR attribute mapping (autocomplete + haspopup) maps autocomplete none/list/both to aria-autocomplete"
+    },
+    {
+      "id": "LIB-COMBOBOX-073",
+      "name": "Combobox cluster B: SSR attribute mapping (autocomplete + haspopup) maps the popup collection to aria-haspopup listbox/tree/grid",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: SSR attribute mapping (autocomplete + haspopup) maps the popup collection to aria-haspopup listbox/tree/grid"
+    },
+    {
+      "id": "LIB-COMBOBOX-074",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-OPEN-03 support: edits request open only with authored collection content",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-OPEN-03 support: edits request open only with authored collection content"
+    },
+    {
+      "id": "LIB-COMBOBOX-075",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-REVERT-02 support: onEscape preventDefault stops revert and dismissal",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-REVERT-02 support: onEscape preventDefault stops revert and dismissal"
+    },
+    {
+      "id": "LIB-COMBOBOX-076",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-MODE-03/07 support: both-mode completes the suffix with zero text callbacks",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-MODE-03/07 support: both-mode completes the suffix with zero text callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-077",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-MODE-04 support: filtering active away restores the typed prefix",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-MODE-04 support: filtering active away restores the typed prefix"
+    },
+    {
+      "id": "LIB-COMBOBOX-078",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-ADAPTER-01 support: grid mount timing pends scroll targets until cells mount",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-ADAPTER-01 support: grid mount timing pends scroll targets until cells mount"
+    },
+    {
+      "id": "LIB-COMBOBOX-079",
+      "name": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-ADAPTER-08 support: conflicting authorities diagnose and stay inert",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox cluster B: content gate, escape hook, completion, grid timing (happy-dom) CB-ADAPTER-08 support: conflicting authorities diagnose and stay inert"
+    },
+    {
+      "id": "LIB-COMBOBOX-080",
+      "name": "Combobox W-24: inline mode + custom values completesInline gates inline completion to inline and both modes",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values completesInline gates inline completion to inline and both modes"
+    },
+    {
+      "id": "LIB-COMBOBOX-081",
+      "name": "Combobox W-24: inline mode + custom values CB-MODE-08: inline completes the suffix with zero text callbacks",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values CB-MODE-08: inline completes the suffix with zero text callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-082",
+      "name": "Combobox W-24: inline mode + custom values CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed"
+    },
+    {
+      "id": "LIB-COMBOBOX-083",
+      "name": "Combobox W-24: inline mode + custom values CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value"
+    },
+    {
+      "id": "LIB-COMBOBOX-084",
+      "name": "Combobox W-24: inline mode + custom values CB-CUSTOM-02: blur commits custom text, maps empty to null, and stays silent when committed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values CB-CUSTOM-02: blur commits custom text, maps empty to null, and stays silent when committed"
+    },
+    {
+      "id": "LIB-COMBOBOX-085",
+      "name": "Combobox W-24: inline mode + custom values W-24 custom Tab: Tab with unmatched text commits the custom value and stays native",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values W-24 custom Tab: Tab with unmatched text commits the custom value and stays native"
+    },
+    {
+      "id": "LIB-COMBOBOX-086",
+      "name": "Combobox W-24: inline mode + custom values W-24 custom Escape: Escape reverts unmatched text even when custom values are allowed",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox W-24: inline mode + custom values W-24 custom Escape: Escape reverts unmatched text even when custom values are allowed"
+    },
+    {
+      "id": "LIB-COMBOBOX-087",
+      "name": "Combobox finish-line P2A unit CB-COMMIT-01 granular: Enter emits change, text, granular open:false, then high-level dismiss",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-COMMIT-01 granular: Enter emits change, text, granular open:false, then high-level dismiss"
+    },
+    {
+      "id": "LIB-COMBOBOX-088",
+      "name": "Combobox finish-line P2A unit CB-CLOSE-03/CB-CLOSE-01 granular: escape and outside paths order granular before high-level",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-CLOSE-03/CB-CLOSE-01 granular: escape and outside paths order granular before high-level"
+    },
+    {
+      "id": "LIB-COMBOBOX-089",
+      "name": "Combobox finish-line P2A unit CB-ADAPTER-08 two-builtins: Listbox plus Tree diagnoses, stays inert, then recovers",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-ADAPTER-08 two-builtins: Listbox plus Tree diagnoses, stays inert, then recovers"
+    },
+    {
+      "id": "LIB-COMBOBOX-090",
+      "name": "Combobox finish-line P2A unit CB-ADAPTER-02 tree-invalid: nested Tree onChange diagnoses and never double-updates",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-ADAPTER-02 tree-invalid: nested Tree onChange diagnoses and never double-updates"
+    },
+    {
+      "id": "LIB-COMBOBOX-091",
+      "name": "Combobox finish-line P2A unit CB-ADAPTER-03 conflicted: navigation is refused with no active ID",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-ADAPTER-03 conflicted: navigation is refused with no active ID"
+    },
+    {
+      "id": "LIB-COMBOBOX-092",
+      "name": "Combobox finish-line P2A unit CB-NAV-06 dynamic: identity follows valid options, preview falls to the mounted neighbor",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-NAV-06 dynamic: identity follows valid options, preview falls to the mounted neighbor"
+    },
+    {
+      "id": "LIB-COMBOBOX-093",
+      "name": "Combobox finish-line P2A unit CB-NAV-02 selection: arrows open onto the selection, absence, and disabled edges",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-NAV-02 selection: arrows open onto the selection, absence, and disabled edges"
+    },
+    {
+      "id": "LIB-COMBOBOX-094",
+      "name": "Combobox finish-line P2A unit CB-OPEN-02 disabled-final: closed arrows skip a disabled final option",
+      "kind": "unit",
+      "file": "Combobox.test.tsx",
+      "title": "Combobox finish-line P2A unit CB-OPEN-02 disabled-final: closed arrows skip a disabled final option"
+    },
+    {
+      "id": "LIB-COMBOBOX-095",
+      "name": "Combobox CT renders combobox input, opens popover on click, selects option and closes",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox CT renders combobox input, opens popover on click, selects option and closes"
+    },
+    {
+      "id": "LIB-COMBOBOX-096",
+      "name": "Combobox CT displays checkmark indicator when selected, and has solid highlight on focus with no outline ring",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox CT displays checkmark indicator when selected, and has solid highlight on focus with no outline ring"
+    },
+    {
+      "id": "LIB-COMBOBOX-097",
+      "name": "Combobox quarantine reconciliation CT CB-DOM-01: transparent coordinator with native parts and controlled relationships",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-DOM-01: transparent coordinator with native parts and controlled relationships"
+    },
+    {
+      "id": "LIB-COMBOBOX-098",
+      "name": "Combobox quarantine reconciliation CT CB-DOM-09/CB-COMMIT-04: nonmodal tab order with tab commit and native traversal",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-DOM-09/CB-COMMIT-04: nonmodal tab order with tab commit and native traversal"
+    },
+    {
+      "id": "LIB-COMBOBOX-099",
+      "name": "Combobox quarantine reconciliation CT CB-DOM-12: one popover with collision-safe bottom-start placement",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-DOM-12: one popover with collision-safe bottom-start placement"
+    },
+    {
+      "id": "LIB-COMBOBOX-100",
+      "name": "Combobox quarantine reconciliation CT CB-OPEN-01: ArrowDown requests open without disturbing focus or text",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-OPEN-01: ArrowDown requests open without disturbing focus or text"
+    },
+    {
+      "id": "LIB-COMBOBOX-101",
+      "name": "Combobox quarantine reconciliation CT CB-OPEN-02: ArrowUp opens with the selected option pending",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-OPEN-02: ArrowUp opens with the selected option pending"
+    },
+    {
+      "id": "LIB-COMBOBOX-102",
+      "name": "Combobox quarantine reconciliation CT CB-OPEN-04: open editable input stays open on click; trigger toggles",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-OPEN-04: open editable input stays open on click; trigger toggles"
+    },
+    {
+      "id": "LIB-COMBOBOX-103",
+      "name": "Combobox quarantine reconciliation CT CB-OPEN-04 select-only: trigger toggles with open and dismiss requests",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-OPEN-04 select-only: trigger toggles with open and dismiss requests"
+    },
+    {
+      "id": "LIB-COMBOBOX-104",
+      "name": "Combobox quarantine reconciliation CT CB-OPEN-08: readOnly and disabled sources never request open",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-OPEN-08: readOnly and disabled sources never request open"
+    },
+    {
+      "id": "LIB-COMBOBOX-105",
+      "name": "Combobox quarantine reconciliation CT CB-EDIT-01: arrows move the active descendant while DOM focus stays in input",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-EDIT-01: arrows move the active descendant while DOM focus stays in input"
+    },
+    {
+      "id": "LIB-COMBOBOX-106",
+      "name": "Combobox quarantine reconciliation CT CB-EDIT-03 caret: Home and End move the caret with the active option unchanged",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-EDIT-03 caret: Home and End move the caret with the active option unchanged"
+    },
+    {
+      "id": "LIB-COMBOBOX-107",
+      "name": "Combobox quarantine reconciliation CT CB-EDIT-04 ancestor scroll: scrolling the page dismisses the open popover",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-EDIT-04 ancestor scroll: scrolling the page dismisses the open popover"
+    },
+    {
+      "id": "LIB-COMBOBOX-108",
+      "name": "Combobox quarantine reconciliation CT CB-EDIT-08: pointer commit keeps input focus and fills the label",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-EDIT-08: pointer commit keeps input focus and fills the label"
+    },
+    {
+      "id": "LIB-COMBOBOX-109",
+      "name": "Combobox quarantine reconciliation CT CB-NAV-01: arrows wrap through enabled options, skipping disabled, focus stays",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-NAV-01: arrows wrap through enabled options, skipping disabled, focus stays"
+    },
+    {
+      "id": "LIB-COMBOBOX-110",
+      "name": "Combobox quarantine reconciliation CT CB-NAV-05 hover half: pointer-hovered option goes active without focus or commit",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-NAV-05 hover half: pointer-hovered option goes active without focus or commit"
+    },
+    {
+      "id": "LIB-COMBOBOX-111",
+      "name": "Combobox quarantine reconciliation CT CB-NAV-08: newly active option scrolls inside the popover; page and input unmoved",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-NAV-08: newly active option scrolls inside the popover; page and input unmoved"
+    },
+    {
+      "id": "LIB-COMBOBOX-112",
+      "name": "Combobox quarantine reconciliation CT CB-COMMIT-03: popup chrome click is ignored; option pointer commits exactly once",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-COMMIT-03: popup chrome click is ignored; option pointer commits exactly once"
+    },
+    {
+      "id": "LIB-COMBOBOX-113",
+      "name": "Combobox quarantine reconciliation CT CB-CLOSE-01: true outside press dismisses once; internal chrome stays open",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-CLOSE-01: true outside press dismisses once; internal chrome stays open"
+    },
+    {
+      "id": "LIB-COMBOBOX-114",
+      "name": "Combobox quarantine reconciliation CT CB-CLOSE-02: popover registers as an overlay branch inside a parent overlay",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-CLOSE-02: popover registers as an overlay branch inside a parent overlay"
+    },
+    {
+      "id": "LIB-COMBOBOX-115",
+      "name": "Combobox quarantine reconciliation CT LB-CB-01: virtual focus without tab stops; activedescendant tracks; one scalar commit",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT LB-CB-01: virtual focus without tab stops; activedescendant tracks; one scalar commit"
+    },
+    {
+      "id": "LIB-COMBOBOX-116",
+      "name": "Combobox quarantine reconciliation CT LB-CB-04: only the activedescendant-named option publishes active styling",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT LB-CB-04: only the activedescendant-named option publishes active styling"
+    },
+    {
+      "id": "LIB-COMBOBOX-117",
+      "name": "Combobox quarantine reconciliation CT FI-COMP-04 Combobox side: token picker commits one scalar value; chip removal is silent",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT FI-COMP-04 Combobox side: token picker commits one scalar value; chip removal is silent"
+    },
+    {
+      "id": "LIB-COMBOBOX-118",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-01: trigger labeling stays app-owned; selected option is active on open",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-01: trigger labeling stays app-owned; selected option is active on open"
+    },
+    {
+      "id": "LIB-COMBOBOX-119",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-04 native: Enter opens then commits via one key-decided path, no toggle",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-04 native: Enter opens then commits via one key-decided path, no toggle"
+    },
+    {
+      "id": "LIB-COMBOBOX-120",
+      "name": "Combobox quarantine reconciliation CT CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-COMMIT-07: tab after pointer leave commits nothing, reverts, closes, traverses"
+    },
+    {
+      "id": "LIB-COMBOBOX-121",
+      "name": "Combobox quarantine reconciliation CT CB-COMMIT-04 source gate: immediate tab on selection-active commits nothing",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-COMMIT-04 source gate: immediate tab on selection-active commits nothing"
+    },
+    {
+      "id": "LIB-COMBOBOX-122",
+      "name": "Combobox quarantine reconciliation CT CB-REVERT-03: outside press blurs, reverts unmatched text, dismisses once",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-REVERT-03: outside press blurs, reverts unmatched text, dismisses once"
+    },
+    {
+      "id": "LIB-COMBOBOX-123",
+      "name": "Combobox quarantine reconciliation CT CB-REVERT-07: closeOnBlur=false preserves open and text on blur; escape still closes",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-REVERT-07: closeOnBlur=false preserves open and text on blur; escape still closes"
+    },
+    {
+      "id": "LIB-COMBOBOX-124",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-02 trigger arrows: open keeps trigger focus with selection pending",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-02 trigger arrows: open keeps trigger focus with selection pending"
+    },
+    {
+      "id": "LIB-COMBOBOX-125",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-03 trigger typeahead: opens closed, cycles enabled matches, commits nothing",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-03 trigger typeahead: opens closed, cycles enabled matches, commits nothing"
+    },
+    {
+      "id": "LIB-COMBOBOX-126",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-08 trigger home/end: jump to first and last enabled options",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-08 trigger home/end: jump to first and last enabled options"
+    },
+    {
+      "id": "LIB-COMBOBOX-127",
+      "name": "Combobox quarantine reconciliation CT CB-SELECT-05: select-only escape/tab/blur mirror with zero text callbacks",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox quarantine reconciliation CT CB-SELECT-05: select-only escape/tab/blur mirror with zero text callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-128",
+      "name": "Combobox PATCHES CT CB-CLOSE-03 escape: one layer, one positioned popover, one ordered revert-before-dismiss",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox PATCHES CT CB-CLOSE-03 escape: one layer, one positioned popover, one ordered revert-before-dismiss"
+    },
+    {
+      "id": "LIB-COMBOBOX-129",
+      "name": "Combobox PATCHES CT CB-CLOSE-03 outside: one layer, one positioned popover, one dismissal",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox PATCHES CT CB-CLOSE-03 outside: one layer, one positioned popover, one dismissal"
+    },
+    {
+      "id": "LIB-COMBOBOX-130",
+      "name": "Combobox PATCHES CT CB-ENV-03: shadow-root portal destination, focus, scroll, composed paths, ordered callbacks",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox PATCHES CT CB-ENV-03: shadow-root portal destination, focus, scroll, composed paths, ordered callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-131",
+      "name": "Combobox cluster B CT CB-MODE-01: none navigates suggestions without changing input text",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-01: none navigates suggestions without changing input text"
+    },
+    {
+      "id": "LIB-COMBOBOX-132",
+      "name": "Combobox cluster B CT CB-MODE-02: list opens on edits and leaves typed text unchanged during navigation",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-02: list opens on edits and leaves typed text unchanged during navigation"
+    },
+    {
+      "id": "LIB-COMBOBOX-133",
+      "name": "Combobox cluster B CT CB-MODE-03: both completes the suffix; typing replaces only the suffix",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-03: both completes the suffix; typing replaces only the suffix"
+    },
+    {
+      "id": "LIB-COMBOBOX-134",
+      "name": "Combobox cluster B CT CB-MODE-04: both tracks completion across options and restores the prefix",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-04: both tracks completion across options and restores the prefix"
+    },
+    {
+      "id": "LIB-COMBOBOX-135",
+      "name": "Combobox cluster B CT CB-MODE-05: backspace and delete edit inline completion natively without committing",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-05: backspace and delete edit inline completion natively without committing"
+    },
+    {
+      "id": "LIB-COMBOBOX-136",
+      "name": "Combobox cluster B CT CB-MODE-06: mode switches clear obsolete completion with the source focused",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-06: mode switches clear obsolete completion with the source focused"
+    },
+    {
+      "id": "LIB-COMBOBOX-137",
+      "name": "Combobox cluster B CT CB-MODE-07: completion navigation emits no text or value callbacks",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-07: completion navigation emits no text or value callbacks"
+    },
+    {
+      "id": "LIB-COMBOBOX-138",
+      "name": "Combobox cluster B CT CB-MODE-08: inline completes the suffix; typing replaces only the suffix",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-MODE-08: inline completes the suffix; typing replaces only the suffix"
+    },
+    {
+      "id": "LIB-COMBOBOX-139",
+      "name": "Combobox cluster B CT CB-OPEN-03 populated: one edit requests one open with content",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-OPEN-03 populated: one edit requests one open with content"
+    },
+    {
+      "id": "LIB-COMBOBOX-140",
+      "name": "Combobox cluster B CT CB-OPEN-03 empty: edits never request open without collection content",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-OPEN-03 empty: edits never request open without collection content"
+    },
+    {
+      "id": "LIB-COMBOBOX-141",
+      "name": "Combobox cluster B CT CB-REVERT-02: onEscape runs first; preventDefault stops revert and dismissal",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-REVERT-02: onEscape runs first; preventDefault stops revert and dismissal"
+    },
+    {
+      "id": "LIB-COMBOBOX-142",
+      "name": "Combobox cluster B CT CB-DOM-02: autocomplete modes and popup roles map to input relationships",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-DOM-02: autocomplete modes and popup roles map to input relationships"
+    },
+    {
+      "id": "LIB-COMBOBOX-143",
+      "name": "Combobox cluster B CT CB-DOM-03: trigger keeps button semantics while exposing popup state",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-DOM-03: trigger keeps button semantics while exposing popup state"
+    },
+    {
+      "id": "LIB-COMBOBOX-144",
+      "name": "Combobox cluster B CT CB-DOM-04: popover owns a stable id and derives grid role only from the adapter",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-DOM-04: popover owns a stable id and derives grid role only from the adapter"
+    },
+    {
+      "id": "LIB-COMBOBOX-145",
+      "name": "Combobox cluster B CT CB-ADAPTER-01: grid adapter navigates, scrolls, and commits one scalar",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-01: grid adapter navigates, scrolls, and commits one scalar"
+    },
+    {
+      "id": "LIB-COMBOBOX-146",
+      "name": "Combobox cluster B CT CB-ADAPTER-02: root onChange is the sole commit authority",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-02: root onChange is the sole commit authority"
+    },
+    {
+      "id": "LIB-COMBOBOX-147",
+      "name": "Combobox cluster B CT CB-ADAPTER-02 invalid: nested onChange diagnoses and never double-updates",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-02 invalid: nested onChange diagnoses and never double-updates"
+    },
+    {
+      "id": "LIB-COMBOBOX-148",
+      "name": "Combobox cluster B CT CB-ADAPTER-03: multiple-selection listbox diagnoses and stays scalar",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-03: multiple-selection listbox diagnoses and stays scalar"
+    },
+    {
+      "id": "LIB-COMBOBOX-149",
+      "name": "Combobox cluster B CT CB-ADAPTER-04: VirtualItem slots stable state onto one native child",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-04: VirtualItem slots stable state onto one native child"
+    },
+    {
+      "id": "LIB-COMBOBOX-150",
+      "name": "Combobox cluster B CT CB-ADAPTER-05: invalid grid metadata, targets, and children diagnose before activation",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-05: invalid grid metadata, targets, and children diagnose before activation"
+    },
+    {
+      "id": "LIB-COMBOBOX-151",
+      "name": "Combobox cluster B CT CB-ADAPTER-05 recovery: the latest valid adapter recovers cleanly",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-05 recovery: the latest valid adapter recovers cleanly"
+    },
+    {
+      "id": "LIB-COMBOBOX-152",
+      "name": "Combobox cluster B CT CB-ADAPTER-06: consumer handlers cancel cell preview and commit independently",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-06: consumer handlers cancel cell preview and commit independently"
+    },
+    {
+      "id": "LIB-COMBOBOX-153",
+      "name": "Combobox cluster B CT CB-ADAPTER-07: grid typeahead follows current metadata and cancels stale requests",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-07: grid typeahead follows current metadata and cancels stale requests"
+    },
+    {
+      "id": "LIB-COMBOBOX-154",
+      "name": "Combobox cluster B CT CB-ADAPTER-08: competing authorities diagnose, stay inert, and recover",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-ADAPTER-08: competing authorities diagnose, stay inert, and recover"
+    },
+    {
+      "id": "LIB-COMBOBOX-155",
+      "name": "Combobox cluster B CT CB-SELECT-08 virtual: trigger home/end/page wait behind one current scroll",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-SELECT-08 virtual: trigger home/end/page wait behind one current scroll"
+    },
+    {
+      "id": "LIB-COMBOBOX-156",
+      "name": "Combobox cluster B CT Tree popup bridge: native registration navigates TreeItems and commits through root onChange (#6)",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT Tree popup bridge: native registration navigates TreeItems and commits through root onChange (#6)"
+    },
+    {
+      "id": "LIB-COMBOBOX-157",
+      "name": "Combobox cluster B CT CB-COMP-02: filtered both-mode consumer across edit, commit, escape, blur, tab, reject",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox cluster B CT CB-COMP-02: filtered both-mode consumer across edit, commit, escape, blur, tab, reject"
+    },
+    {
+      "id": "LIB-COMBOBOX-158",
+      "name": "Combobox playtest CT B-20: escape restores committed text over stale input",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT B-20: escape restores committed text over stale input"
+    },
+    {
+      "id": "LIB-COMBOBOX-159",
+      "name": "Combobox playtest CT B-20: blur restores committed text over stale input",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT B-20: blur restores committed text over stale input"
+    },
+    {
+      "id": "LIB-COMBOBOX-160",
+      "name": "Combobox playtest CT B-21: tabbing into the input never opens the popup",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT B-21: tabbing into the input never opens the popup"
+    },
+    {
+      "id": "LIB-COMBOBOX-161",
+      "name": "Combobox playtest CT B-22: combobox in a dialog closes on blur and never breaks the trap",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT B-22: combobox in a dialog closes on blur and never breaks the trap"
+    },
+    {
+      "id": "LIB-COMBOBOX-162",
+      "name": "Combobox playtest CT B-36: recommitting the identical value emits no onChange",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT B-36: recommitting the identical value emits no onChange"
+    },
+    {
+      "id": "LIB-COMBOBOX-163",
+      "name": "Combobox playtest CT CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT CB-CUSTOM-01: Enter commits exact unmatched text when custom values are allowed"
+    },
+    {
+      "id": "LIB-COMBOBOX-164",
+      "name": "Combobox playtest CT CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT CB-CUSTOM-01 false / CB-COMMIT-02: Enter with no active reverts and dismisses without a value"
+    },
+    {
+      "id": "LIB-COMBOBOX-165",
+      "name": "Combobox playtest CT CB-CUSTOM-02: blur commits custom text",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT CB-CUSTOM-02: blur commits custom text"
+    },
+    {
+      "id": "LIB-COMBOBOX-166",
+      "name": "Combobox playtest CT CB-CUSTOM-02 empty: blur maps empty custom text to null",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT CB-CUSTOM-02 empty: blur maps empty custom text to null"
+    },
+    {
+      "id": "LIB-COMBOBOX-167",
+      "name": "Combobox playtest CT W-24: unmatched pointer blur inside a dialog reverts, closes, and keeps the trap",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT W-24: unmatched pointer blur inside a dialog reverts, closes, and keeps the trap"
+    },
+    {
+      "id": "LIB-COMBOBOX-168",
+      "name": "Combobox playtest CT W-24: closeOnBlur=false inside a dialog preserves open text and the trap",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox playtest CT W-24: closeOnBlur=false inside a dialog preserves open text and the trap"
+    },
+    {
+      "id": "LIB-COMBOBOX-169",
+      "name": "Combobox finish-line P2A CT CB-VIRT-01: windowed Listbox target scrolls into the DOM before its active ID publishes",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-VIRT-01: windowed Listbox target scrolls into the DOM before its active ID publishes"
+    },
+    {
+      "id": "LIB-COMBOBOX-170",
+      "name": "Combobox finish-line P2A CT CB-VIRT-02: rapid windowed navigation and metadata replacement keep only the latest request",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-VIRT-02: rapid windowed navigation and metadata replacement keep only the latest request"
+    },
+    {
+      "id": "LIB-COMBOBOX-171",
+      "name": "Combobox finish-line P2A CT CB-VIRT-03: windowed collection keeps set metadata, selection, and value identity",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-VIRT-03: windowed collection keeps set metadata, selection, and value identity"
+    },
+    {
+      "id": "LIB-COMBOBOX-172",
+      "name": "Combobox finish-line P2A CT CB-TREE-01: tree popup navigates visible items and delegates expansion with input focused",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-TREE-01: tree popup navigates visible items and delegates expansion with input focused"
+    },
+    {
+      "id": "LIB-COMBOBOX-173",
+      "name": "Combobox finish-line P2A CT CB-COMP-01: select-only trigger composes with a virtualized Listbox",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-01: select-only trigger composes with a virtualized Listbox"
+    },
+    {
+      "id": "LIB-COMBOBOX-174",
+      "name": "Combobox finish-line P2A CT CB-SELECT-08 windowed: trigger Home and End wait behind one scroll for offscreen targets",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-SELECT-08 windowed: trigger Home and End wait behind one scroll for offscreen targets"
+    },
+    {
+      "id": "LIB-COMBOBOX-175",
+      "name": "Combobox finish-line P2A CT CB-COMP-03 tree: palette composes a locked overlay with a tree popup",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-03 tree: palette composes a locked overlay with a tree popup"
+    },
+    {
+      "id": "LIB-COMBOBOX-176",
+      "name": "Combobox finish-line P2A CT CB-COMP-03 grid: palette composes a locked overlay with a grid popup",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-03 grid: palette composes a locked overlay with a grid popup"
+    },
+    {
+      "id": "LIB-COMBOBOX-177",
+      "name": "Combobox finish-line P2A CT CB-COMP-04: combobox in a locked shadow overlay with a windowed popover",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-04: combobox in a locked shadow overlay with a windowed popover"
+    },
+    {
+      "id": "LIB-COMBOBOX-178",
+      "name": "Combobox finish-line P2A CT CB-COMP-02 list-mode: controlled list consumer across edit, commit, escape, blur, tab",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-02 list-mode: controlled list consumer across edit, commit, escape, blur, tab"
+    },
+    {
+      "id": "LIB-COMBOBOX-179",
+      "name": "Combobox finish-line P2A CT CB-COMP-02 list-mode reject: ignored text requests leave no hidden state",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMP-02 list-mode reject: ignored text requests leave no hidden state"
+    },
+    {
+      "id": "LIB-COMBOBOX-180",
+      "name": "Combobox finish-line P2A CT CB-CLOSE-04: controlled close clears semantics at commit and unmounts after the exit",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-CLOSE-04: controlled close clears semantics at commit and unmounts after the exit"
+    },
+    {
+      "id": "LIB-COMBOBOX-181",
+      "name": "Combobox finish-line P2A CT CB-CLOSE-02 parent-internal: combobox-external press closes only the child once",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-CLOSE-02 parent-internal: combobox-external press closes only the child once"
+    },
+    {
+      "id": "LIB-COMBOBOX-182",
+      "name": "Combobox finish-line P2A CT CB-ENV-02: strict mode issues one request per user action across the gate",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-ENV-02: strict mode issues one request per user action across the gate"
+    },
+    {
+      "id": "LIB-COMBOBOX-183",
+      "name": "Combobox finish-line P2A CT CB-ENV-03 windowed: one current scroll request resolves in the owning root",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-ENV-03 windowed: one current scroll request resolves in the owning root"
+    },
+    {
+      "id": "LIB-COMBOBOX-184",
+      "name": "Combobox finish-line P2A CT CB-A11Y-01 structural: roles, names, and relationships across shapes",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-A11Y-01 structural: roles, names, and relationships across shapes"
+    },
+    {
+      "id": "LIB-COMBOBOX-185",
+      "name": "Combobox finish-line P2A CT CB-A11Y-01 scan: automated relationship scan reports zero violations across shapes",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-A11Y-01 scan: automated relationship scan reports zero violations across shapes"
+    },
+    {
+      "id": "LIB-COMBOBOX-186",
+      "name": "Combobox finish-line P2A CT CB-DOM-10 blur: omitted closeOnBlur restores committed text and dismisses on blur",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-DOM-10 blur: omitted closeOnBlur restores committed text and dismisses on blur"
+    },
+    {
+      "id": "LIB-COMBOBOX-187",
+      "name": "Combobox finish-line P2A CT CB-EDIT-04 self-scroll: the input scrolling preserves the open popover",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-EDIT-04 self-scroll: the input scrolling preserves the open popover"
+    },
+    {
+      "id": "LIB-COMBOBOX-188",
+      "name": "Combobox finish-line P2A CT CB-EDIT-07: rejected keystrokes keep the caret clamped and usable",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-EDIT-07: rejected keystrokes keep the caret clamped and usable"
+    },
+    {
+      "id": "LIB-COMBOBOX-189",
+      "name": "Combobox finish-line P2A CT CB-EDIT-09: isComposing keys never open, move, or commit",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-EDIT-09: isComposing keys never open, move, or commit"
+    },
+    {
+      "id": "LIB-COMBOBOX-190",
+      "name": "Combobox finish-line P2A CT CB-SELECT-06: select-only trigger never submits its form until type=submit",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-SELECT-06: select-only trigger never submits its form until type=submit"
+    },
+    {
+      "id": "LIB-COMBOBOX-191",
+      "name": "Combobox finish-line P2A CT CB-COMMIT-03 headers: section headers are not options",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMMIT-03 headers: section headers are not options"
+    },
+    {
+      "id": "LIB-COMBOBOX-192",
+      "name": "Combobox finish-line P2A CT CB-COMMIT-04 shift-tab: backward traversal commits and lands behind",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-COMMIT-04 shift-tab: backward traversal commits and lands behind"
+    },
+    {
+      "id": "LIB-COMBOBOX-193",
+      "name": "Combobox finish-line P2A CT CB-SELECT-05 shift-tab: select-only backward traversal commits text-free",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-SELECT-05 shift-tab: select-only backward traversal commits text-free"
+    },
+    {
+      "id": "LIB-COMBOBOX-194",
+      "name": "Combobox finish-line P2A CT Async loading: busy collection and shared-announcer status, no private live region",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT Async loading: busy collection and shared-announcer status, no private live region"
+    },
+    {
+      "id": "LIB-COMBOBOX-195",
+      "name": "Combobox finish-line P2A CT CB-ENV-04 chromium: cross-engine baseline order for the native gate",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.ct.spec.ts",
+      "title": "Combobox finish-line P2A CT CB-ENV-04 chromium: cross-engine baseline order for the native gate"
+    },
+    {
+      "id": "LIB-COMBOBOX-196",
+      "name": "Combobox touch outside-dismiss CT CB-CLOSE-05: outside touch dismisses once with no compat-mouse replay",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.touch.ct.spec.ts",
+      "title": "Combobox touch outside-dismiss CT CB-CLOSE-05: outside touch dismisses once with no compat-mouse replay"
+    },
+    {
+      "id": "LIB-COMBOBOX-197",
+      "name": "Combobox touch outside-dismiss CT CB-CLOSE-05 inside: touches on the source, chrome, and options stay inside",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.touch.ct.spec.ts",
+      "title": "Combobox touch outside-dismiss CT CB-CLOSE-05 inside: touches on the source, chrome, and options stay inside"
+    },
+    {
+      "id": "LIB-COMBOBOX-198",
+      "name": "Combobox touch outside-dismiss CT CB-EDIT-08 touch: tap commits once without refocusing the input",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.touch.ct.spec.ts",
+      "title": "Combobox touch outside-dismiss CT CB-EDIT-08 touch: tap commits once without refocusing the input"
+    },
+    {
+      "id": "LIB-COMBOBOX-199",
+      "name": "Combobox touch outside-dismiss CT CB-COMMIT-03 tap: tapping option bravo commits one ordered sequence",
+      "kind": "ct",
+      "file": "__e2e__/Combobox.touch.ct.spec.ts",
+      "title": "Combobox touch outside-dismiss CT CB-COMMIT-03 tap: tapping option bravo commits one ordered sequence"
+    },
+    {
+      "id": "LIB-COMBOBOX-200",
+      "name": "scanAuthoredCollections finds popover content through authored items",
+      "kind": "unit",
+      "file": "authored.test.ts",
+      "title": "scanAuthoredCollections finds popover content through authored items"
+    },
+    {
+      "id": "LIB-COMBOBOX-201",
+      "name": "scanAuthoredCollections reads adapter metadata and flags nested authorities",
+      "kind": "unit",
+      "file": "authored.test.ts",
+      "title": "scanAuthoredCollections reads adapter metadata and flags nested authorities"
+    },
+    {
+      "id": "LIB-COMBOBOX-202",
+      "name": "scanAuthoredCollections gates content on popovers and logical items",
+      "kind": "unit",
+      "file": "authored.test.ts",
+      "title": "scanAuthoredCollections gates content on popovers and logical items"
+    },
+    {
+      "id": "LIB-COMBOBOX-203",
+      "name": "adapter shape guards accepts grid adapters and rejects near-misses",
+      "kind": "unit",
+      "file": "authored.test.ts",
+      "title": "adapter shape guards accepts grid adapters and rejects near-misses"
+    },
+    {
+      "id": "LIB-COMBOBOX-204",
+      "name": "adapter shape guards accepts windowed list adapters and rejects near-misses",
+      "kind": "unit",
+      "file": "authored.test.ts",
+      "title": "adapter shape guards accepts windowed list adapters and rejects near-misses"
+    },
+    {
+      "id": "LIB-COMBOBOX-205",
+      "name": "completesInline gates inline completion on the inline/both modes",
+      "kind": "unit",
+      "file": "autocomplete.test.ts",
+      "title": "completesInline gates inline completion on the inline/both modes"
+    },
+    {
+      "id": "LIB-COMBOBOX-206",
+      "name": "completionForPrefix completes a case-insensitive prefix to the label",
+      "kind": "unit",
+      "file": "autocomplete.test.ts",
+      "title": "completionForPrefix completes a case-insensitive prefix to the label"
+    },
+    {
+      "id": "LIB-COMBOBOX-207",
+      "name": "completionForPrefix completes to nothing without a prefix, a label, or a suffix",
+      "kind": "unit",
+      "file": "autocomplete.test.ts",
+      "title": "completionForPrefix completes to nothing without a prefix, a label, or a suffix"
+    },
+    {
+      "id": "LIB-COMBOBOX-208",
+      "name": "completionForPrefix rejects non-prefix labels",
+      "kind": "unit",
+      "file": "autocomplete.test.ts",
+      "title": "completionForPrefix rejects non-prefix labels"
+    },
+    {
+      "id": "LIB-COMBOBOX-209",
+      "name": "stepActiveValue steps forward and wraps through enabled options with keyboard source",
+      "kind": "unit",
+      "file": "navigation/step.test.ts",
+      "title": "stepActiveValue steps forward and wraps through enabled options with keyboard source"
+    },
+    {
+      "id": "LIB-COMBOBOX-210",
+      "name": "stepActiveValue starts at the directional edge when nothing is active",
+      "kind": "unit",
+      "file": "navigation/step.test.ts",
+      "title": "stepActiveValue starts at the directional edge when nothing is active"
+    },
+    {
+      "id": "LIB-COMBOBOX-211",
+      "name": "stepActiveValue scrolls the target into view and stays silent when empty",
+      "kind": "unit",
+      "file": "navigation/step.test.ts",
+      "title": "stepActiveValue scrolls the target into view and stays silent when empty"
+    },
+    {
+      "id": "LIB-COMBOBOX-212",
+      "name": "mountedValue keeps only still-mounted active values committable",
+      "kind": "unit",
+      "file": "navigation/step.test.ts",
+      "title": "mountedValue keeps only still-mounted active values committable"
+    },
+    {
+      "id": "LIB-COMBOBOX-213",
+      "name": "comboboxDiagnostic errors with the Combobox prefix outside production",
+      "kind": "unit",
+      "file": "shared/diagnostic.test.ts",
+      "title": "comboboxDiagnostic errors with the Combobox prefix outside production"
+    },
+    {
+      "id": "LIB-COMBOBOX-214",
+      "name": "comboboxDiagnostic stays silent in production",
+      "kind": "unit",
+      "file": "shared/diagnostic.test.ts",
+      "title": "comboboxDiagnostic stays silent in production"
+    },
+    {
+      "id": "LIB-COMBOBOX-215",
+      "name": "combobox ids strips selector-breaking characters from segments",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "combobox ids strips selector-breaking characters from segments"
+    },
+    {
+      "id": "LIB-COMBOBOX-216",
+      "name": "combobox ids prefixes popover ids",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "combobox ids prefixes popover ids"
+    },
+    {
+      "id": "LIB-COMBOBOX-217",
+      "name": "virtual-focus helpers detects duplicate logical values",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "virtual-focus helpers detects duplicate logical values"
+    },
+    {
+      "id": "LIB-COMBOBOX-218",
+      "name": "virtual-focus helpers resolves the logical index of the active value",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "virtual-focus helpers resolves the logical index of the active value"
+    },
+    {
+      "id": "LIB-COMBOBOX-219",
+      "name": "virtual-focus helpers validates targets by range and enabled state, mounts by range",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "virtual-focus helpers validates targets by range and enabled state, mounts by range"
+    },
+    {
+      "id": "LIB-COMBOBOX-220",
+      "name": "virtual-focus helpers searches labels case-insensitively with first-enabled empty rule",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "virtual-focus helpers searches labels case-insensitively with first-enabled empty rule"
+    },
+    {
+      "id": "LIB-COMBOBOX-221",
+      "name": "windowed stepping steps with wraparound and skips disabled items",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "windowed stepping steps with wraparound and skips disabled items"
+    },
+    {
+      "id": "LIB-COMBOBOX-222",
+      "name": "windowed stepping edges to the first and last enabled items",
+      "kind": "unit",
+      "file": "virtual-focus.test.ts",
+      "title": "windowed stepping edges to the first and last enabled items"
+    }
+  ]
+}

@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 1,
+  "component": "Slot",
+  "scope": "public",
+  "description": "Executable Slot contracts covering real-browser behavior and existing visual baselines plus logic and server-rendering evidence. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-SLOT-001",
+      "name": "SL-INSTANCE-01: same-name regions stay isolated across sibling and nested provider updates",
+      "kind": "ct",
+      "file": "__e2e__/Slot.contracts.ct.spec.ts",
+      "title": "SL-INSTANCE-01: same-name regions stay isolated across sibling and nested provider updates"
+    },
+    {
+      "id": "LIB-SLOT-002",
+      "name": "SL-LIFECYCLE-01: removing and restoring a filler clears its host without leaking registrations",
+      "kind": "ct",
+      "file": "__e2e__/Slot.contracts.ct.spec.ts",
+      "title": "SL-LIFECYCLE-01: removing and restoring a filler clears its host without leaking registrations"
+    },
+    {
+      "id": "LIB-SLOT-003",
+      "name": "Slot Composition Gates & Browser Proofs SL-COMP-01: A host renders registered parts in named regions when fillers commit first",
+      "kind": "ct",
+      "file": "__e2e__/Slot.ct.spec.ts",
+      "title": "Slot Composition Gates & Browser Proofs SL-COMP-01: A host renders registered parts in named regions when fillers commit first"
+    },
+    {
+      "id": "LIB-SLOT-004",
+      "name": "Slot Composition Gates & Browser Proofs SL-COMP-02: A host refreshes slotted content on an in-place rerender without a remount key",
+      "kind": "ct",
+      "file": "__e2e__/Slot.ct.spec.ts",
+      "title": "Slot Composition Gates & Browser Proofs SL-COMP-02: A host refreshes slotted content on an in-place rerender without a remount key"
+    },
+    {
+      "id": "LIB-SLOT-005",
+      "name": "Slot Composition Gates & Browser Proofs SL-COMP-03: A host selects a region of slot ids when several entries share a region kind",
+      "kind": "ct",
+      "file": "__e2e__/Slot.ct.spec.ts",
+      "title": "Slot Composition Gates & Browser Proofs SL-COMP-03: A host selects a region of slot ids when several entries share a region kind"
+    },
+    {
+      "id": "LIB-SLOT-006",
+      "name": "Slot Composition Gates & Browser Proofs SL-COMP-04: A host honors resolveSlotVisibility without unregistering",
+      "kind": "ct",
+      "file": "__e2e__/Slot.ct.spec.ts",
+      "title": "Slot Composition Gates & Browser Proofs SL-COMP-04: A host honors resolveSlotVisibility without unregistering"
+    },
+    {
+      "id": "LIB-SLOT-007",
+      "name": "Slot context Public type and factory SL-TYPE-01: types the root generic, registration options, and hook results",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Public type and factory SL-TYPE-01: types the root generic, registration options, and hook results"
+    },
+    {
+      "id": "LIB-SLOT-008",
+      "name": "Slot context Provider and useRoot SL-PROV-01: Provider wraps children without adding extra DOM host of its own",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Provider and useRoot SL-PROV-01: Provider wraps children without adding extra DOM host of its own"
+    },
+    {
+      "id": "LIB-SLOT-009",
+      "name": "Slot context Provider and useRoot SL-PROV-02: Provider accepts a custom root instance",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Provider and useRoot SL-PROV-02: Provider accepts a custom root instance"
+    },
+    {
+      "id": "LIB-SLOT-010",
+      "name": "Slot context Provider and useRoot SL-PROV-03: Provider creates a new root if none is provided",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Provider and useRoot SL-PROV-03: Provider creates a new root if none is provided"
+    },
+    {
+      "id": "LIB-SLOT-011",
+      "name": "Slot context Provider and useRoot SL-USE-01: useRoot throws when used outside of a provider",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Provider and useRoot SL-USE-01: useRoot throws when used outside of a provider"
+    },
+    {
+      "id": "LIB-SLOT-012",
+      "name": "Slot context Provider and useRoot SL-USE-02: useRoot returns the root instance",
+      "kind": "unit",
+      "file": "context.test.tsx",
+      "title": "Slot context Provider and useRoot SL-USE-02: useRoot returns the root instance"
+    },
+    {
+      "id": "LIB-SLOT-013",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-01: useSlotRegistration registers the slot on mount",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-01: useSlotRegistration registers the slot on mount"
+    },
+    {
+      "id": "LIB-SLOT-014",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-02: useSlotRegistration unregisters the slot on unmount",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-02: useSlotRegistration unregisters the slot on unmount"
+    },
+    {
+      "id": "LIB-SLOT-015",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-03: useSlotRegistration handles metadata",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-03: useSlotRegistration handles metadata"
+    },
+    {
+      "id": "LIB-SLOT-016",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-04: useSlotRegistration exposes live element, meta, and visibility without re-registering",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-04: useSlotRegistration exposes live element, meta, and visibility without re-registering"
+    },
+    {
+      "id": "LIB-SLOT-017",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-05: useSlotRegistration re-registers in place when slotId or deps change",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-05: useSlotRegistration re-registers in place when slotId or deps change"
+    },
+    {
+      "id": "LIB-SLOT-018",
+      "name": "useSlotRegistration useSlotRegistration SL-HOOK-06: useSlotRegistration settles one registration under StrictMode replay",
+      "kind": "unit",
+      "file": "hooks/use-slot-registration.test.tsx",
+      "title": "useSlotRegistration useSlotRegistration SL-HOOK-06: useSlotRegistration settles one registration under StrictMode replay"
+    },
+    {
+      "id": "LIB-SLOT-019",
+      "name": "useSlot SL-READ-01: useSlot returns a slot by id",
+      "kind": "unit",
+      "file": "hooks/use-slot.test.tsx",
+      "title": "useSlot SL-READ-01: useSlot returns a slot by id"
+    },
+    {
+      "id": "LIB-SLOT-020",
+      "name": "useSlot SL-READ-02: useSlot returns undefined for non-existent id",
+      "kind": "unit",
+      "file": "hooks/use-slot.test.tsx",
+      "title": "useSlot SL-READ-02: useSlot returns undefined for non-existent id"
+    },
+    {
+      "id": "LIB-SLOT-021",
+      "name": "useSlot SL-READ-03: useSlot updates when a slot is registered",
+      "kind": "unit",
+      "file": "hooks/use-slot.test.tsx",
+      "title": "useSlot SL-READ-03: useSlot updates when a slot is registered"
+    },
+    {
+      "id": "LIB-SLOT-022",
+      "name": "useSlots SL-READ-04: useSlots returns all slots",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots SL-READ-04: useSlots returns all slots"
+    },
+    {
+      "id": "LIB-SLOT-023",
+      "name": "useSlots SL-READ-05: useSlots returns an empty array for an empty root",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots SL-READ-05: useSlots returns an empty array for an empty root"
+    },
+    {
+      "id": "LIB-SLOT-024",
+      "name": "useSlots SL-READ-06: useSlots updates when slots change",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots SL-READ-06: useSlots updates when slots change"
+    },
+    {
+      "id": "LIB-SLOT-025",
+      "name": "useSlots SL-READ-07: useSlots keeps array identity while only live content changes",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots SL-READ-07: useSlots keeps array identity while only live content changes"
+    },
+    {
+      "id": "LIB-SLOT-026",
+      "name": "useSlots useSlots with filter SL-READ-08: useSlots(filter) returns matches in registration order",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots useSlots with filter SL-READ-08: useSlots(filter) returns matches in registration order"
+    },
+    {
+      "id": "LIB-SLOT-027",
+      "name": "useSlots useSlots with filter SL-READ-09: useSlots(filter) returns an empty array when nothing matches",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots useSlots with filter SL-READ-09: useSlots(filter) returns an empty array when nothing matches"
+    },
+    {
+      "id": "LIB-SLOT-028",
+      "name": "useSlots useSlots with filter SL-READ-10: useSlots(filter) updates when a matching slot registers and unregisters",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots useSlots with filter SL-READ-10: useSlots(filter) updates when a matching slot registers and unregisters"
+    },
+    {
+      "id": "LIB-SLOT-029",
+      "name": "useSlots useSlots with filter SL-READ-11: useSlots(filter) keeps array identity across unrelated registrations",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots useSlots with filter SL-READ-11: useSlots(filter) keeps array identity across unrelated registrations"
+    },
+    {
+      "id": "LIB-SLOT-030",
+      "name": "useSlots useSlots with filter SL-READ-12: useSlots accepts an inline filter without resubscribing",
+      "kind": "unit",
+      "file": "hooks/use-slots.test.tsx",
+      "title": "useSlots useSlots with filter SL-READ-12: useSlots accepts an inline filter without resubscribing"
+    },
+    {
+      "id": "LIB-SLOT-031",
+      "name": "Slot host helpers Cache key and transform helpers SL-HELP-01: createSlotCacheKey joins sorted slot ids",
+      "kind": "unit",
+      "file": "host/host.test.ts",
+      "title": "Slot host helpers Cache key and transform helpers SL-HELP-01: createSlotCacheKey joins sorted slot ids"
+    },
+    {
+      "id": "LIB-SLOT-032",
+      "name": "Slot host helpers Cache key and transform helpers SL-HELP-02: transformSlotElements clones each element with host-supplied props",
+      "kind": "unit",
+      "file": "host/host.test.ts",
+      "title": "Slot host helpers Cache key and transform helpers SL-HELP-02: transformSlotElements clones each element with host-supplied props"
+    },
+    {
+      "id": "LIB-SLOT-033",
+      "name": "createLiveRegistration exposes slotId, element, meta, and visibility through live getters",
+      "kind": "unit",
+      "file": "registration/live.test.ts",
+      "title": "createLiveRegistration exposes slotId, element, meta, and visibility through live getters"
+    },
+    {
+      "id": "LIB-SLOT-034",
+      "name": "createLiveRegistration tracks a swapped latest box without a new container",
+      "kind": "unit",
+      "file": "registration/live.test.ts",
+      "title": "createLiveRegistration tracks a swapped latest box without a new container"
+    },
+    {
+      "id": "LIB-SLOT-035",
+      "name": "createLiveRegistration reads undefined meta and visibility until they appear",
+      "kind": "unit",
+      "file": "registration/live.test.ts",
+      "title": "createLiveRegistration reads undefined meta and visibility until they appear"
+    },
+    {
+      "id": "LIB-SLOT-036",
+      "name": "SlotRoot store SlotRoot registration SL-REG-01: registers a slot",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store SlotRoot registration SL-REG-01: registers a slot"
+    },
+    {
+      "id": "LIB-SLOT-037",
+      "name": "SlotRoot store SlotRoot registration SL-REG-02: registers multiple slots in order",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store SlotRoot registration SL-REG-02: registers multiple slots in order"
+    },
+    {
+      "id": "LIB-SLOT-038",
+      "name": "SlotRoot store SlotRoot registration SL-REG-03: overwrites a slot with the same registration id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store SlotRoot registration SL-REG-03: overwrites a slot with the same registration id"
+    },
+    {
+      "id": "LIB-SLOT-039",
+      "name": "SlotRoot store SlotRoot registration SL-REG-04: allows the same slot id with different registration ids",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store SlotRoot registration SL-REG-04: allows the same slot id with different registration ids"
+    },
+    {
+      "id": "LIB-SLOT-040",
+      "name": "SlotRoot store Unregistration SL-UNREG-01: unregisters a slot",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Unregistration SL-UNREG-01: unregisters a slot"
+    },
+    {
+      "id": "LIB-SLOT-041",
+      "name": "SlotRoot store Unregistration SL-UNREG-02: handles unregistering a non-existent slot without error",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Unregistration SL-UNREG-02: handles unregistering a non-existent slot without error"
+    },
+    {
+      "id": "LIB-SLOT-042",
+      "name": "SlotRoot store Unregistration SL-UNREG-03: leaves version and subscribers unchanged when unregistering a missing id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Unregistration SL-UNREG-03: leaves version and subscribers unchanged when unregistering a missing id"
+    },
+    {
+      "id": "LIB-SLOT-043",
+      "name": "SlotRoot store Unregistration SL-UNREG-04: only unregisters the specific registration id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Unregistration SL-UNREG-04: only unregisters the specific registration id"
+    },
+    {
+      "id": "LIB-SLOT-044",
+      "name": "SlotRoot store Get by id SL-SCAN-01: finds a slot by exact id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get by id SL-SCAN-01: finds a slot by exact id"
+    },
+    {
+      "id": "LIB-SLOT-045",
+      "name": "SlotRoot store Get by id SL-SCAN-02: returns undefined for non-existent id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get by id SL-SCAN-02: returns undefined for non-existent id"
+    },
+    {
+      "id": "LIB-SLOT-046",
+      "name": "SlotRoot store Get by id SL-SCAN-03: returns the first match when multiple slots have the same id",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get by id SL-SCAN-03: returns the first match when multiple slots have the same id"
+    },
+    {
+      "id": "LIB-SLOT-047",
+      "name": "SlotRoot store Get by id SL-SCAN-04: does not treat a prefixed sibling as an exact id match",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get by id SL-SCAN-04: does not treat a prefixed sibling as an exact id match"
+    },
+    {
+      "id": "LIB-SLOT-048",
+      "name": "SlotRoot store Select SL-SCANALL-01: finds all slots matching a filter in order",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Select SL-SCANALL-01: finds all slots matching a filter in order"
+    },
+    {
+      "id": "LIB-SLOT-049",
+      "name": "SlotRoot store Select SL-SCANALL-02: returns empty array when no matches",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Select SL-SCANALL-02: returns empty array when no matches"
+    },
+    {
+      "id": "LIB-SLOT-050",
+      "name": "SlotRoot store Select SL-SCANALL-03: returns all slots when filter is always true without sharing array identity",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Select SL-SCANALL-03: returns all slots when filter is always true without sharing array identity"
+    },
+    {
+      "id": "LIB-SLOT-051",
+      "name": "SlotRoot store Get all and snapshot identity SL-ALL-01: returns empty array for new root",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get all and snapshot identity SL-ALL-01: returns empty array for new root"
+    },
+    {
+      "id": "LIB-SLOT-052",
+      "name": "SlotRoot store Get all and snapshot identity SL-ALL-02: returns all registered slots in registration order",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get all and snapshot identity SL-ALL-02: returns all registered slots in registration order"
+    },
+    {
+      "id": "LIB-SLOT-053",
+      "name": "SlotRoot store Get all and snapshot identity SL-ALL-03: returns the cached array when slots are unchanged",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get all and snapshot identity SL-ALL-03: returns the cached array when slots are unchanged"
+    },
+    {
+      "id": "LIB-SLOT-054",
+      "name": "SlotRoot store Get all and snapshot identity SL-ALL-04: returns a new array after slots change",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Get all and snapshot identity SL-ALL-04: returns a new array after slots change"
+    },
+    {
+      "id": "LIB-SLOT-055",
+      "name": "SlotRoot store Metadata SL-META-01: stores and retrieves metadata",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Metadata SL-META-01: stores and retrieves metadata"
+    },
+    {
+      "id": "LIB-SLOT-056",
+      "name": "SlotRoot store Metadata SL-META-02: allows undefined metadata",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Metadata SL-META-02: allows undefined metadata"
+    },
+    {
+      "id": "LIB-SLOT-057",
+      "name": "SlotRoot store Metadata SL-META-03: filters slots by metadata",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Metadata SL-META-03: filters slots by metadata"
+    },
+    {
+      "id": "LIB-SLOT-058",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-01: notifies subscribers on register",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-01: notifies subscribers on register"
+    },
+    {
+      "id": "LIB-SLOT-059",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-02: notifies subscribers on unregister",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-02: notifies subscribers on unregister"
+    },
+    {
+      "id": "LIB-SLOT-060",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-03: notifies multiple subscribers",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-03: notifies multiple subscribers"
+    },
+    {
+      "id": "LIB-SLOT-061",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-04: returns an unsubscribe function",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-04: returns an unsubscribe function"
+    },
+    {
+      "id": "LIB-SLOT-062",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-05: handles an unsubscribe function called multiple times",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-05: handles an unsubscribe function called multiple times"
+    },
+    {
+      "id": "LIB-SLOT-063",
+      "name": "SlotRoot store Subscriptions and version SL-SUB-06: keeps notifying remaining subscribers when one listener throws",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-SUB-06: keeps notifying remaining subscribers when one listener throws"
+    },
+    {
+      "id": "LIB-SLOT-064",
+      "name": "SlotRoot store Subscriptions and version SL-VER-01: does not bump version when only live getter content changes without structural register",
+      "kind": "unit",
+      "file": "registry/store.test.ts",
+      "title": "SlotRoot store Subscriptions and version SL-VER-01: does not bump version when only live getter content changes without structural register"
+    },
+    {
+      "id": "LIB-SLOT-065",
+      "name": "nextSlotRegistrationId mints unique slot-reg-N ids in increasing order",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "nextSlotRegistrationId mints unique slot-reg-N ids in increasing order"
+    },
+    {
+      "id": "LIB-SLOT-066",
+      "name": "Slot visibility Visibility helpers SL-VIS-01: resolveSlotVisibility collapses flags into visible, hidden, or unmounted",
+      "kind": "unit",
+      "file": "visibility/visibility.test.ts",
+      "title": "Slot visibility Visibility helpers SL-VIS-01: resolveSlotVisibility collapses flags into visible, hidden, or unmounted"
+    },
+    {
+      "id": "LIB-SLOT-067",
+      "name": "Slot visibility Visibility helpers SL-VIS-02: SlotRoot stores visibility without dropping registration",
+      "kind": "unit",
+      "file": "visibility/visibility.test.ts",
+      "title": "Slot visibility Visibility helpers SL-VIS-02: SlotRoot stores visibility without dropping registration"
+    }
+  ]
+}

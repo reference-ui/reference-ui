@@ -1,0 +1,1562 @@
+{
+  "schemaVersion": 1,
+  "component": "NumberField",
+  "scope": "public",
+  "description": "Executable NumberField contracts covering logic and server-rendering evidence plus real-browser behavior and existing visual baselines. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-NUMBERFIELD-001",
+      "name": "NumberField numeric defaults NF-MATH-01: NumberField should resolve public numeric defaults without truthiness coercion",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField numeric defaults NF-MATH-01: NumberField should resolve public numeric defaults without truthiness coercion"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-002",
+      "name": "NumberField numeric validation NF-MATH-02: Runtime should reject every nonfinite or unusable numeric prop",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField numeric validation NF-MATH-02: Runtime should reject every nonfinite or unusable numeric prop"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-003",
+      "name": "NumberField step math NF-MATH-07: Decimal stepping should remove ordinary floating drift",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField step math NF-MATH-07: Decimal stepping should remove ordinary floating drift"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-004",
+      "name": "NumberField step math NF-MATH-08: Cleanup should not erase meaningful representable precision",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField step math NF-MATH-08: Cleanup should not erase meaningful representable precision"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-005",
+      "name": "NumberField step math NF-MATH-14: Interaction-produced negative zero should canonicalize to zero without rewriting a programmatic prop",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField step math NF-MATH-14: Interaction-produced negative zero should canonicalize to zero without rewriting a programmatic prop"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-006",
+      "name": "NumberField managed authority NF-TYPE-03 / NF-DOM-06: Managed part authority should defeat every behavior-owned conflicting cast",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed authority NF-TYPE-03 / NF-DOM-06: Managed part authority should defeat every behavior-owned conflicting cast"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-007",
+      "name": "NumberField managed authority NF-EDIT-13: Consumer edit handlers should run in native order without breaking managed state",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed authority NF-EDIT-13: Consumer edit handlers should run in native order without breaking managed state"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-008",
+      "name": "NumberField managed authority NF-DOM-05: Fixed hosts should preserve unrelated native props, handlers, and refs",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed authority NF-DOM-05: Fixed hosts should preserve unrelated native props, handlers, and refs"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-009",
+      "name": "NumberField steppers NF-STEP-11: Stepper capability should follow root state and authored disabled",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField steppers NF-STEP-11: Stepper capability should follow root state and authored disabled"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-010",
+      "name": "NumberField steppers NF-STEP-02: Native, keyboard, and programmatic click should perform exactly one step",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField steppers NF-STEP-02: Native, keyboard, and programmatic click should perform exactly one step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-011",
+      "name": "NumberField keyboard NF-KEY-07: Consumer cancellation and disabled state should suppress handled keyboard work",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField keyboard NF-KEY-07: Consumer cancellation and disabled state should suppress handled keyboard work"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-012",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-03: Primary pointerdown should step immediately without a compatibility-click duplicate",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-03: Primary pointerdown should step immediately without a compatibility-click duplicate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-013",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-04 / NF-STEP-05 / NF-STEP-12: Repeats should fire at exactly 400ms then every 60ms, one request per step",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-04 / NF-STEP-05 / NF-STEP-12: Repeats should fire at exactly 400ms then every 60ms, one request per step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-014",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-06: Pointer cancel and lost capture should terminate repeat independently",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-06: Pointer cancel and lost capture should terminate repeat independently"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-015",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-07: Pointer leave should end the repeat session rather than pause it",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-07: Pointer leave should end the repeat session rather than pause it"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-016",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-08: Pressed re-entry should step immediately and start a fresh 400ms delay",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-08: Pressed re-entry should step immediately and start a fresh 400ms delay"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-017",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-10: A stationary quick touch activation should produce one step without forced focus",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-10: A stationary quick touch activation should produce one step without forced focus"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-018",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-13: State changes and bounds should terminate active repeat as independent cleanup branches",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-13: State changes and bounds should terminate active repeat as independent cleanup branches"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-019",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-14: Removal, unmount, and owner-window blur should terminate active repeat",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-14: Removal, unmount, and owner-window blur should terminate active repeat"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-020",
+      "name": "NumberField hold-repeat (PATCHES §7) NF-STEP-15: Touch movement, scroll intent, and pinch should cancel repeat without suppressing the gesture",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hold-repeat (PATCHES §7) NF-STEP-15: Touch movement, scroll intent, and pinch should cancel repeat without suppressing the gesture"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-021",
+      "name": "NumberField redundant onChange suppression (FEATURES #2) Steppers and arrows at bounds should emit nothing while real steps still fire",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField redundant onChange suppression (FEATURES #2) Steppers and arrows at bounds should emit nothing while real steps still fire"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-022",
+      "name": "NumberField redundant onChange suppression (FEATURES #2) Home and End at their bound should stay handled but emit nothing",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField redundant onChange suppression (FEATURES #2) Home and End at their bound should stay handled but emit nothing"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-023",
+      "name": "NumberField redundant onChange suppression (FEATURES #2) Text edits that change nothing should emit nothing",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField redundant onChange suppression (FEATURES #2) Text edits that change nothing should emit nothing"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-024",
+      "name": "NumberField dirty edit session (B-19) NF-EDIT-03: Newly parseable live edits should request numbers while preserving authored text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) NF-EDIT-03: Newly parseable live edits should request numbers while preserving authored text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-025",
+      "name": "NumberField dirty edit session (B-19) NF-EDIT-05: Live edits with repeated numeric meaning should dedupe without ending the dirty session",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) NF-EDIT-05: Live edits with repeated numeric meaning should dedupe without ending the dirty session"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-026",
+      "name": "NumberField dirty edit session (B-19) Live out-of-range edits should request raw values while none-mode commit clamps once; invalid text reverts silently",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) Live out-of-range edits should request raw values while none-mode commit clamps once; invalid text reverts silently"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-027",
+      "name": "NumberField dirty edit session (B-19) Step actions should use a complete dirty candidate as their base and end the session",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) Step actions should use a complete dirty candidate as their base and end the session"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-028",
+      "name": "NumberField dirty edit session (B-19) A prevented blur should veto commit and keep the dirty buffer",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) A prevented blur should veto commit and keep the dirty buffer"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-029",
+      "name": "NumberField dirty edit session (B-19) A programmatic value change should replace the buffer and end the session",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField dirty edit session (B-19) A programmatic value change should replace the buffer and end the session"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-030",
+      "name": "NumberField live requests (NFLAST ruling c) NF-EDIT-04: Clearing should request null once as a live candidate",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-EDIT-04: Clearing should request null once as a live candidate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-031",
+      "name": "NumberField live requests (NFLAST ruling c) NF-EDIT-14: Rejected live requests should not create a hidden numeric store",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-EDIT-14: Rejected live requests should not create a hidden numeric store"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-032",
+      "name": "NumberField live requests (NFLAST ruling c) NF-COMMIT-01: Blur should commit after the consumer handler and retry a candidate that differs from controlled value",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-COMMIT-01: Blur should commit after the consumer handler and retry a candidate that differs from controlled value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-033",
+      "name": "NumberField live requests (NFLAST ruling c) NF-COMMIT-08: Accepted latest echoes should preserve dirty text until an explicit commit/revert",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-COMMIT-08: Accepted latest echoes should preserve dirty text until an explicit commit/revert"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-034",
+      "name": "NumberField live requests (NFLAST ruling c) NF-COMMIT-11: Out-of-order controlled echoes should never be mistaken for acceptance of the latest request",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-COMMIT-11: Out-of-order controlled echoes should never be mistaken for acceptance of the latest request"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-035",
+      "name": "NumberField live requests (NFLAST ruling c) NF-DYNAMIC-01: Latest accepted echo, stale echo, and unrelated value replacement should have distinct dirty-session outcomes",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField live requests (NFLAST ruling c) NF-DYNAMIC-01: Latest accepted echo, stale echo, and unrelated value replacement should have distinct dirty-session outcomes"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-036",
+      "name": "NumberField environments NF-ENV-01: Server markup should carry textbox semantics for hydration",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField environments NF-ENV-01: Server markup should carry textbox semantics for hydration"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-037",
+      "name": "NumberField environments NF-ENV-02: Mismatched server/client Intl data should report an unsupported deployment instead of promising identical bytes",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField environments NF-ENV-02: Mismatched server/client Intl data should report an unsupported deployment instead of promising identical bytes"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-038",
+      "name": "NumberField environments NF-ENV-05: StrictMode should not duplicate callbacks on a single step",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField environments NF-ENV-05: StrictMode should not duplicate callbacks on a single step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-039",
+      "name": "NumberField required stepper names NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField required stepper names NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-040",
+      "name": "NumberField commitBehavior (W-02) W-02 snap: typing 2.5 with step 1 commits 3 with a single onChange",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 snap: typing 2.5 with step 1 commits 3 with a single onChange"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-041",
+      "name": "NumberField commitBehavior (W-02) NF-MATH-09: Snap midpoint ties should move away from zero",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) NF-MATH-09: Snap midpoint ties should move away from zero"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-042",
+      "name": "NumberField commitBehavior (W-02) NF-MATH-10: Snap should preserve exact and exceeded non-grid maximum endpoints",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) NF-MATH-10: Snap should preserve exact and exceeded non-grid maximum endpoints"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-043",
+      "name": "NumberField commitBehavior (W-02) W-02 snap: fractional steps snap to the nearest lattice point",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 snap: fractional steps snap to the nearest lattice point"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-044",
+      "name": "NumberField commitBehavior (W-02) NF-MATH-11: Snap should preserve exact and exceeded non-grid minimum endpoints",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) NF-MATH-11: Snap should preserve exact and exceeded non-grid minimum endpoints"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-045",
+      "name": "NumberField commitBehavior (W-02) W-02 snap: no-change commits emit nothing; invalid text reverts silently",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 snap: no-change commits emit nothing; invalid text reverts silently"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-046",
+      "name": "NumberField commitBehavior (W-02) W-02 snap: authored display precision applies to the committed number",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 snap: authored display precision applies to the committed number"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-047",
+      "name": "NumberField commitBehavior (W-02) NF-MATH-13: Validate mode should apply authored rounding without snapping or clamping",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) NF-MATH-13: Validate mode should apply authored rounding without snapping or clamping"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-048",
+      "name": "NumberField commitBehavior (W-02) W-02 validate: on-step in-range commits publish plainly",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 validate: on-step in-range commits publish plainly"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-049",
+      "name": "NumberField commitBehavior (W-02) W-02 none (default): off-step values commit with clamp-only behavior",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02 none (default): off-step values commit with clamp-only behavior"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-050",
+      "name": "NumberField commitBehavior (W-02) W-02: an unknown commitBehavior throws at render",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField commitBehavior (W-02) W-02: an unknown commitBehavior throws at render"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-051",
+      "name": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-03: All interaction should use one zero-anchored step lattice",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-03: All interaction should use one zero-anchored step lattice"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-052",
+      "name": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-04: Directional stepping from an off-grid value should choose the next lattice point in the requested direction",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-04: Directional stepping from an off-grid value should choose the next lattice point in the requested direction"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-053",
+      "name": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-05: The first step from null should select the in-range value nearest zero without adding another step",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-05: The first step from null should select the in-range value nearest zero without adding another step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-054",
+      "name": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-06: Exact non-grid bounds should remain reachable and stable under stepping",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-06: Exact non-grid bounds should remain reachable and stable under stepping"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-055",
+      "name": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-12: Snap should apply endpoint preservation or nearest lattice, then authored rounding, then final clamp in that order",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze lattice (NFLAST ruling a) NF-MATH-12: Snap should apply endpoint preservation or nearest lattice, then authored rounding, then final clamp in that order"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-056",
+      "name": "NumberField formatOptions (W-25) W-25: currency display formats clean state while commits stay plain numbers",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: currency display formats clean state while commits stay plain numbers"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-057",
+      "name": "NumberField formatOptions (W-25) W-25: typing never fights the formatter — drafts stay verbatim until commit",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: typing never fights the formatter — drafts stay verbatim until commit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-058",
+      "name": "NumberField formatOptions (W-25) W-25: percent display scales both ways; percent marks reject elsewhere",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: percent display scales both ways; percent marks reject elsewhere"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-059",
+      "name": "NumberField formatOptions (W-25) W-25: percent fields step hundredths by default",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: percent fields step hundredths by default"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-060",
+      "name": "NumberField formatOptions (W-25) W-25: de-DE honors locale punctuation; foreign placement reverts",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: de-DE honors locale punctuation; foreign placement reverts"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-061",
+      "name": "NumberField formatOptions (W-25) W-25: grouped drafts parse and step from their numeric meaning",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: grouped drafts parse and step from their numeric meaning"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-062",
+      "name": "NumberField formatOptions (W-25) W-25: null renders empty under any format; clearing commits null",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: null renders empty under any format; clearing commits null"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-063",
+      "name": "NumberField formatOptions (W-25) W-25: focus and blur without editing never reparse rounded display text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: focus and blur without editing never reparse rounded display text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-064",
+      "name": "NumberField formatOptions (W-25) W-25: an effective format change replaces a dirty draft; equal options preserve it",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: an effective format change replaces a dirty draft; equal options preserve it"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-065",
+      "name": "NumberField formatOptions (W-25) W-25: an invalid locale or formatOptions pair fails fast naming the props",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField formatOptions (W-25) W-25: an invalid locale or formatOptions pair fails fast naming the props"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-066",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-01: NumberField should render exactly one root div, group div, text input, and authored stepper buttons",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-01: NumberField should render exactly one root div, group div, text input, and authored stepper buttons"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-067",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-02: A name should add only one direct canonical hidden form input",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-02: A name should add only one direct canonical hidden form input"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-068",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-03: NumberField should diagnose missing, duplicate, or misplaced named parts",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-03: NumberField should diagnose missing, duplicate, or misplaced named parts"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-069",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-04: Group should allow arbitrary authored siblings while only named parts join behavior",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-04: Group should allow arbitrary authored siblings while only named parts join behavior"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-070",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-07: Input IDs and stepper controls should stay stable within one React root",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-07: Input IDs and stepper controls should stay stable within one React root"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-071",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-DOM-08: Managed data should distinguish dirty editing, visible emptiness, validity, focus, disabled state, and pointer press",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-DOM-08: Managed data should distinguish dirty editing, visible emptiness, validity, focus, disabled state, and pointer press"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-072",
+      "name": "NumberField freeze anatomy (PATCHES §4) NF-SURF-01: Group should consume the Field recipe on its own group node",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField freeze anatomy (PATCHES §4) NF-SURF-01: Group should consume the Field recipe on its own group node"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-073",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-01: Visible localized text and canonical hidden form value should remain separate",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-01: Visible localized text and canonical hidden form value should remain separate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-074",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-02: Clean forms should submit only accepted controlled numeric state",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-02: Clean forms should submit only accepted controlled numeric state"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-075",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-03: Disabled, read-only, dynamic name, and external same-root form association should follow the frozen policy",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-03: Disabled, read-only, dynamic name, and external same-root form association should follow the frozen policy"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-076",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-04: Native required should retain platform valueMissing behavior",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-04: Native required should retain platform valueMissing behavior"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-077",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-05 / NF-A11Y-06: Managed numeric constraint failures should block submit without changing native text-input validity flags",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-05 / NF-A11Y-06: Managed numeric constraint failures should block submit without changing native text-input validity flags"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-078",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-06: Programmatic requestSubmit should process a still-dirty complete candidate and require explicit retry",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-06: Programmatic requestSubmit should process a still-dirty complete candidate and require explicit retry"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-079",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-07: Programmatic requestSubmit should block incomplete dirty text without a numeric substitute",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-07: Programmatic requestSubmit should block incomplete dirty text without a numeric substitute"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-080",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-08: Programmatic reset while focused should clear transient state without blurring or changing controlled value",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-08: Programmatic reset while focused should clear transient state without blurring or changing controlled value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-081",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-10: Application custom validity should survive every NumberField update untouched",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-10: Application custom validity should survive every NumberField update untouched"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-082",
+      "name": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-13: All dirty NumberFields should process the same submit even when it is already prevented",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField hidden form pipeline (PATCHES §5) NF-FORM-13: All dirty NumberFields should process the same submit even when it is already prevented"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-083",
+      "name": "NumberField managed semantics and environments NF-A11Y-01: Input should expose an accessible named textbox rather than a spinbutton",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-A11Y-01: Input should expose an accessible named textbox rather than a spinbutton"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-084",
+      "name": "NumberField managed semantics and environments NF-A11Y-02: An unnamed Input should diagnose without inventing application label markup",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-A11Y-02: An unnamed Input should diagnose without inventing application label markup"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-085",
+      "name": "NumberField managed semantics and environments NF-A11Y-03: Disabled, read-only, required, and invalid semantics should appear only on supported roles",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-A11Y-03: Disabled, read-only, required, and invalid semantics should appear only on supported roles"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-086",
+      "name": "NumberField managed semantics and environments NF-A11Y-05: Group focus state should track the single Input tab stop without adding stepper tab stops",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-A11Y-05: Group focus state should track the single Input tab stop without adding stepper tab stops"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-087",
+      "name": "NumberField managed semantics and environments NF-DYNAMIC-03: Bounds, step, and commit-policy changes should atomically revalidate controlled state and stepper capability",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-DYNAMIC-03: Bounds, step, and commit-policy changes should atomically revalidate controlled state and stepper capability"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-088",
+      "name": "NumberField managed semantics and environments NF-DYNAMIC-04: Optional steppers and arbitrary siblings should insert, remove, and reorder without replacing Input",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-DYNAMIC-04: Optional steppers and arbitrary siblings should insert, remove, and reorder without replacing Input"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-089",
+      "name": "NumberField managed semantics and environments NF-ENV-03: Generated IDs should be stable and unique within one React root",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-ENV-03: Generated IDs should be stable and unique within one React root"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-090",
+      "name": "NumberField managed semantics and environments NF-ENV-07: Automated mobile coverage should assert only grammar-derived inputMode attributes",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-ENV-07: Automated mobile coverage should assert only grammar-derived inputMode attributes"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-091",
+      "name": "NumberField managed semantics and environments NF-STEP-11: Stepper capability should follow controlled, dirty, bound, and root state",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-STEP-11: Stepper capability should follow controlled, dirty, bound, and root state"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-092",
+      "name": "NumberField managed semantics and environments NF-KEY-07: Read-only state should suppress handled keyboard work",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-KEY-07: Read-only state should suppress handled keyboard work"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-093",
+      "name": "NumberField managed semantics and environments NF-COMMIT-03 / NF-COMMIT-07: Invalid commits should revert with a failed boundary that resolves only authoritatively",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-COMMIT-03 / NF-COMMIT-07: Invalid commits should revert with a failed boundary that resolves only authoritatively"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-094",
+      "name": "NumberField managed semantics and environments NF-COMMIT-10: Canceling blur should retain a dirty session while unfocused and resume it on refocus",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-COMMIT-10: Canceling blur should retain a dirty session while unfocused and resume it on refocus"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-095",
+      "name": "NumberField managed semantics and environments NF-MATH-15: Off-grid bound validity should distinguish an allowed endpoint from an ordinary step mismatch",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField managed semantics and environments NF-MATH-15: Off-grid bound validity should distinguish an allowed endpoint from an ordinary step mismatch"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-096",
+      "name": "NumberField wave-2 formatting NF-FORMAT-01: NumberField should render controlled values with the exact requested Intl format through public Input",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-01: NumberField should render controlled values with the exact requested Intl format through public Input"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-097",
+      "name": "NumberField wave-2 formatting NF-FORMAT-02: Controlled null should be the only clean empty display",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-02: Controlled null should be the only clean empty display"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-098",
+      "name": "NumberField wave-2 formatting NF-FORMAT-05: Omitted Intl precision defaults should remain display-only",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-05: Omitted Intl precision defaults should remain display-only"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-099",
+      "name": "NumberField wave-2 formatting NF-FORMAT-06: Authored fraction rounding should apply only at a dirty commit boundary",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-06: Authored fraction rounding should apply only at a dirty commit boundary"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-100",
+      "name": "NumberField wave-2 formatting NF-FORMAT-07: Authored significant digits, priority, and rounding increments should produce observable public commit results",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-07: Authored significant digits, priority, and rounding increments should produce observable public commit results"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-101",
+      "name": "NumberField wave-2 formatting NF-FORMAT-08: Percent rounding should occur at display scale while currency and units retain numeric scale",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 formatting NF-FORMAT-08: Percent rounding should occur at display scale while currency and units retain numeric scale"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-102",
+      "name": "NumberField wave-2 parsing NF-PARSE-04: NumberField should preserve incomplete localized grammar as dirty text without publishing a substitute value",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-04: NumberField should preserve incomplete localized grammar as dirty text without publishing a substitute value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-103",
+      "name": "NumberField wave-2 parsing NF-PARSE-05: Current-locale decimal and group meaning should win over ambiguous foreign punctuation",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-05: Current-locale decimal and group meaning should win over ambiguous foreign punctuation"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-104",
+      "name": "NumberField wave-2 parsing NF-PARSE-14: Empty, nonnumeric, overflowing, and nonfinite text should never cross the numeric callback",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-14: Empty, nonnumeric, overflowing, and nonfinite text should never cross the numeric callback"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-105",
+      "name": "NumberField wave-2 parsing NF-PARSE-02: NumberField should accept ASCII, Arabic-Indic, Extended Arabic-Indic, Devanagari, Bengali, fullwidth, and supported hanidec digits",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-02: NumberField should accept ASCII, Arabic-Indic, Extended Arabic-Indic, Devanagari, Bengali, fullwidth, and supported hanidec digits"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-106",
+      "name": "NumberField wave-2 parsing NF-PARSE-03: NumberField should accept only active-locale or documented width sign variants without discarding duplicate or embedded signs",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-03: NumberField should accept only active-locale or documented width sign variants without discarding duplicate or embedded signs"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-107",
+      "name": "NumberField wave-2 parsing NF-PARSE-06: Locale-equivalent space and apostrophe groups should parse only in valid group positions",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-06: Locale-equivalent space and apostrophe groups should parse only in valid group positions"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-108",
+      "name": "NumberField wave-2 parsing NF-PARSE-17: Indian grouping should honor the 3-2-2 pattern exposed by en-IN and hi-IN",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-17: Indian grouping should honor the 3-2-2 pattern exposed by en-IN and hi-IN"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-109",
+      "name": "NumberField wave-2 parsing NF-PARSE-08: Configured currency affixes should parse in locale order while conflicting currency stays invalid",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-08: Configured currency affixes should parse in locale order while conflicting currency stays invalid"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-110",
+      "name": "NumberField wave-2 parsing NF-PARSE-10: Configured unit affixes should round-trip without treating unit letters as exponent syntax",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-10: Configured unit affixes should round-trip without treating unit letters as exponent syntax"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-111",
+      "name": "NumberField wave-2 parsing NF-PARSE-12: Accounting parentheses should mean negative only in configured accounting currency",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-12: Accounting parentheses should mean negative only in configured accounting currency"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-112",
+      "name": "NumberField wave-2 parsing NF-PARSE-09: Percent style and the percent unit should expose different public scales",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-09: Percent style and the percent unit should expose different public scales"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-113",
+      "name": "NumberField wave-2 parsing NF-PARSE-18: Plural currency and unit affix forms exposed by Intl should remain parseable without guessing prose",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-18: Plural currency and unit affix forms exposed by Intl should remain parseable without guessing prose"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-114",
+      "name": "NumberField wave-2 parsing NF-PARSE-11: Scientific and engineering notation should accept localized exponent parts and reject incomplete exponents at commit",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-11: Scientific and engineering notation should accept localized exponent parts and reject incomplete exponents at commit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-115",
+      "name": "NumberField wave-2 parsing NF-PARSE-13: Formatter-inserted bidi controls should be ignored without accepting unrelated invisible text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-13: Formatter-inserted bidi controls should be ignored without accepting unrelated invisible text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-116",
+      "name": "NumberField wave-2 parsing NF-PARSE-01: NumberField should derive active tokens by rendering the public component for the requested locale and format",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-01: NumberField should derive active tokens by rendering the public component for the requested locale and format"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-117",
+      "name": "NumberField wave-2 parsing NF-PARSE-19: A seeded public formatter/parser matrix should round-trip at least 2,000 deterministic values across the supported Intl surface",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-19: A seeded public formatter/parser matrix should round-trip at least 2,000 deterministic values across the supported Intl surface"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-118",
+      "name": "NumberField wave-2 parsing NF-PARSE-15: Every supported decimal numbering system should satisfy a public format-edit-commit vector rule",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-15: Every supported decimal numbering system should satisfy a public format-edit-commit vector rule"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-119",
+      "name": "NumberField wave-2 parsing NF-PARSE-16: Unsupported algorithmic or non-invertible numbering systems should fail before accepting edits",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 parsing NF-PARSE-16: Unsupported algorithmic or non-invertible numbering systems should fail before accepting edits"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-120",
+      "name": "NumberField wave-2 commit and semantics NF-A11Y-04: Authored descriptions and error relationships should survive managed validity changes",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 commit and semantics NF-A11Y-04: Authored descriptions and error relationships should survive managed validity changes"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-121",
+      "name": "NumberField wave-2 commit and semantics NF-COMMIT-04: Empty commit should retry null when controlled value is still non-null",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 commit and semantics NF-COMMIT-04: Empty commit should retry null when controlled value is still non-null"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-122",
+      "name": "NumberField wave-2 commit and semantics NF-COMMIT-05: Snap commit should publish only its final documented candidate",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 commit and semantics NF-COMMIT-05: Snap commit should publish only its final documented candidate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-123",
+      "name": "NumberField wave-2 commit and semantics NF-COMMIT-09: A no-edit focus/blur cycle should preserve full controlled precision",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 commit and semantics NF-COMMIT-09: A no-edit focus/blur cycle should preserve full controlled precision"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-124",
+      "name": "NumberField wave-2 commit and semantics NF-KEY-06: A complete dirty candidate should be the base for keyboard stepping",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 commit and semantics NF-KEY-06: A complete dirty candidate should be the base for keyboard stepping"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-125",
+      "name": "NumberField wave-2 environment and composition NF-ENV-04: Independent SSR roots should require distinct identifierPrefix values or explicit Input IDs",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 environment and composition NF-ENV-04: Independent SSR roots should require distinct identifierPrefix values or explicit Input IDs"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-126",
+      "name": "NumberField wave-2 environment and composition NF-COMP-03: A percent NumberField should type 12.5% only with explicit fractional grammar and compatible step",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField wave-2 environment and composition NF-COMP-03: A percent NumberField should type 12.5% only with explicit fractional grammar and compatible step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-127",
+      "name": "NumberField CT renders textbox, steppers, and increments/decrements via keyboard and buttons",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT renders textbox, steppers, and increments/decrements via keyboard and buttons"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-128",
+      "name": "NumberField CT mouse click into NumberField changes border color without outline ring",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT mouse click into NumberField changes border color without outline ring"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-129",
+      "name": "NumberField CT keyboard tab applies focus ring and keeps border color aligned with Field",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT keyboard tab applies focus ring and keeps border color aligned with Field"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-130",
+      "name": "NumberField CT stepper clicks focus input and apply focus border without outline ring",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT stepper clicks focus input and apply focus border without outline ring"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-131",
+      "name": "NumberField CT renders disabled NumberField",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT renders disabled NumberField"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-132",
+      "name": "NumberField CT NF-KEY-01: unmodified Up and Down request one step per keydown",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-01: unmodified Up and Down request one step per keydown"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-133",
+      "name": "NumberField CT NF-KEY-02: Shift+Arrow uses the fixed coarse delta 10 * step",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-02: Shift+Arrow uses the fixed coarse delta 10 * step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-134",
+      "name": "NumberField CT NF-KEY-03: Alt-modified arrows remain completely native and unhandled",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-03: Alt-modified arrows remain completely native and unhandled"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-135",
+      "name": "NumberField CT NF-KEY-04: Home and End target supplied bounds only when unmodified and present",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-04: Home and End target supplied bounds only when unmodified and present"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-136",
+      "name": "NumberField CT NF-KEY-04: Home and End are native when bounds are absent",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-04: Home and End are native when bounds are absent"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-137",
+      "name": "NumberField CT NF-KEY-05: Unsupported keys remain native and never change the value",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-KEY-05: Unsupported keys remain native and never change the value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-138",
+      "name": "NumberField CT NF-STEP-01: Named steppers control the real Input without adding a tab stop",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-STEP-01: Named steppers control the real Input without adding a tab stop"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-139",
+      "name": "NumberField CT NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-140",
+      "name": "NumberField CT NF-STEP-09: Secondary and auxiliary pointer buttons never start stepping",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-STEP-09: Secondary and auxiliary pointer buttons never start stepping"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-141",
+      "name": "NumberField CT NF-MATH-07: Decimal stepper clicks remove floating drift in the UI",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-MATH-07: Decimal stepper clicks remove floating drift in the UI"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-142",
+      "name": "NumberField CT NF-EDIT-04: Clearing requests null once as a live candidate",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-04: Clearing requests null once as a live candidate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-143",
+      "name": "NumberField CT NF-EDIT-03: Newly parseable live edits request numbers while preserving authored text and caret",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-03: Newly parseable live edits request numbers while preserving authored text and caret"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-144",
+      "name": "NumberField CT NF-EDIT-19: Focused Input leaves wheel behavior entirely native inside a scrollable ancestor",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-19: Focused Input leaves wheel behavior entirely native inside a scrollable ancestor"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-145",
+      "name": "NumberField CT W-02: snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT W-02: snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-146",
+      "name": "NumberField CT NF-COMMIT-06: Validate commit should retain accepted invalid numbers without touching native text-input range/step validity",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMMIT-06: Validate commit should retain accepted invalid numbers without touching native text-input range/step validity"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-147",
+      "name": "NumberField CT W-25: currency formatOptions display formatted text, commit plain numbers",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT W-25: currency formatOptions display formatted text, commit plain numbers"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-148",
+      "name": "NumberField CT W-25: percent formatOptions scale typed input to plain fractions",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT W-25: percent formatOptions scale typed input to plain fractions"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-149",
+      "name": "NumberField CT controlled unbounded field steps from echoed state (FEATURES #1: no uncontrolled mode)",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT controlled unbounded field steps from echoed state (FEATURES #1: no uncontrolled mode)"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-150",
+      "name": "NumberField CT NF-DOM-01: NumberField renders exactly one root div, group div, text input, and authored stepper buttons",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-DOM-01: NumberField renders exactly one root div, group div, text input, and authored stepper buttons"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-151",
+      "name": "NumberField CT NF-DOM-02: A name adds only one direct canonical hidden form input",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-DOM-02: A name adds only one direct canonical hidden form input"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-152",
+      "name": "NumberField CT NF-SURF-01: Group consumes the Field recipe on its own group node",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-SURF-01: Group consumes the Field recipe on its own group node"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-153",
+      "name": "NumberField CT NF-FORM-02: A named field submits one canonical pair from the live form",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORM-02: A named field submits one canonical pair from the live form"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-154",
+      "name": "NumberField CT NF-FORMAT-03: Referentially new but effectively equal format options preserve a dirty session",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORMAT-03: Referentially new but effectively equal format options preserve a dirty session"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-155",
+      "name": "NumberField CT NF-FORMAT-04: An effective format change replaces dirty text from controlled state",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORMAT-04: An effective format change replaces dirty text from controlled state"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-156",
+      "name": "NumberField CT NF-EDIT-01: Focusing clean Input does not start a dirty session",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-01: Focusing clean Input does not start a dirty session"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-157",
+      "name": "NumberField CT NF-EDIT-01: Focusing null and formatted fields leaves them clean",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-01: Focusing null and formatted fields leaves them clean"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-158",
+      "name": "NumberField CT NF-EDIT-06: Horizontal navigation and selection remain native around localized tokens",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-06: Horizontal navigation and selection remain native around localized tokens"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-159",
+      "name": "NumberField CT NF-EDIT-10: Unreadable clipboard data fails open without fabricating an edit",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-10: Unreadable clipboard data fails open without fabricating an edit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-160",
+      "name": "NumberField CT NF-EDIT-11: Synthetic composition suspends filtering, stepping, and commit until its final event",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-11: Synthetic composition suspends filtering, stepping, and commit until its final event"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-161",
+      "name": "NumberField CT NF-EDIT-14: Rejected live requests do not create a hidden numeric store",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-14: Rejected live requests do not create a hidden numeric store"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-162",
+      "name": "NumberField CT NF-COMMIT-01: Blur commits after the consumer handler and retries a candidate that differs from controlled value",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMMIT-01: Blur commits after the consumer handler and retries a candidate that differs from controlled value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-163",
+      "name": "NumberField CT NF-COMMIT-02: Enter commits without moving focus or synthesizing form submission",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMMIT-02: Enter commits without moving focus or synthesizing form submission"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-164",
+      "name": "NumberField CT NF-FORM-09: Autofill-equivalent input/change events follow ordinary public edit and commit rules",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORM-09: Autofill-equivalent input/change events follow ordinary public edit and commit rules"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-165",
+      "name": "NumberField CT NF-DYNAMIC-02: Locale and effective format changes atomically replace parser, formatter, grammar, and inputMode",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-DYNAMIC-02: Locale and effective format changes atomically replace parser, formatter, grammar, and inputMode"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-166",
+      "name": "NumberField CT NF-COMP-01: A quantity NumberField composes integer bounds, named steppers, controlled rejection, reset, and forms",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMP-01: A quantity NumberField composes integer bounds, named steppers, controlled rejection, reset, and forms"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-167",
+      "name": "NumberField CT NF-FORM-11: Clicking submit from dirty partial or unaccepted complete blocks stale serialization",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORM-11: Clicking submit from dirty partial or unaccepted complete blocks stale serialization"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-168",
+      "name": "NumberField CT NF-FORM-12: Implicit Enter submit after an unaccepted key commit stays blocked without a second submit",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORM-12: Implicit Enter submit after an unaccepted key commit stays blocked without a second submit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-169",
+      "name": "NumberField CT NF-FORM-14: Clicked reset applies blur first and cancellation preserves post-blur state",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-FORM-14: Clicked reset applies blur first and cancellation preserves post-blur state"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-170",
+      "name": "NumberField CT NF-EDIT-16: Cut, undo, redo, and ranged replacement stay browser-native with requests only for new meanings",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-16: Cut, undo, redo, and ranged replacement stay browser-native with requests only for new meanings"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-171",
+      "name": "NumberField CT NF-EDIT-15: Deletion around grouping and affixes preserves a correct editable buffer",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-15: Deletion around grouping and affixes preserves a correct editable buffer"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-172",
+      "name": "NumberField CT NF-EDIT-12: A valid synthetic composition result parses once and an invalid result restores pre-composition text",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-12: A valid synthetic composition result parses once and an invalid result restores pre-composition text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-173",
+      "name": "NumberField CT NF-EDIT-17: A controlled value change during active composition invalidates the session and ignores stale fallout",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-17: A controlled value change during active composition invalidates the session and ignores stale fallout"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-174",
+      "name": "NumberField CT NF-EDIT-18: A locale or effective format change during active composition replaces from latest controlled state and ignores stale fallout",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-18: A locale or effective format change during active composition replaces from latest controlled state and ignores stale fallout"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-175",
+      "name": "NumberField CT NF-EDIT-02: Valid partial edits remain visible while impossible ordinary insertions are canceled",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-02: Valid partial edits remain visible while impossible ordinary insertions are canceled"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-176",
+      "name": "NumberField CT NF-EDIT-08: Valid paste splices at the current selection and retains the resulting caret",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-08: Valid paste splices at the current selection and retains the resulting caret"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-177",
+      "name": "NumberField CT NF-EDIT-09: Invalid paste leaves text, selection, controlled state, and callbacks unchanged",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-09: Invalid paste leaves text, selection, controlled state, and callbacks unchanged"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-178",
+      "name": "NumberField CT NF-PARSE-07: Disabling grouping removes pasted group tokens without changing the number or caret model",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-PARSE-07: Disabling grouping removes pasted group tokens without changing the number or caret model"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-179",
+      "name": "NumberField CT NF-COMP-02: A localized currency NumberField composes precision, non-Latin input, dirty submit, and authored labels",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMP-02: A localized currency NumberField composes precision, non-Latin input, dirty submit, and authored labels"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-180",
+      "name": "NumberField CT NF-EDIT-07: Focused formatting replacements preserve the caret by logical digit with a documented end fallback",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-EDIT-07: Focused formatting replacements preserve the caret by logical digit with a documented end fallback"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-181",
+      "name": "NumberField CT NF-DYNAMIC-05: Interactive replacement cancels pending key, repeat, composition, and failed-submit work",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-DYNAMIC-05: Interactive replacement cancels pending key, repeat, composition, and failed-submit work"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-182",
+      "name": "NumberField CT NF-ENV-06: Open ShadowRoot operation scopes focus, IDs, listeners, and same-root forms to the owner root",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-ENV-06: Open ShadowRoot operation scopes focus, IDs, listeners, and same-root forms to the owner root"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-183",
+      "name": "NumberField CT NF-COMP-04: A scientific unit NumberField composes validate mode, RTL, Shadow DOM, and programmatic replacement without custom parsing",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-COMP-04: A scientific unit NumberField composes validate mode, RTL, Shadow DOM, and programmatic replacement without custom parsing"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-184",
+      "name": "NumberField CT NF-A11Y-01 scan: axe reports zero violations on the named stepper field",
+      "kind": "ct",
+      "file": "__e2e__/NumberField.ct.spec.ts",
+      "title": "NumberField CT NF-A11Y-01 scan: axe reports zero violations on the named stepper field"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-185",
+      "name": "logical caret model counts ASCII and active-system glyphs as digits",
+      "kind": "unit",
+      "file": "draft/caret.test.ts",
+      "title": "logical caret model counts ASCII and active-system glyphs as digits"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-186",
+      "name": "logical caret model maps preceding-digit counts across formatting replacements",
+      "kind": "unit",
+      "file": "draft/caret.test.ts",
+      "title": "logical caret model maps preceding-digit counts across formatting replacements"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-187",
+      "name": "grammar-derived inputMode keeps the full keyboard for validate mode and scientific grammars",
+      "kind": "unit",
+      "file": "draft/input-mode.test.ts",
+      "title": "grammar-derived inputMode keeps the full keyboard for validate mode and scientific grammars"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-188",
+      "name": "grammar-derived inputMode admits fractions only from authored precision or a fractional step",
+      "kind": "unit",
+      "file": "draft/input-mode.test.ts",
+      "title": "grammar-derived inputMode admits fractions only from authored precision or a fractional step"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-189",
+      "name": "draft parser parses plain and grouped western numbers",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser parses plain and grouped western numbers"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-190",
+      "name": "draft parser parses locale separators and rejects foreign punctuation",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser parses locale separators and rejects foreign punctuation"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-191",
+      "name": "draft parser rejects incomplete grammar, doubles, and embedded signs",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser rejects incomplete grammar, doubles, and embedded signs"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-192",
+      "name": "draft parser parses exponents and scales percent style",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser parses exponents and scales percent style"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-193",
+      "name": "draft parser strips configured affixes in locale order",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser strips configured affixes in locale order"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-194",
+      "name": "draft parser validates group heads against the locale pattern",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser validates group heads against the locale pattern"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-195",
+      "name": "draft parser cancels only impossible insertions at keystroke time",
+      "kind": "unit",
+      "file": "draft/parse.test.ts",
+      "title": "draft parser cancels only impossible insertions at keystroke time"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-196",
+      "name": "draft alphabet derives western separators, ASCII digits, and 3-3 groups for en-US",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet derives western separators, ASCII digits, and 3-3 groups for en-US"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-197",
+      "name": "draft alphabet derives locale separators and the en-IN 3-2 pattern",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet derives locale separators and the en-IN 3-2 pattern"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-198",
+      "name": "draft alphabet resolves ten positional digits per numbering system",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet resolves ten positional digits per numbering system"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-199",
+      "name": "draft alphabet refuses numbering systems without ten stable positional digits",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet refuses numbering systems without ten stable positional digits"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-200",
+      "name": "draft alphabet normalizes active-system glyphs and rejects foreign digits",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet normalizes active-system glyphs and rejects foreign digits"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-201",
+      "name": "draft alphabet compares format options shallowly for session preservation",
+      "kind": "unit",
+      "file": "draft/symbols.test.ts",
+      "title": "draft alphabet compares format options shallowly for session preservation"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-202",
+      "name": "accessible-name text plumbing stringifies authored names and blanks nullish ones",
+      "kind": "unit",
+      "file": "shared/names.test.ts",
+      "title": "accessible-name text plumbing stringifies authored names and blanks nullish ones"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-203",
+      "name": "accessible-name text plumbing splits labelledby values into ids and blanks empties",
+      "kind": "unit",
+      "file": "shared/names.test.ts",
+      "title": "accessible-name text plumbing splits labelledby values into ids and blanks empties"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-204",
+      "name": "step advance steps directionally on the lattice",
+      "kind": "unit",
+      "file": "step/advance.test.ts",
+      "title": "step advance steps directionally on the lattice"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-205",
+      "name": "step advance selects the in-range value nearest zero from null, ignoring the factor",
+      "kind": "unit",
+      "file": "step/advance.test.ts",
+      "title": "step advance selects the in-range value nearest zero from null, ignoring the factor"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-206",
+      "name": "step advance clamps to the exact endpoint and noops at the value",
+      "kind": "unit",
+      "file": "step/advance.test.ts",
+      "title": "step advance clamps to the exact endpoint and noops at the value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-207",
+      "name": "commit decision clears to null, and clearing an empty field is a noop",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision clears to null, and clearing an empty field is a noop"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-208",
+      "name": "commit decision fails invalid text and noops the current value (FEATURES #2)",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision fails invalid text and noops the current value (FEATURES #2)"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-209",
+      "name": "commit decision clamps without snapping under the none policy",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision clamps without snapping under the none policy"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-210",
+      "name": "commit decision snaps through the lattice endpoint-first under snap",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision snaps through the lattice endpoint-first under snap"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-211",
+      "name": "commit decision retains the raw candidate with an advisory reason under validate",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision retains the raw candidate with an advisory reason under validate"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-212",
+      "name": "commit decision discards a single leading orphan group separator at commit",
+      "kind": "unit",
+      "file": "step/commit.test.ts",
+      "title": "commit decision discards a single leading orphan group separator at commit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-213",
+      "name": "zero-anchored step lattice snaps to the nearest lattice point with away-from-zero ties",
+      "kind": "unit",
+      "file": "step/lattice.test.ts",
+      "title": "zero-anchored step lattice snaps to the nearest lattice point with away-from-zero ties"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-214",
+      "name": "zero-anchored step lattice preserves exact and exceeded bounds as endpoints",
+      "kind": "unit",
+      "file": "step/lattice.test.ts",
+      "title": "zero-anchored step lattice preserves exact and exceeded bounds as endpoints"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-215",
+      "name": "zero-anchored step lattice cleans float drift without touching genuine values",
+      "kind": "unit",
+      "file": "step/lattice.test.ts",
+      "title": "zero-anchored step lattice cleans float drift without touching genuine values"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-216",
+      "name": "zero-anchored step lattice tests lattice membership without the endpoint exception",
+      "kind": "unit",
+      "file": "step/lattice.test.ts",
+      "title": "zero-anchored step lattice tests lattice membership without the endpoint exception"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-217",
+      "name": "zero-anchored step lattice steps strictly in-direction with Shift equal to ten singles",
+      "kind": "unit",
+      "file": "step/lattice.test.ts",
+      "title": "zero-anchored step lattice steps strictly in-direction with Shift equal to ten singles"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-218",
+      "name": "NumberField type contract NF-TYPE-01: NumberField should export the conventional root and no Root alias",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "NumberField type contract NF-TYPE-01: NumberField should export the conventional root and no Root alias"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-219",
+      "name": "NumberField type contract NF-TYPE-02: NumberField should type one controlled numeric request authority without claiming compile-time finiteness",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "NumberField type contract NF-TYPE-02: NumberField should type one controlled numeric request authority without claiming compile-time finiteness"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-220",
+      "name": "NumberField type contract NF-TYPE-03: NumberField parts should omit every behavior-owned native and ARIA prop",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "NumberField type contract NF-TYPE-03: NumberField parts should omit every behavior-owned native and ARIA prop"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-221",
+      "name": "NumberField type contract NF-TYPE-04: Each stepper should require an authored accessible-name prop at the type boundary",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "NumberField type contract NF-TYPE-04: Each stepper should require an authored accessible-name prop at the type boundary"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-222",
+      "name": "NumberField type contract W-02/W-25: NumberField should type commitBehavior, formatOptions, and onInvalidCommit",
+      "kind": "unit",
+      "file": "types.test.tsx",
+      "title": "NumberField type contract W-02/W-25: NumberField should type commitBehavior, formatOptions, and onInvalidCommit"
+    }
+  ]
+}

@@ -1,6 +1,39 @@
 import * as React from 'react'
 import { RovingFocus } from './RovingFocus'
 
+/** Two independent collections deliberately reuse the same item identities. */
+export function SiblingLifetimeFixture({ generation = 0 }: { generation?: number }) {
+  const [activations, setActivations] = React.useState(0)
+  const labels = ['Alpha', 'Beta', 'Bread', 'Romeo']
+  return (
+    <div>
+      {['first', 'second'].map(group => (
+        <RovingFocus.Root
+          key={group === 'first' ? `first-${generation}` : 'second'}
+          orientation="horizontal"
+          typeahead
+          loop
+        >
+          <div role="toolbar" aria-label={group} data-testid={`lifetime-${group}`}>
+            {labels.map(label => (
+              <RovingFocus.Item key={label} id={label} textValue={label}>
+                <button
+                  type="button"
+                  data-testid={`lifetime-${group}-${label}`}
+                  onClick={() => setActivations(value => value + 1)}
+                >
+                  {label}
+                </button>
+              </RovingFocus.Item>
+            ))}
+          </div>
+        </RovingFocus.Root>
+      ))}
+      <div data-testid="lifetime-activations">{activations}</div>
+    </div>
+  )
+}
+
 export function RovingFocusFixture() {
   const [orientation, setOrientation] = React.useState<'horizontal' | 'vertical'>('horizontal')
   const [loop, setLoop] = React.useState(true)

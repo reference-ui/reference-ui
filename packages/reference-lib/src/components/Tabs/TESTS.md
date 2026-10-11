@@ -185,13 +185,18 @@ do not repeat the generic StyleProps matrix.
   This preserves the no-op behavior covered by React Aria's disabled and
   selected-state tests instead of reporting unchanged controlled values.
 - [x] `TB-SELECT-05` `[convergence]` `[browser]` —
-  **Tabs should allow a consumer click handler to cancel pointer selection when it prevents default.**
+  **Tabs should honor consumer cancellation at the phase that owns selection.**
   Give `billing` an `onClick` that logs `consumer` and calls
-  `preventDefault()`, then click it and assert the log contains only
-  `consumer`, no `onChange` fires, and selected ARIA/Panel state remains
-  `general`.
-  Consumer-first ordering makes cancellation observable without replacing
-  native propagation or the Tab's fixed host.
+  `preventDefault()`. Native Enter/Space activation, or an isolated click
+  without an earlier press request, must leave selection on `general` and
+  fire no `onChange`. For a real pointer gesture, cancel `onPointerDown` or
+  `onMouseDown` to suppress both the press request and its completing click;
+  the next unprevented gesture must still request exactly once.
+  An unprevented native press can request selection when browser focus lands
+  before mouseup/click (`TB-SELECT-08`). A completing `onClick` cannot
+  retroactively cancel that prior request. Assert the request exists before
+  release, then canceled click adds no duplicate or rollback. This preserves
+  native focus and blur ordering without script focus or a visual change.
 - [x] `TB-SELECT-06` `[vendor]` `[browser]` —
   **Tabs should blur content focus when pointer selection settles on another Tab.**
   Focus an input inside the visible `general` Panel, click `billing`, and log

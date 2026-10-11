@@ -1,0 +1,153 @@
+# Component cases
+
+Every directory under `src/components` has a colocated `case.json`. The catalog
+indexes executable unit and browser declarations, rather than interpreting the
+component's design notes as evidence. `pnpm agentct check` validates the entire
+catalog without starting a browser; a conforming index does not mean its tests
+have passed.
+
+```bash
+pnpm agentct check
+pnpm agentct list
+pnpm --silent agentct list --json
+pnpm agentct search "native form"
+pnpm --silent agentct --search "native form" --json
+pnpm --silent agentct Button --list --json
+pnpm agentct run LIB-BUTTON-001
+pnpm agentct Button
+pnpm agentct Button --e2e --react all
+```
+
+Each manifest has this shape:
+
+```json
+{
+  "schemaVersion": 1,
+  "component": "Button",
+  "scope": "support",
+  "description": "Browser evidence for the generated native button primitive.",
+  "cases": [
+    {
+      "id": "LIB-BUTTON-001",
+      "name": "A readable name for the behavior being asserted",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "Exact suite title Exact test declaration title"
+    }
+  ]
+}
+```
+
+The example title is illustrative. A real entry must match its full declaration
+title, with outer and inner suite titles joined by one space. Evidence paths are
+relative to that component, use forward slashes, and cannot escape through `..`
+or symlinks. `kind` is `unit` for `*.test.ts(x)` and `ct` for
+`__e2e__/*.ct.spec.ts`. IDs are globally unique `LIB-COMPONENT-NNN` values; retain
+an existing ID when its test moves or its title changes. Assign new IDs to new
+behavior, without renumbering existing entries.
+
+`list`, `search`, and their `--search` alias report stable `LIB-COMPONENT-NNN`
+records. Add `--json` for one parseable JSON value on stdout with no human
+trailer, and invoke it as `pnpm --silent agentct ... --json`: default `pnpm`
+prints package-script banners on stdout, so the silent form is what keeps the
+value machine-readable. A search with no matches returns an empty list and a
+nonzero exit. Listing and searching are catalog-only: they never start the daemon
+or a browser.
+
+`public` directories are reexported by `src/index.ts`. `support` directories
+exercise primitives or shared implementation outside their own directory.
+`internal` directories are Book fixtures or development surfaces; the description
+explains that purpose. Only internal directories may have no cases. They remain
+visible to conformity, and running one without evidence fails explicitly.
+
+Every runnable declaration must appear exactly once. Adding, deleting, or
+renaming a test requires updating its manifest in the same change. Missing
+manifests, stale titles, duplicate entries, wrong kinds, unknown fields, disabled
+tests, and focused suites fail conformity. Tests use static titles and callbacks;
+dynamic test-generation loops require rewriting as explicit cases or supported
+`it.each` declarations.
+
+For `it.each`, register the declaration's unexpanded title (`%s` or `$name` stays
+in the title) once. The table must be a nonempty static array, inline or in a
+local variable. Selecting that case runs every row, and execution proof requires
+the complete expected count to pass. Parameterized suites and spread/dynamic
+tables fail rather than silently dropping evidence. A named table resolves at
+its declaration's lexical scope, so sibling or nested tables cannot leak into an
+outer declaration; empty `%s`/`$name` expansions still match their runtime row.
+A table is trusted only while it stays provably immutable: a write, an element
+assignment or update, any method called on the named table (a known mutator or an
+unknown or computed receiver alike), a foreign `.each(...)` that is not the
+framework's own, or a reference handed to another function or object — including
+through a shorthand, keyed, nested, spread, or aliased aggregate that captures
+the table — is rejected instead of being evaluated, because such a use can
+register rows the static table never declared. A table used directly as
+`each`'s argument, an immutable `const` alias, and the framework `it`/`test`
+`.each` modifier stay permitted.
+
+Vitest test bindings may be renamed (`import { it as spec } from 'vitest'`), and
+an aliased runnable declaration or suite keeps its full title. A renamed
+`skip`/`only`/`todo`, a computed modifier such as `it['skip']`, an unknown
+computed modifier, and any unsupported tagged `each` form fail conformity rather
+than vanish beside a recognized declaration. A framework test function routed
+through an unsupported alias shape — inline destructured object/array, a
+conditional, sequence, logical expression, or factory call — is rejected the same way instead
+of being evaluated, while unrelated objects, destructuring, conditionals, and
+locally shadowed names stay harmless. A runtime `test.skip(...)` inside a
+callback stays execution evidence, not a declaration.
+
+A name filter (`-g`) selects every declaration whose title or expanded row title
+matches and runs all rows of each selected declaration. Unit selections hand
+Vitest the exact union of the declaration's known expanded row titles. Browser
+(`ct`) selections are never handed that title pattern: Playwright prefixes the
+project and file onto each test title, so CT is selected by its exact file and
+declaration line instead. A filter that matches nothing, or an invalid pattern,
+fails before execution. Unfiltered component and all runs omit the unit title
+filter and collapse CT targets to whole files only when every declaration in
+that file is selected; the same expected evidence is still required. Grep cannot enumerate the rows of a parameterized
+declaration whose row titles are not statically known, so any such candidate in
+the requested layer (`--unit` narrows the universe to unit evidence, and likewise
+`--e2e`) rejects grep before execution and points at the catalog case ID. Legacy
+`--id` and `--line` targets map back to exactly one catalog declaration by
+contained file, declaration line, or title (including an expanded `each` row);
+no match, an ambiguous match, or an unresolvable opaque row identity fails and
+points at the catalog case ID. Selecting a catalog ID always runs all rows of its
+declaration.
+
+Verification runs conformity first, then the requested evidence. A zero exit
+code without a readable execution report, zero passing tests, a skipped selected
+case, or incomplete parameterized rows fails. When a declaration's row titles are
+statically known they are matched literally, and their exact multiset must pass
+per file and runtime: a duplicate, unknown, or wrong-runtime row cannot stand in
+for a missing expected row. A component with only one evidence
+layer reports the absent layer explicitly; requesting that absent layer with
+`--unit` or `--e2e` fails. Component names target their exact directory, so `Field`
+does not run `DateField` or `NumberField`.
+
+Each verification job stores its reports, videos, screenshots, and diffs under
+`playwright/test-results/agentct-<pid>/`, with separate React-major directories.
+Parallel jobs cannot erase one another's artifacts. Ordinary browser runs pass
+`--update-snapshots=none`: missing baselines and visual differences fail, and
+verification does not create or change PNG baselines. Baseline changes still
+require the explicit human-verification workflow in the `test-component` skill.
+
+Verification permits one active local job, covering units and every requested
+React browser run. Queued invocations share a warm Vite gallery; unit-only
+selections do not start that gallery. Vitest and Playwright each have a maximum
+of two workers, including the direct fallback. Set `CT_WORKERS=1` for a smaller
+job; larger overrides cannot expand the budget. Cancellation retains the slot
+until the child stops and escalates the job's owned process groups, so detached
+Playwright server/browser leaders cannot outlive their slot. The direct fallback
+never takes over an existing listener on the CT port; `pnpm agentct stop`
+terminates active jobs and the daemon's owned groups without touching unrelated
+listeners.
+
+The gate's own regression tests run with:
+
+```bash
+node --test --test-concurrency=1 .agents/skills/test-component/scripts/cases/catalog.test.mjs .agents/skills/test-component/scripts/cases/resources.test.mjs
+```
+
+These exercise malformed and incomplete catalogs, source discovery, execution
+report completeness, exact component targeting, and artifact isolation. Component
+verification continues to use `pnpm agentct`; core or matrix changes continue to
+use `pnpm agent`.

@@ -450,10 +450,10 @@ describe('graph headers', () => {
 })
 
 describe('engine', () => {
-  it('loads five manifests plus the graph system collection', () => {
+  it('loads six manifests plus the graph system collection', () => {
     const manifests = loadManifests()
     const names = manifests.map(m => m.name)
-    for (const name of ['cases', 'doom', 'flames', 'graph', 'perf', 'surfaces']) {
+    for (const name of ['cases', 'components', 'doom', 'flames', 'graph', 'perf', 'surfaces']) {
       assert.ok(names.includes(name), name)
     }
     assert.equal(manifests.find(m => m.name === 'graph').system, true)

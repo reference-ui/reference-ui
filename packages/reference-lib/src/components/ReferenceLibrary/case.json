@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "component": "ReferenceLibrary",
+  "scope": "public",
+  "description": "Executable ReferenceLibrary contracts covering real-browser behavior and existing visual baselines plus logic and server-rendering evidence. Case metadata indexes evidence; execution determines the verdict.",
+  "cases": [
+    {
+      "id": "LIB-REFERENCELIBRARY-001",
+      "name": "ReferenceLibrary Composition Gates & Browser Proofs RL-DOM-01 & RL-ROOT-01: Renders application transparently and elects earliest live mount as active host",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.ct.spec.ts",
+      "title": "ReferenceLibrary Composition Gates & Browser Proofs RL-DOM-01 & RL-ROOT-01: Renders application transparently and elects earliest live mount as active host"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-002",
+      "name": "ReferenceLibrary Composition Gates & Browser Proofs RL-DOM-02 & RL-LIFE-03: Displays imperative toast in active host and updates live regions",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.ct.spec.ts",
+      "title": "ReferenceLibrary Composition Gates & Browser Proofs RL-DOM-02 & RL-LIFE-03: Displays imperative toast in active host and updates live regions"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-003",
+      "name": "ReferenceLibrary Composition Gates & Browser Proofs RL-ROOT-03: Fails over active host to standby when primary host unmounts",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.ct.spec.ts",
+      "title": "ReferenceLibrary Composition Gates & Browser Proofs RL-ROOT-03: Fails over active host to standby when primary host unmounts"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-004",
+      "name": "host election elects the first live mount and holds later mounts on standby",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election elects the first live mount and holds later mounts on standby"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-005",
+      "name": "host election fails over to the earliest remaining mount when the host unmounts",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election fails over to the earliest remaining mount when the host unmounts"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-006",
+      "name": "host election keeps the election when a standby unmounts",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election keeps the election when a standby unmounts"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-007",
+      "name": "host election elects independently per document",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election elects independently per document"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-008",
+      "name": "host election holds a remounted former host on standby behind the live successor",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election holds a remounted former host on standby behind the live successor"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-009",
+      "name": "host election repairs a stale election when the recorded host is gone",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election repairs a stale election when the recorded host is gone"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-010",
+      "name": "host election notifies every same-document mount on registration",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election notifies every same-document mount on registration"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-011",
+      "name": "host election memoizes one store per document",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election memoizes one store per document"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-012",
+      "name": "host election subscribes and unsubscribes listeners",
+      "kind": "unit",
+      "file": "election/store.test.ts",
+      "title": "host election subscribes and unsubscribes listeners"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-013",
+      "name": "toaster prop mapping falls back to the global hotkey when toaster config is omitted",
+      "kind": "unit",
+      "file": "parts/toast-props.test.ts",
+      "title": "toaster prop mapping falls back to the global hotkey when toaster config is omitted"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-014",
+      "name": "toaster prop mapping falls back to the global hotkey when only the hotkey is omitted",
+      "kind": "unit",
+      "file": "parts/toast-props.test.ts",
+      "title": "toaster prop mapping falls back to the global hotkey when only the hotkey is omitted"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-015",
+      "name": "toaster prop mapping preserves an explicit false hotkey instead of defaulting",
+      "kind": "unit",
+      "file": "parts/toast-props.test.ts",
+      "title": "toaster prop mapping preserves an explicit false hotkey instead of defaulting"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-016",
+      "name": "toaster prop mapping passes configured defaults through untouched",
+      "kind": "unit",
+      "file": "parts/toast-props.test.ts",
+      "title": "toaster prop mapping passes configured defaults through untouched"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-017",
+      "name": "toaster prop mapping preserves falsey defaults rather than coercing them",
+      "kind": "unit",
+      "file": "parts/toast-props.test.ts",
+      "title": "toaster prop mapping preserves falsey defaults rather than coercing them"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-018",
+      "name": "library host ids mints ref-lib prefixed ids",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "library host ids mints ref-lib prefixed ids"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-019",
+      "name": "library host ids never mints the same id twice",
+      "kind": "unit",
+      "file": "shared/ids.test.ts",
+      "title": "library host ids never mints the same id twice"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-020",
+      "name": "tooltip warm-group config writes a configured skip delay into the document group store",
+      "kind": "unit",
+      "file": "warmup/tooltip-config.test.ts",
+      "title": "tooltip warm-group config writes a configured skip delay into the document group store"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-021",
+      "name": "tooltip warm-group config leaves the 300ms default alone when the delay is omitted",
+      "kind": "unit",
+      "file": "warmup/tooltip-config.test.ts",
+      "title": "tooltip warm-group config leaves the 300ms default alone when the delay is omitted"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-022",
+      "name": "tooltip warm-group config honors zero as a real policy rather than an omission",
+      "kind": "unit",
+      "file": "warmup/tooltip-config.test.ts",
+      "title": "tooltip warm-group config honors zero as a real policy rather than an omission"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-023",
+      "name": "tooltip warm-group config keeps each document warm-group independent",
+      "kind": "unit",
+      "file": "warmup/tooltip-config.test.ts",
+      "title": "tooltip warm-group config keeps each document warm-group independent"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-024",
+      "name": "ReferenceLibrary SSR emits application children without runtime hosts across requests",
+      "kind": "unit",
+      "file": "ssr.test.tsx",
+      "title": "ReferenceLibrary server rendering RL-ENV-04: SSR emits application children without runtime hosts across repeated requests"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-025",
+      "name": "Remounted ReferenceLibrary former host stays standby behind its live successor",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.hardening.ct.spec.ts",
+      "title": "ReferenceLibrary mounted election contracts RL-ROOT-04: a remounted former host stays standby behind its live successor"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-026",
+      "name": "ReferenceLibrary StrictMode elects one runtime and preserves queued work through rerender",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.hardening.ct.spec.ts",
+      "title": "ReferenceLibrary mounted election contracts RL-LIFE-06: StrictMode elects one runtime and preserves queued work through rerender"
+    }
+  ]
+}
