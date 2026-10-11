@@ -5,6 +5,7 @@ order: 3
 slug: colors
 ---
 
+import { ColorComposition } from './color-composition'
 import { ColorsDemo } from './colors-demo'
 
 # Colors
@@ -14,3 +15,10 @@ chrome deliberately stays grayscale — the palette below is the full library yo
 can pull from when building your own surfaces.
 
 <ColorsDemo />
+
+## Composition
+
+A colour is a base and its tints. The same mix paints a background, a border, a
+graph fill, or a foreground — only the role and the amount change.
+
+<ColorComposition />
