@@ -232,3 +232,68 @@ export const NestedLayer = () => {
     </ReferenceLibrary>
   )
 }
+
+interface PopoverContractProps {
+  heldOpen?: boolean
+  followRequests?: boolean
+  callbackLabel?: string
+  cancelTrigger?: boolean
+  cancelClose?: boolean
+  contentId?: string
+}
+
+export function ContractHarness({
+  heldOpen,
+  followRequests = true,
+  callbackLabel = 'initial',
+  cancelTrigger = false,
+  cancelClose = false,
+  contentId,
+}: PopoverContractProps) {
+  const [localOpen, setLocalOpen] = React.useState(false)
+  const [requests, setRequests] = React.useState<string[]>([])
+  const [events, setEvents] = React.useState<string[]>([])
+  const open = heldOpen ?? localOpen
+  const record = (entry: string) => setRequests(previous => [...previous, entry])
+
+  return (
+    <div data-testid="popover-contract-root">
+      <button type="button" data-testid="popover-contract-before">Before</button>
+      <Popover
+        open={open}
+        onOpen={() => record(`${callbackLabel}:open`)}
+        onOpenChange={next => {
+          record(`${callbackLabel}:change:${next}`)
+          if (followRequests) setLocalOpen(next)
+        }}
+        onDismiss={() => record(`${callbackLabel}:dismiss`)}
+      >
+        <Popover.Trigger
+          data-testid="popover-contract-trigger"
+          onClick={event => {
+            setEvents(previous => [...previous, `trigger:${open}`])
+            if (cancelTrigger) event.preventDefault()
+          }}
+        >
+          Open contract popover
+        </Popover.Trigger>
+        <Popover.Content id={contentId} data-testid="popover-contract-content">
+          <button type="button" data-testid="popover-contract-first">First</button>
+          <Popover.Close
+            data-testid="popover-contract-close"
+            onClick={event => {
+              setEvents(previous => [...previous, `close:${open}`])
+              if (cancelClose) event.preventDefault()
+            }}
+          >
+            Close contract popover
+          </Popover.Close>
+        </Popover.Content>
+      </Popover>
+      <button type="button" data-testid="popover-contract-after">After</button>
+      <button type="button" data-testid="popover-contract-last">Last</button>
+      <output data-testid="popover-contract-requests">{requests.join('|')}</output>
+      <output data-testid="popover-contract-events">{events.join('|')}</output>
+    </div>
+  )
+}

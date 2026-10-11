@@ -2,8 +2,9 @@
  * Popover hover intent: the session that opens on hover or keyboard focus
  * and closes when the pointer and focus both leave. Owns the open state
  * (controlled or uncontrolled), the hover session (pending timers, leave
- * point, cursor trail, landing memory), and every trigger/content/focus
- * handler the context value carries — plus the cleanup and pointerup
+ * point, cursor trail, landing memory), the lifetime-generated content ID
+ * and its explicit-id registration descriptor, and every trigger/content/
+ * focus handler the context value carries — plus the cleanup and pointerup
  * effects in their original order. The root only provides the value this
  * returns and wires `isOpen` into Overlay; the hover bridge borrows the
  * session and timer controls for its document-level tracking.
@@ -84,6 +85,21 @@ export function usePopoverIntent({
   if (!contentIdRef.current) {
     contentIdRef.current = nextPopoverContentId()
   }
+
+  const [registeredContentId, setRegisteredContentId] = React.useState<{
+    id: string
+    owner: object
+  } | null>(null)
+
+  const registerContentId = React.useCallback((id: string) => {
+    const owner: object = {}
+    setRegisteredContentId({ id, owner })
+    return () => {
+      setRegisteredContentId(current => (current && current.owner === owner ? null : current))
+    }
+  }, [])
+
+  const contentId = registeredContentId?.id ?? contentIdRef.current!
 
   const latest = React.useRef({
     isOpen,
@@ -284,7 +300,8 @@ export function usePopoverIntent({
       isOpen,
       setIsOpen,
       openOnHover,
-      contentId: contentIdRef.current!,
+      contentId,
+      registerContentId,
       onTriggerEnter,
       onTriggerLeave,
       onTriggerPointerDown,
@@ -299,6 +316,8 @@ export function usePopoverIntent({
       isOpen,
       setIsOpen,
       openOnHover,
+      contentId,
+      registerContentId,
       onTriggerEnter,
       onTriggerLeave,
       onTriggerPointerDown,
