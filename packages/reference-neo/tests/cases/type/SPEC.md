@@ -40,8 +40,9 @@ D5 (TYPE-01 targets `react/react.d.mts` + `./styles.css` names). D6 (TYPE-05:
 `defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`,
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
 root). D8/D10 (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
-Panda and typegen agree). D17 (`strict`/`layers` deferred; typegen `strict`
-stays callable but unexposed, so strict-mode rejection is an absence).
+Panda and typegen agree). D17 (`strict` is wired: config → typegen, validated,
+narrowing JSX style props and css; lib component props are not promised to
+follow consumer strict; the hatch names stay absent).
 
 Coverage-map rows for this group: 2 (`system.mjs`+`.d.mts` → TYPE-05 with
 SYNC-12), 8 (41 packaged core type files → replaced by native `system.d.mts`,
@@ -53,8 +54,9 @@ PRIM-10; the single `index.d.mts` must become the named graph).
 
 - `strictTokens` / `WithEscapeHatch` / `ImportantMark` hatches (D17): engine
   support exists (`styles-strict.d.ts` golden, seam TYP-NATIVE-03) but no
-  config exposes it; Panda `generate-style-props` / `generate-prop-types`
-  are contrast only.
+  config exposes the hatch names; the `strict` category list is the exposed
+  narrowing. Panda `generate-style-props` / `generate-prop-types` are contrast
+  only.
 - Pattern types (`BoxProps`, `FlexProps`, …) and jsx-factory types
   (`JsxFactory`, `JsxElements`, `HTMLStyledProps`, `Styled`): TYP-FORBID-02/03;
   primitives are authored React, layout is primitives + `css()`.

@@ -1,5 +1,5 @@
 // Assembly for Neo generated packages.
-// It takes the assembly input sync builds from compile output and emits the complete generated folder in dependency order.
+// It takes the assembly input sync builds from compile output and emits the complete generated folder in dependency order, plus the typegen diagnostics the declaration leg raised.
 // The order is the contract: shells before the bundles that read them. The legs live beside the assembly; sync calls this one entry with the compile output, commits the result live, then links the packages.
 
 import { mkdirSync } from 'node:fs'
@@ -9,15 +9,17 @@ import { writeReactDir } from './react-shell.ts'
 import { publishTypesBundle } from './types-bundle.ts'
 import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
+import type { NeoDiagnostic } from '../diagnostics/types.ts'
 import type { AssemblyInput } from './types.ts'
 
 /**
  * Assemble the generated folder: shells, data, bundles, declarations. Called
  * once per sync with the compile output; failures propagate to sync, which
  * drops the stage and keeps the last-good folder. Sync commits the result
- * live and links the packages after — never this entry.
+ * live and links the packages after — never this entry. Returns the typegen
+ * warnings so sync reports them with the compile warnings.
  */
-export async function assembleSystem(input: AssemblyInput): Promise<void> {
+export async function assembleSystem(input: AssemblyInput): Promise<NeoDiagnostic[]> {
   mkdirSync(input.outDir, { recursive: true })
   // Ordered: the styled leg stages the stylesheet the react shell copies,
   // and the react leg reads the styled leg's runtime data.
@@ -32,7 +34,8 @@ export async function assembleSystem(input: AssemblyInput): Promise<void> {
     stylePropNames: input.runtime.stylePropNames,
     recipes: input.spec.recipes,
   })
-  await publishTypesBundle(input.outDir, input.spec)
+  const typegenDiagnostics = await publishTypesBundle(input.outDir, input.spec, input.strict)
   // After the react leg: its bundle is the alias target this leg reads.
   await publishReferenceTypesBundle({ outDir: input.outDir })
+  return typegenDiagnostics
 }

@@ -2,11 +2,13 @@
 // It takes the raw module export and emits a ReferenceUIConfig or throws.
 // This module is a Neo-owned copy of the core validator trimmed to the surviving fields.
 
-import type { ReferenceUIConfig } from './types.ts'
+import type { ReferenceUIConfig, StrictCategory } from './types.ts'
 import { ConfigValidationError } from './errors.ts'
 import { validateBaseSystemEntries, validateBaseSystems } from '../system/base/validate.ts'
 
 type ConfigRecord = Record<string, unknown>
+
+const STRICT_CATEGORIES: readonly StrictCategory[] = ['colors', 'radii', 'spacing']
 
 function mustBeObject(raw: unknown): ConfigRecord {
   const config = (raw as { default?: unknown })?.default ?? raw
@@ -73,6 +75,18 @@ function validateStaticCss(cfg: ConfigRecord): void {
   }
 }
 
+function validateStrict(cfg: ConfigRecord): void {
+  const strict = cfg.strict
+  if (strict == null) return
+
+  if (!Array.isArray(strict) || strict.some((entry) => !STRICT_CATEGORIES.includes(entry))) {
+    throw ConfigValidationError.invalidConfig(
+      'strict',
+      "'strict' must be an array of token categories ('colors', 'radii', 'spacing')."
+    )
+  }
+}
+
 /**
  * Validate and normalize the evaluated config object.
  * Unwraps default export, checks for include array.
@@ -86,6 +100,7 @@ export function validateConfig(raw: unknown): ReferenceUIConfig {
   validateConfigJsxElements(cfg)
   validateLogs(cfg)
   validateStaticCss(cfg)
+  validateStrict(cfg)
   const extendsSystems = validateBaseSystems('extends', cfg.extends)
   validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })
   const layersSystems = validateBaseSystems('layers', cfg.layers)

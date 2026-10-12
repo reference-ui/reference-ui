@@ -13,6 +13,12 @@ export type { BaseSystem }
  */
 export type LogChannel = 'compiler'
 
+/**
+ * Token categories a `strict` list may name. Each narrows its style props
+ * and css values to that category's tokens at typegen.
+ */
+export type StrictCategory = 'colors' | 'radii' | 'spacing'
+
 export interface ReferenceUIConfig {
   /**
    * Glob patterns for files to scan for fragment collection and atomic input.
@@ -41,6 +47,17 @@ export interface ReferenceUIConfig {
    * Each entry is a BaseSystem (from baseSystem.mjs of another package).
    */
   layers?: BaseSystem[]
+
+  /**
+   * Token categories that narrow typegen. Omitted or empty means open mode.
+   * A strict category accepts only its tokens; colors also accept tones and
+   * the keywords white, black, inherit, currentColor and transparent. Raw `/50`
+   * opacity and free strings are rejected in JSX style props and css.
+   *
+   * @example
+   * strict: ['colors', 'spacing']
+   */
+  strict?: readonly StrictCategory[]
 
   /**
    * Escape hatch for JSX element names that static tracing cannot infer.

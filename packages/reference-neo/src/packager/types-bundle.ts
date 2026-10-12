@@ -1,12 +1,15 @@
 // Declaration leg of the Neo generated folder.
-// It takes the output dir plus the evaluated spec and emits the central
-// styled declarations plus the classic subpath modules. The react entry
-// types arrive complete from the bound bake, already wired onto this
-// graph, so this leg never rewrites them. Styled stays data-only (D4).
+// It takes the output dir, the evaluated spec, and the optional strict
+// categories, and emits the central styled declarations, the classic subpath
+// modules, and the typegen diagnostics. The react entry types arrive complete
+// from the bound bake, already wired onto this graph, so this leg never
+// rewrites them. Styled stays data-only (D4).
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
+import type { StrictCategory } from '../config/types.ts'
+import type { NeoDiagnostic } from '../diagnostics/types.ts'
 import { BASE_SYSTEM_HEADER } from './constants.ts'
 
 /**
@@ -42,18 +45,32 @@ function writeStyledSubpathDecls(outDir: string): void {
 /**
  * Publish the styled type declarations typegen prints from the evaluated
  * spec into styled/types, plus the classic subpaths. Runs after the react
- * bundle; styled stays data-only (D4).
+ * bundle; styled stays data-only (D4). Returns the typegen diagnostics so
+ * sync reports them beside the other warnings.
  */
-export async function publishTypesBundle(outDir: string, spec: EvaluatedSystemSpec): Promise<void> {
+export async function publishTypesBundle(
+  outDir: string,
+  spec: EvaluatedSystemSpec,
+  strict?: readonly StrictCategory[]
+): Promise<NeoDiagnostic[]> {
   const typegen = (await import('@reference-ui/rust/typegen')) as unknown as {
-    emitDtsSync(options: { baseSystem: unknown }): string
+    emitDtsDetailed(options: { baseSystem: unknown; strict?: string[] }): {
+      dts: string
+      diagnostics: NeoDiagnostic[]
+    }
   }
   const typesDir = join(outDir, 'styled', 'types')
   mkdirSync(typesDir, { recursive: true })
+  // The native strict field is a list, never null: an empty list is open mode, so it is omitted.
+  const emitted = typegen.emitDtsDetailed({
+    baseSystem: spec,
+    ...(strict?.length ? { strict: [...strict] } : {}),
+  })
   writeFileSync(
     join(typesDir, 'index.d.ts'),
-    `${BASE_SYSTEM_HEADER}\n${typegen.emitDtsSync({ baseSystem: spec })}`,
+    `${BASE_SYSTEM_HEADER}\n${emitted.dts}`,
     'utf-8'
   )
   writeStyledSubpathDecls(outDir)
+  return emitted.diagnostics
 }

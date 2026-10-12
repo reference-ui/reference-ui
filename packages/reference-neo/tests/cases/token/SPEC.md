@@ -91,7 +91,7 @@ escaped literal; TOKEN-02 → RS-3). D14 (`colorPalette` out), D15
 | `semanticTokens` + `_dark`/`@light`/`@hover` inside `value` | Reference leaves use `light`/`dark` keys on the token object |
 | Multi-block `@slot` cartesian + selector-only OR blocks | Engine test shape, not author API |
 | `DEFAULT` keyword flattening | No `DEFAULT` in the `tokens()` surface |
-| `strictTokens` / `WithEscapeHatch` / `ImportantMark` types | D17: deferred past this voyage |
+| `strictTokens` / `WithEscapeHatch` / `ImportantMark` types | D17: hatch names stay out of scope; `strict` categories are wired (config → typegen) |
 | `token.var` JS map, `globalVars` unions | No `token()` runtime (D15) |
 | `textStyles` / `layerStyles` / `animationStyles` | Zero matches in lib/core sources |
 | Asset tokens (SVG data-URL) | Not in the `tokens()` surface |

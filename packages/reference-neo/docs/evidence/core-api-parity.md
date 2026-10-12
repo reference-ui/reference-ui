@@ -10,7 +10,7 @@ Neo already owns the overnight host volume: trimmed `defineConfig` + surviving `
 
 The largest holes versus core’s author/runtime surface are: `getRhythm` and the rhythm/shorthand/`r`-named-breakpoint box-pattern stack (still Panda extensions); `css.raw`; public typed `SystemStyleObject` / `StyleProps` / recipe generics / strict-token unions; `box()` as a pattern function; Panda `cx` / `splitCssProps`; fragment-level recipe registration (`extendRecipes`); and the color-mode *compiler* (`resolveColorModeTokens` / `extendThemes` / `staticCss.themes`) which Neo only partially replaces via token `light`/`dark` leaves plus DOM stamping.
 
-Config fields `strict` and `layers` are deferred; `mcp`, library/icon flags, and `skipTypescript` are dropped for v0. Host chassis (watch, Vite/Webpack plugins, packager/tsup, virtual mirror, MCP, Reference/Tasty browser, workers) is later-leg or never, per Neo README and PLAN-host.
+Config field `strict` is wired (config → typegen) and `layers` is wired; `mcp`, library/icon flags, and `skipTypescript` are dropped for v0. Host chassis (watch, Vite/Webpack plugins, packager/tsup, virtual mirror, MCP, Reference/Tasty browser, workers) is later-leg or never, per Neo README and PLAN-host.
 
 Biggest plan risks: named `r` breakpoints vs numeric-only lowering; `!` important vs Panda `!important`; responsive *arrays*; typegen/`strict`; `css.raw` consumers; whether `getRhythm` is author API or an internal token helper.
 
@@ -35,7 +35,7 @@ Legend: **copied** ≈ near-verbatim Neo-owned copy; **partial** ≈ exists but 
 | `loadUserConfig` / bundle / evaluate | `loadUserConfig(cwd) → ReferenceUIConfig` | esbuild bundle → CJS `new Function` → validate. | `config/load.ts`, `bundle.ts`, `evaluate.ts` | same under `src/config/` | copied |
 | `setConfig` / `getConfig` / `getCwd` / `getOutDir` / `clearConfig` | store accessors | Core snapshots for workers. Neo in-memory only. | `config/store.ts` | `config/store.ts` | partial (worker snapshot dropped) |
 | `getOutDir()` / `DEFAULT_OUT_DIR` | always `'.reference-ui'` | **Not a `ui.config` field.** `clean` comments mention `config.outDir`; store ignores it. PLAN Q2: configured-outdir “survives via copied `getOutDirPath`” but still constant. | `constants.ts`, `config/store.ts`, `lib/paths/out-dir.ts` | `constants.ts`, `config/store.ts`, `lib/paths/out-dir.ts` | copied (no author `outdir` field) |
-| `strict` | `strict?: ('colors'\|'radii'\|'spacing')[]` | Typegen-time token restriction. Core validates categories. | types + validate (21 tests include this) | not on Neo type; validate **ignores** unknown field | deliberately dropped (defer) — PLAN-host-build.md Q3 |
+| `strict` | `strict?: ('colors'\|'radii'\|'spacing')[]` | Typegen-time token restriction. Core validates categories. | types + validate (21 tests include this) | types + validate (categories checked); passed to typegen via `emitDtsDetailed` in `packager/types-bundle.ts` | wired (config → typegen); lib component props not promised to follow consumer strict |
 | `layers` | `layers?: BaseSystem[]` | Upstream component CSS in isolated cascade; warn if no `css`. | types + validate | ignored as unknown | deliberately dropped (defer) — PLAN Q3 |
 | `mcp` | `mcp?: { include?, exclude? }` | Atlas selectors only. | types + validate | ignored | deliberately dropped — PLAN Q3, README “MCP not opening chapter” |
 | `useReferenceLibrary` / `use_reference_library` | `boolean?` default true | MCP library index. | types + validate (normalize snake) | ignored | deliberately dropped — PLAN Q3 |
@@ -46,7 +46,7 @@ Legend: **copied** ≈ near-verbatim Neo-owned copy; **partial** ≈ exists but 
 | `getSyncSession` | `getSyncSession(opts) → SyncSession` | Watch generated dir for ready edges. | `session/public.ts`, `public.ts` | MISSING | later leg (watch/bundler) |
 | `referenceVite` / `referenceWebpack` | plugin factories | See Host. | `public.ts` | MISSING | later leg |
 
-Unknown-field behaviour: both validators **do not reject** extra keys. Neo’s test `ignores unknown fields as core does today` explicitly keeps `strict`/`mcp`/`layers` on the returned object even though they are not typed.
+Unknown-field behaviour: both validators **do not reject** extra keys. Neo’s test `ignores unknown fields as core does today` explicitly keeps `skipTypescript` and `mcp` on the returned object even though they are not typed.
 
 ---
 

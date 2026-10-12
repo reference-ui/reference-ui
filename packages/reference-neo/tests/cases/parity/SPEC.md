@@ -70,7 +70,8 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 
 Group union: 158 entries (78 approved + 80 out-of-scope, incl. 10 appended
 `★`); census list = 159 with P-DELTA-4. B-G13 strictTokens needs no new
-line — type/SPEC.md already absents it (D17).
+line — type/SPEC.md already absents its hatch names (D17). The `strict`
+category list is wired (config → typegen) and is not a new absence.
 
 ## Out of scope (carried, never census input)
 

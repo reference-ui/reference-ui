@@ -61,12 +61,12 @@ describe('validateConfig base fields', () => {
   })
 
   it('ignores unknown fields as core does today', () => {
-    // layers is a known field since the S5 cutover wired it; only genuinely
-    // unknown fields ride this test now.
+    // layers and strict are known fields now; only genuinely unknown fields
+    // ride this test.
     const config = validateConfig({
       name: SYSTEM_NAME,
       include: DEFAULT_INCLUDE,
-      strict: ['colors'],
+      skipTypescript: true,
       mcp: { include: ['src/**'] },
     })
 
@@ -139,6 +139,76 @@ describe('validateConfig logs', () => {
         logs: 'compiler' as never,
       })
     ).toThrowError(/'logs' must be an array of log channels/i)
+  })
+})
+
+describe('validateConfig strict', () => {
+  it('accepts a category list and carries it on the returned config', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: ['colors'],
+    })
+
+    expect(config.strict).toEqual(['colors'])
+  })
+
+  it('accepts all three categories, repeated entries, and an empty list', () => {
+    const all = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: ['colors', 'radii', 'spacing'],
+    })
+    expect(all.strict).toEqual(['colors', 'radii', 'spacing'])
+
+    const repeated = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: ['radii', 'radii'],
+    })
+    expect(repeated.strict).toEqual(['radii', 'radii'])
+
+    const empty = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      strict: [],
+    })
+    expect(empty.strict).toEqual([])
+  })
+
+  it('leaves the field absent in open mode', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+    })
+
+    expect(config.strict).toBeUndefined()
+  })
+
+  it('rejects non-array shapes', () => {
+    for (const strict of ['colors', 42, { colors: true }]) {
+      expect(() =>
+        validateConfig({ name: SYSTEM_NAME, include: DEFAULT_INCLUDE, strict: strict as never })
+      ).toThrowError(/'strict' must be an array of token categories/i)
+    }
+  })
+
+  it('rejects entries outside colors, radii, and spacing', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        strict: ['tones'] as never,
+      })
+    ).toThrowError(/Config field 'strict' is invalid/)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        strict: ['colors', 7] as never,
+      })
+    ).toThrowError(/'strict' must be an array of token categories/i)
   })
 })
 

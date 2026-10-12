@@ -53,7 +53,7 @@ export interface SyncResult {
   spec: EvaluatedSystemSpec
   /** Userspace + compiler warnings reported: the one-liner folds this. */
   warningCount: number
-  /** Userspace diagnostics as the engine reported them: `--json` prints these. */
+  /** Userspace diagnostics: the engine's compile warnings plus typegen's. `--json` prints these. */
   diagnostics: NativeDiagnostic[]
   /** Compiler backchannel entries (empty without the `logs` opt-in). */
   compilerDiagnostics: NativeDiagnostic[]
@@ -207,8 +207,9 @@ interface PublishInput {
 
 // Assemble into the stage, then commit it live: the stage builds while the
 // live folder keeps serving, and the commit flips it with no missing-file
-// window before the scope links land on the complete folder.
-async function assembleAndCommit(input: PublishInput): Promise<void> {
+// window before the scope links land on the complete folder. Returns the
+// typegen warnings the declaration leg raised, for the caller to report.
+async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[]> {
   // Publish carries configured ∪ traced: hosts the engine discovered
   // inside compile() join the config names in the artifact and the
   // portable system, so downstream extends keep their fuel.
@@ -220,7 +221,7 @@ async function assembleAndCommit(input: PublishInput): Promise<void> {
     input.result.streams,
     input.spec.name
   )
-  await assembleSystem({
+  const typegenDiagnostics = await assembleSystem({
     outDir: input.stageDir,
     liveOutDir: input.outDir,
     spec: input.spec,
@@ -233,6 +234,7 @@ async function assembleAndCommit(input: PublishInput): Promise<void> {
     streams: merged.streams,
     jsx,
     runtime: input.result.runtime,
+    strict: input.config.strict,
   })
   // Logical request artifact: `files` (megabytes of bytes) and the
   // retention token (a live handle, never persisted) stay out of the
@@ -250,6 +252,7 @@ async function assembleAndCommit(input: PublishInput): Promise<void> {
   })
   linkGeneratedPackages(input.cwd, input.outDir)
   markPhase('publishEnd')
+  return typegenDiagnostics
 }
 
 // The stage dies with the failed run while the live folder keeps its
@@ -300,10 +303,14 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     const prepared = await prepareFragments(cwd, config)
     markPhase('scanEnd')
     const { spec, result, request } = await evaluateAndCompile(cwd, config, prepared)
-    const warningCount = reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, { verbose: options.verbose === true })
+    const reportOptions = { verbose: options.verbose === true }
+    const warningCount = reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, reportOptions)
     throwOnErrorDiagnostics(result.diagnostics)
 
-    await assembleAndCommit({ cwd, config, stageDir, outDir, spec, prepared, result, request })
+    const typegenDiagnostics = await assembleAndCommit({ cwd, config, stageDir, outDir, spec, prepared, result, request })
+    // Typegen warnings exist only after assembly: they fold into the same
+    // count and verbose list as the compile warnings.
+    const typegenWarningCount = reportSyncDiagnostics(typegenDiagnostics, undefined, reportOptions)
 
     // Sync END only: schedule the background tasty phase, never await it.
     scheduleReferenceTastyPhase(cwd, config, {
@@ -312,7 +319,13 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
       json: options.json === true,
     })
 
-    return { outDir, spec, warningCount, diagnostics: result.diagnostics, compilerDiagnostics: result.compilerDiagnostics ?? [] }
+    return {
+      outDir,
+      spec,
+      warningCount: warningCount + typegenWarningCount,
+      diagnostics: [...result.diagnostics, ...typegenDiagnostics],
+      compilerDiagnostics: result.compilerDiagnostics ?? [],
+    }
   } catch (error) {
     failed = true
     await dropFailedStageAndScratch(stageDir, outDir)

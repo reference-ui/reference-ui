@@ -3,6 +3,7 @@
 // The assembly input is the packager's entire contract with sync: everything packaging needs, nothing it doesn't.
 
 import type { EvaluatedSystemSpec, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
+import type { StrictCategory } from '../config/types.ts'
 import type { JsxElementsArtifact } from '../system/base/jsx.ts'
 import type { SystemStreams } from '../system/base/types.ts'
 
@@ -20,6 +21,8 @@ export interface PublishInput {
 /** Full assembly input: the publish input plus the compiled runtime artifact the bundle legs bind. */
 export interface AssemblyInput extends PublishInput {
   runtime: NativeRuntimeArtifact
+  /** Strict token categories the declaration leg narrows to; omitted keeps open mode. */
+  strict?: readonly StrictCategory[]
   /**
    * Live folder the stage commits into. The react map leg emits its sources
    * relative to it so they resolve after the commit rename (F-A); every other

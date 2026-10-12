@@ -185,6 +185,39 @@ describe('sync diagnostics', () => {
   })
 })
 
+describe('sync typegen diagnostics', () => {
+  it('folds typegen strict warnings into the returned count with no stderr by default', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile("  strict: ['spacing'],"),
+      'theme/tokens.ts': TOKENS_FILE,
+    })
+
+    const { calls, warningCount } = await syncWithWarnCapture(dir)
+
+    expect(calls).toHaveLength(0)
+    expect(warningCount).toBe(1)
+    expect(existsSync(outFile(dir, 'styled/types/index.d.ts'))).toBe(true)
+  })
+
+  it('lists typegen strict warnings with their fix hint under verbose without failing', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile("  strict: ['spacing'],"),
+      'theme/tokens.ts': TOKENS_FILE,
+    })
+
+    const { calls, warningCount } = await syncWithWarnCapture(dir, { verbose: true })
+    const output = calls.join('\n')
+
+    expect(warningCount).toBe(1)
+    expect(calls).toHaveLength(1)
+    expect(output).toContain('TGN-W-ABSENT-STRICT-CATEGORY')
+    expect(output).toContain('strict category `spacing` has no tokens in this system')
+    expect(output).toContain('declare spacing tokens or drop `spacing` from strict')
+    expect(output).not.toContain('[--verbose]')
+    expect(existsSync(outFile(dir, 'styled/types/index.d.ts'))).toBe(true)
+  })
+})
+
 describe('sync compiler backchannel', () => {
   it('counts compiler diagnostics in the returned warning count by default', async () => {
     const dir = await writeProject({
