@@ -1352,7 +1352,11 @@ test.describe('NumberField CT', () => {
     const hidden = page.locator('input[name="qty"]')
     const inc = page.getByRole('button', { name: 'Increment' })
     const dec = page.getByRole('button', { name: 'Decrement' })
-    await expect(inc).toHaveAttribute('aria-controls', await input.getAttribute('id'))
+    const inputId = await input.getAttribute('id')
+    if (inputId === null) {
+      throw new Error('NF-COMP-01: expected the NumberField input to expose a resolved id for aria-controls linkage')
+    }
+    await expect(inc).toHaveAttribute('aria-controls', inputId)
     // Type to 99, then hold Increment: the immediate step lands 100 and the
     // bound ends the hold with no further request.
     await input.click()
@@ -1515,7 +1519,8 @@ test.describe('NumberField CT', () => {
     await page.getByTestId('commit-lab-submit').click()
     await expect(submitsB).toHaveText('submits: 3')
     await expect.poll(async () => (await probe()).length).toBe(3)
-    expect((await probe()).at(-1)).toEqual({ prevented: false, qty: '8' })
+    const finalProbeB = await probe()
+    expect(finalProbeB[finalProbeB.length - 1]).toEqual({ prevented: false, qty: '8' })
   })
 
   test('NF-FORM-12: Implicit Enter submit after an unaccepted key commit stays blocked without a second submit', async ({
@@ -1584,8 +1589,12 @@ test.describe('NumberField CT', () => {
     )
     await page.getByTestId('commit-lab-submit').click()
     await expect(submits).toHaveText(`submits: ${submitsAfterEnter + 1}`)
-    await expect.poll(async () => (await probe()).at(-1)?.prevented).toBe(false)
-    expect((await probe()).at(-1)).toEqual({ prevented: false, qty: '9' })
+    await expect.poll(async () => {
+      const polled = await probe()
+      return polled[polled.length - 1]?.prevented
+    }).toBe(false)
+    const finalProbeB = await probe()
+    expect(finalProbeB[finalProbeB.length - 1]).toEqual({ prevented: false, qty: '9' })
   })
 
   test('NF-FORM-14: Clicked reset applies blur first and cancellation preserves post-blur state', async ({

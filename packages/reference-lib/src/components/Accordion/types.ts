@@ -19,7 +19,7 @@ export type AccordionKeyboard = 'headers' | 'none' | 'arrows'
 export type AccordionValue = string | string[] | null
 
 export interface AccordionProps
-  extends Omit<ReferencePartProps<'div'>, 'onChange' | 'value'> {
+  extends Omit<ReferencePartProps<'div'>, 'onChange' | 'value' | 'defaultValue'> {
   children?: React.ReactNode
   expansion?: AccordionExpansion
   /** Optional value. Single uses string|null, multiple uses string[]. Omitted = self-managed from the natural zero state (null single, [] multiple). */

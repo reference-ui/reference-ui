@@ -38,6 +38,24 @@ function pressKey(input: HTMLInputElement, key: string, init?: KeyboardEventInit
   input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }))
 }
 
+// ES2020's Intl.NumberFormatOptions declaration predates the rounding-mode,
+// rounding-priority, and rounding-increment options, so pin the extended shape
+// locally instead of widening the global Intl type.
+interface RoundingFormatOptions extends Intl.NumberFormatOptions {
+  roundingMode?:
+    | 'ceil'
+    | 'floor'
+    | 'expand'
+    | 'trunc'
+    | 'halfCeil'
+    | 'halfFloor'
+    | 'halfExpand'
+    | 'halfTrunc'
+    | 'halfEven'
+  roundingPriority?: 'auto' | 'morePrecision' | 'lessPrecision'
+  roundingIncrement?: number
+}
+
 describe('NumberField numeric defaults', () => {
   it('NF-MATH-01: NumberField should resolve public numeric defaults without truthiness coercion', async () => {
     // Landing re-target: percent-style default step is freeze-only (no
@@ -6183,7 +6201,7 @@ describe('NumberField wave-2 formatting', () => {
     // Snap + fine step keeps every vector on-lattice so only the authored
     // rounding moves the candidate; each vector publishes its raw live
     // meaning first, then one rounded commit.
-    const vectors: Array<{ text: string; formatOptions: Intl.NumberFormatOptions; expected: number }> = [
+    const vectors: Array<{ text: string; formatOptions: RoundingFormatOptions; expected: number }> = [
       { text: '2.5', formatOptions: { maximumFractionDigits: 0 }, expected: 3 },
       { text: '-2.5', formatOptions: { maximumFractionDigits: 0 }, expected: -3 },
       { text: '2.5', formatOptions: { maximumFractionDigits: 0, roundingMode: 'halfEven' }, expected: 2 },
@@ -6270,7 +6288,7 @@ describe('NumberField wave-2 formatting', () => {
     const vectors: Array<{
       text: string
       step: number
-      formatOptions: Intl.NumberFormatOptions
+      formatOptions: RoundingFormatOptions
       expected: number
     }> = [
       {
@@ -6339,9 +6357,10 @@ describe('NumberField wave-2 formatting', () => {
         <Wave2Field value={0} locale="en-US" formatOptions={{ minimumFractionDigits: 5, maximumFractionDigits: 2 }} />
       )
     ).toThrow(/"locale"\/"formatOptions"/)
+    const invalidRoundingIncrement: RoundingFormatOptions = { maximumFractionDigits: 2, roundingIncrement: 7 }
     expect(() =>
       renderToString(
-        <Wave2Field value={0} locale="en-US" formatOptions={{ maximumFractionDigits: 2, roundingIncrement: 7 }} />
+        <Wave2Field value={0} locale="en-US" formatOptions={invalidRoundingIncrement} />
       )
     ).toThrow(/"locale"\/"formatOptions"/)
   })
