@@ -81,3 +81,6 @@ packages/reference-neo/playground/.captures/
 
 # pack artifacts (npm pack / tarballs) — never committed
 *.tgz
+
+# Claude Code agent sandboxes (isolation: "worktree").
+/.claude/worktrees/
