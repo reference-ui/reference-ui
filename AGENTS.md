@@ -6,14 +6,15 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 ## Skills vs `test-core`
 
-`view-story` and `test-component` are **skills** (component workflows for `@reference-ui/lib`).
+`view-story`, `test-component` and `ux-designer` are **skills** (component workflows for `@reference-ui/lib`).
 
-**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a manufacturing loop.
+**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a loop to work through.
 
 | You changed | Use |
 | --- | --- |
 | `@reference-ui/lib` look/feel | `view-story` skill |
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
+| `@reference-ui/lib` component UX sign-off (look, feel, accessibility) | `ux-designer` skill (judge with `view-story`) |
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
@@ -45,10 +46,9 @@ modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> Agents MAY run `pnpm dev:lib` themselves (rescinds the former
-> do-not-start rule). Single instance only: check port 5000 first
-> (`curl -s -o /dev/null -w '%{http_code}' localhost:5000`); if it is already
-> up, use it instead of starting a second. Prefer the managed background
+> Agents MAY run `pnpm dev:lib` themselves. Single instance only: check port
+> 5000 first (`curl -s -o /dev/null -w '%{http_code}' localhost:5000`); if it is
+> already up, use it instead of starting a second. Prefer the managed background
 > session so logs stay inspectable, and stop only processes you started.
 
 ---
@@ -162,7 +162,7 @@ pnpm agentrs                                                 # bare command runs
 > [!IMPORTANT]
 > **Code Quality & Comment Standards for `reference-rs`**:
 > This is a compiler, not a toy. Write small enough to analyze, fail explicitly (`Result`/diagnostics, not `unwrap`), put pass state in a type, and never silence the analyzer. The numbered limits below are the checks; that is the taste.
-> 1. **Zero tolerance default**: 1 Code violations cause immediate failure (exit 1). Not an optional check.
+> 1. **Zero tolerance default**: any code violation causes immediate failure (exit 1). Not an optional check.
 > 2. **File length**: Hard failure if a file exceeds **500 lines**; warning at **365 lines** (*"Can you split this up, please?"*).
 > 3. **Cyclomatic complexity**: Keep $\le 10$ (failure $> 15$). Cognitive complexity $\le 15$ (failure $> 20$).
 > 4. **Function length**: Keep $\le 80$ lines (failure $> 120$).

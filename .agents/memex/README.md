@@ -32,7 +32,7 @@ never across invocations or collections.
 
 | Name       | Kind     | Source                                                             | Owner            |
 | ---------- | -------- | ------------------------------------------------------------------ | ---------------- |
-| `doom`     | markdown | `.agents/doom/logs/*.md`                                           | doom-agent skill |
+| `doom`     | markdown | `.agents/doom/logs/*.md`                                           | doom log archive under `.agents/doom/`, no owning skill |
 | `cases`    | neo      | `packages/reference-neo/tests/cases` (case.json + README + specs)  | agent-neo skill  |
 | `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
@@ -112,7 +112,7 @@ the max per field across collections.
 {
   "name": "doom",
   "description": "Doom hunt reports.",
-  "owner": "doom-agent skill",
+  "owner": "doom log archive under .agents/doom/, no owning skill",
   "kind": "markdown",
   "roots": [".agents/doom/logs"],
   "include": ["*.md"],

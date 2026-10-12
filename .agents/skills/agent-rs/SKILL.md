@@ -1,6 +1,6 @@
 ---
 name: agent-rs
-description: Dedicated workflow and verification runner for reference-rs (Rust domain crates, N-API bridge, and TS runtime wrappers). Enforces fast seam Vitest testing, Rust unit tests, load-balanced CPU gate queueing for multi-agent overnight runs, Darwin QoS elevation, and strict code quality standards (cyclomatic complexity <= 10, cognitive complexity <= 15, file length < 365/500 lines, Clippy #[allow] banned). Activate whenever working in packages/reference-rs or Rust/native bindings.
+description: Dedicated workflow and verification runner for reference-rs (Rust domain crates, N-API bridge, and TS runtime wrappers). Enforces fast seam Vitest testing, Rust unit tests, load-balanced CPU gate queueing for concurrent runs, Darwin QoS elevation, and strict code quality standards (cyclomatic complexity <= 10, cognitive complexity <= 15, file length < 365/500 lines, Clippy #[allow] banned). Activate whenever working in packages/reference-rs or Rust/native bindings.
 ---
 
 # Reference RS Agent Skill (`agent-rs`)
@@ -33,7 +33,7 @@ packages/reference-rs/
 1. **Modules (`modules/atomic/`, `modules/canon/`, `modules/base-system/`, `modules/typegen/`, `modules/tasty/`, `modules/atlas/`, `modules/styletrace/`)**: Products live under `modules/`. Each module is a self-contained product containing its pure Rust crate, JS/TS API wrappers, tests, and documentation.
 2. **N-API Switchboard (`native/`)**: The sole `cdylib` native addon exposing module capabilities to Node.js via `napi-rs`.
 3. **Runtime & Tools (`runtime/`)**: Addon loader, platform detection, packaging, and binary artifact distribution scripts.
-4. **Scope Discipline**: When assigned to work on a specific module, keep changes focused on your target scope.
+4. **Scope Discipline**: When a task targets one module, keep changes focused on that module's scope.
 
 ---
 
@@ -60,7 +60,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 
 > [!IMPORTANT]
 > **ZERO TOLERANCE FOR CODE VIOLATIONS — NOT AN OPTIONAL FLAG.**
-> 1 Code violations cause immediate test/quality failure (exit code 1).
+> Any code violation causes immediate test/quality failure (exit code 1).
 > After EVERY generation or modification step, run:
 > ```bash
 > pnpm agentrs q <path-to-modified-file>
@@ -139,12 +139,12 @@ Repeating the same 6+ arguments across `walk_*` helpers after a complexity split
 
 ---
 
-## 3. Overnight Concurrency & Load Balancer
+## 3. Concurrency & Load Balancer
 
-During overnight processing, multiple autonomous agents work on `packages/reference-rs` concurrently. To prevent CPU starvation, port collisions, and corrupted `.node` binary builds, `agent-rs` coordinates via the shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
+Several runs can work on `packages/reference-rs` at the same time, from agent sessions or terminals. To prevent CPU starvation, port collisions, and corrupted `.node` binary builds, `agent-rs` coordinates via the shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
 
 - **`rs` queue class**: Allows up to 2 parallel test executions (`cargo test` / `vitest`). Extra runs wait in queue with live terminal telemetry (`[cpu-gate] Waiting for cpu gate (rs)...`).
-- **`rs:build` queue class**: Exclusive lock for compiling the native N-API addon (`ensure-native`). Only 1 agent builds the native binary at a time, eliminating binary clobbering.
+- **`rs:build` queue class**: Exclusive lock for compiling the native N-API addon (`ensure-native`). Only one build runs at a time, which prevents binary clobbering.
 - **Matrix coordination**: Pauses `rs` tests when an `exclusive` matrix or Dagger pipeline runs, and vice-versa.
 - **Darwin QoS Jailbreak**: Automatically jailbreaks Darwin background QoS (`PRI 31`) to unthrottled User Interactive Application priority (`PRI 46`) via `taskpolicy -a`.
 

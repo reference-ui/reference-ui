@@ -5,9 +5,9 @@ description: Core and matrix verification runner for Reference UI (the pipeline 
 
 # Core / Matrix Test Runner (`test-core`)
 
-**This is not a skill.** `view-story` and `test-component` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
+**This is not a skill.** `view-story`, `test-component` and `ux-designer` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
 
-The docs live under `.agents/skills/test-core` only so agents can find the runner. Treat it as infrastructure, not a manufacturing loop.
+The docs live under `.agents/skills/test-core` only so agents can find the runner. Treat it as infrastructure, not a loop to work through.
 
 Use `test-core` when you changed any of:
 
@@ -72,7 +72,7 @@ pnpm agent matrix --packages=@matrix/primitives
 # Canonical root shortcut for full matrix:
 pnpm pipeline:test:matrix
 
-# 6. Direct pipeline pass-through:
+# 7. Direct pipeline pass-through:
 pnpm agent pipeline test --packages=@matrix/tokens
 pnpm agent clean
 pnpm agent setup --packages=@matrix/distro --sync

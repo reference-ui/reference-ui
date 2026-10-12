@@ -38,13 +38,10 @@ pnpm agentneo q [paths]       # quality gate (section 6)
   (Vite). Matrix install/bundler-chain proof is for the day Neo is the
   installed core — not today.
 - **Stance:** `packages/reference-neo/README.md` (what Neo is and refuses).
-- **Voyage plan:** `packages/reference-neo/docs/PLAN.md` (the map) plus
-  `packages/reference-neo/docs/PLAN-harness.md` (Part One detail: gate,
-  CLI, cases, skill).
-- **Campaign (Part Three, parity):** `packages/reference-neo/PLAN.md` —
-  decisions, vertical slices, roles, gates, the reserved case catalog.
+- **Plan:** `packages/reference-neo/PLAN.md` (the one plan: a thinking doc and
+  discussion map; nothing in it is ordered into steps until the map converges).
 - **Evidence:** `packages/reference-neo/docs/evidence/` — the nine
-  read-only probe reports the campaign was planned from (lib sheet,
+  read-only probe reports the parity campaign was planned from (lib sheet,
   generated folder, core API, Atomic claims, Panda v1 corpus, Neo state).
   Read `docs/evidence/README.md` first; cite these instead of re-probing.
 - **Usage:** `packages/reference-neo/docs/TESTING.md` (how to run the harness).
@@ -143,8 +140,7 @@ Run the gate after every generation or modification step.
 
 ## 7. Development Loop
 
-1. Read the stance (`README.md`), the voyage plan (`docs/PLAN.md` plus
-   `docs/PLAN-harness.md`), the campaign (`PLAN.md`) and the evidence it
+1. Read the stance (`README.md`), the plan (`PLAN.md`) and the evidence it
    cites (`docs/evidence/`, start at its README), the usage doc
    (`docs/TESTING.md`), and the nomenclature authority (`docs/DOMAIN.md`).
 2. Find your case: `pnpm agentneo list` / `search <query>`.

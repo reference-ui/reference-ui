@@ -12,9 +12,9 @@ to `test-component` (`pnpm agentct`).
 
 Eyes are the built-in browser: a real browser, no hand-rolled clients.
 Never write ad-hoc Playwright scripts or one-liners — the built-in browser
-covers navigate, snapshot, screenshot, evaluate, click, type, and console.
+covers `navigate`, `read_page`, `computer` screenshots and clicks, `javascript_tool`, and `read_console_messages`.
 
-## 1. Ensure the Book server (autonomous)
+## 1. Ensure the Book server
 
 The viewing loop owns its server lifecycle — never stop and ask the
 developer to boot it. Single instance only.

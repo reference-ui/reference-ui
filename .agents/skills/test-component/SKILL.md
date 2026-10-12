@@ -172,13 +172,13 @@ The runner prints absolute paths after e2e:
 
 ### Stills (`frames.png`)
 
-Agent browser hosts here cannot play `.webm`, so the runner writes a `frames.png`
+The agent cannot play `.webm`, so the runner writes a `frames.png`
 next to each video — up to eight stills showing the moments the picture changed,
 laid out left-to-right in a grid, each labelled with its timestamp. The runner
 densely seeks the recording and keeps the frames where the component actually
 appears, so the sheet is not a black background. If nothing changed from the
 first frame the sheet carries a red "no change from first frame" banner and the
-runner warns on stderr. Open it (`view_file` / image read) and check:
+runner warns on stderr. Open it with the Read tool and check:
 
 1. **Presence & exit** — overlay enters with its animation; on dismiss it finishes the exit before unmount (no snap/flicker).
 2. **Anchoring** — position vs trigger, arrow alignment, no jitter on flip.
@@ -205,7 +205,7 @@ close
 
 Snapshots are **settled-state** comparisons (`snap(page, 'open')`, stored as `open.png`). Animations are disabled for the comparison so the check is about layout/paint drift, not motion (motion is the video). `snap()` no-ops unless the CT gallery is React 19.
 
-On mismatch: read the **bbox + color telemetry** in the terminal, then `view_file` the **diff**, then **actual**, then **expected**. Treat a failed snapshot as a **regression until the human says otherwise**. Fix the component. Do **not** update the baseline.
+On mismatch: read the **bbox + color telemetry** in the terminal, then open the **diff** (Read tool), then **actual**, then **expected**. Treat a failed snapshot as a **regression until the human says otherwise**. Fix the component. Do **not** update the baseline.
 
 ---
 

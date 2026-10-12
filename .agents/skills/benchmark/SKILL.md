@@ -37,7 +37,7 @@ Each invocation pins one folder under `packages/reference-neo/benchmark/reports/
 - `result.json` — the machine record: `revision`, `scales[]`, each with `plan`, `generated`, per-run `samples[]`, and `bundle` bytes
 - `report.md` — the human readout
 
-The pin resolves before generation from the tree ignoring `reports/` itself. Hash pins are the committed log; `latest/` is scratch for the refine loop.
+The pin resolves before generation from the tree ignoring `reports/` itself. Hash pins are the committed log; `latest/` is scratch for quick iteration.
 
 The big three per scale, always medians across runs unless you say otherwise:
 

@@ -4,7 +4,7 @@
   "include": ["*.md"],
   "kind": "markdown",
   "name": "doom",
-  "owner": "doom-agent skill",
+  "owner": "doom log archive under .agents/doom/, no owning skill",
   "roots": [".agents/doom/logs"],
   "suggest": ["module", "verdict", "tags"],
   "weights": { "module": 2, "tags": 2, "title": 3, "verdict": 2 }
