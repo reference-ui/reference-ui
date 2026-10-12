@@ -10,8 +10,8 @@ planned points (see `captain`). It is a consulting expert, never the foreman and
 never a token burner: it does not implement, run tests it could delegate,
 supervise crews, manage queues, or gate routine work.
 
-Muse Spark is not an OpenChamber model. The **`oracle` agent** — a DeepSeek V4.1
-Flash sub-agent, defined in `.opencode/agents/oracle.md` — carries the CLI call.
+Muse Spark is not an OpenChamber model. The **`oracle` agent** — the host's oracle
+carrier agent (opencode: `.opencode/agents/oracle.md`) — carries the CLI call.
 It is a **context firewall**: the Oracle's transcript is large and off-task, so
 it never enters the captain's context; only the one-line status does. The captain
 does not call `muse exec`. This skill is the captain's: what to ask, and the

@@ -50,11 +50,10 @@ Out loud, in the conversation, before spawning anyone:
   session, only its one status line does. Reference UI is open source,
   so every Oracle call uses the **Contributor** tier
   (`muse-spark-1.3-contributor`, Max effort).
-- **Model binding.** Every crew and the `oracle` carrier run on
-  **DeepSeek V4.1 Flash**. In OpenCode the `captain`, `red-captain`, and
-  `oracle` agent profiles pin model and permissions in
-  `.opencode/agents/`; an unset model inherits the captain, not the
-  editor default.
+- **Model binding.** Each host defines its crew models in its own agent
+  files (opencode: `.opencode/agents/`, where the `captain`, `red-captain`,
+  and `oracle` profiles pin model and permissions); an unset model inherits
+  the captain, not the editor default.
 - **Crews never commit.** The captain commits, named files only, one
   verified arc per commit. Never touch another session's files:
   shared surfaces ride named and reviewed, or not at all.
