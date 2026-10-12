@@ -10,7 +10,7 @@ use super::resolve_token_value;
 use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity};
 use crate::resolve::ResolveSession;
 
-fn resolve_with_diagnostics(
+pub(super) fn resolve_with_diagnostics(
     prop: &str,
     raw: &str,
     system: &BaseSystem,
@@ -30,7 +30,7 @@ fn resolve_with_diagnostics(
 
 /// A small tone-bearing system: one colour, surface/line/flat/surface-only
 /// tones, an unusable fraction tone, and a spacing token for the non-colour case.
-fn tone_fixture() -> BaseSystem {
+pub(super) fn tone_fixture() -> BaseSystem {
     let mut system = BaseSystem::default();
     for (category, path, light) in [
         ("colors", "blue.500", "#2563eb"),
@@ -213,80 +213,6 @@ fn literal_slash_token_beats_a_tone() {
     });
     let (css, diagnostics) = resolve_with_diagnostics("bg", "a/b", &system);
     assert_eq!(css.as_deref(), Some("var(--colors-a/b)"));
-    assert!(diagnostics.is_empty());
-}
-
-#[test]
-fn brace_tone_uses_the_outer_property_role() {
-    let system = tone_fixture();
-    let (css, diagnostics) = resolve_with_diagnostics(
-        "border",
-        "1px solid {colors.blue.500/medium}",
-        &system,
-    );
-    assert_eq!(
-        css.as_deref(),
-        Some(
-            "1px solid color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent)"
-        )
-    );
-    assert!(diagnostics.is_empty());
-    let (css, diagnostics) = resolve_with_diagnostics(
-        "boxShadow",
-        "0 0 0 3px {colors.blue.500/medium}",
-        &system,
-    );
-    assert_eq!(
-        css.as_deref(),
-        Some(
-            "0 0 0 3px color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent)"
-        )
-    );
-    assert!(diagnostics.is_empty());
-}
-
-#[test]
-fn brace_unknown_tone_errors_and_drops() {
-    let system = tone_fixture();
-    let (css, diagnostics) = resolve_with_diagnostics(
-        "border",
-        "1px solid {colors.blue.500/mediun}",
-        &system,
-    );
-    assert_eq!(css, None);
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
-    assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownTokenReference);
-    assert_eq!(
-        diagnostics[0].message,
-        "unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)"
-    );
-}
-
-#[test]
-fn whole_braced_unknown_tone_errors_and_drops() {
-    let system = tone_fixture();
-    let (css, diagnostics) =
-        resolve_with_diagnostics("borderColor", "{colors.blue.500/mediun}", &system);
-    assert_eq!(css, None);
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
-    assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownTokenReference);
-    assert_eq!(
-        diagnostics[0].message,
-        "unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)"
-    );
-}
-
-#[test]
-fn whole_braced_known_tone_still_resolves() {
-    let system = tone_fixture();
-    let (css, diagnostics) =
-        resolve_with_diagnostics("borderColor", "{colors.blue.500/medium}", &system);
-    assert_eq!(
-        css.as_deref(),
-        Some("color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent)")
-    );
     assert!(diagnostics.is_empty());
 }
 

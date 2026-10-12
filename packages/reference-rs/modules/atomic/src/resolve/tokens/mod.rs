@@ -13,10 +13,12 @@ use base_system::{BaseSystem, TokenEntry};
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
-mod braced_tone;
 mod interpolate;
 mod scale;
+mod tone_value;
 pub(crate) mod tones;
+#[cfg(test)]
+mod braced_tone_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
@@ -25,6 +27,7 @@ mod tones_resolve_tests;
 mod tones_tests;
 
 pub(crate) use interpolate::{expand_brace_segments, BraceExpansion};
+use tone_value::ToneValue;
 
 /// Returns true if the property semantically accepts color values and tokens.
 pub fn is_color_prop(prop: &str) -> bool {
@@ -104,20 +107,18 @@ fn resolve_pathed_value<'a>(
     resolve_unsuffixed(prop, raw_val, unbraced, session)
 }
 
-/// A value with no numeric modifier that names no whole token: a braced unknown
-/// tone refuses, then a named tone, then the malformed-opacity warning, then
-/// interpolation or fallback.
+/// A value with no numeric modifier that names no whole token: a named tone,
+/// then the malformed-opacity warning, then interpolation or fallback.
 fn resolve_unsuffixed<'a>(
     prop: &str,
     raw_val: &'a str,
     unbraced: &str,
     session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
-    if braced_tone::refuse_unknown_braced_tone(prop, raw_val, session) {
-        return None;
-    }
-    if let Some(resolved) = resolve_tone(prop, raw_val, unbraced, session) {
-        return Some(resolved);
+    match tone_value::resolve_tone(prop, raw_val, unbraced, session) {
+        ToneValue::NotTone => {}
+        ToneValue::Value(resolved) => return Some(resolved),
+        ToneValue::Dropped => return None,
     }
     if malformed_opacity(unbraced) {
         return Some(malformed_passthrough(prop, unbraced, raw_val, session));
@@ -147,45 +148,6 @@ fn malformed_passthrough<'a>(
         },
     );
     Cow::Borrowed(raw_val)
-}
-
-/// The tone path for one bare value: `base/name` where `base` names a declared
-/// colours token and `name` is a tone identifier. `Some` means the tone path
-/// owns the value — the resolved `color-mix`, or the raw bytes after an
-/// unknown-tone warning. `None` means this is not a tone value at all. A whole
-/// braced unknown tone never reaches here: `braced_tone` refuses it first.
-fn resolve_tone<'a>(
-    prop: &str,
-    raw_val: &'a str,
-    unbraced: &str,
-    session: &mut ResolveSession<'_, '_>,
-) -> Option<Cow<'a, str>> {
-    let (base, name) = tones::split_tone_reference(unbraced)?;
-    let entry = lookup_entry(prop, base, session.system)?;
-    if entry.category() != "colors" {
-        return None;
-    }
-    match tones::resolve(session.system, prop, entry, name) {
-        Some(css) => Some(Cow::Owned(css)),
-        None => {
-            let key = want_key(
-                session,
-                prop,
-                serde_json::Value::String(raw_val.to_string()),
-            );
-            session.emit(
-                key,
-                ResolveOutcome::Passthrough {
-                    code: DiagnosticCode::UnknownTone,
-                    detail: ResolveDetail::Token(TokenDetail::UnknownTone {
-                        text: unbraced.into(),
-                        tone: name.into(),
-                    }),
-                },
-            );
-            Some(Cow::Borrowed(raw_val))
-        }
-    }
 }
 
 /// Brace interpolation for values the dictionary missed, else error or warn.
