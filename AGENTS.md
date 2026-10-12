@@ -81,8 +81,31 @@ modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 5. `list_console_messages` before trusting pixels — a throwing page
    renders a lie.
 
-Screenshots come back inline from `take_screenshot`. **Always embed them
-directly into your response**.
+Screenshots come back inline from `take_screenshot` only for hosts whose
+browser returns images inline (DevTools-MCP agents, Claude); **always embed
+those directly into your response**. opencode agents get no inline image —
+`cdt` saves a file and prints `saved: <path>` — so open that path with your
+file-read tool to see the screenshot.
+
+Do not pass `filePath` to `take_screenshot` unless an image must be kept.
+When one must, save it under the repository-root `.screenshots/`: the one
+gitignored place for agent snapshots, never nested inside a package. Kept
+files are temporary.
+
+Skills name the DevTools tools. Each host maps them to its own browser;
+this table is the one place that mapping lives:
+
+| Host | Browser tools |
+| --- | --- |
+| DevTools-MCP agents (Codex, Cursor, …) | the DevTools tools as written: `navigate_page`, `take_snapshot`, `take_screenshot`, `evaluate_script`, `list_console_messages` |
+| opencode | no DevTools MCP: the `browser-tools` skill. `cdt <same tool name and args>` (`cdt take_snapshot 1`, `cdt evaluate_script '<fn>' --pageId 1`) starts its own browser and keeps files under `.screenshots/`, deleting them after seven days |
+| Claude (desktop / Code) | its built-in browser: `read_page` / `get_page_text` for snapshots, `javascript_tool` for scripts, `computer` screenshot for pixels, `read_console_messages`; images come back inline and no files are written |
+
+Browser tools are for design work and playtests. A failing Playwright test is
+debugged from its own artifacts instead: failure screenshots, `frames.png`
+stills beside each video where the runner makes them, and the trace, read as
+text with `npx playwright trace open <trace.zip>` then `errors` / `actions` /
+`console` / `screenshot <action-id> -o <png>`.
 
 ---
 

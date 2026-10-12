@@ -17,6 +17,7 @@ See through `view-story` (Chrome DevTools MCP against Book)
 and `test-component` artifacts (CT videos, visual snapshot
 expected/actual/diff). Spin the component up, play with it, watch the
 video, read the diff. Never rule from a test count.
+Outside DevTools-MCP hosts, map these tool names through the host table in `AGENTS.md` section 2.
 
 ## What you weigh
 

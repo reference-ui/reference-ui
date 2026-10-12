@@ -22,6 +22,7 @@ import { unitDirectory, artifactsDirectory } from './cases/targets.mjs'
 import { resolveSelection, selectLegacyTarget, executionArguments } from './cases/selection.mjs'
 import { parseCatalogInvocation, formatCatalogJson, formatCatalogHuman, listingExitCode, writeCatalogOutput } from './cases/output.mjs'
 import { canAcquireJob, MAX_ACTIVE_JOBS, workerBudget, selectOwnedGroups, isListenerOwnedByGroups } from './cases/resources.mjs'
+import { writeVideoContactSheets } from './videoContactSheet.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1049,7 +1050,7 @@ function sendToDaemon(argv) {
     let completed = false
     let buffer = ''
     const client = net.createConnection(SOCKET_PATH, () => {
-      console.log(`[agentct] Connected to daemon at ${SOCKET_PATH}`)
+      if (!isJson) console.log(`[agentct] Connected to daemon at ${SOCKET_PATH}`)
       client.write(JSON.stringify({
         type: 'run',
         argv,
@@ -1073,10 +1074,10 @@ function sendToDaemon(argv) {
         try {
           const msg = JSON.parse(line.trim())
           if (msg.type === 'queue') {
-            console.log(`[agentct-queue] Waiting in daemon queue (position ${msg.position} of ${msg.total})...`)
+            if (!isJson) console.log(`[agentct-queue] Waiting in daemon queue (position ${msg.position} of ${msg.total})...`)
           }
           if (msg.type === 'start') {
-            console.log(`[agentct-queue] Slot acquired. Routing to warm Vite :${msg.port || 3101} (${msg.workers || WORKERS_PER_SLOT} workers).`)
+            if (!isJson) console.log(`[agentct-queue] Slot acquired. Routing to warm Vite :${msg.port || 3101} (${msg.workers || WORKERS_PER_SLOT} workers).`)
           }
           if (msg.type === 'stdout') process.stdout.write(msg.data)
           if (msg.type === 'stderr') process.stderr.write(msg.data)
@@ -1375,7 +1376,7 @@ try {
   if (runUnit && !selectedCases.some(entry => entry.kind === 'unit')) {
     if (unitOnly) throw new Error(`${component || 'Catalog'} has no registered unit evidence.`)
     runUnit = false
-    console.log(`[agentct] ${component || 'Catalog'}: no unit declarations selected; executing its CT evidence.`)
+    if (!isJson) console.log(`[agentct] ${component || 'Catalog'}: no unit declarations selected; executing its CT evidence.`)
   }
   if (runE2e && !selectedCases.some(entry => entry.kind === 'ct')) {
     if (e2eOnly) throw new Error(`${component || 'Catalog'} has no registered CT evidence.`)
@@ -1903,6 +1904,7 @@ function extractTests(suite, react, parents = []) {
         for (const result of t.results || []) {
           let videoPath = null
           let screenshotPath = null
+          let tracePath = null
           let snapshotExpected = null
           let snapshotActual = null
           let snapshotDiff = null
@@ -1913,6 +1915,8 @@ function extractTests(suite, react, parents = []) {
             const name = (attachment.name || '').toLowerCase()
             if (name === 'video' || attachment.contentType?.includes('video')) {
               videoPath = resolved
+            } else if (name === 'trace' || /trace\.zip$/i.test(resolved)) {
+              tracePath = resolved
             } else if (name === 'expected') {
               snapshotExpected = resolved
             } else if (name === 'actual') {
@@ -1939,6 +1943,10 @@ function extractTests(suite, react, parents = []) {
                   const v = files.find((f) => f.endsWith('.webm'))
                   if (v) videoPath = path.join(fullDir, v)
                 }
+                if (!tracePath) {
+                  const tr = files.find((f) => /^trace\.zip$/i.test(f))
+                  if (tr) tracePath = path.join(fullDir, tr)
+                }
                 if (!screenshotPath) {
                   const s = files.find((f) => f.endsWith('.png'))
                   if (s) screenshotPath = path.join(fullDir, s)
@@ -1960,6 +1968,7 @@ function extractTests(suite, react, parents = []) {
             durationMs: result.duration,
             videoPath,
             screenshotPath,
+            tracePath,
             snapshotExpected,
             snapshotActual,
             snapshotDiff,
@@ -2087,6 +2096,32 @@ async function runE2eSuites() {
 }
 
 await runE2eSuites()
+
+// Turn every recording into a stills contact sheet that text/PNG-only agents
+// can inspect. The sheets show only the frames where the picture changed, but a
+// recording that never changes still gets a bannered sheet and a loud warning.
+// Failure is loud but never changes the test verdict, and warnings go to stderr
+// so `--json` stdout stays one parseable value.
+const videoRuns = e2eRuns.filter((entry) => entry.videoPath)
+if (videoRuns.length > 0) {
+  try {
+    const sheets = await writeVideoContactSheets(videoRuns.map((entry) => entry.videoPath))
+    const sheetByVideo = new Map(sheets.map((sheet) => [path.resolve(sheet.videoPath), sheet]))
+    for (const entry of videoRuns) {
+      const sheet = sheetByVideo.get(path.resolve(entry.videoPath)) || null
+      entry.framesPath = sheet?.framesPath || null
+      entry.noChange = Boolean(sheet?.noChange)
+      if (entry.noChange) {
+        console.warn(`[agentct] ⚠ Contact sheet for "${entry.fullTitle || entry.title}" shows no change from the first frame — the recording may be blank: ${entry.videoPath}`)
+      }
+    }
+  } catch (err) {
+    for (const entry of videoRuns) {
+      console.warn(`[agentct] ⚠ Contact sheet failed for ${entry.videoPath}: ${err.message}`)
+    }
+  }
+}
+
 await releaseExecutionGate()
 await releaseExecution()
 
@@ -2134,8 +2169,14 @@ if (isJson) {
         if (t.videoPath) {
           console.log(`  🎥 Video:      ${t.videoPath}`)
         }
+        if (t.framesPath) {
+          console.log(`  🎞  Frames:     ${t.framesPath}`)
+        }
         if (t.screenshotPath) {
           console.log(`  📸 Screenshot: ${t.screenshotPath}`)
+        }
+        if ((t.status === 'failed' || t.status === 'timedOut') && t.tracePath) {
+          console.log(`  🧭 Trace:      ${t.tracePath}`)
         }
         if (t.snapshotDiff || t.snapshotActual || t.snapshotExpected) {
           console.log('  🖼  Snapshot mismatch:')
@@ -2166,8 +2207,9 @@ if (isJson) {
       }
       console.log('-------------------------------------------------------')
 
-      if (e2eRuns.some((t) => t.videoPath)) {
-        console.log('\n💡 Agents: `view_file` each video.webm to verify motion and exit transitions.')
+      if (e2eRuns.some((t) => t.framesPath)) {
+        console.log('\n💡 Agents: open each `frames.png` — the stills are the moments the picture changed, labelled with their timestamps. A red banner means no frame change was detected.')
+        console.log('   For a failed test, read its trace with `npx playwright trace open <trace.zip>` then `actions` / `errors` / `console` / `screenshot <action-id>`.')
       }
       if (e2eRuns.some((t) => t.react && t.react !== 'react19')) {
         console.log('💡 Visual snapshots are skipped on React 17/18. Compare paint drift on React 19.')

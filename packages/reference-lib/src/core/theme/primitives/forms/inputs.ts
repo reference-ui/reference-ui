@@ -125,9 +125,9 @@ export const inputPrimitiveStyles = {
       paddingInline: '4r',
       borderWidth: '1px',
       borderStyle: 'solid',
-      borderColor: '{colors.ui.field.border}',
-      borderRadius: 'sm',
-      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+      borderColor: 'transparent',
+      borderRadius: 'md',
+      backgroundColor: '{colors.ui.button.default.background}',
       color: '{colors.design.text.base}',
       fontSize: '3.5r',
       fontWeight: '500',
@@ -138,11 +138,11 @@ export const inputPrimitiveStyles = {
       transitionDuration: '150ms',
       transitionTimingFunction: 'ease',
       _hover: {
-        backgroundColor:
-          'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
-        borderColor: '{colors.ui.field.borderHover}',
+        backgroundColor: '{colors.ui.button.default.hover}',
       },
-      _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
+      _active: {
+        backgroundColor: '{colors.ui.button.default.pressed}',
+      },
     },
   },
 

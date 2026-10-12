@@ -4,24 +4,29 @@ import { inputPrimitiveStyles } from './inputs'
 import { sliderThumb, sliderTrack } from '../shared'
 
 describe('button variants, file upload, and slider single source of truth', () => {
-  it('defines default button variant as neutral outline', () => {
+  it('defines default button variant as a borderless neutral fill with stepped states', () => {
     const defaultSelector =
       '.ref-button:where([data-variant="default"], :not([data-variant]))'
     const defaultStyles = (buttonPrimitiveStyles as any)[defaultSelector]
 
     expect(defaultStyles).toBeDefined()
-    expect(defaultStyles.backgroundColor).toBe('{colors.ui.table.row.mutedBackground}')
+    expect(defaultStyles.backgroundColor).toBe('{colors.ui.button.default.background}')
     expect(defaultStyles.color).toBe('{colors.design.text.base}')
-    expect(defaultStyles.borderColor).toBe('{colors.ui.field.border}')
+    expect(defaultStyles.borderColor).toBe('transparent')
+    expect(defaultStyles._hover?.backgroundColor).toBe('{colors.ui.button.default.hover}')
+    expect(defaultStyles._active?.backgroundColor).toBe('{colors.ui.button.default.pressed}')
   })
 
-  it('defines primary button variant as high-contrast CTA', () => {
+  it('defines primary button variant as high-contrast CTA with stepped states', () => {
     const primarySelector = '.ref-button:where([data-variant="primary"])'
     const primaryStyles = (buttonPrimitiveStyles as any)[primarySelector]
 
     expect(primaryStyles).toBeDefined()
     expect(primaryStyles.backgroundColor).toBe('{colors.ui.button.background}')
     expect(primaryStyles.color).toBe('{colors.ui.button.foreground}')
+    expect(primaryStyles.borderColor).toBe('transparent')
+    expect(primaryStyles._hover?.backgroundColor).toBe('{colors.ui.button.hover}')
+    expect(primaryStyles._active?.backgroundColor).toBe('{colors.ui.button.pressed}')
   })
 
   it('defines ghost button variant with transparent background and no expanding outline on active', () => {
@@ -33,17 +38,18 @@ describe('button variants, file upload, and slider single source of truth', () =
     expect(ghostStyles.borderColor).toBe('transparent')
     // Active state must NOT have expanding outline halo
     expect(ghostStyles._active).toBeDefined()
-    expect(ghostStyles._active.boxShadow).toBe('none')
+    expect(ghostStyles._active.backgroundColor).toBe('{colors.ui.button.ghost.pressed}')
+    expect(ghostStyles._active.boxShadow).toBeUndefined()
   })
 
-  it('aligns native file upload button with secondary/default button palette', () => {
+  it('aligns native file upload button with the borderless default button palette', () => {
     const fileSelector = '.ref-input[type="file"]'
     const fileStyles = (inputPrimitiveStyles as any)[fileSelector]?._file
 
     expect(fileStyles).toBeDefined()
-    expect(fileStyles.backgroundColor).toBe('{colors.ui.table.row.mutedBackground}')
+    expect(fileStyles.backgroundColor).toBe('{colors.ui.button.default.background}')
     expect(fileStyles.color).toBe('{colors.design.text.base}')
-    expect(fileStyles.borderColor).toBe('{colors.ui.field.border}')
+    expect(fileStyles.borderColor).toBe('transparent')
   })
 
   it('preserves focus ring on hover for focused inputs and field focus parity', () => {

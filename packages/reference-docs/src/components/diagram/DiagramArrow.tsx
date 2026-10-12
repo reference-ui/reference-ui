@@ -4,8 +4,9 @@ import type { DiagramDirection } from './Diagram'
 /**
  * Diagram arrow: the connection. A fixed-length rail — a hairline shaft closed
  * by a solid triangular head — with the label set as a pill straddling the
- * shaft's centre. Length never varies with content, so a stack of arrows reads
- * as one clean column instead of growing with its neighbours.
+ * shaft's centre. The rail length is one value for every arrow, labelled or
+ * not, so a stack of arrows reads as one clean column instead of growing with
+ * its content.
  *
  * The rail stays neutral; the pill borrows the panel surface and hairline, so
  * the label reads as a stop on the line and ties back to the panels it joins.
@@ -13,8 +14,8 @@ import type { DiagramDirection } from './Diagram'
  * intrinsic-size prop can be dropped by the style engine.
  */
 
-/** Total rail length, identical for every direction. */
-const RAIL = '4rem'
+/** Total rail length, identical for every direction and every arrow. */
+const RAIL = '4.5rem'
 /** Hairline shaft thickness, across the flow. */
 const SHAFT = '2px'
 /** Head depth along the flow. */
@@ -52,7 +53,9 @@ const railUp = css({
   minWidth: HEAD_WIDE,
 })
 
-/* Horizontal rails fix the width; height hugs the head. */
+/* Horizontal rails fix the width; a label narrower than the rail centres on it
+ * and one wider overflows evenly into the gaps, so the rail length never drifts
+ * with its content. */
 const railRight = css({
   position: 'relative',
   display: 'flex',
@@ -61,7 +64,7 @@ const railRight = css({
   justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  minWidth: RAIL,
+  width: RAIL,
   minHeight: HEAD_WIDE,
 })
 
@@ -73,7 +76,7 @@ const railLeft = css({
   justifyContent: 'center',
   alignSelf: 'center',
   flexShrink: '0',
-  minWidth: RAIL,
+  width: RAIL,
   minHeight: HEAD_WIDE,
 })
 

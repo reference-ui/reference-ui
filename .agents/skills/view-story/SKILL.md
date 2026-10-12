@@ -14,6 +14,7 @@ Eyes are the native Chrome DevTools MCP (`.cursor/mcp.json`
 `chrome-devtools`): real Chrome, no hand-rolled clients. Never write
 ad-hoc Playwright scripts or one-liners — the MCP tools cover navigate,
 snapshot, screenshot, evaluate, click, type, and console.
+Outside DevTools-MCP hosts, map these tool names through the host table in `AGENTS.md` section 2.
 
 ## 1. Ensure the Book server (autonomous)
 

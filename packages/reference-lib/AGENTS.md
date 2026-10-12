@@ -7,9 +7,9 @@ Master engineering standards and strict architectural invariants for all 24 comp
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> **DO NOT launch background `pnpm dev:lib` dev server processes.**
-> The developer runs `pnpm dev:lib` locally in their own terminal to monitor logs and prevent port/process conflicts.
-> If the Book dev server on port 5000 is not reachable, politely prompt the developer to run `pnpm dev:lib` in their terminal before proceeding with browser fixture verification.
+> Agents MAY run `pnpm dev:lib` themselves — see root `AGENTS.md` §1
+> (Dev Server & Local Environment Policy): single instance only, check port
+> 5000 first, and stop only processes you started.
 
 ---
 

@@ -45,7 +45,8 @@ export default defineConfig({
   outputDir: path.resolve(__dirname, 'test-results'),
   // Mouse and scroll resets happen in the fixture (ct.ts), since the config cannot access the page object directly.
   use: {
-    trace: 'on-first-retry',
+    // on-first-retry never records without retries; keep traces for failures only.
+    trace: 'retain-on-failure',
     video: {
       mode: 'on',
       size: { width: 800, height: 480 },

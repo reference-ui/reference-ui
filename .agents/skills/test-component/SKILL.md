@@ -161,21 +161,45 @@ The runner prints absolute paths after e2e:
 ```text
 ✔ [PASSED] react19 popover opens on trigger click and closes on outside click (845ms)
   🎥 Video:      /path/to/.../video.webm
+  🎞  Frames:     /path/to/.../frames.png
   📸 Screenshot: /path/to/.../test-finished-1.png
 
 ✖ [FAILED] react18 tooltip opens on hover ...
   🎥 Video:      /path/to/.../video.webm
+  🎞  Frames:     /path/to/.../frames.png
+  🧭 Trace:      /path/to/.../trace.zip
 ```
 
-### Videos (`.webm`)
+### Stills (`frames.png`)
 
-Call `view_file` on each `video.webm`. Check:
+Agent browser hosts here cannot play `.webm`, so the runner writes a `frames.png`
+next to each video — up to eight stills showing the moments the picture changed,
+laid out left-to-right in a grid, each labelled with its timestamp. The runner
+densely seeks the recording and keeps the frames where the component actually
+appears, so the sheet is not a black background. If nothing changed from the
+first frame the sheet carries a red "no change from first frame" banner and the
+runner warns on stderr. Open it (`view_file` / image read) and check:
 
 1. **Presence & exit** — overlay enters with its animation; on dismiss it finishes the exit before unmount (no snap/flicker).
 2. **Anchoring** — position vs trigger, arrow alignment, no jitter on flip.
 3. **Focus** — `:focus-visible` rings visible; focus returns to the trigger.
 4. **Pointer travel** — hover overlays stay open across the safe area.
 5. **Layout** — no unexpected shifts or scroll jumps.
+
+### Traces (failed tests)
+
+Failed tests record a `trace.zip` (config: `trace: 'retain-on-failure'`; the old
+`on-first-retry` never fired because there are no retries). Read it as text from
+`packages/reference-lib`:
+
+```bash
+npx playwright trace open <trace.zip>
+actions                 # every user action and its timing
+errors                  # failures with stack traces
+console                 # page console output
+screenshot <action-id>  # PNG for one action
+close
+```
 
 ### Visual snapshots (drift)
 

@@ -21,9 +21,9 @@ that work is done. Differences from `agentct`:
 - Two inspection modes. Fast mode: headless run prints per-case
   artifacts (screenshot, accessibility snapshot, video/trace on
   failure). Interactive mode: serve one case world locally and poke
-  it live — today's mechanism is `@playwright/mcp`, verified working
-  this session; the capability is "inspect a live case world", MCP is
-  just how we action it right now.
+  it live with your host's browser tools (host table in root
+  `AGENTS.md` section 2); the capability is "inspect a live case
+  world", not any one tool.
 - Per-run server first; the warm server plus queue slots (agentct's
   daemon shape) and Darwin QoS elevation land as the case count
   grows.

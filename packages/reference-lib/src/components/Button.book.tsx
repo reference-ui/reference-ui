@@ -11,7 +11,9 @@ import {
 } from '@reference-ui/react'
 import {
   AddIcon,
+  DarkModeIcon,
   KeyboardArrowDownIcon,
+  LightModeIcon,
   SettingsIcon,
   UploadFileIcon,
 } from '@reference-ui/icons'
@@ -53,6 +55,123 @@ function SectionCard({
   )
 }
 
+type ButtonState = 'Normal' | 'Hover' | 'Pressed' | 'Disabled'
+
+function StateCell({ state, children }: { state: ButtonState; children: React.ReactNode }) {
+  return (
+    <Div display="flex" flexDirection="column" gap="1.5r">
+      {children}
+      <Span fontSize="2.5r" color="design.text.lighter" textAlign="center">
+        {state}
+      </Span>
+    </Div>
+  )
+}
+
+function VariantRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Div display="flex" flexDirection="column" gap="2r">
+      <Span fontSize="3r" fontWeight="600" color="design.text.light">
+        {label}
+      </Span>
+      <Div display="grid" gridTemplateColumns="repeat(4, 1fr)" gap="3r">
+        {children}
+      </Div>
+    </Div>
+  )
+}
+
+/**
+ * The Hover and Pressed cells paint the literal token the live `:hover` / `:active`
+ * rule in `core/theme/primitives/forms/button.ts` uses, so this matrix tracks the
+ * primitive instead of restating its colors. Disabled cells are really `disabled`.
+ */
+function ButtonStateMatrix() {
+  return (
+    <>
+      <VariantRow label="Default">
+        <StateCell state="Normal">
+          <Button type="button">Default</Button>
+        </StateCell>
+        <StateCell state="Hover">
+          <Button type="button" bg="ui.button.default.hover">Default</Button>
+        </StateCell>
+        <StateCell state="Pressed">
+          <Button type="button" bg="ui.button.default.pressed">Default</Button>
+        </StateCell>
+        <StateCell state="Disabled">
+          <Button type="button" disabled>Default</Button>
+        </StateCell>
+      </VariantRow>
+
+      <VariantRow label="Primary">
+        <StateCell state="Normal">
+          <Button type="button" variant="primary">Primary</Button>
+        </StateCell>
+        <StateCell state="Hover">
+          <Button type="button" variant="primary" bg="ui.button.hover">Primary</Button>
+        </StateCell>
+        <StateCell state="Pressed">
+          <Button type="button" variant="primary" bg="ui.button.pressed">Primary</Button>
+        </StateCell>
+        <StateCell state="Disabled">
+          <Button type="button" variant="primary" disabled>Primary</Button>
+        </StateCell>
+      </VariantRow>
+
+      <VariantRow label="Ghost">
+        <StateCell state="Normal">
+          <Button type="button" variant="ghost">Ghost</Button>
+        </StateCell>
+        <StateCell state="Hover">
+          <Button type="button" variant="ghost" bg="ui.button.ghost.hover">Ghost</Button>
+        </StateCell>
+        <StateCell state="Pressed">
+          <Button type="button" variant="ghost" bg="ui.button.ghost.pressed">Ghost</Button>
+        </StateCell>
+        <StateCell state="Disabled">
+          <Button type="button" variant="ghost" disabled>Ghost</Button>
+        </StateCell>
+      </VariantRow>
+    </>
+  )
+}
+
+function ButtonThemePanel({ mode, title }: { mode: 'light' | 'dark'; title: string }) {
+  return (
+    <Div
+      colorMode={mode}
+      bg="design.background"
+      border="1px solid"
+      borderColor="ui.dialog.border"
+      borderRadius="lg"
+      p="6r"
+      display="flex"
+      flexDirection="column"
+      gap="6r"
+    >
+      <Div
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        borderBottom="1px solid"
+        borderBottomColor="ui.dialog.border"
+        pb="4r"
+      >
+        <H3 fontSize="4.5r" m="0" color="design.text.base">
+          {title}
+        </H3>
+        {mode === 'light' ? (
+          <LightModeIcon size="large" color="design.text.light" />
+        ) : (
+          <DarkModeIcon size="large" color="design.text.light" />
+        )}
+      </Div>
+      <ButtonStateMatrix />
+    </Div>
+  )
+}
+
 export default {
   Variants: () => (
     <Div
@@ -69,7 +188,8 @@ export default {
         </H3>
         <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
           Native primitive button variants styled with zero-specificity <code>:where()</code>.
-          Provides Default (neutral outline), Primary (flashy high-contrast CTA), and Ghost (transparent background &amp; no expanding ring on active).
+          Provides Default (borderless neutral fill), Primary (high-contrast CTA), and Ghost
+          (transparent at rest, washes in on hover).
         </P>
       </Div>
 
@@ -80,7 +200,7 @@ export default {
         <Div display="flex" flexWrap="wrap" gap="4r" alignItems="center">
           <Div display="flex" flexDirection="column" gap="1.5r" alignItems="flex-start">
             <Span fontSize="2.5r" color="design.text.light">
-              Default (Outline / Secondary)
+              Default (Borderless Neutral Fill)
             </Span>
             <Button type="button">Default Button</Button>
           </Div>
@@ -105,7 +225,7 @@ export default {
 
           <Div display="flex" flexDirection="column" gap="1.5r" alignItems="flex-start">
             <Span fontSize="2.5r" color="design.text.light">
-              Ghost (No Outline / Steps Up A Shade)
+              Ghost (Transparent / Washes In On Hover)
             </Span>
             <Button type="button" variant="ghost">
               Ghost Button
@@ -202,6 +322,24 @@ export default {
           </Div>
         </Div>
       </SectionCard>
+    </Div>
+  ),
+
+  States: () => (
+    <Div maxW="220r" mx="auto" p="6r" display="flex" flexDirection="column" gap="6r">
+      <Div>
+        <H3 fontSize="5r" m="0" color="design.text.base">
+          Button States
+        </H3>
+        <P fontSize="3.5r" color="design.text.light" mt="1r" mb="0">
+          Every variant across Normal, Hover, Pressed, and Disabled. The borderless
+          fills step one shade away from the surface, and both panels resolve the
+          same token names.
+        </P>
+      </Div>
+
+      <ButtonThemePanel mode="light" title="Light theme" />
+      <ButtonThemePanel mode="dark" title="Dark theme" />
     </Div>
   ),
 }

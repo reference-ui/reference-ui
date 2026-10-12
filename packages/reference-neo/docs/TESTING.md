@@ -103,11 +103,13 @@ formatting rules.
 ## Interactive inspection
 
 Serve one case world and poke it live (headed only on explicit human
-request; headless is pixel-identical and the default). Today's
-mechanism is `@playwright/mcp` against the served world — the
-capability is "inspect a live case world", MCP is just how we action
-it right now. The `AutomationControlled` unsupported-flag banner is
-cosmetic Playwright plumbing, never a fault.
+request; headless is pixel-identical and the default). The capability
+is "inspect a live case world"; each agent host uses its own browser
+tools for it, mapped in the host table in root `AGENTS.md` section 2
+(DevTools MCP, opencode's `cdt`, Claude's built-in browser). Cursor's
+`.cursor/mcp.json` also offers `@playwright/mcp`. The
+`AutomationControlled` unsupported-flag banner is cosmetic Playwright
+plumbing, never a fault.
 
 ## Conventions
 
@@ -121,8 +123,8 @@ cosmetic Playwright plumbing, never a fault.
 Try combinations fast, confirm visually, then lock it in:
 
 1. Serve the case world (`run`, or interactive serve for poking).
-2. Iterate on the CSS, screenshotting through the MCP after each
-   change — the screenshot is the quick confirm.
+2. Iterate on the CSS, screenshotting with your host's browser tools
+   after each change — the screenshot is the quick confirm.
 3. When it looks right, write the spec assertions (computed styles,
    cascade wins, settled snapshots) so the result stays proven.
 

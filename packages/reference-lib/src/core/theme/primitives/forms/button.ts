@@ -1,10 +1,5 @@
 import { globalCss } from '@reference-ui/system'
-import {
-  baseTypography,
-  focusRingStyles,
-  controlSize,
-  pressableActiveStyles,
-} from '../shared'
+import { baseTypography, focusRingStyles, controlSize } from '../shared'
 
 export const buttonPrimitiveStyles = {
   '.ref-button': {
@@ -34,7 +29,7 @@ export const buttonPrimitiveStyles = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'transparent',
-    borderRadius: 'sm',
+    borderRadius: 'md',
     ...focusRingStyles,
     fontSize: '3.5r',
     fontWeight: '500',
@@ -50,37 +45,36 @@ export const buttonPrimitiveStyles = {
     },
   },
   '.ref-button:where([data-variant="default"], :not([data-variant]))': {
-    backgroundColor: '{colors.ui.table.row.mutedBackground}',
+    backgroundColor: '{colors.ui.button.default.background}',
     color: '{colors.design.text.base}',
-    borderColor: '{colors.ui.field.border}',
+    borderColor: 'transparent',
     _hover: {
-      backgroundColor:
-        'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
-      borderColor: '{colors.ui.field.borderHover}',
+      backgroundColor: '{colors.ui.button.default.hover}',
     },
-    _active: pressableActiveStyles('var(--colors-ui-table-row-muted-background)'),
+    _active: {
+      backgroundColor: '{colors.ui.button.default.pressed}',
+    },
   },
   '.ref-button:where([data-variant="primary"])': {
     backgroundColor: '{colors.ui.button.background}',
     color: '{colors.ui.button.foreground}',
     borderColor: 'transparent',
     _hover: {
-      backgroundColor:
-        'color-mix(in oklch, {colors.ui.button.background} 90%, transparent)',
+      backgroundColor: '{colors.ui.button.hover}',
     },
-    _active: pressableActiveStyles('var(--colors-ui-button-background)'),
+    _active: {
+      backgroundColor: '{colors.ui.button.pressed}',
+    },
   },
   '.ref-button:where([data-variant="ghost"])': {
     backgroundColor: 'transparent',
     color: '{colors.design.text.base}',
     borderColor: 'transparent',
     _hover: {
-      backgroundColor: '{colors.ui.table.row.mutedBackground}',
+      backgroundColor: '{colors.ui.button.ghost.hover}',
     },
     _active: {
-      backgroundColor:
-        'color-mix(in oklch, {colors.ui.table.row.mutedBackground} 80%, {colors.gray.300})',
-      boxShadow: 'none',
+      backgroundColor: '{colors.ui.button.ghost.pressed}',
     },
   },
 } as const

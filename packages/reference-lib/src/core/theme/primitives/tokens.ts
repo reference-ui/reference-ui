@@ -164,11 +164,27 @@ export const ui = {
   button: {
     background: { light: '{colors.gray.950}', dark: '{colors.gray.50}' },
     foreground: { light: '{colors.gray.50}', dark: '{colors.gray.950}' },
+    // Primary CTA surface states step one shade toward the page, so a black
+    // button lightens on press and a near-white (dark-mode) button deepens.
+    hover: { light: '{colors.gray.800}', dark: '{colors.gray.200}' },
+    pressed: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
     // Provenance: stillborn-leaf fix; twins ui.table.row.mutedBackground below
     // (ghost-button _hover + NumberField _active already use that token as the hover wash).
     mutedBackground: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
+    // Borderless neutral "default" fill. Each state steps one shade away from the
+    // page surface (darker in light mode, lighter in dark mode) to signal press.
+    default: {
+      background: { light: '{colors.gray.100}', dark: '{colors.gray.700}' },
+      hover: { light: '{colors.gray.200}', dark: '{colors.gray.600}' },
+      pressed: { light: '{colors.gray.300}', dark: '{colors.gray.500}' },
+    },
+    // Ghost rests transparent and washes in only while hovered/pressed.
+    ghost: {
+      hover: { light: '{colors.gray.100}', dark: '{colors.gray.800}' },
+      pressed: { light: '{colors.gray.200}', dark: '{colors.gray.700}' },
+    },
     disabled: {
-      background: { light: '{colors.gray.200}', dark: '{colors.gray.800}' },
+      background: { light: '{colors.gray.50}', dark: '{colors.gray.900}' },
       foreground: { light: '{colors.design.text.lighter}', dark: '{colors.design.text.lighter}' },
     },
   },

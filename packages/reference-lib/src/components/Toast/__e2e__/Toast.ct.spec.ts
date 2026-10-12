@@ -54,6 +54,107 @@ async function dragToast(page: Page, id: string, dx: number, dy: number, steps =
   await page.mouse.up()
 }
 
+// TO-HOTKEY-01 controlled-frame seam: queued mount work must not undo the
+// legitimate hotkey focus transfer, so this control parks requestAnimationFrame
+// callbacks and releases them on demand to prove the transfer holds; the release
+// reports how many parked frames it drained.
+const HOTKEY_RELEASE_FRAMES = 'reference-toast-hotkey-release-frames'
+const HOTKEY_CLEANUP_FRAMES = 'reference-toast-hotkey-cleanup-frames'
+
+type FocusDiagnostic = {
+  tagName: string | null
+  testid: string | null
+  toastid: string | null
+  inHost: boolean
+}
+
+function readFocusDiagnostic(): FocusDiagnostic {
+  const active = document.activeElement
+  const host = document.querySelector('[data-reference-toast-host]')
+  const activeIsElement = active instanceof HTMLElement
+  return {
+    tagName: activeIsElement ? active.tagName : null,
+    testid: activeIsElement ? active.getAttribute('data-testid') : null,
+    toastid: activeIsElement ? active.getAttribute('data-reference-toast-id') : null,
+    inHost: activeIsElement && host instanceof Element ? host.contains(active) : false,
+  }
+}
+
+async function installControlledFrames(page: Page): Promise<void> {
+  await page.evaluate(
+    ({ releaseEvent, cleanupEvent }) => {
+      const originalRequestAnimationFrame = window.requestAnimationFrame
+      const originalCancelAnimationFrame = window.cancelAnimationFrame
+
+      let nextHandle = -1
+      const queued = new Map<number, FrameRequestCallback>()
+      let installed = true
+
+      const restoreNative = () => {
+        if (!installed) return
+        installed = false
+        window.requestAnimationFrame = originalRequestAnimationFrame
+        window.cancelAnimationFrame = originalCancelAnimationFrame
+        queued.clear()
+      }
+
+      window.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+        const handle = nextHandle
+        nextHandle -= 1
+        queued.set(handle, callback)
+        return handle
+      }
+
+      window.cancelAnimationFrame = (handle: number): void => {
+        if (queued.delete(handle)) return
+        originalCancelAnimationFrame.call(window, handle)
+      }
+
+      const release = (event: Event) => {
+        const pending = Array.from(queued.values())
+        restoreNative()
+        if (event instanceof CustomEvent) {
+          const detail: unknown = event.detail
+          if (typeof detail === 'object' && detail !== null && 'queuedCallbacks' in detail) {
+            detail.queuedCallbacks = pending.length
+          }
+        }
+        for (const callback of pending) callback(performance.now())
+      }
+
+      const cleanup = () => {
+        restoreNative()
+        window.removeEventListener(releaseEvent, release)
+        window.removeEventListener(cleanupEvent, cleanup)
+      }
+
+      window.addEventListener(releaseEvent, release, { once: true })
+      window.addEventListener(cleanupEvent, cleanup)
+    },
+    { releaseEvent: HOTKEY_RELEASE_FRAMES, cleanupEvent: HOTKEY_CLEANUP_FRAMES }
+  )
+}
+
+async function releaseControlledFrames(page: Page): Promise<number> {
+  return page.evaluate(
+    releaseEvent => {
+      const detail = { queuedCallbacks: 0 }
+      window.dispatchEvent(new CustomEvent(releaseEvent, { detail }))
+      return detail.queuedCallbacks
+    },
+    HOTKEY_RELEASE_FRAMES
+  )
+}
+
+async function cleanupControlledFrames(page: Page): Promise<void> {
+  await page.evaluate(
+    cleanupEvent => {
+      window.dispatchEvent(new Event(cleanupEvent))
+    },
+    HOTKEY_CLEANUP_FRAMES
+  )
+}
+
 test.describe('Toast Composition Gates & Browser Proofs', () => {
   test('TO-DOM-01 & TO-DEF-01: Displays defined toast, updates content in place, and dismisses', async ({
     mount,
@@ -420,14 +521,33 @@ test.describe('Toast Gate 6', () => {
 test('TO-HOTKEY-01 custom: Toast should honor a custom toaster hotkey', async ({ mount, page }) => {
   await mount('components/Toast/Toast/HotkeyCustom')
   await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
-  await page.getByTestId('btn-show-hotkey-toast').click()
-  await expect(page.locator('[data-reference-toast-id="hotkey"]')).toBeVisible()
-  await page.keyboard.press('Shift+Y')
-  const focusedInHost = await page.evaluate(() => {
-    const host = document.querySelector('[data-reference-toast-host]')
-    return Boolean(host && document.activeElement && host.contains(document.activeElement))
-  })
-  expect(focusedInHost).toBe(true)
+
+  await installControlledFrames(page)
+
+  try {
+    await page.getByTestId('btn-show-hotkey-toast').click()
+    await expect(page.locator('[data-reference-toast-id="hotkey"]')).toBeVisible()
+    await page.keyboard.press('Shift+Y')
+
+    await expect(page.locator('[data-reference-toast-id="hotkey"][data-front="true"]')).toBeFocused()
+
+    const before = await page.evaluate(readFocusDiagnostic)
+
+    const queuedCallbacks = await releaseControlledFrames(page)
+
+    const focusedInHost = await page.evaluate(() => {
+      const host = document.querySelector('[data-reference-toast-host]')
+      return Boolean(host && document.activeElement && host.contains(document.activeElement))
+    })
+
+    const after = await page.evaluate(readFocusDiagnostic)
+
+    console.info(`TO-HOTKEY-01 custom controlled frame seam ${JSON.stringify({ queuedCallbacks, before, after })}`)
+
+    expect(focusedInHost).toBe(true)
+  } finally {
+    await cleanupControlledFrames(page)
+  }
 })
 
 test('TO-HOTKEY-01 suppress: Toast should not steal focus when the hotkey is disabled', async ({
@@ -1376,6 +1496,15 @@ test.describe('Toast hardening', () => {
     // excluding that one node keeps label/contrast coverage on every
     // component-owned node. Raw: `color-contrast [serious]` +
     // `label [critical]`, both on input[data-testid="toast-input"] only.
+    // Settled readiness: data-state open starts the entrance; full opacity
+    // is required for a settled contrast scan.
+    const toastItems = host.locator('[data-reference-toast-id]')
+    await expect(toastItems).toHaveCount(7)
+    for (let index = 0; index < 7; index += 1) {
+      const item = toastItems.nth(index)
+      await expect(item).toHaveAttribute('data-state', 'open')
+      await expect(item).toHaveCSS('opacity', '1')
+    }
     await expectNoAxeViolations(page, {
       include: '#root',
       exclude: '[data-testid="toast-input"]',

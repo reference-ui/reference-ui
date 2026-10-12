@@ -72,6 +72,10 @@ packages/reference-neo/tests/.artifacts/
 packages/reference-neo/tests/cases/**/dist/
 packages/reference-neo/playground/.captures/
 .playwright-mcp/
+# OpenChamber's agent screenshot spool: scratch captures, never committed.
+.openchamber/
+# The one place agent snapshots go (see AGENTS.md section 2).
+/.screenshots/
 .agents/case-index/.cache/
 
 

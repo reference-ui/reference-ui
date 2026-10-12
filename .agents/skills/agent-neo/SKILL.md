@@ -83,6 +83,11 @@ Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
   Never point Playwright at a `file://` URL.
 - Artifacts (traces, screenshots, dumps) land **under the workspace**
   (case folder or shared artifacts dir), never in `/tmp` as the record.
+- A failed case leaves `screenshot.png` and `a11y.yml` (open them directly)
+  plus `trace.zip`. Read the trace as text: `npx playwright trace open
+  <trace.zip>`, then `errors`, `actions`, `console`, and `screenshot
+  <action-id> -o <png>` for the frame at a step (setup steps such as
+  "Create page" have none); `trace close` when done.
 
 ## 5. Scope Discipline (Where Work Goes)
 
@@ -178,6 +183,7 @@ View it through Chrome DevTools MCP against the serving instance:
 `take_screenshot`, then `list_console_messages` — a throwing page
 renders a lie. Theme flips via `?theme=light`; routes come from
 `src/pages/*.tsx`.
+Outside DevTools-MCP hosts, map these tool names through the host table in `AGENTS.md` section 2.
 
 - The shell is dark by default with a light/dark toggle in the sidebar
   header. It stamps `data-color-mode` on `<html>` and syncs `?theme=`, so the
