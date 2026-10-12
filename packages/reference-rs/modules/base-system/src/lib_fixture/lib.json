@@ -1067,14 +1067,46 @@
             "light": "{colors.gray.50}",
             "dark": "{colors.gray.950}"
           },
+          "hover": {
+            "light": "{colors.gray.800}",
+            "dark": "{colors.gray.200}"
+          },
+          "pressed": {
+            "light": "{colors.gray.700}",
+            "dark": "{colors.gray.300}"
+          },
           "mutedBackground": {
             "light": "{colors.gray.100}",
             "dark": "{colors.gray.800}"
           },
+          "default": {
+            "background": {
+              "light": "{colors.gray.100}",
+              "dark": "{colors.gray.700}"
+            },
+            "hover": {
+              "light": "{colors.gray.200}",
+              "dark": "{colors.gray.600}"
+            },
+            "pressed": {
+              "light": "{colors.gray.300}",
+              "dark": "{colors.gray.500}"
+            }
+          },
+          "ghost": {
+            "hover": {
+              "light": "{colors.gray.100}",
+              "dark": "{colors.gray.800}"
+            },
+            "pressed": {
+              "light": "{colors.gray.200}",
+              "dark": "{colors.gray.700}"
+            }
+          },
           "disabled": {
             "background": {
-              "light": "{colors.gray.200}",
-              "dark": "{colors.gray.800}"
+              "light": "{colors.gray.50}",
+              "dark": "{colors.gray.900}"
             },
             "foreground": {
               "light": "{colors.design.text.lighter}",
