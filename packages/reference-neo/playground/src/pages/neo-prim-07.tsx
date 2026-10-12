@@ -1,3 +1,9 @@
+// NEO-PRIM-07 route: colour-mode islands repainting at three nesting depths.
+// It takes no props and exports meta plus Page, rendering a shell-following
+// surface, a dark island that restamps data-color-mode, and a nested light
+// island that flips the ink token back. The fixed frames are plain inline
+// style so the paint is the only variable; the proof is that _dark overrides
+// stay live under any dark ancestor while token leaves repaint per depth.
 import type * as React from 'react';
 import { Div, css } from '@reference-ui/react';
 

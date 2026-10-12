@@ -1,3 +1,9 @@
+// Floating-panels route: a compound-variant tab strip over three panels
+// stacked with hard offset shadows. It takes no props and exports meta plus
+// Page, driving a two-axis tab recipe (state and emphasis), a live status
+// pill, hover borders, and a pair of asymmetric cards. The offset shadows
+// each carry a _dark twin so they stay shadows on the night canvas, and the
+// loud active compound keeps its cyan underline.
 import type * as React from 'react';
 import { Button, Div, css, recipe } from '@reference-ui/react';
 

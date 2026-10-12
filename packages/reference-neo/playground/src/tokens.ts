@@ -1,3 +1,10 @@
+// The playground's mini token set: the colours, animations, spacing, and
+// radii every page styles against. It takes nothing and registers one
+// tokens() call — tailwind's palette copied verbatim in oklch, the semantic
+// ink/paper/brand trio, the animation tokens src/motion.ts feeds, and lib's
+// radii. ink, paper, and brand carry dark leaves, so they flip with the shell
+// theme on their own and need no twins; the palette ramps have none, so pages
+// carry explicit _dark twins wherever they use them.
 import { tokens } from '@reference-ui/neo';
 
 // The playground's mini token set: tailwind's palette copied verbatim from

@@ -1,3 +1,8 @@
+// Vite config for the playground dev server on port 5199. It takes nothing
+// and default-exports defineConfig: the playground root, a strict port, the
+// one @reference-ui/react alias into the synced bundle, and the classic
+// esbuild JSX transform with its createElement/Fragment banner. Strict port
+// keeps the address the agent-neo playground loop navigates to stable.
 import { defineConfig } from 'vite';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

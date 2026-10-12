@@ -1,3 +1,12 @@
+// Playground shell: it mounts the app, discovers routes, and renders the
+// sidebar and topbar chrome around the active page. It takes the DOM #root,
+// globs every src/pages/*.tsx into a route table (each page's meta drives the
+// menu), reads ?theme= and the hash, and emits the whole React tree through
+// createRoot. The shell is deliberately hook-free: the generated react entry
+// bundles its own React and exports no hooks, so importing one from 'react'
+// would mount a second copy and break every call; module state plus an
+// explicit render() carries the search box, the theme toggle, and the
+// keyboard shortcuts instead.
 import type * as React from 'react';
 import { createRoot } from 'react-dom/client';
 

@@ -1,3 +1,9 @@
+// Playground motion: the five keyframe sets the animation tokens name. It
+// takes nothing and passes keyframes() literal frame maps — beacon, riseIn,
+// scanX, blink, and spinSlow — which the engine prints as @keyframes rules.
+// Frame values are plain CSS only; no token paths belong inside keyframes, so
+// every animated page pairs its animation with a _motionReduce twin that
+// parks it at none.
 import { keyframes } from '@reference-ui/neo'
 
 // Playground motion: the five keyframe sets the animation tokens name.

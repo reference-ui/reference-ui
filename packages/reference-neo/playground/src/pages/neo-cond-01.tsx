@@ -1,3 +1,9 @@
+// NEO-COND-01 route: it shows one _hover rule serving both a live pointer
+// state and a data-hover twin. It takes no props and exports meta plus Page,
+// painting an ink-to-brand text pair and a surface-flip background pair where
+// the lower element already wears the hover paint. The claim it proves is
+// that _hover lowers to a single :is(:hover, [data-hover]) selector, so the
+// twin shares the exact utility class with no second rule.
 import type * as React from 'react';
 import { css } from '@reference-ui/react';
 

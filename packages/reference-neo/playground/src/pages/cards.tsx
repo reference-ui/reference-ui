@@ -1,3 +1,8 @@
+// Cards route: three composed primitives proving nesting, radius, and shadow
+// classes side by side. It takes no props and exports meta (menu title plus
+// blurb) and Page, the content the shell renders at #/cards. A plain card, a
+// token-inverted dark card, and a full-radius pill show css() utilities
+// layered onto Div, P, and Span with no hand-written stylesheet.
 import type * as React from 'react';
 import { Div, P, Span, css } from '@reference-ui/react';
 

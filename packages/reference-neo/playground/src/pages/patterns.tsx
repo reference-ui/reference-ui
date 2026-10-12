@@ -1,3 +1,10 @@
+// Patterns route: four pattern grounds plus the full keyframe set running
+// live. It takes no props and exports meta plus Page, rendering blueprint,
+// lattice, scanline, and hazard swatches, then beacon, rise, sweep, and spin
+// demos. The grounds are raw backgroundImage over a token base with explicit
+// _dark twins, and every animation carries a _motionReduce twin; the narrow
+// sweep dot travels 1300% of its own width, so it reads as a ping crossing
+// the track.
 import type * as React from 'react';
 import { css } from '@reference-ui/react';
 

@@ -1,3 +1,10 @@
+// Pricing route: a three-tier signal-plan table plus a focus-ring and
+// container-bar demo. It takes no props and exports meta plus Page, driving a
+// recipe() tier (featured inverts to ink), a recipe() CTA, a preset focus
+// ring via data-focus-visible, and a container width array. The featured card
+// inverts its tokens and grows while its price numeral stays paper; the ring
+// is pre-lit through the data twin so a capture shows the paint without a
+// keyboard.
 import type * as React from 'react';
 import { Button, Div, css, recipe } from '@reference-ui/react';
 

@@ -1,3 +1,9 @@
+// States route: each interactive state shown live next to its data-attribute
+// twin. It takes no props and exports meta plus Page, pairing the _hover,
+// _focus, and _disabled rules with data-hover, data-focus, and data-disabled
+// presets on the same utility. The twins prove the lowering is one rule per
+// state — the pseudo-class and the data attribute share a class, so the
+// preset paints with no pointer or keyboard.
 import type * as React from 'react';
 import { css } from '@reference-ui/react';
 

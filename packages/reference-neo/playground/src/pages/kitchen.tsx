@@ -1,3 +1,10 @@
+// Kitchen sink route: a compact tour of css(), recipe(), palette ramps,
+// hover, radius, and dark twins. It takes no props and exports meta plus
+// Page, rendering tonal swatches, a two-axis recipe button, a full 950-stop
+// ramp grid, and an explicit _dark twin. The ramp chips are one literal css()
+// call per stop (extraction only reads literal calls, so a dynamic template
+// ref would resolve to nothing), and ink/paper flip with the shell theme
+// while palette shades need their own twins.
 import type * as React from 'react';
 import { css, recipe } from '@reference-ui/react';
 

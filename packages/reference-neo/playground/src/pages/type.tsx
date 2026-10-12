@@ -1,3 +1,8 @@
+// Type route: a small specimen of sizes, weights, and a mono stack. It takes
+// no props and exports meta plus Page, rendering six css() lines from 12px
+// body through 32px bold brand to a monospace sample. It is the plainest
+// check that fontSize, fontWeight, and fontFamily paint from utilities with
+// no stylesheet.
 import type * as React from 'react';
 import { css } from '@reference-ui/react';
 

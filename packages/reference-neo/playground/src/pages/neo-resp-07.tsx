@@ -1,3 +1,9 @@
+// NEO-RESP-07 route: a container-gated width array painting at three root
+// conditions. It takes no props and exports meta plus Page, rendering a
+// rooted-wide panel (60px), a rooted-narrow panel (50px), and a wide but
+// rootless twin (50px). The width array lowers to a base utility plus an sm
+// rule gated on @container (min-width: 640px), so only a wide root flips the
+// bar.
 import type * as React from 'react';
 import { css } from '@reference-ui/react';
 

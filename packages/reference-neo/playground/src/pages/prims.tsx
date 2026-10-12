@@ -1,3 +1,8 @@
+// Primitives route: one sample of each generated primitive carrying style
+// props. It takes no props and exports meta plus Page, rendering Div, P with
+// a nested Span, Button, Section/Ul/Li, and a passthrough Input. It is the
+// plainest check that tag primitives accept token-aware style props and
+// forward native attributes.
 import type * as React from 'react';
 import { Button, Div, Input, Li, P, Section, Span, Ul } from '@reference-ui/react';
 

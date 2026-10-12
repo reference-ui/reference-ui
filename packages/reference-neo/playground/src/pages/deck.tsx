@@ -1,3 +1,9 @@
+// Flight-deck console route: a relay status board built from css() utilities
+// and a recipe() severity chip. It takes no props and exports meta plus Page,
+// rendering a beacon strip, a telemetry row, a hover-inverting event log, and
+// a sweeping scope. The scope is fixed hardware in both shell themes, so it
+// rides plain inline style while the frame, rows, and chips repaint from
+// flipping tokens; every animation carries a _motionReduce twin.
 import type * as React from 'react';
 import { Div, Span, css, recipe } from '@reference-ui/react';
 
