@@ -270,3 +270,70 @@ fn bas_extend_foreign_upstream_envelope_rejected() {
         FromJsonError::UnsupportedProfile(profile) if profile == "custom"
     ));
 }
+
+#[test]
+fn bas_extend_tones_group_override_keeps_sibling_role() {
+    let mut systems = IndexMap::new();
+    insert_spec(
+        &mut systems,
+        Parts {
+            tokens: r##"{"tones":{"medium":{"surface":{"value":"10%"},"line":{"value":"34%"}}}}"##,
+            ..parts("a")
+        },
+    );
+    insert_spec(
+        &mut systems,
+        Parts {
+            extends: &["a"],
+            tokens: r##"{"tones":{"medium":{"surface":{"value":"12%"}}}}"##,
+            ..parts("b")
+        },
+    );
+    let merged = resolve("b", &systems);
+    assert_eq!(merged.token_light("tones.medium.surface"), Some("12%"));
+    assert_eq!(merged.token_light("tones.medium.line"), Some("34%"));
+    assert!(merged.token_dark("tones.medium.line").is_none());
+}
+
+#[test]
+fn bas_extend_tones_leaf_replaces_upstream_group() {
+    let mut systems = IndexMap::new();
+    insert_spec(
+        &mut systems,
+        Parts {
+            tokens: r##"{"tones":{"medium":{"surface":{"value":"10%"},"line":{"value":"34%"}}}}"##,
+            ..parts("a")
+        },
+    );
+    insert_spec(
+        &mut systems,
+        Parts {
+            extends: &["a"],
+            tokens: r##"{"tones":{"medium":{"value":"6%"}}}"##,
+            ..parts("b")
+        },
+    );
+    let merged = resolve("b", &systems);
+    assert_eq!(merged.token_light("tones.medium"), Some("6%"));
+    assert!(!merged.is_token("tones.medium.surface"));
+    assert!(!merged.is_token("tones.medium.line"));
+}
+
+#[test]
+fn bas_extend_tones_dark_override_lowers() {
+    let mut systems = IndexMap::new();
+    insert_spec(
+        &mut systems,
+        Parts {
+            tokens: r##"{"tones":{"medium":{"surface":{"value":"10%","dark":"12%"}}}}"##,
+            ..parts("a")
+        },
+    );
+    let merged = resolve("a", &systems);
+    assert_eq!(merged.token_light("tones.medium.surface"), Some("10%"));
+    assert_eq!(merged.token_dark("tones.medium.surface"), Some("12%"));
+    assert_eq!(
+        merged.token("tones.medium.surface").unwrap().dark(),
+        Some("12%")
+    );
+}

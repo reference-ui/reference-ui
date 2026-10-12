@@ -1212,6 +1212,40 @@
         "value": "9999px"
       }
     },
+    "tones": {
+      "ghost": {
+        "surface": {
+          "value": "4%"
+        },
+        "line": {
+          "value": "22%"
+        }
+      },
+      "medium": {
+        "surface": {
+          "value": "10%"
+        },
+        "line": {
+          "value": "34%"
+        }
+      },
+      "firm": {
+        "surface": {
+          "value": "14%"
+        },
+        "line": {
+          "value": "46%"
+        }
+      },
+      "strong": {
+        "surface": {
+          "value": "18%"
+        },
+        "line": {
+          "value": "58%"
+        }
+      }
+    },
     "animations": {
       "spin": {
         "slow": {

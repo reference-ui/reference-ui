@@ -1,6 +1,6 @@
 /**
  * Build-time generator for the `@reference-ui/lib` BaseSystem spec.
- * Parses the six `tokens()` object literals, six `keyframes()` tables, and the
+ * Parses the seven `tokens()` object literals, six `keyframes()` tables, and the
  * `font()` family table from `packages/reference-lib` without evaluating TypeScript,
  * merges them into a nested JSON artefact `from_json` accepts, and writes it next
  * to `lib_fixture`. `--check` regenerates in memory and exits 1 if the committed

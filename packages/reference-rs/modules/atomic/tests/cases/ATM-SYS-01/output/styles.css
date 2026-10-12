@@ -451,6 +451,14 @@
     --radii-md: 0.4rem;
     --radii-lg: 0.6rem;
     --radii-full: 9999px;
+    --tones-ghost-surface: 4%;
+    --tones-ghost-line: 22%;
+    --tones-medium-surface: 10%;
+    --tones-medium-line: 34%;
+    --tones-firm-surface: 14%;
+    --tones-firm-line: 46%;
+    --tones-strong-surface: 18%;
+    --tones-strong-line: 58%;
     --animations-spin-slow: spin 4s linear infinite;
     --animations-spin-normal: spin 2s linear infinite;
     --animations-spin-fast: spin 1s linear infinite;

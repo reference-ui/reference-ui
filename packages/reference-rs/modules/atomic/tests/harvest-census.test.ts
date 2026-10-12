@@ -100,9 +100,11 @@ const EXPECTED_BYTES = {
   // licensed words + currentColor/transparent + CSS-wide keywords; the 1249
   // unlicensed color wants leave the sheet (-100075 raw, -13055 gzip,
   // -5656 brotli) and stylePlans one-for-one.
-  cssRaw: 240995,
-  cssGzip: 28424,
-  cssBrotli: 15585,
+  // 2026-10-12 tones re-pin: the lib system ships eight `--tones-*` root
+  // declarations, adding +245 raw, +48 gzip, +7 brotli; stylePlans unchanged.
+  cssRaw: 241240,
+  cssGzip: 28472,
+  cssBrotli: 15592,
   stylePlans: 3689,
   harvestWants: EXPECTED_NET_NEW,
   // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/

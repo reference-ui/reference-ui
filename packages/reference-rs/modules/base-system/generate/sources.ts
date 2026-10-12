@@ -1,6 +1,6 @@
 /**
  * Lib theme files this generator is allowed to read.
- * Six `tokens()` call sites, six `keyframes()` tables, plus the `font()` family
+ * Seven `tokens()` call sites, six `keyframes()` tables, plus the `font()` family
  * table. Paths are relative to the repository root so the tool stays a build-time
  * reader — the Rust crate never opens these files. If a new `tokens()` or
  * `keyframes()` site appears, this list must grow or `--check` will miss it.
@@ -25,6 +25,7 @@ export const TOKEN_FILES = [
   'packages/reference-lib/src/core/theme/design.ts',
   'packages/reference-lib/src/core/theme/primitives/tokens.ts',
   'packages/reference-lib/src/core/theme/radii.ts',
+  'packages/reference-lib/src/core/theme/tones.ts',
   'packages/reference-lib/src/core/theme/animations/tokens.ts',
   'packages/reference-lib/src/components/Reference/theme/tokens.ts',
 ] as const;
