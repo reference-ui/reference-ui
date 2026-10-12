@@ -182,3 +182,14 @@ fn tone_names_are_the_first_segment_after_tones() {
     assert_eq!(tones::nearest(&system, "mediun"), Some("medium"));
     assert_eq!(tones::nearest(&system, "zzzzzz"), None);
 }
+
+#[test]
+fn a_declared_tone_name_is_never_suggested() {
+    let system = reference_system();
+    assert_eq!(
+        tones::nearest(&system, "arc"),
+        None,
+        "`ref` is three edits away and must not win"
+    );
+    assert_eq!(tones::nearest(&system, "medium"), None);
+}

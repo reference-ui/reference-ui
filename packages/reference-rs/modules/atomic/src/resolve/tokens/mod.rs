@@ -13,6 +13,7 @@ use base_system::{BaseSystem, TokenEntry};
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
+mod braced_tone;
 mod interpolate;
 mod scale;
 pub(crate) mod tones;
@@ -103,14 +104,18 @@ fn resolve_pathed_value<'a>(
     resolve_unsuffixed(prop, raw_val, unbraced, session)
 }
 
-/// A value with no numeric modifier that names no whole token: a named tone,
-/// then the malformed-opacity warning, then interpolation or fallback.
+/// A value with no numeric modifier that names no whole token: a braced unknown
+/// tone refuses, then a named tone, then the malformed-opacity warning, then
+/// interpolation or fallback.
 fn resolve_unsuffixed<'a>(
     prop: &str,
     raw_val: &'a str,
     unbraced: &str,
     session: &mut ResolveSession<'_, '_>,
 ) -> Option<Cow<'a, str>> {
+    if braced_tone::refuse_unknown_braced_tone(prop, raw_val, session) {
+        return None;
+    }
     if let Some(resolved) = resolve_tone(prop, raw_val, unbraced, session) {
         return Some(resolved);
     }
@@ -147,7 +152,8 @@ fn malformed_passthrough<'a>(
 /// The tone path for one bare value: `base/name` where `base` names a declared
 /// colours token and `name` is a tone identifier. `Some` means the tone path
 /// owns the value — the resolved `color-mix`, or the raw bytes after an
-/// unknown-tone warning. `None` means this is not a tone value at all.
+/// unknown-tone warning. `None` means this is not a tone value at all. A whole
+/// braced unknown tone never reaches here: `braced_tone` refuses it first.
 fn resolve_tone<'a>(
     prop: &str,
     raw_val: &'a str,

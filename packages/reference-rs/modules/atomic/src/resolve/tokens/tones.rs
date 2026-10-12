@@ -146,9 +146,20 @@ pub(crate) fn tone_names(system: &BaseSystem) -> Vec<&str> {
     names
 }
 
+/// The names a suggestion for `query` may be drawn from. A query that is itself a
+/// declared tone is not a misspelling (its value is what is wrong), so nothing is
+/// offered: a neighbour within the gate's budget would be as wrong as its own name.
+pub(crate) fn suggestion_candidates<'a>(system: &'a BaseSystem, query: &str) -> Vec<&'a str> {
+    let names = tone_names(system);
+    if names.iter().any(|name| *name == query) {
+        return Vec::new();
+    }
+    names
+}
+
 /// The nearest tone name to `name`, through the shared suggestion gate.
 pub(crate) fn nearest<'a>(system: &'a BaseSystem, name: &str) -> Option<&'a str> {
-    let names = tone_names(system);
+    let names = suggestion_candidates(system, name);
     diagnostics::message::suggest(name, &names)
 }
 

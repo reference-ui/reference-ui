@@ -264,6 +264,49 @@ fn brace_unknown_tone_errors_and_drops() {
 }
 
 #[test]
+fn whole_braced_unknown_tone_errors_and_drops() {
+    let system = tone_fixture();
+    let (css, diagnostics) =
+        resolve_with_diagnostics("borderColor", "{colors.blue.500/mediun}", &system);
+    assert_eq!(css, None);
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].severity, DiagnosticSeverity::Error);
+    assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownTokenReference);
+    assert_eq!(
+        diagnostics[0].message,
+        "unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)"
+    );
+}
+
+#[test]
+fn whole_braced_known_tone_still_resolves() {
+    let system = tone_fixture();
+    let (css, diagnostics) =
+        resolve_with_diagnostics("borderColor", "{colors.blue.500/medium}", &system);
+    assert_eq!(
+        css.as_deref(),
+        Some("color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent)")
+    );
+    assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn declared_unusable_tone_offers_only_the_fix_line() {
+    let system = tone_fixture();
+    let (css, diagnostics) = resolve_with_diagnostics("bg", "blue.500/arc", &system);
+    assert_eq!(css.as_deref(), Some("blue.500/arc"));
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownTone);
+    let help = diagnostics[0].help.clone().unwrap_or_default();
+    assert_eq!(
+        help.len(),
+        1,
+        "`arc` is declared, not misspelt: no did-you-mean"
+    );
+    assert!(help[0].starts_with("declare it with tokens("));
+}
+
+#[test]
 fn non_colour_base_keeps_the_malformed_warning() {
     let system = tone_fixture();
     let (css, diagnostics) = resolve_with_diagnostics("mt", "spacing.4/medium", &system);

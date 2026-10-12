@@ -123,25 +123,10 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
         match tones::resolve(self.session.system, self.prop, entry, name) {
             Some(css) => Some(Some(css)),
             None => {
-                self.push_unknown_tone(name, inner);
+                push_unknown_tone(self.session, name, inner);
                 Some(None)
             }
         }
-    }
-
-    /// Drop the atom with an Error naming the unknown tone and, when one is
-    /// near, the did-you-mean. Reuses the missing-reference code so severity
-    /// stays Error without minting a second error code for the brace case.
-    fn push_unknown_tone(&mut self, name: &str, inner: &str) {
-        let mut message = format!("unknown tone `{name}` in `{{{inner}}}`");
-        if let Some(near) = tones::nearest(self.session.system, name) {
-            message.push_str(&format!(" (did you mean `{near}`?)"));
-        }
-        let diagnostic = self
-            .session
-            .location
-            .error(DiagnosticCode::UnknownTokenReference, message);
-        self.session.diagnostics.push(diagnostic);
     }
 
     /// Keep an unresolvable segment verbatim. True when the segment named a
@@ -158,6 +143,22 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
         self.session.diagnostics.push(diagnostic);
         true
     }
+}
+
+/// Drop the atom with an Error naming the unknown tone and, when one is near,
+/// the did-you-mean. Reuses the missing-reference code so severity stays Error
+/// without minting a second error code for the brace case. Shared by the
+/// composite brace walk and a whole braced value (`braced_tone.rs`), so both
+/// spell the same message.
+pub(super) fn push_unknown_tone(session: &mut ResolveSession<'_, '_>, name: &str, inner: &str) {
+    let mut message = format!("unknown tone `{name}` in `{{{inner}}}`");
+    if let Some(near) = tones::nearest(session.system, name) {
+        message.push_str(&format!(" (did you mean `{near}`?)"));
+    }
+    let diagnostic = session
+        .location
+        .error(DiagnosticCode::UnknownTokenReference, message);
+    session.diagnostics.push(diagnostic);
 }
 
 #[cfg(test)]

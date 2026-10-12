@@ -21,7 +21,9 @@ Tones are ordinary `tones`-category tokens whose value is a percentage (`10%`,
 the role: `border*` / `outline*` / strokes / text draw `line`, everything else
 draws `surface`. Lookup tries `tones.N.line|surface`, then the flat `tones.N`,
 then `tones.N.surface`. On a bare value an unknown or unusable tone warns and
-stays raw; inside `{…}` it is an error that drops the atom.
+stays raw; inside `{…}` it is an error that drops the atom. A whole braced value,
+such as the colour longhand a `border` shorthand decomposes into, is refused the
+same way (`braced_tone.rs`).
 
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
 in reference-core / Atlas. This module **looks up** the compiled dictionary

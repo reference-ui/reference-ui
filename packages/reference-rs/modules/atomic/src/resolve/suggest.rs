@@ -73,7 +73,7 @@ fn token_suggestion(token: &TokenDetail, system: &BaseSystem) -> Option<Box<str>
 /// The closest declared tone name to a bad tone, over the first segments after
 /// `tones.` in the theme (the name an author would write after the slash).
 fn suggest_tone(tone: &str, system: &BaseSystem) -> Option<Box<str>> {
-    let candidates = crate::resolve::tokens::tones::tone_names(system);
+    let candidates = crate::resolve::tokens::tones::suggestion_candidates(system, tone);
     gated(DiagnosticCode::UnknownTone, tone, &candidates)
 }
 
