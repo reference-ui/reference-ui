@@ -1,24 +1,17 @@
-//! Strict-token wrappers around SystemStyleObject. Open emit keeps the
-//! `(string & {})` hatch on StyleProps. When `EmitOptions.strict` names known
-//! categories, this printer emits `StrictColorProps` / `StrictRadiiProps` /
-//! `StrictSpacingProps` and wraps `BaseSystemStyleObject` (`StyleProps`) in
-//! declaration order, then intersects nested condition keys so the alias is
-//! not circular. Unknown names are skipped; duplicates keep the first
-//! occurrence. Spacing is implemented here even though core's spacing wrapper
-//! is null. This does not parse `ui.config.ts` and does not invent Panda
+//! Strict-token wrappers that narrow the open StyleProps object. Open emit keeps
+//! the `(string & {})` hatch. When `EmitOptions.strict` names known categories,
+//! the open object prints as `BaseStyleProps` (see `style.rs`) and this printer
+//! emits `StrictColorProps` / `StrictRadiiProps` / `StrictSpacingProps`, composing
+//! them into `StyleProps` in declaration order so JSX style props and
+//! `SystemStyleObject` both narrow. Unknown names are skipped; duplicates keep the
+//! first occurrence. Spacing is implemented here even though core's spacing
+//! wrapper is null. This does not parse `ui.config.ts` and does not invent Panda
 //! `rounded*` keys.
 
 use super::ts::quote_literal;
 use std::collections::BTreeSet;
 
-const OPEN_SYSTEM_STYLE_OBJECT: &str = r#"export type SystemStyleObject = StyleProps & {
-  [K in StyleConditionKey]?: SystemStyleObject;
-} & {
-  [K in `&${string}`]?: SystemStyleObject;
-};
-"#;
-
-const WRAPPED_SYSTEM_STYLE_OBJECT_TAIL: &str = r#" & {
+const SYSTEM_STYLE_OBJECT: &str = r#"export type SystemStyleObject = StyleProps & {
   [K in StyleConditionKey]?: SystemStyleObject;
 } & {
   [K in `&${string}`]?: SystemStyleObject;
@@ -127,24 +120,34 @@ pub(super) fn normalize(names: &[String], keys: &StrictKeys) -> Vec<StrictCatego
     out
 }
 
+/// Name the open object prints under: `StyleProps` in open mode, and
+/// `BaseStyleProps` once strict wrappers compose it into `StyleProps`.
+pub(super) fn printed_props_name(active: &[StrictCategory]) -> &'static str {
+    if active.is_empty() {
+        "StyleProps"
+    } else {
+        "BaseStyleProps"
+    }
+}
+
 pub(super) fn push_system_style_object(
     out: &mut String,
     active: &[StrictCategory],
     keys: &StrictKeys,
 ) {
     if active.is_empty() {
-        out.push_str(OPEN_SYSTEM_STYLE_OBJECT);
+        out.push_str(SYSTEM_STYLE_OBJECT);
         return;
     }
     push_wrappers(out, active, keys);
-    out.push_str("export type BaseSystemStyleObject = StyleProps;\n\n");
-    out.push_str("export type SystemStyleObject = ");
+    out.push_str("export type StyleProps = ");
     out.push_str(&wrap_base(active));
-    out.push_str(WRAPPED_SYSTEM_STYLE_OBJECT_TAIL);
+    out.push_str(";\n\n");
+    out.push_str(SYSTEM_STYLE_OBJECT);
 }
 
 fn wrap_base(active: &[StrictCategory]) -> String {
-    let mut inner = String::from("BaseSystemStyleObject");
+    let mut inner = String::from("BaseStyleProps");
     for cat in active {
         inner = format!("{}<{inner}>", cat.wrapper_name());
     }

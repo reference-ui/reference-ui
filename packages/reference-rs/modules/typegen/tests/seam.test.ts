@@ -57,7 +57,7 @@ describe('typegen native seam', () => {
     })
 
     expect(strictDts).toContain(
-      'StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>'
+      'StrictRadiiProps<StrictColorProps<BaseStyleProps>>'
     )
     expect(strictDts).not.toContain('StrictSpacingProps')
   })

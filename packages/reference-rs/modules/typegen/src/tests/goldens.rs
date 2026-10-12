@@ -83,14 +83,14 @@ fn style_strict_matches_committed_golden() {
     let actual = style_strict_dts();
     assert!(
         actual.contains(
-            "export type SystemStyleObject = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>> & {"
+            "export type StyleProps = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>;"
         ),
-        "strict golden must wrap BaseSystemStyleObject in declaration order:\n{actual}"
+        "strict golden must narrow StyleProps over BaseStyleProps in declaration order:\n{actual}"
     );
     assert!(
         actual.contains("color?: StylePropValue<ColorToken | TonedColorToken | (string & {})>")
             && actual.contains("p?: StylePropValue<SpacingToken | (string & {})>"),
-        "strict golden still prints the open hatch on StyleProps:\n{actual}"
+        "strict golden still prints the open hatch on BaseStyleProps:\n{actual}"
     );
     assert_matches_golden("styles-strict.d.ts", &actual);
 }
@@ -113,9 +113,9 @@ fn tones_matches_committed_golden() {
 fn tones_strict_matches_committed_golden() {
     let actual = tones_strict_dts();
     assert!(
-        actual.contains("export type SystemStyleObject = StrictColorProps<BaseSystemStyleObject> & {")
+        actual.contains("export type StyleProps = StrictColorProps<BaseStyleProps>;")
             && actual.contains("  | ColorToken\n  | TonedColorToken\n"),
-        "tones strict golden must wrap colors and add TonedColorToken:\n{actual}"
+        "tones strict golden must narrow StyleProps over colors and add TonedColorToken:\n{actual}"
     );
     assert_matches_golden("tones-strict.d.ts", &actual);
 }

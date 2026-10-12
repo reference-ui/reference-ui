@@ -66,7 +66,7 @@ export type FontProps = [FontName] extends [never]
   ? FallbackFontProps
   : ScopedFontProps;
 
-export type StyleProps = FontProps & {
+export type BaseStyleProps = FontProps & {
   [K in `--${string}`]?: StylePropValue<string | number>;
 } & {
   MozAnimation?: StylePropValue<string | number>;
@@ -1659,9 +1659,9 @@ export type SafeSpacingProps = {
 
 export type StrictSpacingProps<P> = Omit<P, SpacingPropKeys> & SafeSpacingProps;
 
-export type BaseSystemStyleObject = StyleProps;
+export type StyleProps = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>;
 
-export type SystemStyleObject = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>> & {
+export type SystemStyleObject = StyleProps & {
   [K in StyleConditionKey]?: SystemStyleObject;
 } & {
   [K in `&${string}`]?: SystemStyleObject;

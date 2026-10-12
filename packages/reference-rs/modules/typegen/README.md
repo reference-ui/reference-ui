@@ -44,10 +44,13 @@ category. Font-less StyleProps still emit `FontRegistry {}` so
 as `never`. An empty system emits an empty string — still no `styled.div`.
 
 `emit_dts` is always open-mode: token props keep `Token | (string & {})`.
-`emit_dts_with(system, &EmitOptions { strict })` wraps `BaseSystemStyleObject`
-(`StyleProps`) as `StrictColorProps` / `StrictRadiiProps` / `StrictSpacingProps`
-in declaration order. Unknown and duplicate strict names are skipped. `strict`
-is not a spec field and typegen does not parse `ui.config.ts`.
+`emit_dts_with(system, &EmitOptions { strict })` narrows `StyleProps` with
+`StrictColorProps` / `StrictRadiiProps` / `StrictSpacingProps` in declaration
+order. The open object prints as `BaseStyleProps` and `StyleProps` wraps it, so
+JSX style props (`<Div bg="#fff">`) and `SystemStyleObject` both reject
+off-token values. `r` names `StyleProps`, so nested responsive values narrow
+too. Unknown and duplicate strict names are skipped. `strict` is not a spec
+field and typegen does not parse `ui.config.ts`.
 
 Users never write `.mt_2r` in these files. Atomic class names are not a public
 API.

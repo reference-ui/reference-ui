@@ -1,11 +1,11 @@
-//! TYP-STRICT-01–06: open hatch vs strict SystemStyleObject wrappers.
+//! TYP-STRICT-01–06: open hatch vs strict StyleProps narrowing.
 //! `emit_dts` stays open-mode so goldens keep `Token | (string & {})`, while
-//! `emit_dts_with` wraps `BaseSystemStyleObject` in declaration order for
-//! token-present categories only. Unknown strict names are skipped;
-//! duplicates keep the first occurrence. Radius keys come from canon
-//! (`borderRadius` and *Radius properties), never Panda `rounded*`. Spacing
-//! strict is printed here even though core's spacing wrapper is null, and
-//! `gap` stays an open key outside the spacing family.
+//! `emit_dts_with` prints the open object as `BaseStyleProps` and composes the
+//! wrappers into `StyleProps` in declaration order for token-present categories
+//! only. Unknown strict names are skipped; duplicates keep the first occurrence.
+//! Radius keys come from canon (`borderRadius` and *Radius properties), never
+//! Panda `rounded*`. Spacing strict is printed here even though core's spacing
+//! wrapper is null, and `gap` stays an open key outside the spacing family.
 
 use super::{colors_only_dts_with, style_dts, style_dts_with};
 use crate::{emit_dts, emit_dts_with, EmitOptions};
@@ -13,15 +13,13 @@ use crate::{emit_dts, emit_dts_with, EmitOptions};
 const COLOR_HATCH: &str = "color?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;";
 const SPACING_HATCH: &str = "p?: StylePropValue<SpacingToken | (string & {})>;";
 const RADIUS_HATCH: &str = "borderRadius?: StylePropValue<RadiusToken | (string & {})>;";
-const COLOR_WRAP: &str =
-    "export type SystemStyleObject = StrictColorProps<BaseSystemStyleObject> & {";
-const RADII_WRAP: &str =
-    "export type SystemStyleObject = StrictRadiiProps<BaseSystemStyleObject> & {";
-const SPACING_WRAP: &str =
-    "export type SystemStyleObject = StrictSpacingProps<BaseSystemStyleObject> & {";
+const COLOR_WRAP: &str = "export type StyleProps = StrictColorProps<BaseStyleProps>;";
+const RADII_WRAP: &str = "export type StyleProps = StrictRadiiProps<BaseStyleProps>;";
+const SPACING_WRAP: &str = "export type StyleProps = StrictSpacingProps<BaseStyleProps>;";
 const COLORS_RADII_WRAP: &str =
-    "export type SystemStyleObject = StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>> & {";
-const ALL_WRAP: &str = "export type SystemStyleObject = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseSystemStyleObject>>> & {";
+    "export type StyleProps = StrictRadiiProps<StrictColorProps<BaseStyleProps>>;";
+const ALL_WRAP: &str =
+    "export type StyleProps = StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>;";
 const COLOR_WRAPPER: &str =
     "export type StrictColorProps<P> = Omit<P, ColorPropKeys> & SafeColorProps;";
 const RADII_WRAPPER: &str =
@@ -29,7 +27,7 @@ const RADII_WRAPPER: &str =
 const SPACING_WRAPPER: &str =
     "export type StrictSpacingProps<P> = Omit<P, SpacingPropKeys> & SafeSpacingProps;";
 
-/// TYP-STRICT-01 — strict colors wrap SystemStyleObject; keywords stay, hatch does not.
+/// TYP-STRICT-01 — strict colors narrow StyleProps; keywords stay, hatch does not.
 #[test]
 fn typ_strict_01_restricts_colors_to_tokens_and_keywords() {
     let dts = style_dts_with(&["colors"]);
@@ -47,7 +45,7 @@ fn typ_strict_01_restricts_colors_to_tokens_and_keywords() {
     );
     assert!(
         dts.contains(COLOR_HATCH),
-        "TYP-STRICT-01: StyleProps stays open; wrap is on SystemStyleObject:\n{dts}"
+        "TYP-STRICT-01: BaseStyleProps keeps the hatch; StyleProps is the wrapped export:\n{dts}"
     );
     assert!(
         !dts.contains("StrictRadiiProps") && !dts.contains("StrictSpacingProps"),
@@ -106,7 +104,7 @@ fn typ_strict_03_restricts_spacing_to_tokens_and_keywords() {
     );
     assert!(
         dts.contains(SPACING_HATCH),
-        "TYP-STRICT-03: StyleProps stays open; wrap is on SystemStyleObject:\n{dts}"
+        "TYP-STRICT-03: BaseStyleProps keeps the hatch; StyleProps is the wrapped export:\n{dts}"
     );
     assert_prop(&dts, "gap", "StylePropValue<string | number>");
 }
@@ -121,7 +119,7 @@ fn typ_strict_04_open_mode_keeps_escape_hatch() {
     );
     assert!(
         !dts.contains("StrictColorProps")
-            && !dts.contains("BaseSystemStyleObject")
+            && !dts.contains("BaseStyleProps")
             && dts.contains("export type SystemStyleObject = StyleProps & {"),
         "TYP-STRICT-04: open emit must not wrap SystemStyleObject:\n{dts}"
     );
@@ -170,7 +168,7 @@ fn typ_strict_05_composes_wrappers_in_declaration_order() {
 fn typ_strict_06_skips_wrappers_for_absent_categories() {
     let open = colors_only_dts_with(&["spacing"]);
     assert!(
-        !open.contains("StrictSpacingProps") && !open.contains("BaseSystemStyleObject"),
+        !open.contains("StrictSpacingProps") && !open.contains("BaseStyleProps"),
         "TYP-STRICT-06: absent spacing must not wrap:\n{open}"
     );
     assert!(

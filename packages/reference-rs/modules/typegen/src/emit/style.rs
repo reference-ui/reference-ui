@@ -9,7 +9,9 @@
 //! `StylePropValue<string | number>`, and a `` `--${string}` `` index covers
 //! custom properties. Raw CSS `font` and `weight` stay omitted (`FontProps`
 //! owns them); strict wrappers emit only for token-present categories, and
-//! the wrappers themselves live in `strict.rs`.
+//! the wrappers themselves live in `strict.rs`. In strict mode the open object
+//! prints as `BaseStyleProps`, so the nested `r` value (which names `StyleProps`)
+//! is narrowed too.
 
 use super::fonts;
 use super::props::{PropDefs, PropKind};
@@ -23,6 +25,7 @@ const COLOR_VALUE: &str = "StylePropValue<ColorToken | TonedColorToken | (string
 const SPACING_VALUE: &str = "StylePropValue<SpacingToken | (string & {})>";
 const RADIUS_VALUE: &str = "StylePropValue<RadiusToken | (string & {})>";
 const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
+// Names `StyleProps` on purpose: in strict mode that alias is the wrapped export.
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
 const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const PROP_VALUE: &str =
@@ -42,7 +45,7 @@ pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String 
     out.push_str(PROP_VALUE);
     out.push('\n');
     out.push_str(fonts::font_props());
-    push_props_type(&mut out, defs.props());
+    push_props_type(&mut out, defs.props(), strict::printed_props_name(&active));
     out.push('\n');
     strict::push_system_style_object(&mut out, &active, &keys);
     out
@@ -85,9 +88,11 @@ fn push_condition_key(out: &mut String, keys: &BTreeSet<String>) {
     out.push_str(";\n");
 }
 
-fn push_props_type(out: &mut String, props: &BTreeMap<&'static str, PropKind>) {
+fn push_props_type(out: &mut String, props: &BTreeMap<&'static str, PropKind>, name: &str) {
     out.push('\n');
-    out.push_str("export type StyleProps = FontProps & {\n");
+    out.push_str("export type ");
+    out.push_str(name);
+    out.push_str(" = FontProps & {\n");
     // A mapped member cannot share a literal with named keys (TS7061), so the
     // custom-property index rides its own leading intersection member.
     out.push_str("  [K in `--${string}`]?: ");

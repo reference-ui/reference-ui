@@ -51,7 +51,7 @@ export type FontProps = [FontName] extends [never]
   ? FallbackFontProps
   : ScopedFontProps;
 
-export type StyleProps = FontProps & {
+export type BaseStyleProps = FontProps & {
   [K in `--${string}`]?: StylePropValue<string | number>;
 } & {
   MozAnimation?: StylePropValue<string | number>;
@@ -1561,9 +1561,9 @@ export type SafeColorProps = {
 
 export type StrictColorProps<P> = Omit<P, ColorPropKeys> & SafeColorProps;
 
-export type BaseSystemStyleObject = StyleProps;
+export type StyleProps = StrictColorProps<BaseStyleProps>;
 
-export type SystemStyleObject = StrictColorProps<BaseSystemStyleObject> & {
+export type SystemStyleObject = StyleProps & {
   [K in StyleConditionKey]?: SystemStyleObject;
 } & {
   [K in `&${string}`]?: SystemStyleObject;

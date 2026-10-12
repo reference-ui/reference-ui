@@ -15,7 +15,8 @@ mod emit;
 use base_system::BaseSystem;
 
 /// Printer options that are not dump fields. `strict` names token categories
-/// whose `SystemStyleObject` is wrapped (`colors`, `radii`, `spacing`).
+/// whose `StyleProps` (and so `SystemStyleObject`) is narrowed (`colors`,
+/// `radii`, `spacing`).
 /// Unknown names are skipped; duplicates keep first-seen declaration order.
 /// An empty list is open mode: StyleProps keep the `(string & {})` hatch.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -41,9 +42,10 @@ pub fn emit_dts(system: &BaseSystem) -> String {
 
 /// Print `.d.ts` text for `system` with printer options.
 ///
-/// Open mode (`strict` empty) matches `emit_dts`. Strict names wrap
-/// `BaseSystemStyleObject` as `StrictRadiiProps<StrictColorProps<…>>` in
-/// declaration order. This does not parse `ui.config.ts`.
+/// Open mode (`strict` empty) matches `emit_dts`. Strict names narrow
+/// `StyleProps`: the open object prints as `BaseStyleProps`, and `StyleProps` is
+/// `StrictRadiiProps<StrictColorProps<BaseStyleProps>>` in declaration order.
+/// This does not parse `ui.config.ts`.
 pub fn emit_dts_with(system: &BaseSystem, options: &EmitOptions) -> String {
     emit::dts(system, options)
 }
