@@ -79,6 +79,28 @@ export const DEFAULT_ROWS: ReproRow[] = [
     files: { 'theme/opacity.ts': styleFile("export const cls = css({ color: 'red.500/' })") },
   },
   {
+    code: 'ATM-W-UNKNOWN-TONE',
+    severity: 'warning',
+    channel: 'diagnostics',
+    configExtra: '',
+    files: {
+      'theme/tokens.ts': [
+        "import { tokens } from '@reference-ui/neo'",
+        '',
+        'tokens({',
+        '  colors: {',
+        "    brand: { value: '#7c3aed' },",
+        '  },',
+        '  tones: {',
+        "    medium: { surface: { value: '10%' }, line: { value: '34%' } },",
+        '  },',
+        '})',
+        '',
+      ].join('\n'),
+      'theme/tone.ts': styleFile("export const cls = css({ bg: 'brand/mediun' })"),
+    },
+  },
+  {
     code: 'ATM-W-UNTERMINATED-BRACE',
     severity: 'warning',
     channel: 'diagnostics',

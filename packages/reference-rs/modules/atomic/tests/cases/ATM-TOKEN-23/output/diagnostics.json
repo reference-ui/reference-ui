@@ -1,0 +1,62 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN-PATH",
+    "message": "unknown token path `-blue.500/medium`",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 10,
+    "span": {
+      "start": 77,
+      "end": 95
+    },
+    "help": [
+      "point the path at an existing token"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-COLOR",
+    "message": "`white/medium` is neither a color token nor a CSS color",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 7,
+    "span": {
+      "start": 103,
+      "end": 117
+    },
+    "help": [
+      "use a color token or CSS color"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-COLOR",
+    "message": "`transparent/medium` is neither a color token nor a CSS color",
+    "file": "input/src/App.tsx",
+    "line": 6,
+    "column": 16,
+    "span": {
+      "start": 134,
+      "end": 154
+    },
+    "help": [
+      "use a color token or CSS color"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-MALFORMED-OPACITY",
+    "message": "malformed opacity modifier `blue.500/medium`",
+    "file": "input/src/App.tsx",
+    "line": 7,
+    "column": 14,
+    "span": {
+      "start": 169,
+      "end": 186
+    },
+    "help": [
+      "write the opacity modifier as /<0-100> (got 'blue.500/medium')"
+    ]
+  }
+]

@@ -24,6 +24,10 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-TOKEN-05': ['background: blue .600'],
   'ATM-TOKEN-06': ['border-color: /40', 'color: red .500/'],
   'ATM-TOKEN-14': ['Unexpected input', 'caret-color: ui.missing.path'],
+  'ATM-TOKEN-21': ['background: blue .500/mediun'],
+  'ATM-TOKEN-22': ['background: brand/arc'],
+  'ATM-TOKEN-23': ['background: white/medium', 'border-color: transparent/medium',
+    'box-shadow: blue .500/medium', 'color: -blue .500/medium'],
   'ATM-VALID-03': ['Unexpected input', 'color: ghost.white'],
 
   // §11 silent bare-value passthrough (intended, permanent): a bare miss

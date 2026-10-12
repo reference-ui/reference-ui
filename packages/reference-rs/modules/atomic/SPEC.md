@@ -76,7 +76,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 10 | 10 | 0 |
 | `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 12 | 12 | 0 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 23 | 23 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
@@ -699,6 +699,22 @@ compiler contract.
   **Every token path segment must kebab in the emitted custom property, matching Panda's full-kebab naming.**
   Station `ATM-TOKEN-13`. Compile a dump with the lib `progress.track` shape (`mixForeground` / `mixBackground` `{light, dark}` leaves) plus a camelCase mid-path segment (`meter.evenLessGood.foreground`) and assert `@layer tokens` defines `--colors-ui-progress-track-mix-foreground`, `--colors-ui-progress-track-mix-background`, and `--colors-ui-meter-even-less-good-foreground` in both color-mode blocks; assert no camelCase ghost (`mixForeground`, `evenLessGood`) appears anywhere; assert resolved uses reference the kebab names. Kebabing only the category left lib's hardcoded `var(--colors-ui-progress-track-mix-foreground)` (Slider `trackBackground`, `shared.ts`) undefined with an invalid `{...}` fallback, silently dropping the backdrop (RS-41, unblocking `NEO-TOKEN-14`).
 
+- [x] `ATM-TOKEN-19` `[reference]` `[seam]` —
+  **A named tone must mix through its role variable: the receiving property decides whether it draws the surface amount or the line amount.**
+  Station `ATM-TOKEN-19`. One `css({…})` on the lib fixture: `bg`, `accentColor`, and `fill` draw `--tones-*-surface`; `borderColor`, a braced `border` longhand, `outlineColor`, `color`, `stroke`, `webkitTextFillColor`, and a braced `boxShadow` draw `--tones-*-line`. Assert each declaration exactly, that the tokens layer defines the lib tones it names (`--tones-medium-surface: 10%`, `--tones-medium-line: 34%`, `--tones-ghost-surface: 4%`, `--tones-strong-line: 58%`), and zero diagnostics. `ATM-TOKEN-03` proves the numeric opacity path; this station proves the named path picks the amount the property draws.
+- [x] `ATM-TOKEN-20` `[reference]` `[seam]` —
+  **A numeric opacity modifier beside a tone must stay byte-identical to its `ATM-TOKEN-03` form, and only the tone sibling may name a tone variable.**
+  Station `ATM-TOKEN-20`. One `css({…})` with `bg: 'blue.600/50'`, `borderColor: 'red.500/25%'`, and `outlineColor: 'blue.500/medium'`. Assert the two numeric declarations match the `color-mix(in srgb, var(--colors-…) N%, transparent)` form byte for byte, the outline draws `var(--tones-medium-line)`, the utilities layer names exactly one `--tones-` variable, and zero diagnostics. The gate order keeps numeric modifiers split-first, so adding tones must not move a single numeric byte.
+- [x] `ATM-TOKEN-21` `[reference]` `[seam]` —
+  **An unknown tone must warn with a did-you-mean when bare, and must error and drop the declaration when braced, including a whole braced value.**
+  Station `ATM-TOKEN-21`. Bare `bg: 'blue.500/mediun'` warns `ATM-W-UNKNOWN-TONE` with the did-you-mean `medium` and paints raw. Braced `border: '1px solid {colors.blue.500/mediun}'` raises an `ATM-E-UNKNOWN-TOKEN` error (``unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)``), drops the border colour longhand while its width and style still emit (as `ATM-TOKEN-12`), and keeps the valid sibling `color: 'blue.500'`. The shorthand decomposes before resolution, so `borderColor` arrives as the whole value `{colors.blue.500/mediun}`; `resolve/tokens/braced_tone.rs` refuses that shape before the bare tone path, and the error text is the one `interpolate.rs` pushes for composite braces (TONES-02). Known braced tones and every other shape keep the resolver's existing path. Value-level pins: `whole_braced_unknown_tone_errors_and_drops` and `whole_braced_known_tone_still_resolves` in `tones_resolve_tests.rs`. The bare raw `background` is grammar-quarantined under the token-passthrough policy in `tests/css-quarantine.ts`, as `ATM-TOKEN-05` is.
+- [x] `ATM-TOKEN-22` `[reference]` `[seam]` —
+  **Custom tones from a BaseSystem must resolve through role, flat, then surface-only lookup, and print their own custom properties.**
+  Station `ATM-TOKEN-22`. A custom `baseSystem.json` (`colors.brand` plus four tones) and four `css()` calls. `brand/hush` (flat leaf) uses `var(--tones-hush)` for both `bg` and `borderColor`; `brand/medium` (surface light 12%, dark 16%) uses `var(--tones-medium-surface)`; `borderColor: 'brand/wash'` (surface-only leaf) falls back to `var(--tones-wash-surface)`. The tokens layer prints `--tones-medium-surface: 12%` and `16%` under the dark selector. `brand/arc` is a fraction (`0.1`), not a percentage, so it stays raw with exactly one `ATM-W-UNKNOWN-TONE` warning. The warning offers no did-you-mean: `arc` is declared, so it is not a misspelling (`suggestion_candidates` in `tones.rs`, pinned by `declared_unusable_tone_offers_only_the_fix_line`). A project's own tone scale reaches the compiler only through a BaseSystem, so the lookup order must hold there too.
+- [x] `ATM-TOKEN-23` `[reference]` `[seam]` —
+  **Paths that tones never take (negated bases, CSS colour keywords, non-colour props) must keep their pre-tones output and diagnostic.**
+  Station `ATM-TOKEN-23`. `color: '-blue.500/medium'`, `bg: 'white/medium'`, `borderColor: 'transparent/medium'`, and `boxShadow: 'blue.500/medium'`. Assert no utility names a tone variable and each value paints raw under the diagnostic its path already raised: `ATM-W-UNKNOWN-TOKEN-PATH` (negated), `ATM-W-UNKNOWN-COLOR` twice (keywords), and `ATM-W-MALFORMED-OPACITY` (bare `boxShadow`). The engine's unit tests `negated_tone_is_untouched` and `colour_keyword_never_takes_the_tone_path` pin the same outputs. The four raw declarations are grammar-quarantined under the token-passthrough policy in `tests/css-quarantine.ts`, as `ATM-TOKEN-05` and `ATM-TOKEN-06` are.
+
 ### BaseSystem Spec Validation
 
 - [x] `ATM-TOKEN-10` `[forbidden]` `[seam]` —
@@ -1088,6 +1104,11 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-16` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-16/` |
 | `ATM-TOKEN-17` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-17/` |
 | `ATM-TOKEN-18` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-18/` |
+| `ATM-TOKEN-19` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-19/` |
+| `ATM-TOKEN-20` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-20/` |
+| `ATM-TOKEN-21` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-21/` |
+| `ATM-TOKEN-22` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-22/` |
+| `ATM-TOKEN-23` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-23/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |

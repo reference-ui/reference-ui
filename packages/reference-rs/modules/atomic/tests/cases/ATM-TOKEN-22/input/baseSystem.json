@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "custom-tones",
+  "tokens": {
+    "colors": {
+      "brand": {
+        "light": "red",
+        "dark": "navy"
+      }
+    },
+    "tones": {
+      "hush": {
+        "value": "6%"
+      },
+      "medium": {
+        "surface": {
+          "light": "12%",
+          "dark": "16%"
+        },
+        "line": {
+          "value": "30%"
+        }
+      },
+      "wash": {
+        "surface": {
+          "value": "8%"
+        }
+      },
+      "arc": {
+        "value": "0.1"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "theme/global.ts",
+      "rules": {
+        ":root": {
+          "--spacing-root": "0.25rem"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

@@ -1,0 +1,7 @@
+{
+  "bg:brand/arc": "custom-tones__bg_brand/arc",
+  "bg:brand/hush": "custom-tones__bg_brand/hush",
+  "bg:brand/medium": "custom-tones__bg_brand/medium",
+  "borderColor:brand/hush": "custom-tones__bd-c_brand/hush",
+  "borderColor:brand/wash": "custom-tones__bd-c_brand/wash"
+}

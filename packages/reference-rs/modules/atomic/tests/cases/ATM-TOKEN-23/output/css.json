@@ -1,0 +1,6 @@
+{
+  "bg:white/medium": "@reference-ui/lib__bg_white/medium",
+  "borderColor:transparent/medium": "@reference-ui/lib__bd-c_transparent/medium",
+  "boxShadow:blue.500/medium": "@reference-ui/lib__shadow_blue.500/medium",
+  "color:-blue.500/medium": "@reference-ui/lib__c_-blue.500/medium"
+}

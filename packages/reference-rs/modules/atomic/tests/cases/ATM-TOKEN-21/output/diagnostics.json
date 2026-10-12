@@ -1,0 +1,30 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TONE",
+    "message": "unknown tone `mediun` in `blue.500/mediun`",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 7,
+    "span": {
+      "start": 74,
+      "end": 91
+    },
+    "help": [
+      "did you mean `medium`?",
+      "declare it with tokens({ tones: { mediun: { surface: { value: '10%' }, line: { value: '34%' } } } }) — tone values are percentages — or use /<0-100>"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-UNKNOWN-TOKEN",
+    "message": "unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)",
+    "file": "input/src/App.tsx",
+    "line": 8,
+    "column": 11,
+    "span": {
+      "start": 133,
+      "end": 169
+    }
+  }
+]

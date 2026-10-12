@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TONE",
+    "message": "unknown tone `arc` in `brand/arc`",
+    "file": "input/src/App.tsx",
+    "line": 17,
+    "column": 7,
+    "span": {
+      "start": 266,
+      "end": 277
+    },
+    "help": [
+      "declare it with tokens({ tones: { arc: { surface: { value: '10%' }, line: { value: '34%' } } } }) — tone values are percentages — or use /<0-100>"
+    ]
+  }
+]

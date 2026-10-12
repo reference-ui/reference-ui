@@ -1,0 +1,19 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer custom-tones {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .custom-tones__bg_brand\/arc { background: brand/arc; }
+  .custom-tones__bg_brand\/hush { background: color-mix(in srgb, var(--colors-brand) var(--tones-hush), transparent); }
+  .custom-tones__bg_brand\/medium { background: color-mix(in srgb, var(--colors-brand) var(--tones-medium-surface), transparent); }
+  .custom-tones__bd-c_brand\/hush { border-color: color-mix(in srgb, var(--colors-brand) var(--tones-hush), transparent); }
+  .custom-tones__bd-c_brand\/wash { border-color: color-mix(in srgb, var(--colors-brand) var(--tones-wash-surface), transparent); }
+}
+}

@@ -1,0 +1,14 @@
+{
+  "accentColor:blue.500/medium": "@reference-ui/lib__accent-color_blue.500/medium",
+  "bg:blue.500/medium": "@reference-ui/lib__bg_blue.500/medium",
+  "borderColor:blue.500/medium": "@reference-ui/lib__bd-c_blue.500/medium",
+  "borderColor:{colors.blue.500/medium}": "@reference-ui/lib__bd-c_{colors.blue.500/medium}",
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "boxShadow:0 0 0 3px {colors.blue.500/medium}": "@reference-ui/lib__shadow_0_0_0_3px_{colors.blue.500/medium}",
+  "color:blue.500/strong": "@reference-ui/lib__c_blue.500/strong",
+  "fill:blue.500/ghost": "@reference-ui/lib__fill_blue.500/ghost",
+  "outlineColor:blue.500/firm": "@reference-ui/lib__outline-c_blue.500/firm",
+  "stroke:blue.500/ghost": "@reference-ui/lib__stroke_blue.500/ghost",
+  "webkitTextFillColor:blue.500/medium": "@reference-ui/lib__-webkit-text-fill-color_blue.500/medium"
+}

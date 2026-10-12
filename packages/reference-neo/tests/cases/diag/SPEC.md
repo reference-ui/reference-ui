@@ -21,7 +21,7 @@ otherwise) can audit the suite trivially. The diagnostic case index, made real.
 
 | Codes | World | Spec drives |
 | --- | --- | --- |
-| `ATM-*` row codes (40) | `ui.config.ts` + `theme/` fixture | `compileWorld` on the case world, assert on the row's channel |
+| `ATM-*` row codes (41) | `ui.config.ts` + `theme/` fixture | `compileWorld` on the case world, assert on the row's channel |
 | `ATM-E-*` request codes (5) | base project (`ui.config.ts` + `theme/tokens.ts`, host file where needed) | `prepareDiagWorld` + the registry-documented request mutation + `compileNative` |
 | `TST-*` (6) | `src/` workspace | `buildTasty` (output to temp); the scan refusal asserts a coded throw |
 | `ATL-*` (4) | `src/` app (+ analyzer config in the spec where needed) | `analyzeAtlasDetailed` |

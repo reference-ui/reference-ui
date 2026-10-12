@@ -1,0 +1,5 @@
+{
+  "bg:blue.600/50": "@reference-ui/lib__bg_blue.600/50",
+  "borderColor:red.500/25%": "@reference-ui/lib__bd-c_red.500/25%",
+  "outlineColor:blue.500/medium": "@reference-ui/lib__outline-c_blue.500/medium"
+}

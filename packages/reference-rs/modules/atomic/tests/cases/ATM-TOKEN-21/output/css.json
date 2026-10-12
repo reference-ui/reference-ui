@@ -1,0 +1,6 @@
+{
+  "bg:blue.500/mediun": "@reference-ui/lib__bg_blue.500/mediun",
+  "borderStyle:solid": "@reference-ui/lib__border-style_solid",
+  "borderWidth:1px": "@reference-ui/lib__bd-w_1px",
+  "color:blue.500": "@reference-ui/lib__c_blue.500"
+}

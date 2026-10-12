@@ -1,0 +1,26 @@
+@layer root {
+  :root { --spacing-root: 0.25rem }
+}
+@layer \@reference-ui\/lib {
+@layer reset, global, base, tokens, recipes, utilities;
+@layer global {
+  /* system global layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer tokens {
+  /* system tokens layer collapsed; pinned by ATM-SYS-01 */
+}
+@layer utilities {
+  .\@reference-ui\/lib__bg_blue\.500\/medium { background: color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent); }
+  .\@reference-ui\/lib__bd-c_blue\.500\/medium { border-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent); }
+  .\@reference-ui\/lib__bd-c_\{colors\.blue\.500\/medium\} { border-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent); }
+  .\@reference-ui\/lib__border-style_solid { border-style: solid; }
+  .\@reference-ui\/lib__bd-w_1px { border-width: 1px; }
+  .\@reference-ui\/lib__shadow_0_0_0_3px_\{colors\.blue\.500\/medium\} { box-shadow: 0 0 0 3px color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent); }
+  .\@reference-ui\/lib__accent-color_blue\.500\/medium { accent-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent); }
+  .\@reference-ui\/lib__c_blue\.500\/strong { color: color-mix(in srgb, var(--colors-blue-500) var(--tones-strong-line), transparent); }
+  .\@reference-ui\/lib__fill_blue\.500\/ghost { fill: color-mix(in srgb, var(--colors-blue-500) var(--tones-ghost-surface), transparent); }
+  .\@reference-ui\/lib__outline-c_blue\.500\/firm { outline-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-firm-line), transparent); }
+  .\@reference-ui\/lib__stroke_blue\.500\/ghost { stroke: color-mix(in srgb, var(--colors-blue-500) var(--tones-ghost-line), transparent); }
+  .\@reference-ui\/lib__-webkit-text-fill-color_blue\.500\/medium { -webkit-text-fill-color: color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-line), transparent); }
+}
+}
