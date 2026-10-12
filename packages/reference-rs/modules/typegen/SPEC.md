@@ -240,7 +240,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
   **Typegen should compose multiple active strict category wrappers in deterministic order.**  
   Configure `strict: ['colors', 'radii']` in `ui.config.ts`. Assert emitted `StyleProps` wraps `BaseStyleProps` in declaration order (`StrictRadiiProps<StrictColorProps<BaseStyleProps>>`) and deduplicates repeated entries. The failure mode is applying only the last wrapper or generating invalid nested generic syntax.
 
-- [x] `TYP-STRICT-06` `[reference]` `[unit]` —  
+- [x] `TYP-STRICT-07` `[reference]` `[unit]` —  
   **Strict `StyleProps` narrows JSX style props, not only `SystemStyleObject`.**  
   Configure `strict: ['colors']` in `ui.config.ts`. Assert `StyleProps` (the JSX prop type) rejects `bg: 'blue.500/50'`, `bg: 'not-a-token'`, and a nested `r: { md: { bg: '#fff' } }`, that `SystemStyleObject` rejects the same values, and that `bg: 'blue.500/medium'`, `bg: 'transparent'`, and `bg: 'blue.500'` typecheck on both. The failure mode is `<Div bg="#fff">` escaping strict because JSX props read an open `StyleProps`, or `r` widening back to the open object.
 
@@ -309,7 +309,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-STRICT-03` | `[unit]` | `src/tests/strict.rs::typ_strict_03_restricts_spacing_to_tokens_and_keywords`; `tests/strict.test.ts` | `[x]` Proven |
 | `TYP-STRICT-04` | `[unit]` | `src/tests/strict.rs::typ_strict_04_open_mode_keeps_escape_hatch`; `tests/strict.test.ts` | `[x]` Proven |
 | `TYP-STRICT-05` | `[unit]` | `src/tests/strict.rs::typ_strict_05_composes_wrappers_in_declaration_order`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-06` | `[unit]` | `tests/strict.test.ts` (StyleProps and SystemStyleObject probes over `tones-strict.d.ts`) | `[x]` Proven |
+| `TYP-STRICT-07` | `[unit]` | `tests/strict.test.ts` (StyleProps and SystemStyleObject probes over `tones-strict.d.ts`) | `[x]` Proven |
 | `TYP-FORBID-01` | `[unit]` | `src/tests/mod.rs::typ_forbid_01_emits_no_atomic_class_names` | `[x]` Proven |
 | `TYP-FORBID-02` | `[unit]` | `src/tests/mod.rs::typ_forbid_02_emits_no_jsx_farm` | `[x]` Proven |
 | `TYP-FORBID-03` | `[unit]` | `src/tests/forbid.rs::typ_forbid_03_emits_no_layout_pattern_helpers` | `[x]` Proven |
@@ -337,7 +337,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
    **TYP-FONT-01/02/03 landed 2026-09-15.** `FontRegistry` from `fonts.iter()`; family names quoted; dump weight **keys** (`bold`) as `'bold': true`. SPEC draft `['400','700']` / `'400' | 'sans.400'` does not match Dump. Populated dumps print mapped `FontProps` (`'bold' | 'sans.bold'` via dump keys plus a scoped template) mixed into StyleProps (`styles-fonts.d.ts`). Empty registry is `FontRegistry {}` plus `FontProps = [FontName] extends [never] ? FallbackFontProps : ScopedFontProps` so StyleProps stays usable (`styles.d.ts`). Intersecting Fallback with Scoped on a populated registry widens `weight` to `string` and would fail FONT-02 in tsc.
 8. **Forbidden Codegen Verification (`TYP-FORBID-01`–`06`):**  
    **Landed 2026-09-15.** No `.mt_2r` / jsx farm / `BoxProps` / `patterns/` / `recipes/*.d.ts` / `tokens.mjs` / `atomic` crate. Multiple recipes (`button` + `badge`) share one `emit_dts` string (`recipes-two.d.ts`). `canon` is a crate dependency for StyleProps; `atomic` is still forbidden.
-9. **Strict StyleProps Narrowing (`TYP-STRICT-06`):**  
+9. **Strict StyleProps Narrowing (`TYP-STRICT-07`):**  
    **Landed 2026-10-13.** Strict wrappers narrow `StyleProps`, the JSX prop type, not only `SystemStyleObject`. The open object prints as `BaseStyleProps`, and `StyleProps` is `StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>` in declaration order; `SystemStyleObject` is the open composition `StyleProps & { condition keys } & { &-selectors }` in both modes. `r` names `StyleProps`, so nested responsive values narrow too: no TS2456, because the recursive reference sits in a property, not in the wrap argument. Open-mode output is byte-identical; `styles-strict.d.ts` and `tones-strict.d.ts` are the only goldens that changed. Proof: `pnpm agentrs c typegen` **73**, `pnpm agentrs v typegen` **54**.
 
 ---

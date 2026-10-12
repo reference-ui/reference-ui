@@ -6,7 +6,7 @@
  * StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>.
  * `SystemStyleObject` is `StyleProps` plus nested condition keys, so JSX style
  * props and object styles narrow the same way, and `r` recurses into the strict
- * `StyleProps`. TYP-STRICT-06 probes both through the tones golden.
+ * `StyleProps`. TYP-STRICT-07 probes both through the tones golden.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -136,7 +136,7 @@ export const badRadius: SystemStyleObject = { color: 'n100', borderRadius: '16px
     )
   })
 
-  it('TYP-STRICT-06 StyleProps and SystemStyleObject accept tokens, toned colors and keywords', () => {
+  it('TYP-STRICT-07 StyleProps and SystemStyleObject accept tokens, toned colors and keywords', () => {
     expectOk(
       compile({
         dts: tonesStrictDts,
@@ -153,13 +153,13 @@ export const objToken: SystemStyleObject = { bg: 'blue.500' }
     )
   })
 
-  it('TYP-STRICT-06 StyleProps rejects off-token colors and nested r values', () => {
+  it('TYP-STRICT-07 StyleProps rejects off-token colors and nested r values', () => {
     for (const [prop, code] of REJECTED_PROPS) {
       expectRejectedWithDirective(tonesStrictDts, rejectionSource('StyleProps', prop), code)
     }
   })
 
-  it('TYP-STRICT-06 SystemStyleObject rejects the same values as StyleProps', () => {
+  it('TYP-STRICT-07 SystemStyleObject rejects the same values as StyleProps', () => {
     for (const [prop, code] of REJECTED_PROPS) {
       expectRejectedWithDirective(tonesStrictDts, rejectionSource('SystemStyleObject', prop), code)
     }
