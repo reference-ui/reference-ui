@@ -10,7 +10,7 @@
 use super::{colors_only_dts_with, style_dts, style_dts_with};
 use crate::{emit_dts, emit_dts_with, EmitOptions};
 
-const COLOR_HATCH: &str = "color?: StylePropValue<ColorToken | (string & {})>;";
+const COLOR_HATCH: &str = "color?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;";
 const SPACING_HATCH: &str = "p?: StylePropValue<SpacingToken | (string & {})>;";
 const RADIUS_HATCH: &str = "borderRadius?: StylePropValue<RadiusToken | (string & {})>;";
 const COLOR_WRAP: &str =

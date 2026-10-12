@@ -27,6 +27,7 @@ const WRAPPED_SYSTEM_STYLE_OBJECT_TAIL: &str = r#" & {
 
 const COLOR_VALUE_PARTS: &[&str] = &[
     "ColorToken",
+    "TonedColorToken",
     "'white'",
     "'black'",
     "'inherit'",

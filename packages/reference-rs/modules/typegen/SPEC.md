@@ -32,17 +32,17 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 | Metric | Status |
 | :--- | :--- |
 | Engine | Token / recipe / FontRegistry / FontProps / StyleProps / SystemStyleObject printer (`emit_dts(&BaseSystem)` open-mode; `emit_dts_with` for strict wrappers) + Core generator prototype (`refreshGeneratedTypesArtefact`, `renderSystemStyleObjectDts`) |
-| Named `[x]` | 28 / 28 contract IDs |
-| Named `[ ]` | 0 / 28 contract IDs |
-| Cargo tests | 35 (`src/tests/`) |
-| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–05 tsc fixtures in `modules/typegen/tests/` (`pnpm agentrs v typegen` **14**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
+| Named `[x]` | 34 / 34 contract IDs |
+| Named `[ ]` | 0 / 34 contract IDs |
+| Cargo tests | 73 (`src/tests/`) |
+| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–05 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/` (`pnpm agentrs v typegen` **51**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
 
-**Named proven:** `TYP-TOKEN-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`05`, `TYP-FORBID-01`–`06`.  
+**Named proven:** `TYP-TOKEN-01`–`06`, `TYP-TONE-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`05`, `TYP-FORBID-01`–`06`.  
 **Remaining unproven:** none.
 
 ### In the Tree
 
-- `packages/reference-rs/modules/typegen/src/lib.rs` exports `emit_dts(&BaseSystem)` (always open-mode) and `emit_dts_with(system, &EmitOptions { strict })`. Open emit prints category unions plus `Tokens`, `PascalCase(name)VariantProps`, `PascalCase(name)CompoundVariant` when a dump row's `when` is a subset of declared axes, `FontRegistry`, discriminated `FontProps`, and `StyleProps` when the dump has color/spacing tokens plus breakpoints. Style dumps also print recursive `SystemStyleObject` (`StyleProps` plus nested `StyleConditionKey` and `&${string}` selectors). Radius keys from canon (`*Radius`, excluding `webkit*`) print on StyleProps when the dump has a `radii` category; Panda `rounded*` is not invented. Empty categories / recipes are omitted (not `never`). A StyleProps dump without fonts still prints `FontRegistry {}` so `[FontName] extends [never]` falls back to `StylePropValue<string>` instead of collapsing StyleProps. Goldens: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`. Dump font weight keys are authored names (`bold`), not CSS numbers (`700`). Compound `css` is `{ [property: string]: string }`. Unknown compound axis/value rows are skipped. Multiple recipes share one emit string (`ButtonVariantProps` + `BadgeVariantProps`); there is no `recipes/` module tree, no `tokens.mjs`, and no `atomic` crate dependency. `canon` supplies color properties, padding/margin aliases, radius names, and `NAMED_CONDITIONS`. The token catalog dump has no breakpoints so `tokens.d.ts` stays token-only (no StyleProps / SystemStyleObject). StyleProps intersects `FontProps` and adds dialect `container` / recursive `r`; it does not dump `csstype.Properties` or import `@reference-ui/styled`. Open StyleProps keep `Token | (string & {})`. Strict names wrap `BaseSystemStyleObject` (`StyleProps`) as `StrictSpacingProps<StrictRadiiProps<StrictColorProps<…>>>` in declaration order, then intersect nested condition keys (a recursive wrap of the full object is TS2456). Unknown / duplicate strict names are skipped. `pnpm agentrs v typegen` typechecks consumer fixtures against the style goldens.
+- `packages/reference-rs/modules/typegen/src/lib.rs` exports `emit_dts(&BaseSystem)` (always open-mode) and `emit_dts_with(system, &EmitOptions { strict })`. Open emit prints category unions plus `Tokens`, `PascalCase(name)VariantProps`, `PascalCase(name)CompoundVariant` when a dump row's `when` is a subset of declared axes, `FontRegistry`, discriminated `FontProps`, and `StyleProps` when the dump has color/spacing tokens plus breakpoints. Style dumps also print recursive `SystemStyleObject` (`StyleProps` plus nested `StyleConditionKey` and `&${string}` selectors). Radius keys from canon (`*Radius`, excluding `webkit*`) print on StyleProps when the dump has a `radii` category; Panda `rounded*` is not invented. Empty categories / recipes are omitted (not `never`). A StyleProps dump without fonts still prints `FontRegistry {}` so `[FontName] extends [never]` falls back to `StylePropValue<string>` instead of collapsing StyleProps. Goldens: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`, `tones.d.ts`, `tones-strict.d.ts`. The `tones` category is known but is not a `CATEGORIES` row: it prints `ToneToken` from the sorted, deduped first path segment of each entry (`medium.surface`/`medium.line` → `medium`, flat `hush` → `hush`; `never` when absent) plus `TonedColorToken = \`${ColorToken}/${ToneToken}\``. `Tokens` always indexes `tones`, colour props accept `TonedColorToken` on top of the `(string & {})` hatch, and strict colour parts list `TonedColorToken` right after `ColorToken` (but `tones` is not a strict category). Dump font weight keys are authored names (`bold`), not CSS numbers (`700`). Compound `css` is `{ [property: string]: string }`. Unknown compound axis/value rows are skipped. Multiple recipes share one emit string (`ButtonVariantProps` + `BadgeVariantProps`); there is no `recipes/` module tree, no `tokens.mjs`, and no `atomic` crate dependency. `canon` supplies color properties, padding/margin aliases, radius names, and `NAMED_CONDITIONS`. The token catalog dump has no breakpoints so `tokens.d.ts` stays token-only (no StyleProps / SystemStyleObject). StyleProps intersects `FontProps` and adds dialect `container` / recursive `r`; it does not dump `csstype.Properties` or import `@reference-ui/styled`. Open StyleProps keep `Token | (string & {})`. Strict names wrap `BaseSystemStyleObject` (`StyleProps`) as `StrictSpacingProps<StrictRadiiProps<StrictColorProps<…>>>` in declaration order, then intersect nested condition keys (a recursive wrap of the full object is TS2456). Unknown / duplicate strict names are skipped. `pnpm agentrs v typegen` typechecks consumer fixtures against the style goldens.
 - `packages/reference-core/src/types/generators/fonts.ts` builds `FontRegistry` interfaces and injects them into package `.d.ts` declarations.
 - `packages/reference-core/src/types/generators/strict.ts` prints owned `BaseSystemStyleObject` from `csstype` plus canon aliases, then wraps with `StrictColorProps` / `StrictRadiiProps` based on `ui.config.ts`.
 - `packages/reference-core/src/types/public/` exposes `StyleProps`, `ReferenceProps`, `SafeColorProps`, and `SafeRadiiProps`.
@@ -131,6 +131,34 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 - [x] `TYP-TOKEN-06` `[reference]` `[unit]` —  
   **Typegen should assemble an aggregate Tokens dictionary indexing all category unions.**  
   Pass a `BaseSystem` containing multiple categories into typegen. Assert emitted declarations export an aggregate interface `Tokens` where `Tokens['colors']`, `Tokens['spacing']`, and `Tokens['radii']` index the respective category unions. The failure mode is structural drift that breaks token indexing in consumer libraries.
+
+---
+
+### Tone Unions (`TYP-TONE-*`)
+
+- [x] `TYP-TONE-01` `[reference]` `[unit]` —  
+  **Typegen should emit first-segment tone names and index them on `Tokens`.**  
+  Pass a `BaseSystem` declaring `tones` with nested per-role leaves (`medium.surface`, `medium.line`) and a flat leaf (`hush`). Assert `type ToneToken = 'hush' | 'medium'` — sorted, de-duplicated first path segments, never role leaves like `medium.surface` — and that `Tokens` carries `tones: ToneToken`. The failure mode is emitting full role paths or dropping flat leaves.
+
+- [x] `TYP-TONE-02` `[reference]` `[unit]` —  
+  **Typegen should print `never` for `ToneToken` when the system declares no tones.**  
+  Pass a `BaseSystem` with tokens and breakpoints but no `tones`. Assert `export type ToneToken = never;`, matching the core categories. The failure mode is omitting the alias, which would break `TonedColorToken`.
+
+- [x] `TYP-TONE-03` `[reference]` `[unit]` —  
+  **Typegen should emit the `TonedColorToken` template alias.**  
+  Assert `export type TonedColorToken = \`${ColorToken}/${ToneToken}\`;` directly after `ToneToken`. The failure mode is emitting the two aliases independently so `blue.500/medium` cannot form.
+
+- [x] `TYP-TONE-04` `[reference]` `[unit]` —  
+  **Typegen should treat `tones` as a known token category.**  
+  Emit a system with `tones` and assert there is no `TGN-W-UNKNOWN-TOKEN-CATEGORY` diagnostic. The failure mode is reporting the new category as unknown.
+
+- [x] `TYP-TONE-05` `[reference]` `[unit]` —  
+  **Typegen should add `TonedColorToken` to open colour StyleProps.**  
+  Assert colour props read `StylePropValue<ColorToken | TonedColorToken | (string & {})>`. The failure mode is leaving toned values out of the open union.
+
+- [x] `TYP-TONE-06` `[reference]` `[unit]` —  
+  **Typegen should add `TonedColorToken` to strict colour value parts, without making `tones` strict.**  
+  Assert `StrictColorValue` lists `TonedColorToken` right after `ColorToken` and that `strict: ['tones']` still reports `TGN-W-UNKNOWN-STRICT-CATEGORY`. The failure mode is a strict wrapper that rejects toned colours or an invented `StrictTonesProps`.
 
 ---
 
@@ -252,6 +280,15 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-TOKEN-04` | `[unit]` | `src/tests/tokens.rs::typ_token_04_emits_typography_token_unions` | `[x]` Proven |
 | `TYP-TOKEN-05` | `[unit]` | `src/tests/tokens.rs::typ_token_05_emits_shadow_and_z_index_unions` | `[x]` Proven |
 | `TYP-TOKEN-06` | `[unit]` | `src/tests/tokens.rs::typ_token_06_emits_aggregate_tokens_interface` | `[x]` Proven |
+| `TYP-TONE-01` | `[unit]` | `src/tests/tones.rs::typ_tone_01_emits_first_segment_tone_token` | `[x]` Proven |
+| `TYP-TONE-02` | `[unit]` | `src/tests/tones.rs::typ_tone_02_emits_never_without_tones` | `[x]` Proven |
+| `TYP-TONE-03` | `[unit]` | `src/tests/tones.rs::typ_tone_03_emits_toned_color_alias` | `[x]` Proven |
+| `TYP-TONE-04` | `[unit]` | `src/tests/tones.rs::typ_tone_04_tones_category_is_known` | `[x]` Proven |
+| `TYP-TONE-05` | `[unit]` | `src/tests/tones.rs::typ_tone_05_open_colour_prop_includes_toned_token` | `[x]` Proven |
+| `TYP-TONE-06` | `[unit]` | `src/tests/tones.rs::typ_tone_06_strict_colour_parts_include_toned_token` | `[x]` Proven |
+| `TYP-TONE-07` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-07`); `src/tests/goldens.rs::tones_matches_committed_golden` | `[x]` Proven |
+| `TYP-TONE-08` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-08`) | `[x]` Proven |
+| `TYP-TONE-09` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-09`) | `[x]` Proven |
 | `TYP-STYLE-01` | `[unit]` | `packages/reference-core/src/types/generators/strict.test.ts` (`TYP-STYLE-01`); `renderSystemStyleObjectDts` | `[x]` Proven |
 | `TYP-STYLE-02` | `[unit]` | `src/tests/style.rs::typ_style_02_narrows_style_props_with_aliases_and_tokens` | `[x]` Proven |
 | `TYP-STYLE-03` | `[unit]` | `src/tests/style.rs::typ_style_03_filters_viewport_keys_from_style_condition_key` | `[x]` Proven |

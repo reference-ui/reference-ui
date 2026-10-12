@@ -98,7 +98,7 @@ fn typ_font_03_falls_back_to_string_when_font_registry_is_empty() {
             "? FallbackFontProps",
             ": ScopedFontProps;",
             "export type StyleProps = FontProps & {",
-            "color?: StylePropValue<ColorToken | (string & {})>;",
+            "color?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;",
         ],
     );
     assert_absent(

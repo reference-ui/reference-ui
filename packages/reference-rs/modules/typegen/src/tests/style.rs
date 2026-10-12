@@ -13,7 +13,7 @@ use super::{catalog_dts, style_dts};
 use crate::primitives_vocabulary_json;
 use std::collections::BTreeSet;
 
-const COLOR_VALUE: &str = "StylePropValue<ColorToken | (string & {})>";
+const COLOR_VALUE: &str = "StylePropValue<ColorToken | TonedColorToken | (string & {})>";
 const SPACING_VALUE: &str = "StylePropValue<SpacingToken | (string & {})>";
 const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";

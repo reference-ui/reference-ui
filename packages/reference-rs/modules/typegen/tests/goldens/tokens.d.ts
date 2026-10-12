@@ -14,6 +14,10 @@ export type ShadowToken = 'md' | 'overlay' | 'sm';
 
 export type ZIndexToken = 'modal' | 'toast' | 'tooltip';
 
+export type ToneToken = never;
+
+export type TonedColorToken = `${ColorToken}/${ToneToken}`;
+
 export interface Tokens {
   colors: ColorToken;
   spacing: SpacingToken;
@@ -23,4 +27,5 @@ export interface Tokens {
   lineHeights: LineHeightToken;
   shadows: ShadowToken;
   zIndex: ZIndexToken;
+  tones: ToneToken;
 }

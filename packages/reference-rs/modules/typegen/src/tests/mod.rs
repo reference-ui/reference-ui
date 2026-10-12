@@ -19,8 +19,9 @@ mod recipes;
 mod strict;
 mod style;
 mod tokens;
+mod tones;
 
-use fixtures::{CATALOG_JSON, COMPOUND_JSON, FONT_JSON, RECIPE_JSON, TWO_RECIPE_JSON};
+use fixtures::{CATALOG_JSON, COMPOUND_JSON, FONT_JSON, RECIPE_JSON, TONES_JSON, TWO_RECIPE_JSON};
 
 fn catalog_system() -> BaseSystem {
     parse_dump(CATALOG_JSON, "catalog")
@@ -109,6 +110,23 @@ fn font_dts() -> String {
 
 fn two_recipe_dts() -> String {
     emit_dts(&two_recipe_system())
+}
+
+fn tones_system() -> BaseSystem {
+    parse_dump(TONES_JSON, "tones")
+}
+
+fn tones_dts() -> String {
+    emit_dts(&tones_system())
+}
+
+fn tones_strict_dts() -> String {
+    emit_dts_with(
+        &tones_system(),
+        &EmitOptions {
+            strict: vec!["colors".to_string()],
+        },
+    )
 }
 
 fn style_dump_json() -> String {

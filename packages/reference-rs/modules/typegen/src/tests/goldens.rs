@@ -8,7 +8,7 @@
 
 use super::{
     assert_matches_golden, catalog_dts, compound_dts, font_dts, font_style_dts, recipe_dts,
-    style_dts, style_strict_dts,
+    style_dts, style_strict_dts, tones_dts, tones_strict_dts,
 };
 
 /// Committed `tests/goldens/tokens.d.ts` matches `emit_dts` for the catalog dump.
@@ -88,9 +88,34 @@ fn style_strict_matches_committed_golden() {
         "strict golden must wrap BaseSystemStyleObject in declaration order:\n{actual}"
     );
     assert!(
-        actual.contains("color?: StylePropValue<ColorToken | (string & {})>")
+        actual.contains("color?: StylePropValue<ColorToken | TonedColorToken | (string & {})>")
             && actual.contains("p?: StylePropValue<SpacingToken | (string & {})>"),
         "strict golden still prints the open hatch on StyleProps:\n{actual}"
     );
     assert_matches_golden("styles-strict.d.ts", &actual);
+}
+
+/// Committed `tests/goldens/tones.d.ts` matches `emit_dts` for the tones dump.
+#[test]
+fn tones_matches_committed_golden() {
+    let actual = tones_dts();
+    assert!(
+        actual.contains("export type ToneToken = 'hush' | 'medium';")
+            && actual.contains("export type TonedColorToken = `${ColorToken}/${ToneToken}`;")
+            && actual.contains("  bg?: StylePropValue<ColorToken | TonedColorToken | (string & {})>;"),
+        "tones golden must carry the tone aliases and toned colour prop:\n{actual}"
+    );
+    assert_matches_golden("tones.d.ts", &actual);
+}
+
+/// Committed `tests/goldens/tones-strict.d.ts` matches strict-colors tones emit.
+#[test]
+fn tones_strict_matches_committed_golden() {
+    let actual = tones_strict_dts();
+    assert!(
+        actual.contains("export type SystemStyleObject = StrictColorProps<BaseSystemStyleObject> & {")
+            && actual.contains("  | ColorToken\n  | TonedColorToken\n"),
+        "tones strict golden must wrap colors and add TonedColorToken:\n{actual}"
+    );
+    assert_matches_golden("tones-strict.d.ts", &actual);
 }

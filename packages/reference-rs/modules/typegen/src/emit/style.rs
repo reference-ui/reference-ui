@@ -4,7 +4,8 @@
 //! canonical name plus every alias plus reference props, minus
 //! `variant`/`colorMode`): keys follow the compiler, values follow the token
 //! spec. Color, spacing, and radius keys keep their token unions with the
-//! `(string & {})` hatch; every other key takes
+//! `(string & {})` hatch; color values also carry `TonedColorToken` so
+//! `bg="blue.500/medium"` typechecks; every other key takes
 //! `StylePropValue<string | number>`, and a `` `--${string}` `` index covers
 //! custom properties. Raw CSS `font` and `weight` stay omitted (`FontProps`
 //! owns them); strict wrappers emit only for token-present categories, and
@@ -18,7 +19,7 @@ use crate::EmitOptions;
 use base_system::BaseSystem;
 use std::collections::{BTreeMap, BTreeSet};
 
-const COLOR_VALUE: &str = "StylePropValue<ColorToken | (string & {})>";
+const COLOR_VALUE: &str = "StylePropValue<ColorToken | TonedColorToken | (string & {})>";
 const SPACING_VALUE: &str = "StylePropValue<SpacingToken | (string & {})>";
 const RADIUS_VALUE: &str = "StylePropValue<RadiusToken | (string & {})>";
 const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";

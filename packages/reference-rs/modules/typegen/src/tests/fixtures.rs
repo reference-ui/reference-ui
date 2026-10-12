@@ -91,6 +91,22 @@ pub(super) const FONT_JSON: &str = r##"{
   }
 }"##;
 
+pub(super) const TONES_JSON: &str = r##"{
+  "tokens": {
+    "colors": {
+      "blue": { "500": { "value": "#2563eb" } }
+    },
+    "tones": {
+      "medium": {
+        "surface": { "value": "10%" },
+        "line": { "value": "34%" }
+      },
+      "hush": { "value": "6%" }
+    }
+  },
+  "breakpoints": { "sm": "640px" }
+}"##;
+
 pub(super) const TWO_RECIPE_JSON: &str = r##"{
   "recipes": {
     "button": {

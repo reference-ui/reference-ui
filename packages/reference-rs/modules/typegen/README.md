@@ -21,7 +21,13 @@ typechecks. The type does not care whether the engine will print `.bg_n300`.
 `emit_dts(&BaseSystem)` prints exported category unions (`ColorToken`,
 `SpacingToken`, …) plus an aggregate `Tokens` interface indexed by dump
 category names (`colors`, `fontSizes`, `zIndex`). Literals are category-relative
-(`brand.primary`, not `colors.brand.primary`), sorted unique, and quoted.
+(`brand.primary`, not `colors.brand.primary`), sorted unique, and quoted. The
+`tones` category is a special station: `ToneToken` is the sorted, deduped
+**first** path segment of each `tones` entry (`medium.surface`/`medium.line` →
+`medium`; flat `hush` → `hush`), never the full role leaf, and
+`TonedColorToken` is the template `` `${ColorToken}/${ToneToken}` ``. `Tokens`
+always indexes `tones`, and colour props accept `TonedColorToken` so
+`bg="blue.500/medium"` typechecks.
 Recipes become `ButtonVariantProps`-style aliases with optional axes. A dump
 that lists a valid `compoundVariants` row also prints `ButtonCompoundVariant`
 with the same optional axis unions plus a `css` declaration map. Fonts
@@ -60,7 +66,7 @@ system either way.
 
 ## Goldens
 
-Committed snapshots: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`.
+Committed snapshots: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`, `tones.d.ts`, `tones-strict.d.ts`.
 Tests assert equality against `emit_dts` (open) or `emit_dts_with` (strict). Refresh is opt-in:
 
 ```bash
@@ -70,7 +76,9 @@ TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen
 A normal `pnpm agentrs c typegen` run never rewrites the files. The token
 golden stays token-only; StyleProps and SystemStyleObject live on `styles.d.ts`
 (empty fonts) and `styles-fonts.d.ts` (populated dump keys). `styles-strict.d.ts`
-is `strict: ['colors', 'radii', 'spacing']`. Open goldens keep `(string & {})`.
+is `strict: ['colors', 'radii', 'spacing']`. `tones.d.ts` and
+`tones-strict.d.ts` are a colour-plus-tones dump in open and `strict: ['colors']`
+mode. Open goldens keep `(string & {})`.
 `pnpm agentrs v typegen` runs tsc consumer fixtures against those goldens.
 
 ## Verify
