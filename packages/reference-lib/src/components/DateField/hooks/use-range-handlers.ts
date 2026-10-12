@@ -16,8 +16,8 @@ import {
   parseLocalDate,
 } from '../engine/parse'
 import { resolveStep } from '../engine/stepping'
-import { restoreCaretAt } from '../shared/caret'
 import type { DateFieldRangeEndpoint } from '../types'
+import { useCaretRestoration } from './use-caret-restoration'
 
 export interface RangeHandlersOptions {
   disabled: boolean
@@ -65,6 +65,8 @@ export function useRangeHandlers(options: RangeHandlersOptions) {
     cancelRange,
     checkLivePublish,
   } = options
+
+  const requestCaretRestore = useCaretRestoration()
 
   const handleEndpointInput = React.useCallback(
     (endpoint: DateFieldRangeEndpoint, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +141,7 @@ export function useRangeHandlers(options: RangeHandlersOptions) {
         setFailed(false)
         setPaneMonthState(step.stepped.slice(0, 7) as ISOMonth)
         checkLivePublish(next)
-        restoreCaretAt(input, Math.min(caret, next[endpoint].length))
+        requestCaretRestore(input, Math.min(caret, next[endpoint].length))
       }
     },
     [
@@ -161,6 +163,7 @@ export function useRangeHandlers(options: RangeHandlersOptions) {
       setFailed,
       setIsDirty,
       setPaneMonthState,
+      requestCaretRestore,
     ]
   )
 

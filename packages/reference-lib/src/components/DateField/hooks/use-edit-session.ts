@@ -16,7 +16,7 @@ import {
   parseLocalDate,
 } from '../engine/parse'
 import { resolveStep } from '../engine/stepping'
-import { restoreCaretAt } from '../shared/caret'
+import { useCaretRestoration } from './use-caret-restoration'
 import { useFormObservers } from './use-form-observers'
 
 export interface EditSessionOptions {
@@ -75,6 +75,7 @@ export function useEditSession(options: EditSessionOptions) {
   const isComposingRef = React.useRef(false)
 
   const inputRef = React.useRef<HTMLInputElement | null>(null)
+  const requestCaretRestore = useCaretRestoration()
 
   // Live value / locale synchronization (DF-CMT-04/05/06): a programmatic
   // change replaces the buffer from latest controlled state — except an
@@ -274,7 +275,7 @@ export function useEditSession(options: EditSessionOptions) {
         setIsDirty(false)
         setHasFailedBoundary(false)
         // Keep the caret in the stepped segment for repeated steps.
-        restoreCaretAt(input, Math.min(caret, step.nextText.length))
+        requestCaretRestore(input, Math.min(caret, step.nextText.length))
       }
     },
     [
@@ -291,6 +292,7 @@ export function useEditSession(options: EditSessionOptions) {
       max,
       isDateUnavailable,
       onChange,
+      requestCaretRestore,
     ]
   )
 
