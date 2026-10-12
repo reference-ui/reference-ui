@@ -19,16 +19,8 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
-| Serial `sync()` speed in `packages/reference-rs` (diets, swarm, VOYAGE) | `agent-perf` skill (Memex `perf` collection) |
+| Serial `sync()` speed in `packages/reference-rs` (diets, alloc kills, lookup restructure) | `agent-perf` skill: the perf index and its tools (Memex `perf` collection) |
 | Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
-
-Independent architecture review is available as the **Oracle**
-(`.agents/skills/oracle/SKILL.md`): read-only Muse Spark 1.3 at the
-**Contributor** tier (Max effort), which is the right tier because Reference UI
-is open source. Muse Spark is not an OpenChamber model, so the `oracle` agent
-(`.opencode/agents/oracle.md`) carries the CLI call as a **context firewall**
-and returns one status line. The captain dispatches it; it never runs in the
-captain's session.
 
 If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
 
@@ -38,7 +30,7 @@ If a lib-component task also modified `packages/reference-core`, finish `test-co
 
 Whenever an agent needs to SEE a component in `@reference-ui/lib`:
 - **Activate the `view-story` skill** (`.agents/skills/view-story/SKILL.md`).
-- Standard eyes are native Chrome DevTools MCP against Book.
+- Standard eyes are the built-in browser against Book.
 - Embed screenshots directly in chat. Seeing is not verifying — proof
   belongs to `test-component` (`pnpm agentct`).
 
@@ -53,8 +45,8 @@ modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> Agents MAY run `pnpm dev:lib` themselves (HQ 2026-09-18 — rescinds the
-> former do-not-start rule). Single instance only: check port 5000 first
+> Agents MAY run `pnpm dev:lib` themselves (rescinds the former
+> do-not-start rule). Single instance only: check port 5000 first
 > (`curl -s -o /dev/null -w '%{http_code}' localhost:5000`); if it is already
 > up, use it instead of starting a second. Prefer the managed background
 > session so logs stay inspectable, and stop only processes you started.
@@ -66,40 +58,25 @@ modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
 > [!CAUTION]
 > **NEVER write hand-rolled browser scripts or one-liners** such as:
 > `node -e "const { chromium } = require('playwright'); ..."`
-> Use the native Chrome DevTools MCP tools. Every agent understands
-> them; bespoke capture clients are retired.
+> Use the built-in browser; bespoke capture clients are retired.
 
 ### Standard viewing moves
 
 1. Ensure the target server is up — Book `:5000` (`view-story`), docs
    `:5174`, playground `:5199` (`pnpm playground`). Single instance
    each; if one is already up, use it instead of starting a second.
-2. `navigate_page` to the story / route / page.
-3. `take_snapshot` for refs, `take_screenshot` for pixels.
-4. `evaluate_script` for computed CSS and boxes; `click` / `fill` /
-   `press_key` / `hover` to interact; re-screenshot.
-5. `list_console_messages` before trusting pixels — a throwing page
+2. `navigate` to the story / route / page.
+3. `read_page` or `get_page_text` for refs and text, `computer`
+   screenshot for pixels.
+4. `javascript_tool` for computed CSS and boxes; `computer` click /
+   type / key / hover to interact; screenshot again.
+5. `read_console_messages` before trusting pixels — a throwing page
    renders a lie.
 
-Screenshots come back inline from `take_screenshot` only for hosts whose
-browser returns images inline (DevTools-MCP agents, Claude); **always embed
-those directly into your response**. opencode agents get no inline image —
-`cdt` saves a file and prints `saved: <path>` — so open that path with your
-file-read tool to see the screenshot.
-
-Do not pass `filePath` to `take_screenshot` unless an image must be kept.
-When one must, save it under the repository-root `.screenshots/`: the one
-gitignored place for agent snapshots, never nested inside a package. Kept
-files are temporary.
-
-Skills name the DevTools tools. Each host maps them to its own browser;
-this table is the one place that mapping lives:
-
-| Host | Browser tools |
-| --- | --- |
-| DevTools-MCP agents (Codex, Cursor, …) | the DevTools tools as written: `navigate_page`, `take_snapshot`, `take_screenshot`, `evaluate_script`, `list_console_messages` |
-| opencode | no DevTools MCP: the `browser-tools` skill. `cdt <same tool name and args>` (`cdt take_snapshot 1`, `cdt evaluate_script '<fn>' --pageId 1`) starts its own browser and keeps files under `.screenshots/`, deleting them after seven days |
-| Claude (desktop / Code) | its built-in browser: `read_page` / `get_page_text` for snapshots, `javascript_tool` for scripts, `computer` screenshot for pixels, `read_console_messages`; images come back inline and no files are written |
+Built-in browser screenshots come back inline; **always embed them directly
+into your response**. When a screenshot must be kept as a file, save it under
+the repository-root `.screenshots/`: the one gitignored place for agent
+snapshots, never nested inside a package. Kept files are temporary.
 
 Browser tools are for design work and playtests. A failing Playwright test is
 debugged from its own artifacts instead: failure screenshots, `frames.png`
@@ -112,11 +89,6 @@ text with `npx playwright trace open <trace.zip>` then `errors` / `actions` /
 ## 3. Core / Matrix Verification (`test-core`, `pnpm agent`)
 
 `test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `packages/reference-core` or need hermetic matrix proof. Do not use `test-component` / `pnpm agentct` for core.
-
-> [!TIP]
-> **macOS QoS Jailbreak & Fast Runner**:
-> Antigravity IDE subshells inherit Darwin background QoS (`PRI 31`).
-> Use the `test-core` CLI (`pnpm agent`) to run commands at full interactive performance (`PRI 46`), unthrottled I/O, and with non-TTY progress unbuffering.
 
 ```bash
 # 0. Check runner & daemon status:
@@ -151,10 +123,6 @@ pnpm pipeline test --packages=@matrix/<package>
 > - **Always use `pnpm agent playwright` / `pnpm agent vitest`** for fast native iteration.
 > - **Use `pnpm agent test --packages=@matrix/<package>`** when you need full, hermetic multi-runtime/bundler matrix validation in Dagger containers.
 > - After a `packages/reference-core` change, this section is the proof path — not `pnpm agentct`.
-
-> [!NOTE]
-> **Terminal Bridge Mode (Optional)**:
-> If you have an external terminal open, run `pnpm agent daemon`. The agent will automatically route heavy test runs through your native terminal session over a local socket (`/tmp/reference-ui-agent.sock`). If the daemon is inactive, `pnpm agent` executes directly with `taskpolicy -a` QoS elevation.
 
 ---
 
@@ -203,7 +171,7 @@ pnpm agentrs                                                 # bare command runs
 > 7. **Top-of-file commentary**: 2–6 sentences at the top (`//!` / `/**`) describing what the file does, takes, and emits. Tiny types can be 2 sentences; a walker or lowering pass can be 4–6. No lazy one-liners, not an essay.
 > 8. **Inline comments stay terse**: Explain *why*, not *what*. The file header is the paragraph; function bodies are not.
 > 9. **README rule**: Module-level `README.md` must describe overall architecture, never directory tables of filenames.
-> 10. **Queue & Concurrency**: Multi-agent overnight runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
+> 10. **Queue & Concurrency**: Concurrent runs coordinate via `/tmp/reference-ui-cpu-gate`. Do not bypass `pnpm agentrs`.
 
 ---
 

@@ -178,17 +178,16 @@ Nothing here gates anything.
 pnpm playground                                # sync fresh, serve :5199 until killed
 ```
 
-View it through Chrome DevTools MCP against the serving instance:
-`navigate_page` to `http://localhost:5199/?theme=dark#/<route>`,
-`take_screenshot`, then `list_console_messages` — a throwing page
+View it in the built-in browser against the serving instance:
+`navigate` to `http://localhost:5199/?theme=dark#/<route>`,
+`computer` screenshot, then `read_console_messages` — a throwing page
 renders a lie. Theme flips via `?theme=light`; routes come from
 `src/pages/*.tsx`.
-Outside DevTools-MCP hosts, map these tool names through the host table in `AGENTS.md` section 2.
 
 - The shell is dark by default with a light/dark toggle in the sidebar
   header. It stamps `data-color-mode` on `<html>` and syncs `?theme=`, so the
   engine's token islands and `_dark` wraps respond. Confirm the stamp
-  and the console yourself via `evaluate_script` / `list_console_messages`.
+  and the console yourself via `javascript_tool` / `read_console_messages`.
 - Mini token set (`src/tokens.ts`): tailwind's palette verbatim (oklch),
   plus `ink`/`paper`/`brand` with dark leaves (they flip automatically —
   no twins needed), spacing, and lib's radii.
@@ -199,17 +198,17 @@ Outside DevTools-MCP hosts, map these tool names through the host table in `AGEN
   React and exports no hooks — a second copy breaks every hook call.
   The shell is hook-free (`createRoot` + explicit render); keep it that
   way.
-- Cooks may add scratch pages; never restructure the shell architecture or
-  the token set. The captain owns those.
-- Presentation duty: the playground is HQ's window into the voyage. After a
-  slice lands, its cook adds or extends a page showing the landed behavior,
-  named for the case id, screenshots it via DevTools, and takes pride in it:
+- You may add scratch pages; never restructure the shell architecture or
+  the token set.
+- Presentation duty: the playground is the window onto the engine. After a
+  slice lands, add or extend a page showing the landed behavior, named for
+  the case id, screenshot it in the built-in browser, and take pride in it:
   make it sharp and futuristic with whatever the system can do today — states,
-  hovers, animations as they land — so HQ sees the engine showing off, not
-  demos in a shabby shell. Surface polish to the shell itself (menu, demo
-  list, toggle) is welcome slice by slice; architecture stays the captain's.
+  hovers, animations as they land — so the engine shows off, not demos in a
+  shabby shell. Surface polish to the shell itself (menu, demo list, toggle)
+  is welcome slice by slice; architecture stays with the maintainers.
   This is presentation, not process: verify with cases and Playwright however
-  works — nothing here gates anything. Oracles confirm the page exists,
+  works — nothing here gates anything. Checks confirm the page exists,
   matches the claim, and the console is clean.
 
 ## 9. Retirement Clause

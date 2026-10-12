@@ -21,7 +21,7 @@ Do **not** use `pnpm agentct` / `test-component` for that work. That skill only 
 
 ## 1. Why the CLI exists: the subshell QoS clamp
 
-Processes spawned by Antigravity IDE on macOS inherit Darwin's background Utility QoS tier (`PRI 31`, flags `4004`). In this tier:
+Processes spawned from an IDE subshell on macOS inherit Darwin's background Utility QoS tier (`PRI 31`, flags `4004`). In this tier:
 - Darwin limits thread scheduling across Performance cores (P-cores).
 - Disk and socket I/O are throttled (`IOPOL_THROTTLE`), severely slowing down Dagger engine RPCs and Docker container operations (`buildctl dial-stdio`).
 - TTY progress spinners (`ora` / `\r`) buffer and appear frozen in agent logs.
@@ -121,31 +121,17 @@ await runPipeline('clean')
 
 ---
 
-## 3. Optional Terminal Bridge Daemon Mode
+## 3. Shared CPU Gate
 
-If you prefer to run heavy test workloads 100% inside your external terminal window (similar to running `pnpm dev:lib` in terminal):
-
-1. In your external terminal, run:
-   ```bash
-   pnpm agent daemon
-   ```
-2. The daemon listens on a local Unix domain socket (`/tmp/reference-ui-agent.sock`).
-3. Whenever an agent or subshell runs `pnpm agent test` or `pnpm agent verify`, it automatically detects the running daemon and delegates execution straight to your external terminal session, streaming stdout/stderr back into the agent!
-4. If the daemon is not running, it automatically and transparently falls back to direct unthrottled execution with `taskpolicy -a`.
-
----
-
-## 4. Multi-Agent Shared CPU Gate
-
-When multiple agents or processes request matrix tests or component verifications simultaneously, `test-core` and `test-component` coordinate through a shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
+When multiple processes request matrix tests or component verifications at the same time, `test-core` and `test-component` coordinate through a shared **CPU Gate** (`/tmp/reference-ui-cpu-gate`):
 - **Two Queue Classes**: Component CT (`agentct`) uses the `ct` class (up to 3 parallel slots), while Matrix/Dagger/Verify uses the `exclusive` class.
 - **Zero Parallel Crashes**: Prevents concurrent Docker / Dagger engine or port collisions by pausing CT while Matrix runs, and vice versa.
-- **Cross-Process File Lock**: Uses an atomic file-based ticket lock across all OS subshells and agent sessions.
-- **Live Status Reporting**: Waiting agents and developers receive regular updates (`[cpu-gate] Waiting for cpu gate (exclusive). Active: ct(12345)`).
+- **Cross-Process File Lock**: Uses an atomic file-based ticket lock across all OS subshells and sessions.
+- **Live Status Reporting**: Waiting runs and developers receive regular updates (`[cpu-gate] Waiting for cpu gate (exclusive). Active: ct(12345)`).
 
 ---
 
-## 5. Memex (`cases` + `surfaces` collections)
+## 4. Memex (`cases` + `surfaces` collections)
 
 Memex is the one agent CLI over every collection
 (`.agents/memex/README.md`): neo cases live in `cases`, RS module

@@ -7,9 +7,9 @@ Master engineering standards and strict architectural invariants for all 24 comp
 ## 1. Dev Server & Local Environment Policy
 
 > [!IMPORTANT]
-> Agents MAY run `pnpm dev:lib` themselves — see root `AGENTS.md` §1
-> (Dev Server & Local Environment Policy): single instance only, check port
-> 5000 first, and stop only processes you started.
+> `pnpm dev:lib` is single-instance (port 5000). See root `AGENTS.md` §1
+> (Dev Server & Local Environment Policy): check port 5000 first, and stop
+> only processes you started.
 
 ---
 
