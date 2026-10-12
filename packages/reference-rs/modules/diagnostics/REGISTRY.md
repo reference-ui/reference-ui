@@ -28,7 +28,7 @@ consumers never break on codes minted after they shipped.
 | Namespace | Owner       | Status                                                 |
 | --------- | ----------- | ------------------------------------------------------ |
 | `RS`      | template    | Self: `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` for tests and docs only; never emitted by shipped code |
-| `ATM`     | atomic      | Live: 50-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
+| `ATM`     | atomic      | Live: 52-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
 | `TST`     | tasty       | Live: 6-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, and manifest warnings plus the scan refusal |
 | `STT`     | styletrace  | Live: 3-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips plus the scan and surface refusals |
@@ -148,6 +148,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | A compile request carrying both `files` and a `retentionToken` | `modules/atomic/src/sources.rs` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | A `retentionToken` that names no live retention | `modules/atomic/src/sources.rs` |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | A `retentionToken` drained by an earlier compile | `modules/atomic/src/sources.rs` |
+| `ATM-W-UNKNOWN-TONE` | A named tone that is undeclared or whose value is not a usable percentage | `modules/atomic/src/resolve/tokens/mod.rs` |
 | `RS-W-EXAMPLE-TOKEN` | Template test/doc placeholder; never shipped | `modules/diagnostics` tests |
 | `RS-E-EXAMPLE-BOOM` | Template test/doc placeholder; never shipped | `modules/diagnostics` tests |
 | `TST-W-PARSE-ERROR` | A file failed to parse; extraction keeps the recoverable shells | `modules/tasty/src/ast/extract/pipeline.rs` |

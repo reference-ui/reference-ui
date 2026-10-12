@@ -65,8 +65,16 @@ fn token_suggestion(token: &TokenDetail, system: &BaseSystem) -> Option<Box<str>
     match token {
         TokenDetail::UnknownTokenPath { path } => suggest_token_path(path, system),
         TokenDetail::UnknownColor { text } => suggest_color(text, system),
+        TokenDetail::UnknownTone { tone, .. } => suggest_tone(tone, system),
         _ => None,
     }
+}
+
+/// The closest declared tone name to a bad tone, over the first segments after
+/// `tones.` in the theme (the name an author would write after the slash).
+fn suggest_tone(tone: &str, system: &BaseSystem) -> Option<Box<str>> {
+    let candidates = crate::resolve::tokens::tones::tone_names(system);
+    gated(DiagnosticCode::UnknownTone, tone, &candidates)
 }
 
 /// True when the outcome's code may carry a suggestion: the gate reads the

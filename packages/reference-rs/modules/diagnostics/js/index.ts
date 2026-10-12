@@ -296,6 +296,8 @@ const WARNING_HINTS: Record<string, string> = {
   'ATM-W-UNKNOWN-TOKEN-PATH': 'point the path at an existing token',
   'ATM-W-TOKEN-CATEGORY-MISMATCH': 'use a token from the matching category',
   'ATM-W-UNKNOWN-COLOR': 'use a color token or a CSS color',
+  'ATM-W-UNKNOWN-TONE':
+    "declare the tone with tokens({ tones: { …: { value: '10%' } } }) or use /<0-100>",
   'ATM-W-UNTERMINATED-BRACE': 'close the { brace in the value',
   'ATM-W-STATIC-WILDCARD': 'use a concrete value; this prop has no token category',
   'ATM-W-EMPTY-AT-RULE': 'fill in the at-rule query or drop the key',
@@ -343,6 +345,7 @@ export const SUGGESTION_CODES: readonly string[] = [
   'ATM-W-UNKNOWN-CONDITION',
   'ATM-W-UNKNOWN-TOKEN-PATH',
   'ATM-W-UNKNOWN-COLOR',
+  'ATM-W-UNKNOWN-TONE',
   'ATM-E-UNKNOWN-TOKEN',
   'TGN-W-UNKNOWN-TOKEN-CATEGORY',
   'TGN-W-UNKNOWN-STRICT-CATEGORY',

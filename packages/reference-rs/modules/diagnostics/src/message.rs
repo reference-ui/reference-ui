@@ -40,6 +40,7 @@ pub const SUGGESTION_CODES: &[&str] = &[
     "ATM-W-UNKNOWN-CONDITION",
     "ATM-W-UNKNOWN-TOKEN-PATH",
     "ATM-W-UNKNOWN-COLOR",
+    "ATM-W-UNKNOWN-TONE",
     "ATM-E-UNKNOWN-TOKEN",
     "TGN-W-UNKNOWN-TOKEN-CATEGORY",
     "TGN-W-UNKNOWN-STRICT-CATEGORY",
@@ -156,7 +157,7 @@ mod tests {
     #[test]
     fn suggestion_codes_are_registered_and_stable() {
         use crate::code::DiagnosticCode;
-        assert_eq!(SUGGESTION_CODES.len(), 8);
+        assert_eq!(SUGGESTION_CODES.len(), 9);
         for code in SUGGESTION_CODES {
             let parsed = DiagnosticCode::parse(code).unwrap();
             assert!(parsed.is_registered_namespace());

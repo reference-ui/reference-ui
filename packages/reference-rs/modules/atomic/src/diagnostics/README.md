@@ -138,6 +138,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-E-CONFLICTING-SCAN-INPUTS` | default | Request with both `files` and `retentionToken` |
 | `ATM-E-UNKNOWN-RETENTION-TOKEN` | default | Request with a never-minted token |
 | `ATM-E-DRAINED-RETENTION-TOKEN` | default | Request reusing a drained token |
+| `ATM-W-UNKNOWN-TONE` | default | `css({ color: 'blue.500/mediun' })` |
 
 ## Must not
 

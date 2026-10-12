@@ -9,7 +9,7 @@
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
-use super::{format_entry, split_opacity};
+use super::{format_entry, split_opacity, tones};
 
 /// Outcome of expanding `{path}` segments inside a composite value.
 pub enum BraceExpansion {
@@ -88,17 +88,60 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
         };
         let inner = after[..close].trim();
         let (path, opacity) = split_opacity(inner);
-        match self.session.system.token(path) {
-            Some(entry) if !path.is_empty() => {
+        if !path.is_empty() {
+            if let Some(entry) = self.session.system.token(path) {
                 self.out.push_str(&format_entry(entry, opacity));
+                return Some(&after[close + 1..]);
             }
-            _ => {
-                if self.keep_raw_segment(rest, open, close, inner) {
-                    return None;
+            if opacity.is_none() {
+                if let Some(tone) = self.expand_tone(inner) {
+                    let Some(css) = tone else {
+                        return None;
+                    };
+                    self.out.push_str(&css);
+                    return Some(&after[close + 1..]);
                 }
             }
         }
+        if self.keep_raw_segment(rest, open, close, inner) {
+            return None;
+        }
         Some(&after[close + 1..])
+    }
+
+    /// Try the tone path for one brace segment: `{base/name}` over a declared
+    /// colours token, using the outer property's role. None when the segment is
+    /// not a tone reference; Some(Some(css)) with the resolved mix; Some(None)
+    /// after pushing an error when the tone is unknown or unusable, which drops
+    /// the whole atom.
+    fn expand_tone(&mut self, inner: &str) -> Option<Option<String>> {
+        let (base, name) = tones::split_tone_reference(inner)?;
+        let entry = self.session.system.token(base)?;
+        if entry.category() != "colors" {
+            return None;
+        }
+        match tones::resolve(self.session.system, self.prop, entry, name) {
+            Some(css) => Some(Some(css)),
+            None => {
+                self.push_unknown_tone(name, inner);
+                Some(None)
+            }
+        }
+    }
+
+    /// Drop the atom with an Error naming the unknown tone and, when one is
+    /// near, the did-you-mean. Reuses the missing-reference code so severity
+    /// stays Error without minting a second error code for the brace case.
+    fn push_unknown_tone(&mut self, name: &str, inner: &str) {
+        let mut message = format!("unknown tone `{name}` in `{{{inner}}}`");
+        if let Some(near) = tones::nearest(self.session.system, name) {
+            message.push_str(&format!(" (did you mean `{near}`?)"));
+        }
+        let diagnostic = self
+            .session
+            .location
+            .error(DiagnosticCode::UnknownTokenReference, message);
+        self.session.diagnostics.push(diagnostic);
     }
 
     /// Keep an unresolvable segment verbatim. True when the segment named a

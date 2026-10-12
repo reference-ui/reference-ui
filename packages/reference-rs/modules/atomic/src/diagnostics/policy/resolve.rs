@@ -102,10 +102,21 @@ fn token_help(suggestion: Option<&str>, detail: &TokenDetail) -> Vec<String> {
             suggestion,
             "use a color token or CSS color".to_string(),
         ),
+        TokenDetail::UnknownTone { tone, .. } => {
+            crate::resolve::suggest::suggestion_lines(suggestion, tone_fix(tone))
+        }
         TokenDetail::UnterminatedBrace { value } => {
             vec![format!("close the '{{' in '{value}'")]
         }
     }
+}
+
+/// The fix line for an unknown tone: how to declare it, with the percentage
+/// shape spelled out, plus the numeric-opacity escape hatch.
+fn tone_fix(tone: &str) -> String {
+    format!(
+        "declare it with tokens({{ tones: {{ {tone}: {{ surface: {{ value: '10%' }}, line: {{ value: '34%' }} }} }} }}) — tone values are percentages — or use /<0-100>"
+    )
 }
 
 /// The sentence for one declaration-shape refusal.
@@ -163,6 +174,9 @@ fn token_sentence(detail: &TokenDetail) -> String {
         }
         TokenDetail::UnknownColor { text } => {
             format!("`{text}` is neither a color token nor a CSS color")
+        }
+        TokenDetail::UnknownTone { text, tone } => {
+            format!("unknown tone `{tone}` in `{text}`")
         }
         TokenDetail::UnterminatedBrace { value } => {
             format!("unterminated `{{` in value `{value}`")

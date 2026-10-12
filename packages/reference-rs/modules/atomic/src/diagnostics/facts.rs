@@ -214,6 +214,8 @@ pub enum TokenDetail {
     UnknownTokenPath { path: Box<str> },
     /// `` `{text}` is neither a color token nor a CSS color ``.
     UnknownColor { text: Box<str> },
+    /// ``unknown tone `{tone}` in `{text}` `` (`text` is the authored value).
+    UnknownTone { text: Box<str>, tone: Box<str> },
     /// ``unterminated `{` in value `{value}` ``.
     UnterminatedBrace { value: Box<str> },
 }

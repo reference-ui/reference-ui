@@ -14,6 +14,15 @@ Examples:
 - bare misses pass through silently off color props; on color props they
   warn `ATM-W-UNKNOWN-COLOR` (`ATM-TOKEN-16`)
 
+A **tone** names a colour at a theme-owned opacity: `blue.500/medium` emits
+`color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent)`.
+Tones are ordinary `tones`-category tokens whose value is a percentage (`10%`,
+`12.5%`) or a reference to another tone. The property receiving the value picks
+the role: `border*` / `outline*` / strokes / text draw `line`, everything else
+draws `surface`. Lookup tries `tones.N.line|surface`, then the flat `tones.N`,
+then `tones.N.surface`. On a bare value an unknown or unusable tone warns and
+stays raw; inside `{…}` it is an error that drops the atom.
+
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
 in reference-core / Atlas. This module **looks up** the compiled dictionary
 from `BaseSystem`. It does not become a second color science crate.

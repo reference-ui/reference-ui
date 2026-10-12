@@ -15,8 +15,13 @@ use crate::resolve::{want_key, ResolveSession};
 
 mod interpolate;
 mod scale;
+pub(crate) mod tones;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tones_resolve_tests;
+#[cfg(test)]
+mod tones_tests;
 
 pub(crate) use interpolate::{expand_brace_segments, BraceExpansion};
 
@@ -60,14 +65,20 @@ fn resolve_special_value<'a>(
         return Some(Cow::Owned(font_var));
     }
     if is_color_prop(prop) {
-        if let Some(keyword) = colors_keyword(unbraced) {
+        if let Some(keyword) = tones::colors_keyword(unbraced) {
             return Some(Cow::Owned(keyword.to_string()));
         }
     }
     None
 }
 
-/// Opacity-split dictionary lookup, then brace interpolation or fallback.
+/// Opacity-split dictionary lookup, then a tone, then interpolation or fallback.
+/// Gate order: an empty path malformed-passes through, the numeric `/opacity`
+/// split lookup runs split-first (its historic order), then the whole-value key
+/// resolves, then a named tone (`base/name` over a declared colour), then
+/// today's malformed-opacity warning and its lookup/interpolation fallthrough.
+/// Numeric keeps its historic split-first order; tones are new, so a literal
+/// whole key still wins over a tone rather than the other way round.
 fn resolve_pathed_value<'a>(
     prop: &str,
     raw_val: &'a str,
@@ -75,27 +86,100 @@ fn resolve_pathed_value<'a>(
 ) -> Option<Cow<'a, str>> {
     let unbraced = strip_braces(raw_val.trim());
     let (path, opacity) = split_opacity(unbraced);
-    if path.is_empty() || (opacity.is_none() && malformed_opacity(unbraced)) {
-        let key = want_key(
-            session,
-            prop,
-            serde_json::Value::String(raw_val.to_string()),
-        );
-        session.emit(
-            key,
-            ResolveOutcome::Passthrough {
-                code: DiagnosticCode::MalformedOpacity,
-                detail: ResolveDetail::Token(TokenDetail::MalformedOpacity {
-                    text: unbraced.into(),
-                }),
-            },
-        );
-        return Some(Cow::Borrowed(raw_val));
+    if path.is_empty() {
+        return Some(malformed_passthrough(prop, unbraced, raw_val, session));
     }
-    if let Some(entry) = lookup_entry(prop, path, session.system) {
-        return Some(Cow::Owned(format_entry(entry, opacity)));
+    if let Some(opacity) = opacity {
+        if let Some(entry) = lookup_entry(prop, path, session.system) {
+            return Some(Cow::Owned(format_entry(entry, Some(opacity))));
+        }
+    }
+    if let Some(entry) = lookup_entry(prop, unbraced, session.system) {
+        return Some(Cow::Owned(format_entry(entry, None)));
+    }
+    if opacity.is_some() {
+        return interpolate_or_fallback(prop, raw_val, session);
+    }
+    resolve_unsuffixed(prop, raw_val, unbraced, session)
+}
+
+/// A value with no numeric modifier that names no whole token: a named tone,
+/// then the malformed-opacity warning, then interpolation or fallback.
+fn resolve_unsuffixed<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    unbraced: &str,
+    session: &mut ResolveSession<'_, '_>,
+) -> Option<Cow<'a, str>> {
+    if let Some(resolved) = resolve_tone(prop, raw_val, unbraced, session) {
+        return Some(resolved);
+    }
+    if malformed_opacity(unbraced) {
+        return Some(malformed_passthrough(prop, unbraced, raw_val, session));
     }
     interpolate_or_fallback(prop, raw_val, session)
+}
+
+/// Warn-and-paint a malformed `/opacity` modifier, keeping the authored bytes.
+fn malformed_passthrough<'a>(
+    prop: &str,
+    unbraced: &str,
+    raw_val: &'a str,
+    session: &mut ResolveSession<'_, '_>,
+) -> Cow<'a, str> {
+    let key = want_key(
+        session,
+        prop,
+        serde_json::Value::String(raw_val.to_string()),
+    );
+    session.emit(
+        key,
+        ResolveOutcome::Passthrough {
+            code: DiagnosticCode::MalformedOpacity,
+            detail: ResolveDetail::Token(TokenDetail::MalformedOpacity {
+                text: unbraced.into(),
+            }),
+        },
+    );
+    Cow::Borrowed(raw_val)
+}
+
+/// The tone path for one bare value: `base/name` where `base` names a declared
+/// colours token and `name` is a tone identifier. `Some` means the tone path
+/// owns the value — the resolved `color-mix`, or the raw bytes after an
+/// unknown-tone warning. `None` means this is not a tone value at all.
+fn resolve_tone<'a>(
+    prop: &str,
+    raw_val: &'a str,
+    unbraced: &str,
+    session: &mut ResolveSession<'_, '_>,
+) -> Option<Cow<'a, str>> {
+    let (base, name) = tones::split_tone_reference(unbraced)?;
+    let entry = lookup_entry(prop, base, session.system)?;
+    if entry.category() != "colors" {
+        return None;
+    }
+    match tones::resolve(session.system, prop, entry, name) {
+        Some(css) => Some(Cow::Owned(css)),
+        None => {
+            let key = want_key(
+                session,
+                prop,
+                serde_json::Value::String(raw_val.to_string()),
+            );
+            session.emit(
+                key,
+                ResolveOutcome::Passthrough {
+                    code: DiagnosticCode::UnknownTone,
+                    detail: ResolveDetail::Token(TokenDetail::UnknownTone {
+                        text: unbraced.into(),
+                        tone: name.into(),
+                    }),
+                },
+            );
+            Some(Cow::Borrowed(raw_val))
+        }
+    }
 }
 
 /// Brace interpolation for values the dictionary missed, else error or warn.
@@ -201,29 +285,6 @@ fn strip_braces(trimmed: &str) -> &str {
     } else {
         trimmed
     }
-}
-
-fn colors_keyword(path: &str) -> Option<&str> {
-    let rest = path.strip_prefix("colors.").unwrap_or(path);
-    if is_css_color_keyword(rest) {
-        Some(rest)
-    } else {
-        None
-    }
-}
-
-fn is_css_color_keyword(val: &str) -> bool {
-    matches!(
-        val.to_ascii_lowercase().as_str(),
-        "transparent"
-            | "currentcolor"
-            | "inherit"
-            | "initial"
-            | "unset"
-            | "none"
-            | "black"
-            | "white"
-    )
 }
 
 fn resolve_font_token(prop: &str, trimmed: &str, system: &BaseSystem) -> Option<String> {

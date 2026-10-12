@@ -245,7 +245,7 @@ describe('message pattern', () => {
   })
 
   it('gates suggestions to unknown-from-known-set codes like Rust', () => {
-    expect(SUGGESTION_CODES).toHaveLength(8)
+    expect(SUGGESTION_CODES).toHaveLength(9)
     expect(suggestForCode('ATM-W-UNKNOWN-PROPERTY', 'colr', ['color', 'margin'])).toBe('color')
     expect(suggestForCode('TGN-W-UNKNOWN-STRICT-CATEGORY', 'colour', ['colors'])).toBe('colors')
     for (const silent of [
