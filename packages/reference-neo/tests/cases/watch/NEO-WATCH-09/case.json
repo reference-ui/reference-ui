@@ -1,0 +1,1 @@
+{"id": "NEO-WATCH-09", "name": "concurrent one-shots end in exit 0 or exit 75, never by a signal or exit 1, and the last sync wins", "sync": false}
