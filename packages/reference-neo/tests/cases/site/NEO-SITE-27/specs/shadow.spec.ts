@@ -31,7 +31,7 @@ interface SpecInput {
 
 // The param shadows the cross-file const: no site utility, one located
 // warning, nothing paints. The unshadowed twin still resolves and paints
-// ocean, and the sheet carries the two harvested hex floors beside it.
+// ocean, and the sheet carries only that twin utility.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -39,10 +39,8 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('.neo-site-27__c_ocean {'), 'sheet carries the twin utility');
   assert.ok(!styles.includes('c_cherry'), 'no cherry ghost reaches the sheet');
-  assert.ok(styles.includes('.neo-site-27__c_\\#2563eb {'), 'sheet carries the harvested ocean-hex floor');
-  assert.ok(styles.includes('.neo-site-27__c_\\#dc2626 {'), 'sheet carries the harvested cherry-hex floor');
   const utilityCount = styles.match(/\.neo-site-27__/g)?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries the twin utility plus the harvest floor, got ${utilityCount}`);
+  assert.equal(utilityCount, 1, `sheet carries only the twin utility, got ${utilityCount}`);
 
   const twin = page.locator('#twin');
   await twin.waitFor();

@@ -30,11 +30,11 @@ interface SpecInput {
 }
 
 // The dynamic key warns and skips; the static sibling lands. Sync succeeds
-// (the case runs at all), the sheet carries the ocean background utility
-// plus the two harvested hex floors with no cherry ghost, the node paints
-// the ocean background while keeping its default text color, and the frozen
-// request still reports the located color warning on the opt-in channel
-// (the default is silent since Error Correct Slice 5).
+// (the case runs at all), the sheet carries only the ocean background
+// utility with no cherry ghost, the node paints the ocean background while
+// keeping its default text color, and the frozen request still reports the
+// located color warning on the opt-in channel (the default is silent since
+// Error Correct Slice 5).
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
@@ -42,10 +42,8 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   assert.ok(styles.includes('.neo-site-06__bg_ocean {'), 'sheet carries the static sibling');
   assert.ok(!styles.includes('c_cherry'), 'no cherry ghost reaches the sheet');
-  assert.ok(styles.includes('.neo-site-06__c_\\#dc2626 {'), 'sheet carries the harvested cherry-hex floor');
-  assert.ok(styles.includes('.neo-site-06__c_\\#2563eb {'), 'sheet carries the harvested ocean-hex floor');
   const utilityCount = styles.match(/\.neo-site-06__/g)?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries the sibling utility plus the harvest floor, got ${utilityCount}`);
+  assert.equal(utilityCount, 1, `sheet carries only the sibling utility, got ${utilityCount}`);
 
   const target = page.locator('#target');
   await target.waitFor();

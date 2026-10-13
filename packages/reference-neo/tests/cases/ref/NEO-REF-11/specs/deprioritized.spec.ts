@@ -42,13 +42,16 @@ function snapshotSyncOutput(outDir: string): string[] {
 export default async function run({ case: c }: SpecInput): Promise<void> {
   await waitForReferenceReady(c.worldDir)
   const outDir = path.join(c.worldDir, '.reference-ui')
+  const manifestPath = getReferenceManifestPath(c.worldDir)
   const before = snapshotSyncOutput(outDir)
   assert.ok(before.length >= 10, `synced folder holds the inventory, got ${before.length} files`)
 
+  // Missing-manifest leg: a re-sync preserves the tasty dir (0e08d7cb9), so the manifest survives
+  // sync unless this case removes it first. The delete sets up the absence explicitly.
   // The perf-law ordering: sync-complete (await returned) lands before tasty-manifest-ready.
   // The check runs synchronously in the continuation — no await may sit between the sync and the stat.
+  fs.rmSync(manifestPath, { force: true })
   await sync(c.worldDir)
-  const manifestPath = getReferenceManifestPath(c.worldDir)
   assert.ok(!fs.existsSync(manifestPath), 'sync-complete lands before tasty-manifest-ready')
   await waitForReferenceReady(c.worldDir)
   assert.ok(fs.existsSync(manifestPath), 'the background loop restores the manifest after')
@@ -56,4 +59,10 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   // Tasty trailing behind never perturbs the sync-owned bytes.
   const after = snapshotSyncOutput(outDir)
   assert.deepEqual(after, before, 're-sync output is byte-identical outside the background-owned tasty dir')
+
+  // Preserved leg: no delete, so the preserved tasty dir keeps the manifest and its bytes across sync.
+  const restored = fs.readFileSync(manifestPath)
+  await sync(c.worldDir)
+  assert.ok(fs.existsSync(manifestPath), 'the preserved tasty dir keeps the manifest across sync')
+  assert.deepEqual(fs.readFileSync(manifestPath), restored, 'the manifest bytes are unchanged across sync')
 }

@@ -40,19 +40,16 @@ const EXPECTED_WARNING = {
 
 // The folded member part paints cherry, the sized number part paints 4px,
 // the fan-out part paints the live plum arm, and the refused node paints
-// only its ocean background sibling. The sheet carries the five folded
-// utilities plus the three harvested hex floors, and the frozen recompile
-// carries exactly the one positioned part warning.
+// only its ocean background sibling. The sheet carries exactly the five
+// folded utilities, and the frozen recompile carries exactly the one
+// positioned part warning.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
     'utf8',
   );
-  assert.ok(styles.includes('.neo-site-26__c_\\#dc2626 {'), 'sheet carries the harvested cherry-hex floor');
-  assert.ok(styles.includes('.neo-site-26__c_\\#2563eb {'), 'sheet carries the harvested ocean-hex floor');
-  assert.ok(styles.includes('.neo-site-26__c_\\#a855f7 {'), 'sheet carries the harvested purple-hex floor');
   const utilityCount = styles.match(/\.neo-site-26__/g)?.length ?? 0;
-  assert.equal(utilityCount, 8, `sheet carries the folded utilities plus the harvest floor, got ${utilityCount}`);
+  assert.equal(utilityCount, 5, `sheet carries exactly the five folded utilities, got ${utilityCount}`);
 
   const folded = page.locator('#folded');
   await folded.waitFor();

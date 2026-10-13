@@ -21,19 +21,17 @@ interface DiagnosticWindow {
 const SYSTEM = 'neo-namer-03';
 const MISS_VALUE = 'cobalt-900';
 
-// One live atom, one dynamic miss: the sheet carries the live utility
-// plus the two harvested floor utilities, the live probe paints ember,
-// the miss probe carries its constructed miss class on inherited ink,
-// and the page reports exactly one diagnostic naming prop and value.
+// One live atom, one dynamic miss: the sheet carries only the live utility,
+// the live probe paints ember, the miss probe carries its constructed miss
+// class on inherited ink, and the page reports exactly one diagnostic
+// naming prop and value.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');
   assert.ok(styles.includes(`.${SYSTEM}__c_ember {`), 'sheet carries the live color atom');
   assert.ok(!styles.includes('cobalt'), 'no ghost rule leaks in for the dynamic shade');
-  assert.ok(styles.includes(`.${SYSTEM}__c_\\#111111 {`), 'sheet carries the harvested ink floor');
-  assert.ok(styles.includes(`.${SYSTEM}__c_\\#ef4444 {`), 'sheet carries the harvested ember-hex floor');
   const utilityCount = styles.match(new RegExp(`\\.${SYSTEM}__`, 'g'))?.length ?? 0;
-  assert.equal(utilityCount, 3, `sheet carries the live utility plus the harvest floor, got ${utilityCount}`);
+  assert.equal(utilityCount, 1, `sheet carries only the live utility, got ${utilityCount}`);
 
   const live = page.locator('#live');
   await live.waitFor();
