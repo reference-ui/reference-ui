@@ -167,15 +167,24 @@ function publisherRegisterLines(): string[] {
 
 /**
  * The consumer's fill: a module augmentation that points lib's SyncedSystem at
- * this project's synced style types. Only the consumer role appends it; a
- * publisher must never fill its own register (a second declaration is TS2717).
+ * this project's synced style types. It names them through this file's own
+ * path (the react leg always writes react.d.mts), never by bare name: inside an
+ * augmentation a bare name resolves against lib's exports first, so a bare
+ * StyleProps there is lib's register alias, which reads SyncedSystem, which is
+ * this fill, a cycle (TS2456, TS2502). A qualified name adds no declaration, so
+ * nothing new leaks into this file's exports. Only the consumer role appends
+ * it; a publisher must never fill its own register (a second declaration is TS2717).
  */
 function consumerFillLines(role: SyncedRole): string[] {
   if (role !== 'consumer') return []
   return [
     "/** Fills lib's SyncedSystem register with this project's synced style types. */",
     "declare module '@reference-ui/lib' {",
-    '  interface SyncedSystem { styleProps: StyleProps; cssProp: PrimitiveCssProp; stylePropName: StylePropName }',
+    '  interface SyncedSystem {',
+    "    styleProps: import('./react.d.mts').StyleProps",
+    "    cssProp: import('./react.d.mts').PrimitiveCssProp",
+    "    stylePropName: import('./react.d.mts').StylePropName",
+    '  }',
     '}',
     '',
   ]

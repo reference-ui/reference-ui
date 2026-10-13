@@ -68,9 +68,15 @@ describe('generateReactTypesSource synced register', () => {
     const consumer = generateReactTypesSource({ stylePropNames: NAMES, recipes: {}, role: 'consumer' })
     expect(consumer.startsWith(none)).toBe(true)
     expect(consumer.split("declare module '@reference-ui/lib'")).toHaveLength(2)
-    expect(consumer).toContain(
-      '  interface SyncedSystem { styleProps: StyleProps; cssProp: PrimitiveCssProp; stylePropName: StylePropName }'
-    )
+    for (const line of [
+      "    styleProps: import('./react.d.mts').StyleProps",
+      "    cssProp: import('./react.d.mts').PrimitiveCssProp",
+      "    stylePropName: import('./react.d.mts').StylePropName",
+    ]) {
+      expect(consumer).toContain(line)
+    }
+    // A bare name here would resolve to lib's own register alias: the TS2456 cycle.
+    expect(consumer).not.toMatch(/(styleProps|cssProp|stylePropName): (StyleProps|PrimitiveCssProp|StylePropName)\b/)
     expect(consumer).not.toContain('Local')
     expect(consumer).not.toContain('export interface SyncedSystem')
   })
@@ -93,33 +99,34 @@ describe('generateReactTypesSource synced register under strict tsc', () => {
     expect(checkDeclarations(dir).output).toBe('')
   }, 150000)
 
-  it('consumer fill checks, and lib SyncedSystem narrows to the synced names', () => {
+  it('consumer fill checks against the real publisher output, and lib narrows to the synced names', () => {
     const dir = probeDir('__register-consumer')
     writeFileSync(
-      join(dir, 'index.d.mts'),
+      join(dir, 'react.d.mts'),
       generateReactTypesSource({ stylePropNames: NAMES, recipes: {}, role: 'consumer' })
     )
-    writeLibStub(dir)
+    writeLibPublisher(dir)
     writeProbe(dir, [
-      "import type {} from './index.mjs'",
-      "import type { SyncedSystem } from '@reference-ui/lib'",
-      "const name: SyncedSystem['stylePropName'] = 'color'",
-      'export const probe = [name]',
+      "import type {} from './react.mjs'",
+      "import type { StyleProps, StylePropName } from '@reference-ui/lib'",
+      "const name: StylePropName = 'color'",
+      "const copy: StyleProps = { color: 'brand' }",
+      'export const probe = [name, copy]',
     ])
     expect(checkDeclarations(dir).output).toBe('')
   }, 150000)
 
-  it('consumer fill rejects a name it never synced (red by design)', () => {
+  it('consumer fill rejects a name it never synced, seen through lib (red by design)', () => {
     const dir = probeDir('__register-consumer-red')
     writeFileSync(
-      join(dir, 'index.d.mts'),
+      join(dir, 'react.d.mts'),
       generateReactTypesSource({ stylePropNames: NAMES, recipes: {}, role: 'consumer' })
     )
-    writeLibStub(dir)
+    writeLibPublisher(dir)
     writeProbe(dir, [
-      "import type {} from './index.mjs'",
-      "import type { SyncedSystem } from '@reference-ui/lib'",
-      "const name: SyncedSystem['stylePropName'] = 'notAProp'",
+      "import type {} from './react.mjs'",
+      "import type { StylePropName } from '@reference-ui/lib'",
+      "const name: StylePropName = 'notAProp'",
       'export const probe = [name]',
     ])
     const result = checkDeclarations(dir)
@@ -163,15 +170,22 @@ function writeStyledStub(dir: string): void {
   )
 }
 
-/** The lib stub a synced consumer resolves: its register starts empty, as lib's does. */
-function writeLibStub(dir: string): void {
+/**
+ * The lib a synced consumer resolves: the real publisher output, so the
+ * register's SyncedSystem-dependent aliases are the ones lib ships. A stub that
+ * exported only SyncedSystem would hide every name collision a fill can make.
+ */
+function writeLibPublisher(dir: string): void {
   const libDir = join(dir, 'node_modules', '@reference-ui', 'lib')
   mkdirSync(libDir, { recursive: true })
   writeFileSync(
     join(libDir, 'package.json'),
     JSON.stringify({ name: '@reference-ui/lib', version: '0.0.0', types: './index.d.ts' })
   )
-  writeFileSync(join(libDir, 'index.d.ts'), 'export interface SyncedSystem {}\n')
+  writeFileSync(
+    join(libDir, 'index.d.ts'),
+    generateReactTypesSource({ stylePropNames: NAMES, recipes: {}, role: 'publisher' })
+  )
 }
 
 function writeProbe(dir: string, lines: string[]): void {
