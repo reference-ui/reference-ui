@@ -7,8 +7,8 @@ Case catalog (checklist form): [TESTS.md](./TESTS.md).
 Unit proof: `src/core/measure/measure.test.ts` · `use-measure.test.tsx` ·
 `use-measure-ssr.test.tsx`
 Tracking-seam proof: `src/components/Overlay/geometry/auto-update.test.ts`
-Browser proof: `matrix/lib/tests/e2e/measure.spec.ts`
-Fixture: `matrix/lib/src/measure.tsx` · Page: `/measure`
+Browser proof: `packages/reference-lib/src/components/Measure/__e2e__/Measure.ct.spec.ts` (`pnpm agentct Measure`)
+Fixture: `packages/reference-lib/src/components/Measure/Measure.story.tsx` (`Fixture` export, CT-mounted)
 Book: `src/core/measure/Measure.book.tsx`
 
 ---
@@ -466,4 +466,4 @@ Kernel exports (`index.ts`): `createMeasureSettled`, `createDirtyPoll`,
 - The `MS-BOX-01` ID collision is retired (unit keeps `MS-BOX-01`, browser is
   `MS-BOX-B-01`) in `TESTS.md` and the Playwright titles.
 - `pnpm agent verify Measure` is green (typecheck → vitest → build → the
-  `matrix/lib` Playwright spec).
+  component CT spec).

@@ -106,7 +106,7 @@ driven, hot work sleeps, settle does not thrash React.
 
 ## Browser
 
-Proof lives in `matrix/lib/tests/e2e/measure.spec.ts` against a real
+Proof lives in `packages/reference-lib/src/components/Measure/__e2e__/Measure.ct.spec.ts` against a real
 `ResizeObserver`.
 
 - [x] `MS-DOM-01` `[reference]` `[browser]` —
