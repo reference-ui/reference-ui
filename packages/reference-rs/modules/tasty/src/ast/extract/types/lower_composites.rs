@@ -6,6 +6,7 @@ use oxc_ast::ast::FormalParameters;
 use oxc_span::{GetSpan, Span};
 
 use crate::model::{FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef};
+use crate::shared::type_ref_util::cross_product;
 
 use super::super::members::members_from_signatures_in;
 use super::super::slice_span;
@@ -177,6 +178,8 @@ impl<'a> LoweringContext<'a> {
 
     /// Try to resolve a template literal to a union when possible
     /// For simple cases like `/${'users' | 'posts'}/${'list' | 'detail'}` -> `'/users/list' | '/users/detail' | '/posts/list' | '/posts/detail'`
+    /// Each part multiplies the variants so far. A product past the evaluator's member cap is not built:
+    /// `cross_product` returns `None`, the template keeps its parts, and it has no resolved union.
     fn resolve_template_literal_to_union(
         &self,
         parts: &[crate::model::TemplateLiteralPart],
@@ -190,23 +193,16 @@ impl<'a> LoweringContext<'a> {
                     self.template_literal_fragments(value)?
                 }
             };
-
-            let mut next_variants = Vec::new();
-            for prefix in &variants {
-                for fragment in &fragments {
-                    next_variants.push(format!("{prefix}{fragment}"));
-                }
-            }
-            variants = next_variants;
+            variants = cross_product(&variants, &fragments)?;
         }
 
-        let union_types: Vec<TypeRef> = variants
+        let mut union_types: Vec<TypeRef> = variants
             .into_iter()
             .map(|variant| TypeRef::Literal { value: variant })
             .collect();
 
         if union_types.len() == 1 {
-            Some(union_types.into_iter().next().unwrap())
+            union_types.pop()
         } else {
             Some(TypeRef::Union { types: union_types })
         }
@@ -274,5 +270,79 @@ impl<'a> LoweringContext<'a> {
         }
 
         parts
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeSet;
+    use std::path::Path;
+    use std::rc::Rc;
+
+    use crate::ast::extract_ast;
+    use crate::ast::model::SymbolShell;
+    use crate::model::TypeRef;
+    use crate::scanner::{ImportResolver, ScannedFile, ScannedWorkspace};
+
+    /// `export type Combo = ...` with `holes` template holes, each a union of ten string literals.
+    fn combo_source(holes: usize) -> String {
+        let body: String = (0..holes)
+            .map(|hole| {
+                let members: Vec<String> = (0..10).map(|i| format!("'h{hole}_{i}'")).collect();
+                format!("${{{}}}", members.join(" | "))
+            })
+            .collect();
+        format!("export type Combo = `{body}`;\n")
+    }
+
+    fn combo_underlying(source: &str) -> TypeRef {
+        let scanned = ScannedWorkspace {
+            resolver: Rc::new(ImportResolver::new(Path::new("."))),
+            files: vec![ScannedFile {
+                file_id: "combo.ts".to_string(),
+                module_specifier: "combo.ts".to_string(),
+                library: "user".to_string(),
+                source: source.to_string(),
+            }],
+            file_ids: BTreeSet::from(["combo.ts".to_string()]),
+            bridged_libraries: BTreeSet::new(),
+        };
+        let ast = extract_ast(&scanned).expect("extract should succeed");
+        let shell: &SymbolShell = ast.files[0]
+            .exports
+            .iter()
+            .find(|shell| shell.name == "Combo")
+            .expect("Combo should be extracted");
+        shell
+            .underlying
+            .clone()
+            .expect("type alias should have underlying")
+    }
+
+    #[test]
+    fn template_expansion_past_member_cap_keeps_parts_unexpanded() {
+        // Four holes of ten literals make 10,000 members, past the 1000 cap: no union is built.
+        match combo_underlying(&combo_source(4)) {
+            TypeRef::TemplateLiteral { parts, resolved } => {
+                assert_eq!(parts.len(), 9);
+                assert!(resolved.is_none());
+            }
+            other => panic!("expected TemplateLiteral, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn template_expansion_at_member_cap_builds_the_full_union() {
+        // Three holes of ten literals make exactly 1000 members, which the cap still allows.
+        match combo_underlying(&combo_source(3)) {
+            TypeRef::TemplateLiteral {
+                resolved: Some(resolved),
+                ..
+            } => match *resolved {
+                TypeRef::Union { types } => assert_eq!(types.len(), 1000),
+                other => panic!("expected Union, got {other:?}"),
+            },
+            other => panic!("expected resolved TemplateLiteral, got {other:?}"),
+        }
     }
 }
