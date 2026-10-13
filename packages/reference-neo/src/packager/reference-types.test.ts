@@ -151,6 +151,13 @@ describe('reference-types package (REF-01)', () => {
     expect(readTypesFile('types.d.mts').startsWith(`${BASE_SYSTEM_HEADER}\n`)).toBe(true)
   })
 
+  it('publishes declarations with no @reference-ui/rust specifier (rust tasty is inlined)', () => {
+    const declarations = readTypesFile('types.d.mts')
+    expect(declarations).not.toMatch(/(?:\bfrom\s*|\bimport\s*\(\s*)['"]@reference-ui\/rust/)
+    expect(declarations).toContain('declare namespace __rust_tasty_index {')
+    expect(declarations).toContain('import TastyBrowserRuntime = __rust_tasty_index.TastyBrowserRuntime;')
+  })
+
   it('leaves the session-owned tasty dir alone', () => {
     expect(existsSync(join(outDir, 'types', 'tasty'))).toBe(false)
   })

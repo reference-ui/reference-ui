@@ -15,6 +15,7 @@ import { TYPES_BUNDLE_EXTERNALS } from './externals.ts'
 import { writePackageJson } from './manifest.ts'
 import { TYPES_PACKAGE } from './packages.ts'
 import { runPostprocess } from './postprocess/index.ts'
+import { inlineRustTastyTypes } from './reference-types-tasty.ts'
 
 export interface ReferenceTypesPublishInput {
   outDir: string
@@ -27,7 +28,9 @@ function neoFilePath(...parts: string[]): string {
 /**
  * Publish the generated types package: bundle the reference entry (with
  * the per-system react primitives aliased in), rewrite the tasty runtime
- * edge, and write the bundle, manifest, and declarations. Runs after the
+ * edge, and write the bundle, manifest, and declarations. The declarations
+ * inline the rust tasty types they import, so the published file never
+ * imports @reference-ui/rust (see reference-types-tasty.ts). Runs after the
  * react leg — the alias target must exist. Sync links the packages after
  * the commit, so the junction lands on a complete package. The tasty dir
  * itself is session-owned and lands later; this leg never touches it.
@@ -58,9 +61,6 @@ export async function publishReferenceTypesBundle(
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'types.mjs'), runPostprocess(bundle.code, TYPES_PACKAGE), 'utf-8')
   writePackageJson(dir, TYPES_PACKAGE)
-  writeFileSync(
-    join(dir, 'types.d.mts'),
-    `${BASE_SYSTEM_HEADER}\n${readFileSync(neoFilePath('entry', 'types.d.mts'), 'utf-8')}`,
-    'utf-8'
-  )
+  const declarations = inlineRustTastyTypes(readFileSync(neoFilePath('entry', 'types.d.mts'), 'utf-8'))
+  writeFileSync(join(dir, 'types.d.mts'), `${BASE_SYSTEM_HEADER}\n${declarations}`, 'utf-8')
 }

@@ -3,9 +3,9 @@
  * is the hand-merged single-file surface of the reference types entry: the
  * `Reference` component, its factory, runtimes, provider, hooks, formatter,
  * document model, and view-injection contract. The publish leg copies it
- * beside the bundle as `types.d.mts`; tasty handle types ride `import
- * type` exactly like core's shipped declarations, so fidelity holds where
- * the tasty package resolves and skipLibCheck covers everywhere else.
+ * beside the bundle as `types.d.mts`. Its rust tasty handle types are
+ * imported here and inlined at publish (packager/reference-types-tasty.ts),
+ * so the published file resolves on its own under skipLibCheck: false.
  */
 
 import type * as React from 'react'
