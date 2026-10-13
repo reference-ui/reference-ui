@@ -14,6 +14,7 @@
 import { spawn, spawnSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { constants as signalConstants } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { withCpuGate, readLocks } from '../../test-core/scripts/cpu-gate.mjs'
 import { runFlameCommand } from './flame.mjs'
@@ -89,6 +90,15 @@ function findRepoRoot(startDir = __dirname) {
   return process.cwd()
 }
 
+// A child killed by a signal has no exit code, and that must never read as success. Report 128 plus the signal number (the shell convention) and name the signal.
+function exitCodeOf(code, signal) {
+  if (code !== null) return code
+  if (!signal) return 1
+  const exitCode = 128 + (signalConstants.signals[signal] ?? 1)
+  console.error(`\x1b[1;31m[agent-rs] child process was killed by ${signal} (exit ${exitCode}).\x1b[0m`)
+  return exitCode
+}
+
 function runChild(command, args, cwd, extraEnv = {}) {
   return new Promise((resolve) => {
     const child = spawn(command, args, {
@@ -107,10 +117,10 @@ function runChild(command, args, cwd, extraEnv = {}) {
     process.on('SIGINT', onSig)
     process.on('SIGTERM', onSig)
 
-    child.on('close', (code) => {
+    child.on('close', (code, signal) => {
       process.off('SIGINT', onSig)
       process.off('SIGTERM', onSig)
-      resolve(code ?? 0)
+      resolve(exitCodeOf(code, signal))
     })
   })
 }
@@ -379,11 +389,10 @@ function runChildCapturingStdout(command, args, cwd) {
     process.on('SIGINT', onSig)
     process.on('SIGTERM', onSig)
 
-    // A signal-killed child has no exit code; that is a failure, not a pass.
-    child.on('close', (code) => {
+    child.on('close', (code, signal) => {
       process.off('SIGINT', onSig)
       process.off('SIGTERM', onSig)
-      resolve({ code: code ?? 1, stdout })
+      resolve({ code: exitCodeOf(code, signal), stdout })
     })
   })
 }
