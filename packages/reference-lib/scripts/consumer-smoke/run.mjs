@@ -1,6 +1,7 @@
 // W-31 runner: build -> check:dist -> pack -> bare Vite consumer app ->
-// vite build (warning scan) -> tsc types check -> dev-server Playwright
-// probe (mount-all + B-11 behaviors + zero console errors).
+// vite build (warning scan) -> tsc types check (skipLibCheck on, then off for
+// lib's declarations) -> dev-server Playwright probe (mount-all + B-11
+// behaviors + zero console errors).
 //
 // Usage: node scripts/consumer-smoke/run.mjs [--port 5199] [--keep]
 // On failure the scaffold dir is kept and its path printed for inspection.
@@ -18,6 +19,9 @@ const portIndex = args.indexOf('--port')
 const port = portIndex === -1 ? 5199 : Number(args[portIndex + 1])
 const keep = args.includes('--keep')
 if (!Number.isInteger(port) || port <= 0) throw new Error(`bad --port ${args[portIndex + 1]}`)
+// Declaration errors under sibling packages that have not shipped
+// self-contained types yet. Named here so each residual keeps its owner.
+const SIBLING_OWNED_PREFIXES = ['node_modules/@reference-ui/icons/']
 
 const step = (name) => console.log(`\n=== smoke: ${name} ===`)
 const run = (command, commandArgs, options = {}) =>
@@ -112,6 +116,35 @@ try {
   } catch (error) {
     console.error((error.stdout ?? '').slice(-4000))
     throw new Error('smoke: consumer tsc failed (exports-map types broken?)')
+  }
+
+  // 4b. Same app with skipLibCheck off: lib's published declarations must
+  // check without the escape hatch, which is what a consumer with
+  // skipLibCheck: false sees. Every error fails the gate except those under a
+  // sibling package that has not yet shipped self-contained declarations; those
+  // are counted and named so the residual keeps its owner.
+  step('tsc --noEmit, skipLibCheck false (lib declarations)')
+  let libTypesOutput = ''
+  try {
+    run('npx', ['tsc', '--noEmit', '-p', 'tsconfig.lib-types.json'], { cwd: scaffold })
+  } catch (error) {
+    libTypesOutput = String(error.stdout ?? '')
+    if (!/error TS\d+/.test(libTypesOutput)) {
+      console.error(String(error.stderr ?? '').slice(-2000))
+      throw new Error('smoke: lib-types tsc failed without diagnostics')
+    }
+  }
+  const diagnostics = libTypesOutput.split('\n').filter((line) => /error TS\d+/.test(line))
+  const siblingOwned = (line) => SIBLING_OWNED_PREFIXES.some((prefix) => line.startsWith(prefix))
+  const gated = diagnostics.filter((line) => !siblingOwned(line))
+  const named = diagnostics.filter(siblingOwned)
+  console.log(
+    `smoke: skipLibCheck=false: ${gated.length} errors gated, ${named.length} owned by sibling packages (not gated)`,
+  )
+  if (named.length > 0) console.log(`smoke: first sibling residual: ${named[0].slice(0, 220)}`)
+  if (gated.length > 0) {
+    console.error(gated.slice(0, 20).join('\n'))
+    throw new Error(`smoke: lib declarations fail under skipLibCheck: false (${gated.length} errors)`)
   }
 
   // 5. Production build must succeed with zero node-builtin/externalization

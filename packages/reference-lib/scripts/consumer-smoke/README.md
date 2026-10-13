@@ -6,7 +6,11 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
 1. `check:dist` — refuses to smoke a stale `dist/` (B-11 process half).
 2. `pnpm pack` — the real tarball, not a source link.
 3. `tsc --noEmit` in the scaffold — the exports map (incl. `./primitives`
-   types and `./styles.css`) resolves for a real consumer (B-13).
+   types and `./styles.css`) resolves for a real consumer (B-13). A second
+   pass (`tsconfig.lib-types.json`: `skipLibCheck: false`, `types: []`) must
+   be clean for lib's own declarations and the app, which is what a consumer
+   with `skipLibCheck: false` sees. Errors under `@reference-ui/icons` are
+   counted and named, not gated, until icons ships self-contained types.
 4. `vite build` + warning scan — zero node-builtin/externalized warnings
    (B-35 regression).
 5. `vite dev` + Playwright probe — mounts every barrel component, runs the

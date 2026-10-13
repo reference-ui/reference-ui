@@ -1,0 +1,11 @@
+{
+  // Second tsc pass for the smoke gate: the same app with skipLibCheck off, so
+  // lib's published declarations are checked the way a consumer with
+  // skipLibCheck: false checks them. types: [] keeps ambient @types/* out.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": false,
+    "types": []
+  },
+  "include": ["src"]
+}
