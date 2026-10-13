@@ -8,15 +8,30 @@ not yet committed; `open` means no case or test proves the claim.
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | NEO-WATCH-01 | live-edit→paint loop: a watch resync repaints the browser | done | none | browser | `specs/watch-loop.spec.ts`: css edit, token-value edit, fragment add, fragment delete | `[core]` matrix/watch/tests/e2e/watch-contract.spec.ts; SPEC LC-29 |
-| NEO-WATCH-02 | symlinked project root: watch and engine agree on the compiled file set | in-progress | ATM-SCAN-01 | node | planned, no folder yet | SPEC LC-30 |
-| NEO-WATCH-03 | directory move into and out of include: one resync with the engine's file set | in-progress | ATM-SCAN-01 | node | planned, no folder yet | SPEC LC-32 |
-| NEO-WATCH-04 | symlinked source target edit: watch and engine agree on the target's bytes | in-progress | ATM-SCAN-01 | node | planned, no folder yet | SPEC LC-30, note 3 |
-| NEO-WATCH-05 | gitignored include: watch and engine agree on the file set | in-progress | ATM-SCAN-01 | node | planned, no folder yet | SPEC LC-31, note 1 |
-| NEO-WATCH-06 | dotfile include: watch and engine agree on the file set | in-progress | ATM-SCAN-01 | node | planned, no folder yet | SPEC LC-31, note 2 |
-| NEO-WATCH-07 | lock re-assert: deleting `.reference-ui` under a live watch re-asserts `sync.lock` | in-progress | none | node | planned, no folder yet; no `src` code yet | SPEC LC-21 |
-| NEO-WATCH-08 | a watch resync whose types build fails reports the failure, then recovers on the next good save | in-progress | none | node | folder in the working tree, not yet committed | SPEC LC-39 |
+| NEO-WATCH-02 | symlinked project root: watch and engine agree on the compiled file set | done | ATM-SCAN-01 | node | `specs/symlink-root.spec.ts` | SPEC LC-30 |
+| NEO-WATCH-03 | directory move into and out of include: one resync with the engine's file set | done | ATM-SCAN-01 | node | `specs/dir-move.spec.ts` | SPEC LC-32 |
+| NEO-WATCH-04 | symlinked source target edit: watch and engine agree on the target's bytes | done | ATM-SCAN-01 | node | `specs/symlink-target.spec.ts` | SPEC LC-30, note 3 |
+| NEO-WATCH-05 | gitignored include: watch and engine agree on the file set | done | ATM-SCAN-01 | node | `specs/gitignored.spec.ts` | SPEC LC-31, note 1 |
+| NEO-WATCH-06 | dotfile include: watch and engine agree on the file set | done | ATM-SCAN-01 | node | `specs/dotfile.spec.ts` | SPEC LC-31, note 2 |
+| NEO-WATCH-07 | lock re-assert: deleting `.reference-ui` under a live watch re-asserts `sync.lock` | done | none | node | `specs/lock-reassert.spec.ts` | SPEC LC-21 |
+| NEO-WATCH-08 | a watch resync whose types build fails reports the failure, then recovers on the next good save | done | none | node | `specs/types-failure.spec.ts` | SPEC LC-39 |
+| NEO-WATCH-09 | concurrent one-shots end in exit 0 or 75, never by a signal or exit 1; the last sync wins | done | none | node | `specs/five-way-contention.spec.ts`: five held one-shots, four rounds | SPEC LC-49, LC-50 |
+| NEO-WATCH-10 | a lock whose pid was recycled to an unrelated process is stale: never signalled, attached to or obeyed | done | none | node | `specs/recycled-pid.spec.ts` | SPEC LC-51 |
+| NEO-WATCH-11 | a one-shot covered by a resident watch exits 0 only after the watch's output reflects the saved edit | done | none | node | `specs/covered-waits.spec.ts` | SPEC LC-52 |
+| NEO-WATCH-12 | a one-shot that meets a stopping watch syncs for itself; an edit saved during the stop is never lost | done | none | node | `specs/stopping-edit.spec.ts` | SPEC LC-53 |
+| NEO-WATCH-13 | a fix to a fragment that failed in a newly included dir resyncs the watch | done | none | node | `specs/extra-fragment.spec.ts` | SPEC LC-55 |
+| NEO-WATCH-14 | a save whose event batch the OS drops still reaches the output through a watch re-scan | done | none | node | `specs/dropped-events.spec.ts`, loader hook under `specs/shim/` | SPEC LC-33 |
+| NEO-WATCH-15 | an edit that lands while the watch boots is in its boot sync or resynced after it | done | none | node | `specs/boot-edit.spec.ts`, loader hook under `specs/shim/` | SPEC LC-56 |
+| NEO-WATCH-16 | a wedged watch sync reports stuck on the next save; SIGINT exits within the shutdown bound with the lock released | done | none | node | `specs/wedged-sync.spec.ts` | SPEC LC-58 |
+| NEO-WATCH-17 | a failed resync under --json prints one stdout diagnostics array that holds its failure | done | none | node | `specs/json-failure.spec.ts` | SPEC LC-61 |
+| NEO-WATCH-18 | a tasty warning raised by a save reaches the watch's resync line with its count | done | none | node | `specs/warm-warning.spec.ts` | SPEC LC-59 |
+| NEO-WATCH-19 | a commit that fails partway puts back every live file it replaced; the folder is byte-identical | done | none | node | `specs/commit-failure-rollback.spec.ts` | SPEC LC-46 |
+| NEO-WATCH-20 | --break-lock over a sync frozen mid-commit: breaker exits 0, folder equals a clean rebuild, displaced holder fails cleanly | done | none | node | `specs/break-lock-mid-commit.spec.ts` | SPEC LC-48 |
+| NEO-WATCH-21 | a generated directory replaced by a file heals on the next sync instead of failing with EEXIST on every run | done | none | node | `specs/dir-replaced-by-file.spec.ts` | SPEC LC-47 |
+| NEO-WATCH-22 | a SIGTERM delivered mid-commit is honored: the commit finishes or rolls back, then the sync ends and releases its lock | done | none | node | `specs/sigterm-mid-commit.spec.ts` | SPEC LC-60 |
+| NEO-WATCH-23 | an include glob that matches no files warns by name and the sync still exits 0, human and --json | done | none | node | `specs/include-matches-nothing.spec.ts` | SPEC LC-62 |
 
-NEO-WATCH-09 and up are reserved for the doom round. No rows until their folders land.
+NEO-WATCH-24 and up are unassigned. A row lands with its case folder.
 
 ## Notes
 
@@ -27,8 +42,10 @@ NEO-WATCH-09 and up are reserved for the doom round. No rows until their folders
   `sync/tasty-refresh.test.ts` (4), `sync/tasty-cold-follow-up.test.ts` (4),
   `sync/clean.test.ts` (6), `sync/clean-repro.test.ts` (2),
   `sync/sync-diagnostics.test.ts` (10). That is 72 tests in 11 files.
-- Case folders were not re-executed for this ledger. Running them rewrites
-  tracked world output. Their statuses rest on the landed folders, READMEs and specs.
+- Unit proofs added after that run (`lib/watch/{handler,handshake,scope,index,lock}.test.ts`,
+  `sync/{session-hold,session-covered,session-covered-repro,session-identity,commit-rollback,include-check,tasty-phase-landing,tasty-refresh-failure}.test.ts`,
+  `cli/output-watch.test.ts`) were checked by test name against the source. They were not re-run for this ledger.
+- NEO-WATCH-09 to 23 were passing when this ledger was written. They were not re-executed here, because a case run rewrites tracked world output.
 - Doc drift for the owners of those READMEs: NEO-CLI-02 cites `bin/neo.test.ts`,
   but the file is `bin/ref.test.ts`. NEO-WATCH-01 still calls itself the one
   coverage home for watch behaviour. This group now holds the lifecycle claims.
