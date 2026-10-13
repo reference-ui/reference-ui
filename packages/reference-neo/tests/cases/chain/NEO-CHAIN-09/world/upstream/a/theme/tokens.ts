@@ -1,10 +1,11 @@
-// Token source for the NEO-CHAIN-09 shared base a. It takes the author tokens call and emits the one leaf
-// that both a and branch b write, so the contested token starts at a's value.
+// Token source for the NEO-CHAIN-09 shared base a. It takes the author tokens call and emits the two leaves the
+// branches contest: x, which branch b overrides, and y, which branch c overrides. Both start at a's values.
 
 import { tokens } from '@reference-ui/neo'
 
 tokens({
   colors: {
     x: { value: '#aa0000' },
+    y: { value: '#aa0001' },
   },
 })

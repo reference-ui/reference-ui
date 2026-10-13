@@ -1,8 +1,8 @@
-// diamond.spec.ts — spec for NEO-CHAIN-09, the diamond that keeps a branch's override. It takes
-// { page, url, case } with the app world synced by the runner. It syncs the shared base a for real, then
-// branches b and c that each extend a, then the app extending [b, c] and then [c, b], and checks each
-// order's resolved x and the computed paints of its probes. It restores every canonical config in a finally
-// and emits nothing on success; on failure it throws one line naming every wrong value.
+// diamond.spec.ts — spec for NEO-CHAIN-09, the diamond where a branch's override survives in either order. It
+// takes { page, url, case } with the app world synced by the runner. It syncs the shared base a for real, then
+// branches b and c that each extend a, then the app extending [b, c] and then [c, b], and checks each order's
+// resolved x and y and the computed paints of its probes. It restores every canonical config in a finally and
+// emits nothing on success; on failure it throws one line naming every wrong value.
 import path from 'node:path'
 import type { NeoCase } from '../../../../shared/cases.ts'
 import type { SpecPage } from '../../../../shared/page.ts'
@@ -34,13 +34,15 @@ interface Diamond {
 
 type Branch = 'b' | 'c'
 
-// Both orders must resolve b's value: the bug is order-sensitive, so the second order guards the fix.
+// Each order must keep both overrides, b's x and c's y, whichever branch the app lists last.
 const ORDERS: Branch[][] = [
   ['b', 'c'],
   ['c', 'b'],
 ]
 const X_EXPECTED = '#bb0000'
 const X_PAINT = 'rgb(187, 0, 0)'
+const Y_EXPECTED = '#cc0001'
+const Y_PAINT = 'rgb(204, 0, 1)'
 const C_PAINT = 'rgb(0, 170, 85)'
 const BASE_LINK: UpstreamLink = { binding: 'upstreamA', from: '../a/.reference-ui/system/baseSystem.mjs' }
 
@@ -56,19 +58,24 @@ function linkOf(branch: Branch): UpstreamLink {
   return { binding: bindingOf(branch), from: `./upstream/${branch}/.reference-ui/system/baseSystem.mjs` }
 }
 
-// Writes the app to extend one order of branches, syncs it, and checks what that order resolves.
+// Writes the app to extend one order of branches, syncs it, and checks what that order resolves and paints.
 async function checkOrder(d: Diamond, order: Branch[]): Promise<string[]> {
   const label = `D→[${order.map((b) => b.toUpperCase()).join(', ')}]`
   writeConfig(d.worldDir, wireConfig(d.canonical, order.map(linkOf), order.map(bindingOf)))
   await sync(d.worldDir)
 
   const problems: string[] = []
-  const x = readEvaluated(d.worldDir).tokens.colors?.x?.value
+  const colors = readEvaluated(d.worldDir).tokens.colors
+  const x = colors?.x?.value
   if (x !== X_EXPECTED) problems.push(`${label} resolves x to ${x}, expected ${X_EXPECTED}`)
+  const y = colors?.y?.value
+  if (y !== Y_EXPECTED) problems.push(`${label} resolves y to ${y}, expected ${Y_EXPECTED}`)
 
   await d.page.goto(`${d.url}?order=${order.join('')}`, { waitUntil: 'load' })
   const paintX = await paintOf(d.page, 'probe-x')
   if (paintX !== X_PAINT) problems.push(`${label} paints x as ${paintX}, expected ${X_PAINT}`)
+  const paintY = await paintOf(d.page, 'probe-y')
+  if (paintY !== Y_PAINT) problems.push(`${label} paints y as ${paintY}, expected ${Y_PAINT}`)
   const paintC = await paintOf(d.page, 'probe-c-leaf')
   if (paintC !== C_PAINT) problems.push(`${label} paints cLeaf as ${paintC}, expected ${C_PAINT}`)
   return problems

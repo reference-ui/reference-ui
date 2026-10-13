@@ -1,1 +1,1 @@
-{"id": "NEO-CHAIN-09", "name": "a diamond keeps a branch's override: D→[B,C] resolves B's value for a token only A and B write", "sync": true}
+{"id": "NEO-CHAIN-09", "name": "a branch's override survives in either order: D→[B,C] and D→[C,B] each keep B's x and C's y", "sync": true}
