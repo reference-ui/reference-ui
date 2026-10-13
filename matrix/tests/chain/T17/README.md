@@ -23,9 +23,16 @@ parts under `reference-ui`, and the fixture under `aliased-host-library`.
 ## Probes
 
 Novel consumer-local tokens (`src/tokens.ts`) — a color (`t17ProbeInk`,
-`rgb(183, 2, 51)`) and a spacing (`t17ProbeGap`, `13px`). The spec proves both
-are absent from the published icons/lib/fixture sheets, so a passing paint can
-never be a coincidental package-shipped hit.
+`rgb(183, 2, 51)`), a spacing (`t17ProbeGap`, `13px`) and a role-split tone
+(`t17ProbeTone`, `surface` 12%, `line` 41%). The spec proves the names are
+absent from the published icons/lib/fixture sheets, so a passing paint can
+never be a coincidental package-shipped hit. The tone is gated by name only,
+because lib's published utilities already contain percentages such as `41%`.
+
+The tone probe is `color="t17ProbeInk/t17ProbeTone"` on a prebuilt icon. `color`
+is a line-role prop, so its foreign-qualified rule must reference
+`--tones-t17-probe-tone-line`, never the surface amount. The icon paints the ink
+at 41%, serialised by Chromium as `color(srgb 0.717647 0.00784314 0.2 / 0.41)`.
 
 ## Contract
 
@@ -41,10 +48,15 @@ never be a coincidental package-shipped hit.
 6. The probe paints via an explicitly **foreign-qualified selector** in the
    loaded sheet (`reference-icons__c_t17ProbeInk`), not just computed paint.
 7. **Structured icons accounting**: loaded `reference-icons__` selectors equal
-   the icons canonical set ∪ the consumer's own foreign probe stems, exact and
-   duplicate-free; no `reference-icons__` rule originates from lib's own entry
-   (pins the C-T16 composition strip). `publishedIconsRuleCount`
-   exact-equality is retired **in T17 only**.
+   the icons canonical set ∪ the consumer's own foreign probe stems (the toned
+   stem included), exact and duplicate-free; probe classes match as whole class
+   names, so `c_t17ProbeInk` never counts the toned `c_t17ProbeInk/t17ProbeTone`
+   rule. No `reference-icons__` rule originates from lib's own entry (pins the
+   C-T16 composition strip). `publishedIconsRuleCount` exact-equality is retired
+   **in T17 only**.
+8. A consumer tone resolves against the consumer's tokens through fan-out: the
+   `color` probe paints the ink at the line amount, and its rule references
+   `--tones-t17-probe-tone-line` and never `--tones-t17-probe-tone-surface`.
 
 ## Re-sync order (G1 §3 amendment ii)
 

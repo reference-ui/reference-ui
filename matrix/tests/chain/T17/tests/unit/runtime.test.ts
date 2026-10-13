@@ -44,6 +44,7 @@ describe('chain T17 runtime', () => {
         't17-lib-icon',
         't17-override-badge',
         't17-raw-icon',
+        't17-tone-icon',
       ].sort()
     )
     const byTestId = new Map(probes.map((probe) => [probe.props['data-testid'], probe.type]))
@@ -54,5 +55,6 @@ describe('chain T17 runtime', () => {
     expect(byTestId.get('t17-raw-icon')).toBe(ContentCopyIcon)
     expect(byTestId.get('t17-css-icon')).toBe(ContentCopyIcon)
     expect(byTestId.get('t17-hover-icon')).toBe(ContentCopyIcon)
+    expect(byTestId.get('t17-tone-icon')).toBe(CheckIcon)
   })
 })

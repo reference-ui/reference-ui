@@ -55,6 +55,9 @@ export function Index(): React.ReactElement {
       {/* 7. css prop + condition arm through an external component */}
       <ContentCopyIcon data-testid="t17-css-icon" css={{ color: '#00b7ab' }} />
       <ContentCopyIcon data-testid="t17-hover-icon" _hover={{ color: '#00b7ab' }} />
+
+      {/* 8. consumer tone through a prebuilt icon: `color` is a line-role prop */}
+      <CheckIcon data-testid="t17-tone-icon" color="t17ProbeInk/t17ProbeTone" />
     </main>
   )
 }

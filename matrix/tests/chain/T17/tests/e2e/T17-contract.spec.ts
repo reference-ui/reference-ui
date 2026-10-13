@@ -13,6 +13,11 @@ import {
   T17_PROBE_RAW_HEX,
   T17_PROBE_SPACING_PX,
   T17_PROBE_SPACING_TOKEN,
+  T17_PROBE_TONE_CLASS,
+  T17_PROBE_TONE_COMPUTED,
+  T17_PROBE_TONE_LINE_VAR,
+  T17_PROBE_TONE_SURFACE_VAR,
+  T17_PROBE_TONE_TOKEN,
 } from '../../src/probe'
 
 /**
@@ -63,6 +68,7 @@ const TEST_IDS = {
   controlsIcon: 't17-controls-icon',
   cssIcon: 't17-css-icon',
   hoverIcon: 't17-hover-icon',
+  toneIcon: 't17-tone-icon',
 }
 
 test.describe('T17 — style prebuilt components with consumer style props', () => {
@@ -93,6 +99,10 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
     expect(publishedText).not.toContain(T17_PROBE_COLOR_RGB)
     expect(publishedText).not.toContain(T17_PROBE_RAW_HEX.slice(1))
     expect(publishedText).not.toContain('00b7ab')
+    // The tone is gated by name only: lib's published utilities already carry
+    // percentages such as `41%`, so a value check would be a false alarm.
+    expect(publishedText).not.toContain(T17_PROBE_TONE_TOKEN)
+    expect(publishedText).not.toContain(T17_PROBE_TONE_LINE_VAR)
   })
 
   test('no reference-icons rule originates from lib own entry (pins C-T16)', () => {
@@ -151,6 +161,46 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
       return getComputedStyle(element).color
     })
     expect(color).toBe(T17_PROBE_COLOR_RGB)
+  })
+
+  test('consumer tone on color paints the ink at the line amount', async ({ page }) => {
+    const color = await page.getByTestId(TEST_IDS.toneIcon).evaluate((element) => {
+      return getComputedStyle(element).color
+    })
+    expect(color).toBe(T17_PROBE_TONE_COMPUTED)
+  })
+
+  test('tone rule reads the line amount: color is a line-role prop', async ({ page }) => {
+    // The toned probe emits exactly one foreign-qualified rule. `color` draws
+    // `--tones-*-line`, so that rule must reference the line var, never the surface var.
+    const colorValues = await page.evaluate((className) => {
+      const values: string[] = []
+      const namesClass = (selector: string, name: string): boolean =>
+        selector.split(`.${CSS.escape(name)}`).slice(1).some((rest) => !/^[\w\\-]/.test(rest))
+      const collect = (rules: CSSRuleList | null | undefined): void => {
+        if (rules == null) return
+        for (const rule of rules) {
+          if (rule instanceof CSSStyleRule) {
+            if (namesClass(rule.selectorText, className)) {
+              values.push(rule.style.getPropertyValue('color'))
+            }
+          } else if ('cssRules' in rule) {
+            collect((rule as CSSGroupingRule).cssRules)
+          }
+        }
+      }
+      for (const sheet of document.styleSheets) {
+        try {
+          collect(sheet.cssRules)
+        } catch {
+          continue
+        }
+      }
+      return values
+    }, T17_PROBE_TONE_CLASS)
+    expect(colorValues).toHaveLength(1)
+    expect(colorValues[0]).toContain(`var(${T17_PROBE_TONE_LINE_VAR})`)
+    expect(colorValues[0]).not.toContain(T17_PROBE_TONE_SURFACE_VAR)
   })
 
   test('positive controls paint through prebuilt parts (className/style/native)', async ({ page }) => {
@@ -219,11 +269,15 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
           continue
         }
       }
+      // Whole-class match: `c_t17ProbeInk` must not be satisfied by the toned
+      // `c_t17ProbeInk/t17ProbeTone` rule, which contains it as a prefix.
+      const namesClass = (selector: string, name: string): boolean =>
+        selector.split(`.${CSS.escape(name)}`).slice(1).some((rest) => !/^[\w\\-]/.test(rest))
       return classes.map((className) =>
-        selectors.some((selector) => selector.includes(`.${CSS.escape(className)}`))
+        selectors.some((selector) => namesClass(selector, className))
       )
     }, [...T17_PROBE_ICON_CLASSES])
-    expect(present).toEqual([true, true, true, true])
+    expect(present).toEqual(T17_PROBE_ICON_CLASSES.map(() => true))
   })
 
   test('structured icons accounting: canonical set plus consumer-own probes, no duplicates', async ({ page }) => {
@@ -247,9 +301,11 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
         }
       }
       const icons = selectors.filter((selector) => selector.includes('reference-icons__'))
-      const escaped = probeClasses.map((className) => `.${CSS.escape(className)}`)
+      // Whole-class match, so each probe stem owns exactly its own rule.
+      const namesClass = (selector: string, name: string): boolean =>
+        selector.split(`.${CSS.escape(name)}`).slice(1).some((rest) => !/^[\w\\-]/.test(rest))
       const isProbe = (selector: string): boolean =>
-        escaped.some((candidate) => selector.includes(candidate))
+        probeClasses.some((className) => namesClass(selector, className))
       const counts = new Map<string, number>()
       for (const selector of icons) {
         counts.set(selector, (counts.get(selector) ?? 0) + 1)
@@ -337,9 +393,13 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
             continue
           }
         }
+        // Whole-class match: a backing rule for `c_t17ProbeInk/t17ProbeTone` must
+        // not stand in for a missing `c_t17ProbeInk` rule.
+        const namesClass = (selector: string, name: string): boolean =>
+          selector.split(`.${CSS.escape(name)}`).slice(1).some((rest) => !/^[\w\\-]/.test(rest))
         return {
           unbacked: [...classes].filter(
-            (name) => !selectors.some((selector) => selector.includes(`.${CSS.escape(name)}`))
+            (name) => !selectors.some((selector) => namesClass(selector, name))
           ),
           // Closed world: the only foreign classes on this page are the
           // `material-symbols*` hooks from the SVG library inside the icons
