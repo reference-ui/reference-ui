@@ -15,10 +15,9 @@ absence census equal to the SPEC union, full catalog in 39.2s wall.
 - **Matrix packages.** The hermetic React/bundler matrix still tests core's
   pipeline; Neo's contracts there are unproven.
 - **`strict` config (D17): wired.** `strict` now flows config → typegen,
-  is validated, and narrows JSX style props and css (the typegen change lands
-  in a parallel commit). Lib component props are not promised to follow
-  consumer strict. `layers` is wired as well. Only the `strictTokens` hatches
-  stay an approved absence.
+  is validated, and narrows JSX style props and css. Lib component props are
+  not promised to follow consumer strict. `layers` is wired as well. Only the
+  `strictTokens` hatches stay an approved absence.
 - **D19 `types/` leg.** 13 lib-src files cannot build under Neo until the
   Reference-browser voyage ships an emitter. Largest single blocker.
 

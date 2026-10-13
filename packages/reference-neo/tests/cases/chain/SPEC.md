@@ -37,11 +37,12 @@ prelude-order extends half is that consequence, nothing more.
 
 ## Out of scope
 
-`layers:` has no Neo author surface (D17 defers it), so every layers leg of
-the hybrid matrix tiers stays homed at kept matrix `chain-t2`/`chain-t8`
-until D17 — T2/T8 are the layers proof meanwhile (H3). That holds the T5
-parallel-layers suggestion too: suggested in the same CHAIN_REPORT paragraph
-as depth-three, refused here for the same reason. T8's same-library-both-
-buckets policy is not this group's (H4; T8 stays KEEP). Hybrid
-both-buckets-at-once coexistence has no Neo home yet — a D17 follow-up. The
-single-hop adopt stays homed at NEO-SYNC-10, which this group builds on.
+`layers:` is wired (D17: validated, merged after `extends`), but no Neo case
+authors it. Every layers leg of the hybrid matrix tiers therefore stays homed
+at kept matrix `chain-t2`/`chain-t8` — T2/T8 are the layers proof meanwhile
+(H3). That holds the T5 parallel-layers suggestion too: suggested in the same
+CHAIN_REPORT paragraph as depth-three, refused here for the same scope reason.
+T8's same-library-both-buckets policy is not this group's (H4; T8 stays KEEP).
+Hybrid both-buckets-at-once coexistence has no Neo home yet and stays an open
+follow-up for this group. The single-hop adopt stays homed at NEO-SYNC-10,
+which this group builds on.

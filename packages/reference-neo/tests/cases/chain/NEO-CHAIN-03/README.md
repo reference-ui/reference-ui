@@ -12,6 +12,6 @@ RGB oracles. Node-side, `evaluated-system.json` pins the four-leaf union and
 `jsx-elements.json` pins both chains' republished hosts.
 
 Out of scope: the layers legs of the hybrid tiers stay homed at kept matrix
-`chain-t2`/`chain-t8` until D17 (H3); `layers:` has no Neo author surface.
+`chain-t2`/`chain-t8` (H3); `layers:` is wired (D17) but no Neo case authors it.
 
 > Search terms: parallel, independent chains, union, multi-package, two paths, extends, T11, T13, NEO-CHAIN-01

@@ -2,6 +2,8 @@
 
 Read-only probe of `packages/reference-core` (reference) vs `packages/reference-neo` (today). No repo files were modified. Sources: core `public.ts` / `entry/**` / `system/{api,base,runtime,primitives,types}` / `config` / host trees; Neo `src/**`; `packages/reference-neo/docs/{PLAN-host-build.md,DOMAIN.md,README.md}`.
 
+Update (2026-10-13): `layers` is wired now as well as `strict` (validated, and merged after `extends` in sync), so the `layers` row, the Typegen unions row, the Config test-count row and open question 9 below are superseded for those two fields.
+
 ---
 
 ## 1. Executive summary

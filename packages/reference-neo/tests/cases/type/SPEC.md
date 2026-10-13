@@ -28,7 +28,8 @@ TYP-TOKEN-01..06 (category unions + `Tokens`), TYP-STYLE-02/03/04/05
 (`StyleProps`, `StyleConditionKey`, `StylePropValue<T> = T | Array<T | null> |
 condition map`, recursion without TS2589), TYP-RECIPE-01/02 (plain optional
 unions), TYP-FONT-01..03, TYP-STRICT-01..05 (callable via `emit_dts_with`,
-unexposed per D17), TYP-FORBID-01..06. Caveats, all settled engine contracts,
+exposed as the `strict` config per D17; hatch names stay absent),
+TYP-FORBID-01..06. Caveats, all settled engine contracts,
 no RS: open mode keeps `Token | (string & {})` (TYP-STRICT-04), so TYPE-02
 asserts at a `ColorToken`-typed position; `StyleConditionKey` carries `@sm`,
 never bare `sm` (TYP-STYLE-03, D8); recipe variants are plain unions, not

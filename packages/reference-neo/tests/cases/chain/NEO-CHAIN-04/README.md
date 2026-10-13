@@ -2,7 +2,7 @@
 
 Matrix source: `matrix/chain/T9/tests/e2e/T9-contract.spec.ts` (extends legs
 plus the prelude-order extends half ONLY — the layers legs and cross-bucket
-order stay held for D17). Topology is the untouched T4 parallel-extends from
+order stay out of this case (H3). Topology is the untouched T4 parallel-extends from
 `matrix/CHAIN.md`. Evidence: `[chain-t9]` `T9-contract.spec.ts` (both
 extends paint; `extends...` declared order), Neo
 `src/collect/lib/merge.ts` (later fragments win on scalars).
@@ -17,7 +17,7 @@ leaf keeps its fixture value and RGB oracle. Node-side,
 `jsx-elements.json` pins both hosts.
 
 Out of scope: T9's layers legs and the extends-before-layers prelude order
-stay homed at kept matrix `chain-t2`/`chain-t8` until D17 (H3); `layers:`
-has no Neo author surface.
+stay homed at kept matrix `chain-t2`/`chain-t8` (H3); `layers:` is wired (D17)
+but no Neo case authors it.
 
 > Search terms: parallel extends, direct upstreams, declared order, later wins, shared leaf, prelude, T4, T9, NEO-SYNC-10

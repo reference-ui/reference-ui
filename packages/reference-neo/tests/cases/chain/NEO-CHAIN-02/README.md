@@ -16,6 +16,6 @@ Node-side, `evaluated-system.json` pins the merged leaves and
 once.
 
 Out of scope: the layers legs of the hybrid tiers stay homed at kept matrix
-`chain-t2`/`chain-t8` until D17 (H3); `layers:` has no Neo author surface.
+`chain-t2`/`chain-t8` (H3); `layers:` is wired (D17) but no Neo case authors it.
 
 > Search terms: diamond, shared base, duplicate upstream, multi-package, both branches, extends order, T7, T12, NEO-CHAIN-01

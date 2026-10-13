@@ -10,6 +10,8 @@ Counts: 18 non-chain matrix suites; 58 spec files; 471 test titles via
 `ls -d packages/reference-neo/tests/cases/*/NEO-* | wc -l`
 (121 TESTS.md `done` rows + CSS-02 cross-listed + 3 harness cases).
 
+Update (2026-10-13): `strict` narrowing is wired now for colors, radii and spacing (typegen `StrictRadiiProps` / `StrictSpacingProps`; colours proved by NEO-TYPE-09), so row 118 and the `strict` input bullet further down are superseded for narrowing. Only the `strictTokens` hatch part of G13 stays an approved absence under D17.
+
 ## 1. Executive summary
 
 1. 13 matrix behaviors are unproven by Neo: portaled colorMode island (`matrix/color-mode/tests/e2e/system-contract.spec.ts:96`), sibling `+`/`~` (`matrix/css-selectors/tests/e2e/css-selectors-contract.spec.ts:65`), `:where([data-variant])` scoping (`matrix/primitives/tests/unit/generated-output.test.ts:169`), radius pair shorthands (`matrix/spacing/tests/e2e/system-contract.spec.ts:143`), container+viewport mixing (`matrix/responsive/tests/e2e/viewport-contract.spec.ts:129`), inline-style `var()` probes (`matrix/system/tests/e2e/system-contract.spec.ts:131`), variant-registry augmentation (`matrix/typescript/src/primitive-variants.assertions.tsx:60`), multi-entry `fontFace` arrays (`matrix/font/tests/unit/runtime.test.ts:169`), height queries (`matrix/responsive/tests/e2e/viewport-contract.spec.ts:97`), container names (`matrix/primitives/tests/e2e/primitives-contract.spec.ts:429`), attr+hover composition (`matrix/css-selectors/tests/e2e/css-selectors-contract.spec.ts:118`), display/overflow/letter-spacing breadth (`matrix/primitives/tests/e2e/primitives-contract.spec.ts:330`), strictTokens narrowing (`matrix/typescript/src/strict-tokens.assertions.ts:9`).

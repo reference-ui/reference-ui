@@ -15,6 +15,6 @@ the fixture RGB oracles. Node-side, `evaluated-system.json` pins the merged
 leaves at both depths and `jsx-elements.json` pins the republished hosts.
 
 Out of scope: the layers legs of the hybrid tiers stay homed at kept matrix
-`chain-t2`/`chain-t8` until D17 (H3); `layers:` has no Neo author surface.
+`chain-t2`/`chain-t8` (H3); `layers:` is wired (D17) but no Neo case authors it.
 
 > Search terms: transitive, chain, republish, multi-package, outer inner, extends depth, T6, T10, NEO-SYNC-10

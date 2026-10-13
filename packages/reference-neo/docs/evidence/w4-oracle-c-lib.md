@@ -2,6 +2,8 @@
 
 Read-only scout per PLAN §10.1 (`packages/reference-neo/PLAN.md:985`). Question: what exact minimal API surface does reference-lib use, what family table must PARITY-02 census, and does the union of group SPEC approved absences already equal the PARITY absence list?
 
+Update (2026-10-13): `strict` and `layers` are both wired now, so the "D17 strict/layers deferred" row in the cross-reference table below and the `strict/layers/mcp` item in the sync absence list are superseded (only `mcp` config remains absent); the D17 absence that still stands is the `strictTokens` / `WithEscapeHatch` hatch surface only.
+
 ## 1. Executive summary
 
 1. Lib imports 3 generated packages: `@reference-ui/react` (89 files), `@reference-ui/system` (31), `@reference-ui/types` (11); `@reference-ui/styled` has 0 lib-src importers (`evidence/generated-folder-shape.md:84`, `evidence/coverage-lib.md:24`; re-verified by rg, §5).

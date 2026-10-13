@@ -50,8 +50,9 @@ goldens and the portable fixture emit it). D2 (`styled/global.css` is not
 written; `@layer global` lives inside `styles.css`). D7 (Panda chrome is not
 parity: `--made-with-panda`, the `*` transform-var dump — see GLOBAL-09).
 D9 (slot recipes out; multi-part anatomy is authored global CSS + `data-slot`).
-D17 defers the `layers` *config surface*, not the two-system package nesting
-that LAYER-02 proves via RS-4.
+D17 wired the `layers` *config surface* (validated, merged after `extends`).
+LAYER-02 proves the two-system package nesting via RS-4 through `extends`; it
+does not author that surface.
 
 ## Approved absences
 
