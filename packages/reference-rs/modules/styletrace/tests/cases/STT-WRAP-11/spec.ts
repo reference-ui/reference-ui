@@ -1,6 +1,6 @@
 /**
  * Station specification for STT-WRAP-11.
- * Asserts multibyte capital first letters (Ärger, Kärtchen) trace as components, and that
+ * Asserts a non-ASCII capital first letter (Ärger) and a non-ASCII later letter (Kärtchen) both trace as components, and that
  * an empty file and a BOM-only file parse silently: the trace raises no diagnostic at all.
  */
 import { expect } from 'vitest'
