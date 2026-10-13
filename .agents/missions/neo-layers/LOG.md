@@ -101,7 +101,7 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 | Module | `agentrs c` | `agentrs v` |
 | --- | --- | --- |
-| atomic | 849 passed | 319 passed, 1 failed (ATM-SITE-54) / 15 files |
+| atomic | 849 passed | 320 / 15 files (with gitignored fixtures) |
 | atlas | 24 | 61 / 6 files |
 | tasty | 90 | 83 / 5 files |
 | styletrace | 89 (with fixture) | 32 / 3 files |
@@ -114,6 +114,27 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 | Hash | What | Proof |
 | --- | --- | --- |
+| 6da6e55c2, eb4fa7479 | NEO-LAYERS-01 + layers group SPEC/TESTS | `agentneo run NEO-LAYERS-01` PASS (re-run by orchestrator) |
+| 3067e6b4c | NEO-LAYERS-05 + 2 layers unit tests in validate.test.ts | `agentneo run NEO-LAYERS-05` PASS; validate.test.ts 9 → 11 passed |
+| 6ce8cd381 | NEO-LAYERS-02/03 (visual-only boundary; order, dedupe, self-exclusion) | both PASS (re-run) |
+| 8d4cbd0d8 | NEO-LAYERS-04/06 (container root + qualifiers; re-sync) | 04 PASS; 06 red only on bare-specifier legs = BUG B1 (re-run) |
+| 8e413751e, 44e4ef2f9 | rs/atlas pilot: raw-id folders, suites/, harness/, runner default pattern | atlas c 24→24, v 61/6→61/6; 30 goldens sed-diff 0 |
+
+## Bugs
+
+- B1 (real, Neo): a consumer config importing an upstream baseSystem by BARE
+  specifier keeps the first-loaded upstream for the life of the process
+  (`src/config/bundle.ts:62-71` externalises packages; `src/config/evaluate.ts:30`
+  cache-busts only the entry). Hits watch mode for reference-lib's
+  `@reference-ui/icons/baseSystem`. Red in NEO-LAYERS-06 (layers/bare, extends/bare).
+  Fix: cook in flight; refiner pass after.
+- Pinned as current behaviour, not fixed (D6/D7 in layers/SPEC.md): a system in
+  both buckets prints its block twice; a layers entry named like the consumer
+  ranks with own.
+- Environment, not code: ATM-SITE-54 (and -16/-58) need gitignored
+  `input/node_modules` fixtures, styletrace needs gitignored
+  `fixtures/sync-root/.reference-ui`; both exist only in the main checkout, so a
+  fresh clone/CI is red. Worktrees clone them from main.
 
 ## Verified at
 
