@@ -39,6 +39,16 @@ fn missing_relative_import_leaves_target_unresolved() {
     })
     .expect("scan should complete");
 
+    assert!(
+        bundle.diagnostics.iter().any(|d| {
+            d.code.as_str() == "TST-W-UNRESOLVED-IMPORT"
+                && d.message.contains("`./nonexistent`")
+                && d.file.as_deref() == Some("src/root.ts")
+        }),
+        "expected unresolved-import diagnostic, got {:?}",
+        bundle.diagnostics
+    );
+
     let root_symbol = bundle
         .symbols
         .values()
@@ -109,5 +119,31 @@ fn circular_type_reexports_terminate() {
             && bundle.symbols.values().any(|s| s.name == "B"),
         "expected both symbols from cyclic re-export graph, got {} symbols",
         bundle.symbols.len()
+    );
+}
+
+#[test]
+fn existing_target_outside_the_scan_is_not_reported() {
+    let root = TempDir::new("tasty-error-existing-target");
+    root.write(
+        "src/index.ts",
+        "import './styles.css';\nimport type { Shared } from '../shared/types';\nexport interface Root { x: Shared }\n",
+    );
+    root.write("src/styles.css", "a { color: red; }\n");
+    root.write("shared/types.ts", "export interface Shared { y: string }\n");
+
+    let bundle = scan_typescript_bundle(&ScanRequest {
+        root_dir: root.path().to_path_buf(),
+        include: vec!["src/**/*.ts".to_string()],
+    })
+    .expect("scan should complete");
+
+    assert!(
+        !bundle
+            .diagnostics
+            .iter()
+            .any(|d| d.code.as_str() == "TST-W-UNRESOLVED-IMPORT"),
+        "a target that exists on disk must not warn, got {:?}",
+        bundle.diagnostics
     );
 }

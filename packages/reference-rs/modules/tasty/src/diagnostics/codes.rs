@@ -27,12 +27,14 @@ pub enum TastyDiagnosticCode {
     DuplicateSymbolName,
     /// `scanner/workspace`: the scan root, glob, path, or file read failed; the request is refused.
     ScanFailed,
+    /// `ast/extract/statements/module_requests`: a relative or absolute module request names no file on disk.
+    UnresolvedImport,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(TastyDiagnosticCode, &str); 6] = [
+const CODE_TABLE: [(TastyDiagnosticCode, &str); 7] = [
     (TastyDiagnosticCode::ParseError, "TST-W-PARSE-ERROR"),
     (
         TastyDiagnosticCode::DuplicateDeclaration,
@@ -48,6 +50,10 @@ const CODE_TABLE: [(TastyDiagnosticCode, &str); 6] = [
         "TST-W-DUPLICATE-SYMBOL-NAME",
     ),
     (TastyDiagnosticCode::ScanFailed, "TST-E-SCAN-FAILED"),
+    (
+        TastyDiagnosticCode::UnresolvedImport,
+        "TST-W-UNRESOLVED-IMPORT",
+    ),
 ];
 
 impl TastyDiagnosticCode {
@@ -136,6 +142,7 @@ mod tests {
             TastyDiagnosticCode::StarAmbiguity,
             TastyDiagnosticCode::DuplicateSymbolName,
             TastyDiagnosticCode::ScanFailed,
+            TastyDiagnosticCode::UnresolvedImport,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

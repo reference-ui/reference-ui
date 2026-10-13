@@ -38,6 +38,11 @@ const spec: StationSpec<TastyCaseResult> = {
     }
     expect(predicateRaw.returnType?.kind).toBe('raw')
     expect(predicateRaw.returnType?.summary).toBe('value is User')
+
+    const withThisType = await api.loadSymbolByName('WithThisType')
+    const selfType = findMember(withThisType, 'self').getType()
+    expect(selfType?.getKind()).toBe('raw')
+    expect(selfType?.getSummary()).toBe('this')
   },
 }
 

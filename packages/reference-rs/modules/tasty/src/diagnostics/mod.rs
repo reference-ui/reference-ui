@@ -74,6 +74,23 @@ pub(crate) fn star_ambiguity(
     )])
 }
 
+/// Path-shaped module request that names no file: its names stay external, siblings keep resolving.
+pub(crate) fn unresolved_import(
+    file_id: &str,
+    specifier: &str,
+) -> Result<Diagnostic, DiagnosticError> {
+    Diagnostic::warning(
+        TastyDiagnosticCode::UnresolvedImport.as_str(),
+        format!(
+            "unresolved import `{specifier}` in `{file_id}`: no file matches it, so the names it provides stay unresolved"
+        ),
+    )?
+    .with_location(file_id, None, None)
+    .with_help(vec![format!(
+        "create the file for `{specifier}` or correct the specifier in `{file_id}`"
+    )])
+}
+
 /// One name indexes several symbols: `matches` lists `id (library)` pairs for disambiguation.
 pub(crate) fn duplicate_symbol_name(
     name: &str,
@@ -152,6 +169,12 @@ mod tests {
                     .to_string()
             ])
         );
+
+        let unresolved = unresolved_import("src/root.ts", "./missing").unwrap();
+        assert_eq!(unresolved.code.as_str(), "TST-W-UNRESOLVED-IMPORT");
+        assert_eq!(unresolved.severity, Severity::Warning);
+        assert_eq!(unresolved.file.as_deref(), Some("src/root.ts"));
+        assert!(unresolved.message.contains("`./missing`"));
     }
 
     #[test]
@@ -189,6 +212,13 @@ mod tests {
                 "{\"severity\":\"warning\",\"code\":\"TST-W-DUPLICATE-SYMBOL-NAME\",\
                  \"message\":\"Duplicate symbol name `Shared` matched 2 entries: _aaa (user), _bbb (user). Use symbol id or scoped lookup to disambiguate.\",\
                  \"help\":[\"look up `Shared` by symbol id (_aaa (user), _bbb (user)) or a scoped lookup\"]}",
+            ),
+            (
+                unresolved_import("src/root.ts", "./missing").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"TST-W-UNRESOLVED-IMPORT\",\
+                 \"message\":\"unresolved import `./missing` in `src/root.ts`: no file matches it, so the names it provides stay unresolved\",\
+                 \"file\":\"src/root.ts\",\
+                 \"help\":[\"create the file for `./missing` or correct the specifier in `src/root.ts`\"]}",
             ),
         ];
         for (diagnostic, wire) in cases {

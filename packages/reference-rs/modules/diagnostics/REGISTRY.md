@@ -30,7 +30,7 @@ consumers never break on codes minted after they shipped.
 | `RS`      | template    | Self: `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` for tests and docs only; never emitted by shipped code |
 | `ATM`     | atomic      | Live: 52-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
-| `TST`     | tasty       | Live: 6-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, and manifest warnings plus the scan refusal |
+| `TST`     | tasty       | Live: 7-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, and unresolved-import warnings plus the scan refusal |
 | `STT`     | styletrace  | Live: 3-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
@@ -157,6 +157,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TST-W-STAR-AMBIGUITY` | `export *` name from two targets is excluded from the barrel | `modules/tasty/src/ast/resolve/index.rs` |
 | `TST-W-DUPLICATE-SYMBOL-NAME` | One name indexes several symbols; disambiguate by id or scope | `modules/tasty/src/generator/bundle/modules/manifest.rs` |
 | `TST-E-SCAN-FAILED` | Scan walk, glob, path, or file read failed; the request is refused as a coded throw | `modules/tasty/src/scanner/workspace/**` |
+| `TST-W-UNRESOLVED-IMPORT` | A relative or absolute import, `export *`, or `export { x } from` names no file on disk; its names stay external | `modules/tasty/src/ast/extract/statements/module_requests.rs` |
 | `ATL-W-UNRESOLVED-PROPS-TYPE` | Named props type resolves nowhere; a partial component is kept with empty props | `modules/atlas/src/resolver.rs` |
 | `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | Inline props object annotation; the component is omitted from the inventory | `modules/atlas/src/resolver.rs` |
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | Included package resolves nowhere; the package is skipped | `modules/atlas/src/analyzer.rs` |

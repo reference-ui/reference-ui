@@ -7,7 +7,9 @@ use oxc_ast::ast::{Comment, Statement, TSInterfaceDeclaration, TSTypeAliasDeclar
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
-use super::statements::{exports_from_statement, import_bindings_from_statement};
+use super::statements::{
+    exports_from_statement, import_bindings_from_statement, unresolved_import_diagnostics,
+};
 use super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::values::value_bindings_from_statement;
 use super::ExtractionContext;
@@ -41,6 +43,12 @@ fn extract_file(
     let parsed = Parser::new(&allocator, &scanned_file.source, source_type).parse();
 
     record_parse_errors(scanned_file, parsed.errors.len(), diagnostics)?;
+    diagnostics.extend(unresolved_import_diagnostics(
+        resolver,
+        scanned_file,
+        file_id_set,
+        &parsed.program.body,
+    )?);
 
     let comments = &parsed.program.comments;
     let mut bindings = FileBindings::default();

@@ -90,6 +90,19 @@ impl ImportResolver {
         )
     }
 
+    /// Whether a relative or absolute specifier names a file on disk, ignoring the scan set. A
+    /// target that exists but was not scanned (an asset, or a file outside the include globs) is
+    /// not dangling; only a target missing from disk is.
+    pub(crate) fn names_file_on_disk(&self, current_file_id: &str, source_module: &str) -> bool {
+        self.resolve_relative_import(
+            current_file_id,
+            source_module,
+            &BTreeSet::new(),
+            FileLookup::Allowed,
+        )
+        .is_some()
+    }
+
     /// Memoized external resolution; negative outcomes are cached too.
     pub(super) fn resolve_external(&self, source_module: &str) -> Option<ResolvedModule> {
         if let Some(cached) = self.external.borrow().get(source_module).cloned() {

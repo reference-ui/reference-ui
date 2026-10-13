@@ -280,6 +280,10 @@ impl<'a> LoweringContext<'a> {
             return LoweringContext::new(&ctx).lower_type(&type_alias.type_annotation);
         }
 
+        // Unreachable for error-free sources: a clean tuple element is a complete standalone
+        // type, so its wrapper parses to an alias. The elements whose wrapper parse fails (a bare
+        // `unique`, `readonly`, `keyof` or `infer`) fail the main parse as well, so their file
+        // already carries TST-W-PARSE-ERROR and this summary is only a last resort.
         TypeRef::Raw {
             summary: element_source.to_string(),
         }

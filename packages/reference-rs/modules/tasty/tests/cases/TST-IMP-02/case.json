@@ -1,0 +1,1 @@
+{"id": "TST-IMP-02", "name": "An import from a relative file that does not exist warns TST-W-UNRESOLVED-IMPORT and the type stays an external reference"}
