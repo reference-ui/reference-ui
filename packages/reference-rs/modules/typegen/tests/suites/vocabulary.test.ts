@@ -8,12 +8,12 @@ import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { primitivesVocabulary } from '../js/index.js'
+import { primitivesVocabulary } from '../../js/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
 function goldenStylePropKeys(): string[] {
-  const golden = readFileSync(resolve(here, 'goldens/styles.d.ts'), 'utf8')
+  const golden = readFileSync(resolve(here, '../goldens/styles.d.ts'), 'utf8')
   const lines = golden.split('\n')
   const head = lines.findIndex(line => line === 'export type StyleProps = FontProps & {')
   const keys: string[] = []

@@ -5,9 +5,9 @@
  * Asserts the detailed dts stays byte-identical to the plain sync emit on every shape.
  */
 import { describe, expect, it } from 'vitest'
-import { emitDetailed, emitDts, emitDtsDetailed, emitDtsSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import { compile, expectTscOk } from './tsc'
+import { emitDetailed, emitDts, emitDtsDetailed, emitDtsSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import { compile, expectTscOk } from '../harness/tsc'
 
 function spec(overrides: Partial<EvaluatedSystemSpec> = {}): EvaluatedSystemSpec {
   return {

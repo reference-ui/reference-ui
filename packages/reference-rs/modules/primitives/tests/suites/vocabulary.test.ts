@@ -11,12 +11,12 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import * as roster from '../generated/primitives.mjs'
-import { buildArtifacts } from '../generate/generate.js'
-import { primitivesVocabulary } from '../../typegen/js/index.js'
+import * as roster from '../../generated/primitives.mjs'
+import { buildArtifacts } from '../../generate/generate.js'
+import { primitivesVocabulary } from '../../../typegen/js/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const generatedDir = resolve(here, '../generated')
+const generatedDir = resolve(here, '../../generated')
 
 interface VocabularyDocument {
   version: number
@@ -39,7 +39,7 @@ function readVocabulary(): VocabularyDocument {
 
 function goldenStylePropKeys(): string[] {
   const golden = readFileSync(
-    resolve(here, '../../typegen/tests/goldens/styles.d.ts'),
+    resolve(here, '../../../typegen/tests/goldens/styles.d.ts'),
     'utf8'
   )
   const lines = golden.split('\n')

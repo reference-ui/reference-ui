@@ -8,11 +8,11 @@ import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { emitDts, emitDtsSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
+import { emitDts, emitDtsSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const rootContracts = resolve(here, '../../../contracts/fixtures')
+const rootContracts = resolve(here, '../../../../contracts/fixtures')
 
 function readFixture(name: string): EvaluatedSystemSpec {
   const filePath = resolve(rootContracts, name)
@@ -97,7 +97,7 @@ describe('typegen native seam', () => {
   })
 
   it('TYP-NATIVE-07 exports working emitDtsSync and emitDts from package dist', async () => {
-    const distTypegen = await import('../../../dist/typegen.mjs')
+    const distTypegen = await import('../../../../dist/typegen.mjs')
     expect(typeof distTypegen.emitDtsSync).toBe('function')
     expect(typeof distTypegen.emitDts).toBe('function')
     const dts = distTypegen.emitDtsSync({ baseSystem: fullSpec })

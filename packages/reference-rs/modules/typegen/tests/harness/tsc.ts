@@ -15,7 +15,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
 
-const testsDir = dirname(fileURLToPath(import.meta.url))
+// This file lives in tests/harness/, so testsDir is the tests/ root.
+const testsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 const goldensDir = join(testsDir, 'goldens')
 const rsRoot = join(testsDir, '../../..')
 

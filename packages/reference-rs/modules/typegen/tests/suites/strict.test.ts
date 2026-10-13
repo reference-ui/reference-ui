@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { compile, expectTscReject, readGolden, type TscResult } from './tsc'
+import { compile, expectTscReject, readGolden, type TscResult } from '../harness/tsc'
 
 describe('TYP-STRICT tsc consumers', () => {
   const openDts = readGolden('styles.d.ts')

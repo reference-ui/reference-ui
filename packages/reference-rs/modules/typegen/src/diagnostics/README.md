@@ -30,7 +30,7 @@ guess a missing union or wrapper, and no producer invents a code outside the tab
    the detailed twin only adds the rows.
 
 Positions: every warning is request-level and carries no file. Proof: the exact wire
-bytes in `diagnostics/mod.rs` plus the collector rows in `tests/diagnostics.rs`;
+bytes in `diagnostics/mod.rs` plus the collector rows in `src/tests/diagnostics.rs`;
 whole-compiler repros: Neo's `repro.test.ts` typegen suite.
 
 ## ERROR CODES

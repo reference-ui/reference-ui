@@ -6,21 +6,21 @@
  * numerics, responsive arrays, nesting, selectors, and custom properties. T3
  * pins rejection of bogus keys with self-policing @ts-expect-error negatives.
  * T4 pins strict wrappers: colors narrow while Open keys stay open, and absent
- * categories emit no wrapper. The tsc harness lives in ./tsc.ts.
+ * categories emit no wrapper. The tsc harness lives in ../harness/tsc.ts.
  */
 
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { loadDialect } from '../../canon/generate/dialect'
-import { loadPlatformCss } from '../../canon/generate/platform'
-import { emitDtsSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import { compile, expectTscOk, expectTscReject } from './tsc'
+import { loadDialect } from '../../../canon/generate/dialect'
+import { loadPlatformCss } from '../../../canon/generate/platform'
+import { emitDtsSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import { compile, expectTscOk, expectTscReject } from '../harness/tsc'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const contractsDir = resolve(here, '../../../contracts/fixtures')
+const contractsDir = resolve(here, '../../../../contracts/fixtures')
 
 // Keys the emitter deliberately withholds from the StyleProps block: font and
 // weight belong to the FontProps mix-in, variant and colorMode are primitive

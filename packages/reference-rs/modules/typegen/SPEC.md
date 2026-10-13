@@ -35,7 +35,7 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 | Named `[x]` | 36 / 36 contract IDs |
 | Named `[ ]` | 0 / 36 contract IDs |
 | Cargo tests | 75 (`src/tests/`) |
-| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–06 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/` (`pnpm agentrs v typegen` **56**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
+| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–06 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/suites/` (`pnpm agentrs v typegen` **56**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
 
 **Named proven:** `TYP-TOKEN-01`–`07`, `TYP-TONE-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`06`, `TYP-FORBID-01`–`06`.  
 **Remaining unproven:** none.
@@ -134,7 +134,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 
 - [x] `TYP-TOKEN-07` `[reference]` `[unit]` —  
   **Typegen should print animations tokens as `AnimationToken` and type the `animation` shorthand with it.**  
-  Pass a `BaseSystem` declaring animations `spin.slow` and `fadeIn.quick` plus a breakpoint. Assert the emitted declarations define `type AnimationToken = 'fadeIn.quick' | 'spin.slow'`, that `Tokens` indexes `animations`, and that `animation` is `StylePropValue<AnimationToken | (string & {})>` while `animationName` stays `StylePropValue<string | number>`. A dump without animations omits `AnimationToken` and keeps `animation` open. A tsc consumer probe (`tests/animation.test.ts`) checks that `animation: 'spin.slow'` and a raw shorthand typecheck. The failure mode is an `animation` prop that rejects its own tokens, or one that names an `AnimationToken` the printer never emitted.
+  Pass a `BaseSystem` declaring animations `spin.slow` and `fadeIn.quick` plus a breakpoint. Assert the emitted declarations define `type AnimationToken = 'fadeIn.quick' | 'spin.slow'`, that `Tokens` indexes `animations`, and that `animation` is `StylePropValue<AnimationToken | (string & {})>` while `animationName` stays `StylePropValue<string | number>`. A dump without animations omits `AnimationToken` and keeps `animation` open. A tsc consumer probe (`tests/suites/animation.test.ts`) checks that `animation: 'spin.slow'` and a raw shorthand typecheck. The failure mode is an `animation` prop that rejects its own tokens, or one that names an `AnimationToken` the printer never emitted.
 
 ---
 
@@ -288,33 +288,33 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-TOKEN-04` | `[unit]` | `src/tests/tokens.rs::typ_token_04_emits_typography_token_unions` | `[x]` Proven |
 | `TYP-TOKEN-05` | `[unit]` | `src/tests/tokens.rs::typ_token_05_emits_shadow_and_z_index_unions` | `[x]` Proven |
 | `TYP-TOKEN-06` | `[unit]` | `src/tests/tokens.rs::typ_token_06_emits_aggregate_tokens_interface` | `[x]` Proven |
-| `TYP-TOKEN-07` | `[unit]` | `src/tests/tokens.rs::typ_token_07_emits_animation_token_union`, `typ_token_07_omits_animation_token_when_unpopulated`; `tests/animation.test.ts` (`TYP-TOKEN-07`) | `[x]` Proven |
+| `TYP-TOKEN-07` | `[unit]` | `src/tests/tokens.rs::typ_token_07_emits_animation_token_union`, `typ_token_07_omits_animation_token_when_unpopulated`; `tests/suites/animation.test.ts` (`TYP-TOKEN-07`) | `[x]` Proven |
 | `TYP-TONE-01` | `[unit]` | `src/tests/tones.rs::typ_tone_01_emits_first_segment_tone_token` | `[x]` Proven |
 | `TYP-TONE-02` | `[unit]` | `src/tests/tones.rs::typ_tone_02_emits_never_without_tones` | `[x]` Proven |
 | `TYP-TONE-03` | `[unit]` | `src/tests/tones.rs::typ_tone_03_emits_toned_color_alias` | `[x]` Proven |
 | `TYP-TONE-04` | `[unit]` | `src/tests/tones.rs::typ_tone_04_tones_category_is_known` | `[x]` Proven |
 | `TYP-TONE-05` | `[unit]` | `src/tests/tones.rs::typ_tone_05_open_colour_prop_includes_toned_token` | `[x]` Proven |
 | `TYP-TONE-06` | `[unit]` | `src/tests/tones.rs::typ_tone_06_strict_colour_parts_include_toned_token` | `[x]` Proven |
-| `TYP-TONE-07` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-07`); `src/tests/goldens.rs::tones_matches_committed_golden` | `[x]` Proven |
-| `TYP-TONE-08` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-08`) | `[x]` Proven |
-| `TYP-TONE-09` | `[unit]` | `tests/tones.test.ts` (`TYP-TONE-09`) | `[x]` Proven |
+| `TYP-TONE-07` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-07`); `src/tests/goldens.rs::tones_matches_committed_golden` | `[x]` Proven |
+| `TYP-TONE-08` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-08`) | `[x]` Proven |
+| `TYP-TONE-09` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-09`) | `[x]` Proven |
 | `TYP-STYLE-01` | `[unit]` | `packages/reference-core/src/types/generators/strict.test.ts` (`TYP-STYLE-01`); `renderSystemStyleObjectDts` | `[x]` Proven |
 | `TYP-STYLE-02` | `[unit]` | `src/tests/style.rs::typ_style_02_narrows_style_props_with_aliases_and_tokens` | `[x]` Proven |
 | `TYP-STYLE-03` | `[unit]` | `src/tests/style.rs::typ_style_03_filters_viewport_keys_from_style_condition_key` | `[x]` Proven |
 | `TYP-STYLE-04` | `[unit]` | `src/tests/style.rs::typ_style_04_layers_dialect_props_and_omits_conflicting_css` | `[x]` Proven |
-| `TYP-STYLE-05` | `[unit]` | `tests/style-05.test.ts` (`pnpm agentrs v typegen`) | `[x]` Proven |
+| `TYP-STYLE-05` | `[unit]` | `tests/suites/style-05.test.ts` (`pnpm agentrs v typegen`) | `[x]` Proven |
 | `TYP-RECIPE-01` | `[unit]` | `src/tests/recipes.rs::typ_recipe_01_emits_optional_variant_prop_unions` | `[x]` Proven |
 | `TYP-RECIPE-02` | `[unit]` | `src/tests/recipes.rs::typ_recipe_02_emits_compound_variant_subset_unions` | `[x]` Proven |
 | `TYP-RECIPE-03` | `[unit]` | `packages/reference-core/src/types/public/recipe.test.ts` (`TYP-RECIPE-03`) | `[x]` Proven |
 | `TYP-FONT-01` | `[unit]` | `src/tests/fonts.rs::typ_font_01_emits_font_registry_from_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-02` | `[unit]` | `src/tests/fonts.rs::typ_font_02_narrows_font_props_to_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-03` | `[unit]` | `src/tests/fonts.rs::typ_font_03_falls_back_to_string_when_font_registry_is_empty` | `[x]` Proven |
-| `TYP-STRICT-01` | `[unit]` | `src/tests/strict.rs::typ_strict_01_restricts_colors_to_tokens_and_keywords`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-02` | `[unit]` | `src/tests/strict.rs::typ_strict_02_restricts_radii_to_tokens_and_keywords`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-03` | `[unit]` | `src/tests/strict.rs::typ_strict_03_restricts_spacing_to_tokens_and_keywords`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-04` | `[unit]` | `src/tests/strict.rs::typ_strict_04_open_mode_keeps_escape_hatch`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-05` | `[unit]` | `src/tests/strict.rs::typ_strict_05_composes_wrappers_in_declaration_order`; `tests/strict.test.ts` | `[x]` Proven |
-| `TYP-STRICT-07` | `[unit]` | `tests/strict.test.ts` (StyleProps and SystemStyleObject probes over `tones-strict.d.ts`) | `[x]` Proven |
+| `TYP-STRICT-01` | `[unit]` | `src/tests/strict.rs::typ_strict_01_restricts_colors_to_tokens_and_keywords`; `tests/suites/strict.test.ts` | `[x]` Proven |
+| `TYP-STRICT-02` | `[unit]` | `src/tests/strict.rs::typ_strict_02_restricts_radii_to_tokens_and_keywords`; `tests/suites/strict.test.ts` | `[x]` Proven |
+| `TYP-STRICT-03` | `[unit]` | `src/tests/strict.rs::typ_strict_03_restricts_spacing_to_tokens_and_keywords`; `tests/suites/strict.test.ts` | `[x]` Proven |
+| `TYP-STRICT-04` | `[unit]` | `src/tests/strict.rs::typ_strict_04_open_mode_keeps_escape_hatch`; `tests/suites/strict.test.ts` | `[x]` Proven |
+| `TYP-STRICT-05` | `[unit]` | `src/tests/strict.rs::typ_strict_05_composes_wrappers_in_declaration_order`; `tests/suites/strict.test.ts` | `[x]` Proven |
+| `TYP-STRICT-07` | `[unit]` | `tests/suites/strict.test.ts` (StyleProps and SystemStyleObject probes over `tones-strict.d.ts`) | `[x]` Proven |
 | `TYP-FORBID-01` | `[unit]` | `src/tests/mod.rs::typ_forbid_01_emits_no_atomic_class_names` | `[x]` Proven |
 | `TYP-FORBID-02` | `[unit]` | `src/tests/mod.rs::typ_forbid_02_emits_no_jsx_farm` | `[x]` Proven |
 | `TYP-FORBID-03` | `[unit]` | `src/tests/forbid.rs::typ_forbid_03_emits_no_layout_pattern_helpers` | `[x]` Proven |

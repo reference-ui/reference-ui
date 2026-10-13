@@ -2,12 +2,12 @@
  * TYP-STYLE-05 consumer fixtures: tsc --noEmit against the typegen printer
  * goldens. Nested condition keys on SystemStyleObject must typecheck without
  * TS2589. FONT-02 discrimination is proven here by assignability, not by
- * scanning the .d.ts string. The harness lives in `./tsc.ts`; production
+ * scanning the .d.ts string. The harness lives in `../harness/tsc.ts`; production
  * emit_dts still returns a string and does not write the filesystem.
  */
 
 import { describe, expect, it } from 'vitest'
-import { compile, readGolden } from './tsc'
+import { compile, readGolden } from '../harness/tsc'
 
 describe('TYP-STYLE-05 tsc consumers', () => {
   const emptyDts = readGolden('styles.d.ts')

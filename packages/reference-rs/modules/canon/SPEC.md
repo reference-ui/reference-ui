@@ -3,7 +3,7 @@
 Current freeze, cases, and proof. Architecture: [README.md](./README.md).
 System orchestration: [atomic.md](../../docs/atomic.md).
 
-Harness: Cargo unittests (`packages/reference-rs/modules/canon/src/tests.rs`) + Vitest (`packages/reference-rs/modules/canon/tests/join.test.ts`)  
+Harness: Cargo unittests (`packages/reference-rs/modules/canon/src/tests.rs`) + Vitest (`packages/reference-rs/modules/canon/tests/suites/join.test.ts`)  
 Generator: Platform join validation orchestrator (`pnpm --filter @reference-ui/rust run canon`)
 
 ---
@@ -16,7 +16,7 @@ Canon is the single source of truth for the Reference UI style engine language: 
 
 ## 2. Legend & Status Counts
 
-- `[x]` Proven by a passing cargo unit test (`src/tests.rs`) or fail-closed Vitest station (`tests/join.test.ts`). Code in `src/` is not proof. A proof-map row that only names a production function is `[ ]`.
+- `[x]` Proven by a passing cargo unit test (`src/tests.rs`) or fail-closed Vitest station (`tests/suites/join.test.ts`). Code in `src/` is not proof. A proof-map row that only names a production function is `[ ]`.
 - `[ ]` Specified; not yet proven by a dedicated named station.
 
 Audit: 2026-09-14. Strict 1:1 case-to-spec-ID alignment. Every case is backed by a dedicated named test station.
@@ -39,7 +39,7 @@ Named proven: `CAN-JOIN-01`–`08`, `CAN-TAG-01`–`05`, `CAN-PROP-01`–`07`, `
 ### Existing Suites
 
 - **Rust Unit Tests**: `packages/reference-rs/modules/canon/src/tests.rs` (30 passing tests in `cargo test -p canon`).
-- **Platform Join & Poison Injection Tests**: `packages/reference-rs/modules/canon/tests/join.test.ts` (15 passing tests in `vitest run --project canon`).
+- **Platform Join & Poison Injection Tests**: `packages/reference-rs/modules/canon/tests/suites/join.test.ts` (15 passing tests in `vitest run --project canon`).
 - **Platform Join Orchestrator**: Inverted join validation in generator suite (executes via `pnpm --filter @reference-ui/rust run canon`).
 
 ---
@@ -177,14 +177,14 @@ call sites are examples of the job, not names we ship.
 
 | Case ID | Source Test File | Target Function / Routine | Status |
 | :--- | :--- | :--- | :---: |
-| `CAN-JOIN-01` | `tests/join.test.ts` | `CAN-JOIN-01: dialect JSX primitives join @webref/elements` | `[x]` |
-| `CAN-JOIN-02` | `tests/join.test.ts` | `CAN-JOIN-02: full platform CSS emission plus allowlisted dialect extensions` | `[x]` |
-| `CAN-JOIN-03` | `tests/join.test.ts` | `CAN-JOIN-03: native CSS shorthands decompose to identical longhands as @webref/css` | `[x]` |
+| `CAN-JOIN-01` | `tests/suites/join.test.ts` | `CAN-JOIN-01: dialect JSX primitives join @webref/elements` | `[x]` |
+| `CAN-JOIN-02` | `tests/suites/join.test.ts` | `CAN-JOIN-02: full platform CSS emission plus allowlisted dialect extensions` | `[x]` |
+| `CAN-JOIN-03` | `tests/suites/join.test.ts` | `CAN-JOIN-03: native CSS shorthands decompose to identical longhands as @webref/css` | `[x]` |
 | `CAN-JOIN-04` | `src/tests.rs` | `can_join_04_slices_are_sorted` | `[x]` |
-| `CAN-JOIN-05` | `tests/join.test.ts` | `CAN-JOIN-05: dialect alias targets resolve to platform properties or dialect extensions` | `[x]` |
-| `CAN-JOIN-06` | `tests/join.test.ts` | `CAN-JOIN-06: dialect short-prefix properties exist on platform or dialect allowlist` | `[x]` |
-| `CAN-JOIN-07` | `tests/join.test.ts` | `CAN-JOIN-07: dialect color extensions exist on explicit color allowlist` | `[x]` |
-| `CAN-JOIN-08` | `src/tests.rs`, `tests/join.test.ts` | `can_join_08_unique_class_prefixes`, `CAN-JOIN-08: asserts all canonical properties have unique class prefixes` | `[x]` |
+| `CAN-JOIN-05` | `tests/suites/join.test.ts` | `CAN-JOIN-05: dialect alias targets resolve to platform properties or dialect extensions` | `[x]` |
+| `CAN-JOIN-06` | `tests/suites/join.test.ts` | `CAN-JOIN-06: dialect short-prefix properties exist on platform or dialect allowlist` | `[x]` |
+| `CAN-JOIN-07` | `tests/suites/join.test.ts` | `CAN-JOIN-07: dialect color extensions exist on explicit color allowlist` | `[x]` |
+| `CAN-JOIN-08` | `src/tests.rs`, `tests/suites/join.test.ts` | `can_join_08_unique_class_prefixes`, `CAN-JOIN-08: asserts all canonical properties have unique class prefixes` | `[x]` |
 | `CAN-TAG-01` | `src/tests.rs` | `can_tag_01_pascal_jsx_primitives` | `[x]` |
 | `CAN-TAG-02` | `src/tests.rs` | `can_tag_02_lowercase_html_svg_tags` | `[x]` |
 | `CAN-TAG-03` | `src/tests.rs` | `can_tag_03_reserved_tag_renames` | `[x]` |
@@ -213,13 +213,13 @@ call sites are examples of the job, not names we ship.
 | `CAN-FAIL-01` | `src/tests.rs` | `can_fail_01_hallucinated_primitives` | `[x]` |
 | `CAN-FAIL-02` | `src/tests.rs` | `can_fail_02_non_style_attributes` | `[x]` |
 | `CAN-FAIL-03` | `src/tests.rs` | `can_fail_03_bare_pseudos` | `[x]` |
-| `CAN-FAIL-04` | `tests/join.test.ts` | `CAN-FAIL-04: aborts when dialect contains unknown HTML/SVG element tag` | `[x]` |
-| `CAN-FAIL-05` | `tests/join.test.ts` | `CAN-FAIL-05: aborts when dialect contains unverified CSS property` | `[x]` |
-| `CAN-FAIL-06` | `tests/join.test.ts` | `CAN-FAIL-06: aborts when native shorthand longhands disagree with @webref/css` | `[x]` |
-| `CAN-FAIL-07` | `tests/join.test.ts` | `CAN-FAIL-07: aborts on unknown dialect alias targets` | `[x]` |
-| `CAN-FAIL-08` | `tests/join.test.ts` | `CAN-FAIL-08: aborts when duplicate class_prefix is introduced` | `[x]` |
-| `CAN-FAIL-09` | `tests/join.test.ts` | `CAN-FAIL-09: aborts when dialect short prefix property is not on platform or allowlist` | `[x]` |
-| `CAN-FAIL-10` | `tests/join.test.ts` | `CAN-FAIL-10: aborts when color extension is not in webref or dialect color allowlist` | `[x]` |
+| `CAN-FAIL-04` | `tests/suites/join.test.ts` | `CAN-FAIL-04: aborts when dialect contains unknown HTML/SVG element tag` | `[x]` |
+| `CAN-FAIL-05` | `tests/suites/join.test.ts` | `CAN-FAIL-05: aborts when dialect contains unverified CSS property` | `[x]` |
+| `CAN-FAIL-06` | `tests/suites/join.test.ts` | `CAN-FAIL-06: aborts when native shorthand longhands disagree with @webref/css` | `[x]` |
+| `CAN-FAIL-07` | `tests/suites/join.test.ts` | `CAN-FAIL-07: aborts on unknown dialect alias targets` | `[x]` |
+| `CAN-FAIL-08` | `tests/suites/join.test.ts` | `CAN-FAIL-08: aborts when duplicate class_prefix is introduced` | `[x]` |
+| `CAN-FAIL-09` | `tests/suites/join.test.ts` | `CAN-FAIL-09: aborts when dialect short prefix property is not on platform or allowlist` | `[x]` |
+| `CAN-FAIL-10` | `tests/suites/join.test.ts` | `CAN-FAIL-10: aborts when color extension is not in webref or dialect color allowlist` | `[x]` |
 
 ---
 
