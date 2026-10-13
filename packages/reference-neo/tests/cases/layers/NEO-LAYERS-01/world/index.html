@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="extends-only" class="neo-layers1-ext__c_extInk">extends control</div>
+    <div id="layer-ink" data-layer="neo-layers1-lay" class="neo-layers1-lay__c_layInk">layer ink</div>
+    <div id="layer-paper" data-layer="neo-layers1-lay" class="neo-layers1-lay__bg-c_layPaper">layer paper</div>
+    <div id="rank-extends-layer" data-layer="neo-layers1-lay" class="neo-layers1-ext__c_extInk neo-layers1-lay__c_layInk">extends against layer</div>
+    <div id="rank-layer-own" data-layer="neo-layers1-lay" class="neo-layers1-lay__c_layInk">layer against own</div>
+    <div id="token-scoped" data-layer="neo-layers1-lay">token inside layer scope</div>
+    <div id="token-unscoped">token outside layer scope</div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>
