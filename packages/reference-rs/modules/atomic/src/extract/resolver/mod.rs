@@ -25,7 +25,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 
 use module_graph::{
     BindingOrigin, BindingWalk, ExtensionPolicy, ModuleGraph, ModuleKey, ModuleRecord,
-    RootEntryPolicy, SpecifierLadder, TsconfigPolicy,
+    SpecifierLadder, TsconfigPolicy,
 };
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
@@ -253,11 +253,11 @@ impl<'s> ValueGraph<'s> {
         if let Some(hit) = self.origins.get(&query) {
             return hit.clone();
         }
-        // Atomic follows tsconfig (SITE-54 alias arm); worlds skip. Atomic
-        // keeps the declarations-first root order it has always resolved with.
+        // Atomic follows tsconfig (SITE-54 alias arm); worlds skip. Package
+        // roots are source-first, so a `types` declaration never shadows the
+        // `exports` source that carries a style value (ATM-SITE-91).
         let ladder = SpecifierLadder::new(self.fs.as_ref(), ExtensionPolicy::Source)
-            .with_tsconfig(TsconfigPolicy::Follow)
-            .with_root_entry(RootEntryPolicy::TypesFirst);
+            .with_tsconfig(TsconfigPolicy::Follow);
         let mut walk = BindingWalk::new(&mut self.graph, &ladder);
         let outcome = walk.resolve_binding(from, local);
         drop(walk);

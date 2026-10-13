@@ -110,8 +110,8 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         Self { tsconfig, ..self }
     }
 
-    /// A ladder that orders package roots with this policy: styletrace keeps
-    /// the source-first default, atomic passes types-first to keep its order.
+    /// A ladder that orders package roots with this policy. Atomic and
+    /// styletrace keep the source-first default; types-first is opt-in.
     pub fn with_root_entry(self, root_entry: RootEntryPolicy) -> Self {
         Self { root_entry, ..self }
     }

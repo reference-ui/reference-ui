@@ -16,7 +16,7 @@ declared, shared by the Reference UI compilers.
   `RootEntryPolicy` orders a package root's `exports`, `module`, and `main`
   against its top-level `types`/`typings`: `SourceFirst` by default, so a
   declaration beside a source entry never shadows it; `TypesFirst` is opt-in
-  (atomic keeps it).
+  for consumers that resolve declarations, and no production ladder sets it.
 - **Records** (`ModuleGraph`): `ModuleRecord::collect` reads a parsed program
   into value import edges, an export table, and declared names. The graph
   memoizes one record per `ModuleKey`, loaded on first use.

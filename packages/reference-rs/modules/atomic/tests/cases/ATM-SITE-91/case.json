@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-91", "name": "A package root's types declaration never shadows its exports source, so a value read through the package folds"}
