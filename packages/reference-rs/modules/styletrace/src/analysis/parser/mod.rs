@@ -4,9 +4,12 @@
 
 pub mod component;
 pub mod context;
+pub mod export_resolve;
+pub mod exports;
 pub mod member_alias;
 pub mod pipeline;
 pub mod types;
+pub mod wrappers;
 
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
@@ -15,10 +18,7 @@ use std::path::{Path, PathBuf};
 use rustc_hash::FxHashMap;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{
-    Declaration, ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclarationSpecifier,
-    ImportOrExportKind, Program, Statement,
-};
+use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
@@ -31,10 +31,11 @@ use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
 use self::component::{
-    component_from_expression, component_from_function_declaration, component_from_function_like,
+    component_from_expression, component_from_function_declaration,
     factory_from_function_declaration, factory_target_from_expression,
 };
 use self::context::ParserContext;
+use self::exports::LocalExports;
 
 pub struct ParseState {
     pub components: FxHashMap<String, TraceComponent>,
@@ -44,6 +45,7 @@ pub struct ParseState {
     pub export_all_sources: Vec<String>,
     pub member_aliases: Vec<MemberAlias>,
     pub identifier_aliases: FxHashMap<String, String>,
+    pub local_exports: LocalExports,
 }
 
 impl Default for ParseState {
@@ -56,6 +58,7 @@ impl Default for ParseState {
             export_all_sources: Vec::new(),
             member_aliases: Vec::new(),
             identifier_aliases: FxHashMap::default(),
+            local_exports: LocalExports::default(),
         }
     }
 }
@@ -105,6 +108,7 @@ pub fn fold_trace_module(
     for statement in &program.body {
         if let Statement::ImportDeclaration(import_decl) = statement {
             collect_imports(source, import_decl, &mut imports);
+            exports::collect_type_only_imports(import_decl, &mut state.local_exports.type_only);
         }
     }
 
@@ -119,6 +123,7 @@ pub fn fold_trace_module(
     for statement in &program.body {
         collect_statement(statement, &ctx, &mut state)?;
     }
+    export_resolve::finish(&mut state, &imports);
 
     Ok(TraceModule {
         components: state.components,
@@ -210,24 +215,16 @@ fn collect_statement(
             }
         }
         Statement::VariableDeclaration(declaration) => {
-            collect_variable_symbols(
-                declaration.declarations.iter(),
-                ctx,
-                SymbolTargets {
-                    components: &mut state.components,
-                    component_factories: &mut state.component_factories,
-                    identifier_aliases: &mut state.identifier_aliases,
-                },
-            )?;
+            collect_variable_symbols(declaration.declarations.iter(), ctx, state)?;
         }
         Statement::ExpressionStatement(expression) => {
             member_alias::collect_member_alias(expression, &mut state.member_aliases);
         }
         Statement::ExportNamedDeclaration(export_decl) => {
-            collect_export_named_declaration(export_decl, ctx, state)?;
+            exports::collect_export_named_declaration(export_decl, ctx, state)?;
         }
         Statement::ExportDefaultDeclaration(export_default) => {
-            collect_export_default_declaration(export_default, ctx, state)?;
+            exports::collect_export_default_declaration(export_default, ctx, state)?;
         }
         Statement::ExportAllDeclaration(export_all) => {
             state
@@ -239,191 +236,12 @@ fn collect_statement(
     Ok(())
 }
 
-fn collect_export_default_declaration(
-    export_default: &oxc_allocator::Box<'_, oxc_ast::ast::ExportDefaultDeclaration<'_>>,
-    ctx: &ParserContext,
-    state: &mut ParseState,
-) -> Result<(), StyleTraceError> {
-    match &export_default.declaration {
-        ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let component_name = function
-                .id
-                .as_ref()
-                .map(|id| id.name.to_string())
-                .unwrap_or_else(|| "__default__".to_string());
-            if let Some(component) = component_from_function_like(
-                &crate::analysis::parser::component::FunctionLikeContext {
-                    name: &component_name,
-                    first_param: function.params.items.first(),
-                    body_statements: function.body.as_ref().map(|body| &body.statements),
-                    wrapper_style_props: BTreeSet::new(),
-                },
-                ctx,
-            )? {
-                state.components.insert(component_name.clone(), component);
-                state
-                    .exports
-                    .insert("default".to_string(), ExportTarget::Local(component_name));
-            }
-        }
-        ExportDefaultDeclarationKind::Identifier(identifier) => {
-            let name = identifier.name.to_string();
-            if state.components.contains_key(&name) || state.component_factories.contains_key(&name)
-            {
-                state
-                    .exports
-                    .insert("default".to_string(), ExportTarget::Local(name));
-            }
-        }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            if let Some(component) = component_from_function_like(
-                &crate::analysis::parser::component::FunctionLikeContext {
-                    name: "__default__",
-                    first_param: arrow.params.items.first(),
-                    body_statements: Some(&arrow.body.statements),
-                    wrapper_style_props: BTreeSet::new(),
-                },
-                ctx,
-            )? {
-                state
-                    .components
-                    .insert("__default__".to_string(), component);
-                state.exports.insert(
-                    "default".to_string(),
-                    ExportTarget::Local("__default__".to_string()),
-                );
-            }
-        }
-        ExportDefaultDeclarationKind::FunctionExpression(function) => {
-            if let Some(component) = component_from_function_like(
-                &crate::analysis::parser::component::FunctionLikeContext {
-                    name: "__default__",
-                    first_param: function.params.items.first(),
-                    body_statements: function.body.as_ref().map(|body| &body.statements),
-                    wrapper_style_props: BTreeSet::new(),
-                },
-                ctx,
-            )? {
-                state
-                    .components
-                    .insert("__default__".to_string(), component);
-                state.exports.insert(
-                    "default".to_string(),
-                    ExportTarget::Local("__default__".to_string()),
-                );
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn collect_export_named_declaration(
-    export_decl: &oxc_allocator::Box<'_, ExportNamedDeclaration<'_>>,
-    ctx: &ParserContext,
-    state: &mut ParseState,
-) -> Result<(), StyleTraceError> {
-    if let Some(declaration) = export_decl.declaration.as_ref() {
-        collect_export_named_declaration_body(declaration, ctx, state)?;
-        return Ok(());
-    }
-
-    let source_module = export_decl
-        .source
-        .as_ref()
-        .map(|value| module_source_literal(ctx.source, value.span()));
-    for specifier in &export_decl.specifiers {
-        let local = module_export_name(ctx.source, &specifier.local);
-        let exported = module_export_name(ctx.source, &specifier.exported);
-
-        if let Some(source_module) = &source_module {
-            state.exports.insert(
-                exported,
-                ExportTarget::Imported {
-                    source: source_module.clone(),
-                    imported_name: local,
-                },
-            );
-            continue;
-        }
-
-        if state.components.contains_key(&local) {
-            state.exports.insert(exported, ExportTarget::Local(local));
-            continue;
-        }
-
-        if let Some(import_binding) = ctx.imports.get(&local) {
-            state.exports.insert(
-                exported,
-                ExportTarget::Imported {
-                    source: import_binding.source.clone(),
-                    imported_name: import_binding.imported_name.clone(),
-                },
-            );
-        }
-    }
-    Ok(())
-}
-
-fn collect_export_named_declaration_body(
-    declaration: &Declaration<'_>,
-    ctx: &ParserContext,
-    state: &mut ParseState,
-) -> Result<(), StyleTraceError> {
-    match declaration {
-        Declaration::FunctionDeclaration(function) => {
-            if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
-                state.components.insert(name.clone(), component);
-                state
-                    .exports
-                    .insert(name.clone(), ExportTarget::Local(name));
-            }
-            if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
-                state.factories.insert(name, factory);
-            }
-        }
-        Declaration::VariableDeclaration(declaration) => {
-            collect_variable_symbols(
-                declaration.declarations.iter(),
-                ctx,
-                SymbolTargets {
-                    components: &mut state.components,
-                    component_factories: &mut state.component_factories,
-                    identifier_aliases: &mut state.identifier_aliases,
-                },
-            )?;
-            for declarator in &declaration.declarations {
-                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
-                else {
-                    continue;
-                };
-                let name = identifier.name.to_string();
-                if state.components.contains_key(&name)
-                    || state.component_factories.contains_key(&name)
-                {
-                    state
-                        .exports
-                        .insert(name.clone(), ExportTarget::Local(name));
-                }
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-/// The symbol maps one declarator pass writes into: parsed components,
-/// factory targets, and identifier links for the alias walk.
-pub struct SymbolTargets<'a> {
-    pub components: &'a mut FxHashMap<String, TraceComponent>,
-    pub component_factories: &'a mut FxHashMap<String, FactoryTarget>,
-    pub identifier_aliases: &'a mut FxHashMap<String, String>,
-}
-
+/// Fold one declaration list into the symbol maps: components, factory targets, identifier
+/// links (`const A = B`), wrapper links (`const A = memo(B)`), and `Object.assign` members.
 pub fn collect_variable_symbols<'a, I>(
     declarators: I,
     ctx: &ParserContext,
-    targets: SymbolTargets<'_>,
+    state: &mut ParseState,
 ) -> Result<(), StyleTraceError>
 where
     I: IntoIterator<Item = &'a oxc_ast::ast::VariableDeclarator<'a>>,
@@ -435,23 +253,33 @@ where
         let Some(init) = declarator.init.as_ref() else {
             continue;
         };
-        if let Some(component) =
-            component_from_expression(&identifier.name.to_string(), init, ctx, BTreeSet::new())?
-        {
-            targets.components.insert(identifier.name.to_string(), component);
+        let name = identifier.name.to_string();
+        wrappers::collect_object_assign_members(&name, init, &mut state.member_aliases);
+        if let Some(component) = component_from_expression(&name, init, ctx, BTreeSet::new())? {
+            state.components.insert(name, component);
+            continue;
+        }
+        if let Some(target) = wrappers::react_wrapper_identifier(init, ctx.imports) {
+            link_wrapper(state, &name, target);
             continue;
         }
         if let Some(factory_target) = factory_target_from_expression(init, ctx.imports) {
-            targets
-                .component_factories
-                .insert(identifier.name.to_string(), factory_target);
+            state.component_factories.insert(name, factory_target);
             continue;
         }
-        member_alias::collect_identifier_alias(
-            identifier.name.as_str(),
-            init,
-            &mut *targets.identifier_aliases,
-        );
+        member_alias::collect_identifier_alias(&name, init, &mut state.identifier_aliases);
     }
     Ok(())
+}
+
+/// Link a binding to the identifier its React wrapper call wraps, and mark the link as a
+/// wrapper so the export and member walks do not treat the wrapper object as the wrapped one.
+fn link_wrapper(state: &mut ParseState, name: &str, target: &str) {
+    if target == name {
+        return;
+    }
+    state
+        .identifier_aliases
+        .insert(name.to_string(), target.to_string());
+    state.local_exports.wrapper_links.insert(name.to_string());
 }

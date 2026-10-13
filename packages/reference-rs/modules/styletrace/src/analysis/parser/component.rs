@@ -55,7 +55,9 @@ pub fn factory_from_function_declaration(
         return Ok(None);
     };
 
-    let mut local_components = FxHashMap::default();
+    // Function-local bindings live in a scratch state: only the components they
+    // name matter to the factory, and their links never reach the module's maps.
+    let mut local = super::ParseState::default();
     super::collect_variable_symbols(
         body.statements
             .iter()
@@ -67,16 +69,12 @@ pub fn factory_from_function_declaration(
             })
             .flatten(),
         ctx,
-        super::SymbolTargets {
-            components: &mut local_components,
-            component_factories: &mut FxHashMap::default(),
-            identifier_aliases: &mut FxHashMap::default(),
-        },
+        &mut local,
     )?;
 
     for statement in &body.statements {
         if let Some(factory) =
-            extract_factory_from_statement(statement, id.name.as_str(), &local_components, ctx)?
+            extract_factory_from_statement(statement, id.name.as_str(), &local.components, ctx)?
         {
             return Ok(Some(factory));
         }
