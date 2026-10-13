@@ -5,6 +5,7 @@ import {
   createReferenceUiTastyApi,
   type ReferenceDocument,
 } from '@reference-ui/neo/reference'
+import { formatReferenceWarning } from './warnings'
 
 export interface McpReferenceMemberData {
   name: string
@@ -190,6 +191,6 @@ export async function loadMcpReferenceData(
   return {
     description,
     members: members.map(toMcpReferenceMemberData),
-    warnings: api.getWarnings(),
+    warnings: api.getWarnings().map(formatReferenceWarning),
   }
 }

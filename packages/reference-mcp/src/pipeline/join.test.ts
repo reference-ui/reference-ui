@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Component } from '@reference-ui/rust/atlas'
 import type { ReferenceDocument } from '@reference-ui/neo/reference'
-import { joinMcpComponent } from './join'
+import { joinMcpComponent, toMcpReferenceData } from './join'
 
 function createComponent(): Component {
   return {
@@ -37,7 +37,16 @@ function createDocument(): ReferenceDocument {
     name: 'ButtonProps',
     kind: 'interface',
     kindLabel: 'Interface',
-    warnings: ['duplicate projection'],
+    warnings: [
+      {
+        severity: 'warning',
+        code: 'TST-W-DUPLICATE-MEMBER',
+        message: 'duplicate member variant',
+        file: './src/components/Button.tsx',
+        line: 4,
+        column: 3,
+      },
+    ],
     description: 'Button props',
     jsDoc: { summary: 'Button props', tags: [] },
     typeParameters: [],
@@ -168,6 +177,14 @@ describe('joinMcpComponent', () => {
         origin: 'documented',
         styleProp: false,
       },
+    ])
+  })
+})
+
+describe('toMcpReferenceData', () => {
+  it('formats reference diagnostics as one-line warnings', () => {
+    expect(toMcpReferenceData(createDocument()).warnings).toEqual([
+      './src/components/Button.tsx:4:3 TST-W-DUPLICATE-MEMBER duplicate member variant',
     ])
   })
 })

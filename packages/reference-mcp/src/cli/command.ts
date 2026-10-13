@@ -9,13 +9,21 @@ export type McpTransport = 'http' | 'stdio'
 
 export interface McpCommandOptions {
   transport?: string
+  http?: boolean
   port?: number
   host?: string
   project?: string
 }
 
+// Explicit --transport wins; --http is shorthand; a bare --port or --host implies http.
 export function resolveTransport(options?: McpCommandOptions): McpTransport {
   const value = options?.transport
+  if (options?.http) {
+    if (value && value !== 'http') {
+      throw new Error(`--http conflicts with --transport ${value}`)
+    }
+    return 'http'
+  }
   if (!value) {
     if (options?.port !== undefined || options?.host !== undefined) {
       return 'http'

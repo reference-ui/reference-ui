@@ -1,6 +1,6 @@
 // Vitest alias wiring for the F1 Neo specifier set (mirrors tsconfig paths).
 // It takes the virtual `@reference-ui/neo/*` ids and emits Neo source files.
-// tsup carries the same map for builds; no neo package.json exports entries.
+// scripts/build-bundle.mjs carries the same map; no neo package.json exports entries.
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

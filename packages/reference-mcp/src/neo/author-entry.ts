@@ -14,6 +14,7 @@ export const MCP_FRAGMENT_NEEDLES = [
   '@reference-ui/neo',
   '@reference-ui/neo/config',
   '@reference-ui/system',
+  // Retired core/cli ids stay so older user fragments are found; mirrors neo's needles.
   '@reference-ui/core/config',
   '@reference-ui/cli/config',
 ]

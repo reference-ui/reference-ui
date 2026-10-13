@@ -7,6 +7,7 @@ import {
 import type { McpReferenceData } from './reference'
 import type { McpComponent } from './types'
 import { isStylePropName } from './style-props'
+import { formatReferenceWarning } from './warnings'
 
 function getPropType(member: ReferenceMemberDocument | undefined): string | null {
   if (!member) return null
@@ -78,33 +79,35 @@ export function joinMcpComponentWithReference(
   }
 }
 
+export function toMcpReferenceData(document: ReferenceDocument): McpReferenceData {
+  return {
+    description:
+      document.description ??
+      document.jsDoc?.summary ??
+      document.jsDoc?.description ??
+      null,
+    members: document.members.map(member => ({
+      name: member.name,
+      type: getPropType(member),
+      description:
+        member.summary.description ??
+        member.jsDoc.summary ??
+        member.jsDoc.description ??
+        null,
+      optional: member.optional,
+      readonly: member.readonly,
+      defaultValue: member.defaultValue,
+    })),
+    warnings: (document.warnings ?? []).map(formatReferenceWarning),
+  }
+}
+
 export function joinMcpComponent(
   component: Component,
   document: ReferenceDocument | null
 ): McpComponent {
   return joinMcpComponentWithReference(
     component,
-    document
-      ? {
-          description:
-            document.description ??
-            document.jsDoc?.summary ??
-            document.jsDoc?.description ??
-            null,
-          members: document.members.map(member => ({
-            name: member.name,
-            type: getPropType(member),
-            description:
-              member.summary.description ??
-              member.jsDoc.summary ??
-              member.jsDoc.description ??
-              null,
-            optional: member.optional,
-            readonly: member.readonly,
-            defaultValue: member.defaultValue,
-          })),
-          warnings: document.warnings ?? [],
-        }
-      : null
+    document ? toMcpReferenceData(document) : null
   )
 }

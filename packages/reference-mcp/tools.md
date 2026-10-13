@@ -13,7 +13,7 @@ packages/reference-mcp/
 ├── README.md                        # Package overview & developer quickstart
 ├── src/
 │   ├── index.ts                     # Public API barrel (server factory, types, tools)
-│   ├── cli/                         # CLI entry points (`ref mcp` stdio/http transports)
+│   ├── cli/                         # CLI entry points (`ref-mcp` stdio/http transports)
 │   │   ├── command.ts
 │   │   └── index.ts
 │   ├── child-process/               # Isolated worker pool for AST parsing & model building

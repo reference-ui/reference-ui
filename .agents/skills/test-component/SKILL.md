@@ -13,7 +13,7 @@ Use this skill whenever you need to **verify whether a component passes logic, b
 
 This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-core`, matrix packages, or the pipeline.
 
-If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, MCP, …), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm agentct` will not prove a core change.
+If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, …) or `packages/reference-mcp` (MCP), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm agentct` will not prove a core change.
 
 ---
 

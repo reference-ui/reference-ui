@@ -18,7 +18,7 @@ Reference UI projects configure their component and asset surface via boolean fl
    - 24 compound, accessible components (`Accordion`, `Tabs`, `Splitter`, `Menu`, `Popover`, `Switch`, etc.).
    - When set to `false`, excluded from `list_components` and guarded with clear notices in `get_component`.
 3. **Level 3: Reference Icons (`@reference-ui/icons`)** (`use_reference_icons`, default: `true`):
-   - Over 2,500 Material Symbols React icon components.
+   - 3,800+ Material Symbols React icon components.
    - When set to `false`, `list_icons` notifies that Reference Icons are disabled.
 
 ---
@@ -44,7 +44,7 @@ Reference UI projects configure their component and asset surface via boolean fl
 - **`src/child-process/`**: Sandboxed worker pool executing Atlas AST analysis and model builds out-of-process.
 - **`src/pipeline/`**: Data model extraction, library/icon catalogs, AST enrichment, and query engines.
 - **`src/server/`**: MCP protocol server, active project tracking, model state caching, and universal fallback mode.
-- **`src/cli/`**: CLI command bindings for stdio and HTTP/SSE transports (`ref mcp`).
+- **`src/cli/`**: CLI command bindings for stdio and Streamable HTTP transports (`ref-mcp`).
 
 ---
 
@@ -54,9 +54,9 @@ Run `ref sync` once after installation or package updates before starting the MC
 
 ```shell
 # Stdio transport (for IDEs and AI agent configs):
-pnpm exec ref mcp
+pnpm exec ref-mcp
 
-# HTTP/SSE transport:
-pnpm exec ref mcp --http --port 3000
+# Streamable HTTP transport:
+pnpm exec ref-mcp --http --port 3000
 ```
 
