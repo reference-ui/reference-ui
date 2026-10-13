@@ -8,6 +8,12 @@ extraction shapes, native primitives, and generated declarations — plus
 the parity group with its lib-shaped world and the harness group whose
 three cases prove the runner itself rather than the system.
 
+The `layers/` group (`NEO-LAYERS-NN`) covers the `layers` config surface:
+visual-only upstream systems, each synced for real. Selectors match an exact id
+or folder first, then an id prefix, so `agentneo run NEO-LAYER` also runs
+`NEO-LAYERS-*`; `agentneo run NEO-LAYER-` runs only the `NEO-LAYER-*` ids, and
+`agentneo run NEO-LAYERS` runs this group.
+
 Each group holds `SPEC.md` (behaviour, decisions, approved absences, the
 out-of-scope table) and `TESTS.md` (the case ledger: one row per id with
 a status word), plus leaf cases `NEO-<GROUP>-NN/`. Leaf shape: `case.json`

@@ -14,7 +14,7 @@ leaf world-local (`#4c1d95`). Node-side, `evaluated-system.json` pins the
 three flattened leaves and `jsx-elements.json` pins all three hosts.
 
 The sibling suggestion in the same report paragraph — T5 parallel layers —
-is NOT authored here: layers legs stay out of this case (H3), and `layers:` is
-wired (D17) but no Neo case authors it.
+is NOT authored here: its layers legs are proven by `tests/cases/layers`
+(NEO-LAYERS-03, several layers in config order); this case stays extends-only.
 
 > Search terms: depth three, deep chain, flattening, transitive, republish, multi-package, CHAIN-REPORT-4.3, NEO-CHAIN-01

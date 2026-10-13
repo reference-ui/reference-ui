@@ -37,12 +37,16 @@ prelude-order extends half is that consequence, nothing more.
 
 ## Out of scope
 
-`layers:` is wired (D17: validated, merged after `extends`), but no Neo case
-authors it. Every layers leg of the hybrid matrix tiers therefore stays homed
-at kept matrix `chain-t2`/`chain-t8` — T2/T8 are the layers proof meanwhile
-(H3). That holds the T5 parallel-layers suggestion too: suggested in the same
-CHAIN_REPORT paragraph as depth-three, refused here for the same scope reason.
-T8's same-library-both-buckets policy is not this group's (H4; T8 stays KEEP).
-Hybrid both-buckets-at-once coexistence has no Neo home yet and stays an open
-follow-up for this group. The single-hop adopt stays homed at NEO-SYNC-10,
+`layers:` is wired (D17: validated, merged after `extends`), and Neo now proves
+its legs in `tests/cases/layers`: NEO-LAYERS-01 and -03 for the T2/T8 paint and
+order legs, NEO-LAYERS-02 for the visual-only boundary, and NEO-LAYERS-03 for
+several layers in config order (T5). Matrix `chain-t2`/`chain-t8` stay KEPT as
+secondary proof for bundler and runtime spread on real packages, no longer the
+only proof (H3). The T5 parallel-layers suggestion from the same CHAIN_REPORT
+paragraph as depth-three is refused here for the same scope reason. T8's
+same-library-both-buckets policy is not this group's (H4; T8 stays KEEP).
+NEO-LAYERS-03 pins the both-buckets duplicate behaviour (statement once, block
+twice) as current behaviour, not endorsed. Hybrid both-buckets-at-once
+coexistence (T3) is homed in `tests/cases/layers` (NEO-LAYERS-01), so it is no
+longer an open follow-up here. The single-hop adopt stays homed at NEO-SYNC-10,
 which this group builds on.

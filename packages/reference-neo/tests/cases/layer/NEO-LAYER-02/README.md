@@ -19,7 +19,8 @@ downstream recipe authored over the adopted upstream token, overridden by
 a downstream utility through layer rank. And the two-system nesting is the
 RS-4 extends merge into one downstream package, not two package blocks in
 one sheet (this case does not author the `layers` config surface, which D17
-wired; BAS-LAYER unproven).
+wired and NEO-LAYERS-01/02 author; BAS-LAYER stays unproven, because its rows
+need `base_system` cargo unit tests and base-system has no layers API yet).
 
 Evidence: `[atm]` P1 #16 (`docs/evidence/atomic-claims.md:317`); the
 singular `BaseSystem` publish shape (SYNC-03); RS-4 `BAS-EXTEND-01..05` (14/14 green);

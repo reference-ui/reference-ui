@@ -15,7 +15,7 @@ Node-side, `evaluated-system.json` pins the merged leaves and
 `jsx-elements.json` pins the merged hosts with the shared entries resolving
 once.
 
-Out of scope: the layers legs of the hybrid tiers stay homed at kept matrix
-`chain-t2`/`chain-t8` (H3); `layers:` is wired (D17) but no Neo case authors it.
+Out of scope: the layers legs are proven by `tests/cases/layers` (NEO-LAYERS-03
+for a repeated listing); this case stays extends-only.
 
 > Search terms: diamond, shared base, duplicate upstream, multi-package, both branches, extends order, T7, T12, NEO-CHAIN-01

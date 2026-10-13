@@ -16,8 +16,8 @@ leaf keeps its fixture value and RGB oracle. Node-side,
 `evaluated-system.json` pins the union with the later entry winning, and
 `jsx-elements.json` pins both hosts.
 
-Out of scope: T9's layers legs and the extends-before-layers prelude order
-stay homed at kept matrix `chain-t2`/`chain-t8` (H3); `layers:` is wired (D17)
-but no Neo case authors it.
+Out of scope: T9's layers legs and the extends-before-layers prelude order are
+proven by `tests/cases/layers` (NEO-LAYERS-01 for the order statement, -03 for
+config order); this case stays extends-only.
 
 > Search terms: parallel extends, direct upstreams, declared order, later wins, shared leaf, prelude, T4, T9, NEO-SYNC-10
