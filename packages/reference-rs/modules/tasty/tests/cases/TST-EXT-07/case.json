@@ -1,0 +1,1 @@
+{"id": "TST-EXT-07", "name": "heritage-array: an extends Array<T> clause keeps its element T as a dependency, as a built-in reference with arguments does"}

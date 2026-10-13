@@ -12,7 +12,11 @@ import type {
 } from '../api-types'
 import { dedupeTastyMembers } from '../members'
 import { getTastyResolvedType } from '../resolution'
-import { instantiateTypeAliasDefinition } from './object-projection-instantiation'
+import {
+  instantiateTypeAliasDefinition,
+  instantiateTypeRef,
+  type TypeSubstitutions,
+} from './object-projection-instantiation'
 import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared'
 import type { TastyApiRuntime } from './api-runtime'
 
@@ -69,6 +73,21 @@ async function projectSymbolMembers(
   }
 
   return undefined
+}
+
+/**
+ * Members of a type that is already instantiated, such as an alias's definition with its arguments bound. Nothing
+ * in it is a parameter any more, so it projects under an empty context.
+ */
+export async function projectInstantiatedTypeMembers(
+  api: TastyApiRuntime,
+  typeRef: RawTastyTypeRef
+): Promise<TastyMember[]> {
+  const projected = await projectTypeMembers(api, api.createTypeRef(typeRef), {
+    visitedSymbolIds: new Set<string>(),
+    depth: 0,
+  })
+  return projected ?? []
 }
 
 async function projectTypeMembers(
@@ -268,7 +287,8 @@ async function projectParametersIndexedAccessMembers(
  */
 export async function projectMembersFromInterfaceExtends(
   api: TastyApiRuntime,
-  symbol: TastySymbol
+  symbol: TastySymbol,
+  substitutions: TypeSubstitutions = new Map()
 ): Promise<TastyMember[]> {
   const raw = symbol.getRaw()
   if (!isInterfaceSymbol(raw)) return []
@@ -284,7 +304,9 @@ export async function projectMembersFromInterfaceExtends(
       id: ext.id,
       name: ext.name,
       library: ext.library,
-      typeArguments: ext.typeArguments,
+      typeArguments: ext.typeArguments.map(argument =>
+        instantiateTypeRef(argument, substitutions)
+      ),
     }
     const projected = await projectUtilityReferenceMembers(api, ref, context)
     if (projected?.length) out.push(...projected)

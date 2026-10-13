@@ -12,7 +12,7 @@ import type {
 } from '../api-types'
 import { isTypeReference } from './shared'
 
-type TypeSubstitutions = Map<string, RawTastyTypeRef>
+export type TypeSubstitutions = Map<string, RawTastyTypeRef>
 
 export function instantiateTypeAliasDefinition(
   symbol: RawTastyTypeAliasSymbol,
@@ -26,7 +26,7 @@ export function instantiateTypeAliasDefinition(
   return instantiateTypeRef(symbol.definition, substitutions)
 }
 
-function buildTypeSubstitutions(
+export function buildTypeSubstitutions(
   typeParameters: RawTastyTypeParameter[],
   typeArguments: RawTastyTypeRef[] | undefined
 ): TypeSubstitutions {
@@ -48,7 +48,7 @@ function buildTypeSubstitutions(
   return substitutions
 }
 
-function instantiateTypeRef(
+export function instantiateTypeRef(
   typeRef: RawTastyTypeRef,
   substitutions: TypeSubstitutions
 ): RawTastyTypeRef {
@@ -177,7 +177,7 @@ function instantiateReference(
   }
 }
 
-function instantiateMember(
+export function instantiateMember(
   member: RawTastyMember,
   substitutions: TypeSubstitutions
 ): RawTastyMember {

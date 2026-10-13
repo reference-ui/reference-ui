@@ -32,10 +32,8 @@ import {
   isTypeAliasSymbol,
   type ArtifactImporter,
 } from './shared'
-import {
-  projectMembersFromInterfaceExtends,
-  projectObjectLikeMembers,
-} from './object-projection'
+import { projectObjectLikeMembers } from './object-projection'
+import { flattenInterfaceMembers } from './interface-flatten'
 import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
 import { ChunkLoader } from './chunk-loader'
 import { SymbolResolver } from './symbol-resolver'
@@ -138,9 +136,7 @@ export class TastyApiRuntime implements TastyApi {
     return chain
   }
 
-  private async loadManifestSymbolRef(
-    ref: TastySymbolRef
-  ): Promise<TastySymbol | undefined> {
+  async loadManifestSymbolRef(ref: TastySymbolRef): Promise<TastySymbol | undefined> {
     const id = ref.getId()
     if (this.hasManifestSymbol(id)) return ref.load()
 
@@ -162,12 +158,7 @@ export class TastyApiRuntime implements TastyApi {
   private async graphFlattenInterfaceMembers(
     symbol: TastySymbol
   ): Promise<TastyMember[]> {
-    const fromUtilities = await projectMembersFromInterfaceExtends(this, symbol)
-    const manifestParents = await this.graph.loadExtendsChain(symbol)
-    const fromParents = (
-      await Promise.all(manifestParents.map(s => s.getDisplayMembers()))
-    ).flat()
-    return [...fromParents, ...fromUtilities, ...symbol.getMembers()]
+    return flattenInterfaceMembers(this, symbol, new Map(), new Set([symbol.getId()]))
   }
 
   private async graphGetDisplayMembers(symbol: TastySymbol): Promise<TastyMember[]> {

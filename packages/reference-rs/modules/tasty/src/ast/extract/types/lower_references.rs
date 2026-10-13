@@ -60,13 +60,13 @@ impl<'a> LoweringContext<'a> {
     }
 
     /// `TSInterfaceHeritage` splits `extends Foo<A, B>` into `expression` (`Foo`) and `type_arguments`.
-    /// Lower both so utility types like `Omit` retain their type arguments.
+    /// Lower both so built-ins like `Omit` and `Array` keep their type arguments. Even `Array<T>` stays a
+    /// reference, so its element is a dependency the same way any other heritage argument is.
     pub(super) fn lower_interface_heritage(
         &self,
         heritage: &oxc_ast::ast::TSInterfaceHeritage<'_>,
     ) -> TypeRef {
         let name = slice_span(self.ctx.source, heritage.expression.span()).to_string();
-        let lookup_name = reference_lookup_name(&name);
         let type_arguments = heritage.type_arguments.as_ref().map(|instantiation| {
             instantiation
                 .params
@@ -74,14 +74,6 @@ impl<'a> LoweringContext<'a> {
                 .map(|argument| self.lower_type(argument))
                 .collect::<Vec<_>>()
         });
-
-        if lookup_name == "Array" {
-            if let Some([element]) = type_arguments.as_deref() {
-                return TypeRef::Array {
-                    element: Box::new(element.clone()),
-                };
-            }
-        }
 
         let source_module = self.reference_source_module(&name);
         TypeRef::Reference {

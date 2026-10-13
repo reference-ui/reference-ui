@@ -1,0 +1,1 @@
+{"id": "TST-EXT-06", "name": "heritage-projection: an extends clause binds the parent's type parameters in its inherited members, through a generic parent too"}

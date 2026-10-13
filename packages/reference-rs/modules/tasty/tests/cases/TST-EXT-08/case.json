@@ -1,0 +1,1 @@
+{"id": "TST-EXT-08", "name": "heritage-alias: an extends clause binds the type parameters of an object type alias it names, through a generic parent too"}

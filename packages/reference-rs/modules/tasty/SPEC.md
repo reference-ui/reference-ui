@@ -61,6 +61,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [x] TASTY-36 A type parameter or `infer` name never resolves to a same-named symbol inside its scope, while a reference outside that scope still resolves to the top-level symbol. A reference it binds carries `typeParameter` and is never a user-owned dependency. Proof: TST-GEN-03.
 - [x] TASTY-37 `export * as ns from` binds one namespace with no flat names; `ns.Leaf` through a named import or an `export { ns } from` relay resolves to `Leaf`. Proof: TST-EXT-02.
 - [x] TASTY-42 The type arguments of an interface's `extends` clause are dependencies at any depth: `extends Base<UserT>` lists `Base` and `UserT`, and a type alias among them also joins the symbol's `types` list. Proof: TST-EXT-05.
+- [x] TASTY-44 An `extends Array<T>` clause is a reference to the built-in `Array` with its element as a type argument, so `T` is a user-owned dependency, the way `extends Omit<...>` keeps its arguments. Proof: TST-EXT-07.
 
 ### 3.4 Diagnostics: warnings continue, refusals throw
 
@@ -85,6 +86,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [x] TASTY-33 Indexing a rest tuple yields the item type, and an optional element fails closed. Proof: TST-TUP-02.
 - [ ] TASTY-40 `keyof` over an interface with type parameters, or with numeric keys, fails closed. Unproven: TST-OPR-02 covers `extends` and index signatures only; no station pins type-parameter interfaces or numeric keys.
 - [x] TASTY-41 A type parameter default that names an earlier parameter takes that parameter's argument: `Two<number>` with `type Two<A, B = A>` gives `second: number`, a bare reference's projected members apply each default in order, and a same-named top-level symbol never captures the default. Proof: TST-GEN-04.
+- [x] TASTY-43 An interface's inherited members take the type arguments of its extends clause: `extends Holder<number>` binds `Holder`'s parameters, through a generic parent and through an object type alias that it names. Proof: TST-EXT-06, TST-EXT-08.
 
 ---
 
