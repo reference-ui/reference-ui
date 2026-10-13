@@ -1,5 +1,5 @@
-// Shared reference-case helpers: they take a case world plus a spec page and emit readiness plus text.
-// Every NEO-REF spec awaits tasty readiness explicitly (one-shot processes exit before the background
+// Shared reference-case helpers: they take a case world plus a spec page and emit readiness, freshness, and text.
+// Every NEO-REF spec awaits tasty readiness or freshness explicitly (one-shot processes exit before the background
 // build fires, and resident ones land after), then queries the manifest or reads the rendered page.
 // Browser text reads poll for an anchor first, so assertions never race the async document load.
 import fs from 'node:fs'
@@ -33,6 +33,58 @@ export async function loadReferenceApi(worldDir: string, timeoutMs = 30_000): Pr
   const api = createReferenceUiTastyApi({ manifestPath })
   await api.ready()
   return api
+}
+
+/** What the manifest must show after a re-sync: `present` names load, `absent` names reject. */
+export interface ReferenceFreshness {
+  present: string[]
+  absent: string[]
+}
+
+type FreshnessAttempt = { ok: true; api: TastyApi } | { ok: false; mismatch: string }
+
+// Polls until the manifest reflects a re-sync. A warm sync only queues the background rebuild, so the
+// manifest can trail the sync return. Each attempt opens a fresh API (the manifest re-imports from disk),
+// and a half-swapped tree or a load error counts as not-yet; the timeout throws the last mismatch.
+export async function waitForReferenceFreshness(
+  worldDir: string,
+  expected: ReferenceFreshness,
+  timeoutMs = 30_000
+): Promise<TastyApi> {
+  const started = Date.now()
+  for (;;) {
+    const attempt = await attemptReferenceFreshness(worldDir, expected)
+    if (attempt.ok) return attempt.api
+    if (Date.now() - started > timeoutMs) {
+      throw new Error(`reference manifest never reflected the re-sync within ${timeoutMs}ms: ${attempt.mismatch}`)
+    }
+    await sleep(100)
+  }
+}
+
+async function attemptReferenceFreshness(
+  worldDir: string,
+  expected: ReferenceFreshness
+): Promise<FreshnessAttempt> {
+  let api: TastyApi
+  try {
+    api = await loadReferenceApi(worldDir, 5_000)
+  } catch (error) {
+    return { ok: false, mismatch: `manifest did not load: ${errorText(error)}` }
+  }
+  for (const name of expected.present) {
+    const failure = await api.loadSymbolByName(name).then(() => undefined, errorText)
+    if (failure !== undefined) return { ok: false, mismatch: `${name} did not load: ${failure}` }
+  }
+  for (const name of expected.absent) {
+    const stillLoads = await api.loadSymbolByName(name).then(() => true, () => false)
+    if (stillLoads) return { ok: false, mismatch: `${name} still loads` }
+  }
+  return { ok: true, api }
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
 
 // Reads the body's full text content in one evaluate, so specs assert node-side with real matchers.

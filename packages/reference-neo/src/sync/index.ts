@@ -2,9 +2,9 @@
 // It takes a project root and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
-import { existsSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import { compileNative } from '../native/compile.ts'
 import type {
@@ -41,7 +41,6 @@ import { markPhase } from './phases.ts'
 import { mergeStreams } from '../system/base/streams.ts'
 import type { ReferenceUIConfig } from '../config/types.ts'
 import {
-  getReferenceManifestPath,
   getReferenceTastyBuild,
   getReferenceTastyDirPath,
   initReference,
@@ -61,34 +60,60 @@ export interface SyncResult {
   elapsedMs?: number
 }
 
-// REF-04 aftermath: sync used to rm-wipe the output dir, deleting the tasty
-// artifacts the once-guard believes are landed. The staged commit preserves
-// the tasty dir now, so the refresh only fires when the manifest never
-// landed at all — cold worlds and killed runs. It rebuilds on the background
-// loop, never awaited, so ref syncs keep running on their own; failures
-// report and clear, so a later sync retries.
-// The cold-start tasty build schedules onto the next loop iteration while
-// sync completes unwatched. initReference returns void — nothing here
-// awaits it, so the perf law holds by signature.
+// Tasty phase after a sync. A cold process gets its first build from
+// initReference, on the background loop. Once the session holds a build, every
+// sync queues a rebuild, manifest or not: the staged commit keeps the tasty dir,
+// and a source-only rename changes no sync byte, so only a fresh scan of project
+// source picks it up. Runs never block sync, failures report and clear, and a
+// sync landing mid-run queues exactly one follow-up, so rapid saves coalesce and
+// two builds never write the tasty dir at once.
 function scheduleReferenceTastyPhase(
   cwd: string,
   config: ReferenceUIConfig,
   reporting: { verbose: boolean; foldRefDiagnostics: boolean; json: boolean }
 ): void {
   initReference({ sourceDir: cwd, config }, { verbose: reporting.verbose, fold: reporting.foldRefDiagnostics, json: reporting.json })
-  refreshStaleReferenceTastyBuild(cwd, config)
+  refreshWarmTastyBuild(cwd, config)
 }
 
-function refreshStaleReferenceTastyBuild(sourceDir: string, config: ReferenceUIConfig): void {
+interface TastyRefreshLane {
+  config: ReferenceUIConfig
+  /** A sync landed while a run was in flight: the lane runs once more. */
+  queued: boolean
+}
+
+/** One lane per resolved source dir; it exists exactly while a run is in flight or queued. */
+const tastyRefreshLanes = new Map<string, TastyRefreshLane>()
+
+// Warm path: the session holds a build, so every sync queues a rebuild. The
+// first run starts on the next loop iteration, so sync never runs the scan.
+function refreshWarmTastyBuild(sourceDir: string, config: ReferenceUIConfig): void {
   if (getReferenceTastyBuild(sourceDir) === undefined) return
-  if (existsSync(getReferenceManifestPath(sourceDir))) return
-  rebuildReferenceTastyBuild({ sourceDir, config }).then(
-    () => undefined,
-    (reason: unknown) => {
+  const key = resolve(sourceDir)
+  const lane = tastyRefreshLanes.get(key)
+  if (lane !== undefined) {
+    lane.config = config
+    lane.queued = true
+    return
+  }
+  const fresh: TastyRefreshLane = { config, queued: false }
+  tastyRefreshLanes.set(key, fresh)
+  setImmediate(() => drainTastyRefreshLane(key, fresh))
+}
+
+// One rebuild at a time per source dir. Resetting the flag before each run means
+// only a sync that lands during a run asks for another.
+async function drainTastyRefreshLane(key: string, lane: TastyRefreshLane): Promise<void> {
+  do {
+    lane.queued = false
+    try {
+      await rebuildReferenceTastyBuild({ sourceDir: key, config: lane.config })
+    } catch (reason) {
       const detail = reason instanceof Error ? reason.message : String(reason)
       console.error(`[neo] [ref] background tasty refresh failed: ${detail}`)
     }
-  )
+  } while (lane.queued)
+  tastyRefreshLanes.delete(key)
 }
 
 export interface SyncOptions {
