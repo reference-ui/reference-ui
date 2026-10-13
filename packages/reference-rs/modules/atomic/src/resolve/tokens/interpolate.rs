@@ -9,7 +9,8 @@
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
-use super::{format_entry, split_opacity, tones};
+use super::opacity::{format_entry, split_opacity};
+use super::tones;
 
 /// Outcome of expanding `{path}` segments inside a composite value.
 pub enum BraceExpansion {

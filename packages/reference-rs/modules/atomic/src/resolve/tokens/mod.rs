@@ -14,6 +14,8 @@ use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDet
 use crate::resolve::{want_key, ResolveSession};
 
 mod interpolate;
+mod negation;
+mod opacity;
 mod scale;
 mod tone_value;
 pub(crate) mod tones;
@@ -27,6 +29,8 @@ mod tones_resolve_tests;
 mod tones_tests;
 
 pub(crate) use interpolate::{expand_brace_segments, BraceExpansion};
+use negation::resolve_negated_token;
+use opacity::{format_entry, malformed_opacity, malformed_passthrough, split_opacity};
 use tone_value::ToneValue;
 
 /// Returns true if the property semantically accepts color values and tokens.
@@ -124,30 +128,6 @@ fn resolve_unsuffixed<'a>(
         return Some(malformed_passthrough(prop, unbraced, raw_val, session));
     }
     interpolate_or_fallback(prop, raw_val, session)
-}
-
-/// Warn-and-paint a malformed `/opacity` modifier, keeping the authored bytes.
-fn malformed_passthrough<'a>(
-    prop: &str,
-    unbraced: &str,
-    raw_val: &'a str,
-    session: &mut ResolveSession<'_, '_>,
-) -> Cow<'a, str> {
-    let key = want_key(
-        session,
-        prop,
-        serde_json::Value::String(raw_val.to_string()),
-    );
-    session.emit(
-        key,
-        ResolveOutcome::Passthrough {
-            code: DiagnosticCode::MalformedOpacity,
-            detail: ResolveDetail::Token(TokenDetail::MalformedOpacity {
-                text: unbraced.into(),
-            }),
-        },
-    );
-    Cow::Borrowed(raw_val)
 }
 
 /// Brace interpolation for values the dictionary missed, else error or warn.
@@ -287,108 +267,11 @@ fn fallback_category(category: &str) -> Option<&str> {
     }
 }
 
-/// A leading `-` negates a scale token: `-4` becomes `calc(-1 * var(--spacing-4))`.
-/// The negation distributes over an explicit braced lookup too: `-{spacing.4}`
-/// calc-wraps the expansion, with optional opacity in either brace position.
-fn resolve_negated_token(prop: &str, unbraced: &str, system: &BaseSystem) -> Option<String> {
-    let rest = unbraced.strip_prefix('-')?;
-    if rest.is_empty() || rest.starts_with('-') {
-        return None;
-    }
-    if let Some(after_open) = rest.strip_prefix('{') {
-        return resolve_negated_braced(prop, after_open, system);
-    }
-    let (path, opacity) = split_opacity(rest);
-    let entry = lookup_entry(prop, path, system)?;
-    Some(format!("calc(-1 * {})", format_entry(entry, opacity)))
-}
-
-/// Calc-wrap a negated braced ref: `-{path}` becomes `calc(-1 * var(--…))`.
-/// Only exactly one braced ref plus optional opacity in either position
-/// qualifies; composites, second brace pairs, and unknown paths return
-/// None so the value keeps its current fallthrough (interpolation, or the
-/// Missing error that fails closed like `ATM-TOKEN-12`).
-fn resolve_negated_braced(prop: &str, after_open: &str, system: &BaseSystem) -> Option<String> {
-    let close = after_open.find('}')?;
-    let inner = after_open[..close].trim();
-    if inner.is_empty() || inner.contains(['{', '}']) {
-        return None;
-    }
-    let outer = negated_brace_tail(&after_open[close + 1..])?;
-    let (path, inner_opacity) = split_opacity(inner);
-    if path.is_empty() || (inner_opacity.is_some() && outer.is_some()) {
-        return None;
-    }
-    let entry = lookup_entry(prop, path, system)?;
-    let opacity = inner_opacity.or(outer);
-    Some(format!("calc(-1 * {})", format_entry(entry, opacity)))
-}
-
-/// Parse the tail after a negated `-{path}`: empty or exactly `/opacity`.
-/// None rejects second brace pairs, trailing literals, and bad opacity.
-fn negated_brace_tail(tail: &str) -> Option<Option<&str>> {
-    if tail.is_empty() {
-        return Some(None);
-    }
-    let opacity = tail.strip_prefix('/')?;
-    if !opacity_suffix(opacity) {
-        return None;
-    }
-    Some(Some(opacity))
-}
-
-/// True when a `/` looks like a broken opacity modifier rather than CSS content.
-fn malformed_opacity(unbraced: &str) -> bool {
-    let Some((base, _)) = unbraced.rsplit_once('/') else {
-        return false;
-    };
-    if base.contains('(') {
-        return false;
-    }
-    if base.is_empty() {
-        return true;
-    }
-    base.starts_with(|ch: char| ch.is_ascii_alphabetic()) && looks_like_token_path(base)
-}
-
 fn token_category_for_prop(prop: &str) -> Option<&'static str> {
     if is_color_prop(prop) {
         return Some("colors");
     }
     scale::token_category_for_prop(prop)
-}
-
-fn split_opacity(path: &str) -> (&str, Option<&str>) {
-    let Some((base, opacity)) = path.rsplit_once('/') else {
-        return (path, None);
-    };
-    if opacity_suffix(opacity) {
-        (base, Some(opacity))
-    } else {
-        (path, None)
-    }
-}
-
-fn opacity_suffix(opacity: &str) -> bool {
-    let digits = opacity.strip_suffix('%').unwrap_or(opacity);
-    !digits.is_empty() && digits.chars().all(|ch| ch.is_ascii_digit())
-}
-
-fn format_entry(entry: &TokenEntry, opacity: Option<&str>) -> String {
-    let var_expr = format!("var({})", entry.css_var());
-    match opacity {
-        Some(opacity) => format_color_mix(&var_expr, opacity),
-        None => var_expr,
-    }
-}
-
-fn format_color_mix(var_expr: &str, opacity: &str) -> String {
-    let pct = if opacity.ends_with('%') {
-        opacity.to_string()
-    } else {
-        format!("{opacity}%")
-    };
-    format!("color-mix(in srgb, {var_expr} {pct}, transparent)")
 }
 
 fn looks_like_token_path(val: &str) -> bool {
