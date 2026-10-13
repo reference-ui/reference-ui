@@ -232,12 +232,12 @@ function assertVerboseWarningList(stderr: string): void {
   const [first, second, third] = lines;
   expect(first).toContain('warn.ts:3');
   expect(first).toContain('ATM-W-INVALID-CSS-VALUE');
-  expect(first).toContain('use a CSS keyword, token, or value the prop accepts');
+  expect(first).toContain('use a CSS keyword, token, or accepted value');
   expect(second).toContain('warn.ts:4');
   expect(second).toContain('ATM-W-INVALID-CSS-VALUE');
   expect(third).toContain('warn.ts:5');
   expect(third).toContain('ATM-W-UNKNOWN-COLOR');
-  expect(third).toContain('use a color token or a CSS color');
+  expect(third).toContain('use a color token or CSS color');
   expect(stderr).not.toContain('[--verbose]');
 }
 
