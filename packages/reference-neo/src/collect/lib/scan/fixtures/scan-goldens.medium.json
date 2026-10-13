@@ -51,6 +51,67 @@
   "portableSha": "7bdbb37b106a4f9e24907789bef08f9490a1bff288590506f7c980317ca1b8ab",
   "runtimeSha": "8a03fe4d5e16ca6abda50403f848522aa6d7e0ebb3749347bfff924d5943c0b1",
   "tracedJsxHosts": [],
-  "diagnostics": [],
-  "diagnosticsSha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "ATM-W-UNKNOWN-TOKEN",
+      "message": "`px` is not a font-size token",
+      "file": "src/ui0/Panel41.ts",
+      "line": 4,
+      "column": 33,
+      "span": {
+        "start": 134,
+        "end": 138
+      },
+      "help": [
+        "use a font-size token or a CSS value"
+      ]
+    },
+    {
+      "severity": "warning",
+      "code": "ATM-W-UNKNOWN-TOKEN",
+      "message": "`px` is not a radius token",
+      "file": "src/recipes/recipe14.ts",
+      "line": 9,
+      "column": 279,
+      "span": {
+        "start": 1530,
+        "end": 1534
+      },
+      "help": [
+        "use a radius token or a CSS value"
+      ]
+    },
+    {
+      "severity": "warning",
+      "code": "ATM-W-UNKNOWN-TOKEN",
+      "message": "`px` is not a radius token",
+      "file": "src/ui1/Dialog143.ts",
+      "line": 6,
+      "column": 37,
+      "span": {
+        "start": 568,
+        "end": 572
+      },
+      "help": [
+        "use a radius token or a CSS value"
+      ]
+    },
+    {
+      "severity": "warning",
+      "code": "ATM-W-UNKNOWN-TOKEN",
+      "message": "`px` is not a radius token",
+      "file": "src/ui2/Card240.ts",
+      "line": 7,
+      "column": 101,
+      "span": {
+        "start": 675,
+        "end": 679
+      },
+      "help": [
+        "use a radius token or a CSS value"
+      ]
+    }
+  ],
+  "diagnosticsSha": "1aced676b12eb05700c71522335f22045aab07eb063aa78e6a163d05a932ef4c"
 }

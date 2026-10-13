@@ -51,8 +51,24 @@
   "portableSha": "d6a503e949991330f0c17ee85a6008eea8d5a0666c4ab624e2ed6c9747f981be",
   "runtimeSha": "90a8549c190e27ac4b729c7bed5e3c594a367799c61f4b80365fa3fee63f4bac",
   "tracedJsxHosts": [],
-  "diagnostics": [],
-  "diagnosticsSha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "ATM-W-UNKNOWN-TOKEN",
+      "message": "`px` is not a font-size token",
+      "file": "src/ui0/Card40.ts",
+      "line": 6,
+      "column": 181,
+      "span": {
+        "start": 409,
+        "end": 413
+      },
+      "help": [
+        "use a font-size token or a CSS value"
+      ]
+    }
+  ],
+  "diagnosticsSha": "cb32c41a4307518d238c9c36b24e1e4dc430ffb0942e1f701a693a49d59ef670",
   "manifest": [
     [
       "src/recipes/recipe0.ts",
