@@ -338,7 +338,7 @@ export declare const Video: (props: VideoProps & { ref?: React.Ref<React.Compone
 export type WbrProps = Omit<React.ComponentPropsWithoutRef<"wbr">, StylePropName | 'css' | 'colorMode' | 'variant'> & StyleProps & { css?: PrimitiveCssProp; colorMode?: unknown; variant?: unknown }
 export declare const Wbr: (props: WbrProps & { ref?: React.Ref<React.ComponentRef<"wbr">> }) => React.ReactNode
 
-export declare const LayerScopeContext: React.Context<boolean>
+export declare const LayerScopeContext: React.Context<string | boolean | undefined>
 export declare const ColorModeContext: React.Context<string | undefined>
 export declare const DocumentContext: React.Context<Document | null>
 export declare function useColorMode(): string | undefined

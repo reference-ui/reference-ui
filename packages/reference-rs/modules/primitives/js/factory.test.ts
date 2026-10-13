@@ -7,7 +7,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import type { CssStyles } from './css-types.ts'
 import { createPropSplitter } from './split.ts'
-import { createPrimitive, joinClassName, type CssFn } from './factory.ts'
+import { createPrimitive, joinClassName, type CssFn, type PrimitiveComponent } from './factory.ts'
+import { ColorModeContext, DocumentContext, LayerScopeContext } from './context.ts'
 
 const split = createPropSplitter(['color', 'p'])
 
@@ -77,5 +78,73 @@ describe('joinClassName', () => {
   it('drops empties and returns undefined when bare', () => {
     expect(joinClassName('ref-div', '', undefined, 'x')).toBe('ref-div x')
     expect(joinClassName(undefined, '')).toBeUndefined()
+  })
+})
+
+function makeNamed(layerName: string): PrimitiveComponent {
+  return createPrimitive({ tag: 'div', displayName: 'Div', layerName, split, css: () => 'mock-class' })
+}
+
+// A document stand-in that carries html data-color-mode, the way a page sets it.
+function documentWithMode(mode: string): Document {
+  const documentElement = { getAttribute: (name: string) => (name === 'data-color-mode' ? mode : null) }
+  return { documentElement, body: null } as unknown as Document
+}
+
+// The data-layer values in document order: one per primitive that stamped its scope.
+function layerStamps(html: string): string[] {
+  return [...html.matchAll(/data-layer="([^"]*)"/g)].map(match => match[1] ?? '')
+}
+
+describe('createPrimitive layer scope across systems', () => {
+  it('stamps a primitive of another system nested under an explicit color mode', () => {
+    const Outer = makeNamed('outer-sys')
+    const Inner = makeNamed('inner-sys')
+    const html = renderToStaticMarkup(
+      createElement(Outer, { colorMode: 'dark' }, createElement(Inner, {}, 'x'))
+    )
+    expect(layerStamps(html)).toEqual(['outer-sys', 'inner-sys'])
+  })
+
+  it('stamps a primitive of another system nested under an html data-color-mode', () => {
+    const Outer = makeNamed('outer-sys')
+    const Inner = makeNamed('inner-sys')
+    const html = renderToStaticMarkup(
+      createElement(
+        DocumentContext.Provider,
+        { value: documentWithMode('light') },
+        createElement(Outer, {}, createElement(Inner, {}, 'x'))
+      )
+    )
+    expect(layerStamps(html)).toEqual(['outer-sys', 'inner-sys'])
+  })
+
+  it('stamps the nearest other system again and skips only the same system under a mode', () => {
+    const A = makeNamed('a-sys')
+    const B = makeNamed('b-sys')
+    const html = renderToStaticMarkup(
+      createElement(A, { colorMode: 'dark' }, createElement(B, {}, createElement(A, {}, createElement(A, {}, 'x'))))
+    )
+    expect(layerStamps(html)).toEqual(['a-sys', 'b-sys', 'a-sys'])
+  })
+
+  it('keeps a same-system primitive unstamped under a color mode', () => {
+    const Same = makeNamed('same-sys')
+    const html = renderToStaticMarkup(
+      createElement(Same, { colorMode: 'dark' }, createElement(Same, {}, 'x'))
+    )
+    expect(layerStamps(html)).toEqual(['same-sys'])
+  })
+
+  it('treats a legacy true scope as the same system under a color mode', () => {
+    const Named = makeNamed('named-sys')
+    const html = renderToStaticMarkup(
+      createElement(
+        ColorModeContext.Provider,
+        { value: 'dark' },
+        createElement(LayerScopeContext.Provider, { value: true }, createElement(Named, {}, 'x'))
+      )
+    )
+    expect(layerStamps(html)).toEqual([])
   })
 })

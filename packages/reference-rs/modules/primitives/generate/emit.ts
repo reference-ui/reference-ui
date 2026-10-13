@@ -208,7 +208,7 @@ export function buildPrimitivesDts(model: VocabularyModel): string {
     'export type PrimitiveElement<T extends PrimitiveTag> = T extends keyof PrimitiveElementOverrides ? PrimitiveElementOverrides[T] : React.ComponentRef<T>',
     '',
     ...perTagDecls(model.elements),
-    'export declare const LayerScopeContext: React.Context<boolean>',
+    'export declare const LayerScopeContext: React.Context<string | boolean | undefined>',
     'export declare const ColorModeContext: React.Context<string | undefined>',
     'export declare const DocumentContext: React.Context<Document | null>',
     'export declare function useColorMode(): string | undefined',

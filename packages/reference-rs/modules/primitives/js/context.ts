@@ -1,8 +1,11 @@
 // Layer scope plus color mode contexts for Neo primitives.
 // It takes the system layer name and emits DOM attrs plus providers.
-// The first primitive in a tree stamps data-layer; nested ones inherit it,
-// and an explicit colorMode restamps the scope. Mined from core's shared
-// contexts with the layer name passed in instead of replaced at pack time.
+// The scope carries the nearest owning primitive's layer name, so a primitive
+// stamps data-layer unless an ancestor of its own system already owns the scope
+// and a color mode is in effect. An ancestor of another system always gets a
+// fresh stamp, and an explicit colorMode restamps the scope. A bare true from a
+// pre-name bundle counts as the same system. Mined from core's shared contexts
+// with the layer name passed in instead of replaced at pack time.
 
 import * as React from 'react'
 
@@ -30,10 +33,17 @@ function sharedContext<T>(symbol: symbol, create: () => React.Context<T>): React
   return created
 }
 
-/** Whether an ancestor primitive already established the data-layer scope. */
-export const LayerScopeContext: React.Context<boolean> = sharedContext(
+/**
+ * Layer scope a primitive hands to its subtree: the layer name of the nearest
+ * owning primitive. A bare `true` is a pre-name bundle's scope (the same system,
+ * by construction), and `false` or `undefined` means no scope above.
+ */
+export type LayerScope = string | boolean | undefined
+
+/** Layer scope of the nearest primitive above, when any. */
+export const LayerScopeContext: React.Context<LayerScope> = sharedContext(
   LAYER_SCOPE_CONTEXT_SYMBOL,
-  () => React.createContext<boolean>(false)
+  () => React.createContext<LayerScope>(false)
 )
 
 /** Inherited color mode within the primitive tree, when any. */
@@ -49,7 +59,7 @@ export const DocumentContext: React.Context<Document | null> = sharedContext(
 )
 
 export interface ResolvedPrimitiveContext {
-  providesLayerScope: boolean
+  providesLayerScope: LayerScope
   resolvedColorMode: string | undefined
   dataLayerAttr: { 'data-layer'?: string }
   colorModeAttr: { [K in typeof DATA_COLOR_MODE_ATTR]?: string }
@@ -57,24 +67,49 @@ export interface ResolvedPrimitiveContext {
 }
 
 export interface PrimitiveContextResolutionOptions {
-  inheritsLayerScope: boolean
+  inheritedLayerScope: LayerScope
   inheritedColorMode?: string
   colorMode?: unknown
   variant?: unknown
   layerName?: string
 }
 
+/** Whether an ancestor primitive owns a data-layer scope above this one. */
+function hasLayerScope(scope: LayerScope): boolean {
+  return scope === true || (typeof scope === 'string' && scope !== '')
+}
+
+/**
+ * Whether an inherited scope belongs to this primitive's own system. A bare `true`
+ * predates layer names, so it counts as the same system and keeps the old rules.
+ */
+function isSameSystemScope(scope: LayerScope, layerName: string): boolean {
+  return scope === true || scope === layerName
+}
+
+/**
+ * The stamp rule. No ancestor scope, or an ancestor of another system, always stamps.
+ * Inside the same system the color mode decides: an explicit or inherited color mode
+ * already paints the scope, so the stamp is skipped.
+ */
 function shouldEmitLayerScope(
-  inheritsLayerScope: boolean,
+  inheritedScope: LayerScope,
   hasExplicitColorMode: boolean,
   inheritedColorMode: string | undefined,
   layerName: string | undefined
 ): boolean {
-  return Boolean(
-    layerName != null &&
-      layerName !== '' &&
-      (!inheritsLayerScope || hasExplicitColorMode || inheritedColorMode == null)
-  )
+  if (layerName == null || layerName === '') return false
+  if (!hasLayerScope(inheritedScope)) return true
+  if (!isSameSystemScope(inheritedScope, layerName)) return true
+  return hasExplicitColorMode || inheritedColorMode == null
+}
+
+/**
+ * The scope a primitive hands to its subtree: its own layer name when it names one,
+ * otherwise the ancestor's scope passed through untouched.
+ */
+function providedLayerScope(inheritedScope: LayerScope, layerName: string | undefined): LayerScope {
+  return layerName != null && layerName !== '' ? layerName : inheritedScope
 }
 
 /**
@@ -115,7 +150,7 @@ function resolveVariantAttr(variant?: unknown): { 'data-variant'?: string } {
  * state every primitive needs. Pure: the hook sibling reads the contexts.
  */
 export function resolvePrimitiveContext({
-  inheritsLayerScope,
+  inheritedLayerScope,
   inheritedColorMode,
   colorMode,
   variant,
@@ -124,13 +159,13 @@ export function resolvePrimitiveContext({
   const hasExplicitColorMode = colorMode != null && colorMode !== ''
   const resolvedColorMode = hasExplicitColorMode ? String(colorMode) : inheritedColorMode
   const shouldEmit = shouldEmitLayerScope(
-    inheritsLayerScope,
+    inheritedLayerScope,
     hasExplicitColorMode,
     inheritedColorMode,
     layerName
   )
   return {
-    providesLayerScope: inheritsLayerScope || shouldEmit,
+    providesLayerScope: providedLayerScope(inheritedLayerScope, layerName),
     resolvedColorMode,
     dataLayerAttr: resolveDataLayerAttr(shouldEmit, layerName),
     colorModeAttr: resolveColorModeAttr(resolvedColorMode),
@@ -144,11 +179,11 @@ export function usePrimitiveContext(
   variant?: unknown,
   layerName?: string
 ): ResolvedPrimitiveContext {
-  const inheritsLayerScope = React.useContext(LayerScopeContext)
+  const inheritedLayerScope = React.useContext(LayerScopeContext)
   const inheritedColorMode = React.useContext(ColorModeContext)
   const doc = React.useContext(DocumentContext)
   return resolvePrimitiveContext({
-    inheritsLayerScope,
+    inheritedLayerScope,
     inheritedColorMode: inheritedColorMode ?? readDocumentColorMode(doc),
     colorMode,
     variant,
