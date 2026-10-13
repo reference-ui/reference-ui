@@ -18,6 +18,7 @@ import {
   reportedSyncEntries,
 } from '../diagnostics/index.ts'
 import type { DeduplicatedDiagnostic } from '../diagnostics/index.ts'
+import type { NativeDiagnostic } from '../native/contract.ts'
 
 export { dedupeDiagnostics, formatJsonDiagnostics, formatVerboseWarningLine, formatWarningSummary, reportedSyncEntries }
 export type { DeduplicatedDiagnostic }
@@ -190,4 +191,21 @@ export function printBootBlock(options: PrintBootBlockOptions): void {
 // bytes the boot block headlines, with its folded warnings.
 export function printSyncLine(elapsedMs: number, outDir: string, warnings = 0): void {
   console.log(formatSyncLine(elapsedMs, cssSizeBytes(outDir), warnings))
+}
+
+// The shutdown line: the in-flight sync outlived the shutdown bound, so the
+// watch gave it up, released the lock, and exits 1.
+export const UNSETTLED_SYNC_LINE = '[ref] watch: in-flight sync did not settle; exiting'
+
+// A save that finds the in-flight sync past the stuck bound gets this one
+// line: the pass is reported as stuck, and the save waits behind it.
+export function formatStuckSyncLine(elapsedMs: number): string {
+  const seconds = Math.max(0, Math.floor(elapsedMs / 1000))
+  return `[ref] watch: in-flight sync stuck for ${seconds} s; this save waits until it settles`
+}
+
+// The JSON row for a failed sync event. The failure has no registered code,
+// so it rides as a codeless error carrying its message verbatim.
+export function syncFailureEntry(message: string): NativeDiagnostic {
+  return { severity: 'error', message }
 }

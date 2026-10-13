@@ -1,11 +1,20 @@
 // Unit tests for the watch resync scheduler under fake timers.
 // They pin the settle quiet time, the max-wait ceiling on a burst that never
 // goes quiet, one follow-up pass for events that land mid-sync, settle
-// draining the in-flight pass, and a rejected pass leaving the loop live.
+// draining the in-flight pass, a rejected pass leaving the loop live, and the
+// stall reports: a stuck pass named by a request behind it, and a pass that
+// settle gives up at the shutdown bound.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createResyncScheduler, RESYNC_MAX_WAIT_MS, RESYNC_SETTLE_MS, type ResyncScheduler } from './scheduler.ts'
+import {
+  createResyncScheduler,
+  onResyncStall,
+  RESYNC_MAX_WAIT_MS,
+  RESYNC_SETTLE_MS,
+  type ResyncScheduler,
+  type ResyncStall,
+} from './scheduler.ts'
 
 interface Gate {
   resolve: () => void
@@ -28,6 +37,20 @@ function takeGate(gates: Gate[]): Gate {
   const gate = gates.shift()
   if (gate === undefined) throw new Error('expected a pass in flight')
   return gate
+}
+
+interface StallLog {
+  list: ResyncStall[]
+  stop: () => void
+}
+
+// Records every stall this process announces until stop() is called.
+function collectStalls(): StallLog {
+  const list: ResyncStall[] = []
+  const stop = onResyncStall((stall) => {
+    list.push(stall)
+  })
+  return { list, stop }
 }
 
 // Schedules every stepMs for durationMs of fake time, like a steady save stream.
@@ -191,3 +214,72 @@ describe('createResyncScheduler settle and failures', () => {
     await scheduler.settle()
   })
 })
+
+describe('createResyncScheduler stall reports', () => {
+  it('a request behind a pass past the stuck bound announces it and still queues one follow-up', async () => {
+    const { resync, gates } = gatedResync()
+    const scheduler = createResyncScheduler(resync, { stuckMs: 1000 })
+    const stalls = collectStalls()
+
+    try {
+      scheduler.request()
+      await vi.advanceTimersByTimeAsync(999)
+      scheduler.request()
+      expect(stalls.list).toEqual([])
+
+      await vi.advanceTimersByTimeAsync(1)
+      scheduler.request()
+      expect(stalls.list).toEqual([{ kind: 'stuck', elapsedMs: 1000 }])
+      expect(resync).toHaveBeenCalledTimes(1)
+
+      takeGate(gates).resolve()
+      await vi.advanceTimersByTimeAsync(0)
+      expect(resync).toHaveBeenCalledTimes(2)
+      takeGate(gates).resolve()
+      await scheduler.settle()
+    } finally {
+      stalls.stop()
+    }
+  })
+
+  it('settle gives a pass that never settles up at the shutdown bound and announces the abandonment', async () => {
+    const { resync } = gatedResync()
+    const scheduler = createResyncScheduler(resync, { shutdownSettleMs: 3000 })
+    const stalls = collectStalls()
+
+    try {
+      scheduler.request()
+      let settled = false
+      const done = scheduler.settle().then(() => {
+        settled = true
+      })
+      await vi.advanceTimersByTimeAsync(2999)
+      expect(settled).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(1)
+      await done
+      expect(settled).toBe(true)
+      expect(stalls.list).toEqual([{ kind: 'shutdown', elapsedMs: 3000 }])
+    } finally {
+      stalls.stop()
+    }
+  })
+
+  it('settle announces nothing when the in-flight pass settles inside the bound', async () => {
+    const { resync, gates } = gatedResync()
+    const scheduler = createResyncScheduler(resync, { shutdownSettleMs: 3000 })
+    const stalls = collectStalls()
+
+    try {
+      scheduler.request()
+      const done = scheduler.settle()
+      await vi.advanceTimersByTimeAsync(1000)
+      takeGate(gates).resolve()
+      await done
+      expect(stalls.list).toEqual([])
+    } finally {
+      stalls.stop()
+    }
+  })
+})
+
