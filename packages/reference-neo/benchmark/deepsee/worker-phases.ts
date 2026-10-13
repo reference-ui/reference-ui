@@ -18,7 +18,7 @@ import {
   evaluatePreparedFragments,
   prepareFragments,
 } from '../../src/collect/index.ts'
-import { createPortableFragmentBundle } from '../../src/system/base/fragments.ts'
+import { portableFragmentOf, publishedFragmentNodes } from '../../src/system/base/fragments.ts'
 import { resolveJsxElements } from '../../src/system/base/jsx.ts'
 import { toPublishedEntry } from '../../src/system/base/streams.ts'
 import { applyNormalizeCss } from '../../src/sync/reset.ts'
@@ -120,13 +120,16 @@ async function main(): Promise<void> {
 
   const publishAt = performance.now()
   const jsx = resolveJsxElements(config, result.tracedJsxHosts ?? [])
+  const fragments = publishedFragmentNodes(
+    prepared.upstreamFragments,
+    spec.name,
+    prepared.localFragmentBundles.map(({ bundle }) => bundle)
+  )
   const publishInput = {
     outDir,
     spec,
-    portableFragment: createPortableFragmentBundle(
-      prepared.upstreamFragments,
-      prepared.localFragmentBundles.map(({ bundle }) => bundle)
-    ),
+    portableFragment: portableFragmentOf(fragments),
+    portableFragments: fragments,
     stylesheet: result.stylesheet,
     portableStylesheet: result.portableStylesheet ?? '',
     // Single-system bench worlds carry no extends: the published payload is

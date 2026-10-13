@@ -23,6 +23,7 @@ interface PublishedStreamEntry {
 interface PublishedBaseSystem {
   name: string;
   fragment: string;
+  fragments?: Array<{ name: string; bundle: string }>;
   streams: PublishedStreamEntry[];
   jsxElements?: string[];
 }
@@ -30,9 +31,9 @@ interface PublishedBaseSystem {
 // The runner synced this world before serving: the base system imports as the
 // singular BaseSystem shape the extends validator and reader consume — name,
 // the bundled fragment string, the structured streams payload, and merged jsx
-// hosts. No plural write-only keys survive: fragments[], cssChunks[], and runtime
-// were cut at the publish boundary (the styled leg owns the runtime data).
-// `css` stays dead forever. This world extends nothing, so the payload is the
+// hosts, plus the named fragment list (E1) that rides beside the singular string.
+// No cssChunks[] or runtime survives the publish boundary (the styled leg owns the
+// runtime data), and `css` stays dead forever. This world extends nothing, so the payload is the
 // own entry alone with served-only tokens stripped.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
@@ -55,7 +56,12 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.equal(typeof base.streams[0].tokensPortable, 'string', 'published entry carries portable tokens');
   assert.deepEqual(base.jsxElements, [], `jsxElements merges hosts, got ${base.jsxElements?.join(', ')}`);
 
-  assert.ok(!('fragments' in base), 'no plural fragments survivor');
+  assert.deepEqual(
+    base.fragments?.map((node) => node.name),
+    ['neo-sync3'],
+    'the named fragment list carries the own node'
+  );
+  assert.ok(base.fragments?.[0]?.bundle.includes('brand'), 'the own fragment node carries the token source');
   assert.ok(!('cssChunks' in base), 'no plural cssChunks survivor');
   assert.ok(!('runtime' in base), 'no duplicated runtime survivor');
   assert.ok(!('schemaVersion' in base), 'no schemaVersion survivor');
@@ -69,6 +75,6 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.ok(decl.includes('streams?: SystemStreams[]'), 'baseSystem.d.mts declares streams carriage');
   assert.ok(!decl.includes('css?'), 'baseSystem.d.mts drops the dead css field');
   assert.ok(decl.includes('fragment: string'), 'baseSystem.d.mts declares the singular fragment');
-  assert.ok(!decl.includes('fragments:'), 'baseSystem.d.mts drops the plural field');
+  assert.ok(decl.includes('fragments?: FragmentNode[]'), 'baseSystem.d.mts declares the named fragment list');
   assert.ok(!decl.includes('PortableBaseSystem'), 'baseSystem.d.mts drops the portable type');
 }

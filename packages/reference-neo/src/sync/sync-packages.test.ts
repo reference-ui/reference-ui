@@ -99,6 +99,7 @@ describe('sync generated packages', () => {
       baseSystem: {
         name: string
         fragment: string
+        fragments?: Array<{ name: string; bundle: string }>
         streams: Array<Record<string, unknown>>
         jsxElements: string[]
       } & Record<string, unknown>
@@ -113,7 +114,9 @@ describe('sync generated packages', () => {
     expect(own.name).toBe('sync-test')
     expect(['tokens' in own, typeof own.tokensPortable]).toEqual([false, 'string'])
     expect(mod.baseSystem.jsxElements).toEqual([])
-    expect('fragments' in mod.baseSystem).toBe(false)
+    // A system with no extends publishes one node: its own, carrying the bundle (E1).
+    expect(mod.baseSystem.fragments?.map((node) => node.name)).toEqual(['sync-test'])
+    expect(mod.baseSystem.fragments?.[0]?.bundle).toContain('brand')
     expect('cssChunks' in mod.baseSystem).toBe(false)
     expect('runtime' in mod.baseSystem).toBe(false)
   })

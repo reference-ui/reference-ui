@@ -9,6 +9,7 @@ export function assembleBaseSystem(input: BaseAssemblyInput): BaseSystem {
   return {
     name: input.name,
     fragment: input.fragment,
+    fragments: input.fragments,
     streams: input.streams,
     jsxElements: input.jsxElements,
   }

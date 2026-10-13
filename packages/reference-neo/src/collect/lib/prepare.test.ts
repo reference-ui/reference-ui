@@ -111,7 +111,7 @@ describe('scopeUpstreamTokenFragment', () => {
 })
 
 describe('fragments prepare flow', () => {
-  it('filters upstream fragments to non-empty strings only', async () => {
+  it('filters upstream fragments to non-empty legacy entries only', async () => {
     const { getUpstreamFragments } = await importFragmentsModule()
 
     expect(
@@ -121,8 +121,46 @@ describe('fragments prepare flow', () => {
         { name: 'missing' } as never,
         { name: 'good-two', fragment: 'two()' },
       ])
-    ).toEqual(['one()', 'two()'])
+    ).toEqual([
+      { name: 'good-one', bundle: 'one()' },
+      { name: 'good-two', bundle: 'two()' },
+    ])
     expect(getUpstreamFragments(undefined)).toEqual([])
+  })
+
+  it('linearizes published nodes across extends, keeping each name at its first occurrence', async () => {
+    const { getUpstreamFragments } = await importFragmentsModule()
+    const base = {
+      name: 'base',
+      fragment: ';base()',
+      fragments: [{ name: 'base', bundle: 'base()' }],
+    }
+    const left = {
+      name: 'left',
+      fragment: ';base();left()',
+      fragments: [
+        { name: 'base', bundle: 'base()' },
+        { name: 'left', bundle: 'left()' },
+      ],
+    }
+    const right = {
+      name: 'right',
+      fragment: ';base();right()',
+      fragments: [
+        { name: 'base', bundle: 'base()' },
+        { name: 'right', bundle: 'right()' },
+      ],
+    }
+
+    expect(getUpstreamFragments([left, right]).map((node) => node.name)).toEqual([
+      'base',
+      'left',
+      'right',
+    ])
+    expect(getUpstreamFragments([base, right]).map((node) => node.name)).toEqual([
+      'base',
+      'right',
+    ])
   })
 
   it('maps bootstrap fragment imports back to Neo source entries', async () => {
@@ -184,7 +222,7 @@ describe('fragments prepare output: native token', () => {
       alias: getFragmentBootstrapImportMap(),
     })
     expect(result).toEqual({
-      upstreamFragments: ['upstreamOne()'],
+      upstreamFragments: [{ name: 'upstream-one', bundle: 'upstreamOne()' }],
       localFragmentBundles: [
         { file: '/workspace/app/src/theme.ts', bundle: 'localOne()' },
         { file: '/workspace/app/src/recipes.ts', bundle: 'localTwo()' },

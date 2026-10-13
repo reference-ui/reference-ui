@@ -8,7 +8,9 @@ import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
 import type { ReferenceUIConfig } from '../../config/types.ts'
-import type { BaseSystem } from '../../system/base/types.ts'
+import type { NativeDiagnostic } from '../../native/contract.ts'
+import { fragmentNodesOf, linearizeFragmentNodes } from '../../system/base/fragments.ts'
+import type { BaseSystem, FragmentNode } from '../../system/base/types.ts'
 import {
   CONFIG_FRAGMENT_SOURCE_PROPERTY,
   CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY,
@@ -30,10 +32,14 @@ import { getFragmentBootstrapImportMap } from './bootstrap.ts'
 export { UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
 import {
   isPlainObject,
-  mergeFragmentObjects,
+  mergeTokenTree,
   stripPrivateTokensDeep,
   tokenLeafPaths,
 } from './merge.ts'
+import {
+  mergeTokenFragmentsWithShadows,
+  tokenShadowDiagnostic,
+} from './shadow.ts'
 
 type SpecProvenance = EvaluatedSystemSpec['provenance']
 
@@ -47,7 +53,8 @@ interface EvaluateCollector {
 }
 
 export interface PreparedFragments {
-  upstreamFragments: string[]
+  /** Upstream fragment nodes, linearized: upstream first, each name at its first occurrence (E1). */
+  upstreamFragments: FragmentNode[]
   localFragmentBundles: FragmentBundle[]
   /**
    * Retained compile set from the fragment scan. Native path (C3-in-reverse):
@@ -69,22 +76,13 @@ interface CollectedBucket {
   fragments: unknown[]
 }
 
-export function getUpstreamFragments(systems: BaseSystem[] | undefined): string[] {
-  return (systems ?? [])
-    .map(system => system.fragment)
-    .filter(
-      (fragment): fragment is string =>
-        typeof fragment === 'string' && fragment.trim().length > 0
-    )
-}
-
-function getUpstreamFragmentNames(systems: BaseSystem[] | undefined): string[] {
-  return (systems ?? [])
-    .filter(
-      (system): system is BaseSystem & { fragment: string } =>
-        typeof system.fragment === 'string' && system.fragment.trim().length > 0
-    )
-    .map(system => system.name)
+/**
+ * The upstream fragment nodes a config evaluates: each extends entry's nodes in declared
+ * order, each name kept at its first occurrence (E1, E2). A shared base reached through
+ * two branches therefore evaluates once, in the first branch that reaches it.
+ */
+export function getUpstreamFragments(systems: BaseSystem[] | undefined): FragmentNode[] {
+  return linearizeFragmentNodes((systems ?? []).map(fragmentNodesOf))
 }
 
 export async function scanFragmentFiles(
@@ -160,11 +158,35 @@ export async function evaluatePreparedFragments(
   config: ReferenceUIConfig,
   prepared: PreparedFragments
 ): Promise<EvaluatedSystemSpec> {
+  return (await evaluatePreparedFragmentsDetailed(cwd, config, prepared)).spec
+}
+
+/** The evaluated spec plus the sync warnings its merge raised (E13). */
+export interface EvaluatedFragments {
+  spec: EvaluatedSystemSpec
+  diagnostics: NativeDiagnostic[]
+}
+
+/**
+ * Evaluate prepared fragments once and also return the diagnostics the token merge
+ * raised. Sync reports those diagnostics beside the compile warnings.
+ */
+export async function evaluatePreparedFragmentsDetailed(
+  cwd: string,
+  config: ReferenceUIConfig,
+  prepared: PreparedFragments
+): Promise<EvaluatedFragments> {
   const collectors = getFragmentCollectors()
-  const upstreamNames = getUpstreamFragmentNames(config.extends)
-  const script = createEvaluationScript(collectors, prepared, upstreamNames)
+  const upstreamNames = prepared.upstreamFragments.map(node => node.name)
+  const script = createEvaluationScript(collectors, prepared)
   const collected = await executeEvaluationScript(cwd, collectors, script)
-  return mergeCollectedSpec(config.name, cwd, collected, config.staticCss ?? {}, upstreamNames)
+  return mergeCollectedSpec({
+    name: config.name,
+    cwd,
+    collected,
+    staticCss: config.staticCss ?? {},
+    upstreamNames,
+  })
 }
 
 function isGlobalCssCollector(functionName: string | undefined, name: string): boolean {
@@ -193,17 +215,15 @@ function restoreCollectorScript(collector: EvaluateCollector | undefined): strin
 
 function createEvaluationScript(
   collectors: EvaluateCollector[],
-  prepared: PreparedFragments,
-  upstreamNames: string[]
+  prepared: PreparedFragments
 ): string {
   const globalCssCollector = getGlobalCssCollector(collectors)
   return [
     createCollectorRuntimeScript(collectors),
     // Upstream systems already include global CSS in their portable CSS output.
     disableCollectorScript(globalCssCollector),
-    ...prepared.upstreamFragments.map((bundle, index) =>
-      wrapBundleWithSource(bundle, upstreamNames[index] ?? UPSTREAM_FRAGMENT_SOURCE)
-    ),
+    // Each upstream node runs under its own name, so its tokens cite that system.
+    ...prepared.upstreamFragments.map(node => wrapBundleWithSource(node.bundle, node.name)),
     restoreCollectorScript(globalCssCollector),
     ...prepared.localFragmentBundles.map(({ file, bundle }) =>
       wrapBundleWithSource(bundle, file)
@@ -275,26 +295,36 @@ export function scopeUpstreamTokenFragment(
   return stripped
 }
 
-function mergeCollectedSpec(
-  name: string,
-  cwd: string,
-  collected: CollectedBucket[],
-  staticCss: Record<string, string[]>,
+// The collected buckets as one spec: the input the merge reads, named as a whole.
+interface SpecMergeInput {
+  name: string
+  cwd: string
+  collected: CollectedBucket[]
+  staticCss: Record<string, string[]>
   upstreamNames: readonly string[]
-): EvaluatedSystemSpec {
+}
+
+function mergeCollectedSpec({
+  name,
+  cwd,
+  collected,
+  staticCss,
+  upstreamNames,
+}: SpecMergeInput): EvaluatedFragments {
   const tokens = bucketByName(collected, 'tokens').map(fragment =>
     scopeUpstreamTokenFragment(fragment, upstreamNames)
   )
+  const tokenMerge = mergeTokenFragmentsWithShadows(tokens, new Set(upstreamNames))
   const keyframes = bucketByName(collected, 'keyframes')
   const fonts = bucketByName(collected, 'font')
   const css = bucketByName(collected, 'globalCss')
   const recipes = bucketByName(collected, 'recipe')
   const mergedFonts = mergeFontRecord(fonts)
-  return {
+  const spec: EvaluatedSystemSpec = {
     schemaVersion: 1,
     profile: 'reference-ui',
     name,
-    tokens: mergeFragmentObjects(mergeRecordFragments(tokens), buildFontWeightTokens(mergedFonts)),
+    tokens: mergeTokenTree(tokenMerge.tree, buildFontWeightTokens(mergedFonts)),
     fonts: mergedFonts,
     globalCss: toGlobalCssEntries(css, cwd),
     keyframes: mergeRecordFragments(keyframes),
@@ -308,6 +338,7 @@ function mergeCollectedSpec(
       ...recipeProvenance(recipes, cwd),
     ],
   }
+  return { spec, diagnostics: tokenMerge.shadows.map(tokenShadowDiagnostic) }
 }
 
 function bucketByName(collected: CollectedBucket[], name: string): unknown[] {
@@ -326,7 +357,7 @@ function mergeRecordFragments(fragments: unknown[]): Record<string, unknown> {
   let merged: Record<string, unknown> = {}
   for (const fragment of fragments) {
     if (!isPlainObject(fragment)) continue
-    merged = mergeFragmentObjects(merged, fragment)
+    merged = mergeTokenTree(merged, fragment)
   }
   return merged
 }

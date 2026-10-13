@@ -33,6 +33,8 @@ export {
   prepareFragments,
   evaluateFragments,
   evaluatePreparedFragments,
+  evaluatePreparedFragmentsDetailed,
+  type EvaluatedFragments,
   type PreparedFragments,
 } from './lib/evaluate.ts'
 export { getFragmentBootstrapImportMap } from './lib/bootstrap.ts'

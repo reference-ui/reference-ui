@@ -9,6 +9,9 @@ import path from 'node:path';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 
+// Only the shared base holds this literal, so its count in a published fragment counts the base's copies.
+const SHARED_LITERAL = '#14b8a6';
+
 interface SpecInput {
   page: SpecPage;
   case: NeoCase;
@@ -25,7 +28,7 @@ async function styleOf(page: SpecPage, id: string): Promise<[string, string]> {
 
 // The runner synced this diamond world before serving: both branch-local
 // backgrounds paint while the shared inner base paints on both eyebrows —
-// the base lands twice and every adoption still resolves.
+// the base is one node in the published list and every adoption still resolves.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
 
@@ -58,6 +61,24 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
       metaSiblingBg: { value: '#7c2d12' },
     },
     'evaluated tokens merge both branches with the shared base resolving once',
+  );
+
+  // The shared base is one named node in the published list (E2): the diamond
+  // republishes meta-base once, then each branch, then the app's own node last.
+  const publishedRaw = fs.readFileSync(path.join(outDir, 'system', 'baseSystem.mjs'), 'utf8');
+  const published = JSON.parse(publishedRaw.slice(publishedRaw.indexOf('{'))) as {
+    fragment: string;
+    fragments: Array<{ name: string; bundle: string }>;
+  };
+  assert.deepEqual(
+    published.fragments.map((node) => node.name),
+    ['meta-base', 'meta-extend-library', 'meta-extend-library-sibling', 'neo-chain2'],
+    'the diamond publishes the shared base once, then each branch, then its own node',
+  );
+  assert.equal(
+    published.fragment.split(SHARED_LITERAL).length - 1,
+    1,
+    'the published fragment carries the shared base once',
   );
 
   // Primitives read back from the generated types, not from neo source: the

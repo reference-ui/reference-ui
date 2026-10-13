@@ -1,8 +1,7 @@
 // Config for the NEO-CHAIN-02 world. It takes the two branch stand-ins plus
-// the sync defaults and emits a diamond build: both branches republish the
-// same inner base, so the shared leaves land at the app boundary twice and
-// every adoption still resolves. No deduplication is promised — only that
-// the composed app boots and all tokens paint.
+// the sync defaults and emits a diamond build: both branches publish the same
+// inner base as one named node, so the app's fragment list keeps it once (E1,
+// E2) and every adoption still resolves.
 
 import { defineConfig } from '@reference-ui/neo'
 import { left } from './theme/left.ts'

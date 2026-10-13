@@ -5,12 +5,14 @@
 import type { EvaluatedSystemSpec, NativeRuntimeArtifact } from '@reference-ui/rust/contracts'
 import type { StrictCategory } from '../config/types.ts'
 import type { JsxElementsArtifact } from '../system/base/jsx.ts'
-import type { SystemStreams } from '../system/base/types.ts'
+import type { FragmentNode, SystemStreams } from '../system/base/types.ts'
 
 export interface PublishInput {
   outDir: string
   spec: EvaluatedSystemSpec
   portableFragment: string
+  /** The published node list: upstream nodes first, own node last, each name once. */
+  portableFragments: FragmentNode[]
   stylesheet: string
   portableStylesheet: string
   /** Published structured stylesheet: the upstream expansion plus the own entry, always. */

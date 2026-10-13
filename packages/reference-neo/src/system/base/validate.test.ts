@@ -217,6 +217,35 @@ describe('validateConfig own-name links', () => {
     ).toThrowError(/^Config field 'extends' is invalid\.\nEntry 0 \(upstream\) reaches 'my-system'/)
   })
 
+  it('rejects an extends entry whose fragment nodes reach the config through a name (E7)', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [
+          {
+            name: 'upstream',
+            fragment: FRAGMENT_CODE,
+            fragments: [
+              { name: SYSTEM_NAME, bundle: FRAGMENT_CODE },
+              { name: 'upstream', bundle: FRAGMENT_CODE },
+            ],
+          },
+        ],
+      })
+    ).toThrowError(/^Config field 'extends' is invalid\.\nEntry 0 \(upstream\) reaches 'my-system', this config's own name/)
+  })
+
+  it('rejects a fragments list that is not an array of named bundles', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [{ name: 'upstream', fragment: FRAGMENT_CODE, fragments: [{ bundle: FRAGMENT_CODE }] as never }],
+      })
+    ).toThrowError(/^Config field 'extends' is invalid\.\nEntry 0 \(upstream\) must have 'fragments' as an array of \{ name, bundle \} nodes\./)
+  })
+
   it('rejects a layers entry whose streams reach the config (an A to B cycle)', () => {
     expect(() =>
       validateConfig({

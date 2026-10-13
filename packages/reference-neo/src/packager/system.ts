@@ -1,8 +1,8 @@
 // System leg of the Neo generated folder.
 // It takes the publish input and emits the authoring entry, the evaluated
 // spec, the jsx artifact, the portable base system, and the package manifest.
-// The published base system is the singular BaseSystem shape the extends
-// validator and reader consume: name plus the bundled fragment string.
+// The published base system is the BaseSystem shape the extends validator and
+// reader consume: name, the bundled fragment string, and the named fragment list.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -26,6 +26,7 @@ export function writeSystemDir(input: PublishInput): void {
       assembleBaseSystem({
         name: input.spec.name,
         fragment: input.portableFragment,
+        fragments: input.portableFragments,
         streams: input.streams,
         jsxElements: input.jsx.merged,
       })

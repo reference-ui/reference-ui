@@ -1,14 +1,14 @@
-// Unit tests for the Neo fragment merge helper and leaf paths.
-// They take fragment trees and assert merged output, private stripping,
-// plus provenance keys.
-// Merge conflicts resolve later-wins while the inputs stay untouched.
+// Unit tests for the Neo token merge, leaf paths, and private stripping.
+// They take token trees and assert merged output: a leaf replaces the earlier leaf
+// whole, a group merges recursively, and the inputs stay untouched. They also pin
+// the provenance keys and the `_private` strip.
 
 import { describe, expect, it } from 'vitest'
-import { mergeFragmentObjects, stripPrivateTokensDeep, tokenLeafPaths } from './merge.ts'
+import { mergeTokenTree, stripPrivateTokensDeep, tokenLeafPaths } from './merge.ts'
 
-describe('mergeFragmentObjects', () => {
+describe('mergeTokenTree', () => {
   it('merges sibling token trees key by key', () => {
-    const merged = mergeFragmentObjects(
+    const merged = mergeTokenTree(
       { colors: { red: { value: '#ff0000' } } },
       { spacing: { sm: { value: '0.5rem' } } }
     )
@@ -19,8 +19,8 @@ describe('mergeFragmentObjects', () => {
     })
   })
 
-  it('merges nested objects while later scalars win', () => {
-    const merged = mergeFragmentObjects(
+  it('merges nested groups while later leaves win', () => {
+    const merged = mergeTokenTree(
       { colors: { red: { value: '#ff0000' }, blue: { value: '#0000ff' } } },
       { colors: { red: { value: '#cc0000' } } }
     )
@@ -31,7 +31,7 @@ describe('mergeFragmentObjects', () => {
   })
 
   it('replaces arrays wholesale instead of concatenating', () => {
-    const merged = mergeFragmentObjects(
+    const merged = mergeTokenTree(
       { fonts: { weights: ['400'] } },
       { fonts: { weights: ['700'] } }
     )
@@ -39,14 +39,80 @@ describe('mergeFragmentObjects', () => {
     expect(merged).toEqual({ fonts: { weights: ['700'] } })
   })
 
+})
+
+describe('mergeTokenTree: leaf and group replacement', () => {
+  it('drops the earlier dark value when a later leaf sets only value', () => {
+    const merged = mergeTokenTree(
+      { colors: { brand: { value: '#aaaaaa', dark: '#bbbbbb' } } },
+      { colors: { brand: { value: '#cccccc' } } }
+    )
+
+    expect(merged).toEqual({ colors: { brand: { value: '#cccccc' } } })
+  })
+
+  it('drops the earlier group children when a later leaf replaces a group', () => {
+    const merged = mergeTokenTree(
+      { colors: { brand: { hover: { value: '#111111' }, active: { value: '#222222' } } } },
+      { colors: { brand: { value: '#cccccc' } } }
+    )
+
+    expect(merged).toEqual({ colors: { brand: { value: '#cccccc' } } })
+  })
+
+  it('replaces an earlier leaf with a later group, keeping only the group children', () => {
+    const merged = mergeTokenTree(
+      { colors: { brand: { value: '#aaaaaa' } } },
+      { colors: { brand: { hover: { value: '#111111' } } } }
+    )
+
+    expect(merged).toEqual({ colors: { brand: { hover: { value: '#111111' } } } })
+  })
+
+  it('leaves untouched siblings of a replaced leaf in place', () => {
+    const merged = mergeTokenTree(
+      { colors: { brand: { value: '#aaaaaa', dark: '#bbbbbb' }, ink: { value: '#000000' } } },
+      { colors: { brand: { value: '#cccccc' } } }
+    )
+
+    expect(merged).toEqual({
+      colors: { brand: { value: '#cccccc' }, ink: { value: '#000000' } },
+    })
+  })
+
+  it('reports each leaf that replaces an earlier leaf, with its path and both leaves', () => {
+    const replaced: Array<[string, unknown, unknown]> = []
+
+    mergeTokenTree(
+      { colors: { brand: { value: '#aaaaaa' }, ink: { value: '#000000' } } },
+      { colors: { brand: { value: '#cccccc' }, paper: { value: '#ffffff' } } },
+      (path, earlier, later) => replaced.push([path, earlier, later])
+    )
+
+    expect(replaced).toEqual([['colors.brand', { value: '#aaaaaa' }, { value: '#cccccc' }]])
+  })
+
+  it('never reports a leaf that replaces a group or fills an empty slot', () => {
+    const replaced: string[] = []
+
+    mergeTokenTree(
+      { colors: { brand: { hover: { value: '#111111' } } } },
+      { colors: { brand: { value: '#cccccc' }, paper: { value: '#ffffff' } } },
+      (path) => replaced.push(path)
+    )
+
+    expect(replaced).toEqual([])
+  })
+
   it('never mutates its inputs', () => {
-    const base = { colors: { red: { value: '#ff0000' } } }
-    const override = { colors: { blue: { value: '#0000ff' } } }
+    const base = { colors: { red: { value: '#ff0000', dark: '#880000' } } }
+    const override = { colors: { red: { value: '#cc0000' }, blue: { value: '#0000ff' } } }
 
-    mergeFragmentObjects(base, override)
+    const merged = mergeTokenTree(base, override)
 
-    expect(base).toEqual({ colors: { red: { value: '#ff0000' } } })
-    expect(override).toEqual({ colors: { blue: { value: '#0000ff' } } })
+    expect(base).toEqual({ colors: { red: { value: '#ff0000', dark: '#880000' } } })
+    expect(override).toEqual({ colors: { red: { value: '#cc0000' }, blue: { value: '#0000ff' } } })
+    expect(merged.colors).not.toBe(base.colors)
   })
 })
 

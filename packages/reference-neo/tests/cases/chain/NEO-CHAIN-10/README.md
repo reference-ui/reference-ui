@@ -10,13 +10,13 @@ The spec syncs each upstream for real, then E, and checks three things:
 2. E's evaluated tokens equal D's on every path.
 3. E paints the `x` probe as `rgb(187, 0, 0)`, the value D resolves.
 
-This case is red until the fix slice lands. Today B and C each republish A, so D's fragment carries A
-twice and check 1 counts 2. E evaluates D's fragment as one string, so E runs A twice too. Check 2 holds
-today, since E and D agree on every path, both on the wrong `x`. Check 3 paints `rgb(170, 0, 0)`, A's value.
+Before the fix B and C each republished A, so D's fragment carried A twice (check 1 counted 2), and E ran A
+twice too. Now D publishes its named list with A once, and E resolves exactly what D resolves, with x painted
+`rgb(187, 0, 0)`, B's value.
 
-Cause: the same as NEO-CHAIN-09. `createPortableFragmentBundle` (`src/system/base/fragments.ts`) concatenates
-upstream fragments without deduping, so a base that two branches republish appears twice in the fragment
-a diamond publishes, and every consumer of that fragment evaluates it again.
+Cause (fixed): the same as NEO-CHAIN-09. The fragment list is linearized by name, so a base that two branches
+republish appears once in the list a diamond publishes (`src/system/base/fragments.ts`), and every consumer of
+that list evaluates it once.
 
 Siblings: NEO-CHAIN-09 (the diamond's override, which this case builds on), NEO-CHAIN-02 (the diamond
 through stand-ins), NEO-CHAIN-06 (the real-sync template).

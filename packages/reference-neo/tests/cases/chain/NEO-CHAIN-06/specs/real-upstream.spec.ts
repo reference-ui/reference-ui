@@ -18,6 +18,7 @@ interface SpecInput {
 interface PublishedBaseSystem {
   name: string;
   fragment: string;
+  fragments?: Array<{ name: string; bundle: string }>;
   css: string;
   jsxElements: string[];
 }
@@ -56,7 +57,11 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
   assert.equal(upstream.name, 'neo-chain6-up', `upstream publishes its name, got ${upstream.name}`);
   assert.equal(typeof upstream.fragment, 'string', 'upstream publishes the singular fragment');
   assert.ok(upstream.fragment.length > 0, 'upstream fragment is non-empty');
-  assert.ok(!('fragments' in upstream), 'no plural fragments survivor in real output');
+  assert.deepEqual(
+    upstream.fragments?.map((node) => node.name),
+    ['neo-chain6-up'],
+    'upstream publishes its own named fragment node',
+  );
   assert.ok(!('cssChunks' in upstream), 'no plural cssChunks survivor in real output');
   assert.ok(!('runtime' in upstream), 'no duplicated runtime in real output');
 

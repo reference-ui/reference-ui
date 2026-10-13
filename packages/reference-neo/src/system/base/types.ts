@@ -22,13 +22,26 @@ export interface SystemStreams {
 }
 
 /**
+ * One named node of a system's fragment list. A published system lists its
+ * nodes upstream first and its own last, each name once, so a shared base is
+ * one node wherever it is reached from.
+ */
+export interface FragmentNode {
+  name: string
+  /** One fragment bundle: IIFEs, each semicolon-prefixed, as the evaluator wraps them. */
+  bundle: string
+}
+
+/**
  * Portable design-system artefact emitted by sync.
  * Neo-owned copy of the core BaseSystem shape (name plus fragment payload).
  */
 export interface BaseSystem {
   name: string
-  /** Bundled fragment IIFEs representing the full upstream config contribution. */
+  /** Bundled fragment IIFEs representing the full upstream config contribution: the nodes' bundles in order. */
   fragment: string
+  /** Named fragment nodes, upstream first and own last. Absent on a legacy entry, which reads as one opaque node. */
+  fragments?: FragmentNode[]
   /** Published structured stylesheet: transitively expanded,
       merge-ordered systems, own entry last. Replaces `css`. */
   streams?: SystemStreams[]
@@ -55,6 +68,7 @@ export interface ExtendsCarrier {
 export interface BaseAssemblyInput {
   name: string
   fragment: string
+  fragments?: FragmentNode[]
   streams?: SystemStreams[]
   jsxElements: string[]
 }

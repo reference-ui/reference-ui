@@ -98,6 +98,22 @@ function assertRequiredFragment(
   }
 }
 
+function assertFragmentNodes(field: BaseSystemField, sys: BaseSystem, index: number): void {
+  if (sys.fragments == null) return
+
+  const valid =
+    Array.isArray(sys.fragments) &&
+    sys.fragments.every(
+      (node) => node && typeof node.name === 'string' && node.name.trim() !== '' && typeof node.bundle === 'string'
+    )
+  if (valid) return
+
+  throw invalidBaseSystem(
+    field,
+    `Entry ${index} (${sys.name}) must have 'fragments' as an array of { name, bundle } nodes.`
+  )
+}
+
 function assertRequiredStreams(
   field: BaseSystemField,
   sys: BaseSystem,
@@ -123,6 +139,7 @@ function validateBaseSystemEntry(
   assertBaseSystemObject(field, sys, index)
   assertBaseSystemName(field, sys, index)
   assertRequiredFragment(field, sys, index, options.requireFragment ?? false)
+  assertFragmentNodes(field, sys, index)
   assertRequiredStreams(field, sys, index, options.requireStreams ?? false)
   assertOptionalJsxElements(field, sys, index)
 }
@@ -141,6 +158,7 @@ export function validateBaseSystemEntries(
 
 function reachesOwnName(sys: BaseSystem, ownName: string): boolean {
   if (sys.name === ownName) return true
+  if (Array.isArray(sys.fragments) && sys.fragments.some((node) => node.name === ownName)) return true
   return Array.isArray(sys.streams) && sys.streams.some((stream) => stream?.name === ownName)
 }
 
@@ -178,9 +196,10 @@ function assertNotRepeated(
 
 /**
  * Links between one field's entries and the consumer's own name. An entry reaches
- * the own name when its name or any stream name equals it, which covers a self-named
- * entry and a cycle through an upstream's expansion. A name listed twice in one field
- * is rejected; a repeat reached only through another system is left to the dedupe.
+ * the own name when its name, any fragment node name, or any stream name equals it,
+ * which covers a self-named entry and a cycle through an upstream's expansion (E7).
+ * A name listed twice in one field is rejected; a repeat reached only through another
+ * system is left to the dedupe.
  */
 export function validateBaseSystemLinks(
   field: BaseSystemField,

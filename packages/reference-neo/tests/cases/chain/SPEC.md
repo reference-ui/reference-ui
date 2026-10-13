@@ -12,9 +12,10 @@ alone.
 
 Authors write `extends: [systems]` in `ui.config.ts`, where each entry is a
 `BaseSystem` — the shape a published package's `baseSystem.mjs` carries
-(`name`, bundled `fragment` IIFEs, `jsxElements`). Upstream fragments
-evaluate in extends order, then local bundles; later fragments win scalar
-conflicts (`src/collect/lib/merge.ts`), and upstream `_private` subtrees
+(`name`, the bundled `fragment` string, the named `fragments` list, `jsxElements`).
+Upstream fragment nodes evaluate in linearized order, each name at its first
+occurrence, then local bundles. A later token leaf replaces an earlier one whole,
+and later groups merge (`src/collect/lib/merge.ts`); upstream `_private` subtrees
 strip at the boundary. Worlds stand in for installed packages with
 import-free `theme/*.ts` objects in exactly that shape — the config data,
 not fragments to scan. Transitive middles republish: the outer fragment

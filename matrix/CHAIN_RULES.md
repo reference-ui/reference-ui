@@ -18,10 +18,11 @@ The goal is to be precise enough that, once the priority topologies are green, w
 
 Every published library exposes a `baseSystem` boundary object.
 
-In practice that boundary is made from four distinct surfaces:
+In practice that boundary is made from five distinct surfaces:
 
 - `name`: the design-system identity from `ui.config.name`
 - `fragment`: the portable config-time fragment bundle used by `extends`
+- `fragments`: the named fragment nodes (`{ name, bundle }`), upstream first and its own last, that `extends` linearizes by first occurrence
 - `streams`: the portable per-system stylesheet blocks used by `layers` and other downstream CSS consumers (D17 cutover: the structured payload replaces the old `css` string, which stays dead)
 - `jsxElements`: published host metadata (discovered ∪ configured names); the config field is an escape hatch, not a registry
 
@@ -167,25 +168,33 @@ This is the core contract behind T2, T3, T10, T12, and T13.
 
 ## Shared-base and diamond rules
 
-Diamond graphs need special care because there are two different questions:
+Diamond graphs need care because there are two questions:
 
 1. Can the compiler compose two branches that share the same base?
-2. Does the compiler deduplicate the shared-base contribution automatically?
+2. Does the compiler deduplicate the shared-base contribution?
 
-Those are not the same guarantee.
+Both have a rule now. Composition is supported, and the dedupe is part of the contract: each published system
+carries its fragment list as named nodes, upstream first and its own last.
 
 ### What the current model guarantees
 
-- each branch publishes its own `baseSystem`
-- downstream consumers can compose those published branch artifacts
-- the compiler does not currently define a general graph-aware dedupe contract for shared-base contributions
+- each branch publishes its own `baseSystem`, with a named `fragments` list (one node per contributing system)
+  beside the singular `fragment` string
+- an `extends` chain linearizes by first occurrence: the entries' lists concatenate in declared order, each node
+  name is kept once, and the local system's own node comes last (E1)
+- a shared base reached through two branches evaluates once, at its first occurrence, and its later copies are
+  dropped by name (E2, E5); the diamond publishes it once (E6)
+- a legacy entry with only `fragment` reads as one opaque node named after its system (E15); its contents are
+  not deduplicated internally
 
-So for diamond shapes, the safe current wording is:
+So for diamond shapes the rule is:
 
-- composition is the goal
-- automatic deduplication is not yet a guaranteed rule
+- composition is the goal, and the shared base contributes once
+- a branch's override survives in either order, unless a later system writes that path itself (E3, E5)
+- a cycle reached through a fragment name is rejected with a named error (E7)
 
-That means T7 and T12 are high-value tests precisely because they force us to decide whether duplicate shared-base CSS or duplicate shared-base fragment contribution is acceptable, normalized, or rejected.
+T7 and T12 pin the composed app's adoption; NEO-CHAIN-02, -09, and -10 pin the diamond's dedupe through real and
+stand-in syncs.
 
 ---
 
@@ -240,12 +249,9 @@ Case:
 - `B` and `C` both build on `A`
 - app composes `B` and `C`
 
-Recommended policy question:
-
-- do we accept duplicate shared-base contribution as part of branch-local publication?
-- or do we want graph-aware canonicalization?
-
-This should be decided intentionally, not inferred accidentally from current implementation.
+Decision: first-occurrence linearization by name (E1, E2). For `extends: [B, C]` the app's node list is
+`[A, B, C, app]`; for `[C, B]` it is `[A, C, B, app]`. Dedupe is by name, not by content: a name is the identity
+of a node, so the first occurrence wins. No graph-aware canonicalization is needed for this shape.
 
 ---
 
@@ -259,7 +265,7 @@ If we want a clean v1 contract, the most defensible rules are:
 4. Local fragment contributions override upstream fragment contributions on the same leaf paths.
 5. Every package in a composed graph must have a unique `ui.config.name`.
 6. Same-package-in-both-buckets should be rejected unless we deliberately support it.
-7. Diamond composition must be supported; diamond dedupe must be either specified or declared out of scope.
+7. Diamond composition must be supported, and its dedupe is specified: each fragment node name evaluates once, at its first occurrence (E1, E2).
 
 If we lock down those seven rules and then prove the priority topologies from `CHAIN.md`, the compiler story becomes coherent instead of accidental.
 

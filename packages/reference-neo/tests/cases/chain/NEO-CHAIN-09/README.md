@@ -9,15 +9,14 @@ of three probes: `x`, `y`, and C's `cLeaf`. The served sheet is not an oracle he
 than once (under `[C, B]` the first `--colors-x` it prints is `#aa0000` while the paint is `#bb0000`), so the
 paint is the cascade's answer.
 
-This case is red until the fix slice lands, and each order loses one override today. D on `[B, C]` evaluates A,
-B, A, C, D: the second A run puts `#aa0000` back over B's x, so x resolves `#aa0000` and paints `rgb(170, 0, 0)`,
-while y resolves C's `#cc0001` because C runs last. D on `[C, B]` evaluates A, C, A, B, D: the second A run puts
-`#aa0001` back over C's y, so y resolves `#aa0001` and paints `rgb(170, 0, 1)`, while x resolves B's `#bb0000`
-because B runs last.
+Before the fix each order lost one override. D on `[B, C]` evaluated A, B, A, C, D, so the second A run put
+`#aa0000` back over B's x and x painted `rgb(170, 0, 0)`; D on `[C, B]` lost C's y the same way. The fix gives every
+published system a named fragment list and linearizes the lists by first occurrence (E1): D on `[B, C]` now
+evaluates A, B, C, D, and D on `[C, B]` evaluates A, C, B, D, so each override survives.
 
-Cause: `createPortableFragmentBundle` (`src/system/base/fragments.ts`) concatenates upstream fragments without
-deduping, and `getUpstreamFragments` (`src/collect/lib/evaluate.ts`) hands every copy to the one evaluator, so a
-base that two branches republish runs twice.
+Cause (fixed): `createPortableFragmentBundle` concatenated upstream fragments without deduping, and
+`getUpstreamFragments` (`src/collect/lib/evaluate.ts`) handed every copy to the one evaluator, so a base that two
+branches republish ran twice. The linearization lives in `src/system/base/fragments.ts`.
 
 Siblings: NEO-CHAIN-02 (the extends diamond through stand-ins), NEO-CHAIN-06 (the real-sync template), NEO-CHAIN-10
 (the shared base evaluated once, and the app extending the diamond).

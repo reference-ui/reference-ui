@@ -22,12 +22,12 @@ import {
 import { loadUserConfig } from '../config/load.ts'
 import { getOutDirPath, getOutDirTmpPath, getStageDirPath } from '../lib/paths/index.ts'
 import {
-  evaluatePreparedFragments,
+  evaluatePreparedFragmentsDetailed,
   prepareFragments,
   type PreparedFragments,
 } from '../collect/index.ts'
 import { hasUpstreamContainerRoot } from '../system/base/container-root.ts'
-import { createPortableFragmentBundle } from '../system/base/fragments.ts'
+import { portableFragmentOf, publishedFragmentNodes } from '../system/base/fragments.ts'
 import { resolveJsxElements } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
@@ -105,7 +105,8 @@ async function evaluateAndCompile(
 ): Promise<CompiledSystem> {
   let retentionToken = prepared.retentionToken
   try {
-    const spec = await evaluatePreparedFragments(cwd, config, prepared)
+    // The token merge's shadow warnings (E13) join the compile warnings they are reported with.
+    const { spec, diagnostics: shadows } = await evaluatePreparedFragmentsDetailed(cwd, config, prepared)
     // LAYER-04: the reset fragment rides the spec only when normalizeCss is
     // not false; the engine prints reset-sourced fragments into @layer reset.
     applyNormalizeCss(spec, config.normalizeCss)
@@ -153,7 +154,7 @@ async function evaluateAndCompile(
     // The drain consumed the retention: nothing left to release.
     retentionToken = undefined
     dropScanRetention(request, prepared)
-    return { spec, result, request }
+    return { spec, result: { ...result, diagnostics: [...shadows, ...result.diagnostics] }, request }
   } finally {
     await releaseScanRetention(retentionToken)
   }
@@ -186,14 +187,19 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
     input.result.streams,
     input.spec.name
   )
+  // The published node list: upstream nodes linearized (E1), then the own node. The legacy
+  // `fragment` string is the same nodes concatenated for readers that predate the list.
+  const fragments = publishedFragmentNodes(
+    input.prepared.upstreamFragments,
+    input.spec.name,
+    input.prepared.localFragmentBundles.map(({ bundle }) => bundle)
+  )
   const typegenDiagnostics = await assembleSystem({
     outDir: input.stageDir,
     liveOutDir: input.outDir,
     spec: input.spec,
-    portableFragment: createPortableFragmentBundle(
-      input.prepared.upstreamFragments,
-      input.prepared.localFragmentBundles.map(({ bundle }) => bundle)
-    ),
+    portableFragment: portableFragmentOf(fragments),
+    portableFragments: fragments,
     stylesheet: merged.stylesheet,
     portableStylesheet: merged.portableStylesheet,
     streams: merged.streams,

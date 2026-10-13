@@ -25,9 +25,14 @@ const INTERFACE_SOURCE = `export interface SystemStreams {
   utilities?: string
   package?: string
 }
+export interface FragmentNode {
+  name: string
+  bundle: string
+}
 export interface BaseSystem {
   name: string
   fragment: string
+  fragments?: FragmentNode[]
   streams?: SystemStreams[]
   jsxElements?: string[]
 }
@@ -46,9 +51,14 @@ export interface SystemStreams {
   utilities?: string
   package?: string
 }
+export interface FragmentNode {
+  name: string
+  bundle: string
+}
 export interface BaseSystem {
   name: string
   fragment: string
+  fragments?: FragmentNode[]
   streams?: SystemStreams[]
   jsxElements?: string[]
 }
@@ -102,9 +112,14 @@ export interface SystemStreams {
   utilities?: string
   package?: string
 }
+export interface FragmentNode {
+  name: string
+  bundle: string
+}
 export interface BaseSystem {
   name: string
   fragment: string
+  fragments?: FragmentNode[]
   streams?: SystemStreams[]
   jsxElements?: string[]
 }
