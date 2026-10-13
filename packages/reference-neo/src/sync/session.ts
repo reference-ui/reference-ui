@@ -2,11 +2,13 @@
 // It takes a project root plus the session kind and emits a held lock whose
 // release removes the lock dir. One sync holds the folder at a time, so the
 // latest call wins: it preempts the holder (kill, or a SIGUSR2 poke when a
-// one-shot meets a resident watch) and takes over. The loser dies mid-stage
-// with the live folder untouched. A second watch never preempts: the CLI
-// attaches it to the owner here (block on the owner pid, forward signals)
-// instead of exiting. The owner document model lives in
-// session-owner.ts; this module owns the mkdir race, the preempt matrix,
+// one-shot meets a resident watch) and takes over, and the loser dies
+// mid-stage with the live folder untouched. A second watch never preempts:
+// the CLI attaches it to the owner here (block on the owner pid, forward
+// signals) instead of exiting. A stop signal frees a one-shot's lock at once,
+// but a watch with a graceful shutdown keeps its lock until that shutdown has
+// settled the in-flight sync and released it. The owner document model lives
+// in session-owner.ts; this module owns the mkdir race, the preempt matrix,
 // and the hold with its signal handlers.
 
 import { randomBytes } from 'node:crypto'
@@ -68,6 +70,10 @@ const MAX_ACQUIRE_ATTEMPTS = 25
 const UNIFORM_KILL = false
 
 type Contention = { action: 'take' } | { action: 'retry' }
+
+// The signals that end a session: Ctrl-C, a supervisor's terminate, and the
+// terminal hanging up. A held session and an attached client both answer them.
+type StopSignal = 'SIGINT' | 'SIGTERM' | 'SIGHUP'
 
 interface HeldSession {
   owner: SyncSessionOwner
@@ -327,9 +333,15 @@ export async function acquireSyncSession(options: AcquireSyncSessionOptions): Pr
  * from any attached client stops the shared session and every attached
  * client then exits on its own. Resolves at once when the owner is already
  * gone. Only the owner syncs; attached clients hold no lock and do no work.
+ * `onAttached` is the caller's covered line: it runs once the forwarders are
+ * armed, never before, so a reader of that line can signal this client at
+ * once without the signal dying here unforwarded.
  */
-export async function attachToWatchSession(watchPid: number): Promise<void> {
-  if (watchPid === process.pid || !pidAlive(watchPid)) return
+export async function attachToWatchSession(watchPid: number, onAttached: () => void = () => {}): Promise<void> {
+  if (watchPid === process.pid || !pidAlive(watchPid)) {
+    onAttached()
+    return
+  }
   await new Promise<void>((resolve) => {
     let timer: ReturnType<typeof setInterval> | undefined
     const done = (): void => {
@@ -342,7 +354,7 @@ export async function attachToWatchSession(watchPid: number): Promise<void> {
       process.removeListener('SIGHUP', onSighup)
       resolve()
     }
-    const forward = (signal: 'SIGINT' | 'SIGTERM' | 'SIGHUP'): void => {
+    const forward = (signal: StopSignal): void => {
       try {
         process.kill(watchPid, signal)
       } catch (error) {
@@ -366,6 +378,7 @@ export async function attachToWatchSession(watchPid: number): Promise<void> {
     timer = setInterval(() => {
       if (!pidAlive(watchPid)) done()
     }, ATTACH_POLL_MS)
+    onAttached()
   })
 }
 
@@ -394,19 +407,38 @@ function releaseSession(lockDir: string): void {
   }
 }
 
-// Foreign listeners own their own shutdown (the watch CLI stops gracefully
-// on SIGINT/SIGTERM); each held session contributes exactly one listener per
-// signal, so anything above the hold count is foreign.
-function hasForeignListeners(signal: 'SIGINT' | 'SIGTERM' | 'SIGHUP'): boolean {
+// Foreign listeners own their own shutdown (the watch CLI stops gracefully on
+// SIGINT/SIGTERM/SIGHUP); each held session contributes exactly one listener
+// per signal, so anything above the hold count is foreign.
+function hasForeignListeners(signal: StopSignal): boolean {
   return process.listenerCount(signal) > heldSessions.size
 }
 
-// Release-then-reraise: free the lock synchronously, then let a foreign
-// shutdown run when one exists, else restore the default death.
-function makeReraiseHandler(lockDir: string, signal: 'SIGINT' | 'SIGHUP'): () => void {
+// A SIGTERM carrying another pid's preempt marker is a kill leg: that
+// newcomer takes the lock next, so the victim frees it now and exits 75
+// naming the newcomer, graceful shutdown or not. Any other SIGTERM returns.
+function exitIfSuperseded(lockDir: string, json: boolean): void {
+  const marker = readPreemptMarkerSync(lockDir)
+  if (marker === null || marker.pid === process.pid) return
+  releaseSession(lockDir)
+  notice(json, supersededMessage(marker.pid, marker.kind))
+  process.exit(SUPERSEDED_EXIT_CODE)
+}
+
+// The stop-signal handler of one held session. A watch owner whose process
+// has a foreign (graceful) shutdown keeps its lock: that shutdown settles the
+// in-flight sync first and releases after, so a newcomer can never take the
+// lock while the old sync still writes the folder. Every other holder
+// releases synchronously, then lets a foreign shutdown run when one exists,
+// else restores the default death. A watch with no graceful shutdown yet
+// (still booting) dies like the rest, its lock freed as it goes.
+function makeStopHandler(lockDir: string, signal: StopSignal, owner: SyncSessionOwner, json: boolean): () => void {
   const handler = (): void => {
+    if (signal === 'SIGTERM') exitIfSuperseded(lockDir, json)
+    const graceful = hasForeignListeners(signal)
+    if (graceful && owner.kind === 'watch') return
     releaseSession(lockDir)
-    if (hasForeignListeners(signal)) return
+    if (graceful) return
     process.removeListener(signal, handler)
     process.kill(process.pid, signal)
   }
@@ -414,24 +446,11 @@ function makeReraiseHandler(lockDir: string, signal: 'SIGINT' | 'SIGHUP'): () =>
 }
 
 function holdSession(lockDir: string, owner: SyncSessionOwner, json: boolean): SyncSession {
-  const onSigterm = (): void => {
-    const marker = readPreemptMarkerSync(lockDir)
-    if (marker !== null && marker.pid !== process.pid) {
-      releaseSession(lockDir)
-      notice(json, supersededMessage(marker.pid, marker.kind))
-      process.exit(SUPERSEDED_EXIT_CODE)
-    }
-    if (owner.kind === 'watch') return
-    releaseSession(lockDir)
-    if (hasForeignListeners('SIGTERM')) return
-    process.removeListener('SIGTERM', onSigterm)
-    process.kill(process.pid, 'SIGTERM')
-  }
   const held: HeldSession = {
     owner,
-    onSigint: makeReraiseHandler(lockDir, 'SIGINT'),
-    onSigterm,
-    onSighup: makeReraiseHandler(lockDir, 'SIGHUP'),
+    onSigint: makeStopHandler(lockDir, 'SIGINT', owner, json),
+    onSigterm: makeStopHandler(lockDir, 'SIGTERM', owner, json),
+    onSighup: makeStopHandler(lockDir, 'SIGHUP', owner, json),
   }
   heldSessions.set(lockDir, held)
   process.on('SIGINT', held.onSigint)

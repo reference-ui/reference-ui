@@ -1,13 +1,13 @@
 // CLI watch runner: it takes a resolved project dir and emits the resident
 // watcher behind `ref sync --watch`. The runner owns the process half only —
 // boot block, resync/error prints, signal shutdown, and the never-promise
-// that holds the process open. File events print only under --debug, the
-// dev-only channel; --json moves every human line to stderr and prints one
-// diagnostics array per sync event on stdout. A second watch covered by the
-// resident session attaches to it (block plus signal forwarding) instead of
-// exiting, so supervisors never read an early exit as completion. The watch
-// driver itself (watchSync) lives in lib/watch per the WAVE4 verdict; this
-// file only routes the flag to it.
+// that holds the process open. File events and shutdown steps print only
+// under --debug, the dev-only channel; --json moves every human line to
+// stderr and prints one diagnostics array per sync event on stdout. A second
+// watch covered by the resident session attaches to it (block plus signal
+// forwarding) instead of exiting, so supervisors never read an early exit as
+// completion. The watch driver itself (watchSync) lives in lib/watch per the
+// WAVE4 verdict; this file only routes the flag to it.
 import type { ReferenceBuildResult } from '../reference/bridge/events.ts'
 import type { WatchHandle } from '../lib/watch/index.ts'
 import { SyncCoveredByWatchError } from '../sync/session-owner.ts'
@@ -29,18 +29,39 @@ export interface WatchRunnerOptions {
   quiet?: boolean
 }
 
-// The shutdown wiring: SIGINT/SIGTERM stop the watcher and exit by code,
-// never by signal. Attached before the tasty drain so an interrupt during
-// boot still exits graceful instead of dying mid-drain.
-function attachShutdown(handle: WatchHandle): void {
-  const shutdown = (): void => {
+// Ctrl-C, a supervisor's terminate, and the terminal hanging up all stop the
+// watcher the same way.
+const SHUTDOWN_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'] as const
+
+// The shutdown wiring: every shutdown signal stops the watcher and exits by
+// code, never by signal. Attached before the tasty drain so an interrupt
+// during boot still exits graceful instead of dying mid-drain. The session
+// keeps its lock while stop() settles the in-flight sync and releases it
+// last, so one stop runs per process: a signal that lands while stopping (a
+// second Ctrl-C, or the forwarded copy of the first) is ignored, and can
+// neither start a second stop nor exit before the lock is released. The
+// trace lines ride the dev-only --debug channel.
+function attachShutdown(handle: WatchHandle, trace: (line: string) => void): void {
+  let stopping = false
+  const shutdown = (signal: NodeJS.Signals): void => {
+    if (stopping) {
+      trace(`shutdown ${signal}: already stopping, ignored`)
+      return
+    }
+    stopping = true
+    trace(`shutdown ${signal}: stopping`)
     void handle.stop().then(
-      () => process.exit(0),
-      () => process.exit(1),
+      () => {
+        trace('shutdown: stopped')
+        process.exit(0)
+      },
+      (error: unknown) => {
+        trace(`shutdown: stop failed: ${messageOf(error)}`)
+        process.exit(1)
+      },
     )
   }
-  process.on('SIGINT', shutdown)
-  process.on('SIGTERM', shutdown)
+  for (const signal of SHUTDOWN_SIGNALS) process.on(signal, shutdown)
 }
 
 export async function runWatch(dir: string, options: WatchRunnerOptions = {}): Promise<number> {
@@ -85,7 +106,9 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
     // Fold every landing silent: the runner drains each one and carries
     // its count into its own line, so no background summary ever dangles.
     }, { breakLock, verbose, foldRefDiagnostics: true })
-    attachShutdown(handle)
+    attachShutdown(handle, (line) => {
+      if (debug) say(`[ref] ${line}`)
+    })
     // Ready means the hot path: the block prints the baseline's measured
     // sync wall, but only after the folded tasty landing drains, so the
     // Warnings row carries the total — sync plus tasty, one row, no dangle.
@@ -106,9 +129,10 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
       // Covered but not done: attach to the resident session (block while
       // the owner runs, forwarding signals to it) instead of exiting, so a
       // second `ref sync --watch` never reports early completion to a
-      // supervisor like `concurrently --success first`.
-      say(err.message)
-      await attachToWatchSession(err.watchPid)
+      // supervisor like `concurrently --success first`. The covered line
+      // prints once the forwarders are armed, so whoever reads it can signal
+      // this client at once and the signal still reaches the owner.
+      await attachToWatchSession(err.watchPid, () => say(err.message))
       return 0
     }
     say(`[ref] watch failed: ${messageOf(err)}`)
