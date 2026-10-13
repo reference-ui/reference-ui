@@ -7,8 +7,9 @@
 //! extension, index, and runtime-remap spellings and returning the first
 //! file the filesystem holds. [`ExtensionPolicy::Source`] prefers sources
 //! (atomic's orders first); [`ExtensionPolicy::Declarations`] prefers
-//! declarations (tasty's tables verbatim). Absolute specifiers miss in
-//! every policy, as they do in all three legacy ladders.
+//! declarations (tasty's tables verbatim). [`RootEntryPolicy`] orders a package
+//! root's `exports` against its top-level `types` field, source-first by default.
+//! Absolute specifiers miss in every policy, as they do in all three legacy ladders.
 
 mod memo;
 mod package;
@@ -40,6 +41,20 @@ pub enum TsconfigPolicy {
     /// The nearest `tsconfig.json` maps bare specifiers before
     /// `node_modules` (atomic; the SITE-54 alias arm).
     Follow,
+}
+
+/// Which root entry a package dir tries first: its `exports` source entry,
+/// or its top-level `types`/`typings` declaration. A `types` field often
+/// names a body-less declaration beside the real source entry, so the
+/// default is source-first and a consumer opts into declarations explicitly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RootEntryPolicy {
+    /// `exports` first, then `module`/`main`, then `types`/`typings`.
+    #[default]
+    SourceFirst,
+    /// `types`/`typings` first, then `exports`, then `module`/`main`:
+    /// tasty's manifest order, kept for consumers that resolve declarations.
+    TypesFirst,
 }
 
 /// A specifier the ladder could not map to a file.
@@ -75,21 +90,30 @@ pub struct SpecifierLadder<'f, F: FileSystem> {
     fs: &'f F,
     policy: ExtensionPolicy,
     tsconfig: TsconfigPolicy,
+    root_entry: RootEntryPolicy,
 }
 
 impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
-    /// A ladder over `fs` probing with `policy`, skipping `tsconfig`.
+    /// A ladder over `fs` probing with `policy`, skipping `tsconfig`, and
+    /// trying package `exports` before declarations.
     pub fn new(fs: &'f F, policy: ExtensionPolicy) -> Self {
         Self {
             fs,
             policy,
             tsconfig: TsconfigPolicy::Skip,
+            root_entry: RootEntryPolicy::SourceFirst,
         }
     }
 
     /// A ladder with this `tsconfig` policy: atomic follows, worlds skip.
     pub fn with_tsconfig(self, tsconfig: TsconfigPolicy) -> Self {
         Self { tsconfig, ..self }
+    }
+
+    /// A ladder that orders package roots with this policy: styletrace keeps
+    /// the source-first default, atomic passes types-first to keep its order.
+    pub fn with_root_entry(self, root_entry: RootEntryPolicy) -> Self {
+        Self { root_entry, ..self }
     }
 
     /// The policy this ladder probes with.
@@ -100,6 +124,11 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     /// The `tsconfig` policy this ladder resolves bare specifiers with.
     pub fn tsconfig_policy(&self) -> TsconfigPolicy {
         self.tsconfig
+    }
+
+    /// The root-entry order this ladder reads package manifests with.
+    pub fn root_entry_policy(&self) -> RootEntryPolicy {
+        self.root_entry
     }
 
     /// Resolve `specifier` authored in `from` to a canonical module key.
@@ -214,7 +243,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         if request.subpath != "." {
             return self.targets_hit(pkg_dir, &package::export_targets(text, &request.subpath));
         }
-        self.targets_hit(pkg_dir, &package::root_targets(text))
+        self.targets_hit(pkg_dir, &package::root_targets(text, self.root_entry))
     }
 
     /// First entry target that probes to a file under the package dir.

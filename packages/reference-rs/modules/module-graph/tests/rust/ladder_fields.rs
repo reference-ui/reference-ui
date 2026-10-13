@@ -1,17 +1,29 @@
 //! Manifest-field ladder: entry points, ancestors, and scoped names.
 //!
-//! Tasty's root-entry wins, adopted: `types`, `typings`, `module`, and `main`
-//! resolve package roots that carry no `exports` map, ancestor `node_modules`
-//! walk nearest-first, and scoped names split at the second slash. The field
-//! order keeps `exports` exactly where tasty puts it: after the type fields.
+//! Root entries resolve package roots that carry no `exports` map: `types`,
+//! `typings`, `module`, and `main`, ordered by [`RootEntryPolicy`]. The default
+//! is source-first, so `exports` and the source fields lead a `types` file
+//! beside them, and [`RootEntryPolicy::TypesFirst`] restores tasty's order for
+//! consumers that want declarations. Ancestor `node_modules` walk nearest-first,
+//! and scoped names split at the second slash.
 
 mod common;
 
-use module_graph::{ExtensionPolicy, MemoryFs, ModuleKey, SpecifierLadder};
+use module_graph::{ExtensionPolicy, MemoryFs, ModuleKey, RootEntryPolicy, SpecifierLadder};
 
-/// Resolve from `from` under the Source policy.
+/// Resolve from `from` under the Source policy, source-first roots.
 fn resolve(fs: &MemoryFs, from: &str, specifier: &str) -> Result<String, String> {
     let ladder = SpecifierLadder::new(fs, ExtensionPolicy::Source);
+    ladder
+        .resolve(&ModuleKey::new(from), specifier)
+        .map(|key| key.as_str().to_string())
+        .map_err(|miss| miss.specifier)
+}
+
+/// Resolve from `from` under the Source policy with types-first roots.
+fn resolve_types_first(fs: &MemoryFs, from: &str, specifier: &str) -> Result<String, String> {
+    let ladder = SpecifierLadder::new(fs, ExtensionPolicy::Source)
+        .with_root_entry(RootEntryPolicy::TypesFirst);
     ladder
         .resolve(&ModuleKey::new(from), specifier)
         .map(|key| key.as_str().to_string())
@@ -69,7 +81,7 @@ fn module_and_main_fields_resolve_roots() {
 }
 
 #[test]
-fn types_beat_exports_beat_module() {
+fn exports_beat_types_and_module_by_default() {
     let fs = pkg_world(
         r#"{"types":"./a.d.ts","exports":{".":"./b.js"},"module":"./c.js"}"#,
         &[
@@ -80,7 +92,7 @@ fn types_beat_exports_beat_module() {
     );
     assert_eq!(
         resolve(&fs, "/p/src/app.ts", "pkg"),
-        Ok("/p/node_modules/pkg/a.d.ts".into())
+        Ok("/p/node_modules/pkg/b.js".into())
     );
     let fs = pkg_world(
         r#"{"exports":{".":"./b.js"},"module":"./c.js"}"#,
@@ -91,6 +103,50 @@ fn types_beat_exports_beat_module() {
     );
     assert_eq!(
         resolve(&fs, "/p/src/app.ts", "pkg"),
+        Ok("/p/node_modules/pkg/b.js".into())
+    );
+}
+
+#[test]
+fn source_entry_beats_a_types_declaration_beside_it() {
+    // The shape styletrace STT-PKG-04 traces: a body-less declaration at
+    // `types`, the wrapper's source at `exports`.
+    let fs = pkg_world(
+        r#"{"types":"./index.d.ts","exports":{".":"./index.tsx"}}"#,
+        &[
+            ("/p/node_modules/pkg/index.d.ts", "d"),
+            ("/p/node_modules/pkg/index.tsx", "x"),
+        ],
+    );
+    assert_eq!(
+        resolve(&fs, "/p/src/app.ts", "pkg"),
+        Ok("/p/node_modules/pkg/index.tsx".into())
+    );
+}
+
+#[test]
+fn types_first_policy_puts_declarations_before_exports_and_module() {
+    let fs = pkg_world(
+        r#"{"types":"./a.d.ts","exports":{".":"./b.js"},"module":"./c.js"}"#,
+        &[
+            ("/p/node_modules/pkg/a.d.ts", "a"),
+            ("/p/node_modules/pkg/b.js", "b"),
+            ("/p/node_modules/pkg/c.js", "c"),
+        ],
+    );
+    assert_eq!(
+        resolve_types_first(&fs, "/p/src/app.ts", "pkg"),
+        Ok("/p/node_modules/pkg/a.d.ts".into())
+    );
+    let fs = pkg_world(
+        r#"{"exports":{".":"./b.js"},"module":"./c.js"}"#,
+        &[
+            ("/p/node_modules/pkg/b.js", "b"),
+            ("/p/node_modules/pkg/c.js", "c"),
+        ],
+    );
+    assert_eq!(
+        resolve_types_first(&fs, "/p/src/app.ts", "pkg"),
         Ok("/p/node_modules/pkg/b.js".into())
     );
 }

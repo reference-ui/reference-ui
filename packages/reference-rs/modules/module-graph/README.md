@@ -13,6 +13,10 @@ declared, shared by the Reference UI compilers.
   canonicalize, so symlinks share a key.
 - **Policies** (`ExtensionPolicy`): `Source` probes sources first (value
   compilers); `Declarations` probes declarations first (type scanners).
+  `RootEntryPolicy` orders a package root's `exports`, `module`, and `main`
+  against its top-level `types`/`typings`: `SourceFirst` by default, so a
+  declaration beside a source entry never shadows it; `TypesFirst` is opt-in
+  (atomic keeps it).
 - **Records** (`ModuleGraph`): `ModuleRecord::collect` reads a parsed program
   into value import edges, an export table, and declared names. The graph
   memoizes one record per `ModuleKey`, loaded on first use.

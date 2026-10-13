@@ -3,16 +3,23 @@
 //! Splits `pkg`, `pkg/sub`, and `@scope/pkg/sub` into package plus subpath,
 //! then maps the subpath through the manifest's `exports` field (exact keys,
 //! `*` patterns substituted once, condition maps expanded in `types`,
-//! `import`, `default`, `require` order). Manifest text arrives from the
-//! caller; this module never touches the filesystem. Targets come back as an
-//! ordered list so the ladder can fall through to the next entry when the
-//! first names a file that is not on disk.
+//! `import`, `default`, `require` order). Root entries come back in the
+//! order a [`RootEntryPolicy`] names, so `exports` can lead the top-level
+//! `types` declaration. Manifest text arrives from the caller; this module
+//! never touches the filesystem. Targets come back as an ordered list so the
+//! ladder can fall through to the next entry when the first names a file that
+//! is not on disk.
+
+use super::RootEntryPolicy;
 
 /// Condition names in priority order: types first, `require` last.
 const CONDITIONS: [&str; 4] = ["types", "import", "default", "require"];
 
-/// Root entry fields in priority order: tasty's order verbatim.
-const ROOT_FIELDS: [&str; 4] = ["types", "typings", "module", "main"];
+/// Declaration root fields in tasty's order: `types` before `typings`.
+const DECLARATION_FIELDS: [&str; 2] = ["types", "typings"];
+
+/// Source root fields in tasty's order: `module` before `main`.
+const SOURCE_FIELDS: [&str; 2] = ["module", "main"];
 
 /// Split a bare specifier into package plus subpath (`.` for the root).
 /// Relative, absolute, and empty specifiers yield None.
@@ -54,13 +61,24 @@ pub(crate) fn export_targets(manifest: &str, subpath: &str) -> Vec<String> {
     }
 }
 
-/// Root entry targets: `types`, `typings`, `exports`("."), `module`,
-/// `main` — tasty's manifest order, verbatim.
-pub(crate) fn root_targets(manifest: &str) -> Vec<String> {
-    let mut targets = field_entries(manifest, &ROOT_FIELDS[..2]);
-    targets.extend(export_targets(manifest, "."));
-    targets.extend(field_entries(manifest, &ROOT_FIELDS[2..]));
-    targets
+/// Root entry targets in the policy's order. Source-first lists `exports`("."),
+/// `module`, `main`, then `types`, `typings`; types-first lists `types`,
+/// `typings`, `exports`("."), `module`, `main`, which is tasty's manifest order.
+pub(crate) fn root_targets(manifest: &str, policy: RootEntryPolicy) -> Vec<String> {
+    match policy {
+        RootEntryPolicy::SourceFirst => {
+            let mut targets = export_targets(manifest, ".");
+            targets.extend(field_entries(manifest, &SOURCE_FIELDS));
+            targets.extend(field_entries(manifest, &DECLARATION_FIELDS));
+            targets
+        }
+        RootEntryPolicy::TypesFirst => {
+            let mut targets = field_entries(manifest, &DECLARATION_FIELDS);
+            targets.extend(export_targets(manifest, "."));
+            targets.extend(field_entries(manifest, &SOURCE_FIELDS));
+            targets
+        }
+    }
 }
 
 /// The string values of manifest `fields`, in order, skipping the missing.
