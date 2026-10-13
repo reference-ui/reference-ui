@@ -79,7 +79,7 @@ function tripleKey(group: string, kind: string, label: string): string {
 }
 
 // The checked-in list equals the SPEC table exactly: same multiset of
-// group/kind/label triples, same per-group counts, 152 entries total.
+// group/kind/label triples, same per-group counts, 159 entries total.
 function checkTranscription(entries: ParsedEntry[], counts: Map<string, [number, number]>): void {
   assert.equal(UNION.length, 159, `checked-in union holds 159 entries, got ${UNION.length}`);
   assert.equal(entries.length, 159, `SPEC table holds 159 entries, got ${entries.length}`);

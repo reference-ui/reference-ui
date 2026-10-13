@@ -20,7 +20,7 @@ stable-surface pre-run typecheck.
 
 ## Engine
 
-No Atomic stations: the engine is typegen `emitDtsSync`, verified present
+No Atomic stations: the engine is typegen `emitDtsDetailed`, verified present
 2026-09-17 (`ls packages/reference-rs/modules/typegen/{js/,README.md,SPEC.md,
 tests/goldens/}` + README/SPEC/goldens read). It prints `.d.ts` strings from
 `BaseSystem` + canon and never touches `atomic` (TYP-FORBID-06). Leans:
