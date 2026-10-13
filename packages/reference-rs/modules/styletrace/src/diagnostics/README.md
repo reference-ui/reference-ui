@@ -24,8 +24,8 @@ surface or file, and no producer invents a code outside the table.
    resolved siblings.
 
 Positions: per-file skips carry the file path; the residual and both refusals are
-request-level and carry no file. Proof stations: `parse_failure_isolated`
-(`tests/cases/`, names only) plus `tests/detailed.test.ts` (exact wire bytes);
+request-level and carry no file. Proof stations: `STT-NEG-02`
+(`tests/cases/`, names only) plus `tests/suites/detailed.test.ts` (exact wire bytes);
 whole-compiler repros: Neo's `repro.test.ts` styletrace suite.
 
 ## ERROR CODES

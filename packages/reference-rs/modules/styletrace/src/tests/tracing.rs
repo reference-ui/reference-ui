@@ -1,7 +1,7 @@
 //! Provides unit test coverage for the wrapper-analysis subsystem, focusing on traced JSX exports.
 //! It takes simulated React component hierarchies and styled components written in TSX.
 //! Runs the analyzer to verify that property forwarding and style overrides are correctly identified.
-//! Package-wrapper stations load committed `tests/cases/<id>/input` rather than duplicating source strings.
+//! Package-wrapper stations load committed `tests/cases/<STT-id>/input` rather than duplicating source strings.
 
 use crate::trace_style_jsx_names_with_hint;
 
@@ -17,7 +17,7 @@ fn trace_with_sync_root(root_dir: &std::path::Path) -> Result<Vec<String>, crate
 
 #[test]
 fn traces_local_exports_that_forward_into_node_modules_wrappers() {
-    let fixture = materialize_station("node_modules_wrapper");
+    let fixture = materialize_station("STT-WRAP-04");
     let names =
         trace_with_sync_root(fixture.root()).expect("expected node_modules wrapper case to trace");
 
@@ -29,7 +29,7 @@ fn traces_local_exports_that_forward_into_node_modules_wrappers() {
 
 #[test]
 fn traces_default_export_wrappers_from_packages() {
-    let fixture = materialize_station("default_export_package");
+    let fixture = materialize_station("STT-PKG-01");
     let names = trace_with_sync_root(fixture.root())
         .expect("expected default-export package case to trace");
 
@@ -41,7 +41,7 @@ fn traces_default_export_wrappers_from_packages() {
 
 #[test]
 fn traces_subpath_package_wrappers() {
-    let fixture = materialize_station("subpath_package");
+    let fixture = materialize_station("STT-PKG-03");
     let names =
         trace_with_sync_root(fixture.root()).expect("expected subpath package case to trace");
 
@@ -53,7 +53,7 @@ fn traces_subpath_package_wrappers() {
 
 #[test]
 fn traces_export_star_package_barrels() {
-    let fixture = materialize_station("export_star_package");
+    let fixture = materialize_station("STT-BAR-02");
     let names =
         trace_with_sync_root(fixture.root()).expect("expected export-star package case to trace");
 
@@ -164,7 +164,7 @@ fn ignores_node_builtin_helper_imports_while_tracing_local_wrappers() {
 
 #[test]
 fn station_plain_react_library_has_no_style_bearing_exports() {
-    let fixture = materialize_station("plain_react_library");
+    let fixture = materialize_station("STT-PKG-02");
     let names = trace_with_sync_root(fixture.root())
         .expect("expected plain-react library case to trace");
 
@@ -183,7 +183,7 @@ fn fixture_extend_library_has_no_reference_style_bearing_exports() {
 
 #[test]
 fn station_named_barrel_exports_wrapped_reference_component() {
-    let fixture = materialize_station("named_barrel");
+    let fixture = materialize_station("STT-BAR-04");
     let names =
         trace_with_sync_root(fixture.root()).expect("expected named-barrel case to trace");
 
@@ -192,7 +192,7 @@ fn station_named_barrel_exports_wrapped_reference_component() {
 
 #[test]
 fn station_named_barrel_package_traces_reexported_and_wrapped_components() {
-    let fixture = materialize_station("named_barrel_package");
+    let fixture = materialize_station("STT-BAR-05");
     let names = trace_with_sync_root(fixture.root())
         .expect("expected named-barrel package case to trace");
 
@@ -207,7 +207,7 @@ fn station_named_barrel_package_traces_reexported_and_wrapped_components() {
 
 #[test]
 fn station_plain_react_wrappers_have_no_style_bearing_exports() {
-    let fixture = materialize_station("plain_react_wrappers");
+    let fixture = materialize_station("STT-WRAP-05");
     let names = trace_with_sync_root(fixture.root())
         .expect("expected plain-react wrappers case to trace");
 
