@@ -1,10 +1,11 @@
 // Sync session hold: a session's footprint in its own process. It takes a lock
 // dir, the owner document and the json flag and emits an armed footprint, the
-// three stop handlers on the process, which is armed before the owner document
-// can be seen on disk and held once the lock is won, so a kill can never meet a
-// process without them. The handlers free a one-shot's lock at once, let a watch
-// with a graceful shutdown keep it until that shutdown settles, and answer a
-// newcomer's kill with exit 75 while keeping their listeners on until the exit.
+// stop handlers on the process, which is armed before the owner document can be
+// seen on disk and held once the lock is won, so a kill can never meet a process
+// without them. A watch answers all three stop signals and keeps its lock through
+// a graceful shutdown; every other holder answers only the SIGTERM of a newcomer's
+// kill leg with exit 75 (listeners kept on until the exit), so Ctrl-C and hangup
+// stay default deaths that even a fragment spinning in a CPU loop cannot ignore.
 
 import { rmSync } from 'node:fs'
 import {
@@ -25,7 +26,7 @@ export function notice(json: boolean, line: string): void {
   else console.log(line)
 }
 
-// A session's footprint in this process: its owner document and its three stop
+// A session's footprint in this process: its owner document and its stop
 // handlers. It is armed (handlers on) before the owner document can be seen on
 // disk and held once the lock is won; the same footprint serves both, so a kill
 // can never meet a process whose handlers are not there yet.
@@ -55,10 +56,12 @@ export function markHeld(hold: SessionHold): void {
 }
 
 // Foreign listeners own their own shutdown (the watch CLI stops gracefully on
-// SIGINT/SIGTERM/SIGHUP); each footprint contributes exactly one listener per
-// signal, so anything above the armed count is foreign.
+// SIGINT/SIGTERM/SIGHUP); each footprint contributes at most one listener per
+// signal, so anything above the armed count for that signal is foreign.
 function hasForeignListeners(signal: StopSignal): boolean {
-  return process.listenerCount(signal) > armedSessions.size
+  let own = 0
+  for (const hold of armedSessions) if (hold.handlers.has(signal)) own += 1
+  return process.listenerCount(signal) > own
 }
 
 // Our lock, by its owner document: a foreign nonce means the dir changed hands
@@ -145,9 +148,18 @@ function makeStopHandler(hold: SessionHold, signal: StopSignal): () => void {
   return handler
 }
 
+// A dead holder's lock is taken over as stale, so a lock left by Ctrl-C or a
+// hangup needs no handler to clean it up; the one signal a non-watch holder must
+// answer is the SIGTERM of a newcomer's kill leg. A JS handler on SIGINT would
+// also make a fragment stuck in a CPU loop ignore Ctrl-C, since the handler
+// cannot run while the loop holds the thread.
+function signalsFor(kind: SyncSessionKind): readonly StopSignal[] {
+  return kind === 'watch' ? STOP_SIGNALS : ['SIGTERM']
+}
+
 export function armSession(lockDir: string, owner: SyncSessionOwner, json: boolean): SessionHold {
   const hold: SessionHold = { lockDir, owner, json, handlers: new Map(), published: false }
-  for (const signal of STOP_SIGNALS) {
+  for (const signal of signalsFor(owner.kind)) {
     const handler = makeStopHandler(hold, signal)
     hold.handlers.set(signal, handler)
     process.on(signal, handler)
@@ -155,4 +167,3 @@ export function armSession(lockDir: string, owner: SyncSessionOwner, json: boole
   armedSessions.add(hold)
   return hold
 }
-

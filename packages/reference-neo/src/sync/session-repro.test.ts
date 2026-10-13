@@ -9,7 +9,7 @@
 // for the stop and then syncs itself, and SIGHUP stops a watch like SIGINT.
 // Signal legs are POSIX-only; stale, torn, and break-lock run everywhere.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
@@ -192,12 +192,37 @@ async function repeatSignalsAreIgnored(): Promise<void> {
   expect(held.watch.output().match(/shutdown: stopped/g)).toHaveLength(1)
 }
 
+// A fragment that spins in a CPU loop holds the only thread, so a JS signal
+// handler could never run and Ctrl-C would be ignored. A one-shot installs no
+// SIGINT handler, so the default death applies at once; the stale lock it
+// leaves is taken over, with a warning, by the next sync.
+async function ctrlCStopsSpinningFragment(): Promise<void> {
+  const dir = await writeWorld(0)
+  const spinner = join(dir, 'theme', 'loop.ts')
+  writeFileSync(spinner, "import { tokens } from '@reference-ui/neo'\nwhile (true) {}\n")
+  const run = spawnBin(['sync', dir], dir)
+  await waitForFile(join(dir, '.reference-ui', 'sync.lock', 'owner.json'), 'the one-shot to take the lock')
+  await sleep(1500)
+  expect(childDone(run.child), `the one-shot ended before it could be interrupted:\n${run.output()}`).toBe(false)
+  run.child.kill('SIGINT')
+  await waitForExit(run, 'the interrupted one-shot', 5000)
+  expect(run.child.signalCode, `the spinning one-shot ignored Ctrl-C:\n${run.output()}`).toBe('SIGINT')
+  rmSync(spinner, { force: true })
+  const next = await runBin(['sync', dir], dir)
+  expect(next.code, next.stdout + next.stderr).toBe(0)
+  expect(next.stdout).toMatch(/stale lock \(pid \d+ not running\), taking over/)
+  expect(sheetHasBrand(dir)).toBe(true)
+  expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
+}
+
 describe('sync session lock: control and kill legs', () => {
   it('control: a lone one-shot syncs unchanged with no lock lines', loneOneShotSyncsUnchanged, 120000)
 
   it.skipIf(!POSIX)('one-shot toward one-shot kills: victim exits 75, newcomer completes', oneShotTowardOneShotKills, 120000)
 
   it.skipIf(!POSIX)('watch toward watch attaches: the newcomer stays alive on the running session and exits when the owner stops', watchTowardWatchAttaches, 120000)
+
+  it.skipIf(!POSIX)('Ctrl-C stops a one-shot whose fragment spins in a CPU loop, and the next sync takes the stale lock', ctrlCStopsSpinningFragment, 120000)
 
   it.skipIf(!POSIX).each(['SIGTERM', 'SIGINT', 'SIGHUP'] as const)(
     'attached watch forwards %s: a signal to the newcomer stops the owner cleanly',

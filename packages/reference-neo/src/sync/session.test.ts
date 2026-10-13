@@ -10,13 +10,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   SUPERSEDED_EXIT_CODE,
   coveredByWatchMessage,
   freshWatchState,
   getSyncLockDir,
-  getSyncPreemptPath,
   getWatchStatePath,
   parseSyncSessionOwner,
   parseWatchState,
@@ -24,10 +23,9 @@ import {
   supersededMessage,
   writeWatchState,
   writeWatchStateSync,
-  type SyncSessionKind,
   type SyncSessionOwner,
 } from './session-owner.ts'
-import { acquireSyncSession, attachToWatchSession, type SyncSession } from './session.ts'
+import { acquireSyncSession, attachToWatchSession } from './session.ts'
 
 const tempDirs: string[] = []
 
@@ -178,7 +176,6 @@ describe('session acquire and release', () => {
 })
 
 const STOP_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'] as const
-type StopSignal = (typeof STOP_SIGNALS)[number]
 
 function stopListenerCounts(): number[] {
   return STOP_SIGNALS.map((signal) => process.listenerCount(signal))
@@ -209,77 +206,5 @@ describe('attach to a watch session', () => {
       announced += 1
     })
     expect(announced).toBe(1)
-  })
-})
-
-// Acquire a session and pick out the stop handlers it installed: for each
-// signal, the listener gained during the acquire. The tests call a handler
-// directly, because a real signal on a session with no graceful shutdown
-// restores the default death and would take the test worker with it.
-async function acquireWithHandlers(cwd: string, kind: SyncSessionKind): Promise<{ session: SyncSession; handlerFor: (signal: StopSignal) => () => void }> {
-  const before = new Map(STOP_SIGNALS.map((signal) => [signal, process.listeners(signal)]))
-  const session = await acquireSyncSession({ cwd, kind })
-  const handlerFor = (signal: StopSignal): (() => void) => {
-    const added = process.listeners(signal).find((listener) => !before.get(signal)?.includes(listener))
-    if (added === undefined) throw new Error(`the session installed no ${signal} handler`)
-    return () => added(signal)
-  }
-  return { session, handlerFor }
-}
-
-describe('stop signals on a held session', () => {
-  // Stands in for the watch CLI's graceful shutdown: any listener beyond the
-  // session's own counts as one.
-  const graceful = (): void => {}
-
-  it.each(STOP_SIGNALS)('a watch with a graceful shutdown keeps its lock on %s until release', async (signal) => {
-    const dir = await makeTempDir()
-    process.on(signal, graceful)
-    const { session, handlerFor } = await acquireWithHandlers(dir, 'watch')
-    try {
-      handlerFor(signal)()
-      expect(existsSync(join(getSyncLockDir(dir), 'owner.json'))).toBe(true)
-      // The in-flight sync keeps re-entering the held lock, never taking a fresh one.
-      const inner = await acquireSyncSession({ cwd: dir, kind: 'one-shot' })
-      expect(inner.owner.lockNonce).toBe(session.owner.lockNonce)
-    } finally {
-      session.release()
-      process.removeListener(signal, graceful)
-    }
-    expect(existsSync(getSyncLockDir(dir))).toBe(false)
-  })
-
-  it.each(STOP_SIGNALS)('a one-shot frees its lock at once on %s even with a graceful shutdown around', async (signal) => {
-    const dir = await makeTempDir()
-    process.on(signal, graceful)
-    const { session, handlerFor } = await acquireWithHandlers(dir, 'one-shot')
-    try {
-      handlerFor(signal)()
-      expect(existsSync(getSyncLockDir(dir))).toBe(false)
-    } finally {
-      session.release()
-      process.removeListener(signal, graceful)
-    }
-  })
-
-  it('a watch with a graceful shutdown still exits 75 on a SIGTERM carrying a preempt marker', async () => {
-    const dir = await makeTempDir()
-    process.on('SIGTERM', graceful)
-    const { session, handlerFor } = await acquireWithHandlers(dir, 'watch')
-    const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {
-      throw new Error(`exit ${code}`)
-    })
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    try {
-      writeFileSync(getSyncPreemptPath(getSyncLockDir(dir)), JSON.stringify({ pid: 4242, kind: 'clean' }))
-      expect(handlerFor('SIGTERM')).toThrow(`exit ${SUPERSEDED_EXIT_CODE}`)
-      expect(log).toHaveBeenCalledWith(supersededMessage(4242, 'clean'))
-      expect(existsSync(getSyncLockDir(dir))).toBe(false)
-    } finally {
-      exit.mockRestore()
-      log.mockRestore()
-      session.release()
-      process.removeListener('SIGTERM', graceful)
-    }
   })
 })

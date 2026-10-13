@@ -3,13 +3,13 @@
 // release removes the lock dir. The latest call wins: it preempts the holder
 // (kill, or a SIGUSR2 poke when a one-shot meets a resident watch), the loser
 // dies mid-stage with the live folder untouched, and a second watch attaches to
-// the owner instead of preempting. A stop signal frees a one-shot's lock at
-// once, but a watch with a graceful shutdown keeps its lock until that shutdown
-// has settled the in-flight sync, and the stop handlers are armed before the
-// owner document is visible, so no kill can find a process without one. The
-// owner model lives in session-owner.ts, the mkdir race in session-claim.ts,
-// process identity in session-identity.ts and the one-shot's wait on a watch in
-// session-covered.ts; this module owns the matrix, the hold and the re-assert.
+// the owner instead of preempting. A watch with a graceful shutdown keeps its
+// lock until that shutdown has settled the in-flight sync, every other holder
+// answers a kill with exit 75 and leaves Ctrl-C a default death whose stale
+// lock the next sync takes over, and the handlers are armed before the owner
+// document is visible. The owner model lives in session-owner.ts, the mkdir race
+// in session-claim.ts, the handlers in session-hold.ts, process identity in
+// session-identity.ts and the one-shot's wait on a watch in session-covered.ts.
 
 import { randomBytes } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
