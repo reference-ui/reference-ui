@@ -1,7 +1,7 @@
 # Typegen SPEC
 
 Current freeze, cases, and proof. Architectural design: [atomic.md](../../docs/atomic.md).
-Sequencing: [PLAN.md](./PLAN.md) (crate) and [../../PLAN.md](../../PLAN.md) § Reference UI Track T (host).
+Sequencing: [plan.md](../../../../plan.md).
 Public types architecture: [plan.md](../../../reference-core/src/types/plan.md).
 Module README: [README.md](./README.md).
 

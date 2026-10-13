@@ -1,6 +1,6 @@
 # Neo Voyage Plan, Part Two — the host (BUILD SPEC)
 
-> Landed record (Voyage One). The living plan is [`../PLAN.md`](../../PLAN.md);
+> Landed record (Voyage One). The living plan is [`plan.md`](../../../../plan.md);
 > this file is history, not orders.
 
 Status: build spec. Turns the [`PLAN-host.md`](PLAN-host.md) seed into

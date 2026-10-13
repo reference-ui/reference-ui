@@ -38,8 +38,8 @@ pnpm agentneo q [paths]       # quality gate (section 6)
   (Vite). Matrix install/bundler-chain proof is for the day Neo is the
   installed core — not today.
 - **Stance:** `packages/reference-neo/README.md` (what Neo is and refuses).
-- **Plan:** `packages/reference-neo/PLAN.md` (the one plan: a thinking doc and
-  discussion map; nothing in it is ordered into steps until the map converges).
+- **Plan:** `plan.md` at the repo root (the one plan: production-readiness status,
+  now/later items, owner decisions).
 - **Evidence:** `packages/reference-neo/docs/evidence/` — the nine
   read-only probe reports the parity campaign was planned from (lib sheet,
   generated folder, core API, Atomic claims, Panda v1 corpus, Neo state).
@@ -143,7 +143,7 @@ Run the gate after every generation or modification step.
 
 ## 7. Development Loop
 
-1. Read the stance (`README.md`), the plan (`PLAN.md`) and the evidence it
+1. Read the stance (`README.md`), the plan (`plan.md`) and the evidence it
    cites (`docs/evidence/`, start at its README), the usage doc
    (`docs/TESTING.md`), and the nomenclature authority (`docs/DOMAIN.md`).
 2. Find your case: `pnpm agentneo list` / `search <query>`.

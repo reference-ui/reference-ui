@@ -1,6 +1,6 @@
 # Neo Voyage Plan
 
-> Landed record (Voyage One). The living plan is [`../PLAN.md`](../../PLAN.md);
+> Landed record (Voyage One). The living plan is [`plan.md`](../../../../plan.md);
 > this file is history, not orders.
 
 Status: r5 landed. Gate, harness, skill, and smoke case live in the

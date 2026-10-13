@@ -53,8 +53,7 @@ somewhere to live.
 
 ## Working docs
 
-- [`PLAN.md`](PLAN.md) — the one plan: status, thesis, sequencing,
-  the architecture map item by item, constraints, open questions.
+- [`plan.md`](../../plan.md) — the one plan: status, now/later items, owner decisions.
 - [`docs/TESTING.md`](docs/TESTING.md) — cases, artifacts, snapshots, the gate.
 - [`docs/DOMAIN.md`](docs/DOMAIN.md) — the domain language: names that build
   the runtime, plus retired ones to never revive.

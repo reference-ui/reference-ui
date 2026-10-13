@@ -1,5 +1,5 @@
 /**
- * Frozen cross-package contract definitions for Reference RS cutover (PLAN.md §3).
+ * Frozen cross-package contract definitions for Reference RS cutover.
  * Defines TypeScript interfaces for EvaluatedSystemSpec, NativeRuntimeArtifact,
  * CompileResult, SystemStreams, PortableBaseSystem, and NativeCompileRequest.
  * Every N and C packet references these types and their committed JSON fixtures.

@@ -9,7 +9,7 @@ Interactive map: open `packages/reference-rs/modules/map.html` in a browser.
 Hover a function to see which module it rests on. tasty, atlas, and
 `modules/runtime` (the `.node` loader) are other products — not this engine.
 
-Current campaign: [`PLAN.md`](../PLAN.md).
+Current plan: [`plan.md`](../../../plan.md).
 Panda autopsy: [`modules/atomic/PANDA.md`](../modules/atomic/PANDA.md).
 
 ---

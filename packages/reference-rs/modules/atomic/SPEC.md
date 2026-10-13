@@ -1,7 +1,7 @@
 # Atomic Style Engine SPEC
 
 Current freeze, cases, and proof. Design narrative: [README.md](./README.md).
-Sequencing: [PLAN.md](./PLAN.md) (stations) and [../../PLAN.md](../../PLAN.md) § Reference UI (host).
+Sequencing: [plan.md](../../../../plan.md).
 Mandate and architecture: [atomic.md](../../docs/atomic.md) and [PANDA.md](./PANDA.md) (vendor example / process map).
 
 Harness / Runner: `pnpm agentrs c atomic` (Cargo unit tests) | `pnpm agentrs v atomic` (Vitest seam tests)
@@ -1232,7 +1232,7 @@ still discarded by the host, and runtime `css()` / `recipe()` still call
 `@reference-ui/styled`. That means `ATM-GHOST-01` — our P0 — is unenforceable
 in production today, because the class map it protects never leaves the N-API
 boundary, and `ATM-RECIPE-02`'s variant table has no consumer. Cutover work is
-[`../../PLAN.md`](../../PLAN.md) § Reference UI; these cases prove the
+the root [`plan.md`](../../../../plan.md); these cases prove the
 compiler, and the compiler is only half the delivery.
 
 `ATM-LAYER-05` and `ATM-LAYER-06` close dangling references that ship today: the

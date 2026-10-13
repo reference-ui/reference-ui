@@ -1,6 +1,6 @@
 # MERGE ledger
 
-Source: PLAN.md §8.7 rows NEO-MERGE-01..08, verbatim. No existing cases in
+Source: the retired campaign plan §8.7 rows NEO-MERGE-01..08, verbatim. No existing cases in
 this group, so no `done` rows. All engine stations confirmed present
 (`packages/reference-rs/modules/atomic/tests/cases/<id>` + README);
 no RS rows added.

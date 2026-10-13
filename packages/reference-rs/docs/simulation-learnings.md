@@ -1,6 +1,6 @@
 # Simulation learnings — native cutover from Panda CSS to reference-rs
 
-Mission: PLAN.md gates F0→N1-N6→G1→C1/C2/C3/Q1→C4→C5→M0→G2→K1→G4 (replace Panda
+Mission: the retired campaign plan's gates F0→N1-N6→G1→C1/C2/C3/Q1→C4→C5→M0→G2→K1→G4 (replace Panda
 CSS with Rust crates + N-API + TS wrappers in `packages/reference-rs`).
 **Outcome: SIMULATION. M0 DONE 7/7 GREEN; G2 HALTED (2nd captain halt) on 3
 open items + a css hang. Plan: keep `packages/reference-rs` + this doc,

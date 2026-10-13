@@ -1,6 +1,6 @@
 # STATIC ledger
 
-Source: PLAN.md §8.11 rows NEO-STATIC-01..03, verbatim. All three rows `done`
+Source: the retired campaign plan §8.11 rows NEO-STATIC-01..03, verbatim. All three rows `done`
 (T7). All engine stations confirmed present
 (`packages/reference-rs/modules/atomic/tests/cases/<id>` + README);
 no RS rows added. NEO-STATIC-03 pairs with NEO-MERGE-06 (same D11 rule,

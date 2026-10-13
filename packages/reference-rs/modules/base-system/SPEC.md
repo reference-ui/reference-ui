@@ -1,7 +1,7 @@
 # Base System SPEC
 
 Current freeze, cases, and proof. Design narrative: compile against a base system (the missing contract).
-Sequencing: [PLAN.md](./PLAN.md). Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
+Sequencing: [plan.md](../../../../plan.md). Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
 
 Harness: `cargo test -p base_system` (or `pnpm agentrs c base_system`)
 Verify path: In-memory fixture construction (no sync worker, no packager, no bundler).
