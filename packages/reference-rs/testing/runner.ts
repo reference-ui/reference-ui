@@ -53,7 +53,8 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
   const {
     suiteName,
     casesDir,
-    folderPattern = /^([A-Z]+-[A-Z]+-\d{2}|[a-zA-Z0-9_-]+)-.+$/,
+    // Default: folder name is the raw station id (ATL-BAR-01); modules pass their own.
+    folderPattern = /^([A-Z]+-[A-Z]+-\d{2})$/,
     compile,
     goldens,
     standingGauges = [],

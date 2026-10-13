@@ -61,7 +61,7 @@ export interface StationSuiteConfig<TResult> {
   suiteName: string
   /** Absolute path to cases/ directory */
   casesDir: string
-  /** Folder discovery regex (defaults to standard station ID prefix) */
+  /** Folder discovery regex; group 1 is the station id (default: ATL-BAR-01 style). */
   folderPattern?: RegExp
   /** Compiles or executes the case on-demand */
   compile(context: StationContext): Promise<TResult>
