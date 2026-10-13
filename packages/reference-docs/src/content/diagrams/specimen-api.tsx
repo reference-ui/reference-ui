@@ -33,7 +33,7 @@ const pill = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramBlueText',
-  bg: 'blue.500/strong',
+  bg: 'diagramChip',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -46,7 +46,7 @@ export function ApiExample() {
     <Diagram>
       <Diagram.Row>
         <Diagram.Panel>
-          <CodeIcon size="lg" color="docsMuted" />
+          <CodeIcon size="lg" color="diagramMuted" />
           <Span className={title}>Source</Span>
           <Code className={chip}>{'css({ color: "red.500" })'}</Code>
         </Diagram.Panel>
@@ -54,7 +54,7 @@ export function ApiExample() {
         <Diagram.Arrow direction="right" />
 
         <Diagram.Panel>
-          <PackageIcon size="lg" color="docsMuted" />
+          <PackageIcon size="lg" color="diagramMuted" />
           <Span className={title}>Compiled output</Span>
           <Span className={pill}>Atomic CSS</Span>
         </Diagram.Panel>

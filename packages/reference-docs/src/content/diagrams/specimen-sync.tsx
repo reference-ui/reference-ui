@@ -13,7 +13,7 @@ const eyebrow = css({
   fontWeight: '600',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'docsMuted',
+  color: 'diagramMuted',
   lineHeight: '1.4',
 })
 
@@ -25,7 +25,7 @@ const command = css({
   lineHeight: '1.2',
 })
 
-const lede = css({ fontSize: '4r', color: 'docsMuted', lineHeight: '1.5' })
+const lede = css({ fontSize: '4r', color: 'diagramMuted', lineHeight: '1.5' })
 
 const cardTitle = css({
   fontSize: '5r',
@@ -35,7 +35,7 @@ const cardTitle = css({
   lineHeight: '1.3',
 })
 
-const cardSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
 
 export function SyncOverview() {
   return (

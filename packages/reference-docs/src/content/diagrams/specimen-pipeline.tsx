@@ -60,8 +60,6 @@ import {
   textBlue,
   textDefault,
   textGreen,
-  trayBlue,
-  trayGreen,
   trayNeutral,
   windowChip,
   windowRow,
@@ -71,12 +69,12 @@ import {
  * The Reference UI pipeline end to end: authoring, the compiler, the generated
  * output, the build boundary, the browser runtime, the result. Every stage is a
  * panel, every handoff an arrow, every surface an ordinary Div inside a panel.
- * Tone marks meaning — blue builds, green generates and confirms, amber fences
- * — at the resting intensity. A toned panel titles in its own lighter shade;
- * body text stays near-white.
+ * Tone marks the stages — blue builds, green generates and confirms, amber
+ * fences. Everything inside a stage is neutral: cards, chips and pills sit on
+ * the inset surface, so tints never sit on tints.
  */
 
-const ink = css({ color: 'docsMuted' })
+const ink = css({ color: 'diagramMuted' })
 const inkBlue = css({ color: 'diagramBlueText' })
 const inkGreen = css({ color: 'diagramGreenText' })
 const inkAmber = css({ color: 'diagramAmberText' })
@@ -137,17 +135,17 @@ export function ReferencePipeline() {
             <Span className={tagPillBlue}>Rust + Oxc</Span>
           </Div>
 
-          <Diagram.Panel tone="blue" intensity="firm" align="center">
+          <Diagram.Panel align="center">
             <Div className={cardHead}>
               <ScanIcon size="md" className={inkBlue} />
               <Span className={`${analysisTitle} ${textBlue}`}>Source analysis</Span>
             </Div>
             <Span className={cardSub}>Parse source, discover style usage and resolve dependencies</Span>
             <Div className={chips}>
-              <Span className={`${chip} ${trayBlue}`}>TSX</Span>
-              <Span className={`${chip} ${trayBlue}`}>AST</Span>
-              <Span className={`${chip} ${trayBlue}`}>Config</Span>
-              <Span className={`${chip} ${trayBlue}`}>Imports</Span>
+              <Span className={`${chip} ${trayNeutral}`}>TSX</Span>
+              <Span className={`${chip} ${trayNeutral}`}>AST</Span>
+              <Span className={`${chip} ${trayNeutral}`}>Config</Span>
+              <Span className={`${chip} ${trayNeutral}`}>Imports</Span>
             </Div>
           </Diagram.Panel>
 
@@ -173,7 +171,7 @@ export function ReferencePipeline() {
 
           <Diagram.Arrow direction="down" />
 
-          <Diagram.Panel tone="blue" intensity="firm">
+          <Diagram.Panel>
             <Div className={stageHead}>
               <MemoryIcon size="md" className={inkBlue} />
               <Span className={`${cardTitle} ${textBlue}`}>Canon CSS engine</Span>
@@ -200,20 +198,20 @@ export function ReferencePipeline() {
             <Span className={stageTag}>Build artifacts</Span>
           </Div>
           <Diagram.Row>
-            <Diagram.Panel tone="green" intensity="firm">
+            <Diagram.Panel>
               <Div className={cardHead}>
                 <FormatPaintIcon size="md" className={inkGreen} />
                 <Span className={`${cardTitle} ${textGreen}`}>Atomic stylesheet</Span>
               </Div>
-              <Div className={`${codeBlock} ${trayGreen}`}>{'.a1{padding:16px}\n.b2{color:#f3f4f6}'}</Div>
+              <Div className={`${codeBlock} ${trayNeutral}`}>{'.a1{padding:16px}\n.b2{color:#f3f4f6}'}</Div>
               <Span className={pillGreen}>Static CSS</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" intensity="firm">
+            <Diagram.Panel>
               <Div className={cardHead}>
                 <Package2Icon size="md" className={inkGreen} />
                 <Span className={`${cardTitle} ${textGreen}`}>Component integration</Span>
               </Div>
-              <Div className={`${checkBox} ${trayGreen}`}>
+              <Div className={`${checkBox} ${trayNeutral}`}>
                 <Div className={checkRow}>
                   <CheckIcon size="sm" className={inkGreen} />
                   <Span className={checkText}>Resolved imports</Span>
@@ -303,17 +301,17 @@ export function ReferencePipeline() {
             <CheckCircleIcon size="md" className={inkGreen} />
           </Div>
           <Diagram.Row>
-            <Diagram.Panel tone="green" intensity="firm" align="center">
+            <Diagram.Panel align="center">
               <BoltIcon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Precompiled</Span>
               <Span className={cardSub}>Styling</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" intensity="firm" align="center">
+            <Diagram.Panel align="center">
               <Package2Icon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Compact</Span>
               <Span className={cardSub}>Output</Span>
             </Diagram.Panel>
-            <Diagram.Panel tone="green" intensity="firm" align="center">
+            <Diagram.Panel align="center">
               <FormatPaintIcon size="lg" className={inkGreen} />
               <Span className={`${cardTitle} ${textGreen}`}>Native</Span>
               <Span className={cardSub}>Rendering</Span>

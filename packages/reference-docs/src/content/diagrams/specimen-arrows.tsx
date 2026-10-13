@@ -16,7 +16,7 @@ const panelTitle = css({
   lineHeight: '1.3',
 })
 
-const panelSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const panelSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
 
 const chip = css({
   fontFamily: 'mono',
@@ -30,7 +30,7 @@ const chip = css({
   lineHeight: '1.5',
 })
 
-const caption = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.4' })
+const caption = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.4' })
 
 export function ArrowGallery() {
   return (

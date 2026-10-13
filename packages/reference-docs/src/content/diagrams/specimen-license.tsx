@@ -4,7 +4,7 @@ import { Diagram } from '../../components/diagram/Diagram'
 
 /**
  * A licence with two seats. Green carries the activated state — tinted
- * panels, pills, icons — while the limit note stays neutral: informative,
+ * seats, icons, and inset pills — while the limit note stays neutral: informative,
  * not alarming. The title row inside the last panel is an ordinary Div;
  * panels nest layout freely.
  */
@@ -17,7 +17,7 @@ const cardTitle = css({
   lineHeight: '1.3',
 })
 
-const cardSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
 
 const keyChip = css({
   fontFamily: 'mono',
@@ -31,7 +31,7 @@ const pillGreen = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramGreenText',
-  bg: 'green.500/strong',
+  bg: 'diagramChip',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
@@ -84,7 +84,7 @@ export function LicenseGallery() {
 
         <Diagram.Panel align="center">
           <Div className={titleRow}>
-            <MonitorIcon size="md" color="docsMuted" />
+            <MonitorIcon size="md" color="diagramMuted" />
             <Span className={limitTitle}>Third computer</Span>
           </Div>
           <Span className={cardSub}>Activation limit reached. Deactivate an existing machine first.</Span>

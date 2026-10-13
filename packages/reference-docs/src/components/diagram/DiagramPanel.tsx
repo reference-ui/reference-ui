@@ -22,6 +22,8 @@ import type {
  * Intensity is the core tone name: ghost 4 · medium 10 · firm 14 · strong 18.
  * `medium` is the resting tint, so a toned panel needs no intensity prop; reach
  * past it only when a panel earns it.
+ *
+ * Tints never sit on tints: nest only neutral panels inside a toned one.
  */
 
 type TonefulTone = Exclude<DiagramTone, 'neutral'>
@@ -51,9 +53,9 @@ const panelNeutralOutline = css({ bg: 'transparent', borderColor: 'diagramBorder
  * intensity and the hairline climbs in even twelve-point steps (22 · 34 · 46 · 58).
  *
  * The convention: a resting surface is `medium`, which is the default, so a
- * panel asks for a tone and nothing else. A panel stacked inside a stage steps
- * up to `firm`; `strong` is for a surface that must read as coloured. Context
- * decides, to taste.
+ * panel asks for a tone and nothing else. A toned panel sits on the canvas; a
+ * panel inside a stage is neutral, never a second tint. `strong` is for a
+ * surface that must read as coloured.
  */
 const toneSurface: Record<TonefulTone, Record<DiagramIntensity, string>> = {
   blue: {

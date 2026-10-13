@@ -230,7 +230,7 @@ const pillClass = css({
   paddingY: '1r',
   fontSize: 'sm',
   lineHeight: '1.2',
-  color: 'docsMuted',
+  color: 'diagramMuted',
   whiteSpace: 'nowrap',
 })
 

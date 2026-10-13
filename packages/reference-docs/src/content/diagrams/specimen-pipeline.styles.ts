@@ -24,7 +24,7 @@ export const brandTitle = css({
   lineHeight: '1.3',
 })
 
-export const brandRange = css({ fontFamily: 'mono', fontSize: 'sm', color: 'docsMuted', lineHeight: '1.4' })
+export const brandRange = css({ fontFamily: 'mono', fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.4' })
 
 export const rule = css({
   borderTopWidth: '1px',
@@ -55,7 +55,7 @@ export const stageNoBlue = css({
   borderRadius: 'sm',
   lineHeight: '1.4',
   color: 'diagramBlueText',
-  bg: 'blue.500/strong',
+  bg: 'diagramChip',
 })
 
 export const stageNoGreen = css({
@@ -67,7 +67,7 @@ export const stageNoGreen = css({
   borderRadius: 'sm',
   lineHeight: '1.4',
   color: 'diagramGreenText',
-  bg: 'green.500/strong',
+  bg: 'diagramChip',
 })
 
 export const stageTitle = css({
@@ -85,7 +85,7 @@ export const stageTag = css({
   fontWeight: '600',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'docsMuted',
+  color: 'diagramMuted',
   lineHeight: '1.4',
 })
 
@@ -98,7 +98,7 @@ export const tagPillBlue = css({
   lineHeight: '1.4',
   whiteSpace: 'nowrap',
   color: 'diagramBlueText',
-  bg: 'blue.500/strong',
+  bg: 'diagramChip',
 })
 
 export const cardHead = css({ display: 'flex', alignItems: 'center', gap: '2r' })
@@ -117,7 +117,7 @@ export const textBlue = css({ color: 'diagramBlueText' })
 export const textGreen = css({ color: 'diagramGreenText' })
 export const textAmber = css({ color: 'diagramAmberText' })
 
-export const cardSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+export const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
 
 export const codeBlock = css({
   fontFamily: 'mono',
@@ -145,7 +145,7 @@ export const pillGreen = css({
   lineHeight: '1.4',
   whiteSpace: 'nowrap',
   color: 'diagramGreenText',
-  bg: 'green.500/strong',
+  bg: 'diagramChip',
 })
 
 export const checkBox = css({
@@ -172,24 +172,16 @@ export const chip = css({
   lineHeight: '1.4',
 })
 
-/* Inset trays take the section's tone: a neutral stage insets in slate, a toned
- * stage insets in its own family, so every element belongs to its section. */
+/* Insets (trays, chips, pills, stage numbers) sit on diagramChip in every section,
+ * toned or not: no tint ever sits on a tint, and the tone lives in the ink. */
 export const trayNeutral = css({ bg: 'diagramChip' })
-
-export const trayBlue = css({
-  bg: 'blue.500/firm',
-})
-
-export const trayGreen = css({
-  bg: 'green.500/firm',
-})
 
 export const bars = css({ display: 'flex', gap: '1r' })
 
 export const bar = css({ flex: '1 1 0', height: '3r', borderRadius: 'full' })
 
 export const barOn = css({
-  bg: 'blue.500/solid',
+  bg: 'blue.500/fill',
 })
 
 /* The canon meter lives in the blue stage, so its track is a blue shade too. */
@@ -244,13 +236,13 @@ export const dots = css({ display: 'flex', gap: '1r' })
 export const dot = css({ width: '2r', height: '2r', borderRadius: 'full' })
 
 export const dotRed = css({
-  bg: 'red.500/solid',
+  bg: 'red.500/fill',
 })
 
 export const dotAmber = css({
-  bg: 'amber.500/solid',
+  bg: 'amber.500/fill',
 })
 
 export const dotGreen = css({
-  bg: 'green.500/solid',
+  bg: 'green.500/fill',
 })

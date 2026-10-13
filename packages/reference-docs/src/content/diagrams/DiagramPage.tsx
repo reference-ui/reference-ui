@@ -125,7 +125,7 @@ export function DiagramPage() {
 
         <Section
           title="Gallery · reference pipeline"
-          lede="The whole pipeline: staged panels, icon headers, a nested analysis surface, the build-time canon engine, a browser-runtime mock, and the result strip. Tone carries meaning at the resting intensity; panels nest, the canvas never does."
+          lede="The whole pipeline: staged panels, icon headers, a nested analysis surface, the build-time canon engine, a browser-runtime mock, and the result strip. Tone carries meaning on the stages; panels nest as neutral cards, and the canvas never tints."
         >
           <ReferencePipeline />
         </Section>
@@ -148,9 +148,13 @@ export function DiagramPage() {
               builds, green confirms, amber warns, red blocks, violet transforms.
             </Li>
             <Li lineHeight="1.7">
+              <Strong fontWeight="600">Tints never sit on tints.</Strong> A toned stage holds
+              neutral cards, chips and pills; the stage carries the colour.
+            </Li>
+            <Li lineHeight="1.7">
               <Strong fontWeight="600">Intensity is the resting tint plus three steps.</Strong>{' '}
-              Ghost, medium, firm, strong — mirrored from Arc and local to the kit. Medium is the
-              default, so most panels carry no intensity at all.
+              Ghost, medium, firm, strong — the core tones, the same words the palette uses.
+              Medium is the default, so most panels carry no intensity at all.
             </Li>
             <Li lineHeight="1.7">
               <Strong fontWeight="600">Content is ordinary components.</Strong> Span, Code,
