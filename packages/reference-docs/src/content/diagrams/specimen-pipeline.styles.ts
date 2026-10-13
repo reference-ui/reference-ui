@@ -55,7 +55,7 @@ export const stageNoBlue = css({
   borderRadius: 'sm',
   lineHeight: '1.4',
   color: 'diagramBlueText',
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-diagram-panel))',
+  bg: 'blue.500/strong',
 })
 
 export const stageNoGreen = css({
@@ -67,7 +67,7 @@ export const stageNoGreen = css({
   borderRadius: 'sm',
   lineHeight: '1.4',
   color: 'diagramGreenText',
-  bg: 'color-mix(in oklab, var(--colors-green-500) 18%, var(--colors-diagram-panel))',
+  bg: 'green.500/strong',
 })
 
 export const stageTitle = css({
@@ -98,7 +98,7 @@ export const tagPillBlue = css({
   lineHeight: '1.4',
   whiteSpace: 'nowrap',
   color: 'diagramBlueText',
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-diagram-panel))',
+  bg: 'blue.500/strong',
 })
 
 export const cardHead = css({ display: 'flex', alignItems: 'center', gap: '2r' })
@@ -145,7 +145,7 @@ export const pillGreen = css({
   lineHeight: '1.4',
   whiteSpace: 'nowrap',
   color: 'diagramGreenText',
-  bg: 'color-mix(in oklab, var(--colors-green-500) 18%, var(--colors-diagram-panel))',
+  bg: 'green.500/strong',
 })
 
 export const checkBox = css({
@@ -177,11 +177,11 @@ export const chip = css({
 export const trayNeutral = css({ bg: 'diagramChip' })
 
 export const trayBlue = css({
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 14%, var(--colors-diagram-chip))',
+  bg: 'blue.500/firm',
 })
 
 export const trayGreen = css({
-  bg: 'color-mix(in oklab, var(--colors-green-500) 14%, var(--colors-diagram-chip))',
+  bg: 'green.500/firm',
 })
 
 export const bars = css({ display: 'flex', gap: '1r' })
@@ -189,12 +189,12 @@ export const bars = css({ display: 'flex', gap: '1r' })
 export const bar = css({ flex: '1 1 0', height: '3r', borderRadius: 'full' })
 
 export const barOn = css({
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 70%, var(--colors-diagram-panel))',
+  bg: 'blue.500/solid',
 })
 
 /* The canon meter lives in the blue stage, so its track is a blue shade too. */
 export const barOff = css({
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 16%, var(--colors-diagram-chip))',
+  bg: 'blue.500/firm',
 })
 
 export const windowRow = css({
@@ -244,13 +244,13 @@ export const dots = css({ display: 'flex', gap: '1r' })
 export const dot = css({ width: '2r', height: '2r', borderRadius: 'full' })
 
 export const dotRed = css({
-  bg: 'color-mix(in oklab, var(--colors-red-500) 70%, var(--colors-diagram-panel))',
+  bg: 'red.500/solid',
 })
 
 export const dotAmber = css({
-  bg: 'color-mix(in oklab, var(--colors-amber-500) 70%, var(--colors-diagram-panel))',
+  bg: 'amber.500/solid',
 })
 
 export const dotGreen = css({
-  bg: 'color-mix(in oklab, var(--colors-green-500) 70%, var(--colors-diagram-panel))',
+  bg: 'green.500/solid',
 })

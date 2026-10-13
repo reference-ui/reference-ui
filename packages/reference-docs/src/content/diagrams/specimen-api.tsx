@@ -33,7 +33,7 @@ const pill = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramBlueText',
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-diagram-panel))',
+  bg: 'blue.500/strong',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',

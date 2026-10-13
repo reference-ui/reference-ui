@@ -31,7 +31,7 @@ const pillGreen = css({
   fontSize: 'sm',
   fontWeight: '600',
   color: 'diagramGreenText',
-  bg: 'color-mix(in oklab, var(--colors-green-500) 18%, var(--colors-diagram-panel))',
+  bg: 'green.500/strong',
   paddingX: '3r',
   paddingY: '1r',
   borderRadius: 'full',
