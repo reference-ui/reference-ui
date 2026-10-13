@@ -11,7 +11,7 @@
  * - Code quality, file length limits (<365 / <500), cyclomatic complexity, and banned Clippy allows
  */
 
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -277,64 +277,147 @@ async function runQualityCommand(args, repoRoot, rsDir) {
   return 0
 }
 
-async function runCargoTests(args, rsDir) {
-  const cargoArgs = ['test']
-  const knownCrates = new Set(['atomic', 'canon', 'base_system', 'base-system', 'system', 'typegen', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'reference-native'])
+// Workspace packages as cargo reports them, so a new modules/* member is runnable without editing this file.
+function readWorkspacePackages(rsDir) {
+  const res = spawnSync(
+    'cargo',
+    ['metadata', '--no-deps', '--format-version', '1', '--manifest-path', path.join(rsDir, 'Cargo.toml')],
+    { encoding: 'utf8' }
+  )
+  if (res.status !== 0) throw new Error((res.stderr || 'cargo metadata failed').trim())
+  return JSON.parse(res.stdout).packages
+}
 
-  const crateIdx = args.indexOf('--crate')
-  let targetedCrate = null
-  if (crateIdx !== -1 && args[crateIdx + 1]) {
-    targetedCrate = args[crateIdx + 1]
-  } else {
-    const firstPos = args.find((a) => !a.startsWith('-'))
-    if (firstPos && knownCrates.has(firstPos)) {
-      targetedCrate = firstPos
+// Every spelling a user may type (package name, directory name, dash or underscore form) maps to the cargo package name.
+function workspaceCrateAliases(packages) {
+  const aliases = new Map()
+  for (const pkg of packages) {
+    const dir = path.basename(path.dirname(pkg.manifest_path))
+    for (const name of [pkg.name, dir, pkg.name.replace(/_/g, '-'), dir.replace(/-/g, '_')]) {
+      aliases.set(name, pkg.name)
     }
   }
+  // Legacy names from before the module directories were renamed.
+  aliases.set('system', 'atomic')
+  aliases.set('napi', 'reference-native')
+  return aliases
+}
 
-  const requestedCrate = targetedCrate
-  const crateAliases = {
-    napi: 'reference-native',
-    system: 'atomic',
-    'base-system': 'base_system',
-  }
-  if (targetedCrate && crateAliases[targetedCrate]) {
-    targetedCrate = crateAliases[targetedCrate]
-  }
-
-  if (targetedCrate) {
-    cargoArgs.push('-p', targetedCrate)
-  } else {
-    cargoArgs.push('--workspace')
-  }
-
+// Index of the argument naming the crate: the value of --crate, or the first bare word when that word is a crate.
+function findCrateArgIndex(args, aliases) {
+  const crateIdx = args.indexOf('--crate')
+  if (crateIdx !== -1) return crateIdx + 1
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === '--crate') {
+    if (a === '-t' || a === '--test-name') {
       i++
       continue
     }
-    if (a === targetedCrate || a === requestedCrate) continue
-    if (a === '--release') cargoArgs.push('--release')
-    else if (a === '-t' || a === '--test-name') {
-      if (args[i + 1]) {
-        cargoArgs.push('--', args[i + 1])
-        i++
-      }
-    } else if (!a.startsWith('-')) {
-      cargoArgs.push('--', a)
-    }
+    if (!a.startsWith('-')) return aliases.has(a) ? i : -1
   }
+  return -1
+}
+
+// One crate (or none for the workspace), the release flag, and test-name filters.
+function parseCargoTestArgs(args, aliases) {
+  const crateIdx = findCrateArgIndex(args, aliases)
+  const crateName = crateIdx >= 0 ? args[crateIdx] : undefined
+  return {
+    crate: crateName ? (aliases.get(crateName) ?? crateName) : null,
+    release: args.includes('--release'),
+    filters: collectTestFilters(args, crateIdx),
+  }
+}
+
+// Test-name filters are the bare words and -t values; the crate argument and the flags are not filters.
+function collectTestFilters(args, crateIdx) {
+  return args.filter((_, i) => i !== crateIdx && isFilterToken(args, i))
+}
+
+function isFilterToken(args, i) {
+  const prev = args[i - 1]
+  if (prev === '-t' || prev === '--test-name') return true
+  return !args[i].startsWith('-')
+}
+
+// libtest prints one "running N tests" line per test binary and doc-test target; the sum is what actually ran.
+function countRunTests(stdout) {
+  const plain = stdout.replace(/\x1b\[[0-9;]*m/g, '')
+  let total = 0
+  for (const m of plain.matchAll(/^running (\d+) tests?\s*$/gm)) total += Number(m[1])
+  return total
+}
+
+// Like runChild, but stdout is piped so the test count can be read back; the text still streams to the terminal.
+function runChildCapturingStdout(command, args, cwd) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ['inherit', 'pipe', 'inherit'],
+      env: { ...process.env, FORCE_COLOR: '1' },
+    })
+    child.stdout.setEncoding('utf8')
+    let stdout = ''
+    child.stdout.on('data', (text) => {
+      stdout += text
+      process.stdout.write(text)
+    })
+
+    const onSig = (sig) => {
+      try { child.kill(sig) } catch {}
+    }
+    process.on('SIGINT', onSig)
+    process.on('SIGTERM', onSig)
+
+    // A signal-killed child has no exit code; that is a failure, not a pass.
+    child.on('close', (code) => {
+      process.off('SIGINT', onSig)
+      process.off('SIGTERM', onSig)
+      resolve({ code: code ?? 1, stdout })
+    })
+  })
+}
+
+function reportNoTestMatched(filters, scope, crateNames) {
+  const quoted = filters.map((f) => `"${f}"`).join(' ')
+  console.error(`\n\x1b[1;31m✖ [agent-rs] FAILED: name filter ${quoted} matched 0 tests (searched ${scope}).\x1b[0m`)
+  console.error(`  Crates: ${crateNames.join(', ')}`)
+  console.error('  A first argument naming one of these runs that crate, e.g. pnpm agentrs c module_graph.\n')
+}
+
+async function runCargoTests(args, rsDir) {
+  let packages
+  try {
+    packages = readWorkspacePackages(rsDir)
+  } catch (err) {
+    console.error(`\n\x1b[1;31m✖ [agent-rs] Cannot list workspace crates: ${err.message}\x1b[0m\n`)
+    return 1
+  }
+  const aliases = workspaceCrateAliases(packages)
+  const crateNames = [...new Set(packages.map((p) => p.name))].sort()
+  const { crate, release, filters } = parseCargoTestArgs(args, aliases)
+
+  const cargoArgs = ['test', ...(crate ? ['-p', crate] : ['--workspace'])]
+  if (release) cargoArgs.push('--release')
+  // libtest colors only when its stdout is a terminal, and here stdout is piped, so request color explicitly.
+  const libtestArgs = [...(process.stdout.isTTY ? ['--color', 'always'] : []), ...filters]
+  if (libtestArgs.length > 0) cargoArgs.push('--', ...libtestArgs)
+  const scope = crate ? `crate ${crate}` : 'all workspace crates'
 
   console.log(`\n\x1b[1;36m[agent-rs] Running cargo: cargo ${cargoArgs.join(' ')}\x1b[0m\n`)
   return withCpuGate('rs', 'agentrs cargo', async () => {
-    const code = await runChild('cargo', cargoArgs, rsDir)
-    if (code === 0) {
-      console.log('\n\x1b[1;32m✔ [agent-rs] Rust tests PASSED!\x1b[0m\n')
-    } else {
+    const { code, stdout } = await runChildCapturingStdout('cargo', cargoArgs, rsDir)
+    if (code !== 0) {
       console.log(`\n\x1b[1;31m✖ [agent-rs] Rust tests FAILED (code ${code})\x1b[0m\n`)
+      return code
     }
-    return code
+    const ran = countRunTests(stdout)
+    if (filters.length > 0 && ran === 0) {
+      reportNoTestMatched(filters, scope, crateNames)
+      return 1
+    }
+    console.log(`\n\x1b[1;32m✔ [agent-rs] Rust tests PASSED: ${ran} tests run (${scope}).\x1b[0m\n`)
+    return 0
   })
 }
 
