@@ -1,1 +1,1 @@
-{"id": "NEO-LAYER-02", "name": "two-system package nesting and portable scoping", "sync": true}
+{"id": "NEO-LAYER-02", "name": "two systems nest under one `@layer <name>` package, a downstream utility beats the upstream-fed recipe, and portable tokens scope by `[data-layer]`", "sync": true}

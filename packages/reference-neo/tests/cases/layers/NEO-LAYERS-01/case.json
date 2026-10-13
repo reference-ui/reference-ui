@@ -1,1 +1,1 @@
-{"id": "NEO-LAYERS-01", "name": "layered upstream paints between extends and own", "sync": true}
+{"id": "NEO-LAYERS-01", "name": "a layered upstream's styles reach the consumer and paint, ranked extends < layers < own", "sync": true}

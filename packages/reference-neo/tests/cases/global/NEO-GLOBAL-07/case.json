@@ -1,1 +1,1 @@
-{"id": "NEO-GLOBAL-07", "name": "nested at-rules wrap and gate", "sync": true}
+{"id": "NEO-GLOBAL-07", "name": "nested `@media` and `@container` inside `globalCss` wrap the rule and gate the paint", "sync": true}

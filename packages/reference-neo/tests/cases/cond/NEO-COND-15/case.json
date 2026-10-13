@@ -1,1 +1,1 @@
-{"id": "NEO-COND-15", "name": "mixed supports container hover", "sync": true}
+{"id": "NEO-COND-15", "name": "mixed `@supports` + `@container` + `&:hover` nests and gates", "sync": true}

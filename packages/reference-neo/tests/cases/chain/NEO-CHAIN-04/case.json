@@ -1,1 +1,1 @@
-{"id": "NEO-CHAIN-04", "name": "parallel direct extends", "sync": true}
+{"id": "NEO-CHAIN-04", "name": "parallel direct extends: both upstreams adopt and declared order wins the shared leaf", "sync": true}

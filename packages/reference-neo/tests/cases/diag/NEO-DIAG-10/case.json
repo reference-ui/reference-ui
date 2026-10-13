@@ -1,1 +1,1 @@
-{"id":"NEO-DIAG-10","name":"ATM-W-UNTERMINATED-BRACE repro: unterminated `{` inside a value","sync":false}
+{"id":"NEO-DIAG-10","name":"ATM-W-UNTERMINATED-BRACE reproduces through the whole compiler as warning","sync":false}

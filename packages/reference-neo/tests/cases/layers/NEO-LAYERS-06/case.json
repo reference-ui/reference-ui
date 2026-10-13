@@ -1,1 +1,1 @@
-{"id": "NEO-LAYERS-06", "name": "re-sync picks up a changed layered upstream", "sync": true}
+{"id": "NEO-LAYERS-06", "name": "a changed layered or extended upstream lands on re-sync in the same process, by relative import and by bare specifier", "sync": true}

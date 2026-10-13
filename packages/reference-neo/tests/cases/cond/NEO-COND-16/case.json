@@ -1,1 +1,1 @@
-{"id": "NEO-COND-16", "name": "icon-only collapse paints", "sync": true}
+{"id": "NEO-COND-16", "name": "css()-nested `&:where(:has())` collapses icon-only buttons", "sync": true}

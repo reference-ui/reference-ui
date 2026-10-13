@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-08", "name": "logical spread lands extra", "sync": true}
+{"id": "NEO-SITE-08", "name": "logical `...(ok && extra)` with const `ok` lands `extra`", "sync": true}

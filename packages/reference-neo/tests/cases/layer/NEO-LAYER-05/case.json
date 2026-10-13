@@ -1,1 +1,1 @@
-{"id": "NEO-LAYER-05", "name": "utility overrides recipe base", "sync": true}
+{"id": "NEO-LAYER-05", "name": "recipe rules precede utilities so a host utility overrides the recipe base", "sync": true}

@@ -216,6 +216,6 @@ A case is a folder named by its raw ID (`ATM-TOKEN-06`, `NEO-TYPE-09`) that hold
 - `README.md`: first line `# <ID> — <one-line claim>`, the claim the same text as `case.json`'s `name`.
 - The runnable part and its inputs and outputs. reference-rs: `spec.ts` (`{ id, verify }`), `input/`, `output/`. Neo: `specs/` and `world/`.
 
-The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Neo has no runner gate yet. Memex indexes `case.json`: Neo cases in `cases`, reference-rs cases in `rs-cases`.
+The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Neo's runner enforces the same rules in `packages/reference-neo/tests/shared/caseIndex.ts`, and also requires case.json `name` to equal the README claim: `listCases()` runs that check, so `pnpm agentneo list`, `search` and `run` all fail on a broken case folder. Memex indexes `case.json`: Neo cases in `cases`, reference-rs cases in `rs-cases`.
 
 

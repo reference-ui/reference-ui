@@ -1,1 +1,1 @@
-{"id": "NEO-CLI-02", "name": "cli watch flag: spawned sync --watch boot, resync, debug events, and shutdown", "sync": true}
+{"id": "NEO-CLI-02", "name": "spawned `ref sync --watch`: boot, resync, debug events, shutdown", "sync": true}

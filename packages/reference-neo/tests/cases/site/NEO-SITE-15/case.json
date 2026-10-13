@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-15", "name": "conditional prop object ternary", "sync": true}
+{"id": "NEO-SITE-15", "name": "Object ternary arms in a `_hover` prop: both compile, the hovered arm paints", "sync": true}

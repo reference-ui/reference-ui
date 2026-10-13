@@ -1,1 +1,1 @@
-{"id":"NEO-DIAG-13","name":"ATM-W-UNSUPPORTED-GLOBAL-VALUE repro: list or nested value under a conditional key","sync":false}
+{"id":"NEO-DIAG-13","name":"ATM-W-UNSUPPORTED-GLOBAL-VALUE reproduces through the whole compiler as warning","sync":false}

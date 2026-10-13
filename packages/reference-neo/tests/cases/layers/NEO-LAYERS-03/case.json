@@ -1,1 +1,1 @@
-{"id": "NEO-LAYERS-03", "name": "layer order, dedupe and self-exclusion", "sync": true}
+{"id": "NEO-LAYERS-03", "name": "the order statement follows config order, a system listed twice keeps one name but prints twice, and the own name is never listed as an upstream", "sync": true}

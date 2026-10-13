@@ -1,1 +1,1 @@
-{"id": "NEO-RESP-04", "name": "nested conditions", "sync": true}
+{"id": "NEO-RESP-04", "name": "nested sm: { md: … } paints only when both queries hold", "sync": true}

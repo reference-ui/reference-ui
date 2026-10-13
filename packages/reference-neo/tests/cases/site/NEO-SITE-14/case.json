@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-14", "name": "hostless world fails closed", "sync": true}
+{"id": "NEO-SITE-14", "name": "with no hosts resolvable, the hostless tag yields nothing", "sync": true}

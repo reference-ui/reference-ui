@@ -1,1 +1,1 @@
-{"id": "NEO-COND-03", "name": "hover disabled chain", "sync": true}
+{"id": "NEO-COND-03", "name": "`_hover`/`_disabled` chains two `:is()` lists and the aria twin paints", "sync": true}

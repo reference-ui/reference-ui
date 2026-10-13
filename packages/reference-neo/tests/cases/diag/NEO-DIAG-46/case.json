@@ -1,1 +1,1 @@
-{"id":"NEO-DIAG-46","name":"TST-W-PARSE-ERROR repro: a file failed to parse; extraction keeps the recoverable shells","sync":false}
+{"id":"NEO-DIAG-46","name":"TST-W-PARSE-ERROR reproduces through the whole compiler as warning","sync":false}

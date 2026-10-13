@@ -1,1 +1,1 @@
-{"id": "NEO-GLOBAL-01", "name": "focus-visible token outline", "sync": true}
+{"id": "NEO-GLOBAL-01", "name": "token ref plus a literal `:focus-visible` selector in `globalCss` paints", "sync": true}

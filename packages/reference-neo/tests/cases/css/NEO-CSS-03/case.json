@@ -1,1 +1,1 @@
-{"id": "NEO-CSS-03", "name": "alias eviction over responsive width", "sync": true}
+{"id": "NEO-CSS-03", "name": "Shorthand alias `w` last-wins over a responsive `width` object", "sync": true}

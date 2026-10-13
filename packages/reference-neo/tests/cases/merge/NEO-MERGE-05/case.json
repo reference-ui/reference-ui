@@ -1,1 +1,1 @@
-{"id": "NEO-MERGE-05", "name": "conditional merge", "sync": true}
+{"id": "NEO-MERGE-05", "name": "a conditional object arg merges with a base arg at the condition slot", "sync": true}

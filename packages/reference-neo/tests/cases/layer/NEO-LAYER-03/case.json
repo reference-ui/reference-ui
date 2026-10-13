@@ -1,1 +1,1 @@
-{"id": "NEO-LAYER-03", "name": "keyframes and font-face in global", "sync": true}
+{"id": "NEO-LAYER-03", "name": "`@keyframes` and `@font-face` print once in `@layer global` and the animation runs", "sync": true}

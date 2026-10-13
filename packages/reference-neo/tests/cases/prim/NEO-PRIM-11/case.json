@@ -1,1 +1,1 @@
-{"id": "NEO-PRIM-11", "name": "array css prop", "sync": true}
+{"id": "NEO-PRIM-11", "name": "array `css` props flow through the split to `css()` merge and paint", "sync": true}

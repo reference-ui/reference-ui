@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-06", "name": "dynamic call value warns and skips", "sync": true}
+{"id": "NEO-SITE-06", "name": "Dynamic call value `color: pick()` mints no ghost and emits a located warning", "sync": true}

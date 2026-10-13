@@ -1,1 +1,1 @@
-{"id": "NEO-COND-09", "name": "comma split", "sync": true}
+{"id": "NEO-COND-09", "name": "`'&:focus, &:hover'` splits into two selectors on one class", "sync": true}

@@ -1,1 +1,1 @@
-{"id": "NEO-NAMER-04", "name": "late inline sheet warns only true misses", "sync": true}
+{"id": "NEO-NAMER-04", "name": "a late inline sheet warns only the true miss, never the present rule", "sync": true}

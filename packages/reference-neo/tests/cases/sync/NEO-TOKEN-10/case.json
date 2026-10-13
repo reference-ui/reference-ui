@@ -1,1 +1,1 @@
-{"id": "NEO-TOKEN-10", "name": "font registry vars and macro paint", "sync": true}
+{"id": "NEO-TOKEN-10", "name": "the `font()` registry emits `--fonts-*` and `--font-weights-*` and the `font: 'sans'` macro paints family + weight", "sync": true}

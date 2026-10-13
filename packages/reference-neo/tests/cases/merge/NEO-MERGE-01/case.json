@@ -1,1 +1,1 @@
-{"id": "NEO-MERGE-01", "name": "last-wins two args", "sync": true}
+{"id": "NEO-MERGE-01", "name": "two css() args merge last-wins per slot while the sheet keeps both atoms", "sync": true}

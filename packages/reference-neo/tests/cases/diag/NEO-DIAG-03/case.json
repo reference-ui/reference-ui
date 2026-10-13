@@ -1,1 +1,1 @@
-{"id":"NEO-DIAG-03","name":"ATM-W-UNKNOWN-COLOR repro: bare value on a color prop that is neither a color token nor ...","sync":false}
+{"id":"NEO-DIAG-03","name":"ATM-W-UNKNOWN-COLOR reproduces through the whole compiler as warning","sync":false}

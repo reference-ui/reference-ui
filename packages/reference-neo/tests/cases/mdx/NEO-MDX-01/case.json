@@ -1,1 +1,1 @@
-{"id": "NEO-MDX-01", "name": "mdx fragment collection", "sync": true}
+{"id": "NEO-MDX-01", "name": "MDX files contribute fragments through the native mdx-rs loader", "sync": true}

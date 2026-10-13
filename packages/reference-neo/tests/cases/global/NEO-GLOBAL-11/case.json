@@ -1,1 +1,1 @@
-{"id": "NEO-GLOBAL-11", "name": "vendor pseudos pass through", "sync": true}
+{"id": "NEO-GLOBAL-11", "name": "vendor pseudo-elements in `globalCss` pass through unchanged", "sync": true}

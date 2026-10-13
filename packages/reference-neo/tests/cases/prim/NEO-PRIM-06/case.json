@@ -1,1 +1,1 @@
-{"id": "NEO-PRIM-06", "name": "variant", "sync": true}
+{"id": "NEO-PRIM-06", "name": "`variant` stamps `data-variant` and selects the tag recipe; neither it nor `colorMode` is a style prop", "sync": true}

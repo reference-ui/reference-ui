@@ -1,1 +1,1 @@
-{"id": "NEO-LAYERS-05", "name": "invalid layers config fails loudly at load", "sync": true}
+{"id": "NEO-LAYERS-05", "name": "invalid `layers` config fails loudly at config load with the documented message", "sync": true}

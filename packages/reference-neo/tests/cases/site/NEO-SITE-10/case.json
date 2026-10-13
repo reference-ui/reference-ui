@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-10", "name": "css prop equals css call", "sync": true}
+{"id": "NEO-SITE-10", "name": "`css={{}}` on a primitive equals `css()`", "sync": true}

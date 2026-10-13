@@ -1,1 +1,1 @@
-{"id": "NEO-LAYER-04", "name": "normalizeCss reset layer on and off", "sync": true}
+{"id": "NEO-LAYER-04", "name": "`normalizeCss: true` (default) opens with the reset layer; `false` omits it", "sync": true}

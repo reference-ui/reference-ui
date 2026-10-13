@@ -1,1 +1,1 @@
-{"id": "NEO-RECIPE-05", "name": "recipe raw equivalence", "sync": true}
+{"id": "NEO-RECIPE-05", "name": "`recipe(...).raw(props)` returns a style object that `css()` paints identically", "sync": true}

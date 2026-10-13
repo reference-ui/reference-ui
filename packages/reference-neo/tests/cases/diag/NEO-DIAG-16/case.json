@@ -1,1 +1,1 @@
-{"id":"NEO-DIAG-16","name":"ATM-E-RECIPE-ARG-SHAPE repro: `recipe(...)` first arg is not an inline object","sync":false}
+{"id":"NEO-DIAG-16","name":"ATM-E-RECIPE-ARG-SHAPE reproduces through the whole compiler as error","sync":false}

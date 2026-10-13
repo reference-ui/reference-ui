@@ -1,1 +1,1 @@
-{"id": "NEO-PRIM-13", "name": "category-prefixed color values", "sync": true}
+{"id": "NEO-PRIM-13", "name": "category-prefixed `colors.*` style props paint the token and leak no raw path", "sync": true}

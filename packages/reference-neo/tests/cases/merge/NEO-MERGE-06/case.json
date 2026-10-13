@@ -1,1 +1,1 @@
-{"id": "NEO-MERGE-06", "name": "miss diagnostic, no ghost", "sync": true}
+{"id": "NEO-MERGE-06", "name": "a runtime value with no compiled atom yields no class and exactly one dev diagnostic", "sync": true}

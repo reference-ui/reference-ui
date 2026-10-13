@@ -1,1 +1,1 @@
-{"id": "NEO-SITE-22", "name": "runtime-ok logical spread paints extra", "sync": true}
+{"id": "NEO-SITE-22", "name": "runtime-`ok` `...(ok && extra)` lands `extra`", "sync": true}
