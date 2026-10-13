@@ -2,9 +2,10 @@
 //! A binder is a function or constructor type's parameters, a method or call signature's own parameters,
 //! a mapped type's key, or an `infer` variable in a conditional's true branch; the lowering passes those
 //! names down as `bound`. A reference to a bound name names itself as its target id, which no symbol id
-//! ever equals, so the resolver does not attach it to a same-named top-level symbol and clears the mark
-//! before a symbol leaves resolution. Interface and type-alias parameters are not visible here; the
-//! resolver binds those for the whole declaration.
+//! ever equals, and carries the `type_parameter` flag, so the resolver does not attach it to a same-named
+//! top-level symbol. The resolver clears the target before a symbol leaves resolution and keeps the flag.
+//! Interface and type-alias parameters are not visible here; the resolver binds those for the whole
+//! declaration.
 
 use oxc_ast::ast::{TSType, TSTypeParameterDeclaration};
 
@@ -180,8 +181,9 @@ pub(super) fn interface_heritage_to_reference(
     LoweringContext::new(ctx).lower_interface_heritage(heritage)
 }
 
-/// A reference to a bound name. It names itself as its target id, which no symbol id equals, and it
-/// takes the file's default source rather than an import the binder shadows.
+/// A reference to a bound name. It names itself as its target id, which no symbol id equals, it is
+/// flagged as a type parameter, and it takes the file's default source rather than an import the
+/// binder shadows.
 pub(super) fn bound_reference(
     name: String,
     type_arguments: Option<Vec<TypeRef>>,
@@ -192,6 +194,7 @@ pub(super) fn bound_reference(
         source_module: default_source_module(ctx),
         name,
         type_arguments,
+        type_parameter: true,
     }
 }
 

@@ -230,6 +230,9 @@ impl FileBindings {
     }
 }
 
+/// Names a library shell reaches in its own module, which the export closure may need to emit. A type
+/// parameter is never a dependency, so a nested binder's flagged reference is skipped, and a shell's own
+/// parameters are skipped by name because the resolver has not flagged them yet at this point.
 fn local_references_in_file(shell: &SymbolShell, module_specifier: &str) -> Vec<String> {
     shell
         .references
@@ -238,11 +241,21 @@ fn local_references_in_file(shell: &SymbolShell, module_specifier: &str) -> Vec<
             TypeRef::Reference {
                 name,
                 source_module: Some(source_module),
+                type_parameter: false,
                 ..
-            } if source_module == module_specifier => Some(name.clone()),
+            } if source_module == module_specifier && !binds_own_parameter(shell, name) => {
+                Some(name.clone())
+            }
             _ => None,
         })
         .collect()
+}
+
+fn binds_own_parameter(shell: &SymbolShell, name: &str) -> bool {
+    shell
+        .type_parameters
+        .iter()
+        .any(|parameter| parameter.name == name)
 }
 
 fn record_parse_errors(

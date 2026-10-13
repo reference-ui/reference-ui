@@ -145,11 +145,16 @@ impl<'a> Resolver<'a> {
             name,
             target_id,
             type_arguments,
+            type_parameter,
             ..
         } = type_ref
         else {
             return None;
         };
+        // A type parameter names no symbol, so a same-named declaration must never expand in its place.
+        if *type_parameter {
+            return None;
+        }
 
         let symbol = self.lookup_local_symbol(target_id.as_deref(), name)?;
         let _expansion = AliasScope::enter()?;
@@ -334,11 +339,13 @@ fn naked_check_position(symbol: &SymbolShell, underlying: &TypeRef) -> Option<us
     let TypeRef::Conditional { check_type, .. } = underlying else {
         return None;
     };
+    // The body is the alias's own shell, so its parameters are still unbound (no target, no flag) here.
     let TypeRef::Reference {
         name,
         target_id: None,
-        source_module: None,
+        type_parameter: false,
         type_arguments: None,
+        ..
     } = check_type.as_ref()
     else {
         return None;

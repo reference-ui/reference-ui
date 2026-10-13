@@ -1,8 +1,9 @@
 //! Clears the binder marks once a symbol's resolution is complete. A reference bound by a type parameter or an
 //! `infer` variable carries its own name as its target id, a value no symbol id ever has, so the resolver and
 //! evaluation never attach or dereference it. This walk turns each such mark back into the `None` target an
-//! unresolved name has, and it reaches the `resolved` results too, because evaluation can copy a marked
-//! reference into them.
+//! unresolved name has, and it keeps the `type_parameter` flag, which is what still tells the reference apart
+//! from an unresolved external name. It reaches the `resolved` results too, because evaluation can copy a
+//! marked reference into them.
 
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
@@ -20,19 +21,24 @@ impl TypeRefMap for ClearBinderTargets {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        type_parameter: bool,
     ) -> TypeRef {
-        let target_id = if target_id.as_deref() == Some(name.as_str()) {
+        let target_id = if type_parameter && target_id.as_deref() == Some(name.as_str()) {
             None
         } else {
             target_id
         };
-        let type_arguments =
-            type_arguments.map(|args| args.into_iter().map(|arg| map_type_ref(self, arg)).collect());
+        let type_arguments = type_arguments.map(|args| {
+            args.into_iter()
+                .map(|arg| map_type_ref(self, arg))
+                .collect()
+        });
         TypeRef::Reference {
             name,
             target_id,
             source_module,
             type_arguments,
+            type_parameter,
         }
     }
 

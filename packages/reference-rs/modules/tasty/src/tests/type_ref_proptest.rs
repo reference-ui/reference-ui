@@ -137,15 +137,19 @@ fn type_ref_strategy() -> impl Strategy<Value = TypeRef> {
                 prop::option::of(arb_short_string()),
                 prop::option::of(arb_short_string()),
                 prop::option::of(prop::collection::vec(inner.clone(), 0..3)),
+                any::<bool>(),
             )
-                .prop_map(|(name, target_id, source_module, type_arguments)| {
-                    TypeRef::Reference {
-                        name,
-                        target_id,
-                        source_module,
-                        type_arguments,
-                    }
-                },),
+                .prop_map(
+                    |(name, target_id, source_module, type_arguments, type_parameter)| {
+                        TypeRef::Reference {
+                            name,
+                            target_id,
+                            source_module,
+                            type_arguments,
+                            type_parameter,
+                        }
+                    },
+                ),
             prop::collection::vec(arb_tuple_element(inner.clone()), 0..4)
                 .prop_map(|elements| TypeRef::Tuple { elements }),
             prop::collection::vec(arb_member(inner.clone()), 0..3)

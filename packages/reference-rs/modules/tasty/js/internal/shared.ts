@@ -256,8 +256,8 @@ export function collectUserOwnedReferencesFromSymbol(
   const refs: RawTastySymbolRef[] = []
 
   if (isInterfaceSymbol(symbol)) {
-    refs.push(...symbol.extends)
-    refs.push(...symbol.types)
+    refs.push(...symbol.extends.filter(ref => !ref.typeParameter))
+    refs.push(...symbol.types.filter(ref => !ref.typeParameter))
     for (const member of symbol.members) {
       collectUserOwnedReferencesFromMember(member, refs)
     }
@@ -287,6 +287,8 @@ function collectUserOwnedReferencesFromTypeRef(
   refs: RawTastySymbolRef[]
 ) {
   if (isTypeReference(typeRef)) {
+    // A type parameter or infer name is bound by its declaration, so it is never a dependency.
+    if (typeRef.typeParameter) return
     refs.push({
       id: typeRef.id,
       name: typeRef.name,

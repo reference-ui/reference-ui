@@ -19,6 +19,14 @@ fn elaborate_type_ref() -> TypeRef {
                 target_id: Some("sym:f.ts#Boxed".to_string()),
                 source_module: None,
                 type_arguments: Some(vec![t.clone()]),
+                type_parameter: false,
+            },
+            TypeRef::Reference {
+                name: "Item".to_string(),
+                target_id: Some("Item".to_string()),
+                source_module: None,
+                type_arguments: None,
+                type_parameter: true,
             },
             TypeRef::Array {
                 element: Box::new(TypeRef::Literal {

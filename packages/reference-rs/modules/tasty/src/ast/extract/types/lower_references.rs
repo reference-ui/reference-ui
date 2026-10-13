@@ -55,6 +55,7 @@ impl<'a> LoweringContext<'a> {
             target_id: None,
             source_module,
             type_arguments,
+            type_parameter: false,
         }
     }
 
@@ -88,6 +89,7 @@ impl<'a> LoweringContext<'a> {
             target_id: None,
             source_module,
             type_arguments,
+            type_parameter: false,
         }
     }
 

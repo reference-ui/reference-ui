@@ -27,6 +27,10 @@ pub struct TastyTypeReference {
     pub id: String,
     pub name: String,
     pub library: String,
+    // `Some(true)` only for a type parameter or `infer` name in scope, which is never a dependency.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub type_parameter: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub type_arguments: Option<Vec<TastyTypeRef>>,

@@ -7,7 +7,7 @@
  */
 import { expect } from 'vitest'
 import type { StationSpec } from '../../../../../testing/index.js'
-import { findMember, type TastyCaseResult } from '../../harness/helpers.js'
+import { findMember, type TastyCaseResult, type TastySymbol } from '../../harness/helpers.js'
 
 interface RefJson {
   kind?: string
@@ -49,6 +49,18 @@ const spec: StationSpec<TastyCaseResult> = {
     const keyed = await api.loadSymbolByName('Keyed')
     const keyedValue = (keyed.getUnderlyingType()?.getRaw() as { valueType?: RefJson }).valueType
     expect(keyedValue).toMatchObject({ name: 'Item', id: 'Item' })
+
+    // A bound reference is not a dependency: each binder above adds no user-owned reference. The
+    // unshadowed `UsesItem.item` is the control that still lists its top-level dependency.
+    const dependencyNames = async (symbol: TastySymbol) =>
+      (await api.graph.collectUserOwnedReferences(symbol)).map(ref => ref.getName()).sort()
+    expect(await dependencyNames(wrap)).toEqual([])
+    expect(await dependencyNames(holder)).toEqual([])
+    expect(await dependencyNames(makeItem)).toEqual([])
+    expect(await dependencyNames(flatten)).toEqual([])
+    expect(await dependencyNames(unwrap)).toEqual([])
+    expect(await dependencyNames(keyed)).toEqual([])
+    expect(await dependencyNames(usesItem)).toEqual(['Item'])
   },
 }
 

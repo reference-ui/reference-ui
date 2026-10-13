@@ -8,6 +8,7 @@ pub(crate) mod fixtures;
 mod import_path_proptest;
 mod resolve;
 mod scanner_imports_proptest;
+mod type_parameter_refs;
 mod type_ref_map;
 mod type_ref_map_identity;
 mod type_ref_proptest;

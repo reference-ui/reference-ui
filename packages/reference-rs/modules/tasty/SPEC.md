@@ -58,7 +58,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [ ] TASTY-20 A relative target that exists on disk but is outside the include globs, or is not TypeScript (a stylesheet, a JSON file), does not warn. Unproven at station level: `src/tests/error_paths.rs::existing_target_outside_the_scan_is_not_reported` pins it in Cargo only. Its reference still stays external, silently.
 - [x] TASTY-21 A bare package specifier that names no installed package stays silent and external. Proof: TST-IMP-04.
 - [ ] TASTY-22 Known gap: `./x.js` does not reach `./x.ts` for user files, because the candidates for a `.js` specifier are `x.d.ts` and `x.js` only. Such an import warns `TST-W-UNRESOLVED-IMPORT`. Unproven: no station pins it, and changing resolution changes output.
-- [x] TASTY-36 A type parameter or `infer` name never resolves to a same-named symbol inside its scope, while a reference outside that scope still resolves to the top-level symbol. Proof: TST-GEN-03.
+- [x] TASTY-36 A type parameter or `infer` name never resolves to a same-named symbol inside its scope, while a reference outside that scope still resolves to the top-level symbol. A reference it binds carries `typeParameter` and is never a user-owned dependency. Proof: TST-GEN-03.
 - [x] TASTY-37 `export * as ns from` binds one namespace with no flat names; `ns.Leaf` through a named import or an `export { ns } from` relay resolves to `Leaf`. Proof: TST-EXT-02.
 
 ### 3.4 Diagnostics: warnings continue, refusals throw

@@ -106,6 +106,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        type_parameter: bool,
     ) -> TypeRef {
         let type_arguments: Option<Vec<TypeRef>> = type_arguments.map(|args| {
             args.into_iter()
@@ -113,12 +114,24 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
                 .collect()
         });
 
+        // A type-parameter reference names no symbol, so no import or local lookup may attach one.
+        if type_parameter {
+            return TypeRef::Reference {
+                name,
+                target_id,
+                source_module,
+                type_arguments,
+                type_parameter,
+            };
+        }
+
         if target_id.is_none() && self.binds(&name) {
             return TypeRef::Reference {
                 target_id: Some(name.clone()),
                 source_module: self.resolver.default_source_module(),
                 name,
                 type_arguments,
+                type_parameter: true,
             };
         }
 
@@ -132,6 +145,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
             target_id,
             source_module,
             type_arguments,
+            type_parameter: false,
         }
     }
 

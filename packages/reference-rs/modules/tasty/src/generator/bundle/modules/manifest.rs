@@ -241,15 +241,18 @@ fn type_ref_equivalent(left: &crate::model::TypeRef, right: &crate::model::TypeR
             TypeRef::Reference {
                 name: left_name,
                 type_arguments: left_args,
+                type_parameter: left_bound,
                 ..
             },
             TypeRef::Reference {
                 name: right_name,
                 type_arguments: right_args,
+                type_parameter: right_bound,
                 ..
             },
         ) => {
             left_name == right_name
+                && left_bound == right_bound
                 && optional_type_ref_list_equivalent(left_args.as_deref(), right_args.as_deref())
         }
         (TypeRef::Union { types: left }, TypeRef::Union { types: right }) => {

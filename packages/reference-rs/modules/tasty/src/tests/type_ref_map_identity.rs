@@ -15,6 +15,7 @@ impl TypeRefMap for IdentityMap {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        type_parameter: bool,
     ) -> TypeRef {
         TypeRef::Reference {
             name,
@@ -22,6 +23,7 @@ impl TypeRefMap for IdentityMap {
             source_module,
             type_arguments: type_arguments
                 .map(|args| args.into_iter().map(|t| map_type_ref(self, t)).collect()),
+            type_parameter,
         }
     }
 

@@ -17,6 +17,8 @@ pub(super) struct SymbolRef {
     pub(super) name: String,
     pub(super) library: String,
     pub(super) type_arguments: Option<Vec<TypeRef>>,
+    /// Emitted as `typeParameter: true` only when set, so the runtime can skip the bound name.
+    pub(super) type_parameter: bool,
 }
 
 pub(super) fn emit_chunk_module(
@@ -94,6 +96,7 @@ pub(super) fn reference_descriptor(
         target_id,
         source_module,
         type_arguments,
+        type_parameter,
     } = type_ref
     else {
         return None;
@@ -107,6 +110,7 @@ pub(super) fn reference_descriptor(
         name,
         source_module.as_deref(),
         type_arguments.clone(),
+        *type_parameter,
     ))
 }
 
@@ -257,6 +261,7 @@ fn local_reference_descriptor(
         name: target_symbol.name.clone(),
         library: target_symbol.library.clone(),
         type_arguments,
+        type_parameter: false,
     })
 }
 
@@ -264,12 +269,14 @@ fn external_reference_descriptor(
     name: &str,
     source_module: Option<&str>,
     type_arguments: Option<Vec<TypeRef>>,
+    type_parameter: bool,
 ) -> SymbolRef {
     SymbolRef {
         id: name.to_string(),
         name: name.to_string(),
         library: source_module.unwrap_or(USER_LIBRARY_NAME).to_string(),
         type_arguments,
+        type_parameter,
     }
 }
 
@@ -283,6 +290,9 @@ pub(super) fn symbol_ref_fields(
         emit_field("name", to_js_literal(&reference.name)?),
         emit_field("library", to_js_literal(&reference.library)?),
     ];
+    if reference.type_parameter {
+        fields.push(emit_field("typeParameter", to_js_literal(&true)?));
+    }
     if let Some(args) = &reference.type_arguments {
         fields.push(emit_field(
             "typeArguments",

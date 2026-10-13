@@ -167,6 +167,9 @@ pub enum TypeRef {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        /// True when a type parameter or `infer` name in scope binds this reference. Such a
+        /// reference names no symbol and is never a dependency, whatever its name or target.
+        type_parameter: bool,
     },
     Union {
         types: Vec<TypeRef>,

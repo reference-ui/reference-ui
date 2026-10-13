@@ -18,6 +18,7 @@ pub trait TypeRefMap {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        type_parameter: bool,
     ) -> TypeRef;
 
     fn map_indexed_access(
@@ -91,7 +92,14 @@ pub fn map_type_ref<M: TypeRefMap + ?Sized>(mapper: &mut M, type_ref: TypeRef) -
             target_id,
             source_module,
             type_arguments,
-        } => mapper.map_reference(name, target_id, source_module, type_arguments),
+            type_parameter,
+        } => mapper.map_reference(
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+            type_parameter,
+        ),
         TypeRef::Union { types } => TypeRef::Union {
             types: types.into_iter().map(|t| map_type_ref(mapper, t)).collect(),
         },

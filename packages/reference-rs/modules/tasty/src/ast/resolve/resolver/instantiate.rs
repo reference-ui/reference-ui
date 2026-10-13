@@ -33,15 +33,17 @@ impl<'a> Resolver<'a> {
         let mut substitutions = BTreeMap::new();
 
         for (index, parameter) in type_parameters.iter().enumerate() {
-            let argument = resolved_arguments.get(index).cloned().or_else(|| {
-                parameter
-                    .default
-                    .clone()
-                    .map(|default| self.resolve_type_ref(default))
-            });
-            if let Some(argument) = argument {
-                substitutions.insert(parameter.name.clone(), argument);
-            }
+            let argument = resolved_arguments
+                .get(index)
+                .cloned()
+                .or_else(|| {
+                    parameter
+                        .default
+                        .clone()
+                        .map(|default| self.resolve_type_ref(default))
+                })
+                .unwrap_or_else(|| unsupplied_parameter(&parameter.name));
+            substitutions.insert(parameter.name.clone(), argument);
         }
 
         substitutions
@@ -57,6 +59,18 @@ impl<'a> Resolver<'a> {
     }
 }
 
+/// A parameter the expansion does not supply names no symbol. It stays a type-parameter reference, so the
+/// resolver never attaches a same-named top-level symbol to it.
+fn unsupplied_parameter(name: &str) -> TypeRef {
+    TypeRef::Reference {
+        name: name.to_string(),
+        target_id: None,
+        source_module: None,
+        type_arguments: None,
+        type_parameter: true,
+    }
+}
+
 struct InstantiateTypeRefMap<'a> {
     substitutions: &'a BTreeMap<String, TypeRef>,
 }
@@ -68,8 +82,12 @@ impl TypeRefMap for InstantiateTypeRefMap<'_> {
         target_id: Option<String>,
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
+        type_parameter: bool,
     ) -> TypeRef {
-        if target_id.is_none() && source_module.is_none() {
+        // Expansion instantiates a shell's underlying type, where the alias's own parameters are not bound
+        // yet, so an unbound name matching one is that parameter. Its source module does not matter: a
+        // library alias's references carry the module, and an inner binder's reference is flagged instead.
+        if target_id.is_none() && !type_parameter {
             if let Some(substitution) = self.substitutions.get(&name) {
                 return substitution.clone();
             }
@@ -81,6 +99,7 @@ impl TypeRefMap for InstantiateTypeRefMap<'_> {
             source_module,
             type_arguments: type_arguments
                 .map(|args| args.into_iter().map(|t| map_type_ref(self, t)).collect()),
+            type_parameter,
         }
     }
 
