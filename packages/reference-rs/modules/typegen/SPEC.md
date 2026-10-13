@@ -26,7 +26,7 @@ Typegen is the pure declaration printer for Reference UI's styling system. It ta
 
 ### Current Status (2026-09-15)
 
-**Freeze: Token-union + recipe variant/compound + FontRegistry + FontProps + StyleProps + recursive SystemStyleObject printer in `packages/reference-rs/modules/typegen`; FORBID-01–06 proven on `emit_dts`; STYLE-05 and STRICT-01–06 proven by `tsc --noEmit`. Core `TYP-RECIPE-03` owns recipe contracts and `TYP-STYLE-01` owns `SystemStyleObject` (no `@reference-ui/styled` re-export). Core generator prototype remains in `packages/reference-core/src/types/generators/`.**  
+**Freeze: Token-union + recipe variant/compound + FontRegistry + FontProps + StyleProps + recursive SystemStyleObject printer in `packages/reference-rs/modules/typegen`; FORBID-01–06 proven on `emit_dts`; STYLE-05 and STRICT-01–05 and 07 proven by `tsc --noEmit`. `TYP-RECIPE-03` (owned recipe contracts) and `TYP-STYLE-01` (owned `SystemStyleObject`, no `@reference-ui/styled` re-export) were proven in `packages/reference-core`, which is retired (`b2c666a73`); both are unticked here until typegen proves them.**  
 Public types are Reference UI-owned declarations. Core `SystemStyleObject` is assembled from `csstype.Properties` plus canon aliases; typegen narrows `StyleProps` over `BaseStyleProps` when `strict` is set. `strict` is a printer option on `emit_dts_with`, not a spec field and not a `ui.config.ts` parse.
 
 | Metric | Status |
@@ -35,9 +35,9 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 | Named `[x]` | 36 / 36 contract IDs |
 | Named `[ ]` | 0 / 36 contract IDs |
 | Cargo tests | 75 (`src/tests/`) |
-| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–06 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/suites/` (`pnpm agentrs v typegen` **56**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
+| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–05 and 07 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/suites/` (`pnpm agentrs v typegen` **56**); the core tests for `TYP-STYLE-01` (`generators/strict.test.ts`) went with `packages/reference-core` |
 
-**Named proven:** `TYP-TOKEN-01`–`07`, `TYP-TONE-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`06`, `TYP-FORBID-01`–`06`.  
+**Named proven:** `TYP-TOKEN-01`–`07`, `TYP-TONE-01`–`09`, `TYP-RECIPE-01`–`02`, `TYP-FONT-01`–`03`, `TYP-STYLE-02`–`05`, `TYP-STRICT-01`–`05` and `07`, `TYP-FORBID-01`–`06`.  
 **Remaining unproven:** none.
 
 ### In the Tree
@@ -76,7 +76,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `styled-system/tokens/index.mjs` | `TYP-FORBID-05` | **Refuse.** Tokens are CSS variables in `@layer tokens`. |
 | Atomic class names in `.d.ts` | `TYP-FORBID-01` | **Refuse.** Users never write `.mt_2r`. |
 | Whole-farm AST in Rust (`pandacss_codegen`, `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`) | `TYP-FORBID-06` | **Refuse.** Typegen does not depend on `atomic`. |
-| `strictTokens` / `strictPropertyValues` | `TYP-STRICT-01`–`06` | Owned wrappers via `emit_dts_with` printer options. Typegen does not parse `ui.config.ts`. |
+| `strictTokens` / `strictPropertyValues` | `TYP-STRICT-01`–`05`, `07` | Owned wrappers via `emit_dts_with` printer options. Typegen does not parse `ui.config.ts`. |
 
 ---
 
@@ -164,11 +164,23 @@ Panda treats codegen as a file farm (`styled-system/`). We author
   **Typegen should add `TonedColorToken` to strict colour value parts, without making `tones` strict.**  
   Assert `StrictColorValue` lists `TonedColorToken` right after `ColorToken` and that `strict: ['tones']` still reports `TGN-W-UNKNOWN-STRICT-CATEGORY`. The failure mode is a strict wrapper that rejects toned colours or an invented `StrictTonesProps`.
 
+- [x] `TYP-TONE-07` `[reference]` `[unit]` —  
+  **Typegen should let toned colour tokens typecheck under strict colours.**
+  Assert `SystemStyleObject` accepts `bg: 'blue.500/medium'` on the strict tones golden (`tones-strict.d.ts`), where `medium` is a declared tone. The failure mode is strict colours rejecting a declared toned token.
+
+- [x] `TYP-TONE-08` `[reference]` `[unit]` —  
+  **Typegen should reject a misspelled tone under strict colours.**
+  Assert `SystemStyleObject` rejects `bg: 'blue.500/mediun'` on the strict tones golden with TS2322 or TS2820. The failure mode is strict colours accepting an undeclared tone.
+
+- [x] `TYP-TONE-09` `[reference]` `[unit]` —  
+  **Typegen should leave open colours unnarrowed, so toned and arbitrary values pass.**
+  Assert `SystemStyleObject` accepts both `bg: 'blue.500/medium'` and `bg: 'blue.500/mediun'` on the open tones golden (`tones.d.ts`), through the `(string & {})` hatch. The failure mode is open emit narrowing colours.
+
 ---
 
 ### StyleProps & SystemStyleObject (`TYP-STYLE-*`)
 
-- [x] `TYP-STYLE-01` `[reference]` `[unit]` —  
+- [ ] `TYP-STYLE-01` `[reference]` `[unit]` —  
   **Typegen should emit a Reference UI-owned SystemStyleObject.**
   Inspect the emitted `system-style-object.d.ts` declaration file. Assert `SystemStyleObject` is assembled from `csstype.Properties` and Reference UI token unions, and contains zero imports from `@reference-ui/styled`. The failure mode is re-exporting `StyledSystemStyleObject`.
 
@@ -200,7 +212,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
   **Typegen should constrain compound variant definitions to valid variant combinations.**  
   Declare a recipe with compound variants in `BaseSystem` (e.g. `compoundVariants: [{ size: 'sm', tone: 'loud', css: {...} }]`). Assert the emitted recipe type enforces that compound variant match criteria are subsets of declared variant literal unions. The failure mode is allowing arbitrary string combinations in compound variants without type validation.
 
-- [x] `TYP-RECIPE-03` `[reference]` `[unit]` —  
+- [ ] `TYP-RECIPE-03` `[reference]` `[unit]` —  
   **Typegen should provide owned RecipeDefinition contracts.**
   Inspect `packages/reference-core/src/types/public/recipe.ts`. Assert `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, and `RecipeVariantProps` are declared as owned TypeScript interfaces, eliminating all imports from `@reference-ui/styled/types/recipe`. The failure mode is re-exporting recipe types from the generated styled package.
 
@@ -298,14 +310,14 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-TONE-07` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-07`); `src/tests/goldens.rs::tones_matches_committed_golden` | `[x]` Proven |
 | `TYP-TONE-08` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-08`) | `[x]` Proven |
 | `TYP-TONE-09` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-09`) | `[x]` Proven |
-| `TYP-STYLE-01` | `[unit]` | `packages/reference-core/src/types/generators/strict.test.ts` (`TYP-STYLE-01`); `renderSystemStyleObjectDts` | `[x]` Proven |
+| `TYP-STYLE-01` | `[unit]` | none in typegen; the proof was in `packages/reference-core` (retired) | `[ ]` Open |
 | `TYP-STYLE-02` | `[unit]` | `src/tests/style.rs::typ_style_02_narrows_style_props_with_aliases_and_tokens` | `[x]` Proven |
 | `TYP-STYLE-03` | `[unit]` | `src/tests/style.rs::typ_style_03_filters_viewport_keys_from_style_condition_key` | `[x]` Proven |
 | `TYP-STYLE-04` | `[unit]` | `src/tests/style.rs::typ_style_04_layers_dialect_props_and_omits_conflicting_css` | `[x]` Proven |
 | `TYP-STYLE-05` | `[unit]` | `tests/suites/style-05.test.ts` (`pnpm agentrs v typegen`) | `[x]` Proven |
 | `TYP-RECIPE-01` | `[unit]` | `src/tests/recipes.rs::typ_recipe_01_emits_optional_variant_prop_unions` | `[x]` Proven |
 | `TYP-RECIPE-02` | `[unit]` | `src/tests/recipes.rs::typ_recipe_02_emits_compound_variant_subset_unions` | `[x]` Proven |
-| `TYP-RECIPE-03` | `[unit]` | `packages/reference-core/src/types/public/recipe.test.ts` (`TYP-RECIPE-03`) | `[x]` Proven |
+| `TYP-RECIPE-03` | `[unit]` | none in typegen; the proof was in `packages/reference-core` (retired) | `[ ]` Open |
 | `TYP-FONT-01` | `[unit]` | `src/tests/fonts.rs::typ_font_01_emits_font_registry_from_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-02` | `[unit]` | `src/tests/fonts.rs::typ_font_02_narrows_font_props_to_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-03` | `[unit]` | `src/tests/fonts.rs::typ_font_03_falls_back_to_string_when_font_registry_is_empty` | `[x]` Proven |
