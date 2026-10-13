@@ -18,6 +18,10 @@ const INLINE_IMPORT = /import\(\s*(['"])(\.[^'"\n]+)\1\s*\)/g
 const EMPTY_EXPORT = /^export \{\};?[ \t]*$/gm
 const EXPORT_STAR = /^export\s*\*\s*from\s*(['"])(\.[^'"\n]+)\1/m
 const UNSUPPORTED_EXPORT = /^export\s+(?:default\b|=|\*|(?:type\s+)?\{)/m
+// Augmentations cannot live inside a namespace once `declare` is dropped.
+const UNSUPPORTED_AMBIENT = /^(?:export\s+)?declare\s+(?:global|module)\b/m
+const EXPORTED_NAME =
+  /^export\s+(?:import\s+|const\s+enum\s+|abstract\s+class\s+|(?:interface|type|function|const|class|enum|namespace)\s+)(\w+)/gm
 
 interface Specifier {
   remote: string
@@ -80,7 +84,12 @@ function collectModules(rootFile: string): Map<string, string> {
     for (const specifier of relativeEdges(text)) queue.push(resolveModuleFile(file, specifier))
   }
   const rootDir = dirname(rootFile)
-  const byPath = (a: string, b: string): number => relative(rootDir, a).localeCompare(relative(rootDir, b))
+  // Code-point order, not localeCompare: the published file must not depend on the host locale.
+  const byPath = (a: string, b: string): number => {
+    const left = relative(rootDir, a)
+    const right = relative(rootDir, b)
+    return left < right ? -1 : left > right ? 1 : 0
+  }
   return new Map([...modules].sort(([a], [b]) => byPath(a, b)))
 }
 
@@ -90,10 +99,20 @@ function namespaceName(rootDir: string, file: string): string {
   return `__rust_tasty_${parts.join('_').replace(/[^A-Za-z0-9_]/g, '_')}`
 }
 
-function assertSupported(text: string): void {
-  const unsupported = UNSUPPORTED_EXPORT.exec(text)
+function assertSupported(original: string, flattened: string): void {
+  const unsupported = UNSUPPORTED_AMBIENT.exec(original) ?? UNSUPPORTED_EXPORT.exec(flattened)
   if (unsupported !== null) {
-    throw new Error(`reference-types-tasty: unsupported export form "${unsupported[0]}" in a rust tasty module`)
+    throw new Error(`reference-types-tasty: unsupported form "${unsupported[0]}" in a rust tasty module`)
+  }
+}
+
+// A name the entry imports must be exported by the namespace it is aliased from,
+// otherwise the alias would publish as a dangling reference.
+function assertExported(block: string, namespace: string, names: string[]): void {
+  const exported = new Set([...block.matchAll(EXPORTED_NAME)].map((match) => match[1]))
+  const missing = names.filter((name) => !exported.has(name))
+  if (missing.length > 0) {
+    throw new Error(`reference-types-tasty: rust tasty no longer exports ${missing.join(', ')} (from ${namespace})`)
   }
 }
 
@@ -119,7 +138,7 @@ export function transformRustTastyModule(
   })
   const inlined = aliased.replace(INLINE_IMPORT, (_match, _quote: string, specifier: string) => targetOf(specifier))
   const ambient = inlined.replace(/^export declare /gm, 'export ').replace(/^declare /gm, '')
-  assertSupported(ambient)
+  assertSupported(text, ambient)
   return `declare namespace ${namespace} {\n${ambient}\n}\n`
 }
 
@@ -145,13 +164,16 @@ export function inlineRustTastyTypes(entrySource: string): string {
     if (namespace === undefined) throw new Error(`reference-types-tasty: ${file} is outside the rust tasty closure`)
     return namespace
   }
-  const blocks = [...modules].map(([file, text]) =>
-    transformRustTastyModule(text, namespaceOf(file), (specifier) => namespaceOf(resolveModuleFile(file, specifier))),
+  const blocks = new Map(
+    [...modules].map(([file, text]) => [
+      file,
+      transformRustTastyModule(text, namespaceOf(file), (specifier) => namespaceOf(resolveModuleFile(file, specifier))),
+    ]),
   )
-  const aliases = parseSpecifiers(entry[1] as string).map(
-    ({ remote, local }) => `import ${local} = ${namespaceOf(root)}.${remote};`,
-  )
-  const inlined = `${blocks.join('\n')}\n${aliases.join('\n')}\n`
+  const imported = parseSpecifiers(entry[1] as string)
+  assertExported(blocks.get(root) as string, namespaceOf(root), imported.map(({ remote }) => remote))
+  const aliases = imported.map(({ remote, local }) => `import ${local} = ${namespaceOf(root)}.${remote};`)
+  const inlined = `${[...blocks.values()].join('\n')}\n${aliases.join('\n')}\n`
   const output = entrySource.replace(entry[0], () => inlined)
   if (RUST_SPECIFIER_LEFT.test(output)) throw new Error('reference-types-tasty: output still imports @reference-ui/rust')
   if (RELATIVE_SPECIFIER_LEFT.test(output)) throw new Error('reference-types-tasty: output still has a relative module specifier')

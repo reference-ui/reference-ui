@@ -63,18 +63,36 @@ describe('transformRustTastyModule', () => {
 
   it('refuses a default export it cannot place in a namespace', () => {
     expect(() => transformRustTastyModule('export default Thing;', '__ns', sampleNamespace)).toThrow(
-      /unsupported export form/,
+      /unsupported form/,
     )
   })
 
   it('refuses a local export list it would have to rewrite by hand', () => {
     expect(() => transformRustTastyModule('const Local = 1;\nexport { Local };', '__ns', sampleNamespace)).toThrow(
-      /unsupported export form/,
+      /unsupported form/,
+    )
+  })
+})
+
+describe('transformRustTastyModule, ambient augmentations', () => {
+  it.each(["declare module 'x' {}", 'declare global {}'])('refuses %s, which a namespace cannot hold', (source) => {
+    expect(() => transformRustTastyModule(`export {};\n${source}`, '__ns', sampleNamespace)).toThrow(
+      /unsupported form/,
     )
   })
 })
 
 describe('inlineRustTastyTypes', () => {
+  it('fails when the entry imports a name rust tasty does not export', () => {
+    const entry = "import type { TastySymbol, NoSuchTastyName } from '@reference-ui/rust/tasty'\nexport {}\n"
+    expect(() => inlineRustTastyTypes(entry)).toThrow(/no longer exports NoSuchTastyName/)
+  })
+
+  it('is deterministic across runs', () => {
+    const source = readFileSync(ENTRY_SOURCE, 'utf-8')
+    expect(inlineRustTastyTypes(source)).toBe(inlineRustTastyTypes(source))
+  })
+
   const output = inlineRustTastyTypes(readFileSync(ENTRY_SOURCE, 'utf-8'))
 
   it('leaves no rust or relative module specifier in the published declarations', () => {
