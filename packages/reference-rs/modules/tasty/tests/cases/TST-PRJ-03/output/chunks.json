@@ -1,0 +1,13 @@
+{
+  "modules": [
+    "./chunk-registry.js",
+    "./chunks/_1356cfd0674ed075.js",
+    "./chunks/_d7b3b9083227bb29.js",
+    "./manifest.js",
+    "./runtime.js"
+  ],
+  "declarations": [
+    "./manifest.d.ts",
+    "./runtime.d.ts"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "modules": [
+    "./chunk-registry.js",
+    "./chunks/_06726fe840489193.js",
+    "./chunks/_0f9ff5653a35966d.js",
+    "./chunks/_1c66aebbfd74bb93.js",
+    "./chunks/_34511f757739f2e5.js",
+    "./chunks/_6f1bdb4166f35b1e.js",
+    "./chunks/_7a131b0ca6aeda99.js",
+    "./chunks/_83ed51d936a90dd9.js",
+    "./chunks/_9a994a0c071f8c70.js",
+    "./manifest.js",
+    "./runtime.js"
+  ],
+  "declarations": [
+    "./manifest.d.ts",
+    "./runtime.d.ts"
+  ]
+}

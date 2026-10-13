@@ -10,7 +10,7 @@ Tasty is structured as a self-contained module containing its Rust compiler, Jav
 
 - **Rust Domain Core (`tasty/src/`)**: High-performance AST analysis and type extraction engine built on OXC. Owns symbol extraction, type lowering, member discovery, JSDoc comment extraction, and multi-chunk ESM emission.
 - **JavaScript Runtime (`tasty/js/`)**: Developer-facing API (`@reference-ui/rust/tasty`) that lazily loads emitted chunk modules on demand, provides graph navigation, and evaluates bounded object-like member projections (`projectObjectLikeMembers`, `getDisplayMembers`).
-- **Test Suite (`tasty/tests/`)**: Isolated TypeScript test projects. In Tasty, suite setup emits chunk modules into `output/`, and `api.test.ts` asserts intent and property surface guarantees.
+- **Test Suite (`tasty/tests/`)**: Station cases under `tests/cases/<ID>/`, each named by its raw station id (e.g. `TST-AUD-01`). `spec.ts` is the station specification, `input/` is the TypeScript project Tasty scans, and `output/` holds the committed goldens (`manifest.js`, `chunks.json`). Vitest entries live in `tests/suites/` and shared helpers in `tests/harness/`.
 
 ## Key Invariants
 

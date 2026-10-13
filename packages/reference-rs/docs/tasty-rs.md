@@ -53,6 +53,6 @@ Rust-owned types in `src/tasty/emitted/` use **`ts-rs`** to export TypeScript de
 ## Tests
 
 - `cargo test` — Rust unit tests (scanner, lowering, etc.).
-- Fixture outputs under `tests/tasty/cases/` — emitted bundles and Vitest tests that assert shape and runtime behavior.
+- Station fixtures under `modules/tasty/tests/cases/` — inputs, `spec.ts` specs, and committed `output/` goldens that the Vitest station runner asserts.
 
 For the JavaScript-facing runtime (loaders, `TastyApi`, graph helpers), see [tasty-js.md](./tasty-js.md).

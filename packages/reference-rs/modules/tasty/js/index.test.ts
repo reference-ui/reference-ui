@@ -14,7 +14,7 @@ import {
   createTastyBrowserRuntime,
 } from './index'
 import type { RawTastyManifest } from './api-types'
-import { caseRuntimeDir, ensureTastyCaseCompiled } from '../tests/helpers.js'
+import { caseRuntimeDir, ensureTastyCaseCompiled } from '../tests/harness/helpers.js'
 
 function manifestPath(caseName: string) {
   return join(caseRuntimeDir(caseName), 'manifest.js')
@@ -33,14 +33,14 @@ function toImportSpecifier(artifactPath: string): string {
 describe('tasty runtime', () => {
   beforeAll(async () => {
     await Promise.all([
-      ensureTastyCaseCompiled('TST-EXT-01-external-libs'),
-      ensureTastyCaseCompiled('TST-PAR-01-default-params'),
-      ensureTastyCaseCompiled('TST-DOC-01-jsdoc'),
+      ensureTastyCaseCompiled('TST-EXT-01'),
+      ensureTastyCaseCompiled('TST-PAR-01'),
+      ensureTastyCaseCompiled('TST-DOC-01'),
     ])
   })
 
   it('emits manifest-plus-chunks artifacts without bundle.js', () => {
-    const outputDir = caseRuntimeDir('TST-EXT-01-external-libs')
+    const outputDir = caseRuntimeDir('TST-EXT-01')
     const manifest = join(outputDir, 'manifest.js')
     const runtime = join(outputDir, 'runtime.js')
     const chunkRegistry = join(outputDir, 'chunk-registry.js')
@@ -61,7 +61,7 @@ describe('tasty runtime', () => {
   it('loads only the manifest during ready()', async () => {
     const loads: string[] = []
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
       importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
@@ -76,12 +76,12 @@ describe('tasty runtime', () => {
 
   it('resolves chunk imports relative to the manifest path when created from a manifest object', async () => {
     const manifestModule = await import(
-      toImportSpecifier(manifestPath('TST-EXT-01-external-libs'))
+      toImportSpecifier(manifestPath('TST-EXT-01'))
     )
     const loads: string[] = []
     const api = createTastyApiFromManifest({
       manifest: manifestModule.default,
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
       importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
@@ -98,7 +98,7 @@ describe('tasty runtime', () => {
   it('creates a browser runtime from the generated runtime module', async () => {
     const runtime = createTastyBrowserRuntime({
       loadRuntimeModule: async () =>
-        import(toImportSpecifier(runtimePath('TST-EXT-01-external-libs'))),
+        import(toImportSpecifier(runtimePath('TST-EXT-01'))),
     })
 
     const api = await runtime.loadApi()
@@ -361,7 +361,7 @@ describe('tasty runtime', () => {
 
   it('keeps symbol wrapper identity stable across lookup paths', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
     })
 
     const byName = await api.loadSymbolByName('ButtonProps')
@@ -373,7 +373,7 @@ describe('tasty runtime', () => {
   it('does not import the same chunk twice', async () => {
     const loads: string[] = []
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
       importer: async artifactPath => {
         loads.push(artifactPath)
         return import(toImportSpecifier(artifactPath))
@@ -390,7 +390,7 @@ describe('tasty runtime', () => {
   it('retries chunk imports after a transient failure', async () => {
     let failNextChunkLoad = true
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
       importer: async artifactPath => {
         if (artifactPath.includes('/chunks/') && failNextChunkLoad) {
           failNextChunkLoad = false
@@ -443,7 +443,7 @@ describe('tasty runtime', () => {
           failNextLoad = false
           throw new Error('temporary runtime failure')
         }
-        return import(toImportSpecifier(runtimePath('TST-EXT-01-external-libs')))
+        return import(toImportSpecifier(runtimePath('TST-EXT-01')))
       },
     })
 
@@ -456,7 +456,7 @@ describe('tasty runtime', () => {
 
   it('loads extends symbols and flattens inherited members', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -473,7 +473,7 @@ describe('tasty runtime', () => {
 
   it('collects only user-owned immediate dependencies', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
@@ -1085,7 +1085,7 @@ describe('tasty runtime', () => {
 
   it('exposes type-alias helpers over the emitted definition shape', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-PAR-01-default-params'),
+      manifestPath: manifestPath('TST-PAR-01'),
     })
 
     const withDefault = await api.loadSymbolByName('WithDefault')
@@ -1101,7 +1101,7 @@ describe('tasty runtime', () => {
 
   it('supports simple symbol search over the loaded manifest', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-EXT-01-external-libs'),
+      manifestPath: manifestPath('TST-EXT-01'),
     })
 
     const results = await api.searchSymbols('button')
@@ -1111,7 +1111,7 @@ describe('tasty runtime', () => {
 
   it('exposes clean jsdoc and signature helpers for docs renderers', async () => {
     const api = createTastyApi({
-      manifestPath: manifestPath('TST-DOC-01-jsdoc'),
+      manifestPath: manifestPath('TST-DOC-01'),
     })
 
     const buttonProps = await api.loadSymbolByName('ButtonProps')
