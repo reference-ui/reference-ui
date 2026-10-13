@@ -3,11 +3,14 @@
 // new folder with no missing-file window. Identical bytes keep their mtime so
 // watchers see nothing, changed files flip by atomic rename, and stale
 // entries delete last. Preserved paths (the session lock, the tasty dir)
-// never commit and never delete, so the holder's mutex and the background
-// tasty writer survive every sync. Readers always see complete files, which
-// is what makes the folder bundler-friendly with no bundler plugin.
+// never commit and never delete, and a writer temp beside one survives too,
+// so the holder's mutex and the background tasty writer survive every sync;
+// temps a dead writer left behind sweep at commit. Readers always see
+// complete files, which is what makes the folder bundler-friendly with no
+// bundler plugin.
 
 import {
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -18,7 +21,8 @@ import {
   type Dirent,
   type Stats,
 } from 'node:fs'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, join, relative, resolve, sep } from 'node:path'
+import { pidAlive } from './session.ts'
 
 export interface CommitStats {
   committed: number
@@ -27,7 +31,11 @@ export interface CommitStats {
 }
 
 export interface CommitOptions {
-  /** Absolute paths that never commit and never delete (lock, tasty dir). */
+  /**
+   * Absolute paths that never commit and never delete (lock, tasty dir). A root
+   * also covers its sibling writer temps `<base>.tmp-*`; a dead writer's temps
+   * there sweep at commit, while a live writer's always stay.
+   */
   preserve?: string[]
 }
 
@@ -44,8 +52,16 @@ function isUnder(path: string, root: string): boolean {
   return path === root || path.startsWith(root + sep)
 }
 
+// A writer stages beside its root as `<base>.tmp-<pid>-<random>` (an older build
+// wrote `<base>.tmp-<random>`), then renames over the root: that temp is covered too.
+function writerTempPrefix(root: string): string {
+  return `${basename(root)}.tmp-`
+}
+
 function isPreserved(path: string, preserved: string[]): boolean {
-  return preserved.some((root) => isUnder(path, root))
+  return preserved.some(
+    (root) => isUnder(path, root) || path.startsWith(join(dirname(root), writerTempPrefix(root)))
+  )
 }
 
 // Every non-dir entry under the stage, recursive. Symlinks never resolve,
@@ -122,6 +138,59 @@ function removeStaleFiles(dir: string, plan: CommitPlan): number {
   return removed
 }
 
+// A writer's temp carries its pid after the base: `<pid>-<random>`. A name with
+// no leading pid is the legacy shape from an older writer build.
+function writerTempPid(rest: string): number | undefined {
+  const match = /^(\d+)-/.exec(rest)
+  return match === null ? undefined : Number(match[1])
+}
+
+// An older writer build may still own a pid-less temp: sweep only once it is this old.
+const LEGACY_TEMP_SWEEP_MS = 5 * 60_000
+
+// Stranded means no live writer owns it: a dead pid sweeps at once, a legacy name
+// only once old, and a live pid always stays (our own included). A failed stat
+// keeps the entry, since a live writer may have renamed it a moment ago.
+function isStrandedWriterTemp(entryPath: string, rest: string): boolean {
+  const pid = writerTempPid(rest)
+  if (pid !== undefined) return !pidAlive(pid)
+  try {
+    return Date.now() - lstatSync(entryPath).mtimeMs > LEGACY_TEMP_SWEEP_MS
+  } catch {
+    return false
+  }
+}
+
+// A missing dir holds nothing to sweep.
+function entryNames(dir: string): string[] {
+  try {
+    return readdirSync(dir)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return []
+    throw error
+  }
+}
+
+// The stranded writer temps beside one preserved root; each swept entry counts once.
+function sweepRootWriterTemps(root: string): number {
+  const parent = dirname(root)
+  const prefix = writerTempPrefix(root)
+  let swept = 0
+  for (const name of entryNames(parent)) {
+    if (!name.startsWith(prefix)) continue
+    const entryPath = join(parent, name)
+    if (!isStrandedWriterTemp(entryPath, name.slice(prefix.length))) continue
+    rmSync(entryPath, { recursive: true, force: true })
+    swept += 1
+  }
+  return swept
+}
+
+// Sweeps every preserved root's stranded writer temps and returns how many went.
+function sweepStrandedWriterTemps(preserved: string[]): number {
+  return preserved.reduce((total, root) => total + sweepRootWriterTemps(root), 0)
+}
+
 // Live dirs from the preserve roots up to (not including) the out dir.
 function preserveAncestors(outDir: string, preserved: string[]): Set<string> {
   const ancestors = new Set<string>()
@@ -193,7 +262,8 @@ export function commitStagedDir(
     preserveAncestors: preserveAncestors(liveRoot, preserved),
     stageRoot: stagingRoot,
   }
-  stats.removed = removeStaleFiles(liveRoot, plan)
+  stats.removed = sweepStrandedWriterTemps(preserved)
+  stats.removed += removeStaleFiles(liveRoot, plan)
   pruneEmptyDirs(liveRoot, plan, true)
   rmSync(stagingRoot, { recursive: true, force: true })
   return stats

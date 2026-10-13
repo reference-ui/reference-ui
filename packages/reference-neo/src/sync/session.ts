@@ -88,7 +88,7 @@ function errorCode(error: unknown): string | undefined {
 // Liveness without /proc: signal 0 probes existence, and EPERM (a process
 // we cannot signal) still counts as alive — the kill attempt then fails
 // loud instead of taking over a live holder blind.
-function pidAlive(pid: number): boolean {
+export function pidAlive(pid: number): boolean {
   try {
     process.kill(pid, 0)
     return true
