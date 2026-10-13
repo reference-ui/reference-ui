@@ -20,7 +20,13 @@ const SKIP_ENV = 'REF_PIPELINE_SKIP_DEPENDENCY_BUILDS'
 // tsc emits only src and bin; the project files and the build script decide
 // what that emit contains, so a change to any of them must refresh dist too.
 const INPUT_ROOTS = ['src', 'bin']
-const INPUT_FILES = ['tools/build-bin.mjs', 'tsconfig.build.json', 'tsconfig.json', 'package.json']
+const INPUT_FILES = [
+  'tools/build-bin.mjs',
+  'tools/rewrite-declaration-specifiers.mjs',
+  'tsconfig.build.json',
+  'tsconfig.json',
+  'package.json',
+]
 
 // Mirrors tsconfig.build.json: fixtures, tests, and the emit tree never reach
 // the bin, so touching them must not trigger a rebuild.

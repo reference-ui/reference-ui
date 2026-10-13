@@ -2,7 +2,8 @@
 // type-strip bin/ref.ts under node_modules). It runs tsc over the build
 // tsconfig, asserts the alias-literal set is exactly the known one, then
 // lays the esbuild-entry twins plus the runtime-read declaration asset
-// beside the emit and makes the bin executable. Run from the Neo package
+// beside the emit, repoints the emitted declarations at shipped files
+// (guarded), and makes the bin executable. Run from the Neo package
 // directory: node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
@@ -10,6 +11,11 @@ import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  declarationSpecifierProblems,
+  exportTypeProblems,
+  rewriteDeclarationSpecifiers,
+} from './rewrite-declaration-specifiers.mjs'
 
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
 const DIST = join(PKG, 'dist')
@@ -121,6 +127,21 @@ function layTwinsAndAssets() {
   }
 }
 
+// tsc keeps the `.ts` names in declarations, so they are repointed at the emitted `.js` names. Then the
+// guards fail the build on any shipped declaration whose specifier names no shipped file, or on any export
+// TypeScript would read from a `.ts` twin without a `types` condition.
+function shipDeclarations() {
+  const rewrite = rewriteDeclarationSpecifiers({ pkgDir: PKG })
+  console.log(
+    `[ref build] repointed ${rewrite.rewritten} declaration specifiers in ${rewrite.filesChanged} of ${rewrite.files} .d.ts files`
+  )
+  const problems = [
+    ...declarationSpecifierProblems({ pkgDir: PKG }),
+    ...exportTypeProblems({ pkgDir: PKG }),
+  ]
+  if (problems.length > 0) fail(`declaration guard failed:\n  ${problems.join('\n  ')}`)
+}
+
 function finishBin() {
   const bin = join(DIST, 'bin', 'ref.js')
   if (!existsSync(bin)) fail('missing dist/bin/ref.js after emit')
@@ -144,5 +165,6 @@ rmSync(DIST, { force: true, recursive: true })
 runTsc()
 assertLiteralSet()
 layTwinsAndAssets()
+shipDeclarations()
 finishBin()
 console.log(`[ref build] dist ready: ${countFiles(DIST)} files, bin dist/bin/ref.js`)

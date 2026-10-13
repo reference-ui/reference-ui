@@ -20,7 +20,9 @@
     "rootDir": ".",
     // Paired with allowImportingTsExtensions (base): rewrites relative
     // .ts/.tsx imports to their .js/.jsx emit names. Every packed byte
-    // loads under Node 24 with no type stripping.
+    // loads under Node 24 with no type stripping. Declarations are not
+    // covered (tsc 7.0 keeps the .ts names in .d.ts); the build repoints
+    // them with tools/rewrite-declaration-specifiers.mjs after emit.
     "rewriteRelativeImportExtensions": true
   },
   "include": ["src", "bin"],

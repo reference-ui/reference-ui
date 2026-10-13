@@ -13,8 +13,14 @@
     "node": ">=22.18.0"
   },
   "exports": {
-    ".": "./dist/src/index.js",
-    "./runtime": "./dist/src/runtime/index.js",
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/src/runtime/index.d.ts",
+      "default": "./dist/src/runtime/index.js"
+    },
     "./package.json": "./package.json"
   },
   "bin": {
