@@ -1,0 +1,229 @@
+---
+title: Colour
+section: Components
+order: 4
+slug: colour
+---
+
+import { ColorComposition } from './color-composition'
+import { IntensityGrid, RoleCases, RoleSpecimens, ShadesAndTones } from './colour-sections'
+import { ComplementaryCards, RelationshipGrid } from './colour-relationships'
+
+# Colour
+
+A colour in use is a shade at a strength. The [palette](/palette) gives you the
+shades. This page covers the strength, the role a colour plays, and how colours
+combine.
+
+## Shades and tones
+
+A **shade** is one fixed step of a ramp, such as `blue.500`. A **tone** is a
+colour at a named opacity: `blue.500/medium` is blue at the medium strength. The
+part after the slash names the amount. Reference UI ships four tones, `ghost`,
+`medium`, `firm` and `strong`, and each one holds two amounts: a surface and a
+line.
+
+<ShadesAndTones />
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+// A shade: the solid step.
+<Div bg="blue.500" />
+
+// A tone: the same colour at the medium strength.
+<Div bg="blue.500/medium" />
+```
+
+### Why tones matter
+
+- **One colour, every strength.** A tone gives a range of tints from a single
+  ramp step, so you never need a separate palette step for each lightness.
+- **They take on what is behind them.** A tone mixes its colour with
+  transparency, so `blue.500/medium` is a pale wash on a light page and a dim
+  glow on a dark one, with no per-mode value.
+- **They are retuned in one place.** Each amount is a CSS custom property, such
+  as `--tones-medium-surface`. A theme, or a dark scope, can change a strength
+  without touching a component.
+
+## Roles
+
+A tone draws one of two amounts, and the property you set decides which one.
+
+- **Surface** is the amount for areas: backgrounds and fills. It is the lighter
+  of the two.
+- **Line** is the stronger amount for edges and marks, so they stay visible at a
+  low opacity: borders, outlines, strokes, shadows, rules and text.
+
+| Amount | Props (examples) | Default range |
+| --- | --- | --- |
+| Surface | `bg`, `background`, `fill`, `accentColor`, and any prop not in the line column | 4% to 18% |
+| Line | `borderColor`, `border*`, `outline*`, `color`, `stroke`, `boxShadow`, `textDecorationColor`, `caretColor`, rule colours | 22% to 58% |
+
+<RoleSpecimens />
+
+```tsx
+import { Div, Span } from '@reference-ui/react'
+
+// Surface: bg takes the 18% amount.
+<Div bg="blue.500/strong" />
+
+// Line: borderColor takes the 58% amount.
+<Div borderWidth="2px" borderStyle="solid" borderColor="blue.500/strong" />
+
+// Line: text takes the 58% amount too.
+<Span color="blue.500/strong">Accent label</Span>
+```
+
+The same tone reads differently by role. Here `strong` is 18% as a background
+and 58% as a border or as text. Text takes the line amount, so use a shade, such
+as `blue.700`, for body copy and keep tones for accents.
+
+A numeric suffix such as `blue.500/50` still works for a one-off opacity. Prefer
+a tone, so a theme can retune every use at once.
+
+## Intensity
+
+Four strengths, from the faintest wash to the most emphatic. Each tile shows its
+surface amount in the fill and its line amount on the edge, once on a light page
+and once on a dark one.
+
+<IntensityGrid />
+
+```tsx
+import { Div, css } from '@reference-ui/react'
+
+const firm = css({ bg: 'blue.500/firm', borderColor: 'blue.500/firm' })
+
+<Div colorMode="dark" bg="docsPageBg">
+  <Div className={firm} height="12r" borderWidth="1px" borderStyle="solid" />
+</Div>
+```
+
+Start at `medium`. Move up when a surface has to be found, and move down when it
+competes with the content around it.
+
+## Composition
+
+A colour is a shade and its tones. Base is the shade at full strength; medium and
+strong are the same shade at a tone. The same tone paints a background, a border,
+a graph fill or a foreground, and only the role and the strength change.
+
+<ColorComposition />
+
+Each step is one class that sets two props. `bg` takes the surface amount and
+`borderColor` takes the line amount, so a single tone gives a tint and a matching
+edge.
+
+```tsx
+import { css } from '@reference-ui/react'
+
+const surfaceMedium = css({
+  bg: 'blue.500/medium',
+  borderColor: 'blue.500/medium',
+})
+```
+
+## Role, not just strength
+
+Strength is only a fraction. The job decides which strength fits, so the same
+blue can be a resting surface, a selection, a data fill or an accent edge.
+
+| Role | Medium | Strong |
+| --- | --- | --- |
+| Backgrounds | A quiet tinted surface | A selected or emphasised surface |
+| Borders | A faint outline | A soft accent outline |
+| Hover states | A gentle wash | A clearer highlight |
+| Shadows and glows | Ambient colour | A stronger glow |
+| Graph fills | A light area under a line | An emphasised data region |
+| Overlays | A light wash over content | A stronger overlay |
+| Text | Too faint for copy | An accent label, never body copy |
+| Icons | Too faint | Only an accent icon |
+
+<RoleCases />
+
+```tsx
+import { css } from '@reference-ui/react'
+
+const selected = css({ bg: 'blue.500/strong', borderColor: 'blue.500/strong' })
+const graphFill = css({ fill: 'blue.500/medium' })
+const accentEdge = css({ borderColor: 'blue.500/strong' })
+```
+
+## Complementary accents
+
+Start from a blue surface. Keep most of the foreground blue, and give the one
+thing that should stand out an accent from the far side of the wheel.
+
+<ComplementaryCards />
+
+Amber sits almost opposite blue, so the pair reads as warm against cool. Use the
+accent sparingly: one marker or one meter, not every element.
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div
+  bg="blue.500/medium"
+  borderColor="blue.500/medium"
+  borderWidth="1px"
+  borderStyle="solid"
+>
+  <Div bg="amber.500" width="3r" height="3r" borderRadius="full" />
+</Div>
+```
+
+## The four relationships
+
+Four ways to pair an accent with a blue surface. Each one places the accent at a
+specific point on the wheel, relative to blue.
+
+<RelationshipGrid />
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div bg="blue.500/medium">
+  <Div bg="blue.400" />   {/* the source hue */}
+  <Div bg="amber.500" />  {/* the complementary target */}
+</Div>
+```
+
+## Enforcing tokens
+
+Open mode, the default, accepts any colour. Strict mode narrows colour props to
+your tokens. Turn it on in `ui.config.ts`:
+
+```ts
+import { defineConfig } from '@reference-ui/neo'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  strict: ['colors'],
+})
+```
+
+`strict` takes any of `'colors'`, `'radii'` and `'spacing'`, and each one narrows
+the props in its category to that category's tokens. Any other value fails config
+validation.
+
+With `colors` on, colour props accept only a colour token (`blue.500`), a tone
+(`blue.500/medium`), or one of the keywords `white`, `black`, `inherit`,
+`currentColor` and `transparent`. Non-colour props stay open. The check covers
+your own code: JSX elements, `css()` and the `css` prop.
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+// Accepted: a colour token, a tone, or a keyword.
+<Div bg="blue.500/medium" color="currentColor" />
+
+// Rejected: a raw opacity, a hex value or an unknown name.
+// TS2322: "blue.500/50" is not assignable to a colour token or tone.
+<Div bg="blue.500/50" />
+```
+
+Leaving `strict` out keeps open mode, where raw opacity such as `blue.500/50` and
+any CSS colour still work. That is the escape hatch. The check runs at type level,
+so it shows up in your editor and in `tsc`.

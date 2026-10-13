@@ -1,12 +1,12 @@
 import { Div, Span, css } from '@reference-ui/react'
 
 /**
- * Colour composition: a colour is a base plus its tints, mixed over one neutral
- * face. Base is the pure family step; a tint is that step at a low percentage
- * `color-mix`ed over the panel, so the neutral always shows through. The same
- * mix paints a background, a border, a graph fill, or a foreground — only the
- * role and the amount change. Blue stands in for every family; the tokens are
- * the real palette.
+ * Colour composition: one shade at a strength, in three steps. Base is the shade
+ * itself. Medium and strong are the same shade at a named tone, which mixes it
+ * with whatever sits beneath, so one class paints a tinted panel on light or on
+ * dark. A tone draws its surface amount in a background and its line amount in
+ * a border; only the property and the strength change. Blue stands in for every
+ * family; the tokens are the real palette.
  */
 
 const face = css({
@@ -19,6 +19,7 @@ const face = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '5r',
+  marginBottom: '4r',
 })
 
 const swatchRow = css({ display: 'flex', gap: '3r', flexWrap: 'wrap' })
@@ -38,20 +39,13 @@ const swatchFill = css({
   borderStyle: 'solid',
 })
 
-/* The recipe: base is the step at full strength; a tint is the same step at a
- * low percentage over the face. Every class owns bg + borderColor only, so any
- * shape can wear it. */
+/* The recipe: base is the shade at full strength; a tint is the same shade at a
+ * tone. Every class owns bg + borderColor only, so any shape can wear it. */
 const surfaceBase = css({ bg: 'blue.500', borderColor: 'blue.500' })
 
-const surfaceMedium = css({
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 10%, var(--colors-docs-panel-bg))',
-  borderColor: 'color-mix(in oklab, var(--colors-blue-500) 30%, var(--colors-docs-border))',
-})
+const surfaceMedium = css({ bg: 'blue.500/medium', borderColor: 'blue.500/medium' })
 
-const surfaceStrong = css({
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 18%, var(--colors-docs-panel-bg))',
-  borderColor: 'color-mix(in oklab, var(--colors-blue-500) 46%, var(--colors-docs-border))',
-})
+const surfaceStrong = css({ bg: 'blue.500/strong', borderColor: 'blue.500/strong' })
 
 const swatchName = css({
   fontSize: '4r',
@@ -86,11 +80,7 @@ const appliedTitle = css({
 
 const appliedSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
 
-const meter = css({
-  height: '2r',
-  borderRadius: 'full',
-  bg: 'color-mix(in oklab, var(--colors-blue-500) 16%, var(--colors-docs-panel-bg))',
-})
+const meter = css({ height: '2r', borderRadius: 'full', bg: 'blue.500/firm' })
 
 const meterFill = css({ height: '2r', width: '62%', borderRadius: 'full', bg: 'blue.500' })
 
@@ -108,9 +98,9 @@ export function ColorComposition() {
   return (
     <Div className={face}>
       <Div className={swatchRow}>
-        <Swatch name="Base" meta="blue.500 · 100%" surface={surfaceBase} />
-        <Swatch name="Medium" meta="blue.500 · 10%" surface={surfaceMedium} />
-        <Swatch name="Strong" meta="blue.500 · 18%" surface={surfaceStrong} />
+        <Swatch name="Base" meta="blue.500" surface={surfaceBase} />
+        <Swatch name="Medium" meta="blue.500/medium" surface={surfaceMedium} />
+        <Swatch name="Strong" meta="blue.500/strong" surface={surfaceStrong} />
       </Div>
 
       <Div className={`${appliedCard} ${surfaceMedium}`}>
@@ -118,7 +108,7 @@ export function ColorComposition() {
           <Div className={appliedDot} />
           <Span className={appliedTitle}>Tinted surface</Span>
         </Div>
-        <Span className={appliedSub}>Background 10% · hairline 30% · fill 100%</Span>
+        <Span className={appliedSub}>Background medium · border medium · fill base</Span>
         <Div className={meter}>
           <Div className={meterFill} />
         </Div>

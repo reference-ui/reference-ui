@@ -1,0 +1,41 @@
+---
+title: Palette
+section: Components
+order: 3
+slug: palette
+---
+
+import { PaletteDemo } from './palette-demo'
+
+# Palette
+
+The palette is the raw material: one ramp per colour family, from `50` (the
+lightest step) to `950` (the darkest). Each step is a shade, a fixed colour you
+can name in any prop that takes a colour. When you need a colour at a strength
+rather than a fixed step, reach for a [tone](/colour).
+
+## Neutrals
+
+Slate and gray are the neutrals. Use them for surfaces, rules and body text, so
+the page stays quiet while the hues carry the meaning.
+
+<PaletteDemo group="neutrals" />
+
+## Hues
+
+Seventeen families, from red through rose. Each one is a full ramp, so a hue has
+a step for every lightness a surface or a label could need.
+
+<PaletteDemo group="hues" />
+
+## In use
+
+Name a shade by its family and step. The same name works in every colour prop.
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div bg="blue.100" borderColor="blue.300">
+  <P color="blue.900">A light blue surface with a deep blue label.</P>
+</Div>
+```
