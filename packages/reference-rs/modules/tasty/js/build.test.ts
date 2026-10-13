@@ -3,7 +3,7 @@
  * Contains JS API logic and types.
  */
 import { once } from 'node:events'
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -202,6 +202,38 @@ describe('buildTasty', () => {
       expect(first).not.toBe(second)
       expect(firstSymbol.getMembers()[0]?.getType()?.describe()).toBe('string')
       expect(secondSymbol.getMembers()[0]?.getType()?.describe()).toBe('number')
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('a rebuild requested during an in-flight build reflects the later source', async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), 'reference-ui-tasty-inflight-'))
+    const rootDir = join(tempRoot, 'workspace')
+    const sourceDir = join(rootDir, 'src')
+    const outputDir = join(tempRoot, 'tasty-output')
+    const configPath = join(sourceDir, 'config.ts')
+    const options = { rootDir, include: ['src/**/*.{ts,tsx}'], outputDir }
+    const session = createTastyBuildSession()
+
+    try {
+      await mkdir(sourceDir, { recursive: true })
+      await writeFile(configPath, 'export interface BuildConfig {\n  value: string\n}\n', 'utf-8')
+
+      // A build scans its sources synchronously on call, so the first build reads `string`.
+      // The edit and the second request land while it is still in flight, with no
+      // event-loop turn between them. The first build's api reads the shared output dir
+      // lazily, so only the latest build's symbol is checked.
+      const first = session.rebuild('fixture', options)
+      writeFileSync(configPath, 'export interface BuildConfig {\n  value: number\n}\n', 'utf-8')
+      const second = session.rebuild('fixture', options)
+
+      const [firstBuilt, latest] = await Promise.all([first, second])
+      const latestSymbol = await latest.api.loadSymbolByName('BuildConfig')
+
+      expect(latestSymbol.getMembers()[0]?.getType()?.describe()).toBe('number')
+      expect(latest).not.toBe(firstBuilt)
+      expect(session.get('fixture')).toBe(latest)
     } finally {
       await rm(tempRoot, { recursive: true, force: true })
     }

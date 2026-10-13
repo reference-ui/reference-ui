@@ -113,21 +113,34 @@ class TastyBuildSessionImpl implements TastyBuildSession {
     return cached
   }
 
+  /**
+   * A request never joins a build already in flight: that scan may predate the
+   * request. It queues behind the in-flight run and scans fresh, so builds for one
+   * key never overlap and the latest request's sources win. An idle key scans at once.
+   */
   async rebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty> {
-    const existing = this.rebuildsByKey.get(key)
-    if (existing) return existing
-
-    const rebuild = buildTasty(options)
-      .then(built => {
-        this.buildsByKey.set(key, built)
-        return built
-      })
-      .finally(() => {
-        this.rebuildsByKey.delete(key)
-      })
+    const inFlight = this.rebuildsByKey.get(key)
+    const rebuild = inFlight
+      ? inFlight.then(
+          () => this.buildAndCache(key, options),
+          () => this.buildAndCache(key, options)
+        )
+      : this.buildAndCache(key, options)
 
     this.rebuildsByKey.set(key, rebuild)
+    const release = (): void => {
+      // A newer request may have replaced this run as the key's latest: keep its entry.
+      if (this.rebuildsByKey.get(key) === rebuild) this.rebuildsByKey.delete(key)
+    }
+    rebuild.then(release, release)
     return rebuild
+  }
+
+  private buildAndCache(key: string, options: BuildTastyOptions): Promise<BuiltTasty> {
+    return buildTasty(options).then(built => {
+      this.buildsByKey.set(key, built)
+      return built
+    })
   }
 
   async getOrRebuild(key: string, options: BuildTastyOptions): Promise<BuiltTasty> {
