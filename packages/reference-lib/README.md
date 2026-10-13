@@ -36,6 +36,21 @@ Notes:
   component barrel instead evaluates ~3,900 icon modules (~1.5 s) on every
   `ref sync` startup.
 
+## Your tokens on lib props
+
+Run `ref sync` in your app and lib's style props take your token types. `strict` in
+`ui.config.ts` decides how narrow they are: name the categories you want enforced (`colors`,
+`radii`, `spacing`) and a value outside their tokens fails to type-check on a lib component, as it
+does in your own JSX. Leave `strict` out and lib props stay open. Run sync again after you install
+or upgrade lib.
+
+Sync's types reach your program through `@reference-ui/react`. An app that never imports it adds
+this line to its `env.d.ts`, or its lib props stay open:
+
+```ts
+/// <reference types="@reference-ui/react" />
+```
+
 ## Bundle & code-splitting
 
 The package ships one JS entry (`dist/index.mjs`, ~3.6MB uncompressed at 0.0.46 —
