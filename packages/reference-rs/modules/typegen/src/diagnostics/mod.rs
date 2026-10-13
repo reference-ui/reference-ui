@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn constructors_emit_warnings_with_stable_codes() {
         let rows = [
-            unknown_token_category("animations", 3).unwrap(),
+            unknown_token_category("durations", 3).unwrap(),
             invalid_recipe_name("123").unwrap(),
             empty_recipe("card").unwrap(),
             empty_recipe_axis("button", "size").unwrap(),
@@ -201,10 +201,10 @@ mod tests {
             assert!(diagnostic.file.is_none());
             assert!(!diagnostic.message.trim().is_empty());
         }
-        assert!(rows[0].message.contains("`animations`"));
+        assert!(rows[0].message.contains("`durations`"));
         assert!(rows[4].message.contains("`tone=nope`"));
         let helps = [
-            "move the 3 token(s) from `animations` into a printed category",
+            "move the 3 token(s) from `durations` into a printed category",
             "rename `123` so it forms a TypeScript type name",
             "fill in variant axes for `card` or drop the recipe",
             "fill in axis `size` of `button` or drop the axis",
@@ -239,7 +239,7 @@ mod tests {
             !near.help.as_ref().unwrap().join(" ").contains("did you mean"),
             "{near:?}"
         );
-        let far = unknown_token_category("animations", 3).unwrap();
+        let far = unknown_token_category("durations", 3).unwrap();
         assert!(!far.message.contains("did you mean"), "{far:?}");
     }
 
@@ -247,10 +247,10 @@ mod tests {
     fn every_warning_pins_its_exact_wire_bytes() {
         let cases = [
             (
-                unknown_token_category("animations", 3).unwrap(),
+                unknown_token_category("durations", 3).unwrap(),
                 "{\"severity\":\"warning\",\"code\":\"TGN-W-UNKNOWN-TOKEN-CATEGORY\",\
-                 \"message\":\"token category `animations` has no printed union; omitting 3 token(s)\",\
-                 \"help\":[\"move the 3 token(s) from `animations` into a printed category\"]}",
+                 \"message\":\"token category `durations` has no printed union; omitting 3 token(s)\",\
+                 \"help\":[\"move the 3 token(s) from `durations` into a printed category\"]}",
             ),
             (
                 invalid_recipe_name("123").unwrap(),

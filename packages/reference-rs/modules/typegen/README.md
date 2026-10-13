@@ -41,7 +41,11 @@ recursive `r`, and recursive `SystemStyleObject` (condition keys plus
 category. Font-less StyleProps still emit `FontRegistry {}` so
 `[FontName] extends [never]` falls back to `StylePropValue<string>` instead of
 `never`. Empty token and recipe categories are **omitted** rather than printed
-as `never`. An empty system emits an empty string — still no `styled.div`.
+as `never`. A populated `animations` category prints `AnimationToken` (token
+paths such as `spin.slow`), and the `animation` shorthand takes it in both
+modes, since animations are not a strict category; `animationName` stays open
+for keyframe names, and without animations tokens `animation` stays open too.
+An empty system emits an empty string — still no `styled.div`.
 
 `emit_dts` is always open-mode: token props keep `Token | (string & {})`.
 `emit_dts_with(system, &EmitOptions { strict })` narrows `StyleProps` with

@@ -48,6 +48,8 @@ describe('typegen vocabulary seam', () => {
     expect(vocab.domains['mt']).toBe('spacing')
     expect(vocab.domains['container']).toBe('container')
     expect(vocab.domains['r']).toBe('rhythm')
+    expect(vocab.domains['animation']).toBe('animation')
+    expect(vocab.domains['animationName']).toBe('open')
     expect(vocab.domains['display']).toBe('open')
     expect(Object.keys(vocab.domains).sort()).toEqual(vocab.props)
 

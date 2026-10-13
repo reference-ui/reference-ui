@@ -275,7 +275,7 @@ const TYPEGEN_REPRO_ROWS: TypegenReproRow[] = [
   {
     code: 'TGN-W-UNKNOWN-TOKEN-CATEGORY',
     spec: typegenSpec({
-      tokens: { animations: { spin: { value: 'spin 1s linear infinite' } } },
+      tokens: { durations: { slow: { value: '4s' } } },
     }),
   },
   {

@@ -5,8 +5,9 @@
 //! `variant`/`colorMode`): keys follow the compiler, values follow the token
 //! spec. Color, spacing, and radius keys keep their token unions with the
 //! `(string & {})` hatch; color values also carry `TonedColorToken` so
-//! `bg="blue.500/medium"` typechecks; every other key takes
-//! `StylePropValue<string | number>`, and a `` `--${string}` `` index covers
+//! `bg="blue.500/medium"` typechecks. `animation` takes `AnimationToken` only
+//! when the animations category prints, otherwise it and every other key take
+//! `StylePropValue<string | number>`; a `` `--${string}` `` index covers
 //! custom properties. Raw CSS `font` and `weight` stay omitted (`FontProps`
 //! owns them); strict wrappers emit only for token-present categories, and
 //! the wrappers themselves live in `strict.rs`. In strict mode the open object
@@ -28,6 +29,7 @@ const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 // Names `StyleProps` on purpose: in strict mode that alias is the wrapped export.
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
 const OPEN_VALUE: &str = "StylePropValue<string | number>";
+const ANIMATION_VALUE: &str = "StylePropValue<AnimationToken | (string & {})>";
 const PROP_VALUE: &str =
     "export type StylePropValue<T> = T | Array<T | null> | { [K in StyleConditionKey]?: T };\n";
 
@@ -39,13 +41,21 @@ pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String 
     let keys = strict_keys(defs.props());
     let present = present_strict(system, &options.strict);
     let active = strict::normalize(&present, &keys);
+    // `AnimationToken` prints only for a populated animations category (tokens.rs),
+    // so `animation` may name it only then; an absent alias would be undefined.
+    let animations = has_category(system, "animations");
     let mut out = String::new();
     push_condition_key(&mut out, &defs.condition_keys(system));
     out.push('\n');
     out.push_str(PROP_VALUE);
     out.push('\n');
     out.push_str(fonts::font_props());
-    push_props_type(&mut out, defs.props(), strict::printed_props_name(&active));
+    push_props_type(
+        &mut out,
+        defs.props(),
+        strict::printed_props_name(&active),
+        animations,
+    );
     out.push('\n');
     strict::push_system_style_object(&mut out, &active, &keys);
     out
@@ -88,7 +98,12 @@ fn push_condition_key(out: &mut String, keys: &BTreeSet<String>) {
     out.push_str(";\n");
 }
 
-fn push_props_type(out: &mut String, props: &BTreeMap<&'static str, PropKind>, name: &str) {
+fn push_props_type(
+    out: &mut String,
+    props: &BTreeMap<&'static str, PropKind>,
+    name: &str,
+    animations: bool,
+) {
     out.push('\n');
     out.push_str("export type ");
     out.push_str(name);
@@ -103,19 +118,36 @@ fn push_props_type(out: &mut String, props: &BTreeMap<&'static str, PropKind>, n
         out.push_str("  ");
         push_prop_name(out, name);
         out.push_str("?: ");
-        out.push_str(value_for(kind));
+        out.push_str(value_for(kind, animations));
         out.push_str(";\n");
     }
     out.push_str("};\n");
 }
 
-fn value_for(kind: &PropKind) -> &'static str {
+fn value_for(kind: &PropKind, animations: bool) -> &'static str {
     match kind {
         PropKind::Color => COLOR_VALUE,
         PropKind::Spacing => SPACING_VALUE,
         PropKind::Radius => RADIUS_VALUE,
+        PropKind::Animation => animation_value(animations),
+        PropKind::Container | PropKind::Rhythm | PropKind::Open => plain_value(kind),
+    }
+}
+
+/// `animation` names `AnimationToken` only when that alias prints; otherwise it stays open.
+fn animation_value(animations: bool) -> &'static str {
+    if animations {
+        ANIMATION_VALUE
+    } else {
+        OPEN_VALUE
+    }
+}
+
+/// Container and rhythm keep their own shapes; the open kind takes the hatch.
+fn plain_value(kind: &PropKind) -> &'static str {
+    match kind {
         PropKind::Container => CONTAINER_VALUE,
         PropKind::Rhythm => RHYTHM_VALUE,
-        PropKind::Open => OPEN_VALUE,
+        _ => OPEN_VALUE,
     }
 }

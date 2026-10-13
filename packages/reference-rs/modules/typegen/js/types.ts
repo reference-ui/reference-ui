@@ -31,7 +31,14 @@ export interface TypegenDetailedEmit {
   diagnostics: TypegenDiagnostic[]
 }
 
-export type PropValueDomain = 'color' | 'spacing' | 'radius' | 'container' | 'rhythm' | 'open'
+export type PropValueDomain =
+  | 'color'
+  | 'spacing'
+  | 'radius'
+  | 'container'
+  | 'rhythm'
+  | 'animation'
+  | 'open'
 
 export interface PrimitivesVocabulary {
   props: string[]

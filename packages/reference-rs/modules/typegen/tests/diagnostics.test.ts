@@ -46,7 +46,7 @@ describe('typegen diagnostics seam', () => {
     const baseSystem = spec({
       tokens: {
         colors: { n100: { value: '#fff' } },
-        animations: { spin: { value: 'spin 1s' } },
+        durations: { slow: { value: '4s' } },
       },
     })
     const detailed = emitDtsDetailed({ baseSystem })
@@ -55,9 +55,9 @@ describe('typegen diagnostics seam', () => {
     )
     expect(found.length).toBe(1)
     expect(found[0]?.severity).toBe('warning')
-    expect(found[0]?.message).toContain('`animations`')
+    expect(found[0]?.message).toContain('`durations`')
     expect(detailed.dts).toContain('ColorToken')
-    expect(detailed.dts).not.toContain('spin')
+    expect(detailed.dts).not.toContain('slow')
   })
 
   it('TGN-SEAM-03 reports invalid recipe names and keeps siblings', () => {

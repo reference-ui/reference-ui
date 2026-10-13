@@ -36,7 +36,7 @@ fn clean_systems_emit_no_diagnostics() {
 #[test]
 fn unknown_token_categories_report_once_per_category() {
     let (dts, codes) = codes_of(
-        r##"{"tokens":{"colors":{"n100":{"value":"#fff"}},"animations":{"spin":{"value":"spin 1s"}},"foo":{"bar":{"value":"1"}}}}"##,
+        r##"{"tokens":{"colors":{"n100":{"value":"#fff"}},"durations":{"slow":{"value":"4s"}},"foo":{"bar":{"value":"1"}}}}"##,
         &[],
     );
     assert_eq!(
@@ -47,7 +47,7 @@ fn unknown_token_categories_report_once_per_category() {
         ]
     );
     assert!(dts.contains("ColorToken"), "known sibling still prints:\n{dts}");
-    assert!(!dts.contains("spin"), "unknown tokens stay out:\n{dts}");
+    assert!(!dts.contains("slow"), "unknown tokens stay out:\n{dts}");
 }
 
 #[test]

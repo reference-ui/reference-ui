@@ -19,6 +19,7 @@ pub(super) enum PropKind {
     Radius,
     Container,
     Rhythm,
+    Animation,
     Open,
 }
 
@@ -101,6 +102,7 @@ fn collect_props() -> BTreeMap<&'static str, PropKind> {
     }
     props.insert("container", PropKind::Container);
     props.insert("r", PropKind::Rhythm);
+    props.insert("animation", PropKind::Animation);
     for name in open_prop_names() {
         props.entry(name).or_insert(PropKind::Open);
     }

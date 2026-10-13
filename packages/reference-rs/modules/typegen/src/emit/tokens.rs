@@ -57,6 +57,10 @@ const CATEGORIES: &[CategorySpec] = &[
         category: "zIndex",
         ts_type: "ZIndexToken",
     },
+    CategorySpec {
+        category: "animations",
+        ts_type: "AnimationToken",
+    },
 ];
 
 pub(super) fn token_unions(system: &BaseSystem) -> String {

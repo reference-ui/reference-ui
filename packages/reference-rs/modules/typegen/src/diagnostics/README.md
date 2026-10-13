@@ -44,7 +44,7 @@ Codes are wire contract: never rename, never remove.
 
 | Code | Severity | Trigger |
 | ---- | -------- | ------- |
-| `TGN-W-UNKNOWN-TOKEN-CATEGORY` | warning | `tokens: { animations: { spin: { value: '…' } } }` (no printed union) |
+| `TGN-W-UNKNOWN-TOKEN-CATEGORY` | warning | `tokens: { durations: { slow: { value: '…' } } }` (no printed union) |
 | `TGN-W-INVALID-RECIPE-NAME` | warning | `recipes: { '123': { variants: … } }` (no TypeScript type stem) |
 | `TGN-W-EMPTY-RECIPE` | warning | `recipes: { card: { variants: {} } }` (whole recipe); or one axis `{ size: {} }` beside printing siblings |
 | `TGN-W-INVALID-COMPOUND-VARIANT` | warning | `compoundVariants: [{ tone: 'nope', … }]` (unknown value; `flavor: 'loud'` is the unknown-axis twin) |

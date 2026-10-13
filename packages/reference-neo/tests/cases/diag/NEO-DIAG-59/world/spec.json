@@ -3,9 +3,9 @@
   "profile": "reference-ui",
   "name": "tgn-repro",
   "tokens": {
-    "animations": {
-      "spin": {
-        "value": "spin 1s linear infinite"
+    "durations": {
+      "slow": {
+        "value": "4s"
       }
     }
   },

@@ -32,12 +32,12 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 | Metric | Status |
 | :--- | :--- |
 | Engine | Token / recipe / FontRegistry / FontProps / StyleProps / SystemStyleObject printer (`emit_dts(&BaseSystem)` open-mode; `emit_dts_with` for strict wrappers) + Core generator prototype (`refreshGeneratedTypesArtefact`, `renderSystemStyleObjectDts`) |
-| Named `[x]` | 34 / 34 contract IDs |
-| Named `[ ]` | 0 / 34 contract IDs |
-| Cargo tests | 73 (`src/tests/`) |
-| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–06 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/` (`pnpm agentrs v typegen` **54**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
+| Named `[x]` | 36 / 36 contract IDs |
+| Named `[ ]` | 0 / 36 contract IDs |
+| Cargo tests | 75 (`src/tests/`) |
+| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–06 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/` (`pnpm agentrs v typegen` **56**); core `TYP-STYLE-01` in `generators/strict.test.ts` plus unnamed prototypes in `generators/fonts.test.ts` |
 
-**Named proven:** `TYP-TOKEN-01`–`06`, `TYP-TONE-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`06`, `TYP-FORBID-01`–`06`.  
+**Named proven:** `TYP-TOKEN-01`–`07`, `TYP-TONE-01`–`06`, `TYP-RECIPE-01`–`03`, `TYP-FONT-01`–`03`, `TYP-STYLE-01`–`05`, `TYP-STRICT-01`–`06`, `TYP-FORBID-01`–`06`.  
 **Remaining unproven:** none.
 
 ### In the Tree
@@ -131,6 +131,10 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 - [x] `TYP-TOKEN-06` `[reference]` `[unit]` —  
   **Typegen should assemble an aggregate Tokens dictionary indexing all category unions.**  
   Pass a `BaseSystem` containing multiple categories into typegen. Assert emitted declarations export an aggregate interface `Tokens` where `Tokens['colors']`, `Tokens['spacing']`, and `Tokens['radii']` index the respective category unions. The failure mode is structural drift that breaks token indexing in consumer libraries.
+
+- [x] `TYP-TOKEN-07` `[reference]` `[unit]` —  
+  **Typegen should print animations tokens as `AnimationToken` and type the `animation` shorthand with it.**  
+  Pass a `BaseSystem` declaring animations `spin.slow` and `fadeIn.quick` plus a breakpoint. Assert the emitted declarations define `type AnimationToken = 'fadeIn.quick' | 'spin.slow'`, that `Tokens` indexes `animations`, and that `animation` is `StylePropValue<AnimationToken | (string & {})>` while `animationName` stays `StylePropValue<string | number>`. A dump without animations omits `AnimationToken` and keeps `animation` open. A tsc consumer probe (`tests/animation.test.ts`) checks that `animation: 'spin.slow'` and a raw shorthand typecheck. The failure mode is an `animation` prop that rejects its own tokens, or one that names an `AnimationToken` the printer never emitted.
 
 ---
 
@@ -284,6 +288,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-TOKEN-04` | `[unit]` | `src/tests/tokens.rs::typ_token_04_emits_typography_token_unions` | `[x]` Proven |
 | `TYP-TOKEN-05` | `[unit]` | `src/tests/tokens.rs::typ_token_05_emits_shadow_and_z_index_unions` | `[x]` Proven |
 | `TYP-TOKEN-06` | `[unit]` | `src/tests/tokens.rs::typ_token_06_emits_aggregate_tokens_interface` | `[x]` Proven |
+| `TYP-TOKEN-07` | `[unit]` | `src/tests/tokens.rs::typ_token_07_emits_animation_token_union`, `typ_token_07_omits_animation_token_when_unpopulated`; `tests/animation.test.ts` (`TYP-TOKEN-07`) | `[x]` Proven |
 | `TYP-TONE-01` | `[unit]` | `src/tests/tones.rs::typ_tone_01_emits_first_segment_tone_token` | `[x]` Proven |
 | `TYP-TONE-02` | `[unit]` | `src/tests/tones.rs::typ_tone_02_emits_never_without_tones` | `[x]` Proven |
 | `TYP-TONE-03` | `[unit]` | `src/tests/tones.rs::typ_tone_03_emits_toned_color_alias` | `[x]` Proven |
