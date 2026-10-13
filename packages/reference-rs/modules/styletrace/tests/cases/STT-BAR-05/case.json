@@ -1,1 +1,1 @@
-{"id": "STT-BAR-05", "name": "named_barrel_package"}
+{"id": "STT-BAR-05", "name": "A consumer that re-exports a packaged barrel and wraps it locally traces both the local wrapper and the re-exported package name"}

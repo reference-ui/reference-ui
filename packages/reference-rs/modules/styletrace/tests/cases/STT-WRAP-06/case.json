@@ -1,1 +1,1 @@
-{"id": "STT-WRAP-06", "name": "rest_spread_wrapper"}
+{"id": "STT-WRAP-06", "name": "A wrapper that forwards its remaining props with rest spread is traced, and peeling off non-style fields first does not hide it"}

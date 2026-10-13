@@ -1,1 +1,1 @@
-{"id": "STT-PIPE-01", "name": "direct_style_pipeline"}
+{"id": "STT-PIPE-01", "name": "A component that uses the Reference style pipeline directly (splitCssProps, box, css) is traced without wrapping a primitive"}

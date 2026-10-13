@@ -1,1 +1,1 @@
-{"id": "STT-PKG-01", "name": "default_export_package"}
+{"id": "STT-PKG-01", "name": "A default-export component imported from a package is traced through a local wrapper and through a renamed default re-export"}
