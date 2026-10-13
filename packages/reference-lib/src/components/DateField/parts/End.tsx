@@ -7,7 +7,9 @@ import * as React from 'react'
 import { useSlotRegistration } from '../slots/slots'
 import type { DateFieldEndProps } from '../types'
 
-export const DateFieldEnd = React.forwardRef<HTMLInputElement, DateFieldEndProps>(
+export const DateFieldEnd: React.ForwardRefExoticComponent<
+  DateFieldEndProps & React.RefAttributes<HTMLInputElement>
+> = React.forwardRef<HTMLInputElement, DateFieldEndProps>(
   function DateFieldEnd(props, forwardedRef) {
     useSlotRegistration({
       slotId: 'end',

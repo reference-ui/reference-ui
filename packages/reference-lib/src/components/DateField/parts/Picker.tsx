@@ -9,7 +9,9 @@ import * as React from 'react'
 import { useSlotRegistration } from '../slots/slots'
 import type { DateFieldPickerProps } from '../types'
 
-export const DateFieldPicker = React.forwardRef<HTMLDivElement, DateFieldPickerProps>(
+export const DateFieldPicker: React.ForwardRefExoticComponent<
+  DateFieldPickerProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, DateFieldPickerProps>(
   function DateFieldPicker(props, forwardedRef) {
     useSlotRegistration({
       slotId: 'picker',

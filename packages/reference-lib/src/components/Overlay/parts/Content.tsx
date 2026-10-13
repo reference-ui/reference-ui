@@ -21,7 +21,9 @@ import { useTabCycle } from './tab-cycle'
 import { resolvePortalContainer } from './portal-container'
 export type OverlayContentProps = PrimitiveProps<'div'> & OverlayContentGeometry
 
-export const OverlayContent = React.forwardRef<HTMLDivElement, OverlayContentProps>(
+export const OverlayContent: React.ForwardRefExoticComponent<
+  OverlayContentProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, OverlayContentProps>(
   function OverlayContent(
     {
       children,

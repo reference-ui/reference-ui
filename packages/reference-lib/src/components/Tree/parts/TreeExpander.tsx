@@ -12,7 +12,9 @@ import { ComboboxContext } from '../../Combobox/combobox-context'
 import { TreeContext, TreeItemContext } from '../context'
 import type { TreeExpanderProps } from '../types'
 
-export const TreeExpander = React.forwardRef<HTMLButtonElement, TreeExpanderProps>(
+export const TreeExpander: React.ForwardRefExoticComponent<
+  TreeExpanderProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, TreeExpanderProps>(
   function TreeExpander(
     {
       expanded: expandedProp,

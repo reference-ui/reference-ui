@@ -13,7 +13,9 @@ import { resolveMountPolicy, resolvePresent } from '../mount/policy'
 import { useContentRegistration } from '../hooks/use-content-registration'
 import { CollapsibleContentPanel } from './Panel'
 
-export const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(
+export const CollapsibleContent: React.ForwardRefExoticComponent<
+  CollapsibleContentProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(
   function CollapsibleContent(
     { children, id: idProp, style, hiddenUntilFound: hiddenUntilFoundProp, forceMount = false, ...props },
     forwardedRef

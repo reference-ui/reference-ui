@@ -14,7 +14,9 @@ import { MenubarContext, MenubarMenuContext } from '../context'
 import type { MenubarTriggerProps } from '../types'
 import { devWarn } from '../shared/warn'
 
-export const MenubarTrigger = React.forwardRef<HTMLButtonElement, MenubarTriggerProps>(
+export const MenubarTrigger: React.ForwardRefExoticComponent<
+  MenubarTriggerProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, MenubarTriggerProps>(
   function MenubarTrigger(
     {
       children,

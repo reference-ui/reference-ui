@@ -18,7 +18,9 @@ import {
 
 export type OverlayHandleProps = PrimitiveProps<'div'>
 
-export const OverlayHandle = React.forwardRef<HTMLDivElement, OverlayHandleProps>(
+export const OverlayHandle: React.ForwardRefExoticComponent<
+  OverlayHandleProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, OverlayHandleProps>(
   function OverlayHandle(
     {
       style,

@@ -12,7 +12,9 @@ export type OverlayArrowProps = PrimitiveProps<'div'> & {
   edgePadding?: number
 }
 
-export const OverlayArrow = React.forwardRef<HTMLDivElement, OverlayArrowProps>(
+export const OverlayArrow: React.ForwardRefExoticComponent<
+  OverlayArrowProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, OverlayArrowProps>(
   function OverlayArrow(
     {
       edgePadding = 4,

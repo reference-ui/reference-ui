@@ -10,7 +10,9 @@ import { SliderContext } from '../context'
 import type { SliderRangeProps } from '../types'
 import { valueToPercent } from '../math/slider-math'
 
-export const SliderRange = React.forwardRef<HTMLDivElement, SliderRangeProps>(
+export const SliderRange: React.ForwardRefExoticComponent<
+  SliderRangeProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, SliderRangeProps>(
   function SliderRange(
     {
       className,

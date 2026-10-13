@@ -17,7 +17,9 @@ import { levelDirection, rootTriggerOf } from '../levels/registry'
 import { devWarn } from '../shared/warn'
 import type { MenuContentProps } from '../types'
 
-export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(function MenuContent(
+export const MenuContent: React.ForwardRefExoticComponent<
+  MenuContentProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, MenuContentProps>(function MenuContent(
   {
     children,
     id: authoredId,

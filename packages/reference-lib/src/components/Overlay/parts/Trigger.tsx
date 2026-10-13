@@ -11,7 +11,9 @@ import { assignRef } from '../shared/refs'
 
 export type OverlayTriggerProps = PrimitiveProps<'button'>
 
-export const OverlayTrigger = React.forwardRef<HTMLButtonElement, OverlayTriggerProps>(
+export const OverlayTrigger: React.ForwardRefExoticComponent<
+  OverlayTriggerProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, OverlayTriggerProps>(
   function OverlayTrigger(
     {
       children,

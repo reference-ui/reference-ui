@@ -11,7 +11,9 @@ import { SliderContext } from '../context'
 import type { SliderTrackProps } from '../types'
 import { chooseTrackThumb, pointerToSnappedValue } from '../interaction/track-choice'
 
-export const SliderTrack = React.forwardRef<HTMLDivElement, SliderTrackProps>(
+export const SliderTrack: React.ForwardRefExoticComponent<
+  SliderTrackProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, SliderTrackProps>(
   function SliderTrack(
     {
       children,

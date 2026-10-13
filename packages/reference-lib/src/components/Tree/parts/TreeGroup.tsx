@@ -12,7 +12,9 @@ import { useComposedRefs } from '../hooks'
 import { updateContainerTreeitemPositions } from '../siblings/positions'
 import type { TreeGroupProps } from '../types'
 
-export const TreeGroup = React.forwardRef<HTMLDivElement, TreeGroupProps>(
+export const TreeGroup: React.ForwardRefExoticComponent<
+  TreeGroupProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, TreeGroupProps>(
   function TreeGroup({ children, id: idProp, className, style, ...props }, ref) {
     const itemContext = React.useContext(TreeItemContext)
     const tree = React.useContext(TreeContext)

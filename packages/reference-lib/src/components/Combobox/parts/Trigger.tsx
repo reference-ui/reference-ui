@@ -13,7 +13,9 @@ import { ComboboxContext } from '../combobox-context'
 import { useTriggerKeyboard, useTriggerTypeahead } from '../hooks'
 import type { ComboboxTriggerProps } from '../types'
 
-export const ComboboxTrigger = React.forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
+export const ComboboxTrigger: React.ForwardRefExoticComponent<
+  ComboboxTriggerProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
   function ComboboxTrigger(
     {
       children,

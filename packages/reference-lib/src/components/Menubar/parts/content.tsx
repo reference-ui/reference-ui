@@ -13,7 +13,9 @@ import { MenubarContext, MenubarMenuContext } from '../context'
 import type { MenubarContentProps } from '../types'
 import { devWarn } from '../shared/warn'
 
-export const MenubarContent = React.forwardRef<HTMLDivElement, MenubarContentProps>(
+export const MenubarContent: React.ForwardRefExoticComponent<
+  MenubarContentProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, MenubarContentProps>(
   function MenubarContent({ children, onKeyDown, ...props }: MenubarContentProps, ref) {
     const menubar = React.useContext(MenubarContext)
     const menu = React.useContext(MenubarMenuContext)

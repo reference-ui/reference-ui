@@ -16,7 +16,9 @@ import { resolvePortalContainer } from './portal-container'
 
 export type OverlayBackdropProps = PrimitiveProps<'div'>
 
-export const OverlayBackdrop = React.forwardRef<HTMLDivElement, OverlayBackdropProps>(
+export const OverlayBackdrop: React.ForwardRefExoticComponent<
+  OverlayBackdropProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, OverlayBackdropProps>(
   function OverlayBackdrop(
     {
       children,

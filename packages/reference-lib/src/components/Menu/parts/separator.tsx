@@ -7,7 +7,9 @@ import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { MenuSeparatorProps } from '../types'
 
-export const MenuSeparator = React.forwardRef<HTMLDivElement, MenuSeparatorProps>(
+export const MenuSeparator: React.ForwardRefExoticComponent<
+  MenuSeparatorProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, MenuSeparatorProps>(
   function MenuSeparator({ className, style, ...props }: MenuSeparatorProps, ref) {
     return (
       <Div

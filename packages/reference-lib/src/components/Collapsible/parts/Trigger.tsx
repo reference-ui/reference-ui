@@ -13,7 +13,9 @@ import { CollapsibleContext } from '../context'
 import { resolveTriggerLinkage, resolveTriggerStyle } from '../linkage/state'
 import { setRef } from '../shared/refs'
 
-export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
+export const CollapsibleTrigger: React.ForwardRefExoticComponent<
+  CollapsibleTriggerProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
   function CollapsibleTrigger(
     {
       children,

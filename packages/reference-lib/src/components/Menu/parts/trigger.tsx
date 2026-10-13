@@ -20,7 +20,9 @@ import { hoverCapablePointer } from '../shared/pointer'
 import { devWarn } from '../shared/warn'
 import type { MenuTriggerProps } from '../types'
 
-export const MenuTrigger = React.forwardRef<HTMLDivElement, MenuTriggerProps>(function MenuTrigger(
+export const MenuTrigger: React.ForwardRefExoticComponent<
+  MenuTriggerProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, MenuTriggerProps>(function MenuTrigger(
   {
     children,
     disabled = false,

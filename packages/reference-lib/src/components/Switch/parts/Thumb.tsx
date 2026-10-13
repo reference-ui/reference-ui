@@ -10,7 +10,9 @@ import { Span } from '@reference-ui/react'
 import type { SwitchThumbProps } from '../types'
 import { useSwitchContext } from '../context'
 
-export const SwitchThumb = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
+export const SwitchThumb: React.ForwardRefExoticComponent<
+  SwitchThumbProps & React.RefAttributes<HTMLSpanElement>
+> = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
   function SwitchThumb({ className, style, ...props }, ref) {
     const { checked, disabled } = useSwitchContext()
 

@@ -15,7 +15,9 @@ import { useIsomorphicLayoutEffect } from '../shared/layout-effect'
 import type { TabsListProps, TabsVariant } from '../types'
 import { TabsSelectionSync } from './selection-sync'
 
-export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
+export const TabsList: React.ForwardRefExoticComponent<
+  TabsListProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, TabsListProps>(
   function TabsList(
     {
       children,

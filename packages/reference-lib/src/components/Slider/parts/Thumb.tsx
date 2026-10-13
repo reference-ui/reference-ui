@@ -29,7 +29,9 @@ const thumbHitAreaVertical = {
   inset: '0 -4px',
 } as const
 
-export const SliderThumb = React.forwardRef<HTMLDivElement, SliderThumbProps>(function SliderThumb(
+export const SliderThumb: React.ForwardRefExoticComponent<
+  SliderThumbProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, SliderThumbProps>(function SliderThumb(
   {
     valueText,
     formatValue,

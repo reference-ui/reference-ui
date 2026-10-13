@@ -8,7 +8,9 @@ import * as React from 'react'
 import { useSlotRegistration } from '../slots/slots'
 import type { DateFieldTriggerProps } from '../types'
 
-export const DateFieldTrigger = React.forwardRef<HTMLButtonElement, DateFieldTriggerProps>(
+export const DateFieldTrigger: React.ForwardRefExoticComponent<
+  DateFieldTriggerProps & React.RefAttributes<HTMLButtonElement>
+> = React.forwardRef<HTMLButtonElement, DateFieldTriggerProps>(
   function DateFieldTrigger(props, forwardedRef) {
     useSlotRegistration({
       slotId: 'trigger',

@@ -27,7 +27,9 @@ import type { MenuProps } from '../types'
 // render) the memo holds the first one. One root Menu per Popover.
 const menuIdByTriggerRef = new WeakMap<object, string>()
 
-export const RootMenu = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
+export const RootMenu: React.ForwardRefExoticComponent<
+  MenuProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, MenuProps>(function RootMenu(
   { children, className, style, onKeyDown, id: authoredId, open, onOpen, onDismiss, ...props }: MenuProps,
   ref
 ) {

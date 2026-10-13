@@ -24,7 +24,9 @@ function isGroupChild(child: React.ReactNode): boolean {
   )
 }
 
-export const TreeItem = React.forwardRef<HTMLDivElement, TreeItemProps>(
+export const TreeItem: React.ForwardRefExoticComponent<
+  TreeItemProps & React.RefAttributes<HTMLDivElement>
+> = React.forwardRef<HTMLDivElement, TreeItemProps>(
   function TreeItem(
     {
       id: idProp,
