@@ -64,6 +64,21 @@ function attachShutdown(handle: WatchHandle, trace: (line: string) => void): voi
   for (const signal of SHUTDOWN_SIGNALS) process.on(signal, shutdown)
 }
 
+// Drain the folded tasty landings one sync kicked off: the cold build first,
+// then the warm refresh lane. A failure routes through the runner's error line
+// and the watch stays up; the caller then prints nothing more for that sync.
+// Otherwise the caller carries the completed build's count (human) or entries
+// (JSON) into its own line. Resolves undefined when nothing is pending — every
+// resync past the first drains free.
+async function drainFoldedLanding(dir: string, say: (line: string) => void): Promise<ReferenceBuildResult | undefined> {
+  const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
+  const { flushTastyRefresh } = await import('../sync/tasty-phase.ts')
+  const cold = await flushReferenceBuild(dir)
+  const failed = cold?.status === 'failed' ? cold : await flushTastyRefresh(dir)
+  if (failed !== undefined) say(`[ref] watch error: reference tasty build failed: ${failed.message}`)
+  return failed ?? cold
+}
+
 export async function runWatch(dir: string, options: WatchRunnerOptions = {}): Promise<number> {
   const { breakLock = false, verbose = false, debug = false, json = false, quiet = false } = options
   // One sink per mode: --json keeps stdout purely machine-readable, so
@@ -74,23 +89,12 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
   }
   try {
     const { watchSync } = await import('../lib/watch/index.ts')
-    const { flushReferenceBuild } = await import('../reference/bridge/init.ts')
-    // Drain one folded tasty landing: failures route through the
-    // runner's error line and the watch stays up; otherwise the caller
-    // carries the completed build's count (human) or entries (JSON)
-    // into its own line. Resolves undefined when nothing is pending —
-    // every resync past the first drains free.
-    const drainFoldedLanding = async (): Promise<ReferenceBuildResult | undefined> => {
-      const build = await flushReferenceBuild(dir)
-      if (build?.status === 'failed') say(`[ref] watch error: reference tasty build failed: ${build.message}`)
-      return build
-    }
     const handle = await watchSync(dir, {
       onChange: (change) => {
         if (debug) say(`[ref] ${change.event} ${change.relativePath}`)
       },
       onResync: async (result) => {
-        const build = await drainFoldedLanding()
+        const build = await drainFoldedLanding(dir, say)
         const refWarnings = build?.status === 'complete' ? build.reportedWarningCount : 0
         if (json) {
           const { tastyDiagnosticToNative } = await import('../reference/bridge/build-report.ts')
@@ -98,6 +102,8 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
           console.log(formatJsonDiagnostics([...reportedSyncEntries(result.diagnostics, result.compilerDiagnostics), ...refEntries]))
           return
         }
+        // A failed landing already printed its own line, so the resync adds no success line over it.
+        if (build?.status === 'failed') return
         if (!quiet) printSyncLine(result.elapsedMs ?? 0, result.outDir, foldedWarningCount(result.warningCount + refWarnings, verbose))
       },
       onError: (err) => {
@@ -112,7 +118,7 @@ export async function runWatch(dir: string, options: WatchRunnerOptions = {}): P
     // Ready means the hot path: the block prints the baseline's measured
     // sync wall, but only after the folded tasty landing drains, so the
     // Warnings row carries the total — sync plus tasty, one row, no dangle.
-    const baselineBuild = await drainFoldedLanding()
+    const baselineBuild = await drainFoldedLanding(dir, say)
     const baselineRefWarnings = baselineBuild?.status === 'complete' ? baselineBuild.reportedWarningCount : 0
     if (json) {
       const { tastyDiagnosticToNative } = await import('../reference/bridge/build-report.ts')
