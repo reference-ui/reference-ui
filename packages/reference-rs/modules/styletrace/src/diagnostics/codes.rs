@@ -24,17 +24,28 @@ pub enum StyletraceDiagnosticCode {
     /// `resolver/sync_root` + `analysis/surface`: no sync root, StyleProps entrypoint,
     /// or primitives surface; the trace is refused as a coded throw.
     UnresolvedSurface,
+    /// `parser/classes` + `analysis/analyzer`: a React class component whose props expose
+    /// StyleProps. Classes are not traced in v1, so the warning names the class and its file.
+    ClassComponent,
+    /// `analysis/hoc`: a higher-order component forwards style props into an argument that
+    /// names no component. The binding it initializes stays untraced, rather than guessed.
+    UnresolvedHocArgument,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(StyletraceDiagnosticCode, &str); 3] = [
+const CODE_TABLE: [(StyletraceDiagnosticCode, &str); 5] = [
     (StyletraceDiagnosticCode::SkippedFile, "STT-W-SKIPPED-FILE"),
     (StyletraceDiagnosticCode::ScanFailed, "STT-E-SCAN-FAILED"),
     (
         StyletraceDiagnosticCode::UnresolvedSurface,
         "STT-E-UNRESOLVED-SURFACE",
+    ),
+    (StyletraceDiagnosticCode::ClassComponent, "STT-W-CLASS-COMPONENT"),
+    (
+        StyletraceDiagnosticCode::UnresolvedHocArgument,
+        "STT-W-UNRESOLVED-HOC-ARGUMENT",
     ),
 ];
 
@@ -121,6 +132,8 @@ mod tests {
             StyletraceDiagnosticCode::SkippedFile,
             StyletraceDiagnosticCode::ScanFailed,
             StyletraceDiagnosticCode::UnresolvedSurface,
+            StyletraceDiagnosticCode::ClassComponent,
+            StyletraceDiagnosticCode::UnresolvedHocArgument,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

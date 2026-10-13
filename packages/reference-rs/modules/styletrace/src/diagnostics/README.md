@@ -42,6 +42,8 @@ Codes are wire contract: never rename, never remove.
 | `STT-W-SKIPPED-FILE` | warning | `src/broken.tsx` with `export function Broken( {` beside a tracing sibling |
 | `STT-E-SCAN-FAILED` | error | `traceDetailed('/nonexistent-src', declRoot)` (unreadable source root refuses discovery) |
 | `STT-E-UNRESOLVED-SURFACE` | error | `traceDetailed(src, emptyDir)` (no StyleProps entrypoint); also the hintless trace outside any project (no sync root) |
+| `STT-W-CLASS-COMPONENT` | warning | `export class Card extends React.Component<CardProps>` with `CardProps = StyleProps & {…}` beside a tracing sibling (`STT-NEG-05`) |
+| `STT-W-UNRESOLVED-HOC-ARGUMENT` | warning | `export const Padded = withPad(makeBase())` where `withPad` forwards StyleProps into its first parameter (`STT-NEG-06`) |
 
 ## Must not
 

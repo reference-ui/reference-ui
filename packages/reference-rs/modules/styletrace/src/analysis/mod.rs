@@ -5,10 +5,13 @@
 
 mod aliases;
 mod analyzer;
+mod exposure;
+mod hoc;
 mod memo;
 mod model;
 mod module_resolution;
 mod parser;
+mod report;
 pub(crate) mod primitive_metadata;
 mod source_files;
 mod surface;

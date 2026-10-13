@@ -31,7 +31,7 @@ consumers never break on codes minted after they shipped.
 | `ATM`     | atomic      | Live: 54-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
 | `TST`     | tasty       | Live: 9-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal |
-| `STT`     | styletrace  | Live: 3-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips plus the scan and surface refusals |
+| `STT`     | styletrace  | Live: 5-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component and unresolved-HOC-argument warnings, plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
 | `BSS`     | base-system | Live: 1-code, emitted from Neo's collect step in `packages/reference-neo/src/collect/lib/shadow.ts`; no Rust table |
@@ -170,6 +170,8 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `STT-W-SKIPPED-FILE` | An entry or edge file failed to parse or read; the file is skipped, siblings kept | `modules/styletrace/src/analysis/surface.rs`, `modules/styletrace/src/analysis/analyzer.rs` |
 | `STT-E-SCAN-FAILED` | Source discovery or read failed; the trace is refused as a coded throw | `modules/styletrace/src/analysis/source_files.rs` |
 | `STT-E-UNRESOLVED-SURFACE` | No sync root, StyleProps entrypoint, or primitives surface; the trace is refused as a coded throw | `modules/styletrace/src/resolver/sync_root.rs`, `modules/styletrace/src/analysis/surface.rs` |
+| `STT-W-CLASS-COMPONENT` | A React class component whose props expose StyleProps; not traced in v1, so its style props are not traced | `modules/styletrace/src/analysis/report.rs` |
+| `STT-W-UNRESOLVED-HOC-ARGUMENT` | A higher-order component forwards StyleProps into an argument that names no component; the binding it initializes is not traced | `modules/styletrace/src/analysis/report.rs` |
 | `TGN-W-UNKNOWN-TOKEN-CATEGORY` | A dump token category with no printed union; its tokens are omitted | `modules/typegen/src/diagnostics/collect.rs` |
 | `TGN-W-INVALID-RECIPE-NAME` | A recipe name that cannot PascalCase to a TypeScript identifier; the recipe is omitted | `modules/typegen/src/diagnostics/collect.rs` |
 | `TGN-W-EMPTY-RECIPE` | A recipe with no printable variant axes, or one empty axis; skipped at the reported scope | `modules/typegen/src/diagnostics/collect.rs` |

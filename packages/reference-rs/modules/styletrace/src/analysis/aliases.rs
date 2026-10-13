@@ -1,10 +1,8 @@
 //! Resolves compound-member aliases (`Tabs.Panel = TabPanel`) to dotted style hosts.
-//! Takes one parsed module's member assignments plus the analyzer's trace
-//! caches, and follows each alias target through local components, factories,
-//! identifier chains, and imports back to Reference primitives.
-//! Emits one dotted binding (`Tabs.Panel`) plus its owned props per traced
-//! target, so member-form use sites collect. Aliases onto untraced targets
-//! emit nothing; cycles resolve to untraced, reassigned hosts last-wins.
+//! Takes one module's member assignments, or a re-exported namespace's remapped ones, and follows each
+//! alias target through local components, factories, identifier chains, and imports back to Reference primitives.
+//! Emits one dotted name (`Tabs.Panel`) plus its owned props per traced target, for the exposure walk to label.
+//! Aliases onto untraced targets emit nothing; cycles resolve to untraced, reassigned hosts last-wins.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -12,16 +10,14 @@ use std::path::Path;
 use rustc_hash::FxHashSet;
 
 use super::analyzer::StyleTraceAnalyzer;
-use super::model::{MemberAlias, TraceModule, TracedBinding};
+use super::model::{MemberAlias, TraceModule};
 use crate::resolver::StyleTraceError;
 
-/// One module under alias walk: its path, parsed shape, module label, and
-/// the alias slice to emit. Re-exports pass a renamed slice so one emit
-/// loop serves own and barrel hosts alike.
+/// One module under alias walk: its path, parsed shape, and the alias slice to emit. Re-exports pass
+/// a renamed slice so one emit loop serves own and barrel hosts alike.
 pub(super) struct WalkModule<'a> {
     pub(super) path: &'a Path,
     pub(super) module: &'a TraceModule,
-    pub(super) rel: &'a str,
     pub(super) aliases: &'a [MemberAlias],
 }
 
@@ -53,28 +49,23 @@ enum TargetStep<'a> {
     Dead,
 }
 
-/// Resolve one module's member aliases into dotted traced bindings.
-/// Each traced target gains one binding plus its owned props under the
-/// dotted host; untraced targets stay silent. Reassignments resolve
-/// last-wins: only the final target per host emits, matching runtime.
-pub(super) fn collect_alias_bindings(
+/// The traced dotted names among one slice of member aliases, each with the owned props of its
+/// target. Reassignments resolve last-wins: only the final target per host emits, matching runtime.
+pub(super) fn alias_exposures(
     analyzer: &mut StyleTraceAnalyzer<'_>,
     walk: &WalkModule<'_>,
-    bindings: &mut BTreeSet<TracedBinding>,
-) -> Result<(), StyleTraceError> {
+) -> Result<Vec<(String, BTreeSet<String>)>, StyleTraceError> {
     let mut seen = FxHashSet::default();
+    let mut exposures = Vec::new();
     for alias in walk.aliases.iter().rev() {
         if !seen.insert(alias.host()) {
             continue;
         }
-        let traced = alias_target_is_traced(analyzer, walk, &alias.target, &mut Vec::new())?;
-        if let Some(owned) = traced {
-            let host = alias.host();
-            bindings.insert(TracedBinding::new(walk.rel, &host));
-            analyzer.record_owned(&host, owned);
+        if let Some(owned) = alias_target_is_traced(analyzer, walk, &alias.target, &mut Vec::new())? {
+            exposures.push((alias.host(), owned));
         }
     }
-    Ok(())
+    Ok(exposures)
 }
 
 /// The owned props when a plain ident alias target traces: follows one
@@ -91,7 +82,6 @@ pub(super) fn ident_alias_target_is_traced(
     let walk = WalkModule {
         path,
         module,
-        rel: "",
         aliases: &[],
     };
     alias_target_is_traced(analyzer, &walk, target, stack)

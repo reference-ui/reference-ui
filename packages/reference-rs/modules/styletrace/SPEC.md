@@ -35,6 +35,7 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - [x] STT-8 A namespace import of `@reference-ui/react` (`Ref.Div`) counts as a Reference primitive. Proof: STT-BAR-06.
 - [x] STT-29 A wrapper exported through a const alias, or through `memo` or `forwardRef` over a local identifier, traces under each export name. The unexported local emits nothing, and a style-less `memo` wrapper mints no name. Proof: STT-WRAP-08.
 - [x] STT-33 Mutually recursive wrappers trace deterministically: a cycle cut never becomes a node's verdict, every link that reaches a primitive traces, and a cycle that reaches no primitive stays off. Proof: STT-WRAP-10.
+- [x] STT-36 A higher-order component applied at an export site (`export const Fancy = withPad(Box)`) traces under the export name when its returned component forwards StyleProps into the parameter and the argument names a traced component or primitive. Function, arrow, forwardRef and inner-function products are covered. Proof: STT-WRAP-09.
 
 ### 3.2 Traced: barrels, re-exports and aliases
 
@@ -45,6 +46,7 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - [x] STT-13 A package barrel that re-exports with `export *` traces its wrapped component under the name the entry re-exports it as. Proof: STT-BAR-02.
 - [x] STT-30 An `Object.assign` compound mints a dotted name for each style-bearing member under the compound's exported name. A style-less member mints nothing, and the unexported root emits nothing. Proof: STT-BAR-08.
 - [x] STT-31 A compound's dotted names use the exported alias, never the local binding (`Tabs.Item`, not `TabsRoot.Item`), and an unexported local namespace mints none. Proof: STT-BAR-09.
+- [x] STT-37 A namespace re-export (`export * as UI from 'source'`) exposes each name the source exposes under `UI.`, and the bare names do not leak from the barrel. Proof: STT-BAR-11.
 
 ### 3.3 Traced: packages, subpaths, node_modules and entries
 
@@ -53,6 +55,7 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - [x] STT-16 A wrapper that forwards into an installed package traces, and so does a consumer that re-exports and wraps a packaged barrel. Proof: STT-WRAP-04, STT-BAR-05.
 - [x] STT-17 Only source files discovered under the traced root emit names (`node_modules`, `dist`, `target` and `.git` are skipped); a package export that no entry re-exports stays an edge target, while an entry's re-export traces under the entry's name. Proof: STT-PIPE-02, STT-WRAP-04.
 - [x] STT-35 A package's `exports` source entry wins over a top-level `types` declaration, so the wrapper in the source entry traces. Proof: STT-PKG-04.
+- [x] STT-38 A default re-export (`export { default } from 'pkg'`) mints the name of the binding it re-exports, while `export { default as Foo }` still mints Foo; a default with no binding name keeps `default`. Proof: STT-PKG-05.
 
 ### 3.4 Not traced (negatives)
 
@@ -69,6 +72,8 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - [x] STT-24 An unparsable file yields one `STT-W-SKIPPED-FILE` warning carrying its path and the StyleTrace skip sentence, and its siblings still trace. Proof: STT-NEG-02 (siblings), STT-NEG-04 (one warning across several edges), `tests/suites/detailed.test.ts` (exact wire bytes).
 - [x] STT-25 An unreadable source root refuses the trace with a coded throw, `STT-E-SCAN-FAILED`, never as an outcome diagnostic. Proof: `tests/suites/detailed.test.ts`.
 - [x] STT-26 A declaration root with no StyleProps entrypoint refuses with a coded throw, `STT-E-UNRESOLVED-SURFACE`. Proof: `tests/suites/detailed.test.ts`. Unproven: the no-sync-root refusal.
+- [x] STT-39 A class component whose props expose StyleProps is not traced, and emits one `STT-W-CLASS-COMPONENT` warning naming it and its file, so the silent miss is loud. Proof: STT-NEG-05.
+- [x] STT-40 A higher-order component applied to an argument that names no component leaves its binding untraced and emits one `STT-W-UNRESOLVED-HOC-ARGUMENT` warning, rather than guessing. Proof: STT-NEG-06.
 
 ### 3.6 Robustness and output
 
@@ -85,9 +90,7 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - Do not rename a diagnostic code once a golden pins it; extend the table instead.
 - Do not reword the skip sentence; it is pinned byte-identical to the legacy prose.
 - Do not give a case folder a label as its name: `case.json` `name` and README line 1 are the one-line claim (AGENTS.md section 7).
-- Do not expect class components to trace (known limit).
-- Do not expect a higher-order component that forwards into a parameter, such as `withPad(Base)`, to trace (known limit).
-- Do not expect `export * as UI` namespace re-exports (`UI.Card`) to trace (known limit).
+- Do not trace class components in v1: a class whose props expose StyleProps warns instead (STT-39).
 - Do not expect tsconfig `paths` aliases to trace: an authoring alias must never win (SYNC-15, deliberate).
-- Do not expect `export { default } from './Card'` to emit a component name: it emits `default` (known limit).
+- Do not expect a local `export default function Card` in an entry to mint `Card`: the entry's own default still mints `default` (known limit). Only a re-exported default takes the component's name (STT-38).
 - Do not expect an `Object.assign` root to trace, even when it is style-bearing (known limit).

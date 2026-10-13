@@ -1,11 +1,13 @@
 //! Main entry point for Oxc-based TSX parsing and trace generation.
 //! Orchestrates the parsing phase of styletrace.
-//! Discovers exports, components, factories, and style signal dependencies.
+//! Discovers exports, components, factories, class components and style signal dependencies.
 
+pub mod classes;
 pub mod component;
 pub mod context;
 pub mod export_resolve;
 pub mod exports;
+pub mod factory;
 pub mod member_alias;
 pub mod pipeline;
 pub mod types;
@@ -18,31 +20,35 @@ use std::path::{Path, PathBuf};
 use rustc_hash::FxHashMap;
 
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement};
+use oxc_ast::ast::{
+    ExportAllDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
+};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
-    ExportTarget, FactoryTarget, MemberAlias, TraceComponent, TraceFactory, TraceImport,
-    TraceModule,
+    ExportTarget, FactoryCall, MemberAlias, NamespaceExport, TraceComponent, TraceFactory,
+    TraceImport, TraceModule,
 };
 use crate::analysis::surface::{StyleSurface, TraceSources};
 use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
-use self::component::{
-    component_from_expression, component_from_function_declaration,
-    factory_from_function_declaration, factory_target_from_expression,
-};
+use self::component::{component_from_expression, component_from_function_declaration};
 use self::context::ParserContext;
 use self::exports::LocalExports;
+use self::factory::{
+    factory_call_from_expression, factory_from_expression, factory_from_function_declaration,
+};
 
 pub struct ParseState {
     pub components: FxHashMap<String, TraceComponent>,
-    pub component_factories: FxHashMap<String, FactoryTarget>,
+    pub component_factories: FxHashMap<String, FactoryCall>,
     pub factories: FxHashMap<String, TraceFactory>,
     pub exports: HashMap<String, ExportTarget>,
     pub export_all_sources: Vec<String>,
+    pub namespace_exports: Vec<NamespaceExport>,
+    pub class_components: Vec<String>,
     pub member_aliases: Vec<MemberAlias>,
     pub identifier_aliases: FxHashMap<String, String>,
     pub local_exports: LocalExports,
@@ -56,6 +62,8 @@ impl Default for ParseState {
             factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
+            namespace_exports: Vec::new(),
+            class_components: Vec::new(),
             member_aliases: Vec::new(),
             identifier_aliases: FxHashMap::default(),
             local_exports: LocalExports::default(),
@@ -131,6 +139,8 @@ pub fn fold_trace_module(
         factories: state.factories,
         exports: state.exports,
         export_all_sources: state.export_all_sources,
+        namespace_exports: state.namespace_exports,
+        class_components: state.class_components,
         imports,
         member_aliases: state.member_aliases,
         identifier_aliases: state.identifier_aliases,
@@ -207,12 +217,10 @@ fn collect_statement(
 ) -> Result<(), StyleTraceError> {
     match statement {
         Statement::FunctionDeclaration(function) => {
-            if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
-                state.components.insert(name, component);
-            }
-            if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
-                state.factories.insert(name, factory);
-            }
+            collect_function_statement(function, ctx, state)?
+        }
+        Statement::ClassDeclaration(class) => {
+            classes::note_class(class, ctx, &mut state.class_components)?
         }
         Statement::VariableDeclaration(declaration) => {
             collect_variable_symbols(declaration.declarations.iter(), ctx, state)?;
@@ -227,17 +235,51 @@ fn collect_statement(
             exports::collect_export_default_declaration(export_default, ctx, state)?;
         }
         Statement::ExportAllDeclaration(export_all) => {
-            state
-                .export_all_sources
-                .push(module_source_literal(ctx.source, export_all.source.span()));
+            collect_export_all(export_all, ctx, state);
         }
         _ => {}
     }
     Ok(())
 }
 
-/// Fold one declaration list into the symbol maps: components, factory targets, identifier
-/// links (`const A = B`), wrapper links (`const A = memo(B)`), and `Object.assign` members.
+/// A function declaration may be a component, a factory, or both.
+fn collect_function_statement(
+    function: &oxc_allocator::Box<'_, oxc_ast::ast::Function<'_>>,
+    ctx: &ParserContext,
+    state: &mut ParseState,
+) -> Result<(), StyleTraceError> {
+    if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
+        state.components.insert(name, component);
+    }
+    if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
+        state.factories.insert(name, factory);
+    }
+    Ok(())
+}
+
+/// `export * from 'source'` re-exports the names the source exposes; `export * as Name from 'source'`
+/// exposes them under `Name.`. Type-only forms name no value, so they mint nothing.
+fn collect_export_all(
+    export_all: &ExportAllDeclaration<'_>,
+    ctx: &ParserContext,
+    state: &mut ParseState,
+) {
+    if export_all.export_kind == ImportOrExportKind::Type {
+        return;
+    }
+    let source = module_source_literal(ctx.source, export_all.source.span());
+    match &export_all.exported {
+        Some(exported) => state.namespace_exports.push(NamespaceExport {
+            namespace: module_export_name(ctx.source, exported),
+            source,
+        }),
+        None => state.export_all_sources.push(source),
+    }
+}
+
+/// Fold one declaration list into the symbol maps: components, factory definitions and call sites,
+/// identifier links (`const A = B`), wrapper links (`const A = memo(B)`), `Object.assign` members,
+/// and class components.
 pub fn collect_variable_symbols<'a, I>(
     declarators: I,
     ctx: &ParserContext,
@@ -253,22 +295,38 @@ where
         let Some(init) = declarator.init.as_ref() else {
             continue;
         };
-        let name = identifier.name.to_string();
-        wrappers::collect_object_assign_members(&name, init, &mut state.member_aliases);
-        if let Some(component) = component_from_expression(&name, init, ctx, BTreeSet::new())? {
-            state.components.insert(name, component);
-            continue;
-        }
-        if let Some(target) = wrappers::react_wrapper_identifier(init, ctx.imports) {
-            link_wrapper(state, &name, target);
-            continue;
-        }
-        if let Some(factory_target) = factory_target_from_expression(init, ctx.imports) {
-            state.component_factories.insert(name, factory_target);
-            continue;
-        }
-        member_alias::collect_identifier_alias(&name, init, &mut state.identifier_aliases);
+        collect_declarator_symbol(identifier.name.as_str(), init, ctx, state)?;
     }
+    Ok(())
+}
+
+/// Fold one `name = init` binding into the symbol maps. The first shape that matches claims the name.
+fn collect_declarator_symbol<'a>(
+    name: &str,
+    init: &'a oxc_ast::ast::Expression<'a>,
+    ctx: &ParserContext,
+    state: &mut ParseState,
+) -> Result<(), StyleTraceError> {
+    wrappers::collect_object_assign_members(name, init, &mut state.member_aliases);
+    if let Some((factory_name, factory)) = factory_from_expression(name, init, ctx)? {
+        state.factories.insert(factory_name, factory);
+    }
+    if let oxc_ast::ast::Expression::ClassExpression(class) = init {
+        return classes::note_named_class(name, class, ctx, &mut state.class_components);
+    }
+    if let Some(component) = component_from_expression(name, init, ctx, BTreeSet::new())? {
+        state.components.insert(name.to_string(), component);
+        return Ok(());
+    }
+    if let Some(target) = wrappers::react_wrapper_identifier(init, ctx.imports) {
+        link_wrapper(state, name, target);
+        return Ok(());
+    }
+    if let Some(call) = factory_call_from_expression(init, ctx) {
+        state.component_factories.insert(name.to_string(), call);
+        return Ok(());
+    }
+    member_alias::collect_identifier_alias(name, init, &mut state.identifier_aliases);
     Ok(())
 }
 

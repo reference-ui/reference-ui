@@ -28,10 +28,12 @@ impl TracedBinding {
 #[derive(Clone)]
 pub struct TraceModule {
     pub(super) components: FxHashMap<String, TraceComponent>,
-    pub(super) component_factories: FxHashMap<String, FactoryTarget>,
+    pub(super) component_factories: FxHashMap<String, FactoryCall>,
     pub(super) factories: FxHashMap<String, TraceFactory>,
     pub(super) exports: HashMap<String, ExportTarget>,
     pub(super) export_all_sources: Vec<String>,
+    pub(super) namespace_exports: Vec<NamespaceExport>,
+    pub(super) class_components: Vec<String>,
     pub(super) imports: FxHashMap<String, TraceImport>,
     pub(super) member_aliases: Vec<MemberAlias>,
     pub(super) identifier_aliases: FxHashMap<String, String>,
@@ -47,11 +49,20 @@ impl TraceModule {
             factories: FxHashMap::default(),
             exports: HashMap::new(),
             export_all_sources: Vec::new(),
+            namespace_exports: Vec::new(),
+            class_components: Vec::new(),
             imports: FxHashMap::default(),
             member_aliases: Vec::new(),
             identifier_aliases: FxHashMap::default(),
         }
     }
+}
+
+/// One `export * as Name from 'source'`: every traced name `source` exposes mints as `Name.<name>`.
+#[derive(Clone)]
+pub(super) struct NamespaceExport {
+    pub(super) namespace: String,
+    pub(super) source: String,
 }
 
 /// One compound-member assignment (`Tabs.Panel = TabPanel`): the dotted
@@ -79,9 +90,29 @@ pub(super) enum FactoryTarget {
     },
 }
 
+/// One factory call site (`export const Fancy = withPad(Box)`): the callee plus each argument.
+/// An argument naming a component resolves to an edge target in the calling module; `None` marks
+/// an argument that names no component, such as a call, a spread or a literal.
+#[derive(Clone)]
+pub(super) struct FactoryCall {
+    pub(super) target: FactoryTarget,
+    pub(super) args: Vec<Option<EdgeTarget>>,
+}
+
 #[derive(Clone)]
 pub(super) struct TraceFactory {
     pub(super) component: TraceComponent,
+}
+
+impl TraceFactory {
+    /// True when the product forwards style props into one of the factory's own parameters, which
+    /// makes the factory a higher-order component whose verdict depends on its call's arguments.
+    pub(super) fn forwards_params(&self) -> bool {
+        self.component
+            .edges
+            .iter()
+            .any(|edge| matches!(edge.target, EdgeTarget::Parameter(_)))
+    }
 }
 
 #[derive(Clone)]
@@ -121,6 +152,9 @@ pub(super) enum EdgeTarget {
         source: String,
         imported_name: String,
     },
+    /// A parameter of the higher-order component that produced the edge's component. It takes
+    /// the verdict of the argument the call site passes in that position.
+    Parameter(usize),
 }
 
 #[derive(Default)]

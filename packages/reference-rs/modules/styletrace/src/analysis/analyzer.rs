@@ -1,9 +1,7 @@
-//! Walks the parsed wrapper graph to decide which exported components are
-//! style-traced. It takes parsed modules plus the surface sets and follows
-//! local, imported, and factory edges back to Reference primitives.
-//! Emits the exported bindings whose style props reach a primitive. Entry
-//! parsing and surface acquisition live in `surface.rs`; this file stays
-//! the walker.
+//! Walks the parsed wrapper graph to decide which exported components are style-traced.
+//! It takes parsed modules plus the surface sets and follows local, imported, and factory edges back to Reference primitives.
+//! Emits the exported bindings whose style props reach a primitive, plus the warnings the walk owns: class components and higher-order arguments it could not resolve.
+//! Entry parsing and surface acquisition live in `surface.rs`, name exposure in `exposure.rs`, and higher-order application in `hoc.rs`; this file stays the walker.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -11,7 +9,8 @@ use std::path::{Path, PathBuf};
 use crate::diagnostics::{push_skipped, StyletraceDiagnostic};
 use crate::resolver::StyleTraceError;
 
-use super::memo::TraceMemo;
+use super::hoc::{HocCall, UnresolvedHocs};
+use super::memo::{TraceMemo, Verdict};
 use super::model::{
     EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule, TracedBinding,
 };
@@ -21,14 +20,15 @@ use super::source_files::format_relative_module;
 use super::surface::{StyleSurface, TraceSources};
 
 pub(super) struct StyleTraceAnalyzer<'s> {
-    modules: BTreeMap<PathBuf, TraceModule>,
-    surface: StyleSurface,
-    sync_root: PathBuf,
+    pub(super) modules: BTreeMap<PathBuf, TraceModule>,
+    pub(super) surface: StyleSurface,
+    pub(super) sync_root: PathBuf,
     sources: &'s TraceSources<'s>,
-    resolver: ModuleResolver<'s>,
+    pub(super) resolver: ModuleResolver<'s>,
     pub(super) memo: TraceMemo,
-    owned_props: BTreeMap<String, BTreeSet<String>>,
-    diagnostics: Vec<StyletraceDiagnostic>,
+    pub(super) unresolved_hocs: UnresolvedHocs,
+    pub(super) owned_props: BTreeMap<String, BTreeSet<String>>,
+    pub(super) diagnostics: Vec<StyletraceDiagnostic>,
 }
 
 impl<'s> StyleTraceAnalyzer<'s> {
@@ -45,33 +45,10 @@ impl<'s> StyleTraceAnalyzer<'s> {
             sources,
             resolver: ModuleResolver::new(sources.staged),
             memo: TraceMemo::default(),
+            unresolved_hocs: UnresolvedHocs::new(),
             owned_props: BTreeMap::new(),
             diagnostics: Vec::new(),
         }
-    }
-
-    /// Drain edge-target diagnostics recorded while walking.
-    pub(super) fn take_diagnostics(&mut self) -> Vec<StyletraceDiagnostic> {
-        std::mem::take(&mut self.diagnostics)
-    }
-
-    /// Drain the owned-props map: each traced export name to the prop
-    /// names its own declaration owns. Same-named exports union.
-    pub(super) fn take_owned_props(&mut self) -> BTreeMap<String, BTreeSet<String>> {
-        std::mem::take(&mut self.owned_props)
-    }
-
-    /// Record one traced export's owned props under its export name.
-    /// Empty sets stay out: untraced and own-nothing hosts both mean
-    /// no shadow, so the map carries only real shadows.
-    pub(super) fn record_owned(&mut self, export_name: &str, owned: BTreeSet<String>) {
-        if owned.is_empty() {
-            return;
-        }
-        self.owned_props
-            .entry(export_name.to_string())
-            .or_default()
-            .extend(owned);
     }
 
     pub(super) fn collect_exported_bindings(
@@ -92,6 +69,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
         Ok(bindings.into_iter().collect())
     }
 
+    /// Stamp one module's exposed names with its label and record their owned props.
     fn collect_module_bindings(
         &mut self,
         module_path: &Path,
@@ -99,119 +77,13 @@ impl<'s> StyleTraceAnalyzer<'s> {
         source_root_is_file: bool,
         bindings: &mut BTreeSet<TracedBinding>,
     ) -> Result<(), StyleTraceError> {
-        let Some(module) = self.modules.get(module_path).cloned() else {
+        if !self.modules.contains_key(module_path) {
             return Ok(());
-        };
+        }
         let rel_module = format_relative_module(module_path, source_root, source_root_is_file);
-
-        for export_name in module.exports.keys() {
-            if let Some(owned) = self.export_is_traced(module_path, export_name, &mut Vec::new())? {
-                bindings.insert(TracedBinding::new(&rel_module, export_name));
-                self.record_owned(export_name, owned);
-            }
-        }
-
-        self.collect_export_all_bindings(module_path, &module, &rel_module, bindings)?;
-        self.collect_member_aliases(module_path, &module, &rel_module, bindings)?;
-        self.collect_reexported_aliases(module_path, &module, &rel_module, bindings)?;
-        Ok(())
-    }
-
-    /// Re-emit each export-star target's traced names under this module.
-    /// Unresolvable and unloadable targets contribute nothing.
-    fn collect_export_all_bindings(
-        &mut self,
-        module_path: &Path,
-        module: &TraceModule,
-        rel_module: &str,
-        bindings: &mut BTreeSet<TracedBinding>,
-    ) -> Result<(), StyleTraceError> {
-        for source in &module.export_all_sources {
-            let Some(target) =
-                self.resolver.resolve_imported_module(module_path, source, &self.sync_root)?
-            else {
-                continue;
-            };
-            self.ensure_module_loaded(&target)?;
-            let Some(target_module) = self.modules.get(&target).cloned() else {
-                continue;
-            };
-            for export_name in target_module.exports.keys() {
-                if let Some(owned) = self.export_is_traced(&target, export_name, &mut Vec::new())? {
-                    bindings.insert(TracedBinding::new(rel_module, export_name));
-                    self.record_owned(export_name, owned);
-                }
-            }
-            let walk = super::aliases::WalkModule {
-                path: &target,
-                module: &target_module,
-                rel: rel_module,
-                aliases: &target_module.member_aliases,
-            };
-            super::aliases::collect_alias_bindings(self, &walk, bindings)?;
-        }
-        Ok(())
-    }
-
-    /// Resolve one module's compound-member aliases (`Tabs.Panel`) into
-    /// dotted bindings. One step of the module walk, beside the exports.
-    fn collect_member_aliases(
-        &mut self,
-        module_path: &Path,
-        module: &TraceModule,
-        rel_module: &str,
-        bindings: &mut BTreeSet<TracedBinding>,
-    ) -> Result<(), StyleTraceError> {
-        let walk = super::aliases::WalkModule {
-            path: module_path,
-            module,
-            rel: rel_module,
-            aliases: &module.member_aliases,
-        };
-        super::aliases::collect_alias_bindings(self, &walk, bindings)
-    }
-
-    /// Re-emit a re-exported namespace's aliases under the barrel's name.
-    /// `export { Tabs }` (direct or via a local import) carries `Tabs.*`;
-    /// a rename (`as Accordion`) remaps the hosts. One level, like the
-    /// export-star walk; unresolvable targets contribute nothing.
-    fn collect_reexported_aliases(
-        &mut self,
-        module_path: &Path,
-        module: &TraceModule,
-        rel_module: &str,
-        bindings: &mut BTreeSet<TracedBinding>,
-    ) -> Result<(), StyleTraceError> {
-        for (export_name, target) in &module.exports {
-            let ExportTarget::Imported {
-                source,
-                imported_name,
-            } = target
-            else {
-                continue;
-            };
-            let Some(resolved) =
-                self.resolver
-                    .resolve_imported_module(module_path, source, &self.sync_root)?
-            else {
-                continue;
-            };
-            self.ensure_module_loaded(&resolved)?;
-            let Some(target_module) = self.modules.get(&resolved).cloned() else {
-                continue;
-            };
-            let remapped =
-                super::aliases::remapped_aliases(&target_module, imported_name, export_name);
-            if remapped.is_empty() {
-                continue;
-            }
-            let walk = super::aliases::WalkModule {
-                path: &resolved,
-                module: &target_module,
-                rel: rel_module,
-                aliases: &remapped,
-            };
-            super::aliases::collect_alias_bindings(self, &walk, bindings)?;
+        for (name, owned) in self.module_exposures(module_path, &mut Vec::new())? {
+            bindings.insert(TracedBinding::new(&rel_module, &name));
+            self.record_owned(&name, owned);
         }
         Ok(())
     }
@@ -224,7 +96,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
         module_path: &Path,
         export_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    ) -> Result<Verdict, StyleTraceError> {
         let export_target = self
             .modules
             .get(module_path)
@@ -263,13 +135,13 @@ impl<'s> StyleTraceAnalyzer<'s> {
     }
 
     /// Body of one component node: its own style props and edges, or the
-    /// factory product it was minted from. The memo settles the verdict.
+    /// factory product it was minted from. The memo in `memo.rs` settles the verdict.
     pub(super) fn component_body(
         &mut self,
         module_path: &Path,
         component_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    ) -> Result<Verdict, StyleTraceError> {
         let component = self
             .modules
             .get(module_path)
@@ -283,10 +155,12 @@ impl<'s> StyleTraceAnalyzer<'s> {
             .cloned();
 
         let result = match component {
-            Some(component) => self.component_value_is_traced(module_path, &component, stack)?,
+            Some(component) => {
+                self.component_value_is_traced(module_path, &component, stack, None)?
+            }
             None => match component_factory {
-                Some(factory_target) => {
-                    self.factory_target_is_traced(module_path, &factory_target, stack)?
+                Some(call) => {
+                    self.factory_call_is_traced(module_path, component_name, &call, stack)?
                 }
                 None => None,
             },
@@ -295,12 +169,15 @@ impl<'s> StyleTraceAnalyzer<'s> {
         Ok(result)
     }
 
-    fn component_value_is_traced(
+    /// Whether a component's style props reach a primitive. `call` carries the arguments of the
+    /// higher-order application that produced the component, when there is one.
+    pub(super) fn component_value_is_traced(
         &mut self,
         module_path: &Path,
         component: &TraceComponent,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+        call: Option<&HocCall<'_>>,
+    ) -> Result<Verdict, StyleTraceError> {
         if !component.exposes_style_props {
             return Ok(None);
         }
@@ -309,23 +186,57 @@ impl<'s> StyleTraceAnalyzer<'s> {
         }
 
         for edge in &component.edges {
-            let matched = match &edge.target {
-                EdgeTarget::Primitive(name) => self.surface.primitives.contains(name),
-                EdgeTarget::Local(local_name) => self
-                    .local_target_is_traced(module_path, local_name, stack)?
-                    .is_some(),
-                EdgeTarget::Imported {
-                    source,
-                    imported_name,
-                } => self
-                    .import_target_is_traced(module_path, source, imported_name, stack)?
-                    .is_some(),
-            };
-            if matched {
+            if self
+                .edge_is_traced(module_path, &edge.target, stack, call)?
+                .is_some()
+            {
                 return Ok(Some(component.owned_props.clone()));
             }
         }
+        if let Some(call) = call {
+            self.note_unresolved_arguments(call, component);
+        }
         Ok(None)
+    }
+
+    /// The verdict of one edge: a higher-order parameter, resolved against the call, or a target
+    /// that names a primitive, a local binding or an import.
+    pub(super) fn edge_is_traced(
+        &mut self,
+        module_path: &Path,
+        target: &EdgeTarget,
+        stack: &mut Vec<String>,
+        call: Option<&HocCall<'_>>,
+    ) -> Result<Verdict, StyleTraceError> {
+        if let EdgeTarget::Parameter(index) = target {
+            return match call {
+                Some(call) => self.parameter_is_traced(call, *index, stack),
+                None => Ok(None),
+            };
+        }
+        self.resolved_edge_is_traced(module_path, target, stack)
+    }
+
+    /// The verdict of an edge that names a primitive, a local binding or an import.
+    fn resolved_edge_is_traced(
+        &mut self,
+        module_path: &Path,
+        target: &EdgeTarget,
+        stack: &mut Vec<String>,
+    ) -> Result<Verdict, StyleTraceError> {
+        match target {
+            EdgeTarget::Primitive(name) => {
+                Ok(self.surface.primitives.contains(name).then(BTreeSet::new))
+            }
+            EdgeTarget::Local(local_name) => {
+                self.local_target_is_traced(module_path, local_name, stack)
+            }
+            EdgeTarget::Imported {
+                source,
+                imported_name,
+            } => self.import_target_is_traced(module_path, source, imported_name, stack),
+            EdgeTarget::Parameter(_) => Ok(None),
+        }
     }
 
     /// The owned props when a local edge target traces: a local component
@@ -337,48 +248,36 @@ impl<'s> StyleTraceAnalyzer<'s> {
         module_path: &Path,
         target: &str,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    ) -> Result<Verdict, StyleTraceError> {
         let Some(module) = self.modules.get(module_path).cloned() else {
             return Ok(None);
         };
         super::aliases::ident_alias_target_is_traced(self, module_path, &module, target, stack)
     }
 
-    fn factory_target_is_traced(
+    /// The memoized no-argument verdict of a factory target.
+    pub(super) fn factory_target_is_traced(
         &mut self,
         module_path: &Path,
         target: &FactoryTarget,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
-        match target {
-            FactoryTarget::Local(factory_name) => {
-                self.factory_is_traced(module_path, factory_name, stack)
+    ) -> Result<Verdict, StyleTraceError> {
+        match self.resolve_factory(module_path, target)? {
+            Some((factory_module, factory_name)) => {
+                self.factory_is_traced(&factory_module, &factory_name, stack)
             }
-            FactoryTarget::Imported {
-                source,
-                imported_name,
-            } => {
-                let Some(resolved) = self.resolver.resolve_imported_module(
-                    module_path,
-                    source,
-                    &self.sync_root,
-                )?
-                else {
-                    return Ok(None);
-                };
-                self.ensure_module_loaded(&resolved)?;
-                self.factory_is_traced(&resolved, imported_name, stack)
-            }
+            None => Ok(None),
         }
     }
 
-    /// Body of one factory node: the component its factory returns.
+    /// Body of one factory node: the component its factory returns, with no
+    /// arguments bound. A forwarding factory never reaches here from a call site.
     pub(super) fn factory_body(
         &mut self,
         module_path: &Path,
         factory_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    ) -> Result<Verdict, StyleTraceError> {
         let result = match self
             .modules
             .get(module_path)
@@ -386,7 +285,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
             .cloned()
         {
             Some(factory) => {
-                self.component_value_is_traced(module_path, &factory.component, stack)?
+                self.component_value_is_traced(module_path, &factory.component, stack, None)?
             }
             None => None,
         };
@@ -400,7 +299,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
         source: &str,
         imported_name: &str,
         stack: &mut Vec<String>,
-    ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
+    ) -> Result<Verdict, StyleTraceError> {
         if source == "@reference-ui/react" {
             // Primitives own nothing in the trace flow; the match is the host.
             return Ok(self
@@ -422,7 +321,10 @@ impl<'s> StyleTraceAnalyzer<'s> {
         self.export_is_traced(&resolved_module, imported_name, stack)
     }
 
-    fn ensure_module_loaded(&mut self, module_path: &Path) -> Result<(), StyleTraceError> {
+    pub(super) fn ensure_module_loaded(
+        &mut self,
+        module_path: &Path,
+    ) -> Result<(), StyleTraceError> {
         if self.modules.contains_key(module_path) {
             return Ok(());
         }

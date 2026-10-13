@@ -76,6 +76,9 @@ Then it walks the JSX tree and forwarding edges:
 - direct style-pipeline usage such as `splitCssProps`, `box`, and `css`
 - factory-produced components whose returned component still exposes Reference
 	style props and feeds that same pipeline
+- higher-order components applied at an export site, such as `export const Padded = withPad(Div)`,
+	whose returned component forwards StyleProps into its parameter; the call's argument supplies the wrapped component
+- namespace re-exports such as `export * as UI from './ui'`, whose names read `UI.<name>`
 
 If style-bearing props remain connected to a Reference primitive or to the same
 Reference runtime style pipeline at the far end of that chain, the wrapper
@@ -139,5 +142,7 @@ extraction fails closed without scanning every tag. The voyage that
 made Neo-synced trees traceable is recorded in
 [styletrace.md](../../../../docs/MISSIONS/COMPLETED/STYLETRACE.md). Do not close
 the gap with a PascalCase name list.
+
+Class components are not traced in v1. A class whose props expose StyleProps emits a `STT-W-CLASS-COMPONENT` warning instead, and a higher-order component whose argument names no component emits `STT-W-UNRESOLVED-HOC-ARGUMENT` rather than a guess.
 
 > Search terms: forwardRef, rest spread, style prop tracer, wrapper analysis, styletrace/resolution, styletrace/wrappers, styletrace/primitives, styletrace/forwarding, rs:canon, rs:atomic, rs:base-system

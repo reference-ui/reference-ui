@@ -537,20 +537,25 @@ fn import_then_export_namespace_reemits_member_aliases() {
 }
 
 #[test]
-fn export_star_as_does_not_mint_namespaced_hosts() {
-    // Deferred boundary: `export * as Accordion` invents a namespace whose
-    // members (`<Accordion.Panel>`) name the origin's plain exports, which
-    // needs per-export dotted hosts the walk does not mint. Silent, never
-    // misattributed; only the origin's own spellings emit.
+fn export_star_as_mints_namespaced_hosts() {
+    // `export * as Accordion` exposes each name the origin exposes under `Accordion.`: the origin's
+    // exported Panel and Item, and its compound hosts Tabs.Panel and Tabs.Item. The Plain member
+    // exposes no StyleProps, and the origin is not an entry, so no bare spelling leaks.
     let outcome = trace_scratch(
         "member-alias-barrel-star-as",
         &[("barrel.tsx", BARREL_STAR_AS_TSX), ("tabs.tsx", TABS_TSX)],
         "barrel.tsx",
     );
 
-    assert!(!binding_names(&outcome)
-        .iter()
-        .any(|name| name.starts_with("Accordion.")));
+    assert_eq!(
+        binding_names(&outcome),
+        vec![
+            "Accordion.Item".to_string(),
+            "Accordion.Panel".to_string(),
+            "Accordion.Tabs.Item".to_string(),
+            "Accordion.Tabs.Panel".to_string(),
+        ]
+    );
 }
 
 #[test]

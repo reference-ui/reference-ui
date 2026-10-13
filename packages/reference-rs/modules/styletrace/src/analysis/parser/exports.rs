@@ -17,14 +17,15 @@ use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
 use super::component::{
-    component_from_function_declaration, component_from_function_like,
-    factory_from_function_declaration, FunctionLikeContext,
+    component_from_function_declaration, component_from_function_like, FunctionLikeContext,
 };
+use super::factory::factory_from_function_declaration;
+use super::classes;
 use super::context::ParserContext;
 use super::{collect_variable_symbols, ParseState};
 
-pub(super) const DEFAULT_EXPORT: &str = "default";
-const ANONYMOUS_DEFAULT: &str = "__default__";
+pub(in crate::analysis) const DEFAULT_EXPORT: &str = "default";
+pub(in crate::analysis) const ANONYMOUS_DEFAULT: &str = "__default__";
 
 /// One export of a local binding: the public `exported` name (`default` for the default
 /// export) and the module-level `local` binding it names.
@@ -144,6 +145,9 @@ fn collect_export_named_declaration_body(
         Declaration::VariableDeclaration(declaration) => {
             collect_variable_export(declaration, ctx, state)
         }
+        Declaration::ClassDeclaration(class) => {
+            classes::note_class(class, ctx, &mut state.class_components)
+        }
         _ => Ok(()),
     }
 }
@@ -205,6 +209,20 @@ pub(super) fn collect_export_default_declaration(
         }
         ExportDefaultDeclarationKind::FunctionExpression(function) => {
             collect_default_expression(function, ctx, state)
+        }
+        _ => collect_default_class(&export_default.declaration, ctx, state),
+    }
+}
+
+/// `export default class`: a React class component is recorded for its warning, never traced.
+fn collect_default_class(
+    declaration: &ExportDefaultDeclarationKind<'_>,
+    ctx: &ParserContext,
+    state: &mut ParseState,
+) -> Result<(), StyleTraceError> {
+    match declaration {
+        ExportDefaultDeclarationKind::ClassDeclaration(class) => {
+            classes::note_class(class, ctx, &mut state.class_components)
         }
         _ => Ok(()),
     }

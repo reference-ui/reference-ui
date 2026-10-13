@@ -120,7 +120,7 @@ pub fn jsx_target(
     Some(EdgeTarget::Local(name))
 }
 
-fn handle_namespace_target(
+pub fn handle_namespace_target(
     namespace: &str,
     member: &str,
     imports: &FxHashMap<String, TraceImport>,
@@ -154,7 +154,7 @@ pub fn create_element_target(
     }
 }
 
-fn identifier_target(
+pub fn identifier_target(
     name: &str,
     imports: &FxHashMap<String, TraceImport>,
     primitive_names: &BTreeSet<String>,

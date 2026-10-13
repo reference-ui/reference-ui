@@ -1,17 +1,14 @@
 //! Extracts component signatures and bodies from TSX source code.
-//! Identifies components and factories based on the presence of style pipeline usage or JSX returns.
-//! Populates the intermediate trace representation.
+//! Identifies components from the presence of style pipeline usage or JSX returns, and builds the component value of a function, arrow or React wrapper expression.
+//! Populates the intermediate trace representation; factories and higher-order components live in `factory.rs`.
 
 use oxc_ast::ast::{Expression, FormalParameter, Statement};
-use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 
 use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
 use super::types::parse_prop_bindings;
-use crate::analysis::model::{
-    ComponentEdge, FactoryTarget, PropBindings, TraceComponent, TraceFactory, TraceImport,
-};
+use crate::analysis::model::{ComponentEdge, PropBindings, TraceComponent};
 use crate::analysis::util::is_component_name;
 use crate::analysis::walk::{collect_edges_from_statement, WalkContext};
 use crate::resolver::StyleTraceError;
@@ -42,79 +39,6 @@ pub fn component_from_function_declaration(
     let component = component_from_function_like(&fl_ctx, ctx)?;
 
     Ok(component.map(|c| (name, c)))
-}
-
-pub fn factory_from_function_declaration(
-    function: &oxc_allocator::Box<'_, oxc_ast::ast::Function<'_>>,
-    ctx: &ParserContext,
-) -> Result<Option<(String, TraceFactory)>, StyleTraceError> {
-    let Some(id) = function.id.as_ref() else {
-        return Ok(None);
-    };
-    let Some(body) = function.body.as_ref() else {
-        return Ok(None);
-    };
-
-    // Function-local bindings live in a scratch state: only the components they
-    // name matter to the factory, and their links never reach the module's maps.
-    let mut local = super::ParseState::default();
-    super::collect_variable_symbols(
-        body.statements
-            .iter()
-            .filter_map(|statement| match statement {
-                Statement::VariableDeclaration(declaration) => {
-                    Some(declaration.declarations.iter())
-                }
-                _ => None,
-            })
-            .flatten(),
-        ctx,
-        &mut local,
-    )?;
-
-    for statement in &body.statements {
-        if let Some(factory) =
-            extract_factory_from_statement(statement, id.name.as_str(), &local.components, ctx)?
-        {
-            return Ok(Some(factory));
-        }
-    }
-
-    Ok(None)
-}
-
-fn extract_factory_from_statement(
-    statement: &Statement<'_>,
-    id_name: &str,
-    local_components: &FxHashMap<String, TraceComponent>,
-    ctx: &ParserContext,
-) -> Result<Option<(String, TraceFactory)>, StyleTraceError> {
-    let Statement::ReturnStatement(return_statement) = statement else {
-        return Ok(None);
-    };
-
-    let Some(argument) = return_statement.argument.as_ref() else {
-        return Ok(None);
-    };
-
-    if let Expression::Identifier(identifier) = argument {
-        if let Some(component) = local_components.get(identifier.name.as_str()) {
-            return Ok(Some((
-                id_name.to_string(),
-                TraceFactory {
-                    component: component.clone(),
-                },
-            )));
-        }
-    }
-
-    if let Some(component) =
-        component_from_expression("FactoryProduct", argument, ctx, BTreeSet::new())?
-    {
-        return Ok(Some((id_name.to_string(), TraceFactory { component })));
-    }
-
-    Ok(None)
 }
 
 pub fn component_from_expression(
@@ -245,41 +169,4 @@ fn shadowed_owned_props(bindings: &PropBindings) -> BTreeSet<String> {
         .intersection(&bindings.destructured_prop_names)
         .cloned()
         .collect()
-}
-
-pub fn factory_target_from_expression(
-    expression: &Expression<'_>,
-    imports: &FxHashMap<String, TraceImport>,
-) -> Option<FactoryTarget> {
-    match expression {
-        Expression::CallExpression(call) => match &call.callee {
-            Expression::Identifier(identifier) => imports
-                .get(identifier.name.as_str())
-                .map(|import_binding| FactoryTarget::Imported {
-                    source: import_binding.source.clone(),
-                    imported_name: import_binding.imported_name.clone(),
-                })
-                .or_else(|| Some(FactoryTarget::Local(identifier.name.to_string()))),
-            _ => None,
-        },
-        Expression::ParenthesizedExpression(parenthesized) => {
-            factory_target_from_expression(&parenthesized.expression, imports)
-        }
-        Expression::TSAsExpression(asserted) => {
-            factory_target_from_expression(&asserted.expression, imports)
-        }
-        Expression::TSSatisfiesExpression(asserted) => {
-            factory_target_from_expression(&asserted.expression, imports)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            factory_target_from_expression(&asserted.expression, imports)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            factory_target_from_expression(&asserted.expression, imports)
-        }
-        Expression::TSInstantiationExpression(instantiated) => {
-            factory_target_from_expression(&instantiated.expression, imports)
-        }
-        _ => None,
-    }
 }

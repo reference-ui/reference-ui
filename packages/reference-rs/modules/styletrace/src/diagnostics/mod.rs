@@ -64,6 +64,46 @@ pub(crate) fn unresolved_surface(reason: impl Into<String>) -> String {
     )
 }
 
+/// Class-component warning: a class whose props expose StyleProps is not traced in v1, so its
+/// style props are not traced either. Names the class and its file; the trace keeps going.
+pub(crate) fn class_component(file: &str, name: &str) -> Option<StyletraceDiagnostic> {
+    located_warning(
+        StyletraceDiagnosticCode::ClassComponent,
+        file,
+        format!("StyleTrace: class component `{name}` is not traced; its style props are not traced"),
+    )
+}
+
+/// Unresolved higher-order argument: `binding` is initialized by `hoc`, which forwards style props
+/// into argument `index` (zero-based), but that argument names no component. The binding stays
+/// untraced rather than guessed.
+pub(crate) fn unresolved_hoc_argument(
+    file: &str,
+    binding: &str,
+    hoc: &str,
+    index: usize,
+) -> Option<StyletraceDiagnostic> {
+    located_warning(
+        StyletraceDiagnosticCode::UnresolvedHocArgument,
+        file,
+        format!(
+            "StyleTrace: `{binding}` is not traced: `{hoc}` forwards style props into argument {}, which names no component",
+            index + 1
+        ),
+    )
+}
+
+/// A located warning with a stable code. Both callers pass non-blank messages, so construction
+/// cannot fail in practice; an unreachable failure drops the note, as `push_skipped` does.
+fn located_warning(
+    code: StyletraceDiagnosticCode,
+    file: &str,
+    message: String,
+) -> Option<StyletraceDiagnostic> {
+    let diagnostic = Diagnostic::warning(code.as_str(), message).ok()?;
+    Some(diagnostic.with_location(file, None, None))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +161,40 @@ mod tests {
         assert!(diagnostics
             .iter()
             .all(|note| note.severity == Severity::Warning));
+    }
+
+    #[test]
+    fn class_and_hoc_warnings_pin_codes_and_location() {
+        let class = class_component("/src/index.tsx", "Card").unwrap();
+        assert_eq!(class.code.as_str(), "STT-W-CLASS-COMPONENT");
+        assert_eq!(class.severity, Severity::Warning);
+        assert_eq!(class.file.as_deref(), Some("/src/index.tsx"));
+        assert!(class.message.contains("`Card`"));
+        assert!(class.message.ends_with("its style props are not traced"));
+
+        let hoc = unresolved_hoc_argument("/src/index.tsx", "Fancy", "withPad", 0).unwrap();
+        assert_eq!(hoc.code.as_str(), "STT-W-UNRESOLVED-HOC-ARGUMENT");
+        assert_eq!(hoc.severity, Severity::Warning);
+        assert!(hoc.message.contains("argument 1"));
+        assert!(hoc.message.contains("`withPad`"));
+    }
+
+    #[test]
+    fn class_and_hoc_warnings_pin_wire_bytes() {
+        let class = class_component("/src/index.tsx", "Card").unwrap();
+        assert_eq!(
+            serde_json::to_string(&class).unwrap(),
+            "{\"severity\":\"warning\",\"code\":\"STT-W-CLASS-COMPONENT\",\
+             \"message\":\"StyleTrace: class component `Card` is not traced; its style props are not traced\",\
+             \"file\":\"/src/index.tsx\"}"
+        );
+        let hoc = unresolved_hoc_argument("/src/index.tsx", "Fancy", "withPad", 0).unwrap();
+        assert_eq!(
+            serde_json::to_string(&hoc).unwrap(),
+            "{\"severity\":\"warning\",\"code\":\"STT-W-UNRESOLVED-HOC-ARGUMENT\",\
+             \"message\":\"StyleTrace: `Fancy` is not traced: `withPad` forwards style props into argument 1, which names no component\",\
+             \"file\":\"/src/index.tsx\"}"
+        );
     }
 
     #[test]
