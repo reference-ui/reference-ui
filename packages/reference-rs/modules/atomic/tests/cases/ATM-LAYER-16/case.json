@@ -1,0 +1,1 @@
+{"id": "ATM-LAYER-16", "name": "Global CSS from a user file whose path mentions reset or preset stays in @layer global; only the normalizeCss reset prints in @layer reset"}

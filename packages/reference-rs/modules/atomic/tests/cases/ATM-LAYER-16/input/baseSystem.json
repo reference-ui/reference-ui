@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "layer-user-global",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [
+    {
+      "source": "normalizeCss/reset",
+      "rules": {
+        "body": {
+          "margin": 0
+        }
+      }
+    },
+    {
+      "source": "theme/presets.ts",
+      "rules": {
+        "h2": {
+          "fontWeight": "700"
+        }
+      }
+    },
+    {
+      "source": "styles/reset-buttons.ts",
+      "rules": {
+        "button": {
+          "cursor": "pointer"
+        }
+      }
+    }
+  ],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

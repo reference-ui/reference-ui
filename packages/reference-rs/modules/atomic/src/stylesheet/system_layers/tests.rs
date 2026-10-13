@@ -481,7 +481,7 @@ fn reset_fragment_prints_in_layer_reset() {
     rules.insert("*".to_string(), star_rule);
     let system = BaseSystem {
         global_css: vec![base_system::GlobalCssFragment {
-            source: "preflight.ts".to_string(),
+            source: "normalizeCss/reset".to_string(),
             rules,
         }],
         ..Default::default()

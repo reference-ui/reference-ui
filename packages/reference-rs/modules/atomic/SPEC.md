@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract claims (`- [x]` / `- [ ]` lines) | 237 |
-| Named `[x]` proven | 235 |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 238 |
+| Named `[x]` proven | 236 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Case folders | 263 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 264 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -79,7 +79,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 21 | 21 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 8 | 8 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
-| `LAYER` | Cascade layer order (`@layer`) & layer population | 15 | 15 | 0 |
+| `LAYER` | Cascade layer order (`@layer`) & layer population | 16 | 16 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 8 | 8 | 0 |
 | `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 14 | 0 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
@@ -90,7 +90,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **237** | **235** | **2** |
+| **Total** | | **238** | **236** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -722,7 +722,6 @@ compiler contract.
 - [x] `ATM-TOKEN-25` `[reference]` `[seam]` —
   **Keywords the prop accepts, bare numbers, lengths, real tokens and names on props outside the length categories must never raise `ATM-W-UNKNOWN-TOKEN`.**
   Station `ATM-TOKEN-25`. `p: 'auto'`, `p: '4'`, `p: '2px'`, `w: 'fit-content'`, `fontSize: 'larger'`, `borderRadius: 'sm'` against a real `radii.sm` token, and `fontFamily: 'upFont'`, with no spacing scale declared. Assert zero diagnostics and each declaration printed (`padding: auto`, `padding: 2px`, `width: fit-content`, `font-size: larger`, `border-radius: var(--radii-sm)`, `font-family: upFont`). The golden pins `padding: 4px` for the bare number, which takes the length unit. `padding: auto` is a CSS-wide keyword the whole-value fence passes on any prop, so it was invalid CSS before this change too; it is grammar-quarantined in `tests/harness/css-quarantine.ts`.
-
 - [x] `ATM-TOKEN-26` `[reference]` `[seam]` —
   **A token whose whole value names another token without braces must warn `ATM-W-UNBRACED-TOKEN-REF` and suggest the braced reference, and print unchanged.**
   Station `ATM-TOKEN-26`. A baseSystem with `colors.accent` = `gray.900` (a path within its category), `colors.alias` = `colors.gray.900` (a full key), `colors.braced` = `{colors.gray.900}`, `borderStyles.solid` = `solid` and `sizes.hairline` = `1px`. Assert `--colors-accent: gray.900;` and `--colors-alias: colors.gray.900;` print verbatim and the braced token prints `var(--colors-gray-900)`. Exactly two warnings name `{colors.gray.900}` as the braced form, and no other diagnostic appears, so the self-named `solid` and the complete CSS `1px` stay silent. The check lives in `stylesheet/system_layers/mod.rs`, where `@layer tokens` prints.
@@ -797,8 +796,8 @@ compiler contract.
   **Atoms sharing an identical at-rule wrapper must nest under one copy of that at-rule.**
   Station `ATM-LAYER-07`. Three `sm` utilities share one `@container (min-width: 640px)` block. Nested `sm: { … }` object keys are not extract conditions; array slot 1 is `sm`. `cascade/mod.rs` groups after `CascadeKey` sort. Nested dual at-rules nest in author order (`ATM-GHOST-05`).
 - [x] `ATM-LAYER-08` `[reference]` `[seam]` —
-  **Reset content from the dump must print inside `@layer reset`, ahead of every other layer.**
-  Station `ATM-LAYER-08`. Compile a dump with a small preflight slice and assert it lands in `@layer reset` and that no utility or token rule precedes it. `ATM-LAYER-02` only proves the empty case stays omitted; §6 notes reset chrome is still empty in the fixture, which means the first layer of the shipped cascade has never emitted anything.
+  **The `normalizeCss/reset` fragment must print inside `@layer reset`, ahead of every other layer.**
+  Station `ATM-LAYER-08`. Compile a dump whose reset fragment carries the exact source `normalizeCss/reset`, the only source that prints in `@layer reset` (`ATM-LAYER-16` pins the path-substring exclusion), and assert it lands in `@layer reset` and that no utility or token rule precedes it. `ATM-LAYER-02` only proves the empty case stays omitted; §6 notes reset chrome is still empty in the fixture, which means the first layer of the shipped cascade has never emitted anything.
 - [x] `ATM-LAYER-09` `[reference]` `[seam]` —
   **`&` substitution in the global walker must distribute over comma members with `:is()` around combinator members.**
   Compile `globalCss({ 'body > p, body > ul': { margin: 0, '& ~ &': { marginTop: '10px' } } })` and assert the sibling rule prints `:is(body > p) ~ :is(body > p), :is(body > ul) ~ :is(body > ul)` — every combinator member wrapped, not just the first (Panda's unwrapped second member is a Panda bug, not parity). Comma members without a combinator distribute bare (`.ref-a ~ .ref-a, .ref-b ~ .ref-b`; `.ref-a .ref-kid, .ref-b .ref-kid`), and a lone combinator parent wraps too (`:is(.ref-stack > p) ~ :is(.ref-stack > p)`). Station `ATM-LAYER-09` (RS-11). `ATM-COND-14` pins the comma contract for `css()` utilities.
@@ -820,6 +819,9 @@ compiler contract.
 - [x] `ATM-LAYER-15` `[reference]` `[seam]` —
   **Bare token names in `globalCss` must resolve through the property's category.**
   Station `ATM-LAYER-15` (RS-35). Compile `body { fontFamily: 'sans' }` and `.card { borderRadius: 'md', outlineColor: 'ui.focus.ring', display: 'flex' }` against fonts/radii/colors fixtures. Assert `var(--fonts-sans)`, `var(--radii-md)`, `var(--colors-ui-focus-ring)`, verbatim `display: flex`, and zero diagnostics.
+- [x] `ATM-LAYER-16` `[reference]` `[seam]` —
+  **Only the exact `normalizeCss/reset` source prints in `@layer reset`; a user file whose path mentions reset or preset stays in `@layer global`.**
+  Station `ATM-LAYER-16`. Compile a dump with three `globalCss` fragments: `normalizeCss/reset`, `theme/presets.ts`, and `styles/reset-buttons.ts`. Assert the reset rule prints inside `@layer reset`, both user rules print inside `@layer global`, and no rule crosses into the other layer.
 
 ### Class Naming & Character Hygiene
 
@@ -1150,6 +1152,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-LAYER-13` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-13/` |
 | `ATM-LAYER-14` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-14/` |
 | `ATM-LAYER-15` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-15/` |
+| `ATM-LAYER-16` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-16/` |
 | `ATM-NAME-01` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-01/` |
 | `ATM-NAME-02` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-02/` |
 | `ATM-NAME-03` | `[x]` | `[seam]` | `tests/cases/ATM-NAME-03/` |
