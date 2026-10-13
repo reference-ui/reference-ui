@@ -48,13 +48,13 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 | Slice | Case | Proves | Status |
 | --- | --- | --- | --- |
-| L1 | NEO-LAYERS-01 | layer styles reach the consumer and paint; cascade: extends < layers < own | planned |
-| L2 | NEO-LAYERS-02 | visual-only boundary: layer tokens/recipes/roster/types absent; same upstream under extends present | planned |
-| L3 | NEO-LAYERS-03 | ordering: extends then layers, config order, dedupe and self-exclusion as implemented | planned |
-| L4 | NEO-LAYERS-04 | container root + upstream-system detection through layers | planned |
-| L5 | NEO-LAYERS-05 | validation errors at config load (messages, no output left) | planned |
-| L6 | NEO-LAYERS-06 | re-sync after a layered (and extended) upstream changes | planned |
-| L7 | docs | chain/SPEC.md, layer/SPEC.md, NEO-CHAIN/NEO-LAYER READMEs point at NEO-LAYERS | planned |
+| L1 | NEO-LAYERS-01 | layer styles reach the consumer and paint; cascade: extends < layers < own | done |
+| L2 | NEO-LAYERS-02 | visual-only boundary: layer tokens/recipes/roster/types absent; same upstream under extends present | done |
+| L3 | NEO-LAYERS-03 | ordering: extends then layers, config order, dedupe and self-exclusion as implemented | done |
+| L4 | NEO-LAYERS-04 | container root + upstream-system detection through layers | done |
+| L5 | NEO-LAYERS-05 | validation errors at config load (messages, no output left) | done |
+| L6 | NEO-LAYERS-06 | re-sync after a layered (and extended) upstream changes | done |
+| L7 | docs | chain/SPEC.md, layer/SPEC.md, NEO-CHAIN/NEO-LAYER READMEs point at NEO-LAYERS | done |
 
 ## Track 2 — reference-rs test suites in atomic's shape
 
@@ -69,7 +69,7 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
   diagnostics, runtime, base-system, shared have no `tests/` dir.
 - Baseline reds were environment, not code: styletrace needs the gitignored
   `fixtures/sync-root/.reference-ui` (cloned from the main checkout → 89 cargo /
-  32 vitest green). ATM-SITE-54 fails 1 vitest test on base (under investigation).
+  32 vitest green). ATM-SITE-54 needs gitignored `input/node_modules` (→ 320/320).
 
 ### Layout spec (oracle decision, adopted)
 
@@ -101,7 +101,7 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 | Module | `agentrs c` | `agentrs v` |
 | --- | --- | --- |
-| atomic | 849 passed | 320 / 15 files (with gitignored fixtures) |
+| atomic | 856 passed (6 result lines) | 320 / 15 files (with gitignored fixtures) |
 | atlas | 24 | 61 / 6 files |
 | tasty | 90 | 83 / 5 files |
 | styletrace | 89 (with fixture) | 32 / 3 files |
@@ -110,36 +110,81 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 | module-graph | 109 (`--crate module_graph`) | n/a |
 | primitives | n/a | 29 / 5 files (`v modules/primitives/`) |
 
-## Landings
+### After (re-run by orchestrator on neo-layers-tests)
+
+| Module | `agentrs c` | `agentrs v` | Commit |
+| --- | --- | --- | --- |
+| atlas | 24 = | 61 / 6 = | 4114d29c0, 755c4a536 |
+| styletrace | 89 = | 32 / 3 = | e89ae8c7d |
+| atomic | 856 = (6 lines) | 320 / 15 = | 9924b2da8 |
+| module-graph | 109 = (16 lines) | n/a | 19905fe85 |
+| typegen | 75 = (base after AnimationToken rebase) | 56 / 8 = | eabd217c6 |
+| canon | 58 = | 15 / 1 = | eabd217c6 |
+| primitives | n/a | 29 / 5 = | eabd217c6 |
+| tasty | 90 = (cook's working tree) | 83 / 5 = | NOT LANDED (see Left) |
+
+## Landings (hashes after the final rebase onto public-release c56c9a291)
 
 | Hash | What | Proof |
 | --- | --- | --- |
-| 6da6e55c2, eb4fa7479 | NEO-LAYERS-01 + layers group SPEC/TESTS | `agentneo run NEO-LAYERS-01` PASS (re-run by orchestrator) |
-| 3067e6b4c | NEO-LAYERS-05 + 2 layers unit tests in validate.test.ts | `agentneo run NEO-LAYERS-05` PASS; validate.test.ts 9 → 11 passed |
-| 6ce8cd381 | NEO-LAYERS-02/03 (visual-only boundary; order, dedupe, self-exclusion) | both PASS (re-run) |
-| 8d4cbd0d8 | NEO-LAYERS-04/06 (container root + qualifiers; re-sync) | 04 PASS; 06 red only on bare-specifier legs = BUG B1 (re-run) |
-| 8e413751e, 44e4ef2f9 | rs/atlas pilot: raw-id folders, suites/, harness/, runner default pattern | atlas c 24→24, v 61/6→61/6; 30 goldens sed-diff 0 |
+| ae874b410, 32223e614 | NEO-LAYERS-01 + layers group SPEC/TESTS | PASS |
+| b9aed3381 | NEO-LAYERS-05 + 2 layers unit tests (validate.test.ts 9 → 11) | PASS |
+| 262945c01 | NEO-LAYERS-02/03 | PASS |
+| 566407ae8 | NEO-LAYERS-04/06 (06 red on bare legs = B1) | 04 PASS |
+| e5fc0d990 | B1 fix: config bundle inlines published upstream baseSystem | NEO-LAYERS-06 PASS; reload.test.ts fails without fix |
+| 82362c3b8 | refiner: regression test pins unresolvable/builtin/alias imports external | src/config 39 passed |
+| fe7d7f098 | chain/layer docs point layers legs at NEO-LAYERS | grep "no Neo case authors" empty |
+| 4114d29c0 … eabd217c6 | track 2 module migrations (table above) | counts equal |
 
 ## Bugs
 
-- B1 (real, Neo): a consumer config importing an upstream baseSystem by BARE
-  specifier keeps the first-loaded upstream for the life of the process
-  (`src/config/bundle.ts:62-71` externalises packages; `src/config/evaluate.ts:30`
-  cache-busts only the entry). Hits watch mode for reference-lib's
-  `@reference-ui/icons/baseSystem`. Red in NEO-LAYERS-06 (layers/bare, extends/bare).
-  Fix: cook in flight; refiner pass after.
+- B1 (real, Neo, FIXED e5fc0d990 + 82362c3b8): a consumer config importing an
+  upstream baseSystem by BARE specifier kept the first-loaded upstream for the
+  life of the process (`src/config/bundle.ts` `packages: 'external'` + entry-only
+  cache-bust in `src/config/evaluate.ts:30`); hit watch mode for reference-lib's
+  `@reference-ui/icons/baseSystem`. Fix: onResolve plugin inlines a resolved
+  `baseSystem.m?js`, everything else stays external; watch graph unchanged.
 - Pinned as current behaviour, not fixed (D6/D7 in layers/SPEC.md): a system in
   both buckets prints its block twice; a layers entry named like the consumer
   ranks with own.
-- Environment, not code: ATM-SITE-54 (and -16/-58) need gitignored
-  `input/node_modules` fixtures, styletrace needs gitignored
-  `fixtures/sync-root/.reference-ui`; both exist only in the main checkout, so a
-  fresh clone/CI is red. Worktrees clone them from main.
+- Environment, not code (fresh clone/CI red): gitignored fixtures exist only in
+  the main checkout — styletrace `fixtures/sync-root/.reference-ui`, atomic
+  ATM-SITE-16/54/58 `input/node_modules`, neo NEO-DIAG-56/57
+  `world/decl/.reference-ui`. styletrace `loads_real_reference_core_style_props`
+  fails if `packages/reference-lib/.reference-ui` exists but is partial.
 
-## Verified at
+## Verified at eabd217c6
 
-(pending)
+- `pnpm agentneo run NEO-LAYERS-01..06`, NEO-CHAIN-06, NEO-SYNC-08, NEO-WATCH-01 → PASS.
+- `pnpm agentneo q` (61 files: layers cases, src/config, validate.test.ts) → 0/0.
+- `npx vitest run src/config src/system/base/validate.test.ts` → 50 passed.
+- Full `pnpm agentneo run` (on 82362c3b8, pre-typegen-move; neo untouched since)
+  → failures = the 12 known (MERGE-06, SITE-06/23/26/27, STATIC-01/02/03,
+  NAMER-03/04, REF-04/11) + NEO-DIAG-56/57, which pass once their gitignored
+  `world/decl/.reference-ui` is cloned from main → no new failures.
+- `pnpm agentrs t` → Rust PASSED, Vitest 51 files / 668 passed, quality passed
+  with warnings, COMPLETE SUITE VERIFICATION PASSED.
+- `pnpm agentrs q --all` → fails only on gitignored tasty `tests/.scratch`
+  output (walker IGNORE_DIRS lacks `.scratch`; pre-existing).
 
 ## Left
 
-- BAS-LAYER-01..04 in reference-rs base-system (new Rust layers API + tests).
+- tasty migration done but UNCOMMITTED in worktree `.claude/worktrees/nl-tasty`
+  (base 44e4ef2f9): the commit was denied by the permission classifier. 80
+  goldens re-hash because export names hash `cases/<folder>/`
+  (export_names.rs stable_hash_symbol_id); after folder→id + hash normalization
+  80/80 equal as sorted line sets. Needs the owner's OK to commit, then a
+  cherry-pick onto this branch.
+- `case.json`: not added (atomic has none; spec.ts is the manifest). Owner to say
+  if a separate case.json is still wanted.
+- BAS-LAYER-01..04 in reference-rs base-system: needs a new Rust layers API +
+  base_system cargo tests (separate job).
+- Bare upstream republish still doesn't trigger a watch re-sync (not a watch
+  input); other bare non-baseSystem imports keep first-load instances.
+- `agentrs q` walker should skip `.scratch`; tasty js/utilities flake (parallel
+  writes to `.scratch/TST-DOC-01`, unproven).
+- Stale path citations outside module scope: NEO-TOKEN-09 README (typegen
+  seam.test.ts), STYLE_PROP_EXTERNAL.md:429, agent-perf perf-index.json,
+  docs/bugs/MCP_DEFAULT_PROJECT.md, neo `__fixtures__/union-labels` comments.
+- `bin/ref.test.ts:235` and `src/sync/lib-barrel-negation.test.ts` pre-existing
+  unit-test issues (stale expectation; needs synced icons).
