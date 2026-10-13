@@ -111,18 +111,22 @@ There are two different ordering stories: config merge order and stylesheet asse
 
 ### Config merge order
 
-For config-time fragment data:
+For config-time fragment data, `extends` linearizes into one ordered list of named fragments:
 
-1. upstream `extends[]` fragments are evaluated in declared array order
-2. local fragments are evaluated after upstream fragments
-3. later fragment contributions override earlier ones on the same paths
+1. each `extends[]` entry contributes its published named fragment list, upstream first and its own last
+2. concatenate those lists in declared order, keeping each name at its first occurrence
+3. append the local fragments
+
+The list is evaluated in that order, so a shared base is evaluated once even when two branches republish it.
 
 Practical consequence:
 
-- for repeated token paths across multiple `extends[]`, later entries win
+- for repeated token paths across multiple `extends[]`, a later entry wins only on paths it writes itself
 - for repeated token paths between upstream and local, local wins
 
 Reference UI's Panda extension layer deep-merges fragment contributions, but the effective conflict rule is still "later writer wins on the same leaf path".
+
+Claims and the cases that prove them: [extends SPEC](../packages/reference-neo/src/system/base/SPEC.md).
 
 ### Stylesheet assembly order
 
