@@ -1,0 +1,1 @@
+{"id": "ATM-TOKEN-26", "name": "A token value that names another token without braces warns ATM-W-UNBRACED-TOKEN-REF and suggests the braced ref"}

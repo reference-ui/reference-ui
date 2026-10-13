@@ -9,7 +9,8 @@
 //! the utility passes; unresolvable values print verbatim, mirroring tokens.
 //! Token values resolve `{refs}` — whole-value or embedded in a composite — through
 //! the shared brace pass, and `r` rhythm through the shared rhythm chain like
-//! keyframes; unknown refs print verbatim with an error diagnostic, and the
+//! keyframes; unknown refs print verbatim with an error diagnostic, a whole value
+//! that names a token without braces prints verbatim under a warning, and the
 //! rhythm root itself refuses rhythm values with a diagnostic.
 
 use base_system::{BaseSystem, KeyframeDefinition, StyleMap, TokenEntry};
@@ -294,7 +295,7 @@ fn write_token_entry(
             None => return,
         },
     };
-    let Some(value) = css_token_value(raw, system, entry.css_var(), diagnostics) else {
+    let Some(value) = css_token_value(raw, system, entry, diagnostics) else {
         return;
     };
     out.push_str("    ");
@@ -311,10 +312,12 @@ fn write_token_entry(
 fn css_token_value(
     raw: &str,
     system: &BaseSystem,
-    owner_var: &str,
+    entry: &TokenEntry,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> Option<String> {
     let trimmed = raw.trim();
+    warn_unbraced_token_ref(trimmed, system, entry, diagnostics);
+    let owner_var = entry.css_var();
     let braced = expand_token_refs(trimmed, owner_var, system, diagnostics);
     let resolved = resolve_rhythm(&braced);
     if resolved.as_ref() == braced {
@@ -330,6 +333,48 @@ fn css_token_value(
         return None;
     }
     Some(resolved.into_owned())
+}
+
+/// Warn when a whole brace-free value names another token: `gray.900` on
+/// `colors.accent` is meant as `{colors.gray.900}`, and printed verbatim it is
+/// invalid CSS. Complete CSS (`white`, `1px`) is never a token reference, and
+/// the value still prints as written.
+fn warn_unbraced_token_ref(
+    trimmed: &str,
+    system: &BaseSystem,
+    entry: &TokenEntry,
+    diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
+) {
+    if trimmed.contains('{')
+        || trimmed.contains('}')
+        || canon::classify_css_value(trimmed).is_some()
+    {
+        return;
+    }
+    let Some(key) = named_token_key(trimmed, system, entry) else {
+        return;
+    };
+    diagnostics.push(DiagnosticLocation::default().warning(
+        DiagnosticCode::UnbracedTokenRef,
+        format!(
+            "token `{}` value `{trimmed}` names token `{key}` without braces; write `{{{key}}}`",
+            entry.css_var()
+        ),
+    ));
+}
+
+/// The full key of the other token a bare value names: the value read as a
+/// full key, else read within the owner's category. The owner never counts,
+/// so a token whose value repeats its own path stays silent.
+fn named_token_key(trimmed: &str, system: &BaseSystem, owner: &TokenEntry) -> Option<String> {
+    let in_category = format!("{}.{trimmed}", owner.category());
+    [trimmed.to_string(), in_category]
+        .into_iter()
+        .find(|key| {
+            system
+                .token(key)
+                .is_some_and(|target| target.css_var() != owner.css_var())
+        })
 }
 
 /// Expand `{path}` refs through the shared brace pass. Unknown refs keep the

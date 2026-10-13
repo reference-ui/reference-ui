@@ -156,12 +156,16 @@ pub enum DiagnosticCode {
     /// font-size prop that names no token in that category and is no CSS
     /// keyword the prop accepts. Warned and painted raw, like a bare colour.
     UnknownToken,
+    /// `stylesheet/system_layers`: a token whose whole value names another
+    /// token without braces. Printed verbatim; the warning offers the braced
+    /// reference the author meant.
+    UnbracedTokenRef,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 53] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 54] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -275,6 +279,10 @@ const CODE_TABLE: [(DiagnosticCode, &str); 53] = [
     (DiagnosticCode::RhythmRootCycle, "ATM-E-RHYTHM-ROOT-CYCLE"),
     (DiagnosticCode::UnknownTone, "ATM-W-UNKNOWN-TONE"),
     (DiagnosticCode::UnknownToken, "ATM-W-UNKNOWN-TOKEN"),
+    (
+        DiagnosticCode::UnbracedTokenRef,
+        "ATM-W-UNBRACED-TOKEN-REF",
+    ),
 ];
 
 impl DiagnosticCode {
@@ -409,6 +417,7 @@ mod tests {
             DiagnosticCode::RhythmRootCycle,
             DiagnosticCode::UnknownTone,
             DiagnosticCode::UnknownToken,
+            DiagnosticCode::UnbracedTokenRef,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

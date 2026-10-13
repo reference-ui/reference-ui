@@ -16,6 +16,10 @@ Examples:
   and font-size props `ATM-W-UNKNOWN-TOKEN` for a bare identifier that is no
   token in that category and no CSS keyword the prop accepts (`bare_name.rs`;
   `ATM-TOKEN-24`, `ATM-TOKEN-25`). Numbers, lengths and functions never warn.
+- a whole token value that names another token without braces (`gray.900`
+  for `colors.gray.900`) prints verbatim under `ATM-W-UNBRACED-TOKEN-REF`, which
+  suggests the braced form. That check lives in `stylesheet/system_layers`,
+  where `@layer tokens` is printed, not in this resolver (`ATM-TOKEN-26`).
 
 A **tone** names a colour at a theme-owned opacity: `blue.500/medium` emits
 `color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent)`.

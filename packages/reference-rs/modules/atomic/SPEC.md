@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract claims (`- [x]` / `- [ ]` lines) | 236 |
-| Named `[x]` proven | 234 |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 237 |
+| Named `[x]` proven | 235 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Case folders | 262 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 263 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -76,7 +76,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 10 | 10 | 0 |
 | `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 20 | 20 | 0 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 21 | 21 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 8 | 8 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 15 | 15 | 0 |
@@ -90,7 +90,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **236** | **234** | **2** |
+| **Total** | | **237** | **235** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -723,6 +723,10 @@ compiler contract.
   **Keywords the prop accepts, bare numbers, lengths, real tokens and names on props outside the length categories must never raise `ATM-W-UNKNOWN-TOKEN`.**
   Station `ATM-TOKEN-25`. `p: 'auto'`, `p: '4'`, `p: '2px'`, `w: 'fit-content'`, `fontSize: 'larger'`, `borderRadius: 'sm'` against a real `radii.sm` token, and `fontFamily: 'upFont'`, with no spacing scale declared. Assert zero diagnostics and each declaration printed (`padding: auto`, `padding: 2px`, `width: fit-content`, `font-size: larger`, `border-radius: var(--radii-sm)`, `font-family: upFont`). The golden pins `padding: 4px` for the bare number, which takes the length unit. `padding: auto` is a CSS-wide keyword the whole-value fence passes on any prop, so it was invalid CSS before this change too; it is grammar-quarantined in `tests/harness/css-quarantine.ts`.
 
+- [x] `ATM-TOKEN-26` `[reference]` `[seam]` —
+  **A token whose whole value names another token without braces must warn `ATM-W-UNBRACED-TOKEN-REF` and suggest the braced reference, and print unchanged.**
+  Station `ATM-TOKEN-26`. A baseSystem with `colors.accent` = `gray.900` (a path within its category), `colors.alias` = `colors.gray.900` (a full key), `colors.braced` = `{colors.gray.900}`, `borderStyles.solid` = `solid` and `sizes.hairline` = `1px`. Assert `--colors-accent: gray.900;` and `--colors-alias: colors.gray.900;` print verbatim and the braced token prints `var(--colors-gray-900)`. Exactly two warnings name `{colors.gray.900}` as the braced form, and no other diagnostic appears, so the self-named `solid` and the complete CSS `1px` stay silent. The check lives in `stylesheet/system_layers/mod.rs`, where `@layer tokens` prints.
+
 ### BaseSystem Spec Validation
 
 - [x] `ATM-TOKEN-10` `[forbidden]` `[seam]` —
@@ -1119,6 +1123,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-23` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-23/` |
 | `ATM-TOKEN-24` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-24/` |
 | `ATM-TOKEN-25` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-25/` |
+| `ATM-TOKEN-26` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-26/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |

@@ -140,6 +140,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-E-DRAINED-RETENTION-TOKEN` | default | Request reusing a drained token |
 | `ATM-W-UNKNOWN-TONE` | default | `css({ color: 'blue.500/mediun' })` |
 | `ATM-W-UNKNOWN-TOKEN` | default | `css({ p: 'upGap' })` |
+| `ATM-W-UNBRACED-TOKEN-REF` | default | `tokens({ colors: { accent: { value: 'gray.900' } } })` |
 
 ## Must not
 

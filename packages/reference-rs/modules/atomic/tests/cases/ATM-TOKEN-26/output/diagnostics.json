@@ -1,0 +1,12 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNBRACED-TOKEN-REF",
+    "message": "token `--colors-accent` value `gray.900` names token `colors.gray.900` without braces; write `{colors.gray.900}`"
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNBRACED-TOKEN-REF",
+    "message": "token `--colors-alias` value `colors.gray.900` names token `colors.gray.900` without braces; write `{colors.gray.900}`"
+  }
+]
