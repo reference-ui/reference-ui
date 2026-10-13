@@ -5,203 +5,36 @@
 // attaches to the owner until it stops, stale and torn locks take over with
 // warnings, and signals release the lock. A gated config holds a watch
 // resync in flight on demand, which proves the graceful-stop legs: the lock
-// outlives the in-flight sync, repeat signals are ignored, and SIGHUP stops
-// a watch like SIGINT. Signal legs are POSIX-only; stale, torn, and
-// break-lock run everywhere.
+// outlives the in-flight sync, repeat signals are ignored, a newcomer waits
+// for the stop and then syncs itself, and SIGHUP stops a watch like SIGINT.
+// Signal legs are POSIX-only; stale, torn, and break-lock run everywhere.
 
-import { execFile, spawn, type ChildProcess } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
+import {
+  ATTACH_LINE_RE,
+  BOOT_BLOCK_RE,
+  POSIX,
+  REBRAND,
+  childDone,
+  cleanupHarness,
+  holdWatchMidResync,
+  lockOwnerPid,
+  runBin,
+  sheetHasBrand,
+  sleep,
+  spawnBin,
+  waitForExit,
+  waitForFile,
+  waitForOutput,
+  waitForStageDrop,
+  writeWorld,
+  type HeldResync,
+  type Spawned,
+} from './__fixtures__/session-repro-harness.ts'
 
-const BIN_PATH = fileURLToPath(new URL('../../bin/ref.ts', import.meta.url))
-const BOOT_BLOCK_RE = /REF  v\d+\.\d+\.\d+  ready in \d+ ms/
-const ATTACH_LINE_RE = /already watching this project/
-const BRAND = '#7c3aed'
-const REBRAND = '#0e5c3f'
-const POSIX = process.platform !== 'win32'
-const tempDirs: string[] = []
-const liveChildren: ChildProcess[] = []
-const gateOpeners: Array<() => void> = []
-
-// Plain text from every child, whatever runs the suite: the test-core runner
-// exports FORCE_COLOR=1, which would paint the boot blocks the exact-text
-// assertions read. NO_COLOR wins in the CLI; FORCE_COLOR is dropped so Node
-// does not warn about the pair on the child's stderr.
-const PLAIN_ENV: NodeJS.ProcessEnv = { ...process.env, FORCE_COLOR: undefined, NO_COLOR: '1' }
-
-// Gates open before the reap, or a watch held at its gate sits out the grace.
-afterEach(async () => {
-  for (const open of gateOpeners.splice(0)) open()
-  await Promise.all(liveChildren.splice(0).map((child) => reap(child)))
-  await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })))
-})
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// The gate lives in the config because it is the one module that can await
-// (fragments bundle as IIFE). A load in the pid the gate file names marks its
-// arrival and waits until the file is removed, so that process stays inside a
-// sync holding its lock; any other pid, a newcomer included, loads through.
-const gatePath = (dir: string): string => join(dir, 'resync.gate')
-const arrivedPath = (dir: string): string => join(dir, 'resync.arrived')
-
-function gateLines(dir: string): string[] {
-  return [
-    "import { readFileSync, writeFileSync } from 'node:fs'",
-    `const GATE = ${JSON.stringify(gatePath(dir))}`,
-    `const ARRIVED = ${JSON.stringify(arrivedPath(dir))}`,
-    'const gated = (): boolean => {',
-    "  try { return readFileSync(GATE, 'utf8') === String(process.pid) } catch { return false }",
-    '}',
-    "if (gated()) writeFileSync(ARRIVED, '')",
-    'while (gated()) await new Promise((resolve) => setTimeout(resolve, 10))',
-  ]
-}
-
-function configFile(gatedDir?: string): string {
-  return [
-    "import { defineConfig } from '@reference-ui/neo'",
-    ...(gatedDir === undefined ? [] : gateLines(gatedDir)),
-    '',
-    'export default defineConfig({',
-    "  name: 'lock-test',",
-    "  include: ['theme/**/*.{ts,tsx}'],",
-    '})',
-    '',
-  ].join('\n')
-}
-
-function tokensFile(brand = BRAND): string {
-  return [
-    "import { tokens } from '@reference-ui/neo'",
-    '',
-    'tokens({',
-    '  colors: {',
-    `    brand: { value: '${brand}' },`,
-    "    ink: { value: '#1a1a2e' },",
-    '  },',
-    '})',
-    '',
-  ].join('\n')
-}
-
-// Filler widens the hold window so the stall leg lands mid-sync; the kill
-// path itself is identical whatever the world holds.
-function fillerFile(i: number): string {
-  return [
-    "import { css } from '@reference-ui/react'",
-    '',
-    `export const a${i} = css({ color: 'brand', backgroundColor: 'ink' })`,
-    `export const b${i} = css({ color: 'ink', borderColor: 'brand' })`,
-    '',
-  ].join('\n')
-}
-
-async function writeWorld(fillers: number, gated = false): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-lock-'))
-  tempDirs.push(dir)
-  writeFileSync(join(dir, 'ui.config.ts'), configFile(gated ? dir : undefined))
-  mkdirSync(join(dir, 'theme'), { recursive: true })
-  writeFileSync(join(dir, 'theme', 'tokens.ts'), tokensFile())
-  for (let i = 0; i < fillers; i++) writeFileSync(join(dir, 'theme', `fill-${i}.ts`), fillerFile(i))
-  return dir
-}
-
-interface BinRun {
-  code: number | null
-  pid?: number
-  stdout: string
-  stderr: string
-}
-
-function runBin(args: string[], cwd: string): Promise<BinRun> {
-  return new Promise((resolve) => {
-    const child = execFile(process.execPath, [BIN_PATH, ...args], { cwd, env: PLAIN_ENV, timeout: 120000 }, (err, stdout, stderr) => {
-      resolve({ code: err ? ((err as { code?: number }).code ?? 1) : 0, pid: child.pid, stdout: String(stdout), stderr: String(stderr) })
-    })
-  })
-}
-
-interface Spawned {
-  child: ChildProcess
-  output: () => string
-}
-
-function spawnBin(args: string[], cwd: string): Spawned {
-  const child = spawn(process.execPath, [BIN_PATH, ...args], { cwd, env: PLAIN_ENV, stdio: ['ignore', 'pipe', 'pipe'] })
-  liveChildren.push(child)
-  let text = ''
-  child.stdout?.on('data', (chunk: Buffer) => { text += chunk.toString('utf8') })
-  child.stderr?.on('data', (chunk: Buffer) => { text += chunk.toString('utf8') })
-  return { child, output: () => text }
-}
-
-function childDone(child: ChildProcess): boolean {
-  return child.exitCode !== null || child.signalCode !== null
-}
-
-async function waitForOutput(spawned: Spawned, cond: () => boolean, label: string, budgetMs = 60000): Promise<void> {
-  const deadline = Date.now() + budgetMs
-  while (!cond()) {
-    if (childDone(spawned.child)) throw new Error(`child exited early waiting for ${label}:\n${spawned.output()}`)
-    if (Date.now() >= deadline) throw new Error(`timed out waiting for ${label}:\n${spawned.output()}`)
-    await sleep(50)
-  }
-}
-
-async function waitForFile(path: string, label: string, budgetMs = 60000): Promise<void> {
-  const deadline = Date.now() + budgetMs
-  while (!existsSync(path)) {
-    if (Date.now() >= deadline) throw new Error(`timed out waiting for ${label}`)
-    await sleep(5)
-  }
-}
-
-// The holder drops a stranded stage only after holdSession has installed its SIGTERM handler, so the
-// drop is the safe moment to STOP it. Fails fast with the holder's output if it exits first.
-async function waitForStageDrop(path: string, holder: Spawned, budgetMs = 60000): Promise<void> {
-  const deadline = Date.now() + budgetMs
-  while (existsSync(path)) {
-    if (childDone(holder.child)) throw new Error(`holder exited before dropping its stage:\n${holder.output()}`)
-    if (Date.now() >= deadline) throw new Error('timed out waiting for the holder to drop the stranded stage')
-    await sleep(5)
-  }
-}
-
-// A hung shutdown must be diagnosable from the failure alone: the timeout
-// names the child and carries everything it printed.
-async function waitForExit(spawned: Spawned, label: string, budgetMs = 60000): Promise<void> {
-  const deadline = Date.now() + budgetMs
-  while (!childDone(spawned.child)) {
-    if (Date.now() >= deadline) {
-      throw new Error(`timed out waiting for ${label} to exit (pid ${spawned.child.pid}, still running):\n${spawned.output()}`)
-    }
-    await sleep(25)
-  }
-}
-
-async function reap(child: ChildProcess): Promise<void> {
-  try {
-    if (childDone(child)) return
-    child.kill('SIGTERM')
-    const deadline = Date.now() + 10000
-    while (!childDone(child) && Date.now() < deadline) await sleep(50)
-    if (!childDone(child)) child.kill('SIGKILL')
-  } catch {
-    // Reap runs in teardown; it must never mask the failing assertion.
-  }
-}
-
-function sheetHasBrand(dir: string, brand = BRAND): boolean {
-  const sheet = join(dir, '.reference-ui', 'styled', 'styles.css')
-  return existsSync(sheet) && readFileSync(sheet, 'utf8').toLowerCase().includes(`--colors-brand: ${brand}`)
-}
+afterEach(cleanupHarness)
 
 async function loneOneShotSyncsUnchanged(): Promise<void> {
   const dir = await writeWorld(0)
@@ -217,9 +50,8 @@ async function oneShotTowardOneShotKills(): Promise<void> {
   const dir = await writeWorld(400)
   const outDir = join(dir, '.reference-ui')
   const preemptPath = join(outDir, 'sync.lock', 'preempt.json')
-  // A stranded stage the holder drops right after holdSession installs its SIGTERM
-  // handler. The owner file lands a few awaits earlier, and a STOP in that gap queues
-  // the SIGTERM for default death (signal, no exit 75).
+  // A stranded stage the holder drops once it holds the lock, so the drop marks
+  // a holder that is mid-sync and safe to stop.
   const strandedStage = join(outDir, 'sync.stage')
   mkdirSync(strandedStage, { recursive: true })
   const slow = spawnBin(['sync', dir], dir)
@@ -298,41 +130,22 @@ async function attachedForwardStopsOwner(signal: 'SIGINT' | 'SIGTERM' | 'SIGHUP'
   expect(existsSync(join(dir, '.reference-ui', 'sync.lock'))).toBe(false)
 }
 
-interface HeldResync {
-  dir: string
-  watch: Spawned
-  lockDir: string
-  openGate(): void
-}
-
-// A watch with a resync held in flight: boot, change the brand so the resync
-// has something to commit, then poke it (SIGUSR2, exactly what a one-shot
-// does) with the gate naming the watch's pid. It returns once the resync
-// waits at the gate, so the watch is mid-sync holding its lock.
-async function holdWatchMidResync(): Promise<HeldResync> {
-  const dir = await writeWorld(0, true)
-  const watch = spawnBin(['sync', '--watch', '--debug', dir], dir)
-  await waitForOutput(watch, () => watch.output().includes('ready in'), 'the boot block')
-  writeFileSync(join(dir, 'theme', 'tokens.ts'), tokensFile(REBRAND))
-  writeFileSync(gatePath(dir), String(watch.child.pid))
-  const openGate = (): void => rmSync(gatePath(dir), { force: true })
-  gateOpeners.push(openGate)
-  watch.child.kill('SIGUSR2')
-  await waitForOutput(watch, () => existsSync(arrivedPath(dir)), 'the resync to reach the gate')
-  return { dir, watch, lockDir: join(dir, '.reference-ui', 'sync.lock'), openGate }
-}
-
 // The stopping watch is alive only because its resync is still held, so the
-// lock it owns must still be on disk; it must also read as a live watch to a
-// newcomer, which is covered and never syncs alongside the old sync.
-async function expectLockKeptAgainstNewcomer(held: HeldResync): Promise<void> {
+// lock it owns must still be on disk; a newcomer one-shot that meets it must not
+// sync alongside the old sync and must not report itself covered, since the
+// watch is going away. It says it is waiting, stays alive, and leaves the lock
+// with the stopping watch until that watch lets go.
+async function expectNewcomerWaitsOnStoppingWatch(held: HeldResync): Promise<Spawned> {
   expect(childDone(held.watch.child)).toBe(false)
   expect(existsSync(held.lockDir), 'the lock must outlive the in-flight resync').toBe(true)
-  const newcomer = await runBin(['sync', held.dir], held.dir)
-  expect(newcomer.code).toBe(0)
-  expect(newcomer.stdout).toContain(`already watching this project (pid ${held.watch.child.pid})`)
-  expect(newcomer.stdout).not.toMatch(BOOT_BLOCK_RE)
-  expect(existsSync(held.lockDir), 'a newcomer must not take the lock off a stopping watch').toBe(true)
+  const newcomer = spawnBin(['sync', held.dir], held.dir)
+  const waiting = `the resident watch (pid ${held.watch.child.pid}) is stopping, waiting to sync`
+  await waitForOutput(newcomer, () => newcomer.output().includes(waiting), 'the newcomer to wait on the stopping watch')
+  expect(newcomer.output()).not.toMatch(ATTACH_LINE_RE)
+  expect(newcomer.output()).not.toMatch(BOOT_BLOCK_RE)
+  expect(childDone(newcomer.child)).toBe(false)
+  expect(lockOwnerPid(held.dir), 'a newcomer must not take the lock off a stopping watch').toBe(held.watch.child.pid)
+  return newcomer
 }
 
 // Opening the gate lets the held resync finish its commit, then the stop
@@ -344,6 +157,20 @@ async function expectGracefulFinish(held: HeldResync): Promise<void> {
   expect(held.watch.child.exitCode).toBe(0)
   expect(existsSync(held.lockDir)).toBe(false)
   expect(sheetHasBrand(held.dir, REBRAND), 'the in-flight resync must commit before the watch exits').toBe(true)
+}
+
+// Once the stopping watch has let go, the waiting newcomer takes the lock and
+// syncs for itself: its own boot block, exit 0, the lock gone again.
+async function expectNewcomerSyncsAfterStop(held: HeldResync, newcomer: Spawned): Promise<void> {
+  held.openGate()
+  await waitForExit(held.watch, 'the stopping watch')
+  expect(held.watch.child.signalCode, `the watch died by signal mid-sync:\n${held.watch.output()}`).toBeNull()
+  expect(held.watch.child.exitCode).toBe(0)
+  await waitForExit(newcomer, 'the waiting newcomer')
+  expect(newcomer.child.exitCode, newcomer.output()).toBe(0)
+  expect(newcomer.output()).toMatch(BOOT_BLOCK_RE)
+  expect(existsSync(held.lockDir)).toBe(false)
+  expect(sheetHasBrand(held.dir, REBRAND), 'the in-flight resync must commit before the newcomer syncs').toBe(true)
 }
 
 async function repeatSignalsAreIgnored(): Promise<void> {
@@ -381,13 +208,13 @@ describe('sync session lock: control and kill legs', () => {
 
 describe('sync session lock: a stopping watch keeps its lock until the in-flight sync settles', () => {
   it.skipIf(!POSIX).each(['SIGINT', 'SIGHUP', 'SIGTERM'] as const)(
-    '%s mid-resync: the lock outlives the sync, a newcomer is covered, the sync commits, exit 0',
+    '%s mid-resync: the lock outlives the sync, a newcomer waits for the stop and then syncs itself, exit 0',
     async (signal) => {
       const held = await holdWatchMidResync()
       held.watch.child.kill(signal)
       await waitForOutput(held.watch, () => held.watch.output().includes(`shutdown ${signal}: stopping`), 'the graceful stop to begin')
-      await expectLockKeptAgainstNewcomer(held)
-      await expectGracefulFinish(held)
+      const newcomer = await expectNewcomerWaitsOnStoppingWatch(held)
+      await expectNewcomerSyncsAfterStop(held, newcomer)
     },
     120000,
   )

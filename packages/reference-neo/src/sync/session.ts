@@ -1,37 +1,39 @@
 // Sync session lock: the last-wins cross-process mutex behind `ref sync`.
 // It takes a project root plus the session kind and emits a held lock whose
-// release removes the lock dir. One sync holds the folder at a time, so the
-// latest call wins: it preempts the holder (kill, or a SIGUSR2 poke when a
-// one-shot meets a resident watch) and takes over, and the loser dies
-// mid-stage with the live folder untouched. A second watch never preempts:
-// the CLI attaches it to the owner here (block on the owner pid, forward
-// signals) instead of exiting. A stop signal frees a one-shot's lock at once,
-// but a watch with a graceful shutdown keeps its lock until that shutdown has
-// settled the in-flight sync and released it. The owner document model lives
-// in session-owner.ts; this module owns the mkdir race, the preempt matrix,
-// the hold with its signal handlers, and the re-assert of a held lock dir.
+// release removes the lock dir. The latest call wins: it preempts the holder
+// (kill, or a SIGUSR2 poke when a one-shot meets a resident watch), the loser
+// dies mid-stage with the live folder untouched, and a second watch attaches to
+// the owner instead of preempting. A stop signal frees a one-shot's lock at
+// once, but a watch with a graceful shutdown keeps its lock until that shutdown
+// has settled the in-flight sync, and the stop handlers are armed before the
+// owner document is visible, so no kill can find a process without one. The
+// owner model lives in session-owner.ts, the mkdir race in session-claim.ts,
+// process identity in session-identity.ts and the one-shot's wait on a watch in
+// session-covered.ts; this module owns the matrix, the hold and the re-assert.
 
 import { randomBytes } from 'node:crypto'
-import { readFileSync, rmSync } from 'node:fs'
-import { mkdir, rm } from 'node:fs/promises'
-import { getOutDirPath } from '../lib/paths/index.ts'
+import { mkdir } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import { claimFreshLock, errorCode, forceTake, isRaceError, settleMissingOwner, sleep } from './session-claim.ts'
+import { awaitWatchCoverage, awaitWatchRelease } from './session-covered.ts'
+import { armSession, disarmSession, heldSessionAt, markHeld, notice, releaseHold, type SessionHold } from './session-hold.ts'
+import { judgeHolder, ownIdentity, pidAlive, type HolderVerdict } from './session-identity.ts'
 import {
-  SUPERSEDED_EXIT_CODE,
   SyncCoveredByWatchError,
   getSyncLockDir,
   getSyncOwnerPath,
   getSyncPreemptPath,
   lockActorTag,
-  parseSyncSessionOwner,
   readOwnerFile,
-  readPreemptMarkerSync,
-  supersededMessage,
   throwSupersedeSignalError,
   writeLockFile,
   type OwnerRead,
   type SyncSessionKind,
   type SyncSessionOwner,
 } from './session-owner.ts'
+
+export { attachToWatchSession } from './session-attach.ts'
+export { pidAlive } from './session-identity.ts'
 
 export interface AcquireSyncSessionOptions {
   cwd: string
@@ -44,13 +46,6 @@ export interface AcquireSyncSessionOptions {
   json?: boolean
 }
 
-// Contention notices stay on stdout for human runs; JSON runs move them to
-// stderr, where every other human line already rides.
-function notice(json: boolean, line: string): void {
-  if (json) console.error(line)
-  else console.log(line)
-}
-
 export interface SyncSession {
   readonly owner: SyncSessionOwner
   release(): void
@@ -59,10 +54,10 @@ export interface SyncSession {
 const KILL_GRACE_MS = 5000
 const KILL_FORCE_GRACE_MS = 2000
 const EXIT_POLL_MS = 50
-const ATTACH_POLL_MS = 100
-const MISSING_OWNER_SETTLES_MS = [100, 500]
-const TAKE_SETTLE_MS = 50
 const MAX_ACQUIRE_ATTEMPTS = 25
+// A lost race retries after a short random pause, so racers that collided
+// once do not collide again in lockstep.
+const RETRY_PAUSE_MS = { min: 5, spread: 25 }
 
 // UNIFORM-KILL FLIP (spec section 3): one line. Set true to make one-shot
 // toward watch KILL like every other leg instead of poking the watcher.
@@ -71,111 +66,16 @@ const UNIFORM_KILL = false
 
 type Contention = { action: 'take' } | { action: 'retry' }
 
-// The signals that end a session: Ctrl-C, a supervisor's terminate, and the
-// terminal hanging up. A held session and an attached client both answer them.
-type StopSignal = 'SIGINT' | 'SIGTERM' | 'SIGHUP'
-
-interface HeldSession {
-  owner: SyncSessionOwner
-  onSigint: () => void
-  onSigterm: () => void
-  onSighup: () => void
-}
-
-// Process-local holds keyed by lock dir: a second acquire for a held dir
-// (watch baseline and resyncs under the session) re-enters instead of
-// preempting itself, and its release is a no-op.
-const heldSessions = new Map<string, HeldSession>()
-
-function errorCode(error: unknown): string | undefined {
-  return (error as NodeJS.ErrnoException)?.code
-}
-
-// Liveness without /proc: signal 0 probes existence, and EPERM (a process
-// we cannot signal) still counts as alive — the kill attempt then fails
-// loud instead of taking over a live holder blind.
-export function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0)
-    return true
-  } catch (error) {
-    return errorCode(error) === 'EPERM'
-  }
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(undefined), ms)
-  })
-}
-
 function newSessionOwner(kind: SyncSessionKind): SyncSessionOwner {
+  const identity = ownIdentity()
   return {
     pid: process.pid,
     lockNonce: randomBytes(16).toString('hex'),
     kind,
     argv: [...process.argv],
     startedAt: new Date().toISOString(),
+    ...(identity === undefined ? {} : { identity }),
   }
-}
-
-// A missing owner usually means the winner has not finished writing yet, so
-// settle twice before treating the dir as a crashed acquire. A live writer
-// lands within milliseconds; only a corpse stays missing.
-async function settleMissingOwner(lockDir: string): Promise<OwnerRead> {
-  for (const waitMs of MISSING_OWNER_SETTLES_MS) {
-    await sleep(waitMs)
-    const again = await readOwnerFile(lockDir)
-    if (again.status !== 'missing') return again
-  }
-  return { status: 'missing' }
-}
-
-async function tryClaimDir(lockDir: string): Promise<boolean> {
-  try {
-    await mkdir(lockDir)
-    return true
-  } catch (error) {
-    if (errorCode(error) === 'EEXIST') return false
-    throw error
-  }
-}
-
-async function ownerNonceMatches(lockDir: string, nonce: string): Promise<boolean> {
-  const back = await readOwnerFile(lockDir)
-  return back.status === 'ok' && back.owner.lockNonce === nonce
-}
-
-// The claimed dir still needs its owner file: a racer's rm can land between
-// our mkdir and this write, which reads as retry (never as held).
-async function writeFreshOwner(lockDir: string, mine: SyncSessionOwner): Promise<boolean> {
-  try {
-    await writeLockFile(getSyncOwnerPath(lockDir), JSON.stringify(mine))
-  } catch (error) {
-    if (errorCode(error) === 'ENOENT') return false
-    throw error
-  }
-  return ownerNonceMatches(lockDir, mine.lockNonce)
-}
-
-// Steal the dir: bail when it changed hands since we read it, then rm plus
-// atomic mkdir decides between racing takers, and a settle re-read closes
-// the phantom double-hold window before we call it held.
-async function forceTake(lockDir: string, mine: SyncSessionOwner, lastSeen: SyncSessionOwner | null): Promise<boolean> {
-  if (lastSeen !== null) {
-    const fresh = await readOwnerFile(lockDir)
-    if (fresh.status === 'ok' && fresh.owner.lockNonce !== lastSeen.lockNonce) return false
-  }
-  await rm(lockDir, { recursive: true, force: true })
-  try {
-    await mkdir(lockDir)
-  } catch (error) {
-    if (errorCode(error) === 'EEXIST') return false
-    throw error
-  }
-  if (!(await writeFreshOwner(lockDir, mine))) return false
-  await sleep(TAKE_SETTLE_MS)
-  return ownerNonceMatches(lockDir, mine.lockNonce)
 }
 
 async function waitForProcessExit(pid: number, timeoutMs: number): Promise<boolean> {
@@ -188,11 +88,12 @@ async function waitForProcessExit(pid: number, timeoutMs: number): Promise<boole
 }
 
 // Kill leg: the marker names the newcomer so the victim's SIGTERM handler
-// can print who superseded it. SIGKILL is the backstop; after it the lock
-// is taken regardless, since the newcomer cleans first.
+// can print who superseded it. SIGKILL is the backstop, aimed only at a pid
+// that still is the holder; after it the lock is taken regardless, since the
+// newcomer cleans first.
 async function killHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner): Promise<'dead' | 'retry'> {
   try {
-    await writeLockFile(getSyncPreemptPath(lockDir), JSON.stringify({ pid: mine.pid, kind: mine.kind }))
+    await writeLockFile(getSyncPreemptPath(lockDir), JSON.stringify({ pid: mine.pid, kind: mine.kind, target: holder.lockNonce }))
   } catch {
     return 'retry'
   }
@@ -204,6 +105,7 @@ async function killHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncS
     throwSupersedeSignalError(holder, code)
   }
   if (await waitForProcessExit(holder.pid, KILL_GRACE_MS)) return 'dead'
+  if (judgeHolder(holder) !== 'live') return 'dead'
   try {
     process.kill(holder.pid, 'SIGKILL')
   } catch (error) {
@@ -214,17 +116,17 @@ async function killHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncS
   return 'dead'
 }
 
-// Poke leg: the watch rebuilds now on SIGUSR2 and the newcomer exits 0
-// covered, never syncing. A holder that died mid-poke reads as stale so the
-// newcomer syncs instead of exiting covered with no watch behind it.
-async function pokeWatchHolder(holder: SyncSessionOwner): Promise<'stale'> {
-  if (process.platform !== 'win32') {
-    try {
-      process.kill(holder.pid, 'SIGUSR2')
-    } catch (error) {
-      if (errorCode(error) === 'ESRCH') return 'stale'
-      throw error
-    }
+// Poke leg: the watch rebuilds now on SIGUSR2 and the newcomer waits on the
+// watch-state handshake until that rebuild is current (covered, exit 0) or
+// failed (exit 1). A watch that is stopping or gone is waited out and the lock
+// is contended again, so the newcomer syncs itself. A watch that keeps no state
+// file gets the poke alone and the newcomer reports itself covered.
+async function coverOneShot(lockDir: string, holder: SyncSessionOwner, json: boolean): Promise<Contention> {
+  const outcome = await awaitWatchCoverage(lockDir, holder, { say: (line) => notice(json, line) })
+  if (outcome === 'failed') throw new Error("[ref] sync: the resident watch's sync failed")
+  if (outcome === 'retake') {
+    await awaitWatchRelease(lockDir, holder)
+    return { action: 'retry' }
   }
   throw new SyncCoveredByWatchError(holder.pid)
 }
@@ -236,21 +138,16 @@ async function pokeWatchHolder(holder: SyncSessionOwner): Promise<'stale'> {
 async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
   // A resident watch OWNS the project against sync newcomers: never kill
-  // it. A one-shot pokes it to rebuild and reports itself covered; a second
-  // watch defers outright (the CLI attaches it to the owner instead of
-  // exiting), so starting a dev server (or `ref sync --watch`) twice can
-  // never tear down the one that is already running. `--break-lock` is the
-  // only forced sync takeover. Clean is the exception: an explicit `ref
-  // clean` kills any live holder including a watch (clean-kills-always), as
-  // a wipe cannot proceed under a live writer and clean has no --break-lock.
+  // it. A one-shot pokes it to rebuild and reports itself covered once the
+  // rebuild is current; a second watch defers outright (the CLI attaches it to
+  // the owner instead of exiting), so starting a dev server (or `ref sync
+  // --watch`) twice can never tear down the one that is already running.
+  // `--break-lock` is the only forced sync takeover. Clean is the exception:
+  // an explicit `ref clean` kills any live holder including a watch
+  // (clean-kills-always), as a wipe cannot proceed under a live writer and
+  // clean has no --break-lock.
   if (!UNIFORM_KILL && holder.kind === 'watch' && mine.kind !== 'clean') {
-    if (mine.kind === 'one-shot') {
-      const poked = await pokeWatchHolder(holder)
-      if (poked === 'stale') {
-        notice(json, `[ref] ${tag}: stale lock (pid ${holder.pid} not running), taking over`)
-        return { action: 'take' }
-      }
-    }
+    if (mine.kind === 'one-shot') return coverOneShot(lockDir, holder, json)
     throw new SyncCoveredByWatchError(holder.pid)
   }
   const killed = await killHolder(lockDir, holder, mine)
@@ -259,9 +156,15 @@ async function preemptLiveHolder(lockDir: string, holder: SyncSessionOwner, mine
   return { action: 'take' }
 }
 
+function staleReason(holder: SyncSessionOwner, verdict: Exclude<HolderVerdict, 'live'>): string {
+  return verdict === 'dead' ? `pid ${holder.pid} not running` : `pid ${holder.pid} now belongs to another process`
+}
+
 // Contention over a well-formed owner: re-read before signaling (a changed
-// nonce means the lock already moved on), then liveness, then the matrix.
-// Our own pid with a foreign nonce is a phantom, never a signal target.
+// nonce means the lock already moved on), then liveness by identity (a dead
+// pid, or one recycled to an unrelated process, is stale and never signaled),
+// then the matrix. Our own pid with a foreign nonce is a phantom, never a
+// signal target.
 async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
   if (first.pid === process.pid) {
@@ -270,8 +173,9 @@ async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: Sy
   }
   const again = await readOwnerFile(lockDir)
   if (again.status !== 'ok' || again.owner.lockNonce !== first.lockNonce) return { action: 'retry' }
-  if (!pidAlive(first.pid)) {
-    notice(json, `[ref] ${tag}: stale lock (pid ${first.pid} not running), taking over`)
+  const verdict = judgeHolder(first)
+  if (verdict !== 'live') {
+    notice(json, `[ref] ${tag}: stale lock (${staleReason(first, verdict)}), taking over`)
     return { action: 'take' }
   }
   return preemptLiveHolder(lockDir, first, mine, json)
@@ -287,176 +191,75 @@ function warnBreakLock(seen: OwnerRead, mine: SyncSessionOwner, json: boolean): 
 }
 
 // The EEXIST branch: break-lock takes unconditionally, an unreadable owner
-// takes as stale, and a live owner routes through the matrix. Null retries.
-async function acquireContendedLock(lockDir: string, mine: SyncSessionOwner, breakLock: boolean, json: boolean): Promise<SyncSession | null> {
+// takes as stale, and a live owner routes through the matrix. False retries.
+async function takeContendedLock(hold: SessionHold, breakLock: boolean): Promise<boolean> {
+  const { lockDir, owner: mine, json } = hold
+  const onPublish = (): void => {
+    hold.published = true
+  }
   let seen = await readOwnerFile(lockDir)
   if (seen.status === 'missing') seen = await settleMissingOwner(lockDir)
   if (breakLock) {
     warnBreakLock(seen, mine, json)
-    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine, json) : null
+    return forceTake(lockDir, mine, null, onPublish)
   }
   if (seen.status !== 'ok') {
     notice(json, `[ref] ${lockActorTag(mine.kind)}: stale lock (owner unreadable), taking over`)
-    return (await forceTake(lockDir, mine, null)) ? holdSession(lockDir, mine, json) : null
+    return forceTake(lockDir, mine, null, onPublish)
   }
   const verdict = await contendForLock(lockDir, seen.owner, mine, json)
-  if (verdict.action === 'retry') return null
-  return (await forceTake(lockDir, mine, seen.owner)) ? holdSession(lockDir, mine, json) : null
+  return verdict.action === 'take' && (await forceTake(lockDir, mine, seen.owner, onPublish))
+}
+
+function describeRace(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+// Loop until this hold owns the lock dir, throwing when it cannot. A lost race
+// (including the filesystem errors only a race produces) pauses briefly and
+// retries; the attempt budget bounds a race that never settles, and a
+// permanent fault such as EACCES fails at once.
+async function winLock(hold: SessionHold, breakLock: boolean): Promise<void> {
+  let lastRace: unknown
+  const onPublish = (): void => {
+    hold.published = true
+  }
+  for (let attempt = 0; attempt < MAX_ACQUIRE_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) await sleep(RETRY_PAUSE_MS.min + Math.random() * RETRY_PAUSE_MS.spread)
+    try {
+      // The generated folder itself can vanish between attempts (a racing config
+      // load drops it while it is empty), so each attempt makes sure it is there.
+      await mkdir(dirname(hold.lockDir), { recursive: true })
+      if ((await claimFreshLock(hold.lockDir, hold.owner, onPublish)) || (await takeContendedLock(hold, breakLock))) return
+    } catch (error) {
+      if (!isRaceError(error)) throw error
+      lastRace = error
+    }
+  }
+  const cause = lastRace === undefined ? '' : ` (${describeRace(lastRace)})`
+  throw new Error(`[ref] sync: lock contention did not settle${cause}`)
 }
 
 /**
  * Acquire the sync session lock for the project at cwd, first before any
- * sync write. Wins the atomic mkdir, takes stale locks with a warning, or
- * preempts the live holder by the matrix (kill, or a watch poke that throws
+ * sync write. Arms the stop handlers, then wins the atomic mkdir, takes stale
+ * locks (dead or recycled holder) with a warning, or preempts the live holder
+ * by the matrix (kill, or a watch poke that waits on the watch and throws
  * SyncCoveredByWatchError). Re-enters when this process already holds it.
  */
 export async function acquireSyncSession(options: AcquireSyncSessionOptions): Promise<SyncSession> {
   const lockDir = getSyncLockDir(options.cwd)
-  const held = heldSessions.get(lockDir)
+  const held = heldSessionAt(lockDir)
   if (held !== undefined) return { owner: held.owner, release: () => {} }
-  await mkdir(getOutDirPath(options.cwd), { recursive: true })
-  const mine = newSessionOwner(options.kind)
-  const json = options.json ?? false
-  for (let attempt = 0; attempt < MAX_ACQUIRE_ATTEMPTS; attempt += 1) {
-    if ((await tryClaimDir(lockDir)) && (await writeFreshOwner(lockDir, mine))) {
-      return holdSession(lockDir, mine, json)
-    }
-    const session = await acquireContendedLock(lockDir, mine, options.breakLock ?? false, json)
-    if (session !== null) return session
-  }
-  throw new Error('[ref] sync: lock contention did not settle')
-}
-
-/**
- * Attach to the resident watch session instead of exiting: block until the
- * owner pid exits while forwarding SIGINT/SIGTERM/SIGHUP to it, so Ctrl-C
- * from any attached client stops the shared session and every attached
- * client then exits on its own. Resolves at once when the owner is already
- * gone. Only the owner syncs; attached clients hold no lock and do no work.
- * `onAttached` is the caller's covered line: it runs once the forwarders are
- * armed, never before, so a reader of that line can signal this client at
- * once without the signal dying here unforwarded.
- */
-export async function attachToWatchSession(watchPid: number, onAttached: () => void = () => {}): Promise<void> {
-  if (watchPid === process.pid || !pidAlive(watchPid)) {
-    onAttached()
-    return
-  }
-  await new Promise<void>((resolve) => {
-    let timer: ReturnType<typeof setInterval> | undefined
-    const done = (): void => {
-      if (timer !== undefined) {
-        clearInterval(timer)
-        timer = undefined
-      }
-      process.removeListener('SIGINT', onSigint)
-      process.removeListener('SIGTERM', onSigterm)
-      process.removeListener('SIGHUP', onSighup)
-      resolve()
-    }
-    const forward = (signal: StopSignal): void => {
-      try {
-        process.kill(watchPid, signal)
-      } catch (error) {
-        // ESRCH means the owner died under us; anything else leaves the
-        // poll to decide, since the owner may still be alive.
-        if (errorCode(error) === 'ESRCH') done()
-      }
-    }
-    const onSigint = (): void => {
-      forward('SIGINT')
-    }
-    const onSigterm = (): void => {
-      forward('SIGTERM')
-    }
-    const onSighup = (): void => {
-      forward('SIGHUP')
-    }
-    process.on('SIGINT', onSigint)
-    process.on('SIGTERM', onSigterm)
-    process.on('SIGHUP', onSighup)
-    timer = setInterval(() => {
-      if (!pidAlive(watchPid)) done()
-    }, ATTACH_POLL_MS)
-    onAttached()
-  })
-}
-
-// Release removes only our own lock: a foreign nonce means the dir changed
-// hands (break-lock steal, takeover race) and stays untouched. A missing
-// dir (failure-wipe, double release) is already released.
-function releaseSession(lockDir: string): void {
-  const held = heldSessions.get(lockDir)
-  if (held === undefined) return
-  heldSessions.delete(lockDir)
-  process.removeListener('SIGINT', held.onSigint)
-  process.removeListener('SIGTERM', held.onSigterm)
-  process.removeListener('SIGHUP', held.onSighup)
-  let owned = false
+  const hold = armSession(lockDir, newSessionOwner(options.kind), options.json ?? false)
   try {
-    const parsed = JSON.parse(readFileSync(getSyncOwnerPath(lockDir), 'utf8')) as unknown
-    owned = parseSyncSessionOwner(parsed)?.lockNonce === held.owner.lockNonce
-  } catch {
-    return
+    await winLock(hold, options.breakLock ?? false)
+  } catch (error) {
+    disarmSession(hold)
+    throw error
   }
-  if (!owned) return
-  try {
-    rmSync(lockDir, { recursive: true, force: true })
-  } catch {
-    // Best effort: a racing takeover owns the dir now, or it is already gone.
-  }
-}
-
-// Foreign listeners own their own shutdown (the watch CLI stops gracefully on
-// SIGINT/SIGTERM/SIGHUP); each held session contributes exactly one listener
-// per signal, so anything above the hold count is foreign.
-function hasForeignListeners(signal: StopSignal): boolean {
-  return process.listenerCount(signal) > heldSessions.size
-}
-
-// A SIGTERM carrying another pid's preempt marker is a kill leg: that
-// newcomer takes the lock next, so the victim frees it now and exits 75
-// naming the newcomer, graceful shutdown or not. Any other SIGTERM returns.
-function exitIfSuperseded(lockDir: string, json: boolean): void {
-  const marker = readPreemptMarkerSync(lockDir)
-  if (marker === null || marker.pid === process.pid) return
-  releaseSession(lockDir)
-  notice(json, supersededMessage(marker.pid, marker.kind))
-  process.exit(SUPERSEDED_EXIT_CODE)
-}
-
-// The stop-signal handler of one held session. A watch owner whose process
-// has a foreign (graceful) shutdown keeps its lock: that shutdown settles the
-// in-flight sync first and releases after, so a newcomer can never take the
-// lock while the old sync still writes the folder. Every other holder
-// releases synchronously, then lets a foreign shutdown run when one exists,
-// else restores the default death. A watch with no graceful shutdown yet
-// (still booting) dies like the rest, its lock freed as it goes.
-function makeStopHandler(lockDir: string, signal: StopSignal, owner: SyncSessionOwner, json: boolean): () => void {
-  const handler = (): void => {
-    if (signal === 'SIGTERM') exitIfSuperseded(lockDir, json)
-    const graceful = hasForeignListeners(signal)
-    if (graceful && owner.kind === 'watch') return
-    releaseSession(lockDir)
-    if (graceful) return
-    process.removeListener(signal, handler)
-    process.kill(process.pid, signal)
-  }
-  return handler
-}
-
-function holdSession(lockDir: string, owner: SyncSessionOwner, json: boolean): SyncSession {
-  const held: HeldSession = {
-    owner,
-    onSigint: makeStopHandler(lockDir, 'SIGINT', owner, json),
-    onSigterm: makeStopHandler(lockDir, 'SIGTERM', owner, json),
-    onSighup: makeStopHandler(lockDir, 'SIGHUP', owner, json),
-  }
-  heldSessions.set(lockDir, held)
-  process.on('SIGINT', held.onSigint)
-  process.on('SIGTERM', held.onSigterm)
-  process.on('SIGHUP', held.onSighup)
-  return { owner, release: () => releaseSession(lockDir) }
+  markHeld(hold)
+  return { owner: hold.owner, release: () => releaseHold(hold) }
 }
 
 /**
@@ -468,7 +271,7 @@ function holdSession(lockDir: string, owner: SyncSessionOwner, json: boolean): S
  */
 export async function reassertHeldSession(cwd: string): Promise<boolean> {
   const lockDir = getSyncLockDir(cwd)
-  const held = heldSessions.get(lockDir)
+  const held = heldSessionAt(lockDir)
   if (held === undefined) return false
   if ((await readOwnerFile(lockDir)).status !== 'missing') return false
   await mkdir(lockDir, { recursive: true })

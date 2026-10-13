@@ -15,12 +15,23 @@ import { getOutDirPath } from '../lib/paths/index.ts'
 
 export type SyncSessionKind = 'one-shot' | 'watch' | 'clean'
 
+// The signals that end a session: Ctrl-C, a supervisor's terminate, and the
+// terminal hanging up. A held session and an attached client both answer them.
+export const STOP_SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'] as const
+export type StopSignal = (typeof STOP_SIGNALS)[number]
+
 export interface SyncSessionOwner {
   pid: number
   lockNonce: string
   kind: SyncSessionKind
   argv: string[]
   startedAt: string
+  /**
+   * The owner process's start time as session-identity.ts reads it. A reader
+   * trusts the pid only while the running process still has this identity; an
+   * owner that could not read its own (Windows, no ps) records none.
+   */
+  identity?: string
 }
 
 export type OwnerRead =
@@ -91,33 +102,32 @@ export function lockActorTag(kind: SyncSessionKind): string {
   return kind === 'clean' ? 'clean' : 'sync'
 }
 
+function stringEntries(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []
+}
+
 // Owner validation: every field the takeover path trusts is checked, so a
 // torn write or a foreign file reads as malformed (stale) instead of a kill
-// target. argv/startedAt are forensic only and degrade to empties.
+// target. argv/startedAt are forensic only and degrade to empties; identity
+// is optional and an unreadable one reads as none.
 export function parseSyncSessionOwner(value: unknown): SyncSessionOwner | null {
   if (typeof value !== 'object' || value === null) return null
   const candidate = value as Record<string, unknown>
   if (!isLivePid(candidate.pid)) return null
   if (!isNonEmptyString(candidate.lockNonce)) return null
   if (!isSessionKind(candidate.kind)) return null
-  return {
+  const owner: SyncSessionOwner = {
     pid: candidate.pid,
     lockNonce: candidate.lockNonce,
     kind: candidate.kind,
-    argv: Array.isArray(candidate.argv)
-      ? candidate.argv.filter((entry): entry is string => typeof entry === 'string')
-      : [],
+    argv: stringEntries(candidate.argv),
     startedAt: typeof candidate.startedAt === 'string' ? candidate.startedAt : '',
   }
+  if (isNonEmptyString(candidate.identity)) owner.identity = candidate.identity
+  return owner
 }
 
-export async function readOwnerFile(lockDir: string): Promise<OwnerRead> {
-  let raw: string
-  try {
-    raw = await readFile(getSyncOwnerPath(lockDir), 'utf8')
-  } catch {
-    return { status: 'missing' }
-  }
+function ownerReadOf(raw: string): OwnerRead {
   let parsed: unknown
   try {
     parsed = JSON.parse(raw) as unknown
@@ -128,9 +138,33 @@ export async function readOwnerFile(lockDir: string): Promise<OwnerRead> {
   return owner === null ? { status: 'malformed' } : { status: 'ok', owner }
 }
 
+export async function readOwnerFile(lockDir: string): Promise<OwnerRead> {
+  let raw: string
+  try {
+    raw = await readFile(getSyncOwnerPath(lockDir), 'utf8')
+  } catch {
+    return { status: 'missing' }
+  }
+  return ownerReadOf(raw)
+}
+
+// The synchronous twin, for the check that must sit right beside an action
+// (the takeover's remove) with no await for a racer to slip through.
+export function readOwnerFileSync(lockDir: string): OwnerRead {
+  let raw: string
+  try {
+    raw = readFileSync(getSyncOwnerPath(lockDir), 'utf8')
+  } catch {
+    return { status: 'missing' }
+  }
+  return ownerReadOf(raw)
+}
+
 export interface PreemptMarker {
   pid: number
   kind: SyncSessionKind
+  /** The lockNonce of the holder this marker was written for; a marker without one is honored by any holder. */
+  target?: string
 }
 
 // Lock-content writes go tmp+rename: a concurrent reader never sees a torn
@@ -149,7 +183,8 @@ export async function writeLockFile(path: string, content: string): Promise<void
 // The victim's read of the killer's marker: who superseded it, or null when
 // the SIGTERM came from anywhere else (plain kill, graceful watch shutdown).
 // A kind-less marker reads as a sync newcomer, so half-written markers from
-// an older writer still resolve to a superseder.
+// an older writer still resolve to a superseder; a marker that names its target
+// lets a holder ignore one left in its dir for somebody else.
 export function readPreemptMarkerSync(lockDir: string): PreemptMarker | null {
   let parsed: unknown
   try {
@@ -157,10 +192,11 @@ export function readPreemptMarkerSync(lockDir: string): PreemptMarker | null {
   } catch {
     return null
   }
-  const pid = (parsed as Record<string, unknown>)?.pid
-  if (!isLivePid(pid)) return null
-  const kind = (parsed as Record<string, unknown>)?.kind
-  return { pid, kind: isSessionKind(kind) ? kind : 'one-shot' }
+  const record = (parsed ?? {}) as Record<string, unknown>
+  if (!isLivePid(record.pid)) return null
+  const marker: PreemptMarker = { pid: record.pid, kind: isSessionKind(record.kind) ? record.kind : 'one-shot' }
+  if (isNonEmptyString(record.target)) marker.target = record.target
+  return marker
 }
 
 /**
@@ -173,8 +209,9 @@ export function readPreemptMarkerSync(lockDir: string): PreemptMarker | null {
  *   and writes the file BEFORE it schedules the resync, which is the ack.
  * - `done` / `failed`: `done` is the `requested` value the last finished resync
  *   STARTED from (read it when the pass begins, store it when the pass ends),
- *   and `failed` says whether that pass failed. A one-shot waits for
- *   `done >= R`, where R is the `requested` it saw after its poke.
+ *   and `failed` says whether that pass failed. A one-shot reads `requested`,
+ *   pokes, and waits for `done` to reach one past what it read: that pass
+ *   started after the poke, so it holds the one-shot's saved edit.
  * - `stopping`: written true before the graceful stop begins to settle; a
  *   one-shot then waits for the release and syncs itself.
  *
