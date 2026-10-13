@@ -11,7 +11,7 @@ import { findReferenceUiLibraryComponent } from '../pipeline/library-catalog'
 import type { McpBuildArtifact } from '../pipeline/types'
 import { getStylePropsReference } from '../pipeline/style-props'
 import { toErrorResult, toTextResult } from './formatters'
-import { executeWithProject } from './project-context'
+import { executeWithProject, notSyncedMessage } from './project-context'
 import type { ProjectManager } from './project-manager'
 import {
   getUniversalComponent,
@@ -20,6 +20,7 @@ import {
   getUniversalComponents,
   getUniversalTokens,
 } from './universal-primitives'
+import { isProjectSynced } from './workspace-discovery'
 import { searchIcons } from '../pipeline/icons-catalog'
 
 const SELECT_PROJECT_TARGET_MESSAGE =
@@ -99,6 +100,10 @@ export function registerReferenceTools(
       const result = projectManager.selectProject(target)
       if ('error' in result) {
         return toErrorResult(result.error)
+      }
+      // An explicit selection stays active even when unsynced; the caller is told what to run.
+      if (!isProjectSynced(result.project)) {
+        return toErrorResult(notSyncedMessage(result.project))
       }
       const state = projectManager.getOrCreateState(result.project)
       const artifact = await state.waitForReady(30_000)
@@ -377,7 +382,7 @@ function checkReferenceLibraryDisabled(
     },
     async input => {
       const projectPath = projectManager.resolveProject(input.project)
-      if (projectPath) {
+      if (projectPath && isProjectSynced(projectPath)) {
         const state = projectManager.getOrCreateState(projectPath)
         const artifact = await state.waitForReady(1000).catch(() => null)
         if (artifact && artifact.useReferenceIcons === false) {

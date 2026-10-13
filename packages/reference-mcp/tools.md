@@ -38,7 +38,7 @@ packages/reference-mcp/
 │       ├── workspace-discovery.ts   # Auto-detects ui.config.ts in workspace & machine registry
 │       ├── project-context.ts       # executeWithProject wrapper (warmup, timeouts, notices)
 │       ├── model-state.ts           # Artifact caching, background refresh & deferred readiness
-│       ├── universal-primitives.ts  # Fallback mode when no ui.config.ts is detected
+│       ├── universal-primitives.ts  # Fallback mode when no synced project is active
 │       └── instructions.ts          # Discovers and serves instructions.md to agents
 ```
 
@@ -81,11 +81,13 @@ Discovers all Reference UI projects in the current workspace, the global user ma
     "sanitizedStaleCount": 0
   }
   ```
+`hasArtifacts` is `true` when a project is synced: its `ref sync` types manifest or its MCP model exists. Default selection only picks synced projects.
 
 #### `select_project`
 Sets the active project for the current MCP session and immediately triggers background warmup of its Atlas AST and model artifacts.
-- **Inputs**:
-  - `path` *(string, required)*: Relative or absolute filesystem path to the project directory.
+- **Inputs** (one of `path` or `project` is required; if both are passed, `path` wins):
+  - `path` *(string, optional)*: Relative or absolute filesystem path to the project directory where `ui.config.*` lives.
+  - `project` *(string, optional)*: Alias for `path`, the same field the per-query tools take.
 - **Output**:
   ```json
   {
@@ -95,6 +97,12 @@ Sets the active project for the current MCP session and immediately triggers bac
     "atlasStatus": "ready",
     "componentsCount": 42
   }
+  ```
+- **Unsynced project**: the project still becomes active, since an explicit choice wins, but the call returns an error instead of a status. The error is the same not-synced message the other tools return:
+  ```
+  Project at '/path/to/project' has not been synced yet.
+  Generated type artifacts are missing at '/path/to/project/.reference-ui/types/tasty/manifest.js'.
+  Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.
   ```
 
 ---
@@ -222,6 +230,7 @@ Returns the global Reference UI StyleProps documentation, showing camelCased ato
 - **Inputs**:
   - `query` *(string, optional)*: Search filter for specific style prop names or categories.
   - `includeProps` *(boolean, optional)*: Return the exhaustive prop list.
+  - `project` *(string, optional)*: Accepted so per-query calls match the other tools. The guide is shared, so the result does not change.
 
 #### `get_tokens`
 Extracts design tokens declared in `ui.config.ts` and token fragment files. Automatically compresses large token sets to paths and categories to protect the agent's context window.
@@ -291,10 +300,10 @@ Fast fuzzy search across 3,800+ `@reference-ui/icons` (Material Symbols React ic
 
 ## Universal Primitives Mode
 
-When the MCP server runs in a directory or workspace where no `ui.config.ts` exists:
+When no synced project is active, either because no `ui.config.*` exists in the workspace or because the only configs found are not synced:
 1. The server **does not crash or error**.
 2. It activates **Universal Primitives Mode**, serving:
    - Built-in `@reference-ui/react` layout and typography primitives (`Div`, `Span`, `Button`, `Section`, `H1`–`H6`, etc.).
    - Standard `@reference-ui/lib` components.
    - The shared `get_style_props` reference.
-   - Informative notices guiding the developer to run `ref sync` to enable project-specific tokens and AST analysis.
+   - A `notice` chosen from discovery. With no config at all it says none was detected. When a config exists but no synced project is active, it names that project and says to run `ref sync` there if it has not been synced, then call `select_project` with its path.

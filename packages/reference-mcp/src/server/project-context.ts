@@ -1,6 +1,9 @@
+import { getMcpTypesManifestPath } from '../pipeline/paths'
 import type { McpBuildArtifact } from '../pipeline/types'
 import { toErrorResult, toTextResult } from './formatters'
 import type { ProjectManager } from './project-manager'
+import { universalPrimitivesNotice } from './universal-primitives'
+import { isProjectSynced } from './workspace-discovery'
 
 export type ProjectHandler = (
   artifact: McpBuildArtifact,
@@ -8,6 +11,15 @@ export type ProjectHandler = (
 ) => Promise<Record<string, unknown>> | Record<string, unknown>
 
 export type FallbackUniversalHandler = () => Record<string, unknown>
+
+/** The error for a project whose generated artifacts are missing. Shared by every project-scoped path. */
+export function notSyncedMessage(projectPath: string): string {
+  return (
+    `Project at '${projectPath}' has not been synced yet.\n` +
+    `Generated type artifacts are missing at '${getMcpTypesManifestPath(projectPath)}'.\n` +
+    `Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.`
+  )
+}
 
 /**
  * Orchestrates project resolution, model artifact warmup/waiting, and execution for MCP tools.
@@ -34,7 +46,15 @@ export async function executeWithProject(
     return toTextResult({
       activeProject,
       ...fallback,
+      notice: universalPrimitivesNotice(discovered),
     })
+  }
+
+  // Checked on every call: a project synced at session start must not keep answering from its
+  // cached model once its artifacts are gone. The cache is dropped so a later re-sync reloads it.
+  if (!isProjectSynced(projectPath)) {
+    projectManager.invalidateProject(projectPath)
+    return toErrorResult(notSyncedMessage(projectPath))
   }
 
   if (discovered.length > 1 && !requestedProject) {
@@ -47,11 +67,7 @@ export async function executeWithProject(
   if (!artifact) {
     if (state.error) {
       if (state.error.code === 'missing_artifacts') {
-        return toErrorResult(
-          `Project at '${projectPath}' has not been synced yet.\n` +
-            `Generated type artifacts are missing at '${projectPath}/.reference-ui/types/tasty/manifest.js'.\n` +
-            `Run 'ref sync' (or 'pnpm dev') to generate the model artifacts.`
-        )
+        return toErrorResult(notSyncedMessage(projectPath))
       }
       return toErrorResult(state.error.message)
     }

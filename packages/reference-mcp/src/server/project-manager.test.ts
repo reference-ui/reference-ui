@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ProjectManager } from './project-manager'
 import { GlobalProjectRegistry } from './project-registry'
 
-// Build children are stubbed so no real build runs during unit tests: a synced project
-// rebuilds from its artifact, an unsynced one fails the way a real project does.
+// Build children are stubbed so no real build runs during unit tests: a project with generated
+// types builds its model, and one without fails the way a real project does.
 vi.mock('../child-process/process', async () => {
-  const { existsSync } = await import('node:fs')
-  const { join } = await import('node:path')
+  const { existsSync, mkdirSync, writeFileSync } = await import('node:fs')
+  const { dirname, join } = await import('node:path')
   class McpChildProcessError extends Error {
     constructor(
       public readonly errorType: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed',
@@ -22,30 +22,28 @@ vi.mock('../child-process/process', async () => {
     McpChildProcessError,
     spawnMcpBuildChild: async (projectCwd: string) => {
       const modelPath = join(projectCwd, '.reference-ui', 'mcp', 'model.json')
-      if (existsSync(modelPath)) return { modelPath, componentCount: 0 }
-      throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      const manifestPath = join(projectCwd, '.reference-ui', 'types', 'tasty', 'manifest.js')
+      if (!existsSync(manifestPath)) {
+        throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      }
+      mkdirSync(dirname(modelPath), { recursive: true })
+      writeFileSync(
+        modelPath,
+        JSON.stringify({ schemaVersion: 1, generatedAt: '2026-01-01T00:00:00Z', components: [], tokens: [] })
+      )
+      return { modelPath, componentCount: 0 }
     },
     spawnMcpPrefetchAtlasChild: async () => {},
   }
 })
 
-const MINIMAL_ARTIFACT = {
-  schemaVersion: 1,
-  generatedAt: '2026-01-01T00:00:00Z',
-  workspaceRoot: '/test',
-  manifestPath: '/test/manifest.js',
-  diagnostics: [],
-  components: [],
-  tokens: [],
-}
-
-/** A project with ui.config.ts; `synced` also writes the MCP model artifact discovery looks for. */
+/** A project with ui.config.ts; `synced` also writes the types manifest that `ref sync` produces. */
 function writeProject(dir: string, options: { synced: boolean }): void {
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'ui.config.ts'), 'export default {}')
   if (options.synced) {
-    mkdirSync(join(dir, '.reference-ui', 'mcp'), { recursive: true })
-    writeFileSync(join(dir, '.reference-ui', 'mcp', 'model.json'), JSON.stringify(MINIMAL_ARTIFACT))
+    mkdirSync(join(dir, '.reference-ui', 'types', 'tasty'), { recursive: true })
+    writeFileSync(join(dir, '.reference-ui', 'types', 'tasty', 'manifest.js'), 'export {}\n')
   }
 }
 
@@ -117,6 +115,20 @@ describe('ProjectManager', () => {
     const pm = new ProjectManager(testDir)
     await pm.initialize()
     expect(pm.getActiveProject()).toBe(synced)
+  })
+
+  it('defaults to a freshly synced project that has no MCP model yet', async () => {
+    // `ref sync` writes only the types manifest; the model appears on the first build, so a
+    // default keyed on the model alone would skip every project until it had been served once.
+    writeWorkspace(testDir)
+    writeProject(join(testDir, 'packages', 'a-unsynced'), { synced: false })
+    const fresh = join(testDir, 'packages', 'b-fresh')
+    writeProject(fresh, { synced: true })
+    expect(existsSync(join(fresh, '.reference-ui', 'mcp', 'model.json'))).toBe(false)
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBe(fresh)
   })
 
   it('keeps an explicit --project even when that project is unsynced', async () => {

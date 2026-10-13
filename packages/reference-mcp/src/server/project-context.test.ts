@@ -2,15 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { executeWithProject } from './project-context'
+import { executeWithProject, notSyncedMessage } from './project-context'
 import { ProjectManager } from './project-manager'
 import { GlobalProjectRegistry } from './project-registry'
+import { UNIVERSAL_PRIMITIVES_NOTICE } from './universal-primitives'
 
-// Build children are stubbed: a synced project rebuilds from its artifact, an unsynced one
-// fails the way a real project without generated types does.
+// Build children are stubbed: a project with generated types builds its model, and one without
+// fails the way a real project without `ref sync` output does.
 vi.mock('../child-process/process', async () => {
-  const { existsSync } = await import('node:fs')
-  const { join } = await import('node:path')
+  const { existsSync, mkdirSync, writeFileSync } = await import('node:fs')
+  const { dirname, join } = await import('node:path')
   class McpChildProcessError extends Error {
     constructor(
       public readonly errorType: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed',
@@ -23,22 +24,20 @@ vi.mock('../child-process/process', async () => {
     McpChildProcessError,
     spawnMcpBuildChild: async (projectCwd: string) => {
       const modelPath = join(projectCwd, '.reference-ui', 'mcp', 'model.json')
-      if (existsSync(modelPath)) return { modelPath, componentCount: 0 }
-      throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      const manifestPath = join(projectCwd, '.reference-ui', 'types', 'tasty', 'manifest.js')
+      if (!existsSync(manifestPath)) {
+        throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      }
+      mkdirSync(dirname(modelPath), { recursive: true })
+      writeFileSync(
+        modelPath,
+        JSON.stringify({ schemaVersion: 1, generatedAt: '2026-01-01T00:00:00Z', components: [], tokens: [] })
+      )
+      return { modelPath, componentCount: 0 }
     },
     spawnMcpPrefetchAtlasChild: async () => {},
   }
 })
-
-const MINIMAL_ARTIFACT = {
-  schemaVersion: 1,
-  generatedAt: '2026-01-01T00:00:00Z',
-  workspaceRoot: '/test',
-  manifestPath: '/test/manifest.js',
-  diagnostics: [],
-  components: [],
-  tokens: [],
-}
 
 type ToolResult = {
   content: Array<{ type: string; text: string }>
@@ -46,12 +45,13 @@ type ToolResult = {
   structuredContent?: Record<string, unknown>
 }
 
+/** A project with ui.config.ts; `synced` also writes the types manifest that `ref sync` produces. */
 function writeProject(dir: string, options: { synced: boolean }): void {
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'ui.config.ts'), 'export default {}')
   if (options.synced) {
-    mkdirSync(join(dir, '.reference-ui', 'mcp'), { recursive: true })
-    writeFileSync(join(dir, '.reference-ui', 'mcp', 'model.json'), JSON.stringify(MINIMAL_ARTIFACT))
+    mkdirSync(join(dir, '.reference-ui', 'types', 'tasty'), { recursive: true })
+    writeFileSync(join(dir, '.reference-ui', 'types', 'tasty', 'manifest.js'), 'export {}\n')
   }
 }
 
@@ -108,6 +108,27 @@ describe('executeWithProject default resolution', () => {
     expect(res.structuredContent).toMatchObject({ mode: 'universal_primitives', activeProject: null })
   })
 
+  it('names the unsynced config in the universal notice instead of saying none was found', async () => {
+    const unsynced = join(testDir, 'packages', 'ui')
+    writeProject(unsynced, { synced: false })
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    const res = await runTool(pm)
+
+    expect(res.structuredContent?.notice).toContain(`found in '${unsynced}'`)
+    expect(res.structuredContent?.notice).toContain("run 'ref sync'")
+    expect(res.structuredContent?.notice).not.toContain('No ui.config')
+  })
+
+  it('keeps the no-config notice when the workspace has no ui.config at all', async () => {
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    const res = await runTool(pm)
+
+    expect(res.structuredContent).toMatchObject({ mode: 'universal_primitives', notice: UNIVERSAL_PRIMITIVES_NOTICE })
+  })
+
   it('reports the not-synced error for an explicit unsynced --project', async () => {
     writeProject(join(testDir, 'packages', 'ui'), { synced: false })
 
@@ -118,5 +139,27 @@ describe('executeWithProject default resolution', () => {
     expect(res.isError).toBe(true)
     expect(res.content[0]?.text).toContain('has not been synced yet')
     expect(res.content[0]?.text).toContain("Run 'ref sync'")
+  })
+
+  it('degrades a synced default to the not-synced error once its artifacts are gone', async () => {
+    const synced = join(testDir, 'packages', 'ui')
+    writeProject(synced, { synced: true })
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect((await runTool(pm)).isError).toBeUndefined()
+
+    rmSync(join(synced, '.reference-ui'), { recursive: true, force: true })
+    const lost = await runTool(pm)
+    expect(lost.isError).toBe(true)
+    expect(lost.content[0]?.text).toBe(notSyncedMessage(synced))
+    expect(lost.content[0]?.text).toContain("Run 'ref sync'")
+
+    // A re-sync brings the project back without a restart: the dropped cache is rebuilt.
+    mkdirSync(join(synced, '.reference-ui', 'mcp'), { recursive: true })
+    writeFileSync(join(synced, '.reference-ui', 'mcp', 'model.json'), '{"schemaVersion":1,"components":[],"tokens":[]}')
+    const restored = await runTool(pm)
+    expect(restored.isError).toBeUndefined()
+    expect(restored.structuredContent).toMatchObject({ answered: true, activeProject: synced })
   })
 })

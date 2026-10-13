@@ -183,7 +183,10 @@ describe('multi-project workspace & switching', { timeout: MATRIX_MCP_TIMEOUT_MS
       name: 'select_project',
       arguments: { path: packages['gamma-unsynced'] },
     })
-    expect(selectRes.isError).toBeFalsy()
+    // Selecting reports the not-synced error with the sync step, instead of a 'loading' status.
+    expect(selectRes.isError).toBe(true)
+    const selectText = (selectRes.content as Array<{ text: string }>)[0]?.text ?? ''
+    expect(selectText).toContain("Run 'ref sync'")
 
     // Now query components on the unsynced project
     const compRes = await runningClient!.client.callTool({

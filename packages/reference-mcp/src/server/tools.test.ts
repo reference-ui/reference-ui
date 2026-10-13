@@ -8,11 +8,11 @@ import { createReferenceMcpServer } from './server-factory'
 import { ProjectManager } from './project-manager'
 import { GlobalProjectRegistry } from './project-registry'
 
-// Build children are stubbed: a synced project rebuilds from its artifact, an unsynced one
-// fails the way a real project without generated types does.
+// Build children are stubbed: a project with generated types builds its model, and one without
+// fails the way a real project does.
 vi.mock('../child-process/process', async () => {
-  const { existsSync } = await import('node:fs')
-  const { join } = await import('node:path')
+  const { existsSync, mkdirSync, writeFileSync } = await import('node:fs')
+  const { dirname, join } = await import('node:path')
   class McpChildProcessError extends Error {
     constructor(
       public readonly errorType: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed',
@@ -25,22 +25,20 @@ vi.mock('../child-process/process', async () => {
     McpChildProcessError,
     spawnMcpBuildChild: async (projectCwd: string) => {
       const modelPath = join(projectCwd, '.reference-ui', 'mcp', 'model.json')
-      if (existsSync(modelPath)) return { modelPath, componentCount: 0 }
-      throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      const manifestPath = join(projectCwd, '.reference-ui', 'types', 'tasty', 'manifest.js')
+      if (!existsSync(manifestPath)) {
+        throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+      }
+      mkdirSync(dirname(modelPath), { recursive: true })
+      writeFileSync(
+        modelPath,
+        JSON.stringify({ schemaVersion: 1, generatedAt: '2026-01-01T00:00:00Z', components: [], tokens: [] })
+      )
+      return { modelPath, componentCount: 0 }
     },
     spawnMcpPrefetchAtlasChild: async () => {},
   }
 })
-
-const MINIMAL_ARTIFACT = {
-  schemaVersion: 1,
-  generatedAt: '2026-01-01T00:00:00Z',
-  workspaceRoot: '/test',
-  manifestPath: '/test/manifest.js',
-  diagnostics: [],
-  components: [],
-  tokens: [],
-}
 
 const PROJECT_SCOPED_TOOLS = [
   'list_components',
@@ -52,12 +50,13 @@ const PROJECT_SCOPED_TOOLS = [
   'get_style_props',
 ]
 
+/** A project with ui.config.ts; `synced` also writes the types manifest that `ref sync` produces. */
 function writeProject(dir: string, options: { synced: boolean }): void {
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'ui.config.ts'), 'export default {}')
   if (options.synced) {
-    mkdirSync(join(dir, '.reference-ui', 'mcp'), { recursive: true })
-    writeFileSync(join(dir, '.reference-ui', 'mcp', 'model.json'), JSON.stringify(MINIMAL_ARTIFACT))
+    mkdirSync(join(dir, '.reference-ui', 'types', 'tasty'), { recursive: true })
+    writeFileSync(join(dir, '.reference-ui', 'types', 'tasty', 'manifest.js'), 'export {}\n')
   }
 }
 
@@ -151,6 +150,21 @@ describe('reference tools over MCP', () => {
     const res = await client.callTool({ name: 'select_project', arguments: args })
     expect(res.isError).toBe(true)
     expect(JSON.stringify(res.content)).toContain('Invalid arguments for tool select_project')
+  })
+
+  it('select_project reports the not-synced error for an unsynced project, not a loading status', async () => {
+    const res = await client.callTool({ name: 'select_project', arguments: { path: unsynced } })
+    expect(res.isError).toBe(true)
+    expect(res.structuredContent).toBeUndefined()
+    expect(JSON.stringify(res.content)).toContain('has not been synced yet')
+    expect(JSON.stringify(res.content)).toContain("Run 'ref sync'")
+  })
+
+  it('a project-scoped call after selecting an unsynced project gives the same not-synced error', async () => {
+    await client.callTool({ name: 'select_project', arguments: { path: unsynced } })
+    const res = await client.callTool({ name: 'list_components', arguments: {} })
+    expect(res.isError).toBe(true)
+    expect(JSON.stringify(res.content)).toContain('has not been synced yet')
   })
 
   it.each(PROJECT_SCOPED_TOOLS)('%s advertises a per-query project field', async name => {

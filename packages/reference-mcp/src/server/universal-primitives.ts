@@ -10,13 +10,29 @@ import { searchIcons } from '../pipeline/icons-catalog'
 import { compactComponent, summarizeComponent, summarizeProps } from '../pipeline/queries'
 import { getStylePropsReference } from '../pipeline/style-props'
 
-export const UNIVERSAL_PRIMITIVES_NOTICE =
-  'No ui.config.ts detected in this workspace. Serving Reference UI built-in primitives, library components, and StyleProps.'
+const UNIVERSAL_SERVING_SENTENCE =
+  'Serving Reference UI built-in primitives, library components, and StyleProps'
+
+/** Notice for a workspace with no ui.config.* at all. */
+export const UNIVERSAL_PRIMITIVES_NOTICE = `No ui.config.* detected in this workspace. ${UNIVERSAL_SERVING_SENTENCE}.`
+
+/**
+ * Notice for universal mode, chosen from what discovery found: no config means nothing to sync,
+ * while a config that is not active is named so the agent can sync it and then select it.
+ */
+export function universalPrimitivesNotice(discovered: ReadonlyArray<{ path: string }>): string {
+  const [found] = discovered
+  if (!found) return UNIVERSAL_PRIMITIVES_NOTICE
+  return (
+    `A ui.config.* was found in '${found.path}', but no synced project is active. ` +
+    `If that project has not been synced, run 'ref sync' there, then call select_project with its path. ` +
+    `${UNIVERSAL_SERVING_SENTENCE} until then.`
+  )
+}
 
 function asUniversalResult<T extends Record<string, unknown>>(payload: T) {
   return {
     mode: 'universal_primitives' as const,
-    notice: UNIVERSAL_PRIMITIVES_NOTICE,
     primitivesOverview:
       'All standard HTML elements are available as capitalized primitives from @reference-ui/react (Div, Span, Section, Button, P, H1-H6, etc.) and accept token-aware StyleProps. Call get_style_props for styling reference.',
     ...payload,

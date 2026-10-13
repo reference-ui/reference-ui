@@ -6,6 +6,8 @@ import {
   getUniversalComponents,
   getUniversalStyleProps,
   getUniversalTokens,
+  UNIVERSAL_PRIMITIVES_NOTICE,
+  universalPrimitivesNotice,
 } from './universal-primitives'
 
 describe('universal-primitives', () => {
@@ -65,5 +67,18 @@ describe('universal-primitives', () => {
     const res = getUniversalStyleProps()
     expect(res.mode).toBe('universal_primitives')
     expect(res.categories.length).toBeGreaterThan(0)
+  })
+
+  it('states that no config exists when discovery found none', () => {
+    expect(universalPrimitivesNotice([])).toBe(UNIVERSAL_PRIMITIVES_NOTICE)
+    expect(UNIVERSAL_PRIMITIVES_NOTICE).toContain('No ui.config.* detected')
+  })
+
+  it('names the found config and the sync step when a project exists but is not active', () => {
+    const notice = universalPrimitivesNotice([{ path: '/work/packages/ui' }])
+    expect(notice).toContain("found in '/work/packages/ui'")
+    expect(notice).toContain("run 'ref sync'")
+    expect(notice).toContain('select_project')
+    expect(notice).not.toContain('No ui.config')
   })
 })
