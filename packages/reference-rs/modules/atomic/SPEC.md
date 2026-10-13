@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract cases | 223 |
-| Named `[x]` proven | 221 |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 234 |
+| Named `[x]` proven | 232 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Vitest seam stations | 236 (`tests/cases/<ATM-*>`; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 260 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -68,7 +68,7 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 59 | 59 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 68 | 68 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 11 | 11 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
@@ -76,10 +76,10 @@ Two structural causes, both of which the new areas are designed to close:
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 10 | 10 | 0 |
 | `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 23 | 23 | 0 |
-| `RECIPE` | Closed variant classes & variant lookup tables | 7 | 7 | 0 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 18 | 18 | 0 |
+| `RECIPE` | Closed variant classes & variant lookup tables | 8 | 8 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
-| `LAYER` | Cascade layer order (`@layer`) & layer population | 13 | 13 | 0 |
+| `LAYER` | Cascade layer order (`@layer`) & layer population | 15 | 15 | 0 |
 | `NAME` | Deterministic class naming & selector escaping | 8 | 8 | 0 |
 | `DIAG` | Diagnostics, location tracking, & fail-closed parsing | 14 | 14 | 0 |
 | `FORBID` | Forbidden architectural patterns & tripwires | 7 | 7 | 0 |
@@ -88,8 +88,9 @@ Two structural causes, both of which the new areas are designed to close:
 | `MERGE` | Last-wins semantics across arguments, aliases, & duplicate keys | 3 | 3 | 0 |
 | `UNIT` | Numeric value unit policy & canonical number form | 3 | 3 | 0 |
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
+| `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **203** | **192** | **11** |
+| **Total** | | **234** | **232** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
