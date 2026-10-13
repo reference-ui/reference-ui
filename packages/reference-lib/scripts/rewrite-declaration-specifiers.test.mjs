@@ -2,7 +2,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { rewriteDeclarationSpecifiers, rewriteSpecifierText } from './rewrite-declaration-specifiers.mjs'
+import {
+  declarationSpecifierProblems,
+  rewriteDeclarationSpecifiers,
+  rewriteSpecifierText,
+} from './rewrite-declaration-specifiers.mjs'
 
 let root
 
@@ -13,10 +17,12 @@ function write(rel, text) {
   return full
 }
 
-// The shipped runtime companions that materialize-runtime writes.
+// The shipped runtime files and declarations that materialize-runtime writes.
 function shipRuntime() {
+  write('dist/runtime/reference-ui/react/react.mjs', 'export {}\n')
   write('dist/runtime/reference-ui/react/react.d.mts', 'export {}\n')
   write('dist/runtime/reference-ui/styled/index.d.ts', 'export {}\n')
+  write('dist/runtime/reference-ui/types/types.mjs', 'export {}\n')
   write('dist/runtime/reference-ui/types/types.d.mts', 'export {}\n')
 }
 
@@ -65,6 +71,7 @@ describe('rewriteDeclarationSpecifiers', () => {
     expect(readFileSync(join(root, 'dist/components/Reference/Reference.d.ts'), 'utf8')).toBe(
       "import { type ReferenceComponentProps } from '../../runtime/reference-ui/types/types.mjs';\n",
     )
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
   })
 
   it('leaves specifiers that already resolve in the tarball untouched', () => {
@@ -82,6 +89,7 @@ describe('rewriteDeclarationSpecifiers', () => {
     rewriteDeclarationSpecifiers({ packageRoot: root })
     const once = readFileSync(join(root, 'dist/components/Tabs/Tabs.d.ts'), 'utf8')
 
+    // Four declaration files: three shipped runtime declarations plus Tabs.d.ts.
     expect(rewriteDeclarationSpecifiers({ packageRoot: root })).toEqual({
       files: 4,
       filesChanged: 0,
@@ -107,6 +115,51 @@ describe('rewriteDeclarationSpecifiers', () => {
     rmSync(join(root, 'dist/runtime/reference-ui/types/types.d.mts'))
     expect(() => rewriteDeclarationSpecifiers({ packageRoot: root })).toThrow(/has no shipped declaration/)
   })
+
+  it('fails when a bare target ships its declaration but not the runtime file tasty maps', () => {
+    write('dist/components/Reference/Reference.d.ts', "import type { R } from '@reference-ui/types';\n")
+    rmSync(join(root, 'dist/runtime/reference-ui/types/types.mjs'))
+    expect(() => rewriteDeclarationSpecifiers({ packageRoot: root })).toThrow(
+      /has no shipped file tasty can map to it/,
+    )
+  })
+})
+
+describe('declarationSpecifierProblems', () => {
+  it('names a planted relative specifier that ships no file, and clears once it is removed', () => {
+    const planted = write('dist/components/Odd/Odd.d.ts', "export type T = import('./missing.mjs').X;\n")
+    const problems = declarationSpecifierProblems({ packageRoot: root })
+    expect(problems).toEqual([
+      expect.stringMatching(/^dist\/components\/Odd\/Odd\.d\.ts: "\.\/missing\.mjs" has no shipped declaration at /),
+    ])
+
+    rmSync(planted)
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
+  })
+
+  it('flags a TypeScript extension, ignores commented specifiers, and accepts a .js name with its .d.ts', () => {
+    write(
+      'dist/components/Odd/Odd.d.ts',
+      [
+        "import type { A } from './local.ts';",
+        "// import('./commented-out');",
+        "export type B = import('./ok.js').B;",
+        '',
+      ].join('\n'),
+    )
+    write('dist/components/Odd/ok.d.ts', 'export type B = 1\n')
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([
+      expect.stringMatching(/"\.\/local\.ts" keeps a TypeScript extension/),
+    ])
+  })
+
+  it('accepts a root-shipped baseSystem payload and an index-directory import', () => {
+    write('.reference-ui/system/baseSystem.mjs', 'export {}\n')
+    write('.reference-ui/system/baseSystem.d.mts', 'export {}\n')
+    write('dist/index.d.ts', "export { baseSystem } from '../.reference-ui/system/baseSystem.mjs';\nexport * from './parts';\n")
+    write('dist/parts/index.d.ts', 'export {}\n')
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
+  })
 })
 
 describe('rewriteSpecifierText', () => {
@@ -123,6 +176,7 @@ describe('rewriteSpecifierText', () => {
       "const r = require('@reference-ui/react');",
       '/// <reference types="@reference-ui/react" />',
       'const unrelated = "@reference-ui/react";',
+      "// import x from '@reference-ui/react';",
       '',
     ].join('\n')
 
@@ -130,5 +184,6 @@ describe('rewriteSpecifierText', () => {
     expect(count).toBe(7)
     expect(text.split('./runtime/reference-ui/react/react.mjs').length - 1).toBe(7)
     expect(text).toContain('const unrelated = "@reference-ui/react";')
+    expect(text).toContain("// import x from '@reference-ui/react';")
   })
 })

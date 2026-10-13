@@ -71,12 +71,18 @@ await rm(packagedTastyDir, { recursive: true, force: true })
 await cp(generatedTastyDir, packagedTastyDir, { recursive: true })
 
 // @reference-ui/types is the generated single-file declaration surface that the
-// Reference declarations import. It has no runtime of its own here, so only its
-// .d.mts ships; rewrite-declaration-specifiers points those imports at this copy.
+// Reference declarations import as `types.mjs`. TypeScript reads that name through
+// the `types.d.mts` beside it, and tasty reports the import unresolved unless a file
+// of that name exists, so the runtime ships too. Nothing loads it at runtime: the
+// declarations that import it are type-only. rewrite-declaration-specifiers points
+// those imports at this copy.
 const generatedTypesFile = resolve(generatedRoot, 'types/types.d.mts')
+const generatedTypesRuntime = resolve(generatedRoot, 'types/types.mjs')
 await access(generatedTypesFile, constants.F_OK)
+await access(generatedTypesRuntime, constants.F_OK)
 await mkdir(resolve(packagedRuntimeDir, 'types'), { recursive: true })
 await cp(generatedTypesFile, resolve(packagedRuntimeDir, 'types/types.d.mts'))
+await cp(generatedTypesRuntime, resolve(packagedRuntimeDir, 'types/types.mjs'))
 
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.mjs'), runtimeRewrites)
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.d.mts'), runtimeRewrites)

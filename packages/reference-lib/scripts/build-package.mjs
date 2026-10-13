@@ -3,7 +3,7 @@ import { constants } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { rewriteDeclarationSpecifiers } from './rewrite-declaration-specifiers.mjs'
+import { declarationSpecifierProblems, rewriteDeclarationSpecifiers } from './rewrite-declaration-specifiers.mjs'
 import { assertNoRegisterPins } from './register-pins.mjs'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -26,6 +26,7 @@ const packagedRuntimeFiles = [
   resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
   resolve(distDir, 'runtime/reference-ui/styled/runtime-data.mjs'),
   resolve(distDir, 'runtime/reference-ui/types/types.d.mts'),
+  resolve(distDir, 'runtime/reference-ui/types/types.mjs'),
   resolve(distDir, 'tasty/runtime.js'),
   resolve(distDir, 'tasty/manifest.js'),
   resolve(distDir, 'tasty/chunk-registry.js'),
@@ -60,6 +61,19 @@ const declarations = rewriteDeclarationSpecifiers({ packageRoot })
 console.log(
   `build-package: rewrote ${declarations.rewritten} declaration specifiers in ${declarations.filesChanged} of ${declarations.files} .d.ts files`,
 )
+
+// Guard: every relative specifier a shipped declaration keeps must name a shipped
+// file for TypeScript and for tasty. A dangling one fails the build here, naming it,
+// instead of reaching a consumer's types or their sync as TST-W-UNRESOLVED-IMPORT.
+const danglingSpecifiers = declarationSpecifierProblems({ packageRoot })
+if (danglingSpecifiers.length > 0) {
+  throw new Error(
+    [
+      `build-package: ${danglingSpecifiers.length} shipped declaration specifier(s) name no shipped file:`,
+      ...danglingSpecifiers.map((line) => `  ${line}`),
+    ].join('\n'),
+  )
+}
 
 // SyncedSystem (W3): a declaration outside dist/runtime that names the publisher's
 // register types would hide a component from consumer fills. Fail naming it.
