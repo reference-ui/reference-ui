@@ -20,6 +20,8 @@ const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 const NEO_DIR: string = path.dirname(path.dirname(HERE));
 // Gitignored generated lib mirror (provenance headers from the checked-in mirror tool); the gate never judges it.
 const MIRROR_DIR: string = path.join(NEO_DIR, 'src', 'reference', 'browser-component');
+// Gitignored build output (a case world's .reference-ui, dist builds, installed node_modules, Playwright reports). Never hand-written, so the walk never enters them.
+const GENERATED_DIRS: Set<string> = new Set(['.reference-ui', 'dist', 'node_modules', 'test-results', 'playwright-report', 'blob-report']);
 const CONFIG: string = path.join(HERE, 'biome.json');
 const WARN_CONFIG: string = path.join(HERE, 'biome.warn.json');
 const COGNITIVE_RULE = 'lint/complexity/noExcessiveCognitiveComplexity';
@@ -137,8 +139,7 @@ async function walk(entry: string, code: Set<string>, readmes: Set<string>): Pro
     else if (CODE_EXTS.has(path.extname(entry).toLowerCase())) code.add(resolved);
     return;
   }
-  const base = path.basename(entry);
-  if (base === 'node_modules' || base === 'dist') return;
+  if (GENERATED_DIRS.has(path.basename(entry))) return;
   for (const kid of await readdir(entry)) await walk(path.join(entry, kid), code, readmes);
 }
 
