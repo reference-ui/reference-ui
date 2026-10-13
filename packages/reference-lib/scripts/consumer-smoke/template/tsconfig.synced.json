@@ -1,0 +1,12 @@
+{
+  // Third tsc pass for the smoke gate: the synced-probe folder against lib's
+  // declarations with skipLibCheck off. The gate reads its diagnostics: each
+  // off-token probe must fail, nothing else in the probe may, and lib adds none.
+  // types: [] keeps ambient @types/* out, as in tsconfig.lib-types.json.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": false,
+    "types": []
+  },
+  "include": ["synced-probe"]
+}

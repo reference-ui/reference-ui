@@ -6,6 +6,8 @@
  * with `extends: [baseSystem]`.
  */
 export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
+// The register a consumer's sync fills with its synced style types, so lib props follow its tokens and strict.
+export type { SyncedSystem } from '@reference-ui/react'
 export {
   controlHeight,
   controlHeightPx,

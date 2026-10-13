@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { rewriteDeclarationSpecifiers } from './rewrite-declaration-specifiers.mjs'
+import { assertNoRegisterPins } from './register-pins.mjs'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(packageRoot, 'dist')
@@ -59,6 +60,10 @@ const declarations = rewriteDeclarationSpecifiers({ packageRoot })
 console.log(
   `build-package: rewrote ${declarations.rewritten} declaration specifiers in ${declarations.filesChanged} of ${declarations.files} .d.ts files`,
 )
+
+// SyncedSystem (W3): a declaration outside dist/runtime that names the publisher's
+// register types would hide a component from consumer fills. Fail naming it.
+assertNoRegisterPins(distDir)
 
 // B-35: the bundled tasty manifest runtime (pulled in via @reference-ui/types
 // values used by the Reference browser) carries a Node-only branch,

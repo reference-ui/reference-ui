@@ -1,6 +1,7 @@
 // W-31 runner: build -> check:dist -> pack -> bare Vite consumer app ->
 // vite build (warning scan) -> tsc types check (skipLibCheck on, then off for
-// lib's declarations) -> dev-server Playwright probe (mount-all + B-11
+// lib's declarations, then the SyncedSystem probe: a strict consumer's fill
+// must reach lib's props) -> dev-server Playwright probe (mount-all + B-11
 // behaviors + zero console errors).
 //
 // Usage: node scripts/consumer-smoke/run.mjs [--port 5199] [--keep]
@@ -31,6 +32,69 @@ const run = (command, commandArgs, options = {}) =>
     stdio: ['ignore', 'pipe', 'pipe'],
     ...options,
   })
+
+// SyncedSystem probe (pass 3): synced-probe/probe.tsx against lib's declarations
+// with skipLibCheck off. A line carrying the off-token value must fail with a
+// TS2322 naming it; every other probe line, the offset line included, must
+// compile; lib adds no error. Any other diagnostic fails the gate.
+const SYNCED_PROBE_FILE = 'synced-probe/probe.tsx'
+const SYNCED_OFF_TOKEN = 'smokeOffToken'
+const SYNCED_ACCEPTED = 'offset={8}'
+const DIAGNOSTIC_LINE = /^(.+?)\((\d+),\d+\): error (TS\d+): (.*)$/
+
+const numberedLines = (lines, needle) =>
+  lines.flatMap((text, index) => (text.includes(needle) ? [index + 1] : []))
+
+function checkSyncedProbe(outputLines, probeLines) {
+  const failures = []
+  const rejected = new Set()
+  const named = new Set()
+  let libErrors = 0
+  let siblingErrors = 0
+  for (const line of outputLines) {
+    if (!/error TS\d+/.test(line)) continue
+    if (SIBLING_OWNED_PREFIXES.some((prefix) => line.startsWith(prefix))) {
+      siblingErrors += 1
+      continue
+    }
+    const match = DIAGNOSTIC_LINE.exec(line)
+    if (!match) {
+      failures.push(`unparsed diagnostic: ${line}`)
+      continue
+    }
+    const [, file, lineText, code, message] = match
+    const lineNo = Number(lineText)
+    if (file.startsWith('node_modules/@reference-ui/lib/')) libErrors += 1
+    if (file !== SYNCED_PROBE_FILE) {
+      failures.push(line)
+      continue
+    }
+    rejected.add(lineNo)
+    const offToken = probeLines[lineNo - 1]?.includes(SYNCED_OFF_TOKEN) ?? false
+    if (!offToken || code !== 'TS2322' || !message.includes(SYNCED_OFF_TOKEN)) {
+      failures.push(`unexpected probe error: ${line}`)
+      continue
+    }
+    named.add(lineNo)
+  }
+  const offLines = numberedLines(probeLines, SYNCED_OFF_TOKEN)
+  const acceptedLines = numberedLines(probeLines, SYNCED_ACCEPTED)
+  if (offLines.length === 0) failures.push(`probe has no ${SYNCED_OFF_TOKEN} line`)
+  if (acceptedLines.length === 0) failures.push(`probe has no ${SYNCED_ACCEPTED} line`)
+  for (const lineNo of offLines) {
+    if (!named.has(lineNo)) failures.push(`${SYNCED_PROBE_FILE}:${lineNo} did not fail as TS2322 naming the value`)
+  }
+  for (const lineNo of acceptedLines) {
+    if (rejected.has(lineNo)) failures.push(`${SYNCED_PROBE_FILE}:${lineNo} (offset) was rejected`)
+  }
+  return {
+    failures,
+    offCount: offLines.length,
+    acceptedCount: acceptedLines.length,
+    libErrors,
+    siblingErrors,
+  }
+}
 
 let scaffold = null
 let server = null
@@ -145,6 +209,36 @@ try {
   if (gated.length > 0) {
     console.error(gated.slice(0, 20).join('\n'))
     throw new Error(`smoke: lib declarations fail under skipLibCheck: false (${gated.length} errors)`)
+  }
+
+  // 4c. SyncedSystem probe (pass 3). The template copy puts synced-probe/ in the
+  // scaffold; only tsconfig.synced.json includes it, so passes 1 and 2 never see
+  // it. A nonzero exit is expected: the off-token probes must fail. The gate reads
+  // the diagnostics and fails on any other one.
+  step('tsc --noEmit, SyncedSystem probe (strict consumer)')
+  let probeOutput = null
+  let probeStatus = 0
+  try {
+    run('npx', ['tsc', '--noEmit', '-p', 'tsconfig.synced.json'], { cwd: scaffold })
+  } catch (error) {
+    probeStatus = error.status ?? 1
+    probeOutput = String(error.stdout ?? '')
+    if (!/error TS\d+/.test(probeOutput)) {
+      console.error(String(error.stderr ?? '').slice(-2000))
+      throw new Error('smoke: synced probe tsc failed without diagnostics')
+    }
+  }
+  if (probeOutput === null) {
+    throw new Error('smoke: synced probe compiled clean, so the strict fill never reached lib props')
+  }
+  const probeLines = (await readFile(join(scaffold, SYNCED_PROBE_FILE), 'utf8')).split('\n')
+  const probe = checkSyncedProbe(probeOutput.split('\n'), probeLines)
+  console.log(
+    `smoke: synced probe: tsc exit ${probeStatus} (nonzero expected); ${probe.offCount} off-token lines and ${probe.acceptedCount} offset line checked; ${probe.libErrors} lib errors; ${probe.siblingErrors} owned by sibling packages (not gated)`,
+  )
+  if (probe.failures.length > 0) {
+    console.error(probe.failures.slice(0, 20).join('\n'))
+    throw new Error(`smoke: SyncedSystem probe failed (${probe.failures.length} problems)`)
   }
 
   // 5. Production build must succeed with zero node-builtin/externalization
