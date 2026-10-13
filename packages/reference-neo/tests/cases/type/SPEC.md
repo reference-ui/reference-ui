@@ -41,8 +41,10 @@ D5 (TYPE-01 targets `react/react.d.mts` + `./styles.css` names). D6 (TYPE-05:
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
 root). D8/D10 (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
 Panda and typegen agree). D17 (`strict` is wired: config → typegen, validated,
-narrowing JSX style props and css; lib component props are not promised to
-follow consumer strict; the hatch names stay absent).
+narrowing JSX style props and css, proved for colours by NEO-TYPE-09 (token,
+toned and keyword colours assign; six off-token colours are rejected at their
+consumer line); lib component props are not promised to follow consumer
+strict; the hatch names stay absent).
 
 Coverage-map rows for this group: 2 (`system.mjs`+`.d.mts` → TYPE-05 with
 SYNC-12), 8 (41 packaged core type files → replaced by native `system.d.mts`,
