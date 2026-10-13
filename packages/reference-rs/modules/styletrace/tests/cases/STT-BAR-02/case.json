@@ -1,1 +1,1 @@
-{"id": "STT-BAR-02", "name": "export_star_package"}
+{"id": "STT-BAR-02", "name": "A package barrel that re-exports with export-star traces its wrapped component under the name the entry re-exports it as"}

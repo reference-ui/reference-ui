@@ -1,1 +1,1 @@
-{"id": "STT-NEG-01", "name": "negative"}
+{"id": "STT-NEG-01", "name": "A component that renders a Reference primitive without exposing StyleProps is not traced"}

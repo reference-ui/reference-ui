@@ -1,4 +1,4 @@
-# STT-BAR-04 — named_barrel
+# STT-BAR-04 — A wrapper re-exported through a local named barrel stays traced under its public name
 
 Traces a wrapper re-exported through a local named barrel.
 Converted from fixtures/styletrace-library: index.ts re-exports

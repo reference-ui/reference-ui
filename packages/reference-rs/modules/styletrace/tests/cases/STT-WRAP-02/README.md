@@ -1,4 +1,4 @@
-# STT-WRAP-02 — forward_ref_wrapper
+# STT-WRAP-02 — A React.forwardRef wrapper whose generic props are StyleProps is traced under its public export name
 
 Traces a React.forwardRef wrapper whose generic props are StyleProps.
 Ref forwarding must not hide the style-bearing export.

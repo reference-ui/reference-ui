@@ -1,1 +1,1 @@
-{"id": "STT-BAR-04", "name": "named_barrel"}
+{"id": "STT-BAR-04", "name": "A wrapper re-exported through a local named barrel stays traced under its public name"}
