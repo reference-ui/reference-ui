@@ -125,6 +125,14 @@ async function waitForFile(path: string, label: string, budgetMs = 60000): Promi
   }
 }
 
+async function waitForGone(path: string, label: string, budgetMs = 60000): Promise<void> {
+  const deadline = Date.now() + budgetMs
+  while (existsSync(path)) {
+    if (Date.now() >= deadline) throw new Error(`timed out waiting for ${label}`)
+    await sleep(5)
+  }
+}
+
 async function waitForExit(child: ChildProcess, budgetMs = 60000): Promise<void> {
   const deadline = Date.now() + budgetMs
   while (!childDone(child)) {
@@ -149,12 +157,16 @@ describe('clean writer kind: live kill legs', () => {
   it.skipIf(!POSIX)('clean toward one-shot kills: victim exits 75, clean removes the folder', async () => {
     const dir = await writeWorld(400)
     const outDir = join(dir, '.reference-ui')
-    const ownerPath = join(outDir, 'sync.lock', 'owner.json')
     const preemptPath = join(outDir, 'sync.lock', 'preempt.json')
+    // A stranded stage the holder drops right after holdSession installs its
+    // SIGTERM handler. The owner file lands a few awaits earlier, and a STOP in
+    // that gap queues the SIGTERM for default death (signal, no exit 75).
+    const strandedStage = join(outDir, 'sync.stage')
+    mkdirSync(strandedStage, { recursive: true })
     const slow = spawnBin(['sync', dir], dir)
     // Stall the holder mid-sync; the preempt marker later proves the clean
     // reached the kill leg before the holder is released to die.
-    await waitForFile(ownerPath, 'the holder lock')
+    await waitForGone(strandedStage, 'the holder to drop the stranded stage')
     if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall')
     slow.child.kill('SIGSTOP')
     await sleep(50)
