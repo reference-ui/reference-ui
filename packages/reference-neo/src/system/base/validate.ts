@@ -1,7 +1,8 @@
 // Entry validation for upstream base systems, extends and layers alike.
 // It takes the candidate entries of one field and emits nothing or throws a field
 // error: shape checks per entry, then links between the entries and the consumer's
-// own name (a self-named or cyclic entry, a name repeated within the field).
+// own name (a self-named or cyclic entry, a name repeated within the field). It also
+// takes both fields once each passes and rejects a system named in both.
 // Config calls the entry points from validateConfig; the factory builds the shared
 // field message so every branch reports alike.
 
@@ -192,5 +193,28 @@ export function validateBaseSystemLinks(
   for (const [index, sys] of systems.entries()) {
     assertNoOwnNameReach(field, sys, index, ownName)
     assertNotRepeated(field, sys, index, firstIndexByName)
+  }
+}
+
+/**
+ * A system named in both fields. `extends` already includes everything `layers`
+ * gives, so the layers entry is rejected rather than merged (the owner's ruling,
+ * D6). Config calls this only after each field passes on its own, so every entry
+ * it reads is a valid system with a name. Only direct names are compared.
+ */
+export function validateSharedBaseSystems(
+  extendsSystems: BaseSystem[] | undefined,
+  layersSystems: BaseSystem[] | undefined
+): void {
+  if (!extendsSystems?.length || !layersSystems?.length) return
+
+  const extended = new Set(extendsSystems.map((sys) => sys.name))
+  for (const [index, sys] of layersSystems.entries()) {
+    if (!extended.has(sys.name)) continue
+
+    throw invalidBaseSystem(
+      'layers',
+      `Entry ${index} (${sys.name}) is also listed under 'extends'. 'extends' already includes everything 'layers' gives, so remove it from 'layers'.`
+    )
   }
 }

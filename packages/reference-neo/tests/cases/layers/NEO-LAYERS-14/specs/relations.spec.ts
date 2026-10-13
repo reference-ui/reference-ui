@@ -91,6 +91,12 @@ const LEGS: Leg[] = [
     fields: 'extends: [bUpstream, bUpstream],',
     message: `${EXTENDS_HEADER}\nEntry 1 (${B_NAME}) repeats entry 0. List each system once.`,
   },
+  {
+    label: 'system in both extends and layers',
+    imports: [B_IMPORT],
+    fields: 'extends: [bUpstream],\n  layers: [bUpstream],',
+    message: `${LAYERS_HEADER}\nEntry 0 (${B_NAME}) is also listed under 'extends'. 'extends' already includes everything 'layers' gives, so remove it from 'layers'.`,
+  },
 ];
 
 // The never-synced leg imports an installed package whose published system was never generated.

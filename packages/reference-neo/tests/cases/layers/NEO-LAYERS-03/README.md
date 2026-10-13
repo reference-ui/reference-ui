@@ -1,4 +1,4 @@
-# NEO-LAYERS-03 — the order statement follows config order, and a system present in both extends and layers keeps one statement name but prints its block twice
+# NEO-LAYERS-03 — the order statement follows config order, and the cascade winner flips with it
 
 Three real upstreams are synced for real: `a` (extended), and `b` and `c` (layered). The spec
 rewrites the consumer `ui.config.ts` once per variant, re-syncs, and restores the canonical
@@ -14,28 +14,21 @@ inherit down the tree. A colour only appears when its own layer's variable resol
 2. `extends: [a], layers: [c, b]` → `@layer neo-layers3-a, neo-layers3-c, neo-layers3-b,
    neo-layers3;`, with blocks a, c, b, own. The same `race` element now paints b
    (`rgb(190, 24, 93)`). Only the config order changed, so the winner flips with it.
-3. `extends: [a], layers: [a, b]` → `@layer neo-layers3-a, neo-layers3-b, neo-layers3;`. The
-   statement lists a once, at its first occurrence. **Current behaviour, pinned and not
-   endorsed:** the blocks come from the expansion without a dedupe (`streams.ts:190,204-208`), so
-   a's block prints twice, once at its extends position and again before b. The `a-only` probe
-   still paints a's colour. A system present in both lists is held for the owner's ruling (D6 in
-   `layers/SPEC.md`), so this variant is accepted today.
 
-The statement dedupes by name, while blocks are never deduped. The own block always prints last
-under the own name, so own ranks above every upstream in each variant.
+The statement lists each layer once, in config order, and the own block always prints last under
+the own name, so own ranks above every upstream in each variant.
 
-A self-named layers entry and an A↔B cycle used to run here as variants. Both now fail at config
-load, so NEO-LAYERS-14 owns them, and its rejections come from a real `ref sync`.
+A system named in both `extends` and `layers` is not a variant here. It is rejected at config load
+(the owner's ruling, D6 in `layers/SPEC.md`), and NEO-LAYERS-14 proves that rejection through a real
+`ref sync`. The self-named and cyclic variants live there too.
 
-Evidence: `src/system/base/streams.ts:135-147` (`collectEntryNames`: dedupe by raw name, self
-filtered, self appended last), `streams.ts:185-214` (`mergeStreams`: the statement from the deduped
-names, the blocks from the undeduped expansion), `streams.ts:106-115` (`printUpstreamBlock`, which
-wraps each block in its `package` layer), `src/sync/index.ts:161-169` (compile qualifiers already
-exclude the own name), `src/system/base/types.ts:11-22` (`package` is the layer wrap name),
-`src/config/types.ts:44-49` (the `layers` contract). Siblings: NEO-LAYERS-01 (a layer ranks
-between extends and own), NEO-LAYERS-02 (the visual-only boundary), NEO-LAYERS-14 (the relation
-rejections).
+Evidence: `src/system/base/streams.ts` (`collectEntryNames`: the statement names the printed entries,
+self last; `mergeStreams`: the statement and the blocks read one first-occurrence list),
+`src/sync/index.ts` (compile qualifiers already exclude the own name), `src/system/base/types.ts`
+(`package` is the layer wrap name), `src/config/types.ts` (the `layers` contract). Siblings:
+NEO-LAYERS-01 (a layer ranks between extends and own), NEO-LAYERS-02 (the visual-only boundary),
+NEO-LAYERS-11 (a diamond's shared base prints once), NEO-LAYERS-14 (the relation rejections).
 
-> Search terms: layer order, order statement, config order, cascade order, dedupe, first
-> occurrence, duplicate block, repeated system, both lists, self-named layer, own name,
-> mergeStreams, collectEntryNames, NEO-LAYERS-01, NEO-LAYERS-02, NEO-LAYERS-14
+> Search terms: layer order, order statement, config order, cascade order, winner flips, first
+> occurrence, both lists, self-named layer, own name, mergeStreams, collectEntryNames, NEO-LAYERS-01,
+> NEO-LAYERS-02, NEO-LAYERS-11, NEO-LAYERS-14

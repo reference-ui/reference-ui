@@ -1,1 +1,1 @@
-{"id": "STT-WRAP-05", "name": "Wrappers that forward props only into plain-React package components, with no Reference primitive downstream, are not traced"}
+{"id": "STT-WRAP-05", "name": "plain_react_wrappers"}

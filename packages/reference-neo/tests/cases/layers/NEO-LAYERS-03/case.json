@@ -1,1 +1,1 @@
-{"id": "NEO-LAYERS-03", "name": "the order statement follows config order, and a system present in both extends and layers keeps one statement name but prints its block twice", "sync": true}
+{"id": "NEO-LAYERS-03", "name": "the order statement follows config order, and the cascade winner flips with it", "sync": true}

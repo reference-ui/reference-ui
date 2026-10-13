@@ -1,1 +1,1 @@
-{"id": "STT-WRAP-04", "name": "A wrapper that forwards into a node_modules package is traced, and so is a package component that the entry re-exports"}
+{"id": "STT-WRAP-04", "name": "node_modules_wrapper"}

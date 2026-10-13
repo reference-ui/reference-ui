@@ -302,3 +302,30 @@ describe('validateConfig repeated entries', () => {
     expect(config.extends?.map((sys) => sys.name)).toEqual(['base', 'other'])
   })
 })
+
+// A system named in both fields is rejected at load; distinct systems in both fields are accepted.
+describe('validateConfig shared entries', () => {
+  it('rejects a system named in both extends and layers, and names it', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [{ name: 'base', fragment: FRAGMENT_CODE, streams: STREAMS }],
+        layers: [{ name: 'base', fragment: FRAGMENT_CODE, streams: STREAMS }],
+      })
+    ).toThrowError(
+      /^Config field 'layers' is invalid\.\nEntry 0 \(base\) is also listed under 'extends'\. 'extends' already includes everything 'layers' gives, so remove it from 'layers'\.$/
+    )
+  })
+
+  it('accepts distinct systems in extends and layers', () => {
+    const config = validateConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      extends: [{ name: 'base', fragment: FRAGMENT_CODE, streams: STREAMS }],
+      layers: [{ name: 'tint', fragment: FRAGMENT_CODE, streams: STREAMS }],
+    })
+
+    expect(config.layers?.map((sys) => sys.name)).toEqual(['tint'])
+  })
+})

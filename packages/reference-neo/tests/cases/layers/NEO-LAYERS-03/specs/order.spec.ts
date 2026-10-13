@@ -1,8 +1,8 @@
-// order.spec.ts — spec for NEO-LAYERS-03, the order and cross-list repeat case.
-// Takes { page, url, case } with the consumer world synced standalone. It syncs three
-// upstreams for real, then runs three layer configurations and checks each served
-// statement, block order and computed colours, restoring the canonical config in a
-// finally. Emits nothing on success; throws naming the failed assertion on failure.
+// order.spec.ts — spec for NEO-LAYERS-03, the layer order case. Takes { page, url, case } with the
+// consumer world synced standalone. It syncs three upstreams for real, then runs two layer
+// configurations that list the same systems in opposite order, and checks each served statement,
+// block order and computed colours, restoring the canonical config in a finally. Emits nothing on
+// success; throws naming the failed assertion on failure.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -82,17 +82,6 @@ const VARIANTS: Variant[] = [
       { id: 'a-only', rgb: A_RGB },
       { id: 'b-only', rgb: B_RGB },
       { id: 'race', rgb: B_RGB },
-    ],
-  },
-  // A system present in both lists: held for the owner's ruling (D6), pinned as current behaviour.
-  {
-    key: 'duplicate',
-    layers: ['aUpstream', 'bUpstream'],
-    statement: `@layer ${A}, ${B}, ${OWN};`,
-    blocks: [A, A, B, OWN],
-    probes: [
-      { id: 'a-only', rgb: A_RGB },
-      { id: 'b-only', rgb: B_RGB },
     ],
   },
 ];

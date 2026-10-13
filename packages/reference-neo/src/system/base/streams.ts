@@ -132,18 +132,24 @@ function printOwnInner(own: SystemStreams, tokens: string | undefined): string {
   )
 }
 
-function collectEntryNames(entries: readonly SystemStreams[], selfName: string): string[] {
+// One entry per system, first occurrence kept. A diamond reaches its shared
+// upstream through both branches, so the expansion lists it twice; the sheets
+// print it once, where the merge first reaches it.
+function firstPerSystem(entries: readonly SystemStreams[]): SystemStreams[] {
   const seen = new Set<string>()
-  const names: string[] = []
-  for (const entry of entries) {
-    if (seen.has(entry.name)) continue
+  return entries.filter((entry) => {
+    if (seen.has(entry.name)) return false
     seen.add(entry.name)
-    names.push(entry.name)
-  }
-  // Self stays last even against a pathological self-extends entry. Names
-  // escape at print time, after the raw-keyed dedupe above, so the statement
-  // names exactly the layers the blocks define.
-  return [...names.filter((name) => name !== selfName).map((name) => escapeSelector(name)), escapeSelector(selfName)]
+    return true
+  })
+}
+
+// Names of the printed entries. Self stays last even against a pathological
+// self-extends entry. Names escape at print time, so the statement names
+// exactly the layers the blocks define.
+function collectEntryNames(entries: readonly SystemStreams[], selfName: string): string[] {
+  const names = entries.map((entry) => entry.name).filter((name) => name !== selfName)
+  return [...names.map((name) => escapeSelector(name)), escapeSelector(selfName)]
 }
 
 function appendBlock(assembled: string, block: string): string {
@@ -175,12 +181,13 @@ export function toPublishedEntry(own: SystemStreams): SystemStreams {
  * then the statement, then each usable upstream's entries in order reprinted
  * portable, resetless, and rootless, then the own block verbatim in both
  * token variants (the consumer's own reset rides its block, so
- * `normalizeCss: false` opts the whole subtree out). The statement dedups
- * by name at first-occurrence positions while blocks may repeat (diamond
- * duplicates are identical bytes). With no usable upstreams both sheets
- * reprint the own object byte-identical to the engine concat — no statement,
- * no join, nothing to diff. One call returns all three; the statement
- * computes once.
+ * `normalizeCss: false` opts the whole subtree out). Each system prints once,
+ * at its first occurrence in the expansion: the statement and the blocks read
+ * the same deduped list, so a diamond's shared upstream never repeats. The
+ * published payload keeps the full expansion. With no usable upstreams both
+ * sheets reprint the own object byte-identical to the engine concat — no
+ * statement, no join, nothing to diff. One call returns all three; the
+ * statement computes once.
  */
 export function mergeStreams(
   upstreams: readonly StreamUpstream[],
@@ -196,12 +203,13 @@ export function mergeStreams(
       streams,
     }
   }
-  const statement = `@layer ${collectEntryNames(expansion, selfName).join(', ')};\n`
+  const printed = firstPerSystem(expansion)
+  const statement = `@layer ${collectEntryNames(printed, selfName).join(', ')};\n`
   let stylesheet = own.root ?? ''
   let portableStylesheet = own.root ?? ''
   stylesheet = appendBlock(stylesheet, statement)
   portableStylesheet = appendBlock(portableStylesheet, statement)
-  for (const entry of expansion) {
+  for (const entry of printed) {
     const block = printUpstreamBlock(entry)
     stylesheet = appendBlock(stylesheet, block)
     portableStylesheet = appendBlock(portableStylesheet, block)

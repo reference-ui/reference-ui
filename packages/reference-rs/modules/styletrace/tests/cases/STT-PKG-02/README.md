@@ -1,4 +1,4 @@
-# STT-PKG-02 — A multi-file plain-React library with no Reference imports stays off the style-bearing surface, barrel re-exports included
+# STT-PKG-02 — plain_react_library
 
 Keeps a plain-React component library out of the style-bearing surface.
 Converted from fixtures/demo-ui: Button, Card, Badge, and Stack import only

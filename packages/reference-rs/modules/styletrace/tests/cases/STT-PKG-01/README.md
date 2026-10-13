@@ -1,4 +1,4 @@
-# STT-PKG-01 — A default-export component imported from a package is traced through a local wrapper and through a renamed default re-export
+# STT-PKG-01 — default_export_package
 
 Traces wrappers that import a default-export component from a mock package.
 The package is committed under input/packages/fixture-style-default.

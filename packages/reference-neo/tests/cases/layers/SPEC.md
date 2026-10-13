@@ -12,7 +12,7 @@ Authors write `layers: [system]` beside `extends` in `ui.config.ts`. Each entry
 is the `BaseSystem` a package's `baseSystem.mjs` carries (`name`, `fragment`,
 `streams`; `src/system/base/types.ts:28-37`). The merge runs in bucket order,
 extends then layers, with the own entry last
-(`src/sync/index.ts:219-223`, `src/system/base/streams.ts:185-214`):
+(`src/sync/index.ts:219-223`, `mergeStreams` in `src/system/base/streams.ts`):
 
     @layer <extends names>, <layers names>, <own>;
     <extends blocks> <layers blocks> <own block>
@@ -23,7 +23,8 @@ Each upstream block is reprinted portable, resetless and rootless
 extends then layers (`sync/index.ts:161-169`). Validation checks each field in
 full (`validateBaseFields`, `src/config/validate.ts`): synced data on every entry,
 streams on every layers entry, and no entry that reaches the config's own name or
-repeats within its field (`src/system/base/validate.ts`).
+repeats within its field (`src/system/base/validate.ts`). Once both fields pass, no
+system may be named in both (`validateSharedBaseSystems`, D6).
 
 ## Decisions
 
@@ -40,17 +41,22 @@ repeats within its field (`src/system/base/validate.ts`).
 - D5 A layer-only token is a warning, not a failure. A consumer `css()` that names a
   token only a layers upstream defines makes sync warn `ATM-W-UNKNOWN-COLOR` at the
   call and emit the raw declaration, which the browser drops. Pinned by NEO-LAYERS-02.
-- D6 A system present in both `extends` and `layers` keeps one statement name but
-  prints its block once per listing: `mergeStreams` dedupes the statement and never
-  the blocks. Held for the owner's ruling (O3): accepted, not rejected, until the
-  owner rules. Pinned as current behaviour, not endorsed, by NEO-LAYERS-03. A name
-  repeated within one field is rejected by NEO-LAYERS-14.
+- D6 A system named in both `extends` and `layers` is rejected at load, with a named
+  error: `extends` already includes everything `layers` gives, so the layers entry
+  is removed rather than merged. This is the owner's ruling (O3). Pinned by
+  NEO-LAYERS-14, through a real `ref sync`. A name repeated within one field is
+  rejected too (NEO-LAYERS-14); a repeat reached only through another system is not
+  (D9).
 - D7 An entry that reaches the config's own name, by its name or by any stream name,
   is rejected at load, so the own name never ranks as an upstream. This covers a
   self-named entry and an A to B cycle. Pinned by NEO-LAYERS-14.
 - D8 A layers entry with no streams is rejected at load. Only streams carry its CSS;
   without this check the entry would still become a sync qualifier and add nothing.
   Pinned by NEO-LAYERS-05 (the shape) and NEO-LAYERS-14 (a real sync).
+- D9 A system reached through two branches (a diamond) prints its block once, at its
+  first position in the expansion, and the order statement lists it once. The published
+  payload keeps the full expansion, so a consumer dedupes at print as well. Pinned by
+  NEO-LAYERS-11, which keeps the statement and the paints unchanged.
 
 ## Engine stations and ownership
 
@@ -67,7 +73,7 @@ spread; these Neo cases are the primary layers proof.
 | --- | --- |
 | Layer fragments and tokens in the consumer spec | Extends-only (`evaluate.ts:133,164`); NEO-LAYERS-02 asserts the boundary. |
 | Layer roster in `jsxElements` | Extends-only (`jsx.ts:71`); NEO-LAYERS-02. |
-| Dedupe arbitration for a system in both lists (D6, held for O3) | NEO-LAYERS-03 pins the current behaviour. |
+| Arbitration for a system in both lists (D6, rejected at load) | Nothing to arbitrate: NEO-LAYERS-14 pins the named rejection. |
 | Container root through layers | NEO-LAYERS-04. |
 | Config validation messages | NEO-LAYERS-05 (shapes, precedence) and NEO-LAYERS-14 (relations, by real sync). |
 | Re-sync after an upstream change | NEO-LAYERS-06. |

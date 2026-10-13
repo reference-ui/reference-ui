@@ -65,7 +65,7 @@ describe('mergeStreams statement', () => {
     expect(countOccurrences(merged.stylesheet, '@layer reset {')).toBe(1)
   })
 
-  it('dedups diamond names by first occurrence while blocks repeat', () => {
+  it('prints a diamond shared upstream once, at its first position, in both sheets', () => {
     const merged = mergeStreams(
       [
         { name: 'outer-a', streams: [SHARED_BASE_ENTRY, OUTER_A_ENTRY] },
@@ -77,12 +77,13 @@ describe('mergeStreams statement', () => {
     expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
     expect(merged.stylesheet.split('\n')[3]).toBe('@layer base-lib, outer-a, outer-b, app;')
     expect(countOccurrences(merged.stylesheet, '@layer base-lib, outer-a;')).toBe(0)
-    expect(countOccurrences(merged.stylesheet, '.base-lib__c_bg')).toBe(2)
+    expect(countOccurrences(merged.stylesheet, '.base-lib__c_bg')).toBe(1)
+    expect(countOccurrences(merged.portableStylesheet, '.base-lib__c_bg')).toBe(1)
     expect(countOccurrences(merged.stylesheet, '@layer reset {')).toBe(1)
     expect(merged.stylesheet.endsWith(APP_CSS)).toBe(true)
   })
 
-  it('dedups a directly repeated extends name once in the statement', () => {
+  it('dedups a repeated system to one statement entry and one block', () => {
     const merged = mergeStreams(
       [
         { name: 'flat-lib', streams: [FLAT_ENTRY] },
@@ -93,7 +94,7 @@ describe('mergeStreams statement', () => {
     )
     expect(merged.stylesheet.startsWith(ROOT_DEFAULT)).toBe(true)
     expect(merged.stylesheet.split('\n')[3]).toBe('@layer flat-lib, app;')
-    expect(countOccurrences(merged.stylesheet, '.flat-lib__p_1px')).toBe(2)
+    expect(countOccurrences(merged.stylesheet, '.flat-lib__p_1px')).toBe(1)
   })
 
   it('composes a two-level expansion root-first with its closure', () => {

@@ -1,1 +1,1 @@
-{"id": "STT-WRAP-03", "name": "Icons built by a factory such as createIcon are traced under their exported names, and wrappers that forward to them are traced too"}
+{"id": "STT-WRAP-03", "name": "icon_factory"}

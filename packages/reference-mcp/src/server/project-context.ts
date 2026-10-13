@@ -22,17 +22,6 @@ export function notSyncedMessage(projectPath: string): string {
 }
 
 /**
- * The sync re-check every project-scoped answer passes through, tools and resources alike. Returns
- * the not-synced message when the project's artifacts are gone, dropping its cached model so a later
- * re-sync reloads it; returns null when the project can be answered from.
- */
-export function syncFailure(projectManager: ProjectManager, projectPath: string): string | null {
-  if (isProjectSynced(projectPath)) return null
-  projectManager.invalidateProject(projectPath)
-  return notSyncedMessage(projectPath)
-}
-
-/**
  * Orchestrates project resolution, model artifact warmup/waiting, and execution for MCP tools.
  * Falls back to universal primitives mode when no project is active or resolved.
  */
@@ -62,9 +51,11 @@ export async function executeWithProject(
   }
 
   // Checked on every call: a project synced at session start must not keep answering from its
-  // cached model once its artifacts are gone.
-  const unsynced = syncFailure(projectManager, projectPath)
-  if (unsynced) return toErrorResult(unsynced)
+  // cached model once its artifacts are gone. The cache is dropped so a later re-sync reloads it.
+  if (!isProjectSynced(projectPath)) {
+    projectManager.invalidateProject(projectPath)
+    return toErrorResult(notSyncedMessage(projectPath))
+  }
 
   if (discovered.length > 1 && !requestedProject) {
     notice = `Operating in active project '${projectPath}'. To change the session's project, call select_project({ path: '...' }); to query another project for one call, pass 'project' in that tool call.`

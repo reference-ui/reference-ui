@@ -109,13 +109,19 @@ export interface BaseSystem {
   jsxElements?: string[]
 }
 
+export type LogChannel = 'compiler'
+export type StrictCategory = 'colors' | 'radii' | 'spacing'
 export interface ReferenceUIConfig {
   name: string
   include: string[]
   extends?: BaseSystem[]
+  layers?: BaseSystem[]
+  strict?: readonly StrictCategory[]
   jsxElements?: string[]
+  staticCss?: Record<string, string[]>
   normalizeCss?: boolean
   debug?: boolean
+  logs?: LogChannel[]
 }
 export declare function defineConfig(config: ReferenceUIConfig): ReferenceUIConfig
 export declare function tokens(config: Record<string, unknown>): void

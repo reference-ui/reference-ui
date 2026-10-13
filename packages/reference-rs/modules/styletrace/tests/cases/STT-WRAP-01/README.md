@@ -1,4 +1,4 @@
-# STT-WRAP-01 — A local component that exposes StyleProps and forwards them to a Reference primitive is traced, in body-destructured and fallback forms too
+# STT-WRAP-01 — direct_wrapper
 
 Traces a local component that wraps a Reference primitive and re-exports public StyleProps.
 Plain children without style props stay off the surface.

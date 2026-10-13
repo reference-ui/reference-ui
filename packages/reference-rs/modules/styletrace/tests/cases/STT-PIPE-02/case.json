@@ -1,1 +1,1 @@
-{"id": "STT-PIPE-02", "name": "Only entry-discovered modules emit names: entries that forward into a package wrapper trace under their own names, and the package export itself is not traced"}
+{"id": "STT-PIPE-02", "name": "entry_scope"}

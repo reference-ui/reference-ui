@@ -1,4 +1,4 @@
-# STT-WRAP-06 — A wrapper that forwards its remaining props with rest spread is traced, and peeling off non-style fields first does not hide it
+# STT-WRAP-06 — rest_spread_wrapper
 
 Traces a wrapper that forwards remaining props onto a Reference primitive.
 Non-style fields are peeled off; the rest bag is StyleProps.

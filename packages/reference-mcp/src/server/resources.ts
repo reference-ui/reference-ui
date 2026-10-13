@@ -1,7 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { McpPublicModel } from '../pipeline/types'
 import { toPublicModel } from './formatters'
-import { syncFailure } from './project-context'
 import type { ProjectManager } from './project-manager'
 import { getUniversalComponents } from './universal-primitives'
 
@@ -28,10 +27,6 @@ export function registerReferenceResources(
       let model: McpPublicModel
 
       if (projectPath) {
-        // The tools' sync re-check. A resource has no error result, so a lost project fails the
-        // read with the not-synced message rather than serving its cached model.
-        const unsynced = syncFailure(projectManager, projectPath)
-        if (unsynced) throw new Error(unsynced)
         const state = projectManager.getOrCreateState(projectPath)
         const artifact = await state.waitForReady(30_000)
         if (artifact) {

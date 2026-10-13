@@ -1,4 +1,4 @@
-# STT-WRAP-07 — Every link in a local wrapper chain is traced: Card over Surface over Div yields both Card and Surface
+# STT-WRAP-07 — wrapper_chain
 
 Traces style-bearing links through a local wrapper chain.
 Surface wraps Div; Card wraps Surface and forwards StyleProps.

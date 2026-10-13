@@ -1,1 +1,1 @@
-{"id": "STT-PKG-03", "name": "A wrapper that imports a package subpath listed in its package.json exports map is traced under its public names"}
+{"id": "STT-PKG-03", "name": "subpath_package"}

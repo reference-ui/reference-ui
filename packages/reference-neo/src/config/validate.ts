@@ -9,6 +9,7 @@ import {
   validateBaseSystemEntries,
   validateBaseSystemLinks,
   validateBaseSystems,
+  validateSharedBaseSystems,
 } from '../system/base/validate.ts'
 
 type ConfigRecord = Record<string, unknown>
@@ -117,12 +118,16 @@ function validateBaseFields(cfg: ConfigRecord, ownName: string): void {
       failures.push(error instanceof Error ? error : new Error(String(error)))
     }
   }
-  // A system present in both fields is held for the owner's ruling (D6), so no
-  // cross-field check runs here. Adding one is a single branch after both fields pass.
   if (failures.length === 1) throw failures[0]
   if (failures.length > 1) {
     throw new Error(failures.map((failure) => failure.message).join('\n\n'))
   }
+  // Both fields pass alone, so their entries are valid systems and the one
+  // cross-field rule (a system named in both) can read their names.
+  validateSharedBaseSystems(
+    validateBaseSystems('extends', cfg.extends),
+    validateBaseSystems('layers', cfg.layers)
+  )
 }
 
 /**

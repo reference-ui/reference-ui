@@ -1,4 +1,4 @@
-# STT-WRAP-05 — Wrappers that forward props only into plain-React package components, with no Reference primitive downstream, are not traced
+# STT-WRAP-05 — plain_react_wrappers
 
 Keeps wrappers around non-Reference UI out of the style-bearing surface.
 Converted from fixtures/atlas-project components: UserBadge, AppCard, and
