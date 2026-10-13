@@ -29,12 +29,16 @@ pub enum TastyDiagnosticCode {
     ScanFailed,
     /// `ast/extract/statements/module_requests`: a relative or absolute module request names no file on disk.
     UnresolvedImport,
+    /// `ast/extract/statements/unsupported`: a `declare module` augmentation of a path-shaped module is not merged.
+    UnsupportedAugmentation,
+    /// `ast/extract/statements/unsupported`: a module-level statement tasty does not model (`declare global`, `import x = …`, `export =`) is skipped.
+    UnsupportedSyntax,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(TastyDiagnosticCode, &str); 7] = [
+const CODE_TABLE: [(TastyDiagnosticCode, &str); 9] = [
     (TastyDiagnosticCode::ParseError, "TST-W-PARSE-ERROR"),
     (
         TastyDiagnosticCode::DuplicateDeclaration,
@@ -53,6 +57,14 @@ const CODE_TABLE: [(TastyDiagnosticCode, &str); 7] = [
     (
         TastyDiagnosticCode::UnresolvedImport,
         "TST-W-UNRESOLVED-IMPORT",
+    ),
+    (
+        TastyDiagnosticCode::UnsupportedAugmentation,
+        "TST-W-UNSUPPORTED-AUGMENTATION",
+    ),
+    (
+        TastyDiagnosticCode::UnsupportedSyntax,
+        "TST-W-UNSUPPORTED-SYNTAX",
     ),
 ];
 
@@ -143,6 +155,8 @@ mod tests {
             TastyDiagnosticCode::DuplicateSymbolName,
             TastyDiagnosticCode::ScanFailed,
             TastyDiagnosticCode::UnresolvedImport,
+            TastyDiagnosticCode::UnsupportedAugmentation,
+            TastyDiagnosticCode::UnsupportedSyntax,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

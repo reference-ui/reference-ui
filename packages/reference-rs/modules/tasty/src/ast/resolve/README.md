@@ -18,6 +18,10 @@ into the final `ResolvedTypeScriptGraph`.
 - exclude star-provided `"default"` from the barrel map silently (ESM
   star never re-exports default; explicit `export { X as default }`
   seeds still resolve; no diagnostic — absence, not ambiguity)
+- rebind named imports of a namespace re-export (`export * as ns from`,
+  followed through named re-export chains) to a namespace import of the
+  namespace's file, before the indexes are built, so `ns.Leaf` resolves
+  through the same path as `import * as ns`; the barrel keeps no flat names
 - resolve named-reexport seeds transitively and default-aware through
   the target's folded export map (local shells first, so declaring
   files win and `a↔b` cycles terminate); remaining misses stay silent

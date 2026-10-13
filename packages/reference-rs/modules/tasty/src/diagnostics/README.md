@@ -5,7 +5,7 @@ Tasty diagnostics are typed facts, not message strings. This submodule owns ever
 ## How a diagnostic flows
 
 1. Scanning refuses the request as a coded throw (`TST-E-SCAN-FAILED`) when the root, the glob, a path, or a file read fails. No partial bundle is returned.
-2. Extraction warns per file. A parse failure warns once and keeps whatever the parser recovered; a file the parser abandons outright contributes no declarations, and the scan still completes (`TST-W-PARSE-ERROR`). A relative or absolute module request that names no file on disk warns once per (file, specifier) (`TST-W-UNRESOLVED-IMPORT`), and the names it provides stay external.
+2. Extraction warns per file. A parse failure warns once and keeps whatever the parser recovered; a file the parser abandons outright contributes no declarations, and the scan still completes (`TST-W-PARSE-ERROR`). A relative or absolute module request that names no file on disk warns once per (file, specifier) (`TST-W-UNRESOLVED-IMPORT`), and the names it provides stay external. In a user file, a path-shaped `declare module` augmentation warns once per (file, module) (`TST-W-UNSUPPORTED-AUGMENTATION`), and `declare global`, `import x = …`, or `export =` warns once per (file, construct) (`TST-W-UNSUPPORTED-SYNTAX`); the statement is skipped and named.
 3. Resolution warns per name. Same-file duplicate declarations and members keep one survivor; a star-ambiguous name is excluded from the barrel (`TST-W-STAR-AMBIGUITY`).
 4. Manifest emission warns once per name that several symbols share (`TST-W-DUPLICATE-SYMBOL-NAME`), with the candidate ids in the help line.
 
@@ -21,6 +21,8 @@ The shared registry, `modules/diagnostics/REGISTRY.md`, is the home for each cod
 | `TST-W-STAR-AMBIGUITY` | warning | two `export *` targets provide `Widget` with different ids (`tests/cases/TST-RXP-02`) |
 | `TST-W-DUPLICATE-SYMBOL-NAME` | warning | two user files export `Shared` (`tests/cases/TST-DUP-01`) |
 | `TST-W-UNRESOLVED-IMPORT` | warning | `import type { Missing } from './missing'` with no `missing` file on disk (`tests/cases/TST-IMP-02`) |
+| `TST-W-UNSUPPORTED-AUGMENTATION` | warning | `declare module './base' { interface Base { extra: number } }` in a user file; the members are not merged (`tests/cases/TST-EXT-03`) |
+| `TST-W-UNSUPPORTED-SYNTAX` | warning | `declare global { … }`, `import x = require('…')`, or `export = X` in a user file; the statement is skipped (`tests/cases/TST-EXT-04`) |
 | `TST-E-SCAN-FAILED` | error | an unreadable scan root, an invalid glob, or an unreadable source file |
 
 ## Must not

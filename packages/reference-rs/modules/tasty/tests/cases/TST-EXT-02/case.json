@@ -1,0 +1,1 @@
+{"id": "TST-EXT-02", "name": "export * as ns exposes one namespace whose qualified members resolve"}

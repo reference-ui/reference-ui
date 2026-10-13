@@ -91,6 +91,41 @@ pub(crate) fn unresolved_import(
     )])
 }
 
+/// `declare module '<module>' { … }` in `file_id` augments a path-shaped module: tasty does not merge
+/// the augmenting declarations into it, so the augmentation is named instead of dropped.
+pub(crate) fn unsupported_augmentation(
+    file_id: &str,
+    module: &str,
+) -> Result<Diagnostic, DiagnosticError> {
+    Diagnostic::warning(
+        TastyDiagnosticCode::UnsupportedAugmentation.as_str(),
+        format!(
+            "module augmentation of `{module}` in `{file_id}` is not merged; its declarations are not added to `{module}`"
+        ),
+    )?
+    .with_location(file_id, None, None)
+    .with_help(vec![format!(
+        "declare the members in `{module}` itself instead of augmenting it"
+    )])
+}
+
+/// Module-level statement tasty does not model: `construct` names it, and the statement is skipped.
+pub(crate) fn unsupported_syntax(
+    file_id: &str,
+    construct: &str,
+) -> Result<Diagnostic, DiagnosticError> {
+    Diagnostic::warning(
+        TastyDiagnosticCode::UnsupportedSyntax.as_str(),
+        format!(
+            "unsupported syntax `{construct}` in `{file_id}`: tasty does not model this statement and skips it"
+        ),
+    )?
+    .with_location(file_id, None, None)
+    .with_help(vec![format!(
+        "re-declare what `{construct}` provides as named exports of `{file_id}`"
+    )])
+}
+
 /// One name indexes several symbols: `matches` lists `id (library)` pairs for disambiguation.
 pub(crate) fn duplicate_symbol_name(
     name: &str,
@@ -175,6 +210,17 @@ mod tests {
         assert_eq!(unresolved.severity, Severity::Warning);
         assert_eq!(unresolved.file.as_deref(), Some("src/root.ts"));
         assert!(unresolved.message.contains("`./missing`"));
+
+        let augmentation = unsupported_augmentation("src/augment.ts", "./base").unwrap();
+        assert_eq!(augmentation.code.as_str(), "TST-W-UNSUPPORTED-AUGMENTATION");
+        assert_eq!(augmentation.severity, Severity::Warning);
+        assert_eq!(augmentation.file.as_deref(), Some("src/augment.ts"));
+        assert!(augmentation.message.contains("`./base`"));
+
+        let syntax = unsupported_syntax("src/globals.ts", "declare global").unwrap();
+        assert_eq!(syntax.code.as_str(), "TST-W-UNSUPPORTED-SYNTAX");
+        assert_eq!(syntax.severity, Severity::Warning);
+        assert!(syntax.message.contains("`declare global`"));
     }
 
     #[test]
@@ -219,6 +265,20 @@ mod tests {
                  \"message\":\"unresolved import `./missing` in `src/root.ts`: no file matches it, so the names it provides stay unresolved\",\
                  \"file\":\"src/root.ts\",\
                  \"help\":[\"create the file for `./missing` or correct the specifier in `src/root.ts`\"]}",
+            ),
+            (
+                unsupported_augmentation("src/augment.ts", "./base").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"TST-W-UNSUPPORTED-AUGMENTATION\",\
+                 \"message\":\"module augmentation of `./base` in `src/augment.ts` is not merged; its declarations are not added to `./base`\",\
+                 \"file\":\"src/augment.ts\",\
+                 \"help\":[\"declare the members in `./base` itself instead of augmenting it\"]}",
+            ),
+            (
+                unsupported_syntax("src/globals.ts", "declare global").unwrap(),
+                "{\"severity\":\"warning\",\"code\":\"TST-W-UNSUPPORTED-SYNTAX\",\
+                 \"message\":\"unsupported syntax `declare global` in `src/globals.ts`: tasty does not model this statement and skips it\",\
+                 \"file\":\"src/globals.ts\",\
+                 \"help\":[\"re-declare what `declare global` provides as named exports of `src/globals.ts`\"]}",
             ),
         ];
         for (diagnostic, wire) in cases {

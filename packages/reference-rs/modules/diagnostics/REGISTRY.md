@@ -160,6 +160,8 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TST-W-DUPLICATE-SYMBOL-NAME` | One name indexes several symbols; disambiguate by id or scope | `modules/tasty/src/generator/bundle/modules/manifest.rs` |
 | `TST-E-SCAN-FAILED` | Scan walk, glob, path, or file read failed; the request is refused as a coded throw | `modules/tasty/src/scanner/workspace/**` |
 | `TST-W-UNRESOLVED-IMPORT` | A relative or absolute import, `export *`, or `export { x } from` names no file on disk; its names stay external | `modules/tasty/src/ast/extract/statements/module_requests.rs` |
+| `TST-W-UNSUPPORTED-AUGMENTATION` | A `declare module './x' { … }` augments a path-shaped module in a user file; tasty does not merge the augmenting declarations | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
+| `TST-W-UNSUPPORTED-SYNTAX` | A user file holds `declare global`, `import x = require()` or `import x = …`, or `export =`; tasty skips the statement and names the construct | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
 | `ATL-W-UNRESOLVED-PROPS-TYPE` | Named props type resolves nowhere; a partial component is kept with empty props | `modules/atlas/src/resolver.rs` |
 | `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | Inline props object annotation; the component is omitted from the inventory | `modules/atlas/src/resolver.rs` |
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | Included package resolves nowhere; the package is skipped | `modules/atlas/src/analyzer.rs` |

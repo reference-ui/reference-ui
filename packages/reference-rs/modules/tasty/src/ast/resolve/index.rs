@@ -4,12 +4,15 @@
 //! `export *` fold), resolves every symbol's references through those maps,
 //! and assembles the final graph. Star-ambiguous names — one name from two
 //! star targets with different symbol ids — are excluded from the barrel's
-//! map with a single diagnostic (ESM absence), never first-wins.
+//! map with a single diagnostic (ESM absence), never first-wins. Named imports
+//! of a namespace re-export (`export * as ns`) are rebound to the namespace's
+//! file before any index is built, so qualified references resolve through it.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::graph::ResolvedTypeScriptGraph;
 use super::merge::fold_same_file_merges;
+use super::namespaces::link_namespace_imports;
 use super::resolver::{CrossFileValues, Resolver};
 use crate::ast::model::{ParsedFileAst, ParsedTypeScriptAst};
 use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
@@ -26,6 +29,7 @@ pub(crate) fn resolve_ast(
     for parsed in parsed_files.iter_mut() {
         fold_same_file_merges(parsed, &mut diagnostics)?;
     }
+    link_namespace_imports(&mut parsed_files);
     let symbol_index = build_symbol_index(&parsed_files);
     let mut reported_ambiguities = BTreeSet::new();
     let export_index = build_export_index(

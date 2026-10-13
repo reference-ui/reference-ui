@@ -6,6 +6,7 @@ mod graph;
 mod index;
 mod merge;
 mod names;
+mod namespaces;
 mod resolver;
 
 pub(crate) use graph::ResolvedTypeScriptGraph;

@@ -9,6 +9,7 @@ use oxc_span::{GetSpan, SourceType};
 
 use super::statements::{
     exports_from_statement, import_bindings_from_statement, unresolved_import_diagnostics,
+    unsupported_syntax_diagnostics,
 };
 use super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::values::value_bindings_from_statement;
@@ -47,6 +48,10 @@ fn extract_file(
         resolver,
         scanned_file,
         file_id_set,
+        &parsed.program.body,
+    )?);
+    diagnostics.extend(unsupported_syntax_diagnostics(
+        scanned_file,
         &parsed.program.body,
     )?);
 

@@ -1,8 +1,12 @@
-//! Export statement collection: named exports, default exports, and bare type declarations.
+//! Export statement collection: named exports, default exports, bare type declarations, and star re-exports.
+//! `export * from './m'` appends its target to the barrel's star list, so the target's names join the barrel flat.
+//! `export * as ns from './m'` records one namespace binding `ns` in the re-export map with the `*` remote name,
+//! the same marker a namespace import uses, and never adds the target's names flat; `resolve` rebinds named
+//! imports of that binding to the namespace's file.
 
 use std::collections::BTreeMap;
 
-use oxc_ast::ast::Statement;
+use oxc_ast::ast::{ModuleExportName, Statement};
 use oxc_span::GetSpan;
 
 use crate::constants::libraries::USER_LIBRARY_NAME;
@@ -10,6 +14,7 @@ use crate::constants::libraries::USER_LIBRARY_NAME;
 use super::super::module_bindings::{
     collect_default_export_declaration, collect_exported_declaration, record_named_reexports,
 };
+use super::super::slice_span;
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::super::ExtractionContext;
 use crate::ast::model::{ImportBinding, SymbolShell};
@@ -38,13 +43,13 @@ pub(crate) fn exports_from_statement(
         reexport_target,
         exports,
     );
-    collect_export_all_statement(
-        resolver,
-        file_id_set,
-        scanned_file,
-        statement,
-        export_all_targets,
-    );
+    match export_all_binding(resolver, file_id_set, scanned_file, statement) {
+        Some(ExportAllBinding::Star(target)) => export_all_targets.push(target),
+        Some(ExportAllBinding::Namespace { name, target }) => {
+            reexport_target.insert(name, (target, "*".to_string()));
+        }
+        None => {}
+    }
 
     let ctx = ExtractionContext {
         source: &scanned_file.source,
@@ -106,15 +111,22 @@ fn collect_named_export_statement(
     );
 }
 
-fn collect_export_all_statement(
+/// One resolved `export * from` or `export * as ns from` statement.
+enum ExportAllBinding {
+    /// `export * from './m'`: the target's names join the barrel flat.
+    Star(String),
+    /// `export * as ns from './m'`: one namespace named `ns` over the target, with no flat names.
+    Namespace { name: String, target: String },
+}
+
+fn export_all_binding(
     resolver: &ImportResolver,
     file_id_set: &std::collections::BTreeSet<String>,
     scanned_file: &ScannedFile,
     statement: &Statement<'_>,
-    export_all_targets: &mut Vec<String>,
-) {
+) -> Option<ExportAllBinding> {
     let Statement::ExportAllDeclaration(export_all) = statement else {
-        return;
+        return None;
     };
 
     let source_module = export_all
@@ -123,13 +135,21 @@ fn collect_export_all_statement(
         .as_str()
         .trim_matches('"')
         .trim_matches('\'');
-    let Some(target_file_id) =
-        resolver.resolve_import(&scanned_file.file_id, source_module, file_id_set)
-    else {
-        return;
-    };
+    let target = resolver.resolve_import(&scanned_file.file_id, source_module, file_id_set)?;
+    Some(match &export_all.exported {
+        Some(exported) => ExportAllBinding::Namespace {
+            name: export_name_text(exported, &scanned_file.source),
+            target,
+        },
+        None => ExportAllBinding::Star(target),
+    })
+}
 
-    export_all_targets.push(target_file_id);
+fn export_name_text(name: &ModuleExportName<'_>, source: &str) -> String {
+    slice_span(source, name.span())
+        .trim_matches('"')
+        .trim_matches('\'')
+        .to_string()
 }
 
 fn collect_user_export_statement(

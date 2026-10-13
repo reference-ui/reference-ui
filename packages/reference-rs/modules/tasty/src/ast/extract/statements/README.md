@@ -5,7 +5,9 @@ Top-level **statement dispatch** for a single parse pass: for each `Statement` i
 library) default exports and interface/type-alias symbol shells.
 
 This sits between `pipeline` (parse + loop) and the heavier `module_bindings` /
-`symbols` implementations.
+`symbols` implementations. `export * as ns` records one namespace binding instead of a star
+target, and `unsupported` names the module-level statements tasty skips (augmentations of a
+path-shaped module, `declare global`, `import x = …`, `export =`) with a warning.
 
 ## Files
 
