@@ -2,9 +2,11 @@
 
 **Severity:** High (blocks zero-config agent onboarding)
 **Area:** MCP (`list_projects`, `list_components`, `get_tokens`, …)
-**Status**: Open.
+**Status**: Fixed (commit "mcp: default project prefers synced; select_project schema; get_style_props per-query project").
 **Scope**: `@reference-ui/mcp` (server).
 **Not panda CSS.**
+
+Fix: `pickDefault` picks only synced projects in the same precedence order; an explicit `--project` still wins unsynced (the `ref sync` message); with none synced, universal primitives serve. Tests: `project-manager.test.ts`, `project-context.test.ts`.
 
 ## Observed
 

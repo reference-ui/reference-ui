@@ -38,7 +38,7 @@ export async function executeWithProject(
   }
 
   if (discovered.length > 1 && !requestedProject) {
-    notice = `Operating in active project '${projectPath}'. To switch projects, call select_project({ path: '...' }) or pass 'project' in your tool call.`
+    notice = `Operating in active project '${projectPath}'. To change the session's project, call select_project({ path: '...' }); to query another project for one call, pass 'project' in that tool call.`
   }
 
   const state = projectManager.getOrCreateState(projectPath)

@@ -22,6 +22,9 @@ import {
 } from './universal-primitives'
 import { searchIcons } from '../pipeline/icons-catalog'
 
+const SELECT_PROJECT_TARGET_MESSAGE =
+  "select_project needs a project directory: pass 'path' (or 'project')."
+
 export function registerReferenceTools(
   server: McpServer,
   projectManager: ProjectManager
@@ -64,18 +67,36 @@ export function registerReferenceTools(
     {
       title: 'Select Project',
       description:
-        'Set the active project path for the session and initiate background warmup of its Atlas AST and model artifacts.',
-      inputSchema: {
-        path: z
-          .string()
-          .describe(
-            'Relative or absolute filesystem path to the project directory where ui.config.* resides.'
-          ),
-      },
+        'Set the active project path for the session and initiate background warmup of its Atlas AST and model artifacts. Pass the directory as path (project is accepted as an alias).',
+      inputSchema: z
+        .object({
+          path: z
+            .string()
+            .min(1)
+            .optional()
+            .describe(
+              'Relative or absolute filesystem path to the project directory where ui.config.* resides. Pass path or project.'
+            ),
+          project: z
+            .string()
+            .min(1)
+            .optional()
+            .describe(
+              'Alias for path: relative or absolute filesystem path to the project directory where ui.config.* resides. Pass path or project.'
+            ),
+        })
+        .refine(
+          input => input.path !== undefined || input.project !== undefined,
+          SELECT_PROJECT_TARGET_MESSAGE
+        ),
     },
     async input => {
       await projectManager.waitForDiscovery()
-      const result = projectManager.selectProject(input.path)
+      const target = input.path ?? input.project
+      if (!target) {
+        return toErrorResult(SELECT_PROJECT_TARGET_MESSAGE)
+      }
+      const result = projectManager.selectProject(target)
       if ('error' in result) {
         return toErrorResult(result.error)
       }
@@ -269,13 +290,22 @@ function checkReferenceLibraryDisabled(
     {
       title: 'Get Style Props',
       description:
-        'Return the shared Reference UI StyleProps guide and token category compatibility.',
+        'Return the shared Reference UI StyleProps guide and token category compatibility. The guide is identical for every project; project is accepted so per-query calls match the other tools.',
       inputSchema: {
         query: z.string().optional(),
         includeProps: z.boolean().optional(),
+        project: z
+          .string()
+          .optional()
+          .describe(
+            'Optional relative or absolute filesystem path to target project directory. The guide is shared, so this does not change the result.'
+          ),
       },
     },
-    async input => toTextResult(getStylePropsReference(input))
+    async input =>
+      toTextResult(
+        getStylePropsReference({ query: input.query, includeProps: input.includeProps })
+      )
   )
 
   server.registerTool(

@@ -70,13 +70,13 @@ When developing in a Reference UI codebase, follow these core principles:
 
 In monorepos and multi-package workspaces, the user will often pivot between different packages (e.g. `packages/reference-lib`, `packages/reference-docs`). Always track the package you are working in:
 
-- **Set Session Focus**: When shifting your work to a package, call `select_project({ path: 'packages/...' })`. All subsequent tool calls will operate in that project's AST and token graph.
+- **Set Session Focus**: When shifting your work to a package, call `select_project({ path: 'packages/...' })` (`project:` works as an alias). All subsequent tool calls will operate in that project's AST and token graph.
 - **Per-Query Targeting**: If you just need a one-off query from another package without altering active focus, pass `project: 'packages/...'`:
   ```ts
   get_component({ name: 'Button', project: 'packages/reference-lib' })
   ```
 - **Discover Projects**: Call `list_projects` to discover all Reference UI projects in your workspace and global machine registry.
-- **Universal Mode**: If a workspace has no `ui.config.ts`, the server automatically operates in Universal Primitives mode, providing documentation for built-in primitives and StyleProps.
+- **Universal Mode**: If no project is synced (no `ui.config.ts` with generated artifacts), the server automatically operates in Universal Primitives mode, providing documentation for built-in primitives and StyleProps.
 
 ---
 

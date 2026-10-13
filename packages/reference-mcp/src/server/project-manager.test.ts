@@ -1,13 +1,62 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ProjectManager } from './project-manager'
 import { GlobalProjectRegistry } from './project-registry'
 
+// Build children are stubbed so no real build runs during unit tests: a synced project
+// rebuilds from its artifact, an unsynced one fails the way a real project does.
+vi.mock('../child-process/process', async () => {
+  const { existsSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  class McpChildProcessError extends Error {
+    constructor(
+      public readonly errorType: 'config_not_found' | 'config_invalid' | 'missing_artifacts' | 'build_failed',
+      message: string
+    ) {
+      super(message)
+    }
+  }
+  return {
+    McpChildProcessError,
+    spawnMcpBuildChild: async (projectCwd: string) => {
+      const modelPath = join(projectCwd, '.reference-ui', 'mcp', 'model.json')
+      if (existsSync(modelPath)) return { modelPath, componentCount: 0 }
+      throw new McpChildProcessError('missing_artifacts', "Run 'ref sync' to generate the model artifacts.")
+    },
+    spawnMcpPrefetchAtlasChild: async () => {},
+  }
+})
+
+const MINIMAL_ARTIFACT = {
+  schemaVersion: 1,
+  generatedAt: '2026-01-01T00:00:00Z',
+  workspaceRoot: '/test',
+  manifestPath: '/test/manifest.js',
+  diagnostics: [],
+  components: [],
+  tokens: [],
+}
+
+/** A project with ui.config.ts; `synced` also writes the MCP model artifact discovery looks for. */
+function writeProject(dir: string, options: { synced: boolean }): void {
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, 'ui.config.ts'), 'export default {}')
+  if (options.synced) {
+    mkdirSync(join(dir, '.reference-ui', 'mcp'), { recursive: true })
+    writeFileSync(join(dir, '.reference-ui', 'mcp', 'model.json'), JSON.stringify(MINIMAL_ARTIFACT))
+  }
+}
+
+function writeWorkspace(root: string): void {
+  writeFileSync(join(root, 'pnpm-workspace.yaml'), "packages:\n  - 'packages/*'\n")
+}
+
 describe('ProjectManager', () => {
   let testDir: string
   let registryFile: string
+  let savedRefProject: string | undefined
 
   beforeEach(() => {
     const rawTestDir = join(tmpdir(), `ref-test-pm-${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -15,10 +64,14 @@ describe('ProjectManager', () => {
     testDir = realpathSync(rawTestDir)
     registryFile = join(testDir, 'registry.json')
     GlobalProjectRegistry.setRegistryPathForTesting(registryFile)
+    savedRefProject = process.env.REF_PROJECT
+    delete process.env.REF_PROJECT
   })
 
   afterEach(() => {
     GlobalProjectRegistry.setRegistryPathForTesting(null)
+    if (savedRefProject === undefined) delete process.env.REF_PROJECT
+    else process.env.REF_PROJECT = savedRefProject
     rmSync(testDir, { recursive: true, force: true })
   })
 
@@ -29,20 +82,71 @@ describe('ProjectManager', () => {
     expect(pm.resolveProject()).toBeNull()
   })
 
-  it('selects CWD project when ui.config.ts is present', async () => {
-    writeFileSync(join(testDir, 'ui.config.ts'), 'export default {}')
+  it('selects a synced CWD project when ui.config.ts is present', async () => {
+    writeProject(testDir, { synced: true })
     const pm = new ProjectManager(testDir)
     await pm.initialize()
     expect(pm.getActiveProject()).toBe(testDir)
   })
 
+  it('does not default to an unsynced CWD project', async () => {
+    writeProject(testDir, { synced: false })
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBeNull()
+  })
+
+  it('prefers a synced workspace project over an unsynced CWD project', async () => {
+    writeWorkspace(testDir)
+    writeProject(testDir, { synced: false })
+    const synced = join(testDir, 'packages', 'shared-ui')
+    writeProject(synced, { synced: true })
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBe(synced)
+  })
+
+  it('prefers a synced workspace project over an unsynced sibling that sorts first', async () => {
+    writeWorkspace(testDir)
+    const unsynced = join(testDir, 'packages', 'a-unsynced')
+    const synced = join(testDir, 'packages', 'b-synced')
+    writeProject(unsynced, { synced: false })
+    writeProject(synced, { synced: true })
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBe(synced)
+  })
+
+  it('keeps an explicit --project even when that project is unsynced', async () => {
+    writeWorkspace(testDir)
+    const synced = join(testDir, 'packages', 'a-synced')
+    const explicit = join(testDir, 'packages', 'z-unsynced')
+    writeProject(synced, { synced: true })
+    writeProject(explicit, { synced: false })
+
+    const pm = new ProjectManager(testDir, { project: 'packages/z-unsynced' })
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBe(explicit)
+  })
+
+  it('leaves the default unset when no discovered project is synced', async () => {
+    writeWorkspace(testDir)
+    writeProject(join(testDir, 'packages', 'a-unsynced'), { synced: false })
+    writeProject(join(testDir, 'packages', 'b-unsynced'), { synced: false })
+
+    const pm = new ProjectManager(testDir)
+    await pm.initialize()
+    expect(pm.getActiveProject()).toBeNull()
+    expect(pm.resolveProject()).toBeNull()
+  })
+
   it('honors explicit --project option over auto-discovery', async () => {
     const pkgA = join(testDir, 'pkg-a')
     const pkgB = join(testDir, 'pkg-b')
-    mkdirSync(pkgA, { recursive: true })
-    mkdirSync(pkgB, { recursive: true })
-    writeFileSync(join(pkgA, 'ui.config.ts'), 'export default {}')
-    writeFileSync(join(pkgB, 'ui.config.ts'), 'export default {}')
+    writeProject(pkgA, { synced: true })
+    writeProject(pkgB, { synced: false })
 
     const pm = new ProjectManager(testDir, { project: 'pkg-b' })
     await pm.initialize()
@@ -52,10 +156,8 @@ describe('ProjectManager', () => {
   it('dynamically switches project via selectProject', async () => {
     const pkgA = join(testDir, 'pkg-a')
     const pkgB = join(testDir, 'pkg-b')
-    mkdirSync(pkgA, { recursive: true })
-    mkdirSync(pkgB, { recursive: true })
-    writeFileSync(join(pkgA, 'ui.config.ts'), 'export default {}')
-    writeFileSync(join(pkgB, 'ui.config.ts'), 'export default {}')
+    writeProject(pkgA, { synced: true })
+    writeProject(pkgB, { synced: false })
 
     const pm = new ProjectManager(pkgA)
     await pm.initialize()

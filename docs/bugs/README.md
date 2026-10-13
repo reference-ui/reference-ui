@@ -11,8 +11,8 @@ below are independent of the compiler.
 
 | File | Scope | Issue |
 | --- | --- | --- |
-| [MCP_DEFAULT_PROJECT.md](./MCP_DEFAULT_PROJECT.md) | MCP | Default active project has no artifacts |
-| [MCP_SELECT_PROJECT_SCHEMA.md](./MCP_SELECT_PROJECT_SCHEMA.md) | MCP | `select_project` rejects `project` |
+| [MCP_DEFAULT_PROJECT.md](./MCP_DEFAULT_PROJECT.md) | MCP | Fixed: default project prefers synced projects; universal primitives when none is synced |
+| [MCP_SELECT_PROJECT_SCHEMA.md](./MCP_SELECT_PROJECT_SCHEMA.md) | MCP | Fixed: `select_project` accepts `project` as well as `path` |
 
 ## Atlas / inventory
 

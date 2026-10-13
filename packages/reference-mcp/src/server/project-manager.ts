@@ -39,6 +39,10 @@ export function compareProjectsByLastActive(
   return a.path.localeCompare(b.path)
 }
 
+function pickMostRecentlyActive(projects: DiscoveredProject[]): DiscoveredProject | undefined {
+  return [...projects].sort(compareProjectsByLastActive)[0]
+}
+
 export class ProjectManager {
   readonly workspaceRoot: string
   readonly explicitProject: string | null
@@ -175,6 +179,12 @@ export class ProjectManager {
     }
   }
 
+  /**
+   * Default project for the session. An explicit --project (or REF_PROJECT) wins even when
+   * unsynced, so the caller gets the "run ref sync" message. Otherwise only synced projects
+   * qualify, in precedence order cwd > ancestor > workspace > registry. When none qualify
+   * this returns null and tools serve universal primitives instead of an unsynced error.
+   */
   private pickDefault(): string | null {
     // 1. Explicit CLI --project or REF_PROJECT
     if (this.explicitProject) {
@@ -182,32 +192,23 @@ export class ProjectManager {
       if (explicit) return explicit
     }
 
-    // 2. CWD contains ui.config.*
-    const cwdMatch = this.discoveredProjects.find(p => p.source === 'cwd')
+    const synced = this.discoveredProjects.filter(p => p.hasArtifacts)
+
+    // 2. CWD contains ui.config.* and has been synced
+    const cwdMatch = synced.find(p => p.source === 'cwd')
     if (cwdMatch) return cwdMatch.path
 
     // 3. Ancestor search
-    const ancestorMatch = this.discoveredProjects.find(p => p.source === 'ancestor')
+    const ancestorMatch = synced.find(p => p.source === 'ancestor')
     if (ancestorMatch) return ancestorMatch.path
 
-    // 4. Workspace projects
-    const workspaceProjects = this.discoveredProjects.filter(p => p.source === 'workspace')
-    if (workspaceProjects.length === 1) {
-      return workspaceProjects[0].path
-    }
-    if (workspaceProjects.length > 1) {
-      const sorted = [...workspaceProjects].sort(compareProjectsByLastActive)
-      return sorted[0].path
-    }
+    // 4. Workspace projects (most recently active first, then path)
+    const workspaceMatch = pickMostRecentlyActive(synced.filter(p => p.source === 'workspace'))
+    if (workspaceMatch) return workspaceMatch.path
 
     // 5. Global registry projects
-    const registryProjects = this.discoveredProjects.filter(p => p.source === 'global_registry')
-    if (registryProjects.length > 0) {
-      const sorted = [...registryProjects].sort(compareProjectsByLastActive)
-      return sorted[0].path
-    }
-
-    return null
+    const registryMatch = pickMostRecentlyActive(synced.filter(p => p.source === 'global_registry'))
+    return registryMatch?.path ?? null
   }
 
   private matchProjectPath(raw: string): string | null {
