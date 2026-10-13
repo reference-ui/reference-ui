@@ -13,7 +13,7 @@ mod streams;
 
 pub use streams::{StylesheetStreams, build_stylesheet_streams};
 use super::name;
-use super::system_layers::{append_portable_system_layers, append_system_layers};
+use super::system_layers::{append_portable_system_layers, append_system_layers, own_token_scope};
 use crate::atom::{Atom, AtomSet, WhenKind};
 use crate::recipes::CompiledRecipe;
 use crate::resolve::conditions::nest_selector_condition;
@@ -62,7 +62,7 @@ pub fn build_stylesheet_with(
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> String {
     let mut inner = LAYER_PREAMBLE.to_string();
-    append_system_layers(&mut inner, system, diagnostics);
+    append_system_layers(&mut inner, system, own_token_scope(qualifiers), diagnostics);
     append_recipes_layer(&mut inner, recipes);
     append_utilities_layer(&mut inner, own, external, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))

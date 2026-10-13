@@ -1,7 +1,9 @@
 //! Prints `@layer reset`, `@layer global`, and `@layer tokens` from an ingested `BaseSystem`.
 //! Global is the stored CSS dump (fixture `:root --spacing-root`) plus `@keyframes`
 //! rules from the system's motion table and `@font-face` blocks from the font table.
-//! Tokens become custom properties on `:root, [data-color-mode=light]` and `[data-color-mode=dark]`.
+//! Tokens become custom properties under the selectors their `TokenScope` picks: `:root` with bare
+//! `[data-color-mode]` for a standalone system, `[data-layer]` for the portable sheet, and an isolated
+//! own-layer set under upstreams.
 //! Empty layers and empty keyframe tables are omitted; recipes and utilities stay separate.
 //! Keyframe bodies resolve aliases, units, `{token}` refs, and `r` units through
 //! the utility passes; unresolvable values print verbatim, mirroring tokens.
@@ -21,20 +23,23 @@ use crate::resolve::ResolveSession;
 
 use super::global;
 
+mod scope;
 #[cfg(test)]
 mod tests;
 
-const DARK_SELECTOR: &str = "[data-color-mode=dark]";
+use scope::token_selectors;
+pub use scope::{own_token_scope, TokenScope};
 
-/// Append globalCss and token custom-property layers when the dump has them.
+/// Append globalCss and token custom-property layers under the given token `scope`.
 pub fn append_system_layers(
     out: &mut String,
     system: &BaseSystem,
+    scope: TokenScope,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) {
     global::append_reset_css(out, system, diagnostics);
     append_global(out, system, diagnostics);
-    append_tokens(out, system, false, diagnostics);
+    append_tokens(out, system, scope, diagnostics);
 }
 
 /// Append globalCss and portable [data-layer] token custom-property layers.
@@ -45,7 +50,7 @@ pub fn append_portable_system_layers(
 ) {
     global::append_reset_css(out, system, diagnostics);
     append_global(out, system, diagnostics);
-    append_tokens(out, system, true, diagnostics);
+    append_tokens(out, system, TokenScope::Portable, diagnostics);
 }
 
 /// Append `@layer global {…}` when fragments, fonts, or keyframes print.
@@ -222,32 +227,19 @@ fn push_css_property(out: &mut String, prop: &str) {
     out.push_str(canon::to_css_declaration_property(prop));
 }
 
-/// Append `@layer tokens {…}`; portable selects `[data-layer]` over `:root`.
+/// Append `@layer tokens {…}`; the `scope` picks the selectors (see `TokenScope`).
 /// Rhythm-root cycles diagnose into `diagnostics` and omit the declaration.
 pub fn append_tokens(
     out: &mut String,
     system: &BaseSystem,
-    portable: bool,
+    scope: TokenScope,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) {
     if system.tokens.is_empty() {
         return;
     }
     out.push_str("@layer tokens {\n");
-    let (light_sel, dark_sel) = if portable && !system.name.is_empty() {
-        (
-            format!(
-                "[data-layer=\"{}\"], [data-layer=\"{}\"][data-color-mode=light]",
-                system.name, system.name
-            ),
-            format!("[data-layer=\"{}\"][data-color-mode=dark]", system.name),
-        )
-    } else {
-        (
-            ":root, [data-color-mode=light]".to_string(),
-            DARK_SELECTOR.to_string(),
-        )
-    };
+    let (light_sel, dark_sel) = token_selectors(scope, &system.name);
     write_token_block(out, &light_sel, system, TokenMode::Light, diagnostics);
     if has_dark_overrides(system) {
         write_token_block(out, &dark_sel, system, TokenMode::Dark, diagnostics);

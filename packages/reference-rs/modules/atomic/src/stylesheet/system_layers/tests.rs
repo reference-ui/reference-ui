@@ -40,14 +40,14 @@ fn custom_system() -> BaseSystem {
 fn emit(system: &BaseSystem) -> String {
     let mut out = String::new();
     let mut diagnostics = Vec::new();
-    append_system_layers(&mut out, system, &mut diagnostics);
+    append_system_layers(&mut out, system, TokenScope::Root, &mut diagnostics);
     out
 }
 
 fn emit_with_diagnostics(system: &BaseSystem) -> (String, Vec<crate::diagnostics::Diagnostic>) {
     let mut out = String::new();
     let mut diagnostics = Vec::new();
-    append_system_layers(&mut out, system, &mut diagnostics);
+    append_system_layers(&mut out, system, TokenScope::Root, &mut diagnostics);
     (out, diagnostics)
 }
 
@@ -489,4 +489,57 @@ fn reset_fragment_prints_in_layer_reset() {
     let css = emit(&system);
     assert!(css.contains("@layer reset {"));
     assert!(css.contains("* { box-sizing: border-box }"));
+}
+
+/// Tokens of `custom_system` printed under one scope, for the selector assertions.
+fn tokens_under(scope: TokenScope) -> String {
+    let mut out = String::new();
+    let mut diagnostics = Vec::new();
+    append_tokens(&mut out, &custom_system(), scope, &mut diagnostics);
+    out
+}
+
+#[test]
+fn token_scope_root_prints_root_and_bare_color_mode_selectors() {
+    let css = tokens_under(TokenScope::Root);
+    assert!(
+        css.contains("  :root, [data-color-mode=light] {\n"),
+        "{css}"
+    );
+    assert!(css.contains("  [data-color-mode=dark] {\n"), "{css}");
+    assert!(!css.contains("data-layer"), "{css}");
+}
+
+#[test]
+fn token_scope_portable_names_only_the_system_data_layer() {
+    let css = tokens_under(TokenScope::Portable);
+    assert!(
+        css.contains(
+            "  [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light] {\n"
+        ),
+        "{css}"
+    );
+    assert!(
+        css.contains("  [data-layer=\"custom\"][data-color-mode=dark] {\n"),
+        "{css}"
+    );
+    assert!(!css.contains(":root"), "{css}");
+}
+
+#[test]
+fn token_scope_isolated_adds_own_layer_and_never_prints_bare_dark() {
+    let css = tokens_under(TokenScope::Isolated);
+    assert!(
+        css.contains(
+            "  :root, :root[data-color-mode=light], body[data-color-mode=light], [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light] {\n"
+        ),
+        "{css}"
+    );
+    assert!(
+        css.contains(
+            "  :root[data-color-mode=dark], body[data-color-mode=dark], [data-layer=\"custom\"][data-color-mode=dark] {\n"
+        ),
+        "{css}"
+    );
+    assert!(!css.contains("\n  [data-color-mode=dark] {"), "{css}");
 }

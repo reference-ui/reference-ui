@@ -11,7 +11,7 @@ use super::StylesheetSinks;
 use super::super::global::append_reset_css;
 use super::super::layers::{LAYER_PREAMBLE, wrap_package_layer};
 use super::super::root_default::append_root_default;
-use super::super::system_layers::{append_global, append_tokens};
+use super::super::system_layers::{append_global, append_tokens, own_token_scope, TokenScope};
 use crate::atom::AtomSet;
 use crate::recipes::CompiledRecipe;
 use base_system::BaseSystem;
@@ -35,7 +35,8 @@ pub struct StylesheetStreams {
     pub reset: String,
     /// `@layer global {…}`, empty when nothing is printable.
     pub global: String,
-    /// `@layer tokens {…}` with `:root` selectors (served sheet).
+    /// `@layer tokens {…}` for the served sheet: `:root` selectors, or the isolated own-layer set
+    /// under upstreams.
     pub tokens: String,
     /// `@layer tokens {…}` with `[data-layer]` selectors (portable sheet).
     pub tokens_portable: String,
@@ -125,9 +126,19 @@ pub fn build_stylesheet_streams(
         "global prints identically in both sheets"
     );
     let mut tokens = String::new();
-    append_tokens(&mut tokens, system, false, sinks.primary);
+    append_tokens(
+        &mut tokens,
+        system,
+        own_token_scope(qualifiers),
+        sinks.primary,
+    );
     let mut tokens_portable = String::new();
-    append_tokens(&mut tokens_portable, system, true, sinks.portable);
+    append_tokens(
+        &mut tokens_portable,
+        system,
+        TokenScope::Portable,
+        sinks.portable,
+    );
     let mut root = String::new();
     append_root_default(&mut root);
     StylesheetStreams {

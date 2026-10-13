@@ -57,6 +57,16 @@ system may be named in both (`validateSharedBaseSystems`, D6).
   first position in the expansion, and the order statement lists it once. The published
   payload keeps the full expansion, so a consumer dedupes at print as well. Pinned by
   NEO-LAYERS-11, which keeps the statement and the paints unchanged.
+- D10 With upstreams, token scopes are disjoint. Each system declares its tokens on its own
+  `[data-layer]` stamps, and own also on the document (`:root`, `body`). Own's bare
+  `[data-color-mode=dark]` rule goes, so an upstream's layered root, which primitives stamp
+  with `data-color-mode`, keeps the upstream's values. Standalone output is unchanged
+  (`TokenScope::Isolated` in `system_layers/scope.rs`). Pinned by NEO-LAYERS-10, which reads
+  the nested consumer child's own value in each colour-mode leg. Two limits are accepted: a
+  plain non-primitive `<div data-color-mode>` island no longer switches own tokens under
+  upstreams, so islands go through primitives' `colorMode`; and consumer plain content placed
+  directly inside an upstream component, with no own primitive in between, inherits the
+  upstream's values.
 
 ## Engine stations and ownership
 
