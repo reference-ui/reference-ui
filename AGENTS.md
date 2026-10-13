@@ -8,7 +8,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 `view-story`, `test-component` and `ux-designer` are **skills** (component workflows for `@reference-ui/lib`).
 
-**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for `packages/reference-core` and the matrix. Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a loop to work through.
+**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for the kept matrix suites (`matrix/*`) and the pipeline. `packages/reference-core` was retired in `b2c666a73`; its work now lives in Neo and reference-rs (see the table). Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a loop to work through.
 
 | You changed | Use |
 | --- | --- |
@@ -18,12 +18,12 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
 | packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
-| `packages/reference-core`, `matrix/*`, pipeline, bundler/runtime contracts | **test-core** (`pnpm agent`) |
+| `matrix/*` (kept chain and MCP suites), `packages/reference-mcp`, `pipeline/*`, hermetic bundler contracts | **test-core** (`pnpm agent`) |
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
 | Serial `sync()` speed in `packages/reference-rs` (diets, alloc kills, lookup restructure) | `agent-perf` skill: the perf index and its tools (Memex `perf` collection) |
 | Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
 
-If a lib-component task also modified `packages/reference-core`, finish `test-component` for the component, then **switch to test-core** for core/matrix proof. `pnpm agentct` does not cover core.
+If a lib-component task also modified `matrix/*`, `pipeline/*` or `packages/reference-mcp`, finish `test-component` for the component, then **switch to test-core** for that proof. `pnpm agentct` does not cover them. Neo and reference-rs changes go to `agent-neo` / `agent-rs` (table above).
 
 ---
 
@@ -38,8 +38,8 @@ Whenever an agent needs to SEE a component in `@reference-ui/lib`:
 When a user prompt asks to fix, polish, style, improve, or adjust a
 component: view it first (`view-story`), implement in
 `packages/reference-lib/src/components/<Component>/`, prove with
-`test-component` (`pnpm agentct`). If `packages/reference-core` was also
-modified, switch to **test-core** (`pnpm agent`) for core/matrix proof.
+`test-component` (`pnpm agentct`). If `matrix/*` or `pipeline/*` was also
+modified, switch to **test-core** (`pnpm agent`) for matrix proof.
 
 ---
 
@@ -86,28 +86,23 @@ text with `npx playwright trace open <trace.zip>` then `errors` / `actions` /
 
 ---
 
-## 3. Core / Matrix Verification (`test-core`, `pnpm agent`)
+## 3. Matrix Verification (`test-core`, `pnpm agent`)
 
-`test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `packages/reference-core` or need hermetic matrix proof. Do not use `test-component` / `pnpm agentct` for core.
+`test-core` is the pipeline runner, **not a skill**. Follow `.agents/skills/test-core/SKILL.md` whenever you change `matrix/*`, `pipeline/*` or `packages/reference-mcp`, or need hermetic matrix proof. Do not use `test-component` / `pnpm agentct` for matrix work.
 
 ```bash
 # 0. Check runner & daemon status:
 pnpm agent status
 
-# 1. Fast Native Iteration (Recommended during component tweaking & spec tests):
-# (Runs unthrottled PRI 46 natively, with port 4173 cleanup, queue locks, and exit pass signals)
-pnpm agent playwright overlays -g "OV-OUT"
-pnpm agent playwright overlays -g "OV-LAYER"
-pnpm agent playwright lib tests/e2e/toast.spec.ts
-pnpm agent pw -g "OV-OUT"              # Auto-infers matrix/overlays
+# 1. Fast native Playwright for one kept matrix suite (runs unthrottled PRI 46, with port 4173 cleanup, queue locks, and exit pass signals):
+pnpm agent pw chain/T8                 # matrix/tests/chain/T8
 
 # Native Vitest (unit tests):
 pnpm agent vitest lib -t "Dialog"
-pnpm agent vitest core                 # packages/reference-core
+pnpm agent vt packages/reference-mcp   # MCP server unit tests
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
-# 2. Full 4-Phase Component Verification in One Shot (Final check before completion):
-# (Runs typecheck -> vitest -> build -> targeted matrix Playwright spec with cached deps)
+# 2. Full component verification in one shot (typecheck -> unit -> lib build -> component CT E2E; final check before completion):
 pnpm agent verify <ComponentName>
 # e.g.: pnpm agent verify Toast
 
@@ -122,7 +117,7 @@ pnpm pipeline test --packages=@matrix/<package>
 > - **Never execute raw Playwright or Vitest commands directly in subshells** (e.g. `pnpm --dir matrix/... exec playwright test`). Raw subshell commands run under clamped Darwin QoS (`PRI 31`), orphan Vite processes on port 4173, and lack clean exit pass signaling on SIGINT.
 > - **Always use `pnpm agent playwright` / `pnpm agent vitest`** for fast native iteration.
 > - **Use `pnpm agent test --packages=@matrix/<package>`** when you need full, hermetic multi-runtime/bundler matrix validation in Dagger containers.
-> - After a `packages/reference-core` change, this section is the proof path — not `pnpm agentct`.
+> - After a `matrix/*` or `pipeline/*` change, this section is the proof path — not `pnpm agentct`.
 
 ---
 
