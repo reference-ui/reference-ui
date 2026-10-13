@@ -12,16 +12,15 @@ import { ComplementaryCards, RelationshipGrid } from './colour-relationships'
 # Colour
 
 A colour in use is a shade at a strength. The [palette](/palette) gives you the
-shades. This page covers the strength, the role a colour plays, and how colours
+shades. This page covers strength, the role a colour plays, and how colours
 combine.
 
 ## Shades and tones
 
 A **shade** is one fixed step of a ramp, such as `blue.500`. A **tone** is a
-colour at a named opacity: `blue.500/medium` is blue at the medium strength. The
-part after the slash names the amount. Reference UI ships four tones, `ghost`,
-`medium`, `firm` and `strong`, and each one holds two amounts: a surface and a
-line.
+colour at a named strength, written `color/tone`: `blue.500/medium` is blue at
+the medium strength. Reference UI ships four tones, `ghost`, `medium`, `firm`
+and `strong`. Each holds two amounts, a surface and a line.
 
 <ShadesAndTones />
 
@@ -37,28 +36,28 @@ import { Div } from '@reference-ui/react'
 
 ### Why tones matter
 
-- **One colour, every strength.** A tone gives a range of tints from a single
-  ramp step, so you never need a separate palette step for each lightness.
+- **One colour, every strength.** A tone gives a range of tints from one ramp
+  step, so you do not need a palette step for each lightness.
 - **They take on what is behind them.** A tone mixes its colour with
   transparency, so `blue.500/medium` is a pale wash on a light page and a dim
   glow on a dark one, with no per-mode value.
 - **They are retuned in one place.** Each amount is a CSS custom property, such
-  as `--tones-medium-surface`. A theme, or a dark scope, can change a strength
-  without touching a component.
+  as `--tones-medium-surface`, so changing a strength never touches a
+  component. See [custom tones](#custom-tones).
 
 ## Roles
 
-A tone draws one of two amounts, and the property you set decides which one.
+A tone draws one of two amounts, and the property you set decides which.
 
-- **Surface** is the amount for areas: backgrounds and fills. It is the lighter
-  of the two.
-- **Line** is the stronger amount for edges and marks, so they stay visible at a
-  low opacity: borders, outlines, strokes, shadows, rules and text.
+- **Surface** is the lighter amount, for areas: backgrounds and fills.
+- **Line** is the stronger amount, for edges and marks that need to stay visible
+  at a low opacity: borders, outlines, text, strokes, carets, decoration,
+  shadows and column rules.
 
-| Amount | Props (examples) | Default range |
+| Amount | Props | Default range |
 | --- | --- | --- |
-| Surface | `bg`, `background`, `fill`, `accentColor`, and any prop not in the line column | 4% to 18% |
-| Line | `borderColor`, `border*`, `outline*`, `color`, `stroke`, `boxShadow`, `textDecorationColor`, `caretColor`, rule colours | 22% to 58% |
+| Surface | `bg`, `fill`, `accentColor`, and every colour prop not in the line row | 4% to 18% |
+| Line | `borderColor` (and per side), `outlineColor`, `color`, `webkitTextFillColor`, `stroke`, `caretColor`, `textDecorationColor`, `boxShadow`, `textShadow`, `columnRuleColor` | 22% to 58% |
 
 <RoleSpecimens />
 
@@ -75,18 +74,18 @@ import { Div, Span } from '@reference-ui/react'
 <Span color="blue.500/strong">Accent label</Span>
 ```
 
-The same tone reads differently by role. Here `strong` is 18% as a background
-and 58% as a border or as text. Text takes the line amount, so use a shade, such
-as `blue.700`, for body copy and keep tones for accents.
+The same tone reads differently by role: `strong` is 18% as a background and 58%
+as a border or as text. Text takes the line amount, so use a shade such as
+`blue.700` for body copy and keep tones for accents.
 
-A numeric suffix such as `blue.500/50` still works for a one-off opacity. Prefer
-a tone, so a theme can retune every use at once.
+In open mode a numeric suffix such as `blue.500/50` still works for a one-off
+opacity. Prefer a tone, so one change retunes every use.
 
 ## Intensity
 
-Four strengths, from the faintest wash to the most emphatic. Each tile shows its
-surface amount in the fill and its line amount on the edge, once on a light page
-and once on a dark one.
+Four strengths, from the faintest wash to the most emphatic. Each tile fills with
+the surface amount and draws its edge with the line amount, on a light page and
+on a dark one.
 
 <IntensityGrid />
 
@@ -100,19 +99,52 @@ const firm = css({ bg: 'blue.500/firm', borderColor: 'blue.500/firm' })
 </Div>
 ```
 
-Start at `medium`. Move up when a surface has to be found, and move down when it
+Start at `medium`. Move up when a surface has to be found, and down when it
 competes with the content around it.
+
+## Custom tones
+
+Tones are tokens. Add one, or change a default, with `tokens({ tones })`:
+
+```ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  tones: {
+    // A flat leaf serves both roles: 6% as a surface and as a line.
+    hush: { value: '6%' },
+    // Splitting the roles overrides a default.
+    medium: { surface: { value: '12%' }, line: { value: '30%' } },
+  },
+})
+```
+
+Each value must be a percentage written `<number>%`, and a leaf can carry a dark
+override like any other token. Then use the tone by name, as in
+`bg="blue.500/hush"`.
+
+A misspelt tone is caught. A bare `bg="blue.500/mediun"` warns with
+`ATM-W-UNKNOWN-TONE`, suggests `medium` and paints the raw value. Inside braces,
+as in `border: '1px solid {colors.blue.500/mediun}'`, it is an error and that
+colour is dropped.
+
+A tone compiles to a `color-mix` over one custom property per role. A flat tone
+such as `hush` has a single property, `--tones-hush`.
+
+```css
+color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent)
+```
 
 ## Composition
 
-A colour is a shade and its tones. Base is the shade at full strength; medium and
-strong are the same shade at a tone. The same tone paints a background, a border,
-a graph fill or a foreground, and only the role and the strength change.
+Base is the shade at full strength. Medium and strong are the same shade at a
+tone. A tone can paint a background, a border, a graph fill or a foreground; only
+the role and the strength change.
 
 <ColorComposition />
 
 Each step is one class that sets two props. `bg` takes the surface amount and
-`borderColor` takes the line amount, so a single tone gives a tint and a matching
+`borderColor` takes the line amount, so one tone gives a tint and a matching
 edge.
 
 ```tsx
@@ -124,10 +156,10 @@ const surfaceMedium = css({
 })
 ```
 
-## Role, not just strength
+## Choosing a strength
 
-Strength is only a fraction. The job decides which strength fits, so the same
-blue can be a resting surface, a selection, a data fill or an accent edge.
+The job decides which strength fits, so the same blue can be a resting surface, a
+selection, a data fill or an accent edge.
 
 | Role | Medium | Strong |
 | --- | --- | --- |
@@ -152,13 +184,13 @@ const accentEdge = css({ borderColor: 'blue.500/strong' })
 
 ## Complementary accents
 
-Start from a blue surface. Keep most of the foreground blue, and give the one
+Start from a blue surface and keep most of the foreground blue. Give the one
 thing that should stand out an accent from the far side of the wheel.
 
 <ComplementaryCards />
 
-Amber sits almost opposite blue, so the pair reads as warm against cool. Use the
-accent sparingly: one marker or one meter, not every element.
+Amber sits almost opposite blue, so the pair reads as warm against cool. Use it
+sparingly: one marker or one meter, not every element.
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -175,18 +207,18 @@ import { Div } from '@reference-ui/react'
 
 ## The four relationships
 
-Four ways to pair an accent with a blue surface. Each one places the accent at a
-specific point on the wheel, relative to blue.
+Four ways to pair an accent with blue, by where the accent sits on the wheel.
 
 <RelationshipGrid />
 
 ```tsx
 import { Div } from '@reference-ui/react'
 
-<Div bg="blue.500/medium">
-  <Div bg="blue.400" />   {/* the source hue */}
-  <Div bg="amber.500" />  {/* the complementary target */}
-</Div>
+<Div bg="blue.400" />    {/* the source */}
+<Div bg="blue.800" />    {/* monochromatic */}
+<Div bg="violet.500" />  {/* analogous */}
+<Div bg="amber.500" />   {/* complementary */}
+<Div bg="orange.500" />  {/* split complementary, with lime.500 */}
 ```
 
 ## Enforcing tokens
@@ -204,14 +236,14 @@ export default defineConfig({
 })
 ```
 
-`strict` takes any of `'colors'`, `'radii'` and `'spacing'`, and each one narrows
-the props in its category to that category's tokens. Any other value fails config
-validation.
+`strict` takes any of `'colors'`, `'radii'` and `'spacing'`. Any other value
+throws when the config loads.
 
 With `colors` on, colour props accept only a colour token (`blue.500`), a tone
 (`blue.500/medium`), or one of the keywords `white`, `black`, `inherit`,
 `currentColor` and `transparent`. Non-colour props stay open. The check covers
-your own code: JSX elements, `css()` and the `css` prop.
+your own code: JSX props, `css()` and the `css` prop. It does not narrow the props
+of components from `@reference-ui/lib`.
 
 ```tsx
 import { Div } from '@reference-ui/react'
@@ -219,11 +251,12 @@ import { Div } from '@reference-ui/react'
 // Accepted: a colour token, a tone, or a keyword.
 <Div bg="blue.500/medium" color="currentColor" />
 
-// Rejected: a raw opacity, a hex value or an unknown name.
-// TS2322: "blue.500/50" is not assignable to a colour token or tone.
+// Type errors: a raw opacity, a hex value, an unknown name.
 <Div bg="blue.500/50" />
+<Div bg="#3b82f6" />
+<Div bg="not-a-token" />
 ```
 
-Leaving `strict` out keeps open mode, where raw opacity such as `blue.500/50` and
-any CSS colour still work. That is the escape hatch. The check runs at type level,
-so it shows up in your editor and in `tsc`.
+Leave `strict` out to keep open mode, where `blue.500/50` and any CSS colour still
+work. The check runs at the type level, so it shows up in your editor and in
+`tsc`.

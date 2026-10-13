@@ -1,4 +1,4 @@
-import { createRouter, createRootRoute, createRoute } from '@tanstack/react-router'
+import { createRouter, createRootRoute, createRoute, redirect } from '@tanstack/react-router'
 import { DocLayout } from './DocLayout'
 import { DocPage } from './DocPage'
 import { DiagramPage } from '../content/diagrams/DiagramPage'
@@ -31,9 +31,19 @@ const diagramRoute = createRoute({
   component: DiagramPage,
 })
 
+/** The old Colors page split into Palette and Colour; keep its URL working. */
+const colorsRedirectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/colors',
+  beforeLoad: () => {
+    throw redirect({ to: '/$slug', params: { slug: 'colour' } })
+  },
+})
+
 const routeTree = rootRoute.addChildren([
   docsRoute.addChildren([indexRoute, docRoute]),
   diagramRoute,
+  colorsRedirectRoute,
 ])
 
 export const router = createRouter({

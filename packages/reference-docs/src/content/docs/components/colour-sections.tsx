@@ -166,6 +166,17 @@ const specimenText = css({
   lineHeight: '1.3',
 })
 
+function RoleLabel({ prop, kind, amount }: { prop: string; kind: string; amount: string }) {
+  return (
+    <>
+      <Span className={toneName}>{prop}</Span>
+      <Span className={label}>
+        {kind} · {amount}
+      </Span>
+    </>
+  )
+}
+
 /** One tone, three props: the same `strong` is 18% as a surface and 58% as a line. */
 export function RoleSpecimens() {
   return (
@@ -173,15 +184,15 @@ export function RoleSpecimens() {
       <Div className={row}>
         <Div className={cell}>
           <Div className={specimenSurface} />
-          <Span className={label}>bg · surface · 18%</Span>
+          <RoleLabel prop="bg" kind="surface" amount="18%" />
         </Div>
         <Div className={cell}>
           <Div className={specimenLine} />
-          <Span className={label}>borderColor · line · 58%</Span>
+          <RoleLabel prop="borderColor" kind="line" amount="58%" />
         </Div>
         <Div className={cell}>
           <Span className={specimenText}>Accent label</Span>
-          <Span className={label}>color · line · 58%</Span>
+          <RoleLabel prop="color" kind="line" amount="58%" />
         </Div>
       </Div>
     </Preview>

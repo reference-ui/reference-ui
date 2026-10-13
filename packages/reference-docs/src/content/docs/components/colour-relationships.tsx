@@ -4,13 +4,14 @@ import { Div, Span, css } from '@reference-ui/react'
  * Accent specimens for the Colour page: a blue tinted surface with one accent
  * in either blue or amber, and the four relationships of an accent to blue.
  * Accents are static classes, never computed names, so the compiler extracts
- * them. Hues are placed by their OKLCH hue: amber.500 sits about 170 degrees
- * from blue.500, the nearest thing to its complement in the palette.
+ * them. Hues are placed by their OKLCH hue: blue.500 is at 260 degrees, so its
+ * complement is near 80. amber.500 (70) and yellow.500 (86) are the closest
+ * steps; orange.500 (48) and lime.500 (131) bracket it for the split pair.
  */
 
 type Accent = 'blue' | 'amber'
-type Target = 'blue.800' | 'violet.500' | 'amber.500' | 'orange.500'
-type Relationship = { key: string; title: string; caption: string; target: Target }
+type Target = 'blue.800' | 'violet.500' | 'amber.500' | 'orange.500' | 'lime.500'
+type Relationship = { key: string; title: string; caption: string; targets: Target[] }
 
 const grid = css({
   display: 'grid',
@@ -36,11 +37,6 @@ const cardHead = css({ display: 'flex', alignItems: 'center', gap: '3r' })
 
 const dot = css({ width: '3r', height: '3r', borderRadius: 'full', flexShrink: '0' })
 
-const accentDot: Record<Accent, string> = {
-  blue: css({ bg: 'blue.400' }),
-  amber: css({ bg: 'amber.500' }),
-}
-
 const accentFill: Record<Accent, string> = {
   blue: css({ bg: 'blue.400' }),
   amber: css({ bg: 'amber.500' }),
@@ -58,7 +54,7 @@ function AccentCard({ accent, caption }: { accent: Accent; caption: string }) {
   return (
     <Div className={surfaceCard}>
       <Div className={cardHead}>
-        <Div className={`${dot} ${accentDot[accent]}`} />
+        <Div className={`${dot} ${accentFill[accent]}`} />
         <Span className={cardTitle}>Input</Span>
       </Div>
       <Div className={meterTrack}>
@@ -84,25 +80,25 @@ const RELATIONSHIPS: Relationship[] = [
     key: 'monochromatic',
     title: 'Monochromatic',
     caption: 'The same hue at another step. Calm and cohesive.',
-    target: 'blue.800',
+    targets: ['blue.800'],
   },
   {
     key: 'analogous',
     title: 'Analogous',
     caption: 'Neighbouring hues on the wheel. Harmonious, with more character.',
-    target: 'violet.500',
+    targets: ['violet.500'],
   },
   {
     key: 'complementary',
     title: 'Complementary',
     caption: 'The opposite hue. The strongest contrast, so use it sparingly.',
-    target: 'amber.500',
+    targets: ['amber.500'],
   },
   {
     key: 'split',
     title: 'Split complementary',
     caption: 'Two hues either side of the opposite. Contrast with less tension.',
-    target: 'orange.500',
+    targets: ['orange.500', 'lime.500'],
   },
 ]
 
@@ -127,8 +123,6 @@ const stage = css({
   bg: 'blue.500/medium',
 })
 
-const sourceDot = css({ width: '3r', height: '3r', borderRadius: 'full', bg: 'blue.400', flexShrink: '0' })
-
 const rule = css({
   flex: '1 1 auto',
   height: '0',
@@ -137,20 +131,23 @@ const rule = css({
   borderTopColor: 'blue.500/strong',
 })
 
-const targetDot: Record<Target, string> = {
-  'blue.800': css({ width: '3r', height: '3r', borderRadius: 'full', flexShrink: '0', bg: 'blue.800' }),
-  'violet.500': css({ width: '3r', height: '3r', borderRadius: 'full', flexShrink: '0', bg: 'violet.500' }),
-  'amber.500': css({ width: '3r', height: '3r', borderRadius: 'full', flexShrink: '0', bg: 'amber.500' }),
-  'orange.500': css({ width: '3r', height: '3r', borderRadius: 'full', flexShrink: '0', bg: 'orange.500' }),
+const targetFill: Record<Target, string> = {
+  'blue.800': css({ bg: 'blue.800' }),
+  'violet.500': css({ bg: 'violet.500' }),
+  'amber.500': css({ bg: 'amber.500' }),
+  'orange.500': css({ bg: 'orange.500' }),
+  'lime.500': css({ bg: 'lime.500' }),
 }
 
 function RelationshipCard({ relationship }: { relationship: Relationship }) {
   return (
     <Div className={relCard}>
       <Div className={stage}>
-        <Div className={sourceDot} />
+        <Div className={`${dot} ${accentFill.blue}`} />
         <Div className={rule} />
-        <Div className={targetDot[relationship.target]} />
+        {relationship.targets.map(target => (
+          <Div key={target} className={`${dot} ${targetFill[target]}`} />
+        ))}
       </Div>
       <Span className={cardTitle}>{relationship.title}</Span>
       <Span className={cardSub}>{relationship.caption}</Span>

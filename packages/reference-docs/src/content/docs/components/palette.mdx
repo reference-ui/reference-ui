@@ -9,22 +9,22 @@ import { PaletteDemo } from './palette-demo'
 
 # Palette
 
-The palette is the raw material: one ramp per colour family, from `50` (the
-lightest step) to `950` (the darkest). Each step is a shade, a fixed colour you
-can name in any prop that takes a colour. When you need a colour at a strength
-rather than a fixed step, reach for a [tone](/colour).
+The palette is one ramp per colour family, from `50` (the lightest step) to `950`
+(the darkest). Each step is a shade: a fixed colour you can name in any colour
+prop. For a colour at a strength rather than a fixed step, use a
+[tone](/colour).
 
 ## Neutrals
 
-Slate and gray are the neutrals. Use them for surfaces, rules and body text, so
-the page stays quiet while the hues carry the meaning.
+Slate and gray are the neutrals. Use them for surfaces, rules and body text, and
+let the hues carry the meaning.
 
 <PaletteDemo group="neutrals" />
 
 ## Hues
 
-Seventeen families, from red through rose. Each one is a full ramp, so a hue has
-a step for every lightness a surface or a label could need.
+Seventeen families, from red through rose. Each is a full ramp, from `50` to
+`950`.
 
 <PaletteDemo group="hues" />
 
