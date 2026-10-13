@@ -36,12 +36,10 @@ function run(command, args) {
   execFileSync(command, args, { cwd: packageRoot, stdio: 'inherit', env: process.env })
 }
 
+// The theme entry re-exports the theme barrel. The barrel has no default export, in source or in theme/index.mjs,
+// so a `default` re-export here named nothing and failed TS2305 for every consumer that imports @reference-ui/lib/theme.
 await mkdir(resolve(distDir, 'theme'), { recursive: true })
-await writeFile(
-  resolve(distDir, 'theme/index.d.ts'),
-  `export * from '../core/theme/index'\nexport { default } from '../core/theme/index'\n`,
-  'utf8',
-)
+await writeFile(resolve(distDir, 'theme/index.d.ts'), `export * from '../core/theme/index'\n`, 'utf8')
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)
