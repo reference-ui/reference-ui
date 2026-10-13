@@ -303,6 +303,16 @@ function workspaceCrateAliases(packages) {
   return aliases
 }
 
+// Crate aliases for the commands that name a crate, or null when cargo cannot list the workspace.
+function loadWorkspaceAliases(rsDir) {
+  try {
+    return workspaceCrateAliases(readWorkspacePackages(rsDir))
+  } catch (err) {
+    console.error(`\n\x1b[1;31m✖ [agent-rs] Cannot list workspace crates: ${err.message}\x1b[0m\n`)
+    return null
+  }
+}
+
 // Index of the argument naming the crate: the value of --crate, or the first bare word when that word is a crate.
 function findCrateArgIndex(args, aliases) {
   const crateIdx = args.indexOf('--crate')
@@ -385,45 +395,49 @@ function reportNoTestMatched(filters, scope, crateNames) {
   console.error('  A first argument naming one of these runs that crate, e.g. pnpm agentrs c module_graph.\n')
 }
 
-async function runCargoTests(args, rsDir) {
-  let packages
-  try {
-    packages = readWorkspacePackages(rsDir)
-  } catch (err) {
-    console.error(`\n\x1b[1;31m✖ [agent-rs] Cannot list workspace crates: ${err.message}\x1b[0m\n`)
-    return 1
-  }
-  const aliases = workspaceCrateAliases(packages)
-  const crateNames = [...new Set(packages.map((p) => p.name))].sort()
-  const { crate, release, filters } = parseCargoTestArgs(args, aliases)
-
+// The cargo test argv for a parsed run. libtest colours only when its stdout is a terminal, and here stdout is piped, so colour is requested explicitly.
+function buildCargoTestArgs({ crate, release, filters }) {
   const cargoArgs = ['test', ...(crate ? ['-p', crate] : ['--workspace'])]
   if (release) cargoArgs.push('--release')
-  // libtest colors only when its stdout is a terminal, and here stdout is piped, so request color explicitly.
   const libtestArgs = [...(process.stdout.isTTY ? ['--color', 'always'] : []), ...filters]
   if (libtestArgs.length > 0) cargoArgs.push('--', ...libtestArgs)
-  const scope = crate ? `crate ${crate}` : 'all workspace crates'
+  return cargoArgs
+}
+
+// Exit code for a finished cargo run: cargo's own code, or 1 when a name filter ran no test at all.
+function judgeCargoRun(code, stdout, filters, scope, crateNames) {
+  if (code !== 0) {
+    console.log(`\n\x1b[1;31m✖ [agent-rs] Rust tests FAILED (code ${code})\x1b[0m\n`)
+    return code
+  }
+  const ran = countRunTests(stdout)
+  if (filters.length > 0 && ran === 0) {
+    reportNoTestMatched(filters, scope, crateNames)
+    return 1
+  }
+  console.log(`\n\x1b[1;32m✔ [agent-rs] Rust tests PASSED: ${ran} tests run (${scope}).\x1b[0m\n`)
+  return 0
+}
+
+async function runCargoTests(args, rsDir) {
+  const aliases = loadWorkspaceAliases(rsDir)
+  if (!aliases) return 1
+  const crateNames = [...new Set(aliases.values())].sort()
+  const parsed = parseCargoTestArgs(args, aliases)
+  const cargoArgs = buildCargoTestArgs(parsed)
+  const scope = parsed.crate ? `crate ${parsed.crate}` : 'all workspace crates'
 
   console.log(`\n\x1b[1;36m[agent-rs] Running cargo: cargo ${cargoArgs.join(' ')}\x1b[0m\n`)
   return withCpuGate('rs', 'agentrs cargo', async () => {
     const { code, stdout } = await runChildCapturingStdout('cargo', cargoArgs, rsDir)
-    if (code !== 0) {
-      console.log(`\n\x1b[1;31m✖ [agent-rs] Rust tests FAILED (code ${code})\x1b[0m\n`)
-      return code
-    }
-    const ran = countRunTests(stdout)
-    if (filters.length > 0 && ran === 0) {
-      reportNoTestMatched(filters, scope, crateNames)
-      return 1
-    }
-    console.log(`\n\x1b[1;32m✔ [agent-rs] Rust tests PASSED: ${ran} tests run (${scope}).\x1b[0m\n`)
-    return 0
+    return judgeCargoRun(code, stdout, parsed.filters, scope, crateNames)
   })
 }
 
 async function runBenchCommand(args, rsDir) {
   const cargoArgs = ['bench']
-  const knownCrates = new Set(['atomic', 'canon', 'module_graph', 'module-graph', 'base_system', 'base-system', 'system', 'typegen', 'styletrace', 'atlas', 'tasty', 'shared', 'napi', 'runtime', 'reference-native'])
+  const aliases = loadWorkspaceAliases(rsDir)
+  if (!aliases) return 1
 
   const crateIdx = args.indexOf('--crate')
   let targetedCrate = null
@@ -431,21 +445,14 @@ async function runBenchCommand(args, rsDir) {
     targetedCrate = args[crateIdx + 1]
   } else {
     const firstPos = args.find((a) => !a.startsWith('-'))
-    if (firstPos && knownCrates.has(firstPos)) {
+    if (firstPos && aliases.has(firstPos)) {
       targetedCrate = firstPos
     }
   }
 
   const requestedCrate = targetedCrate
-  const crateAliases = {
-    napi: 'reference-native',
-    runtime: 'reference-native',
-    system: 'atomic',
-    'base-system': 'base_system',
-    'module-graph': 'module_graph',
-  }
-  if (targetedCrate && crateAliases[targetedCrate]) {
-    targetedCrate = crateAliases[targetedCrate]
+  if (targetedCrate && aliases.has(targetedCrate)) {
+    targetedCrate = aliases.get(targetedCrate)
   }
 
   if (targetedCrate) {
