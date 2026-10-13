@@ -85,7 +85,7 @@ pipeline, other packages, and vendor read no plan field.
   (`baseSystem.json` inputs carry spec `schemaVersion: 1`, unrelated to the
   artifact version); `ATM-SEAM-02`'s `schemaVersion` is the request version.
 - **Neo-adjacent**: `playground/vite.config.ts:16` mentions
-  `runtime-data.mjs` in a comment only; `PLAN.md` D4/D5 rows are prose.
+  `runtime-data.mjs` in a comment only; the retired plan D4/D5 rows are prose.
 
 ## Corrected re-point set (mechanical)
 

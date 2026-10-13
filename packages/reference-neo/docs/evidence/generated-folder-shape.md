@@ -1,6 +1,6 @@
 # Generated package shape probe
 
-Source: `packages/reference-lib/.reference-ui/` (core + Panda v1, 2026-09-16 tree), consumers in `packages/reference-lib` + `matrix/`, Neo publish in `packages/reference-neo/src/{sync,primitives}`, inventory in `packages/reference-rs/PLAN.md` §3.5. Read-only; no repo writes.
+Source: `packages/reference-lib/.reference-ui/` (core + Panda v1, 2026-09-16 tree), consumers in `packages/reference-lib` + `matrix/`, Neo publish in `packages/reference-neo/src/{sync,primitives}`, inventory in the retired plan §3.5. Read-only; no repo writes.
 
 ## 1. Executive summary
 
@@ -8,7 +8,7 @@ Consumers of `@reference-ui/lib` almost never import Panda’s generated `css()`
 
 Today’s `.reference-ui/styled/` is still a full Panda outdir (`css/`, `jsx/`, `patterns/`, `helpers.js`, `global.css`, panda banner) **plus** native `runtime-data.mjs` (~3752 style plans) and assembled `styles.css`. `react.mjs` (2781 lines) is **core-authored**, Liquid-templated primitives bundled with `forwardRef`, wrapping Panda `css`/`cva`.
 
-`PLAN.md` §3.5 forbids executable styled machinery and obsolete Panda paths after sync. Neo already emits `styles.css`, `runtime-data.mjs`, a **styled `css.mjs` bundle**, `system/baseSystem.mjs`, and a **string-built** react entry (`index.mjs`, not `react.mjs`). Gaps: PortableBaseSystem shape, `compile-request.json`, native `styled/types`, package `exports`/filenames matching lib, authoring APIs on `@reference-ui/system`, color-mode attribute (`data-panda-theme` today vs PLAN `data-theme` vs Neo `data-color-mode`), and deleting Panda trees.
+The retired plan §3.5 forbids executable styled machinery and obsolete Panda paths after sync. Neo already emits `styles.css`, `runtime-data.mjs`, a **styled `css.mjs` bundle**, `system/baseSystem.mjs`, and a **string-built** react entry (`index.mjs`, not `react.mjs`). Gaps: PortableBaseSystem shape, `compile-request.json`, native `styled/types`, package `exports`/filenames matching lib, authoring APIs on `@reference-ui/system`, color-mode attribute (`data-panda-theme` today vs PLAN `data-theme` vs Neo `data-color-mode`), and deleting Panda trees.
 
 `packages/reference-core/src/system/styled` is **gitignored and absent**. `@reference-ui/types` (Tasty/Reference runtime) is a fourth generated package not listed in §3.5; lib still publishes it.
 

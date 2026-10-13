@@ -58,14 +58,14 @@ all absences, `types/`, `font-registry.json`, determinism/cleanup.
 ## §8 mapping
 
 SYNC-02..13, PRIM-10, TYPE-01..06, GLOBAL-09, PARITY-02..04 — every id verified
-present in PLAN.md. No new rows.
+present in the retired plan. No new rows.
 
 ## Converge notes
 
 a. `jsx-elements.json` merged content (`local`/`merged` multi-component counts) has
 no pinning row — fold it into SYNC-04 (or SYNC-02 spec detail), not a new row.
 b. `types/` (543 files, 13 lib-src importers): mark unproven → approved absence.
-Caveat: `parity:130` claims “PLAN: tasty not tonight” but PLAN.md has zero Tasty
+Caveat: `parity:130` claims “PLAN: tasty not tonight” but the retired plan has zero Tasty
 hits — the deferral lives in evidence only, so the SYNC SPEC must carry the absence.
 13 lib-src files cannot build under Neo until the later leg.
 c. SYNC-01 must be rewritten in the SAME slice SYNC-02 lands: its spec asserts the

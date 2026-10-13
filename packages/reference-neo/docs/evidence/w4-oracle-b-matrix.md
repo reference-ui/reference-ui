@@ -15,13 +15,13 @@ Update (2026-10-13): `strict` narrowing is wired now for colors, radii and spaci
 ## 1. Executive summary
 
 1. 13 matrix behaviors are unproven by Neo: portaled colorMode island (`matrix/color-mode/tests/e2e/system-contract.spec.ts:96`), sibling `+`/`~` (`matrix/css-selectors/tests/e2e/css-selectors-contract.spec.ts:65`), `:where([data-variant])` scoping (`matrix/primitives/tests/unit/generated-output.test.ts:169`), radius pair shorthands (`matrix/spacing/tests/e2e/system-contract.spec.ts:143`), container+viewport mixing (`matrix/responsive/tests/e2e/viewport-contract.spec.ts:129`), inline-style `var()` probes (`matrix/system/tests/e2e/system-contract.spec.ts:131`), variant-registry augmentation (`matrix/typescript/src/primitive-variants.assertions.tsx:60`), multi-entry `fontFace` arrays (`matrix/font/tests/unit/runtime.test.ts:169`), height queries (`matrix/responsive/tests/e2e/viewport-contract.spec.ts:97`), container names (`matrix/primitives/tests/e2e/primitives-contract.spec.ts:429`), attr+hover composition (`matrix/css-selectors/tests/e2e/css-selectors-contract.spec.ts:118`), display/overflow/letter-spacing breadth (`matrix/primitives/tests/e2e/primitives-contract.spec.ts:330`), strictTokens narrowing (`matrix/typescript/src/strict-tokens.assertions.ts:9`).
-2. Three gaps are already blocked on known RS rows: `~` on RS-11 (`packages/reference-neo/tests/cases/global/TESTS.md:10`), mixed queries on RS-15 (`packages/reference-neo/tests/cases/cond/TESTS.md:20`), strictTokens is a D17 approved absence (`packages/reference-neo/PLAN.md:940`).
-3. The matrix color-mode contract pins `data-panda-theme='dark'` (`matrix/color-mode/tests/e2e/system-contract.spec.ts:107`), which PARITY-04 forbids (`packages/reference-neo/PLAN.md:955`); Neo must prove the portal repaint without that attribute — a recorded divergence, not a port.
+2. Three gaps are already blocked on known RS rows: `~` on RS-11 (`packages/reference-neo/tests/cases/global/TESTS.md:10`), mixed queries on RS-15 (`packages/reference-neo/tests/cases/cond/TESTS.md:20`), strictTokens is a D17 approved absence.
+3. The matrix color-mode contract pins `data-panda-theme='dark'` (`matrix/color-mode/tests/e2e/system-contract.spec.ts:107`), which PARITY-04 forbids; Neo must prove the portal repaint without that attribute — a recorded divergence, not a port.
 4. Zero-specificity `:where([data-variant])` has zero hits across all Neo specs (`rg -n ":where\(\[data-variant" packages/reference-neo/tests/cases/*/NEO-*/specs/*.spec.ts` → none); PRIM-06 asserts attr+class only (`packages/reference-neo/tests/cases/prim/TESTS.md:12`).
 5. No Neo spec uses portals, logical radius props, or height queries (`rg -ln "createPortal|portal|border-start|height"` over resp/prim/token specs → none).
 6. Everything else in the 13 paint suites maps to a green Neo case: color-mode nesting/toggle, css/container/viewport basics, recipe axes/compounds, font faces + registry, distro exports, spacing rhythm/shorthands, tokens/renames.
-7. Whole suites out of scope with standing reasons: mcp, reference (Tasty), session, virtual, watch, plus chain per D20 (`packages/reference-neo/PLAN.md:212`).
-8. The PARITY mini-lib world (`packages/reference-neo/PLAN.md:945`) needs 12 new probes (§4); PARITY-02's family table needs rows for siblings, `:where` variants, logical radius, and mixed queries or approved absences citing RS-11/RS-15.
+7. Whole suites out of scope with standing reasons: mcp, reference (Tasty), session, virtual, watch, plus chain per D20.
+8. The PARITY mini-lib world needs 12 new probes (§4); PARITY-02's family table needs rows for siblings, `:where` variants, logical radius, and mixed queries or approved absences citing RS-11/RS-15.
 9. `fontFace` arrays are typed (`packages/reference-neo/src/fragments/api/font.ts:28`) but no world authors two entries for one family — engine-ready, case-missing.
 10. Sibling `+` has no RS row at all (only `~` is GLOBAL-06/RS-11); the census must carry `+` or mint the row.
 
@@ -167,7 +167,7 @@ GAP ids (G1–G13) resolve in §3. "Trivial" = marker/entrypoint/testid boilerpl
 - **Divergence:** the matrix test also asserts `data-panda-theme='dark'`
   (`matrix/color-mode/tests/e2e/system-contract.spec.ts:107`). Neo scopes dark
   via `[data-color-mode=dark]` (D1) and PARITY-04 forbids `data-panda-theme`
-  (`packages/reference-neo/PLAN.md:955`). The census must prove the repaint and
+The census must prove the repaint and
   record the attribute as an approved divergence.
 
 ### 3.2 Selectors (G2, G11)
@@ -251,13 +251,12 @@ GAP ids (G1–G13) resolve in §3. "Trivial" = marker/entrypoint/testid boilerpl
   (`matrix/typescript/src/strict-tokens.assertions.ts:9`). **Expected (core):**
   token-or-keyword narrowing with `@ts-expect-error` on hex/functional/bare
   values. **Actual (Neo):** open `(string & {})` hatch by design; approved
-  absence per D17 (`packages/reference-neo/PLAN.md:940`). Census lists, never
+  absence per D17. Census lists, never
   proves.
 
 ## 4. Implications for the PARITY mini-lib world and census
 
-The mini-lib world is one world authored like `packages/reference-lib/src`
-(`packages/reference-neo/PLAN.md:945`): tokens with light/dark, `font()`,
+The mini-lib world is one world authored like `packages/reference-lib/src`: tokens with light/dark, `font()`,
 `keyframes()`, ~8 `.ref-*` tag recipes, two `recipe()`s, primitives, a
 `data-slot` bezel, one `container: true` region. To close the matrix side it
 must additionally host these probes (input → assertion):
@@ -288,12 +287,12 @@ reason the probe asserts absence.
 
 ## 5. Out of scope (with reasons)
 
-- **chain (all T1–T13).** Excluded per D20 (`packages/reference-neo/PLAN.md:212`):
+- **chain (all T1–T13).** Excluded per D20:
   PARITY cartography sources are Panda v1 atomic tests plus matrix minus CHAIN.
 - **mcp (18 unit files).** The MCP server (tools, project discovery/switching,
   registry lifecycle, path handling) is developer tooling around the style
   system, not emitted-style behavior; Neo's scope is fragments/publish/runtime
-  (`packages/reference-neo/PLAN.md:372` gives PARITY no `src/` ownership at all).
+  (gives PARITY no `src/` ownership at all).
 - **reference (Tasty).** `@reference-ui/types` package + symbol pages are the
   deferred Tasty leg; coverage-map note b already marks `types/` unproven →
   approved absence with the SYNC SPEC to carry it

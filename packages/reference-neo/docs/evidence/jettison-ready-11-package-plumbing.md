@@ -167,7 +167,7 @@ Named without touching — the complete GO surface for
     `ATM-SEAM-06..08` + `ATM-NAME-08` entries), `src/runtime/README.md`
     (permanent home of both tables), `docs/ATOMIC.md`,
     `packages/reference-neo/docs/DOMAIN.md` (+9 Vocabulary entries),
-    `packages/reference-neo/PLAN.md` D4/D5 rows, `docs/missions/README.md`.
+    the retired plan D4/D5 rows, `docs/missions/README.md`.
 
 ## D6 recommendation
 

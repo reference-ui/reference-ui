@@ -3,7 +3,7 @@
 Read-only scout, 2026-09-17. Census of every consumer import specifier rooted
 at `@reference-ui/react`, `@reference-ui/system`, `@reference-ui/styled` across
 the four in-scope surfaces, each mapped to the PLAN §4.1 target inventory
-(`packages/reference-neo/PLAN.md` §4.1, derived from
+(the retired plan §4.1, derived from
 `docs/evidence/generated-folder-shape.md` §7). Complements
 `generated-folder-shape.md` §3 (which covered lib `src/` + matrix value
 imports); this report owns Book, CT (Playwright), matrix entry/config

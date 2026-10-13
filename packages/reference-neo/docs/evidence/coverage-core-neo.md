@@ -3,13 +3,13 @@
 Read-only scout report for reference-neo. Question: inventory every emitted
 artifact type in core's and Neo's current output trees, and check each against
 Neo case coverage and PLAN §4.1. Sources: the on-disk trees, Neo publish code,
-existing case specs, and `PLAN.md` §4.1. No repo files were modified except this report.
+existing case specs, and the retired plan §4.1. No repo files were modified except this report.
 
 ## 1. Executive summary
 
 1. Core's tree (`packages/reference-lib/.reference-ui/`) holds ~1100 files across 4 packages plus `virtual/`/`tmp`/panda scaffolding, while Neo emits a uniform 13 files per world (`packages/reference-neo/src/sync/publish.ts:28-33`, `packages/reference-neo/src/sync/react.ts:49-98`).
-2. Of PLAN §4.1's 17 expected paths (`packages/reference-neo/PLAN.md:222-232`), Neo writes 10, misses 7 (`system.mjs`, `system.d.mts`, `compile-request.json`, `runtime-data.d.mts`, `styled/types/*`, `react.mjs` naming, `react/styles.css`).
-3. Neo currently writes 3 of §4.1's forbidden paths (`packages/reference-neo/PLAN.md:234-239`): `styled/global.css` stub (`packages/reference-neo/src/sync/publish.ts:80-84`), `styled/css.mjs` (`packages/reference-neo/src/sync/publish.ts:159`), and empty `tmp/` (`packages/reference-neo/src/config/evaluate.ts:22-24`).
+2. Of PLAN §4.1's 17 expected paths, Neo writes 10, misses 7 (`system.mjs`, `system.d.mts`, `compile-request.json`, `runtime-data.d.mts`, `styled/types/*`, `react.mjs` naming, `react/styles.css`).
+3. Neo currently writes 3 of §4.1's forbidden paths: `styled/global.css` stub (`packages/reference-neo/src/sync/publish.ts:80-84`), `styled/css.mjs` (`packages/reference-neo/src/sync/publish.ts:159`), and empty `tmp/` (`packages/reference-neo/src/config/evaluate.ts:22-24`).
 4. Only `NEO-SYNC-01` asserts folder shape, and it asserts the forbidden `global.css` *exists* (`packages/reference-neo/tests/cases/NEO-SYNC-01/specs/sync.spec.ts:16-26`); no case asserts any absence, link, export map, or types artifact.
 5. `system/baseSystem.mjs` exists in Neo but is a stub (`{name, fragment, css, jsxElements}`), not the contract `PortableBaseSystem` (`packages/reference-neo/src/sync/publish.ts:38-43`); `system/.` exports only baseSystem, not the authoring surface.
 6. React entry naming diverges: core emits `react.mjs`+`react.d.mts`+`styles.css` copy, Neo emits `index.mjs`+`index.d.mts` with no CSS export (`packages/reference-neo/src/sync/react.ts:60-73`).

@@ -18,11 +18,11 @@ drifts (two stale count comments, one PLAN unblocks cell); zero data drift.
   (`tests/cases/global/TESTS.md:10`), token 1
   (`tests/cases/token/TESTS.md:18`).
 - Every cited RS (RS-5/11/12/14/15/16/17/18/19) has a PLAN §5.3 row
-  (`PLAN.md:407,414-419,421-422`, all `in-progress`) plus per-group lane
+  (all `in-progress`) plus per-group lane
   text, except RS-5 which is PLAN-owned only (finding N1).
 - 5 cited probes verify: P4→RS-25, P5→RS-15, P8→RS-24, P14→RS-22,
   P15→RS-23 (`tests/cases/parity/NEO-PARITY-01/README.md:13-15`,
-  `tests/cases/parity/TESTS.md:5,9-12`, probe RS rows `PLAN.md:415,425-428`).
+  `tests/cases/parity/TESTS.md:5,9-12`, probe RS rows).
 - Union is 152, three ways: SPEC table `n` cells sum 71+80=151 across 13
   groups +1 parity-owned (`tests/cases/parity/SPEC.md:53-72`, every `n`
   cell matches its `·` counts); `UNION` holds 152 ids, 71 approved + 80
@@ -35,7 +35,7 @@ drifts (two stale count comments, one PLAN unblocks cell); zero data drift.
   (`census.spec.ts:83-162`; `BLOCKED` at `census-families.ts:191-204`).
 - Zero `open`/`in-progress` rows; no case folders exist for any blocked row.
 - DRIFT (prose only): stale "151" comments in `census-union.ts:2` and
-  `census.spec.ts:82`; `PLAN.md:419` RS-12 unblocks cell omits COND-10.
+  `census.spec.ts:82` RS-12 unblocks cell omits COND-10.
 
 ## 2. Inventory table
 
@@ -55,12 +55,11 @@ drifts (two stale count comments, one PLAN unblocks cell); zero data drift.
 | Zero open/in-progress; no blocked case folders | verified |
 | `census-union.ts:2` "151-entry (150 group + P-DELTA-4)" header | DRIFT (stale comment; data is 152) |
 | `census.spec.ts:82` "151 entries total" comment | DRIFT (stale comment; asserts 152) |
-| `PLAN.md:419` RS-12 unblocks `NEO-COND-05` only | DRIFT (omits COND-10; lane covers both) |
+| RS-12 unblocks `NEO-COND-05` only | DRIFT (omits COND-10; lane covers both) |
 
 Commands (from `packages/reference-neo`): `rg -n "^\| NEO-.*blocked-on-rs"
 tests/cases/*/TESTS.md`; `rg -n "blocked-on-rs" tests/cases/*/TESTS.md`;
-`rg -n "^\| RS-" PLAN.md`; `rg -n "RS-<n>\b" tests/cases/*/TESTS.md
-PLAN.md` per cited RS; `rg -n "\| open \||\| in-progress \|"
+`git show 84fc4eaac^:packages/reference-neo/PLAN.md | rg -n "^\| RS-"`; `rg -n "RS-<n>\b" tests/cases/*/TESTS.md` and `git show 84fc4eaac^:packages/reference-neo/PLAN.md | rg -n "RS-<n>\b"` per cited RS; `rg -n "\| open \||\| in-progress \|"
 tests/cases/*/TESTS.md` (no matches, exit 1); `rg -c "id: '"
 tests/cases/parity/NEO-PARITY-02/specs/census-union.ts` (152);
 `rg -n "151-entry\|150 group\|151 entries total\|152" <census files>`;
@@ -80,7 +79,7 @@ key-grounding loop over all 152 entries.
    §, token row :19, parity rows :9-12 for probe RS-22–25). The parity
    SPEC proof-basis (§"Proof basis") lists the same 12 `(b)` rows.
 2. **N1 — RS-5 note (not drift).** SITE-14 cites RS-5, whose only text is
-   the PLAN §5.3 one-liner (`PLAN.md:407`, ATM-SITE-13 open station).
+   the PLAN §5.3 one-liner (ATM-SITE-13 open station).
    Unlike every other cited RS it has no per-group lane section. This is
    consistent with its probe-era origin, but the N2 liaison should confirm
    the SITE-14 diagnostic contract is citable from the atomic side
@@ -90,7 +89,7 @@ key-grounding loop over all 152 entries.
    `sheet.spec.ts:96-107` pin the avoided source shapes per probe (plus
    RS-11/RS-17 avoidance guards). P5's RS-15 lane correctly lives in cond
    TESTS, not parity TESTS (matches charter N2 "RS-15 → COND-15 (+P5)").
-   All five RS rows exist and read `in-progress` (`PLAN.md:415,425-428`).
+   All five RS rows exist and read `in-progress`.
 4. **Union exact, three ways.** Independent re-parse: SPEC table `n` cells
    all match their `·` counts, summing to 71+80=151 across 13 groups, +1
    parity-owned = 152, matching the prose at SPEC :70-72; `UNION` holds
@@ -107,11 +106,11 @@ key-grounding loop over all 152 entries.
    the union 151→152. Data (`UNION`), assertions (`152`), and the SPEC
    table are all 152-correct; only the two comments lag. One-line fixes,
    captain-owned files.
-7. **DRIFT D3 — PLAN RS-12 unblocks cell.** `PLAN.md:419` names only
+7. **DRIFT D3 — PLAN RS-12 unblocks cell.** names only
    `NEO-COND-05`, but the cond RS-12 lane (`TESTS.md:21`), the ledger row
    (`TESTS.md:15`), and the census BLOCKED table all show COND-10 blocked
    on the same RS-12 gap. The charter N1 line ("RS-12 → resume
-   COND-05/10", `PLAN.md:1220`) is already correct; only the §5.3 cell lags.
+   COND-05/10") is already correct; only the §5.3 cell lags.
 8. **Census is self-guarding.** `census.spec.ts` asserts UNION==152, SPEC
    table==152, transcription multiset equality, per-group counts, keyword
    grounding, 43 families, and 12 still-blocked rows with RS owners — so
@@ -122,7 +121,7 @@ key-grounding loop over all 152 entries.
 ## 4. Implications for the N1 wave
 
 - **Sail as chartered.** N1 order RS-14 → SITE-01/02/03, RS-11 →
-  GLOBAL-06, RS-12 → COND-05/10 (`PLAN.md:1219-1220`) is fully grounded:
+  GLOBAL-06, RS-12 → COND-05/10 is fully grounded:
   every waiting row and its lane text verified above. No ledger fix gates N1.
 - **Resume = TESTS flip + BLOCKED shrink, same landing.** `checkBlocked`
   asserts all 12 rows still read `blocked-on-rs` and `BLOCKED.length ==

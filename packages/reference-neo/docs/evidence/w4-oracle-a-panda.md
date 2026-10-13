@@ -11,9 +11,9 @@ prints nothing). Counts below via `ls`/`rg`; commands quoted inline.
 1. Neo is 124 green (`ls -d packages/reference-neo/tests/cases/*/NEO-* | wc -l`) with 12 blocked-on-rs rows and no case folder (`rg -c '^\| NEO-[A-Z]+-[0-9]+ .*blocked-on-rs' packages/reference-neo/tests/cases/*/TESTS.md` → `packages/reference-neo/tests/cases/cond/TESTS.md:10` ×4, `packages/reference-neo/tests/cases/global/TESTS.md:10`, `packages/reference-neo/tests/cases/recipe/TESTS.md:13`, `packages/reference-neo/tests/cases/site/TESTS.md:5` ×5 incl. `:17`–`:18`, `packages/reference-neo/tests/cases/token/TESTS.md:18`).
 2. 8 blocked rows carry `[panda-v1]` evidence and are the headline gaps: parent combinators (`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:231`), `:focus > &` (`packages/reference-neo/tests/cases/cond/TESTS.md:15`), mixed `@supports` (`vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1928`), `& ~ &` siblings (`vendor/panda-v1/packages/core/__tests__/global-css.test.ts:243`), ternary/const/spread (`vendor/panda-v1/packages/parser/__tests__/output.test.ts:878`), keyframe refs (`vendor/panda-v1/packages/generator/__tests__/generate-keyframes.test.ts:50`).
 3. 10 silent gaps have no row and no SPEC absence: invalid `/abc` (`vendor/panda-v1/packages/core/__tests__/color-mix.test.ts:184`), decimal `0.33%` (`vendor/panda-v1/packages/core/__tests__/color-mix.test.ts:89`), `textGradient` (`vendor/panda-v1/packages/core/__tests__/gradient.test.ts:70`), array `css` prop (`vendor/panda-v1/packages/parser/__tests__/jsx.test.ts:529`), StyleProp `!` (zero prim hits; proposed `packages/reference-neo/docs/evidence/panda-v1-parser-config-corpus.md:302`), recipe first-child+responsive (`vendor/panda-v1/packages/core/__tests__/recipe-nesting.test.ts:55`), reset scope (`vendor/panda-v1/packages/generator/__tests__/generate-reset.test.ts:193`), union negatives (`vendor/panda-v1/packages/generator/__tests__/generate-token-dts.test.ts:37`), dark mix (`vendor/panda-v1/packages/generator/__tests__/generate-token.test.ts:870`), hyphenation (`vendor/panda-v1/packages/shared/src/hypenate-property.ts:6`).
-4. `/half` opacity tokens (`vendor/panda-v1/packages/core/__tests__/color-mix.test.ts:229`) and breakpoint/condition token axes are out-of-dialect (`rg -i opacity packages/reference-neo/src/fragments/api/tokens.ts` → empty) but unlisted — the census needs absence rows, not silence (`packages/reference-neo/PLAN.md:642`).
+4. `/half` opacity tokens (`vendor/panda-v1/packages/core/__tests__/color-mix.test.ts:229`) and breakpoint/condition token axes are out-of-dialect (`rg -i opacity packages/reference-neo/src/fragments/api/tokens.ts` → empty) but unlisted — the census needs absence rows, not silence.
 5. All other ~155 vendor test files are proven green, recorded SPEC absences, or engine-golden territory (ORDER/SHORT stations, namer escapes) needing no browser case (§2 inventory).
-6. PARITY consequence: author the mini-lib strictly inside the proven dialect (`packages/reference-neo/PLAN.md:952`) and disposition all 22 items in the PARITY-02 census (`packages/reference-neo/PLAN.md:953`) or G4's absence-equality check fails.
+6. PARITY consequence: author the mini-lib strictly inside the proven dialect and disposition all 22 items in the PARITY-02 census or G4's absence-equality check fails.
 
 ## 2. Inventory (panda test file → family → Neo case or GAP)
 
@@ -330,10 +330,10 @@ preset), `token()` nested fallbacks beyond D15, percent cssVar
 
 ## 4. Implications for the PARITY mini-lib world and census
 
-`PLAN.md:943`–`955` (§8.15): one mini-lib world (tokens with light/dark,
+The retired plan §8.15: one mini-lib world (tokens with light/dark,
 `font()`, `keyframes()`, ~8 `.ref-*` tag recipes, two `recipe()`s,
 primitives, a `data-slot` bezel, one `container: true` region) plus four
-cases. D20 (`PLAN.md:212`) makes this report + oracle B (matrix
+cases. D20 makes this report + oracle B (matrix
 non-CHAIN) + oracle C (lib census) the cartography inputs.
 
 **Authoring constraints on the mini-lib world (must hold until the RS
@@ -353,7 +353,7 @@ recipes (RECIPE-01–06/08/09/10).
 disjoint lists — (a) proven families → green case ids; (b) the 12
 blocked rows with RS ids (NOT absences — G3 permits them, G4 must show
 them as known-unproven, not silently missing); (c) the union of group
-SPEC absence/out-of-scope rows (G4 at `PLAN.md:642` requires the census
+SPEC absence/out-of-scope rows (G4 requires the census
 absence list to equal exactly this union); (d) dispositions for the 22
 items in §3 (8 Panda-blocked + 4 non-Panda-blocked + 10 silent). Today's
 (c) is short: F3 + the five out-of-dialect-unlisted items need new SPEC

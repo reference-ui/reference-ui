@@ -1,6 +1,6 @@
 # Landing scope — D19 switch-minimal `@reference-ui/types` (C2 recon)
 
-Read-only cartography per landing crew tasking (`PLAN.md:1351`, row C2).
+Read-only cartography per landing crew tasking (row C2).
 Question: what minimal `types/` surface must exist for reference-lib to build
 and run its `Reference` component under Neo, and does it need an emitter?
 

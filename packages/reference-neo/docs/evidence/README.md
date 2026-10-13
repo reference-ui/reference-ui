@@ -1,18 +1,19 @@
-# Evidence — the research behind `PLAN.md` Part Three
+# Evidence — the research behind the retired Neo campaign plan (Part Three)
 
 Read-only findings gathered on 2026-09-17 by nine scouts, each answering one
 question and writing one report. Nothing here is a contract; every report
 cites the files and tests it read so a claim can be re-checked, and the
-campaign plan (`packages/reference-neo/PLAN.md`) cites these reports instead
-of re-probing. The folder is called `evidence` rather than `research` because
+campaign plan cited these reports instead of re-probing. That plan,
+`packages/reference-neo/PLAN.md`, was retired in `84fc4eaac`. The reports cite its sections and row IDs (D7, RS-12, PARITY-02 and so on) by name; recover its text with `git show 84fc4eaac^:packages/reference-neo/PLAN.md`.
+The folder is called `evidence` rather than `research` because
 the repository root ignores every `research/` directory.
 
 Before you plan, spec, or build anything in Neo, read the executive summary
 of the reports that touch your group. Every number in them came from `rg`
 and the command is stated. Family tags (`TOKEN`, `COND`, `RESP`, `MERGE`,
 `RECIPE`, `GLOBAL`, `STATIC`, `SITE`, `TYPE`) match the group names in
-`PLAN.md` §8. Where a report says Reference *differs on purpose* from Panda,
-that is a decision the plan records in §3; do not "fix" it toward Panda.
+the retired plan's §8. Where a report says Reference *differs on purpose* from Panda,
+that is a decision the retired plan records in §3; do not "fix" it toward Panda.
 
 ## The reports
 
@@ -30,7 +31,7 @@ that is a decision the plan records in §3; do not "fix" it toward Panda.
   filenames, exports, and DOM attributes that must not regress.
 - `core-api-parity.md` — core's author and runtime surface against Neo's,
   module by module; the panda-isms to rename at the boundary; the ten open
-  questions that `PLAN.md` §3 answers.
+  questions that the retired plan's §3 answers.
 - `atomic-claims.md` — what the Rust engine claims, how each claim is proven
   (goldens, not browsers), the seam Neo actually calls, the colour-mode
   attribute conflict with counts, and the P0/P1/P2 list of claims with no
@@ -54,6 +55,6 @@ that is a decision the plan records in §3; do not "fix" it toward Panda.
 
 ## Refreshing a report
 
-Re-run the scout prompt in `PLAN.md` §10.1 with the same question, overwrite
+Re-run the scout prompt in the retired plan's §10.1 with the same question, overwrite
 the file, and put the new date at the top. Add a report only when the captain
 has stated a question the existing reports do not answer.

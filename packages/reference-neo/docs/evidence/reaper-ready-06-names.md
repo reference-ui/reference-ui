@@ -14,7 +14,7 @@ Sweeps run on this checkout (`rg`, case-insensitive where noted):
 | `ATM-HARVEST-06` (+ `harvest-06`, `HARVEST_06`) | `packages/`, `.agents/`, `docs/` | 1: the mission brief itself (`operation-reaper.md`) |
 | `reaper-NN-*.md` / `reaper-ready-*` | `docs/evidence/` | 0 pre-existing (this arc's files are the first) |
 | `harvest` case group | `tests/cases/` (rs + neo) | no `harvest` group dir; rs holds `ATM-HARVEST-01..05` only — **06 free** |
-| `harvest` | neo `PLAN.md` reserved catalog | 0 — no interaction |
+| `harvest` | retired neo plan's reserved catalog | 0 — no interaction |
 
 SPEC check: `packages/reference-rs/modules/atomic/SPEC.md` holds `ATM-HARVEST-01`
 through `-05`, so `-06` is the next free ID in family. The Slice 2 case folder does

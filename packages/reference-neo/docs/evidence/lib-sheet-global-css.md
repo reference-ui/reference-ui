@@ -351,7 +351,7 @@ Rust `append_reset_css` only prints fragments whose `source` contains `"reset"` 
 
 ## 6. Gap list for Neo (with test ideas)
 
-Frozen contract: `PLAN.md` §3.1 `GlobalStyleNode` + recursive declarations; `container: true` / responsive arrays / `undefined` drop / `_dark`→`[data-theme=dark]`. Atomic walker (`modules/atomic/src/stylesheet/global/walker.rs`) already lowers nested `&`, `_` conditions via `BaseSystem`, lists→`@media`, `container` macro. Remaining gaps vs **this** `global.css`:
+Frozen contract: the retired plan §3.1 `GlobalStyleNode` + recursive declarations; `container: true` / responsive arrays / `undefined` drop / `_dark`→`[data-theme=dark]`. Atomic walker (`modules/atomic/src/stylesheet/global/walker.rs`) already lowers nested `&`, `_` conditions via `BaseSystem`, lists→`@media`, `container` macro. Remaining gaps vs **this** `global.css`:
 
 1. **Panda `@layer base` file vs Rust `@layer global` in `styles.css`.** Neo currently writes a comment stub for `styled/global.css`. Core’s demote contract expects a real matching file if anything still reads it.  
    `NEO-GLOBAL-01: panda-shaped global.css is either omitted on purpose or byte-matches styles.css @layer global after compile.`
