@@ -23,6 +23,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -35,6 +36,7 @@ import {
   publishReactBundle,
   stagedLoaderFor,
 } from './react.ts'
+import type { SyncedRole } from './synced-role.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 // A package's own depth: `.reference-ui` also lives one level under it, so the
@@ -57,7 +59,7 @@ function parseSources(map: string): string[] {
   return (JSON.parse(map) as { sources: string[] }).sources
 }
 
-async function publish(stage: string, liveOutDir?: string): Promise<void> {
+async function publish(stage: string, liveOutDir?: string, role?: SyncedRole): Promise<void> {
   mkdirSync(join(stage, 'styled'), { recursive: true })
   writeFileSync(
     join(stage, 'styled', 'runtime-data.mjs'),
@@ -67,6 +69,7 @@ async function publish(stage: string, liveOutDir?: string): Promise<void> {
   await publishReactBundle({
     outDir: stage,
     ...(liveOutDir === undefined ? {} : { liveOutDir }),
+    ...(role === undefined ? {} : { role }),
     systemName: 'probe',
     stylePropNames: ['color', 'margin'],
     recipes: {},
@@ -228,4 +231,28 @@ describe('live-map plugin re-homing', () => {
       rmSync(probe, { recursive: true, force: true })
     }
   })
+})
+
+describe('react.d.mts synced register', () => {
+  it('declares the register for a publisher, fills it for a consumer, and leaves the default open', async () => {
+    const declarationFor = async (role?: SyncedRole): Promise<string> => {
+      const stage = mkdtempSync(join(tmpdir(), 'neo-react-role-'))
+      try {
+        await publish(stage, undefined, role)
+        return readFileSync(join(stage, 'react', 'react.d.mts'), 'utf-8')
+      } finally {
+        rmSync(stage, { recursive: true, force: true })
+      }
+    }
+    const omitted = await declarationFor()
+    expect(omitted).not.toContain('SyncedSystem')
+
+    const publisher = await declarationFor('publisher')
+    expect(publisher).toContain('export interface SyncedSystem {}')
+    expect(publisher).not.toContain("declare module '@reference-ui/lib'")
+
+    const consumer = await declarationFor('consumer')
+    expect(consumer.split("declare module '@reference-ui/lib'")).toHaveLength(2)
+    expect(consumer).not.toContain('export interface SyncedSystem')
+  }, 120000)
 })

@@ -3,14 +3,25 @@
 // The order is the contract: shells before the bundles that read them. The legs live beside the assembly; sync calls this one entry with the compile output, commits the result live, then links the packages.
 
 import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { writeSystemDir } from './system.ts'
 import { publishRuntimeBundle, writeStyledDir } from './styled.ts'
 import { writeReactDir } from './react-shell.ts'
 import { publishTypesBundle } from './types-bundle.ts'
 import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
+import { detectSyncedRole, type SyncedRole } from './synced-role.ts'
 import type { NeoDiagnostic } from '../diagnostics/types.ts'
 import type { AssemblyInput } from './types.ts'
+
+/**
+ * Synced role of the project that owns a live generated folder. The out dir is
+ * `<project>/.reference-ui`, so the project root is its parent; the role decides
+ * what the react leg declares for SyncedSystem.
+ */
+export function syncedRoleFor(liveOutDir: string): SyncedRole {
+  return detectSyncedRole(dirname(liveOutDir))
+}
 
 /**
  * Assemble the generated folder: shells, data, bundles, declarations. Called
@@ -33,6 +44,7 @@ export async function assembleSystem(input: AssemblyInput): Promise<NeoDiagnosti
     systemName: input.spec.name,
     stylePropNames: input.runtime.stylePropNames,
     recipes: input.spec.recipes,
+    role: syncedRoleFor(input.liveOutDir),
   })
   const typegenDiagnostics = await publishTypesBundle(input.outDir, input.spec, input.strict)
   // After the react leg: its bundle is the alias target this leg reads.

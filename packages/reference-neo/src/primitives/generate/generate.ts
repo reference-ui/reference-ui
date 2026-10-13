@@ -3,9 +3,12 @@
 // primitives path, and the spec recipes, and emits the bound entry source
 // plus the complete react.d.mts. The types bake narrows E4 per system:
 // the compiled StylePropName union, SystemStyleObject css, and the typegen
-// recipe-union variant (never when recipes are absent).
+// recipe-union variant (never when recipes are absent). The synced role
+// decides the SyncedSystem register: a publisher declares it, a consumer
+// fills it, and the default role keeps the pre-register output byte-identical.
 
 import { ELEMENT_DOM_TAGS, ELEMENT_JSX_NAMES, ELEMENT_ROSTER } from '../../native/element-vocabulary.ts'
+import type { SyncedRole } from '../../packager/synced-role.ts'
 
 export interface ReactEntryInput {
   systemName: string
@@ -17,6 +20,8 @@ export interface ReactTypesInput {
   stylePropNames: readonly string[]
   /** Raw spec recipes (name to RecipeDefinition JSON): stems the variant union. */
   recipes: Record<string, unknown>
+  /** Synced role of the project; omitted means none, the pre-register output. */
+  role?: SyncedRole
 }
 
 /**
@@ -103,6 +108,79 @@ function styledImportLine(variantStems: readonly string[]): string {
   return `import type { ${names.join(', ')} } from '@reference-ui/styled'`
 }
 
+/** Names of the three style types the bound declarations read. */
+interface StyleTypeNames {
+  stylePropName: string
+  styleProps: string
+  primitiveCssProp: string
+}
+
+/** The publisher declares these; the register routes the public names through them. */
+const LOCAL_STYLE_NAMES: StyleTypeNames = {
+  stylePropName: 'LocalStylePropName',
+  styleProps: 'LocalStyleProps',
+  primitiveCssProp: 'LocalPrimitiveCssProp',
+}
+
+/** Every other role declares the public names outright. */
+const PUBLIC_STYLE_NAMES: StyleTypeNames = {
+  stylePropName: 'StylePropName',
+  styleProps: 'StyleProps',
+  primitiveCssProp: 'PrimitiveCssProp',
+}
+
+/**
+ * The style type block. A publisher declares the Local* set and emits the
+ * register after it; every other role declares the public names directly, so
+ * its lines are the pre-register lines with no register at all.
+ */
+function styleTypeLines(union: string, variantStems: readonly string[], role: SyncedRole): string[] {
+  const names = role === 'publisher' ? LOCAL_STYLE_NAMES : PUBLIC_STYLE_NAMES
+  return [
+    '/** Compiled style prop names: the styling keys every primitive accepts. */',
+    `export type ${names.stylePropName} = ${union}`,
+    styledImportLine(variantStems),
+    '/** React style props: typegen precision where tokens exist, open everywhere else. */',
+    `export type ${names.styleProps} = Omit<NarrowStyleProps, 'font' | 'weight'> & {`,
+    `  [K in Exclude<${names.stylePropName}, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown`,
+    '} & {',
+    `  [K in StyleConditionKey]?: ${names.styleProps}`,
+    '}',
+    `export type ${names.primitiveCssProp} = Omit<SystemStyleObject, 'font' | 'weight'> & { font?: unknown; weight?: unknown }`,
+    ...(role === 'publisher' ? publisherRegisterLines() : []),
+  ]
+}
+
+/**
+ * The publisher's register. SyncedSystem is empty in lib's own build, so the
+ * public names fall back to the Local* set; a consumer's fill replaces them.
+ */
+function publisherRegisterLines(): string[] {
+  return [
+    "/** Register a consumer fills through a module augmentation of lib; empty keeps lib's own types. */",
+    'export interface SyncedSystem {}',
+    `export type StylePropName = SyncedSystem extends { stylePropName: infer V } ? V : ${LOCAL_STYLE_NAMES.stylePropName}`,
+    `export type StyleProps = SyncedSystem extends { styleProps: infer V } ? V : ${LOCAL_STYLE_NAMES.styleProps}`,
+    `export type PrimitiveCssProp = SyncedSystem extends { cssProp: infer V } ? V : ${LOCAL_STYLE_NAMES.primitiveCssProp}`,
+  ]
+}
+
+/**
+ * The consumer's fill: a module augmentation that points lib's SyncedSystem at
+ * this project's synced style types. Only the consumer role appends it; a
+ * publisher must never fill its own register (a second declaration is TS2717).
+ */
+function consumerFillLines(role: SyncedRole): string[] {
+  if (role !== 'consumer') return []
+  return [
+    "/** Fills lib's SyncedSystem register with this project's synced style types. */",
+    "declare module '@reference-ui/lib' {",
+    '  interface SyncedSystem { styleProps: StyleProps; cssProp: PrimitiveCssProp; stylePropName: StylePropName }',
+    '}',
+    '',
+  ]
+}
+
 function perTagDecls(): string[] {
   const lines: string[] = []
   for (const { dom: tag, jsx: name } of ELEMENT_ROSTER) {
@@ -180,6 +258,7 @@ function namedGraphLines(): string[] {
  * reuses the E4 text verbatim ((g)11).
  */
 export function generateReactTypesSource(input: ReactTypesInput): string {
+  const role = input.role ?? 'none'
   const union = stylePropUnion(input.stylePropNames)
   const variantStems = recipeVariantTypeNames(input.recipes)
   const variantUnion = variantStems.length === 0 ? 'never' : variantStems.join(' | ')
@@ -187,16 +266,7 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     '/** Generated by ref sync — do not edit manually */',
     `import type * as React from 'react'`,
     '',
-    '/** Compiled style prop names: the styling keys every primitive accepts. */',
-    `export type StylePropName = ${union}`,
-    styledImportLine(variantStems),
-    '/** React style props: typegen precision where tokens exist, open everywhere else. */',
-    `export type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {`,
-    `  [K in Exclude<StylePropName, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown`,
-    '} & {',
-    '  [K in StyleConditionKey]?: StyleProps',
-    '}',
-    `export type PrimitiveCssProp = Omit<SystemStyleObject, 'font' | 'weight'> & { font?: unknown; weight?: unknown }`,
+    ...styleTypeLines(union, variantStems, role),
     '/** Per-system variant selection: this system recipe unions, never when recipes are absent. */',
     `export type PrimitiveVariantProp = ${variantUnion}`,
     '',
@@ -220,6 +290,7 @@ export function generateReactTypesSource(input: ReactTypesInput): string {
     `export { createElement } from 'react'`,
     '',
     ...namedGraphLines(),
+    ...consumerFillLines(role),
   ]
   return lines.join('\n')
 }

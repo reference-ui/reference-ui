@@ -1,5 +1,5 @@
 // React entry publishing for the Neo generated folder.
-// It takes the system name plus compiled style prop names and emits the
+// It takes the system name, the compiled style prop names, and the synced role, and emits the
 // react package: a minified bundled react.mjs plus its external map and standalone react.d.mts. React
 // stays external (like core's entry): bundling it would fork the dispatcher
 // for any consumer rendering through its own react-dom, so the bundle
@@ -23,6 +23,7 @@ import {
   generateReactTypesSource,
 } from '../primitives/generate/generate.ts'
 import { REACT_BUNDLE_EXTERNALS } from './externals.ts'
+import type { SyncedRole } from './synced-role.ts'
 
 export interface ReactPublishInput {
   /** Stage folder the emitted bytes land in (react.mjs and its map). */
@@ -37,6 +38,8 @@ export interface ReactPublishInput {
   stylePropNames: string[]
   /** Raw spec recipes: stems the bound types variant union (never when absent). */
   recipes: Record<string, unknown>
+  /** Synced role: decides what react.d.mts declares for SyncedSystem (omitted means none). */
+  role?: SyncedRole
 }
 
 function runtimeModulePath(...parts: string[]): string {
@@ -164,7 +167,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
   mkdirSync(dir, { recursive: true })
   writeFileSync(
     join(dir, 'react.d.mts'),
-    generateReactTypesSource({ stylePropNames: input.stylePropNames, recipes: input.recipes }),
+    generateReactTypesSource({ stylePropNames: input.stylePropNames, recipes: input.recipes, role: input.role }),
     'utf-8'
   )
 
