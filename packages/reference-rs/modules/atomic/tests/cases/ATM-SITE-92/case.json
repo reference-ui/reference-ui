@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-92", "name": "An exports condition map leads with its source import, so a types condition never shadows it for the root or a subpath"}

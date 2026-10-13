@@ -1,0 +1,5 @@
+{
+  "color:blue": "@reference-ui/lib__c_blue",
+  "color:purple": "@reference-ui/lib__c_purple",
+  "color:red": "@reference-ui/lib__c_red"
+}

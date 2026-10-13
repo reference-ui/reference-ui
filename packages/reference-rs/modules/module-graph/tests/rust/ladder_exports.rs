@@ -2,17 +2,28 @@
 //!
 //! Atomic's `exports` arm, verbatim where stations pin it and extended where
 //! nobody does: exact keys, `*` patterns substituted once, condition maps in
-//! `types`/`import`/`default`/`require` order, and fallthrough to the next
+//! the policy's order (source-first: `source`, `import`, `default`, `require`,
+//! then `types`; types-first: `types` leading), and fallthrough to the next
 //! entry when the first names a file that is not on disk. A missed map still
 //! falls back to the direct subpath.
 
 mod common;
 
-use module_graph::{ExtensionPolicy, MemoryFs, ModuleKey, SpecifierLadder};
+use module_graph::{ExtensionPolicy, MemoryFs, ModuleKey, RootEntryPolicy, SpecifierLadder};
 
 /// Resolve from `/p/src/app.ts` under the Source policy.
 fn resolve(fs: &MemoryFs, specifier: &str) -> Result<String, String> {
     let ladder = SpecifierLadder::new(fs, ExtensionPolicy::Source);
+    ladder
+        .resolve(&ModuleKey::new("/p/src/app.ts"), specifier)
+        .map(|key| key.as_str().to_string())
+        .map_err(|miss| miss.specifier)
+}
+
+/// Resolve from `/p/src/app.ts` under the Source policy with types-first entries.
+fn resolve_types_first(fs: &MemoryFs, specifier: &str) -> Result<String, String> {
+    let ladder = SpecifierLadder::new(fs, ExtensionPolicy::Source)
+        .with_root_entry(RootEntryPolicy::TypesFirst);
     ladder
         .resolve(&ModuleKey::new("/p/src/app.ts"), specifier)
         .map(|key| key.as_str().to_string())
@@ -42,7 +53,7 @@ fn exact_keys_map_subpaths() {
 }
 
 #[test]
-fn conditions_unwrap_types_over_import_over_default() {
+fn conditions_unwrap_import_over_default_over_types() {
     let fs = pkg_world(
         r#"{"exports":{".":{"types":"./t.d.ts","import":"./i.mjs","default":"./d.js"}}}"#,
         &[
@@ -51,7 +62,7 @@ fn conditions_unwrap_types_over_import_over_default() {
             ("/p/node_modules/pkg/d.js", "d"),
         ],
     );
-    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/t.d.ts".into()));
+    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/i.mjs".into()));
     let fs = pkg_world(
         r#"{"exports":{".":{"default":"./d.js","import":"./i.mjs"}}}"#,
         &[
@@ -60,34 +71,61 @@ fn conditions_unwrap_types_over_import_over_default() {
         ],
     );
     assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/i.mjs".into()));
-}
-
-#[test]
-fn require_condition_resolves_last() {
     let fs = pkg_world(
-        r#"{"exports":{".":{"require":"./r.cjs","default":"./d.js"}}}"#,
+        r#"{"exports":{".":{"types":"./t.d.ts","default":"./d.js"}}}"#,
         &[
-            ("/p/node_modules/pkg/r.cjs", "r"),
+            ("/p/node_modules/pkg/t.d.ts", "t"),
             ("/p/node_modules/pkg/d.js", "d"),
         ],
     );
     assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/d.js".into()));
-    let fs = pkg_world(
-        r#"{"exports":{".":{"require":"./r.cjs"}}}"#,
-        &[("/p/node_modules/pkg/r.cjs", "r")],
-    );
-    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/r.cjs".into()));
 }
 
 #[test]
-fn missing_first_condition_falls_through() {
+fn types_first_keeps_declarations_leading_conditions() {
     let fs = pkg_world(
-        r#"{"exports":{".":{"types":"./gone.d.ts","import":"./live.mjs"}}}"#,
-        &[("/p/node_modules/pkg/live.mjs", "l")],
+        r#"{"exports":{".":{"types":"./t.d.ts","import":"./i.mjs","default":"./d.js"}}}"#,
+        &[
+            ("/p/node_modules/pkg/t.d.ts", "t"),
+            ("/p/node_modules/pkg/i.mjs", "i"),
+            ("/p/node_modules/pkg/d.js", "d"),
+        ],
     );
     assert_eq!(
-        resolve(&fs, "pkg"),
-        Ok("/p/node_modules/pkg/live.mjs".into())
+        resolve_types_first(&fs, "pkg"),
+        Ok("/p/node_modules/pkg/t.d.ts".into())
+    );
+}
+
+#[test]
+fn source_condition_leads_the_map() {
+    let fs = pkg_world(
+        r#"{"exports":{".":{"types":"./t.d.ts","import":"./i.mjs","source":"./s.ts"}}}"#,
+        &[
+            ("/p/node_modules/pkg/t.d.ts", "t"),
+            ("/p/node_modules/pkg/i.mjs", "i"),
+            ("/p/node_modules/pkg/s.ts", "s"),
+        ],
+    );
+    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/s.ts".into()));
+}
+
+#[test]
+fn subpath_conditions_follow_the_policy() {
+    let fs = pkg_world(
+        r#"{"exports":{"./tokens":{"types":"./t.d.ts","import":"./i.mjs"}}}"#,
+        &[
+            ("/p/node_modules/pkg/t.d.ts", "t"),
+            ("/p/node_modules/pkg/i.mjs", "i"),
+        ],
+    );
+    assert_eq!(
+        resolve(&fs, "pkg/tokens"),
+        Ok("/p/node_modules/pkg/i.mjs".into())
+    );
+    assert_eq!(
+        resolve_types_first(&fs, "pkg/tokens"),
+        Ok("/p/node_modules/pkg/t.d.ts".into())
     );
 }
 
@@ -115,6 +153,43 @@ fn exact_keys_beat_star_patterns() {
     assert_eq!(
         resolve(&fs, "pkg/special"),
         Ok("/p/node_modules/pkg/special.ts".into())
+    );
+}
+
+#[test]
+fn require_condition_resolves_last() {
+    let fs = pkg_world(
+        r#"{"exports":{".":{"require":"./r.cjs","default":"./d.js"}}}"#,
+        &[
+            ("/p/node_modules/pkg/r.cjs", "r"),
+            ("/p/node_modules/pkg/d.js", "d"),
+        ],
+    );
+    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/d.js".into()));
+    let fs = pkg_world(
+        r#"{"exports":{".":{"require":"./r.cjs"}}}"#,
+        &[("/p/node_modules/pkg/r.cjs", "r")],
+    );
+    assert_eq!(resolve(&fs, "pkg"), Ok("/p/node_modules/pkg/r.cjs".into()));
+}
+
+#[test]
+fn missing_first_condition_falls_through() {
+    let fs = pkg_world(
+        r#"{"exports":{".":{"import":"./gone.mjs","types":"./live.d.ts"}}}"#,
+        &[("/p/node_modules/pkg/live.d.ts", "l")],
+    );
+    assert_eq!(
+        resolve(&fs, "pkg"),
+        Ok("/p/node_modules/pkg/live.d.ts".into())
+    );
+    let fs = pkg_world(
+        r#"{"exports":{".":{"types":"./gone.d.ts","import":"./live.mjs"}}}"#,
+        &[("/p/node_modules/pkg/live.mjs", "l")],
+    );
+    assert_eq!(
+        resolve_types_first(&fs, "pkg"),
+        Ok("/p/node_modules/pkg/live.mjs".into())
     );
 }
 

@@ -7,8 +7,8 @@
 //! extension, index, and runtime-remap spellings and returning the first
 //! file the filesystem holds. [`ExtensionPolicy::Source`] prefers sources
 //! (atomic's orders first); [`ExtensionPolicy::Declarations`] prefers
-//! declarations (tasty's tables verbatim). [`RootEntryPolicy`] orders a package
-//! root's `exports` against its top-level `types` field, source-first by default.
+//! declarations (tasty's tables verbatim). [`RootEntryPolicy`] orders a package's
+//! `exports` against its declarations, root and conditions alike, source-first by default.
 //! Absolute specifiers miss in every policy, as they do in all three legacy ladders.
 
 mod memo;
@@ -43,17 +43,20 @@ pub enum TsconfigPolicy {
     Follow,
 }
 
-/// Which root entry a package dir tries first: its `exports` source entry,
-/// or its top-level `types`/`typings` declaration. A `types` field often
-/// names a body-less declaration beside the real source entry, so the
-/// default is source-first and a consumer opts into declarations explicitly.
+/// Which entry a package tries first: its source (`exports`, `module`, `main`)
+/// or its declarations (`types`, `typings`). A `types` field often names a
+/// body-less declaration beside the real source entry, and an `exports` map
+/// often pairs `types` with `import`, so the default is source-first and a
+/// consumer opts into declarations explicitly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RootEntryPolicy {
-    /// `exports` first, then `module`/`main`, then `types`/`typings`.
+    /// `exports` first (conditions `source`, `import`, `default`, `require`,
+    /// then `types`), then `module`/`main`, then `types`/`typings`.
     #[default]
     SourceFirst,
-    /// `types`/`typings` first, then `exports`, then `module`/`main`:
-    /// tasty's manifest order, kept for consumers that resolve declarations.
+    /// `types`/`typings` first, then `exports` (conditions `types`, `import`,
+    /// `default`, `require`), then `module`/`main`: tasty's manifest order,
+    /// kept for consumers that resolve declarations.
     TypesFirst,
 }
 
@@ -110,8 +113,9 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         Self { tsconfig, ..self }
     }
 
-    /// A ladder that orders package roots with this policy. Atomic and
-    /// styletrace keep the source-first default; types-first is opt-in.
+    /// A ladder that orders package entries with this policy, root fields and
+    /// `exports` conditions alike. Atomic and styletrace keep the source-first
+    /// default; types-first is opt-in.
     pub fn with_root_entry(self, root_entry: RootEntryPolicy) -> Self {
         Self { root_entry, ..self }
     }
@@ -241,7 +245,8 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     ) -> Option<String> {
         let text = manifest?;
         if request.subpath != "." {
-            return self.targets_hit(pkg_dir, &package::export_targets(text, &request.subpath));
+            let targets = package::export_targets(text, &request.subpath, self.root_entry);
+            return self.targets_hit(pkg_dir, &targets);
         }
         self.targets_hit(pkg_dir, &package::root_targets(text, self.root_entry))
     }

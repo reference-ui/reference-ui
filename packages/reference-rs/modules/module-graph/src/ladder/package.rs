@@ -2,18 +2,25 @@
 //!
 //! Splits `pkg`, `pkg/sub`, and `@scope/pkg/sub` into package plus subpath,
 //! then maps the subpath through the manifest's `exports` field (exact keys,
-//! `*` patterns substituted once, condition maps expanded in `types`,
-//! `import`, `default`, `require` order). Root entries come back in the
-//! order a [`RootEntryPolicy`] names, so `exports` can lead the top-level
-//! `types` declaration. Manifest text arrives from the caller; this module
-//! never touches the filesystem. Targets come back as an ordered list so the
-//! ladder can fall through to the next entry when the first names a file that
-//! is not on disk.
+//! `*` patterns substituted once, condition maps expanded in the order a
+//! [`RootEntryPolicy`] names). Source-first expands `source`, `import`,
+//! `default`, `require`, then `types`, so a declaration never shadows a source
+//! entry; types-first expands `types` before the rest. Root entries come back
+//! in the same policy's order, so `exports` can lead the top-level `types`
+//! declaration. Manifest text arrives from the caller; this module never
+//! touches the filesystem. Targets come back as an ordered list so the ladder
+//! can fall through to the next entry when the first names a file that is not
+//! on disk.
 
 use super::RootEntryPolicy;
 
-/// Condition names in priority order: types first, `require` last.
-const CONDITIONS: [&str; 4] = ["types", "import", "default", "require"];
+/// Condition names for source-first maps: a source entry leads, and `types`
+/// is the fallback of last resort.
+const SOURCE_FIRST_CONDITIONS: [&str; 5] = ["source", "import", "default", "require", "types"];
+
+/// Condition names for types-first maps: tasty's order, `types` leading and
+/// `require` last.
+const TYPES_FIRST_CONDITIONS: [&str; 4] = ["types", "import", "default", "require"];
 
 /// Declaration root fields in tasty's order: `types` before `typings`.
 const DECLARATION_FIELDS: [&str; 2] = ["types", "typings"];
@@ -45,19 +52,33 @@ pub(crate) fn split_bare(specifier: &str) -> Option<(String, String)> {
 }
 
 /// Ordered `exports` targets for one subpath, following exact keys first,
-/// then `*` patterns, then bare condition maps for the root only.
-pub(crate) fn export_targets(manifest: &str, subpath: &str) -> Vec<String> {
+/// then `*` patterns, then bare condition maps for the root only. Condition
+/// maps expand in the order `policy` names.
+pub(crate) fn export_targets(
+    manifest: &str,
+    subpath: &str,
+    policy: RootEntryPolicy,
+) -> Vec<String> {
     let Ok(json) = serde_json::from_str::<serde_json::Value>(manifest) else {
         return Vec::new();
     };
     let Some(exports) = json.get("exports") else {
         return Vec::new();
     };
+    let order = condition_order(policy);
     match exports {
         serde_json::Value::String(target) => string_targets(target, subpath),
-        serde_json::Value::Array(list) => array_targets(list, subpath),
-        serde_json::Value::Object(map) => object_targets(map, subpath),
+        serde_json::Value::Array(list) => array_targets(list, subpath, order),
+        serde_json::Value::Object(map) => object_targets(map, subpath, order),
         _ => Vec::new(),
+    }
+}
+
+/// The condition order a policy expands `exports` maps with.
+fn condition_order(policy: RootEntryPolicy) -> &'static [&'static str] {
+    match policy {
+        RootEntryPolicy::SourceFirst => &SOURCE_FIRST_CONDITIONS,
+        RootEntryPolicy::TypesFirst => &TYPES_FIRST_CONDITIONS,
     }
 }
 
@@ -67,14 +88,14 @@ pub(crate) fn export_targets(manifest: &str, subpath: &str) -> Vec<String> {
 pub(crate) fn root_targets(manifest: &str, policy: RootEntryPolicy) -> Vec<String> {
     match policy {
         RootEntryPolicy::SourceFirst => {
-            let mut targets = export_targets(manifest, ".");
+            let mut targets = export_targets(manifest, ".", policy);
             targets.extend(field_entries(manifest, &SOURCE_FIELDS));
             targets.extend(field_entries(manifest, &DECLARATION_FIELDS));
             targets
         }
         RootEntryPolicy::TypesFirst => {
             let mut targets = field_entries(manifest, &DECLARATION_FIELDS);
-            targets.extend(export_targets(manifest, "."));
+            targets.extend(export_targets(manifest, ".", policy));
             targets.extend(field_entries(manifest, &SOURCE_FIELDS));
             targets
         }
@@ -123,9 +144,9 @@ fn string_targets(target: &str, subpath: &str) -> Vec<String> {
 }
 
 /// An array exports map applies to the root subpath only, expanded in order.
-fn array_targets(list: &[serde_json::Value], subpath: &str) -> Vec<String> {
+fn array_targets(list: &[serde_json::Value], subpath: &str, order: &[&str]) -> Vec<String> {
     if subpath == "." {
-        expand_list(list)
+        expand_list(list, order)
     } else {
         Vec::new()
     }
@@ -133,13 +154,17 @@ fn array_targets(list: &[serde_json::Value], subpath: &str) -> Vec<String> {
 
 /// Follow an object exports map: exact subpath, then `*` patterns, then bare
 /// condition maps for the root only.
-fn object_targets(map: &serde_json::Map<String, serde_json::Value>, subpath: &str) -> Vec<String> {
+fn object_targets(
+    map: &serde_json::Map<String, serde_json::Value>,
+    subpath: &str,
+    order: &[&str],
+) -> Vec<String> {
     if let Some(value) = map.get(subpath) {
-        return expand_value(value);
+        return expand_value(value, order);
     }
     for (pattern, value) in map {
         if let Some(star) = match_pattern(pattern, subpath) {
-            let targets = expand_value(value);
+            let targets = expand_value(value, order);
             if !targets.is_empty() {
                 return targets
                     .into_iter()
@@ -149,7 +174,7 @@ fn object_targets(map: &serde_json::Map<String, serde_json::Value>, subpath: &st
         }
     }
     if subpath == "." && map.keys().any(|key| !key.starts_with('.')) {
-        return expand_conditions(map);
+        return expand_conditions(map, order);
     }
     Vec::new()
 }
@@ -165,26 +190,31 @@ fn match_pattern(pattern: &str, subpath: &str) -> Option<String> {
     Some(star.to_string())
 }
 
-/// Every file target a value position can name, in priority order.
-fn expand_value(value: &serde_json::Value) -> Vec<String> {
+/// Every file target a value position can name, in the policy's order.
+fn expand_value(value: &serde_json::Value, order: &[&str]) -> Vec<String> {
     match value {
         serde_json::Value::String(target) => vec![target.clone()],
-        serde_json::Value::Array(list) => expand_list(list),
-        serde_json::Value::Object(map) => expand_conditions(map),
+        serde_json::Value::Array(list) => expand_list(list, order),
+        serde_json::Value::Object(map) => expand_conditions(map, order),
         _ => Vec::new(),
     }
 }
 
 /// Targets of an exports array, concatenated in order.
-fn expand_list(list: &[serde_json::Value]) -> Vec<String> {
-    list.iter().flat_map(expand_value).collect()
+fn expand_list(list: &[serde_json::Value], order: &[&str]) -> Vec<String> {
+    list.iter()
+        .flat_map(|value| expand_value(value, order))
+        .collect()
 }
 
-/// Targets of a condition map, in [`CONDITIONS`] order, recursing nested maps.
-fn expand_conditions(map: &serde_json::Map<String, serde_json::Value>) -> Vec<String> {
-    CONDITIONS
+/// Targets of a condition map, in `order`, recursing nested maps.
+fn expand_conditions(
+    map: &serde_json::Map<String, serde_json::Value>,
+    order: &[&str],
+) -> Vec<String> {
+    order
         .iter()
         .filter_map(|condition| map.get(*condition))
-        .flat_map(expand_value)
+        .flat_map(|value| expand_value(value, order))
         .collect()
 }
