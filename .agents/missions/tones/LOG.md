@@ -40,9 +40,10 @@ concept beside shades. Owner-ratified shape; Oracle gate `PLAN.oracle`
 | S3 | typegen: tones category, ToneToken, TonedColorToken | landed `4248f3f74` |
 | S2a | atomic resolution + ATM-W-UNKNOWN-TONE wiring | landed `def96d905` |
 | S1 | lib tones tokens, generator, fixture regen/re-freeze | landed `153ee3a93` (pre-existing fixture drift) + `0d5892428` |
-| S2b | ATM-TOKEN-19..23 stations + SPEC + NEO-DIAG-67 | NOT STARTED — brief ready: `briefs/S2b.stations.md` |
-| S4 | T17 consumer tone probe | not started |
-| S5 | docs: palette + colour pages, diagram migration | not started (before screenshots taken) |
+| S2b | ATM-TOKEN-19..23 stations + SPEC + NEO-DIAG-67 | landed `a3951a68f` (engine fix) + `5d358c828` + refine `eaaf4d0bb` |
+| S4 | T17 consumer tone probe | in progress |
+| S5 | docs: palette + colour pages (S5a), diagram migration (S5b) | in progress (before screenshots taken) |
+| S6 | strict mode via ui.config: `strict?: ('colors'\|'radii'\|'spacing')[]` → typegen `emitDts({ strict })`, validation, Neo proof, D17 notes, docs "Enforcing tokens" | S6a typegen `2bc1faec2`+`3c730412f`; S6b Neo `5862760f8`; S6c case in progress; docs section pending |
 
 ## Log
 
@@ -64,6 +65,25 @@ concept beside shades. Owner-ratified shape; Oracle gate `PLAN.oracle`
   bytes (+245 raw). Extends tests: role override keeps sibling, flat leaf
   replaces the group, dark override lowers.
 - Stopped here on the coordinator's wrap-up order (no more opencode / Oracle).
+- 2026-10-12 Resumed under the Claude-native workflow (Opus orchestrator, Haiku scouts/cooks). Added S6 strict mode. Type-cost baseline measured before S2b/re-sync.
+- 2026-10-12 S6 scout: Neo owns typegen (`packager/types-bundle.ts:55`, `emitDtsSync({ baseSystem })` only; core retired b2c666a73). Fork: strict wraps only `SystemStyleObject`; JSX `StyleProps` stays open on purpose (`typegen/tests/strict.test.ts:4-6`), and lib components resolve lib's own `@reference-ui/react` in the monorepo. TGN-W-* only via unused `emitDtsDetailed`. Sent to oracle before cooking.
+- 2026-10-12 Oracle verdict (S6): strict narrows JSX `StyleProps` too (typegen-only change; SPEC STRICT-01 already promises it); `validateConfig` throws on non-array/unknown categories (core's `validateStrict` precedent); Neo uses `emitDtsDetailed` and prints TGN-W-* as sync warnings; narrow `AssemblyInput.strict`; proof = typegen tsc tests + one Neo type case (not matrix). Lib component props are NOT promised to follow consumer strict. Open for architect: should lib peer-depend on `@reference-ui/react` so consumer types flow into lib props? Briefs: S6a typegen, S6b Neo plumbing (parallel), S6c Neo case (after both + native rebuild).
+- 2026-10-13 Lib-reach facts: lib `.d.ts` import `@reference-ui/react` by bare name, undeclared; a synced registry consumer's own `node_modules/@reference-ui/react` link likely satisfies it (so consumer strict would reach lib props by accident); monorepo resolves lib's own. Claim stays consumer-authored code only. Separate packaging defect (9 shipped `.d.ts` reach unshipped `.reference-ui/` by relative path) spun off as its own task.
+- 2026-10-13 S2b blocked on engine defect: whole braced unknown tone (`{colors.blue.500/mediun}`) took the bare tone path (warning, raw braces kept) instead of TONES-02 error+drop. Cook authorised to fix in a sibling file + unit test; ATM-TOKEN-19/20/22/23 and NEO-DIAG-67 green. Darwin-x64 addon rebuilt (`pnpm agentrs b`).
+- 2026-10-13 `isolation: worktree` bases on origin/main, not public-release; S6a/S6b re-sent into manual worktrees `.claude/worktrees/s6a`, `s6b`.
+- `a3951a68f` braced unknown tone (`{colors.blue.500/mediun}`, also `{brand/mediun}`) → ATM-E-UNKNOWN-TOKEN + drop; a declared tone gets no did-you-mean. `5d358c828` ATM-TOKEN-19..23, SPEC TOKEN 23/23, NEO-DIAG-67, quarantine entries for 21/22/23. Refiner `eaaf4d0bb`: merged braced path into `tone_value.rs` (one lookup, no double resolve; mod.rs 438→401), braced tests split to `braced_tone_tests.rs`; edge cases pinned (braced numeric, role split, `{brand/medium}`, mixed, padded braces fail closed). Known: composite `{brand/medium}` errors while whole resolves (pre-existing inconsistency).
+- `2bc1faec2` typegen strict: open object prints as `BaseStyleProps`, `StyleProps = Strict…<BaseStyleProps>`, `SystemStyleObject = StyleProps & conditions`; `r` stays strict (no TS2456). Open goldens byte-identical. `3c730412f` renumbered probe to TYP-STRICT-07 (06 = absent-categories unit test).
+- `5862760f8` Neo: `strict` on ReferenceUIConfig, validated (throws `Config field 'strict' is invalid.`), `AssemblyInput.strict` → `emitDtsDetailed`; all TGN warnings now join the sync report (second reportSyncDiagnostics). No types cache key (commit byte-compares). D17 docs updated; `parity/SPEC.md:68` label kept (pinned by census-union.ts:164). Stale strict/layers text remains in sync/SPEC.md:63, parity/SPEC.md:56, core-api-parity.md:39, type/SPEC.md:31, layer/SPEC.md:53, chain/SPEC.md:40-46.
+- Re-sync: native addon + neo dist rebuilt; dev:lib restarted (owner-approved); lib `baseSystem` ships tones, `ToneToken = 'firm'|'ghost'|'medium'|'strong'`, lib styled types 86608 B. Lib sync now surfaces pre-existing `TGN-W-UNKNOWN-TOKEN-CATEGORY` (21 `animations` tokens have no printed union).
+- Full `pnpm agentneo run`: 12/287 failed (MERGE-06, SITE-06/23/26/27, STATIC-01/02/03, NAMER-03/04, REF-04/11); baseline triage in progress.
+
+## Verified at `5862760f8` (orchestrator re-ran)
+
+- `pnpm agentrs c atomic` pass; `pnpm agentrs v atomic` 320/320
+- `pnpm agentrs c typegen` pass; `pnpm agentrs v typegen` 54/54 (after `pnpm agentrs b`)
+- `pnpm agentrs q` 0 violations
+- neo vitest `src/config src/packager` 57/57; `repro.test.ts` 62/62
+- `pnpm agentneo run` NEO-TYPE-01/02/07/08, NEO-DIAG-63/64/67, NEO-PARITY-02 all PASS
 
 ## Verified at `0d5892428`
 
@@ -73,6 +93,22 @@ concept beside shades. Owner-ratified shape; Oracle gate `PLAN.oracle`
 - `pnpm agentrs c base_system` 85 passed; `base-system --check` current
 - `pnpm agentrs c --crate diagnostics` 37 passed
 - `pnpm agentrs q` 0 code violations (109 warnings repo-wide)
+
+## Type-cost baseline (2026-10-12, pre-tones generated types)
+
+Generated `styled/types/index.d.ts` (no tone types yet; native addon
+`dist/native/reference-native.darwin-x64.node` dated Oct 10 predates the emitter,
+so re-sync needs a native rebuild first):
+
+| file | bytes | lines | ColorToken members |
+| --- | --- | --- | --- |
+| lib `.reference-ui/styled/types/index.d.ts` | 84716 | 1457 | 320 |
+| lib `dist/runtime/reference-ui/styled/types/index.d.ts` | 84529 | 1457 | 313 (stale vs generated) |
+| docs `.reference-ui/styled/types/index.d.ts` | 85196 | 1457 | 345 |
+
+Docs `pnpm --filter @reference-ui/reference-docs exec tsc --noEmit`: real 0.95/0.80/0.89 s
+(median 0.89, ~0.4 s is pnpm wrapper). `--extendedDiagnostics`: Types 80541,
+Instantiations 359143, Memory 280344K, Check 0.250 s. TS 7.0.2, cold (no tsbuildinfo).
 
 ## Next steps (in order)
 
