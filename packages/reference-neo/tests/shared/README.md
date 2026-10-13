@@ -16,6 +16,11 @@ that work is done. Differences from `agentct`:
 - Cases, not components. Discovers `tests/cases/` via `case.json`,
   descriptions from each case's `README.md`, search over id, name,
   and README text.
+- Convention checks at discovery (`caseIndex.ts`): the folder is a raw
+  case ID, `case.json` `id` equals the folder and `name` is set, and the
+  README first line is `# <ID> — <name>` with that same name. `list`,
+  `search`, `status` and run-all fail on any broken folder; `run <ID>`
+  fails only for the folders it selects and warns about the rest.
 - A CLI tool agents call, not an MCP server. List, search, run
   one/some/all, quality-gate, report.
 - Two inspection modes. Fast mode: headless run prints per-case

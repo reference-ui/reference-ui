@@ -64,8 +64,12 @@ Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
 - `list` shows four columns: **id, name, folder, README first line**. Keep
   case README first lines sharp — they are the catalog.
 - Every case folder has a `README.md`. That file is the **standard case
-  description** and is **never a failure**: the gate never fails a case
-  README for content, length, or shape.
+  description**. The gate judges only its first line, which must be
+  `# <ID> — <name>`: this folder's ID, and the `name` from `case.json`.
+  Content, length and shape are never judged.
+- A broken folder fails `list`, `search`, `status` and run-all, and every
+  problem is named. `run <ID>` fails only when the folders it selects are
+  broken; other broken folders get one warning line each.
 - Case folders share one convention with reference-rs (`AGENTS.md` section 7):
   `case.json` (`id`, `name`), `README.md`, then Neo's `specs/` and `world/`.
   Memex indexes each case as `cases`.
