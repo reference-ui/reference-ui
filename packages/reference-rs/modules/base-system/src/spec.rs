@@ -4,7 +4,7 @@
 //! Leaves carry `value`, `light`, and `dark` strings. When `light` or `dark` is itself an object,
 //! it is a nested group rather than a mode slot. Unknown top-level fields and unsupported
 //! schema versions fail closed with explicit diagnostics. `extends` names upstream systems
-//! that `BaseSystem::from_specs` resolves; empty means standalone.
+//! kept for wire compatibility; this crate does not resolve them, since Neo composes them.
 
 use std::error::Error;
 use std::fmt;
@@ -40,12 +40,6 @@ pub enum FromJsonError {
         path: String,
         source: Option<String>,
     },
-    UnknownUpstream {
-        name: String,
-    },
-    ExtendsCycle {
-        chain: Vec<String>,
-    },
     InvalidGlobalCss {
         path: String,
         source: Option<String>,
@@ -78,9 +72,6 @@ impl FromJsonError {
     }
 
     fn fmt_domain_error(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(res) = self.fmt_extends_error(f) {
-            return res;
-        }
         if let Some(res) = self.fmt_path_error(f) {
             return res;
         }
@@ -114,19 +105,6 @@ impl FromJsonError {
                 path,
                 source.as_deref(),
             )),
-            _ => None,
-        }
-    }
-
-    fn fmt_extends_error(&self, f: &mut fmt::Formatter<'_>) -> Option<fmt::Result> {
-        match self {
-            Self::UnknownUpstream { name } => Some(write!(
-                f,
-                "unknown upstream system \"{name}\" in extends graph"
-            )),
-            Self::ExtendsCycle { chain } => {
-                Some(write!(f, "extends cycle detected: {}", chain.join(" -> ")))
-            }
             _ => None,
         }
     }
@@ -225,6 +203,7 @@ pub struct EvaluatedSystemSpec {
     pub schema_version: u32,
     pub profile: String,
     pub name: String,
+    /// Upstream names kept for wire compatibility; this crate does not resolve them.
     #[serde(default)]
     pub extends: Vec<String>,
     pub tokens: IndexMap<String, TokenSpecNode>,

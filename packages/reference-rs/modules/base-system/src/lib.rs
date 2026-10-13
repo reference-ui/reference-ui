@@ -4,12 +4,11 @@
 //! font/breakpoint/keyframe tables apply, and which `staticCss` utilities to pre-emit.
 //! `lib_fixture()` builds the lib fixture via public `from_spec` with `profile: "reference-ui"`.
 //! `from_json` lowers a versioned `EvaluatedSystemSpec` and rejects unversioned or foreign dumps.
-//! `from_specs` resolves declared `extends` graphs with downstream precedence.
+//! `extends` is carried on the wire but not resolved here: composition lives in Neo.
 
 mod breakpoints;
 mod condition_map;
 mod conditions;
-mod extends;
 mod fonts;
 mod global_css;
 mod lib_fixture;

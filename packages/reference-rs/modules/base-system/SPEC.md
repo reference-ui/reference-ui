@@ -12,6 +12,8 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 
 `base-system` is the portable design-system definition artefact for Reference UI. It takes the evaluated fragment JSON emitted by TypeScript (`tokens()`, `font()`, `keyframes()`, `globalCss()`, declared recipes, and condition/breakpoint maps) — the `BaseSystemSpec` — and deserializes it into a pure, immutable in-memory query engine. It emits authoritative answers to the five canonical questions asked by downstream consumers: custom property variable names, raw token CSS values across light and dark modes, declared recipe variant schemas, keyframes/fonts/globals, and conditions/breakpoints for `modules/atomic`, alongside token existence and category membership for `modules/typegen`. It must not evaluate author JavaScript, bundle modules, parse TSX, run an OXC walker, perform file I/O, print atomic utility classes (such as `.mt_2r`), synthesize runtime `css()` or `recipe()` code, or permit `layers` CSS tokens to leak into the queryable token dictionary.
 
+Extends composition lives in Neo: see packages/reference-neo/src/system/base/SPEC.md (E1–E15).
+
 ---
 
 ## 2. Legend & Status Counts
@@ -22,15 +24,14 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 | Area | Meaning | Total Cases | Proven `[x]` | Pending `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | **`DUMP`** | `BaseSystemSpec` ingestion & in-memory artefact | 5 | 5 | 0 |
-| **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 7 | 1 |
+| **`TOKEN`** | Token Dictionary & Value Normalization | 8 | 6 | 2 |
 | **`FONT`** | Font Definitions & Face Rules | 5 | 5 | 0 |
 | **`MOTION`** | Keyframes & Animation Steps | 3 | 3 | 0 |
-| **`GLOBAL`** | Global CSS, Reset & Conditions | 4 | 4 | 0 |
+| **`GLOBAL`** | Global CSS, Reset & Conditions | 3 | 3 | 0 |
 | **`RECIPE`** | Declared Component & Slot Recipes | 4 | 4 | 0 |
-| **`EXTEND`** | Upstream Definition Merge & Private Scoping | 5 | 5 | 0 |
 | **`LAYER`** | Upstream CSS Layer Isolation | 4 | 0 | 4 |
 | **`ASK`** | The Five Canonical Query Contracts | 6 | 3 | 3 |
-| **Total** | | **44** | **36** | **8** |
+| **Total** | | **38** | **29** | **9** |
 
 ---
 
@@ -54,7 +55,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `pandacss_codegen::artifacts::types` | lives in `typegen` | `.d.ts` / TS AST in this crate | Pure data. |
 | Utility class names in types | — | `.mt_2r` in declarations | Users author StyleProps. |
 | `pandacss_extractor` static token evaluator | lives in `atomic` | Parsing TSX / folding `token()` | This crate answers queries. |
-| `@pandacss/dev` `defineConfig({ presets })` | `BAS-EXTEND-01`–`05` | Deep object mutation / prototype inheritance | Deterministic merge, `_private` stripping. |
+| `@pandacss/dev` `defineConfig({ presets })` | Neo, not this crate | Deep object mutation / prototype inheritance | Deterministic merge, `_private` stripping, in Neo's fragment path. |
 | `@layer` multi-package sheet assembly | `BAS-LAYER-01`–`04` | Importing layered tokens into the local dictionary | `layers` is CSS-only. |
 
 ---
@@ -99,7 +100,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [x] `BAS-TOKEN-06` `[reference]` `[unit]` —
   **BaseSystem should isolate `_private` token trees from downstream export while preserving local resolution.**
   Ingest a token set defining `colors.brand` alongside `colors._private.internalAccent`. Assert that local queries inside the owning system resolve `colors._private.internalAccent` and format its CSS variable, while public token enumerations mark the token private. Failing to scope `_private` tokens allows internal library implementation details to leak into consumer autocomplete.
-- [x] `BAS-TOKEN-07` `[reference]` `[unit]` —
+- [ ] `BAS-TOKEN-07` `[reference]` `[unit]` —
   **BaseSystem should detect and report duplicate token definitions within the same fragment batch.**
   Ingest two token fragments in the same unlayered definition that declare `colors.primary` with conflicting values `"#000"` and `"#fff"`. Assert that ingestion records a collision diagnostic detailing the duplicate key and source fragments. Silently overwriting definitions based on file discovery order produces non-deterministic builds.
 - [x] `BAS-TOKEN-08` `[reference]` `[unit]` —
@@ -147,9 +148,6 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [x] `BAS-GLOBAL-03` `[reference]` `[unit]` —
   **BaseSystem should index pseudo-class, state, and container query conditions.**
   Ingest conditions `{ _hover: '&:hover', _dark: '[data-color-mode="dark"] &', _focusVisible: '&:focus-visible' }`. Assert that each condition key maps to its exact CSS selector transform template. Missing conditions cause the atomic resolver to fail or emit invalid CSS rules.
-- [x] `BAS-GLOBAL-04` `[forbidden]` `[unit]` —
-  **BaseSystem must reject upstream global CSS duplication across extends.**
-  Ingest a downstream system extending an upstream system where the upstream system's global CSS is already included in its compiled layer. Assert that upstream global CSS fragments are not reinjected into the downstream global CSS list. Emitting duplicate resets or duplicate root CSS across package boundaries is strictly forbidden.
 
 ### Declared Component & Slot Recipes (`RECIPE`)
 
@@ -165,24 +163,6 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [x] `BAS-RECIPE-04` `[forbidden]` `[unit]` —
   **BaseSystem must not execute runtime variant selection or class concatenation.**
   Attempt to invoke runtime recipe variant selection on a `BaseSystem` instance with props `{ tone: 'loud' }`. Assert that `BaseSystem` exposes only the static recipe schema and tables to `atomic` and `typegen`. The runtime `recipe()` function is authored TypeScript in core; embedding a runtime evaluator or closure compiler inside `base-system` is forbidden.
-
-### Upstream Definition Merge & Private Scoping (`EXTEND`)
-
-- [x] `BAS-EXTEND-01` `[reference]` `[unit]` —
-  **BaseSystem should merge upstream tokens into the local dictionary via `extends`.**
-  Construct System B declaring `extends: [System A]`, where System A defines `colors.n100: '#eee'` and System B defines `colors.n200: '#ccc'`. Assert that System B's token dictionary contains both `n100` and `n200`, both answerable to `is_token` and visible to typegen. Dropping upstream tokens breaks token inheritance across packages.
-- [x] `BAS-EXTEND-02` `[reference]` `[unit]` —
-  **BaseSystem should allow downstream tokens to override upstream tokens with precedence.**
-  System A defines `colors.primary: '#0066cc'`; System B extends System A and defines `colors.primary: '#0055bb'`. Assert that querying `colors.primary` on System B resolves to `'#0055bb'`. Inverting precedence or raising a collision error on intentional downstream extension violates the composition model.
-- [x] `BAS-EXTEND-03` `[reference]` `[unit]` —
-  **BaseSystem should strictly strip `_private` token trees when merging upstream systems.**
-  System A defines `colors.publicToken: '#111'` and `colors._private.secretAccent: '#999'`. System B extends System A. Assert that System B's token dictionary contains `colors.publicToken` but does NOT contain `colors._private.secretAccent` or any key within `_private`. Internal tokens of base libraries must never leak into downstream application autocomplete.
-- [x] `BAS-EXTEND-04` `[reference]` `[unit]` —
-  **BaseSystem should merge recipes and fonts across the extends hierarchy.**
-  System A defines recipe `badge` and font `sans`; System B extends System A and defines recipe `button`. Assert that System B exposes recipes `badge` and `button` and font `sans`. Dropping recipes or fonts during definition merge breaks compound design systems.
-- [x] `BAS-EXTEND-05` `[reference]` `[unit]` —
-  **BaseSystem should preserve deep multi-level extends chains deterministically.**
-  Construct a three-tier chain where System C extends System B, and System B extends System A. Assert that token resolution follows bottom-up priority (C > B > A), with `_private` tokens stripped at each boundary. Cycle detection must identify circular extends chains (`A -> B -> A`) and fail closed with an explicit diagnostic.
 
 ### Upstream CSS Layer Isolation (`LAYER`)
 
@@ -237,7 +217,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `BAS-TOKEN-04` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_04_resolves_mode_slots` |
 | `BAS-TOKEN-05` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-TOKEN-06` | `packages/reference-rs/modules/base-system/src/tokens/tests.rs` | `tests::bas_token_06_is_private_distinguishes_internal_tokens` |
-| `BAS-TOKEN-07` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_07_fonts_dual_source_duplicate` |
+| `BAS-TOKEN-07` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | none |
 | `BAS-TOKEN-08` | `packages/reference-rs/modules/base-system/src/lower/tests.rs` | `tests::bas_token_08_keeps_brace_aliases_and_detects_cycle` |
 | `BAS-FONT-01` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_01_stores_family_value_and_fallback_stacks` |
 | `BAS-FONT-02` | `packages/reference-rs/modules/base-system/src/fonts.rs` | `tests::bas_font_02_preserves_structured_font_face_descriptors` |
@@ -250,16 +230,10 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `BAS-GLOBAL-01` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_01_stores_structured_global_rules` |
 | `BAS-GLOBAL-02` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_02_stores_responsive_breakpoints` |
 | `BAS-GLOBAL-03` | `packages/reference-rs/modules/base-system/src/tests.rs` | `tests::bas_global_03_indexes_conditions` |
-| `BAS-GLOBAL-04` | `packages/reference-rs/modules/base-system/src/extends/adoption_tests.rs` | `extends::adoption_tests::bas_global_04_upstream_global_css_not_reinjected` |
 | `BAS-RECIPE-01` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_01_stores_base_variants_and_defaults` |
 | `BAS-RECIPE-02` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_02_preserves_compound_variants` |
 | `BAS-RECIPE-03` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_03_has_no_slot_recipe_schema` |
 | `BAS-RECIPE-04` | `packages/reference-rs/modules/base-system/src/recipes.rs` | `tests::bas_recipe_04_static_schema_only` |
-| `BAS-EXTEND-01` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_01_merges_upstream_tokens` |
-| `BAS-EXTEND-02` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_02_downstream_override_wins_without_collision` |
-| `BAS-EXTEND-03` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_03_strips_private_across_boundary` |
-| `BAS-EXTEND-04` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_04_merges_recipes_and_fonts` |
-| `BAS-EXTEND-05` | `packages/reference-rs/modules/base-system/src/extends/tests.rs` | `extends::tests::bas_extend_05_chain_precedence_and_private_stripped_at_each_boundary`, `extends::tests::bas_extend_05_cycle_and_unknown_fail_closed` |
 | `BAS-LAYER-01` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-02` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
 | `BAS-LAYER-03` | `packages/reference-rs/modules/base-system/src/lib.rs` | none |
@@ -278,9 +252,9 @@ those jobs. Vendor crates below are example call sites, not our API.
 1. **P0 — In-Memory Artefact & Deserialization (`BAS-DUMP-01` .. `05`):** Define the serializable/deserializable data model so evaluated fragment JSON dumps hydrate cleanly into memory.
 2. **P0 — The Five Canonical Query Contracts (`BAS-ASK-01` .. `06`):** Implement the query methods required by `modules/atomic` and `modules/typegen`, answering token existence, CSS variable naming, light/dark values, keyframes/fonts/globals, recipes, and conditions.
 3. **P1 — Token Dictionary & Normalization (`BAS-TOKEN-01` .. `08`):** Implement dot-path normalization, CSS custom property prefixing (`--colors-*`), literal value preservation, and semantic light/dark storage.
-4. **P1 — Extends & Private Token Scoping (`BAS-EXTEND-01` .. `05`) — DONE:** Multi-system definition merge with precedence rules, cycle detection, and strict stripping of `_private` token trees is implemented (`BaseSystem::from_specs`) and proven.
+4. **Retired — Extends (former P1):** upstream merge moved out of this crate into Neo; see the pointer in section 1.
 5. **P1 — Layer Isolation (`BAS-LAYER-01` .. `04`):** Implement CSS-only attachment for upstream systems, ensuring tokens from layered dependencies stay strictly out of local token queries and types.
-6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `05`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `04`) — DONE:** Schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks is complete, including the upstream global CSS exclusion.
+6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `05`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `03`) — DONE:** Schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks is complete.
 
 ---
 
@@ -294,8 +268,8 @@ those jobs. Vendor crates below are example call sites, not our API.
    Type generation belongs to `modules/typegen`. `base-system` exposes read-only query APIs over the definition.
 4. **Do not leak `layers` tokens into queryable dictionaries or TypeScript types.**
    `layers` provides precompiled CSS for component rendering without expanding the authoring contract. If `bg="isolatedToken"` typechecks or resolves as a token from a layered system, Matrix T1–T13 fails.
-5. **Do not leak `_private` token trees across `extends`.**
-   Tokens nested under `_private` are package-internal. They must be stripped during upstream merge so library internals do not pollute application autocomplete.
+5. **Do not resolve `extends` in `base-system`.**
+   Upstream composition and `_private` stripping live in Neo's fragment path. A resolver here would duplicate that merge and drift from it.
 6. **Do not perform file I/O, glob walking, or directory scans.**
    `base-system` is an in-memory data structure. File discovery and micro-bundling are host pipeline responsibilities in TypeScript.
 7. **Do not grow a second config dialect.**

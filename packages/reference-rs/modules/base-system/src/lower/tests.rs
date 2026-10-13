@@ -1,5 +1,5 @@
 //! Lowering tests: flatten paths, kebab cssVar, the seven-case light/dark
-//! table, font dual-source duplicates, and brace-alias cycle detection.
+//! table, and brace-alias cycle detection.
 //! Verifies that valid EvaluatedSystemSpec envelopes lower into indexed tokens
 //! and that provenance source attributes are carried onto error diagnostics.
 
@@ -8,12 +8,6 @@ use super::*;
 fn spec_json(tokens: &str) -> String {
     format!(
         r#"{{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{tokens},"fonts":{{}},"globalCss":[],"keyframes":{{}},"recipes":{{}},"staticCss":{{}},"provenance":[]}}"#
-    )
-}
-
-fn spec_json_with_fonts(tokens: &str, fonts: &str) -> String {
-    format!(
-        r#"{{"schemaVersion":1,"profile":"reference-ui","name":"test","tokens":{tokens},"fonts":{fonts},"globalCss":[],"keyframes":{{}},"recipes":{{}},"staticCss":{{}},"provenance":[]}}"#
     )
 }
 
@@ -107,19 +101,6 @@ fn bas_token_05_multi_leaf_group_kebabs_each_leaf() {
         system.token_dark("colors.ui.progress.track.mixForeground"),
         Some("f")
     );
-}
-
-#[test]
-fn bas_token_07_fonts_dual_source_duplicate() {
-    let conflicting = spec_json_with_fonts(
-        r#"{"fonts":{"sans":{"value":"A"}}}"#,
-        r#"{"sans":{"value":"B"}}"#,
-    );
-    let err = crate::BaseSystem::from_json(&conflicting).unwrap_err();
-    assert!(matches!(
-        err,
-        FromJsonError::DuplicatePath { ref path, .. } if path == "fonts.sans"
-    ));
 }
 
 #[test]

@@ -17,9 +17,9 @@ precomputed `cssVar`). `compile()` still deserializes the indexed shape
 directly so station `baseSystem.json` files keep working.
 `BaseSystem::default()` stays empty. `staticCss` is a property →
 token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
-it empty so AtomSet stays small. `extends` merges named upstream specs via
-`BaseSystem::from_specs` (downstream wins, `_private` stripped, upstream
-global CSS excluded); `layers` is not here yet.
+it empty so AtomSet stays small. `layers` is not here yet.
+
+Extends composition lives in Neo: see packages/reference-neo/src/system/base/SPEC.md (E1–E15).
 
 `lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
 through `from_json`, then overlays host/Panda conditions, the standard
@@ -64,4 +64,4 @@ pnpm agentrs c base_system
 pnpm --filter @reference-ui/rust base-system --check
 ```
 
-> Search terms: system definition, theme artefact, base-system/spec, base-system/tokens, base-system/conditions, base-system/extends, base-system/lib-fixture, rs:canon, rs:atomic, rs:typegen
+> Search terms: system definition, theme artefact, base-system/spec, base-system/tokens, base-system/conditions, base-system/lib-fixture, rs:canon, rs:atomic, rs:typegen
