@@ -2,11 +2,12 @@
 // It takes a project root plus callbacks and emits a handle whose stop()
 // ends the session and whose baseline carries the first sync's result.
 // Every matched add/change/unlink settles through a trailing-edge debounce
-// into one serial sync(), so discovery, alignment, and deletion all ride
-// the same full resync. Scope is the config include globs plus the config
-// file's own dependencies; node_modules, the generated folder, git
-// internals, and gitignored paths never emit. The session holds the sync
-// lock for its life; a SIGUSR2 poke resyncs now.
+// with a max-wait ceiling (scheduler.ts), so a steady stream of saves still
+// resyncs. Each settled burst is one serial sync(), so discovery, alignment,
+// and deletion all ride the same full resync. Scope is the config include
+// globs plus the config file's own dependencies; node_modules, the generated
+// folder, git internals, and gitignored paths never emit. The session holds
+// the sync lock for its life; a SIGUSR2 poke resyncs now.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -15,6 +16,7 @@ import picomatch from 'picomatch'
 import { getLastLoadedUserConfig, loadUserConfigWithDependencies } from '../../config/load.ts'
 import { sync, type SyncOptions, type SyncResult } from '../../sync/index.ts'
 import { acquireSyncSession } from '../../sync/session.ts'
+import { createResyncScheduler } from './scheduler.ts'
 
 export type WatchEvent = 'add' | 'change' | 'unlink'
 
@@ -42,7 +44,6 @@ const EVENT_MAP = {
   delete: 'unlink',
 } as const
 
-const RESYNC_SETTLE_MS = 60
 const ERROR_RESYNC_COOLDOWN_MS = 5000
 const GLOB_MAGIC = /[*?[\]{}()!]/
 const STATIC_IGNORE = ['**/node_modules/**', '**/.reference-ui/**', '**/.git/**']
@@ -189,67 +190,6 @@ function isDroppedEventsError(error: Error): boolean {
   return error.message.includes('Events were dropped')
 }
 
-interface ResyncScheduler {
-  schedule(): void
-  request(): void
-  settle(): Promise<void>
-}
-
-// Debounce plus serialization behind one resync function: schedule()
-// waits for the trailing edge, request() runs now, and a burst behind
-// a slow sync costs one extra pass, never a backlog. Settle cancels
-// the timer and drains the in-flight pass.
-function createResyncScheduler(resync: () => Promise<void>): ResyncScheduler {
-  let syncing = false
-  let queued = false
-  let cancelled = false
-  let timer: ReturnType<typeof setTimeout> | null = null
-  let inFlight: Promise<void> | null = null
-
-  async function drain(): Promise<void> {
-    syncing = true
-    try {
-      for (;;) {
-        await resync()
-        if (!queued || cancelled) break
-        queued = false
-      }
-    } finally {
-      syncing = false
-    }
-  }
-
-  function request(): void {
-    if (cancelled) return
-    if (syncing) {
-      queued = true
-      return
-    }
-    inFlight = drain()
-    void inFlight
-  }
-
-  function schedule(): void {
-    if (cancelled) return
-    if (timer !== null) clearTimeout(timer)
-    timer = setTimeout(() => {
-      timer = null
-      request()
-    }, RESYNC_SETTLE_MS)
-  }
-
-  async function settle(): Promise<void> {
-    cancelled = true
-    if (timer !== null) {
-      clearTimeout(timer)
-      timer = null
-    }
-    if (inFlight !== null) await inFlight.catch(() => {})
-  }
-
-  return { schedule, request, settle }
-}
-
 // Watcher errors resync after a cooldown so a flapping backend cannot
 // self-perpetuate; dropped OS event buffers stay quiet because the
 // watcher keeps delivering real events without a rebuild storm.
@@ -355,8 +295,8 @@ async function stampedSync(projectRoot: string, reporting: SyncOptions): Promise
 /**
  * Watch the project at cwd: hold the sync session lock, run one baseline
  * sync, then resync on every matched add/change/unlink until stop().
- * Resyncs debounce to a trailing edge and serialize behind the in-flight
- * sync, so a burst of saves costs one rebuild; a failing resync reports
+ * Resyncs debounce to a trailing edge, capped by max-wait, and serialize
+ * behind the in-flight sync, so a burst of saves costs one rebuild; a failing resync reports
  * through onError and keeps watching. onResync fires only for watch-driven
  * resyncs, never the baseline. A SIGUSR2 poke (a one-shot meeting the
  * session) resyncs now. Resolves with the handle plus the baseline result
