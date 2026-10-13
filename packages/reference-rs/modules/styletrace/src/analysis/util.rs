@@ -151,8 +151,5 @@ pub(super) fn is_identifier(value: &str) -> bool {
 }
 
 pub(super) fn is_component_name(name: &str) -> bool {
-    name.chars()
-        .next()
-        .map(|ch| ch.is_ascii_uppercase())
-        .unwrap_or(false)
+    name.chars().next().is_some_and(char::is_uppercase)
 }

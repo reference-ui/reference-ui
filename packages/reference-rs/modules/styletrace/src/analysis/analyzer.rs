@@ -8,11 +8,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use rustc_hash::FxHashMap;
-
 use crate::diagnostics::{push_skipped, StyletraceDiagnostic};
 use crate::resolver::StyleTraceError;
 
+use super::memo::TraceMemo;
 use super::model::{
     EdgeTarget, ExportTarget, FactoryTarget, TraceComponent, TraceModule, TracedBinding,
 };
@@ -27,9 +26,7 @@ pub(super) struct StyleTraceAnalyzer<'s> {
     sync_root: PathBuf,
     sources: &'s TraceSources<'s>,
     resolver: ModuleResolver<'s>,
-    component_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
-    factory_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
-    export_cache: FxHashMap<(PathBuf, String), Option<BTreeSet<String>>>,
+    pub(super) memo: TraceMemo,
     owned_props: BTreeMap<String, BTreeSet<String>>,
     diagnostics: Vec<StyletraceDiagnostic>,
 }
@@ -47,9 +44,7 @@ impl<'s> StyleTraceAnalyzer<'s> {
             sync_root,
             sources,
             resolver: ModuleResolver::new(sources.staged),
-            component_cache: FxHashMap::default(),
-            factory_cache: FxHashMap::default(),
-            export_cache: FxHashMap::default(),
+            memo: TraceMemo::default(),
             owned_props: BTreeMap::new(),
             diagnostics: Vec::new(),
         }
@@ -221,27 +216,15 @@ impl<'s> StyleTraceAnalyzer<'s> {
         Ok(())
     }
 
-    /// The export's owned props when its component traces to a
-    /// primitive; `None` when the export is not a style host. The owned
-    /// set is the resolved component's own declaration, so re-exports
-    /// carry the origin's names.
-    fn export_is_traced(
+    /// Body of one export node. The export's owned props when its target
+    /// traces: the resolved component's own declaration, so re-exports carry
+    /// the origin's names. The memo in `memo.rs` settles the verdict.
+    pub(super) fn export_body(
         &mut self,
         module_path: &Path,
         export_name: &str,
         stack: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
-        let cache_key = (module_path.to_path_buf(), export_name.to_string());
-        if let Some(cached) = self.export_cache.get(&cache_key) {
-            return Ok(cached.clone());
-        }
-
-        let stack_key = format!("export:{}::{export_name}", module_path.display());
-        if stack.contains(&stack_key) {
-            return Ok(None);
-        }
-        stack.push(stack_key);
-
         let export_target = self
             .modules
             .get(module_path)
@@ -276,28 +259,17 @@ impl<'s> StyleTraceAnalyzer<'s> {
             }
         };
 
-        stack.pop();
-        self.export_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 
-    pub(super) fn component_is_traced(
+    /// Body of one component node: its own style props and edges, or the
+    /// factory product it was minted from. The memo settles the verdict.
+    pub(super) fn component_body(
         &mut self,
         module_path: &Path,
         component_name: &str,
         stack: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
-        let cache_key = (module_path.to_path_buf(), component_name.to_string());
-        if let Some(cached) = self.component_cache.get(&cache_key) {
-            return Ok(cached.clone());
-        }
-
-        let stack_key = format!("component:{}::{component_name}", module_path.display());
-        if stack.contains(&stack_key) {
-            return Ok(None);
-        }
-        stack.push(stack_key);
-
         let component = self
             .modules
             .get(module_path)
@@ -320,8 +292,6 @@ impl<'s> StyleTraceAnalyzer<'s> {
             },
         };
 
-        stack.pop();
-        self.component_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 
@@ -402,23 +372,13 @@ impl<'s> StyleTraceAnalyzer<'s> {
         }
     }
 
-    fn factory_is_traced(
+    /// Body of one factory node: the component its factory returns.
+    pub(super) fn factory_body(
         &mut self,
         module_path: &Path,
         factory_name: &str,
         stack: &mut Vec<String>,
     ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
-        let cache_key = (module_path.to_path_buf(), factory_name.to_string());
-        if let Some(cached) = self.factory_cache.get(&cache_key) {
-            return Ok(cached.clone());
-        }
-
-        let stack_key = format!("factory:{}::{factory_name}", module_path.display());
-        if stack.contains(&stack_key) {
-            return Ok(None);
-        }
-        stack.push(stack_key);
-
         let result = match self
             .modules
             .get(module_path)
@@ -431,8 +391,6 @@ impl<'s> StyleTraceAnalyzer<'s> {
             None => None,
         };
 
-        stack.pop();
-        self.factory_cache.insert(cache_key, result.clone());
         Ok(result)
     }
 

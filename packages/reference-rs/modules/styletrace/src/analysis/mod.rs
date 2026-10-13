@@ -5,6 +5,7 @@
 
 mod aliases;
 mod analyzer;
+mod memo;
 mod model;
 mod module_resolution;
 mod parser;

@@ -273,6 +273,9 @@ impl SurfaceTraceSession<'_> {
                 Err(error) => {
                     let file = entry.to_string_lossy().to_string();
                     push_skipped(diagnostics, Some(&file), error.to_string());
+                    // Cache the failure as an empty module so an import of this file
+                    // reads it instead of parsing and warning a second time.
+                    modules.insert(entry.clone(), TraceModule::empty());
                 }
             }
         }
