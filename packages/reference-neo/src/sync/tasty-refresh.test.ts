@@ -1,7 +1,8 @@
 // Warm tasty refresh proofs: they take temp projects, a bridge mock for the session cache and the rebuild,
 // and real sync runs. They assert that a warm sync queues a background rebuild even when the manifest already
 // exists, that a cold sync leaves the first build to initReference, and that a sync landing mid-rebuild
-// coalesces into exactly one follow-up run that never overlaps the run in flight.
+// coalesces into exactly one follow-up run that never overlaps the run in flight, and that a failed run
+// frees its lane so the next sync rebuilds again.
 
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -139,5 +140,22 @@ describe('sync tasty refresh', () => {
 
     expect(rebuildReferenceTastyBuild).toHaveBeenCalledTimes(2)
     expect(maxInFlight).toBe(1)
+  }, 60_000)
+
+  it('recovers after a failed rebuild: the next sync runs a fresh one', async () => {
+    const dir = await writeProject()
+    await seedManifest(dir)
+    vi.mocked(getReferenceTastyBuild).mockReturnValue(WARM_BUILD)
+    vi.mocked(rebuildReferenceTastyBuild).mockRejectedValueOnce(new Error('scan exploded'))
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    try {
+      await sync(dir)
+      await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining('scan exploded')))
+      await sync(dir)
+      await vi.waitFor(() => expect(rebuildReferenceTastyBuild).toHaveBeenCalledTimes(2))
+    } finally {
+      errors.mockRestore()
+    }
   }, 60_000)
 })
