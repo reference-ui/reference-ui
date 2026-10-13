@@ -9,7 +9,7 @@
 // but a watch with a graceful shutdown keeps its lock until that shutdown has
 // settled the in-flight sync and released it. The owner document model lives
 // in session-owner.ts; this module owns the mkdir race, the preempt matrix,
-// and the hold with its signal handlers.
+// the hold with its signal handlers, and the re-assert of a held lock dir.
 
 import { randomBytes } from 'node:crypto'
 import { readFileSync, rmSync } from 'node:fs'
@@ -457,4 +457,21 @@ function holdSession(lockDir: string, owner: SyncSessionOwner, json: boolean): S
   process.on('SIGTERM', held.onSigterm)
   process.on('SIGHUP', held.onSighup)
   return { owner, release: () => releaseSession(lockDir) }
+}
+
+/**
+ * Re-claim the lock this process holds when its lock dir vanished under it
+ * (the generated folder deleted during a watch). Only a missing owner is
+ * re-asserted, from the same owner document, so pid and nonce stay this
+ * process's; a foreign or unreadable owner means the lock moved on and is left
+ * alone. Resolves true when it re-asserted the lock, false when nothing needed it.
+ */
+export async function reassertHeldSession(cwd: string): Promise<boolean> {
+  const lockDir = getSyncLockDir(cwd)
+  const held = heldSessions.get(lockDir)
+  if (held === undefined) return false
+  if ((await readOwnerFile(lockDir)).status !== 'missing') return false
+  await mkdir(lockDir, { recursive: true })
+  await writeLockFile(getSyncOwnerPath(lockDir), JSON.stringify(held.owner))
+  return true
 }
