@@ -98,9 +98,8 @@ pnpm agent status
 pnpm agent pw chain/T8                 # matrix/tests/chain/T8
 
 # Native Vitest (unit tests):
-pnpm agent vitest lib -t "Dialog"
 pnpm agent vt packages/reference-mcp   # MCP server unit tests
-pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
+pnpm agent vt packages/reference-lib/src/components/Accordion/Accordion.test.tsx
 
 # 2. Full component verification in one shot (typecheck -> unit -> lib build -> component CT E2E; final check before completion):
 pnpm agent verify <ComponentName>
