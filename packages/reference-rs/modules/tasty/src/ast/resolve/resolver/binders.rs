@@ -3,7 +3,8 @@
 //! evaluation never attach or dereference it. This walk turns each such mark back into the `None` target an
 //! unresolved name has, and it keeps the `type_parameter` flag, which is what still tells the reference apart
 //! from an unresolved external name. It reaches the `resolved` results too, because evaluation can copy a
-//! marked reference into them.
+//! marked reference into them. A shadowing binder keeps its `#binder` marker, which is not its own name, so this walk
+//! leaves that marker in place.
 
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};

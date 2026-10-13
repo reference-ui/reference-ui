@@ -1,0 +1,1 @@
+{"id": "TST-EXT-09", "name": "heritage-shadow: an inherited generic method keeps its own type parameter when that name is also the parent's parameter"}

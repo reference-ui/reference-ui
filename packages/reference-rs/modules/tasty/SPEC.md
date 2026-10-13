@@ -87,6 +87,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [ ] TASTY-40 `keyof` over an interface with type parameters, or with numeric keys, fails closed. Unproven: TST-OPR-02 covers `extends` and index signatures only; no station pins type-parameter interfaces or numeric keys.
 - [x] TASTY-41 A type parameter default that names an earlier parameter takes that parameter's argument: `Two<number>` with `type Two<A, B = A>` gives `second: number`, a bare reference's projected members apply each default in order, and a same-named top-level symbol never captures the default. Proof: TST-GEN-04.
 - [x] TASTY-43 An interface's inherited members take the type arguments of its extends clause: `extends Holder<number>` binds `Holder`'s parameters, through a generic parent and through an object type alias that it names. Proof: TST-EXT-06, TST-EXT-08.
+- [x] TASTY-45 An inherited generic method keeps its own type parameter when that name is also the parent's parameter: `keep: A` takes the clause's argument, while `run<A>(input: A): A` still returns the method's own `A`, for an interface parent and for an object type alias parent. Proof: TST-EXT-09.
 
 ---
 

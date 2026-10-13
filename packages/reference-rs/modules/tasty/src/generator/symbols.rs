@@ -103,6 +103,14 @@ pub(super) fn reference_descriptor(
     };
 
     if let Some(target_id) = target_id {
+        if *type_parameter {
+            return Some(shadowing_binder_descriptor(
+                name,
+                target_id,
+                source_module.as_deref(),
+                type_arguments.clone(),
+            ));
+        }
         return local_reference_descriptor(bundle, target_id, export_names, type_arguments.clone());
     }
 
@@ -112,6 +120,20 @@ pub(super) fn reference_descriptor(
         type_arguments.clone(),
         *type_parameter,
     ))
+}
+
+/// A bound name that shadows a declaration parameter. It names no symbol, so its id is the marker the resolver gave it
+/// rather than the name, and the JS API's name-based substitution does not take it for the declaration's parameter.
+fn shadowing_binder_descriptor(
+    name: &str,
+    marker: &str,
+    source_module: Option<&str>,
+    type_arguments: Option<Vec<TypeRef>>,
+) -> SymbolRef {
+    SymbolRef {
+        id: marker.to_string(),
+        ..external_reference_descriptor(name, source_module, type_arguments, true)
+    }
 }
 
 pub(super) fn emit_ref_array(

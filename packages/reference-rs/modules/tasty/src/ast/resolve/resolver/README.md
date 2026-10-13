@@ -14,7 +14,9 @@ underlying type, members, references, and parameter constraints and defaults. A 
 a name is bound (it is marked with its own name and with the `type_parameter` flag), so no top-level
 symbol captures it. Extraction marks the nested binders the same way (see `ast/extract/types`).
 Once a symbol's resolution is done, `binders.rs` clears the target and keeps the flag, so the output
-carries no symbol target and is still never a dependency. Expansion instantiates a shell's
+carries no symbol target and is still never a dependency. An inner binder that shares its name with a
+declaration's parameter keeps a `#binder` marker as its target, so a name-based substitution in the JS API cannot
+take it for that parameter. Expansion instantiates a shell's
 underlying type, where the alias's own parameters are not bound yet: a bare name that matches one
 is substituted by its argument, whatever its source module. A default is instantiated where the
 parameters before it already hold their arguments, so `B = A` takes `A`'s argument. A later

@@ -97,6 +97,16 @@ impl ResolverTypeRefMap<'_, '_> {
     fn binds(&self, name: &str) -> bool {
         self.binders.iter().any(|binder| binder == name)
     }
+
+    /// The target of an inner binder (a method's or a function type's own parameter) that shares its name with one of
+    /// the declaration's parameters. Its target is its own name, which a name-based substitution would take for the
+    /// declaration's parameter, so it takes a marker that no symbol id has and no substitution matches.
+    fn shadowing_binder_target(&self, name: &str, target_id: Option<String>) -> Option<String> {
+        if target_id.as_deref() == Some(name) && self.binds(name) {
+            return Some(format!("{name}#binder"));
+        }
+        target_id
+    }
 }
 
 impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
@@ -116,6 +126,7 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
 
         // A type-parameter reference names no symbol, so no import or local lookup may attach one.
         if type_parameter {
+            let target_id = self.shadowing_binder_target(&name, target_id);
             return TypeRef::Reference {
                 name,
                 target_id,
