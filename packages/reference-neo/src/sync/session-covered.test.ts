@@ -10,9 +10,10 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { awaitWatchCoverage, awaitWatchRelease } from './session-covered.ts'
-import { getSyncLockDir, readOwnerFile, type SyncSessionOwner } from './session-owner.ts'
+import { SyncCoveredByWatchError, getSyncLockDir, readOwnerFile, type SyncSessionOwner } from './session-owner.ts'
+import { acquireSyncSession } from './session.ts'
 
 const POSIX = process.platform !== 'win32'
 const SESSION_URL = new URL('./session.ts', import.meta.url).href
@@ -216,5 +217,46 @@ describe.skipIf(!POSIX)('waiting for a watch to let go of the lock', () => {
     await expect(awaitWatchRelease(watch.lockDir, watch.owner, 400)).rejects.toThrow(/did not release the lock/)
     rmSync(watch.lockDir, { recursive: true, force: true })
     await awaitWatchRelease(watch.lockDir, watch.owner, 400)
+  })
+})
+
+function stopListenerCounts(): number[] {
+  return ['SIGINT', 'SIGTERM', 'SIGHUP'].map((signal) => process.listenerCount(signal))
+}
+
+describe.skipIf(!POSIX)('acquiring a one-shot session toward a resident watch', () => {
+  it('rejects covered only once the watch has resynced, and leaves no handler behind', async () => {
+    const watch = await startStandIn('healthy', 500)
+    const before = stopListenerCounts()
+    const started = Date.now()
+    await expect(acquireSyncSession({ cwd: watch.cwd, kind: 'one-shot' })).rejects.toBeInstanceOf(SyncCoveredByWatchError)
+    expect(Date.now() - started).toBeGreaterThanOrEqual(450)
+    expect(stopListenerCounts()).toEqual(before)
+  })
+
+  it("rejects with the watch's failure when the covering resync failed", async () => {
+    const watch = await startStandIn('failing', 100)
+    await expect(acquireSyncSession({ cwd: watch.cwd, kind: 'one-shot' })).rejects.toThrow("[ref] sync: the resident watch's sync failed")
+  })
+
+  it('waits out a stopping watch, then takes the stale lock it leaves and syncs for itself', async () => {
+    const watch = await startStandIn('stopping')
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      const acquiring = acquireSyncSession({ cwd: watch.cwd, kind: 'one-shot' })
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      watch.child.kill('SIGKILL')
+      const session = await acquiring
+      try {
+        expect(session.owner.pid).toBe(process.pid)
+        expect(watch.pokes()).toBe(0)
+        expect(log).toHaveBeenCalledWith(`[ref] sync: the resident watch (pid ${watch.owner.pid}) is stopping, waiting to sync`)
+        expect(log).toHaveBeenCalledWith(expect.stringContaining(`stale lock (pid ${watch.owner.pid} not running)`))
+      } finally {
+        session.release()
+      }
+    } finally {
+      log.mockRestore()
+    }
   })
 })
