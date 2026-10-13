@@ -1,5 +1,5 @@
-// Unit tests for the base-system extends validation.
-// They take candidate extends entries and assert accept or typed rejection.
+// Unit tests for the base-system extends and layers validation.
+// They take candidate extends and layers entries and assert accept or typed rejection.
 // The entries ride validateConfig end to end, so the config-to-base arrow
 // stays proven alongside the branch behavior.
 
@@ -140,6 +140,28 @@ describe('validateConfig extends edges', () => {
         name: SYSTEM_NAME,
         include: DEFAULT_INCLUDE,
         extends: [{ name: '   ', fragment: FRAGMENT_CODE }],
+      })
+    ).toThrowError(/must have a non-empty 'name'/i)
+  })
+})
+
+describe('validateConfig layers edges', () => {
+  it('rejects non-object layers entries', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: [null],
+      })
+    ).toThrowError(/entry 0 must be an object/i)
+  })
+
+  it('rejects whitespace-only layers names', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: [{ name: '   ', fragment: FRAGMENT_CODE }],
       })
     ).toThrowError(/must have a non-empty 'name'/i)
   })
