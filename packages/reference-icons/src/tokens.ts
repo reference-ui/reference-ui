@@ -250,9 +250,9 @@ export const colors = {
   },
 
   text: {
-    primary: { light: 'gray.900', dark: 'white' },
-    secondary: { light: 'gray.700', dark: 'gray.300' },
-    disabled: { light: 'gray.500', dark: 'gray.500' },
+    primary: { light: '{colors.gray.900}', dark: 'white' },
+    secondary: { light: '{colors.gray.700}', dark: '{colors.gray.300}' },
+    disabled: { light: '{colors.gray.500}', dark: '{colors.gray.500}' },
   },
 } as const
 
