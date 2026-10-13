@@ -1,10 +1,13 @@
 // Undo log for the staged commit. It takes a backup dir inside the stage and
 // emits journaled live mutations, each recorded with its way back. A replaced
 // file keeps its old inode as a hard link (a symlink copy for a link) until the
-// rename-over lands, so the live path always names a whole file. A rollback
-// renames the backups back and removes what the commit added, newest first.
+// rename-over lands, so the live path always names a whole file. A placed file is
+// a copy, never a link to its staged twin, so a write into the stage can never
+// reach live bytes. A rollback renames the backups back and removes what the
+// commit added, newest first.
 
 import {
+  constants,
   copyFileSync,
   linkSync,
   mkdirSync,
@@ -78,14 +81,15 @@ export class CommitJournal {
   }
 
   /**
-   * Puts a staged file's bytes at its live path: a hard link into the backup dir,
-   * then a rename over the live path. The staged name is left in place, so a sync
-   * that was displaced mid-commit can copy what is staged but never move a file out
-   * of the stage that the newer sync is committing from.
+   * Puts a staged file's bytes at its live path: a copy into the backup dir (a
+   * clone where the filesystem has them), then a rename over the live path. A
+   * copy, not a link: a displaced sync that rewrites a stage file in place must
+   * never change a live file's bytes. The staged name is left in place, so a
+   * displaced sync never moves a file out of the stage a newer sync commits from.
    */
   place(stagedFile: string, live: string): void {
     const temp = this.nextBackupPath()
-    linkOrCopy(stagedFile, temp)
+    copyFileSync(stagedFile, temp, constants.COPYFILE_FICLONE)
     renameSync(temp, live)
   }
 

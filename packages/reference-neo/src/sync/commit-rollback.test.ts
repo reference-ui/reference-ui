@@ -4,12 +4,13 @@
 // Each leg runs over temp dirs with no writer process; the permission legs skip
 // for root, since chmod does not stop root from writing.
 
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { commitStagedDir } from './commit.ts'
+import { CommitJournal } from './commit-journal.ts'
 import { lockTakenByOther } from './owner-check.ts'
 
 const tempDirs: string[] = []
@@ -155,5 +156,23 @@ describe('lock takeover probe', () => {
     expect(lockTakenByOther(lockDir, 'mine')).toBe(true)
     putFile(join(lockDir, 'owner.json'), '{ torn')
     expect(lockTakenByOther(lockDir, 'mine')).toBe(true)
+  })
+})
+
+describe('a placed live file shares nothing with its staged twin', () => {
+  it('keeps live bytes when a displaced sync rewrites the stage file in place', async () => {
+    const root = await makeTempDir()
+    const staged = join(root, 'stage', 'index.js')
+    const live = join(root, 'out', 'index.js')
+    putFile(staged, 'index v2\n')
+    putFile(live, 'index v1\n')
+    const journal = new CommitJournal(join(root, 'stage', '.commit-backup'))
+
+    journal.keep(live, 'file')
+    journal.place(staged, live)
+    writeFileSync(staged, 'displaced writer\n')
+
+    expect(statSync(live).ino).not.toBe(statSync(staged).ino)
+    expect(readFileSync(live, 'utf8')).toBe('index v2\n')
   })
 })

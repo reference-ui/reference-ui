@@ -2,7 +2,7 @@
 // It takes a project root and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
-import { writeFileSync } from 'node:fs'
+import { readdirSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
@@ -33,6 +33,7 @@ import { applyNormalizeCss } from './reset.ts'
 import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { removeDirIfEmpty } from './clean.ts'
 import { commitStagedDir } from './commit.ts'
+import { isFreshScratch } from './commit-keep.ts'
 import { includeMatchDiagnostics } from './include-check.ts'
 import { lockTakenByOther } from './owner-check.ts'
 import { getSyncLockDir, type SyncSessionKind } from './session-owner.ts'
@@ -238,15 +239,33 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
   return typegenDiagnostics
 }
 
+// Stale evaluator scratch goes, young scratch stays: another process may be
+// loading its config there before it contends for the lock. The dir itself goes
+// once empty.
+async function dropStaleScratch(outDir: string): Promise<void> {
+  const scratch = getOutDirTmpPath(outDir)
+  let names: string[]
+  try {
+    names = readdirSync(scratch)
+  } catch {
+    return
+  }
+  for (const name of names) {
+    const entry = join(scratch, name)
+    if (!isFreshScratch(entry, scratch)) await rm(entry, { recursive: true, force: true })
+  }
+  await removeDirIfEmpty(scratch)
+}
+
 // The stage dies with the failed run while the live folder keeps its
-// last-good outputs. Evaluator scratch drops too, so a fresh world still
+// last-good outputs. Stale evaluator scratch drops too, so a fresh world still
 // lands nothing at all (SYNC-11). A run that lost the lock removes neither:
 // the stage and scratch belong to the new holder by then.
 async function dropFailedStageAndScratch(stageDir: string, outDir: string, ownsLock: boolean): Promise<void> {
   if (!ownsLock) return
   try {
     await rm(stageDir, { recursive: true, force: true })
-    await rm(getOutDirTmpPath(outDir), { recursive: true, force: true })
+    await dropStaleScratch(outDir)
   } catch {
     // Best effort: the next sync drops a stranded stage at start, and
     // the commit prunes scratch it did not stage.
