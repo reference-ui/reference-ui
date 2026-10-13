@@ -28,13 +28,13 @@ consumers never break on codes minted after they shipped.
 | Namespace | Owner       | Status                                                 |
 | --------- | ----------- | ------------------------------------------------------ |
 | `RS`      | template    | Self: `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` for tests and docs only; never emitted by shipped code |
-| `ATM`     | atomic      | Live: 52-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
+| `ATM`     | atomic      | Live: 54-code table in `modules/atomic/src/diagnostics/codes.rs`, aligned onto the template (wire-identical, tag-matched); `-I-` telemetry stays module-local |
 | `ATL`     | atlas       | Live: 5-code table in `modules/atlas/src/diagnostics/codes.rs`; props warnings plus the scan refusal |
-| `TST`     | tasty       | Live: 7-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, and unresolved-import warnings plus the scan refusal |
+| `TST`     | tasty       | Live: 9-code table in `modules/tasty/src/diagnostics/codes.rs`; scanner, merge, star, manifest, unresolved-import, unsupported-syntax, and augmentation warnings plus the scan refusal |
 | `STT`     | styletrace  | Live: 3-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
-| `BSS`     | base-system | Reserved, unminted                                     |
+| `BSS`     | base-system | Live: 1-code, emitted from Neo's collect step in `packages/reference-neo/src/collect/lib/shadow.ts`; no Rust table |
 | `MGP`     | module-graph| Reserved, unminted                                     |
 
 Rules:
@@ -179,6 +179,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TGN-W-EMPTY-FONT-FAMILY` | A font family declaring no weights; omitted from the registry | `modules/typegen/src/diagnostics/collect.rs` |
 | `TGN-E-INVALID-BASE-SYSTEM` | The baseSystem spec failed contract validation; the request is refused as a coded throw | `modules/typegen/native.rs` |
 | `TGN-W-DUPLICATE-RECIPE-STEM` | A recipe whose PascalCase stem collides with an earlier recipe; the loser is omitted | `modules/typegen/src/diagnostics/collect.rs` |
+| `BSS-W-TOKEN-SHADOW` | A local token leaf replaces a different upstream value; one warning per path, naming the path, the upstream system and both values | `packages/reference-neo/src/collect/lib/shadow.ts` |
 
 Tasty emit invariants (emitted-id hashing, artifact serialization) throw
 plain internal errors without codes: they are unreachable failure classes

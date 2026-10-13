@@ -9,7 +9,8 @@ Oxc, collects forwarding edges, and then walks the wrapper graph.
 ## Files
 
 - `mod.rs` — analysis module entry and public export
-- `analyzer.rs` — graph walk and cache management
+- `analyzer.rs` — graph walk and the verdict bodies
+- `memo.rs` — verdict cache, cycle-cut counter, and the entry points that call those bodies
 - `model.rs` — wrapper graph and prop-binding data structures
 - `parser.rs` — Oxc parsing and component extraction
 - `walk.rs` — statement / expression / JSX traversal

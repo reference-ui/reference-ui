@@ -21,7 +21,7 @@ Rust Tasty:
 - emits a manifest-first artifact set
 - generates the raw TypeScript contract types consumed by the JS runtime
 
-It is not trying to be another TypeScript compiler, a type evaluator, a
+It is not trying to be another TypeScript compiler, a full type evaluator, a
 bundler, or the runtime graph API.
 
 ## Shape Of The Pipeline
@@ -218,7 +218,7 @@ Example:
 | `TSConstructorType` | `Constructor { abstract, type_parameters, params, return_type }` | includes abstract constructors |
 | `TSTypeOperatorType` | `TypeOperator { operator, target }` | currently `keyof`, `readonly`, `unique` |
 | `TSTypeQuery` | `TypeQuery { expression }` | preserves `typeof ...` expression text |
-| `TSConditionalType` | `Conditional { check_type, extends_type, true_type, false_type }` | structural only, no evaluation |
+| `TSConditionalType` | `Conditional { check_type, extends_type, true_type, false_type }` | shape kept; `resolved` is set only by the bounded evaluator, see [Bounded evaluation](#bounded-evaluation) |
 | `TSMappedType` | `Mapped { ... }` | structural only, no evaluation |
 | `TSImportType` | `Raw { summary }` | preserved text only |
 | `TSInferType` | `Raw { summary }` | preserved text only |
@@ -227,6 +227,31 @@ Example:
 | `JSDocNullableType` | `Raw { summary }` | JSDoc-only |
 | `JSDocNonNullableType` | `Raw { summary }` | JSDoc-only |
 | `JSDocUnknownType` | `Raw { summary }` | JSDoc-only |
+
+### Bounded evaluation
+
+Conditional types, `keyof`, indexed access, and template literal types get a
+`resolved` answer only when the evaluator can settle them the way TypeScript
+does, on concrete types. A generic check, an `any` or `never` check, and a
+`null`, `undefined`, or `void` check (whose answer depends on strictNullChecks)
+stay unresolved. A union check distributes only when it is a naked type
+parameter of a generic alias being instantiated; otherwise the union is judged
+as a whole.
+
+Alias expansion runs under three budgets. When one runs out, the evaluation
+fails closed: `resolved` stays absent, the declaration keeps its structural
+shape, and the scan carries on.
+
+- 50 nested alias expansions in one evaluation (`MAX_ALIAS_DEPTH`)
+- 10,000 alias expansions across one top-level evaluation (`MAX_ALIAS_STEPS`)
+- 1000 union members (`MAX_EVALUATED_UNION_MEMBERS`): a union past this size
+  fails closed, whether it would be distributed over or built as a result, and
+  so does a template literal or `keyof` expansion past it
+
+The depth and step budgets live in `shared/eval_budget.rs`, and the member
+cap lives in `shared/type_ref_util.rs`. The evaluator is
+`ast/resolve/resolver/evaluate.rs`, and conditional decisions are made in
+`shared/type_extends.rs`.
 
 ### `TSTupleElement` matrix
 

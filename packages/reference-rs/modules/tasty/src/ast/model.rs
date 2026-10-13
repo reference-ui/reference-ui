@@ -19,6 +19,7 @@ pub(crate) struct ParsedFileAst {
     pub(crate) value_bindings: BTreeMap<String, TypeRef>,
     pub(crate) export_bindings: BTreeMap<String, String>,
     /// For `export { X } from './m'`, maps the specifier local name → (target file id, export name in target's folded map).
+    /// For `export * as ns from './m'`, `ns` maps to (target file id, `*`): the `*` remote name marks a namespace, never a flat name (see `ast/resolve/namespaces.rs`).
     pub(crate) reexport_target: BTreeMap<String, (String, String)>,
     /// For `export * from './m'`, stores the fully resolved target file id.
     pub(crate) export_all_targets: Vec<String>,
