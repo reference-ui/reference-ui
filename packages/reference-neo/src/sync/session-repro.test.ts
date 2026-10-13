@@ -127,6 +127,17 @@ async function waitForFile(path: string, label: string, budgetMs = 60000): Promi
   }
 }
 
+// The holder drops a stranded stage only after holdSession has installed its SIGTERM handler, so the
+// drop is the safe moment to STOP it. Fails fast with the holder's output if it exits first.
+async function waitForStageDrop(path: string, holder: Spawned, budgetMs = 60000): Promise<void> {
+  const deadline = Date.now() + budgetMs
+  while (existsSync(path)) {
+    if (childDone(holder.child)) throw new Error(`holder exited before dropping its stage:\n${holder.output()}`)
+    if (Date.now() >= deadline) throw new Error('timed out waiting for the holder to drop the stranded stage')
+    await sleep(5)
+  }
+}
+
 async function waitForExit(child: ChildProcess, budgetMs = 60000): Promise<void> {
   const deadline = Date.now() + budgetMs
   while (!childDone(child)) {
@@ -164,12 +175,17 @@ async function loneOneShotSyncsUnchanged(): Promise<void> {
 
 async function oneShotTowardOneShotKills(): Promise<void> {
   const dir = await writeWorld(400)
-  const ownerPath = join(dir, '.reference-ui', 'sync.lock', 'owner.json')
-  const preemptPath = join(dir, '.reference-ui', 'sync.lock', 'preempt.json')
+  const outDir = join(dir, '.reference-ui')
+  const preemptPath = join(outDir, 'sync.lock', 'preempt.json')
+  // A stranded stage the holder drops right after holdSession installs its SIGTERM
+  // handler. The owner file lands a few awaits earlier, and a STOP in that gap queues
+  // the SIGTERM for default death (signal, no exit 75).
+  const strandedStage = join(outDir, 'sync.stage')
+  mkdirSync(strandedStage, { recursive: true })
   const slow = spawnBin(['sync', dir], dir)
   // Stall the holder mid-sync; the preempt marker later proves B reached
   // the kill leg before the holder is released to die.
-  await waitForFile(ownerPath, 'the holder lock')
+  await waitForStageDrop(strandedStage, slow)
   if (childDone(slow.child)) throw new Error('harness lost the race: A finished before the stall')
   slow.child.kill('SIGSTOP')
   await sleep(50)
