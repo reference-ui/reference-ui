@@ -28,7 +28,9 @@ pub fn record_pipeline_binding(
 
     if pattern_source.starts_with('[')
         && matches!(init, Expression::CallExpression(call) if is_split_css_props_call(call, ctx.imports))
-        && expression_reads_style_signal(call_first_argument(init), ctx.bindings, ctx.state)
+        && call_first_argument(init).is_some_and(|argument| {
+            expression_reads_style_signal(argument, ctx.bindings, ctx.state)
+        })
     {
         if let Some(first_binding) = parse_array_pattern_first_binding(pattern_source) {
             ctx.state.style_signals.insert(first_binding);
@@ -64,17 +66,15 @@ fn parse_array_pattern_first_binding(pattern_source: &str) -> Option<String> {
         .map(ToOwned::to_owned)
 }
 
-fn call_first_argument<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+// A call with no arguments has nothing to read: None means it carries no style
+// signal, so the binding is ignored rather than panicking the trace.
+fn call_first_argument<'a>(expression: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
     match expression {
-        Expression::CallExpression(call) => call
-            .arguments
-            .iter()
-            .find_map(|argument| match argument {
-                Argument::SpreadElement(spread) => Some(&spread.argument),
-                _ => Some(argument.to_expression()),
-            })
-            .expect("expected call expression to have an argument"),
-        _ => expression,
+        Expression::CallExpression(call) => call.arguments.first().map(|argument| match argument {
+            Argument::SpreadElement(spread) => &spread.argument,
+            _ => argument.to_expression(),
+        }),
+        _ => Some(expression),
     }
 }
 

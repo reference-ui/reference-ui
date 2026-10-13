@@ -10,7 +10,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect } from 'vitest'
 
-import { trace } from '../../js/index'
+import {
+  trace,
+  traceDetailed,
+  type StyletraceDiagnostic,
+  type TracedBinding,
+} from '../../js/index'
 import {
   createVirtualWorkspace,
   type GoldenDefinition,
@@ -30,16 +35,37 @@ export const CASE_FOLDER = /^(STT-[A-Z]+-\d{2})$/
 export type StyletraceResult = string[]
 export type StyletraceCaseSpec = StationSpec<StyletraceResult>
 
+// verify, goldens and gauges all receive the names array itself, so the diagnostics
+// travel beside it, keyed by that array's identity. Existing specs never read them.
+const diagnosticsByResult = new WeakMap<StyletraceResult, StyletraceDiagnostic[]>()
+
 export async function compileStyletraceCase(
   ctx: StationContext
 ): Promise<StyletraceResult> {
   const files = collectStationFiles(ctx.inputDir)
   const workspace = await createVirtualWorkspace(files, `styletrace-${ctx.caseName}`)
   try {
-    return await trace(workspace.rootDir, DEFAULT_SYNC_ROOT)
+    const detailed = await traceDetailed(workspace.rootDir, DEFAULT_SYNC_ROOT)
+    const names = componentNames(detailed.bindings)
+    diagnosticsByResult.set(names, detailed.diagnostics)
+    return names
   } finally {
     await workspace.cleanup()
   }
+}
+
+/** Diagnostics the trace raised while compiling this station's result. */
+export function styletraceDiagnostics(result: StyletraceResult): StyletraceDiagnostic[] {
+  const diagnostics = diagnosticsByResult.get(result)
+  if (diagnostics === undefined) {
+    throw new Error('styletraceDiagnostics: result was not produced by compileStyletraceCase')
+  }
+  return diagnostics
+}
+
+/** Sorted, unique component names: the list trace() returns for the same workspace. */
+function componentNames(bindings: TracedBinding[]): string[] {
+  return [...new Set(bindings.map(binding => binding.name))].sort()
 }
 
 export const styletraceGoldens: GoldenDefinition<StyletraceResult>[] = [
