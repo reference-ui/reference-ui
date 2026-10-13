@@ -10,7 +10,7 @@ import {
   layerBody,
   layerClassNames,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const STEM = '@reference-ui/lib__buttonStyle'
 const ESCAPED_STEM = '\\@reference-ui\\/lib__buttonStyle'

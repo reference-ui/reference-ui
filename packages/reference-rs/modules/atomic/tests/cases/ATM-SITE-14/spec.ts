@@ -3,7 +3,7 @@
  * the equivalent `css({ … })` call: same atoms, same classes, one deduped set.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-14',

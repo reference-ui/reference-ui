@@ -4,7 +4,7 @@
  * One want and one runtime plan per leaf; zero diagnostics.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-39',

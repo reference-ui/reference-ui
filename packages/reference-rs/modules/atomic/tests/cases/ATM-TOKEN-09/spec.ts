@@ -4,7 +4,7 @@
  * through silently — bare values never warn off color props (§11).
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-09',

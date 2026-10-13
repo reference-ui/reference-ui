@@ -56,3 +56,21 @@ test = true
 name = "line_index"
 harness = false
 test = true
+
+# Integration tests live under tests/rust/; names match the former tests/*.rs
+# targets so `cargo test --test <name>` keeps working.
+[[test]]
+name = "backfill_skip"
+path = "tests/rust/backfill_skip.rs"
+
+[[test]]
+name = "harvest_pool"
+path = "tests/rust/harvest_pool.rs"
+
+[[test]]
+name = "scan_retention"
+path = "tests/rust/scan_retention.rs"
+
+[[test]]
+name = "serializer_parity"
+path = "tests/rust/serializer_parity.rs"

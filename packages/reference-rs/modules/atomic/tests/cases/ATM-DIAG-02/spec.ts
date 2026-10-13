@@ -5,7 +5,7 @@
  * channel with their locations intact; the default channel is silent.)
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-02',

@@ -3,7 +3,7 @@
  * `calc(N * var(--spacing-root))`.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RHYTHM-02',

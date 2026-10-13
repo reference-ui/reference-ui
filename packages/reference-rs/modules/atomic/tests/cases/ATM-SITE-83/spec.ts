@@ -6,7 +6,7 @@
  * style-object semantics, so `css: 1` still warns there.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const MD = '@container (min-width: 768px)'
 

@@ -6,7 +6,7 @@
  * coverage proof exists, so the silence assertion fails.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-10',

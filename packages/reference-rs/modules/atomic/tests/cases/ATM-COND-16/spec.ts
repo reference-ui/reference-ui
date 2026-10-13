@@ -2,7 +2,7 @@
  * Boolean container utility and named-container r query lowering.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-16',

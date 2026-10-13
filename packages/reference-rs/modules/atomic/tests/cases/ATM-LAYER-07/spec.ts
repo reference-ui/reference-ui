@@ -3,7 +3,7 @@
  * Nested `sm:` object keys are not extract conditions; array slot 1 is `sm`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const WRAP = '@container (min-width: 640px)'
 

@@ -4,7 +4,12 @@
  * plan, and warns exactly once on the dynamic arm, in both arm positions.
  */
 import { expect } from 'vitest'
-import { compileCase, harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  harvestWants,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-63',

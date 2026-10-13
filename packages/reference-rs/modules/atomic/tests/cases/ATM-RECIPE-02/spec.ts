@@ -5,7 +5,7 @@
  * pre-composed. Identity rides the runtime-map key, not the table.
  */
 import { expect } from 'vitest'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-02',

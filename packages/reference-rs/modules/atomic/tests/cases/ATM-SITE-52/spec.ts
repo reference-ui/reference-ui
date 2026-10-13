@@ -6,7 +6,7 @@
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
-import { hasWant, layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const MT_CLASS = `${SYSTEM}__mt_2r`

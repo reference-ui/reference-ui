@@ -3,7 +3,7 @@
  * Authorship order is at-rule / hover / base; the sorter still buckets.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-ORDER-02',

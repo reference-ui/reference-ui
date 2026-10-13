@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-FORBID-02',

@@ -4,7 +4,7 @@
  * `sm: { … }` object keys are not extract conditions (COND-01 / ORDER-01).
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const MEDIA = '@media (prefers-color-scheme: dark)'
 const CONTAINER = '@container (min-width: 640px)'

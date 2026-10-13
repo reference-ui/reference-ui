@@ -13,10 +13,10 @@ import {
   assertWritableCss,
   staleCssAllowlist,
   validateCss,
-} from '../../../testing/css.js'
-import { diffOrWriteGoldens } from '../../../testing/goldens.js'
-import { CASES_DIR } from './helpers.js'
-import { CSS_QUARANTINE } from './css-quarantine.js'
+} from '../../../../testing/css.js'
+import { diffOrWriteGoldens } from '../../../../testing/goldens.js'
+import { CASES_DIR } from '../harness/helpers.js'
+import { CSS_QUARANTINE } from '../harness/css-quarantine.js'
 
 describe('css quarantine', () => {
   it('contains no entry that now validates', () => {

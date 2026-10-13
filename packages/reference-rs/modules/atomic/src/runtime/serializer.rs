@@ -306,7 +306,7 @@ mod tests {
 
     /// One differential case, checked under every live `W`. The full
     /// per-`W` matrix (byte values, adversarial steps, fuzz) lives in
-    /// `tests/serializer_parity.rs`; this test only smokes each `W` here.
+    /// `tests/rust/serializer_parity.rs`; this test only smokes each `W` here.
     #[test]
     fn scalar_fast_frame_matches_diet_on_each_live_w() {
         let val = json!("red.500");

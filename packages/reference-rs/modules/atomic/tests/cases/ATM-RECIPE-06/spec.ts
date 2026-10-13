@@ -4,7 +4,7 @@
  * and duplicate recipe className in the same system with descriptive error diagnostics.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-06',

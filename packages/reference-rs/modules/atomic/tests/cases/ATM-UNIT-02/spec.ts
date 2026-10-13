@@ -10,7 +10,7 @@
  * magnitude (the oracle breaks away), silently canonical like any number.
  */
 import { expect } from 'vitest'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-UNIT-02',

@@ -3,7 +3,7 @@
  * `hover:` / `dark:hover:` prefixes on the runtime class string.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-NAME-02',

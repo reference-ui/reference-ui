@@ -4,7 +4,7 @@
  * normalized, and classes emitted in @layer recipes.
  */
 import { expect } from 'vitest'
-import { layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-04',

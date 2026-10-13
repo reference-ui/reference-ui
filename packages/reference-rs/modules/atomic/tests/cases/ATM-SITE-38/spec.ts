@@ -12,7 +12,7 @@ import {
   harvestWants,
   hasWant,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean }> = [
   { prop: 'marginTop', value: -4 },

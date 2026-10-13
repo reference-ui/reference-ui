@@ -9,7 +9,7 @@
  * five sink infos stay channel-only.)
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const EXPECTED: Array<{
   line: number

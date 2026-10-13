@@ -6,7 +6,7 @@
  * refuses it and the refs expand to `var()`s, silently.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-14',

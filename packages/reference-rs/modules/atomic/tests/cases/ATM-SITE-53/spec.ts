@@ -7,7 +7,12 @@
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
-import { compileCase, hasWant, layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  hasWant,
+  layerClassNames,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 

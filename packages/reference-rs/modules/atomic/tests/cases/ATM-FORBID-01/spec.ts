@@ -3,7 +3,7 @@
  * Every runtime class is an atomic `prefix_value` grain.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-FORBID-01',

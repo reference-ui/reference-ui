@@ -5,7 +5,7 @@
  * `nested_selector_parity.rs:235/:257/:268/:323/:345/:367/:400`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const ARMS: Array<[when: string, color: string, pattern: RegExp]> = [
   ['&&+&', 'red.500', /\.(\S+?)\.\1\+\.\1 \{ color: var\(--colors-red-500\); \}/],

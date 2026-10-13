@@ -5,7 +5,7 @@
  * core shorthand battery (`calc(1r * 2)` lowers with `var(--spacing-root)`).
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SHORT-07',

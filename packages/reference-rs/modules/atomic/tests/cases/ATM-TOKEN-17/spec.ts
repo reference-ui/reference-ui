@@ -7,7 +7,7 @@
  * interpolation with no calc-wrap.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const COLOR_MIX = 'color-mix(in srgb, var(--colors-blue-600) 50%, transparent)'
 

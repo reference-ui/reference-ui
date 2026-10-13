@@ -2,7 +2,11 @@
  * Reset layer emission ahead of tokens and utilities.
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  LAYER_PREAMBLE,
+  ROOT_DEFAULT_BLOCK,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-08',

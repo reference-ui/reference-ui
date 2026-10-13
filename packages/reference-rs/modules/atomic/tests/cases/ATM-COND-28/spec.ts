@@ -7,7 +7,7 @@
  * `nested_selector_parity.rs:444/:488/:499/:510/:543/:554/:565`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-28',

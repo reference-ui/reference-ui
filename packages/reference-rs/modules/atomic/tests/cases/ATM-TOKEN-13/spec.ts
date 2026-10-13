@@ -4,7 +4,7 @@
  * uses reference those same names — never the camel ghosts (RS-41).
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-13',

@@ -3,7 +3,7 @@
  * become a want. Static sibling properties still extract.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-06',

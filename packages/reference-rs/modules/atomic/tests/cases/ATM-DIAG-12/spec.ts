@@ -6,7 +6,7 @@
  * exist yet, so the channel assertions fail until Slices 2/5 land them.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 interface ChannelDiagnostic {
   severity: string

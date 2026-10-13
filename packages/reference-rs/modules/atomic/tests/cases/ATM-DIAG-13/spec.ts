@@ -5,7 +5,7 @@
  * emit exactly 2 file-less warnings each.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const lineKey = (d: {
   severity: string

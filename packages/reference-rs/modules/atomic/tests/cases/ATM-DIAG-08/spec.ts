@@ -6,7 +6,7 @@
  * analysis and no channel exist yet, so the hinge fails.
  */
 import { expect } from 'vitest'
-import { compileCase, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-08',

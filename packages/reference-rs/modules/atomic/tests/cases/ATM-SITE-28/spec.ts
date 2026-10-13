@@ -4,7 +4,12 @@
  * (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53) resolve like `const`.
  */
 import { expect } from 'vitest'
-import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  getWantsForProp,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'blue.600' },

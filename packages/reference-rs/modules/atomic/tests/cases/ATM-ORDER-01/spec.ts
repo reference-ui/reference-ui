@@ -3,7 +3,7 @@
  * not lexicographic 1024-first. `@media` max-width blocks emit descending.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const MIN = ['640', '768', '1024', '1280', '1536'] as const
 const MAX = ['1536', '1280', '1024', '768', '640'] as const

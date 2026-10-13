@@ -10,9 +10,9 @@
  * first, later wins, and a deeper path wins when one path extends the other.
  */
 import { describe, expect, it } from 'vitest'
-import { compileSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import { LAYER_PREAMBLE, LIB_SYSTEM_SPEC } from './helpers.js'
+import { compileSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import { LAYER_PREAMBLE, LIB_SYSTEM_SPEC } from '../harness/helpers.js'
 
 const UTILITY_DECL = 'color: var(--colors-blue-600);'
 const GLOBAL_DECL = 'container-type: inline-size'

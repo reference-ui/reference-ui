@@ -2,7 +2,7 @@
  * Core interaction pseudo catalog lowering: _active, _focus, _focusVisible, _disabled, _checked.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-10',

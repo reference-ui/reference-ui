@@ -3,7 +3,12 @@
  * and still yields a CompileResult (stylesheet + class map).
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  LAYER_PREAMBLE,
+  LIB_PACKAGE_OPEN,
+  ROOT_DEFAULT_BLOCK,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-DIAG-03',

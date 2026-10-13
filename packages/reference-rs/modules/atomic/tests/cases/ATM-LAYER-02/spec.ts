@@ -3,7 +3,12 @@
  * has nothing for them. Fixture globalCss and tokens do populate those layers.
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  LAYER_PREAMBLE,
+  LIB_PACKAGE_OPEN,
+  ROOT_DEFAULT_BLOCK,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-02',

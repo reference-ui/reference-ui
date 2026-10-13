@@ -4,7 +4,7 @@
  * keeps printing exactly one block. Empty arrays mean absent (cargo).
  */
 import { expect } from 'vitest'
-import type { AtomicCaseSpec } from '../../helpers.js'
+import type { AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-11',

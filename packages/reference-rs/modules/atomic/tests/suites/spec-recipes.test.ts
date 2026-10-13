@@ -8,9 +8,9 @@
  * tables out.
  */
 import { describe, expect, it } from 'vitest'
-import { compileSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
+import { compileSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import evaluatedSystemSpecJson from '../../../../contracts/fixtures/evaluated-system-spec.json'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 const STEM = 'lib-test-system__button'

@@ -11,7 +11,7 @@ finiteness, not magnitude. Close (a) refuse-to-passthrough per
 `.agents/missions/continuity/doom-r-rule.md`: legacy parity on every named
 spelling; genuine-overflow singles pass through where legacy mints valid
 `calc(Infinity * …)` (documented GIGO). The refused declarations ride the
-§11 silent bare-value passthrough quarantine (`css-quarantine.ts`), like
+§11 silent bare-value passthrough quarantine (`tests/harness/css-quarantine.ts`), like
 `ATM-TOKEN-16` — the author wrote them, the browser drops them. Contract:
 [SPEC.md](../../../SPEC.md) ATM-VALID-02 + rule 10. Siblings:
 `ATM-RHYTHM-01..06` (mint shapes); mirror cargo pins live in

@@ -8,7 +8,7 @@
  * `:378/:532/:587/:598/:609/:620/:631`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const ARMS: Array<[when: string, color: string, pattern: RegExp]> = [
   ['&_elem', 'red.500', /\.(\S+?)_elem \{ color: var\(--colors-red-500\); \}/],

@@ -5,7 +5,7 @@
  * member. Selectors mirror v2 `nested_selector_parity.rs:642/:653/:664`.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-23',

@@ -14,7 +14,7 @@ import { collapseRNumber, renderDecimal } from './lexical.js'
 import { NAMER_RULES_VERSION } from './index.js'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const GOLDEN_DIR = path.resolve(HERE, '..', '..', 'tests', 'namer-goldens')
+const GOLDEN_DIR = path.resolve(HERE, '..', '..', 'tests', 'goldens', 'namer')
 
 /** Static and side-effect runtime imports; `import type` lines are erased. */
 const STATIC_IMPORT = /^\s*import\s+(?!type\b)(?:[^'"]*from\s*)?['"]([^'"]+)['"]/gm

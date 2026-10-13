@@ -4,7 +4,7 @@
  * explicit-className parity; bare or non-suffixed bindings still refuse.
  */
 import { expect } from 'vitest'
-import { layerBody, layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const STEM = '@reference-ui/lib__chip'
 const ESCAPED_STEM = '\\@reference-ui\\/lib__chip'

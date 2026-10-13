@@ -5,7 +5,7 @@
  * `nested_selector_parity.rs:675/:686` plus the `:hover` textual control.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-COND-24',

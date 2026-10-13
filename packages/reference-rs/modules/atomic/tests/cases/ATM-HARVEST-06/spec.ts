@@ -7,7 +7,12 @@
  * the CSS-wide keyword.
  */
 import { expect } from 'vitest'
-import { compileCase, harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  harvestWants,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const VAR = 'var(--spacing-4r, 16px)'
 const OKLCH = 'oklch(55.4% 0.046 257.417)'

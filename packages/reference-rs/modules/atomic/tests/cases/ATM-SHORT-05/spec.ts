@@ -3,7 +3,7 @@
  * `padding: 10px`, `p: 1r`, and `m: 2r` stay one atom each.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SHORT-05',

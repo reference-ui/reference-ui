@@ -12,7 +12,7 @@ import {
   layerBody,
   ROOT_DEFAULT_BLOCK,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-ROOT-02',

@@ -192,7 +192,7 @@ audit defects are invisible to substring matching and visible to any CSS parser.
 
 - [x] `ATM-VALID-01` `[reference]` `[seam]` —
   **The emitted stylesheet must parse without error, and every generated selector must be a valid selector.**
-  Run a real CSS parser over `result.stylesheet` on every station as a standing gauge, asserting zero parse errors, and additionally validate each generated class selector in isolation. Assert that layer nesting, at-rule wrapping, and escaping all survive a round trip. The gauge is `atomicGauges` (`tests/helpers.ts`) over `testing/css.ts`, and the golden writer refuses invalid CSS outside `css-quarantine.ts`. The parser choice, the two-tier design, the `var()` caveat, and the measured findings are settled in [testing.md](./testing.md) — that document owns the harness, this case owns the claim.
+  Run a real CSS parser over `result.stylesheet` on every station as a standing gauge, asserting zero parse errors, and additionally validate each generated class selector in isolation. Assert that layer nesting, at-rule wrapping, and escaping all survive a round trip. The gauge is `atomicGauges` (`tests/harness/helpers.ts`) over `testing/css.ts`, and the golden writer refuses invalid CSS outside `css-quarantine.ts`. The parser choice, the two-tier design, the `var()` caveat, and the measured findings are settled in [testing.md](./testing.md) — that document owns the harness, this case owns the claim.
 - [x] `ATM-VALID-02` `[reference]` `[seam]` —
   **A declaration value must always be valid CSS; `true`, `false`, and `null` must never reach the stylesheet.**
   `Atom.value` is `CssValue` (String / Token / Number) — Bool and Null are not variants. `Want.value` remains `AtomValue` and may be Bool (`<Div border />`). Resolve is the boundary: the `border: true` macro lowers to `border-width: 1px` plus `border-style: solid` (RS-19); leftover Bool pairs warn naming the property and emit zero atoms; Null pairs drop silently (Panda parity, NEO-CSS-05). `ATM-SITE-09` still proves Bool extraction via `hasWant(..., 'border', true)`. `ATM-ATOM-02` asserts the stylesheet does not contain `border: true`.
@@ -216,7 +216,7 @@ compiler contract.
   **An array argument to `css()` must be a merge list, never a responsive array.**
   Compile `css([{ margin: '1r' }, { margin: '3r' }, false])`. Assert both objects emit unconditioned atoms, that `false` is skipped without a diagnostic, and that no breakpoint condition is applied to any of them. Confusing this with the responsive-array form (`ATM-LEAF-05`) silently moves styles to a breakpoint the author never wrote.
 
-> **Merge note (RS-9): responsive-expansion eviction.** Responsive values (arrays per `ATM-LEAF-05`, per-prop objects per `ATM-COND-17`) expand one authored declaration into several cascade slots: the engine (`runtime/builder.rs`, `derive_slot`) stamps breakpoint members as `[cond ':']* canonical '@' bp` (`width@base`, `width@md`) while a scalar alias lands on the bare slot (`width`). Distinct slots never collide under plain last-wins, so without eviction `css({ width: { base: '50px', md: '60px' }, w: '70px' })` would print all three classes and leave base width to stylesheet order. The runtime (`js/plans.ts` `mergeDeclarations`, mirrored by Neo `src/runtime/css/plans.ts`) therefore merges by slot *family* with overlapping breakpoint coverage: a later bare declaration evicts every earlier slot in its family, and a later `@bp` member evicts the earlier bare slot plus same-`@bp` members, leaving other breakpoints and other condition families untouched. Both directions hold — a later alias evicts the earlier expansion, and a later expansion evicts the earlier alias. The `@` suffix parses as the text after the LAST `@` only when that `@` sits after the last `:` (see `splitSlot`), because `r`-condition families such as `@container (min-width: 300px):p` carry a leading `@` of their own. Non-breakpoint object keys (`_hover`) slot as nested `when` parts (`hover:width`), identical to the `_hover: { … }` block form. Proved by station `ATM-COND-17` (both merge directions through compiled plans) and `tests/merge-eviction.test.ts` (slot grammar boundaries).
+> **Merge note (RS-9): responsive-expansion eviction.** Responsive values (arrays per `ATM-LEAF-05`, per-prop objects per `ATM-COND-17`) expand one authored declaration into several cascade slots: the engine (`runtime/builder.rs`, `derive_slot`) stamps breakpoint members as `[cond ':']* canonical '@' bp` (`width@base`, `width@md`) while a scalar alias lands on the bare slot (`width`). Distinct slots never collide under plain last-wins, so without eviction `css({ width: { base: '50px', md: '60px' }, w: '70px' })` would print all three classes and leave base width to stylesheet order. The runtime (`js/plans.ts` `mergeDeclarations`, mirrored by Neo `src/runtime/css/plans.ts`) therefore merges by slot *family* with overlapping breakpoint coverage: a later bare declaration evicts every earlier slot in its family, and a later `@bp` member evicts the earlier bare slot plus same-`@bp` members, leaving other breakpoints and other condition families untouched. Both directions hold — a later alias evicts the earlier expansion, and a later expansion evicts the earlier alias. The `@` suffix parses as the text after the LAST `@` only when that `@` sits after the last `:` (see `splitSlot`), because `r`-condition families such as `@container (min-width: 300px):p` carry a leading `@` of their own. Non-breakpoint object keys (`_hover`) slot as nested `when` parts (`hover:width`), identical to the `_hover: { … }` block form. Proved by station `ATM-COND-17` (both merge directions through compiled plans) and `tests/suites/merge-eviction.test.ts` (slot grammar boundaries).
 
 ### Numeric Values & Unit Policy
 
@@ -707,13 +707,13 @@ compiler contract.
   Station `ATM-TOKEN-20`. One `css({…})` with `bg: 'blue.600/50'`, `borderColor: 'red.500/25%'`, and `outlineColor: 'blue.500/medium'`. Assert the two numeric declarations match the `color-mix(in srgb, var(--colors-…) N%, transparent)` form byte for byte, the outline draws `var(--tones-medium-line)`, the utilities layer names exactly one `--tones-` variable, and zero diagnostics. The gate order keeps numeric modifiers split-first, so adding tones must not move a single numeric byte.
 - [x] `ATM-TOKEN-21` `[reference]` `[seam]` —
   **An unknown tone must warn with a did-you-mean when bare, and must error and drop the declaration when braced, including a whole braced value.**
-  Station `ATM-TOKEN-21`. Bare `bg: 'blue.500/mediun'` warns `ATM-W-UNKNOWN-TONE` with the did-you-mean `medium` and paints raw. Braced `border: '1px solid {colors.blue.500/mediun}'` raises an `ATM-E-UNKNOWN-TOKEN` error (``unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)``), drops the border colour longhand while its width and style still emit (as `ATM-TOKEN-12`), and keeps the valid sibling `color: 'blue.500'`. The shorthand decomposes before resolution, so `borderColor` arrives as the whole value `{colors.blue.500/mediun}`; `resolve/tokens/tone_value.rs` refuses that shape before the bare tone path, and the error text is the one `interpolate.rs` pushes for composite braces (TONES-02). Known braced tones and every other shape keep the resolver's existing path. Value-level pins: `whole_braced_unknown_tone_errors_and_drops` and `whole_braced_known_tone_still_resolves` in `braced_tone_tests.rs`. The bare raw `background` is grammar-quarantined under the token-passthrough policy in `tests/css-quarantine.ts`, as `ATM-TOKEN-05` is.
+  Station `ATM-TOKEN-21`. Bare `bg: 'blue.500/mediun'` warns `ATM-W-UNKNOWN-TONE` with the did-you-mean `medium` and paints raw. Braced `border: '1px solid {colors.blue.500/mediun}'` raises an `ATM-E-UNKNOWN-TOKEN` error (``unknown tone `mediun` in `{colors.blue.500/mediun}` (did you mean `medium`?)``), drops the border colour longhand while its width and style still emit (as `ATM-TOKEN-12`), and keeps the valid sibling `color: 'blue.500'`. The shorthand decomposes before resolution, so `borderColor` arrives as the whole value `{colors.blue.500/mediun}`; `resolve/tokens/tone_value.rs` refuses that shape before the bare tone path, and the error text is the one `interpolate.rs` pushes for composite braces (TONES-02). Known braced tones and every other shape keep the resolver's existing path. Value-level pins: `whole_braced_unknown_tone_errors_and_drops` and `whole_braced_known_tone_still_resolves` in `braced_tone_tests.rs`. The bare raw `background` is grammar-quarantined under the token-passthrough policy in `tests/harness/css-quarantine.ts`, as `ATM-TOKEN-05` is.
 - [x] `ATM-TOKEN-22` `[reference]` `[seam]` —
   **Custom tones from a BaseSystem must resolve through role, flat, then surface-only lookup, and print their own custom properties.**
   Station `ATM-TOKEN-22`. A custom `baseSystem.json` (`colors.brand` plus four tones) and four `css()` calls. `brand/hush` (flat leaf) uses `var(--tones-hush)` for both `bg` and `borderColor`; `brand/medium` (surface light 12%, dark 16%) uses `var(--tones-medium-surface)`; `borderColor: 'brand/wash'` (surface-only leaf) falls back to `var(--tones-wash-surface)`. The tokens layer prints `--tones-medium-surface: 12%` and `16%` under the dark selector. `brand/arc` is a fraction (`0.1`), not a percentage, so it stays raw with exactly one `ATM-W-UNKNOWN-TONE` warning. The warning offers no did-you-mean: `arc` is declared, so it is not a misspelling (`suggestion_candidates` in `tones.rs`, pinned by `declared_unusable_tone_offers_only_the_fix_line`). A project's own tone scale reaches the compiler only through a BaseSystem, so the lookup order must hold there too.
 - [x] `ATM-TOKEN-23` `[reference]` `[seam]` —
   **Paths that tones never take (negated bases, CSS colour keywords, non-colour props) must keep their pre-tones output and diagnostic.**
-  Station `ATM-TOKEN-23`. `color: '-blue.500/medium'`, `bg: 'white/medium'`, `borderColor: 'transparent/medium'`, and `boxShadow: 'blue.500/medium'`. Assert no utility names a tone variable and each value paints raw under the diagnostic its path already raised: `ATM-W-UNKNOWN-TOKEN-PATH` (negated), `ATM-W-UNKNOWN-COLOR` twice (keywords), and `ATM-W-MALFORMED-OPACITY` (bare `boxShadow`). The engine's unit tests `negated_tone_is_untouched` and `colour_keyword_never_takes_the_tone_path` pin the same outputs. The four raw declarations are grammar-quarantined under the token-passthrough policy in `tests/css-quarantine.ts`, as `ATM-TOKEN-05` and `ATM-TOKEN-06` are.
+  Station `ATM-TOKEN-23`. `color: '-blue.500/medium'`, `bg: 'white/medium'`, `borderColor: 'transparent/medium'`, and `boxShadow: 'blue.500/medium'`. Assert no utility names a tone variable and each value paints raw under the diagnostic its path already raised: `ATM-W-UNKNOWN-TOKEN-PATH` (negated), `ATM-W-UNKNOWN-COLOR` twice (keywords), and `ATM-W-MALFORMED-OPACITY` (bare `boxShadow`). The engine's unit tests `negated_tone_is_untouched` and `colour_keyword_never_takes_the_tone_path` pin the same outputs. The four raw declarations are grammar-quarantined under the token-passthrough policy in `tests/harness/css-quarantine.ts`, as `ATM-TOKEN-05` and `ATM-TOKEN-06` are.
 
 ### BaseSystem Spec Validation
 
@@ -900,10 +900,10 @@ compiler contract.
   Station `ATM-FORBID-05`. `border.rs` / `dimensional.rs` / `tokens/mod.rs` must not grow `BORDER_CONFIGS` or hardcoded color props.
 - [x] `ATM-FORBID-06` `[forbidden]` `[seam]` —
   **The test harness must not reimplement the namer or the escaper.**
-  Assert that no TypeScript in `tests/` or `js/` constructs a class name or a CSS selector from an atom. The harness must obtain selectors from the compiler's own output, and `classSelector` in `tests/helpers.ts` — a regex that re-escaped class names in TypeScript (it lived at lines 149–151, not the 127–129 cited in an earlier draft of this case) — is deleted. A second escaper in the harness is the same split-brain `ATM-FORBID-03` forbids in the product, and it is worse here: because the harness escaped exactly the way the Rust denylist does, both sides agreed on an invalid selector and `ATM-GHOST-01` passed. This is precisely how `.2xl\:p_6r` became a blessed golden. Ghost membership is now `css-tree` class selectors inside `@layer utilities`.
+  Assert that no TypeScript in `tests/` or `js/` constructs a class name or a CSS selector from an atom. The harness must obtain selectors from the compiler's own output, and `classSelector` in `tests/harness/helpers.ts` — a regex that re-escaped class names in TypeScript (it lived at lines 149–151, not the 127–129 cited in an earlier draft of this case) — is deleted. A second escaper in the harness is the same split-brain `ATM-FORBID-03` forbids in the product, and it is worse here: because the harness escaped exactly the way the Rust denylist does, both sides agreed on an invalid selector and `ATM-GHOST-01` passed. This is precisely how `.2xl\:p_6r` became a blessed golden. Ghost membership is now `css-tree` class selectors inside `@layer utilities`.
 - [x] `ATM-FORBID-07` `[forbidden]` `[seam]` —
   **No golden may contain machine-specific state.**
-  Assert that no file under `tests/cases/*/output/` contains an absolute path, a home directory, a hostname, or a timestamp. The golden runner normalises the case root to a relative path, and `tests/portability.test.ts` fails the suite if any committed output embeds machine-specific state or an absolute diagnostics path.
+  Assert that no file under `tests/cases/*/output/` contains an absolute path, a home directory, a hostname, or a timestamp. The golden runner normalises the case root to a relative path, and `tests/suites/portability.test.ts` fails the suite if any committed output embeds machine-specific state or an absolute diagnostics path.
 
 ### Engine Parity & Scale
 
@@ -924,7 +924,7 @@ compiler contract.
   Station `ATM-SEAM-07`. Compiling the fixture plus a file of 500 distinct harvestable hexes and one color hole grows the sheet by 500 rules (asserted first, so a vacuous plus-compile fails loud) while `JSON.stringify(runtime)` is byte-identical and the plan count grows by exactly 500.
 - [x] `ATM-SEAM-08` `[reference]` `[seam]` —
   **The runtime namer must reproduce every namer golden.**
-  Station `ATM-SEAM-08`. One block per committed `tests/namer-goldens/*.json` — six lexical functions, nine procedures, then the composed `name()` cases — each run as `fn(input, tables, system)` against the compiled tables, so a drift names the exact function. Beneath it the Cargo guard `namer_goldens_are_fresh` (`src/goldens/`) regenerates every file in memory and diffs; `NAMER_UPDATE_GOLDENS=1` is the only rewrite path, and a re-bless after an intentional naming-rule change carries a `NAMER_RULES_VERSION` bump. Per the SPEC legend the guard is not a tick; the tick is this Vitest case.
+  Station `ATM-SEAM-08`. One block per committed `tests/goldens/namer/*.json` — six lexical functions, nine procedures, then the composed `name()` cases — each run as `fn(input, tables, system)` against the compiled tables, so a drift names the exact function. Beneath it the Cargo guard `namer_goldens_are_fresh` (`src/goldens/`) regenerates every file in memory and diffs; `NAMER_UPDATE_GOLDENS=1` is the only rewrite path, and a re-bless after an intentional naming-rule change carries a `NAMER_RULES_VERSION` bump. Per the SPEC legend the guard is not a tick; the tick is this Vitest case.
 
 `ATM-SEAM-04` is reserved and undefined: no case folder, no SPEC prose. The ID is cited as Overmatch's (`docs/MISSIONS/COMPLETED/STYLETRACE.md`), which defines nothing under it — do not go hunting, and do not reuse the number. `ATM-SEAM-05` (StyleTrace's: the result carries `tracedJsxHosts`) exists as a case folder only, with no SPEC prose row.
 - [x] `ATM-SCAN-01` `[reference]` `[seam]` —
@@ -944,7 +944,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 
 | Contract ID | Status | Harness | Proof Source |
 | :--- | :--- | :--- | :--- |
-| `ATM-GHOST-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (css-tree `@layer utilities`) |
+| `ATM-GHOST-01` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` (css-tree `@layer utilities`) |
 | `ATM-GHOST-02` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-02/` + differential `NEO-NAMER-01` |
 | `ATM-GHOST-03` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-03/` |
 | `ATM-GHOST-05` | `[x]` | `[seam]` | `tests/cases/ATM-GHOST-05/` |
@@ -1095,7 +1095,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-07` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-07/` |
 | `ATM-TOKEN-08` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-08/` |
 | `ATM-TOKEN-09` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-09/` |
-| `ATM-TOKEN-10` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-10/` + `tests/token10.test.ts` |
+| `ATM-TOKEN-10` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-10/` + `tests/suites/token10.test.ts` |
 | `ATM-TOKEN-11` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-11/` |
 | `ATM-TOKEN-12` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-12/` |
 | `ATM-TOKEN-13` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-13/` |
@@ -1120,7 +1120,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-STATIC-01` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-01/` |
 | `ATM-STATIC-02` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-02/` |
 | `ATM-STATIC-03` | `[x]` | `[seam]` | `tests/cases/ATM-STATIC-03/` |
-| `ATM-LAYER-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
+| `ATM-LAYER-01` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` |
 | `ATM-LAYER-02` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-02/` |
 | `ATM-LAYER-03` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-03/` |
 | `ATM-LAYER-04` | `[x]` | `[seam]` | `tests/cases/ATM-LAYER-04/` |
@@ -1154,15 +1154,15 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-FORBID-03` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-03/` + differential `NEO-NAMER-01` |
 | `ATM-FORBID-04` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-04/` |
 | `ATM-FORBID-05` | `[x]` | `[seam]` | `tests/cases/ATM-FORBID-05/` |
-| `ATM-FORBID-06` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` (`classSelector` deleted) |
-| `ATM-FORBID-07` | `[x]` | `[seam]` | `tests/portability.test.ts` |
+| `ATM-FORBID-06` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` (`classSelector` deleted) |
+| `ATM-FORBID-07` | `[x]` | `[seam]` | `tests/suites/portability.test.ts` |
 | `ATM-ORDER-01` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-01/` |
 | `ATM-ORDER-02` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-02/` |
 | `ATM-ORDER-03` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-03/` |
 | `ATM-ORDER-04` | `[x]` | `[seam]` | `tests/cases/ATM-ORDER-04/` |
-| `ATM-ORDER-05` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
-| `ATM-ORDER-06` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` |
-| `ATM-VALID-01` | `[x]` | `[seam]` | `tests/helpers.ts` `atomicGauges` + `testing/css.ts` writer guard |
+| `ATM-ORDER-05` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` |
+| `ATM-ORDER-06` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` |
+| `ATM-VALID-01` | `[x]` | `[seam]` | `tests/harness/helpers.ts` `atomicGauges` + `testing/css.ts` writer guard |
 | `ATM-VALID-03` | `[x]` | `[seam]` | `tests/cases/ATM-VALID-03/` |
 | `ATM-MERGE-01` | `[x]` | `[seam]` | `tests/cases/ATM-MERGE-01/` |
 | `ATM-MERGE-02` | `[x]` | `[seam]` | `tests/cases/ATM-MERGE-02/` |
@@ -1170,12 +1170,12 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-UNIT-01` | `[x]` | `[seam]` | `tests/cases/ATM-UNIT-01/` |
 | `ATM-UNIT-02` | `[x]` | `[seam]` | `tests/cases/ATM-UNIT-02/` |
 | `ATM-UNIT-03` | `[x]` | `[seam]` | `tests/cases/ATM-UNIT-03/` |
-| `ATM-SEAM-01` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-01/` + `tests/seam.test.ts` |
+| `ATM-SEAM-01` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-01/` + `tests/suites/seam.test.ts` |
 | `ATM-SEAM-02` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-02/` |
 | `ATM-SEAM-03` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-03/` |
 | `ATM-SEAM-06` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-06/` |
 | `ATM-SEAM-07` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-07/` |
-| `ATM-SEAM-08` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-08/` + `tests/namer-goldens/` |
+| `ATM-SEAM-08` | `[x]` | `[seam]` | `tests/cases/ATM-SEAM-08/` + `tests/goldens/namer/` |
 | `ATM-SCAN-01` | `[x]` | `[seam]` | `tests/cases/ATM-SCAN-01/` |
 | `ATM-HARVEST-01` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-01/` |
 | `ATM-HARVEST-02` | `[x]` | `[seam]` | `tests/cases/ATM-HARVEST-02/` |
@@ -1196,7 +1196,7 @@ Order is the recommended landing order.
 
 `ATM-GHOST-04`
 
-`ATM-FORBID-07` (portable goldens plus `tests/portability.test.ts`) and
+`ATM-FORBID-07` (portable goldens plus `tests/suites/portability.test.ts`) and
 `ATM-VALID-01` (the standing CSS gauge and golden-writer guard) already landed.
 `ATM-GHOST-04` stays open until the injectivity quarantine is empty.
 

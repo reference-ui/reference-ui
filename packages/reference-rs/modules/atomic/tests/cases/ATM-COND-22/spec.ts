@@ -5,7 +5,7 @@
  * scoping intact. Selector mirrors v2 `nested_selector_parity.rs:389`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const WHEN = '&:where(:has(> [data-slot="icon"]:only-child, > svg:only-child))'
 

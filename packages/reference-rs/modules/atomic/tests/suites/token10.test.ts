@@ -6,12 +6,12 @@
  * that every style plan carries a non-empty system and neither stylesheet mentions data-panda-theme.
  */
 import { describe, expect, it } from 'vitest'
-import { compileSync } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
-import invalidVersionJson from '../../../contracts/fixtures/evaluated-system-spec-invalid-version.json'
-import unknownFieldJson from '../../../contracts/fixtures/evaluated-system-spec-unknown-field.json'
-import { LAYER_PREAMBLE } from './helpers.js'
+import { compileSync } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import evaluatedSystemSpecJson from '../../../../contracts/fixtures/evaluated-system-spec.json'
+import invalidVersionJson from '../../../../contracts/fixtures/evaluated-system-spec-invalid-version.json'
+import unknownFieldJson from '../../../../contracts/fixtures/evaluated-system-spec-unknown-field.json'
+import { LAYER_PREAMBLE } from '../harness/helpers.js'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 

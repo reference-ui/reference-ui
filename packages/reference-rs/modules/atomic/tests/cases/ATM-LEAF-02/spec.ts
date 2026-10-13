@@ -4,7 +4,7 @@
  * leaves. Undefined omission is ATM-LEAF-03.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-02',

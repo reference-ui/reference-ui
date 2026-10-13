@@ -4,7 +4,7 @@
  * selector, never a `:@supports` selector fragment. Supports sorts first.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const WHEN = '@supports (display: grid)'

@@ -5,7 +5,7 @@
  * keeps the four-member lib twin list. All three wants resolve to plans.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const ESC = '\\@reference-ui\\/lib'

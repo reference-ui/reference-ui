@@ -17,7 +17,7 @@ use serde_json::{json, Value};
 use crate::runtime::NAMER_RULES_VERSION;
 
 /// Committed golden directory, relative to the crate manifest.
-const GOLDEN_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/namer-goldens");
+const GOLDEN_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/goldens/namer");
 /// The only rewrite path: set to `1` to re-bless the committed files.
 const UPDATE_ENV: &str = "NAMER_UPDATE_GOLDENS";
 

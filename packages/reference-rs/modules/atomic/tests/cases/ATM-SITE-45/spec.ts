@@ -14,7 +14,7 @@ import {
   hasWant,
   siteWants,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 function tokenWant(result: unknown, prop: string, path: string): boolean {
   const wants = (result as { wants?: unknown[] }).wants ?? []

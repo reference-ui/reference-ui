@@ -6,7 +6,7 @@
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-MERGE-01',

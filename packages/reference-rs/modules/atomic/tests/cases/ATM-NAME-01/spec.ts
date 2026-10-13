@@ -3,7 +3,7 @@
  * `<system>__mt_2r`, `<system>__p_10px`, `<system>__c_blue.600`.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-NAME-01',

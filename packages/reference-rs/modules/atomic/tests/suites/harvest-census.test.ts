@@ -15,16 +15,22 @@ import { fileURLToPath } from 'node:url'
 import zlib from 'node:zlib'
 import { beforeAll, describe, expect, it } from 'vitest'
 import * as csstree from 'css-tree'
-import { compile } from '../js/index.js'
-import type { CompileResult, Want } from '../js/types.js'
-import { LIB_SYSTEM_SPEC } from './helpers.js'
-import { buildModel, type ModelWhen } from './harvest-model.js'
-import { publishRuntimeBundle } from '../../../../reference-neo/src/packager/styled.ts'
-import { publishReactBundle } from '../../../../reference-neo/src/packager/react.ts'
+import { compile } from '../../js/index.js'
+import type { CompileResult, Want } from '../../js/types.js'
+import { LIB_SYSTEM_SPEC } from '../harness/helpers.js'
+import { buildModel, type ModelWhen } from '../harness/harvest-model.js'
+import { publishRuntimeBundle } from '../../../../../reference-neo/src/packager/styled.ts'
+import { publishReactBundle } from '../../../../../reference-neo/src/packager/react.ts'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const FIXTURE_SRC = path.join(HERE, 'fixtures', 'harvest-enterprise', 'src')
-const CENSUS_JSON = path.join(HERE, 'fixtures', 'harvest-enterprise', 'pool-census.json')
+const FIXTURE_SRC = path.join(HERE, '..', 'fixtures', 'harvest-enterprise', 'src')
+const CENSUS_JSON = path.join(
+  HERE,
+  '..',
+  'fixtures',
+  'harvest-enterprise',
+  'pool-census.json'
+)
 
 /** Mission M-cells: classes / raw / gzip-6 / brotli-11. Variants pin classes + raw only. */
 const M_CELLS: { total: 300 | 500; whens: ModelWhen[]; cells: number[] }[] = [

@@ -6,8 +6,8 @@
  * a shared sm/md/lg breakpoint trio ordered by parsed width, not string order.
  */
 import { describe, expect, it } from 'vitest'
-import { compileSync } from '../js/index.js'
-import { layerBody, LIB_SYSTEM_SPEC } from './helpers.js'
+import { compileSync } from '../../js/index.js'
+import { layerBody, LIB_SYSTEM_SPEC } from '../harness/helpers.js'
 
 function compileRecipe(source: string): string {
   const result = compileSync({

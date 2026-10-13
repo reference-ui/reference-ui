@@ -5,7 +5,7 @@
  * `nested_selector_parity.rs:169/:224/:301/:312/:334/:356/:411/:422`.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const ARMS: Array<[when: string, color: string, pattern: RegExp]> = [
   [

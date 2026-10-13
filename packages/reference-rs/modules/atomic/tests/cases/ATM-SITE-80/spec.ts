@@ -12,7 +12,7 @@ import {
   hasWant,
   siteWants,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-80',

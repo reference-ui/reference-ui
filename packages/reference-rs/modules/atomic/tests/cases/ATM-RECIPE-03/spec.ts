@@ -3,7 +3,7 @@
  * the host are utilities. variant stays runtime-owned (ATM-COND-06).
  */
 import { expect } from 'vitest'
-import { hasWant, layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-03',

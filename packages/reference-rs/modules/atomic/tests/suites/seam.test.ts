@@ -12,12 +12,12 @@ import {
   mergeStylePlans,
   serializeCanonicalJson,
   serializeLookupKey,
-} from '../js/index.js'
-import type { EvaluatedSystemSpec, RuntimeStylePlan } from '../js/types.js'
-import { layerClassNames, LIB_SYSTEM_SPEC } from './helpers.js'
-import runtimeStylePlansJson from '../../../contracts/fixtures/runtime-style-plans.json'
-import compileResultJson from '../../../contracts/fixtures/compile-result.json'
-import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
+} from '../../js/index.js'
+import type { EvaluatedSystemSpec, RuntimeStylePlan } from '../../js/types.js'
+import { layerClassNames, LIB_SYSTEM_SPEC } from '../harness/helpers.js'
+import runtimeStylePlansJson from '../../../../contracts/fixtures/runtime-style-plans.json'
+import compileResultJson from '../../../../contracts/fixtures/compile-result.json'
+import evaluatedSystemSpecJson from '../../../../contracts/fixtures/evaluated-system-spec.json'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 

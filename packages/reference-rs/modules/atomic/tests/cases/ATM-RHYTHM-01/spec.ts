@@ -3,7 +3,7 @@
  * fractions, and authored negatives live in ATM-RHYTHM-02/03/05.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RHYTHM-01',

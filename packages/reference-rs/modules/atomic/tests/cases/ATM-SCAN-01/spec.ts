@@ -14,7 +14,7 @@ import {
   LIB_SYSTEM_SPEC,
   type AtomicCaseSpec,
   type CompileResult,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const CASE = 'ATM-SCAN-01'
 const RED = 'red.500'

@@ -7,7 +7,7 @@
  * the default channel must carry none of these by contract.
  */
 import { expect } from 'vitest'
-import { compileCase, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 /** Compiler-family codes: true facts that prove no exact runtime miss. */
 function isChannelItem(code: string): boolean {

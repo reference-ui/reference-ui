@@ -3,7 +3,7 @@
  * values match the selectors printed in the stylesheet. Goldens are css.json.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-GHOST-02',

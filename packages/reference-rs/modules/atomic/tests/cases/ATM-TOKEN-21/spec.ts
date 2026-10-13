@@ -6,7 +6,7 @@
  * ATM-TOKEN-12), and the valid sibling still emits.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 import type { Diagnostic } from '../../../js/types.js'
 
 // The compiler's help lines ride the native diagnostic but are not on the TS type.

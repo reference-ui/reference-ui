@@ -15,9 +15,9 @@ import {
   layerClassNames,
   noGhostClasses,
   type CompileResult,
-} from './helpers.js'
-import { INJECTIVITY_QUARANTINE } from './injectivity-quarantine.js'
-import type { StationContext } from '../../../testing/index.js'
+} from '../harness/helpers.js'
+import { INJECTIVITY_QUARANTINE } from '../harness/injectivity-quarantine.js'
+import type { StationContext } from '../../../../testing/index.js'
 
 describe('injectivity quarantine', () => {
   it('contains no station that now has unique class names', () => {

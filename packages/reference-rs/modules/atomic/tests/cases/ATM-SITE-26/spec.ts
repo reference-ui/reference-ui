@@ -4,7 +4,7 @@
  * bare arg with one runtime plan per want and zero diagnostics.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'red' },

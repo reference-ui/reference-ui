@@ -5,7 +5,7 @@
  * dead `text-gradient` property. Conditions fan out over all three atoms.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const GRADIENT = 'linear-gradient({colors.red.200}, {colors.blue.300})'

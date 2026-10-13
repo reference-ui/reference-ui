@@ -166,7 +166,7 @@ Put the generic parser wrapper in `packages/reference-rs/testing/css.ts` — tha
 directory *is* the reference-rs harness (`runner.ts`, `goldens.ts`,
 `normalizers.ts`), so it is not "outside atomic" in any meaningful sense, and
 other modules that emit CSS get it for free. Atomic-specific policy stays in
-`tests/helpers.ts` next to the existing gauges.
+`tests/harness/helpers.ts` next to the existing gauges.
 
 ```ts
 // testing/css.ts — generic, no atomic knowledge
@@ -176,7 +176,7 @@ export function validateCss(sheet: string): CssProblem[]
 ```
 
 ```ts
-// tests/helpers.ts — atomic policy, as a standing gauge
+// tests/harness/helpers.ts — atomic policy, as a standing gauge
 export const atomicGauges = [
   cssIsValid,        // ATM-VALID-01 / ATM-VALID-02
   noGhostClasses,    // ATM-GHOST-01 (tightened, see chefs_kiss.md Move 3)
@@ -199,7 +199,7 @@ be gated behind fixing all of them. Ship it with an explicit, ugly, shrinking
 quarantine:
 
 ```ts
-// tests/css-quarantine.ts
+// tests/harness/css-quarantine.ts
 // Known-invalid output. Every entry is a bug with an owner. This list may only shrink.
 export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-SITE-09': ['border: true'],                          // ATM-VALID-02

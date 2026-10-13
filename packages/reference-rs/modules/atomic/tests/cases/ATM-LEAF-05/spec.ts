@@ -3,7 +3,7 @@
  * skip; a ternary inside an item scoops both arms onto that when.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-05',

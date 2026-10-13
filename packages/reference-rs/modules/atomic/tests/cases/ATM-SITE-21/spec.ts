@@ -4,7 +4,7 @@
  * the `undefined` arm stays silent with zero diagnostics.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const HOVER: string[] = ['_hover']

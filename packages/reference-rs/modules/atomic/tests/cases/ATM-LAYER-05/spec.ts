@@ -2,7 +2,7 @@
  * Keyframes emission inside @layer global with from/to and percentage selectors.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-05',

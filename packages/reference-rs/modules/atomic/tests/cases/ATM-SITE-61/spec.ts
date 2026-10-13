@@ -8,7 +8,7 @@
  * `calls.rs` `nested_unwraps_and_folding`, `jsx.rs` wrap arms.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 

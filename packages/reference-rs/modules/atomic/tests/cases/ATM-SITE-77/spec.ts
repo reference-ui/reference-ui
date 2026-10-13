@@ -5,7 +5,7 @@
  * value diagnose with the prop named.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const EXPECTED_WANTS: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'red' },

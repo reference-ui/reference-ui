@@ -9,7 +9,7 @@
  * the default channel must carry no unknown-value refusals by contract.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 /** Unknown-value refusal codes: dynamic shapes and unfoldable positions. */
 function isUnknownValue(code: string): boolean {

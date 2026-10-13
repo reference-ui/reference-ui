@@ -13,7 +13,7 @@ import {
   hasWant,
   LIB_SYSTEM_SPEC,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const CASE = 'ATM-SITE-57'
 

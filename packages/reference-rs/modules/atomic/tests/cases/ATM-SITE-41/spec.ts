@@ -12,7 +12,7 @@ import {
   hasWant,
   layerClassNames,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 const RED_CLASS = `${SYSTEM}__c_red`

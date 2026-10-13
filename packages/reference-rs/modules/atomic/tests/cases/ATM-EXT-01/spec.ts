@@ -7,7 +7,7 @@
  * longhands) keep working. One JSX leg proves the same funnel.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const REFUSED: Array<{ prop: string; deadDecl: string }> = [
   { prop: 'translateX', deadDecl: 'translate-x:' },

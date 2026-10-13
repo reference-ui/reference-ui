@@ -5,7 +5,7 @@
  * while every runtime table still builds.
  */
 import { expect } from 'vitest'
-import { layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SM_QUERY = '@container (min-width: 640px)'
 const MD_QUERY = '@container (min-width: 768px)'

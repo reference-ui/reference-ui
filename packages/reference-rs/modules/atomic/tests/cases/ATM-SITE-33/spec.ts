@@ -6,7 +6,12 @@
  * info. Refusals diagnose with a code and keep every static sibling.
  */
 import { expect } from 'vitest'
-import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  getWantsForProp,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean; when?: string[] }> =
   [

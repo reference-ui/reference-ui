@@ -6,7 +6,7 @@
  * tone is not a percentage: it stays raw and warns once.
  */
 import { expect } from 'vitest'
-import { layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-22',

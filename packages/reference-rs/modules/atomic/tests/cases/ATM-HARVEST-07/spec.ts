@@ -6,7 +6,12 @@
  * the undeclared word still never mints a color.
  */
 import { expect } from 'vitest'
-import { compileCase, harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  harvestWants,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-07',

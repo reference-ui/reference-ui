@@ -6,7 +6,7 @@
  * canonicalizes, so each twin pair shares one runtime class.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const GRID = '"preview name delete" "preview size delete"'
 

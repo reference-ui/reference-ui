@@ -7,7 +7,13 @@
  * part while static siblings extract.
  */
 import { expect } from 'vitest'
-import { compileCase, harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const FOLDS: Array<{ prop: string; value: string | number | boolean }> = [
   { prop: 'width', value: '4px' },

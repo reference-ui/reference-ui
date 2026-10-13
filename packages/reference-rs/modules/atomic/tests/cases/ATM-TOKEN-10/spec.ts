@@ -4,7 +4,7 @@
  * seam must refuse it by name with an error diagnostic and a preamble-only sheet.
  */
 import { expect } from 'vitest'
-import { LAYER_PREAMBLE, type AtomicCaseSpec } from '../../helpers.js'
+import { LAYER_PREAMBLE, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-10',

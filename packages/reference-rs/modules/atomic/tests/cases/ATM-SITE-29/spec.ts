@@ -5,7 +5,7 @@
  * like inline objects. Zero diagnostics throughout.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const READS: Array<{ prop: string; value: string | number; when?: string[] }> = [
   { prop: 'color', value: '#f00' },

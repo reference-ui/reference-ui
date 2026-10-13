@@ -3,7 +3,12 @@
  * ternary arms diagnose; static neighbours and the literal arm still become wants.
  */
 import { expect } from 'vitest'
-import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  getWantsForProp,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-07',

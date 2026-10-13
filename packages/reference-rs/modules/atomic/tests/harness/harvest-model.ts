@@ -15,9 +15,10 @@ import { fileURLToPath } from 'node:url'
 import zlib from 'node:zlib'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const CANON = path.resolve(HERE, '..', '..', 'canon', 'src')
+const CANON = path.resolve(HERE, '..', '..', '..', 'canon', 'src')
 const VALIDITY = path.resolve(
   HERE,
+  '..',
   '..',
   'src',
   'extract',

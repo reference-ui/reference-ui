@@ -12,7 +12,7 @@ import {
   hasWant,
   siteWants,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'red' },

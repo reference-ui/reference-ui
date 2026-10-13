@@ -4,7 +4,7 @@
  * zero stays bare (0, not 0px), and custom properties stay unitless.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-UNIT-01',

@@ -7,7 +7,12 @@
  * their clones too.
  */
 import { expect } from 'vitest'
-import { compileCase, getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  getWantsForProp,
+  hasWant,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-46',

@@ -150,7 +150,7 @@ for responsive members. `splitSlot` / `evictFamilyLosers` /
 The class stem passes only through six explicit functions —
 `src/resolve/lexical.rs` on the compiler side,
 `js/namer/lexical.ts` on the runtime side — never a `std` or builtin
-default. One golden per function (`tests/namer-goldens/01–06`), plus a
+default. One golden per function (`tests/goldens/namer/01–06`), plus a
 compiled case per divergence (`ATM-NAME-08`).
 
 - **L1 `is_structural_whitespace`** — the 25-point Rust `White_Space`

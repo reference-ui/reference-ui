@@ -6,7 +6,7 @@
  * the refused color position below.
  */
 import { expect } from 'vitest'
-import { harvestWants, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { harvestWants, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const EXPECTED: Array<{ prop: string; value: string | number }> = [
   { prop: 'color', value: 'red' },

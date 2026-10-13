@@ -3,7 +3,7 @@
  * includes n300 share one atom / one class. n100 still prints from the dump.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-STATIC-02',

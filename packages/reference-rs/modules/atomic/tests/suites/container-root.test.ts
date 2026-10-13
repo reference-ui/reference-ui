@@ -5,9 +5,9 @@
  * emitting its `@container` rules.
  */
 import { describe, expect, it } from 'vitest'
-import { compile } from '../js/index.js'
-import type { Diagnostic, EvaluatedSystemSpec } from '../js/types.js'
-import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
+import { compile } from '../../js/index.js'
+import type { Diagnostic, EvaluatedSystemSpec } from '../../js/types.js'
+import evaluatedSystemSpecJson from '../../../../contracts/fixtures/evaluated-system-spec.json'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 

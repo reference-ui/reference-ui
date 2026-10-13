@@ -6,7 +6,7 @@
  * through compiled plans; these cases pin the boundary grammar.
  */
 import { describe, expect, it } from 'vitest'
-import { mergeDeclarations, splitSlot } from '../js/index.js'
+import { mergeDeclarations, splitSlot } from '../../js/index.js'
 
 describe('splitSlot', () => {
   it('reads bare and responsive slots', () => {

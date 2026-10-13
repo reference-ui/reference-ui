@@ -3,7 +3,7 @@
  * CSS declaration. No hashed whole-object classes.
  */
 import { expect } from 'vitest'
-import { layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-ATOM-04',

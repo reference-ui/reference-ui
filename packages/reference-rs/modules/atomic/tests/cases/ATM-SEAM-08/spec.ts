@@ -2,7 +2,7 @@
  * Namer-golden station (ATM-SEAM-08). The compiler generates one namer golden
  * per lexical function and per procedure — an input to output file the runtime
  * namer must reproduce exactly. This station runs one block per committed
- * file in tests/namer-goldens, lexical functions first, then each procedure,
+ * file in tests/goldens/namer, lexical functions first, then each procedure,
  * then the composed name() cases, so a drift names the exact function that
  * moved. The compiler namer stays the oracle: this compile's plans anchor it.
  */
@@ -10,10 +10,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { expect } from 'vitest'
-import type { AtomicCaseSpec } from '../../helpers.js'
+import type { AtomicCaseSpec } from '../../harness/helpers.js'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const GOLDEN_DIR = path.resolve(HERE, '..', '..', 'namer-goldens')
+const GOLDEN_DIR = path.resolve(HERE, '..', '..', 'goldens', 'namer')
 
 interface NamerGolden {
   /** Runtime namer export under test, e.g. collapseWhitespace or name. */

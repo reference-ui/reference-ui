@@ -9,7 +9,7 @@ import {
   createStationSuite,
   normalizeSystemLayers,
   rewriteAbsoluteRoot,
-} from '../../../testing/index.js'
+} from '../../../../testing/index.js'
 import {
   atomicGauges,
   atomicGoldens,
@@ -17,9 +17,9 @@ import {
   CASES_DIR,
   CASE_FOLDER,
   type CompileResult,
-} from './helpers.js'
-import { SYSTEM_EMISSION_ANCHOR } from './package-layers.js'
-import { quarantineFor } from './css-quarantine.js'
+} from '../harness/helpers.js'
+import { SYSTEM_EMISSION_ANCHOR } from '../harness/package-layers.js'
+import { quarantineFor } from '../harness/css-quarantine.js'
 
 createStationSuite<CompileResult>({
   suiteName: 'atomic cases',

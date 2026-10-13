@@ -3,7 +3,7 @@
  * escaped in CSS selectors while runtime class strings stay clean.
  */
 import { expect } from 'vitest'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-NAME-04',

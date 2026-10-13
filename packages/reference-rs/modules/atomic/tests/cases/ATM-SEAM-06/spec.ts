@@ -6,7 +6,7 @@
  * the oracle behind the differential gate.
  */
 import { expect } from 'vitest'
-import { compileCase, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 function sorted(names: string[]): string[] {
   return [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))

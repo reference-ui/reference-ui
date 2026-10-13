@@ -3,7 +3,7 @@
  * reference, `mb: '4'` the plain reference, and the class keeps the minus.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-07',

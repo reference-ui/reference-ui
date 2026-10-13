@@ -5,7 +5,7 @@
  * references a tone custom property.
  */
 import { expect } from 'vitest'
-import { layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-TOKEN-23',

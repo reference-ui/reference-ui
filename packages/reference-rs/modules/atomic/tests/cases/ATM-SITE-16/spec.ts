@@ -4,7 +4,7 @@
  * non-source extensions are never compiled.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-16',

@@ -6,7 +6,7 @@
  * escaper unit tests.
  */
 import { expect } from 'vitest'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-NAME-06',

@@ -18,7 +18,7 @@ import {
   layerClassNames,
   siteWants,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const SYSTEM = '@reference-ui/lib'
 

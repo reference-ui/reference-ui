@@ -4,7 +4,7 @@
  * author order. In-selector nesting is the unchanged control.
  */
 import { expect } from 'vitest'
-import type { AtomicCaseSpec } from '../../helpers.js'
+import type { AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LAYER-12',

@@ -8,7 +8,7 @@
  * declarations and never caught this class of mint.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const GIANT = '9'.repeat(309)
 

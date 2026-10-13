@@ -12,7 +12,7 @@ import {
   LAYER_PREAMBLE,
   LIB_SYSTEM_SPEC,
   type AtomicCaseSpec,
-} from '../../helpers.js'
+} from '../../harness/helpers.js'
 
 const CASE = 'ATM-SEAM-02'
 

@@ -3,7 +3,7 @@
  * `<system>__mt_2r!` and a system-qualified `.mt_2r\!` selector.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-NAME-03',

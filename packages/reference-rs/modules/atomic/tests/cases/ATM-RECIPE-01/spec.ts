@@ -3,7 +3,7 @@
  * class in @layer recipes. Those selectors must not appear in utilities.
  */
 import { expect } from 'vitest'
-import { hasWant, layerBody, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, layerBody, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-RECIPE-01',

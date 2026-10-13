@@ -6,7 +6,7 @@
  * its position and keeps sibling args.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 interface ExpectedDiagnostic {
   file: string

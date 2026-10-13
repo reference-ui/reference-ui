@@ -5,7 +5,7 @@
  * hyphenated dead properties.
  */
 import { expect } from 'vitest'
-import { compileCase, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const SYSTEM = 'site-unknown-prop-policy'
 

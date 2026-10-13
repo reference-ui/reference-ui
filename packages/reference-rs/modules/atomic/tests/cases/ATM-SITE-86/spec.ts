@@ -5,7 +5,7 @@
  * and one runtime plan, and the value union still scoops its kept leaf.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-86',

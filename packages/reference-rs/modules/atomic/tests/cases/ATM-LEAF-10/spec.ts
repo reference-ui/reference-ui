@@ -4,7 +4,7 @@
  * string value stays literal and unimportant.
  */
 import { expect } from 'vitest'
-import { getWantsForProp, type AtomicCaseSpec } from '../../helpers.js'
+import { getWantsForProp, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-LEAF-10',

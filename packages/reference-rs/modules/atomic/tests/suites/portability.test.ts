@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CASES_DIR, CASE_FOLDER } from './helpers.js'
+import { CASES_DIR, CASE_FOLDER } from '../harness/helpers.js'
 
 const MACHINE_MARKERS = [os.homedir(), '/Users/', '/home/', os.hostname()].filter(
   marker => marker.length > 1

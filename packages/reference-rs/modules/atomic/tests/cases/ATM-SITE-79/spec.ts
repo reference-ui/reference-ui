@@ -6,7 +6,13 @@
  * the miss stays visible and the sink infos zero.
  */
 import { expect } from 'vitest'
-import { compileCase, harvestWants, hasWant, siteWants, type AtomicCaseSpec } from '../../helpers.js'
+import {
+  compileCase,
+  harvestWants,
+  hasWant,
+  siteWants,
+  type AtomicCaseSpec,
+} from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-SITE-79',

@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect } from 'vitest'
 import { compile } from '../../../js/index.js'
-import { LIB_SYSTEM_SPEC, type AtomicCaseSpec } from '../../helpers.js'
+import { LIB_SYSTEM_SPEC, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const HEXES = 500
 

@@ -12,20 +12,20 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
 import * as csstree from 'css-tree'
-import { compile } from '../js/index.js'
-import type { CompileRequest, CompileResult, VirtualSource } from '../js/types.js'
-import type { EvaluatedSystemSpec } from '../../../contracts/types.js'
-import libSystemSpecJson from './fixtures/lib-system-spec.json'
+import { compile } from '../../js/index.js'
+import type { CompileRequest, CompileResult, VirtualSource } from '../../js/types.js'
+import type { EvaluatedSystemSpec } from '../../../../contracts/types.js'
+import libSystemSpecJson from '../fixtures/lib-system-spec.json'
 import type {
   GoldenDefinition,
   StandingGauge,
   StationContext,
-} from '../../../testing/index.js'
+} from '../../../../testing/index.js'
 import {
   unexpectedCssProblems,
   validateCss,
   type CssProblem,
-} from '../../../testing/css.js'
+} from '../../../../testing/css.js'
 import { quarantineFor } from './css-quarantine.js'
 import { INJECTIVITY_QUARANTINE } from './injectivity-quarantine.js'
 import { assertExemptionsFresh, isUnmatchable } from './unmatchable-classes.js'
@@ -37,11 +37,11 @@ export type {
   RecipeTable,
   RecipeRuntimeTable,
   RecipeMatch,
-} from '../js/types.js'
+} from '../../js/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export const CASES_DIR = path.resolve(__dirname, 'cases')
+export const CASES_DIR = path.resolve(__dirname, '..', 'cases')
 export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})$/
 export { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK } from './package-layers.js'
 

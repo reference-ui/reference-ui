@@ -5,7 +5,7 @@
  * starts one; the bare NAME-06 hex form stays proven by escaper unit tests.
  */
 import { expect } from 'vitest'
-import { hasWant, type AtomicCaseSpec } from '../../helpers.js'
+import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const WIDTHS = [
   ['sm', '640', '2r'],

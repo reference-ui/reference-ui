@@ -29,7 +29,7 @@ They share one root cause, and it is not carelessness. It is that **every one of
 these is a semantic property, and the entire test suite is structural.** A station
 asserts "a want was extracted", "a class was named", "that string appears in the
 sheet". None asserts "a browser would apply this". `ATM-GHOST-01`, our declared
-P0, used to be a substring search — and `tests/helpers.ts` reimplemented the
+P0, used to be a substring search — and `tests/harness/helpers.ts` reimplemented the
 escaper in TypeScript (it lived at lines 149–151, not 127–129), so the harness
 and the compiler agreed on an invalid selector and the gauge passed.
 
@@ -60,7 +60,7 @@ Nothing else is defended until this lands. Small, mechanical, unblocks everythin
    Owner: `ATM-FORBID-07`.
 2. **Add a CI job** running `pnpm agentrs c atomic && pnpm agentrs v atomic`,
    plus `base_system`. Keep the napi build as a separate artifact job.
-3. **Delete `tests/aliases.test.ts`** as a sibling suite — `tests/cases/README.md`
+3. **Delete `tests/suites/aliases.test.ts`** as a sibling suite — `tests/cases/README.md`
    forbids exactly this — and promote its two real proofs (custom breakpoint
    scales, refused aliases) into stations. They are currently the *only* seam
    coverage of custom breakpoint names, hiding in a file the convention bans.
@@ -77,7 +77,7 @@ Nothing else is defended until this lands. Small, mechanical, unblocks everythin
    inputs is **not defined in `lib_fixture()`**, so those stations emit inert CSS;
    and the token-passthrough policy in `ATM-TOKEN-02` / `ATM-SHORT-03` *specifies*
    invalid output (`border: borders.card`), which is a SPEC decision, not a bug fix.
-5. **Delete `classSelector` from `tests/helpers.ts`.** *(landed)* Have the ghost
+5. **Delete `classSelector` from `tests/harness/helpers.ts`.** *(landed)* Have the ghost
    gauge use selectors the compiler emitted, and tighten it to require the
    selector to be inside `@layer utilities` (the SPEC claim it currently skips).
    Owner: `ATM-FORBID-06`, `ATM-GHOST-01`.

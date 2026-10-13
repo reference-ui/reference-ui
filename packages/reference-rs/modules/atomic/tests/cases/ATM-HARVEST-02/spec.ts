@@ -4,7 +4,7 @@
  * still warn `DYNAMIC-TEMPLATE`, and each refused sink infos a zero count.
  */
 import { expect } from 'vitest'
-import { compileCase, type AtomicCaseSpec } from '../../helpers.js'
+import { compileCase, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-HARVEST-02',

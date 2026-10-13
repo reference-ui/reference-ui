@@ -5,10 +5,10 @@
  * Asserts responsive array mapping against the profile scale with authored names appended.
  */
 import { describe, expect, it } from 'vitest'
-import { compile } from '../js/index.js'
-import type { EvaluatedSystemSpec } from '../js/types.js'
-import evaluatedSystemSpecJson from '../../../contracts/fixtures/evaluated-system-spec.json'
-import { hasWant } from './helpers.js'
+import { compile } from '../../js/index.js'
+import type { EvaluatedSystemSpec } from '../../js/types.js'
+import evaluatedSystemSpecJson from '../../../../contracts/fixtures/evaluated-system-spec.json'
+import { hasWant } from '../harness/helpers.js'
 
 const specSystem = evaluatedSystemSpecJson as EvaluatedSystemSpec
 

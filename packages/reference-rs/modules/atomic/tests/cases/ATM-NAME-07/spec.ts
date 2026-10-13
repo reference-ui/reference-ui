@@ -4,7 +4,7 @@
  * unescaped. Every emitted selector must parse (CSS gauge).
  */
 import { expect } from 'vitest'
-import { layerClassNames, type AtomicCaseSpec } from '../../helpers.js'
+import { layerClassNames, type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const MARKERS = ['*', '$', '^', '|', '\\', ';', '?', '<', '`', 'é'] as const
 

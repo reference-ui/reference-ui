@@ -6,7 +6,7 @@
  * `global-css.test.ts:243` shape is the driver.
  */
 import { expect } from 'vitest'
-import type { AtomicCaseSpec } from '../../helpers.js'
+import type { AtomicCaseSpec } from '../../harness/helpers.js'
 
 const spec: AtomicCaseSpec = {
   id: 'ATM-UNIT-03',

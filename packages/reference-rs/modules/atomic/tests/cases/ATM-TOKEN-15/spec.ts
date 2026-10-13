@@ -4,7 +4,7 @@
  * expand to their corners before lookup. No mismatch, no passthrough.
  */
 import { expect } from 'vitest'
-import { type AtomicCaseSpec } from '../../helpers.js'
+import { type AtomicCaseSpec } from '../../harness/helpers.js'
 
 const CORNERS = [
   'border-top-left-radius',
