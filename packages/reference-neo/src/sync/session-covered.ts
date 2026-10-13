@@ -54,8 +54,10 @@ function pokeWatch(holder: SyncSessionOwner): 'sent' | 'gone' | 'unsupported' {
   try {
     process.kill(holder.pid, 'SIGUSR2')
   } catch (error) {
-    if (errorCode(error) === 'ESRCH') return 'gone'
-    throw error
+    const code = errorCode(error)
+    if (code === 'ESRCH') return 'gone'
+    // A plain Error, not the errno: the acquire loop retries errno-coded faults as lost races.
+    throw new Error(`[ref] sync: cannot poke the resident watch pid ${holder.pid} (${code ?? 'signal failed'})`)
   }
   return 'sent'
 }

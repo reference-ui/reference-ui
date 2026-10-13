@@ -14,6 +14,7 @@ import {
   readOwnerFileSync,
   readPreemptMarkerSync,
   supersededMessage,
+  type PreemptMarker,
   type StopSignal,
   type SyncSessionKind,
   type SyncSessionOwner,
@@ -104,15 +105,24 @@ export function releaseHold(hold: SessionHold): void {
   removeOwnLockDir(hold)
 }
 
+// The kill marker for this holder, if a newcomer's kill leg aimed one at it: a
+// marker aimed at another holder is not ours, and one naming this very process
+// is its own.
+function markerForUs(hold: SessionHold): PreemptMarker | null {
+  const marker = readPreemptMarkerSync(hold.lockDir)
+  if (marker === null || marker.pid === process.pid) return null
+  return marker.target === undefined || marker.target === hold.owner.lockNonce ? marker : null
+}
+
 // Who took the lock from this holder, as the SIGTERM it just got reads it: the
 // newcomer its preempt marker names, or nobody by name when the lock now
 // belongs to another session (a late taker beat the marker). Null means the
-// SIGTERM is a plain stop. A marker aimed at another holder is not ours.
-function supersededBy(hold: SessionHold): { pid: number; kind: SyncSessionKind } | 'unnamed' | null {
-  const marker = readPreemptMarkerSync(hold.lockDir)
-  const aimedAtUs = marker !== null && (marker.target === undefined || marker.target === hold.owner.lockNonce)
-  if (marker !== null && aimedAtUs && marker.pid !== process.pid) return marker
-  return hold.published && lockMovedOn(hold) ? 'unnamed' : null
+// SIGTERM is a plain stop. A watch whose lock `--break-lock` took keeps running
+// by design, so only a named kill supersedes it.
+function supersededBy(hold: SessionHold): PreemptMarker | 'unnamed' | null {
+  const marker = markerForUs(hold)
+  if (marker !== null) return marker
+  return hold.owner.kind !== 'watch' && hold.published && lockMovedOn(hold) ? 'unnamed' : null
 }
 
 // A SIGTERM from a newcomer's kill leg: that newcomer takes the lock next, so

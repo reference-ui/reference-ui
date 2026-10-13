@@ -58,11 +58,26 @@ async function acquireWithHandlers(cwd: string, kind: SyncSessionKind): Promise<
   return { session, handlerFor }
 }
 
-describe('stop signals on a held session', () => {
-  // Stands in for the watch CLI's graceful shutdown: any listener beyond the
-  // session's own counts as one.
-  const graceful = (): void => {}
+// Stands in for the watch CLI's graceful shutdown, and for the process.exit a supersede ends in:
+// the spy throws instead of exiting, so a test reads what the handler did on its way there.
+const graceful = (): void => {}
 
+async function withExitSpy(run: (exit: ReturnType<typeof vi.spyOn>, log: ReturnType<typeof vi.spyOn>) => Promise<void>): Promise<void> {
+  const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {
+    throw new Error(`exit ${code}`)
+  })
+  const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+  process.on('SIGTERM', graceful)
+  try {
+    await run(exit, log)
+  } finally {
+    exit.mockRestore()
+    log.mockRestore()
+    process.removeListener('SIGTERM', graceful)
+  }
+}
+
+describe('stop signals on a held session', () => {
   it.each(STOP_SIGNALS)('a watch with a graceful shutdown keeps its lock on %s until release', async (signal) => {
     const dir = await makeTempDir()
     process.on(signal, graceful)
@@ -133,26 +148,7 @@ describe('stop signals on a held session', () => {
   })
 })
 
-// A supersede is the one stop that exits the process, so the process.exit spy
-// throws instead and the test reads what the handler did on its way there.
 describe('superseded holders', () => {
-  const graceful = (): void => {}
-
-  async function withExitSpy(run: (exit: ReturnType<typeof vi.spyOn>, log: ReturnType<typeof vi.spyOn>) => Promise<void>): Promise<void> {
-    const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {
-      throw new Error(`exit ${code}`)
-    })
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    process.on('SIGTERM', graceful)
-    try {
-      await run(exit, log)
-    } finally {
-      exit.mockRestore()
-      log.mockRestore()
-      process.removeListener('SIGTERM', graceful)
-    }
-  }
-
   it('exits 75 for a marker aimed at it, keeping its handler on until the exit', async () => {
     const dir = await makeTempDir()
     await withExitSpy(async (_exit, log) => {
@@ -180,6 +176,25 @@ describe('superseded holders', () => {
         handlerFor('SIGTERM')()
         expect(exit).not.toHaveBeenCalled()
         expect(log).not.toHaveBeenCalled()
+      } finally {
+        session.release()
+      }
+    })
+  })
+
+})
+
+describe('a lock taken from its holder', () => {
+  it('leaves a watch whose lock --break-lock took to its graceful stop: only a named kill supersedes it', async () => {
+    const dir = await makeTempDir()
+    await withExitSpy(async (exit, log) => {
+      const { session, handlerFor } = await acquireWithHandlers(dir, 'watch')
+      try {
+        writeFileSync(join(getSyncLockDir(dir), 'owner.json'), JSON.stringify(ownerDoc({ pid: 4243, lockNonce: 'breaker' })))
+        handlerFor('SIGTERM')()
+        expect(exit).not.toHaveBeenCalled()
+        expect(log).not.toHaveBeenCalled()
+        expect(JSON.parse(readFileSync(join(getSyncLockDir(dir), 'owner.json'), 'utf8'))).toMatchObject({ lockNonce: 'breaker' })
       } finally {
         session.release()
       }
