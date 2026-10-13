@@ -106,7 +106,7 @@ function commitOneFile(
   }
   if (liveStat?.isDirectory() === true) rmSync(liveFile, { recursive: true, force: true })
   else if (liveStat?.isFile() === true && sameBytes(stagedFile, liveFile)) return false
-  else if (liveStat !== undefined) rmSync(liveFile, { force: true })
+  // A live file is replaced by the rename itself; removing it first opens a missing window.
   renameSync(stagedFile, liveFile)
   return true
 }
