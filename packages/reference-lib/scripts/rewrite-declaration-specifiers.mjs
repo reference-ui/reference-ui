@@ -11,6 +11,10 @@
 // `.d.mts` and `.js` as `.d.ts`; tasty reads a `.js` or `.mjs` name as a `.d.ts`
 // beside it, or as the file itself. declarationSpecifierProblems checks every
 // relative specifier left in a shipped declaration against that rule.
+//
+// node16 and nodenext also require an extension on every relative specifier, so an
+// extensionless one (`./types`, `../core/theme/index`) takes the extension of the
+// declaration it names: `.js` for `.d.ts`, `.mjs` for `.d.mts`, `.cjs` for `.d.cts`.
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, posix, relative, resolve, sep } from 'node:path'
 
@@ -38,6 +42,14 @@ const DECLARATION_FOR_RUNTIME = new Map([
   ['.mjs', '.d.mts'],
   ['.cjs', '.d.cts'],
 ])
+
+// The extension an extensionless relative specifier takes from the declaration it names. TypeScript maps
+// each one back to that declaration under node16 and nodenext; the guard then checks what tasty reads.
+const EXTENSION_FOR_DECLARATION = [
+  ['.d.ts', '.js'],
+  ['.d.mts', '.mjs'],
+  ['.d.cts', '.cjs'],
+]
 
 const DECLARATION_FILE = /\.d\.(ts|mts|cts)$/
 const SOURCE_EXTENSION = /\.(ts|tsx|mts|cts)$/
@@ -101,15 +113,30 @@ function unshippedTarget(target, shipped) {
 }
 
 // Why a relative specifier in a shipped declaration names no shipped file, or null when it does.
+// An extensionless specifier is refused outright: node16 and nodenext reject it whatever it resolves to.
 function unshippedSpecifier(specifier, fromFile, shipped) {
   if (SOURCE_EXTENSION.test(specifier) && !DECLARATION_FILE.test(specifier)) {
     return 'keeps a TypeScript extension, which tasty cannot map to its declaration'
   }
-  const target = resolve(dirname(fromFile), specifier)
   const ext = posix.extname(specifier)
+  if (ext === '') return 'has no file extension, which node16 and nodenext reject'
+  const target = resolve(dirname(fromFile), specifier)
   if (DECLARATION_FOR_RUNTIME.has(ext)) return unshippedRuntimeName(target.slice(0, -ext.length), ext, shipped)
-  if (ext !== '') return shipped(target) ? null : 'names no shipped file'
-  return [`${target}.d.ts`, join(target, 'index.d.ts')].some(shipped) ? null : 'names no shipped declaration'
+  return shipped(target) ? null : 'names no shipped file'
+}
+
+// The specifier with the extension of the declaration it names, either at the target or at target/index.
+// Null when no declaration sits there, so the guard names the specifier.
+function extensionlessSpecifier(specifier, target) {
+  if (posix.extname(specifier) !== '') return null
+  const directory = specifier === '.' || specifier === '..' || specifier.endsWith('/')
+  const direct = directory
+    ? undefined
+    : EXTENSION_FOR_DECLARATION.find(([declaration]) => isFile(`${target}${declaration}`))
+  if (direct !== undefined) return `${specifier}${direct[1]}`
+  const index = EXTENSION_FOR_DECLARATION.find(([declaration]) => isFile(join(target, `index${declaration}`)))
+  if (index === undefined) return null
+  return `${specifier.endsWith('/') ? specifier : `${specifier}/`}index${index[1]}`
 }
 
 function createSpecifierResolver({ packageRoot }) {
@@ -138,7 +165,7 @@ function createSpecifierResolver({ packageRoot }) {
     }
     if (!isRelative(specifier)) return null
     const target = resolve(dirname(fromFile), specifier)
-    if (!target.startsWith(`${generatedDir}${sep}`)) return null
+    if (!target.startsWith(`${generatedDir}${sep}`)) return extensionlessSpecifier(specifier, target)
     const generated = toPosix(relative(generatedDir, target))
     if (ROOT_SHIPPED.has(generated)) return null
     return shippedSpecifier(fromFile, posix.join('runtime/reference-ui', generated), specifier)
@@ -185,10 +212,19 @@ export function rewriteDeclarationSpecifiers({ packageRoot }) {
   return { files: files.length, filesChanged, rewritten }
 }
 
-// Every relative specifier in a shipped declaration that names no shipped file, as printable problems.
+// The declarations the tarball ships: everything under dist/, and the root payload's declaration.
+function shippedDeclarationFiles(packageRoot) {
+  const rootDeclarations = [...ROOT_SHIPPED]
+    .filter((rel) => DECLARATION_FILE.test(rel))
+    .map((rel) => resolve(packageRoot, '.reference-ui', rel))
+    .filter(isFile)
+  return [...listDeclarationFiles(join(packageRoot, 'dist')), ...rootDeclarations]
+}
+
+// Every relative specifier in a shipped declaration that has no extension or names no shipped file, as problems.
 export function declarationSpecifierProblems({ packageRoot }) {
   const shipped = createShipCheck(packageRoot)
-  return listDeclarationFiles(join(packageRoot, 'dist')).flatMap((file) =>
+  return shippedDeclarationFiles(packageRoot).flatMap((file) =>
     specifiersIn(readFileSync(file, 'utf8'))
       .filter(isRelative)
       .flatMap((specifier) => {

@@ -123,6 +123,48 @@ describe('rewriteDeclarationSpecifiers', () => {
       /has no shipped file tasty can map to it/,
     )
   })
+
+  it('gives each extensionless relative specifier the extension of the declaration it names', () => {
+    write('dist/types.d.ts', 'export type T = 1\n')
+    write('dist/components/Overlay/index.d.ts', 'export {}\n')
+    write('dist/components/Overlay/parts/Trigger.d.ts', 'export {}\n')
+    write('dist/components/Tabs/Motion.d.mts', 'export {}\n')
+    write('dist/components/Tabs/Motion.mjs', 'export {}\n')
+    write(
+      'dist/components/Tabs/Tabs.d.ts',
+      [
+        "import type { T } from '../../types';",
+        "export * from '../Overlay';",
+        "export * from '../Overlay/parts/Trigger';",
+        "export type * from './Motion';",
+        "export type U = import('../../types').T;",
+        '',
+      ].join('\n'),
+    )
+
+    // Three shipped runtime declarations plus types, Overlay, Trigger, Motion and Tabs.
+    expect(rewriteDeclarationSpecifiers({ packageRoot: root })).toEqual({ files: 8, filesChanged: 1, rewritten: 5 })
+    expect(readFileSync(join(root, 'dist/components/Tabs/Tabs.d.ts'), 'utf8')).toBe(
+      [
+        "import type { T } from '../../types.js';",
+        "export * from '../Overlay/index.js';",
+        "export * from '../Overlay/parts/Trigger.js';",
+        "export type * from './Motion.mjs';",
+        "export type U = import('../../types.js').T;",
+        '',
+      ].join('\n'),
+    )
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
+  })
+
+  it('leaves an extensionless specifier that names no declaration for the guard to name', () => {
+    write('dist/components/Odd/Odd.d.ts', "export * from './missing';\n")
+    // Three shipped runtime declarations plus Odd.d.ts.
+    expect(rewriteDeclarationSpecifiers({ packageRoot: root })).toEqual({ files: 4, filesChanged: 0, rewritten: 0 })
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([
+      expect.stringMatching(/^dist\/components\/Odd\/Odd\.d\.ts: "\.\/missing" has no file extension/),
+    ])
+  })
 })
 
 describe('declarationSpecifierProblems', () => {
@@ -153,11 +195,22 @@ describe('declarationSpecifierProblems', () => {
     ])
   })
 
-  it('accepts a root-shipped baseSystem payload and an index-directory import', () => {
+  it('accepts a root-shipped baseSystem payload and an index-directory import with its extension', () => {
     write('.reference-ui/system/baseSystem.mjs', 'export {}\n')
     write('.reference-ui/system/baseSystem.d.mts', 'export {}\n')
-    write('dist/index.d.ts', "export { baseSystem } from '../.reference-ui/system/baseSystem.mjs';\nexport * from './parts';\n")
+    write('dist/index.d.ts', "export { baseSystem } from '../.reference-ui/system/baseSystem.mjs';\nexport * from './parts/index.js';\n")
     write('dist/parts/index.d.ts', 'export {}\n')
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
+  })
+
+  it('fails on a planted extensionless specifier, even one that resolves, and passes once it carries its extension', () => {
+    write('dist/components/Tabs/Trigger.d.ts', 'export {}\n')
+    const planted = write('dist/components/Tabs/Tabs.d.ts', "export * from './Trigger';\n")
+    expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([
+      expect.stringMatching(/^dist\/components\/Tabs\/Tabs\.d\.ts: "\.\/Trigger" has no file extension/),
+    ])
+
+    writeFileSync(planted, "export * from './Trigger.js';\n")
     expect(declarationSpecifierProblems({ packageRoot: root })).toEqual([])
   })
 })

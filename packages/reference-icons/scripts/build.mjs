@@ -3,6 +3,7 @@ import { constants } from 'node:fs'
 import { access, rm } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { declarationSpecifierProblems, rewriteDeclarationSpecifiers } from './rewrite-declaration-specifiers.mjs'
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(packageRoot, 'dist')
@@ -29,6 +30,22 @@ run('pnpm', ['exec', 'ref', 'sync'])
 run(process.execPath, ['scripts/build-bundle.mjs'])
 run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])
 run(process.execPath, ['scripts/materialize-runtime.mjs'])
+
+// tsc emits extensionless relative specifiers, which node16 and nodenext reject. Give each its declaration's
+// extension, then fail the build on any shipped declaration that still names no shipped file.
+const declarations = rewriteDeclarationSpecifiers({ packageRoot })
+console.log(
+  `build: rewrote ${declarations.rewritten} declaration specifiers in ${declarations.filesChanged} of ${declarations.files} .d.ts files`,
+)
+const danglingSpecifiers = declarationSpecifierProblems({ packageRoot })
+if (danglingSpecifiers.length > 0) {
+  throw new Error(
+    [
+      `build: ${danglingSpecifiers.length} shipped declaration specifier(s) name no shipped file:`,
+      ...danglingSpecifiers.map((line) => `  ${line}`),
+    ].join('\n'),
+  )
+}
 
 for (const filePath of requiredFiles) {
   await access(filePath, constants.F_OK)
