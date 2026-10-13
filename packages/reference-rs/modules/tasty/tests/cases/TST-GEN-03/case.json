@@ -1,0 +1,1 @@
+{"id": "TST-GEN-03", "name": "generic-shadow: a type parameter or infer variable named like a top-level symbol does not resolve to that symbol"}

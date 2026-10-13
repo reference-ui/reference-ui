@@ -1,36 +1,28 @@
 //! `TypeRef` resolution pass: resolves import references and evaluates type-level expressions.
+//! A declaration's own type resolves with its type-parameter names bound: a reference to a bound name is
+//! marked with its own name as target (see `binders.rs`), so no same-named symbol captures it. Expansions and
+//! evaluation resolve with no binders, since they belong to another declaration's scope.
 
 use super::super::names::namespace_export_lookup_name;
 use super::Resolver;
 use crate::ast::model::ImportBindingKind;
+use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
 use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
 use crate::shared::type_ref_util::{reference_lookup_name, resolve_object_member_type};
 
 impl<'a> Resolver<'a> {
     pub(super) fn resolve_type_ref(&self, type_ref: TypeRef) -> TypeRef {
-        let mut mapper = ResolverTypeRefMap { resolver: self };
-        map_type_ref(&mut mapper, type_ref)
+        self.resolve_type_ref_in(type_ref, &[])
     }
 
-    fn resolve_reference(
-        &self,
-        name: String,
-        target_id: Option<String>,
-        source_module: Option<String>,
-        type_arguments: Option<Vec<TypeRef>>,
-    ) -> TypeRef {
-        let type_arguments = type_arguments.map(|args| self.resolve_type_refs(args));
-        let target_id = target_id.or_else(|| {
-            self.resolve_import_target_id(&name)
-                .or_else(|| self.resolve_local_target_id(&name))
-        });
-        TypeRef::Reference {
-            name,
-            target_id,
-            source_module,
-            type_arguments,
-        }
+    /// Resolves a type where `binders` (the names bound by the enclosing declaration) shadow same-named symbols.
+    pub(super) fn resolve_type_ref_in(&self, type_ref: TypeRef, binders: &[String]) -> TypeRef {
+        let mut mapper = ResolverTypeRefMap {
+            resolver: self,
+            binders,
+        };
+        map_type_ref(&mut mapper, type_ref)
     }
 
     fn resolve_import_target_id(&self, name: &str) -> Option<String> {
@@ -53,14 +45,21 @@ impl<'a> Resolver<'a> {
             .cloned()
     }
 
-    fn resolve_type_refs(&self, type_refs: Vec<TypeRef>) -> Vec<TypeRef> {
-        type_refs
-            .into_iter()
-            .map(|type_ref| self.resolve_type_ref(type_ref))
-            .collect()
+    /// Source for a reference that no import claims: the file's own module in a library, none in user code.
+    fn default_source_module(&self) -> Option<String> {
+        if self.parsed.library == USER_LIBRARY_NAME {
+            None
+        } else {
+            Some(self.parsed.module_specifier.clone())
+        }
     }
 
     fn resolve_type_query_expression(&self, expression: &str) -> Option<TypeRef> {
+        // `typeof f<Args>` names an instantiated signature, which this pass does not evaluate.
+        if expression.contains('<') {
+            return None;
+        }
+
         let mut path = expression.split('.');
         let first = path.next()?;
         let mut current = match self.parsed.value_bindings.get(first) {
@@ -91,6 +90,13 @@ impl<'a> Resolver<'a> {
 
 struct ResolverTypeRefMap<'a, 'b> {
     resolver: &'a Resolver<'b>,
+    binders: &'a [String],
+}
+
+impl ResolverTypeRefMap<'_, '_> {
+    fn binds(&self, name: &str) -> bool {
+        self.binders.iter().any(|binder| binder == name)
+    }
 }
 
 impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
@@ -101,8 +107,32 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         source_module: Option<String>,
         type_arguments: Option<Vec<TypeRef>>,
     ) -> TypeRef {
-        self.resolver
-            .resolve_reference(name, target_id, source_module, type_arguments)
+        let type_arguments: Option<Vec<TypeRef>> = type_arguments.map(|args| {
+            args.into_iter()
+                .map(|arg| map_type_ref(self, arg))
+                .collect()
+        });
+
+        if target_id.is_none() && self.binds(&name) {
+            return TypeRef::Reference {
+                target_id: Some(name.clone()),
+                source_module: self.resolver.default_source_module(),
+                name,
+                type_arguments,
+            };
+        }
+
+        let target_id = target_id.or_else(|| {
+            self.resolver
+                .resolve_import_target_id(&name)
+                .or_else(|| self.resolver.resolve_local_target_id(&name))
+        });
+        TypeRef::Reference {
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+        }
     }
 
     fn map_indexed_access(
@@ -189,7 +219,11 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
     }
 
     fn map_type_parameter(&mut self, param: TsTypeParameter) -> TsTypeParameter {
-        self.resolver.resolve_type_parameter(param)
+        TsTypeParameter {
+            name: param.name,
+            constraint: param.constraint.map(|t| map_type_ref(self, t)),
+            default: param.default.map(|t| map_type_ref(self, t)),
+        }
     }
 
     fn map_tuple_element(&mut self, element: TupleElement) -> TupleElement {

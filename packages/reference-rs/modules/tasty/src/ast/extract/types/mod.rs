@@ -1,6 +1,10 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Lowers Oxc type annotations into `TypeRef` values, carrying the names that enclosing binders bind.
+//! A binder is a function or constructor type's parameters, a method or call signature's own parameters,
+//! a mapped type's key, or an `infer` variable in a conditional's true branch; the lowering passes those
+//! names down as `bound`. A reference to a bound name names itself as its target id, which no symbol id
+//! ever equals, so the resolver does not attach it to a same-named top-level symbol and clears the mark
+//! before a symbol leaves resolution. Interface and type-alias parameters are not visible here; the
+//! resolver binds those for the whole declaration.
 
 use oxc_ast::ast::{TSType, TSTypeParameterDeclaration};
 
@@ -12,17 +16,46 @@ use crate::ast::extract::ExtractionContext;
 use crate::model::{MappedModifierKind, TsTypeParameter, TypeRef};
 use oxc_span::GetSpan;
 
+mod infer_binders;
 mod lower_composites;
 mod lower_keywords;
 mod lower_references;
+mod lower_tuples;
 
+/// Lowering state: the extraction inputs and the names bound by the enclosing declarations and binders.
 struct LoweringContext<'a> {
     ctx: &'a ExtractionContext<'a>,
+    bound: Vec<String>,
 }
 
 impl<'a> LoweringContext<'a> {
     fn new(ctx: &'a ExtractionContext<'a>) -> Self {
-        Self { ctx }
+        Self::with_bound(ctx, Vec::new())
+    }
+
+    fn with_bound(ctx: &'a ExtractionContext<'a>, bound: Vec<String>) -> Self {
+        Self { ctx, bound }
+    }
+
+    /// Child context that binds `names` on top of this one, for the part of a declaration they scope.
+    fn bind(&self, names: Vec<String>) -> LoweringContext<'a> {
+        let mut bound = self.bound.clone();
+        bound.extend(names);
+        Self::with_bound(self.ctx, bound)
+    }
+
+    fn is_bound(&self, name: &str) -> bool {
+        self.bound.iter().any(|bound| bound == name)
+    }
+
+    /// Names a type-parameter list declares, in source order.
+    fn declared_names(&self, decl: Option<&TSTypeParameterDeclaration<'_>>) -> Vec<String> {
+        decl.map_or_else(Vec::new, |decl| {
+            decl.params
+                .iter()
+                .map(|param| slice_span(self.ctx.source, param.name.span()).to_string())
+                .collect()
+        })
     }
 
     pub(super) fn lower_type_parameters<'b>(
@@ -33,6 +66,8 @@ impl<'a> LoweringContext<'a> {
             return Vec::new();
         };
 
+        // A constraint or default may name a sibling parameter, so the whole list is bound first.
+        let scope = self.bind(self.declared_names(Some(decl)));
         decl.params
             .iter()
             .map(|param| TsTypeParameter {
@@ -40,11 +75,11 @@ impl<'a> LoweringContext<'a> {
                 constraint: param
                     .constraint
                     .as_ref()
-                    .map(|constraint| self.lower_type(constraint)),
+                    .map(|constraint| scope.lower_type(constraint)),
                 default: param
                     .default
                     .as_ref()
-                    .map(|default| self.lower_type(default)),
+                    .map(|default| scope.lower_type(default)),
             })
             .collect()
     }
@@ -125,11 +160,39 @@ pub(super) fn type_to_ref(type_annotation: &TSType<'_>, ctx: &ExtractionContext<
     LoweringContext::new(ctx).lower_type(type_annotation)
 }
 
+/// Lowers a member's type. `binders` are the names bound by enclosing declarations; `own` is the
+/// member's own type-parameter list (`run<Item>(): Item`), which binds only within this type.
+pub(super) fn member_type_to_ref(
+    type_annotation: &TSType<'_>,
+    ctx: &ExtractionContext<'_>,
+    binders: &[String],
+    own: Option<&TSTypeParameterDeclaration<'_>>,
+) -> TypeRef {
+    let base = LoweringContext::with_bound(ctx, binders.to_vec());
+    base.bind(base.declared_names(own))
+        .lower_type(type_annotation)
+}
+
 pub(super) fn interface_heritage_to_reference(
     heritage: &oxc_ast::ast::TSInterfaceHeritage<'_>,
     ctx: &ExtractionContext<'_>,
 ) -> TypeRef {
     LoweringContext::new(ctx).lower_interface_heritage(heritage)
+}
+
+/// A reference to a bound name. It names itself as its target id, which no symbol id equals, and it
+/// takes the file's default source rather than an import the binder shadows.
+pub(super) fn bound_reference(
+    name: String,
+    type_arguments: Option<Vec<TypeRef>>,
+    ctx: &ExtractionContext<'_>,
+) -> TypeRef {
+    TypeRef::Reference {
+        target_id: Some(name.clone()),
+        source_module: default_source_module(ctx),
+        name,
+        type_arguments,
+    }
 }
 
 fn mapped_modifier_kind(
@@ -149,13 +212,16 @@ fn reference_source_module(reference_name: &str, ctx: &ExtractionContext<'_>) ->
     ctx.import_bindings
         .get(lookup_name)
         .map(|binding| binding.source_module.clone())
-        .or_else(|| {
-            if ctx.library == USER_LIBRARY_NAME {
-                None
-            } else {
-                Some(ctx.module_specifier.to_string())
-            }
-        })
+        .or_else(|| default_source_module(ctx))
+}
+
+/// The source of a reference that no import claims: the file's own module in a library, none in user code.
+fn default_source_module(ctx: &ExtractionContext<'_>) -> Option<String> {
+    if ctx.library == USER_LIBRARY_NAME {
+        None
+    } else {
+        Some(ctx.module_specifier.to_string())
+    }
 }
 
 fn intrinsic(name: &str) -> TypeRef {

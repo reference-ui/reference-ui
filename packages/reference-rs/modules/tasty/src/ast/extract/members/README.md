@@ -1,10 +1,12 @@
 # Members
 
-Turns Oxc interface / object-type member signatures into `TsMember` values,
-including leading-comment metadata and per-signature `TypeRef` lowering.
+Turns Oxc interface and object-type signatures into `TsMember` values, including leading-comment
+metadata and the `TypeRef` of each member's type.
 
-## Files
+Each signature keeps its source position: a property, method, call, construct, or index signature
+becomes one member. An accessor pair (a `get` and a `set` of one name) folds into a single property
+member, typed by the getter's return type or, when only a setter exists, by its parameter type, and
+readonly only while no setter is present.
 
-- `dispatch.rs` — walk `TSSignature` lists and route to converters; `member_exclusion_starts`
-- `signatures.rs` — property, method, call, construct, and index signature converters
-- `mod.rs` — re-exports the surface used by `types` and `symbols`
+Member types lower with the enclosing binder names bound, and a method, call, or construct signature
+also binds its own type parameters. Interface and type-alias parameters are bound later, by the resolver.

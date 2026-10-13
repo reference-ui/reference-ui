@@ -1,0 +1,1 @@
+{"id": "TST-SIG-02", "name": "accessor-pair: a get and set accessor pair in an interface is one string property, and a lone getter is readonly"}

@@ -2,18 +2,16 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use oxc_allocator::Allocator;
-use oxc_ast::ast::{FormalParameters, TSTupleElement};
-use oxc_parser::Parser;
-use oxc_span::{GetSpan, SourceType};
+use oxc_ast::ast::FormalParameters;
+use oxc_span::{GetSpan, Span};
 
 use crate::model::{FnParam, TemplateLiteralPart, TupleElement, TypeOperatorKind, TypeRef};
 
-use super::super::members::members_from_signatures;
+use super::super::members::members_from_signatures_in;
 use super::super::slice_span;
+use super::infer_binders::infer_names;
 use super::mapped_modifier_kind;
 use super::LoweringContext;
-use crate::ast::extract::ExtractionContext;
 
 impl<'a> LoweringContext<'a> {
     pub(super) fn lower_array_type(&self, array_type: &oxc_ast::ast::TSArrayType<'_>) -> TypeRef {
@@ -22,25 +20,16 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
-    pub(super) fn lower_tuple_type(&self, tuple_type: &oxc_ast::ast::TSTupleType<'_>) -> TypeRef {
-        TypeRef::Tuple {
-            elements: tuple_type
-                .element_types
-                .iter()
-                .map(|element| self.lower_tuple_element(element))
-                .collect(),
-        }
-    }
-
     pub(super) fn lower_type_literal(
         &self,
         type_literal: &oxc_ast::ast::TSTypeLiteral<'_>,
     ) -> TypeRef {
         TypeRef::Object {
-            members: members_from_signatures(
+            members: members_from_signatures_in(
                 type_literal.members.as_slice(),
                 &self.ctx.with_empty_comments(),
                 None,
+                &self.bound,
             ),
         }
     }
@@ -65,9 +54,10 @@ impl<'a> LoweringContext<'a> {
         &self,
         function_type: &oxc_ast::ast::TSFunctionType<'_>,
     ) -> TypeRef {
+        let signature = self.bind(self.declared_names(function_type.type_parameters.as_deref()));
         TypeRef::Function {
-            params: self.lower_fn_params(&function_type.params),
-            return_type: Box::new(self.lower_type(&function_type.return_type.type_annotation)),
+            params: signature.lower_fn_params(&function_type.params),
+            return_type: Box::new(signature.lower_type(&function_type.return_type.type_annotation)),
         }
     }
 
@@ -75,12 +65,14 @@ impl<'a> LoweringContext<'a> {
         &self,
         constructor_type: &oxc_ast::ast::TSConstructorType<'_>,
     ) -> TypeRef {
+        let signature =
+            self.bind(self.declared_names(constructor_type.type_parameters.as_deref()));
         TypeRef::Constructor {
             r#abstract: constructor_type.r#abstract,
             type_parameters: self
                 .lower_type_parameters(constructor_type.type_parameters.as_deref()),
-            params: self.lower_fn_params(&constructor_type.params),
-            return_type: Box::new(self.lower_type(&constructor_type.return_type.type_annotation)),
+            params: signature.lower_fn_params(&constructor_type.params),
+            return_type: Box::new(signature.lower_type(&constructor_type.return_type.type_annotation)),
         }
     }
 
@@ -122,40 +114,54 @@ impl<'a> LoweringContext<'a> {
         }
     }
 
+    /// `typeof f<Args>` keeps its type arguments in the expression text: the query names the
+    /// instantiated signature, and the bare name would describe a different type.
     pub(super) fn lower_type_query(&self, query: &oxc_ast::ast::TSTypeQuery<'_>) -> TypeRef {
+        let start = query.expr_name.span().start;
+        let end = query
+            .type_arguments
+            .as_ref()
+            .map_or(query.expr_name.span().end, |arguments| arguments.span.end);
         TypeRef::TypeQuery {
-            expression: slice_span(self.ctx.source, query.expr_name.span()).to_string(),
+            expression: slice_span(self.ctx.source, Span::new(start, end)).to_string(),
             resolved: None,
         }
     }
 
+    /// `infer` names bind only in the true branch, and only those written in this conditional's
+    /// extends clause; the check and false branches see the enclosing binders alone.
     pub(super) fn lower_conditional_type(
         &self,
         conditional: &oxc_ast::ast::TSConditionalType<'_>,
     ) -> TypeRef {
+        let extends_type = self.lower_type(&conditional.extends_type);
+        let true_scope = self.bind(infer_names(&extends_type));
         TypeRef::Conditional {
             check_type: Box::new(self.lower_type(&conditional.check_type)),
-            extends_type: Box::new(self.lower_type(&conditional.extends_type)),
-            true_type: Box::new(self.lower_type(&conditional.true_type)),
+            extends_type: Box::new(extends_type),
+            true_type: Box::new(true_scope.lower_type(&conditional.true_type)),
             false_type: Box::new(self.lower_type(&conditional.false_type)),
             resolved: None,
         }
     }
 
+    /// The key binds in the name and value types, not in the constraint that supplies its keys.
     pub(super) fn lower_mapped_type(&self, mapped: &oxc_ast::ast::TSMappedType<'_>) -> TypeRef {
+        let key = slice_span(self.ctx.source, mapped.key.span()).to_string();
+        let body = self.bind(vec![key.clone()]);
         TypeRef::Mapped {
-            type_param: slice_span(self.ctx.source, mapped.key.span()).to_string(),
+            type_param: key,
             source_type: Box::new(self.lower_type(&mapped.constraint)),
             name_type: mapped
                 .name_type
                 .as_ref()
-                .map(|name_type| Box::new(self.lower_type(name_type))),
+                .map(|name_type| Box::new(body.lower_type(name_type))),
             optional_modifier: mapped_modifier_kind(mapped.optional),
             readonly_modifier: mapped_modifier_kind(mapped.readonly),
             value_type: mapped
                 .type_annotation
                 .as_ref()
-                .map(|value_type| Box::new(self.lower_type(value_type))),
+                .map(|value_type| Box::new(body.lower_type(value_type))),
         }
     }
 
@@ -217,75 +223,6 @@ impl<'a> LoweringContext<'a> {
                 Some(fragments)
             }
             _ => None,
-        }
-    }
-
-    pub(super) fn lower_tuple_element(&self, element: &TSTupleElement<'_>) -> TupleElement {
-        match element {
-            TSTupleElement::TSOptionalType(optional) => TupleElement {
-                label: None,
-                optional: true,
-                rest: false,
-                readonly: false,
-                element: self.lower_type(&optional.type_annotation),
-            },
-            TSTupleElement::TSRestType(rest) => TupleElement {
-                label: None,
-                optional: false,
-                rest: true,
-                readonly: false,
-                element: self.lower_type(&rest.type_annotation),
-            },
-            TSTupleElement::TSNamedTupleMember(named) => {
-                let lowered = self.lower_tuple_element(&named.element_type);
-
-                TupleElement {
-                    label: Some(slice_span(self.ctx.source, named.label.span()).to_string()),
-                    optional: named.optional,
-                    rest: false,
-                    readonly: false,
-                    element: lowered.element,
-                }
-            }
-            _ => TupleElement {
-                label: None,
-                optional: false,
-                rest: false,
-                readonly: false,
-                element: self.lower_tuple_element_type(element),
-            },
-        }
-    }
-
-    /// HACK: synthetic reparse of a single tuple element via a type alias wrapper.
-    pub(super) fn lower_tuple_element_type(&self, element: &TSTupleElement<'_>) -> TypeRef {
-        let element_source = slice_span(self.ctx.source, element.span());
-        let wrapped_source = format!("type __TastyTupleElement = {element_source};");
-        let allocator = Allocator::default();
-        let source_type = SourceType::from_path("tuple-element.ts").unwrap_or_default();
-        let parse_result = Parser::new(&allocator, &wrapped_source, source_type).parse();
-
-        // Reparse a single tuple element through a synthetic alias so we can reuse
-        // the normal type-lowering path without special-casing every tuple variant.
-        if let Some(oxc_ast::ast::Statement::TSTypeAliasDeclaration(type_alias)) =
-            parse_result.program.body.first()
-        {
-            let ctx = ExtractionContext {
-                source: wrapped_source.as_str(),
-                comments: &[],
-                import_bindings: self.ctx.import_bindings,
-                module_specifier: self.ctx.module_specifier,
-                library: self.ctx.library,
-            };
-            return LoweringContext::new(&ctx).lower_type(&type_alias.type_annotation);
-        }
-
-        // Unreachable for error-free sources: a clean tuple element is a complete standalone
-        // type, so its wrapper parses to an alias. The elements whose wrapper parse fails (a bare
-        // `unique`, `readonly`, `keyof` or `infer`) fail the main parse as well, so their file
-        // already carries TST-W-PARSE-ERROR and this summary is only a last resort.
-        TypeRef::Raw {
-            summary: element_source.to_string(),
         }
     }
 

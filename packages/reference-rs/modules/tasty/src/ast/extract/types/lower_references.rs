@@ -8,7 +8,7 @@ use crate::model::TypeRef;
 use crate::shared::type_ref_util::reference_lookup_name;
 
 use super::super::slice_span;
-use super::reference_source_module;
+use super::{bound_reference, reference_source_module};
 use super::LoweringContext;
 
 impl<'a> LoweringContext<'a> {
@@ -36,6 +36,10 @@ impl<'a> LoweringContext<'a> {
                 .map(|argument| self.lower_type(argument))
                 .collect::<Vec<_>>()
         });
+
+        if self.is_bound(&name) {
+            return bound_reference(name, type_arguments, self.ctx);
+        }
 
         if lookup_name == "Array" {
             if let Some([element]) = type_arguments.as_deref() {

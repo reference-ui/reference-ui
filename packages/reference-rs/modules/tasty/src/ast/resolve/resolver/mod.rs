@@ -1,12 +1,15 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Per-file reference resolver: the `Resolver` state shared by the passes, the cross-file `typeof` value
+//! table, and the submodules that resolve a symbol's own parts, its type references, evaluation, and
+//! instantiation. `Resolver` is built once per symbol by `resolve/index.rs`, and each pass reads the same
+//! lookup indexes, so a symbol's result depends only on its shell and the scan.
+//! Binder marks written during lowering are cleared before a symbol leaves this module.
 
 use std::collections::BTreeMap;
 
 use crate::ast::model::ParsedFileAst;
 use crate::model::TypeRef;
 
+mod binders;
 mod evaluate;
 mod instantiate;
 mod resolve;
