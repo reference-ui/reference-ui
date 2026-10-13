@@ -1,4 +1,4 @@
-# ATL-VAL-01 dynamic values
+# ATL-VAL-01 — dynamic-values: dynamic values
 
 Verifies that dynamic JSX expressions and variable references count toward prop usage without fabricating literal value observations.
 Asserts prop call counts and static literal breakdown for string unions.
