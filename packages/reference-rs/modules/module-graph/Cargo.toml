@@ -21,3 +21,59 @@ criterion.workspace = true
 name = "ladder"
 harness = false
 test = true
+
+[[test]]
+name = "fs"
+path = "tests/rust/fs.rs"
+
+[[test]]
+name = "graph"
+path = "tests/rust/graph.rs"
+
+[[test]]
+name = "key"
+path = "tests/rust/key.rs"
+
+[[test]]
+name = "ladder_exports"
+path = "tests/rust/ladder_exports.rs"
+
+[[test]]
+name = "ladder_fields"
+path = "tests/rust/ladder_fields.rs"
+
+[[test]]
+name = "ladder_relative"
+path = "tests/rust/ladder_relative.rs"
+
+[[test]]
+name = "ladder_remap"
+path = "tests/rust/ladder_remap.rs"
+
+[[test]]
+name = "ladder_symlink"
+path = "tests/rust/ladder_symlink.rs"
+
+[[test]]
+name = "ladder_tsconfig"
+path = "tests/rust/ladder_tsconfig.rs"
+
+[[test]]
+name = "ladder_types"
+path = "tests/rust/ladder_types.rs"
+
+[[test]]
+name = "record"
+path = "tests/rust/record.rs"
+
+[[test]]
+name = "walk_chains"
+path = "tests/rust/walk_chains.rs"
+
+[[test]]
+name = "walk_refused"
+path = "tests/rust/walk_refused.rs"
+
+[[test]]
+name = "walk_star"
+path = "tests/rust/walk_star.rs"
