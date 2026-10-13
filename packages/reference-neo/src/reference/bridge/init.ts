@@ -59,3 +59,8 @@ export function flushReferenceBuild(
 ): Promise<ReferenceBuildResult | undefined> {
   return pendingTastyBuilds.get(resolve(sourceDir)) ?? Promise.resolve(undefined)
 }
+
+/** True while the cold build for sourceDir is in flight: a sync that lands now may miss its scan. */
+export function isReferenceBuildPending(sourceDir: string): boolean {
+  return pendingTastyBuilds.has(resolve(sourceDir))
+}

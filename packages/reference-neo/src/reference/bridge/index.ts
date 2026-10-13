@@ -3,7 +3,7 @@
 // No workers, no bus, no virtual copy — the buried core scaffolds stay buried.
 
 export { createReferenceBuildReport, tastyDiagnosticToNative } from './build-report.ts'
-export { flushReferenceBuild, initReference } from './init.ts'
+export { flushReferenceBuild, initReference, isReferenceBuildPending } from './init.ts'
 export {
   getReferenceManifestPath,
   getReferenceTastyDirPath,
