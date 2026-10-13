@@ -1,6 +1,6 @@
-// Version stamp and banner for Neo generated packages.
-// It takes nothing and emits the manifest version every generated package.json carries plus the banner every generated file carries.
-// Both values are frozen sync output: changing either ripples into every generated folder and the tests that pin it.
+// Version base and banner for Neo generated packages.
+// It takes nothing and emits the base version every generated package.json extends plus the banner every generated file carries.
+// The package version is the base plus a content hash (content-version.ts), so two generated packages share a version only when their bytes match.
 
 export const GENERATED_VERSION = '0.0.0-neo'
 

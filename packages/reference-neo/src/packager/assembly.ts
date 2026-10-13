@@ -10,6 +10,7 @@ import { writeReactDir } from './react-shell.ts'
 import { publishTypesBundle } from './types-bundle.ts'
 import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
+import { stampContentVersions } from './content-version.ts'
 import { detectSyncedRole, type SyncedRole } from './synced-role.ts'
 import type { NeoDiagnostic } from '../diagnostics/types.ts'
 import type { AssemblyInput } from './types.ts'
@@ -49,5 +50,7 @@ export async function assembleSystem(input: AssemblyInput): Promise<NeoDiagnosti
   const typegenDiagnostics = await publishTypesBundle(input.outDir, input.spec, input.strict)
   // After the react leg: its bundle is the alias target this leg reads.
   await publishReferenceTypesBundle({ outDir: input.outDir })
+  // Last: a package's version hashes its files, so every leg must have written them.
+  stampContentVersions(input.outDir)
   return typegenDiagnostics
 }
