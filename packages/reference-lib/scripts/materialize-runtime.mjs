@@ -70,6 +70,14 @@ await access(generatedTastyDir, constants.F_OK)
 await rm(packagedTastyDir, { recursive: true, force: true })
 await cp(generatedTastyDir, packagedTastyDir, { recursive: true })
 
+// @reference-ui/types is the generated single-file declaration surface that the
+// Reference declarations import. It has no runtime of its own here, so only its
+// .d.mts ships; rewrite-declaration-specifiers points those imports at this copy.
+const generatedTypesFile = resolve(generatedRoot, 'types/types.d.mts')
+await access(generatedTypesFile, constants.F_OK)
+await mkdir(resolve(packagedRuntimeDir, 'types'), { recursive: true })
+await cp(generatedTypesFile, resolve(packagedRuntimeDir, 'types/types.d.mts'))
+
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.mjs'), runtimeRewrites)
 await rewriteSpecifiers(resolve(packagedRuntimeDir, 'react/react.d.mts'), runtimeRewrites)
 await rewriteSpecifiers(resolve(distDir, 'index.mjs'), bundleRewrites)

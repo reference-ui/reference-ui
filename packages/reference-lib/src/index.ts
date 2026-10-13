@@ -2,7 +2,8 @@
  * Reference Lib - foundational design system package.
  * Exports baseSystem for extends[] in downstream apps.
  *
- * Run `ref sync` in reference-lib before using.
+ * Components need no `ref sync`; run it only to compile your own styles
+ * with `extends: [baseSystem]`.
  */
 export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
 export {

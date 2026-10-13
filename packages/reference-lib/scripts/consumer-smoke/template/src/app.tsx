@@ -285,11 +285,11 @@ export function App() {
         <Mount id="splitter">
           <div style={{ width: 600 }}>
             <Splitter value={splitter} onChange={setSplitter}>
-              <Splitter.Panel index={0} min={10} max={90}>
+              <Splitter.Panel min={10} max={90}>
                 <div>panel zero</div>
               </Splitter.Panel>
-              <Splitter.Handle index={0} aria-label="resize" />
-              <Splitter.Panel index={1} min={10}>
+              <Splitter.Handle aria-label="resize" />
+              <Splitter.Panel min={10}>
                 <div>panel one</div>
               </Splitter.Panel>
             </Splitter>

@@ -63,11 +63,11 @@ export function B11Splitter() {
         <div style={{ width: 600 }}>
           {/* 3 values, 2 panels: src throws structurally; stale dist rendered ~13px. */}
           <Splitter value={[10, 10, 80]}>
-            <Splitter.Panel index={0}>
+            <Splitter.Panel>
               <div>degenerate panel zero</div>
             </Splitter.Panel>
-            <Splitter.Handle index={0} aria-label="b11 resize" />
-            <Splitter.Panel index={1}>
+            <Splitter.Handle aria-label="b11 resize" />
+            <Splitter.Panel>
               <div>degenerate panel one</div>
             </Splitter.Panel>
           </Splitter>

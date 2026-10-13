@@ -3,6 +3,7 @@ import { constants } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { rewriteDeclarationSpecifiers } from './rewrite-declaration-specifiers.mjs'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(packageRoot, 'dist')
@@ -23,6 +24,7 @@ const requiredFiles = [
 const packagedRuntimeFiles = [
   resolve(distDir, 'runtime/reference-ui/react/react.mjs'),
   resolve(distDir, 'runtime/reference-ui/styled/runtime-data.mjs'),
+  resolve(distDir, 'runtime/reference-ui/types/types.d.mts'),
   resolve(distDir, 'tasty/runtime.js'),
   resolve(distDir, 'tasty/manifest.js'),
   resolve(distDir, 'tasty/chunk-registry.js'),
@@ -49,6 +51,14 @@ run(process.execPath, ['scripts/materialize-runtime.mjs'])
 for (const filePath of packagedRuntimeFiles) {
   await access(filePath, constants.F_OK)
 }
+
+// tsc emits the bare `@reference-ui/*` and `.reference-ui/` specifiers the source
+// wrote. Repoint them at the shipped runtime copies now that they exist; a
+// specifier with no shipped target throws here and fails the build.
+const declarations = rewriteDeclarationSpecifiers({ packageRoot })
+console.log(
+  `build-package: rewrote ${declarations.rewritten} declaration specifiers in ${declarations.filesChanged} of ${declarations.files} .d.ts files`,
+)
 
 // B-35: the bundled tasty manifest runtime (pulled in via @reference-ui/types
 // values used by the Reference browser) carries a Node-only branch,

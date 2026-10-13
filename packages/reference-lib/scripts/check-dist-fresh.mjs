@@ -23,6 +23,7 @@ const INPUT_FILES = [
   'ui.config.ts',
   'scripts/build-package.mjs',
   'scripts/materialize-runtime.mjs',
+  'scripts/rewrite-declaration-specifiers.mjs',
 ]
 // Every generated artifact that must exist. The six dist/ outputs are emitted by
 // build-bundle/tsc + build-package.mjs; the two `.reference-ui/system/` baseSystem
