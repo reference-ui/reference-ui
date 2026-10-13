@@ -161,7 +161,7 @@ function buildUnrealizableExtensions(platformCss: PlatformCss): string[] {
     Array.from(platformCss.properties.values()).map((p) => p.kebab.toLowerCase())
   );
   return EXTENSIONS.filter(
-    (ext) =>
+    (ext: ExtensionProp) =>
       !platformCss.properties.has(ext.name) &&
       (ext.longhands?.length ?? 0) === 0 &&
       !webrefKebab.has(ext.css.toLowerCase())
