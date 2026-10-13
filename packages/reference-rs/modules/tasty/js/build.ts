@@ -1,10 +1,20 @@
 /**
  * Artifact builder module compiling Tasty TypeScript ASTs into disk-persisted bundles.
  * Coordinates native scanning, manifest generation, and type declaration emission.
- * Writes generated module chunks and index maps to destination directories.
+ * Stages generated chunks and index maps in a sibling temp dir, then swaps them into
+ * the output dir file by file. The manifest is swapped last and stale outputs are removed
+ * after it, so a concurrent reader never sees the output dir or a file this build emits missing.
  * Provides caching session wrappers for efficient incremental compiler workflows.
  */
-import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises'
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 
 import { scanAndEmitModules, type TastyDiagnostic } from './runtime'
@@ -192,41 +202,117 @@ async function writeEmittedArtifacts(
   outputDir: string,
   emitted: EmittedModulesPayload
 ): Promise<void> {
+  const manifestRelativePath = findManifestRelativePath(emitted)
+  const files = { ...emitted.modules, ...emitted.type_declarations }
   await mkdir(dirname(outputDir), { recursive: true })
 
-  const tempDir = await mkdtemp(join(dirname(outputDir), `${basename(outputDir)}.tmp-`))
+  // The pid lets a sync commit tell a live writer's stage from a killed one's.
+  const tempDir = await mkdtemp(
+    join(dirname(outputDir), `${basename(outputDir)}.tmp-${process.pid}-`)
+  )
 
   try {
-    const files = {
-      ...emitted.modules,
-      ...emitted.type_declarations,
-    }
-
-    await Promise.all(
-      Object.entries(files).map(async ([relativePath, source]) => {
-        const outputPath = join(tempDir, stripRelativePrefix(relativePath))
-        await mkdir(dirname(outputPath), { recursive: true })
-        await writeFile(
-          outputPath,
-          source.endsWith('\n') ? source : `${source}\n`,
-          'utf-8'
-        )
-      })
+    await stageEmittedFiles(tempDir, files)
+    await swapStagedFiles(
+      outputDir,
+      tempDir,
+      Object.keys(files).map(path => stripRelativePrefix(path)),
+      manifestRelativePath
     )
-
-    await rm(outputDir, { recursive: true, force: true })
-    await rename(tempDir, outputDir)
-  } catch (error) {
+  } finally {
     await rm(tempDir, { recursive: true, force: true })
+  }
+}
+
+async function stageEmittedFiles(
+  tempDir: string,
+  files: Record<string, string>
+): Promise<void> {
+  await Promise.all(
+    Object.entries(files).map(async ([relativePath, source]) => {
+      const stagedPath = join(tempDir, stripRelativePrefix(relativePath))
+      await mkdir(dirname(stagedPath), { recursive: true })
+      await writeFile(stagedPath, source.endsWith('\n') ? source : `${source}\n`, 'utf-8')
+    })
+  )
+}
+
+/** The manifest moves last, so a reader that sees it finds every file it names in place. */
+async function swapStagedFiles(
+  outputDir: string,
+  tempDir: string,
+  relativePaths: string[],
+  manifestRelativePath: string
+): Promise<void> {
+  // The live dir itself is never removed, so a poller on it never sees it vanish.
+  await mkdir(outputDir, { recursive: true })
+
+  const otherPaths = relativePaths.filter(path => path !== manifestRelativePath)
+  await Promise.all(otherPaths.map(path => swapFileIn(outputDir, tempDir, path)))
+  await swapFileIn(outputDir, tempDir, manifestRelativePath)
+
+  await removeStaleOutputs(outputDir, relativePaths)
+}
+
+async function swapFileIn(
+  outputDir: string,
+  tempDir: string,
+  relativePath: string
+): Promise<void> {
+  const stagedPath = join(tempDir, relativePath)
+  const livePath = join(outputDir, relativePath)
+  // Unchanged files stay untouched so bundler watchers see no mtime churn.
+  if (await hasSameBytes(stagedPath, livePath)) return
+
+  await mkdir(dirname(livePath), { recursive: true })
+  // rename over an existing file is atomic: readers see the old bytes or the new ones.
+  await rename(stagedPath, livePath)
+}
+
+async function hasSameBytes(stagedPath: string, livePath: string): Promise<boolean> {
+  const live = await readFileIfPresent(livePath)
+  return live !== undefined && live.equals(await readFile(stagedPath))
+}
+
+async function readFileIfPresent(path: string): Promise<Buffer | undefined> {
+  try {
+    return await readFile(path)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
     throw error
   }
+}
+
+/** Deletes live files this build did not emit. Directories are left in place. */
+async function removeStaleOutputs(
+  outputDir: string,
+  relativePaths: string[]
+): Promise<void> {
+  const emittedPaths = new Set(relativePaths.map(path => join(outputDir, path)))
+  const livePaths = await listFilePaths(outputDir)
+  await Promise.all(
+    livePaths
+      .filter(livePath => !emittedPaths.has(livePath))
+      .map(livePath => rm(livePath, { force: true }))
+  )
+}
+
+async function listFilePaths(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true })
+  const nested = await Promise.all(
+    entries.map(entry => {
+      const entryPath = join(dir, entry.name)
+      return entry.isDirectory() ? listFilePaths(entryPath) : [entryPath]
+    })
+  )
+  return nested.flat()
 }
 
 function stripRelativePrefix(relativePath: string): string {
   return relativePath.replace(/^\.\//, '')
 }
 
-function resolveManifestPath(outputDir: string, emitted: EmittedModulesPayload): string {
+function findManifestRelativePath(emitted: EmittedModulesPayload): string {
   const manifestModulePath =
     Object.keys(emitted.modules).find(path => path.endsWith('/manifest.js')) ??
     Object.keys(emitted.modules).find(path => path === './manifest.js')
@@ -235,5 +321,9 @@ function resolveManifestPath(outputDir: string, emitted: EmittedModulesPayload):
     throw new Error('Emitted Tasty modules payload did not include ./manifest.js.')
   }
 
-  return join(outputDir, stripRelativePrefix(manifestModulePath))
+  return stripRelativePrefix(manifestModulePath)
+}
+
+function resolveManifestPath(outputDir: string, emitted: EmittedModulesPayload): string {
+  return join(outputDir, findManifestRelativePath(emitted))
 }
