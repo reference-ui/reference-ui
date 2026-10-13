@@ -83,9 +83,31 @@ jobs:
       - name: Compile native binary
         run: pnpm --filter @reference-ui/rust exec napi build --package reference-native --platform --release --target ${{ matrix.target }} --output-dir dist/native --no-js
 
+      - name: Stamp native binary with its inputs hash
+        # The stamp records the hash of the Rust sources this binary was compiled from.
+        # The pipeline refuses a binary without a matching stamp, so CI must write one.
+        shell: bash
+        env:
+          RUST_TARGET: ${{ matrix.target }}
+        run: |
+          case "$RUST_TARGET" in
+            x86_64-unknown-linux-gnu) triple=linux-x64-gnu ;;
+            x86_64-apple-darwin) triple=darwin-x64 ;;
+            aarch64-apple-darwin) triple=darwin-arm64 ;;
+            x86_64-pc-windows-msvc) triple=win32-x64-msvc ;;
+            *)
+              echo "No reference-native triple for Rust target $RUST_TARGET" >&2
+              exit 1
+              ;;
+          esac
+          pnpm --dir packages/reference-rs run write-native-stamp -- "$triple"
+
       - name: Upload native artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact_prefix }}-${{ matrix.target }}
-          path: packages/reference-rs/dist/native/reference-native.*.node
+          # Binary and stamp travel together; consumers keep them side by side.
+          path: |
+            packages/reference-rs/dist/native/reference-native.*.node
+            packages/reference-rs/dist/native/reference-native.*.inputs.sha256
           if-no-files-found: error

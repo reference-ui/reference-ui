@@ -1,4 +1,4 @@
-# ATM-SITE-53: Identifiers Resolve Through Their Binding
+# ATM-SITE-53 — Identifiers Resolve Through Their Binding
 
 Tests that a value-position identifier resolves through the scope chain
 (SPEC-V2-75): a `Card({ color })` param shadows the cross-file

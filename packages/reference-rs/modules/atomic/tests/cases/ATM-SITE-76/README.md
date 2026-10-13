@@ -1,4 +1,4 @@
-# ATM-SITE-76
+# ATM-SITE-76 — Import-identity station (SPEC-V2-59 alias + I2 arms)
 
 Aliased, named multi-declaration, and string-literal `css` imports are
 live sites. Pins the SPEC-V2-59 alias arm (v2 `imports.rs:34`) and the

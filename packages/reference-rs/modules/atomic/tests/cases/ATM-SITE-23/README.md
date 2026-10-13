@@ -1,4 +1,4 @@
-# ATM-SITE-23: Const-Bound Branches Extract Every Leaf
+# ATM-SITE-23 — Const-Bound Branches Extract Every Leaf
 
 Tests that an identifier bound to a ternary or logical of literals —
 `const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component

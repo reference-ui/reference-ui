@@ -2,11 +2,18 @@
  * Release publishing tool for platform-specific native addons.
  * Discovers built native artifacts and publishes corresponding platform npm packages.
  * Dynamically binds optionalDependencies on the root package before publishing.
+ * Refuses to publish when a downloaded binary lacks an inputs stamp matching
+ * the current sources, so a prebuilt from older sources cannot ship.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 
+import {
+  collectArtifactFreshnessIssues,
+  formatNativeFreshnessError,
+} from '../shared/native-freshness'
+import { hashNativeInputs } from '../shared/native-inputs'
 import { artifactsDir, npmDir, packageDir } from '../shared/paths'
 
 interface PackageJson {
@@ -96,6 +103,14 @@ function publishRootPackage(rootPkg: PackageJson) {
 
 if (!existsSync(artifactsDir)) {
   throw new Error('Missing native artifacts for @reference-ui/rust publish.')
+}
+
+const freshness = collectArtifactFreshnessIssues({
+  artifactsDirPath: artifactsDir,
+  currentHash: hashNativeInputs(packageDir),
+})
+if (freshness.issues.length > 0) {
+  throw new Error(formatNativeFreshnessError(freshness, 'publish'))
 }
 
 run('pnpm', ['run', 'create-npm-dirs'])

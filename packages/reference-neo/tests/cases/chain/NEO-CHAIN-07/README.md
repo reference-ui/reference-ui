@@ -1,4 +1,4 @@
-# NEO-CHAIN-07
+# NEO-CHAIN-07 — root default loses to every author
 
 The baked `@layer root` spacing-root default ranks below every author
 definition in an extends chain: standalone it applies (`0.25rem`, `140r`

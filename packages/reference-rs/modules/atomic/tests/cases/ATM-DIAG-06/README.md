@@ -1,4 +1,4 @@
-# ATM-DIAG-06
+# ATM-DIAG-06 — Unicode-positions station (ATM-DIAG-06, Operation Error Correct Slice 0)
 
 Unicode diagnostic positions: non-ASCII source and selectors compile
 without panic, and columns count UTF-16 code units so reported

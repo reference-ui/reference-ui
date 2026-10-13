@@ -1,4 +1,4 @@
-# ATM-HARVEST-07
+# ATM-HARVEST-07 — Color token-license station
 
 The color token-license arm. The pool holds two named colors the system
 declares as `colors` tokens plus one undeclared shade, and a dynamic

@@ -1,4 +1,4 @@
-# ATM-SHORT-08
+# ATM-SHORT-08 — Text-gradient station (ATM-SHORT-08, RS-22)
 
 `textGradient` expands to the Panda clip trio (`background-image` with
 resolved refs, `-webkit-background-clip: text`, `color: transparent`)

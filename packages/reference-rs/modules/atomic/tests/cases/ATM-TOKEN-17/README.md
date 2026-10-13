@@ -1,4 +1,4 @@
-# ATM-TOKEN-17
+# ATM-TOKEN-17 — Negated-brace station
 
 Negation distributes over explicit braced lookups: `-{spacing.4}` calc-wraps silently, opacity composes in either brace position (`-{path/50}`, `-{path}/50`), `-{unknown.path}` fails closed with an error plus a dropped declaration, and the `-1px solid {colors…}` composite keeps interpolation with no calc-wrap.
 Symbols: `resolve_negated_token`, `resolve_negated_braced`, `DiagnosticCode::UnknownTokenReference`.

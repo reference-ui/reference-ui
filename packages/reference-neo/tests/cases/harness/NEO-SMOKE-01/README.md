@@ -1,3 +1,4 @@
+# NEO-SMOKE-01 — smoke
 Smoke test: a grey page with a crimson dot centered proves the harness loop works.
 
 This is the smallest honest neo case. The world is a single static page, and the

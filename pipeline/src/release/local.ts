@@ -7,7 +7,8 @@
 
 import { RELEASE_PACKAGE_NAMES } from '../../config.js'
 import { buildWorkspaceArtifacts } from '../build/index.js'
-import { REFERENCE_RUST_PACKAGE_NAME, getLocallyBuildableReferenceRustTargets, getMissingLocalReleaseRustTargets } from '../build/rust/targets.js'
+import { getNativelyBuildableReferenceRustTargets } from '../build/rust/planning.js'
+import { REFERENCE_RUST_PACKAGE_NAME, getMissingLocalReleaseRustTargets } from '../build/rust/targets.js'
 import { packPublicPackages } from '../registry/index.js'
 import { ensureNpmAuth } from './auth.js'
 import {
@@ -27,7 +28,7 @@ interface ResolveLocalReleasePlanDependencies {
 }
 
 interface AssertLocalRustReleaseSupportedDependencies {
-  getLocallyBuildableReferenceRustTargets: () => string[]
+  getNativelyBuildableReferenceRustTargets: () => string[]
   getMissingLocalReleaseRustTargets: (packageDir: string) => string[]
 }
 
@@ -53,7 +54,7 @@ export async function resolveLocalReleasePlan(
 export function assertLocalRustReleaseSupported(
   releasePlan: ReleasePlan,
   dependencies: AssertLocalRustReleaseSupportedDependencies = {
-    getLocallyBuildableReferenceRustTargets,
+    getNativelyBuildableReferenceRustTargets: () => getNativelyBuildableReferenceRustTargets(),
     getMissingLocalReleaseRustTargets,
   },
 ): void {
@@ -69,14 +70,14 @@ export function assertLocalRustReleaseSupported(
     return
   }
 
-  const locallyBuildableTargets = dependencies.getLocallyBuildableReferenceRustTargets()
+  const nativelyBuildableTargets = dependencies.getNativelyBuildableReferenceRustTargets()
 
   throw new Error(
     [
       `Local release cannot publish ${REFERENCE_RUST_PACKAGE_NAME}@${rustPackage.version} from this machine yet.`,
       `Missing native targets: ${missingTargets.join(', ')}.`,
-      `This local flow can currently materialize: ${locallyBuildableTargets.join(', ')}.`,
-      'Provide the missing target artifacts under packages/reference-rs/dist/artifacts (for example from your release CI or pipeline), or run the release from a machine that can build the full target set.',
+      `This local flow can currently materialize: ${nativelyBuildableTargets.join(', ')}.`,
+      'Provide the missing target artifacts, each with its .inputs.sha256 stamp matching these sources, under packages/reference-rs/dist/artifacts (for example from your release CI or pipeline), or run the release from a machine that can build the full target set.',
     ].join(' '),
   )
 }

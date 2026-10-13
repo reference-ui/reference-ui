@@ -1,4 +1,4 @@
-# ATM-ORDER-01
+# ATM-ORDER-01 — Magnitude sort station
 
 At-rule blocks sort by parsed query magnitude, not by the query string.
 `min-width` is ascending; `max-width` is descending.

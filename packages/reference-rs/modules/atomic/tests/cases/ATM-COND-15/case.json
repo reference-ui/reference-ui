@@ -1,0 +1,1 @@
+{"id": "ATM-COND-15", "name": "Container-query conditions without a container root in globalCss emit a diagnostic"}

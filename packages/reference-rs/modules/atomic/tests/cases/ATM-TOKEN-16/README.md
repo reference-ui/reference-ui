@@ -1,4 +1,4 @@
-# ATM-TOKEN-16
+# ATM-TOKEN-16 — Bare-value station (§11)
 
 Bare values never warn off color props: `fontSize="sm"` passes `sm` through silently, `color="md"` warns unknown-color, and `borderRadius="sm"` still resolves `var(--radii-sm)` — the cross-category radii story is retired.
 Symbols: `warn_unresolved_token`, `warn_unknown_color`, `DiagnosticCode::UnknownColor`.

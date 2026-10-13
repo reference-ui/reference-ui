@@ -33,6 +33,11 @@ export interface BuildPackageJsonOverride {
 export interface BuildRegistryArtifacts {
   cacheKey?: string
   generatedPackages: BuildRegistryArtifactPackage[]
+  /**
+   * Warnings for native targets the prepared pack left out. Artifacts with any
+   * are never reused, so every pack that leaves a target out says so again.
+   */
+  leftOutWarnings?: string[]
   packageHashAugmentations: Record<string, string>
   preparedPackageJsonOverrides: Record<string, BuildPackageJsonOverride>
 }

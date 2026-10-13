@@ -1,4 +1,4 @@
-# ATM-DIAG-08
+# ATM-DIAG-08 — Exact-plan-present station (ATM-DIAG-08, Operation Error Correct, Slice 0)
 
 Exact plan present: diagnostics predicts a static runtime query, the same
 key is in `stylePlans`, and userspace is silent. The prediction is

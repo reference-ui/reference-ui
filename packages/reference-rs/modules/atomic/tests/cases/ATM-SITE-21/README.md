@@ -1,4 +1,4 @@
-# ATM-SITE-21: Ternary Object Arms in JSX `css`/Condition Props
+# ATM-SITE-21 — Ternary Object Arms in JSX `css`/Condition Props
 
 Tests that a ternary (or nested ternary) with object-literal arms in a JSX
 `css` or condition prop (`_hover`, `_dark`, …) compiles every leaf of every

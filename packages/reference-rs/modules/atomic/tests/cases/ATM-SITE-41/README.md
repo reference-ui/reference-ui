@@ -1,4 +1,4 @@
-# ATM-SITE-41: Barrel Re-Export Proof (Binding Walk)
+# ATM-SITE-41 — Barrel Re-Export Proof (Binding Walk)
 
 Proves SPEC-V2-56: same-name chains through one, two, and three barrel
 hops resolve to the origin const, and the aliased re-export

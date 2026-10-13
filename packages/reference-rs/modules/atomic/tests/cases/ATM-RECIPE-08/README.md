@@ -1,4 +1,4 @@
-# ATM-RECIPE-08: Recipe Identity From `<Name>Recipe` Bindings
+# ATM-RECIPE-08 — Recipe Identity From `<Name>Recipe` Bindings
 
 Tests that a `recipe(...)` call with no `className` prop resolves its stem from
 an enclosing `<Name>Recipe` declarator (`const chipRecipe = recipe(...)` →

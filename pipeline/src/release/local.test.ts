@@ -75,7 +75,7 @@ describe('assertLocalRustReleaseSupported', () => {
   it('allows non-rust release plans to continue', () => {
     assert.doesNotThrow(() => {
       assertLocalRustReleaseSupported(releasePlan(), {
-        getLocallyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
+        getNativelyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
         getMissingLocalReleaseRustTargets: () => ['win32-x64-msvc'],
       })
     })
@@ -99,7 +99,7 @@ describe('assertLocalRustReleaseSupported', () => {
           ],
         }),
         {
-          getLocallyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
+          getNativelyBuildableReferenceRustTargets: () => ['darwin-x64', 'linux-x64-gnu'],
           getMissingLocalReleaseRustTargets: () => ['darwin-arm64', 'win32-x64-msvc'],
         },
       ),

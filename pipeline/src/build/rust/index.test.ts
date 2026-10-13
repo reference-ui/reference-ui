@@ -52,8 +52,16 @@ describe('createRustBuildHashAugmentation', () => {
 })
 
 describe('createRustBuildRegistryArtifactsCacheKey', () => {
-  it('normalizes the default target set and ordering', () => {
+  it('normalizes explicit target ordering', () => {
     assert.equal(
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', ['darwin-x64', 'linux-x64-gnu']),
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', ['linux-x64-gnu', 'darwin-x64']),
+    )
+  })
+
+  it('keeps the implicit all-target pack apart from an explicit list naming every target', () => {
+    // The implicit pack may leave stale targets out; the explicit one must refuse. One must never reuse the other.
+    assert.notEqual(
       createRustBuildRegistryArtifactsCacheKey('rust-hash'),
       createRustBuildRegistryArtifactsCacheKey('rust-hash', [
         'win32-x64-msvc',
@@ -61,6 +69,13 @@ describe('createRustBuildRegistryArtifactsCacheKey', () => {
         'linux-x64-gnu',
         'darwin-x64',
       ]),
+    )
+  })
+
+  it('keys artifacts by the host, since the host decides what it can build', () => {
+    assert.notEqual(
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', undefined, false, undefined, 'darwin-x64'),
+      createRustBuildRegistryArtifactsCacheKey('rust-hash', undefined, false, undefined, 'linux-x64-gnu'),
     )
   })
 
@@ -106,6 +121,42 @@ describe('canReuseRustBuildRegistryArtifacts', () => {
       )
     } finally {
       await rm(resolve(repoRoot, relativeTarballPath), { force: true })
+      await rm(tarballDir, { recursive: true, force: true })
+    }
+  })
+
+  it('never reuses artifacts that left a native target out, so a binary placed afterwards is picked up', async () => {
+    const tarballDir = await mkdtemp(resolve(tmpdir(), 'reference-ui-rust-tarballs-'))
+    const tarballPath = resolve(tarballDir, 'cached-rust-target.tgz')
+
+    try {
+      await writeFile(tarballPath, 'tarball')
+      const artifacts = {
+        cacheKey: 'rust-cache-key',
+        generatedPackages: [
+          {
+            hash: 'generated-hash',
+            internalDependencies: [],
+            name: '@reference-ui/rust-darwin-arm64',
+            sourceDir: 'packages/reference-rs/npm/darwin-arm64',
+            tarballFileName: 'cached-rust-target.tgz',
+            tarballPath,
+            version: '0.0.15',
+          },
+        ],
+        packageHashAugmentations: {},
+        preparedPackageJsonOverrides: {},
+      }
+
+      assert.equal(canReuseRustBuildRegistryArtifacts(artifacts, 'rust-cache-key'), true)
+      assert.equal(
+        canReuseRustBuildRegistryArtifacts(
+          { ...artifacts, leftOutWarnings: ['Leaving @reference-ui/rust-win32-x64-msvc@0.0.15 out of this pack'] },
+          'rust-cache-key',
+        ),
+        false,
+      )
+    } finally {
       await rm(tarballDir, { recursive: true, force: true })
     }
   })

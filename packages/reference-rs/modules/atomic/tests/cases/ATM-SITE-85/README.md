@@ -1,4 +1,4 @@
-# ATM-SITE-85
+# ATM-SITE-85 — Declared-props shadow station (Forge §14)
 
 A host's own declared props shadow StyleProps on that host: Button's `size` never reaches the resolver (no want, no warning), while Div still folds the `size` macro and Button's inherited `color` still extracts.
 Symbols: `owned_props`, `host_owns`, `is_style_attr_name`, `collect_declared_prop_names`, `TraceOutcome`.

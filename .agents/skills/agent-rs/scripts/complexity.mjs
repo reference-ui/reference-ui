@@ -126,6 +126,8 @@ const IGNORE_DIRS = new Set([
   'artifacts',
   '.git',
   '.reference-ui',
+  // Gitignored test output (tasty tests/.scratch): generated JS, not source.
+  '.scratch',
   'cases',
   'fixtures',
   'generated',

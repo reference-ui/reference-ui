@@ -1,0 +1,8 @@
+{
+  "description": "reference-rs cases — one doc per case folder from case.json + README + spec.ts.",
+  "kind": "rs-case",
+  "name": "rs-cases",
+  "owner": "agent-rs skill",
+  "root": "packages/reference-rs/modules",
+  "weights": { "id": 4, "title": 3 }
+}

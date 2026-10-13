@@ -1,4 +1,4 @@
-# ATM-SITE-84
+# ATM-SITE-84 — Origin-precision station (Forge §3)
 
 An import resolves to its origin binding only: `glow` folds `#f59e0b` from its unmutated export despite a same-named write in another file, while the written file's own use still diagnoses `ATM-W-MUTATED-BINDING` naming that write.
 Symbols: `ImportLookup`, `ResolvedExport::mutation`, `Scoped::mutation`, `ValueGraph`.

@@ -1,4 +1,4 @@
-# ATM-COND-27
+# ATM-COND-27 — Tag / class / BEM compounds, ancestors, tails, and bare `&` (ATM-COND-27, SPEC-V2-72)
 
 Tag / class / BEM compounds (`&_elem`, `&html`, `html&`, `body&`,
 `.foo&`), ancestors (`body &:hover b`), the three-level `.c &` tail,

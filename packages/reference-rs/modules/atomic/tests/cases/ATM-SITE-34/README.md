@@ -1,4 +1,4 @@
-# ATM-SITE-34
+# ATM-SITE-34 — Optional-chain station (ATM-SITE-34, SPEC-V2-43/44, Overmatch Ph3)
 
 Optional-chain folding over known const objects (SPEC-V2-43/44,
 Overmatch Ph3). `?.` unwraps transparently — single-hop and nested —

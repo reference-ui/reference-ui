@@ -1,4 +1,4 @@
-# ATM-DIAG-12
+# ATM-DIAG-12 — Surface-parity station (ATM-DIAG-12, Error Correct Slice 2, red shell)
 
 Surface parity: imported `css()` and traced JSX predict the same
 expected runtime lookup key for equivalent declarations, while native

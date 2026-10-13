@@ -1,4 +1,4 @@
-# ATM-SITE-67
+# ATM-SITE-67 — Overlapping-spread station (SPEC-V2-23 GAP-23)
 
 Overlapping inline-object spreads mint both atoms while the runtime merge
 resolves the shared slot last-wins. Pins SPEC-V2-23 GAP-23 (v2

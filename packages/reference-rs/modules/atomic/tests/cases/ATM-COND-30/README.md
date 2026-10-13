@@ -1,4 +1,4 @@
-# ATM-COND-30
+# ATM-COND-30 — Sibling-combinator station (SPEC-V2-47 utility half)
 
 Utility-path `& + &` / `& ~ &` substitution, two-level stacks, and comma
 descendant lists. Pins the SPEC-V2-47 shapes the globalCss stations prove

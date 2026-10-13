@@ -1,4 +1,4 @@
-# ATM-SITE-88: Bound Member Roots Resolve Through Const Object Literals
+# ATM-SITE-88 — Bound Member Roots Resolve Through Const Object Literals
 
 Tests that a locally bound member root (`const NS = { Panel: Div }`)
 re-admits `<NS.Panel />` when the statically matched member value is an

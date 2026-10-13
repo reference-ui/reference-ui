@@ -6,6 +6,8 @@ dist/cargo/
 node_modules/
 
 # Tasty API loads emitted modules from scratch. Committed goldens live in output/.
+# tests/.scratch is the legacy location, still ignored so old output never shows as untracked.
+modules/tasty/.scratch/
 modules/tasty/tests/.scratch/
 
 # Generated ts-rs test bindings

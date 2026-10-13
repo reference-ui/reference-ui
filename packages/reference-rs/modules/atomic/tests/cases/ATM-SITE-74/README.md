@@ -1,4 +1,4 @@
-# ATM-SITE-74
+# ATM-SITE-74 — Optional-chain drop station (SPEC-V2-44)
 
 Optional chain on an unresolvable base warns once and mints nothing while
 the `padding` sibling extracts. Pins SPEC-V2-44 (v2

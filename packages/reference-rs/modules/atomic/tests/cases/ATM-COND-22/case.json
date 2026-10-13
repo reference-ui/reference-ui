@@ -1,0 +1,1 @@
+{"id": "ATM-COND-22", "name": "css()-nested `&:where(:has())` substitutes inside the functional arg"}

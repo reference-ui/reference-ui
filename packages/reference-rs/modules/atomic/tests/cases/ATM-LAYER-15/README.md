@@ -1,4 +1,4 @@
-# ATM-LAYER-15: Bare Token Names Resolve in `globalCss` Like the Atomic Path
+# ATM-LAYER-15 — Bare Token Names Resolve in `globalCss` Like the Atomic Path
 
 Tests that `globalCss` values resolve bare token names through the
 property's category — `fontFamily: 'sans'` → `var(--fonts-sans)`,

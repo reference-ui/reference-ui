@@ -1,4 +1,4 @@
-# ATM-DIAG-05
+# ATM-DIAG-05 — Diagnostic-precision station (ATM-DIAG-05, Overmatch Ph1, SPEC-V2-77)
 
 Diagnostic precision: every refusal the extractor emits carries
 `file:line:col` of the offending sub-expression plus a stable

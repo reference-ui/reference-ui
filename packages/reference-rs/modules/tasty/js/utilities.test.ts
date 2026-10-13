@@ -3,7 +3,7 @@
  * Contains JS API logic and types.
  */
 import { join } from 'node:path'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import {
   createTastyApi,
@@ -14,7 +14,11 @@ import {
   getTastyTypeInlineVariants,
   getTastyTypeSemanticKind,
 } from './index'
-import { caseRuntimeDir, ensureTastyCaseCompiled } from '../tests/harness/helpers.js'
+import {
+  caseRuntimeDir,
+  disposeTastyScratch,
+  ensureTastyCaseCompiled,
+} from '../tests/harness/helpers.js'
 
 function manifestPath(caseName: string): string {
   return join(caseRuntimeDir(caseName), 'manifest.js')
@@ -29,6 +33,8 @@ describe('tasty utilities', () => {
       ensureTastyCaseCompiled('TST-VAL-01'),
     ])
   })
+
+  afterAll(disposeTastyScratch)
 
   it('builds useful member utilities for jsdoc-rich interfaces', async () => {
     const api = createTastyApi({

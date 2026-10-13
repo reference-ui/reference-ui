@@ -1,4 +1,4 @@
-# ATM-SITE-40: Aliased Imports Resolve by Exported Name
+# ATM-SITE-40 — Aliased Imports Resolve by Exported Name
 
 Overmatch Ph4 crew-B station for SPEC-V2-52 (aliased value import), the
 entry-54 remainder (missing export through an alias), and import cycles

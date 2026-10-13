@@ -1,4 +1,4 @@
-# ATM-SITE-82
+# ATM-SITE-82 — Null-const station (§4)
 
 A const bound to `null` strips silently: same-file `const n = null` and an imported null both vanish like literal nulls while `padding` and `margin` siblings emit, with zero diagnostics.
 Symbols: `literal_leaf` (`scope/init.rs`, `constants/collect.rs`), `AtomValue::Null`, `css_value_from_authored`.

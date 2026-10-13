@@ -1,4 +1,4 @@
-# ATM-SITE-55: Site Identity Through Re-Exports (Zero Config)
+# ATM-SITE-55 — Site Identity Through Re-Exports (Zero Config)
 
 Pins the SPEC-V2-76 identity rider (S12): a consumer wrapper module
 (`export { css } from '@reference-ui/react'`) carries site identity to

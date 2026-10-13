@@ -1,4 +1,4 @@
-# ATM-COND-06
+# ATM-COND-06 — Runtime-owned prop station
 
 Runtime-owned `variant` and `colorMode` extract as wants but emit no
 utility atoms. Sibling StyleProps still compile. Contract:

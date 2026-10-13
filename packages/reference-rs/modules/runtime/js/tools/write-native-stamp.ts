@@ -1,8 +1,11 @@
 /**
- * Stamp writer for freshly compiled native binaries.
- * Records the current rust inputs hash beside a .node binary so later pack
- * and build steps can prove the binary matches the sources it ships with.
- * Used by CI immediately after compiling a target the pack host cannot build.
+ * Stamp writer for native binaries built elsewhere.
+ * Records the current rust inputs hash beside a .node binary in dist/native so
+ * pack and build steps can prove the binary matches the sources it ships with.
+ * The stamp is the hash of the current sources, so run it only after copying a
+ * binary built from these exact sources onto this host. CI calls it right after
+ * each napi build (.github/workflows/rust-compile.yml) and uploads the stamp
+ * beside its binary.
  */
 import { nativeDir, packageDir } from '../shared/paths'
 import { writeNativeStamp } from '../shared/native-freshness'

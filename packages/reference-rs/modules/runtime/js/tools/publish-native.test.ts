@@ -174,6 +174,17 @@ describe('publish-native', () => {
     expect(restoredPackageJson.optionalDependencies).toBeUndefined()
   })
 
+  it('refuses to publish before touching npm when a downloaded binary has no matching inputs stamp', async () => {
+    const { packageDir, artifactsDir } = createNativePublishFixture()
+    const bindingsDir = resolve(artifactsDir, 'bindings-aarch64-apple-darwin')
+    mkdirSync(bindingsDir, { recursive: true })
+    writeFileSync(resolve(bindingsDir, 'reference-native.darwin-arm64.node'), 'fake-binary', 'utf-8')
+
+    await expect(
+      importPublishNativeModule({ packageDir, artifactsDir, argv: ['--publish-root'] })
+    ).rejects.toThrow('Refusing to publish @reference-ui/rust with stale or unstamped native binaries')
+  })
+
   it('refuses to publish the root package when a same-version native target is already published', async () => {
     const { packageDir, artifactsDir } = createNativePublishFixture()
 

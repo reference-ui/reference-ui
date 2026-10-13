@@ -1,4 +1,4 @@
-# ATM-ROOT-01
+# ATM-ROOT-01 — Baked root-default station
 
 The baked `@layer root` spacing-root default emits first in the sheet even
 when the system defines no author `:root` and the input uses zero rhythm

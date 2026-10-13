@@ -1,4 +1,4 @@
-# ATM-HARVEST-03
+# ATM-HARVEST-03 — Harvest condition station (Forge §2 sinks)
 
 A sink under `_hover` mints `"_hover:color:..."` only: the pool crosses the sink carrying the sink's `when`, and no unconditioned twins leak into the map. One `ATM-I-HARVEST-SINK` names the scope and the count.
 Symbols: `Sink`, `mint`, `HarvestSink`.

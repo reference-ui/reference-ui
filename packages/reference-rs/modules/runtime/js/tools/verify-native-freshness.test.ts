@@ -17,6 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { hashNativeInputs } from '../shared/native-inputs'
 import {
+  collectArtifactFreshnessIssues,
   collectNativeFreshnessIssues,
   formatNativeFreshnessError,
   tripleForRustTarget,
@@ -70,6 +71,18 @@ describe('hashNativeInputs', () => {
     const second = join(secondRoot, 'pkg')
 
     expect(hashNativeInputs(second)).toBe(hashNativeInputs(first.packageDir))
+  })
+
+  it('hashes a CRLF checkout of the same sources identically to an LF checkout', () => {
+    // Windows CI checks text out as CRLF under core.autocrlf; its stamp must still match macOS and Linux.
+    const { packageDir } = createPackageFixture()
+    const lfHash = hashNativeInputs(packageDir)
+    const libPath = join(packageDir, 'modules', 'demo', 'lib.rs')
+    writeFileSync(libPath, 'pub fn x() {}\r\n', 'utf-8')
+    const crlfCargoPath = join(packageDir, 'Cargo.toml')
+    writeFileSync(crlfCargoPath, '[workspace]\r\n', 'utf-8')
+
+    expect(hashNativeInputs(packageDir)).toBe(lfHash)
   })
 
   it('changes the hash when rust input content changes', () => {
@@ -218,6 +231,32 @@ describe('collectNativeFreshnessIssues', () => {
 
     expect(message).toContain('Refusing to pack @reference-ui/rust')
     expect(message).toContain('linux-x64-gnu: is old')
+  })
+})
+
+describe('collectArtifactFreshnessIssues', () => {
+  it('checks binaries in per-target artifact dirs and at the artifacts root against their stamps', () => {
+    const { packageDir } = createPackageFixture()
+    const artifactsDir = join(packageDir, 'dist', 'artifacts')
+    const hash = hashNativeInputs(packageDir)
+    const freshDir = join(artifactsDir, 'bindings-x86_64-apple-darwin')
+    const staleDir = join(artifactsDir, 'bindings-aarch64-apple-darwin')
+    mkdirSync(freshDir, { recursive: true })
+    mkdirSync(staleDir, { recursive: true })
+    writeBinary(freshDir, 'darwin-x64')
+    writeFileSync(join(freshDir, 'reference-native.darwin-x64.inputs.sha256'), `${hash}\n`)
+    writeBinary(staleDir, 'darwin-arm64')
+    writeFileSync(join(staleDir, 'reference-native.darwin-arm64.inputs.sha256'), `${'0'.repeat(64)}\n`)
+    writeBinary(artifactsDir, 'win32-x64-msvc')
+
+    const report = collectArtifactFreshnessIssues({ artifactsDirPath: artifactsDir, currentHash: hash })
+
+    expect(report.verified).toEqual(['darwin-x64'])
+    expect(report.issues.map(issue => [issue.triple, issue.kind]).sort()).toEqual([
+      ['darwin-arm64', 'stale-binary'],
+      ['win32-x64-msvc', 'missing-stamp'],
+    ])
+    expect(formatNativeFreshnessError(report, 'publish')).toContain('Refusing to publish @reference-ui/rust')
   })
 })
 

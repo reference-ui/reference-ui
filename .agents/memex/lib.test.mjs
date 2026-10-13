@@ -1,6 +1,7 @@
 /**
  * Memex unit tests: pure functions plus tmp-fixture collectors.
- * Run: node --test .agents/memex/
+ * Run: node --test .agents/memex/lib.test.mjs .agents/memex/components.test.mjs
+ * (Node 24 rejects a bare directory argument to --test.)
  */
 
 import { execFileSync } from 'node:child_process'
@@ -14,13 +15,14 @@ import {
   collectNeo,
   collectPerf,
   collectRs,
+  collectRsCases,
   formatPerfShow,
   matchGlob,
   perfCounts,
   substringSearch,
 } from './adapters.mjs'
 import { chainShow, extractHeader, readmeChain } from './graph.mjs'
-import { buildIndex, loadManifests, search, show } from './lib.mjs'
+import { buildIndex, loadAll, loadManifests, search, show } from './lib.mjs'
 import {
   extractTitle,
   firstParagraph,
@@ -257,6 +259,76 @@ describe('rs collector', () => {
     } finally {
       done()
     }
+  })
+})
+
+describe('rs case collector', () => {
+  it('builds one doc per case folder from case.json, README, and spec', () => {
+    const { dir, done } = fixture()
+    try {
+      const cased = join(dir, 'mods', 'tiny', 'tests', 'cases', 'TST-AAA-01')
+      mkdirSync(cased, { recursive: true })
+      writeFileSync(
+        join(cased, 'case.json'),
+        JSON.stringify({ id: 'TST-AAA-01', name: 'tiny claim' })
+      )
+      writeFileSync(
+        join(cased, 'README.md'),
+        '# TST-AAA-01 — tiny claim\nSee TST-AAA-02 and ATL-BAR-01.\n'
+      )
+      writeFileSync(join(cased, 'spec.ts'), 'export default { id: "TST-AAA-01" }\n')
+      const bare = join(dir, 'mods', 'tiny', 'tests', 'cases', 'TST-AAA-02')
+      mkdirSync(bare, { recursive: true })
+      writeFileSync(join(bare, 'README.md'), '# TST-AAA-02\n')
+      const { docs, warnings } = collectRsCases(join(dir, 'mods'), dir, 'rs-cases')
+      assert.equal(docs.length, 1)
+      assert.equal(docs[0].kind, 'rs-case')
+      assert.equal(docs[0].id, 'TST-AAA-01')
+      assert.equal(docs[0].title, 'tiny claim')
+      assert.equal(docs[0].extra, 'tiny')
+      assert.equal(docs[0].path, 'mods/tiny/tests/cases/TST-AAA-01')
+      assert.deepEqual(docs[0].payload.related, ['TST-AAA-02', 'ATL-BAR-01'])
+      assert.deepEqual(docs[0].payload.specs, [
+        'mods/tiny/tests/cases/TST-AAA-01/spec.ts',
+      ])
+      assert.ok(docs[0].fields.text.includes('export default'))
+      assert.deepEqual(warnings, [
+        'skipped (no case.json): mods/tiny/tests/cases/TST-AAA-02',
+      ])
+    } finally {
+      done()
+    }
+  })
+
+  it('warns on a case.json that is unparseable or has no id', () => {
+    const { dir, done } = fixture()
+    try {
+      const cases = join(dir, 'mods', 'tiny', 'tests', 'cases')
+      mkdirSync(join(cases, 'TST-BAD-01'), { recursive: true })
+      writeFileSync(join(cases, 'TST-BAD-01', 'case.json'), '{"name": "cut off"')
+      mkdirSync(join(cases, 'TST-BAD-02'), { recursive: true })
+      writeFileSync(join(cases, 'TST-BAD-02', 'case.json'), '{"name": "no id"}')
+      const { docs, warnings } = collectRsCases(join(dir, 'mods'), dir, 'rs-cases')
+      assert.equal(docs.length, 0)
+      assert.deepEqual(warnings, [
+        'skipped (unparseable case.json): mods/tiny/tests/cases/TST-BAD-01',
+        'skipped (case.json has no id): mods/tiny/tests/cases/TST-BAD-02',
+      ])
+    } finally {
+      done()
+    }
+  })
+})
+
+describe('reference-rs case docs in this repo', () => {
+  it('finds a case by its raw id as its own doc, ahead of its module doc', () => {
+    const all = loadAll(loadManifests().filter(m => m.name === 'rs-cases'))
+    const [top] = search(all, 'ATM-TOKEN-19').hits
+    assert.equal(top.collection, 'rs-cases')
+    assert.equal(top.id, 'ATM-TOKEN-19')
+    const shown = show(all, 'ATM-TOKEN-19').text
+    assert.ok(shown.startsWith('rs-cases:ATM-TOKEN-19 '), shown.slice(0, 80))
+    assert.ok(shown.includes('module: atomic'))
   })
 })
 

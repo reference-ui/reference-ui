@@ -1,4 +1,4 @@
-# ATM-SITE-42
+# ATM-SITE-42 — Destructuring station (ATM-SITE-42, SPEC-V2-32, Overmatch Ph3)
 
 Destructuring declarations bound to const values (SPEC-V2-32, Overmatch
 Ph3). Object and array patterns bind the entries they select — shorthand,

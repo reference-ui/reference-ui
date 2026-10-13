@@ -1,4 +1,4 @@
-# ATM-EXT-01
+# ATM-EXT-01 — Dialect-extension realization station (ATM-EXT-01)
 
 Dialect extensions with no CSS lowering refuse at the resolve
 fall-through instead of minting dead rules. Each probed prop

@@ -1,4 +1,4 @@
-# ATM-STATIC-02
+# ATM-STATIC-02 — staticCss overlap station
 
 Overlapping AST `bg="n300"` and `staticCss` `bg: ['n100', 'n300']` dedup
 to one atom / one class. Contract: [SPEC.md](../../../SPEC.md).

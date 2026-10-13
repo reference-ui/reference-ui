@@ -1,4 +1,4 @@
-# ATM-COND-01
+# ATM-COND-01 — Named-breakpoint at-rule station
 
 Named breakpoint `when` tokens (`sm` / `md` / `lg` / `xl` / `2xl`) lower
 to `@container (min-width: Npx)`. Array indexing is `ATM-LEAF-05`.

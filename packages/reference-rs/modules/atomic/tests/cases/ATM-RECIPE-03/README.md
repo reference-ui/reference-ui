@@ -1,4 +1,4 @@
-# ATM-RECIPE-03
+# ATM-RECIPE-03 — Host StyleProps station
 
 StyleProps on a recipe host stay utilities. `variant` is runtime-owned.
 Because `@layer utilities` follows `@layer recipes`, host overrides win.

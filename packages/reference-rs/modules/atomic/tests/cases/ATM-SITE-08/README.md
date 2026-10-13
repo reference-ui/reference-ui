@@ -1,4 +1,4 @@
-# ATM-SITE-08
+# ATM-SITE-08 — Styletrace gating station
 
 JSX extract uses styletrace plus Reference imports, not PascalCase
 guessing. Honest subset: this station has no synced

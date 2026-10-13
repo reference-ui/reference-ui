@@ -1,4 +1,4 @@
-# ATM-DIAG-04
+# ATM-DIAG-04 — Located-diagnostics station (ATM-DIAG-04, Operation Error Correct Slice 0)
 
 Located diagnostics beyond extract: every diagnostic the compiler emits
 carries `file:line:col` of the offending site, so a warning without a

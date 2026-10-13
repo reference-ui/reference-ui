@@ -1,4 +1,4 @@
-# ATM-LAYER-07
+# ATM-LAYER-07 — Shared-wrapper station
 
 Atoms that share an at-rule wrapper nest under one copy of that at-rule.
 Three `sm` utilities share a single `@container (min-width: 640px)` block.

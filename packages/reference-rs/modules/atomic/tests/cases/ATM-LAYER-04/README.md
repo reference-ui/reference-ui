@@ -1,4 +1,4 @@
-# ATM-LAYER-04
+# ATM-LAYER-04 — Utilities-encapsulation station
 
 Atomic utility rules and their at-rule wrappers live inside `@layer utilities`.
 Contract: [SPEC.md](../../../SPEC.md).

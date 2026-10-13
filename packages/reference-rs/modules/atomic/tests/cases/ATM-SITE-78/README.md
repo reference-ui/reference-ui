@@ -1,4 +1,4 @@
-# ATM-SITE-78
+# ATM-SITE-78 — Cross-file fold station (Forge §1)
 
 A nested import spread folds across three files (`base.ts` → `tokens.ts` → `app.ts`), named imports resolve through an `export *` barrel, a cyclic value chase keeps its literal siblings with one located `ATM-W-UNFOLDABLE-SPREAD` naming the origin spread and the cycle, and an inner origin refused mid-chase (`zest`, read while its file is mid-refinement) still folds on later direct use because cycle refusals never memoize.
 Symbols: `ValueGraph`, `value_of`, `BindingOrigin`, `UnfoldableSpread`, `resolve_binding`.

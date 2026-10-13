@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import {
   createTastyApi,
@@ -14,7 +14,11 @@ import {
   createTastyBrowserRuntime,
 } from './index'
 import type { RawTastyManifest } from './api-types'
-import { caseRuntimeDir, ensureTastyCaseCompiled } from '../tests/harness/helpers.js'
+import {
+  caseRuntimeDir,
+  disposeTastyScratch,
+  ensureTastyCaseCompiled,
+} from '../tests/harness/helpers.js'
 
 function manifestPath(caseName: string) {
   return join(caseRuntimeDir(caseName), 'manifest.js')
@@ -38,6 +42,8 @@ describe('tasty runtime', () => {
       ensureTastyCaseCompiled('TST-DOC-01'),
     ])
   })
+
+  afterAll(disposeTastyScratch)
 
   it('emits manifest-plus-chunks artifacts without bundle.js', () => {
     const outputDir = caseRuntimeDir('TST-EXT-01')

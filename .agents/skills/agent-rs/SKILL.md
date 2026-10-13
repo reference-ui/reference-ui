@@ -54,6 +54,8 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
 | **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
 
+**Case folders.** Every station is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex indexes each case as `rs-cases`. The shared convention is in `AGENTS.md` section 7.
+
 ---
 
 ## 2. Code Quality & Comment Policy (MANDATORY)
@@ -223,11 +225,11 @@ flowchart TD
 
 ---
 
-## 6. Memex (`cases` + `surfaces` collections)
+## 6. Memex (`cases`, `rs-cases` + `surfaces` collections)
 
 Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): neo cases live in `cases`, RS module
-surfaces in `surfaces`. Use it to find **module surfaces by feature**
+(`.agents/memex/README.md`): neo cases live in `cases`, RS cases in
+`rs-cases`, RS module surfaces in `surfaces`. Use it to find **module surfaces by feature**
 instead of grepping — it also surfaces the neo cases that prove a surface.
 Surface docs overlap by design (several modules can claim one concern);
 adjudicate ownership via each doc's `related:` links plus the neo case's

@@ -1,4 +1,4 @@
-# ATM-COND-28
+# ATM-COND-28 — Pseudo-element placements and combinator stacks (ATM-COND-28, SPEC-V2-73)
 
 Pseudo-element placements (`& ::after`, `::before&`, `:before&`,
 `::before &`) print textually at one level; combinator stacks

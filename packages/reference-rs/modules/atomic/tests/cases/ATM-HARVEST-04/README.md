@@ -1,4 +1,4 @@
-# ATM-HARVEST-04
+# ATM-HARVEST-04 — Harvest control station (Forge S4-2)
 
 A static program — palette array included — harvests nothing: no sinks, no harvest wants, no infos. The sheet is byte-identical before and after Slice 4 (verified against the pre-slice native at land time, not just against these goldens).
 Symbols: `HarvestPool`, `Sink`, `mint`.

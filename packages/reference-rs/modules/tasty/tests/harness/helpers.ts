@@ -35,7 +35,11 @@ export type {
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const TESTS_DIR = path.resolve(__dirname, '..')
 export const CASES_DIR = path.resolve(TESTS_DIR, 'cases')
-export const SCRATCH_DIR = path.resolve(TESTS_DIR, '.scratch')
+/**
+ * Gitignored base for the per-file scratch roots. It sits beside tests/, not inside it, because
+ * the native scanner walks all of TESTS_DIR on every scan and a root removed mid-walk fails it.
+ */
+export const SCRATCH_DIR = path.resolve(TESTS_DIR, '..', '.scratch')
 export const CASE_FOLDER = /^(TST-[A-Z]+-\d{2})$/
 
 export const TEST_PREFERRED_EXTERNAL_LIBRARIES = [
@@ -162,8 +166,35 @@ export function caseOutputDir(caseName: string): string {
   return path.join(CASES_DIR, caseName, 'output')
 }
 
+/**
+ * Scratch root owned by this module instance. Vitest loads each test file in its own module
+ * instance, so each file writes under a root of its own and no two writers share a station dir.
+ */
+let ownedScratchRoot: string | undefined
+
+function scratchRoot(): string {
+  if (ownedScratchRoot === undefined) {
+    fs.mkdirSync(SCRATCH_DIR, { recursive: true })
+    ownedScratchRoot = fs.mkdtempSync(path.join(SCRATCH_DIR, `run-${process.pid}-`))
+  }
+  return ownedScratchRoot
+}
+
 export function caseRuntimeDir(caseName: string): string {
-  return path.join(SCRATCH_DIR, caseName)
+  return path.join(scratchRoot(), caseName)
+}
+
+/**
+ * Removes only the scratch root this module instance created, then forgets its compilations.
+ * Roots that belong to files running alongside are never touched. Call it from afterAll in
+ * every suite that compiles stations.
+ */
+export function disposeTastyScratch(): void {
+  if (ownedScratchRoot !== undefined) {
+    fs.rmSync(ownedScratchRoot, { recursive: true, force: true })
+    ownedScratchRoot = undefined
+  }
+  compilationCache.clear()
 }
 
 export function caseManifestPath(caseName: string): string {

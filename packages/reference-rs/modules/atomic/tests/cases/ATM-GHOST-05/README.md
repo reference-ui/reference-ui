@@ -1,4 +1,4 @@
-# ATM-GHOST-05
+# ATM-GHOST-05 — Dual at-rule wrap station
 
 Both at-rule `When`s on one atom must wrap the utility, nested, in author
 order. Nested `sm:` object keys are not extract conditions; array slot 1

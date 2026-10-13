@@ -1,4 +1,4 @@
-# ATM-SITE-02
+# ATM-SITE-02 — css() call-site extract station
 
 `css()` and `css.object()` are extract sites. Multi-arg `css()` emits every
 argument. Contract: [SPEC.md](../../../SPEC.md).

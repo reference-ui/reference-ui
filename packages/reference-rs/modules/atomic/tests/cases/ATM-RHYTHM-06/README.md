@@ -1,4 +1,4 @@
-# ATM-RHYTHM-06
+# ATM-RHYTHM-06 — Continuity rhythm station
 
 Arbitrary (`140r`, `220r`), fractional (`137.5r`, `12.5r`), and negative
 fractional (`-2.5r`) rhythm compute to root calc formulas with zero

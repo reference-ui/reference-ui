@@ -1,4 +1,4 @@
-# ATM-SYS-01
+# ATM-SYS-01 — System emission anchor
 
 System emission anchor. The only station whose `styles.css` golden is committed
 un-normalized: it compiles against the frozen lib spec and pins the full

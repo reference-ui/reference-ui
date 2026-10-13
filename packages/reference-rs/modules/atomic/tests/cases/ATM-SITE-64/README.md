@@ -1,4 +1,4 @@
-# ATM-SITE-64
+# ATM-SITE-64 — Ternary-arm shapes station (SPEC-V2-15/16 remainder)
 
 Open-test ternary arm shapes: equal branches dedupe to one class,
 mixed-type arms both compile, per-arm `!` sticks to its arm. Pins the

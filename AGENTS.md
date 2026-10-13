@@ -205,4 +205,17 @@ pnpm agentdocs q [paths]      # docs quality gate (Biome + strict tsc + suppress
 
 The gate's fail line is cognitive complexity 20, `any` banned, file length 500, and every `tsc --noEmit` error; warnings (12 / 365) shout but do not block. Suppressions (`biome-ignore`, `@ts-ignore`, bare `@ts-expect-error`) fail immediately — fix the code. After the gate is green, do the reading pass: naming, no panda-isms, and nothing too complicated or weird-looking.
 
+---
+
+## 7. Test Case Convention
+
+Every case-driven suite uses one shape, for Neo, reference-rs and any new module.
+A case is a folder named by its raw ID (`ATM-TOKEN-06`, `NEO-TYPE-09`) that holds:
+
+- `case.json`: the index entry, `{"id": "ATM-TOKEN-06", "name": "<one-line claim>"}`.
+- `README.md`: first line `# <ID> — <one-line claim>`, the claim the same text as `case.json`'s `name`.
+- The runnable part and its inputs and outputs. reference-rs: `spec.ts` (`{ id, verify }`), `input/`, `output/`. Neo: `specs/` and `world/`.
+
+The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Neo has no runner gate yet. Memex indexes `case.json`: Neo cases in `cases`, reference-rs cases in `rs-cases`.
+
 

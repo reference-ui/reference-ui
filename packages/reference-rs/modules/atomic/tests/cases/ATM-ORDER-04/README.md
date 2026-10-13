@@ -1,4 +1,4 @@
-# ATM-ORDER-04
+# ATM-ORDER-04 — Property-priority station
 
 Property priority ranks shorthands before the longhands they contain, from
 canon longhand facts. Authorship order does not change print order.

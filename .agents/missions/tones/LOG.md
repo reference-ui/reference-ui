@@ -178,3 +178,29 @@ Open, out of this mission (task chips offered to the owner):
 - Decided 2026-10-13 (owner agreed): no peer dependency on `@reference-ui/react` (it's a generated `0.0.0-neo` folder, not an npm package, and basic consumers never sync). Lib's published types become self-contained against its own shipped primitives; consumer strict covers consumer code only. A future opt-in (documented tsconfig `paths`) can extend it to lib props. `1ee98f2ef` post-emit rewrite repoints `@reference-ui/react|styled|types` and `.reference-ui/` specifiers at shipped `dist/runtime/reference-ui/` (2,408 specifiers in 78 d.ts; throws on an unshipped target; 7 unit tests). `32f4cbd92` smoke gate typechecks lib declarations with skipLibCheck false. Scratch consumer: 2,316 TS2307 → 9 (all from published icons 0.0.43, which needs an owner republish). Docs tsc exit 0; T17 PASS. `baf937272` Neo inlines the 37 tasty modules into published `types/types.d.mts` (declare namespace + aliases; throws on surviving rust/relative specifiers). `cace2aa1a` lib cleans 640 declarations before emit (22 stale files gone). Orchestrator restarted dev:lib + dev:docs on current code and rebuilt lib: 0 `@reference-ui/rust` specifiers in lib types; lib dist ships `AnimationToken`. Refiner `17ee18bc4` (triple-slash references rewritten) + `7649d154b` (tasty inliner: assert entry names exported, throw on `declare global/module`, code-point ordering). Smoke break test: a bare `@reference-ui/react` in Tabs.d.ts fails the gate; restored → PASS. Orchestrator re-ran: lib scripts 9/9, neo packager 34/34, smoke PASS, docs tsc 0, T17 consumer with lib declarations and skipLibCheck false → tsc exit 0. Splitter `index` stays undeclared (runtime-internal).
 - Done 2026-10-13: `8a406db6c` split tokens/mod.rs (400→285; opacity.rs, negation.rs); `f6ff66b3d` composite braces resolve bare bases like whole braces (`{brand}`, `{brand/medium}` now agree in `1px solid {…}`; ambiguous custom-prop bases still fail closed; 7 tests). Orchestrator re-ran: cargo pass, vitest 320/320, q 0 violations; NEO-DIAG-05/67, TOKEN-11, TYPE-09 PASS. `f3954d295` + `072698d5d` Neo strict/layers wording. `eb15784b5` SPEC file refs. Open: a bare name in both sizes and spacing resolves to sizes (size props) — needs a decision.
 - Smaller: `TGN-W-UNKNOWN-TOKEN-CATEGORY` for lib's 21 `animations` tokens is a parity gap (old core printed `AnimationToken`; the Rust typegen never did; invisible until 5862760f8 surfaced TGN warnings): landed `4da6b826d`: `AnimationToken` printed (omitted when empty, like fontSizes), `Tokens.animations`, `animation?: StylePropValue<AnimationToken | (string & {})>` (only while the alias prints), `animationName` stays open; warning gone in a fresh docs sync; typegen cargo/vitest 56/56/q pass, NEO-DIAG-59 + TOKEN-11 PASS (orchestrator re-ran). Same gap for durations, easings, letterSpacings, opacity, borders, gradients and sizes (follow-up); stale strict/layers wording in some Neo SPECs; TONES-12 closed: NEO-NAMER-01 recompiles every `ATM-*` station (now incl. ATM-TOKEN-19..23) and passes.
+
+## Session wrap (2026-10-13)
+
+Landed after the tones mission, all orchestrator-verified:
+- `4da6b826d` typegen prints `AnimationToken`; `animation` typed `AnimationToken | (string & {})`.
+- Lib self-contained published types: `1ee98f2ef`, `32f4cbd92`, `baf937272`, `cace2aa1a`, refiner `17ee18bc4` + `7649d154b`.
+- Neo layers coverage + reference-rs test layout (mission `.agents/missions/neo-layers/LOG.md`): NEO-LAYERS-01..06, bare-import baseSystem reload fix `e5fc0d990` (+`82362c3b8`), atlas/styletrace/atomic/module-graph/typegen/canon/primitives/tasty in case shape (tasty `b20ada593`).
+- Case convention: `case.json` in all 336 reference-rs cases, runner-enforced, Memex per-case index, AGENTS.md §7 (`885e80986`, `7a1d356e1`, `4b20a15a4`, `0026810cf`).
+- Pipeline native freshness by inputs stamp: `0de92975a`, `c79563321`, refiner `5cade0206` (stale linux rebuilt in Dagger; stale non-buildable targets warn on local packs, refuse on explicit lists/release; CI keeps stamps; publish-native gated).
+- Tasty scratch race: `e1aa93b3d` (per-writer mkdtemp roots), `811603ad7` (quality gate skips `.scratch`).
+- module-graph README `dc5ac9dad`; atomic loose ends `8a406db6c`, `f6ff66b3d`, `eb15784b5`; Neo docs `f3954d295`, `072698d5d`.
+
+### Final sweep at `5cade0206`
+- pipeline tests 218/218; pipeline typecheck: only the 5 known TS2835
+- `pnpm agentrs t`: complete suite PASS (vitest 690/690), q 0 violations
+- `pnpm agentneo run` NEO-TYPE-01/07/09, NEO-DIAG-59/67, NEO-TOKEN-11, NEO-LAYERS-01/06, NEO-PARITY-02: PASS
+- `pnpm agentdocs q` 0/0, docs tsc exit 0
+- matrix T17 Playwright 16/16, T16 6/6
+- working tree clean, no worktrees; 69 commits ahead of origin/public-release (not pushed)
+
+### Still open
+- Owner: republish `@reference-ui/icons` (0.0.43 breaks `skipLibCheck: false`); decide bare-name `sizes` vs `spacing` precedence.
+- 12 pre-existing Neo failures (5f9348cd6, 0e08d7cb9).
+- BAS-LAYER-01..04 (Rust base-system layers API); unprinted resolvable categories (durations, easings, letterSpacings, gradients, sizes).
+- Pipeline: docs.yml artifact path mismatch; npm-fallback for unbuildable explicit targets; rust-compile only exercised for linux.
+- Neo READMEs' claims differ from short case.json names (281/294); a republished bare upstream doesn't trigger a watch re-sync.

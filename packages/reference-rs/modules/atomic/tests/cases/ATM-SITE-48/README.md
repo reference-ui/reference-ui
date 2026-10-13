@@ -1,4 +1,4 @@
-# ATM-SITE-48: Element Access over Const Tables (Fold Arm)
+# ATM-SITE-48 — Element Access over Const Tables (Fold Arm)
 
 Probes SPEC-V2-63's fold: `obj[key]` and `arr[i]` resolve when
 the base is a const object, a const array, or an inline literal and the

@@ -1,4 +1,4 @@
-# ATM-COND-31
+# ATM-COND-31 — Raw pseudo-element station (SPEC-V2-48 raw arm)
 
 Raw `&::` spelling lowers like the `_before`/`_after` dialect, with
 single-level compound order and comma pseudo-element lists. Pins the

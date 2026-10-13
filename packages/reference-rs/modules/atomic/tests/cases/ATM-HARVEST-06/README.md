@@ -1,4 +1,4 @@
-# ATM-HARVEST-06
+# ATM-HARVEST-06 — Color allowlist station
 
 The color allowlist station. A dynamic `color` site sinks beside a dynamic
 `width` site while the pool holds a spacing `var()`, an `oklch()` value, an

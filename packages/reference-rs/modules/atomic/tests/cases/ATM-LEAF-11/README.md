@@ -1,4 +1,4 @@
-# ATM-LEAF-11
+# ATM-LEAF-11 — Responsive-leaf refusal station
 
 Responsive-object leaves refuse `!` at the extraction boundary. The
 whole-object plan carries one important flag, so a per-leaf marker can

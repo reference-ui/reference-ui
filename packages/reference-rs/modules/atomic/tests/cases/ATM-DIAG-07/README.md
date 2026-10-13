@@ -1,4 +1,4 @@
-# ATM-DIAG-07
+# ATM-DIAG-07 — Channel-isolation station (ATM-DIAG-07, Operation Error Correct, Slice 5)
 
 Channel isolation: the default compile contains no dynamic, spread,
 harvest-sink, or dead-branch diagnostics. Those facts move to the opt-in

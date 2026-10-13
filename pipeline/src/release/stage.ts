@@ -8,8 +8,10 @@
 
 import { buildWorkspacePackages } from '../build/index.js'
 import { defaultRegistryUrl } from '../registry/index.js'
+import { SUPPORTED_REFERENCE_NATIVE_TARGETS } from '../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 
 export async function stageLocalReleaseArtifacts(registryUrl: string = defaultRegistryUrl): Promise<void> {
-  await buildWorkspacePackages(registryUrl)
+  // Naming every native target makes the stage hard: a stale target this host cannot build refuses.
+  await buildWorkspacePackages(registryUrl, undefined, { requiredRustTargets: SUPPORTED_REFERENCE_NATIVE_TARGETS })
   console.log(`\nStaged release artifacts into ${registryUrl}`)
 }

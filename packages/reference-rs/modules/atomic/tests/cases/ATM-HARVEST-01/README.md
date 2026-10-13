@@ -1,4 +1,4 @@
-# ATM-HARVEST-01
+# ATM-HARVEST-01 — Harvest floor station (Forge §2)
 
 `'inherit'` lives only in an array no site reads, a dynamic `css({ color })` site exists, and `"color:inherit"` is in the map anyway — minted by harvest onto the refused `(color, [])` sink, with one `ATM-I-HARVEST-SINK` counting it and a runtime plan behind it. The `'4px'` pool twin does not land on the color sink (kind gate).
 Symbols: `HarvestPool`, `Sink`, `warn_dynamic`, `prop_accepts`, `HarvestSink`.

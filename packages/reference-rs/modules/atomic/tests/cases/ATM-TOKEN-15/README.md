@@ -1,4 +1,4 @@
-# ATM-TOKEN-15
+# ATM-TOKEN-15 — Radius-longhand station (§10)
 
 Every radius longhand takes `radii` tokens: the twelve corner spellings resolve bare `full` to `var(--radii-full)` exactly like `borderRadius`, with silent zero-diagnostic output.
 Symbols: `token_category_for_prop`, `shape_category`, `is_radius_longhand`, `wildcard_category`.

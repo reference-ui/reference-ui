@@ -1,24 +1,36 @@
 /**
  * Generic station test runner for Reference RS compiler harnesses.
  * Replaces boilerplate case loops and eager pre-runners with declarative suites.
- * Discovers case stations, validates filesystem hygiene, executes semantic specs,
- * runs invariant standing gauges, and verifies committed output goldens.
+ * Discovers case stations, rejects folders under cases/ that are not raw case IDs,
+ * validates filesystem hygiene and each case's index and README heading, executes
+ * semantic specs, runs invariant standing gauges, and verifies committed output goldens.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import {
+  caseIndexProblems,
+  readCaseIndex,
+  readCaseReadme,
+  readmeProblems,
+  strayCaseFolders,
+} from './caseIndex.js'
 import { diffOrWriteGoldens, isUpdateGoldensRequested } from './goldens.js'
 import type { StationContext, StationSpec, StationSuiteConfig } from './types.js'
 
-function discoverStations(casesDir: string, pattern: RegExp): string[] {
+/** Every directory directly under a cases/ folder, sorted by name. */
+function listCaseFolders(casesDir: string): string[] {
   if (!fs.existsSync(casesDir)) return []
   return fs
     .readdirSync(casesDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => entry.name)
-    .filter(name => pattern.test(name))
     .sort()
+}
+
+function discoverStations(casesDir: string, pattern: RegExp): string[] {
+  return listCaseFolders(casesDir).filter(name => pattern.test(name))
 }
 
 function checkHygiene(stationDir: string, stationName: string, requiredFiles: string[]): void {
@@ -65,10 +77,19 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
 
   const updateGoldens = isUpdateGoldensRequested()
   const stations = discoverStations(casesDir, folderPattern)
+  const strays = strayCaseFolders(listCaseFolders(casesDir), folderPattern)
+  const casesLabel = path.basename(casesDir)
 
   describe(suiteName, () => {
-    it(`discovers at least one station under ${path.basename(casesDir)}`, () => {
+    it(`discovers at least one station under ${casesLabel}`, () => {
       expect(stations.length).toBeGreaterThan(0)
+    })
+
+    it(`every folder under ${casesLabel}/ is named by a raw case ID`, () => {
+      expect(
+        strays,
+        `${casesLabel}/ holds folders not named by a raw case ID ${folderPattern}: ${strays.join(', ')}`
+      ).toEqual([])
     })
 
     for (const stationName of stations) {
@@ -86,6 +107,14 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
           }
 
           checkHygiene(stationDir, stationName, requiredFiles)
+          const caseProblems = [
+            ...caseIndexProblems(stationName, readCaseIndex(stationDir)),
+            ...readmeProblems(stationName, readCaseReadme(stationDir)),
+          ]
+          expect(
+            caseProblems,
+            `${stationName}: case folder breaks the case convention`
+          ).toEqual([])
 
           const spec = await loadSpec<TResult>(
             path.join(stationDir, 'spec.ts'),

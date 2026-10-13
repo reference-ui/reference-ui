@@ -1,4 +1,4 @@
-# ATM-DIAG-09
+# ATM-DIAG-09 — Exact-plan-absent station (ATM-DIAG-09, Operation Error Correct Slice 0)
 
 Exact plan absent: when diagnostics predicts a static runtime query
 and the final plan omits it, the author gets one located non-fatal

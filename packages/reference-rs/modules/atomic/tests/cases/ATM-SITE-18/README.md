@@ -1,4 +1,4 @@
-# ATM-SITE-18
+# ATM-SITE-18 — Boolean-macro station (ATM-SITE-18, RS-19)
 
 `<Div border />` lowers the boolean macro to `border-width: 1px` plus
 `border-style: solid` utilities with one two-declaration plan. A bool on

@@ -11,9 +11,13 @@
 
 import type { WorkspacePackage } from '../types.js'
 import type { BuildRegistryArtifacts } from '../types.js'
-import type { ReferenceNativeTarget } from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
+import {
+  getReferenceNativeTriple,
+  type ReferenceNativeTarget,
+} from '../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import { computePackageBuildHashes } from '../cache.js'
 import { logSkip } from '../../lib/log/index.js'
+import { hashNativeInputs } from '../../../../packages/reference-rs/modules/runtime/js/shared/native-inputs.js'
 import {
   applyPreparedRustPackageHash,
   applyPreparedRustPackageOverride,
@@ -30,6 +34,8 @@ import {
 
 export interface PrepareReferenceRustRegistryArtifactsOptions {
   forceBuildNativeTargets?: boolean
+  /** Sources hash the caller already keyed its cache on, so key and artifacts describe the same sources. */
+  inputsHash?: string
   requiredTargets?: readonly ReferenceNativeTarget[]
 }
 
@@ -37,7 +43,7 @@ export async function prepareReferenceRustRegistryArtifacts(
   packageDir: string,
   options: PrepareReferenceRustRegistryArtifactsOptions = {},
 ): Promise<BuildRegistryArtifacts> {
-  const generatedPackages = await materializeReferenceRustTargetTarballs(packageDir, options)
+  const { generatedPackages, leftOutWarnings } = await materializeReferenceRustTargetTarballs(packageDir, options)
   const override = createReferenceRustPackageJsonOverride(
     generatedPackages.map(generatedPackage => ({
       name: generatedPackage.name,
@@ -47,11 +53,12 @@ export async function prepareReferenceRustRegistryArtifacts(
   const packageHashAugmentation = createRustBuildHashAugmentation(generatedPackages, override)
 
   if (generatedPackages.length === 0 && !override) {
-    return emptyRustBuildRegistryArtifacts()
+    return { ...emptyRustBuildRegistryArtifacts(), leftOutWarnings }
   }
 
   return {
     generatedPackages,
+    leftOutWarnings,
     packageHashAugmentations: packageHashAugmentation
       ? {
           [REFERENCE_RUST_PACKAGE_NAME]: packageHashAugmentation,
@@ -82,10 +89,14 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
     throw new Error(`Missing build hash for ${rustPackage.name}`)
   }
 
+  // Hashed once: a source edit between the cache key and the pack must not give them different sources.
+  const inputsHash = hashNativeInputs(rustPackage.dir)
   const cacheKey = createRustBuildRegistryArtifactsCacheKey(
     rustPackageHash,
     options.requiredTargets,
     options.forceBuildNativeTargets,
+    inputsHash,
+    getReferenceNativeTriple(),
   )
   const cachedArtifacts = await readRustBuildRegistryArtifacts()
 
@@ -96,7 +107,7 @@ export async function prepareAndWriteRustBuildRegistryArtifacts(
 
   await writeRustBuildRegistryArtifacts(
     {
-      ...(await prepareReferenceRustRegistryArtifacts(rustPackage.dir, options)),
+      ...(await prepareReferenceRustRegistryArtifacts(rustPackage.dir, { ...options, inputsHash })),
       cacheKey,
     },
   )

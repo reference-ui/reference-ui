@@ -266,6 +266,8 @@ function showJsonDoc(doc) {
       return { ...base, family: p.family, related: p.related, specs: p.specs }
     case 'rs':
       return { ...base, related: p.related, suites: p.suites, caseIds: p.caseIds }
+    case 'rs-case':
+      return { ...base, module: p.module, related: p.related, specs: p.specs }
     case 'markdown':
       return { ...base, tags: p.tags, frontmatter: p.frontmatter }
     default:

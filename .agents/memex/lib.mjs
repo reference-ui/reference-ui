@@ -1,7 +1,7 @@
 /**
  * Memex engine: manifests in, ranked docs out. No CLI side effects.
  *
- * Manifest collections (doom, cases, surfaces, perf, flames) load from
+ * Manifest collections (doom, cases, rs-cases, surfaces, perf, flames) load from
  * `.agents/memex/collections/*.json`; the graph system collection is
  * built in. Everything is read live on every call, so there is no
  * stale state and no rebuild step. MiniSearch ranks globally over
@@ -20,6 +20,7 @@ import {
   collectNeo,
   collectPerf,
   collectRs,
+  collectRsCases,
   formatPerfShow,
   perfCounts,
   substringSearch,
@@ -100,6 +101,8 @@ export function collectCollection(manifest, root = ROOT) {
       return collectComponents(join(root, manifest.root), root, manifest.name)
     case 'rs':
       return collectRs(join(root, manifest.root), root, manifest.name)
+    case 'rs-case':
+      return collectRsCases(join(root, manifest.root), root, manifest.name)
     case 'perf':
       return collectPerf(join(root, manifest.index), manifest.name)
     case GRAPH_NAME:
@@ -155,7 +158,7 @@ export function buildIndex(docs, boosts) {
   return mini
 }
 
-const COLLECTION_PRIOR = { surfaces: 3, cases: 2 }
+const COLLECTION_PRIOR = { surfaces: 3, cases: 2, 'rs-cases': 2 }
 function prior(collection) {
   return COLLECTION_PRIOR[collection] ?? 1
 }
@@ -350,6 +353,14 @@ function formatDocShow(doc) {
           p.caseIds.length > shown.length ? ' …' : ''
         }`
       )
+      lines.push(`\n${p.readme || '(no README)'}`)
+      return lines.join('\n')
+    }
+    case 'rs-case': {
+      const p = doc.payload
+      const lines = [head, `path: ${doc.path}`, `module: ${p.module}`]
+      if (p.related.length) lines.push(`related: ${p.related.join(' ')}`)
+      if (p.specs.length) lines.push(`specs:\n  ${p.specs.join('\n  ')}`)
       lines.push(`\n${p.readme || '(no README)'}`)
       return lines.join('\n')
     }

@@ -1,4 +1,4 @@
-# ATM-TOKEN-14
+# ATM-TOKEN-14 — Alphabet-fence station (§9)
 
 Complete CSS values are never token paths: `rgba()`, `oklch()`, `color-mix()`, `translateX()`, `calc()`, and `url()` pass through silently while the dictionary still resolves `gray.800` and still warns on `ui.missing.path`. A `color-mix()` carrying `{colors.gray.800}` / `{colors.red.500}` refs is not a complete CSS value, so the fence refuses it and the refs expand to `var()`s, silently (Forge Slice 1 fixup).
 Symbols: `resolve_token_value`, `is_whole_css_value`, `canon::classify_css_value`, `ValueKind`.

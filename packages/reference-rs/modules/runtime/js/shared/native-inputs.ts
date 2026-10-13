@@ -35,14 +35,23 @@ function framePath(packageDir: string, path: string): string {
   return relative(packageDir, path).split(sep).join('/')
 }
 
+/**
+ * Folds CRLF to LF. Windows checkouts with core.autocrlf set rewrite text files
+ * to CRLF, which would give the same sources a different hash from macOS and
+ * Linux. LF-only content is returned byte for byte, so existing stamps still match.
+ */
+function withLfLineEndings(contents: Buffer): Buffer {
+  return Buffer.from(contents.toString('latin1').replace(/\r\n/g, '\n'), 'latin1')
+}
+
 function hashFile(
   hash: ReturnType<typeof createHash>,
   packageDir: string,
   path: string
 ): void {
-  const stats = statSync(path)
-  hash.update(`file:${framePath(packageDir, path)}:${stats.size}\n`)
-  hash.update(readFileSync(path))
+  const contents = withLfLineEndings(readFileSync(path))
+  hash.update(`file:${framePath(packageDir, path)}:${contents.length}\n`)
+  hash.update(contents)
 }
 
 function hashSortedDir(

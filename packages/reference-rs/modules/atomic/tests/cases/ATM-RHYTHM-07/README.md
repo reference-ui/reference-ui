@@ -1,4 +1,4 @@
-# ATM-RHYTHM-07
+# ATM-RHYTHM-07 — Doom fortify pin for CONTINUITY-01 r-computation (doom-r-rule: BREAK)
 
 Non-finite rhythm stems refuse behind the shared finiteness gate
 (`resolve_single_rhythm` → `lexical::parse_decimal(…).finite()`) and pass

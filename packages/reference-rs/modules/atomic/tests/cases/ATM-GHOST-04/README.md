@@ -1,4 +1,4 @@
-# ATM-GHOST-04
+# ATM-GHOST-04 — Unknown `_nope` collision station
 
 Unknown `_nope` must not collide with the unconditioned sibling or wrap
 `:nope`. Standing injectivity is still blocked on `ATM-LEAF-05`.

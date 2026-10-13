@@ -1,4 +1,4 @@
-# ATM-COND-05
+# ATM-COND-05 — Dialect-utility station
 
 Dialect utilities `container`, `font`, `weight`, and `size` lower like
 core box-pattern transforms. Tracking comes from the lib font table.

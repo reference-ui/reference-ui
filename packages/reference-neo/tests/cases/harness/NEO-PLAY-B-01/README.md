@@ -1,3 +1,4 @@
+# NEO-PLAY-B-01 — harness-probe-b
 Harness probe: cascade wins, theme flips, and snapshot compare behavior over one small world.
 
 This case tests the harness, not a system. Two specs share one world:

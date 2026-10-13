@@ -3,8 +3,10 @@
  *
  * `markdown` reads .md files (optional frontmatter, everything kept) plus
  * small .json sidecars (flattened). `neo` and `rs` port the case-index
- * collectors verbatim: one doc per case / per module. `perf` reads the
- * committed perf-index.json and keeps its exact substring-AND search —
+ * collectors verbatim: one doc per case / per module. `rs-case` gives each
+ * reference-rs case folder its own doc, keyed by the id in its case.json.
+ * `perf` reads the committed perf-index.json and keeps its exact
+ * substring-AND search —
  * fuzziness was deliberately rejected there, so MiniSearch never ranks it.
  */
 
@@ -13,8 +15,11 @@ import { basename, dirname, join, relative } from 'node:path'
 import { extractTitle, firstParagraph, parseFrontmatter, parseTags } from './text.mjs'
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'target', 'build'])
-const ID_PATTERN = /\b(NEO-[A-Z]+-\d+|ATM-[A-Z]+-\d+|TST-[A-Z]+-\d+|rs:[a-z-]+)\b/g
+// Any case-id shape (NEO-, ATM-, ATL-, STT-, TST-, ...), so a cited id links as related.
+const ID_PATTERN = /\b([A-Z]{2,4}-[A-Z]{2,}-\d+|rs:[a-z-]+)\b/g
 const NEO_CASES_SUBDIR = 'cases'
+const RS_CASES_PATH = ['tests', 'cases']
+const CASE_INDEX_FILE = 'case.json'
 
 export function inferRelated(markdown, selfId) {
   const out = []
@@ -326,6 +331,78 @@ export function collectRs(modulesDir, root, name) {
     })
   }
   return { docs, warnings: [] }
+}
+
+function isDirectory(path) {
+  return existsSync(path) && statSync(path).isDirectory()
+}
+
+/** Read a case folder's case.json; a warning names what is wrong with it. */
+function readCaseMeta(file) {
+  if (!existsSync(file)) return { warning: 'no case.json' }
+  let meta
+  try {
+    meta = JSON.parse(readFileSync(file, 'utf8'))
+  } catch {
+    return { warning: 'unparseable case.json' }
+  }
+  return meta?.id ? { meta } : { warning: 'case.json has no id' }
+}
+
+/**
+ * One doc per reference-rs case folder: case.json meta + README + spec.ts.
+ * A folder whose case.json is missing or unreadable is skipped with a
+ * warning; the station runner fails those folders, so this only shows
+ * while a case is being written.
+ */
+export function collectRsCases(modulesDir, root, name) {
+  const docs = []
+  const warnings = []
+  for (const mod of readdirSync(modulesDir).sort()) {
+    const casesDir = join(modulesDir, mod, ...RS_CASES_PATH)
+    if (!isDirectory(casesDir)) continue
+    for (const folder of readdirSync(casesDir).sort()) {
+      const dir = join(casesDir, folder)
+      if (!isDirectory(dir)) continue
+      const { meta, warning } = readCaseMeta(join(dir, CASE_INDEX_FILE))
+      if (warning) {
+        warnings.push(`skipped (${warning}): ${relative(root, dir)}`)
+        continue
+      }
+      docs.push(rsCaseDoc(meta, { dir, mod, root, name }))
+    }
+  }
+  return { docs, warnings }
+}
+
+function rsCaseDoc(meta, { dir, mod, root, name }) {
+  const id = String(meta.id)
+  const readmePath = join(dir, 'README.md')
+  const readme = existsSync(readmePath) ? readFileSync(readmePath, 'utf8') : ''
+  const specPath = join(dir, 'spec.ts')
+  const hasSpec = existsSync(specPath)
+  const spec = hasSpec ? readFileSync(specPath, 'utf8') : ''
+  const title = typeof meta.name === 'string' && meta.name ? meta.name : id
+  return {
+    collection: name,
+    kind: 'rs-case',
+    id,
+    title,
+    extra: mod,
+    path: relative(root, dir),
+    snippetText: `${title}\n${readme}`,
+    fields: {
+      id,
+      title,
+      text: `${id} ${title}\n${readme}\nspec.ts:\n${spec}`,
+    },
+    payload: {
+      readme,
+      related: inferRelated(readme, id),
+      specs: hasSpec ? [relative(root, specPath)] : [],
+      module: mod,
+    },
+  }
 }
 
 function perfMeta(e) {

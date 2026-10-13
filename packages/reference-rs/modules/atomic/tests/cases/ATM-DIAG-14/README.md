@@ -1,4 +1,4 @@
-# ATM-DIAG-14
+# ATM-DIAG-14 — Source-modes station (ATM-DIAG-14, Error Correct Slice 2 + 5 channel)
 
 Source modes: `.ts`, `.tsx`, `.js`, and `.jsx` use the one compiler
 parse; JSX mode, parse errors, and UTF-16 locations do not drift

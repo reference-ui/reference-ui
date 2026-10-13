@@ -1,4 +1,4 @@
-# ATM-DIAG-13
+# ATM-DIAG-13 — Producer-seam station (ATM-DIAG-13, Operation Error Correct Slice 0)
 
 Producer seam: extract, harvest, resolve, and host facts retain one
 site identity, deterministic ordering, stable codes, and no duplicate

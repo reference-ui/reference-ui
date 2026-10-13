@@ -36,12 +36,13 @@ never across invocations or collections.
 | `cases`    | neo      | `packages/reference-neo/tests/cases` (case.json + README + specs)  | agent-neo skill  |
 | `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
+| `rs-cases` | rs-case  | `packages/reference-rs/modules/*/tests/cases` (case.json + README + spec.ts) | agent-rs skill |
 | `perf`     | perf     | `.agents/skills/agent-perf/perf-index.json` (committed)            | agent-perf skill |
 | `flames`   | markdown | `.agents/rs-index` (bundle notes + ledgers; raw profiles excluded) | agent-perf skill |
 | `graph`    | system   | built in: every README.md + every file-top header                  | memex itself     |
 
 Global `search` ranks the manifest collections with a prior for
-authoritative docs (surfaces ×3, cases ×2) over evidence logs. The
+authoritative docs (surfaces ×3, cases ×2, rs-cases ×2) over evidence logs. The
 graph is targeted-only (`--in graph`): thousands of harvested headers
 would drown curated hits in a global rank. `show <path>` always walks
 the graph regardless of collection.
@@ -93,7 +94,7 @@ errors — a passed flag never silently does nothing.
 header, docs[]}`; the perf header carries `{built, waves, verdicts}`.
 - bare `search --json`: the complete collections array.
 - `show … --json`: `{ref, text}` plus the doc's structured fields
-  (perf: verdict/wave/kind/report/files/…; neo/rs: related/specs/suites).
+  (perf: verdict/wave/kind/report/files/…; neo: family, related, specs; rs: related, suites, caseIds; rs-case: module, related, specs).
 - misses with `--json`: `{error}`; ambiguous ids: `{ref, candidates[]}`
   — both exit 1, so branch on the shape, not the code. Other errors
   with `--json`: `{error}` on stdout with the usual exit code.
@@ -122,7 +123,7 @@ the max per field across collections.
 ```
 
 Kinds are memex built-ins: `markdown` (.md plus small .json sidecars),
-`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `perf`
+`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `rs-case` (one doc per reference-rs case), `perf`
 (perf-index.json entries). New markdown knowledge needs only a manifest —
 no code, no CLI change.
 

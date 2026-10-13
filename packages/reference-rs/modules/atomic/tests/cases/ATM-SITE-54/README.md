@@ -1,4 +1,4 @@
-# ATM-SITE-54: Specifier Resolution and Collision Control
+# ATM-SITE-54 — Specifier Resolution and Collision Control
 
 Pins SPEC-V2-76's Ph4 row 1: specifiers resolve (relative, `tsconfig`
 `paths`/`baseUrl`, extension and index probing, `package.json` `exports`)

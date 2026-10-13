@@ -4,19 +4,20 @@
  * records new stamps for freshly compiled targets. Pure path-in functions
  * so tests exercise the gate without touching the real distribution tree.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
+// Explicit .js specifiers: the pipeline type-checks this file under NodeNext.
 import {
   hashNativeInputs,
   nativeBinaryFileName,
   nativeStampFileName,
-} from './native-inputs'
+} from './native-inputs.js'
 import {
   SUPPORTED_REFERENCE_NATIVE_TARGETS,
   TARGET_TRIPLES,
   type ReferenceNativeTarget,
-} from './targets'
+} from './targets.js'
 
 export type NativeFreshnessKind =
   | 'missing-binary'
@@ -109,19 +110,65 @@ export function collectNativeFreshnessIssues(options: {
   return report
 }
 
-export function formatNativeFreshnessError(report: NativeFreshnessReport): string {
+const ARTIFACT_BINARY_PATTERN = /^reference-native\.(.+)\.node$/
+
+/**
+ * Checks every native binary under a downloaded-artifacts dir (the dir itself and
+ * one level of per-target subdirs, the layout of a CI artifact download) against
+ * its sibling stamp. Publishing reads these binaries, so a stale one must stop it.
+ */
+export function collectArtifactFreshnessIssues(options: {
+  artifactsDirPath: string
+  currentHash: string
+}): NativeFreshnessReport {
+  const report: NativeFreshnessReport = { verified: [], missing: [], issues: [] }
+  const dirs = [
+    options.artifactsDirPath,
+    ...readdirSync(options.artifactsDirPath, { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => join(options.artifactsDirPath, entry.name)),
+  ]
+
+  for (const dir of dirs) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const triple = entry.isFile() ? ARTIFACT_BINARY_PATTERN.exec(entry.name)?.[1] : undefined
+      if (!triple) continue
+
+      const rustTarget = TARGET_TRIPLES[triple as ReferenceNativeTarget]
+      const dirReport = collectNativeFreshnessIssues({
+        nativeDirPath: dir,
+        rustTargets: [rustTarget ?? triple],
+        currentHash: options.currentHash,
+      })
+      report.verified.push(...dirReport.verified)
+      report.issues.push(...dirReport.issues.map(issue => ({ ...issue, detail: `(${dir}) ${issue.detail}` })))
+    }
+  }
+  return report
+}
+
+export function formatNativeFreshnessError(
+  report: NativeFreshnessReport,
+  action: 'pack' | 'publish' = 'pack'
+): string {
   const lines = report.issues.map(issue => `  - ${issue.triple}: ${issue.detail}`)
   return [
-    'Refusing to pack @reference-ui/rust with stale or unstamped native binaries:',
+    `Refusing to ${action} @reference-ui/rust with stale or unstamped native binaries:`,
     ...lines,
-    'Rebuild the listed targets from current sources and re-run pack.',
+    `Rebuild the listed targets from current sources and re-run ${action}.`,
   ].join('\n')
 }
 
+/**
+ * Records the inputs stamp beside a binary. Callers that compile should pass
+ * `inputsHash` captured before the build starts: hashing after the compile
+ * could stamp a binary with sources it was not built from.
+ */
 export function writeNativeStamp(options: {
   nativeDirPath: string
   packageDirPath: string
   triple: string
+  inputsHash?: string
 }): string {
   if (!SUPPORTED_REFERENCE_NATIVE_TARGETS.includes(options.triple as ReferenceNativeTarget)) {
     throw new Error(
@@ -136,7 +183,7 @@ export function writeNativeStamp(options: {
     )
   }
   const stampPath = join(options.nativeDirPath, nativeStampFileName(options.triple))
-  const stamp = hashNativeInputs(options.packageDirPath)
+  const stamp = options.inputsHash ?? hashNativeInputs(options.packageDirPath)
   mkdirSync(dirname(stampPath), { recursive: true })
   writeFileSync(stampPath, `${stamp}\n`)
   return stampPath

@@ -1,3 +1,4 @@
+# NEO-SNAP-A-01 — harness-probe
 Harness probe: two specs over one world prove multi-spec runs, cascade wins, and the snapshot bless flow.
 
 This case tests the harness, not the system. The world is a static

@@ -1,4 +1,4 @@
-# ATM-DIAG-10
+# ATM-DIAG-10 — Incidental-coverage station (ATM-DIAG-10, Operation Error Correct, Slice 0)
 
 Incidental coverage: the diagnosed site contributes no plan, but another
 source or harvest contributes the exact key, so runtime paints and

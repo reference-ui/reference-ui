@@ -61,7 +61,8 @@ This is one of the main testing directions for the pipeline.
 - `pnpm pipeline:test:matrix`
 	- tests matrix inputs and bootstrap wiring
 	- currently reuses the single pipeline-managed Verdaccio registry, binds that shared host registry into Dagger, installs a minimal consumer from the `matrix/install` package, runs `ref sync`, and then runs that package's standard `pnpm test` command inside the clean container
-	- when the required linux Rust target package is missing from local tarballs and public npm, the pipeline builds that native artifact inside Dagger, stages it into the generated npm target package, and loads that package into the local registry before the consumer install step
+	- the linux Rust binary is fresh only when its `reference-native.linux-x64-gnu.inputs.sha256` stamp matches the current `packages/reference-rs` sources and it passes the export-name check; otherwise the pipeline builds it inside Dagger, writes the stamp, stages it into the generated npm target package, and loads that package into the local registry before the consumer install step
+	- any `.rs` change therefore triggers a Dagger linux build (~50 s) on the next matrix run; the other targets are not built here, so a stale optional one is left out of the pack with a warning
 	- this keeps matrix/testing self-contained: internal test installs should come from the pipeline registry, not from whatever happens to be published publicly
 	- pass `--trace` to stream Dagger's execution trace when you want low-level execution profiling instead of the default higher-level matrix story
 	- on macOS, it will start Colima automatically when the active Docker context is `colima` and the VM is not already running
