@@ -4,13 +4,15 @@
 //! references embedded in multi-token strings (`1px solid {colors.gray.800}`).
 //! Each resolved segment becomes `var(--…)` while surrounding literals stay
 //! verbatim. A segment that names no token errors and drops the whole atom;
-//! unterminated braces stay raw and warn.
+//! unterminated braces stay raw and warn. A segment's base resolves through the
+//! same `lookup_entry` as a whole-value brace, so a bare `{brand}` means the same
+//! in both shapes.
 
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
 use super::opacity::{format_entry, split_opacity};
-use super::tones;
+use super::{lookup_entry, tones};
 
 /// Outcome of expanding `{path}` segments inside a composite value.
 pub enum BraceExpansion {
@@ -90,7 +92,7 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
         let inner = after[..close].trim();
         let (path, opacity) = split_opacity(inner);
         if !path.is_empty() {
-            if let Some(entry) = self.session.system.token(path) {
+            if let Some(entry) = lookup_entry(self.prop, path, self.session.system) {
                 self.out.push_str(&format_entry(entry, opacity));
                 return Some(&after[close + 1..]);
             }
@@ -117,7 +119,7 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
     /// the whole atom.
     fn expand_tone(&mut self, inner: &str) -> Option<Option<String>> {
         let (base, name) = tones::split_tone_reference(inner)?;
-        let entry = self.session.system.token(base)?;
+        let entry = lookup_entry(self.prop, base, self.session.system)?;
         if entry.category() != "colors" {
             return None;
         }

@@ -20,6 +20,8 @@ mod scale;
 mod tone_value;
 pub(crate) mod tones;
 #[cfg(test)]
+mod braced_base_tests;
+#[cfg(test)]
 mod braced_tone_tests;
 #[cfg(test)]
 mod tests;
