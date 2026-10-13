@@ -1,6 +1,6 @@
-// order.spec.ts — spec for NEO-LAYERS-03, the order, dedupe and self-exclusion case.
-// Takes { page, url, case } with the consumer world synced standalone. It syncs four
-// upstreams for real, then runs four layer configurations and checks each served
+// order.spec.ts — spec for NEO-LAYERS-03, the order and cross-list repeat case.
+// Takes { page, url, case } with the consumer world synced standalone. It syncs three
+// upstreams for real, then runs three layer configurations and checks each served
 // statement, block order and computed colours, restoring the canonical config in a
 // finally. Emits nothing on success; throws naming the failed assertion on failure.
 import assert from 'node:assert/strict';
@@ -47,23 +47,17 @@ const OWN = 'neo-layers3';
 const A_RGB = 'rgb(29, 78, 216)';
 const B_RGB = 'rgb(190, 24, 93)';
 const C_RGB = 'rgb(21, 128, 61)';
-const TWIN_RGB = 'rgb(124, 58, 237)';
 
 const PACKAGE_BLOCK = /^@layer (neo-layers3[a-z0-9-]*) \{$/;
 const STATEMENT_LINE = /^@layer neo-layers3[^{]*;$/;
 const CONFIG_IMPORT = "import { defineConfig } from '@reference-ui/neo'";
 const EMPTY_EXTENDS = 'extends: [],';
 
-// Each upstream's rule text as its sync emits it. The twin carries the consumer's own name on purpose.
+// Each upstream's rule text as its sync emits it.
 const UPSTREAMS: Upstream[] = [
   { dir: 'a', name: A, rule: `.${A}__c_aInk { color: var(--colors-a-ink); }` },
   { dir: 'b', name: B, rule: `.${B}__c_bInk { color: var(--colors-b-ink); }` },
   { dir: 'c', name: C, rule: `.${C}__c_cInk { color: var(--colors-c-ink); }` },
-  {
-    dir: 'twin',
-    name: OWN,
-    rule: `.${OWN}__c_twinInk { color: var(--colors-twin-ink); }`,
-  },
 ];
 
 // Every variant extends the base upstream A. The layers list and the expected sheet change.
@@ -90,6 +84,7 @@ const VARIANTS: Variant[] = [
       { id: 'race', rgb: B_RGB },
     ],
   },
+  // A system present in both lists: held for the owner's ruling (D6), pinned as current behaviour.
   {
     key: 'duplicate',
     layers: ['aUpstream', 'bUpstream'],
@@ -98,17 +93,6 @@ const VARIANTS: Variant[] = [
     probes: [
       { id: 'a-only', rgb: A_RGB },
       { id: 'b-only', rgb: B_RGB },
-    ],
-  },
-  {
-    key: 'self',
-    layers: ['twinUpstream', 'bUpstream'],
-    statement: `@layer ${A}, ${B}, ${OWN};`,
-    blocks: [A, OWN, B, OWN],
-    probes: [
-      { id: 'a-only', rgb: A_RGB },
-      { id: 'twin-only', rgb: TWIN_RGB },
-      { id: 'self-race', rgb: TWIN_RGB },
     ],
   },
 ];
@@ -124,7 +108,6 @@ const UPSTREAM_IMPORTS = [
   importLine('aUpstream', 'a'),
   importLine('bUpstream', 'b'),
   importLine('cUpstream', 'c'),
-  importLine('twinUpstream', 'twin'),
 ];
 
 // Swaps one anchor for its replacement; a missing anchor means the canonical config changed shape.

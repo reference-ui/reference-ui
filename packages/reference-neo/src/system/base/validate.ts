@@ -1,13 +1,17 @@
-// Extends-entry validation for upstream base systems.
-// It takes candidate extends entries and emits nothing or throws a field
-// error. Config calls the two entry points from validateConfig; the factory
-// builds the shared field message so every branch reports alike.
+// Entry validation for upstream base systems, extends and layers alike.
+// It takes the candidate entries of one field and emits nothing or throws a field
+// error: shape checks per entry, then links between the entries and the consumer's
+// own name (a self-named or cyclic entry, a name repeated within the field).
+// Config calls the entry points from validateConfig; the factory builds the shared
+// field message so every branch reports alike.
 
 import type { BaseSystem } from './types.ts'
 
-type BaseSystemField = 'extends' | 'layers'
+export type BaseSystemField = 'extends' | 'layers'
 type BaseSystemValidationOptions = {
   requireFragment?: boolean
+  // A layers entry contributes CSS only through its streams.
+  requireStreams?: boolean
 }
 
 export function invalidBaseSystem(field: BaseSystemField, reason: string): Error {
@@ -93,6 +97,22 @@ function assertRequiredFragment(
   }
 }
 
+function assertRequiredStreams(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number,
+  requireStreams: boolean
+): void {
+  if (!requireStreams) return
+
+  if (!Array.isArray(sys.streams) || sys.streams.length === 0) {
+    throw invalidBaseSystem(
+      field,
+      `Entry ${index} (${sys.name}) must include 'streams'. A ${field} entry contributes CSS only through its streams, so a fragment or jsxElements alone would be silently dropped. Run sync on the upstream package first, or list it under 'extends' for its fragment and jsxElements.`
+    )
+  }
+}
+
 function validateBaseSystemEntry(
   field: BaseSystemField,
   sys: BaseSystem,
@@ -102,6 +122,7 @@ function validateBaseSystemEntry(
   assertBaseSystemObject(field, sys, index)
   assertBaseSystemName(field, sys, index)
   assertRequiredFragment(field, sys, index, options.requireFragment ?? false)
+  assertRequiredStreams(field, sys, index, options.requireStreams ?? false)
   assertOptionalJsxElements(field, sys, index)
 }
 
@@ -114,5 +135,62 @@ export function validateBaseSystemEntries(
 
   for (const [index, sys] of systems.entries()) {
     validateBaseSystemEntry(field, sys, index, options)
+  }
+}
+
+function reachesOwnName(sys: BaseSystem, ownName: string): boolean {
+  if (sys.name === ownName) return true
+  return Array.isArray(sys.streams) && sys.streams.some((stream) => stream?.name === ownName)
+}
+
+function assertNoOwnNameReach(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number,
+  ownName: string
+): void {
+  if (!reachesOwnName(sys, ownName)) return
+
+  throw invalidBaseSystem(
+    field,
+    `Entry ${index} (${sys.name}) reaches '${ownName}', this config's own name, so the config would be its own upstream. Remove the entry, or cut the path from its extends and layers back to '${ownName}'.`
+  )
+}
+
+function assertNotRepeated(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number,
+  firstIndexByName: Map<string, number>
+): void {
+  const first = firstIndexByName.get(sys.name)
+  if (first === undefined) {
+    firstIndexByName.set(sys.name, index)
+    return
+  }
+
+  throw invalidBaseSystem(
+    field,
+    `Entry ${index} (${sys.name}) repeats entry ${first}. List each system once.`
+  )
+}
+
+/**
+ * Links between one field's entries and the consumer's own name. An entry reaches
+ * the own name when its name or any stream name equals it, which covers a self-named
+ * entry and a cycle through an upstream's expansion. A name listed twice in one field
+ * is rejected; a repeat reached only through another system is left to the dedupe.
+ */
+export function validateBaseSystemLinks(
+  field: BaseSystemField,
+  systems: BaseSystem[] | undefined,
+  ownName: string
+): void {
+  if (!systems?.length) return
+
+  const firstIndexByName = new Map<string, number>()
+  for (const [index, sys] of systems.entries()) {
+    assertNoOwnNameReach(field, sys, index, ownName)
+    assertNotRepeated(field, sys, index, firstIndexByName)
   }
 }

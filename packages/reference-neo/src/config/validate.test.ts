@@ -247,3 +247,53 @@ describe('validateConfig staticCss', () => {
     ).toThrowError(/entry 'color' must be an array of strings/i)
   })
 })
+
+// extends and layers are checked independently: a bad extends must not hide a bad layers.
+describe('validateConfig base-system fields report together', () => {
+  it('reports both bad fields, extends first, with each field message intact', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [null],
+        layers: {},
+      })
+    ).toThrowError(
+      /^Config field 'extends' is invalid\.\nEntry 0 must be an object\.\n\nConfig field 'layers' is invalid\.\nExpected an array of BaseSystem objects\.$/
+    )
+  })
+
+  it('reports a layers entry error alongside a repeat in extends', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: [
+          { name: 'base', fragment: 'fragment-code' },
+          { name: 'base', fragment: 'fragment-code' },
+        ],
+        layers: [{ name: SYSTEM_NAME, fragment: 'fragment-code', streams: [{ name: SYSTEM_NAME, preamble: '' }] }],
+      })
+    ).toThrowError(
+      /^Config field 'extends' is invalid\.\nEntry 1 \(base\) repeats entry 0\. List each system once\.\n\nConfig field 'layers' is invalid\.\nEntry 0 \(my-system\) reaches 'my-system'/
+    )
+  })
+
+  it('keeps a single bad field message exactly as it reads alone', () => {
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        layers: {},
+      })
+    ).toThrowError(/^Config field 'layers' is invalid\.\nExpected an array of BaseSystem objects\.$/)
+
+    expect(() =>
+      validateConfig({
+        name: SYSTEM_NAME,
+        include: DEFAULT_INCLUDE,
+        extends: {},
+      })
+    ).toThrowError(/^Config field 'extends' is invalid\.\nExpected an array of BaseSystem objects\.$/)
+  })
+})

@@ -33,13 +33,22 @@ const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.
 const LAYERS_HEADER = "Config field 'layers' is invalid.";
 const EXTENDS_HEADER = "Config field 'extends' is invalid.";
 const NAME_REASON = "Entry 0 must have a non-empty 'name'.";
-const NAMED_SYNCED_ENTRY = "{ name: 'a', fragment: 'fragment-code' }";
+const NAMED_SYNCED_ENTRY = "{ name: 'a', fragment: 'fragment-code', streams: [{ name: 'a', preamble: '' }] }";
 
 // The reason line for a layers entry that carries no synced payload, at the given label.
 function unsyncedReason(entry: string): string {
   return [
     `${entry} must include synced system data (fragment, streams, or jsxElements).`,
     'Run sync on the upstream package first.',
+  ].join(' ');
+}
+
+// The reason line for a layers entry with synced data but no streams, at the given label.
+function streamlessReason(entry: string): string {
+  return [
+    `${entry} must include 'streams'.`,
+    'A layers entry contributes CSS only through its streams, so a fragment or jsxElements alone would be silently dropped.',
+    "Run sync on the upstream package first, or list it under 'extends' for its fragment and jsxElements.",
   ].join(' ');
 }
 
@@ -68,11 +77,19 @@ const BAD_SHAPES: BadShape[] = [
     `[${NAMED_SYNCED_ENTRY}, { name: 'b' }]`,
     unsyncedReason('Entry 1 (b)'),
   ),
+  badShape(
+    'fragment-only entry without streams',
+    "[{ name: 'tokens', fragment: 'x' }]",
+    streamlessReason('Entry 0 (tokens)'),
+  ),
 ];
 
-// extends is validated before layers, so a pair of bad fields names the extends header.
+// Both bad fields are reported together, extends first, joined by a blank line.
 const PRECEDENCE_FIELDS = '  extends: [null],\n  layers: {},';
-const PRECEDENCE_MESSAGE = `${EXTENDS_HEADER}\nEntry 0 must be an object.`;
+const PRECEDENCE_MESSAGE = [
+  `${EXTENDS_HEADER}\nEntry 0 must be an object.`,
+  `${LAYERS_HEADER}\nExpected an array of BaseSystem objects.`,
+].join('\n\n');
 
 // Accepted shapes: omitted layers and an empty array both sync and land the folder.
 const ACCEPTED_SHAPES: AcceptedShape[] = [
@@ -179,15 +196,16 @@ function proveWorldSheet(worldDir: string): void {
 }
 
 // The runner synced the valid world before serving. Every bad shape rejects with its
-// message and leaves no folder, extends is checked first, the accepted shapes land a
-// folder, and the bin prints the same line and exits 1.
+// message and leaves no folder, a bad extends and a bad layers are reported together with
+// extends first, the accepted shapes land a folder, and the bin prints the same line and
+// exits 1.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   proveWorldSheet(c.worldDir);
   for (const bad of BAD_SHAPES) {
     await proveRejects(bad.label, configFile(`  layers: ${bad.layers},`), bad.message);
   }
   await proveRejects(
-    'extends checked before layers',
+    'both bad fields reported, extends first',
     configFile(PRECEDENCE_FIELDS),
     PRECEDENCE_MESSAGE,
   );

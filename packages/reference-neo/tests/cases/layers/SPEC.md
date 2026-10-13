@@ -20,9 +20,10 @@ extends then layers, with the own entry last
 Each upstream block is reprinted portable, resetless and rootless
 (`printUpstreamBlock`, `streams.ts:106-115`), so its tokens sit under
 `[data-layer="<name>"]`. Upstream names feed the compile request as qualifiers,
-extends then layers (`sync/index.ts:161-169`). Validation requires synced data
-on every entry (`src/config/validate.ts:106-107`,
-`src/system/base/validate.ts:76-94`).
+extends then layers (`sync/index.ts:161-169`). Validation checks each field in
+full (`validateBaseFields`, `src/config/validate.ts`): synced data on every entry,
+streams on every layers entry, and no entry that reaches the config's own name or
+repeats within its field (`src/system/base/validate.ts`).
 
 ## Decisions
 
@@ -39,12 +40,17 @@ on every entry (`src/config/validate.ts:106-107`,
 - D5 A layer-only token is a warning, not a failure. A consumer `css()` that names a
   token only a layers upstream defines makes sync warn `ATM-W-UNKNOWN-COLOR` at the
   call and emit the raw declaration, which the browser drops. Pinned by NEO-LAYERS-02.
-- D6 A repeated system keeps one statement name but prints its block once per
-  listing: `mergeStreams` dedupes the statement and never the blocks. Pinned as
-  current behaviour, not endorsed, by NEO-LAYERS-03.
-- D7 A layers entry named as the consumer leaves the statement, but its block still
-  prints under the own layer name, so its rules rank with own. Pinned as current
-  behaviour, not endorsed, by NEO-LAYERS-03.
+- D6 A system present in both `extends` and `layers` keeps one statement name but
+  prints its block once per listing: `mergeStreams` dedupes the statement and never
+  the blocks. Held for the owner's ruling (O3): accepted, not rejected, until the
+  owner rules. Pinned as current behaviour, not endorsed, by NEO-LAYERS-03. A name
+  repeated within one field is rejected by NEO-LAYERS-14.
+- D7 An entry that reaches the config's own name, by its name or by any stream name,
+  is rejected at load, so the own name never ranks as an upstream. This covers a
+  self-named entry and an A to B cycle. Pinned by NEO-LAYERS-14.
+- D8 A layers entry with no streams is rejected at load. Only streams carry its CSS;
+  without this check the entry would still become a sync qualifier and add nothing.
+  Pinned by NEO-LAYERS-05 (the shape) and NEO-LAYERS-14 (a real sync).
 
 ## Engine stations and ownership
 
@@ -61,9 +67,9 @@ spread; these Neo cases are the primary layers proof.
 | --- | --- |
 | Layer fragments and tokens in the consumer spec | Extends-only (`evaluate.ts:133,164`); NEO-LAYERS-02 asserts the boundary. |
 | Layer roster in `jsxElements` | Extends-only (`jsx.ts:71`); NEO-LAYERS-02. |
-| Dedupe and self-exclusion arbitration | NEO-LAYERS-03 pins the current behaviour (D6, D7). |
+| Dedupe arbitration for a system in both lists (D6, held for O3) | NEO-LAYERS-03 pins the current behaviour. |
 | Container root through layers | NEO-LAYERS-04. |
-| Config validation messages | NEO-LAYERS-05. |
+| Config validation messages | NEO-LAYERS-05 (shapes, precedence) and NEO-LAYERS-14 (relations, by real sync). |
 | Re-sync after an upstream change | NEO-LAYERS-06. |
 
 ## Out of scope

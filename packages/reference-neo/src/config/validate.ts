@@ -3,8 +3,13 @@
 // This module is a Neo-owned copy of the core validator trimmed to the surviving fields.
 
 import type { ReferenceUIConfig, StrictCategory } from './types.ts'
+import type { BaseSystemField } from '../system/base/validate.ts'
 import { ConfigValidationError } from './errors.ts'
-import { validateBaseSystemEntries, validateBaseSystems } from '../system/base/validate.ts'
+import {
+  validateBaseSystemEntries,
+  validateBaseSystemLinks,
+  validateBaseSystems,
+} from '../system/base/validate.ts'
 
 type ConfigRecord = Record<string, unknown>
 
@@ -24,7 +29,7 @@ function validateInclude(cfg: ConfigRecord): void {
   }
 }
 
-function validateName(cfg: ConfigRecord): void {
+function validateName(cfg: ConfigRecord): string {
   const name = cfg.name
   if (name == null || typeof name !== 'string' || name.trim() === '') {
     throw ConfigValidationError.mustHaveName()
@@ -35,6 +40,7 @@ function validateName(cfg: ConfigRecord): void {
       'name must be safe for CSS @layer and [data-layer] (no double-quotes or newlines)'
     )
   }
+  return name
 }
 
 function validateConfigJsxElements(cfg: ConfigRecord): void {
@@ -87,23 +93,52 @@ function validateStrict(cfg: ConfigRecord): void {
   }
 }
 
+const BASE_FIELDS: readonly BaseSystemField[] = ['extends', 'layers']
+
+// One base-system field, checked in full: shape and synced payload, then the links to
+// the own name. Layers also need streams, since only streams carry a layer's CSS.
+function validateBaseField(cfg: ConfigRecord, field: BaseSystemField, ownName: string): void {
+  const systems = validateBaseSystems(field, cfg[field])
+  validateBaseSystemEntries(field, systems, {
+    requireFragment: true,
+    requireStreams: field === 'layers',
+  })
+  validateBaseSystemLinks(field, systems, ownName)
+}
+
+// Each field is checked on its own, so a bad extends cannot hide a bad layers. One
+// failure keeps its own message; two are reported together, extends first.
+function validateBaseFields(cfg: ConfigRecord, ownName: string): void {
+  const failures: Error[] = []
+  for (const field of BASE_FIELDS) {
+    try {
+      validateBaseField(cfg, field, ownName)
+    } catch (error) {
+      failures.push(error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+  // A system present in both fields is held for the owner's ruling (D6), so no
+  // cross-field check runs here. Adding one is a single branch after both fields pass.
+  if (failures.length === 1) throw failures[0]
+  if (failures.length > 1) {
+    throw new Error(failures.map((failure) => failure.message).join('\n\n'))
+  }
+}
+
 /**
  * Validate and normalize the evaluated config object.
  * Unwraps default export, checks for include array.
  *
- * @throws ConfigValidationError for config fields, Error for extends entries
+ * @throws ConfigValidationError for config fields, Error for base-system entries
  */
 export function validateConfig(raw: unknown): ReferenceUIConfig {
   const cfg = mustBeObject(raw)
   validateInclude(cfg)
-  validateName(cfg)
+  const ownName = validateName(cfg)
   validateConfigJsxElements(cfg)
   validateLogs(cfg)
   validateStaticCss(cfg)
   validateStrict(cfg)
-  const extendsSystems = validateBaseSystems('extends', cfg.extends)
-  validateBaseSystemEntries('extends', extendsSystems, { requireFragment: true })
-  const layersSystems = validateBaseSystems('layers', cfg.layers)
-  validateBaseSystemEntries('layers', layersSystems, { requireFragment: true })
+  validateBaseFields(cfg, ownName)
   return cfg as unknown as ReferenceUIConfig
 }
