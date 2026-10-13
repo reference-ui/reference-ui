@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { flattenTokenFragments } from './tokens'
+import { flattenTokenFragments, getUpstreamFragments } from './tokens'
 
 describe('mcp token projection', () => {
   it('flattens token fragments and preserves descriptions', () => {
@@ -137,5 +137,35 @@ describe('mcp token projection', () => {
     expect(paths).toContain('colors.localPublic')
     expect(paths).toContain('colors._private.localSecret')
     expect(paths).not.toContain('colors._private.upstreamSecret')
+  })
+})
+
+describe('mcp upstream fragment linearization', () => {
+  // Two extends entries reach one shared base. Neo evaluates the base once, in the first branch that reaches it.
+  const base = { name: 'base', bundle: ';/* base */' }
+  const left = { name: 'left', bundle: ';/* left */' }
+  const right = { name: 'right', bundle: ';/* right */' }
+
+  it('evaluates a diamond base once, at its first occurrence', () => {
+    const nodes = getUpstreamFragments([
+      { name: 'left', fragment: ';/* left */', fragments: [base, left] },
+      { name: 'right', fragment: ';/* right */', fragments: [base, right] },
+    ])
+
+    expect(nodes.map(node => node.name)).toEqual(['base', 'left', 'right'])
+    expect(nodes.map(node => node.bundle)).toEqual([base.bundle, left.bundle, right.bundle])
+  })
+
+  it('reads a legacy entry as one opaque node named after its system', () => {
+    expect(
+      getUpstreamFragments([
+        { name: 'legacy', fragment: ';/* legacy */' },
+        { name: 'blank', fragment: '   ' },
+      ])
+    ).toEqual([{ name: 'legacy', bundle: ';/* legacy */' }])
+  })
+
+  it('returns no upstream nodes without extends', () => {
+    expect(getUpstreamFragments(undefined)).toEqual([])
   })
 })

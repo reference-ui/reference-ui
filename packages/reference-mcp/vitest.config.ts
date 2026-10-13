@@ -22,6 +22,7 @@ export default defineConfig({
       '@reference-ui/neo/fragments/runner': neo('collect/lib/runner.ts'),
       '@reference-ui/neo/fragments/scanner': neo('collect/lib/scan/scanner.ts'),
       '@reference-ui/neo/fragments/tokens': neo('collect/surface/tokens.ts'),
+      '@reference-ui/neo/system/base/fragments': neo('system/base/fragments.ts'),
       '@reference-ui/neo/microbundle': neo('lib/microbundle/index.ts'),
     },
   },

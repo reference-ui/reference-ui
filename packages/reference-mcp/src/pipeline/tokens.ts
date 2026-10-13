@@ -19,6 +19,7 @@ import type {
 import { createTokensCollector } from '@reference-ui/neo/fragments/tokens'
 import { scanForFragments } from '@reference-ui/neo/fragments/scanner'
 import { bundleFragments } from '@reference-ui/neo/fragments/runner'
+import { fragmentNodesOf, linearizeFragmentNodes } from '@reference-ui/neo/system/base/fragments'
 import { getMcpFragmentImportMap, MCP_FRAGMENT_NEEDLES } from '../neo/author-entry'
 import { getOutDirPath } from '../neo/paths'
 import type { McpToken } from './types'
@@ -66,13 +67,17 @@ function wrapBundleWithSource(bundle: string, source: string): string {
   ].join('\n')
 }
 
-function getUpstreamFragments(systems: ReferenceUIConfig['extends']): string[] {
-  return (systems ?? [])
-    .map(system => system.fragment)
-    .filter(
-      (fragment): fragment is string =>
-        typeof fragment === 'string' && fragment.trim().length > 0
-    )
+type UpstreamFragmentNode = ReturnType<typeof fragmentNodesOf>[number]
+
+/**
+ * The upstream fragment nodes MCP evaluates, in Neo's order: each extends entry's nodes, each name kept at its
+ * first occurrence, so a shared base evaluates once, in the first branch that reaches it. A legacy entry that
+ * carries only `fragment` reads as one opaque node, exactly as Neo reads it.
+ */
+export function getUpstreamFragments(
+  systems: ReferenceUIConfig['extends']
+): UpstreamFragmentNode[] {
+  return linearizeFragmentNodes((systems ?? []).map(fragmentNodesOf))
 }
 
 function isUpstreamFragment(fragment: ReferenceTokenConfig): boolean {
@@ -138,8 +143,9 @@ async function collectTokenFragmentsFromBundle(input: {
   const script = [
     collector.toScript(),
     collector.toRuntimeFunction(),
-    ...upstreamFragments.map(fragment =>
-      wrapBundleWithSource(fragment, UPSTREAM_FRAGMENT_SOURCE),
+    // Every upstream node keeps the upstream source tag, so `_private` still strips at the boundary.
+    ...upstreamFragments.map(node =>
+      wrapBundleWithSource(node.bundle, UPSTREAM_FRAGMENT_SOURCE),
     ),
     ...localBundles.map(({ file, bundle }) => wrapBundleWithSource(bundle, file)),
     `globalThis['${MCP_TOKEN_FRAGMENTS_GLOBAL}'] = ${collector.toGetter()}`,
