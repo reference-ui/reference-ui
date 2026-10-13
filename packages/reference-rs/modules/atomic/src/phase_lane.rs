@@ -267,7 +267,10 @@ fn fold_harvest(input: &RecordIn<'_>, program: &oxc_ast::ast::Program<'_>) -> Op
     }
 }
 
-/// Fold the trace module while the program is still alive.
+/// Fold the trace module while the program is still alive. Parse errors return
+/// early because `fold_errors` already reports them as ATM-E-PARSE. A failed
+/// fold keeps no module: an on-disk file's failure surfaces as ATM-W-TRACE-SKIPPED
+/// from the host trace's re-parse, while a virtual source's failure is not reported.
 fn fold_trace(input: &RecordIn<'_>, program: &oxc_ast::ast::Program<'_>) -> Option<styletrace::TraceModule> {
     let root = input.trace_root?;
     if !input.parsed.errors.is_empty() || crate::hosts::trace_skip(input.content) {

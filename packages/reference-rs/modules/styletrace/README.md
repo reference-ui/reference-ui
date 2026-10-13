@@ -126,12 +126,16 @@ So the rule is still the same:
 
 ### Why atomic hosts fail closed without synced declarations
 
-Atomic `compile()` asks this crate for JSX host names, but hermetic
-stations usually have no synced `.reference-ui/react` primitive
-declarations. When the trace cannot resolve its declaration entrypoints
-it returns an explicit error, and atomic maps that error to the empty
-host set with a missing-graph diagnostic (ATM-SITE-13) — extraction
-fails closed and never falls back to scanning every tag. The voyage that
+Atomic `compile()` traces hosts against the engine surface built from its
+base system, never against a declaration root, so a refusal of that root
+(`resolve_sync_root`, `StyleSurface::from_declaration_root`) does not reach
+atomic. A per-file trace failure does: atomic reports an on-disk file's
+failure as a located ATM-W-TRACE-SKIPPED warning and the file's siblings still
+trace (`atomic/src/hosts/diagnostics.rs`). The empty host set is reported by
+atomic extraction, not by a styletrace error: with no host, style-bearing JSX gets one
+ATM-E-MISSING-HOST-GRAPH per file (ATM-SITE-13, `extract/jsx/mod.rs`
+`report_dropped_tag` into `extract/context.rs` `report_missing_graph`), and
+extraction fails closed without scanning every tag. The voyage that
 made Neo-synced trees traceable is recorded in
 [styletrace.md](../../../../docs/MISSIONS/COMPLETED/STYLETRACE.md). Do not close
 the gap with a PascalCase name list.

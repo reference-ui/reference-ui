@@ -1,0 +1,40 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-TRACE-SKIPPED",
+    "message": "StyleTrace: failed to parse input/src/types.ts: 1 parse error(s)",
+    "file": "input/src/Card.tsx",
+    "help": [
+      "check the StyleTrace host graph for 'input/src/Card.tsx'"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-TRACE-SKIPPED",
+    "message": "StyleTrace: failed to parse input/src/types.ts: 1 parse error(s)",
+    "file": "input/src/types.ts",
+    "help": [
+      "check the StyleTrace host graph for 'input/src/types.ts'"
+    ]
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-PARSE",
+    "message": "Expected `}` but found `EOF`",
+    "file": "input/src/types.ts",
+    "line": 5,
+    "column": 1,
+    "span": {
+      "start": 111,
+      "end": 111
+    }
+  },
+  {
+    "severity": "error",
+    "code": "ATM-E-MISSING-HOST-GRAPH",
+    "message": "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <Card>",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 10
+  }
+]
