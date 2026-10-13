@@ -1952,7 +1952,7 @@
    "overruledBy": null,
    "files": [
     "packages/reference-mcp/src/pipeline/icons-search-index.ts",
-    "packages/reference-mcp/tsup.config.ts"
+    "packages/reference-mcp/scripts/build-bundle.mjs"
    ],
    "report": ".agents/perf-waves/waves/wave-3/report-swarm-rawindex.md",
    "patch": null,

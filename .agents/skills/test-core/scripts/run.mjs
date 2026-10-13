@@ -4,7 +4,7 @@
  * test-core: Miniature Agent CLI & Pipeline Runner
  *
  * Not a component skill. This is the core/matrix verification runner
- * (`pnpm agent`) for packages/reference-core and matrix/*.
+ * (`pnpm agent`) for matrix/* and the native package runners (packages/reference-core is retired).
  *
  * Provides:
  * 1. Automatic macOS Darwin QoS Jailbreak (elevates child process from PRI 31 to PRI 46/47 via `taskpolicy -a`).
@@ -1606,6 +1606,14 @@ async function actionVitest(rawArgs = []) {
 
   let resolvedTarget = 'packages/reference-lib'
   if (targetPackage) {
+    // Checked before the file matcher, which would otherwise read 'core' as a test-name filter.
+    if (['core', '@reference-ui/core'].includes(targetPackage.trim())) {
+      console.error(
+        `[agent] Error: '${targetPackage}' is retired: packages/reference-core no longer exists. ` +
+          'Name a package (e.g. packages/reference-mcp) or a matrix suite (e.g. matrix/tests/mcp).'
+      )
+      process.exit(1)
+    }
     if (isKnownPackage(targetPackage)) {
       const clean = targetPackage.trim().replace(/^@matrix\//, '')
       resolvedTarget = matrixSuiteDirFor(clean)
@@ -1620,8 +1628,6 @@ async function actionVitest(rawArgs = []) {
         let clean = targetPackage.trim()
         if (clean === '@reference-ui/lib') {
           resolvedTarget = 'packages/reference-lib'
-        } else if (clean === 'core' || clean === '@reference-ui/core') {
-          resolvedTarget = 'packages/reference-core'
         } else if (clean.startsWith('matrix/')) {
           resolvedTarget = clean
         } else if (clean.startsWith('@matrix/')) {

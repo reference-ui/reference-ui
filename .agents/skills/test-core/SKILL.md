@@ -11,7 +11,8 @@ The docs live under `.agents/skills/test-core` only so agents can find the runne
 
 Use `test-core` when you changed any of:
 
-- `packages/reference-core` (CLI, sync, Vite/Webpack plugins, packager, types, Book discovery, Playwright host, React runtime aliases, virtual FS, MCP, …)
+- `packages/reference-core` (CLI, sync, Vite/Webpack plugins, packager, types, Book discovery, Playwright host, React runtime aliases, virtual FS, …)
+- `packages/reference-mcp` (the MCP server; its unit tests run with `pnpm agent vt packages/reference-mcp`, its matrix suite is `matrix/tests/mcp`)
 - `matrix/*` packages
 - pipeline / Dagger / hermetic React + bundler contracts
 
@@ -48,7 +49,6 @@ pnpm agent pw --workers 4              # Harness multi-core hardware
 
 # 3. Fast Native Vitest (Unit Tests):
 pnpm agent vitest lib -t "Dialog"
-pnpm agent vitest core                 # packages/reference-core
 pnpm agent vitest -t "Overlay"
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
