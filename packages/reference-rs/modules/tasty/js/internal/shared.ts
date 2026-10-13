@@ -256,7 +256,7 @@ export function collectUserOwnedReferencesFromSymbol(
   const refs: RawTastySymbolRef[] = []
 
   if (isInterfaceSymbol(symbol)) {
-    refs.push(...symbol.extends.filter(ref => !ref.typeParameter))
+    collectHeritageReferences(symbol.extends, refs)
     refs.push(...symbol.types.filter(ref => !ref.typeParameter))
     for (const member of symbol.members) {
       collectUserOwnedReferencesFromMember(member, refs)
@@ -271,6 +271,19 @@ export function collectUserOwnedReferencesFromSymbol(
   }
 
   return refs
+}
+
+/**
+ * Each heritage clause is a reference that may carry type arguments, so it is walked like a
+ * member type.
+ */
+function collectHeritageReferences(
+  heritage: RawTastyTypeRef[],
+  refs: RawTastySymbolRef[]
+) {
+  for (const ref of heritage) {
+    collectUserOwnedReferencesFromTypeRef(ref, refs)
+  }
 }
 
 function collectUserOwnedReferencesFromMember(

@@ -59,7 +59,18 @@ impl<'a> LoweringContext<'a> {
         })
     }
 
+    /// Lowers an inner binder's own parameter list, such as a constructor type's. The list binds its own names
+    /// first, so a constraint or default that names a sibling is flagged here instead of captured.
     pub(super) fn lower_type_parameters<'b>(
+        &self,
+        decl: Option<&TSTypeParameterDeclaration<'b>>,
+    ) -> Vec<TsTypeParameter> {
+        self.bind(self.declared_names(decl))
+            .lower_parameter_list(decl)
+    }
+
+    /// Lowers each parameter's constraint and default in this scope, with the names this scope binds.
+    fn lower_parameter_list<'b>(
         &self,
         decl: Option<&TSTypeParameterDeclaration<'b>>,
     ) -> Vec<TsTypeParameter> {
@@ -67,8 +78,6 @@ impl<'a> LoweringContext<'a> {
             return Vec::new();
         };
 
-        // A constraint or default may name a sibling parameter, so the whole list is bound first.
-        let scope = self.bind(self.declared_names(Some(decl)));
         decl.params
             .iter()
             .map(|param| TsTypeParameter {
@@ -76,11 +85,11 @@ impl<'a> LoweringContext<'a> {
                 constraint: param
                     .constraint
                     .as_ref()
-                    .map(|constraint| scope.lower_type(constraint)),
+                    .map(|constraint| self.lower_type(constraint)),
                 default: param
                     .default
                     .as_ref()
-                    .map(|default| scope.lower_type(default)),
+                    .map(|default| self.lower_type(default)),
             })
             .collect()
     }
@@ -150,11 +159,14 @@ impl<'a> LoweringContext<'a> {
     }
 }
 
+/// Lowers an interface's or a type alias's own parameters. Their names are not bound here, so a default that names
+/// an earlier parameter stays unbound in the shell like the rest of it. The resolver flags it when the declaration
+/// resolves, and an expansion instantiates it with that parameter's argument.
 pub(super) fn type_parameters_from_oxc<'a>(
     decl: Option<&TSTypeParameterDeclaration<'a>>,
     ctx: &ExtractionContext<'_>,
 ) -> Vec<TsTypeParameter> {
-    LoweringContext::new(ctx).lower_type_parameters(decl)
+    LoweringContext::new(ctx).lower_parameter_list(decl)
 }
 
 pub(super) fn type_to_ref(type_annotation: &TSType<'_>, ctx: &ExtractionContext<'_>) -> TypeRef {

@@ -33,7 +33,13 @@ function buildTypeSubstitutions(
   const substitutions = new Map<string, RawTastyTypeRef>()
 
   for (const [index, parameter] of typeParameters.entries()) {
-    const argument = typeArguments?.[index] ?? parameter.default
+    // A default is evaluated where the earlier parameters hold their arguments:
+    // `B = A` takes A's argument.
+    const argument =
+      typeArguments?.[index] ??
+      (parameter.default
+        ? instantiateTypeRef(parameter.default, substitutions)
+        : undefined)
     if (argument) {
       substitutions.set(parameter.name, argument)
     }

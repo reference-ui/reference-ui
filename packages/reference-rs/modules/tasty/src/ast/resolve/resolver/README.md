@@ -10,15 +10,17 @@ walking symbol shapes and nested `TypeRef` values to attach target ids.
 ## Binders
 
 A symbol's own type parameters shadow same-named symbols across its whole shape: its `extends`,
-underlying type, members, references, and parameter constraints. A reference to such a name is
-bound (it is marked with its own name and with the `type_parameter` flag), so no top-level symbol
-captures it. Extraction marks the nested binders the same way (see `ast/extract/types`). Once a
-symbol's resolution is done, `binders.rs` clears the target and keeps the flag, so the output
+underlying type, members, references, and parameter constraints and defaults. A reference to such
+a name is bound (it is marked with its own name and with the `type_parameter` flag), so no top-level
+symbol captures it. Extraction marks the nested binders the same way (see `ast/extract/types`).
+Once a symbol's resolution is done, `binders.rs` clears the target and keeps the flag, so the output
 carries no symbol target and is still never a dependency. Expansion instantiates a shell's
 underlying type, where the alias's own parameters are not bound yet: a bare name that matches one
-is substituted by its argument, whatever its source module, and a parameter with no argument
-becomes a flagged reference. Evaluation never dereferences a flagged reference, because it names
-no symbol.
+is substituted by its argument, whatever its source module. A default is instantiated where the
+parameters before it already hold their arguments, so `B = A` takes `A`'s argument. A later
+parameter named in a default stays unbound rather than resolving in the outer scope. A parameter
+with no argument and no default becomes a flagged reference. Evaluation never dereferences a flagged
+reference, because it names no symbol.
 
 ## Boundaries
 

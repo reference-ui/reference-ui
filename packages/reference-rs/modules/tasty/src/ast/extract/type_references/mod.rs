@@ -13,7 +13,11 @@ pub(super) fn collect_references_from_members(
     type_parameters: &[TsTypeParameter],
 ) -> Vec<TypeRef> {
     let mut references = Vec::new();
-    references.extend(extends.iter().cloned());
+    // A heritage clause is a reference that may carry type arguments, so it is walked like any other type:
+    // the arguments are dependencies of the symbol too.
+    for heritage in extends {
+        walk::collect_type_ref_references(heritage, &mut references);
+    }
 
     if let Some(underlying) = underlying {
         walk::collect_type_ref_references(underlying, &mut references);

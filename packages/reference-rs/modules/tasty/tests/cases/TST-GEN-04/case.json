@@ -1,0 +1,1 @@
+{"id": "TST-GEN-04", "name": "generic-default: a default that names an earlier type parameter evaluates to that parameter's argument, never to a top-level symbol"}

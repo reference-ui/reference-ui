@@ -33,20 +33,36 @@ impl<'a> Resolver<'a> {
         let mut substitutions = BTreeMap::new();
 
         for (index, parameter) in type_parameters.iter().enumerate() {
-            let argument = resolved_arguments
-                .get(index)
-                .cloned()
-                .or_else(|| {
-                    parameter
-                        .default
-                        .clone()
-                        .map(|default| self.resolve_type_ref(default))
-                })
-                .unwrap_or_else(|| unsupplied_parameter(&parameter.name));
+            let argument = match resolved_arguments.get(index) {
+                Some(argument) => argument.clone(),
+                None => self
+                    .default_argument(type_parameters, index, &substitutions)
+                    .unwrap_or_else(|| unsupplied_parameter(&parameter.name)),
+            };
             substitutions.insert(parameter.name.clone(), argument);
         }
 
         substitutions
+    }
+
+    /// The default of `type_parameters[index]`, evaluated where the parameters before it hold their arguments
+    /// (`earlier`). The names from `index` on stay unbound, so no outer symbol captures a forward reference, and
+    /// only a name left over after substitution resolves in the outer scope.
+    fn default_argument(
+        &self,
+        type_parameters: &[TsTypeParameter],
+        index: usize,
+        earlier: &BTreeMap<String, TypeRef>,
+    ) -> Option<TypeRef> {
+        let default = type_parameters.get(index)?.default.clone()?;
+        let mut scope = earlier.clone();
+        for later in &type_parameters[index..] {
+            scope
+                .entry(later.name.clone())
+                .or_insert_with(|| unsupplied_parameter(&later.name));
+        }
+        let instantiated = self.instantiate_type_ref(&default, &scope);
+        Some(self.resolve_type_ref(instantiated))
     }
 
     fn instantiate_type_ref(

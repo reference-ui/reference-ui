@@ -60,6 +60,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [ ] TASTY-22 Known gap: `./x.js` does not reach `./x.ts` for user files, because the candidates for a `.js` specifier are `x.d.ts` and `x.js` only. Such an import warns `TST-W-UNRESOLVED-IMPORT`. Unproven: no station pins it, and changing resolution changes output.
 - [x] TASTY-36 A type parameter or `infer` name never resolves to a same-named symbol inside its scope, while a reference outside that scope still resolves to the top-level symbol. A reference it binds carries `typeParameter` and is never a user-owned dependency. Proof: TST-GEN-03.
 - [x] TASTY-37 `export * as ns from` binds one namespace with no flat names; `ns.Leaf` through a named import or an `export { ns } from` relay resolves to `Leaf`. Proof: TST-EXT-02.
+- [x] TASTY-42 The type arguments of an interface's `extends` clause are dependencies at any depth: `extends Base<UserT>` lists `Base` and `UserT`, and a type alias among them also joins the symbol's `types` list. Proof: TST-EXT-05.
 
 ### 3.4 Diagnostics: warnings continue, refusals throw
 
@@ -83,6 +84,7 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [x] TASTY-32 `keyof` lists the keys of a plain interface, and an interface that `extends` another or has an index signature fails closed. A call signature is never a key. Proof: TST-OPR-02.
 - [x] TASTY-33 Indexing a rest tuple yields the item type, and an optional element fails closed. Proof: TST-TUP-02.
 - [ ] TASTY-40 `keyof` over an interface with type parameters, or with numeric keys, fails closed. Unproven: TST-OPR-02 covers `extends` and index signatures only; no station pins type-parameter interfaces or numeric keys.
+- [x] TASTY-41 A type parameter default that names an earlier parameter takes that parameter's argument: `Two<number>` with `type Two<A, B = A>` gives `second: number`, a bare reference's projected members apply each default in order, and a same-named top-level symbol never captures the default. Proof: TST-GEN-04.
 
 ---
 

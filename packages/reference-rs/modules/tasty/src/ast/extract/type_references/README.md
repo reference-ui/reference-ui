@@ -1,7 +1,8 @@
 # Type references
 
 Collects `TypeRef` reference nodes from symbol shells (members, extends, type
-parameters, underlying types) for downstream resolution.
+parameters, underlying types) for downstream resolution. Each `extends` clause is walked like any
+other type, so the type arguments it names are collected too.
 
 ## Files
 
