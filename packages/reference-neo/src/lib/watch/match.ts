@@ -71,7 +71,7 @@ function isUnder(parent: string, candidate: string): boolean {
 
 // Shortest-first dedupe: a root nested under an earlier one adds no
 // coverage, so collapse keeps the watch subscription list small.
-function collapseRoots(roots: string[]): string[] {
+export function collapseRoots(roots: string[]): string[] {
   const unique = [...new Set(roots.map((root) => resolve(root)))].sort((a, b) => a.length - b.length)
   const collapsed: string[] = []
   for (const root of unique) {
@@ -120,6 +120,15 @@ export interface MatchSnapshot {
   links: Map<string, string>
   /** Directories holding each link's real target, watched so an edit there arrives. */
   linkDirs: string[]
+}
+
+// The union of two snapshots: a widened scope keeps every match either one knew.
+export function mergeSnapshots(a: MatchSnapshot, b: MatchSnapshot): MatchSnapshot {
+  return {
+    dirs: new Set([...a.dirs, ...b.dirs]),
+    links: new Map([...a.links, ...b.links]),
+    linkDirs: [...new Set([...a.linkDirs, ...b.linkDirs])],
+  }
 }
 
 function ancestorsOf(relativePath: string): string[] {
