@@ -121,13 +121,14 @@ describe('rewriteSpecifierText', () => {
       'type A = typeof import("@reference-ui/react");',
       "declare module '@reference-ui/react' {}",
       "const r = require('@reference-ui/react');",
+      '/// <reference types="@reference-ui/react" />',
       'const unrelated = "@reference-ui/react";',
       '',
     ].join('\n')
 
     const { text, count } = rewriteSpecifierText(source, fromFile, resolve)
-    expect(count).toBe(6)
-    expect(text.split('./runtime/reference-ui/react/react.mjs').length - 1).toBe(6)
+    expect(count).toBe(7)
+    expect(text.split('./runtime/reference-ui/react/react.mjs').length - 1).toBe(7)
     expect(text).toContain('const unrelated = "@reference-ui/react";')
   })
 })

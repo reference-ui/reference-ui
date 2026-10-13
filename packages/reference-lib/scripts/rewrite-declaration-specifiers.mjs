@@ -21,8 +21,10 @@ const BARE_TARGETS = new Map([
 const ROOT_SHIPPED = new Set(['system/baseSystem.mjs', 'system/baseSystem.d.mts'])
 
 // Specifier positions in declaration text: `from '…'`, `import('…')`,
-// `import '…'`, `require('…')`, and ambient `module '…'`.
-const SPECIFIER_PATTERN = /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bmodule\s+)(['"])([^'"\n]+)\2/g
+// `import '…'`, `require('…')`, ambient `module '…'`, and the triple-slash
+// `<reference types="…" />` / `<reference path="…" />` directives.
+const SPECIFIER_PATTERN =
+  /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bmodule\s+|<reference\s+(?:types|path)\s*=\s*)(['"])([^'"\n]+)\2/g
 
 const GUARDED_PACKAGES = ['@reference-ui/react', '@reference-ui/styled', '@reference-ui/types']
 
