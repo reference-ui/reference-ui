@@ -71,6 +71,10 @@ function attachShutdown(handle: WatchHandle, report: ShutdownReport): void {
       return
     }
     stopping = true
+    // stop() drops the watch's poke listener once it releases the lock, and the
+    // exit still waits on a flush: a poke a one-shot aimed before the release
+    // must not land in that gap, where SIGUSR2's default action kills the process.
+    process.on('SIGUSR2', () => {})
     report.trace(`shutdown ${signal}: stopping`)
     void handle.stop().then(
       () => {

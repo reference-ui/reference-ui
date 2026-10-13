@@ -1,7 +1,8 @@
 // Staged commit for the Neo generated folder. It takes a fully assembled staging dir plus the live out dir and emits the new folder with no missing-file window.
 // Identical bytes keep their mtime, changed files are linked into place over a backup of their old bytes, and stale entries retire last.
 // Every live change is journaled, so a failed commit rolls back to the last-good folder, and a superseded one stops without touching what the new lock holder owns.
-// Preserved paths (the session lock, the tasty dir) never commit or delete, and a writer temp beside one survives too; temps a dead writer left behind sweep at commit.
+// Preserved paths (the session lock, the tasty dir) never commit or delete, and a writer temp beside one survives too, as does young evaluator scratch
+// (commit-keep.ts); temps a dead writer left behind and stranded scratch sweep at commit.
 // Readers always see complete files, which is what makes the folder bundler-friendly with no bundler plugin.
 
 import {
@@ -15,9 +16,9 @@ import {
   type Dirent,
   type Stats,
 } from 'node:fs'
-import { basename, dirname, join, relative, resolve, sep } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { CommitJournal } from './commit-journal.ts'
-import { pidAlive } from './session.ts'
+import { isFreshScratch, isPreserved, isUnder, sweepStrandedWriterTemps } from './commit-keep.ts'
 
 export interface CommitStats {
   committed: number
@@ -38,6 +39,12 @@ export interface CommitOptions {
    * owns the folder from then on.
    */
   superseded?: () => boolean
+  /**
+   * Absolute path of the evaluator scratch dir. Another process loads its config
+   * there before it contends for the lock, so a scratch entry retires (and a
+   * scratch dir prunes) only once it is too old to belong to a live evaluation.
+   */
+  scratch?: string
 }
 
 interface CommitContext {
@@ -48,6 +55,7 @@ interface CommitContext {
   stagedRel: Set<string>
   journal: CommitJournal
   superseded: () => boolean
+  scratch: string | undefined
 }
 
 type LiveKind = 'missing' | 'file' | 'symlink' | 'dir' | 'other'
@@ -58,24 +66,6 @@ const BACKUP_DIR_PREFIX = '.commit-backup-'
 const SUPERSEDED_MESSAGE =
   '[ref] sync: another sync took the lock during this commit; the new holder now owns the generated folder'
 
-// An older writer build may still own a pid-less temp: sweep only once it is this old.
-const LEGACY_TEMP_SWEEP_MS = 5 * 60_000
-
-function isUnder(path: string, root: string): boolean {
-  return path === root || path.startsWith(root + sep)
-}
-
-// A writer stages beside its root as `<base>.tmp-<pid>-<random>` (an older build
-// wrote `<base>.tmp-<random>`), then renames over the root: that temp is covered too.
-function writerTempPrefix(root: string): string {
-  return `${basename(root)}.tmp-`
-}
-
-function isPreserved(path: string, preserved: string[]): boolean {
-  return preserved.some(
-    (root) => isUnder(path, root) || path.startsWith(join(dirname(root), writerTempPrefix(root)))
-  )
-}
 
 // The stage sits inside the out dir, so the live walks must skip it by path.
 function isStageEntry(path: string, ctx: CommitContext): boolean {
@@ -204,7 +194,7 @@ function retireStaleFiles(dir: string, ctx: CommitContext): number {
       continue
     }
     if (ctx.stagedRel.has(relative(ctx.outDir, full))) continue
-    if (isPreserved(full, ctx.preserved)) continue
+    if (isPreserved(full, ctx.preserved) || isFreshScratch(full, ctx.scratch)) continue
     assertOwned(ctx)
     ctx.journal.moveAside(full)
     removed += 1
@@ -212,55 +202,6 @@ function retireStaleFiles(dir: string, ctx: CommitContext): number {
   return removed
 }
 
-// A writer's temp carries its pid after the base: `<pid>-<random>`. A name with
-// no leading pid is the legacy shape from an older writer build.
-function writerTempPid(rest: string): number | undefined {
-  const match = /^(\d+)-/.exec(rest)
-  return match === null ? undefined : Number(match[1])
-}
-
-// Stranded means no live writer owns it: a dead pid sweeps at once, a legacy name
-// only once old, and a live pid always stays (our own included). A failed stat
-// keeps the entry, since a live writer may have renamed it a moment ago.
-function isStrandedWriterTemp(entryPath: string, rest: string): boolean {
-  const pid = writerTempPid(rest)
-  if (pid !== undefined) return !pidAlive(pid)
-  try {
-    return Date.now() - lstatSync(entryPath).mtimeMs > LEGACY_TEMP_SWEEP_MS
-  } catch {
-    return false
-  }
-}
-
-// A missing dir holds nothing to sweep.
-function entryNames(dir: string): string[] {
-  try {
-    return readdirSync(dir)
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') return []
-    throw error
-  }
-}
-
-// The stranded writer temps beside one preserved root; each swept entry counts once.
-function sweepRootWriterTemps(root: string): number {
-  const parent = dirname(root)
-  const prefix = writerTempPrefix(root)
-  let swept = 0
-  for (const name of entryNames(parent)) {
-    if (!name.startsWith(prefix)) continue
-    const entryPath = join(parent, name)
-    if (!isStrandedWriterTemp(entryPath, name.slice(prefix.length))) continue
-    rmSync(entryPath, { recursive: true, force: true })
-    swept += 1
-  }
-  return swept
-}
-
-// Sweeps every preserved root's stranded writer temps and returns how many went.
-function sweepStrandedWriterTemps(preserved: string[]): number {
-  return preserved.reduce((total, root) => total + sweepRootWriterTemps(root), 0)
-}
 
 // Live dirs from the preserve roots up to (not including) the out dir.
 function preserveAncestors(outDir: string, preserved: string[]): Set<string> {
@@ -279,7 +220,9 @@ function preserveAncestors(outDir: string, preserved: string[]): Set<string> {
 
 // The prune never touches preserved paths, their ancestors, or the stage.
 function isPruneSkipped(dir: string, ctx: CommitContext): boolean {
-  return isPreserved(dir, ctx.preserved) || ctx.preserveAncestors.has(dir) || isStageEntry(dir, ctx)
+  return (
+    isPreserved(dir, ctx.preserved) || ctx.preserveAncestors.has(dir) || isStageEntry(dir, ctx) || isFreshScratch(dir, ctx.scratch)
+  )
 }
 
 // Post-order empty-dir prune: stale dirs left behind by the file pass drop,
@@ -339,6 +282,7 @@ export function commitStagedDir(stagingDir: string, outDir: string, options: Com
     stagedRel: new Set(stagedFiles.map((file) => relative(stagingRoot, file))),
     journal: new CommitJournal(join(stagingRoot, `${BACKUP_DIR_PREFIX}${process.pid}`)),
     superseded: options.superseded ?? (() => false),
+    scratch: options.scratch === undefined ? undefined : resolve(options.scratch),
   }
   const stats: CommitStats = { committed: 0, skipped: 0, removed: 0 }
   try {

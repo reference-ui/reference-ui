@@ -2,10 +2,10 @@
 // root survives a commit, a dead writer's temp and an old pid-less temp sweep
 // away, and a fresh pid-less temp survives. Each leg runs over a temp outDir,
 // with a dead pid from a child that has already exited, so no writer process or
-// signal is needed.
+// signal is needed. Fresh evaluator scratch survives a commit the same way, by age.
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -92,5 +92,35 @@ describe('commit keeps writer temps beside a preserved root', () => {
 
     expect(stats).toEqual({ committed: 1, skipped: 0, removed: 0 })
     expect(readFileSync(join(outDir, 'index.js'), 'utf8')).toBe('index v1\n')
+  })
+})
+
+describe('commit leaves a running evaluation its scratch', () => {
+  it('keeps fresh scratch, sweeps stranded scratch, and prunes the scratch dir once it is empty', async () => {
+    const root = await makeTempDir()
+    const outDir = join(root, '.reference-ui')
+    const scratch = join(outDir, 'tmp')
+    const stage = join(root, 'stage')
+    putFile(join(stage, 'index.js'), 'index v1\n')
+    // Another process has made its eval dir and not yet written its bundle.
+    const emptyEval = join(scratch, 'config-eval-fresh0')
+    mkdirSync(emptyEval, { recursive: true })
+    const freshBundle = join(scratch, 'config-eval-fresh1', 'config.bundle.mjs')
+    putFile(freshBundle)
+    const stranded = join(scratch, 'fragments-eval-stranded.mjs')
+    putFile(stranded)
+    backdate(stranded, HOUR_MS)
+
+    commitStagedDir(stage, outDir, { scratch })
+
+    expect(existsSync(emptyEval)).toBe(true)
+    expect(existsSync(freshBundle)).toBe(true)
+    expect(existsSync(stranded)).toBe(false)
+
+    rmSync(scratch, { recursive: true, force: true })
+    mkdirSync(scratch)
+    putFile(join(stage, 'index.js'), 'index v2\n')
+    commitStagedDir(stage, outDir, { scratch })
+    expect(existsSync(scratch)).toBe(false)
   })
 })

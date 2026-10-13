@@ -73,9 +73,19 @@ setInterval(() => {}, 1000)
 const tempDirs: string[] = []
 const children: ChildProcess[] = []
 
-afterEach(() => {
-  for (const child of children.splice(0)) child.kill('SIGKILL')
-  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+// A SIGKILL lands asynchronously: a stand-in still finishing a state write would
+// drop a file into its dir mid-remove, so each one is awaited dead first.
+function killed(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve()
+  return new Promise((resolve) => {
+    child.once('exit', () => resolve())
+    child.kill('SIGKILL')
+  })
+}
+
+afterEach(async () => {
+  await Promise.all(children.splice(0).map(killed))
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 20 })
 })
 
 interface StandIn {

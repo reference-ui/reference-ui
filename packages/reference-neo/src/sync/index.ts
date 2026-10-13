@@ -230,6 +230,7 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
   // then the links land on the complete folder.
   commitStagedDir(input.stageDir, input.outDir, {
     preserve: [getSyncLockDir(input.cwd), getReferenceTastyDirPath(input.cwd)],
+    scratch: getOutDirTmpPath(input.outDir),
     superseded: input.superseded,
   })
   linkGeneratedPackages(input.cwd, input.outDir)
