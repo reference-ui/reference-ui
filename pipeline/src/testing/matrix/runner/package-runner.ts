@@ -12,6 +12,7 @@ import {
   CONSUMER_DIR_IN_CONTAINER,
   REGISTRY_URL_IN_CONTAINER,
 } from '../../../../config.js'
+import { getReferenceNativePackageName } from '../../../../../packages/reference-rs/modules/runtime/js/shared/targets.js'
 import { playwrightSummaryReporterCode } from './playwright-reporter.js'
 import { formatDuration } from '../../../lib/log/index.js'
 import {
@@ -23,6 +24,7 @@ import {
 } from '../node-modules/install.js'
 import {
   externalPnpmStoreCacheKey,
+  matrixNativeCachePackages,
   matrixNodeModulesCacheKey,
   matrixSharedNodeModulesCacheKey,
 } from '../node-modules/cache.js'
@@ -32,6 +34,7 @@ import {
   MATRIX_SHARED_NODE_MODULES_ROOT_PATH,
 } from '../node-modules/constants.js'
 import { baseNodeContainer, matrixContainerImage } from './container.js'
+import { matrixNativeTarget } from './paths.js'
 import {
   matrixFixtureSourceDirectory,
   matrixGeneratedConsumerDirectory,
@@ -88,6 +91,11 @@ export async function runMatrixPackageInDagger(
     internalTarballSpecs,
   )
   const containerImage = matrixContainerImage(packageRunContext.source)
+  // The container installs these rust packages, so their tarball identity keys the volume.
+  const nativePackages = matrixNativeCachePackages(
+    executionContext.manifest.packages,
+    getReferenceNativePackageName(matrixNativeTarget),
+  )
   const nodeModulesCacheKey = matrixNodeModulesCacheKey({
     containerImage,
     neoVersion: executionContext.neoVersion,
@@ -96,6 +104,7 @@ export async function runMatrixPackageInDagger(
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
     ),
     libVersion: executionContext.libVersion,
+    nativePackages,
     reactRuntime: packageRunContext.reactRuntime,
   })
   const sharedNodeModulesCacheKey = matrixSharedNodeModulesCacheKey({
@@ -106,6 +115,7 @@ export async function runMatrixPackageInDagger(
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
     ),
     libVersion: executionContext.libVersion,
+    nativePackages,
     reactRuntime: packageRunContext.reactRuntime,
   })
   const nodeModulesCache = dag.cacheVolume(nodeModulesCacheKey)

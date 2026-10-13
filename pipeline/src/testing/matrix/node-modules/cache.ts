@@ -4,7 +4,8 @@
  * The matrix runner wants two separate reuse layers:
  * - a pnpm content-addressed store shared across compatible runs
  * - a prelinked /consumer/node_modules tree reused only when the full install
- *   graph is identical for a matrix entry
+ *   graph is identical for a matrix entry, including the rust native tarballs
+ *   the container installs (their content hash, not just their version)
  */
 
 import { createHash } from 'node:crypto'
@@ -28,6 +29,7 @@ interface MatrixNodeModulesCacheKeyOptions {
   fixturePackageJson: MatrixFixturePackageJson
   internalPackages: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[]
   libVersion: string
+  nativePackages?: readonly Pick<RegistryManifestPackage, 'artifactHash' | 'hash' | 'name' | 'version'>[]
   reactRuntime?: MatrixReactRuntime
 }
 
@@ -67,6 +69,7 @@ function createMatrixInstallGraph(
     {
       fixtureName,
       manifestFingerprint: registryManifestFingerprint(options.internalPackages),
+      nativeFingerprint: registryManifestFingerprint(options.nativePackages ?? []),
       dependencies: replaceWorkspaceProtocolVersions({
         dependencies: packageJson.dependencies,
         versionOverrides,
@@ -109,6 +112,18 @@ export function registryManifestFingerprint(
     .join('|')
 
   return createHash('sha256').update(fingerprint).digest('hex').slice(0, 16)
+}
+
+/**
+ * The rust packages a matrix container installs: the `@reference-ui/rust`
+ * wrapper and the native package for the container's target. Their tarball
+ * identity keys the node_modules volume, so a native-only rebuild misses it.
+ */
+export function matrixNativeCachePackages<T extends Pick<RegistryManifestPackage, 'name'>>(
+  packages: readonly T[],
+  nativePackageName: string,
+): T[] {
+  return packages.filter(pkg => pkg.name === '@reference-ui/rust' || pkg.name === nativePackageName)
 }
 
 export function replaceWorkspaceProtocolVersions(

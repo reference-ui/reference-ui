@@ -4,6 +4,7 @@ import { describe, it } from 'node:test'
 import { registryManifestVersion, type RegistryManifest, type RegistryManifestPackage } from '../../../registry/types.js'
 import {
   externalPnpmStoreCacheKey,
+  matrixNativeCachePackages,
   matrixNodeModulesCacheKey,
   matrixSharedNodeModulesCacheKey,
   replaceWorkspaceProtocolVersions,
@@ -54,6 +55,30 @@ function selectInternalPackages(
   packageNames: readonly string[] = ['@reference-ui/neo', '@reference-ui/lib'],
 ): RegistryManifestPackage[] {
   return manifest.packages.filter(pkg => packageNames.includes(pkg.name))
+}
+
+/** The rust packages at one version; each tarball identity is set separately. */
+function createNativePackages(artifacts: {
+  darwin?: string
+  linux: string
+  root?: string
+}): RegistryManifestPackage[] {
+  const pkg = (name: string, artifactHash: string): RegistryManifestPackage => ({
+    artifactHash,
+    hash: `${name}-hash-a`,
+    internalDependencies: [],
+    name,
+    sourceDir: `/tmp/${name}`,
+    tarballFileName: `${name.replace('@reference-ui/', 'reference-ui-')}-0.0.42.tgz`,
+    tarballPath: `/tmp/${name}.tgz`,
+    version: '0.0.42',
+  })
+
+  return [
+    pkg('@reference-ui/rust', artifacts.root ?? 'rust-root-artifact-a'),
+    pkg('@reference-ui/rust-linux-x64-gnu', artifacts.linux),
+    pkg('@reference-ui/rust-darwin-x64', artifacts.darwin ?? 'rust-darwin-artifact-a'),
+  ]
 }
 
 function createFixturePackageJson(overrides?: Partial<MatrixFixturePackageJson>): MatrixFixturePackageJson {
@@ -364,5 +389,76 @@ describe('matrix node_modules cache helpers', () => {
 
     assert.notEqual(react19, react17)
     assert.notEqual(sharedReact19, sharedReact17)
+  })
+
+  it('selects the rust wrapper and the target native package as the native cache identity', () => {
+    const packages = createNativePackages({ linux: 'linux-artifact-a' })
+
+    assert.deepEqual(
+      matrixNativeCachePackages(packages, '@reference-ui/rust-linux-x64-gnu').map(pkg => pkg.name),
+      ['@reference-ui/rust', '@reference-ui/rust-linux-x64-gnu'],
+    )
+  })
+
+  it('splits node_modules cache keys when the linux native tarball changes at the same version', () => {
+    const fixturePackageJson = createFixturePackageJson()
+    const internalPackages = selectInternalPackages(createManifest())
+    const keysFor = (linux: string) => {
+      const nativePackages = matrixNativeCachePackages(
+        createNativePackages({ linux }),
+        '@reference-ui/rust-linux-x64-gnu',
+      )
+      const options = { neoVersion: '0.0.41', fixturePackageJson, internalPackages, libVersion: '0.0.44', nativePackages }
+      return {
+        perEntry: matrixNodeModulesCacheKey(options),
+        shared: matrixSharedNodeModulesCacheKey(options),
+      }
+    }
+
+    const baseline = keysFor('linux-artifact-a')
+    const rebuilt = keysFor('linux-artifact-b')
+
+    assert.notEqual(baseline.perEntry, rebuilt.perEntry)
+    assert.notEqual(baseline.shared, rebuilt.shared)
+  })
+
+  it('splits node_modules cache keys when the rust wrapper tarball changes at the same version', () => {
+    const fixturePackageJson = createFixturePackageJson()
+    const internalPackages = selectInternalPackages(createManifest())
+    const keyFor = (root: string) =>
+      matrixNodeModulesCacheKey({
+        neoVersion: '0.0.41',
+        fixturePackageJson,
+        internalPackages,
+        libVersion: '0.0.44',
+        nativePackages: matrixNativeCachePackages(
+          createNativePackages({ linux: 'linux-artifact-a', root }),
+          '@reference-ui/rust-linux-x64-gnu',
+        ),
+      })
+
+    assert.notEqual(keyFor('rust-root-artifact-a'), keyFor('rust-root-artifact-b'))
+  })
+
+  it('keeps node_modules cache keys stable for identical native identities and other platforms', () => {
+    const fixturePackageJson = createFixturePackageJson()
+    const internalPackages = selectInternalPackages(createManifest())
+    const keyFor = (artifacts: Parameters<typeof createNativePackages>[0]) =>
+      matrixNodeModulesCacheKey({
+        neoVersion: '0.0.41',
+        fixturePackageJson,
+        internalPackages,
+        libVersion: '0.0.44',
+        nativePackages: matrixNativeCachePackages(
+          createNativePackages(artifacts),
+          '@reference-ui/rust-linux-x64-gnu',
+        ),
+      })
+
+    const baseline = keyFor({ linux: 'linux-artifact-a' })
+
+    assert.equal(baseline, keyFor({ linux: 'linux-artifact-a' }))
+    // The darwin tarball is never installed in the linux container, so it must not split the key.
+    assert.equal(baseline, keyFor({ darwin: 'rust-darwin-artifact-b', linux: 'linux-artifact-a' }))
   })
 })
