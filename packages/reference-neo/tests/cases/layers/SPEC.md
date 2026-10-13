@@ -67,6 +67,9 @@ system may be named in both (`validateSharedBaseSystems`, D6).
   upstreams, so islands go through primitives' `colorMode`; and consumer plain content placed
   directly inside an upstream component, with no own primitive in between, inherits the
   upstream's values.
+- D11 `extendSystem` is the intentional theming path for a layered system, and tokens only in
+  v1: recipes and globalCss are not overridden. Pinned by NEO-LAYERS-17 (an override paints under
+  layers) and NEO-LAYERS-18 (its misuse, and the extends shape).
 
 ## Engine stations and ownership
 

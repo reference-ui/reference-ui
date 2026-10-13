@@ -51,6 +51,57 @@ this line to its `env.d.ts`, or its lib props stay open:
 /// <reference types="@reference-ui/react" />
 ```
 
+## Theming lib with your brand (layers + extendSystem)
+
+Lib's design system is the `@reference-ui/lib/baseSystem` payload. You can build on it two ways, and they differ in
+what happens to lib's tokens.
+
+`extends: [baseSystem]` adopts lib's tokens and types into your own system, and your tokens win wherever you set the
+same path.
+
+`layers: [...]` keeps lib isolated: its tokens sit under lib's own `data-layer` scope, so they stay apart from yours.
+To rebrand a layered lib, wrap it in `extendSystem` in your own module:
+
+```ts
+// src/system/lib.ts
+import { extendSystem } from '@reference-ui/neo'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+export const brandedLib = extendSystem(baseSystem, {
+  tokens: {
+    colors: {
+      design: {
+        primary: {
+          background: { light: '#0f766e', dark: '#5eead4' },
+        },
+      },
+    },
+  },
+})
+```
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/neo'
+import { brandedLib } from './src/system/lib'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [],
+  layers: [brandedLib],
+})
+```
+
+`extendSystem` overrides the lib tokens you name and leaves the rest of lib as it is. Its v1 limits:
+
+- Existing token names only. An override of a token lib does not declare fails sync with an error that names it.
+- Tokens only. There are no recipe or globalCss overrides yet.
+- One branding of lib per app. A branded lib keeps lib's name, so a second branded lib in the same config repeats
+  that name, and sync rejects it.
+- An override must not point at a lib token that lib builds from the token being overridden. The two would refer to
+  each other, which is a CSS cycle. `extendSystem` only rejects a direct self-reference.
+
 ## Bundle & code-splitting
 
 The package ships one JS entry (`dist/index.mjs`, ~3.6MB uncompressed at 0.0.46 —
