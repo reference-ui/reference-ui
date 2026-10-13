@@ -122,6 +122,13 @@ describe('case README heading', () => {
     ])
   })
 
+  it('requires the claim to equal the case.json name when the name is known', () => {
+    expect(readmeProblems('ATM-TOKEN-06', '# ATM-TOKEN-06 — tokens\n', 'tokens')).toEqual([])
+    expect(readmeProblems('ATM-TOKEN-06', '# ATM-TOKEN-06 — tokens\n', 'tokens resolve')).toEqual([
+      'README.md heading claim "tokens" must equal case.json name "tokens resolve"',
+    ])
+  })
+
   it('reports a missing README with the heading to add', () => {
     expect(readmeProblems('ATM-TOKEN-06', null)).toEqual([
       'no README.md; its first line must be "# ATM-TOKEN-06 — <one-line claim>"',

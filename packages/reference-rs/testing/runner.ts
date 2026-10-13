@@ -10,6 +10,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  caseIndexName,
   caseIndexProblems,
   readCaseIndex,
   readCaseReadme,
@@ -107,9 +108,10 @@ export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>)
           }
 
           checkHygiene(stationDir, stationName, requiredFiles)
+          const caseIndex = readCaseIndex(stationDir)
           const caseProblems = [
-            ...caseIndexProblems(stationName, readCaseIndex(stationDir)),
-            ...readmeProblems(stationName, readCaseReadme(stationDir)),
+            ...caseIndexProblems(stationName, caseIndex),
+            ...readmeProblems(stationName, readCaseReadme(stationDir), caseIndexName(caseIndex)),
           ]
           expect(
             caseProblems,

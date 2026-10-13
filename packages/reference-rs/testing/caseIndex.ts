@@ -83,11 +83,18 @@ export function strayCaseFolders(
 
 const README_HEADING = /^# (.+?) — (.*)$/
 
+/** The case.json name when it is a string on a JSON object, else undefined. */
+export function caseIndexName(read: CaseIndexRead): string | undefined {
+  if (read.kind !== 'parsed' || !isRecord(read.value)) return undefined
+  return typeof read.value.name === 'string' ? read.value.name : undefined
+}
+
 /**
  * Convention violations for one case README; an empty list means it conforms.
  * The first line must be "# <folder> — <claim>": this folder's own ID, then a claim.
+ * When case.json's name is known, the claim must equal it.
  */
-export function readmeProblems(folderName: string, readme: string | null): string[] {
+export function readmeProblems(folderName: string, readme: string | null, name?: string): string[] {
   const expected = `"# ${folderName} — <one-line claim>"`
   if (readme === null) {
     return [`no ${CASE_README_FILE}; its first line must be ${expected}`]
@@ -103,8 +110,13 @@ export function readmeProblems(folderName: string, readme: string | null): strin
       `${CASE_README_FILE} heading names "${heading[1]}"; it must name folder "${folderName}"`
     )
   }
-  if (heading[2]!.trim() === '') {
+  const claim = heading[2]!
+  if (claim.trim() === '') {
     problems.push(`${CASE_README_FILE} heading has no claim after the em dash`)
+  } else if (name !== undefined && claim !== name) {
+    problems.push(
+      `${CASE_README_FILE} heading claim "${claim}" must equal case.json name "${name}"`
+    )
   }
   return problems
 }
