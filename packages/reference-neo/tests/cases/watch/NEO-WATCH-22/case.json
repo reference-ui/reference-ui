@@ -1,0 +1,1 @@
+{"id": "NEO-WATCH-22", "name": "a SIGTERM delivered mid-commit is honored: the commit finishes or rolls back, then the sync ends by the signal and releases its lock", "sync": false}

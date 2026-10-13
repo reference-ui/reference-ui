@@ -1,0 +1,1 @@
+{"id": "NEO-WATCH-19", "name": "a commit that fails partway puts back every live file it had replaced, so the generated folder is byte-identical to before the run", "sync": false}

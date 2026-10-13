@@ -33,6 +33,8 @@ import { applyNormalizeCss } from './reset.ts'
 import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { removeDirIfEmpty } from './clean.ts'
 import { commitStagedDir } from './commit.ts'
+import { includeMatchDiagnostics } from './include-check.ts'
+import { lockTakenByOther } from './owner-check.ts'
 import { getSyncLockDir, type SyncSessionKind } from './session-owner.ts'
 import { acquireSyncSession } from './session.ts'
 import { assembleSystem } from '../packager/assembly.ts'
@@ -154,7 +156,13 @@ async function evaluateAndCompile(
     // The drain consumed the retention: nothing left to release.
     retentionToken = undefined
     dropScanRetention(request, prepared)
-    return { spec, result: { ...result, diagnostics: [...shadows, ...result.diagnostics] }, request }
+    // An include that reaches no file drops its tokens silently in the engine, so it is named here.
+    const includeWarnings = includeMatchDiagnostics(cwd, config.include)
+    return {
+      spec,
+      result: { ...result, diagnostics: [...shadows, ...includeWarnings, ...result.diagnostics] },
+      request,
+    }
   } finally {
     await releaseScanRetention(retentionToken)
   }
@@ -169,6 +177,8 @@ interface PublishInput {
   prepared: PreparedFragments
   result: NativeCompileResult
   request: ScopedCompileRequest
+  /** True once another session took the lock: the commit stops rather than write over it. */
+  superseded: () => boolean
 }
 
 // Assemble into the stage, then commit it live: the stage builds while the
@@ -220,6 +230,7 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
   // then the links land on the complete folder.
   commitStagedDir(input.stageDir, input.outDir, {
     preserve: [getSyncLockDir(input.cwd), getReferenceTastyDirPath(input.cwd)],
+    superseded: input.superseded,
   })
   linkGeneratedPackages(input.cwd, input.outDir)
   markPhase('publishEnd')
@@ -228,15 +239,31 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
 
 // The stage dies with the failed run while the live folder keeps its
 // last-good outputs. Evaluator scratch drops too, so a fresh world still
-// lands nothing at all (SYNC-11).
-async function dropFailedStageAndScratch(stageDir: string, outDir: string): Promise<void> {
+// lands nothing at all (SYNC-11). A run that lost the lock removes neither:
+// the stage and scratch belong to the new holder by then.
+async function dropFailedStageAndScratch(stageDir: string, outDir: string, ownsLock: boolean): Promise<void> {
+  if (!ownsLock) return
   try {
     await rm(stageDir, { recursive: true, force: true })
     await rm(getOutDirTmpPath(outDir), { recursive: true, force: true })
   } catch {
-    // Best effort: the next sync drops the stranded stage at start, and
+    // Best effort: the next sync drops a stranded stage at start, and
     // the commit prunes scratch it did not stage.
   }
+}
+
+// One full turn of the event loop, with a poll phase in it. A stop signal that
+// arrived during the synchronous commit is read from the signal pipe in that poll
+// phase, so its handler runs while this run still holds the lock. An immediate
+// queued from inside another waits for the next turn, which is what makes the
+// second hop reach a poll phase; a single immediate can share the check phase
+// with the work before it and resolve before the signal is read.
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    setImmediate(() => {
+      setImmediate(resolve)
+    })
+  })
 }
 
 /**
@@ -245,12 +272,13 @@ async function dropFailedStageAndScratch(stageDir: string, outDir: string): Prom
  * evaluates fragments once, compiles the spec natively, and assembles the
  * result into the nested stage dir — the live folder keeps serving the
  * whole run. The commit then moves the stage live with no missing-file
- * window (identical bytes keep their mtime, the rest flips by atomic
- * rename, stale entries delete last), and the scope links land on the
- * complete folder. A failed sync keeps the last-good outputs: the stage
- * dies with the run, and a fresh world still lands nothing (SYNC-11). A
- * watch poke cover throws SyncCoveredByWatchError before any write. The
- * lock releases in the finally, before syncEnd.
+ * window (identical bytes keep their mtime, the rest flips by atomic rename
+ * over a backup, stale entries retire last), and the scope links land on the
+ * complete folder. A failed sync rolls its changes back and keeps the
+ * last-good outputs (SYNC-11 for a fresh world); a sync that lost the lock
+ * mid-commit stops without touching what the new holder wrote. A watch poke
+ * cover throws SyncCoveredByWatchError before any write. The lock releases in
+ * the finally, after one event-loop turn that lets a queued stop signal land.
  */
 export async function sync(cwd: string, options: SyncOptions = {}): Promise<SyncResult> {
   markPhase('syncStart')
@@ -264,11 +292,13 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     breakLock: options.breakLock ?? false,
     json: options.json ?? false,
   })
+  const lockDir = getSyncLockDir(cwd)
+  const superseded = (): boolean => lockTakenByOther(lockDir, session.owner.lockNonce)
   let failed = false
 
   try {
-    // A killed run may have stranded its stage; it drops here, under the
-    // lock, before anything assembles. The live folder stays untouched.
+    // A killed run may have stranded its stage; it drops here, under the lock,
+    // before anything assembles. The live folder stays untouched.
     await rm(stageDir, { recursive: true, force: true })
     markPhase('scanStart')
     const prepared = await prepareFragments(cwd, config)
@@ -278,7 +308,17 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     const warningCount = reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, reportOptions)
     throwOnErrorDiagnostics(result.diagnostics)
 
-    const typegenDiagnostics = await assembleAndCommit({ cwd, config, stageDir, outDir, spec, prepared, result, request })
+    const typegenDiagnostics = await assembleAndCommit({
+      cwd,
+      config,
+      stageDir,
+      outDir,
+      spec,
+      prepared,
+      result,
+      request,
+      superseded,
+    })
     // Typegen warnings exist only after assembly: they fold into the same
     // count and verbose list as the compile warnings.
     const typegenWarningCount = reportSyncDiagnostics(typegenDiagnostics, undefined, reportOptions)
@@ -299,9 +339,11 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     }
   } catch (error) {
     failed = true
-    await dropFailedStageAndScratch(stageDir, outDir)
+    await dropFailedStageAndScratch(stageDir, outDir, !superseded())
     throw error
   } finally {
+    // The commit is synchronous, so a stop signal that landed during it is still queued here.
+    await yieldToEventLoop()
     session.release()
     if (failed) await removeDirIfEmpty(outDir)
     markPhase('syncEnd')
