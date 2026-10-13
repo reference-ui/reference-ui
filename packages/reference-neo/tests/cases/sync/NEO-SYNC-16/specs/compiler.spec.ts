@@ -10,6 +10,8 @@ import path from 'node:path';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import { sync } from '../../../../../src/sync/index.ts';
+import { flushReferenceBuild } from '../../../../../src/reference/bridge/index.ts';
+import { flushTastyRefresh } from '../../../../../src/sync/tasty-phase.ts';
 
 interface SpecInput {
   page: SpecPage;
@@ -29,6 +31,13 @@ const PLAIN_CONFIG = [
   '})',
   '',
 ].join('\n');
+
+// sync never awaits the tasty phase it schedules. That phase prints its own summary when its build lands, so it
+// drains here, before the verbose spy opens: the spy then counts the sync's own verbose list and nothing else.
+async function drainTastyPhase(dir: string): Promise<void> {
+  await flushReferenceBuild(path.resolve(dir));
+  await flushTastyRefresh(dir);
+}
 
 async function syncWithWarnCapture(dir: string, verbose: boolean): Promise<{ calls: string[]; warningCount: number }> {
   const calls: string[] = [];
@@ -62,6 +71,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.ok(warningCount > 0, `expected a folded warning count, got ${warningCount}`);
 
   // (ii) verbose list: one call whose compiler-tagged lines carry the codes.
+  await drainTastyPhase(c.worldDir);
   const { calls: verboseCalls } = await syncWithWarnCapture(c.worldDir, true);
   assert.equal(verboseCalls.length, 1, `expected one verbose call, got ${verboseCalls.length}`);
   const lines = verboseCalls.join('\n').split('\n');
@@ -100,6 +110,8 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
       'no-logs world still syncs green',
     );
   } finally {
+    // The temp world goes only after its background tasty build settles, so no build walks a removed root.
+    await drainTastyPhase(plainDir);
     fs.rmSync(plainDir, { recursive: true, force: true });
   }
 }
