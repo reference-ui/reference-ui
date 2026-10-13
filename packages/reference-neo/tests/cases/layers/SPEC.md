@@ -36,6 +36,15 @@ on every entry (`src/config/validate.ts:106-107`,
 - D4 The upstream emits name-based classes, `<system>__c_<token>` for colour and
   `<system>__bg-c_<token>` for background (observed here). The spec asserts the
   exact rule text the sync emits, so a renamed class fails loud, not silently.
+- D5 A layer-only token is a warning, not a failure. A consumer `css()` that names a
+  token only a layers upstream defines makes sync warn `ATM-W-UNKNOWN-COLOR` at the
+  call and emit the raw declaration, which the browser drops. Pinned by NEO-LAYERS-02.
+- D6 A repeated system keeps one statement name but prints its block once per
+  listing: `mergeStreams` dedupes the statement and never the blocks. Pinned as
+  current behaviour, not endorsed, by NEO-LAYERS-03.
+- D7 A layers entry named as the consumer leaves the statement, but its block still
+  prints under the own layer name, so its rules rank with own. Pinned as current
+  behaviour, not endorsed, by NEO-LAYERS-03.
 
 ## Engine stations and ownership
 
@@ -52,7 +61,7 @@ spread; these Neo cases are the primary layers proof.
 | --- | --- |
 | Layer fragments and tokens in the consumer spec | Extends-only (`evaluate.ts:133,164`); NEO-LAYERS-02 asserts the boundary. |
 | Layer roster in `jsxElements` | Extends-only (`jsx.ts:71`); NEO-LAYERS-02. |
-| Dedupe and self-exclusion arbitration | NEO-LAYERS-03. |
+| Dedupe and self-exclusion arbitration | NEO-LAYERS-03 pins the current behaviour (D6, D7). |
 | Container root through layers | NEO-LAYERS-04. |
 | Config validation messages | NEO-LAYERS-05. |
 | Re-sync after an upstream change | NEO-LAYERS-06. |
