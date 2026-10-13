@@ -3,7 +3,7 @@
 //! import-graph walk. Matches the entry set extraction compiles so traced
 //! hosts and extracted styles never disagree on scope.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Include-scoped entries that exist on disk, in extraction order.
 /// Virtual-only sources carry no import graph and are skipped silently.
@@ -21,8 +21,15 @@ pub(crate) fn entry_paths(sources: &[(String, String)], failed: &[bool]) -> Vec<
         })
         .map(|(_, (path, _))| PathBuf::from(path))
         // Trace walks the disk import graph, so virtual-only sources skip here, silently.
-        .filter(|path| path.is_file())
+        .filter(|path| on_disk_source(path))
         .collect()
+}
+
+/// True when a source is a real file, the only kind the trace walks from.
+/// Serial entries and the lane fold both gate on it, so the two paths trace
+/// one file set. A relative path is probed against the process working directory.
+pub(crate) fn on_disk_source(path: &Path) -> bool {
+    path.is_file()
 }
 
 /// True when a file's bytes cannot feed the styletrace entry parse.

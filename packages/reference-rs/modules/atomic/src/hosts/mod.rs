@@ -24,11 +24,13 @@ mod diagnostics;
 mod entries;
 mod surface;
 #[cfg(test)]
+mod lane_tests;
+#[cfg(test)]
 mod tests;
 
 use diagnostics::convert_trace_diagnostic;
 use entries::entry_paths;
-pub(crate) use entries::trace_skip;
+pub(crate) use entries::{on_disk_source, trace_skip};
 pub use surface::engine_surface;
 
 /// Traced vs caller-configured host names for one compile.

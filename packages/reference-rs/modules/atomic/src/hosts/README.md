@@ -9,6 +9,11 @@ condition keys, canon primitives) over the same include-scoped entries
 extraction compiles. No `root_dir` or an empty entry set traces nothing,
 silently — virtual-only compiles gate on configured hosts alone.
 
+A source that is not on disk is never traced: it cannot be an entry, and no
+import edge resolves to it. Serial and lane folds share that rule
+(`on_disk_source`), so a virtual wrapper adds no traced host on either path;
+only configured `jsxHosts` admit it.
+
 ## Must not
 
 - Warn when there is nothing to trace (empty entries stay silent).
