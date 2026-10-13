@@ -58,7 +58,57 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 ## Track 2 — reference-rs test suites in atomic's shape
 
-(planned after Track 1 cooks are underway; see below once scouted)
+### Facts (inventory scout)
+
+- No `case.json` exists anywhere in reference-rs. atomic's per-case manifest is
+  `spec.ts` (`{ id, verify(result) }`); the shared runner `testing/runner.ts`
+  discovers by folder regex and asserts `spec.id === folder id` (:41-44).
+- Case-driven suites: atomic (260, `ATM-AREA-NN`), atlas (15, `ATL-AREA-NN-slug`),
+  tasty (40, `TST-AREA-NN-slug`), styletrace (21, snake_case). Non-case: typegen,
+  canon, primitives (TS), module-graph (14 Cargo `tests/*.rs` + `tests/common/`);
+  diagnostics, runtime, base-system, shared have no `tests/` dir.
+- Baseline reds were environment, not code: styletrace needs the gitignored
+  `fixtures/sync-root/.reference-ui` (cloned from the main checkout → 89 cargo /
+  32 vitest green). ATM-SITE-54 fails 1 vitest test on base (under investigation).
+
+### Layout spec (oracle decision, adopted)
+
+1. No `case.json`: `spec.ts` stays the manifest (that is atomic's real shape; the
+   runner already enforces id = folder). Owner to confirm if a separate
+   `case.json` is still wanted — a follow-up, nothing here depends on it.
+2. Case folder = raw ID everywhere. atlas/tasty drop the `-slug` (slug moves to
+   the README H1); styletrace gets minted `STT-<AREA>-NN` ids (WRAP 01-07, BAR
+   01-07, PKG 01-03, PIPE 01-02, NEG 01-02, alphabetical within area; old snake
+   name in the README H1). Accepted golden exception: goldens that embed the
+   folder name (atlas `caseName`, tasty TST-ERR-01/TST-RXP-02 manifest paths)
+   change by exactly old→new name, proved by
+   `diff <(git show HEAD:<old> | sed 's/<old>/<new>/g') <new>` printing nothing.
+3. `tests/` top level holds only folders (+ optional README.md):
+   `cases/<ID>/{README.md,spec.ts,input/,output/}`, `suites/*.test.ts` (every
+   vitest entry incl. cases.test.ts), `harness/*.ts` (every non-test helper),
+   `rust/` (Cargo integration targets), `fixtures/`, `goldens/` (atomic
+   `namer-goldens/` → `goldens/namer/`).
+4. Rust integration tests: `tests/rust/<name>.rs` with one
+   `[[test]] name="<name>" path="tests/rust/<name>.rs"` each (names unchanged);
+   module-graph `tests/common/mod.rs` → `tests/rust/common/mod.rs`.
+5. Non-case suites get the layout only (no forced cases). No change: diagnostics,
+   runtime, base-system, shared.
+6. Order: atlas pilot (also sets runner default folderPattern), then tasty,
+   styletrace, atomic, module-graph, typegen+canon+primitives in parallel
+   sub-worktrees; typegen last after rebasing past AnimationToken.
+
+### Baseline counts (before)
+
+| Module | `agentrs c` | `agentrs v` |
+| --- | --- | --- |
+| atomic | 849 passed | 319 passed, 1 failed (ATM-SITE-54) / 15 files |
+| atlas | 24 | 61 / 6 files |
+| tasty | 90 | 83 / 5 files |
+| styletrace | 89 (with fixture) | 32 / 3 files |
+| typegen | 73 | 54 / 7 files |
+| canon | 58 | 15 / 1 file |
+| module-graph | 109 (`--crate module_graph`) | n/a |
+| primitives | n/a | 29 / 5 files (`v modules/primitives/`) |
 
 ## Landings
 
