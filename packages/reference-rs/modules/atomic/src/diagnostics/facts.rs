@@ -218,6 +218,9 @@ pub enum TokenDetail {
     UnknownTone { text: Box<str>, tone: Box<str> },
     /// ``unterminated `{` in value `{value}` ``.
     UnterminatedBrace { value: Box<str> },
+    /// `` `{text}` is not a {category} token `` (`category` is the token
+    /// category the prop draws on: spacing, radii, sizes, or fontSizes).
+    UnknownToken { text: Box<str>, category: Box<str> },
 }
 
 /// One semantic report from a compiler phase. Small vocabulary on purpose:

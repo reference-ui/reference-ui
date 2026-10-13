@@ -22,11 +22,11 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined stations were split (`AT
 | Metric | Count |
 | :--- | :--- |
 | Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes `Option<BaseSystem>`; omitted uses `BaseSystem::lib_fixture()`. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract claims (`- [x]` / `- [ ]` lines) | 234 |
-| Named `[x]` proven | 232 |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 236 |
+| Named `[x]` proven | 234 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Case folders | 260 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 262 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — S6 audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a station folder exists and is green. It does **not** mean the
 station proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -76,7 +76,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SHORT` | Shorthand decomposition without `currentColor` reset | 10 | 10 | 0 |
 | `EXT` | Dialect-extension realization (refused until expanded) | 1 | 1 | 0 |
 | `COND` | Conditions, media queries, pseudo-classes, & patterns | 31 | 31 | 0 |
-| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 18 | 18 | 0 |
+| `TOKEN` | Token resolution, CSS vars, & BaseSystem ingest | 20 | 20 | 0 |
 | `RECIPE` | Closed variant classes & variant lookup tables | 8 | 8 | 0 |
 | `STATIC` | Static CSS want synthesis from BaseSystem | 3 | 3 | 0 |
 | `LAYER` | Cascade layer order (`@layer`) & layer population | 15 | 15 | 0 |
@@ -90,7 +90,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **234** | **232** | **2** |
+| **Total** | | **236** | **234** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -716,6 +716,13 @@ compiler contract.
   **Paths that tones never take (negated bases, CSS colour keywords, non-colour props) must keep their pre-tones output and diagnostic.**
   Station `ATM-TOKEN-23`. `color: '-blue.500/medium'`, `bg: 'white/medium'`, `borderColor: 'transparent/medium'`, and `boxShadow: 'blue.500/medium'`. Assert no utility names a tone variable and each value paints raw under the diagnostic its path already raised: `ATM-W-UNKNOWN-TOKEN-PATH` (negated), `ATM-W-UNKNOWN-COLOR` twice (keywords), and `ATM-W-MALFORMED-OPACITY` (bare `boxShadow`). The engine's unit tests `negated_tone_is_untouched` and `colour_keyword_never_takes_the_tone_path` pin the same outputs. The four raw declarations are grammar-quarantined under the token-passthrough policy in `tests/harness/css-quarantine.ts`, as `ATM-TOKEN-05` and `ATM-TOKEN-06` are.
 
+- [x] `ATM-TOKEN-24` `[reference]` `[seam]` —
+  **An unknown bare name on a spacing, radius, size or font-size prop must warn `ATM-W-UNKNOWN-TOKEN` once and pass through raw.**
+  Station `ATM-TOKEN-24`. A baseSystem with one real token per length category and `css({ p: 'upGap', borderRadius: 'upRadius', fontSize: 'upSize', w: 'upSize' })`. Assert each value prints raw (`padding: upGap`, `border-radius: upRadius`, `font-size: upSize`, `width: upSize`) and exactly four warnings name the category noun: ``upGap` is not a spacing token``, ``upRadius` is not a radius token``, ``upSize` is not a font-size token``, and ``upSize` is not a size token``. `w` falls back to spacing on a sizes miss and still names no token. The four raw declarations are grammar-quarantined under the token-passthrough policy in `tests/harness/css-quarantine.ts`, as `ATM-TOKEN-21` and `ATM-TOKEN-23` are. The identifier grammar and keyword list are pinned by the unit tests in `resolve/tokens/bare_name.rs`.
+- [x] `ATM-TOKEN-25` `[reference]` `[seam]` —
+  **Keywords the prop accepts, bare numbers, lengths, real tokens and names on props outside the length categories must never raise `ATM-W-UNKNOWN-TOKEN`.**
+  Station `ATM-TOKEN-25`. `p: 'auto'`, `p: '4'`, `p: '2px'`, `w: 'fit-content'`, `fontSize: 'larger'`, `borderRadius: 'sm'` against a real `radii.sm` token, and `fontFamily: 'upFont'`, with no spacing scale declared. Assert zero diagnostics and each declaration printed (`padding: auto`, `padding: 2px`, `width: fit-content`, `font-size: larger`, `border-radius: var(--radii-sm)`, `font-family: upFont`). The golden pins `padding: 4px` for the bare number, which takes the length unit. `padding: auto` is a CSS-wide keyword the whole-value fence passes on any prop, so it was invalid CSS before this change too; it is grammar-quarantined in `tests/harness/css-quarantine.ts`.
+
 ### BaseSystem Spec Validation
 
 - [x] `ATM-TOKEN-10` `[forbidden]` `[seam]` —
@@ -1110,6 +1117,8 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-TOKEN-21` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-21/` |
 | `ATM-TOKEN-22` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-22/` |
 | `ATM-TOKEN-23` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-23/` |
+| `ATM-TOKEN-24` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-24/` |
+| `ATM-TOKEN-25` | `[x]` | `[seam]` | `tests/cases/ATM-TOKEN-25/` |
 | `ATM-RECIPE-01` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-01/` |
 | `ATM-RECIPE-02` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-02/` |
 | `ATM-RECIPE-03` | `[x]` | `[seam]` | `tests/cases/ATM-RECIPE-03/` |

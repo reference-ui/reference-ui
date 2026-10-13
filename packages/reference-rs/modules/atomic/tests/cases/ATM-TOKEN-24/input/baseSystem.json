@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-unknown-name",
+  "tokens": {
+    "spacing": {
+      "4": {
+        "value": "1rem"
+      }
+    },
+    "radii": {
+      "sm": {
+        "value": "0.125rem"
+      }
+    },
+    "sizes": {
+      "md": {
+        "value": "20rem"
+      }
+    },
+    "fontSizes": {
+      "md": {
+        "value": "1rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

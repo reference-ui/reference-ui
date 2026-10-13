@@ -152,12 +152,16 @@ pub enum DiagnosticCode {
     /// and painted raw on a bare value; the brace form reuses the
     /// unknown-reference error instead.
     UnknownTone,
+    /// `resolve/tokens`: a bare identifier on a spacing, radius, size or
+    /// font-size prop that names no token in that category and is no CSS
+    /// keyword the prop accepts. Warned and painted raw, like a bare colour.
+    UnknownToken,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 52] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 53] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -270,6 +274,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 52] = [
     ),
     (DiagnosticCode::RhythmRootCycle, "ATM-E-RHYTHM-ROOT-CYCLE"),
     (DiagnosticCode::UnknownTone, "ATM-W-UNKNOWN-TONE"),
+    (DiagnosticCode::UnknownToken, "ATM-W-UNKNOWN-TOKEN"),
 ];
 
 impl DiagnosticCode {
@@ -403,6 +408,7 @@ mod tests {
             DiagnosticCode::DrainedRetentionToken,
             DiagnosticCode::RhythmRootCycle,
             DiagnosticCode::UnknownTone,
+            DiagnosticCode::UnknownToken,
         ] {
             assert!(variants.contains(&code), "missing table row: {code:?}");
         }

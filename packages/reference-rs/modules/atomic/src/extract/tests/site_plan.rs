@@ -109,7 +109,17 @@ fn test_identifier_spread_emits_plan_beside_sibling() {
     assert_eq!(plan_values(&res, "mt"), vec!["gap".to_string()]);
     assert_plans_point_at_sheet(&res, "color");
     assert_plans_point_at_sheet(&res, "mt");
-    assert_unknown_colors(&res, 1);
+    // `gap` is a bare word on a spacing prop that names no token: a true
+    // positive for ATM-W-UNKNOWN-TOKEN, beside the colour miss.
+    assert_eq!(res.diagnostics.len(), 2);
+    assert!(res
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("neither a color token")));
+    assert!(res
+        .diagnostics
+        .iter()
+        .any(|d| d.message == "`gap` is not a spacing token"));
 }
 
 #[test]

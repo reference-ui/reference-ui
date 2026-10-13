@@ -13,6 +13,7 @@ use base_system::{BaseSystem, TokenEntry};
 use crate::diagnostics::{DiagnosticCode, ResolveDetail, ResolveOutcome, TokenDetail};
 use crate::resolve::{want_key, ResolveSession};
 
+mod bare_name;
 mod interpolate;
 mod negation;
 mod opacity;
@@ -174,10 +175,11 @@ fn is_whole_css_value(trimmed: &str) -> bool {
             || crate::resolve::rhythm::resolve_single_rhythm(trimmed).is_some())
 }
 
-/// Warn for an unresolvable value: a dotted path that names no token, or a
-/// bare value on a color prop that is neither a token nor CSS. Bare values
-/// elsewhere pass through silently; cross-category unique-name stories are
-/// retired, since the author typed a scale the theme does not have.
+/// Warn for an unresolvable value: a dotted path that names no token, a bare
+/// value on a color prop that is neither a token nor CSS, or an unknown bare
+/// name on a spacing, radius, size or font-size prop. Other bare values pass
+/// through silently; cross-category unique-name stories are retired, since the
+/// author typed a scale the theme does not have.
 fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSession<'_, '_>) {
     if looks_like_token_path(unbraced) {
         let key = want_key(
@@ -197,6 +199,7 @@ fn warn_unresolved_token(prop: &str, unbraced: &str, session: &mut ResolveSessio
         return;
     }
     warn_unknown_color(prop, unbraced, session);
+    bare_name::warn_unknown_token_name(prop, unbraced, session);
 }
 
 /// Warn when a bare value on a color prop is neither a token nor CSS color.

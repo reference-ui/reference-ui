@@ -233,12 +233,26 @@ fn test_unknown_color_warns_on_color_props() {
 }
 
 #[test]
-fn test_bare_value_misses_silently_off_color_props() {
+fn test_bare_value_misses_silently_off_token_categories() {
     let system = spacing_system();
-    for (prop, raw) in [("fontSize", "sm"), ("zIndex", "2"), ("width", "sm")] {
+    let (css, diagnostics) = resolve_with_diagnostics("zIndex", "2", &system);
+    assert_eq!(css.as_deref(), Some("2"));
+    assert!(diagnostics.is_empty(), "zIndex=2 stays silent");
+}
+
+#[test]
+fn test_bare_value_misses_warn_on_length_token_categories() {
+    use crate::diagnostics::DiagnosticCode;
+    let system = spacing_system();
+    for (prop, raw, message) in [
+        ("fontSize", "sm", "`sm` is not a font-size token"),
+        ("width", "sm", "`sm` is not a size token"),
+    ] {
         let (css, diagnostics) = resolve_with_diagnostics(prop, raw, &system);
         assert_eq!(css.as_deref(), Some(raw));
-        assert!(diagnostics.is_empty(), "{prop}={raw} stays silent");
+        assert_eq!(diagnostics.len(), 1, "{prop}={raw} warns once");
+        assert_eq!(diagnostics[0].code, DiagnosticCode::UnknownToken);
+        assert_eq!(diagnostics[0].message, message);
     }
 }
 

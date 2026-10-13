@@ -16,6 +16,13 @@ pub fn token_category_for_prop(prop: &str) -> Option<&'static str> {
         .or_else(|| spacing_or_size_category(canonical))
 }
 
+/// True for the categories whose bare names print into a length-bearing CSS
+/// property: spacing, radii, sizes, and font sizes. A miss there is a warning;
+/// every other category keeps the silent raw passthrough.
+pub fn is_length_category(category: &str) -> bool {
+    matches!(category, "spacing" | "radii" | "sizes" | "fontSizes")
+}
+
 /// Shape properties: radii, font families, animations.
 fn shape_category(canonical: &str) -> Option<&'static str> {
     if is_radius_longhand(canonical) {

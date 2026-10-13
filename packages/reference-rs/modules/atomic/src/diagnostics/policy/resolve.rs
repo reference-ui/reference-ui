@@ -108,6 +108,12 @@ fn token_help(suggestion: Option<&str>, detail: &TokenDetail) -> Vec<String> {
         TokenDetail::UnterminatedBrace { value } => {
             vec![format!("close the '{{' in '{value}'")]
         }
+        TokenDetail::UnknownToken { category, .. } => {
+            vec![format!(
+                "use a {} token or a CSS value",
+                category_noun(category)
+            )]
+        }
     }
 }
 
@@ -117,6 +123,17 @@ fn tone_fix(tone: &str) -> String {
     format!(
         "declare it with tokens({{ tones: {{ {tone}: {{ surface: {{ value: '10%' }}, line: {{ value: '34%' }} }} }} }}) — tone values are percentages — or use /<0-100>"
     )
+}
+
+/// The noun a token category reads as in prose: `radii` is a radius, `sizes`
+/// a size, and `fontSizes` a font-size. Other categories read as themselves.
+fn category_noun(category: &str) -> &str {
+    match category {
+        "radii" => "radius",
+        "sizes" => "size",
+        "fontSizes" => "font-size",
+        other => other,
+    }
 }
 
 /// The sentence for one declaration-shape refusal.
@@ -180,6 +197,9 @@ fn token_sentence(detail: &TokenDetail) -> String {
         }
         TokenDetail::UnterminatedBrace { value } => {
             format!("unterminated `{{` in value `{value}`")
+        }
+        TokenDetail::UnknownToken { text, category } => {
+            format!("`{text}` is not a {} token", category_noun(category))
         }
     }
 }
@@ -337,6 +357,24 @@ mod tests {
             rendered.message,
             "unterminated `{` in value `1px solid {colors.gray.800`"
         );
+
+        let token = TokenDetail::UnknownToken {
+            text: "upGap".into(),
+            category: "spacing".into(),
+        };
+        let rendered = Policy::render_resolve(&report(rejected(ResolveDetail::Token(token))));
+        assert_eq!(rendered.message, "`upGap` is not a spacing token");
+        assert!(rendered
+            .help
+            .as_ref()
+            .is_some_and(|lines| lines.iter().any(|line| line.contains("spacing token"))));
+
+        let token = TokenDetail::UnknownToken {
+            text: "upRadius".into(),
+            category: "radii".into(),
+        };
+        let rendered = Policy::render_resolve(&report(rejected(ResolveDetail::Token(token))));
+        assert_eq!(rendered.message, "`upRadius` is not a radius token");
     }
 
     #[test]

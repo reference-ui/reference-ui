@@ -28,6 +28,14 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   'ATM-TOKEN-22': ['background: brand/arc'],
   'ATM-TOKEN-23': ['background: white/medium', 'border-color: transparent/medium',
     'box-shadow: blue .500/medium', 'color: -blue .500/medium'],
+  // Unknown bare names on length props warn ATM-W-UNKNOWN-TOKEN and pass
+  // through raw by design, so these declarations are invalid CSS (ATM-TOKEN-24).
+  // `p: 'auto'` is a CSS-wide keyword that the whole-value fence passes through
+  // on any prop, so `padding: auto` is invalid CSS before this change too
+  // (ATM-TOKEN-25).
+  'ATM-TOKEN-24': ['padding: upGap', 'border-radius: upRadius', 'font-size: upSize',
+    'width: upSize'],
+  'ATM-TOKEN-25': ['padding: auto'],
   'ATM-VALID-03': ['Unexpected input', 'color: ghost.white'],
 
   // §11 silent bare-value passthrough (intended, permanent): a bare miss
@@ -57,11 +65,11 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // properties validate.
   'ATM-COND-05': ['MyProp: 2px', 'myProp: 2px', 'mozFoo: 2px'],
   // Doom-r fortify (CONTINUITY-01 r-computation, close (a)): refused
-  // non-finite rhythm stems pass through raw under the section 11 silent
-  // bare-value passthrough policy (permanent, like ATM-TOKEN-16) — the
-  // author wrote them, the browser drops them. The sheet-text pins in the
-  // case spec are the real guard; these entries only quiet the grammar
-  // gauge over the intentionally invalid passthrough spellings.
+  // non-finite rhythm stems pass through raw (permanent, like ATM-TOKEN-16) —
+  // the author wrote them, the browser drops them. The identifier-shaped
+  // stems also warn ATM-W-UNKNOWN-TOKEN (ATM-TOKEN-24 rule). The sheet-text
+  // pins in the case spec are the real guard; these entries only quiet the
+  // grammar gauge over the intentionally invalid passthrough spellings.
   'ATM-RHYTHM-07': ['margin-top: infr', 'margin-top: nanr', 'margin-top: infinityr',
     'margin-top: Infinityr', 'margin-top: -infr', 'margin-top: 1e309r',
     'margin-top: 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999r', 'margin-top: 1/infr', 'margin-top: inf/3r'],

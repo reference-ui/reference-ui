@@ -1,0 +1,9 @@
+{
+  "borderRadius:sm": "token-silent-names__rounded_sm",
+  "fontFamily:upFont": "token-silent-names__font-family_upFont",
+  "fontSize:larger": "token-silent-names__fs_larger",
+  "p:2px": "token-silent-names__p_2px",
+  "p:4": "token-silent-names__p_4",
+  "p:auto": "token-silent-names__p_auto",
+  "w:fit-content": "token-silent-names__w_fit-content"
+}

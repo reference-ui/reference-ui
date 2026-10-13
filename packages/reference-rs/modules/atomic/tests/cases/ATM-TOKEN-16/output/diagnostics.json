@@ -1,6 +1,21 @@
 [
   {
     "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN",
+    "message": "`sm` is not a font-size token",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 13,
+    "span": {
+      "start": 80,
+      "end": 84
+    },
+    "help": [
+      "use a font-size token or a CSS value"
+    ]
+  },
+  {
+    "severity": "warning",
     "code": "ATM-W-UNKNOWN-COLOR",
     "message": "`md` is neither a color token nor a CSS color",
     "file": "input/src/App.tsx",

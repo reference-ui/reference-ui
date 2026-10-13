@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "token-silent-names",
+  "tokens": {
+    "radii": {
+      "sm": {
+        "value": "0.125rem"
+      }
+    }
+  },
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": []
+}

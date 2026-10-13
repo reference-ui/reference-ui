@@ -1,7 +1,9 @@
 /**
- * Bare-value station (§11). A bare miss off color props passes through
- * silently — no cross-category story — while the same shape on a color
- * prop warns unknown-color, and the true category still resolves.
+ * Bare-value station (§11). A bare miss on a color prop warns unknown-color,
+ * and a bare miss on a font-size prop warns unknown-token, because no
+ * font-size token is named `sm` here. The radius token `sm` never answers a
+ * font-size prop (the cross-category story is retired), while `borderRadius`
+ * still resolves its own `sm`.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'
@@ -14,6 +16,11 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: md;')
     expect(sheet).toContain('border-radius: var(--radii-sm);')
     expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'ATM-W-UNKNOWN-TOKEN',
+        message: '`sm` is not a font-size token',
+      }),
       expect.objectContaining({
         severity: 'warning',
         code: 'ATM-W-UNKNOWN-COLOR',

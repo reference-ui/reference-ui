@@ -11,8 +11,11 @@ Examples:
 - already-`var(--…)` values pass through
 - complete CSS values (`rgba(…)`, `translateX(…)`, `red`, `13px`) fence
   before lookup: CSS wins over tokens, silently (`ATM-TOKEN-14`)
-- bare misses pass through silently off color props; on color props they
-  warn `ATM-W-UNKNOWN-COLOR` (`ATM-TOKEN-16`)
+- bare misses pass through silently, except two shapes that warn: on color
+  props `ATM-W-UNKNOWN-COLOR` (`ATM-TOKEN-16`), and on spacing, radius, size
+  and font-size props `ATM-W-UNKNOWN-TOKEN` for a bare identifier that is no
+  token in that category and no CSS keyword the prop accepts (`bare_name.rs`;
+  `ATM-TOKEN-24`, `ATM-TOKEN-25`). Numbers, lengths and functions never warn.
 
 A **tone** names a colour at a theme-owned opacity: `blue.500/medium` emits
 `color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent)`.

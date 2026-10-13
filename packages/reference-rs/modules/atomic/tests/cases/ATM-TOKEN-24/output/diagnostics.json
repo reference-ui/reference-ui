@@ -1,0 +1,62 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN",
+    "message": "`upGap` is not a spacing token",
+    "file": "input/src/App.tsx",
+    "line": 4,
+    "column": 6,
+    "span": {
+      "start": 73,
+      "end": 80
+    },
+    "help": [
+      "use a spacing token or a CSS value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN",
+    "message": "`upRadius` is not a radius token",
+    "file": "input/src/App.tsx",
+    "line": 5,
+    "column": 17,
+    "span": {
+      "start": 98,
+      "end": 108
+    },
+    "help": [
+      "use a radius token or a CSS value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN",
+    "message": "`upSize` is not a font-size token",
+    "file": "input/src/App.tsx",
+    "line": 6,
+    "column": 13,
+    "span": {
+      "start": 122,
+      "end": 130
+    },
+    "help": [
+      "use a font-size token or a CSS value"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-UNKNOWN-TOKEN",
+    "message": "`upSize` is not a size token",
+    "file": "input/src/App.tsx",
+    "line": 7,
+    "column": 6,
+    "span": {
+      "start": 137,
+      "end": 145
+    },
+    "help": [
+      "use a size token or a CSS value"
+    ]
+  }
+]

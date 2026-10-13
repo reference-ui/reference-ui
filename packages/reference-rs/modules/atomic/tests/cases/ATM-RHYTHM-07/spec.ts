@@ -36,7 +36,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).not.toContain('calc(NaN ')
     expect(result.stylesheet).not.toMatch(/calc\([^;{}]*\binf\b/)
     expect(result.stylesheet).not.toMatch(/calc\([^;{}]*\bNaN\b/)
-    // Close (a): refused stems pass through raw, silent.
+    // Close (a): refused stems pass through raw.
     for (const value of REFUSED) {
       expect(result.stylesheet).toContain(`margin-top: ${value}`)
     }
@@ -46,7 +46,16 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('margin-top: calc(0.5 * var(--spacing-root))')
     expect(result.stylesheet).toContain('margin-top: calc(0.001 * var(--spacing-root))')
     expect(result.stylesheet).toMatch(/margin-top: calc\(1\d+ \* var\(--spacing-root\)\)/)
-    expect(result.diagnostics ?? []).toEqual([])
+    // Identifier-shaped stems name no spacing token, so they warn
+    // ATM-W-UNKNOWN-TOKEN. Number-shaped refusals (`-infr`, `1e309r`, `1/infr`,
+    // `inf/3r`, the 309-digit overflow) stay silent.
+    expect(result.diagnostics.map(d => d.message)).toEqual([
+      '`infr` is not a spacing token',
+      '`nanr` is not a spacing token',
+      '`infinityr` is not a spacing token',
+      '`Infinityr` is not a spacing token',
+    ])
+    expect(result.diagnostics.every(d => d.code === 'ATM-W-UNKNOWN-TOKEN')).toBe(true)
   },
 }
 
