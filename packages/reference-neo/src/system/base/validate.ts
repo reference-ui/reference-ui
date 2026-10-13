@@ -19,6 +19,14 @@ export function invalidBaseSystem(field: BaseSystemField, reason: string): Error
   return new Error(`Config field '${field}' is invalid.\n${reason}`)
 }
 
+// A system name is written into an unescaped [data-layer="…"] selector, so a double quote, a backslash
+// or a line break would break it. Config load checks every name, the own name included.
+const UNSAFE_NAME_CHARS = /["\\\r\n]/
+
+export function isSafeSystemName(name: string): boolean {
+  return !UNSAFE_NAME_CHARS.test(name)
+}
+
 function assertOptionalJsxElements(
   field: BaseSystemField,
   sys: BaseSystem,
@@ -74,6 +82,12 @@ function assertBaseSystemName(
     throw invalidBaseSystem(
       field,
       `Entry ${index} must have a non-empty 'name'.`
+    )
+  }
+  if (!isSafeSystemName(sys.name)) {
+    throw invalidBaseSystem(
+      field,
+      `Entry ${index} (${JSON.stringify(sys.name)}) has a name with a double quote, a backslash or a line break, which a [data-layer] selector cannot carry.`
     )
   }
 }

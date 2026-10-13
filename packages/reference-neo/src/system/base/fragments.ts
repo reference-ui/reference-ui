@@ -4,6 +4,7 @@
 // the legacy `fragment` field carries. A legacy entry with only `fragment` reads as one
 // opaque node named after its system. Callers project the inputs at the call.
 
+import { extendFragmentNode } from './extend.ts'
 import type { BaseSystem, FragmentNode } from './types.ts'
 
 export function createPortableFragmentBundle(
@@ -15,8 +16,17 @@ export function createPortableFragmentBundle(
     .join('\n')
 }
 
-/** The fragment nodes one system publishes; a legacy entry is one opaque node named after it (E15). */
+/**
+ * The fragment nodes one system publishes; a legacy entry is one opaque node named after it (E15). An
+ * extendSystem result adds its override node last, so under extends its tokens land after the base's (E14).
+ */
 export function fragmentNodesOf(system: BaseSystem): FragmentNode[] {
+  const nodes = ownFragmentNodes(system)
+  const override = extendFragmentNode(system)
+  return override ? [...nodes, override] : nodes
+}
+
+function ownFragmentNodes(system: BaseSystem): FragmentNode[] {
   if (Array.isArray(system.fragments) && system.fragments.length > 0) return system.fragments
   if (typeof system.fragment === 'string' && system.fragment.trim().length > 0) {
     return [{ name: system.name, bundle: system.fragment }]

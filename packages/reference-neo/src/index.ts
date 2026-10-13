@@ -4,6 +4,7 @@
 // same file, so every resolver agrees on what authors can import.
 export { defineConfig, type ReferenceUIConfig } from './config/types.ts'
 export { type BaseSystem } from './system/base/types.ts'
+export { extendSystem } from './system/base/extend.ts'
 export {
   tokens,
   type ReferenceTokenConfig,

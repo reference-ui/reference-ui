@@ -14,6 +14,7 @@ export {
   publishedFragmentNodes,
 } from './fragments.ts'
 export { resolveJsxElements, type JsxElementsArtifact } from './jsx.ts'
+export { ExtendSystemError, extendSystem, type ExtendSystemOverrides } from './extend.ts'
 export {
   invalidBaseSystem,
   validateBaseSystemEntries,

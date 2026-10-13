@@ -6,6 +6,7 @@ import type { ReferenceUIConfig, StrictCategory } from './types.ts'
 import type { BaseSystemField } from '../system/base/validate.ts'
 import { ConfigValidationError } from './errors.ts'
 import {
+  isSafeSystemName,
   validateBaseSystemEntries,
   validateBaseSystemLinks,
   validateBaseSystems,
@@ -36,9 +37,9 @@ function validateName(cfg: ConfigRecord): string {
     throw ConfigValidationError.mustHaveName()
   }
   const trimmed = name.trim()
-  if (trimmed.includes('"') || /[\r\n]/.test(trimmed)) {
+  if (!isSafeSystemName(trimmed)) {
     throw ConfigValidationError.invalidName(
-      'name must be safe for CSS @layer and [data-layer] (no double-quotes or newlines)'
+      'name must be safe for CSS @layer and [data-layer] (no double-quotes, backslashes or newlines)'
     )
   }
   return name
