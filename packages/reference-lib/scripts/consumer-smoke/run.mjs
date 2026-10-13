@@ -2,11 +2,14 @@
 // vite build (warning scan) -> tsc types check (skipLibCheck on, then off for
 // lib's declarations, then the SyncedSystem probe: a strict consumer's fill
 // must reach lib's props) -> dev-server Playwright probe (mount-all + B-11
-// behaviors + zero console errors).
+// behaviors + zero console errors) -> layered override (extendSystem through a
+// real ref sync: the served sheet checked as text, then a lib Button painted in
+// light and dark against the override and against lib's own default).
 //
 // Usage: node scripts/consumer-smoke/run.mjs [--port 5199] [--keep]
 // On failure the scaffold dir is kept and its path printed for inspection.
-import { spawn, execFileSync } from 'node:child_process'
+import { spawn, execFileSync, spawnSync } from 'node:child_process'
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -96,23 +99,234 @@ function checkSyncedProbe(outputLines, probeLines) {
   }
 }
 
+// Layered override pass (step 7). lib's published base system is layered whole by one config, and the same base
+// wrapped in extendSystem by another. Each config is synced for real by the neo bin, and the sheet it serves is
+// checked as text. Then one lib Button per colour mode is painted on three pages: the override sheet, the control
+// sheet, and lib's own prebuilt styles. The override is a light and a dark value on lib's default button background.
+const NEO_BIN = resolve(packageRoot, '..', 'reference-neo', 'dist', 'bin', 'ref.js')
+const NEO_ENSURE = resolve(packageRoot, '..', 'reference-neo', 'tools', 'ensure-dist.mjs')
+const LAYER_OVERRIDE = { light: '#fde68a', dark: '#1e3a8a' }
+// ui.button.default.background: the token lib's default <Button> paints, light gray.100 and dark gray.700.
+const LAYER_TOKEN = '--colors-ui-button-default-background'
+const LAYER_RULE = {
+  light: '[data-layer="reference-ui"], [data-layer="reference-ui"][data-color-mode=light]',
+  dark: '[data-layer="reference-ui"][data-color-mode=dark]',
+}
+const LAYER_BASE_IMPORT = "import { baseSystem as libBaseSystem } from '@reference-ui/lib/baseSystem'"
+const OVERRIDE_CONFIG = `import { defineConfig, extendSystem } from '@reference-ui/neo'
+${LAYER_BASE_IMPORT}
+
+const branded = extendSystem(libBaseSystem, {
+  tokens: {
+    colors: {
+      ui: {
+        button: {
+          default: {
+            background: { light: '${LAYER_OVERRIDE.light}', dark: '${LAYER_OVERRIDE.dark}' },
+          },
+        },
+      },
+    },
+  },
+})
+
+export default defineConfig({
+  name: 'consumer-smoke',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [],
+  layers: [branded],
+})
+`
+const CONTROL_CONFIG = `import { defineConfig } from '@reference-ui/neo'
+${LAYER_BASE_IMPORT}
+
+export default defineConfig({
+  name: 'consumer-smoke',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [],
+  layers: [libBaseSystem],
+})
+`
+// The three pages the paint probe opens. Each renders the same Probe: one lib Button in light and one in dark.
+const LAYER_PAGES = [
+  { name: 'override', css: './sheets/override.css' },
+  { name: 'control', css: './sheets/control.css' },
+  { name: 'libown', css: '@reference-ui/lib/styles.css' },
+]
+const PROBE_COMPONENT = `import { Button, Div } from '@reference-ui/lib/primitives'
+
+export function Probe() {
+  return (
+    <Div>
+      <Button id="light" colorMode="light">Light</Button>
+      <Button id="dark" colorMode="dark">Dark</Button>
+    </Div>
+  )
+}
+`
+
+function pageHtml(name) {
+  return `<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>layers ${name}</title></head>
+  <body><div id="root"></div><script type="module" src="/src/${name}.tsx"></script></body>
+</html>
+`
+}
+
+function pageEntry(css) {
+  return `import '${css}'
+import { createRoot } from 'react-dom/client'
+import { Probe } from './probe'
+
+createRoot(document.getElementById('root') as HTMLElement).render(<Probe />)
+`
+}
+
+// One real sync of the scaffold through the neo bin. A failed sync throws with its own output, never a stale sheet.
+function syncScaffold(dir) {
+  const result = spawnSync(process.execPath, [NEO_BIN, 'sync', '--quiet', dir], { cwd: dir, encoding: 'utf8' })
+  if (result.status !== 0) {
+    const output = `${result.stdout}${result.stderr}`.slice(-3000)
+    throw new Error(`smoke: ref sync failed in the scaffold (exit ${result.status}): ${output}`)
+  }
+}
+
+// The declaration bodies of every rule the served sheet prints under one exact selector.
+function rulesUnder(sheet, selector) {
+  const open = `${selector} {`
+  const bodies = []
+  for (let at = sheet.indexOf(open); at >= 0; at = sheet.indexOf(open, at + open.length)) {
+    bodies.push(sheet.slice(at + open.length, sheet.indexOf('}', at)))
+  }
+  return bodies
+}
+
+// Reads the two served sheets from disk. The override must print its light and dark values under the reference-ui
+// stamp. The control must print lib's own defaults and none of the override values.
+function proveLayeredSheets(sheetsDir) {
+  const override = readFileSync(join(sheetsDir, 'override.css'), 'utf8')
+  const control = readFileSync(join(sheetsDir, 'control.css'), 'utf8')
+  const printsUnder = (sheet, mode, value) =>
+    rulesUnder(sheet, LAYER_RULE[mode]).some((body) => body.includes(`${LAYER_TOKEN}: ${value};`))
+  const checks = [
+    [
+      'override sheet prints its light value under the reference-ui stamp',
+      printsUnder(override, 'light', LAYER_OVERRIDE.light),
+    ],
+    [
+      'override sheet prints its dark value under the reference-ui dark stamp',
+      printsUnder(override, 'dark', LAYER_OVERRIDE.dark),
+    ],
+    ["control sheet prints lib's light default", printsUnder(control, 'light', 'var(--colors-gray-100)')],
+    ["control sheet prints lib's dark default", printsUnder(control, 'dark', 'var(--colors-gray-700)')],
+    [
+      'control sheet carries no override value',
+      !control.includes(LAYER_OVERRIDE.light) && !control.includes(LAYER_OVERRIDE.dark),
+    ],
+  ]
+  const failed = checks.filter(([, ok]) => !ok).map(([name]) => name)
+  if (failed.length > 0) throw new Error(`smoke: layered sheet check failed: ${failed.join('; ')}`)
+  for (const [name] of checks) console.log(`smoke: PASS sheet: ${name}`)
+}
+
+// Writes the pages into the scaffold: the shared Probe component, then one entry and one html file per page.
+function writeLayerPages(dir) {
+  mkdirSync(join(dir, 'src'), { recursive: true })
+  writeFileSync(join(dir, 'src', 'probe.tsx'), PROBE_COMPONENT)
+  for (const { name, css } of LAYER_PAGES) {
+    writeFileSync(join(dir, `${name}.html`), pageHtml(name))
+    writeFileSync(join(dir, 'src', `${name}.tsx`), pageEntry(css))
+  }
+}
+
+// Syncs the override config, then the control config. Each served sheet is copied beside the pages before the next
+// sync overwrites it. The scaffold's ui.config.ts is this pass's own: the template ships none.
+function prepareLayeredPass(dir) {
+  execFileSync(process.execPath, [NEO_ENSURE], { cwd: packageRoot, stdio: 'inherit' })
+  const served = join(dir, '.reference-ui', 'styled', 'styles.css')
+  const sheets = join(dir, 'src', 'sheets')
+  mkdirSync(sheets, { recursive: true })
+  writeFileSync(join(dir, 'ui.config.ts'), OVERRIDE_CONFIG)
+  syncScaffold(dir)
+  copyFileSync(served, join(sheets, 'override.css'))
+  writeFileSync(join(dir, 'ui.config.ts'), CONTROL_CONFIG)
+  syncScaffold(dir)
+  copyFileSync(served, join(sheets, 'control.css'))
+  proveLayeredSheets(sheets)
+  writeLayerPages(dir)
+}
+
+// The paint half: layers-probe.mjs opens the three pages on the served dev server and checks each Button's paint.
+function probeLayeredPages(base) {
+  try {
+    execFileSync(process.execPath, [join(here, 'layers-probe.mjs'), base, JSON.stringify(LAYER_OVERRIDE)], {
+      cwd: packageRoot,
+      stdio: 'inherit',
+      env: process.env,
+    })
+  } catch {
+    throw new Error('smoke: layered paint probe failed (see check lines above)')
+  }
+}
+
 let scaffold = null
 let server = null
-async function cleanup({ failed }) {
-  if (server) {
-    server.kill('SIGTERM')
-    await new Promise((resolveDone) => {
-      const timer = setTimeout(() => {
-        server.kill('SIGKILL')
-        resolveDone(null)
-      }, 5000)
-      server.on('exit', () => {
-        clearTimeout(timer)
-        resolveDone(null)
-      })
+
+// Stops the dev server this run started, if one is up: SIGTERM, then SIGKILL after five seconds.
+async function stopServer() {
+  if (!server) return
+  server.kill('SIGTERM')
+  await new Promise((resolveDone) => {
+    const timer = setTimeout(() => {
+      server.kill('SIGKILL')
+      resolveDone(null)
+    }, 5000)
+    server.on('exit', () => {
+      clearTimeout(timer)
+      resolveDone(null)
     })
-    server = null
+  })
+  server = null
+}
+
+// Starts the scaffold's vite dev server into the `server` handle and resolves once it answers. A server that exits or
+// never answers fails loud with its log, and the handle stays set so cleanup still stops it.
+async function startDevServer(cwd, devPort) {
+  server = spawn('npx', ['vite', '--port', String(devPort), '--strictPort'], {
+    cwd,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  let serverLog = ''
+  server.stdout.on('data', (chunk) => {
+    serverLog += chunk.toString()
+  })
+  server.stderr.on('data', (chunk) => {
+    serverLog += chunk.toString()
+  })
+  const deadline = Date.now() + 90000
+  let ready = false
+  while (Date.now() < deadline) {
+    if (server.exitCode !== null) break
+    try {
+      const response = await fetch(`http://localhost:${devPort}/`)
+      if (response.ok) {
+        ready = true
+        break
+      }
+    } catch {
+      // not listening yet
+    }
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 500))
   }
+  if (!ready) {
+    console.error(serverLog.slice(-4000))
+    throw new Error('smoke: dev server never became ready')
+  }
+}
+
+async function cleanup({ failed }) {
+  await stopServer()
   if (scaffold && !keep && !failed) {
     await rm(scaffold, { recursive: true, force: true })
     scaffold = null
@@ -266,36 +480,7 @@ try {
   // 6. Dev server + Playwright probe (dev React: B-03 noise and dev
   // diagnostics only fire outside production builds).
   step(`vite dev + probe (port ${port})`)
-  server = spawn('npx', ['vite', '--port', String(port), '--strictPort'], {
-    cwd: scaffold,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  })
-  let serverLog = ''
-  server.stdout.on('data', (chunk) => {
-    serverLog += chunk.toString()
-  })
-  server.stderr.on('data', (chunk) => {
-    serverLog += chunk.toString()
-  })
-  const deadline = Date.now() + 90000
-  let ready = false
-  while (Date.now() < deadline) {
-    if (server.exitCode !== null) break
-    try {
-      const response = await fetch(`http://localhost:${port}/`)
-      if (response.ok) {
-        ready = true
-        break
-      }
-    } catch {
-      // not listening yet
-    }
-    await new Promise((resolveSleep) => setTimeout(resolveSleep, 500))
-  }
-  if (!ready) {
-    console.error(serverLog.slice(-4000))
-    throw new Error('smoke: dev server never became ready')
-  }
+  await startDevServer(scaffold, port)
   try {
     execFileSync(process.execPath, [join(here, 'probe.mjs'), `http://localhost:${port}/`], {
       cwd: packageRoot,
@@ -305,6 +490,17 @@ try {
   } catch {
     throw new Error('smoke: probe failed (see check lines above)')
   }
+
+  // 7. Layered override through the real sync: extendSystem over lib's base
+  // system, synced by the neo bin. The served sheet is checked as text, then a
+  // lib Button is painted in light and dark. The dev server restarts first so
+  // the new pages are served from a fresh dependency scan.
+  step('layers: extendSystem through ref sync')
+  prepareLayeredPass(scaffold)
+  await stopServer()
+  step(`layered paint probe (port ${port})`)
+  await startDevServer(scaffold, port)
+  probeLayeredPages(`http://localhost:${port}/`)
 
   await cleanup({ failed: false })
   console.log('\nSMOKE-GATE PASS')

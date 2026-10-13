@@ -16,6 +16,18 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
 5. `vite dev` + Playwright probe — mounts every barrel component, runs the
    six B-11 behavioral assertions against current `src`, asserts zero
    unexpected console errors and zero `no compiled class` warnings.
+6. Layered override through a real `ref sync` (`layers-probe.mjs`). The
+   scaffold's `ui.config.ts` layers `extendSystem(libBaseSystem, { tokens })`,
+   overriding `ui.button.default.background` (the token lib's default `<Button>`
+   paints) with a light and a dark value. The served sheet must print the
+   override under `[data-layer="reference-ui"]`, light and dark. A control sheet,
+   the same base layered with no override, must print lib's defaults and no
+   override value. Then a lib `Button` is painted on three pages (the override
+   sheet, the control sheet, and lib's own `styles.css`): computed
+   `background-color` in light and dark, the `data-layer="reference-ui"` stamp,
+   and zero console errors. This proof lives here because a Neo case world cannot
+   host lib: `@reference-ui/lib` is not linked into `packages/reference-neo`, and
+   Neo never touches reference-lib.
 
 Run locally (from anywhere in the repo):
 
