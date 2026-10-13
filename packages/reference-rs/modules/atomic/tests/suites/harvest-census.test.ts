@@ -131,10 +131,13 @@ const EXPECTED_BYTES = {
   // strip from it; A/B with the tsup-built dist reproduces 159077/39933
   // exactly. 2026-10-10 F2 diagnostic miss-message change -> 153469/37738
   // (+12/+3): the css() miss message carries the class name and the call
-  // site, react.mjs-only with all CSS pins green.
+  // site, react.mjs-only with all CSS pins green. 2026-10-13 data-layer stamp
+  // follows the ancestor's system (c2eb26281, NEO-LAYERS-09) -> 153626/37786
+  // (+157/+48): the context.ts stamp rule, react.mjs-only; A/B with only that
+  // file reverted reproduces 153469/37738 exactly, CSS pins untouched.
   // Re-verify if acceptance moves bytes.
-  reactRaw: 153469,
-  reactGzip: 37738,
+  reactRaw: 153626,
+  reactGzip: 37786,
   fixtureRules: 3693,
   m500Rules: 33806,
 }
