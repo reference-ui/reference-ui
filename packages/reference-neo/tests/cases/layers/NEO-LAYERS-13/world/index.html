@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root" style="width: 800px">
+      <div id="plain">plain sibling</div>
+      <div id="dark-own-base" data-layer="neo-layers13-lay" class="neo-layers13-lay__dark:c_layDark">dark: own base over layer dark</div>
+      <div id="dark-own-dark" data-layer="neo-layers13-lay" class="neo-layers13-lay__dark:c_layDark">dark: own dark over layer dark</div>
+      <div id="dark-layer-over-ext-dark" data-layer="neo-layers13-lay" class="neo-layers13-ext__dark:c_extDark neo-layers13-lay__dark:c_layDark">dark: layer dark over extends dark</div>
+      <div id="dark-layer-over-ext-base" data-layer="neo-layers13-lay" class="neo-layers13-ext__c_extInk neo-layers13-lay__dark:c_layDark">dark: layer dark over extends base</div>
+      <div id="wide-own-base" data-layer="neo-layers13-lay" class="neo-layers13-lay__sm:c_laySm">wide: own base over layer sm</div>
+      <div id="wide-own-sm" data-layer="neo-layers13-lay" class="neo-layers13-lay__sm:c_laySm">wide: own sm over layer sm</div>
+      <div id="wide-layer-over-ext-sm" data-layer="neo-layers13-lay" class="neo-layers13-ext__sm:c_extSm neo-layers13-lay__sm:c_laySm">wide: layer sm over extends sm</div>
+      <div id="wide-layer-over-ext-base" data-layer="neo-layers13-lay" class="neo-layers13-ext__c_extInk neo-layers13-lay__sm:c_laySm">wide: layer sm over extends base</div>
+    </div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+{"id": "NEO-LAYERS-08", "name": "a layer's globalCss, @font-face and @keyframes print once in its block, own rules win on the same selector, and its reset, root default and :root tokens stay out of the sheet", "sync": true}

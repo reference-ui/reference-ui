@@ -71,10 +71,21 @@ spread; these Neo cases are the primary layers proof.
 | Container root through layers | NEO-LAYERS-04. |
 | Config validation messages | NEO-LAYERS-05 (shapes, precedence) and NEO-LAYERS-14 (relations, by real sync). |
 | Re-sync after an upstream change | NEO-LAYERS-06. |
+| A layer's reset, root default and `:root`-hoisted tokens in the served sheet | Portable, resetless, rootless blocks (`printUpstreamBlock`, `streams.ts:106-115`); NEO-LAYERS-08 asserts the boundary. |
 
 ## Out of scope
 
 Panda's inner `layers.ts` spelling and the six-layer order (the LAYER group
-owns those). `styled/global.css` contents for layers (no layer authors global
-CSS here). Selector note: `agentneo run NEO-LAYER` is a prefix match and also
+owns those). Selector note: `agentneo run NEO-LAYER` is a prefix match and also
 runs `NEO-LAYERS-*`; `agentneo run NEO-LAYER-` runs only the cascade-layer group.
+
+## Claims pinned by NEO-LAYERS-08, -13 and -15
+
+| Claim | Case |
+| --- | --- |
+| A layer's globalCss, `@font-face` and `@keyframes` print once in its block, carried below own (O1); an own rule on the same selector wins | NEO-LAYERS-08 |
+| A layer's reset, root default and `:root`-hoisted tokens never reach the sheet; its tokens are empty at `:root` and resolve only under `[data-layer]` | NEO-LAYERS-08 |
+| A layer's dark and breakpoint rules keep their layer rank: own's base colour beats them under the same condition | NEO-LAYERS-13 |
+| Under one condition, own beats layers and layers beat extends | NEO-LAYERS-13 |
+| A re-synced upstream drops its removed utility from the consumer's sheet and paint, with no stale CSS | NEO-LAYERS-15 |
+| Watch mode re-syncs the consumer after a relative-path upstream rebuild | NEO-LAYERS-15 |
