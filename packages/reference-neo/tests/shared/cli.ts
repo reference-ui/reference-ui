@@ -22,7 +22,8 @@
 //   2  serve-only degrade: playwright/browsers not resolvable, world served but no spec ran
 //   3  quality gate not integrated yet (tools/quality/run.ts absent)
 
-import { listCases, searchCases, matchCases, type NeoCase } from './cases.ts';
+import { listCases, scanCases, searchCases, matchCases, type NeoCase } from './cases.ts';
+import { skipWarning } from './caseIndex.ts';
 import { runCase, type RunResult } from './runner.ts';
 import { checkTypes } from './typecheck.ts';
 import { failedIds, LAST_RUN_FILE, orderFailFirst, readLastRun, summarizeByGroup, writeLastRun, type LastRunEntry, type LastRunLog } from './lastRun.ts';
@@ -91,7 +92,10 @@ function selectRunCases(flags: RunFlags, log: LastRunLog | null): NeoCase[] {
     const ids = new Set(failedIds(log));
     return listCases().filter((c) => ids.has(c.id));
   }
-  return flags.id ? matchCases(flags.id) : listCases();
+  if (!flags.id) return listCases();
+  const cases = matchCases(flags.id);
+  for (const broken of scanCases().broken) console.error(skipWarning(broken));
+  return cases;
 }
 
 function checkSnapshotGate(flags: RunFlags): void {
@@ -138,7 +142,8 @@ async function runSelected(cases: NeoCase[], flags: RunFlags): Promise<number> {
     for (const a of result.artifacts) console.log(`[${c.id}] artifact: ${a}`);
     if (harnessFault(result)) console.log(`[${c.id}] error: ${result.error}`);
   }
-  const log = writeLastRun(entries, listCases().map((c) => c.id));
+  // Not strict: a broken folder must not fail a run after its cases have already run.
+  const log = writeLastRun(entries, scanCases().cases.map((c) => c.id));
   console.log(`[neo] last-run log: ${log.cases.length} cases at ${LAST_RUN_FILE}`);
   if (failed) return 1;
   if (degraded) return 2;

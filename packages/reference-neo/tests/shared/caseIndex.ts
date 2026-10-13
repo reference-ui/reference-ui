@@ -2,7 +2,7 @@
 // named by its raw ID (NEO-<GROUP>-<nn>, with an optional one-letter variant such as
 // NEO-PLAY-B-01) and holds case.json {"id", "name"} plus a README.md whose first line
 // is "# <ID> — <name>". Takes a case folder's path and emits convention problems as
-// plain messages, so listCases in cases.ts fails loud before any case loads. Mirrors
+// plain messages, so scanCases in cases.ts can report every broken folder before a case loads. Mirrors
 // packages/reference-rs/testing/caseIndex.ts and adds the rule that name equals the claim.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -83,6 +83,29 @@ export function caseIndexProblems(folderName: string, read: CaseIndexRead): stri
     problems.push(`${CASE_INDEX_FILE} needs a non-empty string "name"`);
   }
   return problems;
+}
+
+/** A case folder that breaks the convention, with every problem found in it. */
+export interface BrokenCase {
+  folder: string;
+  problems: string[];
+}
+
+/** The one error for broken folders: names each folder and its fix (AGENTS.md section 7). */
+export function conventionError(broken: BrokenCase[]): string {
+  const lines = broken.flatMap((b) => b.problems.map((p) => `${b.folder}: ${p}`));
+  return `case convention broken (AGENTS.md section 7); fix these case folders:\n  ${lines.join('\n  ')}`;
+}
+
+/** True when a run selector picks this folder: its path, its folder name, or a prefix of that name. */
+export function selectsFolder(selector: string, folder: string): boolean {
+  const name = path.basename(folder);
+  return folder === selector || name === selector || name.startsWith(selector);
+}
+
+/** The one stderr line for a broken folder that a run does not select. */
+export function skipWarning(broken: BrokenCase): string {
+  return `warning: skipped broken case folder ${broken.folder}: ${broken.problems[0]} (agentneo list shows every problem)`;
 }
 
 /**

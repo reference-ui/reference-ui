@@ -2,12 +2,14 @@
 // folders under tests/cases/, grouped at any depth). Emits case records
 // { id, name, folder, dir, worldDir, specsDir, description } via
 // listCases/getCase, plus substring search over id, name, and README
-// text via searchCases. listCases fails loud when a case folder breaks the
-// convention checked in caseIndex.ts, before any case loads.
+// text via searchCases. scanCases splits the folders into conforming cases and
+// broken ones (convention checked in caseIndex.ts). listCases, searchCases and
+// getCase fail loud on any broken folder; matchCases fails only when the folders
+// it selects are broken, so `run <ID>` can skip the rest with a warning.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { caseFolderProblems, isCaseFolder } from './caseIndex.ts';
+import { caseFolderProblems, conventionError, isCaseFolder, selectsFolder, type BrokenCase } from './caseIndex.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 export const TESTS_DIR: string = path.resolve(HERE, '..');
@@ -80,32 +82,44 @@ function collectCaseFolders(dir: string, prefix: string, out: string[]): void {
   }
 }
 
-// Fails loud before any case loads: every case folder must follow the
-// convention in caseIndex.ts. One error names each broken folder and its fix,
-// so list, search, run and status all stop the same way.
-function assertCaseConvention(folders: string[]): void {
-  const problems = folders.flatMap((folder) =>
-    caseFolderProblems(path.basename(folder), path.join(CASES_DIR, folder)).map((p) => `${folder}: ${p}`),
-  );
-  if (problems.length > 0) {
-    throw new Error(`case convention broken (AGENTS.md section 7); fix these case folders:\n  ${problems.join('\n  ')}`);
-  }
+// Every case folder, split into conforming cases (sorted by id) and broken
+// ones. A broken folder keeps all of its problems, so each caller decides
+// whether it fails the command. A duplicate id makes every folder carrying it
+// broken, since getCase and the last-run log key on id.
+export interface CaseScan {
+  cases: NeoCase[];
+  broken: BrokenCase[];
 }
 
-// All cases sorted by id. Duplicate ids across groups fail loud, since getCase
-// and the last-run log key on id.
-export function listCases(): NeoCase[] {
-  if (!fs.existsSync(CASES_DIR)) return [];
+export function scanCases(): CaseScan {
+  if (!fs.existsSync(CASES_DIR)) return { cases: [], broken: [] };
   const folders: string[] = [];
   collectCaseFolders(CASES_DIR, '', folders);
-  assertCaseConvention(folders);
-  const cases = folders.map(loadCase).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const seen = new Map<string, string>();
-  for (const c of cases) {
-    const prev = seen.get(c.id);
-    if (prev !== undefined) throw new Error(`duplicate case id ${c.id} in ${prev} and ${c.folder}`);
-    seen.set(c.id, c.folder);
+  const broken: BrokenCase[] = [];
+  const conforming: string[] = [];
+  for (const folder of folders) {
+    const problems = caseFolderProblems(path.basename(folder), path.join(CASES_DIR, folder));
+    if (problems.length > 0) broken.push({ folder, problems });
+    else conforming.push(folder);
   }
+  const loaded = conforming.map(loadCase);
+  const foldersById = new Map<string, string[]>();
+  for (const c of loaded) foldersById.set(c.id, [...(foldersById.get(c.id) ?? []), c.folder]);
+  const cases: NeoCase[] = [];
+  for (const c of loaded) {
+    const others = (foldersById.get(c.id) ?? []).filter((f) => f !== c.folder);
+    if (others.length > 0) broken.push({ folder: c.folder, problems: [`duplicate case id ${c.id} also in ${others.join(', ')}`] });
+    else cases.push(c);
+  }
+  cases.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  broken.sort((a, b) => (a.folder < b.folder ? -1 : a.folder > b.folder ? 1 : 0));
+  return { cases, broken };
+}
+
+// Strict: list, search, status and run-all need every case folder to conform.
+export function listCases(): NeoCase[] {
+  const { cases, broken } = scanCases();
+  if (broken.length > 0) throw new Error(conventionError(broken));
   return cases;
 }
 
@@ -125,13 +139,17 @@ export function searchCases(query: string): NeoCase[] {
   });
 }
 
-// Exact id or folder wins; otherwise the selector is an id prefix
-// (`agentneo run NEO-COND` runs the group). Unknown stays an error.
+// `run` selection. An exact id or folder wins, otherwise the selector is an id
+// prefix (`agentneo run NEO-COND` runs the group). Only the folders it picks
+// decide failure: a picked broken folder throws with its problems, and broken
+// folders it does not pick are left for the caller to report.
 export function matchCases(selector: string): NeoCase[] {
-  const all = listCases();
-  const exact = all.find((c) => c.id === selector || c.folder === selector);
+  const { cases, broken } = scanCases();
+  const picked = broken.filter((b) => selectsFolder(selector, b.folder));
+  if (picked.length > 0) throw new Error(conventionError(picked));
+  const exact = cases.find((c) => c.id === selector || c.folder === selector);
   if (exact) return [exact];
-  const prefixed = all.filter((c) => c.id.startsWith(selector));
+  const prefixed = cases.filter((c) => c.id.startsWith(selector));
   if (prefixed.length > 0) return prefixed;
-  return [getCase(selector)];
+  throw new Error(`unknown case: ${selector}`);
 }
