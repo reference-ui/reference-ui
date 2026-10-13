@@ -98,4 +98,29 @@ describe('config loads in one process', () => {
     expect(bundled).toMatch(/from ['"]plain-pkg['"]/)
     expect(bundled).not.toContain('plain-value')
   })
+
+  it('leaves unresolvable and builtin imports external and keeps the neo alias', async () => {
+    const { app } = await makeConsumer()
+    const configPath = join(app, 'ui.config.ts')
+    await writeFile(
+      configPath,
+      [
+        "import { defineConfig } from '@reference-ui/neo'",
+        "import { gone } from 'not-installed-anywhere'",
+        "import { deep } from '@scope/missing/deep/path'",
+        "import { sep } from 'node:path'",
+        "export default defineConfig({ name: 'fake-app', include: [], gone, deep, sep })",
+        '',
+      ].join('\n'),
+    )
+
+    const bundled = await bundleConfig(configPath)
+
+    // A specifier esbuild cannot resolve is Node's call at runtime, not a build error.
+    expect(bundled).toMatch(/from ['"]not-installed-anywhere['"]/)
+    expect(bundled).toMatch(/from ['"]@scope\/missing\/deep\/path['"]/)
+    expect(bundled).toMatch(/from ['"]node:path['"]/)
+    // The defineConfig id still maps to the local entry instead of staying a bare import.
+    expect(bundled).not.toMatch(/from ['"]@reference-ui\/neo['"]/)
+  })
 })
