@@ -1,0 +1,1 @@
+{"id": "TST-TUP-02", "name": "Indexing a rest tuple yields the rest element's item type, and an optional element stays unresolved."}

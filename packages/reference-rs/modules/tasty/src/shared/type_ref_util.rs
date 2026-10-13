@@ -1,9 +1,18 @@
-//! Shared helpers for `TypeRef` lowering, resolution, and evaluation.
+//! Shared helpers for `TypeRef` lowering, resolution, and evaluation. Extraction uses the name and
+//! property-key helpers; the evaluator uses the union, keyof and indexed-access helpers, which fail
+//! closed (return `None`) rather than answer from a partial member set. Union size is capped in the
+//! evaluator path only, so extraction's own unions keep their uncapped behavior.
 
 use oxc_ast::ast::PropertyKey;
 use oxc_span::GetSpan;
 
-use crate::model::{TsMember, TupleElement, TypeRef};
+use crate::model::{TsMember, TsMemberKind, TupleElement, TypeRef};
+
+use super::literal_value::{index_position, property_key_text};
+
+/// Largest union the evaluator builds. Template literal and keyof expansions past this fail closed,
+/// which bounds memory before TypeScript's own limit (100,000) would matter.
+pub(crate) const MAX_EVALUATED_UNION_MEMBERS: usize = 1000;
 
 pub(crate) fn reference_lookup_name(reference_name: &str) -> &str {
     reference_name
@@ -25,6 +34,56 @@ pub(crate) fn collapse_union(types: Vec<TypeRef>) -> Option<TypeRef> {
         0 => None,
         1 => unique.into_iter().next(),
         _ => Some(TypeRef::Union { types: unique }),
+    }
+}
+
+/// `collapse_union` for evaluator results: a union past the member cap is not built at all.
+pub(crate) fn collapse_union_capped(types: Vec<TypeRef>) -> Option<TypeRef> {
+    if types.len() > MAX_EVALUATED_UNION_MEMBERS {
+        return None;
+    }
+    collapse_union(types)
+}
+
+/// A union small enough to distribute over. A larger one fails closed rather than instantiating the
+/// alias body once per member.
+pub(crate) fn union_members(types: Vec<TypeRef>) -> Option<Vec<TypeRef>> {
+    (types.len() <= MAX_EVALUATED_UNION_MEMBERS).then_some(types)
+}
+
+/// `boolean` is `true | false`, the two members a distributive conditional runs over.
+pub(crate) fn boolean_members() -> Vec<TypeRef> {
+    ["true", "false"]
+        .into_iter()
+        .map(|value| TypeRef::Literal {
+            value: value.to_string(),
+        })
+        .collect()
+}
+
+/// Appends each fragment to each prefix, failing closed past the union member cap.
+pub(crate) fn cross_product(prefixes: &[String], fragments: &[String]) -> Option<Vec<String>> {
+    if prefixes.len().checked_mul(fragments.len())? > MAX_EVALUATED_UNION_MEMBERS {
+        return None;
+    }
+
+    Some(
+        prefixes
+            .iter()
+            .flat_map(|prefix| {
+                fragments
+                    .iter()
+                    .map(move |fragment| format!("{prefix}{fragment}"))
+            })
+            .collect(),
+    )
+}
+
+/// Adds a union's members to a flat list, or a single type as itself.
+pub(crate) fn push_members(results: &mut Vec<TypeRef>, value: TypeRef) {
+    match value {
+        TypeRef::Union { types } => results.extend(types),
+        other => results.push(other),
     }
 }
 
@@ -64,41 +123,6 @@ pub(crate) fn string_literal_type(value: &str) -> TypeRef {
     TypeRef::Literal {
         value: format!("'{}'", value.replace('\\', "\\\\").replace('\'', "\\'")),
     }
-}
-
-pub(crate) fn literal_key(value: &str) -> Option<String> {
-    let trimmed = value.trim();
-    if is_wrapped_literal(trimmed) {
-        return Some(trimmed[1..trimmed.len() - 1].to_string());
-    }
-
-    Some(trimmed.to_string())
-}
-
-pub(crate) fn parse_numeric_literal(value: &str) -> Option<usize> {
-    let trimmed = value.trim();
-    let normalized = if is_wrapped_literal(trimmed) {
-        &trimmed[1..trimmed.len() - 1]
-    } else {
-        trimmed
-    };
-    normalized.parse::<usize>().ok()
-}
-
-pub(crate) fn literal_fragment(value: &str) -> Option<String> {
-    let trimmed = value.trim();
-    if is_wrapped_literal(trimmed) {
-        return Some(trimmed[1..trimmed.len() - 1].to_string());
-    }
-
-    Some(trimmed.to_string())
-}
-
-pub(crate) fn is_wrapped_literal(value: &str) -> bool {
-    value.len() >= 2
-        && ((value.starts_with('\'') && value.ends_with('\''))
-            || (value.starts_with('"') && value.ends_with('"'))
-            || (value.starts_with('`') && value.ends_with('`')))
 }
 
 pub(crate) fn unquote_string_literal(value: &str) -> Option<String> {
@@ -146,111 +170,127 @@ pub(crate) fn resolve_object_member_type(type_ref: &TypeRef, name: &str) -> Opti
         .and_then(|member| member.type_ref.clone())
 }
 
+/// Property names `keyof` lists for an object type. An index signature has no recoverable key type
+/// here (string or number), and a numeric-looking name is a number literal in TypeScript, so both
+/// fail closed. Call and construct signatures never become keys.
+pub(crate) fn object_key_names(members: &[TsMember]) -> Option<Vec<String>> {
+    if members
+        .iter()
+        .any(|member| member.kind == TsMemberKind::IndexSignature)
+    {
+        return None;
+    }
+    let names: Vec<String> = members
+        .iter()
+        .filter(|member| is_key_kind(member.kind))
+        .map(|member| member.name.clone())
+        .collect();
+    let numeric = names.iter().any(|name| name.parse::<f64>().is_ok());
+    (!names.is_empty() && !numeric).then_some(names)
+}
+
+fn is_key_kind(kind: TsMemberKind) -> bool {
+    matches!(kind, TsMemberKind::Property | TsMemberKind::Method)
+}
+
 pub(crate) fn resolve_indexed_access(object: &TypeRef, index: &TypeRef) -> Option<TypeRef> {
+    if let TypeRef::Union { types } = object {
+        return collapse_all(types.iter().map(|item| resolve_indexed_access(item, index)));
+    }
     match object {
         TypeRef::Object { members } => resolve_object_index(members, index),
         TypeRef::Tuple { elements } => resolve_tuple_index(elements, index),
-        TypeRef::Array { element } => {
-            if is_number_index(index) {
-                Some(element.as_ref().clone())
-            } else {
-                None
-            }
-        }
-        TypeRef::Union { types } => collapse_union(
-            types
-                .iter()
-                .filter_map(|item| resolve_indexed_access(item, index))
-                .collect(),
-        ),
+        TypeRef::Array { element } => is_number_index(index).then(|| element.as_ref().clone()),
         _ => None,
     }
 }
 
+/// Collapses per-member answers only when every member answered. A partial union would silently
+/// drop the members that failed, which is a wrong answer rather than an unknown one.
+fn collapse_all(results: impl Iterator<Item = Option<TypeRef>>) -> Option<TypeRef> {
+    let members = results.collect::<Option<Vec<_>>>()?;
+    collapse_union_capped(members)
+}
+
+/// The single declared property or method named `key`. Overloads, optional members, and index or
+/// call signatures fail closed: an optional member would add `undefined` under strictNullChecks.
 fn resolve_object_index(members: &[TsMember], index: &TypeRef) -> Option<TypeRef> {
     match index {
         TypeRef::Literal { value } => {
-            let key = literal_key(value)?;
-            members
-                .iter()
-                .find(|member| member.name == key)
-                .and_then(|member| member.type_ref.clone())
+            let key = property_key_text(value)?;
+            named_member_type(members, &key)
         }
-        TypeRef::Union { types } => collapse_union(
-            types
-                .iter()
-                .filter_map(|item| resolve_object_index(members, item))
-                .collect(),
-        ),
+        TypeRef::Union { types } => {
+            collapse_all(types.iter().map(|item| resolve_object_index(members, item)))
+        }
         _ => None,
     }
 }
 
+fn named_member_type(members: &[TsMember], key: &str) -> Option<TypeRef> {
+    let mut named = members
+        .iter()
+        .filter(|member| is_key_kind(member.kind) && member.name == key);
+    let member = named.next()?;
+    if named.next().is_some() || member.optional {
+        return None;
+    }
+    member.type_ref.clone()
+}
+
 fn resolve_tuple_index(elements: &[TupleElement], index: &TypeRef) -> Option<TypeRef> {
+    if is_number_index(index) {
+        return tuple_number_index(elements);
+    }
     match index {
-        TypeRef::Literal { value } => {
-            let index = parse_numeric_literal(value)?;
-            elements.get(index).map(|element| element.element.clone())
+        TypeRef::Literal { value } => tuple_element_at(elements, index_position(value)?),
+        TypeRef::Union { types } => {
+            collapse_all(types.iter().map(|item| resolve_tuple_index(elements, item)))
         }
-        TypeRef::Union { types } => collapse_union(
-            types
-                .iter()
-                .filter_map(|item| resolve_tuple_index(elements, item))
-                .collect(),
-        ),
-        _ if is_number_index(index) => collapse_union(
-            elements
-                .iter()
-                .map(|element| element.element.clone())
-                .collect(),
-        ),
+        _ => None,
+    }
+}
+
+/// `tuple[position]`. A position at or past a trailing rest element has the rest's item type, not
+/// the array type it is stored as. An optional element fails closed, because its type would gain
+/// `undefined` under strictNullChecks.
+fn tuple_element_at(elements: &[TupleElement], position: usize) -> Option<TypeRef> {
+    if let Some(rest) = elements.iter().position(|element| element.rest) {
+        if position >= rest {
+            return (rest + 1 == elements.len())
+                .then(|| rest_item_type(&elements[rest]))
+                .flatten();
+        }
+    }
+    let element = elements.get(position)?;
+    (!element.optional && !element.rest).then(|| element.element.clone())
+}
+
+/// `tuple[number]`: the union of every element's item type, with rest elements unwrapped.
+fn tuple_number_index(elements: &[TupleElement]) -> Option<TypeRef> {
+    let items = elements
+        .iter()
+        .map(|element| {
+            if element.optional {
+                None
+            } else if element.rest {
+                rest_item_type(element)
+            } else {
+                Some(element.element.clone())
+            }
+        })
+        .collect::<Option<Vec<_>>>()?;
+    collapse_union_capped(items)
+}
+
+/// The item type of a rest element: `...T[]` stores the array, and its item type is `T`.
+fn rest_item_type(element: &TupleElement) -> Option<TypeRef> {
+    match &element.element {
+        TypeRef::Array { element: item } => Some(item.as_ref().clone()),
         _ => None,
     }
 }
 
 fn is_number_index(index: &TypeRef) -> bool {
     matches!(index, TypeRef::Intrinsic { name } if name == "number")
-}
-
-pub(crate) fn type_extends(check_type: &TypeRef, extends_type: &TypeRef) -> Option<bool> {
-    match extends_type {
-        TypeRef::Union { types } => {
-            let results = types
-                .iter()
-                .map(|item| type_extends(check_type, item))
-                .collect::<Option<Vec<_>>>()?;
-            Some(results.into_iter().any(|result| result))
-        }
-        _ => match check_type {
-            TypeRef::Union { types } => {
-                let results = types
-                    .iter()
-                    .map(|item| type_extends(item, extends_type))
-                    .collect::<Option<Vec<_>>>()?;
-                Some(results.into_iter().all(|result| result))
-            }
-            TypeRef::Literal { value } => match extends_type {
-                TypeRef::Literal {
-                    value: extends_value,
-                } => Some(value == extends_value),
-                TypeRef::Intrinsic { name } => literal_matches_intrinsic(value, name),
-                _ => Some(check_type == extends_type),
-            },
-            TypeRef::Intrinsic { name } => match extends_type {
-                TypeRef::Intrinsic { name: extends_name } => Some(name == extends_name),
-                _ => Some(check_type == extends_type),
-            },
-            _ => Some(check_type == extends_type),
-        },
-    }
-}
-
-fn literal_matches_intrinsic(value: &str, intrinsic_name: &str) -> Option<bool> {
-    let trimmed = value.trim();
-    match intrinsic_name {
-        "string" => Some(is_wrapped_literal(trimmed)),
-        "number" => Some(parse_numeric_literal(trimmed).is_some()),
-        "boolean" => Some(trimmed == "true" || trimmed == "false"),
-        _ => None,
-    }
 }

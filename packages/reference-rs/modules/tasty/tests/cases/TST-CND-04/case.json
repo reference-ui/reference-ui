@@ -1,0 +1,1 @@
+{"id": "TST-CND-04", "name": "A recursive alias that never settles ends unresolved within the expansion budget instead of crashing the scan."}

@@ -1,0 +1,1 @@
+{"id": "TST-CND-02", "name": "A conditional whose check is a bare type parameter stays deferred, and a union reached through an alias is never distributed."}

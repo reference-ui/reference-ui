@@ -1,0 +1,1 @@
+{"id": "TST-CND-03", "name": "A conditional over any, unknown, never or a fractional number agrees with TypeScript or stays unresolved."}

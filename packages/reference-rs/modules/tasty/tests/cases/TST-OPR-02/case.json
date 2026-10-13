@@ -1,0 +1,1 @@
+{"id": "TST-OPR-02", "name": "keyof lists the declared keys of a plain interface, and never reports an inherited, index or call-signature key."}
