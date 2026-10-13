@@ -14,11 +14,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   SUPERSEDED_EXIT_CODE,
   coveredByWatchMessage,
+  freshWatchState,
   getSyncLockDir,
   getSyncPreemptPath,
+  getWatchStatePath,
   parseSyncSessionOwner,
+  parseWatchState,
+  readWatchState,
   supersededMessage,
+  writeWatchState,
+  writeWatchStateSync,
   type SyncSessionKind,
+  type SyncSessionOwner,
 } from './session-owner.ts'
 import { acquireSyncSession, attachToWatchSession, type SyncSession } from './session.ts'
 
@@ -58,6 +65,39 @@ describe('session owner model', () => {
       { pid: process.pid }, {}]) {
       expect(parseSyncSessionOwner(bad)).toBeNull()
     }
+  })
+})
+
+describe('watch-state handshake file', () => {
+  const owner: SyncSessionOwner = { pid: process.pid, lockNonce: 'nonce-1', kind: 'watch', argv: [], startedAt: '' }
+
+  it('starts empty, round-trips through both writers, and keeps the whole file at every instant', async () => {
+    const dir = await makeTempDir()
+    const lockDir = getSyncLockDir(dir)
+    mkdirSync(lockDir, { recursive: true })
+    expect(await readWatchState(lockDir)).toBeNull()
+    const state = freshWatchState(owner)
+    expect(state).toEqual({ pid: process.pid, nonce: 'nonce-1', requested: 0, done: 0, failed: false, stopping: false })
+    await writeWatchState(lockDir, state)
+    expect(await readWatchState(lockDir)).toEqual(state)
+    const poked = { ...state, requested: 3, done: 2, failed: true }
+    writeWatchStateSync(lockDir, poked)
+    expect(await readWatchState(lockDir)).toEqual(poked)
+    expect(JSON.parse(readFileSync(getWatchStatePath(lockDir), 'utf8'))).toEqual(poked)
+  })
+
+  it('reads a torn, missing, or foreign-shaped file as no state', async () => {
+    const dir = await makeTempDir()
+    const lockDir = getSyncLockDir(dir)
+    mkdirSync(lockDir, { recursive: true })
+    writeFileSync(getWatchStatePath(lockDir), '{torn')
+    expect(await readWatchState(lockDir)).toBeNull()
+    const good = freshWatchState(owner)
+    for (const bad of [null, 7, 'x', [], {}, { ...good, pid: 0 }, { ...good, nonce: '' }, { ...good, requested: -1 },
+      { ...good, requested: 1.5 }, { ...good, done: '2' }, { ...good, failed: 0 }, { ...good, stopping: 'yes' }]) {
+      expect(parseWatchState(bad)).toBeNull()
+    }
+    expect(parseWatchState({ ...good, extra: true })).toEqual(good)
   })
 })
 

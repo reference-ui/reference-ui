@@ -1,11 +1,14 @@
 // Sync session owner: the lock-dir document model behind `ref sync`.
-// It takes lock-dir paths and emits validated owners, owner reads, and the
-// exit-path messages. The acquire engine in session.ts owns the mkdir race,
-// the preempt matrix, and the hold; this module owns what the lock dir
-// means on disk.
+// It takes lock-dir paths and emits validated owners, owner reads, the
+// watch-state handshake file, and the exit-path messages. The acquire engine
+// in session.ts owns the mkdir race, the preempt matrix, and the hold; this
+// module owns what the lock dir means on disk. The watch-state file is the
+// covered handshake: a resident watch publishes how many pokes it has taken
+// and how many resyncs have answered them, and a one-shot that meets it waits
+// on those counters instead of exiting before the output is current.
 
 import { randomBytes } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getOutDirPath } from '../lib/paths/index.ts'
@@ -30,6 +33,7 @@ export const SUPERSEDED_EXIT_CODE = 75
 
 const OWNER_FILE = 'owner.json'
 const PREEMPT_FILE = 'preempt.json'
+const WATCH_STATE_FILE = 'watch-state.json'
 
 export function getSyncLockDir(cwd: string): string {
   return join(getOutDirPath(cwd), SYNC_LOCK_DIR_NAME)
@@ -41,6 +45,10 @@ export function getSyncOwnerPath(lockDir: string): string {
 
 export function getSyncPreemptPath(lockDir: string): string {
   return join(lockDir, PREEMPT_FILE)
+}
+
+export function getWatchStatePath(lockDir: string): string {
+  return join(lockDir, WATCH_STATE_FILE)
 }
 
 export function coveredByWatchMessage(watchPid: number): string {
@@ -125,10 +133,6 @@ export interface PreemptMarker {
   kind: SyncSessionKind
 }
 
-// The victim's read of the killer's marker: who superseded it, or null when
-// the SIGTERM came from anywhere else (plain kill, graceful watch shutdown).
-// A kind-less marker reads as a sync newcomer, so half-written markers from
-// an older writer still resolve to a superseder.
 // Lock-content writes go tmp+rename: a concurrent reader never sees a torn
 // owner or marker, only the previous whole file or the next whole file.
 export async function writeLockFile(path: string, content: string): Promise<void> {
@@ -142,6 +146,10 @@ export async function writeLockFile(path: string, content: string): Promise<void
   }
 }
 
+// The victim's read of the killer's marker: who superseded it, or null when
+// the SIGTERM came from anywhere else (plain kill, graceful watch shutdown).
+// A kind-less marker reads as a sync newcomer, so half-written markers from
+// an older writer still resolve to a superseder.
 export function readPreemptMarkerSync(lockDir: string): PreemptMarker | null {
   let parsed: unknown
   try {
@@ -153,4 +161,88 @@ export function readPreemptMarkerSync(lockDir: string): PreemptMarker | null {
   if (!isLivePid(pid)) return null
   const kind = (parsed as Record<string, unknown>)?.kind
   return { pid, kind: isSessionKind(kind) ? kind : 'one-shot' }
+}
+
+/**
+ * The watch-state file: what a resident watch tells a one-shot that pokes it
+ * (SIGUSR2), written by the watch to `<lockDir>/watch-state.json`.
+ *
+ * - `pid` / `nonce`: the watch's own owner pid and lockNonce; a reader ignores
+ *   a file that names anyone else, so a stale file never speaks for a new watch.
+ * - `requested`: pokes taken so far. On each SIGUSR2 the watch increments it
+ *   and writes the file BEFORE it schedules the resync, which is the ack.
+ * - `done` / `failed`: `done` is the `requested` value the last finished resync
+ *   STARTED from (read it when the pass begins, store it when the pass ends),
+ *   and `failed` says whether that pass failed. A one-shot waits for
+ *   `done >= R`, where R is the `requested` it saw after its poke.
+ * - `stopping`: written true before the graceful stop begins to settle; a
+ *   one-shot then waits for the release and syncs itself.
+ *
+ * Publish the first state only once the SIGUSR2 listener is attached: a
+ * one-shot reads the file's existence as "safe to poke". Writers should use
+ * writeWatchStateSync from the poke handler, so two writes can never land out
+ * of order; a rejected or thrown write (ENOENT while the generated folder is
+ * gone) must not stop the watch from scheduling its resync.
+ */
+export interface WatchState {
+  pid: number
+  nonce: string
+  requested: number
+  done: number
+  failed: boolean
+  stopping: boolean
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
+// The first state of a watch session: nothing requested, nothing done.
+export function freshWatchState(owner: SyncSessionOwner): WatchState {
+  return { pid: owner.pid, nonce: owner.lockNonce, requested: 0, done: 0, failed: false, stopping: false }
+}
+
+type WatchCounters = Pick<WatchState, 'requested' | 'done' | 'failed' | 'stopping'>
+
+function readWatchCounters(candidate: Record<string, unknown>): WatchCounters | null {
+  const { requested, done, failed, stopping } = candidate
+  if (!isCount(requested) || !isCount(done)) return null
+  if (typeof failed !== 'boolean' || typeof stopping !== 'boolean') return null
+  return { requested, done, failed, stopping }
+}
+
+// Every field a waiting one-shot trusts is checked, so a torn or foreign file
+// reads as no state at all instead of a wrong ack.
+export function parseWatchState(value: unknown): WatchState | null {
+  if (typeof value !== 'object' || value === null) return null
+  const candidate = value as Record<string, unknown>
+  if (!isLivePid(candidate.pid) || !isNonEmptyString(candidate.nonce)) return null
+  const counters = readWatchCounters(candidate)
+  return counters === null ? null : { pid: candidate.pid, nonce: candidate.nonce, ...counters }
+}
+
+export async function readWatchState(lockDir: string): Promise<WatchState | null> {
+  try {
+    return parseWatchState(JSON.parse(await readFile(getWatchStatePath(lockDir), 'utf8')) as unknown)
+  } catch {
+    return null
+  }
+}
+
+export async function writeWatchState(lockDir: string, state: WatchState): Promise<void> {
+  await writeLockFile(getWatchStatePath(lockDir), JSON.stringify(state))
+}
+
+// The synchronous twin, for the poke handler: tmp+rename like writeLockFile,
+// with no await between two writes, so a later state can never be overtaken.
+export function writeWatchStateSync(lockDir: string, state: WatchState): void {
+  const path = getWatchStatePath(lockDir)
+  const tmpPath = `${path}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`
+  writeFileSync(tmpPath, JSON.stringify(state), 'utf8')
+  try {
+    renameSync(tmpPath, path)
+  } catch (error) {
+    rmSync(tmpPath, { force: true })
+    throw error
+  }
 }
