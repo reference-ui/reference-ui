@@ -12,7 +12,7 @@ import { mkdtemp } from 'node:fs/promises'
 import { hostname, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { probeProcess } from './session-identity.ts'
+import { foreignHostOf, probeProcess } from './session-identity.ts'
 import { SyncCoveredByWatchError, getSyncLockDir, getSyncOwnerPath, getSyncPreemptPath, parseSyncSessionOwner, type SyncSessionKind } from './session-owner.ts'
 import { acquireSyncSession } from './session.ts'
 
@@ -86,10 +86,8 @@ function plantOwner(dir: string, overrides: Record<string, unknown>): { ownerPat
   return { ownerPath, planted }
 }
 
-function identityOf(pid: number): Record<string, unknown> {
-  const probe = probeProcess(pid)
-  return probe.status === 'live' ? { identity: probe.identity } : {}
-}
+// The start time a process on the other machine recorded: nothing here runs under it.
+const OTHER_MACHINE_START = 'Thu Jan  1 00:00:00 1970'
 
 const stopListenerCounts = (): number[] => STOP_SIGNALS.map((signal) => process.listenerCount(signal))
 
@@ -130,7 +128,7 @@ describe.skipIf(!POSIX)('a lock held by a process on another host', () => {
   ] as const)('a %s newcomer meets a %s on another host: it fails naming the pid and host, and the holder gets no signal', async (newcomer, held) => {
     const dir = await makeProject()
     const holder = await startHolder(dir)
-    const { ownerPath, planted } = plantOwner(dir, { pid: holder.pid, kind: held, ...identityOf(holder.pid) })
+    const { ownerPath, planted } = plantOwner(dir, { pid: holder.pid, kind: held, identity: OTHER_MACHINE_START })
     const before = stopListenerCounts()
 
     const error = await failureOf(dir, newcomer)
@@ -176,7 +174,7 @@ describe.skipIf(!POSIX)('a lock held on another host: whatever its pid looks lik
   it('--break-lock takes it unconditionally, names the host, and signals nobody', async () => {
     const dir = await makeProject()
     const holder = await startHolder(dir)
-    const { ownerPath } = plantOwner(dir, { pid: holder.pid, kind: 'watch', ...identityOf(holder.pid) })
+    const { ownerPath } = plantOwner(dir, { pid: holder.pid, kind: 'watch', identity: OTHER_MACHINE_START })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const session = await acquireSyncSession({ cwd: dir, kind: 'one-shot', breakLock: true })
@@ -226,5 +224,15 @@ describe('the host an owner records', () => {
         log.mockRestore()
       }
     }
+  })
+})
+
+describe.skipIf(process.platform === 'win32')('a host renamed under a running holder', () => {
+  it('reads a holder whose pid runs here under its recorded identity as here, whatever host it recorded', () => {
+    const probe = probeProcess(process.pid)
+    if (probe.status !== 'live') return
+    expect(foreignHostOf({ pid: process.pid, host: FOREIGN_HOST, identity: probe.identity })).toBeUndefined()
+    expect(foreignHostOf({ pid: process.pid, host: FOREIGN_HOST, identity: OTHER_MACHINE_START })).toBe(FOREIGN_HOST)
+    expect(foreignHostOf({ pid: process.pid, host: FOREIGN_HOST })).toBe(FOREIGN_HOST)
   })
 })

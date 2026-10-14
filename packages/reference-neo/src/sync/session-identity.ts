@@ -164,10 +164,17 @@ export function ownHostname(): string | undefined {
  * The host a lock holder ran on when that is not this machine, else undefined.
  * A pid means nothing across machines, so a holder on another host is never
  * judged by its pid and never signalled; an owner that recorded no host is taken
- * to be here.
+ * to be here. A host name can change under a running process (macOS renames
+ * itself with the network), so a holder whose pid runs here under the very
+ * identity it recorded is here, whatever name it recorded.
  */
-export function foreignHostOf(holder: { host?: string }): string | undefined {
-  return holder.host !== undefined && holder.host !== ownHostname() ? holder.host : undefined
+export function foreignHostOf(holder: { pid: number; host?: string; identity?: string }): string | undefined {
+  if (holder.host === undefined || holder.host === ownHostname()) return undefined
+  if (holder.identity !== undefined && pidAlive(holder.pid)) {
+    const seen = probeProcess(holder.pid)
+    if (seen.status === 'live' && seen.identity === holder.identity) return undefined
+  }
+  return holder.host
 }
 
 /**
