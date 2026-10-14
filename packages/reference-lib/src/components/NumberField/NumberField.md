@@ -322,6 +322,18 @@ controlled state, and causes stale `compositionend` and matching `input`
 fallout to be ignored without callbacks. Synthetic DOM composition sequences
 are automated; real OS IME behavior is a manual release gate.
 
+An out-of-range controlled `value` (finite, below `min` or above `max`) renders
+exactly as given: nothing clamps during render, and under the default
+`commitBehavior: "none"` the field owns no invalid state. In development the
+field logs `Reference UI: NumberField value (<value>) is outside [<min>, <max>];
+it renders as given and snaps into range on the next commit.` once per distinct
+message, printing an absent bound as `-Infinity` or `Infinity`. A value equal to
+the field's latest `onChange` request is exempt, because live typing requests raw
+candidates such as `150` toward `max={100}` and a consumer echoes them back; the
+next commit then clamps under `"none"`, snaps under `"snap"`, and under
+`"validate"` retains the rounded raw candidate, so the message's snapping wording
+describes only the first two policies.
+
 ## Parsing, formatting, and input mode
 
 `Intl.NumberFormat(locale, formatOptions)` and `formatToParts` define decimal,

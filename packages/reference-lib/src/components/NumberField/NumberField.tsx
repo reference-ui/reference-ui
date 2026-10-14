@@ -13,6 +13,7 @@ import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visib
 import { NumberFieldContext, type NumberFieldContextValue } from './context'
 import type { NumberFieldProps } from './types'
 import { isOnStepLattice, snapValueToLattice } from './step/lattice'
+import { numberFieldDevDiagnostic } from './shared/dev'
 import { useFieldFormatting } from './hooks/use-field-formatting'
 import { useEditSession } from './hooks/use-edit-session'
 import { useStepActions } from './hooks/use-step-actions'
@@ -90,6 +91,20 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       groupingDisabled,
     } = formatting
 
+    // Requests this field makes through onChange (live typing, commits,
+    // steps, Home/End) are marked here. Typing publishes raw candidates such
+    // as 150 toward max 100, and a consumer echoing one back is not a
+    // consumer mistake, so the range check below skips a controlled value
+    // equal to its mark. The check consumes the mark on the next change.
+    const lastEmittedRef = React.useRef<number | null | undefined>(undefined)
+    const emitChange = React.useCallback(
+      (next: number | null) => {
+        lastEmittedRef.current = next
+        onChange?.(next)
+      },
+      [onChange]
+    )
+
     const session = useEditSession({
       value,
       displayValue,
@@ -103,7 +118,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       readOnly,
       symbols,
       inputRef,
-      onChange,
+      onChange: emitChange,
     })
     const { draft, failedBoundary, resetEpoch, replacementEpoch } = session
 
@@ -180,6 +195,29 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
       if (isOnStepLattice(value, step)) return false
       return displayRoundTrip(snapValueToLattice(value, latticeMin, latticeMax, step)) !== value
     }, [value, commitBehavior, latticeMin, latticeMax, step, displayRoundTrip])
+
+    // Dev-only range diagnostic for a controlled value outside [min, max].
+    // Nothing clamps here: the value renders and reports as given, and the
+    // next commit snaps or clamps it. Absent bounds print as -Infinity and
+    // Infinity. Warns once per distinct message; a StrictMode mount re-run
+    // repeats the same message and is dropped.
+    const lastWarnedRef = React.useRef<string | null>(null)
+    React.useEffect(() => {
+      const requested = lastEmittedRef.current
+      lastEmittedRef.current = undefined
+      const lower = min ?? -Infinity
+      const upper = max ?? Infinity
+      const outside =
+        value !== null && Number.isFinite(value) && (value < lower || value > upper)
+      if (!outside || value === requested) {
+        lastWarnedRef.current = null
+        return
+      }
+      const message = `value (${value}) is outside [${String(lower)}, ${String(upper)}]; it renders as given and snaps into range on the next commit.`
+      if (lastWarnedRef.current === message) return
+      lastWarnedRef.current = message
+      numberFieldDevDiagnostic(message)
+    }, [value, min, max])
 
     // Managed invalid union: application invalid, owned numeric-constraint
     // state, or a retained failed boundary. Application false cannot hide

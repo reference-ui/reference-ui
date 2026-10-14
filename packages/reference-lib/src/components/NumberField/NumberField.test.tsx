@@ -8340,3 +8340,273 @@ describe('NumberField wave-2 environment and composition', () => {
     await cleanup(container, root)
   })
 })
+
+describe('NumberField out-of-range controlled value', () => {
+  // Dev-only warning, never a clamp: a finite controlled value outside
+  // [min, max] renders exactly as given. Requests the field itself made
+  // through onChange are exempt when the consumer echoes them back.
+  function spyDiagnostics() {
+    const errors: string[] = []
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.map(String).join(' '))
+    })
+    return {
+      range: () => errors.filter(t => t.startsWith('Reference UI: NumberField value (')),
+      restore: () => spy.mockRestore(),
+    }
+  }
+
+  function warning(value: string, bounds: string) {
+    return `Reference UI: NumberField value (${value}) is outside [${bounds}]; it renders as given and snaps into range on the next commit.`
+  }
+
+  function field(props: {
+    value: number | null
+    min?: number
+    max?: number
+    name?: string
+    onChange?: (value: number | null) => void
+  }) {
+    return (
+      <NumberField locale="en-US" {...props}>
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrement" />
+          <NumberField.Input aria-label="Quantity" />
+          <NumberField.Increment aria-label="Increment" />
+        </NumberField.Group>
+      </NumberField>
+    )
+  }
+
+  it('OOR-NF-01: NumberField should warn once in dev when a controlled value sits above max, with the exact text', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(field({ value: 150, min: 0, max: 100 }))
+      })
+      expect(diag.range()).toEqual([
+        'Reference UI: NumberField value (150) is outside [0, 100]; it renders as given and snaps into range on the next commit.',
+      ])
+      // The same value on a re-render is not a new offense.
+      await React.act(async () => {
+        root.render(field({ value: 150, min: 0, max: 100 }))
+      })
+      expect(diag.range()).toHaveLength(1)
+      // A different offending value warns once more.
+      await React.act(async () => {
+        root.render(field({ value: 200, min: 0, max: 100 }))
+      })
+      expect(diag.range()).toEqual([warning('150', '0, 100'), warning('200', '0, 100')])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-02: NumberField should warn in dev when a controlled value sits below min, with the exact text', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(field({ value: -5, min: 0, max: 100 }))
+      })
+      expect(diag.range()).toEqual([
+        'Reference UI: NumberField value (-5) is outside [0, 100]; it renders as given and snaps into range on the next commit.',
+      ])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-03: NumberField should print an absent bound as -Infinity or Infinity in the warning', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(field({ value: 150, max: 100 }))
+      })
+      expect(diag.range()).toEqual([warning('150', '-Infinity, 100')])
+      await React.act(async () => {
+        root.render(field({ value: -5, min: 0 }))
+      })
+      expect(diag.range()).toEqual([
+        warning('150', '-Infinity, 100'),
+        warning('-5', '0, Infinity'),
+      ])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-04: NumberField should not warn for in-range values, inclusive endpoints, or the null empty value', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      for (const value of [0, 50, 100, null]) {
+        await React.act(async () => {
+          root.render(field({ value, min: 0, max: 100 }))
+        })
+      }
+      expect(diag.range()).toEqual([])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-05: NumberField should not warn on a normal mount, under StrictMode, or when the omitted value fails fast', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(
+          <React.StrictMode>{field({ value: 50, min: 0, max: 100 })}</React.StrictMode>
+        )
+      })
+      expect(container.querySelector('input')?.value).toBe('50')
+      expect(diag.range()).toEqual([])
+      // NumberField has no uncontrolled mode (FEATURES #1): an omitted value
+      // throws during render, before any range check can run.
+      expect(() =>
+        renderToString(
+          // @ts-expect-error - an omitted value is required and throws before the range check
+          <NumberField locale="en-US" />
+        )
+      ).toThrow(/"value" is required/)
+      expect(diag.range()).toEqual([])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-06: NumberField should render an out-of-range controlled value verbatim with no clamp and no owned invalid state under none', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(field({ value: 150, min: 0, max: 100, name: 'quantity' }))
+      })
+      const input = container.querySelector(
+        'input:not([type="hidden"])'
+      ) as HTMLInputElement
+      const hidden = container.querySelector('input[type="hidden"]') as HTMLInputElement
+      // Both the visible text and the canonical form value keep the given number.
+      expect(input.value).toBe('150')
+      expect(hidden.value).toBe('150')
+      // The input is a plain textbox with no numeric ARIA, so nothing can
+      // report a clamped value that disagrees with the render.
+      expect(input.getAttribute('aria-valuenow')).toBeNull()
+      // Under the default commitBehavior "none" the field owns no invalid state.
+      expect(container.querySelector('[data-invalid]')).toBeNull()
+      expect(diag.range()).toEqual([warning('150', '0, 100')])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-07: NumberField should not warn while typing toward an out-of-range bound when the consumer echoes each request', async () => {
+    const diag = spyDiagnostics()
+    const seen: Array<number | null> = []
+    function Echo() {
+      const [current, setCurrent] = React.useState<number | null>(50)
+      return field({
+        value: current,
+        min: 0,
+        max: 100,
+        onChange: next => {
+          seen.push(next)
+          setCurrent(next)
+        },
+      })
+    }
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(<Echo />)
+      })
+      const input = container.querySelector('input') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, '1')
+      })
+      await React.act(async () => {
+        setNativeValue(input, '15')
+      })
+      await React.act(async () => {
+        setNativeValue(input, '150')
+      })
+      // Live candidates are requested raw, and each echo lands with no warning.
+      expect(seen).toEqual([1, 15, 150])
+      expect(input.value).toBe('150')
+      expect(diag.range()).toEqual([])
+      // Commit clamps to max under "none"; the echoed clamp is in range.
+      await React.act(async () => {
+        input.blur()
+      })
+      expect(seen).toEqual([1, 15, 150, 100])
+      expect(input.value).toBe('100')
+      expect(diag.range()).toEqual([])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-08: NumberField should warn when a bound drops under an echoed value and when a later programmatic value is out of range', async () => {
+    const diag = spyDiagnostics()
+    const seen: Array<number | null> = []
+    const fieldAt = (value: number | null, max: number) =>
+      field({ value, min: 0, max, onChange: next => void seen.push(next) })
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(fieldAt(50, 200))
+      })
+      const input = container.querySelector('input') as HTMLInputElement
+      await React.act(async () => {
+        input.focus()
+        setNativeValue(input, '150')
+      })
+      expect(seen).toEqual([150])
+      // The consumer echoes the request; 150 is in range for max 200.
+      await React.act(async () => {
+        root.render(fieldAt(150, 200))
+      })
+      expect(diag.range()).toEqual([])
+      // Lowering the bound under the echoed value makes it a real out-of-range value.
+      await React.act(async () => {
+        root.render(fieldAt(150, 100))
+      })
+      expect(diag.range()).toEqual([warning('150', '0, 100')])
+      // A later programmatic value is not swallowed by the earlier request.
+      await React.act(async () => {
+        root.render(fieldAt(180, 100))
+      })
+      expect(diag.range()).toEqual([warning('150', '0, 100'), warning('180', '0, 100')])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it('OOR-NF-09: NumberField should emit the out-of-range mount warning once under StrictMode', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(
+          <React.StrictMode>{field({ value: 150, min: 0, max: 100 })}</React.StrictMode>
+        )
+      })
+      expect(diag.range()).toEqual([warning('150', '0, 100')])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+})

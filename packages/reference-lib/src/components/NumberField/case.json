@@ -1557,6 +1557,69 @@
       "kind": "unit",
       "file": "types.test.tsx",
       "title": "NumberField type contract W-02/W-25: NumberField should type commitBehavior, formatOptions, and onInvalidCommit"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-223",
+      "name": "NumberField out-of-range controlled value OOR-NF-01: NumberField should warn once in dev when a controlled value sits above max, with the exact text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-01: NumberField should warn once in dev when a controlled value sits above max, with the exact text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-224",
+      "name": "NumberField out-of-range controlled value OOR-NF-02: NumberField should warn in dev when a controlled value sits below min, with the exact text",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-02: NumberField should warn in dev when a controlled value sits below min, with the exact text"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-225",
+      "name": "NumberField out-of-range controlled value OOR-NF-03: NumberField should print an absent bound as -Infinity or Infinity in the warning",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-03: NumberField should print an absent bound as -Infinity or Infinity in the warning"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-226",
+      "name": "NumberField out-of-range controlled value OOR-NF-04: NumberField should not warn for in-range values, inclusive endpoints, or the null empty value",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-04: NumberField should not warn for in-range values, inclusive endpoints, or the null empty value"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-227",
+      "name": "NumberField out-of-range controlled value OOR-NF-05: NumberField should not warn on a normal mount, under StrictMode, or when the omitted value fails fast",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-05: NumberField should not warn on a normal mount, under StrictMode, or when the omitted value fails fast"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-228",
+      "name": "NumberField out-of-range controlled value OOR-NF-06: NumberField should render an out-of-range controlled value verbatim with no clamp and no owned invalid state under none",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-06: NumberField should render an out-of-range controlled value verbatim with no clamp and no owned invalid state under none"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-229",
+      "name": "NumberField out-of-range controlled value OOR-NF-07: NumberField should not warn while typing toward an out-of-range bound when the consumer echoes each request",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-07: NumberField should not warn while typing toward an out-of-range bound when the consumer echoes each request"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-230",
+      "name": "NumberField out-of-range controlled value OOR-NF-08: NumberField should warn when a bound drops under an echoed value and when a later programmatic value is out of range",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-08: NumberField should warn when a bound drops under an echoed value and when a later programmatic value is out of range"
+    },
+    {
+      "id": "LIB-NUMBERFIELD-231",
+      "name": "NumberField out-of-range controlled value OOR-NF-09: NumberField should emit the out-of-range mount warning once under StrictMode",
+      "kind": "unit",
+      "file": "NumberField.test.tsx",
+      "title": "NumberField out-of-range controlled value OOR-NF-09: NumberField should emit the out-of-range mount warning once under StrictMode"
     }
   ]
 }
