@@ -294,6 +294,9 @@ const WARNING_HINTS: Record<string, string> = {
   'ATM-W-INVALID-CSS-VALUE': 'use a CSS keyword, token, or value the prop accepts',
   'ATM-W-MALFORMED-OPACITY': 'write the opacity modifier as /<0-100>',
   'ATM-W-UNKNOWN-TOKEN-PATH': 'point the path at an existing token',
+  'ATM-W-UNKNOWN-TOKEN': 'declare the name in its theme category or write a CSS value',
+  'ATM-W-UNBRACED-TOKEN-REF':
+    'write the token reference in braces, like `{colors.gray.900}`',
   'ATM-W-TOKEN-CATEGORY-MISMATCH': 'use a token from the matching category',
   'ATM-W-UNKNOWN-COLOR': 'use a color token or a CSS color',
   'ATM-W-UNKNOWN-TONE':
@@ -318,11 +321,18 @@ const WARNING_HINTS: Record<string, string> = {
   'TST-W-DUPLICATE-MEMBER': 'remove the duplicate member or rename one',
   'TST-W-STAR-AMBIGUITY': 're-export the name explicitly from the barrel',
   'TST-W-DUPLICATE-SYMBOL-NAME': 'use the symbol id or a scoped lookup to disambiguate',
+  'TST-W-UNRESOLVED-IMPORT': 'create the file it names or correct the specifier',
+  'TST-W-UNSUPPORTED-AUGMENTATION': 'declare the members in the augmented module itself',
+  'TST-W-UNSUPPORTED-SYNTAX': 're-declare what it provides as named exports',
   'ATL-W-UNRESOLVED-PROPS-TYPE': 'import the props type or define it in scope',
   'ATL-W-UNSUPPORTED-PROPS-ANNOTATION': 'name the props type instead of inlining the object',
   'ATL-W-UNRESOLVED-INCLUDE-PACKAGE': 'check the package name or install it alongside the app',
   'ATL-W-PACKAGE-SCAN-FAILED': 'fix the package dir so it scans or drop it from include',
   'STT-W-SKIPPED-FILE': 'fix the file so it parses and reads cleanly',
+  'STT-W-CLASS-COMPONENT':
+    'rewrite it as a function component so its style props are traced',
+  'STT-W-UNRESOLVED-HOC-ARGUMENT':
+    'pass a component by name in that argument, not a call result',
   'TGN-W-UNKNOWN-TOKEN-CATEGORY': 'move the tokens into a printed category',
   'TGN-W-INVALID-RECIPE-NAME': 'rename the recipe so it forms a TypeScript type name',
   'TGN-W-EMPTY-RECIPE': 'fill in the variant axes or drop the recipe',
