@@ -105,3 +105,42 @@ describe('evaluateConfig cleanup', () => {
     expect(readFileSync(join(tempRoot, 'session.json'), 'utf8')).toBe('{}')
   })
 })
+
+describe('evaluateConfig bounds', () => {
+  it('rejects a config whose top-level await never settles, once its bound passes', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-evaluate-'))
+    tempDirs.push(dir)
+
+    const error = await evaluateConfig(
+      'await new Promise(() => {})\nexport default { name: "demo" }',
+      join(dir, 'ui.config.ts'),
+      { timeoutMs: 50 }
+    ).then(
+      () => undefined,
+      (err: unknown) => err
+    )
+
+    expect(error).toMatchObject({ name: 'ConfigEvaluationTimeoutError', timeoutMs: 50 })
+    expect((error as Error).message).toMatch(/did not finish within 50 ms/)
+    expect(existsSync(getProjectTmpDirPath(dir))).toBe(false)
+  })
+})
+
+describe('evaluateConfig concurrency', () => {
+  it('lets five evaluations of one project start together and each land its own module', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-evaluate-'))
+    tempDirs.push(dir)
+    const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+
+    for (let round = 0; round < 150; round += 1) {
+      const settled = await Promise.allSettled(
+        Array.from({ length: 5 }, async (_, load) => {
+          await sleep(Math.random() * 4)
+          return evaluateConfig(`export default { name: "demo-${round}-${load}" }`, join(dir, 'ui.config.ts'))
+        })
+      )
+      const failures = settled.flatMap((result) => (result.status === 'rejected' ? [String(result.reason)] : []))
+      expect(failures, `round ${round}`).toEqual([])
+    }
+  }, 30_000)
+})

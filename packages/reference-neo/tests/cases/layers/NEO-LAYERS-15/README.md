@@ -24,9 +24,9 @@ The spec runs two legs in one process, in order.
 The class names are the engine's names for these utilities. The spec asserts each one in the
 published utilities, so a renamed class fails loud.
 
-Not covered: a bare-specifier upstream. The bundler inlines a published base system imported
-by bare specifier and keeps it out of the watch scope (`src/config/bundle.ts`), so a bare
-upstream rebuild does not trigger a watch resync. That is a known gap, not asserted here.
+Not covered here: a bare-specifier upstream. The bundler inlines a published base system imported
+by bare specifier and watches its real path (`src/config/bundle.ts`), so a bare upstream rebuild
+resyncs a watch too. NEO-WATCH-28 asserts that for a linked and an installed upstream.
 NEO-LAYERS-06 covers the bare-specifier re-sync in one process.
 
 > Search terms: re-sync, lifecycle, stale CSS, removed rule, watch mode, watchSync, onResync, relative import, upstream rebuild, layers, live upstream change, NEO-WATCH-01, NEO-SYNC-14, NEO-LAYERS-06

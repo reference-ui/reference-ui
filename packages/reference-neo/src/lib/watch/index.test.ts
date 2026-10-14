@@ -39,6 +39,7 @@ vi.mock('../../sync/index.ts', () => ({ sync: vi.fn() }))
 vi.mock('../../config/load.ts', () => ({
   loadUserConfigWithDependencies: vi.fn(async () => mocks.loaded),
   getLastLoadedUserConfig: vi.fn(() => mocks.latest),
+  getAttemptedUserConfigDependencies: vi.fn(() => []),
 }))
 
 const DROPPED = 'Events were dropped by the FSEvents client. File system must be re-scanned.'

@@ -32,6 +32,10 @@ not yet committed; `open` means no case or test proves the claim.
 | NEO-WATCH-23 | an include glob that matches no files warns by name and the sync still exits 0, human and --json | done | none | node | `specs/include-matches-nothing.spec.ts` | SPEC LC-62 |
 | NEO-WATCH-24 | a dangling symlink under include warns once by name, and the sync still builds CSS and types | done | none | node | `specs/dangling-link.spec.ts` | SPEC LC-63 |
 | NEO-WATCH-25 | a new file inside a symlinked directory target resyncs the class the link serves | done | ATM-SCAN-01 | node | `specs/linked-dir-new-file.spec.ts` | SPEC LC-30 |
+| NEO-WATCH-26 | five config loads that start together all resolve, so no one-shot loses its config to another's cleanup | done | none | node | `specs/config-load-race.spec.ts`: 150 rounds of five jittered loads of one world | SPEC LC-49; `config/evaluate.ts:createEvalDir` |
+| NEO-WATCH-27 | a config dependency created after a failed config load resyncs the watch, and its include reaches the sheet | done | none | node | `specs/failed-load-dependency.spec.ts` | SPEC LC-26, LC-55 |
+| NEO-WATCH-28 | a bare-specifier upstream that re-syncs through node_modules resyncs the downstream watch, linked or installed | done | none | node | `specs/bare-upstream.spec.ts`: a linked and an installed upstream, each re-synced alone | SPEC LC-28 |
+| NEO-WATCH-29 | a config whose top-level await never settles exits a one-shot 1 with a named evaluation-timeout line, and a watch reports it and keeps watching until the config is fixed | done | none | node | `specs/config-timeout.spec.ts`: a one-shot CLI leg and a watch leg | SPEC LC-07 |
 
 A row lands with its case folder.
 
@@ -53,3 +57,11 @@ A row lands with its case folder.
   coverage home for watch behaviour. This group now holds the lifecycle claims.
 - Debounce is credited to NEO-SYNC-14 by the NEO-WATCH-01 and NEO-CLI-02 READMEs,
   but its specs have no debounce leg. The proof is unit-level, `lib/watch/scheduler.test.ts`.
+- NEO-WATCH-26 stress (real processes, the command behind LC-49): 25 rounds of five concurrent
+  `node packages/reference-neo/bin/ref.ts sync "$W"` runs on one fresh world, each run exiting 0 or 75.
+  Result after the fix: 125 runs, 0 failures. The same spec fails on the HEAD sources at round 101 of 150 with
+  `mkdtemp ... ENOENT`.
+- NEO-WATCH-29's bound is 30 s (`CONFIG_EVALUATION_TIMEOUT_MS`, `src/config/evaluate.ts`). NEO-WATCH-16's wedge is a
+  config that never settles, and its shutdown window runs about 10 s, so the bound must stay past that window. The
+  bound covers config evaluation only: a fragment or tasty pass that never settles is still bounded by LC-58's stuck
+  line and SIGINT exit alone.

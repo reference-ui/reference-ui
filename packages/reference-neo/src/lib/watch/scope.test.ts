@@ -3,12 +3,12 @@
 // narrowing a good sync applies, the subscription diff (an unchanged set churns nothing),
 // and a root that cannot be subscribed: reported, left out, and never counted as added.
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import type { AsyncSubscription } from '@parcel/watcher'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LoadedUserConfig } from '../../config/load.ts'
+import { getAttemptedUserConfigDependencies, type LoadedUserConfig } from '../../config/load.ts'
 import { canonicalPath } from './match.ts'
 import { deriveScope, mergeScope, refreshTriggerScope, type TriggerScope } from './scope.ts'
 
@@ -28,6 +28,7 @@ vi.mock('@parcel/watcher', () => ({
 
 vi.mock('../../config/load.ts', () => ({
   getLastLoadedUserConfig: vi.fn(() => mocks.latest),
+  getAttemptedUserConfigDependencies: vi.fn(() => []),
 }))
 
 const tempDirs: string[] = []
@@ -135,5 +136,44 @@ describe('refreshTriggerScope', () => {
     expect(added).toBe(false)
     expect(scope.report).toHaveBeenCalledWith(expect.objectContaining({ message: `cannot watch ${join(root, 'extra')}` }))
     expect(scope.currentRoots).toEqual([join(root, 'theme')])
+  })
+})
+
+describe('dependency files the watch must still see', () => {
+  const configOf = (include: string[]): LoadedUserConfig['config'] => ({ name: 'scope', include }) as unknown as LoadedUserConfig['config']
+
+  it('keeps a dependency under an engine-ignored dir as its own root, so its re-sync is not dropped', () => {
+    const root = makeTree(['ui.config.ts', 'node_modules/pkg/.reference-ui/system/baseSystem.mjs'])
+    const upstream = join(root, 'node_modules', 'pkg', '.reference-ui', 'system', 'baseSystem.mjs')
+
+    const derived = deriveScope(root, {
+      config: configOf(['**/*.ts']),
+      dependencyPaths: [join(root, 'ui.config.ts'), upstream],
+    })
+
+    expect(derived.dependencyFiles.has(upstream)).toBe(true)
+    expect(derived.roots).toEqual(expect.arrayContaining([root, dirname(upstream)]))
+  })
+
+  it('watches a dependency that does not exist yet, through the nearest directory that does', () => {
+    const root = makeTree(['ui.config.ts'])
+    const missing = join(root, 'config', 'extra.ts')
+
+    const derived = deriveScope(root, { config: configOf(['theme/**/*.ts']), dependencyPaths: [missing] })
+
+    expect(derived.dependencyFiles.has(missing)).toBe(true)
+    expect(derived.roots.every((dir) => existsSync(dir))).toBe(true)
+  })
+
+  it('widens to the files a failed load tried to import, so creating one resyncs', async () => {
+    const root = makeTree(['theme/a.ts'])
+    const missing = join(root, 'config', 'extra.ts')
+    const scope = liveOf(root, ['theme/**/*.ts'])
+    mocks.latest = loadedOf(['theme/**/*.ts'])
+    vi.mocked(getAttemptedUserConfigDependencies).mockReturnValueOnce([missing])
+
+    await refreshTriggerScope(scope, true)
+
+    expect(scope.state.dependencyFiles.has(missing)).toBe(true)
   })
 })

@@ -103,3 +103,18 @@ export class LoadConfigError extends ConfigError {
     this.configPath = configPath
   }
 }
+
+// The config module did not finish evaluating within its bound. A top-level await
+// that never settles is the usual cause, so the message names that first.
+export class ConfigEvaluationTimeoutError extends ConfigError {
+  readonly configPath: string
+  readonly timeoutMs: number
+  constructor(configPath: string, timeoutMs: number) {
+    super(
+      `config evaluation did not finish within ${timeoutMs} ms; a top-level await that never settles is the likely cause.\n` +
+        `Make ${configPath} finish without waiting on a promise that never resolves.`
+    )
+    this.configPath = configPath
+    this.timeoutMs = timeoutMs
+  }
+}

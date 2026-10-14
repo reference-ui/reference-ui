@@ -26,6 +26,8 @@ interface Exit {
 
 const BIN_PATH = fileURLToPath(new URL('../../../../../bin/ref.ts', import.meta.url));
 const CHILD_ENV = { ...process.env, NO_COLOR: '1' };
+// The wedge is a config that never settles. Its evaluation bound (30 s, src/config/evaluate.ts) sits past this spec's
+// shutdown window, so the pass is still unsettled at SIGINT. NEO-WATCH-29 covers what the bound then does.
 const READY_TEXT = 'ready in';
 const STUCK_TEXT = 'in-flight sync stuck for';
 const UNSETTLED_TEXT = 'in-flight sync did not settle; exiting';

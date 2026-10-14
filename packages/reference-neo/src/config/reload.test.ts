@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { bundleConfig } from './bundle.ts'
-import { loadUserConfigWithDependencies } from './load.ts'
+import { getAttemptedUserConfigDependencies, loadUserConfigWithDependencies } from './load.ts'
 
 const tempDirs: string[] = []
 
@@ -74,8 +74,8 @@ describe('config loads in one process', () => {
     await writeFile(upstreamFile, baseSystemModule('ink: v2'))
     const second = await loadUserConfigWithDependencies(app)
     expect(second.config.extends?.[0]?.fragment).toBe('ink: v2')
-    // The bare upstream is inlined but is not a watch input, as it never was.
-    expect(second.dependencyPaths).toEqual([realpathSync(configPath)])
+    // The bare upstream is inlined, and its real file is a watch input, so its re-sync reaches this config.
+    expect(second.dependencyPaths).toEqual([realpathSync(configPath), realpathSync(upstreamFile)].sort())
   })
 
   it('keeps other resolvable packages external', async () => {
@@ -122,5 +122,24 @@ describe('config loads in one process', () => {
     expect(bundled).toMatch(/from ['"]node:path['"]/)
     // The defineConfig id still maps to the local entry instead of staying a bare import.
     expect(bundled).not.toMatch(/from ['"]@reference-ui\/neo['"]/)
+  })
+})
+
+describe('config loads that fail', () => {
+  it('names the files a failed load tried to import, and forgets them after a good load', async () => {
+    const { app } = await makeConsumer()
+    const configPath = join(app, 'ui.config.ts')
+    await writeFile(
+      configPath,
+      ["import { gone } from './missing/tokens.ts'", "export default { name: 'fake-app', include: [], gone }", ''].join('\n'),
+    )
+
+    await expect(loadUserConfigWithDependencies(app)).rejects.toThrow(/missing/)
+    const attempted = getAttemptedUserConfigDependencies(app)
+    expect(attempted.some((file) => file.endsWith(join('missing', 'tokens.ts')))).toBe(true)
+
+    await writeFile(configPath, "export default { name: 'fake-app', include: [] }\n")
+    await loadUserConfigWithDependencies(app)
+    expect(getAttemptedUserConfigDependencies(app)).toEqual([])
   })
 })

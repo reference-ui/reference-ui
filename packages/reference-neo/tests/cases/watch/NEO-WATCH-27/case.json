@@ -1,0 +1,1 @@
+{"id": "NEO-WATCH-27", "name": "a config dependency created after a failed config load resyncs the watch, and its include reaches the sheet", "sync": false}
