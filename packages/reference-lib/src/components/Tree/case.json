@@ -626,6 +626,125 @@
       "kind": "unit",
       "file": "typeahead/labels.test.ts",
       "title": "extractTypeaheadText falls back to trimmed row text without decoration"
+    },
+    {
+      "id": "LIB-TREE-090",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-01: warns with the exact text when a fully expanded tree value matches no item",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-01: warns with the exact text when a fully expanded tree value matches no item"
+    },
+    {
+      "id": "LIB-TREE-091",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-02: warns with the exact text for an unknown expanded id and still passes it through",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-02: warns with the exact text for an unknown expanded id and still passes it through"
+    },
+    {
+      "id": "LIB-TREE-092",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-03: stays silent for a valid selected id that lives under a collapsed branch",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-03: stays silent for a valid selected id that lives under a collapsed branch"
+    },
+    {
+      "id": "LIB-TREE-093",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-04: known limit, stays silent while any branch is collapsed, even for a truly unknown value or expanded id",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-04: known limit, stays silent while any branch is collapsed, even for a truly unknown value or expanded id"
+    },
+    {
+      "id": "LIB-TREE-094",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-05: stays silent on a normal mount with valid ids",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-05: stays silent on a normal mount with valid ids"
+    },
+    {
+      "id": "LIB-TREE-095",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-06: never warns for a null value on a fully expanded tree",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-06: never warns for a null value on a fully expanded tree"
+    },
+    {
+      "id": "LIB-TREE-096",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-07: stays silent under StrictMode for a valid mount",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-07: stays silent under StrictMode for a valid mount"
+    },
+    {
+      "id": "LIB-TREE-097",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-08: warns exactly once under StrictMode for an unmatched value",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-08: warns exactly once under StrictMode for an unmatched value"
+    },
+    {
+      "id": "LIB-TREE-098",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-09: equal re-renders never repeat a warning, and a new unknown id names only itself",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-09: equal re-renders never repeat a warning, and a new unknown id names only itself"
+    },
+    {
+      "id": "LIB-TREE-099",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-10: nested in Combobox the value check is skipped, while unknown expanded ids are still reported",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-10: nested in Combobox the value check is skipped, while unknown expanded ids are still reported"
+    },
+    {
+      "id": "LIB-TREE-100",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-11: a registration made by a child with its own state re-runs the check through the registry version",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-11: a registration made by a child with its own state re-runs the check through the registry version"
+    },
+    {
+      "id": "LIB-TREE-101",
+      "name": "Tree unmatched-id decision is undecidable while the registry is empty",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision is undecidable while the registry is empty"
+    },
+    {
+      "id": "LIB-TREE-102",
+      "name": "Tree unmatched-id decision is undecidable while any registered branch is collapsed",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision is undecidable while any registered branch is collapsed"
+    },
+    {
+      "id": "LIB-TREE-103",
+      "name": "Tree unmatched-id decision flags an unmatched value and deduplicated unknown expanded ids once every branch is expanded",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision flags an unmatched value and deduplicated unknown expanded ids once every branch is expanded"
+    },
+    {
+      "id": "LIB-TREE-104",
+      "name": "Tree unmatched-id decision never flags a null or undefined value, and returns null when every id matches",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision never flags a null or undefined value, and returns null when every id matches"
+    },
+    {
+      "id": "LIB-TREE-105",
+      "name": "Tree unmatched-id decision orders registered ids by document order and appends registered ids the DOM did not list",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision orders registered ids by document order and appends registered ids the DOM did not list"
+    },
+    {
+      "id": "LIB-TREE-106",
+      "name": "Tree unmatched-id decision words the value and expanded warnings with the pinned text",
+      "kind": "unit",
+      "file": "diagnostics/unmatched.test.ts",
+      "title": "Tree unmatched-id decision words the value and expanded warnings with the pinned text"
     }
   ]
 }

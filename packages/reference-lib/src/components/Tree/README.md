@@ -13,8 +13,9 @@ decisions, and the item scope they provide feeds the Item, Group, and
 Expander parts. Beneath the hooks, each problem owns a folder.
 Expansion emits deterministic payloads. Siblings keep posinset/setsize
 honest. Typeahead names each row's search label. Navigation resolves
-reading direction for arrow mirroring. Shared holds the development
-diagnostic. Pure decisions carry colocated unit tests; browser behavior
+reading direction for arrow mirroring. Diagnostics decides which
+controlled ids name no item, and shared holds the development channel that
+reports them. Pure decisions carry colocated unit tests; browser behavior
 proves out in CT.
 
 | Folder | Role |
@@ -25,7 +26,8 @@ proves out in CT.
 | [`siblings/`](./siblings) | Sibling-set metadata refresh |
 | [`typeahead/`](./typeahead) | Row search-label extraction |
 | [`navigation/`](./navigation) | Shadow-crossing direction resolution |
-| [`shared/`](./shared) | Development diagnostic |
+| [`diagnostics/`](./diagnostics) | Unmatched-id decision for controlled values and expansion |
+| [`shared/`](./shared) | Development diagnostic channel |
 
 `context.ts` scopes the private item subtree (the Law 3 allowance):
 items read selection, expansion, focus, and keyboard commands from the

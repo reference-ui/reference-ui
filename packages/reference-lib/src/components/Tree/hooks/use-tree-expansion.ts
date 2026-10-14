@@ -24,14 +24,18 @@ export function useTreeExpansion(
   combobox: ComboboxContextValue | null,
   onExpandedChange: ((expanded: string[]) => void) | undefined
 ): TreeExpansion {
-  const { branchesMapRef, expanded, isControlledExpanded, setInternalExpanded, focusedId, setFocusedId, rootRef, lastExpansionSeqRef } = session
+  const { branchesMapRef, expanded, isControlledExpanded, setInternalExpanded, focusedId, setFocusedId, rootRef, lastExpansionSeqRef, bumpRegistry } = session
 
+  // Branch registration bumps the registry version too: the unmatched-id
+  // diagnostics decide on the branch set, not only on the item set.
   const registerBranchOrder = React.useCallback((id: string, el: HTMLElement | null) => {
     branchesMapRef.current.set(id, el)
+    bumpRegistry()
     return () => {
       branchesMapRef.current.delete(id)
+      bumpRegistry()
     }
-  }, [])
+  }, [bumpRegistry])
 
   const isItemExpanded = React.useCallback(
     (id: string) => expanded.includes(id),

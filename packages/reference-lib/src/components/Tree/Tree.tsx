@@ -13,6 +13,7 @@ import { Div } from '@reference-ui/react'
 import { ComboboxContext } from '../Combobox/combobox-context'
 import { TreeContext, TreeLevelContext } from './context'
 import {
+  useTreeDiagnostics,
   useTreeExpansion,
   useTreeFocus,
   useTreeKeyboard,
@@ -80,6 +81,9 @@ export const Tree = React.forwardRef<HTMLDivElement, TreeProps>(
     )
     const { isItemSelected, selectItem } = useTreeSelection(effectiveValue, value, combobox, onChange)
     useTreeFocus(session, combobox, effectiveValue)
+    // Dev diagnostics for unmatched ids. Inside Combobox the value belongs to
+    // the source, so only the standalone value is checked; expanded still is.
+    useTreeDiagnostics(session, combobox ? undefined : value)
     const handleItemKeyDown = useTreeKeyboard(session, toggleExpanded, expandItems, selectItem)
     const { focusedId, setFocusedId, expanded, registerItemInstance, rootRef } = session
 

@@ -1,8 +1,13 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ComboboxContext, type ComboboxContextValue } from '../Combobox/combobox-context'
 import { Tree, getBatchExpanded, getDeterministicExpanded } from './Tree'
+
+// @ts-ignore
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 describe('Tree Unit Proofs', () => {
   it('TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order', () => {
@@ -111,5 +116,247 @@ describe('Tree Unit Proofs', () => {
         </Tree>
       )
     ).toThrow('Tree "onChange" is required')
+  })
+})
+
+describe('Tree out-of-range proofs (dev warning on unmatched value and expanded ids)', () => {
+  let container: HTMLDivElement
+  let root: Root
+  let errors: Array<Array<unknown>>
+  let errorSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    errors = []
+    errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => {
+      errors.push(args)
+    })
+  })
+
+  afterEach(async () => {
+    errorSpy.mockRestore()
+    await React.act(async () => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  // Tree's warnings arrive as one console.error string with the Tree prefix.
+  function treeWarnings(): string[] {
+    return errors
+      .map((args) => args.join(' '))
+      .filter((text) => text.startsWith('[reference-ui] Tree: '))
+  }
+
+  // One branch, fully expandable: folder contains a and b.
+  function FolderTree({
+    value,
+    expanded,
+    onExpandedChange,
+  }: {
+    value: string | null
+    expanded: string[]
+    onExpandedChange?: (next: string[]) => void
+  }) {
+    return (
+      <Tree
+        value={value}
+        onChange={() => {}}
+        expanded={expanded}
+        onExpandedChange={onExpandedChange}
+      >
+        <Tree.Item value="folder">
+          <Tree.Expander />
+          <span>Folder</span>
+          <Tree.Group>
+            <Tree.Item value="a">A</Tree.Item>
+            <Tree.Item value="b">B</Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+      </Tree>
+    )
+  }
+
+  // Two branches: 'open' keeps its child mounted when expanded, while
+  // 'closed' unmounts its child 'deep' whenever it is collapsed.
+  function TwoBranchTree({ value, expanded }: { value: string | null; expanded: string[] }) {
+    return (
+      <Tree value={value} onChange={() => {}} expanded={expanded}>
+        <Tree.Item value="open">
+          <Tree.Expander />
+          <span>Open</span>
+          <Tree.Group>
+            <Tree.Item value="open-child">Open child</Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+        <Tree.Item value="closed">
+          <Tree.Expander />
+          <span>Closed</span>
+          <Tree.Group>
+            <Tree.Item value="deep">Deep</Tree.Item>
+          </Tree.Group>
+        </Tree.Item>
+      </Tree>
+    )
+  }
+
+  // Minimal Combobox stand-in: only the members Tree reads when nested.
+  const stubCombobox = {
+    value: null,
+    registerOption: () => () => {},
+    activeOptionId: null,
+    activeValue: null,
+    setActiveValue: () => {},
+    handleSelect: () => {},
+    treeExpansionRequest: null,
+  } as unknown as ComboboxContextValue
+
+  function NestedFolderTree({ expanded }: { expanded: string[] }) {
+    return (
+      <ComboboxContext.Provider value={stubCombobox}>
+        <Tree value="ghost" expanded={expanded}>
+          <Tree.Item value="folder">
+            <Tree.Expander />
+            <span>Folder</span>
+            <Tree.Group>
+              <Tree.Item value="a">A</Tree.Item>
+              <Tree.Item value="b">B</Tree.Item>
+            </Tree.Group>
+          </Tree.Item>
+        </Tree>
+      </ComboboxContext.Provider>
+    )
+  }
+
+  it('OOR-TREE-01: warns with the exact text when a fully expanded tree value matches no item', async () => {
+    await React.act(async () => {
+      root.render(<FolderTree value="ghost" expanded={['folder']} />)
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).',
+    ])
+  })
+
+  it('OOR-TREE-02: warns with the exact text for an unknown expanded id and still passes it through', async () => {
+    const onExpandedChange = vi.fn()
+    await React.act(async () => {
+      root.render(
+        <FolderTree value={null} expanded={['folder', 'ghost']} onExpandedChange={onExpandedChange} />
+      )
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: expanded contains "ghost" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
+    ])
+    // Passthrough: collapsing the branch emits the unknown id unchanged.
+    await React.act(async () => {
+      container.querySelector<HTMLButtonElement>('button')?.click()
+    })
+    expect(onExpandedChange).toHaveBeenLastCalledWith(['ghost'])
+  })
+
+  it('OOR-TREE-03: stays silent for a valid selected id that lives under a collapsed branch', async () => {
+    await React.act(async () => {
+      root.render(<TwoBranchTree value="deep" expanded={['open']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-04: known limit, stays silent while any branch is collapsed, even for a truly unknown value or expanded id', async () => {
+    await React.act(async () => {
+      root.render(<TwoBranchTree value="typo" expanded={['open', 'ghost']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-05: stays silent on a normal mount with valid ids', async () => {
+    await React.act(async () => {
+      root.render(<TwoBranchTree value="deep" expanded={['open', 'closed']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-06: never warns for a null value on a fully expanded tree', async () => {
+    await React.act(async () => {
+      root.render(<FolderTree value={null} expanded={['folder']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-07: stays silent under StrictMode for a valid mount', async () => {
+    await React.act(async () => {
+      root.render(
+        <React.StrictMode>
+          <FolderTree value="a" expanded={['folder']} />
+        </React.StrictMode>
+      )
+    })
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-08: warns exactly once under StrictMode for an unmatched value', async () => {
+    await React.act(async () => {
+      root.render(
+        <React.StrictMode>
+          <FolderTree value="ghost" expanded={['folder']} />
+        </React.StrictMode>
+      )
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).',
+    ])
+  })
+
+  it('OOR-TREE-09: equal re-renders never repeat a warning, and a new unknown id names only itself', async () => {
+    await React.act(async () => {
+      root.render(<FolderTree value={null} expanded={['folder', 'ghost']} />)
+    })
+    await React.act(async () => {
+      root.render(<FolderTree value={null} expanded={['folder', 'ghost']} />)
+    })
+    await React.act(async () => {
+      root.render(<FolderTree value={null} expanded={['folder', 'ghost', 'phantom']} />)
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: expanded contains "ghost" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
+      '[reference-ui] Tree: expanded contains "phantom" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
+    ])
+  })
+
+  it('OOR-TREE-10: nested in Combobox the value check is skipped, while unknown expanded ids are still reported', async () => {
+    await React.act(async () => {
+      root.render(<NestedFolderTree expanded={['folder']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+    await React.act(async () => {
+      root.render(<NestedFolderTree expanded={['folder', 'phantom']} />)
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: expanded contains "phantom" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
+    ])
+  })
+
+  it('OOR-TREE-11: a registration made by a child with its own state re-runs the check through the registry version', async () => {
+    function LateItem() {
+      const [ready, setReady] = React.useState(false)
+      React.useEffect(() => {
+        setReady(true)
+      }, [])
+      return ready ? <Tree.Item value="late">Late</Tree.Item> : null
+    }
+    // Mount with an empty registry: nothing to decide yet. The item then
+    // registers without the root re-rendering, so only the version bump can
+    // make the check run again.
+    await React.act(async () => {
+      root.render(
+        <Tree value="typo" onChange={() => {}}>
+          <LateItem />
+        </Tree>
+      )
+    })
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: value "typo" matches no item (registered ids: late).',
+    ])
   })
 })
