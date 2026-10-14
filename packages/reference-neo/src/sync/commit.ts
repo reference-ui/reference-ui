@@ -19,6 +19,7 @@ import {
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { CommitJournal } from './commit-journal.ts'
 import { isFreshScratch, isPreserved, isUnder, sweepStrandedWriterTemps } from './commit-keep.ts'
+import { pauseInCommit } from './commit-pause.ts'
 
 export interface CommitStats {
   committed: number
@@ -301,6 +302,8 @@ export function commitStagedDir(stagingDir: string, outDir: string, options: Com
       if (commitOneFile(ctx, file)) stats.committed += 1
       else stats.skipped += 1
     }
+    // Test-only and inert unless REF_TEST_COMMIT_PAUSE is set: the live changes have landed, stale retirement has not.
+    pauseInCommit()
     stats.removed = sweepStrandedWriterTemps(preserved)
     stats.removed += retireStaleFiles(liveRoot, ctx)
     pruneEmptyDirs(liveRoot, ctx, true)

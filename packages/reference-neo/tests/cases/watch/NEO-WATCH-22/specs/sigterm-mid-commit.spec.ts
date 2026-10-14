@@ -1,25 +1,27 @@
 // sigterm-mid-commit.spec.ts — spec for NEO-WATCH-22, a SIGTERM delivered mid-commit. Takes { case } from the runner and
-// asserts node-side: a temp world syncs, stale files keep the next commit busy, the brand changes, and a sync is frozen
-// inside its commit while SIGTERM is queued for it. The sync must end by that signal or exit non-zero, release its
-// lock, and leave the folder whole: either the new state or the last-good one. Emits nothing on success; throws naming
-// the failed leg on failure.
+// asserts node-side: a temp world syncs, the brand changes, and a sync is held at the commit's test-only pause point
+// (REF_TEST_COMMIT_PAUSE) with its live changes landed. SIGTERM is sent while it is held, then the sync resumes. The sync
+// must end by that signal or exit non-zero, release its lock, and leave the folder whole: either the new state or the
+// last-good one. Emits nothing on success; throws naming the failed leg on failure.
 import assert from 'node:assert/strict';
 import { existsSync, rmSync } from 'node:fs';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import {
+  awaitPaused,
+  COMMIT_PAUSE_ENV,
   disposeWorld,
-  freezeInCommit,
+  liveSheetCarries,
   lockOf,
   makeWorld,
   outOf,
-  plantStale,
+  pauseDirOf,
   REBRAND,
+  resume,
   runCli,
   setBrand,
   snapshot,
   spawnCli,
-  stageOf,
 } from '../../shared/commit-world.ts';
 
 interface SpecInput {
@@ -33,17 +35,19 @@ function sameFolder(a: Map<string, string>, b: Map<string, string>): boolean {
 
 export default async function run(_input: SpecInput): Promise<void> {
   const dir = makeWorld();
+  const pauseDir = pauseDirOf(dir);
   try {
     const baseline = await runCli(['sync', dir], dir);
     assert.equal(baseline.code, 0, `baseline sync exits 0, got ${baseline.code}: ${baseline.output}`);
-    plantStale(dir, 1000);
     const before = snapshot(outOf(dir));
     setBrand(dir, REBRAND);
 
-    const sync = spawnCli(['sync', dir], dir);
-    assert.ok(await freezeInCommit(sync, stageOf(dir)), 'the sync froze inside its commit (inconclusive: it finished first)');
+    const sync = spawnCli(['sync', dir], dir, { [COMMIT_PAUSE_ENV]: pauseDir });
+    assert.ok(await awaitPaused(sync, pauseDir), `the sync paused inside its commit (it exited or never got there): ${sync.output()}`);
+    assert.ok(liveSheetCarries(dir, REBRAND), 'the pause stands after the live changes landed: the live sheet already carries the new brand');
+    // The commit is synchronous: the signal queues while it is held, and its handler can only run once the commit returns.
     sync.child.kill('SIGTERM');
-    sync.child.kill('SIGCONT');
+    resume(sync, pauseDir);
     const result = await sync.done;
 
     assert.ok(

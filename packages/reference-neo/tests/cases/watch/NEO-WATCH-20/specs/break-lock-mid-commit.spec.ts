@@ -1,20 +1,23 @@
-// break-lock-mid-commit.spec.ts — spec for NEO-WATCH-20, --break-lock over a holder frozen mid-commit. Takes { case } from
-// the runner and asserts node-side: a holder sync is frozen inside its commit, a breaker sync takes the lock and is
-// frozen inside its own commit, then both resume. The breaker must exit 0, the displaced holder must stop cleanly
-// with the lock message, and the folder must equal a clean rebuild. Emits nothing on success; throws naming the leg.
+// break-lock-mid-commit.spec.ts — spec for NEO-WATCH-20, --break-lock over a holder held mid-commit. Takes { case } from
+// the runner and asserts node-side: a holder sync is held at the commit's test-only pause point (REF_TEST_COMMIT_PAUSE),
+// a breaker sync takes the lock and is held at its own, then the holder resumes first and the breaker second. The breaker
+// must exit 0, the displaced holder must stop cleanly with the lock message, and the folder must equal a clean rebuild.
+// Emits nothing on success; throws naming the leg.
 import assert from 'node:assert/strict';
 import { existsSync, rmSync } from 'node:fs';
 import type { NeoCase } from '../../../../shared/cases.ts';
 import type { SpecPage } from '../../../../shared/page.ts';
 import {
+  awaitPaused,
+  COMMIT_PAUSE_ENV,
   disposeWorld,
-  freezeInCommit,
   lockOf,
   makeWorld,
   outOf,
+  pauseDirOf,
   plantStale,
   REBRAND,
-  requestStamp,
+  resume,
   runCli,
   setBrand,
   snapshot,
@@ -27,27 +30,27 @@ interface SpecInput {
   case: NeoCase;
 }
 
+// A few stale files: the commit retires them after the pause point, so the resumed holder meets its ownership check there.
+const STALE_FILES = 3;
+
 export default async function run(_input: SpecInput): Promise<void> {
   const dir = makeWorld();
+  const pauseDir = pauseDirOf(dir);
+  const armed = { [COMMIT_PAUSE_ENV]: pauseDir };
   try {
     const baseline = await runCli(['sync', dir], dir);
     assert.equal(baseline.code, 0, `baseline sync exits 0, got ${baseline.code}: ${baseline.output}`);
-    plantStale(dir, 1000);
+    plantStale(dir, STALE_FILES);
     setBrand(dir, REBRAND);
 
-    const holder = spawnCli(['sync', dir], dir);
-    assert.ok(await freezeInCommit(holder, stageOf(dir)), 'the holder froze inside its commit (inconclusive: it finished first)');
-    // The holder's request already sits in the shared stage: the breaker's probe waits for a newer one of its own.
-    const holderRequest = requestStamp(stageOf(dir));
-    const breaker = spawnCli(['sync', '--break-lock', dir], dir);
-    assert.ok(
-      await freezeInCommit(breaker, stageOf(dir), holderRequest),
-      'the breaker froze inside its own commit (inconclusive)'
-    );
+    const holder = spawnCli(['sync', dir], dir, armed);
+    assert.ok(await awaitPaused(holder, pauseDir), `the holder paused inside its commit (it exited or never got there): ${holder.output()}`);
+    const breaker = spawnCli(['sync', '--break-lock', dir], dir, armed);
+    assert.ok(await awaitPaused(breaker, pauseDir), `the breaker paused inside its own commit (it exited or never got there): ${breaker.output()}`);
 
-    holder.child.kill('SIGCONT');
+    resume(holder, pauseDir);
     const holderRun = await holder.done;
-    breaker.child.kill('SIGCONT');
+    resume(breaker, pauseDir);
     const breakerRun = await breaker.done;
 
     assert.equal(breakerRun.code, 0, `the breaker sync exits 0, got ${breakerRun.code}: ${breakerRun.output}`);
