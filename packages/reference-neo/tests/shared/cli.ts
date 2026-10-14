@@ -22,6 +22,7 @@
 //   2  serve-only degrade: playwright/browsers not resolvable, world served but no spec ran
 //   3  quality gate not integrated yet (tools/quality/run.ts absent)
 
+import { bootstrapNeo } from './bootstrap.ts';
 import { listCases, scanCases, searchCases, matchCases, type NeoCase } from './cases.ts';
 import { skipWarning } from './caseIndex.ts';
 import { runCase, type RunResult } from './runner.ts';
@@ -161,6 +162,11 @@ async function cmdRun(rest: string[]): Promise<number> {
   if (plan.cases.length === 0) {
     console.log('no failed cases in the last run; nothing to rerun.');
     return 0;
+  }
+  const boot = bootstrapNeo();
+  if (!boot.ok) {
+    console.log(`[neo] bootstrap failed: ${boot.message}`);
+    return 1;
   }
   const types = await checkTypes();
   if (!types.ok) {

@@ -750,6 +750,9 @@ async function main() {
   }
 
   if (command === 'vitest' || command === 'vt' || command === 'v') {
+    // Seam tests load the N-API addon, so a missing or stale build is refreshed before they run.
+    const buildCode = await runEnsureNative(rsDir)
+    if (buildCode !== 0) process.exit(buildCode)
     const code = await runVitestTests(args.slice(1), rsDir)
     process.exit(code)
   }

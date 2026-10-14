@@ -160,7 +160,7 @@ The runner is mapped to `pnpm agentrs` (with shortcuts `pnpm agent:rs` and `pnpm
 # 1. Environment health, toolchain, and CPU gate locks:
 pnpm agentrs s                                               # alias: status
 
-# 2. Per-Module Vitest Seam Testing:
+# 2. Per-Module Vitest Seam Testing (builds the native addon first when missing or stale):
 pnpm agentrs v                                               # runs all module test suites (isolated projects)
 pnpm agentrs v atomic                                        # runs ONLY atomic tests (never runs tasty setup)
 pnpm agentrs v tasty                                         # runs ONLY tasty tests

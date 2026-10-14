@@ -53,6 +53,9 @@ pnpm agentneo q [paths]       # quality gate (section 6)
 `pnpm agentneo` maps to `node packages/reference-neo/tests/shared/cli.ts`.
 Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
 
+- `run` bootstraps a fresh checkout first: it builds the reference-component
+  mirror when that output is missing, then the native addon (`ensure-native`,
+  a no-op when current), then the neo dist (`ensure-dist`).
 - `run` typechecks the package first and refuses on red types; it
   also builds each world's `src/` to gitignored `dist/` before
   serving. Worlds are TypeScript-only — never hand-written JS.
