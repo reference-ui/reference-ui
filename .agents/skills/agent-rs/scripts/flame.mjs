@@ -17,6 +17,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
+import { exitCodeOf } from '../../test-core/scripts/run-outcome.mjs'
 import { ANALYZE_FLAGS, ANALYZE_USAGE, parseAnalyzeArgs, runAnalyzeCommand } from './flame-analyze.mjs'
 import { FLAME_PROCEDURE, FLAME_PROCEDURE_NOTE, attachPhaseBuckets, buildFlameMeta, resolveEvidenceDir, runResummarizeCommand, writeFlameEvidence } from './flame-evidence.mjs'
 import { phasesEnvFor } from './phases.mjs'
@@ -152,7 +153,7 @@ function spawnCapture(command, args, cwd, env) {
       stdout += chunk.toString('utf-8')
     })
     child.on('error', (err) => resolve({ code: 1, stdout, error: err.message }))
-    child.on('close', (code) => resolve({ code: code ?? 0, stdout }))
+    child.on('close', (code, signal) => resolve({ code: exitCodeOf(code, signal), stdout }))
   })
 }
 

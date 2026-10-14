@@ -16,6 +16,7 @@ import { createHash } from 'node:crypto'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { exitCodeOf } from '../../test-core/scripts/run-outcome.mjs'
 import { bucketize } from './phases.mjs'
 
 export const CENSUS_OUT_ENV = 'COUNTERS_CENSUS_OUT'
@@ -65,7 +66,7 @@ function spawnCapture(command, args, env) {
       stderr += chunk.toString('utf-8')
     })
     child.on('error', (err) => resolve({ code: 1, stdout, stderr, error: err.message }))
-    child.on('close', (code) => resolve({ code: code ?? 0, stdout, stderr }))
+    child.on('close', (code, signal) => resolve({ code: exitCodeOf(code, signal), stdout, stderr }))
   })
 }
 

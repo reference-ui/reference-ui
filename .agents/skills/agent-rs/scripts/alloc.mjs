@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withCpuGate } from '../../test-core/scripts/cpu-gate.mjs'
+import { exitCodeOf } from '../../test-core/scripts/run-outcome.mjs'
 import { describeShippedNative, describeTraceNative, ensureTraceNative } from './alloc-build.mjs'
 import { parseGcLog } from './alloc-gc.mjs'
 import { buildAllocMeta, resolveAllocEvidenceDir, writeAllocEvidence } from './alloc-evidence.mjs'
@@ -103,7 +104,7 @@ function spawnCapture(command, args, cwd, env) {
       stderr += chunk.toString('utf-8')
     })
     child.on('error', (err) => resolve({ code: 1, stdout, stderr, error: err.message }))
-    child.on('close', (code) => resolve({ code: code ?? 0, stdout, stderr }))
+    child.on('close', (code, signal) => resolve({ code: exitCodeOf(code, signal), stdout, stderr }))
   })
 }
 

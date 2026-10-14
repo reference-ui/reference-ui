@@ -14,9 +14,9 @@
 import { spawn, spawnSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
-import { constants as signalConstants } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { withCpuGate, readLocks } from '../../test-core/scripts/cpu-gate.mjs'
+import { exitCodeOf, vitestTestsRan } from '../../test-core/scripts/run-outcome.mjs'
 import { runFlameCommand } from './flame.mjs'
 import { runAllocCommand } from './alloc.mjs'
 import { runCountersCommand } from './counters.mjs'
@@ -88,15 +88,6 @@ function findRepoRoot(startDir = __dirname) {
     cur = path.dirname(cur)
   }
   return process.cwd()
-}
-
-// A child killed by a signal has no exit code, and that must never read as success. Report 128 plus the signal number (the shell convention) and name the signal.
-function exitCodeOf(code, signal) {
-  if (code !== null) return code
-  if (!signal) return 1
-  const exitCode = 128 + (signalConstants.signals[signal] ?? 1)
-  console.error(`\x1b[1;31m[agent-rs] child process was killed by ${signal} (exit ${exitCode}).\x1b[0m`)
-  return exitCode
 }
 
 function runChild(command, args, cwd, extraEnv = {}) {
@@ -369,12 +360,12 @@ function countRunTests(stdout) {
 }
 
 // Like runChild, but stdout is piped so the test count can be read back; the text still streams to the terminal.
-function runChildCapturingStdout(command, args, cwd) {
+function runChildCapturingStdout(command, args, cwd, extraEnv = {}) {
   return new Promise((resolve) => {
     const child = spawn(command, args, {
       cwd,
       stdio: ['inherit', 'pipe', 'inherit'],
-      env: { ...process.env, FORCE_COLOR: '1' },
+      env: { ...process.env, FORCE_COLOR: '1', ...extraEnv },
     })
     child.stdout.setEncoding('utf8')
     let stdout = ''
@@ -553,21 +544,37 @@ async function runVitestTests(args, rsDir) {
     vitestArgs.push('--', '--update-goldens')
   }
 
+  const extraEnv = hasUpdateGoldens ? { UPDATE_GOLDENS: '1' } : {}
+  const nameFilter = testNameIdx !== -1 ? args[testNameIdx + 1] : undefined
+  const filters = [...new Set([testFilter, nameFilter].filter(Boolean))]
   console.log(`\n\x1b[1;36m[agent-rs] Running Vitest: pnpm ${vitestArgs.join(' ')}\x1b[0m\n`)
   return withCpuGate('rs', 'agentrs vitest', async () => {
-    const code = await runChild(
-      'pnpm',
-      vitestArgs,
-      rsDir,
-      hasUpdateGoldens ? { UPDATE_GOLDENS: '1' } : {}
-    )
-    if (code === 0) {
-      console.log('\n\x1b[1;32m✔ [agent-rs] Vitest tests PASSED!\x1b[0m\n')
-    } else {
-      console.log(`\n\x1b[1;31m✖ [agent-rs] Vitest tests FAILED (code ${code})\x1b[0m\n`)
-    }
-    return code
+    // Watch mode never finishes on its own, so it has no run to judge; a one-shot run must have run a test.
+    if (watch) return reportVitestCode(await runChild('pnpm', vitestArgs, rsDir, extraEnv))
+    const { code, stdout } = await runChildCapturingStdout('pnpm', vitestArgs, rsDir, extraEnv)
+    return judgeVitestRun(code, stdout, filters)
   })
+}
+
+function reportVitestCode(code) {
+  if (code === 0) console.log('\n\x1b[1;32m✔ [agent-rs] Vitest tests PASSED!\x1b[0m\n')
+  else console.log(`\n\x1b[1;31m✖ [agent-rs] Vitest tests FAILED (code ${code})\x1b[0m\n`)
+  return code
+}
+
+// A run that exits 0 but ran no test is not a pass: a name filter that matched nothing skips every test.
+function judgeVitestRun(code, stdout, filters) {
+  if (code !== 0) return reportVitestCode(code)
+  const { ran, summary } = vitestTestsRan(stdout)
+  if (filters.length > 0 && ran === 0) {
+    const quoted = filters.map((f) => `"${f}"`).join(' ')
+    const detail = summary ? `vitest reported "Tests ${summary}"` : 'vitest printed no Tests summary'
+    console.error(`\n\x1b[1;31m✖ [agent-rs] FAILED: vitest filter ${quoted} ran 0 tests; ${detail}. The filter matched nothing or only skipped tests, so this is not a pass.\x1b[0m\n`)
+    return 1
+  }
+  const noun = ran === 1 ? 'test' : 'tests'
+  console.log(`\n\x1b[1;32m✔ [agent-rs] Vitest tests PASSED: ${ran} ${noun} ran.\x1b[0m\n`)
+  return 0
 }
 
 async function runEnsureNative(rsDir) {
