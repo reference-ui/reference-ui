@@ -20,6 +20,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { withCpuGate } from './cpu-gate.mjs'
+import { exitCodeOf, vitestTestsRan } from './run-outcome.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -522,7 +523,7 @@ function spawnWithCleanStream(cmd, args, options = {}) {
       process.off('SIGTERM', onSigTerm)
       process.off('SIGHUP', onSigTerm)
       resolve({
-        code: typeof code === 'number' ? code : 1,
+        code: exitCodeOf(code, signal),
         signal: signal || signalReceived,
         childPid: child.pid,
       })
@@ -789,9 +790,10 @@ async function startDaemon() {
         })
 
         const onJobEnd = (code, signal) => {
-          console.log(`[agent-daemon] Finished with code ${code ?? 0}`)
+          const exitCode = exitCodeOf(code, signal)
+          console.log(`[agent-daemon] Finished with code ${exitCode}`)
           try {
-            socket.write(JSON.stringify({ type: 'exit', code: numericExitCode(code), signal }) + '\n')
+            socket.write(JSON.stringify({ type: 'exit', code: exitCode, signal }) + '\n')
             socket.end()
           } catch {}
           finishJob()
@@ -1662,13 +1664,9 @@ async function actionVitest(rawArgs = []) {
     const isWatch = vitestArgs.includes('--watch') || vitestArgs.includes('-w')
     const pnpmArgs = ['--dir', resolvedTarget, 'exec', 'vitest', ...(isWatch ? [] : ['run']), ...vitestArgs]
 
-    let passedTests = 0
-    let failedTests = 0
+    let output = ''
     const onLine = (line) => {
-      const passMatch = line.match(/Tests\s+.*(\d+)\s+passed/i)
-      if (passMatch) passedTests = parseInt(passMatch[1], 10)
-      const failMatch = line.match(/Tests\s+.*(\d+)\s+failed/i)
-      if (failMatch) failedTests = parseInt(failMatch[1], 10)
+      output += `${line}\n`
     }
 
     const res = await runCommand('pnpm', pnpmArgs, {
@@ -1677,19 +1675,28 @@ async function actionVitest(rawArgs = []) {
       cwd: repoRoot,
     })
 
-    if (res.code === 0) {
-      finishAgent({
-        ok: true,
-        message: `Vitest suite PASSED in ${resolvedTarget}`,
-        code: 0,
-      })
-    } else {
+    if (res.code !== 0) {
       finishAgent({
         ok: false,
         message: `Vitest suite FAILED in ${resolvedTarget} (code ${numericExitCode(res.code)})`,
         code: res.code,
       })
     }
+    // A run with arguments that ran no test is not a pass: a filter that matched nothing skips every test.
+    const { ran, summary } = vitestTestsRan(output)
+    if (vitestArgs.length > 0 && !isWatch && ran === 0) {
+      const detail = summary ? `vitest reported "Tests ${summary}"` : 'vitest printed no Tests summary'
+      finishAgent({
+        ok: false,
+        message: `Vitest ran 0 tests in ${resolvedTarget}; ${detail}. The filter matched nothing or only skipped tests, so this is not a pass.`,
+        code: 1,
+      })
+    }
+    finishAgent({
+      ok: true,
+      message: `Vitest suite PASSED in ${resolvedTarget}: ${ran} ${ran === 1 ? 'test' : 'tests'} ran`,
+      code: 0,
+    })
   })
 }
 
