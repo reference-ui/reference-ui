@@ -1,20 +1,28 @@
 // Unit proof for the test-only commit pause (commit-pause.ts). Unarmed it returns at once and writes nothing; armed it writes its
 // paused marker and holds until the resume marker for its pid exists; with no resume it throws naming the variable once the cap passes.
-// The holding legs run the module in a child process, which is how a spec drives it: the parent watches for the marker and writes the
-// resume file, since a blocked thread cannot do either itself. The cap and call-time legs run in this process over a temp dir.
+// The holding legs run in a child process, which is how a spec drives it: the parent watches for the marker and writes the resume
+// file, since a blocked thread cannot do either itself. One of them runs a real commit and proves the pause stands after its live
+// changes land and before stale files retire. The cap and call-time legs run in this process over a temp dir.
 
 import { spawn, type ChildProcess } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { COMMIT_PAUSE_ENV, pauseInCommit, pausedMarkerOf, resumeMarkerOf } from './commit-pause.ts'
 
-const MODULE_URL = pathToFileURL(fileURLToPath(new URL('./commit-pause.ts', import.meta.url))).href
+function moduleUrl(file: string): string {
+  return pathToFileURL(fileURLToPath(new URL(file, import.meta.url))).href
+}
+
+// Each script gets the module URL, then its own arguments, as process.argv[1..].
 // Calls the pause as the commit does, then reports that the call returned.
-const CHILD_SCRIPT = "const { pauseInCommit } = await import(process.argv[1]); pauseInCommit(); console.log('returned')"
+const PAUSE_SCRIPT = "const { pauseInCommit } = await import(process.argv[1]); pauseInCommit(); console.log('returned')"
+// Commits one staged dir over one out dir, then reports the commit's stats.
+const COMMIT_SCRIPT =
+  'const { commitStagedDir } = await import(process.argv[1]); console.log(JSON.stringify(commitStagedDir(process.argv[2], process.argv[3])))'
 // A marker that never shows reports its own failure inside the leg's budget, not as a generic test timeout.
 const MARKER_BUDGET_MS = 20_000
 const LEG_BUDGET_MS = 30_000
@@ -33,6 +41,11 @@ async function makeTempDir(): Promise<string> {
   return dir
 }
 
+function putFile(path: string, body: string): void {
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, body)
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -41,21 +54,23 @@ function sleep(ms: number): Promise<void> {
 
 interface PauseChild {
   child: ChildProcess
+  pid: number
   stdout: () => string
   exited: Promise<number | null>
 }
 
-// The pause module in its own process, with the variable set to pauseDir or absent, in cwd.
-function startChild(cwd: string, pauseDir: string | undefined): PauseChild {
+// A script in its own process, in cwd, with the variable set to pauseDir or absent.
+function startChild(cwd: string, pauseDir: string | undefined, script: string, args: string[]): PauseChild {
   const env: NodeJS.ProcessEnv = { ...process.env }
   if (pauseDir === undefined) delete env[COMMIT_PAUSE_ENV]
   else env[COMMIT_PAUSE_ENV] = pauseDir
-  const child = spawn(process.execPath, ['--input-type=module', '-e', CHILD_SCRIPT, MODULE_URL], {
+  const child = spawn(process.execPath, ['--input-type=module', '-e', script, ...args], {
     cwd,
     env,
     stdio: ['ignore', 'pipe', 'inherit'],
   })
   children.push(child)
+  if (child.pid === undefined) throw new Error('the child process did not start')
   let out = ''
   child.stdout?.on('data', (chunk: Buffer) => {
     out += chunk.toString('utf8')
@@ -63,7 +78,7 @@ function startChild(cwd: string, pauseDir: string | undefined): PauseChild {
   const exited = new Promise<number | null>((resolve) => {
     child.on('close', (code) => resolve(code))
   })
-  return { child, stdout: () => out, exited }
+  return { child, pid: child.pid, stdout: () => out, exited }
 }
 
 async function waitForPath(path: string): Promise<void> {
@@ -77,7 +92,7 @@ async function waitForPath(path: string): Promise<void> {
 describe('the test-only commit pause', () => {
   it('returns at once and writes nothing when the variable is unset', async () => {
     const cwd = await makeTempDir()
-    const run = startChild(cwd, undefined)
+    const run = startChild(cwd, undefined, PAUSE_SCRIPT, [moduleUrl('./commit-pause.ts')])
 
     expect(await run.exited).toBe(0)
     expect(run.stdout()).toBe('returned\n')
@@ -87,24 +102,43 @@ describe('the test-only commit pause', () => {
   it('writes its paused marker and holds until the resume marker for its pid exists', async () => {
     const root = await makeTempDir()
     const pauseDir = join(root, 'pause')
-    const run = startChild(root, pauseDir)
-    const pid = run.child.pid
-    if (pid === undefined) throw new Error('the pausing process did not start')
+    const run = startChild(root, pauseDir, PAUSE_SCRIPT, [moduleUrl('./commit-pause.ts')])
 
-    await waitForPath(pausedMarkerOf(pauseDir, pid))
+    await waitForPath(pausedMarkerOf(pauseDir, run.pid))
     // Only the resume marker releases it: a pause that fell through would have returned by now.
     await sleep(250)
     expect(run.child.exitCode).toBeNull()
     expect(run.stdout()).toBe('')
 
     // A resume marker for another pid is not its release.
-    writeFileSync(resumeMarkerOf(pauseDir, pid + 1), '')
+    writeFileSync(resumeMarkerOf(pauseDir, run.pid + 1), '')
     await sleep(100)
     expect(run.child.exitCode).toBeNull()
 
-    writeFileSync(resumeMarkerOf(pauseDir, pid), '')
+    writeFileSync(resumeMarkerOf(pauseDir, run.pid), '')
     expect(await run.exited).toBe(0)
     expect(run.stdout()).toBe('returned\n')
+  }, LEG_BUDGET_MS)
+
+  it('stands inside a commit after its live changes land and before stale files retire', async () => {
+    const root = await makeTempDir()
+    const outDir = join(root, 'out')
+    const stage = join(root, 'stage')
+    const pauseDir = join(root, 'pause')
+    putFile(join(outDir, 'replaced.txt'), 'old\n')
+    putFile(join(outDir, 'stale.txt'), 'stale\n')
+    putFile(join(stage, 'replaced.txt'), 'new\n')
+    const run = startChild(root, pauseDir, COMMIT_SCRIPT, [moduleUrl('./commit.ts'), stage, outDir])
+
+    await waitForPath(pausedMarkerOf(pauseDir, run.pid))
+    expect(readFileSync(join(outDir, 'replaced.txt'), 'utf8')).toBe('new\n')
+    expect(existsSync(join(outDir, 'stale.txt'))).toBe(true)
+
+    writeFileSync(resumeMarkerOf(pauseDir, run.pid), '')
+    expect(await run.exited).toBe(0)
+    expect(JSON.parse(run.stdout())).toMatchObject({ committed: 1 })
+    expect(existsSync(join(outDir, 'stale.txt'))).toBe(false)
+    expect(readFileSync(join(outDir, 'replaced.txt'), 'utf8')).toBe('new\n')
   }, LEG_BUDGET_MS)
 
   it('throws naming the variable when nothing resumes it within the cap', async () => {
