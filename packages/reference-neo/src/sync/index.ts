@@ -2,7 +2,7 @@
 // It takes a project root and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
-import { readdirSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
@@ -33,7 +33,7 @@ import { applyNormalizeCss } from './reset.ts'
 import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { removeDirIfEmpty } from './clean.ts'
 import { commitStagedDir } from './commit.ts'
-import { isFreshScratch } from './commit-keep.ts'
+import { dropFailedStageAndScratch } from './failed-run.ts'
 import { includeMatchDiagnostics } from './include-check.ts'
 import { lockTakenByOther } from './owner-check.ts'
 import { getSyncLockDir, type SyncSessionKind } from './session-owner.ts'
@@ -239,39 +239,6 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
   return typegenDiagnostics
 }
 
-// Stale evaluator scratch goes, young scratch stays: another process may be
-// loading its config there before it contends for the lock. The dir itself goes
-// once empty.
-async function dropStaleScratch(outDir: string): Promise<void> {
-  const scratch = getOutDirTmpPath(outDir)
-  let names: string[]
-  try {
-    names = readdirSync(scratch)
-  } catch {
-    return
-  }
-  for (const name of names) {
-    const entry = join(scratch, name)
-    if (!isFreshScratch(entry, scratch)) await rm(entry, { recursive: true, force: true })
-  }
-  await removeDirIfEmpty(scratch)
-}
-
-// The stage dies with the failed run while the live folder keeps its
-// last-good outputs. Stale evaluator scratch drops too, so a fresh world still
-// lands nothing at all (SYNC-11). A run that lost the lock removes neither:
-// the stage and scratch belong to the new holder by then.
-async function dropFailedStageAndScratch(stageDir: string, outDir: string, ownsLock: boolean): Promise<void> {
-  if (!ownsLock) return
-  try {
-    await rm(stageDir, { recursive: true, force: true })
-    await dropStaleScratch(outDir)
-  } catch {
-    // Best effort: the next sync drops a stranded stage at start, and
-    // the commit prunes scratch it did not stage.
-  }
-}
-
 // One full turn of the event loop, with a poll phase in it. A stop signal that
 // arrived during the synchronous commit is read from the signal pipe in that poll
 // phase, so its handler runs while this run still holds the lock. An immediate
@@ -295,7 +262,9 @@ function yieldToEventLoop(): Promise<void> {
  * window (identical bytes keep their mtime, the rest flips by atomic rename
  * over a backup, stale entries retire last), and the scope links land on the
  * complete folder. A failed sync rolls its changes back and keeps the
- * last-good outputs (SYNC-11 for a fresh world); a sync that lost the lock
+ * last-good outputs (SYNC-11 for a fresh world); a rollback that cannot restore
+ * a file keeps that file's last-good bytes in a `sync.rollback-*` dir beside the
+ * stage and names it in the error. A sync that lost the lock
  * mid-commit stops without touching what the new holder wrote. A watch poke
  * cover throws SyncCoveredByWatchError before any write. The lock releases in
  * the finally, after one event-loop turn that lets a queued stop signal land.

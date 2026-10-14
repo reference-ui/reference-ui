@@ -1,6 +1,6 @@
 // Staged commit for the Neo generated folder. It takes a fully assembled staging dir plus the live out dir and emits the new folder with no missing-file window.
 // Identical bytes keep their mtime, changed files are linked into place over a backup of their old bytes, and stale entries retire last.
-// Every live change is journaled, so a failed commit rolls back to the last-good folder, and a superseded one stops without touching what the new lock holder owns.
+// Every live change is journaled, so a failed commit rolls back to the last-good folder (backups a rollback cannot restore move to a sibling `sync.rollback-*` dir), and a superseded one stops without touching what the new lock holder owns.
 // Preserved paths (the session lock, the tasty dir) never commit or delete, and a writer temp beside one survives too, as does young evaluator scratch
 // (commit-keep.ts); temps a dead writer left behind and stranded scratch sweep at commit.
 // Readers always see complete files, which is what makes the folder bundler-friendly with no bundler plugin.
@@ -63,6 +63,11 @@ type LiveKind = 'missing' | 'file' | 'symlink' | 'dir' | 'other'
 // The backup dir lives inside the stage, so every hard link stays on one volume.
 // It is named per process, so a sync that displaced another never shares its backups.
 const BACKUP_DIR_PREFIX = '.commit-backup-'
+// A rollback that cannot restore an entry moves the backup dir here, beside the stage in the out dir (one
+// volume, so one rename), because the failed run removes the stage. Nothing commits from it and the stage
+// walk never sees it. The next successful commit retires it as stale output, like any live file with no
+// staged twin: the folder is rebuilt whole by then, so those last-good bytes are obsolete.
+const KEPT_BACKUP_PREFIX = 'sync.rollback-'
 const SUPERSEDED_MESSAGE =
   '[ref] sync: another sync took the lock during this commit; the new holder now owns the generated folder'
 
@@ -252,20 +257,25 @@ function messageOf(error: unknown): string {
 
 // A failed commit puts the folder back as it was. A superseded one only rethrows:
 // the lock holder that took over owns the folder now, and undoing our writes could
-// overwrite what it has committed since.
+// overwrite what it has committed since. When some entries cannot be restored, their
+// backups leave the stage for a dir the error names, so the failed run's stage removal
+// cannot take the last-good bytes with it.
 function restoreAfterFailure(ctx: CommitContext, error: unknown): never {
   if (ctx.superseded()) throw error
   const stuck = ctx.journal.rollback()
   if (stuck.length === 0) throw error
-  throw new Error(`${messageOf(error)}; rollback could not restore ${stuck.join(', ')}`)
+  const kept = join(ctx.outDir, `${KEPT_BACKUP_PREFIX}${process.pid}-${Date.now()}`)
+  const where = ctx.journal.keepBackups(kept) ? `; their last-good bytes are kept in ${kept}` : ''
+  throw new Error(`${messageOf(error)}; rollback could not restore ${stuck.join(', ')}${where}`)
 }
 
 /**
  * Move an assembled staging dir live: unchanged bytes keep their mtime,
  * changed files are linked into place over a backup of their old bytes, stale entries
  * retire last, and the emptied stage drops. The live folder is never missing a
- * file mid-commit. A failure rolls every change back before it rethrows; a
- * superseded commit stops without rolling back.
+ * file mid-commit. A failure rolls every change back before it rethrows, and the
+ * error names the dir holding the backups of any entry the rollback could not
+ * restore; a superseded commit stops without rolling back.
  */
 export function commitStagedDir(stagingDir: string, outDir: string, options: CommitOptions = {}): CommitStats {
   const stagingRoot = resolve(stagingDir)

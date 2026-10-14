@@ -4,13 +4,16 @@
 // rename-over lands, so the live path always names a whole file. A placed file is
 // a copy, never a link to its staged twin, so a write into the stage can never
 // reach live bytes. A rollback renames the backups back and removes what the
-// commit added, newest first.
+// commit added, newest first, and the backups it could not rename back can leave
+// the stage whole, so they outlive the failed run.
 
 import {
   constants,
   copyFileSync,
   linkSync,
+  lstatSync,
   mkdirSync,
+  readdirSync,
   readlinkSync,
   renameSync,
   rmdirSync,
@@ -51,9 +54,26 @@ function removeAddedDir(dir: string): void {
   }
 }
 
+// True when the live path still names the backup's inode: the rename-over never landed, so there is
+// nothing to put back. Asked before any rename, because a link renamed onto itself is a no-op on Linux
+// but fails with EACCES on macOS inside a read-only dir. An inode number of 0 (a filesystem without
+// stable ones) never matches.
+function isUnreplaced(live: string, backup: string): boolean {
+  try {
+    const liveStat = lstatSync(live, { bigint: true })
+    const backupStat = lstatSync(backup, { bigint: true })
+    return liveStat.ino !== 0n && liveStat.ino === backupStat.ino && liveStat.dev === backupStat.dev
+  } catch {
+    return false
+  }
+}
+
+// An unreplaced live path is already restored, so its backup is only a spare link to live bytes and drops:
+// what stays in the backup dir after a rollback is exactly what it could not put back.
 function undo(entry: JournalEntry): void {
   if (entry.op === 'restore') {
-    renameSync(entry.backup, entry.live)
+    if (isUnreplaced(entry.live, entry.backup)) rmSync(entry.backup, { force: true })
+    else renameSync(entry.backup, entry.live)
   } else if (entry.isDir) {
     removeAddedDir(entry.path)
   } else {
@@ -86,11 +106,17 @@ export class CommitJournal {
    * copy, not a link: a displaced sync that rewrites a stage file in place must
    * never change a live file's bytes. The staged name is left in place, so a
    * displaced sync never moves a file out of the stage a newer sync commits from.
+   * A placement that fails leaves no copy behind, so the backup dir never holds staged bytes.
    */
   place(stagedFile: string, live: string): void {
     const temp = this.nextBackupPath()
-    copyFileSync(stagedFile, temp, constants.COPYFILE_FICLONE)
-    renameSync(temp, live)
+    try {
+      copyFileSync(stagedFile, temp, constants.COPYFILE_FICLONE)
+      renameSync(temp, live)
+    } catch (error) {
+      rmSync(temp, { force: true })
+      throw error
+    }
   }
 
   /** Keeps a live file or symlink beside itself, so the rename-over that follows can be undone. */
@@ -119,7 +145,10 @@ export class CommitJournal {
     this.entries.push({ op: 'remove', path, isDir: false })
   }
 
-  /** Puts every journaled change back, newest first. Returns the paths it could not restore. */
+  /**
+   * Puts every journaled change back, newest first. Returns the paths it could not restore.
+   * Only their backups stay in the backup dir, which is dropped whole when nothing is stuck.
+   */
   rollback(): string[] {
     const stuck: string[] = []
     for (const entry of [...this.entries].reverse()) {
@@ -131,6 +160,22 @@ export class CommitJournal {
     }
     if (stuck.length === 0) this.discard()
     return stuck
+  }
+
+  /**
+   * Moves the backup dir to `destination` when a rollback left backups in it, so the last-good
+   * bytes of the entries it could not restore outlive the stage. One rename: `destination` must
+   * be on the backup dir's volume. False means nothing was kept, either because no backup was
+   * left or because the rename failed, and the backups stay where they were.
+   */
+  keepBackups(destination: string): boolean {
+    try {
+      if (readdirSync(this.backupRoot).length === 0) return false
+      renameSync(this.backupRoot, destination)
+      return true
+    } catch {
+      return false
+    }
   }
 
   /** Drops the backups once the commit has landed. Best effort: the stage removal takes them too. */
