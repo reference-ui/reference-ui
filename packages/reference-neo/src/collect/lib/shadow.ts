@@ -5,11 +5,10 @@
 // reserved for extendSystem, so they stay silent too.
 
 import { isDeepStrictEqual } from 'node:util'
+import { TOKEN_SHADOW_CODE } from '../../diagnostics/codes.ts'
 import type { NativeDiagnostic } from '../../native/contract.ts'
 import { CONFIG_FRAGMENT_SOURCE_PROPERTY, UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
 import { isPlainObject, mergeTokenTree, tokenLeafPaths } from './merge.ts'
-
-export const TOKEN_SHADOW_CODE = 'BSS-W-TOKEN-SHADOW'
 
 const EXTEND_NODE_PREFIX = 'extend:'
 

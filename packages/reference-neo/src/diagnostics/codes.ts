@@ -1,0 +1,10 @@
+// Codes Neo mints in TypeScript, the counterpart to the Rust codes.rs tables. It takes nothing and
+// emits one constant per wire string plus NEO_MINTED_CODES, the list the registry self-check reads.
+// A producer imports its constant from here so each wire string is spelled once, and a new
+// TypeScript-minted code joins the list and gets its row in REGISTRY.md.
+
+/** A local token leaf replaces an upstream value (E13). Namespace BSS, emitted by the collect step. */
+export const TOKEN_SHADOW_CODE = 'BSS-W-TOKEN-SHADOW'
+
+/** Every code this package mints in TypeScript; each must be cited in `REGISTRY.md`. */
+export const NEO_MINTED_CODES: readonly string[] = [TOKEN_SHADOW_CODE]
