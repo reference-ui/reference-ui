@@ -3,25 +3,28 @@
 // release removes the lock dir. The latest call wins: it preempts the holder
 // (kill, or a SIGUSR2 poke when a one-shot meets a resident watch), the loser
 // dies mid-stage with the live folder untouched, and a second watch attaches to
-// the owner instead of preempting. A watch with a graceful shutdown keeps its
-// lock until that shutdown has settled the in-flight sync, every other holder
-// answers a kill with exit 75 and leaves Ctrl-C a default death whose stale
-// lock the next sync takes over, and the handlers are armed before the owner
-// document is visible. The owner model lives in session-owner.ts, the mkdir race
-// in session-claim.ts, the handlers in session-hold.ts, process identity in
-// session-identity.ts and the one-shot's wait on a watch in session-covered.ts.
+// the owner instead of preempting; a holder that ran on another host, on a
+// folder shared between machines, is never preempted and the newcomer fails
+// instead. A watch with a graceful shutdown keeps its lock until that shutdown
+// has settled the in-flight sync, every other holder answers a kill with exit 75
+// and leaves Ctrl-C a default death whose stale lock the next sync takes over,
+// and the handlers are armed before the owner document is visible. A watch whose
+// lock dir is deleted under it claims it back by compare-and-set, never over a
+// claimer that got there first. The owner model lives in session-owner.ts, the
+// mkdir race in session-claim.ts, the handlers in session-hold.ts, process
+// identity in session-identity.ts and the one-shot's wait on a watch in
+// session-covered.ts.
 
 import { randomBytes } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { claimFreshLock, errorCode, forceTake, isRaceError, settleMissingOwner, sleep } from './session-claim.ts'
+import { claimFreshLock, errorCode, forceTake, isRaceError, reclaimLostLock, settleMissingOwner, sleep } from './session-claim.ts'
 import { awaitWatchCoverage, awaitWatchRelease } from './session-covered.ts'
 import { armSession, disarmSession, heldSessionAt, markHeld, notice, releaseHold, type SessionHold } from './session-hold.ts'
 import { foreignHostOf, judgeHolder, ownHostname, ownIdentity, pidAlive, type HolderVerdict } from './session-identity.ts'
 import {
   SyncCoveredByWatchError,
   getSyncLockDir,
-  getSyncOwnerPath,
   getSyncPreemptPath,
   lockActorTag,
   readOwnerFile,
@@ -276,15 +279,16 @@ export async function acquireSyncSession(options: AcquireSyncSessionOptions): Pr
  * Re-claim the lock this process holds when its lock dir vanished under it
  * (the generated folder deleted during a watch). Only a missing owner is
  * re-asserted, from the same owner document, so pid and nonce stay this
- * process's; a foreign or unreadable owner means the lock moved on and is left
- * alone. Resolves true when it re-asserted the lock, false when nothing needed it.
+ * process's, and it is a compare-and-set: the lock dir is claimed by an
+ * exclusive mkdir, so a one-shot that claimed it first is never overwritten. A
+ * foreign or unreadable owner means the lock moved on and is left alone.
+ * Resolves true when it re-asserted the lock, false when nothing needed it or
+ * the lock was lost to another session.
  */
 export async function reassertHeldSession(cwd: string): Promise<boolean> {
   const lockDir = getSyncLockDir(cwd)
   const held = heldSessionAt(lockDir)
-  if (held === undefined) return false
+  if (held === undefined || held.owner.pid !== process.pid) return false
   if ((await readOwnerFile(lockDir)).status !== 'missing') return false
-  await mkdir(lockDir, { recursive: true })
-  await writeLockFile(getSyncOwnerPath(lockDir), JSON.stringify(held.owner))
-  return true
+  return reclaimLostLock(lockDir, held.owner)
 }

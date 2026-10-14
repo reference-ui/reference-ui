@@ -1,9 +1,11 @@
 // Unit tests for the watch's lock re-assert over temp projects, no child processes.
 // A held watch session whose lock dir a deletion removed gets its own owner back
-// with the same nonce, a present or foreign owner is left alone, and a process
-// that holds nothing re-asserts nothing.
+// with the same nonce, a present or foreign owner is left alone, an owner a
+// racing claimer wrote into the recreated lock dir is never overwritten, and a
+// process that holds nothing re-asserts nothing. The racing windows are pinned
+// in sync/session-reassert.test.ts.
 
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -55,6 +57,38 @@ describe('reassertHeldSession', () => {
 
       expect(await reassertHeldSession(dir)).toBe(false)
       expect(readOwner(dir)).toEqual(foreign)
+    } finally {
+      session.release()
+    }
+  })
+
+  it('never overwrites the owner a racing claimer wrote into the recreated lock dir', async () => {
+    const dir = await makeTempProject()
+    const session = await acquireSyncSession({ cwd: dir, kind: 'watch' })
+    try {
+      const racer = JSON.stringify({ ...readOwner(dir), lockNonce: 'racer-nonce', kind: 'one-shot' })
+      rmSync(join(dir, '.reference-ui'), { recursive: true, force: true })
+      const lockDir = getSyncLockDir(dir)
+      mkdirSync(lockDir, { recursive: true })
+      writeFileSync(getSyncOwnerPath(lockDir), racer)
+
+      expect(await reassertHeldSession(dir)).toBe(false)
+      expect(readFileSync(getSyncOwnerPath(lockDir), 'utf8')).toBe(racer)
+    } finally {
+      session.release()
+    }
+  })
+
+  it('puts the same owner back, once, when only owner.json was deleted and the lock dir stayed', async () => {
+    const dir = await makeTempProject()
+    const session = await acquireSyncSession({ cwd: dir, kind: 'watch' })
+    try {
+      const held = readOwner(dir)
+      rmSync(getSyncOwnerPath(getSyncLockDir(dir)))
+
+      expect(await reassertHeldSession(dir)).toBe(true)
+      expect(readOwner(dir)).toEqual(held)
+      expect(await reassertHeldSession(dir)).toBe(false)
     } finally {
       session.release()
     }

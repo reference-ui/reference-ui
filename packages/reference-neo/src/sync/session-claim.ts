@@ -3,12 +3,16 @@
 // whether that process now owns the dir: a fresh claim is one atomic mkdir, a
 // takeover is a remove plus an mkdir that decides between racing takers, and both
 // end by reading the owner file back, so a racer that replaced it reads as a lost
-// race and never as a hold. The takeover's owner check and its remove run back to
-// back with no await between them, and the filesystem errors that only a race can
-// produce are named here so the acquire loop can treat them as lost races too.
+// race and never as a hold. A holder whose lock dir vanished claims it back the
+// same way, and writes into a dir that already exists only once its owner has
+// stayed missing past the settle, so it can never overwrite a racer's claim. The
+// takeover's owner check and its remove run back to back with no await between
+// them, and the filesystem errors that only a race can produce are named here so
+// the acquire loop can treat them as lost races too.
 
 import { existsSync, rmSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { getSyncOwnerPath, readOwnerFile, readOwnerFileSync, writeLockFile, type OwnerRead, type SyncSessionOwner } from './session-owner.ts'
 
 const MISSING_OWNER_SETTLES_MS = [100, 500]
@@ -114,4 +118,36 @@ export async function forceTake(
   if (!(await claimFreshLock(lockDir, mine, onPublish))) return false
   await sleep(TAKE_SETTLE_MS)
   return ownerNonceMatches(lockDir, mine.lockNonce)
+}
+
+// The dir exists. A racer that just claimed it writes its owner within
+// milliseconds, so the owner is given the settle to appear; one that stays
+// missing is the corpse of our own deleted folder (only owner.json went). The
+// last look and the write run back to back, so a racer's owner can only be
+// overwritten by one that lands inside the write itself, which the read-back
+// then reports as a lost race.
+async function reclaimExistingDir(lockDir: string, mine: SyncSessionOwner): Promise<boolean> {
+  if ((await settleMissingOwner(lockDir)).status !== 'missing') return false
+  if (readOwnerFileSync(lockDir).status !== 'missing') return false
+  return writeFreshOwner(lockDir, mine, () => {})
+}
+
+/**
+ * Put back the lock a holder lost when its lock dir vanished, as a
+ * compare-and-set: an exclusive mkdir claims the dir (the same atomic step a
+ * newcomer's claim takes, so exactly one of them wins), and our own owner
+ * document, with the same pid and nonce, is written only into a dir this call
+ * made or into one whose owner stayed missing. An owner that names another
+ * session, or cannot be read, means the lock moved on and is left untouched.
+ * True when the owner document is back and reads as ours.
+ */
+export async function reclaimLostLock(lockDir: string, mine: SyncSessionOwner): Promise<boolean> {
+  await mkdir(dirname(lockDir), { recursive: true })
+  try {
+    await mkdir(lockDir)
+  } catch (error) {
+    if (errorCode(error) === 'EEXIST') return reclaimExistingDir(lockDir, mine)
+    throw error
+  }
+  return writeFreshOwner(lockDir, mine, () => {})
 }
