@@ -10,6 +10,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execExitCode } from '../../tests/shared/exit-code.ts';
 import { readTextFiles } from './files.ts';
 import { measureFiles, type FileMetric, type FunctionMetric, type MetricsResult } from './metrics.ts';
 import { checkHeader, checkReadme, type Violation } from './prose.ts';
@@ -84,7 +85,7 @@ function resolveBin(packageName: string, rel: string): string | null {
 function runCmd(cmd: string, args: string[], env: NodeJS.ProcessEnv, cwd?: string): Promise<RunOutput> {
   return new Promise((resolve) => {
     execFile(cmd, args, { env, cwd, maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => {
-      resolve({ code: err?.code ?? 0, out: String(stdout ?? ''), errOut: String(stderr ?? '') });
+      resolve({ code: execExitCode(err), out: String(stdout ?? ''), errOut: String(stderr ?? '') });
     });
   });
 }
@@ -460,7 +461,7 @@ async function runGate(ctx: GateCtx): Promise<number> {
   for (const [title, vs] of groups) if (vs.length) printGroup(title, vs);
   console.log(`[neo-quality] ${errors.length} errors, ${warnings.length} warnings, ${ctx.code.length} files in ${Date.now() - ctx.started}ms`);
   if (missingTool) {
-    console.log(`[neo-quality] tooling missing: ${missingTool} is not installed; install dependencies and rerun.`);
+    console.log(`[neo-quality] tooling unavailable: ${missingTool} is not installed or did not run to completion; install dependencies and rerun (a killed process is named above).`);
     return 2;
   }
   return errors.length ? 1 : 0;
@@ -486,5 +487,10 @@ export async function runQuality(argv: string[] = []): Promise<number> {
     }
   }
   if (report) return runReport(measured, code, started);
+  // A gate pointed at paths that yield no file inspected nothing; that must not read as a pass.
+  if (paths.length > 0 && code.length === 0 && readmes.length === 0) {
+    console.log('[neo-quality] nothing to check: no code or README files under the given paths. A gate that inspects nothing does not pass.');
+    return 1;
+  }
   return runGate({ code, readmes, texts, measured, started });
 }

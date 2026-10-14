@@ -6,6 +6,7 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execExitCode } from '../../tests/shared/exit-code.ts';
 import type { Violation } from './prose.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +23,7 @@ export async function vendorTier(): Promise<Violation[]> {
       [VENDOR_TOOL, '--check'],
       { cwd: NEO_DIR, maxBuffer: 32 * 1024 * 1024 },
       (err, stdout, stderr) => {
-        resolve({ code: err?.code ?? 0, text: `${String(stdout ?? '')}\n${String(stderr ?? '')}` });
+        resolve({ code: execExitCode(err), text: `${String(stdout ?? '')}\n${String(stderr ?? '')}` });
       }
     );
   });

@@ -6,6 +6,7 @@ import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execExitCode } from './exit-code.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 const NEO_DIR: string = path.dirname(path.dirname(HERE));
@@ -25,7 +26,7 @@ function runTsc(bin: string): Promise<TscRun> {
         resolve({ code: null, text: 'tsc timed out after 180s' });
         return;
       }
-      resolve({ code: err ? (err as { code?: number }).code ?? 1 : 0, text: `${stdout}\n${stderr}` });
+      resolve({ code: err ? execExitCode(err) : 0, text: `${stdout}\n${stderr}` });
     });
   });
 }
