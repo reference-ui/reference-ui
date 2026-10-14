@@ -163,12 +163,12 @@ describe('holder verdicts: a probe that fails or has nothing to compare never st
 describe('hosts', () => {
   it('reads this machine\'s hostname and takes an owner that recorded it, or none, to be here', () => {
     expect(ownHostname()).toBe(hostname())
-    expect(foreignHostOf({})).toBeUndefined()
-    expect(foreignHostOf({ host: hostname() })).toBeUndefined()
+    expect(foreignHostOf({ pid: process.pid })).toBeUndefined()
+    expect(foreignHostOf({ pid: process.pid, host: hostname() })).toBeUndefined()
   })
 
   it('names the host of an owner that recorded another machine', () => {
-    expect(foreignHostOf({ host: 'another-machine.example' })).toBe('another-machine.example')
+    expect(foreignHostOf({ pid: process.pid, host: 'another-machine.example' })).toBe('another-machine.example')
   })
 })
 
