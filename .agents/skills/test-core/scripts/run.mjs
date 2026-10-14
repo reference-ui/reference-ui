@@ -1495,24 +1495,34 @@ async function actionPlaywright(rawArgs = []) {
   
       let passedCount = 0
       let failedCount = 0
+      let flakyCount = 0
       let skippedCount = 0
       let totalDuration = ''
       let suiteSummaryFound = false
+      let countLineSeen = false
   
       const onLine = (line) => {
         const passMatch = line.match(/(\d+)\s+passed/i)
         if (passMatch) {
           passedCount = parseInt(passMatch[1], 10)
           suiteSummaryFound = true
+          countLineSeen = true
         }
         const failMatch = line.match(/(\d+)\s+failed/i)
         if (failMatch) {
           failedCount = parseInt(failMatch[1], 10)
           suiteSummaryFound = true
+          countLineSeen = true
+        }
+        const flakyMatch = line.match(/(\d+)\s+flaky/i)
+        if (flakyMatch) {
+          flakyCount = parseInt(flakyMatch[1], 10)
+          countLineSeen = true
         }
         const skipMatch = line.match(/(\d+)\s+(?:skipped|did not run)/i)
         if (skipMatch) {
           skippedCount = parseInt(skipMatch[1], 10)
+          countLineSeen = true
         }
         const durMatch = line.match(/\(([\d.]+(?:s|ms|m))\)/)
         if (durMatch && suiteSummaryFound) {
@@ -1535,10 +1545,14 @@ async function actionPlaywright(rawArgs = []) {
         saveServerState(resolvedTarget)
       }
   
-      // Signal & result evaluation:
-      const allPassed = (passedCount > 0 && failedCount === 0) || (suiteSummaryFound && failedCount === 0)
+      // Signal & result evaluation. Exit 0 is a pass only when tests ran and none failed. Playwright exits 0 when
+      // every test was skipped, so a run that executed no test, or printed no count at all, is not a pass.
+      const testsRan = passedCount + failedCount + flakyCount
+      const zeroRunMessage = countLineSeen
+        ? `Playwright ran 0 tests (${skippedCount} skipped): nothing executed, so this is not a pass.`
+        : 'Playwright printed no test count, so no test is known to have run: this is not a pass.'
   
-      if (allPassed) {
+      if (res.code === 0 && testsRan > 0 && failedCount === 0) {
         finishAgent({
           ok: true,
           message: `Playwright suite PASSED: ${passedCount} passed (0 failed)${totalDuration ? ` in ${totalDuration}` : ''}`,
@@ -1553,9 +1567,10 @@ async function actionPlaywright(rawArgs = []) {
         })
       } else if (res.code === 0) {
         finishAgent({
-          ok: true,
-          message: 'Playwright completed successfully (code 0).',
-          code: 0,
+          ok: false,
+          message: zeroRunMessage,
+          code: 1,
+          killPort: true,
         })
       } else {
         finishAgent({
