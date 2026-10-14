@@ -1424,6 +1424,62 @@
       "kind": "unit",
       "file": "shared/validate.test.ts",
       "title": "validateCalendarProps requires a structurally valid locale and a function Day"
+    },
+    {
+      "id": "LIB-CALENDAR-204",
+      "name": "Calendar out-of-range controlled value OOR-CAL-01: a day value below min warns once with the exact text and an open max",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-01: a day value below min warns once with the exact text and an open max"
+    },
+    {
+      "id": "LIB-CALENDAR-205",
+      "name": "Calendar out-of-range controlled value OOR-CAL-02: a day value above max warns with an open min",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-02: a day value above max warns with an open min"
+    },
+    {
+      "id": "LIB-CALENDAR-206",
+      "name": "Calendar out-of-range controlled value OOR-CAL-03: range mode names value.end above max, and checks value.start separately",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-03: range mode names value.end above max, and checks value.start separately"
+    },
+    {
+      "id": "LIB-CALENDAR-207",
+      "name": "Calendar out-of-range controlled value OOR-CAL-04: in-range values, inclusive bounds, partly overlapping units, and the predicate never warn",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-04: in-range values, inclusive bounds, partly overlapping units, and the predicate never warn"
+    },
+    {
+      "id": "LIB-CALENDAR-208",
+      "name": "Calendar out-of-range controlled value OOR-CAL-05: a normal mount with a null value or an in-range value stays silent, under StrictMode too",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-05: a normal mount with a null value or an in-range value stays silent, under StrictMode too"
+    },
+    {
+      "id": "LIB-CALENDAR-209",
+      "name": "Calendar out-of-range controlled value OOR-CAL-06: an out-of-range day stays aria-selected and its day button is disabled",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-06: an out-of-range day stays aria-selected and its day button is disabled"
+    },
+    {
+      "id": "LIB-CALENDAR-210",
+      "name": "Calendar out-of-range controlled value OOR-CAL-07: month and year values warn only when their unit lies wholly outside min/max",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-07: month and year values warn only when their unit lies wholly outside min/max"
+    },
+    {
+      "id": "LIB-CALENDAR-211",
+      "name": "Calendar out-of-range controlled value OOR-CAL-08: a re-render with the same out-of-range value stays silent, and a changed value warns again",
+      "kind": "unit",
+      "file": "Calendar.contract.test.tsx",
+      "title": "Calendar out-of-range controlled value OOR-CAL-08: a re-render with the same out-of-range value stays silent, and a changed value warns again"
     }
   ]
 }

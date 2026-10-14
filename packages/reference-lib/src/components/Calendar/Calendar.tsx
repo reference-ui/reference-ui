@@ -10,6 +10,7 @@ import { Div } from '@reference-ui/react'
 import { CalendarContext, type CalendarContextValue } from './context'
 import { useAvailability } from './hooks/use-availability'
 import { useLocaleData } from './hooks/use-locale-data'
+import { useOutOfRangeWarning } from './hooks/use-out-of-range'
 import { usePane } from './hooks/use-pane'
 import { useSelection, type CalendarEmitter } from './hooks/use-selection'
 import { useTodayMarker } from './hooks/use-today-marker'
@@ -122,6 +123,11 @@ export function Calendar(calendarProps: CalendarProps) {
     isMonthDisabled,
     isYearDisabled,
   } = useAvailability({ min, max, isDateUnavailable })
+
+  // Out-of-range controlled value: a dev warning only. The value keeps its
+  // paint and selected ARIA while its cell is disabled. Sits before the
+  // early return below so hook order stays stable across valid/invalid.
+  useOutOfRangeWarning({ mode, value: value as CalendarValue, min, max, invalid })
 
   // The destructured union `onChange` is one signature per branch; the
   // runtime branches below always pair the mode with its own payload, so

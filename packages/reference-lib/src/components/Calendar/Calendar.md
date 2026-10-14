@@ -295,6 +295,8 @@ not match mode is the `CA-ISO-07` diagnostic, not a coercion. There is no
 second `selection × precision` matrix and therefore no month-range or
 year-range mode without a product requirement.
 
+A controlled `value` outside `min`/`max` is neither clamped nor hidden: its cell stays painted selected (and `aria-selected="true"` for day and range) while being natively disabled, because the value really is that date and only picking it is refused. Dev builds warn once per distinct offending value through the Calendar channel, for example `value (2024-06-01) is outside [2024-06-05, +∞]; it stays selected but is disabled.` Range mode names `value.start` or `value.end`, and a missing bound prints as `-∞` or `+∞`. Only `min`/`max` count, never the `isDateUnavailable` predicate, and a month or year counts as outside only when it lies wholly beyond a bound. A null value never warns, and an invalid prop set reports only its fail-closed diagnostic.
+
 `month` remains `YYYY-MM` in every mode: it is the visible pane (day-grid
 month, month-grid year, or year-window center), not the selected value.
 Omitted `month` means Calendar owns the pane. The seed comes from the

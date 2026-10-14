@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
-import { hydrateRoot, type Root } from 'react-dom/client'
+import { createRoot, hydrateRoot, type Root } from 'react-dom/client'
 import { describe, expect, it, vi } from 'vitest'
 import { Calendar, type CalendarProps } from './index'
 
@@ -902,6 +902,220 @@ describe('Calendar month/year views (FEATURES #10)', () => {
     } finally {
       console.error = origError
       container.remove()
+    }
+  })
+})
+
+describe('Calendar out-of-range controlled value', () => {
+  const OUTSIDE = 'is outside ['
+
+  // The warning is an effect: renderToString never runs effects, so these
+  // proofs mount on the client and read the console after commit.
+  async function mountCalendar(element: React.ReactElement) {
+    const messages: string[] = []
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      messages.push(args.map((arg) => String(arg)).join(' '))
+    })
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+    await React.act(async () => {
+      root.render(element)
+    })
+    return {
+      container,
+      root,
+      outOfRange: () => messages.filter((message) => message.includes(OUTSIDE)),
+      cleanup: async () => {
+        await React.act(async () => {
+          root.unmount()
+        })
+        errorSpy.mockRestore()
+        container.remove()
+      },
+    }
+  }
+
+  it('OOR-CAL-01: a day value below min warns once with the exact text and an open max', async () => {
+    const calendar = await mountCalendar(
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-01" min="2024-06-05" />
+    )
+    try {
+      expect(calendar.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value (2024-06-01) is outside [2024-06-05, +∞]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await calendar.cleanup()
+    }
+  })
+
+  it('OOR-CAL-02: a day value above max warns with an open min', async () => {
+    const calendar = await mountCalendar(
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-30" max="2024-06-25" />
+    )
+    try {
+      expect(calendar.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value (2024-06-30) is outside [-∞, 2024-06-25]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await calendar.cleanup()
+    }
+  })
+
+  it('OOR-CAL-03: range mode names value.end above max, and checks value.start separately', async () => {
+    const endOnly = await mountCalendar(
+      <Calendar
+        locale="en-US"
+        mode="range"
+        month="2024-06"
+        today="2024-06-10"
+        value={{ start: '2024-06-10', end: '2024-06-30' }}
+        min="2024-06-05"
+        max="2024-06-25"
+      />
+    )
+    try {
+      expect(endOnly.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value.end (2024-06-30) is outside [2024-06-05, 2024-06-25]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await endOnly.cleanup()
+    }
+
+    const both = await mountCalendar(
+      <Calendar
+        locale="en-US"
+        mode="range"
+        month="2024-06"
+        today="2024-06-10"
+        value={{ start: '2024-06-01', end: '2024-06-30' }}
+        min="2024-06-05"
+        max="2024-06-25"
+      />
+    )
+    try {
+      expect(both.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value.start (2024-06-01) is outside [2024-06-05, 2024-06-25]; it stays selected but is disabled.',
+        '[reference-ui] Calendar: value.end (2024-06-30) is outside [2024-06-05, 2024-06-25]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await both.cleanup()
+    }
+  })
+
+  it('OOR-CAL-04: in-range values, inclusive bounds, partly overlapping units, and the predicate never warn', async () => {
+    const mounts: Array<[string, React.ReactElement]> = [
+      ['day inside the bounds', <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-10" min="2024-06-05" max="2024-06-25" />],
+      ['day on min', <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-05" min="2024-06-05" max="2024-06-25" />],
+      ['day on max', <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-25" min="2024-06-05" max="2024-06-25" />],
+      ['range inside the bounds', <Calendar locale="en-US" mode="range" month="2024-06" today="2024-06-10" value={{ start: '2024-06-05', end: '2024-06-25' }} min="2024-06-05" max="2024-06-25" />],
+      ['month partly overlapping min', <Calendar locale="en-US" mode="month" today="2024-06-10" value="2024-06" min="2024-06-15" />],
+      ['year partly overlapping the bounds', <Calendar locale="en-US" mode="year" today="2024-06-10" value="2024" min="2024-06-15" max="2024-09-01" />],
+      ['day refused only by isDateUnavailable', <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-12" isDateUnavailable={(date) => date === '2024-06-12'} />],
+    ]
+    for (const [label, element] of mounts) {
+      const calendar = await mountCalendar(element)
+      try {
+        expect(calendar.outOfRange(), label).toEqual([])
+      } finally {
+        await calendar.cleanup()
+      }
+    }
+  })
+
+  it('OOR-CAL-05: a normal mount with a null value or an in-range value stays silent, under StrictMode too', async () => {
+    const nullValue = await mountCalendar(
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value={null} min="2024-06-05" max="2024-06-25" />
+    )
+    try {
+      expect(nullValue.outOfRange()).toEqual([])
+    } finally {
+      await nullValue.cleanup()
+    }
+
+    const inRange = await mountCalendar(
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-10" min="2024-06-05" max="2024-06-25" />
+    )
+    try {
+      expect(inRange.outOfRange()).toEqual([])
+    } finally {
+      await inRange.cleanup()
+    }
+
+    const strict = await mountCalendar(
+      <React.StrictMode>
+        <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-10" min="2024-06-05" max="2024-06-25" />
+      </React.StrictMode>
+    )
+    try {
+      expect(strict.outOfRange()).toEqual([])
+    } finally {
+      await strict.cleanup()
+    }
+  })
+
+  it('OOR-CAL-06: an out-of-range day stays aria-selected and its day button is disabled', async () => {
+    const calendar = await mountCalendar(
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value="2024-06-01" min="2024-06-05" max="2024-06-25" />
+    )
+    try {
+      const button = calendar.container.querySelector<HTMLButtonElement>('button[data-date="2024-06-01"]')
+      expect(button, 'expected a day button for the out-of-range value').not.toBeNull()
+      // Policy pin: the controlled value is still that date, so it is painted
+      // and announced as selected, while the cell is natively disabled.
+      expect(button!.getAttribute('aria-selected')).toBe('true')
+      expect(button!.hasAttribute('data-selected')).toBe(true)
+      expect(button!.disabled).toBe(true)
+      expect(button!.closest('[role="gridcell"]')?.getAttribute('aria-selected')).toBe('true')
+    } finally {
+      await calendar.cleanup()
+    }
+  })
+
+  it('OOR-CAL-07: month and year values warn only when their unit lies wholly outside min/max', async () => {
+    const month = await mountCalendar(
+      <Calendar locale="en-US" mode="month" today="2024-06-10" value="2023-05" min="2024-01-15" />
+    )
+    try {
+      expect(month.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value (2023-05) is outside [2024-01-15, +∞]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await month.cleanup()
+    }
+
+    const year = await mountCalendar(
+      <Calendar locale="en-US" mode="year" today="2024-06-10" value="2026" max="2025-12-31" />
+    )
+    try {
+      expect(year.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value (2026) is outside [-∞, 2025-12-31]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await year.cleanup()
+    }
+  })
+
+  it('OOR-CAL-08: a re-render with the same out-of-range value stays silent, and a changed value warns again', async () => {
+    const element = (value: string) => (
+      <Calendar locale="en-US" month="2024-06" today="2024-06-10" value={value} min="2024-06-05" />
+    )
+    const calendar = await mountCalendar(element('2024-06-01'))
+    try {
+      await React.act(async () => {
+        calendar.root.render(element('2024-06-01'))
+      })
+      expect(calendar.outOfRange()).toHaveLength(1)
+
+      await React.act(async () => {
+        calendar.root.render(element('2024-05-31'))
+      })
+      expect(calendar.outOfRange()).toEqual([
+        '[reference-ui] Calendar: value (2024-06-01) is outside [2024-06-05, +∞]; it stays selected but is disabled.',
+        '[reference-ui] Calendar: value (2024-05-31) is outside [2024-06-05, +∞]; it stays selected but is disabled.',
+      ])
+    } finally {
+      await calendar.cleanup()
     }
   })
 })

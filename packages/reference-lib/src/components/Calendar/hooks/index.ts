@@ -1,8 +1,10 @@
-/** Calendar hooks: pane, availability, selection, today, locale, grid focus. */
+/** Calendar hooks: pane, availability, out-of-range warning, selection, today, locale, grid focus. */
 export { usePane } from './use-pane'
 export type { PaneOptions } from './use-pane'
 export { useAvailability } from './use-availability'
 export type { AvailabilityOptions } from './use-availability'
+export { useOutOfRangeWarning } from './use-out-of-range'
+export type { OutOfRangeOptions } from './use-out-of-range'
 export { useSelection } from './use-selection'
 export type { SelectionOptions, CalendarEmitter } from './use-selection'
 export { useTodayMarker } from './use-today-marker'
