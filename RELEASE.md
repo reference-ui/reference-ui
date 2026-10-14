@@ -49,5 +49,14 @@ tick it when its check passes.
 
 ## 4. Launch
 
+- [ ] Out-of-range controlled values (non-blocking). The rule: a component
+      given a value outside its range either clamps it, so render and ARIA
+      agree, or warns in dev, naming component, prop, value and valid range;
+      it never fails silently. Slider and Splitter comply. Four don't:
+      NumberField renders `999` with `max={10}` verbatim; Calendar marks a
+      disabled out-of-range day `aria-selected`; Listbox and Tree ignore an
+      unmatched value or id without a word (mirror Tabs' warning).
+- [ ] Repo hygiene: sweep crew-era handoff docs (mission codes, dead
+      `docs/MISSIONS` links) before the repo goes public.
 - [ ] Branding.
 - [ ] Push `public-release` and open it up.
