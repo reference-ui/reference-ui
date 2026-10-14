@@ -1,12 +1,25 @@
 // Unit tests for process identity over real processes, never the workspace.
 // They take this test process, spawned sleepers and made-up pids and assert the
 // identity read, the /proc line parser, the holder verdicts (live, dead, recycled)
-// and the stopped-process probe. Cases that need an identity source skip on a host
-// that has none (no ps, no /proc), where the production code falls back to signal 0.
+// and the stopped-process probe. The verdict table runs through stand-in probes,
+// so what a failed or missing identity may never do is pinned on every host; the
+// cases that need a real identity source skip on a host that has none (no ps, no
+// /proc), where the production code falls back to signal 0.
 
 import { spawn, type ChildProcess } from 'node:child_process'
+import { hostname } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
-import { judgeHolder, ownIdentity, parseProcStat, pidAlive, probeProcess, processSuspended } from './session-identity.ts'
+import {
+  foreignHostOf,
+  judgeHolder,
+  ownHostname,
+  ownIdentity,
+  parseProcStat,
+  pidAlive,
+  probeProcess,
+  processSuspended,
+  type ProcessProbe,
+} from './session-identity.ts'
 
 const POSIX = process.platform !== 'win32'
 const HAS_IDENTITY = probeProcess(process.pid).status === 'live'
@@ -84,7 +97,6 @@ describe('holder verdicts', () => {
   it.skipIf(!HAS_IDENTITY)('reads a running pid as the holder only while its identity matches', () => {
     expect(judgeHolder({ pid: process.pid, identity: ownIdentity() })).toBe('live')
     expect(judgeHolder({ pid: process.pid, identity: 'another start time' })).toBe('recycled')
-    expect(judgeHolder({ pid: process.pid })).toBe('recycled')
   })
 
   it.skipIf(!HAS_IDENTITY)('reads an unrelated same-user process under a recorded pid as recycled, never live', () => {
@@ -97,9 +109,66 @@ describe('holder verdicts', () => {
     expect(judgeHolder({ pid: sleeper.pid, identity: probe.identity })).toBe('live')
   })
 
-  it.skipIf(!POSIX)('reads a root-owned pid as recycled when its owner recorded no identity, on any host', () => {
-    // pid 1 is never this test's holder: signal 0 is refused (EPERM) or the identity differs.
-    expect(judgeHolder({ pid: 1 })).toBe('recycled')
+  it.skipIf(!HAS_IDENTITY)('reads a running pid as live when its owner recorded no identity, never recycled', () => {
+    const sleeper = spawnSleeper()
+    expect(judgeHolder({ pid: process.pid })).toBe('live')
+    expect(judgeHolder({ pid: sleeper.pid })).toBe('live')
+  })
+
+  // pid 1 always exists on a POSIX host: signal 0 answers alive to root and EPERM to
+  // everyone else, and both are a pid that exists.
+  it.skipIf(!POSIX)('reads pid 1 as live when its owner recorded no identity, root-owned or not', () => {
+    expect(judgeHolder({ pid: 1 })).toBe('live')
+  })
+
+  it.skipIf(!POSIX || probeProcess(1).status !== 'live')('reads pid 1 as recycled only when the identity its owner recorded is not its own', () => {
+    expect(judgeHolder({ pid: 1, identity: 'Thu Jan  1 00:00:00 1970' })).toBe('recycled')
+  })
+})
+
+// The probe seam stands in for `ps` and /proc, so the table holds on any host.
+describe('holder verdicts: a probe that fails or has nothing to compare never steals a lock', () => {
+  const probing = (probe: ProcessProbe) => (): ProcessProbe => probe
+  const recorded = 'Thu Jan  1 00:00:00 1970'
+
+  it('reads an unknown probe as live while the pid exists, whether or not we may signal it', () => {
+    const unknown = probing({ status: 'unknown' })
+    expect(judgeHolder({ pid: process.pid, identity: recorded }, unknown)).toBe('live')
+    expect(judgeHolder({ pid: process.pid }, unknown)).toBe('live')
+    expect(judgeHolder({ pid: 2 ** 30, identity: recorded }, unknown)).toBe('dead')
+  })
+
+  it.skipIf(!POSIX)('reads an unknown probe over a pid we may not signal as live too', () => {
+    expect(judgeHolder({ pid: 1, identity: recorded }, probing({ status: 'unknown' }))).toBe('live')
+  })
+
+  it('reads an owner that recorded no identity as live while the pid exists, whatever the pid is now', () => {
+    const someoneElse = probing({ status: 'live', identity: 'Fri Jan  2 00:00:00 1970' })
+    expect(judgeHolder({ pid: process.pid }, someoneElse)).toBe('live')
+    expect(judgeHolder({ pid: 2 ** 30 }, someoneElse)).toBe('dead')
+  })
+
+  it('reads a probe that finds the pid gone as dead, recorded identity or not', () => {
+    expect(judgeHolder({ pid: process.pid, identity: recorded }, probing({ status: 'gone' }))).toBe('dead')
+    expect(judgeHolder({ pid: process.pid }, probing({ status: 'gone' }))).toBe('dead')
+  })
+
+  it('reads only two known identities that differ as recycled', () => {
+    expect(judgeHolder({ pid: process.pid, identity: recorded }, probing({ status: 'live', identity: recorded }))).toBe('live')
+    const later = probing({ status: 'live', identity: 'Fri Jan  2 00:00:00 1970' })
+    expect(judgeHolder({ pid: process.pid, identity: recorded }, later)).toBe('recycled')
+  })
+})
+
+describe('hosts', () => {
+  it('reads this machine\'s hostname and takes an owner that recorded it, or none, to be here', () => {
+    expect(ownHostname()).toBe(hostname())
+    expect(foreignHostOf({})).toBeUndefined()
+    expect(foreignHostOf({ host: hostname() })).toBeUndefined()
+  })
+
+  it('names the host of an owner that recorded another machine', () => {
+    expect(foreignHostOf({ host: 'another-machine.example' })).toBe('another-machine.example')
   })
 })
 

@@ -17,7 +17,7 @@ import { dirname } from 'node:path'
 import { claimFreshLock, errorCode, forceTake, isRaceError, settleMissingOwner, sleep } from './session-claim.ts'
 import { awaitWatchCoverage, awaitWatchRelease } from './session-covered.ts'
 import { armSession, disarmSession, heldSessionAt, markHeld, notice, releaseHold, type SessionHold } from './session-hold.ts'
-import { judgeHolder, ownIdentity, pidAlive, type HolderVerdict } from './session-identity.ts'
+import { foreignHostOf, judgeHolder, ownHostname, ownIdentity, pidAlive, type HolderVerdict } from './session-identity.ts'
 import {
   SyncCoveredByWatchError,
   getSyncLockDir,
@@ -25,6 +25,7 @@ import {
   getSyncPreemptPath,
   lockActorTag,
   readOwnerFile,
+  sharedFolderLockMessage,
   throwSupersedeSignalError,
   writeLockFile,
   type OwnerRead,
@@ -68,6 +69,7 @@ type Contention = { action: 'take' } | { action: 'retry' }
 
 function newSessionOwner(kind: SyncSessionKind): SyncSessionOwner {
   const identity = ownIdentity()
+  const host = ownHostname()
   return {
     pid: process.pid,
     lockNonce: randomBytes(16).toString('hex'),
@@ -75,6 +77,7 @@ function newSessionOwner(kind: SyncSessionKind): SyncSessionOwner {
     argv: [...process.argv],
     startedAt: new Date().toISOString(),
     ...(identity === undefined ? {} : { identity }),
+    ...(host === undefined ? {} : { host }),
   }
 }
 
@@ -161,18 +164,23 @@ function staleReason(holder: SyncSessionOwner, verdict: Exclude<HolderVerdict, '
 }
 
 // Contention over a well-formed owner: re-read before signaling (a changed
-// nonce means the lock already moved on), then liveness by identity (a dead
-// pid, or one recycled to an unrelated process, is stale and never signaled),
-// then the matrix. Our own pid with a foreign nonce is a phantom, never a
-// signal target.
+// nonce means the lock already moved on), then the host (an owner on another
+// machine is live by assumption: its pid names nothing here, so it is never
+// judged, taken or signaled, and the newcomer fails), then liveness by identity
+// (a dead pid, or one recycled to an unrelated process, is stale and never
+// signaled), then the matrix. Our own pid with a foreign nonce is a phantom,
+// never a signal target, unless the owner ran on another machine, where the same
+// pid number is a coincidence.
 async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: SyncSessionOwner, json: boolean): Promise<Contention> {
   const tag = lockActorTag(mine.kind)
-  if (first.pid === process.pid) {
+  const elsewhere = foreignHostOf(first)
+  if (first.pid === process.pid && elsewhere === undefined) {
     notice(json, `[ref] ${tag}: stale lock (pid ${first.pid} is this process), taking over`)
     return { action: 'take' }
   }
   const again = await readOwnerFile(lockDir)
   if (again.status !== 'ok' || again.owner.lockNonce !== first.lockNonce) return { action: 'retry' }
+  if (elsewhere !== undefined) throw new Error(sharedFolderLockMessage(first.pid, elsewhere, mine.kind))
   const verdict = judgeHolder(first)
   if (verdict !== 'live') {
     notice(json, `[ref] ${tag}: stale lock (${staleReason(first, verdict)}), taking over`)
@@ -184,7 +192,9 @@ async function contendForLock(lockDir: string, first: SyncSessionOwner, mine: Sy
 function warnBreakLock(seen: OwnerRead, mine: SyncSessionOwner, json: boolean): void {
   const tag = lockActorTag(mine.kind)
   if (seen.status === 'ok') {
-    notice(json, `[ref] ${tag}: --break-lock: taking over lock held by pid ${seen.owner.pid}`)
+    const elsewhere = foreignHostOf(seen.owner)
+    const where = elsewhere === undefined ? '' : ` on host ${elsewhere}`
+    notice(json, `[ref] ${tag}: --break-lock: taking over lock held by pid ${seen.owner.pid}${where}`)
   } else {
     notice(json, `[ref] ${tag}: --break-lock: taking over lock unconditionally`)
   }

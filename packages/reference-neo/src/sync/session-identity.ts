@@ -1,14 +1,18 @@
 // Sync session identity: which process a lock owner really names. It takes a
-// pid, and for a holder the identity its owner document recorded, and emits
-// liveness verdicts and process facts. A pid alone is not an identity because
-// the OS recycles pids, so an owner records its process start time where the
-// platform can say it (/proc on Linux, `ps` on other POSIX hosts) and a reader
-// trusts the pid only while that start time still matches. Windows, and hosts
-// with neither source, report an unknown identity and keep the plain signal-0
-// test, so nothing here ever blocks a sync.
+// pid, and for a holder the identity and host its owner document recorded, and
+// emits liveness verdicts and process facts. A pid alone is not an identity
+// because the OS recycles pids, so an owner records its process start time where
+// the platform can say it (/proc on Linux, `ps` on other POSIX hosts), and a
+// reader calls the pid recycled only when that start time and the running
+// process's own are both known and differ. Any weaker evidence keeps the plain
+// signal-0 test, so Windows, a failed or timed-out `ps`, and an owner that
+// recorded no identity all read a living pid as the holder: nothing here steals
+// a lock or blocks a sync. An owner also records its hostname, because a pid
+// names nothing on another machine that shares the folder.
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
+import { hostname } from 'node:os'
 
 export type ProcessProbe =
   | { status: 'live'; identity: string }
@@ -146,31 +150,45 @@ export function ownIdentity(): string | undefined {
   return own
 }
 
-// Signal 0 distinguishes three answers: running, gone, or running under an
-// owner we may not signal (a root process, another user's).
-function signalState(pid: number): 'alive' | 'denied' | 'dead' {
+/** This machine's hostname, to record in an owner document; undefined when the OS cannot say. */
+export function ownHostname(): string | undefined {
   try {
-    process.kill(pid, 0)
-    return 'alive'
-  } catch (error) {
-    return errorCode(error) === 'EPERM' ? 'denied' : 'dead'
+    const name = hostname()
+    return name === '' ? undefined : name
+  } catch {
+    return undefined
   }
 }
 
 /**
- * Judge a lock holder from its owner document. Dead pids are dead. A running
- * pid is the holder only while its identity matches the one the owner recorded;
- * a mismatch, or an owner that recorded none while this host can read one, is a
- * recycled pid. When the host cannot read identities, a pid we may not signal
- * can never have been our holder, so it reads as recycled too.
+ * The host a lock holder ran on when that is not this machine, else undefined.
+ * A pid means nothing across machines, so a holder on another host is never
+ * judged by its pid and never signalled; an owner that recorded no host is taken
+ * to be here.
  */
-export function judgeHolder(holder: { pid: number; identity?: string }): HolderVerdict {
-  const signal = signalState(holder.pid)
-  if (signal === 'dead') return 'dead'
-  const probe = probeProcess(holder.pid)
-  if (probe.status === 'gone') return 'dead'
-  if (probe.status === 'live') return probe.identity === holder.identity ? 'live' : 'recycled'
-  return signal === 'denied' ? 'recycled' : 'live'
+export function foreignHostOf(holder: { host?: string }): string | undefined {
+  return holder.host !== undefined && holder.host !== ownHostname() ? holder.host : undefined
+}
+
+/**
+ * Judge a lock holder from its owner document. A pid nothing runs is dead, and
+ * so is one the probe reports gone. A pid that exists is the holder unless two
+ * identities that are both known disagree, the one the owner recorded and the
+ * one the process has now: only that mismatch is a recycled pid. An owner that
+ * recorded no identity, or a probe that could not answer (`ps` failed or timed
+ * out), leaves the plain existence test standing, so a pid we may not signal
+ * (EPERM) is still the holder and a lock is never stolen on a failed probe.
+ * `probe` is the seam the verdict table is tested through.
+ */
+export function judgeHolder(
+  holder: { pid: number; identity?: string },
+  probe: (pid: number) => ProcessProbe = probeProcess,
+): HolderVerdict {
+  if (!pidAlive(holder.pid)) return 'dead'
+  const seen = probe(holder.pid)
+  if (seen.status === 'gone') return 'dead'
+  if (seen.status === 'unknown' || holder.identity === undefined) return 'live'
+  return seen.identity === holder.identity ? 'live' : 'recycled'
 }
 
 /** True when the process is stopped (SIGSTOP, Ctrl-Z, a debugger); false when it is not or the host cannot say. */

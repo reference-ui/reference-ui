@@ -32,6 +32,13 @@ export interface SyncSessionOwner {
    * owner that could not read its own (Windows, no ps) records none.
    */
   identity?: string
+  /**
+   * The hostname of the machine the owner ran on. A pid names a process only on
+   * its own machine, so on a generated folder shared between machines a reader
+   * whose hostname differs never judges or signals this owner. An owner that
+   * recorded none is taken to be on the reader's machine.
+   */
+  host?: string
 }
 
 export type OwnerRead =
@@ -74,6 +81,14 @@ export function throwSupersedeSignalError(holder: SyncSessionOwner, code: string
   throw new Error(`[ref] sync: cannot supersede ${lockActorTag(holder.kind)} pid ${holder.pid} (${code ?? 'signal failed'})`)
 }
 
+// A holder on another machine is live by assumption and never signalled, so the
+// newcomer fails and says how to proceed. `ref clean` has no --break-lock, so it
+// points at the sync command that has one.
+export function sharedFolderLockMessage(holderPid: number, holderHost: string, newcomerKind: SyncSessionKind): string {
+  const way = newcomerKind === 'clean' ? 'take the lock first with `ref sync --break-lock`' : 'rerun with --break-lock'
+  return `[ref] ${lockActorTag(newcomerKind)}: the lock is held by pid ${holderPid} on host ${holderHost}; the generated folder is on a shared filesystem. Stop that sync, or ${way}`
+}
+
 export class SyncCoveredByWatchError extends Error {
   readonly watchPid: number
 
@@ -106,25 +121,33 @@ function stringEntries(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []
 }
 
+// The fields an owner may leave out: one that is missing or unreadable reads as
+// none, so an older writer's document and a host with no identity still parse.
+function optionalOwnerFields(candidate: Record<string, unknown>): Pick<SyncSessionOwner, 'identity' | 'host'> {
+  const fields: Pick<SyncSessionOwner, 'identity' | 'host'> = {}
+  if (isNonEmptyString(candidate.identity)) fields.identity = candidate.identity
+  if (isNonEmptyString(candidate.host)) fields.host = candidate.host
+  return fields
+}
+
 // Owner validation: every field the takeover path trusts is checked, so a
 // torn write or a foreign file reads as malformed (stale) instead of a kill
 // target. argv/startedAt are forensic only and degrade to empties; identity
-// is optional and an unreadable one reads as none.
+// and host are optional.
 export function parseSyncSessionOwner(value: unknown): SyncSessionOwner | null {
   if (typeof value !== 'object' || value === null) return null
   const candidate = value as Record<string, unknown>
   if (!isLivePid(candidate.pid)) return null
   if (!isNonEmptyString(candidate.lockNonce)) return null
   if (!isSessionKind(candidate.kind)) return null
-  const owner: SyncSessionOwner = {
+  return {
     pid: candidate.pid,
     lockNonce: candidate.lockNonce,
     kind: candidate.kind,
     argv: stringEntries(candidate.argv),
     startedAt: typeof candidate.startedAt === 'string' ? candidate.startedAt : '',
+    ...optionalOwnerFields(candidate),
   }
-  if (isNonEmptyString(candidate.identity)) owner.identity = candidate.identity
-  return owner
 }
 
 function ownerReadOf(raw: string): OwnerRead {
