@@ -59,7 +59,7 @@ describe('createParcelHandler', () => {
     watchRoot: '/project',
     isMatch: createIncludeMatcher(['theme/**/*.ts']),
     dependencyFiles: new Set(),
-    snapshot: { dirs: new Set(), links: new Map(), linkDirs: [] },
+    snapshot: { dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() },
   }
 
   it('reports each matched change and schedules one resync for the batch', () => {

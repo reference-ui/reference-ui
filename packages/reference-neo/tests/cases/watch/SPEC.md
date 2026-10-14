@@ -77,7 +77,7 @@ and a one-shot answers SIGTERM alone (LC-54).
 | LC-27 | a relative-path upstream file is a watch input: its rebuild resyncs the consumer | done | NEO-LAYERS-15 (watch leg) | `config/bundle.ts` (dependencyPaths) |
 | LC-28 | a bare-specifier upstream rebuild triggers a watch resync | open | none: NEO-LAYERS-15 records it as a known gap; NEO-LAYERS-06 covers the one-process case only. Known open 3 | `config/bundle.ts` keeps inlined paths out of the watch list |
 | LC-29 | a watched edit (css, token value, fragment add and delete) repaints the browser after reload | done | NEO-WATCH-01 (`specs/watch-loop.spec.ts`) | `lib/watch/index.ts:watchSync` (`onResync`) |
-| LC-30 | a symlinked project root and symlinked sources: the watch matches the files the engine compiles | in-progress | NEO-WATCH-02 (root) and NEO-WATCH-04 (target edit) pass. Known open 7: a new file created inside a symlinked directory target is not seen until another matched event | `lib/watch/match.ts:canonicalPath`, `lib/watch/classify.ts:classifyEvent` |
+| LC-30 | a symlinked project root and symlinked sources: the watch matches the files the engine compiles | done | NEO-WATCH-02 (root), NEO-WATCH-04 (target edit) and NEO-WATCH-25 (a new file inside a symlinked directory target, empty at boot, resyncs under the link path); `lib/watch/match.test.ts` "subscribes the real target of an empty symlinked directory and maps it back to the link"; `lib/watch/classify.test.ts` "reports a new matched file in the target under its link path, and drops a non-match" | `lib/watch/match.ts:scanMatches`, `lib/watch/match.ts:scanSymlinkedDirs`, `lib/watch/classify.ts:classifyEvent` |
 | LC-31 | dotfiles and gitignored files that match include: the watch matches the files the engine compiles | done | NEO-WATCH-05 (gitignored: the watch ignores exactly the engine's directory set, never `.gitignore`); NEO-WATCH-06 (dotfile: matching is dot-enabled) | `lib/watch/match.ts:ENGINE_IGNORE_GLOBS`, `lib/watch/index.ts:createWatchRun` (`start`) |
 | LC-32 | a directory moved into or out of include resyncs with the engine's file set | done | NEO-WATCH-03 (a bare directory move carries no per-file events, so the directory event is a scope change) | `lib/watch/classify.ts:isScopeDirectory`, `lib/watch/match.ts:deriveWatchRoots` |
 | LC-33 | a watcher error other than dropped events reports every time and resyncs at most once per 5 s cooldown; a dropped-events error reports nothing and schedules a debounced resync | done | `lib/watch/handler.test.ts` "reports another error and resyncs now, then only once per cooldown"; "schedules a debounced resync for a dropped-events error and reports nothing"; `lib/watch/index.test.ts` "resyncs after a dropped-events error and reports nothing"; NEO-WATCH-14 (a dropped batch still reaches the output) | `lib/watch/handler.ts:createWatcherErrorHandler` |
@@ -98,8 +98,9 @@ one caveat on debounce.
 3. Symlinks (LC-30): the watch root is the real path (`canonicalPath`), and a matched
    file reached through a link watches its real target and reports under the link
    path (`lib/watch/match.ts`, `lib/watch/classify.ts`). NEO-WATCH-02 and NEO-WATCH-04
-   prove the root and target legs. New files inside a symlinked directory target are
-   Known open 7.
+   prove the root and target legs. A symlinked directory target is subscribed and
+   mapped back to its link even when it is empty at boot, so a new file inside it
+   resyncs (NEO-WATCH-25).
 4. Debounce is proven at unit level only. The NEO-WATCH-01 and NEO-CLI-02 READMEs
    credit NEO-SYNC-14 with debounce, but its specs have no debounce leg.
 
@@ -112,7 +113,7 @@ one caveat on debounce.
 | LC-36 | a save during a cold build gets one follow-up once it settles; saves during one cold build coalesce | done | `sync/tasty-cold-follow-up.test.ts` "a save that lands while the cold build is pending reaches the manifest through one follow-up"; "saves that land during one cold build coalesce into one follow-up" | `sync/tasty-phase.ts:queueAfterColdBuild`, `runColdFollowUp` |
 | LC-37 | a failed build frees its lane, and the next sync builds again | done | `sync/tasty-cold-follow-up.test.ts` "a failed cold build drops its follow-up, and the next sync builds fresh"; `sync/tasty-refresh.test.ts` "recovers after a failed rebuild: the next sync runs a fresh one" | `sync/tasty-phase.ts:drainTastyRefreshLane` |
 | LC-38 | a rename refreshes the reference types: the renamed symbol loads and the old spelling rejects | done | NEO-REF-04 | `sync/tasty-phase.ts:scheduleReferenceTastyPhase` |
-| LC-39 | a failed types build is reported on the watch resync line | done | NEO-WATCH-08 (a dangling symlink under `theme/` breaks the types build; the failure prints on the resync line, never the success one-liner); `sync/tasty-refresh-failure.test.ts` "hands a drained warm failure to the drainer and keeps it off the background line"; "keeps the background line for an undrained warm failure"; "reports nothing until the lane runs dry, then reports the failure of its last run". Known open 8 is the cause: a dangling link fails the types build while CSS skips it | `cli/watch.ts:runWatch` (`drainFoldedLanding`), `sync/tasty-phase.ts:reportWarmBuild` |
+| LC-39 | a failed types build is reported on the watch resync line | done | NEO-WATCH-08 (a non-UTF-8 source under `theme/` breaks the types build; the failure prints on the resync line, never the success one-liner); `sync/tasty-refresh-failure.test.ts` "hands a drained warm failure to the drainer and keeps it off the background line"; "keeps the background line for an undrained warm failure"; "reports nothing until the lane runs dry, then reports the failure of its last run". A dangling link no longer fails the types build (LC-63) | `cli/watch.ts:runWatch` (`drainFoldedLanding`), `sync/tasty-phase.ts:reportWarmBuild` |
 | LC-40 | a failed types build makes a one-shot `ref sync` exit 1 | open | none; the code path exists | `cli/sync.ts:runSyncCommand` |
 | LC-59 | a warm tasty landing reports its warnings the way the cold build does: the watch resync line carries the count, and under `--json` the array carries the warnings | done | NEO-WATCH-18 (the first resync line after a save reads `1 warning`); `sync/tasty-phase-landing.test.ts` "hands a drained landing its count and diagnostics, with no summary printed"; "prints the warning summary for an undrained landing, as a background landing does"; "prints an undrained json landing as one diagnostics array on stdout" | `sync/tasty-phase.ts:reportWarmBuild`, `cli/watch.ts:drainFoldedLanding` |
 
@@ -133,6 +134,7 @@ one caveat on debounce.
 | --- | --- | --- | --- | --- |
 | LC-61 | under `--json`, a failed resync prints its human line on stderr and one stdout diagnostics array holding a single codeless error row | done | NEO-WATCH-17; `cli/output-watch.test.ts` "is a codeless error row that prints as a one-row diagnostics array" | `cli/watch.ts:runWatch` (`onError`), `cli/output.ts:syncFailureEntry`, `cli/output.ts:formatJsonDiagnostics` |
 | LC-62 | an include glob that matches no file warns by name, in verbose and `--json` output, and the sync still exits 0 | done | NEO-WATCH-23; `sync/include-check.test.ts` "warns once, naming only the dead positive patterns"; "reads a single dead include as one pattern, and points at the config to fix"; "stays silent when every include reaches a file" | `sync/include-check.ts:includeMatchDiagnostics` |
+| LC-63 | a dangling symlink under include warns once by name, and the sync still builds CSS and types | done | NEO-WATCH-24 (a one-shot `ref sync --json` exits 0, the sheet and the tasty types carry the world, exactly one warning names the link); `sync/include-check.test.ts` "warns once per dangling link under include, naming the link and its missing target"; "stays silent for a link whose target exists, a link a negation drops, and a link outside include"; `scanner/workspace/tests/dangling_links.rs` "scan_workspace_skips_a_dangling_symlink_under_include"; "scan_workspace_still_fails_a_symlink_loop_under_include" | `sync/include-check.ts:danglingLinkDiagnostics`, `reference-rs` `scanner/workspace/file_discovery.rs:is_dangling_link` |
 
 ## Known open
 
@@ -145,8 +147,6 @@ They are not approved absences: each one is open work.
 4. A config with a never-settling top-level await makes a one-shot exit 13 with no `[ref]` line (`src/config/load.ts`). Affects LC-07.
 5. A save behind a wedged pass is reported, not run (by design: no second writer). Affects LC-58.
 6. The sync stage dir is shared, not per session (the stage name leaks into generated bytes), so a displaced sync still in assembly can write the shared stage until assembly returns. Affects LC-48.
-7. New files created inside a symlinked directory target are not seen until another matched event. Affects LC-30.
-8. One dangling symlink under `include` hard-fails the types build (Rust tasty `file_discovery` follows links), while CSS skips it silently. Affects LC-39.
 
 ## Out of scope and approved absences
 
@@ -154,4 +154,4 @@ They are not approved absences: each one is open work.
 - approved-absence: the matrix contract's webpack leg is not ported; Neo has no webpack target (H5 retire).
 - out of scope: Windows. The poke and signal legs are POSIX-only (`it.skipIf(!POSIX)`), so no claim covers win32.
 - out of scope, other groups: the normalizeCss reset injection (`sync/reset.ts`, NEO-LAYER-04) and the bench phase marks (`sync/phases.ts`) carry no lifecycle claim.
-- NEO-WATCH-09 to 23 landed from the doom round. NEO-WATCH-24 and up are unassigned.
+- NEO-WATCH-09 to 23 landed from the doom round. NEO-WATCH-24 and 25 cover the dangling-link and symlinked-target fixes (LC-63, LC-30).

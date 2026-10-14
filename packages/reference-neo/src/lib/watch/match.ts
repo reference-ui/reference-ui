@@ -1,6 +1,7 @@
 // Watch matching: the include matcher the engine's walk implies, the engine's
-// ignore set, watch-root derivation, the real-path helper, and the matched-file
-// snapshot a resync refreshes. It takes a real project root plus the config
+// ignore set, watch-root derivation, the real-path helper, and the match snapshot
+// a resync refreshes, which maps each symlinked file and directory under include
+// back to its real target. It takes a real project root plus the config
 // include globs and emits predicates over relative paths, root sets, and
 // snapshots. The engine never reads .gitignore: its walk is fast-glob with
 // dot:true and node_modules pruned, then the native directory ignores, so every
@@ -120,6 +121,8 @@ export interface MatchSnapshot {
   links: Map<string, string>
   /** Directories holding each link's real target, watched so an edit there arrives. */
   linkDirs: string[]
+  /** Real path of each symlinked directory under include, mapped to its relative link dir. */
+  targetDirs: Map<string, string>
 }
 
 // The union of two snapshots: a widened scope keeps every match either one knew.
@@ -128,6 +131,7 @@ export function mergeSnapshots(a: MatchSnapshot, b: MatchSnapshot): MatchSnapsho
     dirs: new Set([...a.dirs, ...b.dirs]),
     links: new Map([...a.links, ...b.links]),
     linkDirs: [...new Set([...a.linkDirs, ...b.linkDirs])],
+    targetDirs: new Map([...a.targetDirs, ...b.targetDirs]),
   }
 }
 
@@ -150,7 +154,7 @@ function realTargetOf(absolute: string): string | undefined {
 // One walk of the include globs, the engine's own enumeration: the directories
 // above every match, plus the real targets of matches reached through a link.
 export function scanMatches(watchRoot: string, include: string[]): MatchSnapshot {
-  const snapshot: MatchSnapshot = { dirs: new Set(), links: new Map(), linkDirs: [] }
+  const snapshot: MatchSnapshot = { dirs: new Set(), links: new Map(), linkDirs: [], targetDirs: new Map() }
   const found = fg.sync(include, { cwd: watchRoot, dot: true, ignore: [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS] })
   for (const entry of found) {
     const relativePath = toPosix(entry)
@@ -160,7 +164,37 @@ export function scanMatches(watchRoot: string, include: string[]): MatchSnapshot
     snapshot.links.set(real, relativePath)
     snapshot.linkDirs.push(dirname(real))
   }
+  scanSymlinkedDirs(watchRoot, include, snapshot)
   return snapshot
+}
+
+// The directory globs the include globs can reach: each positive pattern's static
+// head, or the whole root when the pattern has none.
+function dirGlobsOf(include: string[]): string[] {
+  return include
+    .filter((pattern) => !isNegated(pattern))
+    .map((pattern) => {
+      const prefix = staticPrefix(pattern)
+      return prefix === undefined ? '**' : `${prefix}/**`
+    })
+}
+
+// Every symlinked directory the include globs reach, empty or not. A file walk cannot find a link with no match yet,
+// so a directory-only walk does: each real target is subscribed, and maps back to its link so a new file there resyncs.
+function scanSymlinkedDirs(watchRoot: string, include: string[], snapshot: MatchSnapshot): void {
+  const dirs = fg.sync(dirGlobsOf(include), {
+    cwd: watchRoot,
+    dot: true,
+    onlyDirectories: true,
+    ignore: [...RETENTION_EXCLUDE, ...ENGINE_IGNORE_GLOBS],
+  })
+  for (const entry of dirs) {
+    const relativeDir = toPosix(entry)
+    const real = realTargetOf(join(watchRoot, relativeDir))
+    if (real === undefined) continue
+    snapshot.targetDirs.set(real, relativeDir)
+    snapshot.linkDirs.push(real)
+  }
 }
 
 // True when one directory's subtree holds a path the include globs match now:

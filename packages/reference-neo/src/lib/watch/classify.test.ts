@@ -121,3 +121,21 @@ describe('classifyEvent', () => {
     expect(classifyEvent(event('create', join(dirname(root), 'elsewhere.ts')), stateOf(root))).toBeNull()
   })
 })
+
+describe('classifyEvent over a symlinked directory', () => {
+  it('reports a new matched file in the target under its link path, and drops a non-match', () => {
+    // The target starts empty, so no file match ever recorded it: only the symlinked-directory scan maps it back.
+    const root = makeTree({ 'shared/seed.md': 's', 'theme/base.ts': 'b' })
+    mkdirSync(join(root, 'shared', 'empty'))
+    symlinkSync(join('..', 'shared', 'empty'), join(root, 'theme', 'linkdir'), 'dir')
+    const state = stateOf(root)
+    const fresh = join(root, 'shared', 'empty', 'fresh.ts')
+    writeFileSync(fresh, 'f')
+    expect(classifyEvent(event('create', fresh), state)).toEqual({
+      event: 'add',
+      path: join(root, 'theme', 'linkdir', 'fresh.ts'),
+      relativePath: 'theme/linkdir/fresh.ts',
+    })
+    expect(classifyEvent(event('create', join(root, 'shared', 'empty', 'notes.md')), state)).toBeNull()
+  })
+})

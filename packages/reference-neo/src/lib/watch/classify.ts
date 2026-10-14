@@ -49,6 +49,19 @@ function isDirectory(path: string): boolean {
   }
 }
 
+// The link path a file under a symlinked directory's real target is reached by: the longest target that holds the
+// path, rebased onto its link directory. Undefined when no symlinked target holds it.
+function linkedPathOf(absolute: string, targetDirs: Map<string, string>): string | undefined {
+  let best: { real: string; link: string } | undefined
+  for (const [real, link] of targetDirs) {
+    if (isInside(relative(real, absolute)) && (best === undefined || real.length > best.real.length)) {
+      best = { real, link }
+    }
+  }
+  if (best === undefined) return undefined
+  return toPosix(join(best.link, relative(best.real, absolute)))
+}
+
 // A directory event moves matches with no per-file event: a delete drops a
 // directory that the last snapshot held matches under, and a create or update
 // carries a directory whose subtree holds matches now.
@@ -71,6 +84,10 @@ export function classifyEvent(event: ParcelEvent, state: ClassifyState): WatchCh
   const linkPath = state.snapshot.links.get(absolute)
   if (linkPath !== undefined && state.isMatch(linkPath)) {
     return { event: eventName, path: join(state.watchRoot, linkPath), relativePath: linkPath }
+  }
+  const targetPath = linkedPathOf(absolute, state.snapshot.targetDirs)
+  if (targetPath !== undefined && state.isMatch(targetPath)) {
+    return { event: eventName, path: join(state.watchRoot, targetPath), relativePath: targetPath }
   }
   if (isScopeDirectory(event, absolute, relativePath, state)) {
     return { event: eventName, path: event.path, relativePath }

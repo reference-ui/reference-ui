@@ -1,7 +1,7 @@
 // types-failure.spec.ts — spec for NEO-WATCH-08, the failed types build proof. Takes { case } from the runner with the
 // world freshly synced, runs the real `ref sync --watch` CLI as a child process, and reads the lines it prints. A
-// dangling link under include fails the tasty scan, so the resync that link causes must print the failure on its own
-// line, never a success line. Removing the link and saving a good type recovers: a later resync prints success and the
+// source under include that is not valid UTF-8 fails the tasty scan, so the resync that file causes must print the
+// failure on its own line, never a success line. Removing the file and saving a good type recovers: a later resync prints success and the
 // type lands in the generated types folder. Emits nothing on success; throws naming the printed line or the missing type.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
@@ -23,6 +23,8 @@ const READY_TEXT = 'ready in';
 const SUCCESS_TEXT = 'ref sync';
 const FAILURE_TEXT = 'watch error: reference tasty build failed';
 const NEW_TYPE = 'export interface NewThing {\n  a: number\n}\n';
+// Latin-1 é is the byte 0xE9 on its own: not valid UTF-8, so tasty's read fails. CSS reads lossily and syncs clean.
+const BROKEN_SOURCE = 'export const broken = "café"\n';
 const TYPE_NAME = 'NewThing';
 const WAIT_MS = 90000;
 const STOP_MS = 15000;
@@ -101,31 +103,31 @@ function restoreWorld(worldDir: string): void {
 }
 
 // The runner synced this world before serving it. The spec starts the resident CLI, breaks the types build with a
-// dangling link, asserts the resync line reports the failure, then recovers and asserts a success line with the type
+// non-UTF-8 source, asserts the resync line reports the failure, then recovers and asserts a success line with the type
 // landed. The child stops and the world restores in a finally, so no outcome leaves the tree dirty.
 export default async function run({ case: c }: SpecInput): Promise<void> {
-  const link = path.join(c.worldDir, 'theme', 'dangling.ts');
+  const broken = path.join(c.worldDir, 'theme', 'broken.ts');
   const added = path.join(c.worldDir, 'theme', 'newtype.ts');
   // The runner's own sync may leave its cold tasty build in flight; land it before the watcher writes the same folder.
   await flushReferenceBuild(c.worldDir);
-  fs.rmSync(link, { force: true });
+  fs.rmSync(broken, { force: true });
   fs.rmSync(added, { force: true });
 
   const { child, lines } = startWatch(c.worldDir);
   try {
     await waitUntil(() => lines.some((line) => line.includes(READY_TEXT)), 'the watch boot block', lines);
 
-    // The first resync the dangling link causes must be the failure. A success line here is the bug: the failed types
+    // The first resync the broken file causes must be the failure. A success line here is the bug: the failed types
     // build reported as success, while the stale types stayed behind with only a background line to say so.
     const mark = lines.length;
-    fs.symlinkSync('../nowhere.ts', link);
-    await waitUntil(() => lines.slice(mark).some(isResyncLine), 'the resync the dangling link causes', lines);
+    fs.writeFileSync(broken, Buffer.from(BROKEN_SOURCE, 'latin1'));
+    await waitUntil(() => lines.slice(mark).some(isResyncLine), 'the resync the broken file causes', lines);
     const first = lines.slice(mark).find(isResyncLine) ?? '';
     assert.ok(first.includes(FAILURE_TEXT), `the resync must report the failed types build, but printed: ${first}`);
 
     // Recovery: the link goes, a good type is saved, and a later resync prints success once the type has landed.
     const recovered = lines.length;
-    fs.rmSync(link, { force: true });
+    fs.rmSync(broken, { force: true });
     fs.writeFileSync(added, NEW_TYPE);
     await waitUntil(
       () => lines.slice(recovered).some((line) => line.includes(SUCCESS_TEXT)) && typesCarry(c.worldDir, TYPE_NAME),
@@ -134,7 +136,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
     );
   } finally {
     await stopWatch(child);
-    fs.rmSync(link, { force: true });
+    fs.rmSync(broken, { force: true });
     fs.rmSync(added, { force: true });
     restoreWorld(c.worldDir);
   }

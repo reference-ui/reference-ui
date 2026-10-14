@@ -27,7 +27,8 @@ since Neo emits no `session.json` sentinel.
   contention and recycled pids, covered and stopping one-shots, boot and
   dropped-event saves, wedged passes, `--json` output, tasty warnings, commit
   rollback, break-lock, a file in the way of a generated dir, SIGTERM mid-commit
-  and dead include globs: NEO-WATCH-02 to 23
+  and dead include globs: NEO-WATCH-02 to 23, plus dangling symlinks under
+  include and new files inside a symlinked directory target: NEO-WATCH-24 and 25
 
 Each case proves one or more `LC-nn` claims. Gaps the claims do not cover are
 in the Known open section of `SPEC.md`.
@@ -57,8 +58,8 @@ in the Known open section of `SPEC.md`.
 - NEO-WATCH-21 — a generated directory replaced by a file heals on the next sync instead of failing with EEXIST.
 - NEO-WATCH-22 — a SIGTERM delivered mid-commit is honored: the commit finishes or rolls back, then the sync ends and releases its lock.
 - NEO-WATCH-23 — an include glob that matches no files warns by name and the sync still exits 0.
-
-NEO-WATCH-24 and up are unassigned.
+- NEO-WATCH-24 — a dangling symlink under include warns once by name, and the sync still builds CSS and types.
+- NEO-WATCH-25 — a new file inside a symlinked directory target resyncs the class the link serves.
 
 The matrix contract's webpack dual-consumption leg is not ported. The H5
 default retire stands, and Neo has no webpack target.

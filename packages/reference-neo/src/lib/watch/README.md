@@ -37,7 +37,9 @@ because only the watcher matches globs.
 - symlinked roots and targets: the project root is canonicalized before
   any comparison, since parcel reports real paths; a matched symlink is
   watched through its real target, whose directory becomes a root, and
-  an edit there reports under the link's own relative path (`classify.ts`)
+  an edit there reports under the link's own relative path (`classify.ts`);
+  a symlinked directory under include maps back to its link even when it is
+  empty at boot, so a new file in its target resyncs (`match.ts`)
 - watch roots from the static heads of the include globs, plus the
   config dependency dirs and symlink target dirs, collapsed
   shortest-first; a glob with no static head means the project root

@@ -72,11 +72,13 @@ export async function rebuildReferenceTastyBuild(
  * existsSync guard keeps a mid-publish outDir from failing the background
  * phase.
  *
- * `node_modules` is pruned by negation: the Rust walker follows symlinks and
- * a single dangling link fails the whole scan, while node_modules matches are
+ * `node_modules` is pruned by negation: the Rust walker follows symlinks into
+ * dependency trees, which are a large walk, while node_modules matches are
  * dropped from the indexed set anyway — so the exclusion is semantically
- * neutral and strictly safer. Re-export discovery resolves linked packages
- * through node resolution, not the walker, and is unaffected.
+ * neutral and keeps the walk small. A dangling link under include is skipped
+ * by the walker and named by the sync's include check (NEO-WATCH-24).
+ * Re-export discovery resolves linked packages through node resolution, not
+ * the walker, and is unaffected.
  */
 export function buildReferenceTastyScanOptions(
   sourceDir: string,

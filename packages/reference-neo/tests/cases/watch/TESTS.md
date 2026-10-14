@@ -30,8 +30,10 @@ not yet committed; `open` means no case or test proves the claim.
 | NEO-WATCH-21 | a generated directory replaced by a file heals on the next sync instead of failing with EEXIST on every run | done | none | node | `specs/dir-replaced-by-file.spec.ts` | SPEC LC-47 |
 | NEO-WATCH-22 | a SIGTERM delivered mid-commit is honored: the commit finishes or rolls back, then the sync ends and releases its lock | done | none | node | `specs/sigterm-mid-commit.spec.ts` | SPEC LC-60 |
 | NEO-WATCH-23 | an include glob that matches no files warns by name and the sync still exits 0, human and --json | done | none | node | `specs/include-matches-nothing.spec.ts` | SPEC LC-62 |
+| NEO-WATCH-24 | a dangling symlink under include warns once by name, and the sync still builds CSS and types | done | none | node | `specs/dangling-link.spec.ts` | SPEC LC-63 |
+| NEO-WATCH-25 | a new file inside a symlinked directory target resyncs the class the link serves | done | ATM-SCAN-01 | node | `specs/linked-dir-new-file.spec.ts` | SPEC LC-30 |
 
-NEO-WATCH-24 and up are unassigned. A row lands with its case folder.
+A row lands with its case folder.
 
 ## Notes
 

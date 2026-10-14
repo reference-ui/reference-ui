@@ -1,8 +1,10 @@
 // Include check legs: a glob that reaches no file yields one warning naming each
 // dead positive pattern, a glob that reaches a file stays silent, and negations
-// never count. Each leg runs over a temp project with one token file under theme/.
+// never count. A dangling symlink the globs reach yields one warning naming the
+// link, while a live link or one outside include stays silent. Each leg runs over
+// a temp project with one token file under theme/.
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -45,5 +47,25 @@ describe('includeMatchDiagnostics', () => {
     expect(only?.message).toContain("'nothing/**/*.ts'")
     expect(only?.message).toContain('Fragments and tokens under it are not scanned')
     expect(only?.help?.[0]).toContain('config')
+  })
+
+  it('warns once per dangling link under include, naming the link and its missing target', async () => {
+    const dir = await projectWithTokens()
+    symlinkSync('../nowhere.ts', join(dir, 'theme', 'dangling.ts'))
+    const diagnostics = includeMatchDiagnostics(dir, ['theme/**/*.ts'])
+    expect(diagnostics).toHaveLength(1)
+    expect(diagnostics[0]?.severity).toBe('warning')
+    expect(diagnostics[0]?.message).toContain("'theme/dangling.ts'")
+    expect(diagnostics[0]?.message).toContain("'../nowhere.ts'")
+    expect(diagnostics[0]?.message).not.toContain('matched no files')
+  })
+
+  it('stays silent for a link whose target exists, a link a negation drops, and a link outside include', async () => {
+    const dir = await projectWithTokens()
+    symlinkSync(join('..', 'theme', 'tokens.ts'), join(dir, 'theme', 'alias.ts'))
+    symlinkSync('../nowhere.ts', join(dir, 'theme', 'skip.ts'))
+    mkdirSync(join(dir, 'other'), { recursive: true })
+    symlinkSync('../nowhere.ts', join(dir, 'other', 'gone.ts'))
+    expect(includeMatchDiagnostics(dir, ['theme/**/*.ts', '!theme/skip.ts'])).toEqual([])
   })
 })

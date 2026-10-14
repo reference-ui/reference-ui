@@ -119,6 +119,15 @@ describe('match snapshot', () => {
     expect(snapshot.linkDirs).toEqual([join(root, 'shared')])
   })
 
+  it('subscribes the real target of an empty symlinked directory and maps it back to the link', () => {
+    const root = makeTree({ 'shared/seed.md': 's', 'theme/base.ts': 'b' })
+    mkdirSync(join(root, 'shared', 'empty'))
+    symlinkSync(join('..', 'shared', 'empty'), join(root, 'theme', 'linkdir'), 'dir')
+    const snapshot = scanMatches(root, ['theme/**/*.ts'])
+    expect(snapshot.targetDirs.get(join(root, 'shared', 'empty'))).toBe('theme/linkdir')
+    expect(snapshot.linkDirs).toContain(join(root, 'shared', 'empty'))
+  })
+
   it('skips a dangling symlink without failing the scan', () => {
     const root = makeTree({ 'theme/base.ts': 'b' })
     symlinkSync('../missing.ts', join(root, 'theme', 'gone.ts'))
