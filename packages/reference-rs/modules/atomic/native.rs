@@ -9,6 +9,7 @@
 
 use napi::Result;
 use napi_derive::napi;
+use std::collections::BTreeMap;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -178,6 +179,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
         recipes: Vec::new(),
         atom_count: 0,
         traced_jsx_hosts: Vec::new(),
+        traced_jsx_owned: BTreeMap::new(),
         compiler_diagnostics: None,
     }
 }
@@ -201,6 +203,9 @@ struct SlimCompileResult<'a> {
     runtime: &'a ::atomic::NativeRuntimeArtifact,
     diagnostics: &'a Vec<::atomic::Diagnostic>,
     traced_jsx_hosts: &'a Vec<String>,
+    /// Owned props ride beside the host roster; absent when no host owns any.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    traced_jsx_owned: &'a BTreeMap<String, Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     compiler_diagnostics: &'a Option<Vec<::atomic::Diagnostic>>,
 }
@@ -217,6 +222,7 @@ impl<'a> SlimCompileResult<'a> {
             runtime: &result.runtime,
             diagnostics: &result.diagnostics,
             traced_jsx_hosts: &result.traced_jsx_hosts,
+            traced_jsx_owned: &result.traced_jsx_owned,
             compiler_diagnostics: &result.compiler_diagnostics,
         }
     }

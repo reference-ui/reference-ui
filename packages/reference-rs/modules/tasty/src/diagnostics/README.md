@@ -22,7 +22,7 @@ The shared registry, `modules/diagnostics/REGISTRY.md`, is the home for each cod
 | `TST-W-DUPLICATE-SYMBOL-NAME` | warning | two user files export `Shared` (`tests/cases/TST-DUP-01`) |
 | `TST-W-UNRESOLVED-IMPORT` | warning | `import type { Missing } from './missing'` with no `missing` file on disk (`tests/cases/TST-IMP-02`) |
 | `TST-W-UNSUPPORTED-AUGMENTATION` | warning | `declare module './base' { interface Base { extra: number } }` in a user file; the members are not merged (`tests/cases/TST-EXT-03`) |
-| `TST-W-UNSUPPORTED-SYNTAX` | warning | `declare global { … }`, `import x = require('…')`, or `export = X` in a user file; the statement is skipped (`tests/cases/TST-EXT-04`) |
+| `TST-W-UNSUPPORTED-SYNTAX` | warning | `declare global { … }`, `import x = require('…')`, `export = X`, or an `import x = <entity>` whose head the file never declares, in a user file; the statement is skipped (`tests/cases/TST-EXT-04`). A declared-head entity alias is modelled and does not warn (`tests/cases/TST-IMP-07`). |
 | `TST-E-SCAN-FAILED` | error | an unreadable scan root, an invalid glob, or an unreadable source file |
 
 ## Must not

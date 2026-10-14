@@ -217,7 +217,7 @@ function MdxP(props: MdxProps<'p'>) {
   return (
     <P
       color="docsText"
-      fontSize="md"
+      fontSize="4r"
       lineHeight="1.7"
       marginTop="0"
       marginBottom="4r"

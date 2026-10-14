@@ -1,12 +1,22 @@
 // Emitted-source builders for the generated system folder.
-// It takes nothing at runtime and emits the authoring entry, the portable
-// interface, and both declaration texts. The packager leg calls these pure
-// builders and owns every write; the banner rides the shared leaf constant.
+// It takes the published system for the two declaration texts and nothing
+// else, and emits the authoring entry, the portable interface, and both
+// declaration texts. The interface lists `jsxOwned` only for a system that
+// carries it, so a system without owned data prints the declarations it
+// always did. The packager leg calls these pure builders and owns every write;
+// the banner rides the shared leaf constant.
 
 import { BASE_SYSTEM_HEADER } from '../../packager/constants.ts'
 import type { BaseSystem } from './types.ts'
 
-export function baseSystemInterfaceSource(): string {
+/** The slice of a published system its declaration text depends on. */
+export type DescribedSystem = Pick<BaseSystem, 'jsxOwned'>
+
+function ownsProps(system: DescribedSystem): boolean {
+  return Object.keys(system.jsxOwned ?? {}).length > 0
+}
+
+export function baseSystemInterfaceSource(system: DescribedSystem = {}): string {
   return [
     'export interface SystemStreams {',
     '  name: string',
@@ -30,13 +40,14 @@ export function baseSystemInterfaceSource(): string {
     '  fragments?: FragmentNode[]',
     '  streams?: SystemStreams[]',
     '  jsxElements?: string[]',
+    ...(ownsProps(system) ? ['  jsxOwned?: Record<string, string[]>'] : []),
     '}',
     '',
   ].join('\n')
 }
 
-export function baseSystemTypesSource(): string {
-  return `${BASE_SYSTEM_HEADER}\n${baseSystemInterfaceSource()}export declare const baseSystem: BaseSystem\n`
+export function baseSystemTypesSource(system: DescribedSystem = {}): string {
+  return `${BASE_SYSTEM_HEADER}\n${baseSystemInterfaceSource(system)}export declare const baseSystem: BaseSystem\n`
 }
 
 export function systemEntrySource(): string {
@@ -77,10 +88,10 @@ export function systemEntrySource(): string {
   ].join('\n')
 }
 
-export function systemTypesSource(): string {
+export function systemTypesSource(system: DescribedSystem = {}): string {
   return [
     BASE_SYSTEM_HEADER,
-    baseSystemInterfaceSource(),
+    baseSystemInterfaceSource(system),
     "export type LogChannel = 'compiler'",
     "export type StrictCategory = 'colors' | 'radii' | 'spacing'",
     'export interface ReferenceUIConfig {',

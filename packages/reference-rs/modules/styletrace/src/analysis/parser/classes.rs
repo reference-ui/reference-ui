@@ -6,7 +6,7 @@ use oxc_ast::ast::{Class, Expression};
 use rustc_hash::FxHashMap;
 
 use super::context::ParserContext;
-use super::types::wrapper_style_props_from_type_arguments;
+use super::types::wrapper_props_from_type_arguments;
 use crate::analysis::model::TraceImport;
 use crate::resolver::StyleTraceError;
 
@@ -48,7 +48,8 @@ fn class_exposes_style_props(class: &Class<'_>, ctx: &ParserContext) -> Result<b
         .super_type_arguments
         .as_ref()
         .and_then(|arguments| arguments.params.iter().next());
-    Ok(!wrapper_style_props_from_type_arguments(ctx, props)?.is_empty())
+    let wrapper = wrapper_props_from_type_arguments(ctx, props)?;
+    Ok(!wrapper.style_props.is_empty())
 }
 
 /// `Component` or `PureComponent` imported from react, or the same name on a react namespace import.

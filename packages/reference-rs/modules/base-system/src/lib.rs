@@ -5,6 +5,7 @@
 //! `lib_fixture()` builds the lib fixture via public `from_spec` with `profile: "reference-ui"`.
 //! `from_json` lowers a versioned `EvaluatedSystemSpec` and rejects unversioned or foreign dumps.
 //! `extends` is carried on the wire but not resolved here: composition lives in Neo.
+//! `jsxOwned` rides the same wire: the props each published component keeps for itself.
 
 mod breakpoints;
 mod condition_map;
@@ -21,6 +22,7 @@ mod tokens;
 #[cfg(test)]
 mod tests;
 
+use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 use indexmap::IndexMap;
@@ -66,6 +68,12 @@ pub struct BaseSystem {
     pub recipes: IndexMap<String, RecipeDefinition>,
     #[serde(default)]
     pub static_css: StaticCss,
+    /// Component name → prop names it keeps for itself (never forwarded to a
+    /// style primitive), so a call site never reads them as styles. Published
+    /// components arrive here with no source to trace. Expected sorted and
+    /// unique on the wire; consumers union into sets. Empty means none owned.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub jsx_owned: BTreeMap<String, Vec<String>>,
 }
 
 impl BaseSystem {

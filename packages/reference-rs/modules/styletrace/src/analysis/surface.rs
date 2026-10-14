@@ -146,6 +146,7 @@ pub fn trace_style_bindings_detailed(
     Ok(StyletraceDetailedResult {
         bindings: outcome.bindings,
         diagnostics: outcome.diagnostics,
+        owned: outcome.owned_props,
     })
 }
 

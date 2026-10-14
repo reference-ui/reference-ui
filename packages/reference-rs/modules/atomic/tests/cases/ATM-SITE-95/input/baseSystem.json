@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "profile": "reference-ui",
+  "name": "owned-icons",
+  "tokens": {},
+  "fonts": {},
+  "globalCss": [],
+  "keyframes": {},
+  "recipes": {},
+  "staticCss": {},
+  "provenance": [],
+  "jsxOwned": {
+    "CodeIcon": ["size", "variant"]
+  }
+}

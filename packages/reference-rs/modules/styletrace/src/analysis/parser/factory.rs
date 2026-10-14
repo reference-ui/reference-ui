@@ -2,8 +2,6 @@
 //! A `function`, arrow or function-expression body yields a factory when one of its returned expressions is a component, including a forwardRef or memo wrapper and an inner function declaration. Edges that render a parameter become `Parameter` edges, which the call's arguments resolve later.
 //! A call such as `withPad(Box)` yields a call site whose arguments resolve to edge targets in the calling module; an argument that names no component resolves to nothing.
 
-use std::collections::BTreeSet;
-
 use oxc_ast::ast::{
     Argument, ArrowFunctionExpression, BindingPattern, Expression, FormalParameters, Function,
     Statement, StaticMemberExpression,
@@ -15,7 +13,7 @@ use super::context::ParserContext;
 use super::types::unwrap_transparent_expression;
 use super::ParseState;
 use crate::analysis::model::{
-    EdgeTarget, FactoryCall, FactoryTarget, TraceComponent, TraceFactory, TraceImport,
+    EdgeTarget, FactoryCall, FactoryTarget, TraceComponent, TraceFactory, TraceImport, WrapperProps,
 };
 use crate::analysis::walk::jsx::{handle_namespace_target, identifier_target};
 use crate::resolver::StyleTraceError;
@@ -162,7 +160,7 @@ fn factory_product(
     if let Expression::Identifier(identifier) = expression {
         return Ok(local.get(identifier.name.as_str()).cloned());
     }
-    component_from_expression("FactoryProduct", expression, ctx, BTreeSet::new())
+    component_from_expression("FactoryProduct", expression, ctx, WrapperProps::default())
 }
 
 /// Each positional parameter's name. A destructured or defaulted pattern names nothing, so it binds no edge.

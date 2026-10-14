@@ -228,7 +228,7 @@ const pillClass = css({
   borderRadius: 'full',
   paddingX: '3r',
   paddingY: '1r',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   lineHeight: '1.2',
   color: 'diagramMuted',
   whiteSpace: 'nowrap',

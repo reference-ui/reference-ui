@@ -8,7 +8,7 @@
 //! Connects TypeScript typings to the component prop model.
 
 use super::context::ParserContext;
-use crate::analysis::model::PropBindings;
+use crate::analysis::model::{PropBindings, WrapperProps};
 use crate::analysis::util::{
     is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, slice_span,
 };
@@ -25,25 +25,30 @@ pub fn parse_prop_bindings(
     first_param: Option<&FormalParameter<'_>>,
     body_statements: Option<&oxc_allocator::Vec<'_, Statement<'_>>>,
     ctx: &ParserContext,
-    wrapper_style_props: BTreeSet<String>,
+    wrapper: WrapperProps,
 ) -> Result<PropBindings, StyleTraceError> {
     let Some(param) = first_param else {
         return Ok(PropBindings::default());
     };
 
-    let mut resolved_style_props = if wrapper_style_props.is_empty() {
-        BTreeSet::new()
-    } else {
-        wrapper_style_props
+    // A forwardRef generic declares the props its unannotated inner function destructures, so its
+    // owned names seed the bindings; an annotation on the parameter adds to them.
+    let WrapperProps {
+        style_props: mut resolved_style_props,
+        owned_props,
+    } = wrapper;
+    let mut bindings = PropBindings {
+        owned_props,
+        ..PropBindings::default()
     };
-
-    let mut bindings = PropBindings::default();
     if let Some(annotation) = param.type_annotation.as_ref() {
         resolved_style_props.extend(resolve_style_props_from_type_annotation(
             ctx,
             &annotation.type_annotation,
         )?);
-        bindings.owned_props = resolve_owned_prop_names(ctx, &annotation.type_annotation)?;
+        bindings
+            .owned_props
+            .extend(resolve_owned_prop_names(ctx, &annotation.type_annotation)?);
     }
     let pattern_source = slice_span(ctx.source, param.pattern.span()).trim();
     if pattern_source.starts_with('{') {
@@ -245,13 +250,7 @@ fn parse_object_bindings(
     bindings: &mut PropBindings,
 ) {
     let destructured = parse_object_pattern_bindings(pattern_source);
-    // Every pulled-out prop name, style or not: the §14 shadow keeps only
-    // these, so quoted keys normalize like the type side does.
-    bindings.destructured_prop_names.extend(
-        destructured
-            .iter()
-            .map(|binding| binding.prop_name.trim_matches(['"', '\'']).to_string()),
-    );
+    bindings.record_destructured(&destructured);
     let explicit_style_props = destructured
         .iter()
         .filter(|binding| resolved_style_props.contains(&binding.prop_name))
@@ -284,11 +283,11 @@ fn parse_object_bindings(
     }
 }
 
-pub fn wrapper_style_props_from_call(
+pub fn wrapper_props_from_call(
     call: &oxc_ast::ast::CallExpression<'_>,
     ctx: &ParserContext,
-) -> Result<BTreeSet<String>, StyleTraceError> {
-    wrapper_style_props_from_type_arguments(
+) -> Result<WrapperProps, StyleTraceError> {
+    wrapper_props_from_type_arguments(
         ctx,
         call.type_arguments
             .as_ref()
@@ -296,14 +295,17 @@ pub fn wrapper_style_props_from_call(
     )
 }
 
-pub fn wrapper_style_props_from_type_arguments(
+pub fn wrapper_props_from_type_arguments(
     ctx: &ParserContext,
     ts_type: Option<&TSType<'_>>,
-) -> Result<BTreeSet<String>, StyleTraceError> {
-    match ts_type {
-        Some(ts_type) => resolve_style_props_from_type_annotation(ctx, ts_type),
-        None => Ok(BTreeSet::new()),
-    }
+) -> Result<WrapperProps, StyleTraceError> {
+    let Some(ts_type) = ts_type else {
+        return Ok(WrapperProps::default());
+    };
+    Ok(WrapperProps {
+        style_props: resolve_style_props_from_type_annotation(ctx, ts_type)?,
+        owned_props: resolve_owned_prop_names(ctx, ts_type)?,
+    })
 }
 
 fn resolve_style_props_from_type_annotation(
@@ -378,8 +380,9 @@ fn resolve_intersection_type(
 /// collisions with style props (`size`, `weight`) stay owned — that is
 /// the §14 shadow — while `StyleProps` / `PrimitiveProps` references
 /// prune inside the resolver, so `color` keeps extracting. The shadow
-/// later keeps only destructured names: forwarded members ride the
-/// props/rest spread and the call site mints them.
+/// later keeps only destructured names the body does not pass on under
+/// their own name: forwarded members ride the props/rest spread or an
+/// attribute of the same name, and the call site mints them.
 fn resolve_owned_prop_names(
     ctx: &ParserContext,
     type_annotation: &TSType<'_>,

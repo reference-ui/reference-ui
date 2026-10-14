@@ -15,7 +15,7 @@ import { DiagramPanel } from './DiagramPanel'
  * reaches a style prop or a `css()` object.
  */
 
-export type DiagramGap = 'tight' | 'base' | 'loose'
+export type DiagramGap = '2r' | '4r' | '6r'
 export type DiagramAlign = 'start' | 'center' | 'end' | 'stretch'
 export type DiagramTone = 'neutral' | 'blue' | 'green' | 'amber' | 'red' | 'violet'
 export type DiagramIntensity = 'ghost' | 'medium' | 'firm' | 'strong'
@@ -38,9 +38,9 @@ const rowClass = css({ display: 'flex', flexDirection: 'row' })
 const columnClass = css({ display: 'flex', flexDirection: 'column' })
 
 const gapClass: Record<DiagramGap, string> = {
-  tight: css({ gap: '2r' }),
-  base: css({ gap: '4r' }),
-  loose: css({ gap: '6r' }),
+  '2r': css({ gap: '2r' }),
+  '4r': css({ gap: '4r' }),
+  '6r': css({ gap: '6r' }),
 }
 
 const alignClass: Record<DiagramAlign, string> = {
@@ -66,7 +66,7 @@ type DiagramRowProps = {
   className?: string
 }
 
-function DiagramRow({ children, gap = 'base', align = 'stretch', className }: DiagramRowProps) {
+function DiagramRow({ children, gap = '4r', align = 'stretch', className }: DiagramRowProps) {
   const composed = `${rowClass} ${gapClass[gap]} ${alignClass[align]}`
   return <Div className={className ? `${composed} ${className}` : composed}>{children}</Div>
 }
@@ -78,7 +78,7 @@ type DiagramColumnProps = {
   className?: string
 }
 
-function DiagramColumn({ children, gap = 'base', align = 'stretch', className }: DiagramColumnProps) {
+function DiagramColumn({ children, gap = '4r', align = 'stretch', className }: DiagramColumnProps) {
   const composed = `${columnClass} ${gapClass[gap]} ${alignClass[align]}`
   return <Div className={className ? `${composed} ${className}` : composed}>{children}</Div>
 }

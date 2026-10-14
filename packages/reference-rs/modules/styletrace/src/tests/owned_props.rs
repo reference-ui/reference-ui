@@ -34,14 +34,14 @@ const CARD_TSX: &str = concat!(
     "}\n",
 );
 
-fn test_surface() -> StyleSurface {
+pub(super) fn test_surface() -> StyleSurface {
     StyleSurface::new(
         BTreeSet::from(["color".to_string(), "size".to_string()]),
         BTreeSet::from(["Div".to_string()]),
     )
 }
 
-fn trace_scratch(
+pub(super) fn trace_scratch(
     name: &str,
     files: &[(&str, &str)],
     entry: &str,

@@ -89,6 +89,12 @@ export interface NativeCompileResult {
    */
   tracedJsxHosts?: string[]
   /**
+   * Prop names each traced wrapper keeps for itself, by component name, sorted
+   * and unique. Absent on engines older than the owned-props slice; publish
+   * treats a missing field as nothing owned.
+   */
+  tracedJsxOwned?: Record<string, string[]>
+  /**
    * Compiler-channel diagnostics, present only when `logs` requested them.
    * The engine omits this field for userspace-only compiles; sync counts
    * its entries in the one-line warning summary and lists them behind

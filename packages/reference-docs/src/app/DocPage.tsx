@@ -9,7 +9,7 @@ export function DocPage({ slug: fixedSlug }: { slug?: string } = {}) {
 
   if (!Doc) {
     return (
-      <Div color="docsMuted" fontSize="md">
+      <Div color="docsMuted" fontSize="4r">
         Not found
       </Div>
     )

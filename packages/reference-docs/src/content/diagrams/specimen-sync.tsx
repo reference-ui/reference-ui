@@ -9,7 +9,7 @@ import { Diagram } from '../../components/diagram/Diagram'
  */
 
 const eyebrow = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
@@ -35,7 +35,7 @@ const cardTitle = css({
   lineHeight: '1.3',
 })
 
-const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
+const cardSub = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.5' })
 
 export function SyncOverview() {
   return (

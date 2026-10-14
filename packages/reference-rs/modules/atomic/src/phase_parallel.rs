@@ -306,11 +306,7 @@ pub(crate) fn lock_published(
     mutex.lock().unwrap_or_else(|poison| poison.into_inner())
 }
 
-/// Hosts when the phase never published: configured names only.
+/// Hosts when the phase never published: configured names and declared owned props only.
 pub(crate) fn vacant_hosts(request: &CompileRequest) -> ResolvedHosts {
-    ResolvedHosts {
-        traced: Vec::new(),
-        configured: request.jsx_hosts.clone().unwrap_or_default(),
-        owned_props: std::collections::BTreeMap::new(),
-    }
+    ResolvedHosts::declared(request)
 }

@@ -17,7 +17,8 @@ pub(crate) const TYPES_SCOPE_NAME: &str = "@types";
 
 /// Full TypeScript suffixes removed from already-normalized file ids and module
 /// paths.
-pub(crate) const TS_PATH_SUFFIXES: [&str; 5] = [".d.ts", ".d.mts", ".d.cts", ".ts", ".tsx"];
+pub(crate) const TS_PATH_SUFFIXES: [&str; 7] =
+    [".d.ts", ".d.mts", ".d.cts", ".ts", ".tsx", ".mts", ".cts"];
 
 /// Extension candidates tried when resolving a relative import without an
 /// explicit extension.

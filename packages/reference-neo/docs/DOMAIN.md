@@ -92,6 +92,26 @@ this file in the same pass.
   project, from the code — never declared. (styletrace)
 - **configured** — from `jsxElements`: the escape hatch for shapes
   static tracing cannot infer. (styletrace)
+- **owned** — a declared prop a component destructures and does not
+  forward. It counts as forwarded, and stops being owned, only when
+  it reaches an element under the same prop name: `name={name}`, or a
+  spread whose object literal still contains that name.
+  `<Icon size={size} />` counts, because the name is the same.
+  Everything else leaves it owned: reflecting it under another name
+  (`data-size={size}`, `aria-*`, `w={size}`), and using it in children
+  or conditions. StyleTrace computes it, and `traceDetailed` returns
+  it as `owned`. A call site reads an owned prop as the component's
+  own, never as a style prop. (styletrace)
+- **jsxOwned** — the owned props as published: a map beside
+  `jsxElements`, from component name to sorted, unique prop names
+  (`{ Tile: ['size'] }`). Absent or empty means nothing is owned, and
+  the key is omitted when empty. The shape goes by three names:
+  `jsxOwned` on the base system and the compile spec, `tracedJsxOwned`
+  on the compile result, `owned` in the jsx artifact
+  (`jsx-elements.json`). It flows through `extends` and `layers`;
+  roster names flow through `extends` only, so the engine knows a
+  layered component's own props without that component becoming a
+  host. (styletrace)
 - **compiler namer** — the Rust request-to-class function, run at
   compile time over extracted wants. The oracle behind every naming
   gate. (namer)

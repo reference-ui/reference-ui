@@ -1,0 +1,1 @@
+{"id": "TST-IMP-06", "name": "A relative .js, .mjs or .cjs specifier resolves to its TypeScript source sibling with no unresolved-import warning"}

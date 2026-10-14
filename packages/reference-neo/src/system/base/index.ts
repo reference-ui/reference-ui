@@ -13,7 +13,12 @@ export {
   portableFragmentOf,
   publishedFragmentNodes,
 } from './fragments.ts'
-export { resolveJsxElements, type JsxElementsArtifact } from './jsx.ts'
+export {
+  publishedJsxElements,
+  resolveJsxElements,
+  type JsxElementsArtifact,
+  type PublishedJsxElements,
+} from './jsx.ts'
 export { ExtendSystemError, extendSystem, type ExtendSystemOverrides } from './extend.ts'
 export {
   invalidBaseSystem,
@@ -27,4 +32,5 @@ export {
   baseSystemTypesSource,
   systemEntrySource,
   systemTypesSource,
+  type DescribedSystem,
 } from './sources.ts'

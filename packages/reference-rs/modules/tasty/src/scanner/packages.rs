@@ -81,13 +81,12 @@ impl ImportResolver {
         file_id_set: &BTreeSet<String>,
         file_lookup: FileLookup,
     ) -> Option<String> {
-        relative::resolve_relative_import(
-            &self.root_dir,
-            current_file_id,
-            source_module,
-            file_id_set,
+        let lookup = relative::RelativeLookup {
+            root_dir: &self.root_dir,
+            file_ids: file_id_set,
             file_lookup,
-        )
+        };
+        relative::resolve_relative_import(&lookup, current_file_id, source_module)
     }
 
     /// Whether a relative or absolute specifier names a file on disk, ignoring the scan set. A
@@ -134,22 +133,6 @@ impl ImportResolver {
             .insert(path.to_path_buf(), value.clone());
         value
     }
-}
-
-pub(super) fn resolve_relative_import(
-    root_dir: &Path,
-    current_file_id: &str,
-    source_module: &str,
-    file_id_set: &BTreeSet<String>,
-    file_lookup: FileLookup,
-) -> Option<String> {
-    relative::resolve_relative_import(
-        root_dir,
-        current_file_id,
-        source_module,
-        file_id_set,
-        file_lookup,
-    )
 }
 
 pub(super) fn resolve_external_import(

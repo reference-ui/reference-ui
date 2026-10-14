@@ -20,10 +20,11 @@ strip at the boundary. Worlds stand in for installed packages with
 import-free `theme/*.ts` objects in exactly that shape — the config data,
 not fragments to scan. Transitive middles republish: the outer fragment
 carries the inner base first and outer-local leaves second, the flattened
-bundle order a real publish produces. The one exception is NEO-CHAIN-06:
-it syncs a genuine upstream package mid-run and extends the artifact on
-disk, so the publish/consume shape agreement is proven, not assumed —
-stand-ins alone once let the publisher drift silently.
+bundle order a real publish produces. The exceptions are NEO-CHAIN-06,
+NEO-CHAIN-09, NEO-CHAIN-10 and NEO-CHAIN-14: each syncs a genuine upstream
+package mid-run and extends the artifact on disk, so the publish/consume
+shape agreement is proven, not assumed — stand-ins alone once let the
+publisher drift silently.
 
 ## Decisions
 

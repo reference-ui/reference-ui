@@ -8,7 +8,7 @@
 //! printed suffix and sinks its own system-layer diagnostics so warnings
 //! surface once.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use rustc_hash::FxHashSet;
 
@@ -19,6 +19,9 @@ use crate::{
     recipes, resolve, runtime, static_css, stylesheet, BaseSystem, CompileResult, Diagnostic,
     DiagnosticCode, DiagnosticLocation, NativeRuntimeArtifact,
 };
+
+mod build;
+use build::{build_atom_sets, build_css_runtime, build_plans, compile_recipes, RecipeInputs};
 
 /// The compile's filled sinks, assembled into the artifact bundle.
 pub(crate) struct AssembleCtx {
@@ -32,6 +35,9 @@ pub(crate) struct AssembleCtx {
     pub(crate) authored: Vec<runtime::AuthoredDeclaration>,
     /// Component names StyleTrace discovered (sorted, unique).
     pub(crate) traced: Vec<String>,
+    /// Owned prop names per component as the gate read them: the system's
+    /// declared seeds unioned with what the trace found.
+    pub(crate) owned: BTreeMap<String, BTreeSet<String>>,
     /// True when the proof channel is requested: materialize the
     /// compile-internal rows (plans, css map, wants, top-level tables)
     /// the slim serde drops on the default path.
@@ -86,67 +92,36 @@ impl AssembleCtx {
             mut diagnostics,
             authored,
             traced,
+            owned,
             proof,
             selections,
             upstream_container_root,
             upstream_systems,
         } = self;
         let qualifiers = qualifiers_for(&system.name, &upstream_systems);
-        let (mut atom_set, mut external_atom_set) =
-            build_atom_sets(&wants, system, &mut diagnostics, Some(&mut *sink));
-        let root_input = resolve::conditions::ContainerRootInput {
+        let scope = FinishScope {
             system,
-            atoms: &atom_set,
-            upstream_root: upstream_container_root,
+            qualifiers: &qualifiers,
+            proof,
+            upstream_container_root,
         };
-        resolve::conditions::check_container_root(&root_input, &mut diagnostics, Some(&mut *sink));
+        let mut atoms = build_atoms(&wants, system, &mut diagnostics, sink);
+        check_root(&scope, &atoms, &mut diagnostics, sink);
         let compiled_recipes = compile_recipes(
             &RecipeInputs::new(&extracted_recipes, &selections),
             system,
             &mut diagnostics,
             Some(&mut *sink),
         );
-        // Plans stay unconditional: the S4 render joins verdicts against
-        // them, and the diagnostics sweep killed proof-gating here (the
-        // "no compiled style plan" prefix rides render_session output).
-        // On `!proof` the diet path carries placeholder declarations (slim
-        // drops plans) plus the canonical keys, skipping render's second
-        // serialization; proof restores full plans and the legacy join.
-        let mut plan_builder = runtime::PlanBuilder::new(
-            &system.name,
-            system,
-            &mut atom_set,
-            &mut external_atom_set,
-            &qualifiers,
-            &mut diagnostics,
-        );
-        let (style_plans, carried_keys) = build_plans(&mut plan_builder, &authored, proof);
-        let runtime_recipes = runtime::build_recipe_runtime_tables(&compiled_recipes);
-        let runtime = NativeRuntimeArtifact {
-            schema_version: 2,
-            namer: runtime::NamerTables::for_system(system),
-            recipes: runtime_recipes,
-            style_prop_names: runtime::get_style_prop_names(),
-        };
+        let plans = build_plan_stage(&scope, &mut atoms, &authored, &mut diagnostics);
+        let runtime = runtime_artifact(system, &compiled_recipes);
 
         // Own + external atoms both count (G0 D6/§J); the proof css map stays
         // own-only while the sheets group foreign rules per qualifier (T04).
-        let atom_count = atom_set.len() + external_atom_set.len();
-        let css = proof.then(|| build_css_runtime(&atom_set, &system.name));
-        // Dual-sheet build shares one recipes+utilities suffix; the portable
-        // diagnostics sink here so global warnings surface once, as before.
-        let mut portable_sink = Vec::new();
-        let (streams, stylesheet, portable_stylesheet) = stylesheet::build_stylesheets_with(
-            &atom_set,
-            &external_atom_set,
-            &qualifiers,
-            system,
-            &compiled_recipes,
-            stylesheet::StylesheetSinks {
-                primary: &mut diagnostics,
-                portable: &mut portable_sink,
-            },
-        );
+        let atom_count = atoms.own.len() + atoms.external.len();
+        let css = proof.then(|| build_css_runtime(&atoms.own, &system.name));
+        let (streams, stylesheet, portable_stylesheet) =
+            build_sheets(&scope, &atoms, &compiled_recipes, &mut diagnostics);
         // The top-level tables duplicate the shipped runtime map; slim drops
         // them, so the default path drops the second in-memory copy too.
         let recipe_tables: Vec<recipes::RecipeTable> = if proof {
@@ -157,25 +132,7 @@ impl AssembleCtx {
         } else {
             Vec::new()
         };
-
-        // Final-plan proof (S4): join the session's analysis expectations
-        // against the emitted plans and render the verdicts in place.
-        match carried_keys {
-            Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
-                sink.facts(),
-                emitted,
-                &qualifiers,
-                &system.name,
-                &mut diagnostics,
-            ),
-            None => crate::diagnostics::proof::render::render_session(
-                sink.facts(),
-                &style_plans,
-                &qualifiers,
-                &system.name,
-                &mut diagnostics,
-            ),
-        };
+        let style_plans = plans.render_into(&scope, sink, &mut diagnostics);
 
         CompileResult {
             stylesheet,
@@ -189,308 +146,161 @@ impl AssembleCtx {
             recipes: recipe_tables,
             atom_count,
             traced_jsx_hosts: traced,
+            traced_jsx_owned: crate::hosts::owned_wire(owned),
             compiler_diagnostics: None,
         }
     }
 }
 
-/// Build plans plus the carried emitted-key set. Proof builds full plans
-/// and no keys (render re-serializes as today); `!proof` builds diet plans
-/// whose carried keys become the render join set, serialization-free.
-fn build_plans(
-    builder: &mut runtime::PlanBuilder<'_>,
-    authored: &[runtime::AuthoredDeclaration],
+/// The borrowed inputs every finish stage reads: the consumer system, the composed
+/// qualifier list, the proof switch, and whether an upstream already roots the page.
+struct FinishScope<'a> {
+    system: &'a BaseSystem,
+    qualifiers: &'a [String],
     proof: bool,
-) -> (Vec<runtime::RuntimeStylePlan>, Option<BTreeSet<String>>) {
-    if proof {
-        (builder.build(authored), None)
-    } else {
-        let (plans, keys) = builder.build_diet(authored);
-        let emitted: BTreeSet<String> = keys.into_iter().collect();
-        (plans, Some(emitted))
+    upstream_container_root: bool,
+}
+
+/// The own and external atom sets one compile builds, kept together for the stages
+/// that read both.
+struct AtomSets {
+    own: AtomSet,
+    external: AtomSet,
+}
+
+/// The plans the authored declarations produce, plus the emitted-key set a diet build
+/// carries into the render join.
+struct PlanStage {
+    style_plans: Vec<runtime::RuntimeStylePlan>,
+    carried_keys: Option<BTreeSet<String>>,
+}
+
+impl PlanStage {
+    /// Join the session's analysis expectations against the emitted plans, then hand
+    /// the plans back for the result. Proof renders against the plans themselves; the
+    /// diet path renders against the carried keys.
+    fn render_into(
+        self,
+        scope: &FinishScope<'_>,
+        sink: &mut DiagnosticsSession,
+        diagnostics: &mut Vec<Diagnostic>,
+    ) -> Vec<runtime::RuntimeStylePlan> {
+        let Self {
+            style_plans,
+            carried_keys,
+        } = self;
+        match carried_keys {
+            Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
+                sink.facts(),
+                emitted,
+                scope.qualifiers,
+                &scope.system.name,
+                diagnostics,
+            ),
+            None => crate::diagnostics::proof::render::render_session(
+                sink.facts(),
+                &style_plans,
+                scope.qualifiers,
+                &scope.system.name,
+                diagnostics,
+            ),
+        };
+        style_plans
     }
 }
 
-/// Partition wants by the external marker, then resolve each partition into
-/// its own atom set with the consumer `BaseSystem`. Every want resolves with
-/// the same system; the partition only decides which set an atom lands in.
-/// The pooled guard runs per partition, so an empty external partition makes
-/// the own decision byte-identical to the pre-partition single-set call.
-fn build_atom_sets(
+/// Own and external atom sets from the filled wants. The resolve facts go to the
+/// diagnostics and the sink, in the order the stages always reported them.
+fn build_atoms(
     wants: &[crate::atom::Want],
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
-    mut sink: Option<&mut DiagnosticsSession>,
-) -> (AtomSet, AtomSet) {
-    let (own_wants, external_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
-        wants.iter().partition(|want| !want.external);
-    let own = build_atom_set(&own_wants, system, diagnostics, sink.as_deref_mut());
-    let external = build_atom_set(&external_wants, system, diagnostics, sink.as_deref_mut());
-    (own, external)
+    sink: &mut DiagnosticsSession,
+) -> AtomSets {
+    let (own, external) = build_atom_sets(wants, system, diagnostics, Some(&mut *sink));
+    AtomSets { own, external }
 }
 
-/// Resolve one partition's wants into an atom set, reporting resolve facts.
-fn build_atom_set(
-    wants: &[&crate::atom::Want],
-    system: &BaseSystem,
+/// Container-root check over the own group. The upstream signal arrives through the scope.
+fn check_root(
+    scope: &FinishScope<'_>,
+    atoms: &AtomSets,
     diagnostics: &mut Vec<Diagnostic>,
-    mut sink: Option<&mut DiagnosticsSession>,
-) -> AtomSet {
-    if let Some(pooled) = build_atom_set_pooled(wants, system, diagnostics, &mut sink) {
-        return pooled;
-    }
-    let mut atom_set = AtomSet::new();
-    let mut session = resolve::ResolveSession {
-        system,
-        diagnostics,
-        location: DiagnosticLocation::default(),
-        sink,
-        want: None,
+    sink: &mut DiagnosticsSession,
+) {
+    let root_input = resolve::conditions::ContainerRootInput {
+        system: scope.system,
+        atoms: &atoms.own,
+        upstream_root: scope.upstream_container_root,
     };
-    for &want in wants {
-        for atom in resolve::resolve_want_with(want, &mut session) {
-            atom_set.insert(atom);
-        }
-    }
-    atom_set
+    resolve::conditions::check_container_root(&root_input, diagnostics, Some(&mut *sink));
 }
 
-/// Resolve one partition's wants on the tail pool, committing atoms in input
-/// order. Returns `None` when the lane guard declines so the caller runs serial.
-fn build_atom_set_pooled(
-    wants: &[&crate::atom::Want],
-    system: &BaseSystem,
+/// Build the plans for the authored declarations. The plan builder borrows both atom
+/// sets and the diagnostics only for its own run, so the sheets read the sets after it.
+/// Plans stay unconditional: the S4 render joins verdicts against them, and the
+/// diagnostics sweep killed proof-gating here (the "no compiled style plan" prefix rides
+/// render_session output). On `!proof` the diet path carries placeholder declarations
+/// (slim drops plans) plus the canonical keys, skipping render's second serialization;
+/// proof restores full plans and the legacy join.
+fn build_plan_stage(
+    scope: &FinishScope<'_>,
+    atoms: &mut AtomSets,
+    authored: &[runtime::AuthoredDeclaration],
     diagnostics: &mut Vec<Diagnostic>,
-    sink: &mut Option<&mut DiagnosticsSession>,
-) -> Option<AtomSet> {
-    let guard = Lanes::Auto.guard(WorkKind::TailWants, wants.len())?;
-    let mut atom_set = AtomSet::new();
-    for item in crate::resolve_pool::resolve_wants(wants, system, &guard) {
-        if let Some(slot) = sink.as_deref_mut() {
-            slot.extend_facts(item.facts);
-        }
-        diagnostics.extend(item.diagnostics);
-        for atom in item.atoms {
-            atom_set.insert(atom);
-        }
-    }
-    Some(atom_set)
-}
-
-/// Recipe definitions plus the observed selections gating their emission.
-struct RecipeInputs<'a> {
-    extracted: &'a [recipes::Recipe],
-    selections: &'a [crate::extract::recipes::selection::RecipeSelection],
-}
-
-impl<'a> RecipeInputs<'a> {
-    fn new(
-        extracted: &'a [recipes::Recipe],
-        selections: &'a [crate::extract::recipes::selection::RecipeSelection],
-    ) -> Self {
-        Self {
-            extracted,
-            selections,
-        }
-    }
-}
-
-/// Deduplicate spec and extracted recipes, then compile them to rules.
-/// Selections join by className; spec recipes stay open by construction.
-fn compile_recipes(
-    inputs: &RecipeInputs<'_>,
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-    sink: Option<&mut DiagnosticsSession>,
-) -> Vec<recipes::CompiledRecipe> {
-    let spec_recipes = recipes::from_spec(&system.recipes, diagnostics);
-    let mut seen = FxHashSet::default();
-    let mut valid = Vec::new();
-    for recipe in spec_recipes.iter().chain(inputs.extracted.iter()) {
-        if !seen.insert(&recipe.class_name) {
-            diagnostics.push(recipe.location.error(
-                DiagnosticCode::DuplicateRecipe,
-                format!(
-                    "Duplicate recipe className '{}' within system '{}'",
-                    recipe.class_name, system.name
-                ),
-            ));
-        } else {
-            valid.push(recipe.clone());
-        }
-    }
-    let mut session = resolve::ResolveSession {
-        system,
+) -> PlanStage {
+    let mut plan_builder = runtime::PlanBuilder::new(
+        &scope.system.name,
+        scope.system,
+        &mut atoms.own,
+        &mut atoms.external,
+        scope.qualifiers,
         diagnostics,
-        location: DiagnosticLocation::default(),
-        sink,
-        want: None,
-    };
-    let index =
-        crate::extract::recipes::selection::SelectionIndex::new(inputs.selections, &spec_recipes);
-    recipes::compile(&valid, &system.name, &mut session, &index)
+    );
+    let (style_plans, carried_keys) = build_plans(&mut plan_builder, authored, scope.proof);
+    PlanStage {
+        style_plans,
+        carried_keys,
+    }
 }
 
-/// Index the atom set's class names by their runtime lookup shape.
-fn build_css_runtime(atom_set: &AtomSet, system: &str) -> runtime::CssRuntime {
-    let mut runtime = runtime::CssRuntime::new();
-    for atom in atom_set {
-        let c_name = stylesheet::name::class_name_with_system(atom, system);
-        let val_key = atom.value.class_name_str();
-        let key = if atom.conditions.is_empty() {
-            format!("{}:{}", atom.prop, val_key)
-        } else {
-            let conds: Vec<&str> = atom.conditions.iter().map(When::authored).collect();
-            format!("{}:{}:{}", conds.join(":"), atom.prop, val_key)
-        };
-        runtime.insert(key, c_name);
+/// The runtime artifact: recipe tables from the compiled recipes, the namer, and the
+/// style prop names.
+fn runtime_artifact(
+    system: &BaseSystem,
+    compiled_recipes: &[recipes::CompiledRecipe],
+) -> NativeRuntimeArtifact {
+    let runtime_recipes = runtime::build_recipe_runtime_tables(compiled_recipes);
+    NativeRuntimeArtifact {
+        schema_version: 2,
+        namer: runtime::NamerTables::for_system(system),
+        recipes: runtime_recipes,
+        style_prop_names: runtime::get_style_prop_names(),
     }
-    runtime
+}
+
+/// Build the own and external stylesheets. The portable diagnostics sink here so global
+/// warnings surface once, as before.
+fn build_sheets(
+    scope: &FinishScope<'_>,
+    atoms: &AtomSets,
+    compiled_recipes: &[recipes::CompiledRecipe],
+    diagnostics: &mut Vec<Diagnostic>,
+) -> (stylesheet::StylesheetStreams, String, String) {
+    let mut portable_sink = Vec::new();
+    stylesheet::build_stylesheets_with(
+        &atoms.own,
+        &atoms.external,
+        scope.qualifiers,
+        scope.system,
+        compiled_recipes,
+        stylesheet::StylesheetSinks {
+            primary: diagnostics,
+            portable: &mut portable_sink,
+        },
+    )
 }
 
 #[cfg(test)]
-mod tests {
-    use super::qualifiers_for;
-    use crate::diagnostics::DiagnosticCode;
-    use crate::{compile, BaseSystem, CompileRequest, VirtualSource};
-
-    #[test]
-    fn qualifiers_are_own_first_deduped_and_minus_own() {
-        let upstream = vec![
-            "@reference-ui/lib".to_string(),
-            "bench".to_string(),
-            "@reference-ui/lib".to_string(),
-            "own".to_string(),
-        ];
-        assert_eq!(
-            qualifiers_for("own", &upstream),
-            vec!["own", "@reference-ui/lib", "bench"]
-        );
-    }
-
-    #[test]
-    fn qualifiers_solo_own_when_standalone() {
-        assert_eq!(qualifiers_for("own", &[]), vec!["own"]);
-    }
-
-    fn compile_props(upstream: Vec<String>) -> crate::CompileResult {
-        let req = CompileRequest {
-            files: Some(vec![VirtualSource {
-                path: "test.tsx".into(),
-                content: "import { Div } from '@reference-ui/react';\
-                          export const a = <Div mt=\"2r\" />;\
-                          export const b = <BoltIcon color=\"red\" />;"
-                    .into(),
-            }]),
-            base_system: BaseSystem::lib_fixture().clone(),
-            upstream_systems: upstream,
-            logs: Some(vec!["proof".to_string()]),
-            ..Default::default()
-        };
-        compile(&req).expect("compile succeeds")
-    }
-
-    fn compile_code(code: &str, upstream: Vec<String>) -> crate::CompileResult {
-        let req = CompileRequest {
-            files: Some(vec![VirtualSource {
-                path: "test.tsx".into(),
-                content: code.into(),
-            }]),
-            base_system: BaseSystem::lib_fixture().clone(),
-            upstream_systems: upstream,
-            logs: Some(vec!["proof".to_string()]),
-            ..Default::default()
-        };
-        compile(&req).expect("compile succeeds")
-    }
-
-    #[test]
-    fn external_decl_expands_one_plan_per_foreign_qualifier() {
-        let res = compile_props(vec!["@reference-ui/icons".to_string()]);
-        // Own declaration keeps exactly one plan on the own system.
-        let own: Vec<_> = res.style_plans.iter().filter(|plan| plan.prop == "mt").collect();
-        assert_eq!(own.len(), 1, "{:?}", res.style_plans);
-        assert_eq!(own[0].system, "@reference-ui/lib");
-        // External declaration takes one plan on the foreign qualifier.
-        let external: Vec<_> = res
-            .style_plans
-            .iter()
-            .filter(|plan| plan.prop == "color")
-            .collect();
-        assert_eq!(external.len(), 1, "{:?}", res.style_plans);
-        assert_eq!(external[0].system, "@reference-ui/icons");
-        assert_eq!(
-            external[0].declarations[0].class_name,
-            "@reference-ui/icons__c_red"
-        );
-        // The proof css map stays own-only: the external class is not indexed.
-        let css = res.css.expect("proof css map");
-        assert_eq!(
-            css.classes.get("color:red"),
-            None,
-            "external atom stays out of the own css map"
-        );
-        // atom_count counts both partitions.
-        assert_eq!(res.atom_count, 2);
-    }
-
-    #[test]
-    fn external_decl_needs_a_foreign_qualifier_to_plan() {
-        let res = compile_props(Vec::new());
-        assert!(
-            res.style_plans.iter().all(|plan| plan.prop != "color"),
-            "no foreign qualifier means no external plan: {:?}",
-            res.style_plans
-        );
-        // The external atom still resolves and counts.
-        assert_eq!(res.atom_count, 2);
-    }
-
-    /// A covered external expectation is silent: analysis predicts the
-    /// foreign-qualified key and the foreign plan backs it, so the S4 join
-    /// proves nothing absent.
-    #[test]
-    fn covered_external_expectation_is_silent() {
-        let res = compile_props(vec!["@reference-ui/icons".to_string()]);
-        assert!(
-            res.diagnostics.is_empty(),
-            "covered external key stays silent: {:?}",
-            res.diagnostics
-        );
-        assert!(
-            res.style_plans
-                .iter()
-                .any(|plan| plan.prop == "color" && plan.system == "@reference-ui/icons"),
-            "the foreign plan is present: {:?}",
-            res.style_plans
-        );
-    }
-
-    /// A missing external key warns once: the external rejection joins the
-    /// foreign-qualified expectation (no double-warn from a causeless miss).
-    #[test]
-    fn missing_external_key_warns_once() {
-        let res = compile_code(
-            "import { Div } from '@reference-ui/react';\
-             export const el = <BoltIcon _nope={{ color: 'red' }} />;",
-            vec!["@reference-ui/icons".to_string()],
-        );
-        let misses: Vec<_> = res
-            .diagnostics
-            .iter()
-            .filter(|diag| {
-                matches!(
-                    diag.code,
-                    DiagnosticCode::UnknownCondition | DiagnosticCode::MissingStylePlan
-                )
-            })
-            .collect();
-        assert_eq!(
-            misses.len(),
-            1,
-            "exactly one miss warning, not a double-warn: {:?}",
-            res.diagnostics
-        );
-        assert_eq!(misses[0].code, DiagnosticCode::UnknownCondition);
-    }
-}
+#[path = "assembly_tests.rs"]
+mod tests;

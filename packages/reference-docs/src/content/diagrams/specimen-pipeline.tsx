@@ -252,7 +252,7 @@ export function ReferencePipeline() {
               <DesktopWindowsIcon size="md" className={ink} />
               <Span className={`${cardTitle} ${textDefault}`}>Application rendering</Span>
             </Div>
-            <Diagram.Row gap="tight">
+            <Diagram.Row gap="2r">
               <Diagram.Panel align="center">
                 <WidgetsIcon size="lg" className={ink} />
                 <Span className={`${cardTitle} ${textDefault}`}>React</Span>

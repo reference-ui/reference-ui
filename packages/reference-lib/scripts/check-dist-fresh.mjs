@@ -15,7 +15,9 @@ function label(file) {
   return file.startsWith(`${packageRoot}/`) ? file.slice(packageRoot.length + 1) : relative(repoRoot, file)
 }
 
-const INPUT_ROOTS = ['src', 'book']
+// book/ is Book's own sync (book/ui.config.ts). It never reaches dist or the
+// published system, so it is not an input here.
+const INPUT_ROOTS = ['src']
 const INPUT_FILES = [
   'package.json',
   'scripts/build-bundle.mjs',
@@ -72,13 +74,13 @@ function resolveUpstream(specifier) {
 // snapshots) never affect dist, so they must not stale the gate.
 const TRACKED_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.json'])
 
-// Test-only files never ship: the bundle step does not bundle them and `ref sync`
-// extracts nothing from them, so they must not stale the gate. Story and
-// book files (*.story.tsx, *.book.tsx) are NOT excluded — their literals
-// compile into shipped CSS (precedent: Tree.story.tsx `120r`).
-function isTestOnly(full, name) {
-  if (full.split('/').includes('__e2e__')) return true
-  return name.includes('.test.') || name.includes('.spec.')
+// Unshipped files never reach dist or the published system: lib's ui.config.ts
+// include drops test, spec, story, book, fixture, example and __e2e__ files, so
+// the gate must not stale on them either. This mirrors that include.
+function isUnshipped(full, name) {
+  // Segments are taken relative to the package, so a checkout under an `examples` folder is not dropped whole.
+  if (relative(packageRoot, full).split('/').some((part) => ['__e2e__', 'fixtures', 'examples'].includes(part))) return true
+  return ['.test.', '.spec.', '.story.', '.book.'].some((marker) => name.includes(marker))
 }
 
 async function* walk(dir) {
@@ -89,7 +91,7 @@ async function* walk(dir) {
       yield* walk(full)
       continue
     }
-    if (isTestOnly(full, entry.name)) continue
+    if (isUnshipped(full, entry.name)) continue
     if (TRACKED_EXTENSIONS.has(entry.name.slice(entry.name.lastIndexOf('.')))) yield full
   }
 }

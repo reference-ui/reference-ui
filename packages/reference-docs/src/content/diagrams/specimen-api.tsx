@@ -19,7 +19,7 @@ const title = css({
 
 const chip = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsText',
   bg: 'diagramChip',
   paddingX: '2r',
@@ -30,7 +30,7 @@ const chip = css({
 })
 
 const pill = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   color: 'diagramBlueText',
   bg: 'diagramChip',

@@ -1,0 +1,8 @@
+{
+  "color:currentColor": "@reference-ui/lib__c_currentColor",
+  "color:inherit": "@reference-ui/lib__c_inherit",
+  "display:inline-flex": "@reference-ui/lib__d_inline-flex",
+  "height:2r": "@reference-ui/lib__h_2r",
+  "p:2r": "@reference-ui/lib__p_2r",
+  "width:2r": "@reference-ui/lib__w_2r"
+}

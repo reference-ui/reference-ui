@@ -2,32 +2,16 @@
 //! Responsible for domain logic, AST parsing, or utility functions.
 //! See module README for architecture details.
 
-use std::collections::BTreeSet;
 use std::fs;
 
 mod memo;
+mod relative;
 
-use super::{resolve_external_import, resolve_relative_import, FileLookup, ImportResolver};
+use super::{resolve_external_import, ImportResolver};
 use crate::scanner::paths::split_package_specifier;
 #[cfg(unix)]
 use crate::scanner::workspace::scan_workspace;
 use crate::tests::fixtures::TempDir;
-
-#[test]
-fn relative_import_prefers_declaration_candidates_for_runtime_entries() {
-    let root = TempDir::new("scanner-packages-relative");
-    let file_ids = BTreeSet::from(["src/button.d.ts".to_string(), "src/index.ts".to_string()]);
-
-    let resolved = resolve_relative_import(
-        root.path(),
-        "src/index.ts",
-        "./button.js",
-        &file_ids,
-        FileLookup::Denied,
-    );
-
-    assert_eq!(resolved.as_deref(), Some("src/button.d.ts"));
-}
 
 #[test]
 fn external_import_uses_types_exports_for_root_and_subpath() {

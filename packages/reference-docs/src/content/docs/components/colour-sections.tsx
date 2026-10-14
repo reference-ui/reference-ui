@@ -54,11 +54,11 @@ const tile = css({
   borderStyle: 'solid',
 })
 
-const label = css({ fontFamily: 'mono', fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const label = css({ fontFamily: 'mono', fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
 
 const toneName = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   color: 'docsText',
   lineHeight: '1.5',
@@ -243,7 +243,7 @@ const graphEdge = css({ stroke: 'blue.500', fill: 'none', strokeWidth: '2px' })
 
 const caseTitle = css({ fontSize: '4r', fontWeight: '600', color: 'docsText', lineHeight: '1.3' })
 
-const caseSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const caseSub = css({ fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
 
 const meterTrack = css({ height: '2r', borderRadius: 'full', bg: 'blue.500/firm' })
 

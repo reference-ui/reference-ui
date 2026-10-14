@@ -7,11 +7,20 @@ use oxc_span::GetSpan;
 use crate::model::TypeRef;
 use crate::shared::type_ref_util::reference_lookup_name;
 
+use super::super::namespaces::expand_alias;
 use super::super::slice_span;
-use super::{bound_reference, reference_source_module};
 use super::LoweringContext;
+use super::{bound_reference, reference_source_module};
 
 impl<'a> LoweringContext<'a> {
+    /// The name a reference lowers to: an import-equals alias expands to its target text, unless a bound name shadows it.
+    fn expand_reference(&self, name: String) -> String {
+        if self.is_bound(&name) {
+            return name;
+        }
+        expand_alias(self.ctx.import_bindings, &name)
+    }
+
     pub(super) fn lower_indexed_access_type(
         &self,
         indexed_access: &oxc_ast::ast::TSIndexedAccessType<'_>,
@@ -27,7 +36,8 @@ impl<'a> LoweringContext<'a> {
         &self,
         reference: &oxc_ast::ast::TSTypeReference<'_>,
     ) -> TypeRef {
-        let name = slice_span(self.ctx.source, reference.type_name.span()).to_string();
+        let name = self
+            .expand_reference(slice_span(self.ctx.source, reference.type_name.span()).to_string());
         let lookup_name = reference_lookup_name(&name);
         let type_arguments = reference.type_arguments.as_ref().map(|instantiation| {
             instantiation
@@ -66,7 +76,8 @@ impl<'a> LoweringContext<'a> {
         &self,
         heritage: &oxc_ast::ast::TSInterfaceHeritage<'_>,
     ) -> TypeRef {
-        let name = slice_span(self.ctx.source, heritage.expression.span()).to_string();
+        let name = self
+            .expand_reference(slice_span(self.ctx.source, heritage.expression.span()).to_string());
         let type_arguments = heritage.type_arguments.as_ref().map(|instantiation| {
             instantiation
                 .params

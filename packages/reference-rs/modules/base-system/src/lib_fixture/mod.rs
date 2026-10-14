@@ -4,6 +4,8 @@
 //! and the structured `--spacing-root` global rule through the public `from_spec` path.
 //! This fixture is strictly opt-in for testing; production compilation refuses missing specs.
 
+use std::collections::BTreeMap;
+
 use indexmap::IndexMap;
 use serde::Deserialize;
 
@@ -57,6 +59,7 @@ pub fn build() -> BaseSystem {
             kind: ProvenanceKind::Fragment,
             keys: Vec::new(),
         }],
+        jsx_owned: BTreeMap::new(),
     };
     BaseSystem::from_spec(&spec).unwrap_or_else(|err| panic!("lib_fixture lowering failed: {err}"))
 }

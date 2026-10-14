@@ -48,7 +48,7 @@ const meterFill = css({ height: '2r', width: '62%', borderRadius: 'full' })
 
 const cardTitle = css({ fontSize: '4r', fontWeight: '600', color: 'docsText', lineHeight: '1.3' })
 
-const cardSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const cardSub = css({ fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
 
 function AccentCard({ accent, caption }: { accent: Accent; caption: string }) {
   return (

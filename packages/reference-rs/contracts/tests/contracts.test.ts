@@ -65,6 +65,20 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect({ ...spec, extends: undefined }).toBeDefined()
   })
 
+  it('carries owned prop names as optional maps on the spec, the portable system and the compile result', () => {
+    const spec: Pick<EvaluatedSystemSpec, 'jsxOwned'> = { jsxOwned: { Tile: ['size'] } }
+    const portable: Pick<PortableBaseSystem, 'jsxOwned'> = { jsxOwned: { Tile: ['size'] } }
+    const result: Pick<CompileResult, 'tracedJsxOwned'> = { tracedJsxOwned: { Tile: ['size'] } }
+    expect(spec.jsxOwned).toEqual({ Tile: ['size'] })
+    expect(portable.jsxOwned).toEqual({ Tile: ['size'] })
+    expect(result.tracedJsxOwned).toEqual({ Tile: ['size'] })
+
+    // The committed fixtures stay silent: absent means nothing is owned.
+    expect('jsxOwned' in evaluatedSystemSpecJson).toBe(false)
+    expect('jsxOwned' in portableBaseSystemJson).toBe(false)
+    expect('tracedJsxOwned' in compileResultJson).toBe(false)
+  })
+
   it('Invalid version fixture has schemaVersion !== 1', () => {
     expect(evaluatedSystemSpecInvalidVersionJson.schemaVersion).not.toBe(1)
   })

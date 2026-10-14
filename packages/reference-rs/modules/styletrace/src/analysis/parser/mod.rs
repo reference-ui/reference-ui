@@ -13,7 +13,7 @@ pub mod pipeline;
 pub mod types;
 pub mod wrappers;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -28,7 +28,7 @@ use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
     ExportTarget, FactoryCall, MemberAlias, NamespaceExport, TraceComponent, TraceFactory,
-    TraceImport, TraceModule,
+    TraceImport, TraceModule, WrapperProps,
 };
 use crate::analysis::surface::{StyleSurface, TraceSources};
 use crate::analysis::util::{module_export_name, module_source_literal};
@@ -314,7 +314,7 @@ fn collect_declarator_symbol<'a>(
     if let oxc_ast::ast::Expression::ClassExpression(class) = init {
         return classes::note_named_class(name, class, ctx, &mut state.class_components);
     }
-    if let Some(component) = component_from_expression(name, init, ctx, BTreeSet::new())? {
+    if let Some(component) = component_from_expression(name, init, ctx, WrapperProps::default())? {
         state.components.insert(name.to_string(), component);
         return Ok(());
     }

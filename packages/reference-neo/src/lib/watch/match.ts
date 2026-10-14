@@ -81,14 +81,16 @@ export function collapseRoots(roots: string[]): string[] {
   return collapsed
 }
 
-// Negated patterns only subtract, so they never add a root of their own.
+// Negated patterns only subtract, so they never add a root of their own. An unrooted positive pattern still needs the
+// project root, but a rooted prefix outside that root (../shared) keeps its own root beside it, never dropped.
 export function deriveWatchRoots(projectRoot: string, include: string[], extraDirs: string[] = []): string[] {
   const root = resolve(projectRoot)
   const prefixes = include.filter((pattern) => !isNegated(pattern)).map(staticPrefix)
   const unrooted = prefixes.length === 0 || prefixes.some((prefix) => prefix === undefined)
-  const includeRoots = unrooted
-    ? [root]
-    : prefixes.filter((prefix): prefix is string => prefix !== undefined).map((prefix) => resolve(root, prefix))
+  const rootedRoots = prefixes
+    .filter((prefix): prefix is string => prefix !== undefined)
+    .map((prefix) => resolve(root, prefix))
+  const includeRoots = unrooted ? [root, ...rootedRoots] : rootedRoots
   return collapseRoots([...includeRoots, ...extraDirs.map((dir) => resolve(root, dir))])
 }
 

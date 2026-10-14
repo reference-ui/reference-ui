@@ -278,6 +278,13 @@ export interface CompileResult {
   atomCount?: number
   /** Component names StyleTrace discovered in this compile (ATM-SEAM-05). */
   tracedJsxHosts?: string[]
+  /**
+   * Prop names each component keeps for itself (never forwarded to a style
+   * primitive), keyed by component name, sorted and unique: the map the
+   * extraction gate read, so the request's `jsxOwned` seeds ride beside what
+   * StyleTrace found. Absent when no component owns a prop.
+   */
+  tracedJsxOwned?: Record<string, string[]>
   /** Opt-in compiler backchannel (S5): present only when requested via `logs`. */
   compilerDiagnostics?: Diagnostic[]
 }

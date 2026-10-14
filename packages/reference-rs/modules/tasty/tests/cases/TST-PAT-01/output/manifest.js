@@ -23,6 +23,39 @@ export const manifest = {
     "ForwardRefExample": [
       "_93c98f3c29d918aa"
     ],
+    "React.Consumer": [
+      "_18125ac8cd2f4ec9"
+    ],
+    "React.Context": [
+      "_f973a3bba9672806"
+    ],
+    "React.FC": [
+      "_e3c69d1b2a6d1894"
+    ],
+    "React.ForwardRefExoticComponent": [
+      "_96d01bc12857a31e"
+    ],
+    "React.Provider": [
+      "_2fdf0301b6e0c7fe"
+    ],
+    "React.ReactElement": [
+      "_dbc92650c7f949fa"
+    ],
+    "React.ReactNode": [
+      "_74c5c586712b65f6"
+    ],
+    "React.Ref": [
+      "_77beb729178416dc"
+    ],
+    "React.RefAttributes": [
+      "_ebaef086b84bea47"
+    ],
+    "React.RefCallback": [
+      "_1888a14386e0de25"
+    ],
+    "React.RefObject": [
+      "_c294774dc14bb591"
+    ],
     "ReactComponentProps": [
       "_a365806dbf50be38"
     ],
@@ -55,11 +88,32 @@ export const manifest = {
     ]
   },
   "symbolsById": {
+    "_18125ac8cd2f4ec9": {
+      "id": "_18125ac8cd2f4ec9",
+      "name": "React.Consumer",
+      "kind": "interface",
+      "chunk": "./chunks/_18125ac8cd2f4ec9.js",
+      "library": "user"
+    },
+    "_1888a14386e0de25": {
+      "id": "_1888a14386e0de25",
+      "name": "React.RefCallback",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_1888a14386e0de25.js",
+      "library": "user"
+    },
     "_2f453780af9225d1": {
       "id": "_2f453780af9225d1",
       "name": "ZodExample",
       "kind": "typeAlias",
       "chunk": "./chunks/_2f453780af9225d1.js",
+      "library": "user"
+    },
+    "_2fdf0301b6e0c7fe": {
+      "id": "_2fdf0301b6e0c7fe",
+      "name": "React.Provider",
+      "kind": "interface",
+      "chunk": "./chunks/_2fdf0301b6e0c7fe.js",
       "library": "user"
     },
     "_333cae95ad6abb6f": {
@@ -90,6 +144,20 @@ export const manifest = {
       "chunk": "./chunks/_641764fd1fbc4d43.js",
       "library": "user"
     },
+    "_74c5c586712b65f6": {
+      "id": "_74c5c586712b65f6",
+      "name": "React.ReactNode",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_74c5c586712b65f6.js",
+      "library": "user"
+    },
+    "_77beb729178416dc": {
+      "id": "_77beb729178416dc",
+      "name": "React.Ref",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_77beb729178416dc.js",
+      "library": "user"
+    },
     "_86320d56f098064a": {
       "id": "_86320d56f098064a",
       "name": "ZodSchema",
@@ -116,6 +184,13 @@ export const manifest = {
       "name": "ForwardRefExample",
       "kind": "typeAlias",
       "chunk": "./chunks/_93c98f3c29d918aa.js",
+      "library": "user"
+    },
+    "_96d01bc12857a31e": {
+      "id": "_96d01bc12857a31e",
+      "name": "React.ForwardRefExoticComponent",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_96d01bc12857a31e.js",
       "library": "user"
     },
     "_9946c9fd92a932e2": {
@@ -153,11 +228,39 @@ export const manifest = {
       "chunk": "./chunks/_c2128a9468666d9a.js",
       "library": "user"
     },
+    "_c294774dc14bb591": {
+      "id": "_c294774dc14bb591",
+      "name": "React.RefObject",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_c294774dc14bb591.js",
+      "library": "user"
+    },
+    "_dbc92650c7f949fa": {
+      "id": "_dbc92650c7f949fa",
+      "name": "React.ReactElement",
+      "kind": "interface",
+      "chunk": "./chunks/_dbc92650c7f949fa.js",
+      "library": "user"
+    },
     "_e09eaa8a79c44be6": {
       "id": "_e09eaa8a79c44be6",
       "name": "EventHandlerMap",
       "kind": "typeAlias",
       "chunk": "./chunks/_e09eaa8a79c44be6.js",
+      "library": "user"
+    },
+    "_e3c69d1b2a6d1894": {
+      "id": "_e3c69d1b2a6d1894",
+      "name": "React.FC",
+      "kind": "typeAlias",
+      "chunk": "./chunks/_e3c69d1b2a6d1894.js",
+      "library": "user"
+    },
+    "_ebaef086b84bea47": {
+      "id": "_ebaef086b84bea47",
+      "name": "React.RefAttributes",
+      "kind": "interface",
+      "chunk": "./chunks/_ebaef086b84bea47.js",
       "library": "user"
     },
     "_f0aa03fa9b24e778": {
@@ -172,6 +275,13 @@ export const manifest = {
       "name": "ZodInfer",
       "kind": "typeAlias",
       "chunk": "./chunks/_f670abe0b414b48d.js",
+      "library": "user"
+    },
+    "_f973a3bba9672806": {
+      "id": "_f973a3bba9672806",
+      "name": "React.Context",
+      "kind": "interface",
+      "chunk": "./chunks/_f973a3bba9672806.js",
       "library": "user"
     }
   }

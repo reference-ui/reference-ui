@@ -1,7 +1,8 @@
 //! Host gating tests: configured hosts admit unimported tags, empty hosts match legacy.
 //! Proves explicit `jsxHosts` promote an unimported tag from an external
 //! component (capital, no file-local import — G0 §D/C8) to a host, while
-//! absent and empty host lists compile identically to each other.
+//! absent and empty host lists compile identically to each other. Also proves
+//! the system's declared `jsxOwned` gates with no trace and ships sorted.
 
 use super::*;
 use crate::{compile, BaseSystem, VirtualSource};
@@ -78,4 +79,76 @@ fn test_trace_skip_converts_to_host_report() {
     );
     assert_eq!(bare.file, None);
     assert_eq!(bare.message, "trace skipped");
+}
+
+fn owned_request(jsx_hosts: Option<Vec<String>>, owned: &[(&str, &[&str])]) -> CompileRequest {
+    let mut request = host_request(jsx_hosts);
+    for (host, names) in owned {
+        request.base_system.jsx_owned.insert(
+            (*host).to_string(),
+            names.iter().map(|name| (*name).to_string()).collect(),
+        );
+    }
+    request
+}
+
+/// No root and no entries: nothing traces, so only the system's declared
+/// `jsxOwned` speaks. An owned name is an attribute on its component, never a
+/// style, whether the tag is an external component or a configured host.
+#[test]
+fn test_declared_owned_props_gate_without_a_trace() {
+    for hosts in [None, Some(vec!["ConfiguredHost".to_string()])] {
+        let request = owned_request(hosts.clone(), &[("ConfiguredHost", &["mt"])]);
+        let result = compile(&request).expect("compile succeeds");
+        assert!(
+            !result.wants.iter().any(|w| &*w.prop == "mt"),
+            "hosts {hosts:?}: owned `mt` minted {:?}",
+            result.wants
+        );
+        assert!(!result.stylesheet.contains("mt_4r"));
+        assert_eq!(
+            result.traced_jsx_owned,
+            BTreeMap::from([("ConfiguredHost".to_string(), vec!["mt".to_string()])])
+        );
+    }
+}
+
+/// An owned name shadows only its own prop on its own tag: a sibling name
+/// still extracts, and another component's owned names do not leak.
+#[test]
+fn test_declared_owned_props_shadow_only_their_own_names() {
+    let sibling = owned_request(None, &[("ConfiguredHost", &["p"])]);
+    let result = compile(&sibling).expect("compile succeeds");
+    assert!(has_mt(&result.wants, "4r"), "{:?}", result.wants);
+
+    let other_tag = owned_request(None, &[("OtherHost", &["mt"])]);
+    let result = compile(&other_tag).expect("compile succeeds");
+    assert!(has_mt(&result.wants, "4r"), "{:?}", result.wants);
+}
+
+/// Declared names union as sets and ship as sorted, unique arrays; a host
+/// that owns nothing drops out of the result.
+#[test]
+fn test_declared_owned_wire_is_sorted_unique_and_drops_empty() {
+    let request = owned_request(
+        None,
+        &[("CodeIcon", &["variant", "size", "size"]), ("Ghost", &[])],
+    );
+    let result = compile(&request).expect("compile succeeds");
+    assert_eq!(
+        result.traced_jsx_owned,
+        BTreeMap::from([(
+            "CodeIcon".to_string(),
+            vec!["size".to_string(), "variant".to_string()]
+        )])
+    );
+}
+
+/// Nothing owned keeps the key off the wire, so existing results stay byte-identical.
+#[test]
+fn test_no_owned_props_keeps_the_wire_key_absent() {
+    let result = compile(&host_request(None)).expect("compile succeeds");
+    assert!(result.traced_jsx_owned.is_empty());
+    let wire = serde_json::to_value(&result).expect("result serializes");
+    assert!(wire.get("tracedJsxOwned").is_none(), "{wire}");
 }

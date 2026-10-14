@@ -3,7 +3,9 @@
 //! configured hosts and discovered wrappers extract without a file-local
 //! import. Tracing runs against the engine-owned surface over the same
 //! include-scoped entries extraction compiles; per-file failures become
-//! located warnings, never silent empty sets.
+//! located warnings, never silent empty sets. Every path also unions the
+//! base system's declared `jsxOwned` into the owned props, so a published
+//! component with no source to trace still keeps its own prop names.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -17,7 +19,7 @@ use styletrace::{
 
 use crate::{
     diagnostics::{DiagnosticFact, DiagnosticSink, DiagnosticsSession, Policy},
-    CompileRequest, Diagnostic,
+    BaseSystem, CompileRequest, Diagnostic,
 };
 
 mod diagnostics;
@@ -50,6 +52,45 @@ impl ResolvedHosts {
         hosts.extend(self.configured.iter().cloned());
         hosts
     }
+
+    /// Configured names plus the system's declared owned props, nothing
+    /// traced: the start for every path that never reaches a trace.
+    pub(crate) fn declared(request: &CompileRequest) -> Self {
+        let mut hosts = Self {
+            traced: Vec::new(),
+            configured: request.jsx_hosts.clone().unwrap_or_default(),
+            owned_props: BTreeMap::new(),
+        };
+        hosts.union_declared_owned(&request.base_system);
+        hosts
+    }
+
+    /// Union the system's `jsxOwned` into the owned props as sets, so order
+    /// and duplicates on the wire never matter and a host named by both the
+    /// trace and the system owns both name lists.
+    fn union_declared_owned(&mut self, system: &BaseSystem) {
+        for (host, names) in &system.jsx_owned {
+            if names.is_empty() {
+                continue;
+            }
+            self.owned_props
+                .entry(host.clone())
+                .or_default()
+                .extend(names.iter().cloned());
+        }
+    }
+}
+
+/// Owned props as the sorted, unique arrays `CompileResult` ships; a host
+/// that owns nothing drops out.
+pub(crate) fn owned_wire(
+    owned: BTreeMap<String, BTreeSet<String>>,
+) -> BTreeMap<String, Vec<String>> {
+    owned
+        .into_iter()
+        .filter(|(_, names)| !names.is_empty())
+        .map(|(host, names)| (host, names.into_iter().collect()))
+        .collect()
 }
 
 /// Caller hosts plus traced names for one compile.
@@ -81,9 +122,8 @@ pub fn resolve(
     sink: &mut DiagnosticsSession,
     programs: &FxHashMap<PathBuf, &Program<'_>>,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
-    let configured = request.jsx_hosts.clone().unwrap_or_default();
     let Some(opened) = open_trace(request, sources, failed) else {
-        return configured_only(configured);
+        return configured_only(request);
     };
     let surface = engine_surface(&request.base_system);
     let inputs = TraceSources {
@@ -97,7 +137,7 @@ pub fn resolve(
         &surface,
         &inputs,
     );
-    hosts_from(configured, outcome, sink)
+    hosts_from(request, outcome, sink)
 }
 
 /// Trace from modules workers already folded off the programs they hold.
@@ -107,9 +147,9 @@ pub(crate) fn resolve_prepared(
     prepared: PreparedTrace<'_>,
     sink: &mut DiagnosticsSession,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
-    let configured = prepared.request.jsx_hosts.clone().unwrap_or_default();
-    let Some(opened) = open_trace(prepared.request, prepared.sources, prepared.failed) else {
-        return configured_only(configured);
+    let request = prepared.request;
+    let Some(opened) = open_trace(request, prepared.sources, prepared.failed) else {
+        return configured_only(request);
     };
     let programs = FxHashMap::default();
     let inputs = TraceSources {
@@ -124,7 +164,7 @@ pub(crate) fn resolve_prepared(
         modules: prepared.modules,
         sources: &inputs,
     });
-    hosts_from(configured, outcome, sink)
+    hosts_from(request, outcome, sink)
 }
 
 /// Folded modules plus the surface they were folded against.
@@ -176,21 +216,15 @@ pub(crate) fn trace_root(request: &CompileRequest) -> Option<PathBuf> {
     ))
 }
 
-/// Configured names alone, when nothing is traced.
-fn configured_only(configured: Vec<String>) -> (ResolvedHosts, Vec<Diagnostic>) {
-    (
-        ResolvedHosts {
-            traced: Vec::new(),
-            configured,
-            owned_props: BTreeMap::new(),
-        },
-        Vec::new(),
-    )
+/// Configured names and declared owned props alone, when nothing is traced.
+fn configured_only(request: &CompileRequest) -> (ResolvedHosts, Vec<Diagnostic>) {
+    (ResolvedHosts::declared(request), Vec::new())
 }
 
-/// Turn one trace outcome into hosts plus rendered warnings.
+/// Turn one trace outcome into hosts plus rendered warnings, with the
+/// system's declared owned props unioned over what the trace found.
 fn hosts_from(
-    configured: Vec<String>,
+    request: &CompileRequest,
     outcome: TraceOutcome,
     sink: &mut DiagnosticsSession,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
@@ -211,12 +245,11 @@ fn hosts_from(
             rendered
         })
         .collect();
-    (
-        ResolvedHosts {
-            traced,
-            configured,
-            owned_props: outcome.owned_props,
-        },
-        diagnostics,
-    )
+    let mut hosts = ResolvedHosts {
+        traced,
+        configured: request.jsx_hosts.clone().unwrap_or_default(),
+        owned_props: outcome.owned_props,
+    };
+    hosts.union_declared_owned(&request.base_system);
+    (hosts, diagnostics)
 }

@@ -36,6 +36,7 @@ not yet committed; `open` means no case or test proves the claim.
 | NEO-WATCH-27 | a config dependency created after a failed config load resyncs the watch, and its include reaches the sheet | done | none | node | `specs/failed-load-dependency.spec.ts` | SPEC LC-26, LC-55 |
 | NEO-WATCH-28 | a bare-specifier upstream that re-syncs through node_modules resyncs the downstream watch, linked or installed | done | none | node | `specs/bare-upstream.spec.ts`: a linked and an installed upstream, each re-synced alone | SPEC LC-28 |
 | NEO-WATCH-29 | a config whose top-level await never settles exits a one-shot 1 with a named evaluation-timeout line, and a watch reports it and keeps watching until the config is fixed | done | none | node | `specs/config-timeout.spec.ts`: a one-shot CLI leg and a watch leg | SPEC LC-07 |
+| NEO-WATCH-30 | a watch whose include mixes an unrooted glob with a path outside the project root resyncs on an edit under that outside path | done | none | node | `specs/outside-root-edit.spec.ts`: an edit to `../shared/colors.tsx` beside the world resyncs the sheet | SPEC LC-64 |
 
 A row lands with its case folder.
 

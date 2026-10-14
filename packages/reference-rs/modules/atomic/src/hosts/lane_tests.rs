@@ -4,8 +4,9 @@
 //! contributes no hosts, silently, and an on-disk failure warns once from the
 //! host re-parse. Each fixture compiles serially with fewer than 64 styling
 //! files and on forced lanes past that threshold, then requires the same
-//! hosts, diagnostics, wants, and stylesheet from both paths.
+//! hosts, owned props, diagnostics, wants, and stylesheet from both paths.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -128,10 +129,19 @@ fn assert_same_verdict(serial: &CompileResult, lanes: &CompileResult) {
         lanes.traced_jsx_hosts, serial.traced_jsx_hosts,
         "traced hosts differ"
     );
+    assert_eq!(
+        lanes.traced_jsx_owned, serial.traced_jsx_owned,
+        "traced owned props differ"
+    );
     assert_eq!(lanes.diagnostics, serial.diagnostics, "diagnostics differ");
     assert_eq!(lanes.wants, serial.wants, "wants differ");
     assert_eq!(lanes.stylesheet, serial.stylesheet, "stylesheet differs");
 }
+
+/// On-disk wrapper that pulls `label` out by name and forwards the rest to Div.
+const OWNING_CARD: &str = "import { Div } from '@reference-ui/react'\nexport function Card({ label, ...rest }: { mt?: string; label?: string }) {\n  return <Div {...rest}>{label}</Div>\n}\n";
+/// On-disk page spelling the traced `label`, the declared `size`, and a real style.
+const OWNING_APP: &str = "import { Card } from './Card'\nexport function App() {\n  return <Card mt=\"4r\" size=\"lg\" label=\"x\" />\n}\n";
 
 /// Trace warnings whose file ends with `suffix`.
 fn trace_warnings<'a>(result: &'a CompileResult, suffix: &str) -> Vec<&'a Diagnostic> {
@@ -204,4 +214,38 @@ fn virtual_wrapper_imported_from_disk_gets_the_serial_verdict_on_lanes() {
     crowded.push(card);
     let lanes = compile_lanes(&request(&tree, crowded));
     assert_same_verdict(&serial, &lanes);
+}
+
+/// The trace finds `Card` owning `label`; the system declares `size` for it.
+/// Both paths seed the declared names over the traced ones, so the lane fold
+/// and the serial walk publish the union and gate on it: `mt` extracts while
+/// `label` and `size` are the component's own attributes.
+#[test]
+fn declared_owned_props_union_with_traced_ones_on_both_paths() {
+    let tree = Tree::new("owned");
+    tree.write("src/Card.tsx", OWNING_CARD);
+    tree.write("src/App.tsx", OWNING_APP);
+    let seeded = |files: Vec<VirtualSource>| {
+        let mut seeded = request(&tree, files);
+        seeded.logs = Some(vec!["proof".to_string()]);
+        seeded
+            .base_system
+            .jsx_owned
+            .insert("Card".to_string(), vec!["size".to_string()]);
+        seeded
+    };
+    let serial = compile_serial(&seeded(Vec::new()));
+    let lanes = compile_lanes(&seeded(fillers(&tree)));
+    assert_same_verdict(&serial, &lanes);
+    let expected = BTreeMap::from([(
+        "Card".to_string(),
+        vec!["label".to_string(), "size".to_string()],
+    )]);
+    assert_eq!(serial.traced_jsx_owned, expected);
+    assert_eq!(lanes.traced_jsx_owned, expected);
+    for result in [&serial, &lanes] {
+        let props: Vec<&str> = result.wants.iter().map(|want| &*want.prop).collect();
+        assert!(props.contains(&"mt"), "mt extracts: {props:?}");
+        assert!(!props.contains(&"size"), "size is owned: {props:?}");
+    }
 }

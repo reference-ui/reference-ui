@@ -100,8 +100,8 @@ export function App() {
 
   return (
     <ReferenceLibrary>
-      <Div p="4r" maxW="120r" data-testid="mount-referencelibrary">
-        <H1 fontSize="5r">consumer smoke</H1>
+      <Div p="2r" maxW="100%" data-testid="mount-referencelibrary">
+        <H1 fontSize="3r">consumer smoke</H1>
 
         <Mount id="accordion">
           <Accordion value={accordion} onChange={setAccordion} expansion="single">

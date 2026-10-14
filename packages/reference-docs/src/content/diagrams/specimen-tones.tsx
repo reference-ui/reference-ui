@@ -26,7 +26,7 @@ const cardName = css({
   lineHeight: '1.3',
 })
 
-const cardUse = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
+const cardUse = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.5' })
 
 const toneIcon: Record<Exclude<DiagramTone, 'neutral'>, ReactNode> = {
   blue: <DeployedCodeIcon size="lg" color="diagramBlueText" />,

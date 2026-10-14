@@ -54,7 +54,7 @@ const swatchName = css({
   lineHeight: '1.3',
 })
 
-const swatchMeta = css({ fontFamily: 'mono', fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const swatchMeta = css({ fontFamily: 'mono', fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
 
 const appliedCard = css({
   display: 'flex',
@@ -78,7 +78,7 @@ const appliedTitle = css({
   lineHeight: '1.3',
 })
 
-const appliedSub = css({ fontSize: 'sm', color: 'docsMuted', lineHeight: '1.5' })
+const appliedSub = css({ fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
 
 const meter = css({ height: '2r', borderRadius: 'full', bg: 'blue.500/firm' })
 

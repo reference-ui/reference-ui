@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::scanner::model::ResolvedModule;
-use crate::scanner::packages::{resolve_relative_import, FileLookup, ImportResolver};
+use crate::scanner::packages::{FileLookup, ImportResolver};
 use crate::scanner::paths::{
     is_external_file_id, module_specifier_for_file_id, package_name_from_file_id,
     split_package_specifier,
@@ -60,13 +60,9 @@ fn resolve_relative_import_for_discovery(
     } else {
         (ctx.user_file_ids, FileLookup::Denied)
     };
-    let file_id = resolve_relative_import(
-        ctx.resolver.root_dir(),
-        ctx.file_id,
-        source_module,
-        file_ids,
-        file_lookup,
-    )?;
+    let file_id =
+        ctx.resolver
+            .resolve_relative_import(ctx.file_id, source_module, file_ids, file_lookup)?;
 
     Some(resolved_module_from_file_id(file_id, ctx.external_depth))
 }

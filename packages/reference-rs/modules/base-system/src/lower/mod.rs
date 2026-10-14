@@ -46,6 +46,7 @@ fn lower(spec: EvaluatedSystemSpec) -> Result<BaseSystem, FromJsonError> {
         keyframes: spec.keyframes,
         recipes: spec.recipes,
         static_css: spec.static_css,
+        jsx_owned: spec.jsx_owned,
     })
 }
 

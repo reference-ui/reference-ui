@@ -70,6 +70,9 @@ those jobs. Vendor crates below are example call sites, not our API.
 - [x] `BAS-DUMP-02` `[reference]` `[unit]` —
   **BaseSystem should ingest JSON-serialized fragment specs without file I/O or bundler runtime.**
   Pass a complete serialized JSON payload containing evaluated fragments (`name`, `tokens`, `fonts`, `keyframes`, `globalCss`, `recipes`, `conditions`) to `BaseSystem::from_json(&str)`. Assert that all structures deserialize directly into typed in-memory representations with all lookup indexes built in $O(N)$ time. Deserialization must not spawn Node.js processes, read disk paths, or lose fragment categories.
+- [x] `BAS-JSXOWNED-01` `[reference]` `[unit]` —
+  **BaseSystem should carry the per-component owned prop map and default it to empty.**
+  `jsxOwned` maps a component name to the sorted prop names it keeps for itself. A spec that carries it round-trips the map through `BaseSystem::from_json`; a spec without the key carries no owned names, so a published component with no declaration stays unchanged. Pinned by `src/spec_tests.rs`.
 - [x] `BAS-DUMP-03` `[reference]` `[unit]` —
   **BaseSystem should preserve system name identity and package attribution.**
   Construct a BaseSystem with `name: "@reference-ui/lib"`. Assert that `system.name()` returns `"@reference-ui/lib"`, maintaining clear provenance for diagnostic reporting, layer naming, and package attribution. Name omission or conflation with downstream root systems violates system identity.

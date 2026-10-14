@@ -13,18 +13,18 @@
  * boundary construct, carry, and display identical values. Codes validate in `parseCode`, never in the type.
  */
 import type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic.js';
+import type { DiagnosticLocation } from './location.js';
 export type { Severity } from './generated/Severity.js';
+export type { ByteSpan } from './generated/ByteSpan.js';
+export type { Label } from './generated/Label.js';
 export type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic.js';
+export { createLabel, createSpan, parseLocation } from './location.js';
+export type { DiagnosticLocation } from './location.js';
+export { MAX_FRAMES, renderBatch, renderFrame } from './render.js';
 /** Wire code text (`NS-SEV-NAME`); validated by `parseCode`, not by the type. */
 export type DiagnosticCode = string;
 /** Parsed diagnostic: the generated wire shape, guaranteed valid by construction or `parseDiagnostic`. */
 export type Diagnostic = GeneratedDiagnostic;
-/** Optional source location accepted by the `create*` constructors. */
-export interface DiagnosticLocation {
-    file?: string;
-    line?: number;
-    column?: number;
-}
 /** Namespace owned by the template itself; mirrors `TEMPLATE_NAMESPACE` in Rust. */
 export declare const TEMPLATE_NAMESPACE = "RS";
 /**
@@ -52,7 +52,15 @@ export declare function createError(code: string, message: string, location?: Di
 export declare function parseDiagnostic(input: unknown): Diagnostic;
 /** Parse a batch from unknown input (array or JSON string); any bad row refuses the batch. */
 export declare function parseBatch(input: unknown): Diagnostic[];
-/** Encode one diagnostic to its wire JSON. */
+/**
+ * Canonical wire record: the template fields in struct order (severity, code,
+ * message, file, line, column, span, labels, help), unknown keys stripped,
+ * absent optionals omitted, and empty label/help lists dropped like Rust.
+ * Both js mirrors and the serde struct emit this order, so the same
+ * diagnostic encodes to byte-identical JSON on either side of napi.
+ */
+export declare function toCanonicalRecord(diagnostic: Diagnostic): Diagnostic;
+/** Encode one diagnostic to its canonical wire JSON. */
 export declare function encodeDiagnostic(diagnostic: Diagnostic): string;
 /** Encode a batch for transport; `parseBatch` of the result round-trips. */
 export declare function encodeBatch(diagnostics: Diagnostic[]): string;
@@ -75,6 +83,18 @@ export declare function hint(text: string): string;
 export declare function didYouMean(known: string): string;
 /** Join message lines with newlines; line one stays the complete subject. */
 export declare function joinLines(lines: string[]): string;
+/** The fix hint for a warning code, or undefined when the code has none. */
+export declare function warningHintFor(code: string | undefined): string | undefined;
+export declare const SUGGESTION_CODES: readonly string[];
+/** Whether `code` may carry a did-you-mean suggestion: membership in `SUGGESTION_CODES`. */
+export declare function supportsSuggestions(code: string): boolean;
+/**
+ * Pick the closest candidate for one diagnostic code, or undefined when the code is not a
+ * suggestion code or all candidates are far off. Modules wire their own known sets as
+ * `candidates`; the gate decides whether suggesting is legitimate, the distance decides
+ * whether any candidate is near enough.
+ */
+export declare function suggestForCode(code: string, unknown: string, candidates: string[]): string | undefined;
 /**
  * Pick the closest candidate to an unknown name, or undefined when all are far off.
  * Mirrors the Rust helper exactly: within a third of the name, minimum three edits.

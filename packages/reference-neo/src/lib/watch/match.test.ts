@@ -96,6 +96,12 @@ describe('watch roots', () => {
     const root = makeTree({})
     expect(deriveWatchRoots(root, ['!theme/skip/**', 'theme/**/*.ts'])).toEqual([join(root, 'theme')])
   })
+
+  it('keeps a rooted prefix outside the root when an unrooted include is also present', () => {
+    const root = makeTree({})
+    const shared = join(dirname(root), 'shared')
+    expect(deriveWatchRoots(root, ['**/*.tsx', '../shared/**']).sort()).toEqual([root, shared].sort())
+  })
 })
 
 describe('match snapshot', () => {

@@ -37,7 +37,7 @@ function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif'
       flexDirection="column"
       gap="3r"
     >
-      <Span fontSize="sm" fontWeight="600" color="docsMuted">
+      <Span fontSize="3.5r" fontWeight="600" color="docsMuted">
         {name}
       </Span>
       <Div font={font} fontSize="5r" lineHeight="1.3" color="docsText">

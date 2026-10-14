@@ -6,10 +6,12 @@
  * Regen: cd packages/reference-neo && node tools/vendor-rust-styletrace-dts.mjs
  */
 
+import type { ByteSpan } from "./ByteSpan.js";
+import type { Label } from "./Label.js";
 import type { Severity } from "./Severity.js";
 /**
  * One structured diagnostic: severity, validated code, rich-text message, plus optional location.
- * Serializes camelCase (`severity`, `code`, `message`, `file`, `line`, `column`) to match the atomic wire shape.
+ * Serializes camelCase to match the atomic wire shape; absent spans, labels, and help stay off the wire.
  */
 export type Diagnostic = {
     /**
@@ -36,4 +38,16 @@ export type Diagnostic = {
      * One-based column within `line`, when known.
      */
     column?: number;
+    /**
+     * Byte-offset span into `file`: the rendering channel, recorded cheaply with no line math.
+     */
+    span?: ByteSpan;
+    /**
+     * Labeled underlines for the rendered frame; absent when the message alone suffices.
+     */
+    labels?: Array<Label>;
+    /**
+     * `= help:` lines for the rendered frame; absent when no guidance applies.
+     */
+    help?: Array<string>;
 };

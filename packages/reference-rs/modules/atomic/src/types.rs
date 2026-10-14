@@ -5,6 +5,8 @@
 //! and diagnostics. Both cross the N-API boundary as JSON, so every field
 //! serde-renames to camelCase and defaults additively.
 
+use std::collections::BTreeMap;
+
 use base_system::BaseSystem;
 use serde::{Deserialize, Serialize};
 
@@ -115,6 +117,14 @@ pub struct CompileResult {
     /// unique). Neo publishes configured ∪ traced downstream.
     #[serde(default)]
     pub traced_jsx_hosts: Vec<String>,
+    /// Prop names each component keeps for itself (never forwarded to a
+    /// style primitive), keyed by component name and sorted, unique: the
+    /// map the extraction gate read, so the request's `jsxOwned` seeds ride
+    /// beside what StyleTrace found. Absent from the wire when empty, so
+    /// results without owned props stay byte-identical. Neo publishes it
+    /// beside the host roster.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub traced_jsx_owned: BTreeMap<String, Vec<String>>,
     /// Opt-in compiler backchannel (S5): present only when requested.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compiler_diagnostics: Option<Vec<Diagnostic>>,

@@ -16,6 +16,12 @@ fn test_envelope(tokens_json: &str) -> String {
     )
 }
 
+fn owned_envelope(owned_json: &str) -> String {
+    format!(
+        r#"{{"schemaVersion":1,"profile":"reference-ui","name":"@reference-ui/lib","tokens":{{}},"fonts":{{}},"globalCss":[],"keyframes":{{}},"recipes":{{}},"staticCss":{{}},"provenance":[],"jsxOwned":{owned_json}}}"#
+    )
+}
+
 #[test]
 fn bas_dump_02_indexes_nested_color_leaf() {
     let json = test_envelope(r##"{"colors":{"blue":{"600":{"value":"#2563eb"}}}}"##);
@@ -145,5 +151,53 @@ fn string_leaf_is_invalid() {
     assert!(matches!(
         err,
         FromJsonError::InvalidLeaf { path, .. } if path == "colors.blue.500"
+    ));
+}
+
+#[test]
+fn spec_with_jsx_owned_lowers_onto_the_base_system() {
+    let json = owned_envelope(r#"{"CodeIcon":["size","variant"],"Tile":["tone"]}"#);
+    let system = BaseSystem::from_json(&json).unwrap();
+    assert_eq!(system.jsx_owned.len(), 2);
+    assert_eq!(
+        system.jsx_owned.get("CodeIcon"),
+        Some(&vec!["size".to_string(), "variant".to_string()])
+    );
+    assert_eq!(
+        system.jsx_owned.get("Tile"),
+        Some(&vec!["tone".to_string()])
+    );
+}
+
+#[test]
+fn spec_without_jsx_owned_owns_nothing() {
+    let system = BaseSystem::from_json(&test_envelope("{}")).unwrap();
+    assert!(system.jsx_owned.is_empty());
+    assert!(BaseSystem::default().jsx_owned.is_empty());
+}
+
+#[test]
+fn jsx_owned_key_is_omitted_from_the_wire_when_empty() {
+    let bare = BaseSystem::from_json(&test_envelope("{}")).unwrap();
+    let bare_wire = serde_json::to_value(&bare).unwrap();
+    assert!(bare_wire.get("jsxOwned").is_none(), "{bare_wire}");
+
+    let owned = BaseSystem::from_json(&owned_envelope(r#"{"CodeIcon":["size"]}"#)).unwrap();
+    let owned_wire = serde_json::to_value(&owned).unwrap();
+    assert_eq!(
+        owned_wire.get("jsxOwned"),
+        Some(&serde_json::json!({"CodeIcon": ["size"]}))
+    );
+    // The indexed shape round-trips, so a pre-lowered system keeps its roster.
+    let again: BaseSystem = serde_json::from_value(owned_wire).unwrap();
+    assert_eq!(again.jsx_owned, owned.jsx_owned);
+}
+
+#[test]
+fn jsx_owned_must_map_names_to_string_arrays() {
+    let json = owned_envelope(r#"{"CodeIcon":"size"}"#);
+    assert!(matches!(
+        BaseSystem::from_json(&json).unwrap_err(),
+        FromJsonError::Parse(_)
     ));
 }

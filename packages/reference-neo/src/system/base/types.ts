@@ -47,23 +47,31 @@ export interface BaseSystem {
   streams?: SystemStreams[]
   /** Resolved non-primitive JSX elements contributed by this system and its upstream extends chain. */
   jsxElements?: string[]
+  /**
+   * Prop names a component keeps for itself, by component name (`{ Tile: ['size'] }`): a call site reads
+   * them as the component's own props, never as style props. Sorted and unique, set only when non-empty,
+   * and carried through extends and layers alike. A key need not appear in `jsxElements`.
+   */
+  jsxOwned?: Record<string, string[]>
 }
 
 /**
- * The config surface the roster join reads: upstream extends plus the local
- * escape hatch. ReferenceUIConfig satisfies it structurally, so the join takes
- * this instead of the config type and no config↔base cycle forms.
+ * The config surface the roster join reads: upstream extends and layers plus
+ * the local escape hatch. Layers feed only the owned prop map; the roster
+ * names come from extends. ReferenceUIConfig satisfies it structurally, so the
+ * join takes this instead of the config type and no config↔base cycle forms.
  */
 export interface ExtendsCarrier {
   extends?: BaseSystem[]
+  layers?: BaseSystem[]
   jsxElements?: string[]
 }
 
 /**
  * The narrow input the published-system assembler maps: identity, the portable
- * fragment bundle, the published structured stylesheet, and the merged roster.
- * The leg projects this from the publish input at the call, so assembly never
- * imports packager types.
+ * fragment bundle, the published structured stylesheet, the merged roster, and
+ * the owned prop names. The leg projects this from the publish input at the
+ * call, so assembly never imports packager types.
  */
 export interface BaseAssemblyInput {
   name: string
@@ -71,4 +79,5 @@ export interface BaseAssemblyInput {
   fragments?: FragmentNode[]
   streams?: SystemStreams[]
   jsxElements: string[]
+  jsxOwned?: Record<string, string[]>
 }

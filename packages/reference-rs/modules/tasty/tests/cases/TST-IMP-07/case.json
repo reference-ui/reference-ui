@@ -1,0 +1,1 @@
+{"id": "TST-IMP-07", "name": "An import-equals alias of a namespace member resolves to the referenced symbol with no unsupported-syntax warning"}

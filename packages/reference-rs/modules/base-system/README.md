@@ -17,7 +17,9 @@ precomputed `cssVar`). `compile()` still deserializes the indexed shape
 directly so station `baseSystem.json` files keep working.
 `BaseSystem::default()` stays empty. `staticCss` is a property →
 token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
-it empty so AtomSet stays small. `layers` is not here yet.
+it empty so AtomSet stays small. `layers` is not here yet. `jsxOwned` maps a
+component name to the sorted prop names it keeps for itself (omitted when
+empty); `from_json` keeps it, and atomic seeds its host gate from it.
 
 Extends composition lives in Neo: see packages/reference-neo/src/system/base/SPEC.md (E1–E15).
 

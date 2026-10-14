@@ -26,6 +26,13 @@ export interface EvaluatedSystemSpec {
    * with later upstreams winning. Added by RS-4; existing fixtures omit it.
    */
   extends?: string[]
+  /**
+   * Prop names an upstream component keeps for itself, by component name
+   * (`{ Tile: ['size'] }`). A call site reads them as the component's own
+   * props, never as style props. Each value is sorted and unique. Absent or
+   * empty means nothing is owned.
+   */
+  jsxOwned?: Record<string, string[]>
   tokens: Record<string, unknown>
   fonts: Record<string, unknown>
   breakpoints?: Record<string, string | { value: string }>
@@ -195,6 +202,12 @@ export interface CompileResult {
   wants?: unknown[]
   atomCount?: number
   tracedJsxHosts?: string[]
+  /**
+   * Prop names each traced component keeps for itself, by component name:
+   * the local counterpart of the spec's `jsxOwned`. Each value is sorted and
+   * unique. Absent or empty means nothing is owned.
+   */
+  tracedJsxOwned?: Record<string, string[]>
   compilerDiagnostics?: Diagnostic[]
 }
 
@@ -216,6 +229,8 @@ export interface PortableBaseSystem {
   cssChunks: PortableCssChunk[]
   runtime: NativeRuntimeArtifact
   jsxElements: string[]
+  /** Owned prop names by component, as the spec's `jsxOwned`. Absent or empty means nothing is owned. */
+  jsxOwned?: Record<string, string[]>
 }
 
 /**

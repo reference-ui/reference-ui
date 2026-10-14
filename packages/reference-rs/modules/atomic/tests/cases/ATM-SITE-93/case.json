@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-93", "name": "A forwardRef component's destructured props stay its own API at call sites, while props riding rest still extract"}

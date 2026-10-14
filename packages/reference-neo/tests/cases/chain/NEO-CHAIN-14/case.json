@@ -1,0 +1,1 @@
+{"id": "NEO-CHAIN-14", "name": "an upstream that publishes a component as owning size keeps size off the downstream's call sites: no rule, no warning", "sync": true}

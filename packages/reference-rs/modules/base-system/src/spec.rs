@@ -6,6 +6,7 @@
 //! schema versions fail closed with explicit diagnostics. `extends` names upstream systems
 //! kept for wire compatibility; this crate does not resolve them, since Neo composes them.
 
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 
@@ -217,6 +218,10 @@ pub struct EvaluatedSystemSpec {
     pub recipes: IndexMap<String, RecipeDefinition>,
     pub static_css: StaticCss,
     pub provenance: Vec<ProvenanceEntry>,
+    /// Component name → prop names it keeps for itself; lowered onto
+    /// `BaseSystem::jsx_owned` unchanged. Absent on the wire means none.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub jsx_owned: BTreeMap<String, Vec<String>>,
 }
 
 /// Backwards-compatible alias for existing indexed BaseSystem consumers.

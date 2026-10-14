@@ -56,6 +56,7 @@ const BASE: BaseSystem = {
     { name: NAME, preamble: '@layer reset, tokens;\n', tokensPortable: OWN_TOKENS, utilities: '' },
   ],
   jsxElements: ['Button'],
+  jsxOwned: { Button: ['size'] },
 }
 
 function ownTokens(system: BaseSystem): string {
@@ -159,6 +160,7 @@ describe('extendSystem: the untouched entries', () => {
     expect(next.fragments).toEqual(BASE.fragments)
     expect(next.fragment).toBe(BASE.fragment)
     expect(next.jsxElements).toEqual(BASE.jsxElements)
+    expect(next.jsxOwned).toEqual(BASE.jsxOwned)
     expect(next.name).toBe(NAME)
     expect({ ...next.streams?.[1], tokensPortable: undefined }).toEqual({
       ...BASE.streams?.[1],

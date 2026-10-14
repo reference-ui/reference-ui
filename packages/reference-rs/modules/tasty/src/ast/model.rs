@@ -31,6 +31,9 @@ pub(crate) enum ImportBindingKind {
     Named,
     Default,
     Namespace,
+    /// `import X = <entity>`: `imported_name` holds the entity's source text. Lowering rewrites a reference to `X` as that
+    /// text, so the alias names no file and carries no source module of its own.
+    Alias,
 }
 
 #[derive(Debug, Clone)]

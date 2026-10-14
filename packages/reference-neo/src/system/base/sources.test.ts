@@ -1,11 +1,15 @@
 // Exact-string goldens for the generated system source builders.
 // They take no input and assert every emitted declaration and entry byte.
-// These pins name the culprit builder on drift; the end-to-end byte proof
-// stays with the resync determinism case.
+// A system that owns props gains one interface line and a published key, and
+// a system without owned data keeps the bytes it always had. These pins name
+// the culprit builder on drift; the end-to-end byte proof stays with the
+// resync determinism case.
 
 import { describe, expect, it } from 'vitest'
+import { assembleBaseSystem } from './assemble.ts'
 import {
   baseSystemInterfaceSource,
+  baseSystemMjsSource,
   baseSystemTypesSource,
   systemEntrySource,
   systemTypesSource,
@@ -148,6 +152,15 @@ export declare function getRhythm(num: number, denom: number): string
 export declare const baseSystem: BaseSystem
 `
 
+const OWNED_LINE = '  jsxOwned?: Record<string, string[]>\n'
+const OWNING = { jsxOwned: { Tile: ['size'] } }
+
+// The owned line sits straight after jsxElements, the interface's last field.
+function withOwnedLine(text: string): string {
+  const anchor = '  jsxElements?: string[]\n'
+  return text.replace(anchor, `${anchor}${OWNED_LINE}`)
+}
+
 describe('system source builders', () => {
   it('pins the portable interface source', () => {
     expect(baseSystemInterfaceSource()).toBe(INTERFACE_SOURCE)
@@ -163,5 +176,35 @@ describe('system source builders', () => {
 
   it('pins the system types source', () => {
     expect(systemTypesSource()).toBe(SYSTEM_TYPES)
+  })
+})
+
+describe('system source builders for a system that owns props', () => {
+  it('lists jsxOwned after jsxElements in the interface', () => {
+    expect(baseSystemInterfaceSource(OWNING)).toBe(withOwnedLine(INTERFACE_SOURCE))
+    expect(baseSystemInterfaceSource(OWNING)).toContain(`  jsxElements?: string[]\n${OWNED_LINE}}`)
+  })
+
+  it('carries the same line into both declaration texts', () => {
+    expect(baseSystemTypesSource(OWNING)).toBe(withOwnedLine(BASE_SYSTEM_TYPES))
+    expect(systemTypesSource(OWNING)).toBe(withOwnedLine(SYSTEM_TYPES))
+  })
+
+  it('prints the unchanged declarations for an absent or empty owned map', () => {
+    for (const system of [{}, { jsxOwned: undefined }, { jsxOwned: {} }]) {
+      expect(baseSystemInterfaceSource(system)).toBe(INTERFACE_SOURCE)
+      expect(baseSystemTypesSource(system)).toBe(BASE_SYSTEM_TYPES)
+      expect(systemTypesSource(system)).toBe(SYSTEM_TYPES)
+    }
+  })
+
+  it('prints jsxOwned in baseSystem.mjs right after jsxElements, and only for a system that owns props', () => {
+    const base = { name: 'up', fragment: ';tokens()', jsxElements: ['Tile'] }
+    const owning = baseSystemMjsSource(assembleBaseSystem({ ...base, jsxOwned: { Tile: ['size'] } }))
+    const plain = baseSystemMjsSource(assembleBaseSystem({ ...base, jsxOwned: {} }))
+
+    expect(owning).toContain('"jsxElements": [\n    "Tile"\n  ],\n  "jsxOwned": {\n    "Tile": [\n      "size"\n    ]\n  }\n}')
+    expect(plain).not.toContain('jsxOwned')
+    expect(plain).toBe(baseSystemMjsSource(assembleBaseSystem(base)))
   })
 })

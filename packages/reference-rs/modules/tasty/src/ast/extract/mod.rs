@@ -7,6 +7,7 @@ mod context;
 mod infer;
 mod members;
 mod module_bindings;
+mod namespaces;
 mod pipeline;
 mod statements;
 mod symbols;

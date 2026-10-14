@@ -24,7 +24,7 @@ export const brandTitle = css({
   lineHeight: '1.3',
 })
 
-export const brandRange = css({ fontFamily: 'mono', fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.4' })
+export const brandRange = css({ fontFamily: 'mono', fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.4' })
 
 export const rule = css({
   borderTopWidth: '1px',
@@ -36,7 +36,7 @@ export const stageHead = css({ display: 'flex', alignItems: 'center', gap: '3r' 
 
 export const stageNo = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   paddingX: '2r',
   paddingY: '1r',
@@ -48,7 +48,7 @@ export const stageNo = css({
 
 export const stageNoBlue = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   paddingX: '2r',
   paddingY: '1r',
@@ -60,7 +60,7 @@ export const stageNoBlue = css({
 
 export const stageNoGreen = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   paddingX: '2r',
   paddingY: '1r',
@@ -81,7 +81,7 @@ export const stageTitle = css({
 export const spacer = css({ flex: '1' })
 
 export const stageTag = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
@@ -90,7 +90,7 @@ export const stageTag = css({
 })
 
 export const tagPillBlue = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   paddingX: '3r',
   paddingY: '1r',
@@ -117,11 +117,11 @@ export const textBlue = css({ color: 'diagramBlueText' })
 export const textGreen = css({ color: 'diagramGreenText' })
 export const textAmber = css({ color: 'diagramAmberText' })
 
-export const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
+export const cardSub = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.5' })
 
 export const codeBlock = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsText',
   borderRadius: 'sm',
   padding: '3r',
@@ -137,7 +137,7 @@ export const analysisTitle = css({
 })
 
 export const pillGreen = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   paddingX: '3r',
   paddingY: '1r',
@@ -158,13 +158,13 @@ export const checkBox = css({
 
 export const checkRow = css({ display: 'flex', alignItems: 'center', gap: '2r' })
 
-export const checkText = css({ fontSize: 'sm', color: 'docsText', lineHeight: '1.5' })
+export const checkText = css({ fontSize: '3.5r', color: 'docsText', lineHeight: '1.5' })
 
 export const chips = css({ display: 'flex', flexWrap: 'wrap', gap: '1r', justifyContent: 'center' })
 
 export const chip = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsText',
   paddingX: '2r',
   paddingY: '1r',
@@ -216,7 +216,7 @@ export const skeleton = css({ display: 'flex', flexDirection: 'column', gap: '1r
 export const skeletonBar = css({ height: '1r', borderRadius: 'full', bg: 'diagramBorder' })
 
 export const actionButton = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   color: 'docsText',
   bg: 'diagramPanel',

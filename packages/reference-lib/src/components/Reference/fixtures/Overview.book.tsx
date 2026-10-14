@@ -15,10 +15,10 @@ export default (
     height="600px"
   >
     <Div display="flex" flexDirection="column" gap="2r">
-      <Span fontSize="4xl" fontWeight="700" letterSpacing="tight" color="gray.950">
+      <Span fontSize="9r" fontWeight="700" letterSpacing="tight" color="gray.950">
         Reference Lib playground
       </Span>
-      <Span fontSize="lg" color="gray.600" lineHeight="relaxed" maxWidth="36rem">
+      <Span fontSize="4.5r" color="gray.600" lineHeight="relaxed" maxWidth="36rem">
         Browse stories in the sidebar to preview and inspect components in isolation.
         Powered by the Book single-document playground.
       </Span>
@@ -31,7 +31,7 @@ export default (
       borderColor="gray.100"
     >
       <Span
-        fontSize="sm"
+        fontSize="3.5r"
         fontWeight="600"
         color="gray.700"
         display="block"
@@ -39,7 +39,7 @@ export default (
       >
         Tip
       </Span>
-      <Span fontSize="sm" color="gray.600" lineHeight="relaxed">
+      <Span fontSize="3.5r" color="gray.600" lineHeight="relaxed">
         Run{' '}
         <Span fontFamily="mono" color="gray.800">
           pnpm dev:lib

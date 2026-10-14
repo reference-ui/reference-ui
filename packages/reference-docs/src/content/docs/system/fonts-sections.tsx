@@ -16,7 +16,7 @@ function FamilyRow({ name, font, sample }: { name: string; font: 'sans' | 'serif
       flexDirection="column"
       gap="3r"
     >
-      <Span fontSize="sm" fontWeight="600" color="docsMuted">
+      <Span fontSize="3.5r" fontWeight="600" color="docsMuted">
         {name}
       </Span>
       <Div font={font} fontSize="5r" lineHeight="1.3" color="docsText">
@@ -44,7 +44,7 @@ export function ShippedFamilies() {
 
 const specStyle = {
   width: '34r',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsMuted',
   fontFamily: 'mono',
 } as const

@@ -3,6 +3,7 @@
 //! Connects properties from parents to children in the component graph.
 
 pub mod expr;
+mod forwarded;
 pub mod jsx;
 
 use crate::analysis::model::{ComponentEdge, PropBindings, TraceImport};
@@ -15,6 +16,8 @@ pub struct WalkContext<'a> {
     pub primitive_names: &'a BTreeSet<String>,
     pub bindings: &'a PropBindings,
     pub edges: &'a mut Vec<ComponentEdge>,
+    /// Destructured props the body passes on to an element under their own name, by prop name.
+    pub forwarded_props: &'a mut BTreeSet<String>,
 }
 
 pub fn collect_edges_from_statement(statement: &Statement<'_>, ctx: &mut WalkContext<'_>) {

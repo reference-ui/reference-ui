@@ -17,7 +17,7 @@ const cardTitle = css({
   lineHeight: '1.3',
 })
 
-const cardSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
+const cardSub = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.5' })
 
 const keyChip = css({
   fontFamily: 'mono',
@@ -28,7 +28,7 @@ const keyChip = css({
 })
 
 const pillGreen = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   color: 'diagramGreenText',
   bg: 'diagramChip',

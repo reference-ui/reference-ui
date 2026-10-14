@@ -18,14 +18,14 @@ import { ToneGallery } from './specimen-tones'
  */
 
 const backLink = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsMuted',
   textDecoration: 'none',
   _hover: { color: 'docsText' },
 })
 
 const eyebrow = css({
-  fontSize: 'sm',
+  fontSize: '3.5r',
   fontWeight: '600',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
@@ -40,7 +40,7 @@ function Section({ title, lede, children }: { title: string; lede: string; child
         <H2 margin="0" color="docsText" fontSize="6r" letterSpacing="-0.02em" lineHeight="1.25">
           {title}
         </H2>
-        <P margin="0" color="docsMuted" fontSize="md" lineHeight="1.7">
+        <P margin="0" color="docsMuted" fontSize="4r" lineHeight="1.7">
           {lede}
         </P>
       </Div>
@@ -81,7 +81,7 @@ export function DiagramPage() {
           >
             Diagram kit
           </H1>
-          <P margin="0" color="docsMuted" fontSize="md" lineHeight="1.7" maxWidth="46rem">
+          <P margin="0" color="docsMuted" fontSize="4r" lineHeight="1.7" maxWidth="46rem">
             Five pieces — canvas, row, column, panel, arrow — composed with ordinary
             components. Nothing here ships in the sidebar; this page exists so diagrams
             across the docs share one hand.
@@ -171,7 +171,7 @@ export function DiagramPage() {
           </Ol>
         </Section>
 
-        <P margin="0" color="docsMuted" fontSize="sm" lineHeight="1.6">
+        <P margin="0" color="docsMuted" fontSize="3.5r" lineHeight="1.6">
           Private gallery — nothing here ships in the sidebar. The kit lives in
           src/content/diagrams.
         </P>

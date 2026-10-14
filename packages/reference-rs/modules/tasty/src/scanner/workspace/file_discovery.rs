@@ -68,7 +68,7 @@ fn is_supported_source_entry(entry: &globwalk::DirEntry) -> bool {
 fn has_supported_source_extension(path: &Path) -> bool {
     matches!(
         path.extension().and_then(|ext| ext.to_str()),
-        Some("ts" | "tsx")
+        Some("ts" | "tsx" | "mts" | "cts")
     )
 }
 

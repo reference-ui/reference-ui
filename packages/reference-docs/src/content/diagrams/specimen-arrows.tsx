@@ -16,11 +16,11 @@ const panelTitle = css({
   lineHeight: '1.3',
 })
 
-const panelSub = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.5' })
+const panelSub = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.5' })
 
 const chip = css({
   fontFamily: 'mono',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsText',
   bg: 'diagramChip',
   paddingX: '2r',
@@ -30,7 +30,7 @@ const chip = css({
   lineHeight: '1.5',
 })
 
-const caption = css({ fontSize: 'sm', color: 'diagramMuted', lineHeight: '1.4' })
+const caption = css({ fontSize: '3.5r', color: 'diagramMuted', lineHeight: '1.4' })
 
 export function ArrowGallery() {
   return (

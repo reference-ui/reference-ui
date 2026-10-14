@@ -25,7 +25,7 @@ export interface TypegenDetailedEmit {
     dts: string;
     diagnostics: TypegenDiagnostic[];
 }
-export type PropValueDomain = 'color' | 'spacing' | 'radius' | 'container' | 'rhythm' | 'open';
+export type PropValueDomain = 'color' | 'spacing' | 'radius' | 'container' | 'rhythm' | 'animation' | 'open';
 export interface PrimitivesVocabulary {
     props: string[];
     domains: Record<string, PropValueDomain>;

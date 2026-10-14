@@ -72,7 +72,8 @@ Emitted kinds are the strings the JS API reads: `intrinsic`, `literal`, `object`
 - [ ] TASTY-27 An unreadable scan root, an invalid glob, or an unreadable file throws `TST-E-SCAN-FAILED` and produces no bundle. Unproven at station level: `src/diagnostics/mod.rs` pins the message prefix only.
 - [x] TASTY-28 Warnings reach the manifest `warnings` array with `severity`, `code`, `message`, `file`, and an optional `help`. Proof: TST-IMP-02 (golden).
 - [x] TASTY-38 A path-shaped `declare module './x'` augmentation is not merged, and warns `TST-W-UNSUPPORTED-AUGMENTATION` naming the augmenting file and the module. Proof: TST-EXT-03.
-- [x] TASTY-39 `declare global`, `import x =`, and `export =` in a user file warn `TST-W-UNSUPPORTED-SYNTAX` naming the construct, and the statement is skipped. Proof: TST-EXT-04.
+- [x] TASTY-39 `declare global`, `export =`, `import x = require()`, and an `import x = <entity>` whose head the file never declares warn `TST-W-UNSUPPORTED-SYNTAX` naming the construct, and the statement is skipped. Proof: TST-EXT-04.
+- [x] TASTY-46 An `import X = <entity>` alias lowers as the entity it names, so a reference to `X` resolves to that entity's symbol: an import namespace member, a namespace declared in the same file, or another alias. A namespace member `N.M` is a symbol named `N.M`, emitted when a reference or an export names it, and an `export import` re-exports its target. Proof: TST-IMP-07.
 
 ### 3.5 Output
 

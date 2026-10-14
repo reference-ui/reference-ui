@@ -7,7 +7,7 @@
  */
 
 /**
- * Frozen cross-package contract definitions for Reference RS cutover (PLAN.md §3).
+ * Frozen cross-package contract definitions for Reference RS cutover.
  * Defines TypeScript interfaces for EvaluatedSystemSpec, NativeRuntimeArtifact,
  * CompileResult, SystemStreams, PortableBaseSystem, and NativeCompileRequest.
  * Every N and C packet references these types and their committed JSON fixtures.
@@ -27,6 +27,13 @@ export interface EvaluatedSystemSpec {
      * with later upstreams winning. Added by RS-4; existing fixtures omit it.
      */
     extends?: string[];
+    /**
+     * Prop names an upstream component keeps for itself, by component name
+     * (`{ Tile: ['size'] }`). A call site reads them as the component's own
+     * props, never as style props. Each value is sorted and unique. Absent or
+     * empty means nothing is owned.
+     */
+    jsxOwned?: Record<string, string[]>;
     tokens: Record<string, unknown>;
     fonts: Record<string, unknown>;
     breakpoints?: Record<string, string | {
@@ -203,6 +210,12 @@ export interface CompileResult {
     wants?: unknown[];
     atomCount?: number;
     tracedJsxHosts?: string[];
+    /**
+     * Prop names each traced component keeps for itself, by component name:
+     * the local counterpart of the spec's `jsxOwned`. Each value is sorted and
+     * unique. Absent or empty means nothing is owned.
+     */
+    tracedJsxOwned?: Record<string, string[]>;
     compilerDiagnostics?: Diagnostic[];
 }
 export interface PortableCssChunk {
@@ -221,6 +234,8 @@ export interface PortableBaseSystem {
     cssChunks: PortableCssChunk[];
     runtime: NativeRuntimeArtifact;
     jsxElements: string[];
+    /** Owned prop names by component, as the spec's `jsxOwned`. Absent or empty means nothing is owned. */
+    jsxOwned?: Record<string, string[]>;
 }
 /**
  * One in-memory source file: the absolute path plus the bytes to compile.
@@ -260,6 +275,15 @@ export interface NativeCompileRequest {
      * accept 'compiler'; 'proof' is a test-observability channel.
      */
     logs?: LogChannel[];
+    /**
+     * True when an extends/layers upstream's published global CSS already
+     * establishes a container root (`:root`/`html`/`body` carrying
+     * `container-type`/`container`). Upstream global CSS ships via the
+     * streams merge, invisible to this compile, so the container-root
+     * check trusts this signal and stays silent. Absent means standalone:
+     * the check reads local global CSS only.
+     */
+    upstreamContainerRoot?: boolean;
 }
 export interface OutputInventory {
     expectedPaths: string[];

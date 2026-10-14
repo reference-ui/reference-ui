@@ -31,7 +31,7 @@ pub enum TastyDiagnosticCode {
     UnresolvedImport,
     /// `ast/extract/statements/unsupported`: a `declare module` augmentation of a path-shaped module is not merged.
     UnsupportedAugmentation,
-    /// `ast/extract/statements/unsupported`: a module-level statement tasty does not model (`declare global`, `import x = …`, `export =`) is skipped.
+    /// `ast/extract/statements/unsupported`: a module-level statement tasty does not model (`declare global`, `export =`, `import x = require()`, or an `import x = <entity>` with an undeclared head) is skipped.
     UnsupportedSyntax,
 }
 

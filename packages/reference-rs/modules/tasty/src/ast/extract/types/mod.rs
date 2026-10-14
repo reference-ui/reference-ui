@@ -9,6 +9,7 @@
 
 use oxc_ast::ast::{TSType, TSTypeParameterDeclaration};
 
+use crate::ast::model::ImportBindingKind;
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::shared::type_ref_util::reference_lookup_name;
 
@@ -224,8 +225,10 @@ fn mapped_modifier_kind(
 fn reference_source_module(reference_name: &str, ctx: &ExtractionContext<'_>) -> Option<String> {
     let lookup_name = reference_lookup_name(reference_name);
 
+    // An alias names no module of its own; a reference that still starts with one falls back to the file's default.
     ctx.import_bindings
         .get(lookup_name)
+        .filter(|binding| !matches!(binding.kind, ImportBindingKind::Alias))
         .map(|binding| binding.source_module.clone())
         .or_else(|| default_source_module(ctx))
 }

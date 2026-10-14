@@ -1,6 +1,7 @@
 //! JSX traversal for collecting forwarding edges.
 
 use super::expr::collect_edges_from_expression;
+use super::forwarded::note_forwarded_props;
 use super::WalkContext;
 use crate::analysis::model::{ComponentEdge, EdgeTarget, PropBindings, TraceImport};
 use crate::analysis::util::{is_component_name, jsx_name_to_string};
@@ -67,6 +68,7 @@ pub fn collect_edges_from_jsx_element(
 }
 
 fn walk_jsx_attribute(attribute: &JSXAttributeItem<'_>, ctx: &mut WalkContext<'_>) {
+    note_forwarded_props(attribute, ctx);
     match attribute {
         JSXAttributeItem::Attribute(attr) => {
             if let Some(value) = &attr.value {

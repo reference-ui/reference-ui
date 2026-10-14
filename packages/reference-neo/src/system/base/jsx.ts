@@ -1,9 +1,11 @@
 // Resolved JSX element artifact for the generated system folder.
-// It takes an extends carrier plus traced wrapper names and emits the
-// styletrace input shape. Local is traced union configured, so config
-// stays the override: names the tracer misses still land. Primitives come
-// from the E1 element vocabulary on the committed shelf, so downstream
-// extends consumers read the roster without tracing it.
+// It takes an extends carrier plus traced wrapper names and owned props and
+// emits the styletrace input shape. Local is traced union configured, so
+// config stays the override: names the tracer misses still land. Owned prop
+// names ride beside the roster as a component-to-props map that prints only
+// when it names a prop. Primitives come from the E1 element vocabulary on the
+// committed shelf, so downstream extends consumers read the roster without
+// tracing it.
 
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -15,10 +17,36 @@ export interface JsxElementsArtifact {
   upstream: string[]
   local: string[]
   merged: string[]
+  /** Prop names each component keeps for itself, by component: upstream (extends and layers) joined with local traced. */
+  owned: Record<string, string[]>
 }
 
-function uniqueSorted(names: string[]): string[] {
+type OwnedProps = Readonly<Record<string, readonly string[]>>
+
+function uniqueSorted(names: readonly string[]): string[] {
   return [...new Set(names.map(name => name.trim()).filter(name => name.length > 0))].sort()
+}
+
+// Every source's props, gathered under the trimmed component name.
+function groupOwned(sources: ReadonlyArray<OwnedProps | undefined>): Map<string, string[]> {
+  const propsByComponent = new Map<string, string[]>()
+  for (const source of sources) {
+    for (const [component, props] of Object.entries(source ?? {})) {
+      const name = component.trim()
+      propsByComponent.set(name, [...(propsByComponent.get(name) ?? []), ...props])
+    }
+  }
+  return propsByComponent
+}
+
+// Joins owned maps by component name: names trimmed, props deduped and sorted, keys sorted, and a
+// component left with no prop dropped, so the same inputs always print the same bytes.
+function mergeOwned(sources: ReadonlyArray<OwnedProps | undefined>): Record<string, string[]> {
+  const grouped = groupOwned(sources)
+  const entries = uniqueSorted([...grouped.keys()]).map(
+    name => [name, uniqueSorted(grouped.get(name) ?? [])] as const
+  )
+  return Object.fromEntries(entries.filter(([, props]) => props.length > 0))
 }
 
 // The E1 vocabulary is the committed shelf the PGEN parity cases gate:
@@ -63,18 +91,35 @@ function readPrimitiveRoster(): string[] {
 
 const PRIMITIVE_ROSTER: string[] = readPrimitiveRoster()
 
+/** The artifact as printed to jsx-elements.json: `owned` rides only when it names a prop. */
+export type PublishedJsxElements = Omit<JsxElementsArtifact, 'owned'> & Partial<Pick<JsxElementsArtifact, 'owned'>>
+
+// An empty owned map is left out, as jsxOwned is from the base system, so a roster without owned
+// data keeps the four keys it always printed.
+export function publishedJsxElements(artifact: JsxElementsArtifact): PublishedJsxElements {
+  const { owned, ...roster } = artifact
+  return Object.keys(owned).length > 0 ? artifact : roster
+}
+
 export function resolveJsxElements(
   config: ExtendsCarrier,
-  traced: readonly string[] = []
+  traced: readonly string[] = [],
+  tracedOwned: OwnedProps = {}
 ): JsxElementsArtifact {
+  // Names come from extends only, because lib's config keeps the JSX roster icons-local. Owned flows
+  // through layers on purpose, and only owned does: a layered component keeps its own props too.
   const upstream = uniqueSorted(
     (config.extends ?? []).flatMap(system => system.jsxElements ?? [])
   )
   const local = uniqueSorted([...(config.jsxElements ?? []), ...traced])
+  const upstreamOwned = [...(config.extends ?? []), ...(config.layers ?? [])].map(
+    system => system.jsxOwned
+  )
   return {
     primitives: PRIMITIVE_ROSTER,
     upstream,
     local,
     merged: uniqueSorted([...upstream, ...local]),
+    owned: mergeOwned([...upstreamOwned, tracedOwned]),
   }
 }

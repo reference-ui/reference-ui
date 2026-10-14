@@ -11,7 +11,7 @@ import { Div, H1, H2, H3, H4, H5, H6, Span } from '@reference-ui/react'
 
 const specStyle = {
   width: '12r',
-  fontSize: 'sm',
+  fontSize: '3.5r',
   color: 'docsMuted',
   fontFamily: 'mono',
 } as const

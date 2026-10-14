@@ -28,6 +28,12 @@ export type StyletraceDiagnosticCode =
 export interface StyletraceDetailedResult {
   bindings: TracedBinding[]
   diagnostics: StyletraceDiagnostic[]
+  /**
+   * Each traced export name to the declared prop names it keeps for itself
+   * (never forwarded to a style primitive), sorted and unique. Always present;
+   * `{}` when no traced component owns a prop.
+   */
+  owned: Record<string, string[]>
 }
 
 export async function traceBindings(

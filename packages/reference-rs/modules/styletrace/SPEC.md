@@ -8,7 +8,7 @@ Harness: `pnpm agentrs v styletrace` (Vitest: station suite plus `tests/suites/`
 
 ## 1. Job of the Crate
 
-`styletrace` takes a source tree and a Reference sync root (the synced `.reference-ui/react` declarations) and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. StyleProps names come from the synced public type and primitive identity from the synced primitive declarations, never from PascalCase names or a parallel list. It parses sources with Oxc and never executes them. `trace()` returns names; `traceDetailed()` returns bindings and diagnostics. A missing source root, declaration root, or StyleProps entrypoint refuses the request with a coded throw: phases never guess a missing surface or file.
+`styletrace` takes a source tree and a Reference sync root (the synced `.reference-ui/react` declarations) and emits the sorted names of exported JSX components whose StyleProps reach a Reference primitive or the Reference style pipeline, plus located, coded diagnostics. StyleProps names come from the synced public type and primitive identity from the synced primitive declarations, never from PascalCase names or a parallel list. It parses sources with Oxc and never executes them. `trace()` returns names; `traceDetailed()` returns bindings, diagnostics, and the prop names each traced component owns. A missing source root, declaration root, or StyleProps entrypoint refuses the request with a coded throw: phases never guess a missing surface or file.
 
 ---
 
@@ -80,6 +80,7 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 - [x] STT-27 Malformed but parseable user code, such as a style helper called with no arguments, never crashes the trace. Proof: STT-NEG-03.
 - [x] STT-28 The trace returns unique names in sorted order, and each station pins them in `output/components.json`. Proof: every STT station (standing gauges and goldens in `tests/harness/helpers.ts`).
 - [x] STT-34 A component name whose first letter is a non-ASCII capital (`Ärger`) traces, and an empty or BOM-only file parses with no diagnostic. Proof: STT-WRAP-11.
+- [x] STT-41 `traceDetailed()` returns `owned`: each traced export name mapped to the sorted, unique prop names it declares and keeps for itself. A destructured prop stops being owned only when it reaches an element under the same prop name: a JSX attribute `name={...}` whose value reads the prop's local (`size={size}`), or a spread whose object literal still contains that name (`{...{ size }}`, `{...{ size: size }}`). The key is always present and `{}` when no traced component owns a prop. Proof: `tests/suites/detailed.test.ts` (exact wire bytes).
 
 ---
 

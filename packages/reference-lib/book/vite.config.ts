@@ -7,11 +7,15 @@ import { bookPerfPlugin } from './perf/plugin'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkgDir = resolve(__dirname, '..')
-const reactRoot = resolve(pkgDir, '.reference-ui/react')
+// Book's generated output comes from its own sync (book/ui.config.ts), so the
+// stories' style call-sites reach its stylesheet. Lib's .reference-ui stays the
+// shipped-only output that docs and other consumers read.
+const bookGenerated = resolve(__dirname, '.reference-ui')
+const reactRoot = resolve(bookGenerated, 'react')
 const reactStylesCss = resolve(reactRoot, 'styles.css')
-const styledRoot = resolve(pkgDir, '.reference-ui/styled')
-const systemRoot = resolve(pkgDir, '.reference-ui/system')
-const typesRoot = resolve(pkgDir, '.reference-ui/types')
+const styledRoot = resolve(bookGenerated, 'styled')
+const systemRoot = resolve(bookGenerated, 'system')
+const typesRoot = resolve(bookGenerated, 'types')
 
 const workspaceIconsDir = resolve(pkgDir, '../reference-icons')
 const iconsEntry = existsSync(resolve(workspaceIconsDir, 'src/index.ts'))

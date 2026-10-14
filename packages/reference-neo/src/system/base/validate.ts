@@ -42,6 +42,30 @@ function assertOptionalJsxElements(
   }
 }
 
+// The owned map's keys are component names and need not appear in jsxElements: a system can own
+// the props of a component it only reaches through another, so only the shape is checked here.
+function isOwnedMap(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  return Object.values(value as Record<string, unknown>).every(
+    (props) => Array.isArray(props) && props.every((prop) => typeof prop === 'string')
+  )
+}
+
+function assertOptionalJsxOwned(
+  field: BaseSystemField,
+  sys: BaseSystem,
+  index: number
+): void {
+  if (sys.jsxOwned == null) return
+
+  if (!isOwnedMap(sys.jsxOwned)) {
+    throw invalidBaseSystem(
+      field,
+      `Entry ${index} (${sys.name}) must have 'jsxOwned' as an object mapping component names to arrays of strings.`
+    )
+  }
+}
+
 export function validateBaseSystems(
   field: BaseSystemField,
   value: unknown
@@ -156,6 +180,7 @@ function validateBaseSystemEntry(
   assertFragmentNodes(field, sys, index)
   assertRequiredStreams(field, sys, index, options.requireStreams ?? false)
   assertOptionalJsxElements(field, sys, index)
+  assertOptionalJsxOwned(field, sys, index)
 }
 
 export function validateBaseSystemEntries(

@@ -12,7 +12,7 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
-use crate::analysis::model::{ExportTarget, TraceComponent};
+use crate::analysis::model::{ExportTarget, TraceComponent, WrapperProps};
 use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
@@ -238,7 +238,7 @@ fn collect_default_arrow(
         name: ANONYMOUS_DEFAULT,
         first_param: arrow.params.items.first(),
         body_statements: Some(&arrow.body.statements),
-        wrapper_style_props: BTreeSet::new(),
+        wrapper_props: WrapperProps::default(),
     };
     let component = component_from_function_like(&context, ctx)?;
     collect_anonymous_default(component, state);
@@ -255,7 +255,7 @@ fn collect_default_expression(
         name: ANONYMOUS_DEFAULT,
         first_param: function.params.items.first(),
         body_statements: function.body.as_ref().map(|body| &body.statements),
-        wrapper_style_props: BTreeSet::new(),
+        wrapper_props: WrapperProps::default(),
     };
     let component = component_from_function_like(&context, ctx)?;
     collect_anonymous_default(component, state);
@@ -277,7 +277,7 @@ fn collect_default_function(
         name: &component_name,
         first_param: function.params.items.first(),
         body_statements: function.body.as_ref().map(|body| &body.statements),
-        wrapper_style_props: BTreeSet::new(),
+        wrapper_props: WrapperProps::default(),
     };
     let Some(component) = component_from_function_like(&context, ctx)? else {
         return Ok(());

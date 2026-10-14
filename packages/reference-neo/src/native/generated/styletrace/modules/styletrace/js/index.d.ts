@@ -16,6 +16,12 @@ export type StyletraceDiagnosticCode = 'STT-W-SKIPPED-FILE' | 'STT-E-SCAN-FAILED
 export interface StyletraceDetailedResult {
     bindings: TracedBinding[];
     diagnostics: StyletraceDiagnostic[];
+    /**
+     * Each traced export name to the declared prop names it keeps for itself
+     * (never forwarded to a style primitive), sorted and unique. Always present;
+     * `{}` when no traced component owns a prop.
+     */
+    owned: Record<string, string[]>;
 }
 export declare function traceBindings(sourceRoot: string, declarationRoot?: string): Promise<TracedBinding[]>;
 export declare function trace(rootDir: string, syncRootHint?: string): Promise<string[]>;

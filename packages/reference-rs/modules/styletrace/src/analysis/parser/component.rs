@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
 use super::types::parse_prop_bindings;
-use crate::analysis::model::{ComponentEdge, PropBindings, TraceComponent};
+use crate::analysis::model::{ComponentEdge, PropBindings, TraceComponent, WrapperProps};
 use crate::analysis::util::is_component_name;
 use crate::analysis::walk::{collect_edges_from_statement, WalkContext};
 use crate::resolver::StyleTraceError;
@@ -17,7 +17,7 @@ pub struct FunctionLikeContext<'a, 'b, 'c> {
     pub name: &'a str,
     pub first_param: Option<&'b FormalParameter<'b>>,
     pub body_statements: Option<&'c oxc_allocator::Vec<'c, Statement<'c>>>,
-    pub wrapper_style_props: BTreeSet<String>,
+    pub wrapper_props: WrapperProps,
 }
 
 pub fn component_from_function_declaration(
@@ -33,7 +33,7 @@ pub fn component_from_function_declaration(
         name: &name,
         first_param: function.params.items.first(),
         body_statements: function.body.as_ref().map(|body| &body.statements),
-        wrapper_style_props: BTreeSet::new(),
+        wrapper_props: WrapperProps::default(),
     };
 
     let component = component_from_function_like(&fl_ctx, ctx)?;
@@ -45,7 +45,7 @@ pub fn component_from_expression(
     name: &str,
     expression: &Expression<'_>,
     ctx: &ParserContext,
-    wrapper_style_props: BTreeSet<String>,
+    wrapper_props: WrapperProps,
 ) -> Result<Option<TraceComponent>, StyleTraceError> {
     match expression {
         Expression::ArrowFunctionExpression(arrow) => component_from_function_like(
@@ -53,7 +53,7 @@ pub fn component_from_expression(
                 name,
                 first_param: arrow.params.items.first(),
                 body_statements: Some(&arrow.body.statements),
-                wrapper_style_props,
+                wrapper_props,
             },
             ctx,
         ),
@@ -62,27 +62,27 @@ pub fn component_from_expression(
                 name,
                 first_param: function.params.items.first(),
                 body_statements: function.body.as_ref().map(|body| &body.statements),
-                wrapper_style_props,
+                wrapper_props,
             },
             ctx,
         ),
         Expression::ParenthesizedExpression(parenthesized) => {
-            component_from_expression(name, &parenthesized.expression, ctx, wrapper_style_props)
+            component_from_expression(name, &parenthesized.expression, ctx, wrapper_props)
         }
         Expression::TSAsExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
         }
         Expression::TSSatisfiesExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
         }
         Expression::TSTypeAssertion(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
         }
         Expression::TSNonNullExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_style_props)
+            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
         }
         Expression::TSInstantiationExpression(instantiated) => {
-            let next_wrapper = super::types::wrapper_style_props_from_type_arguments(
+            let next_wrapper = super::types::wrapper_props_from_type_arguments(
                 ctx,
                 instantiated.type_arguments.params.iter().nth(1),
             )?;
@@ -98,7 +98,7 @@ fn extract_component_from_call(
     call: &oxc_allocator::Box<'_, oxc_ast::ast::CallExpression<'_>>,
     ctx: &ParserContext,
 ) -> Result<Option<TraceComponent>, StyleTraceError> {
-    let next_wrapper = super::types::wrapper_style_props_from_call(call, ctx)?;
+    let next_wrapper = super::types::wrapper_props_from_call(call, ctx)?;
     for argument in &call.arguments {
         let oxc_ast::ast::Argument::SpreadElement(_) = argument else {
             if let Some(component) = component_from_expression(
@@ -130,9 +130,10 @@ pub fn component_from_function_like(
         fl_ctx.first_param,
         fl_ctx.body_statements,
         ctx,
-        fl_ctx.wrapper_style_props.clone(),
+        fl_ctx.wrapper_props.clone(),
     )?;
     let mut edges = Vec::<ComponentEdge>::new();
+    let mut forwarded_props = BTreeSet::<String>::new();
     for statement in body_statements {
         collect_edges_from_statement(
             statement,
@@ -141,6 +142,7 @@ pub fn component_from_function_like(
                 primitive_names: &ctx.surface.primitives,
                 bindings: &bindings,
                 edges: &mut edges,
+                forwarded_props: &mut forwarded_props,
             },
         );
     }
@@ -156,17 +158,23 @@ pub fn component_from_function_like(
         exposes_style_props: bindings.exposes_style_props(),
         uses_style_pipeline,
         edges,
-        owned_props: shadowed_owned_props(&bindings),
+        owned_props: shadowed_owned_props(&bindings, &forwarded_props),
     }))
 }
 
 /// Declared-owned names that survive the forward: only props the component
-/// pulls out of the props object shadow StyleProps. Names riding the
-/// props/rest spread into the primitive keep extracting at call sites.
-fn shadowed_owned_props(bindings: &PropBindings) -> BTreeSet<String> {
+/// pulls out of the props object shadow StyleProps, and only while the body
+/// never passes them on under their own name (`size={size}`). Names riding
+/// the props/rest spread into the primitive, or handed on under their own
+/// name, keep extracting at call sites.
+fn shadowed_owned_props(
+    bindings: &PropBindings,
+    forwarded_props: &BTreeSet<String>,
+) -> BTreeSet<String> {
     bindings
         .owned_props
         .intersection(&bindings.destructured_prop_names)
+        .filter(|name| !forwarded_props.contains(*name))
         .cloned()
         .collect()
 }

@@ -7,6 +7,7 @@ use oxc_ast::ast::{Comment, Statement, TSInterfaceDeclaration, TSTypeAliasDeclar
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
+use super::namespaces::{collect_namespace_table, NamespaceView};
 use super::statements::{
     exports_from_statement, import_bindings_from_statement, unresolved_import_diagnostics,
     unsupported_syntax_diagnostics,
@@ -56,13 +57,25 @@ fn extract_file(
     )?);
 
     let comments = &parsed.program.comments;
+    let namespaces = collect_namespace_table(&parsed.program.body, &scanned_file.source);
     let mut bindings = FileBindings::default();
+    bindings.import_bindings.extend(namespaces.aliases.clone());
 
     for statement in parsed.program.body.iter() {
         bindings.apply_statement(resolver, scanned_file, file_id_set, statement, comments);
     }
 
     bindings.materialize_library_export_closure(scanned_file, &parsed.program.body, comments);
+
+    let view = NamespaceView {
+        scanned_file,
+        comments,
+        file_bindings: &bindings.import_bindings,
+        table: &namespaces,
+    };
+    view.record_export_aliases(&mut bindings.export_bindings, &mut bindings.reexport_target);
+    let seeds: Vec<String> = bindings.export_bindings.values().cloned().collect();
+    view.materialize(seeds, &mut bindings.exports);
 
     Ok(ParsedFileAst {
         file_id: scanned_file.file_id.clone(),

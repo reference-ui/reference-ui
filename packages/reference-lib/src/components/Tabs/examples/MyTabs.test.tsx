@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import * as React from 'react'
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'
 import { css } from '@reference-ui/react'
 import {
@@ -16,6 +16,10 @@ import {
   myTabsTab,
   type MyTabsVariant,
 } from './MyTabs'
+
+// The author recipes in ./MyTabs are compiled only into Book's sync output: lib's published output leaves this
+// example out. So this file runs against the runtime of that compile, which carries the flavor's classes.
+vi.mock('@reference-ui/react', () => import('../../../../book/.reference-ui/react/react.mjs'))
 
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true

@@ -104,7 +104,7 @@ function writeArtifactsToDisk(outputDir: string, files: Record<string, string>):
 }
 
 async function executeTastyCompilation(ctx: StationContext): Promise<TastyCaseResult> {
-  const include = [`cases/${ctx.caseName}/input/**/*.{ts,tsx}`]
+  const include = [`cases/${ctx.caseName}/input/**/*.{ts,tsx,mts,cts}`]
   const raw = scanAndEmitModules(TESTS_DIR, include)
   const emitted: EmittedModulesPayload = {
     modules: raw.modules ?? {},

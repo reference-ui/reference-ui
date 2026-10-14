@@ -120,6 +120,10 @@ async function evaluateAndCompile(
     // records what the author asked for: discovery reaches the publish below,
     // never this list.
     const requested = resolveJsxElements(config)
+    // The props every upstream (extends and layers) keeps for its components ride the spec, not the
+    // request: a compiled package ships no source to trace, so the engine learns them here. They are
+    // set only when one names a prop, which keeps the frozen request byte-identical otherwise.
+    if (Object.keys(requested.owned).length > 0) spec.jsxOwned = requested.owned
     // Self excluded: the wire list never carries the consumer's own name; the
     // engine constructs own-first itself (G0 §E/§F). Each upstream contributes
     // its transitively-expanded `streams` names (own entry last, per the
@@ -189,8 +193,13 @@ interface PublishInput {
 async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[]> {
   // Publish carries configured ∪ traced: hosts the engine discovered
   // inside compile() join the config names in the artifact and the
-  // portable system, so downstream extends keep their fuel.
-  const jsx = resolveJsxElements(input.config, input.result.tracedJsxHosts ?? [])
+  // portable system, so downstream extends keep their fuel. The props
+  // those hosts keep for themselves ride along the same way.
+  const jsx = resolveJsxElements(
+    input.config,
+    input.result.tracedJsxHosts ?? [],
+    input.result.tracedJsxOwned ?? {}
+  )
   // Structured merge over data: both buckets feed the streams merge in
   // bucket order (extends, then layers), fragments stay extends-only.
   const merged = mergeStreams(

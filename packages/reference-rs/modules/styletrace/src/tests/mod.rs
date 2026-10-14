@@ -3,12 +3,15 @@
 //! Takes test assertions and simulated file environments via the fixtures module.
 //! Emits test results, verifying the correctness of type expansion and JSX wrapper tracing.
 
+mod detailed_owned;
 mod fixtures;
 mod hermetic_roots;
 mod ident_alias;
 mod member_alias;
 mod neo_decl_roots;
+mod owned_forwarded;
 mod owned_props;
+mod owned_wrappers;
 mod prop_resolution;
 mod trace_gate;
 mod tracing;

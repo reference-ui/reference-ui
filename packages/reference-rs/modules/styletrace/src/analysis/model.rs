@@ -3,7 +3,7 @@
 //! Organizes these elements into nodes and edges representing the component hierarchy and data flow.
 //! Emits structural models that the analyzer uses to resolve style trace paths across modules.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use oxc_ast::ast::Expression;
 use rustc_hash::FxHashMap;
@@ -157,6 +157,15 @@ pub(super) enum EdgeTarget {
     Parameter(usize),
 }
 
+/// The props a wrapper's type argument declares (`forwardRef<Ref, Props>`): the StyleProps names it
+/// exposes and the names its own declaration owns. The wrapped function is often unannotated, so
+/// the generic is the only place its declared names exist.
+#[derive(Clone, Default)]
+pub(super) struct WrapperProps {
+    pub(super) style_props: BTreeSet<String>,
+    pub(super) owned_props: BTreeSet<String>,
+}
+
 #[derive(Default)]
 pub(super) struct PropBindings {
     pub(super) direct_style_bindings: BTreeSet<String>,
@@ -168,9 +177,26 @@ pub(super) struct PropBindings {
     /// props/rest spread into the primitive are forwarded styles, and the
     /// call site mints them.
     pub(super) destructured_prop_names: BTreeSet<String>,
+    /// Local name to prop name for each of those pulls, renames included
+    /// (`{ id: ident }` maps `ident` to `id`). The body walk reads it to see
+    /// which props reach an element under their own name: a prop passed on
+    /// is not kept.
+    pub(super) destructured_locals: BTreeMap<String, String>,
 }
 
 impl PropBindings {
+    /// Records every pulled-out prop, style or not: the §14 shadow keeps only
+    /// these, and the walk maps each local back to its prop to see what the
+    /// body passes on. Quoted keys normalize like the type side does.
+    pub(super) fn record_destructured(&mut self, destructured: &[ObjectPatternBinding]) {
+        for binding in destructured {
+            let prop_name = binding.prop_name.trim_matches(['"', '\'']).to_string();
+            self.destructured_locals
+                .insert(binding.local_name.clone(), prop_name.clone());
+            self.destructured_prop_names.insert(prop_name);
+        }
+    }
+
     pub(super) fn exposes_style_props(&self) -> bool {
         !self.direct_style_bindings.is_empty()
             || !self.props_object_bindings.is_empty()

@@ -1,0 +1,1 @@
+{"id": "TST-IMP-05", "name": "A relative import whose basename has dots resolves to its TypeScript file with no unresolved-import warning"}
