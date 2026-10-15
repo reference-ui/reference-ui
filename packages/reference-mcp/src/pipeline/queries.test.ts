@@ -261,19 +261,26 @@ describe('mcp queries', () => {
       components: createObservedReferenceUiPrimitives([
         {
           name: 'Div',
+          source: '@reference-ui/react',
           count: 2,
+          usage: 'very common',
           examples: ['<Div />'],
           filePresence: 1,
-          propCounts: { children: 1, p: 1 },
-          usedWithCounts: {},
+          props: [
+            { name: 'children', count: 1, usage: 'common' },
+            { name: 'p', count: 1, usage: 'common' },
+          ],
+          usedWith: {},
         },
         {
           name: 'Code',
+          source: '@reference-ui/react',
           count: 1,
-          examples: ['<Code>src/App.tsx</Code>'],
+          usage: 'common',
+          examples: ['<Code>'],
           filePresence: 1,
-          propCounts: { children: 1 },
-          usedWithCounts: {},
+          props: [{ name: 'children', count: 1, usage: 'very common' }],
+          usedWith: {},
         },
       ]),
     }

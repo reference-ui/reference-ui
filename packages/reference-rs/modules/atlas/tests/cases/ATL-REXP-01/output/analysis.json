@@ -21,9 +21,7 @@
         "examples": [
           "<Button>"
         ],
-        "usedWith": {
-          "UserBadge": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "UserBadge",
@@ -52,9 +50,7 @@
         "examples": [
           "<UserBadge count={3}>"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {}

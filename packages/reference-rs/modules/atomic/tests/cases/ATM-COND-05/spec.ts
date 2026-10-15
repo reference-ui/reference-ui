@@ -19,6 +19,8 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'weight', 'sans.thin')).toBe(true)
     expect(hasWant(result, 'weight', 'serif.normal')).toBe(true)
     expect(hasWant(result, 'weight', 'mono.normal')).toBe(true)
+    // `mono` declares no `black`: the scoped want survives scoping, and lowering maps it to the keyword.
+    expect(hasWant(result, 'weight', 'mono.black')).toBe(true)
     expect(hasWant(result, 'weight', 'thin')).toBe(false)
     expect(hasWant(result, 'weight', 'normal')).toBe(false)
     expect(hasWant(result, 'size', '20px')).toBe(true)
@@ -34,6 +36,10 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('font-weight: 200;')
     expect(result.stylesheet).toContain('font-weight: 373;')
     expect(result.stylesheet).toContain('font-weight: 393;')
+    // A family scale miss falls back to its keyword: 900, never the raw `mono.black`.
+    expect(result.stylesheet).toContain('font-weight: 900;')
+    expect(result.stylesheet).not.toContain('mono.black')
+    expect(result.diagnostics.filter(d => d.code === 'ATM-W-UNKNOWN-TOKEN-PATH')).toEqual([])
     // Non-canon extras spell verbatim (doom-4 T3): no kebab, no vendor dash.
     expect(result.stylesheet).toContain('font-family: var(--fonts-test);')
     expect(result.stylesheet).toContain('font-weight: 500;')

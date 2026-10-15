@@ -16,9 +16,7 @@
           "<UI.Button variant=\"solid\">",
           "<UI.Button variant=\"ghost\">"
         ],
-        "usedWith": {
-          "UserBadge": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "UserBadge",
@@ -33,9 +31,7 @@
         "examples": [
           "<UI.UserBadge tone=\"info\">"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {}

@@ -31,9 +31,7 @@
           "<PrimaryButton variant=\"solid\">",
           "<PrimaryButton variant=\"ghost\">"
         ],
-        "usedWith": {
-          "UserBadge": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "UserBadge",
@@ -62,9 +60,7 @@
         "examples": [
           "<IdentityBadge count={2}>"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {
@@ -124,9 +120,7 @@
             "<PrimaryButton variant=\"solid\">",
             "<PrimaryButton variant=\"ghost\">"
           ],
-          "usedWith": {
-            "UserBadge": "very common"
-          }
+          "usedWith": {}
         },
         {
           "name": "Button",
@@ -185,9 +179,7 @@
           "examples": [
             "<IdentityBadge count={2}>"
           ],
-          "usedWith": {
-            "Button": "very common"
-          }
+          "usedWith": {}
         }
       ]
     }

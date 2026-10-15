@@ -1,0 +1,46 @@
+{
+  "caseName": "ATL-OBS-01",
+  "analyses": {
+    "default": [],
+    "withIncludes": {},
+    "observed": [
+      {
+        "name": "Button",
+        "source": "@reference-ui/react",
+        "count": 2,
+        "usage": "very common",
+        "examples": [
+          "<Button style={{ a: { b: 1 } }} onClick={() => go()} disabled>",
+          "<Button style={{ a: { b: 1 } }} onClick={() => go()} disabled />"
+        ],
+        "filePresence": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 1,
+            "usage": "very common"
+          },
+          {
+            "name": "disabled",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "true": "very common"
+            }
+          },
+          {
+            "name": "onClick",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "style",
+            "count": 2,
+            "usage": "very common"
+          }
+        ],
+        "usedWith": {}
+      }
+    ]
+  }
+}

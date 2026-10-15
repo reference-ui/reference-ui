@@ -6,5 +6,8 @@
 /** A local token leaf replaces an upstream value (E13). Namespace BSS, emitted by the collect step. */
 export const TOKEN_SHADOW_CODE = 'BSS-W-TOKEN-SHADOW'
 
+/** Evaluating ui.config, where base systems are imported, ran past the slow threshold. Namespace BSS, emitted by the config loader. */
+export const SLOW_CONFIG_CODE = 'BSS-W-SLOW-CONFIG'
+
 /** Every code this package mints in TypeScript; each must be cited in `REGISTRY.md`. */
-export const NEO_MINTED_CODES: readonly string[] = [TOKEN_SHADOW_CODE]
+export const NEO_MINTED_CODES: readonly string[] = [TOKEN_SHADOW_CODE, SLOW_CONFIG_CODE]

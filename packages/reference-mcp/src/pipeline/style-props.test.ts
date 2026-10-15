@@ -1,12 +1,39 @@
 import { describe, expect, it } from 'vitest'
 import { getStylePropsReference, isStylePropName } from './style-props'
 
-describe('mcp style prop reference', () => {
-  it('detects common Reference UI style props', () => {
-    expect(isStylePropName('p')).toBe(true)
-    expect(isStylePropName('backgroundColor')).toBe(true)
-    expect(isStylePropName('variant')).toBe(false)
+describe('isStylePropName', () => {
+  it.each([
+    ['p', true],
+    ['border', true],
+    ['background', true],
+    ['bg', true],
+    ['backgroundColor', true],
+    ['_hover', true],
+    ['_disabled', true],
+    ['&:hover', true],
+    ['@md', true],
+    ['r', true],
+    ['container', true],
+    ['css', true],
+    ['font', true],
+    ['weight', true],
+    ['disabled', false],
+    ['checked', false],
+    ['open', false],
+    ['expanded', false],
+    ['align', false],
+    ['textarea', false],
+    ['variant', false],
+    ['colorMode', false],
+    ['className', false],
+    ['children', false],
+    ['ref', false],
+  ])('isStylePropName(%s) is %s', (name, expected) => {
+    expect(isStylePropName(name)).toBe(expected)
   })
+})
+
+describe('mcp style prop reference', () => {
 
   it('returns a concise reference by default', () => {
     const reference = getStylePropsReference()

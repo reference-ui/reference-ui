@@ -1,6 +1,6 @@
 // Unit tests for the Neo config bundler over temp project trees.
-// They take fixture configs and assert external handling plus dependency
-// paths, including resolution of canon-base-relative metafile keys.
+// They take fixture configs and assert external handling (and the listed
+// external specifiers) plus dependency paths, including resolution of canon-base-relative metafile keys.
 // This file is a Neo-owned copy of the core bundler tests.
 
 import { realpathSync } from 'node:fs'
@@ -40,6 +40,33 @@ describe('bundleConfig', () => {
     const bundled = await bundleConfig(configPath)
 
     expect(bundled).toMatch(/from ['"]nonexistent-package['"]/)
+  })
+
+  it('lists the bare specifiers it keeps external, without the aliased Neo entry', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-bundle-'))
+    tempDirs.push(dir)
+
+    const configPath = join(dir, 'ui.config.ts')
+    await writeFile(
+      configPath,
+      [
+        "import { defineConfig } from '@reference-ui/neo'",
+        "import { baseSystem } from '@reference-ui/lib'",
+        "import missingPkg from 'nonexistent-package'",
+        '',
+        'export default defineConfig({',
+        "  name: 'demo',",
+        "  include: ['src/**/*.{ts,tsx}'],",
+        '  extends: [baseSystem],',
+        '  meta: missingPkg,',
+        '})',
+        '',
+      ].join('\n')
+    )
+
+    const bundled = await bundleConfigWithDependencies(configPath)
+
+    expect(bundled.externalImports).toEqual(['@reference-ui/lib', 'nonexistent-package'])
   })
 
   it('aliases Neo package ids to the local root barrel', async () => {

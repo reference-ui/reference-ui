@@ -1,15 +1,7 @@
+import type { ComponentProp, ObservedElement } from '@reference-ui/rust/atlas'
 import { TAGS } from './constants'
 import type { McpComponent, McpComponentProp } from './types'
 import { isStylePropName } from './style-props'
-
-export interface ReferenceUiPrimitiveObservation {
-  name: string
-  count: number
-  examples: string[]
-  filePresence: number
-  propCounts: Record<string, number>
-  usedWithCounts: Record<string, number>
-}
 
 const COMMON_PRIMITIVES = [
   'Div',
@@ -74,17 +66,6 @@ function toHtmlTagName(name: string): string {
   return name.toLowerCase()
 }
 
-function scoreUsage(count: number, total: number) {
-  if (total === 0) return 'unused' as const
-
-  const ratio = count / total
-  if (ratio >= 0.5) return 'very common' as const
-  if (ratio >= 0.2) return 'common' as const
-  if (ratio >= 0.1) return 'occasional' as const
-  if (ratio > 0) return 'rare' as const
-  return 'unused' as const
-}
-
 function clonePrimitive(component: McpComponent): McpComponent {
   return {
     ...component,
@@ -142,47 +123,53 @@ export function findReferenceUiPrimitive(name: string): McpComponent | null {
   return primitive ? clonePrimitive(primitive) : null
 }
 
+/**
+ * Maps Atlas `observed` elements onto the primitive catalog. Atlas has already
+ * counted, scored and parsed the JSX, so this copies its fields as they are.
+ * Primitives Atlas did not observe are omitted and keep their catalog defaults.
+ */
 export function createObservedReferenceUiPrimitives(
-  observations: ReferenceUiPrimitiveObservation[]
+  observed: ObservedElement[]
 ): McpComponent[] {
-  const total = observations.reduce((sum, observation) => sum + observation.count, 0)
-
-  return observations.flatMap(observation => {
-    const primitive = findReferenceUiPrimitive(observation.name)
+  return observed.flatMap(element => {
+    const primitive = findReferenceUiPrimitive(element.name)
     if (!primitive) return []
 
-    primitive.count = observation.count
-    primitive.usage = scoreUsage(observation.count, total)
-    primitive.examples = observation.examples.length > 0
-      ? observation.examples
+    primitive.count = element.count
+    primitive.usage = element.usage
+    primitive.examples = element.examples.length > 0
+      ? element.examples
       : primitive.examples
-    primitive.usedWith = Object.fromEntries(
-      Object.entries(observation.usedWithCounts)
-        .map(([name, count]) => [name, scoreUsage(count, observation.filePresence)])
-    )
+    primitive.usedWith = { ...element.usedWith }
 
-    for (const [name, count] of Object.entries(observation.propCounts)) {
-      const existing = primitive.props.find(prop => prop.name === name)
-      if (existing) {
-        existing.count = count
-        existing.usage = scoreUsage(count, observation.count)
-        existing.origin = 'observed'
-        continue
-      }
-
-      primitive.props.push({
-        name,
-        count,
-        usage: scoreUsage(count, observation.count),
-        type: null,
-        description: null,
-        optional: true,
-        readonly: false,
-        origin: 'observed',
-        styleProp: isStylePropName(name),
-      })
+    for (const prop of element.props) {
+      mergeObservedProp(primitive, prop)
     }
 
     return [primitive]
+  })
+}
+
+function mergeObservedProp(primitive: McpComponent, prop: ComponentProp): void {
+  const existing = primitive.props.find(candidate => candidate.name === prop.name)
+  if (existing) {
+    existing.count = prop.count
+    existing.usage = prop.usage
+    existing.origin = 'observed'
+    if (prop.values) existing.values = prop.values
+    return
+  }
+
+  primitive.props.push({
+    name: prop.name,
+    count: prop.count,
+    usage: prop.usage,
+    ...(prop.values ? { values: prop.values } : {}),
+    type: null,
+    description: null,
+    optional: true,
+    readonly: false,
+    origin: 'observed',
+    styleProp: isStylePropName(prop.name),
   })
 }

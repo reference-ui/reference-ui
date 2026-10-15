@@ -9,10 +9,11 @@ lists; the compiler namer wrote the golden.
 
 It also pins the bare-weight family-scoping seam against the static
 `ATM-COND-05` oracle: every family × keyword pair (`sans`/`serif`/`mono` ×
-six keywords) scopes to the family scale, lone keywords keep the CSS
-keyword, two families decline, a conditional weight falls back to the base
-family, and the static sheet backs the scoped rule (computed `font-weight`
-proves it paints). The dynamic-value boundary is pinned too: the runtime
+six keywords) scopes to the family scale, or falls back to the CSS keyword
+when the family's scale omits it (`mono` black → 900); lone keywords keep
+the CSS keyword, two families decline, a conditional weight falls back to
+the base family, and the static sheet backs the scoped rule (computed
+`font-weight` proves it paints). The dynamic-value boundary is pinned too: the runtime
 scopes a variable-held `thin` that the static pass cannot see. The F3
 responsive shapes (weight array, object+object, font-object + string) are
 pinned as KNOWN-DIVERGENT interim behavior.

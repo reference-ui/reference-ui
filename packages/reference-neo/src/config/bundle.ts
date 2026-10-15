@@ -1,7 +1,8 @@
 // Bundling for Neo ui.config files via esbuild.
 // It takes a config path and emits bundled code plus local dependency paths. A published base system
 // imported by bare specifier is inlined, so every load reads its current file, and its real path is a
-// watch input; all other packages stay external. A failed bundle names the files it tried to import.
+// watch input; all other packages stay external and are listed, so a slow evaluation can name them.
+// A failed bundle names the files it tried to import.
 // It began as a Neo-owned copy of the core config bundler with a Neo-local entry.
 
 import { microBundleWithResult, NEO_PACKAGE_ROOT, type MicroBundleResult } from '../lib/microbundle/index.ts'
@@ -19,6 +20,8 @@ export interface BundleConfigOptions {
 export interface BundledConfig {
   code: string
   dependencyPaths: string[]
+  /** Bare specifiers left as runtime imports, in first-seen order: what evaluating the bundle loads. */
+  externalImports: string[]
 }
 
 // A published base system is a `baseSystem.mjs` (or `.js`) data module. Inlining
@@ -54,20 +57,28 @@ function importCandidates(resolveDir: string, specifier: string): string[] {
   ]
 }
 
+// What the import plugin saw: inlined base-system files, attempted relative paths, external bare specifiers.
+interface ConfigImportRecord {
+  inlined: Set<string>
+  attempted: Set<string>
+  external: Set<string>
+}
+
 /**
  * esbuild plugin that settles every bare specifier in a config bundle. A
  * published base system resolves to its file and is inlined; any other package
  * stays an external import, as `packages: 'external'` left it. Inlined paths are
  * recorded, and so is every relative import the bundler attempts, so a bundle
- * that fails still names the files it tried.
+ * that fails still names the files it tried, and every external specifier, which
+ * is what evaluating the bundle will load.
  */
-function configImportPlugin(inlinedPaths: Set<string>, attemptedPaths: Set<string>): esbuild.Plugin {
+function configImportPlugin(record: ConfigImportRecord): esbuild.Plugin {
   return {
     name: 'neo-config-imports',
     setup(build) {
       build.onResolve({ filter: RELATIVE_SPECIFIER }, (args) => {
         if (!args.resolveDir) return undefined
-        for (const candidate of importCandidates(args.resolveDir, args.path)) attemptedPaths.add(candidate)
+        for (const candidate of importCandidates(args.resolveDir, args.path)) record.attempted.add(candidate)
         return undefined
       })
       build.onResolve({ filter: /^[^./]/ }, async (args) => {
@@ -81,9 +92,10 @@ function configImportPlugin(inlinedPaths: Set<string>, attemptedPaths: Set<strin
           pluginData: { [PROBE_FLAG]: true },
         })
         if (probe.errors.length > 0 || !BASE_SYSTEM_FILE.test(probe.path)) {
+          record.external.add(args.path)
           return { path: args.path, external: true }
         }
-        inlinedPaths.add(probe.path)
+        record.inlined.add(probe.path)
         return { path: probe.path, external: false }
       })
     },
@@ -145,8 +157,7 @@ export async function bundleConfigWithDependencies(
   options: BundleConfigOptions = {}
 ): Promise<BundledConfig> {
   const defineConfigEntry = resolveDefineConfigEntry()
-  const inlinedPaths = new Set<string>()
-  const attemptedPaths = new Set<string>()
+  const record: ConfigImportRecord = { inlined: new Set(), attempted: new Set(), external: new Set() }
 
   let bundled: MicroBundleResult
   try {
@@ -154,14 +165,14 @@ export async function bundleConfigWithDependencies(
       format: 'esm',
       external: options.external ?? ['esbuild'],
       metafile: true,
-      plugins: [configImportPlugin(inlinedPaths, attemptedPaths)],
+      plugins: [configImportPlugin(record)],
       alias: Object.fromEntries(CONFIG_EXTERNALS.map(id => [id, defineConfigEntry])),
       tsconfigRaw: {
         compilerOptions: {},
       },
     })
   } catch (error) {
-    if (typeof error === 'object' && error !== null) attemptedByFailure.set(error, [...attemptedPaths])
+    if (typeof error === 'object' && error !== null) attemptedByFailure.set(error, [...record.attempted])
     throw error
   }
 
@@ -170,7 +181,8 @@ export async function bundleConfigWithDependencies(
     dependencyPaths: normalizeConfigDependencyPaths(
       configPath,
       Object.keys(bundled.metafile?.inputs ?? {}),
-      inlinedPaths,
+      record.inlined,
     ),
+    externalImports: [...record.external],
   }
 }

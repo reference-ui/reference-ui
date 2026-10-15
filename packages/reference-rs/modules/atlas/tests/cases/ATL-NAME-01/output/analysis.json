@@ -39,9 +39,7 @@
           "<SubmitButton variant=\"submit\">",
           "<SubmitButton variant=\"reset\" disabled>"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "Button",
@@ -71,9 +69,7 @@
         "examples": [
           "<HeroButton tone=\"hero\">"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {}

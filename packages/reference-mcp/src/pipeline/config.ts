@@ -1,5 +1,6 @@
 import type { AtlasConfig } from '@reference-ui/rust/atlas'
 import type { ReferenceUIConfig } from '@reference-ui/neo/config/types'
+import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
 
 export interface McpAtlasSelectors {
   include?: string[]
@@ -19,19 +20,20 @@ export type McpAwareConfig = ReferenceUIConfig & {
   use_reference_icons?: boolean
 }
 
-export function getAtlasMcpConfig(
-  config: McpAwareConfig | undefined
-): AtlasConfig | undefined {
-  const include = config?.mcp?.include
-  const exclude = config?.mcp?.exclude
-
-  if (!include?.length && !exclude?.length) {
-    return undefined
-  }
-
+/**
+ * Atlas config for the MCP build. Always asks Atlas to observe the Reference UI
+ * primitives, so primitive usage comes from the same parse as component usage.
+ * Empty mcp include/exclude lists are dropped, so Atlas sees no selector at all.
+ */
+export function getAtlasMcpConfig(config: McpAwareConfig | undefined): AtlasConfig {
   return {
     rootDir: '',
-    include,
-    exclude,
+    include: nonEmptyPatterns(config?.mcp?.include),
+    exclude: nonEmptyPatterns(config?.mcp?.exclude),
+    observe: [{ source: '@reference-ui/react', names: REFERENCE_UI_PRIMITIVE_NAMES }],
   }
+}
+
+function nonEmptyPatterns(patterns: string[] | undefined): string[] | undefined {
+  return patterns?.length ? patterns : undefined
 }

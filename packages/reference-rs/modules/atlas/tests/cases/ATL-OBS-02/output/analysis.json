@@ -1,0 +1,37 @@
+{
+  "caseName": "ATL-OBS-02",
+  "analyses": {
+    "default": [],
+    "withIncludes": {},
+    "observed": [
+      {
+        "name": "Div",
+        "source": "@reference-ui/react",
+        "count": 2,
+        "usage": "very common",
+        "examples": [
+          "<Box padding=\"2r\">",
+          "<R.Div padding=\"4r\">"
+        ],
+        "filePresence": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 2,
+            "usage": "very common"
+          },
+          {
+            "name": "padding",
+            "count": 2,
+            "usage": "very common",
+            "values": {
+              "2r": "very common",
+              "4r": "very common"
+            }
+          }
+        ],
+        "usedWith": {}
+      }
+    ]
+  }
+}

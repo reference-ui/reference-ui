@@ -1,12 +1,23 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Discovers the TypeScript and JavaScript files Atlas parses under a project root.
+//! The local walk and every include walk prune node_modules and .git subtrees, so dependency trees are read only when a pattern names them.
+//! Each include walks from the literal directory it names, and symlinked packages resolve through their link path.
+//! Excludes never walk: they filter the discovered set with gitignore-style override matching, so an exclude can drop a dependency file that an include named.
+//! A link back to an ancestor is skipped rather than failing the scan, and results are sorted root-joined paths, never canonicalized.
+
+mod patterns;
+#[cfg(test)]
+mod tests;
 
 use crate::config::AtlasConfig;
-use globwalk::GlobWalkerBuilder;
+use globwalk::{GlobWalkerBuilder, WalkError};
+use ignore::overrides::OverrideBuilder;
 use oxc_span::SourceType;
+use patterns::split_literal_base;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+/// Directory that holds installed dependencies. Walks skip it unless a pattern names it.
+const DEPENDENCY_DIR: &str = "node_modules";
 
 /// A discovered source file with its parsed AST
 #[derive(Debug, Clone)]
@@ -32,36 +43,41 @@ impl Scanner {
     /// Discover all files matching the include/exclude patterns
     pub fn discover_files(&self, config: &AtlasConfig) -> Result<Vec<PathBuf>, String> {
         let mut files = BTreeSet::new();
+        let includes = config.include.as_deref().unwrap_or_default();
 
-        // Always scan local project files recursively.
-        self.collect_matches(&mut files, &["**/*.{ts,tsx,js,jsx}".to_string()])?;
+        // Always scan local project files recursively, without entering dependency trees.
+        let local = self.walk_sources(&self.root_dir, &["**/*.{ts,tsx,js,jsx}".to_string()], true)?;
+        files.extend(local);
 
         // Apply include patterns
-        if let Some(includes) = &config.include {
-            for pattern in includes {
-                if pattern.starts_with('@') {
-                    continue;
-                }
-
-                self.collect_matches(&mut files, &[pattern.clone()])?;
-            }
+        for pattern in includes.iter().filter(|pattern| !pattern.starts_with('@')) {
+            files.extend(self.include_matches(pattern)?);
         }
 
-        // Apply exclude patterns
+        // Excludes filter the set instead of walking, so a dependency an include named is still dropped
+        // without re-reading the dependency trees the includes skipped.
         if let Some(excludes) = &config.exclude {
-            for pattern in excludes {
-                if pattern.contains(':') {
-                    continue;
-                }
-
-                let excluded = self.collect_glob_matches(&[pattern.clone()])?;
-                for path in excluded {
-                    files.remove(&path);
-                }
-            }
+            self.apply_excludes(&mut files, excludes)?;
         }
 
         Ok(files.into_iter().collect())
+    }
+
+    /// Removes from `files` every path that an exclude pattern matches. Nothing is walked: each pattern
+    /// compiles to a gitignore-style override rooted at the project and is matched against paths already found.
+    fn apply_excludes(
+        &self,
+        files: &mut BTreeSet<PathBuf>,
+        excludes: &[String],
+    ) -> Result<(), String> {
+        for pattern in excludes.iter().filter(|pattern| !pattern.contains(':')) {
+            let matcher = OverrideBuilder::new(&self.root_dir)
+                .add(pattern)
+                .and_then(|builder| builder.build())
+                .map_err(|e| format!("Glob error: {}", e))?;
+            files.retain(|path| !matcher.matched(path, false).is_whitelist());
+        }
+        Ok(())
     }
 
     /// Parse a source file and return the AST
@@ -95,6 +111,23 @@ impl Scanner {
         Ok(results)
     }
 
+    /// Matches one include pattern. The walk starts at the literal directory the pattern names, so
+    /// `src/**/*.tsx` never reads the rest of the project.
+    fn include_matches(&self, pattern: &str) -> Result<Vec<PathBuf>, String> {
+        let (base, glob) = split_literal_base(pattern);
+        if glob.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let dir = self.root_dir.join(&base);
+        // A base that does not exist matches nothing, as a walk of the whole root would.
+        if !base.as_os_str().is_empty() && dir.symlink_metadata().is_err() {
+            return Ok(Vec::new());
+        }
+
+        self.walk_sources(&dir, std::slice::from_ref(&glob), !glob.contains(DEPENDENCY_DIR))
+    }
+
     /// Check if a file is a relevant source file
     fn is_source_file(&self, path: &Path) -> bool {
         if let Some(ext) = path.extension() {
@@ -107,27 +140,30 @@ impl Scanner {
         }
     }
 
-    fn collect_matches(
+    /// Lists source files under `root` that match `patterns`. Prune globs ride along with them, so globwalk
+    /// skips a dependency or .git subtree whole instead of filtering its entries one by one.
+    fn walk_sources(
         &self,
-        files: &mut BTreeSet<PathBuf>,
+        root: &Path,
         patterns: &[String],
-    ) -> Result<(), String> {
-        let matches = self.collect_glob_matches(patterns)?;
-        for path in matches {
-            files.insert(path);
+        prune_dependencies: bool,
+    ) -> Result<Vec<PathBuf>, String> {
+        let mut globs = patterns.to_vec();
+        if prune_dependencies {
+            globs.push(format!("!**/{DEPENDENCY_DIR}"));
         }
-        Ok(())
-    }
+        globs.push("!**/.git".to_string());
 
-    fn collect_glob_matches(&self, patterns: &[String]) -> Result<Vec<PathBuf>, String> {
-        let walker = GlobWalkerBuilder::from_patterns(&self.root_dir, patterns)
+        let walker = GlobWalkerBuilder::from_patterns(root, &globs)
             .follow_links(true)
             .build()
             .map_err(|e| format!("Glob error: {}", e))?;
 
         let mut matches = Vec::new();
         for entry in walker {
-            let entry = entry.map_err(|e| format!("Glob walk error: {}", e))?;
+            let Some(entry) = take_walk_entry(entry)? else {
+                continue;
+            };
             let path = entry.path().to_path_buf();
             if entry.file_type().is_file() && self.is_source_file(&path) {
                 matches.push(path);
@@ -138,86 +174,12 @@ impl Scanner {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn test_scanner_discovery() {
-        let temp_dir = std::env::temp_dir();
-        let root = temp_dir.join(format!("atlas_test_{}", std::process::id()));
-
-        // Clean up any existing directory
-        if root.exists() {
-            fs::remove_dir_all(&root).unwrap();
-        }
-
-        // Create test directory
-        std::fs::create_dir_all(&root).unwrap();
-
-        // Create test files
-        fs::write(root.join("test.tsx"), "export const Test = () => null;").unwrap();
-        fs::write(root.join("ignore.txt"), "not a source file").unwrap();
-
-        // Create subdirectory and file
-        let subdir = root.join("subdir");
-        fs::create_dir_all(&subdir).unwrap();
-        fs::write(
-            subdir.join("component.ts"),
-            "export function Component() {}",
-        )
-        .unwrap();
-
-        let scanner = Scanner::new(root.to_str().unwrap());
-        let files = scanner.discover_files(&AtlasConfig::default()).unwrap();
-
-        // Debug: print what files were found
-        println!("Found files: {:?}", files);
-
-        // Should find the TypeScript files
-        assert!(files.len() >= 2);
-        assert!(files.iter().any(|f| f.ends_with("test.tsx")));
-        assert!(files.iter().any(|f| f.ends_with("component.ts")));
-
-        // Cleanup
-        fs::remove_dir_all(&root).unwrap();
-    }
-
-    #[test]
-    fn test_exclude_patterns() {
-        let temp_dir = std::env::temp_dir();
-        let root = temp_dir.join(format!("atlas_test_exclude_{}", std::process::id()));
-
-        // Clean up any existing directory
-        if root.exists() {
-            fs::remove_dir_all(&root).unwrap();
-        }
-
-        // Create test directory
-        std::fs::create_dir_all(&root).unwrap();
-
-        // Create test files
-        fs::write(root.join("keep.tsx"), "export const Keep = () => null;").unwrap();
-        fs::write(
-            root.join("exclude.tsx"),
-            "export const Exclude = () => null;",
-        )
-        .unwrap();
-
-        let scanner = Scanner::new(root.to_str().unwrap());
-        let config = AtlasConfig {
-            exclude: Some(vec!["**/exclude.tsx".to_string()]),
-            ..Default::default()
-        };
-
-        let files = scanner.discover_files(&config).unwrap();
-        // Should only find the keep.tsx file
-        assert!(files.len() >= 1);
-        assert!(files.iter().any(|f| f.ends_with("keep.tsx")));
-        assert!(!files.iter().any(|f| f.ends_with("exclude.tsx")));
-
-        // Cleanup
-        fs::remove_dir_all(&root).unwrap();
+/// Unwraps one glob walker item. A link back to an ancestor yields `Ok(None)`: walkdir does not
+/// descend into it and that ancestor is already being walked, so no file is lost. Other errors fail.
+fn take_walk_entry<T>(entry: Result<T, WalkError>) -> Result<Option<T>, String> {
+    match entry {
+        Ok(entry) => Ok(Some(entry)),
+        Err(e) if e.loop_ancestor().is_some() => Ok(None),
+        Err(e) => Err(format!("Glob walk error: {}", e)),
     }
 }

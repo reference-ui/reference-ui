@@ -34,7 +34,7 @@ consumers never break on codes minted after they shipped.
 | `STT`     | styletrace  | Live: 5-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component and unresolved-HOC-argument warnings, plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
-| `BSS`     | base-system | Live: 1-code, emitted from Neo's collect step in `packages/reference-neo/src/collect/lib/shadow.ts`; no Rust table |
+| `BSS`     | base-system | Live: 2-code, minted in Neo's `packages/reference-neo/src/diagnostics/codes.ts` (the collect step's token shadow, the config loader's slow evaluation); no Rust table |
 | `MGP`     | module-graph| Reserved, unminted                                     |
 
 Rules:
@@ -182,6 +182,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TGN-E-INVALID-BASE-SYSTEM` | The baseSystem spec failed contract validation; the request is refused as a coded throw | `modules/typegen/native.rs` |
 | `TGN-W-DUPLICATE-RECIPE-STEM` | A recipe whose PascalCase stem collides with an earlier recipe; the loser is omitted | `modules/typegen/src/diagnostics/collect.rs` |
 | `BSS-W-TOKEN-SHADOW` | A local token leaf replaces a different upstream value; one warning per path, naming the path, the upstream system and both values | `packages/reference-neo/src/collect/lib/shadow.ts` |
+| `BSS-W-SLOW-CONFIG` | Evaluating ui.config (where base systems are imported) took over 750 ms; names the `@reference-ui/lib` barrel and its `/baseSystem` subpath fix, else the config's package imports | `packages/reference-neo/src/config/slow-evaluation.ts` |
 
 Tasty emit invariants (emitted-id hashing, artifact serialization) throw
 plain internal errors without codes: they are unreachable failure classes

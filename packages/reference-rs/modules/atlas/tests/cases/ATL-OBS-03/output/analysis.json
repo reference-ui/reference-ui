@@ -1,0 +1,32 @@
+{
+  "caseName": "ATL-OBS-03",
+  "analyses": {
+    "default": [],
+    "withIncludes": {},
+    "observed": [
+      {
+        "name": "Div",
+        "source": "@reference-ui/react",
+        "count": 1,
+        "usage": "very common",
+        "examples": [
+          "<Div className={panel}>"
+        ],
+        "filePresence": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 1,
+            "usage": "very common"
+          },
+          {
+            "name": "className",
+            "count": 1,
+            "usage": "very common"
+          }
+        ],
+        "usedWith": {}
+      }
+    ]
+  }
+}

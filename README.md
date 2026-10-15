@@ -59,8 +59,6 @@ Product docs live in the docs site and the package READMEs:
 - [`packages/reference-neo/README.md`](./packages/reference-neo/README.md)
 - [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
 
-Open issues under investigation live in [`docs/bugs/`](./docs/bugs/).
-
 ## Status
 
 Production system. `ref sync` builds and synchronizes design-system output, with working build, test, docs, and release workflows (see Getting started above).

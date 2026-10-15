@@ -1,15 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { getAtlasMcpConfig } from './config'
+import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
+
+const PRIMITIVE_OBSERVE = [
+  { source: '@reference-ui/react', names: REFERENCE_UI_PRIMITIVE_NAMES },
+]
 
 describe('getAtlasMcpConfig', () => {
-  it('returns undefined when no mcp config exists', () => {
-    expect(getAtlasMcpConfig(undefined)).toBeUndefined()
+  it('always observes Reference UI primitives when no mcp selectors exist', () => {
+    expect(getAtlasMcpConfig(undefined)).toEqual({
+      rootDir: '',
+      observe: PRIMITIVE_OBSERVE,
+    })
     expect(
       getAtlasMcpConfig({
         name: 'test',
         include: ['src/**/*.{ts,tsx}'],
       })
-    ).toBeUndefined()
+    ).toEqual({
+      rootDir: '',
+      observe: PRIMITIVE_OBSERVE,
+    })
   })
 
   it('maps dedicated mcp include/exclude directly to Atlas config', () => {
@@ -26,6 +37,7 @@ describe('getAtlasMcpConfig', () => {
       rootDir: '',
       include: ['src/components/**'],
       exclude: ['src/components/internal/**'],
+      observe: PRIMITIVE_OBSERVE,
     })
   })
 })

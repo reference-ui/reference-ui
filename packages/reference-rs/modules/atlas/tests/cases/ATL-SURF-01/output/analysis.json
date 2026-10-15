@@ -195,9 +195,7 @@
           "<UserBadge count={5}>",
           "<UserBadge>"
         ],
-        "usedWith": {
-          "Button": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {
@@ -317,7 +315,7 @@
             "<Badge variant=\"default\" {...props} />"
           ],
           "usedWith": {
-            "Card": "very common"
+            "Card": "common"
           }
         },
         {
@@ -487,9 +485,7 @@
           "examples": [
             "<Card\n      title={title}\n      {...cardProps}\n      footer={\n        status ? <Badge variant={status}>{statusLabel ?? status}</Badge> : undefined\n      }\n    >"
           ],
-          "usedWith": {
-            "Badge": "very common"
-          }
+          "usedWith": {}
         },
         {
           "name": "Stack",
@@ -584,9 +580,7 @@
             "<UserBadge count={5}>",
             "<UserBadge>"
           ],
-          "usedWith": {
-            "Button": "very common"
-          }
+          "usedWith": {}
         }
       ]
     }

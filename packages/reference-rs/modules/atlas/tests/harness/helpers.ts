@@ -2,6 +2,7 @@
  * Atlas test harness helpers and standing fixtures.
  * Provides on-demand case compilation, golden artifact extraction, standing schema gauges,
  * and component lookup utilities for station specifications and unit tests.
+ * A case that carries input/observe.json also analyzes with that observe config.
  * Standardizes output verification across all Atlas test scenarios.
  */
 import fs from 'node:fs'
@@ -9,7 +10,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect } from 'vitest'
 import { analyze, analyzeDetailed } from '../../js/index.js'
-import type { AtlasConfig, AtlasDiagnostic, Component, Usage } from '../../js/types.js'
+import type {
+  AtlasConfig,
+  AtlasDiagnostic,
+  Component,
+  ObservedElement,
+  ObserveSpec,
+  Usage,
+} from '../../js/types.js'
 import type {
   GoldenDefinition,
   StandingGauge,
@@ -51,12 +59,14 @@ export interface AtlasAnalysisPayload {
   analyses: {
     default: Component[]
     withIncludes: Record<string, Component[]>
+    observed?: ObservedElement[]
   }
 }
 
 export interface AtlasCaseResult {
   caseName: string
   components: Component[]
+  observed: ObservedElement[]
   diagnostics: AtlasDiagnostic[]
   withIncludes: Record<string, Component[]>
   analysisPayload: AtlasAnalysisPayload
@@ -95,11 +105,22 @@ function discoverCasePackages(inputDir: string): string[] {
     .filter((name): name is string => Boolean(name))
 }
 
+/** The observe specs a case declares in input/observe.json; none when the file is absent. */
+function readCaseObserve(inputDir: string): ObserveSpec[] {
+  const file = path.join(inputDir, 'observe.json')
+  if (!fs.existsSync(file)) return []
+  return JSON.parse(fs.readFileSync(file, 'utf8')) as ObserveSpec[]
+}
+
 export async function compileAtlasCase(ctx: StationContext): Promise<AtlasCaseResult> {
   const appRoot = path.join(ctx.inputDir, 'app')
   const includePackages = discoverCasePackages(ctx.inputDir)
+  const observe = readCaseObserve(ctx.inputDir)
 
-  const detailed = await analyzeDetailed(appRoot)
+  const config: AtlasConfig | undefined =
+    observe.length > 0 ? { rootDir: appRoot, observe } : undefined
+  const detailed = await analyzeDetailed(appRoot, config)
+  const observed = detailed.observed ?? []
   const withIncludes: Record<string, Component[]> = {}
   for (const packageName of includePackages) {
     withIncludes[packageName] = await analyze(appRoot, { include: [packageName] })
@@ -110,6 +131,7 @@ export async function compileAtlasCase(ctx: StationContext): Promise<AtlasCaseRe
     analyses: {
       default: detailed.components,
       withIncludes,
+      ...(observed.length > 0 ? { observed } : {}),
     },
   }
 
@@ -126,6 +148,7 @@ export async function compileAtlasCase(ctx: StationContext): Promise<AtlasCaseRe
   return {
     caseName: ctx.caseName,
     components: detailed.components,
+    observed,
     diagnostics: detailed.diagnostics,
     withIncludes,
     analysisPayload,
@@ -157,6 +180,24 @@ export const atlasGauges: StandingGauge<AtlasCaseResult>[] = [
       for (const prop of comp.props) {
         expect(prop.name).toBeTruthy()
         expect(prop.count).toBeGreaterThanOrEqual(0)
+        expect(USAGE_VALUES).toContain(prop.usage)
+      }
+    }
+  },
+  // ATL-SCHEMA-02: Observed element schema integrity
+  (res: AtlasCaseResult) => {
+    for (const element of res.observed) {
+      expect(element.name).toBeTruthy()
+      expect(element.source).toBeTruthy()
+      expect(USAGE_VALUES).toContain(element.usage)
+      expect(element.count).toBeGreaterThan(0)
+      expect(element.filePresence).toBeGreaterThan(0)
+      expect(element.filePresence).toBeLessThanOrEqual(element.count)
+      expect(element.examples.length).toBeLessThanOrEqual(5)
+      for (const prop of element.props) {
+        expect(prop.name).toBeTruthy()
+        expect(prop.count).toBeGreaterThan(0)
+        expect(prop.count).toBeLessThanOrEqual(element.count)
         expect(USAGE_VALUES).toContain(prop.usage)
       }
     }

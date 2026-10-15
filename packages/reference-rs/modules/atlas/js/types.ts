@@ -1,5 +1,5 @@
 /**
- * Atlas public types: the component inventory plus template diagnostics.
+ * Atlas public types: the component inventory, observed elements and template diagnostics.
  * Takes the generated wire shapes and re-exports them with the stable
  * diagnostic vocabulary (`ATL-W-*` warnings, `ATL-E-*` errors) every
  * consumer filters by. Diagnostics ride the shared template Diagnostic;
@@ -8,6 +8,8 @@
 export type { AtlasAnalysisResult } from './generated/AtlasAnalysisResult'
 
 export type { AtlasConfig } from './generated/AtlasConfig'
+
+export type { ObserveSpec } from './generated/ObserveSpec'
 
 export type { Diagnostic as AtlasDiagnostic } from '../../diagnostics/js/index.js'
 
@@ -23,5 +25,7 @@ export type { Component } from './generated/Component'
 export type { ComponentInterface } from './generated/ComponentInterface'
 
 export type { ComponentProp } from './generated/ComponentProp'
+
+export type { ObservedElement } from './generated/ObservedElement'
 
 export type { Usage } from './generated/Usage'

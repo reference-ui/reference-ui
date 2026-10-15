@@ -1,7 +1,7 @@
 // Sync generated-package proofs over temp projects with the native compiler.
 // They take fixture configs plus author files and assert the runtime leg,
-// the importable base system, the node_modules links, and the loud
-// missing-config failure. Every run compiles for real: no stubs stand
+// the importable base system, the node_modules links, the content-version
+// stamps recomputing equal, and the loud missing-config failure. Every run compiles for real: no stubs stand
 // between sync and the engine.
 
 import { existsSync, lstatSync, readFileSync } from 'node:fs'
@@ -11,6 +11,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ConfigNotFoundError } from '../config/errors.ts'
+import { findStampMismatches } from '../packager/content-version.ts'
 import { cleanDir } from './clean.ts'
 import { sync } from './index.ts'
 
@@ -87,6 +88,14 @@ describe('sync runtime leg', () => {
 })
 
 describe('sync generated packages', () => {
+  it('stamps every package with the version a recompute of its dir gives', async () => {
+    const dir = await writeProject({ 'ui.config.ts': configFile(''), 'theme/tokens.ts': TOKENS_FILE })
+
+    await sync(dir)
+
+    expect(findStampMismatches(outFile(dir))).toEqual([])
+  })
+
   it('emits an importable base system carrying the portable bundle', async () => {
     const dir = await writeProject({
       'ui.config.ts': configFile(''),

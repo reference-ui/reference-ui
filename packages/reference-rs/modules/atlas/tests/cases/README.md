@@ -9,6 +9,7 @@ implementation. Each case should own:
 
 - `input/app/` — the project root Atlas analyzes
 - `input/demo-ui/` or other support packages — local library-style modules used by the app
+- `input/observe.json` — optional `ObserveSpec[]`; when present the case analyzes with that `observe` config and the golden gains `analyses.observed`
 - `spec.ts` — the station specification: scenario-local assertions
 - `output/` — reserved for known analysis output once Atlas emits real artifacts
 
@@ -27,6 +28,11 @@ Current seed case:
 - `ATL-BAR-02/` — local wrappers and included package surfaces resolve through package entrypoint re-exports
 - `ATL-BAR-03/` — package default exports forwarded through entrypoint barrels still resolve inventory and interface mapping
 - `ATL-PAIR-01/` — common co-usage stays deterministic and ranks more-common neighbors higher
+- `ATL-PAIR-02/` — usedWith floor, cap and rare filter bound co-usage
+- `ATL-OBS-01/` — observed props survive nested braces, arrow bodies and bare attributes
+- `ATL-OBS-02/` — aliased imports and namespace members both count as the observed element
+- `ATL-OBS-03/` — an unbound tag counts only when the file imports the source and nothing else declares the name
+- `ATL-WALK-01/` — JSX in class bodies, optional calls, throw, template literals and new arguments is counted
 - `ATL-PROP-01/` — unresolved props types preserve partial results and emit diagnostics
 - `ATL-TYPE-01/` — unsupported inline props annotations emit diagnostics instead of vanishing silently
 

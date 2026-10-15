@@ -32,6 +32,10 @@ export function MonoNormal() {
   return <Div font="mono" weight="normal" />
 }
 
+export function MonoBlack() {
+  return <Div font="mono" weight="black" />
+}
+
 export function Sizes() {
   return <Div size="20px" />
 }

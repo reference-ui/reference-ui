@@ -168,6 +168,7 @@ describe('joinMcpComponent', () => {
         type: '"solid" | "ghost"',
         description: 'Controls visual treatment',
       },
+      // `size` is a style prop in the compiler vocabulary; recipe variants sharing the name are a known follow-up.
       {
         name: 'size',
         count: 0,
@@ -175,7 +176,7 @@ describe('joinMcpComponent', () => {
         type: '"sm" | "md" | "lg"',
         description: 'Controls the recipe size',
         origin: 'documented',
-        styleProp: false,
+        styleProp: true,
       },
     ])
   })

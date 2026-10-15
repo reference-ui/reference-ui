@@ -6,7 +6,7 @@
 mod tests {
     use crate::config::AtlasConfig;
     use crate::model::{Component, ComponentInterface, ComponentProp, Usage, UsageThresholds};
-    use crate::usage_policy::{score_usage, usage_thresholds};
+    use crate::usage_policy::{score_usage, score_used_with, usage_thresholds, USED_WITH_CAP};
     use crate::AtlasAnalyzer;
     use std::collections::BTreeMap;
 
@@ -48,11 +48,61 @@ mod tests {
     }
 
     #[test]
+    fn used_with_is_empty_below_the_file_floor() {
+        let mut counts = BTreeMap::new();
+        counts.insert("Card".to_string(), 1);
+
+        assert!(score_used_with(&counts, 1).is_empty());
+        assert!(score_used_with(&counts, 0).is_empty());
+    }
+
+    #[test]
+    fn used_with_divides_by_the_denominator_floor_for_small_targets() {
+        let mut counts = BTreeMap::new();
+        counts.insert("Card".to_string(), 2);
+        counts.insert("Badge".to_string(), 1);
+
+        let used_with = score_used_with(&counts, 2);
+        assert_eq!(used_with.get("Card"), Some(&Usage::VeryCommon));
+        assert_eq!(used_with.get("Badge"), Some(&Usage::Common));
+    }
+
+    #[test]
+    fn used_with_drops_rare_pairs() {
+        let mut counts = BTreeMap::new();
+        counts.insert("Divider".to_string(), 1);
+        counts.insert("Tabs".to_string(), 3);
+
+        let used_with = score_used_with(&counts, 21);
+        assert_eq!(used_with.len(), 1);
+        assert_eq!(used_with.get("Tabs"), Some(&Usage::Occasional));
+    }
+
+    #[test]
+    fn used_with_caps_entries_by_count_then_name() {
+        let mut counts = BTreeMap::new();
+        counts.insert("Zed".to_string(), 4);
+        counts.insert("Yak".to_string(), 3);
+        for index in 0..12 {
+            counts.insert(format!("A{index:02}"), 1);
+        }
+
+        let used_with = score_used_with(&counts, 10);
+        assert_eq!(used_with.len(), USED_WITH_CAP);
+        assert!(used_with.contains_key("Zed"));
+        assert!(used_with.contains_key("Yak"));
+        assert!(used_with.contains_key("A09"));
+        assert!(!used_with.contains_key("A10"));
+        assert!(!used_with.contains_key("A11"));
+    }
+
+    #[test]
     fn test_analyzer_new() {
         let config = AtlasConfig {
             root_dir: "/test".to_string(),
             include: Some(vec!["src/**".to_string()]),
             exclude: Some(vec!["node_modules/**".to_string()]),
+            observe: Vec::new(),
         };
 
         let analyzer = AtlasAnalyzer::new(config);
@@ -65,6 +115,7 @@ mod tests {
             root_dir: "/nonexistent".to_string(),
             include: None,
             exclude: None,
+            observe: Vec::new(),
         };
 
         let mut analyzer = AtlasAnalyzer::new(config);
@@ -160,6 +211,7 @@ mod tests {
             root_dir: root.to_string_lossy().to_string(),
             include: None,
             exclude: None,
+            observe: Vec::new(),
         };
 
         let mut analyzer = AtlasAnalyzer::new(config);

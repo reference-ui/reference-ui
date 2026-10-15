@@ -19,7 +19,8 @@ import {
   dropScanRetention,
   releaseScanRetention,
 } from '../native/retention.ts'
-import { loadUserConfig } from '../config/load.ts'
+import { loadUserConfigWithDependencies } from '../config/load.ts'
+import { printConfigWarnings } from '../config/slow-evaluation.ts'
 import { getOutDirPath, getOutDirTmpPath, getStageDirPath } from '../lib/paths/index.ts'
 import {
   evaluatePreparedFragmentsDetailed,
@@ -280,7 +281,8 @@ function yieldToEventLoop(): Promise<void> {
  */
 export async function sync(cwd: string, options: SyncOptions = {}): Promise<SyncResult> {
   markPhase('syncStart')
-  const config = await loadUserConfig(cwd)
+  const loaded = await loadUserConfigWithDependencies(cwd)
+  const config = loaded.config
   markPhase('configEnd')
   const outDir = getOutDirPath(cwd)
   const stageDir = getStageDirPath(cwd)
@@ -303,8 +305,13 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
     markPhase('scanEnd')
     const { spec, result, request } = await evaluateAndCompile(cwd, config, prepared)
     const reportOptions = { verbose: options.verbose === true }
-    const warningCount = reportSyncDiagnostics(result.diagnostics, result.compilerDiagnostics, reportOptions)
-    throwOnErrorDiagnostics(result.diagnostics)
+    // The config's load-time warnings (a slow evaluation) join the compile warnings, and print
+    // on their own line too: folded into the count alone, nobody would see them.
+    const configDiagnostics = loaded.diagnostics ?? []
+    const diagnostics = [...configDiagnostics, ...result.diagnostics]
+    printConfigWarnings(configDiagnostics, options)
+    const warningCount = reportSyncDiagnostics(diagnostics, result.compilerDiagnostics, reportOptions)
+    throwOnErrorDiagnostics(diagnostics)
 
     const typegenDiagnostics = await assembleAndCommit({
       cwd,
@@ -332,7 +339,7 @@ export async function sync(cwd: string, options: SyncOptions = {}): Promise<Sync
       outDir,
       spec,
       warningCount: warningCount + typegenWarningCount,
-      diagnostics: [...result.diagnostics, ...typegenDiagnostics],
+      diagnostics: [...diagnostics, ...typegenDiagnostics],
       compilerDiagnostics: result.compilerDiagnostics ?? [],
     }
   } catch (error) {

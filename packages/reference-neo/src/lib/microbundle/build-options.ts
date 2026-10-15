@@ -102,5 +102,6 @@ export function buildMicroBundleOptions(
     sourcemap: resolvedOptions.sourcemap,
     outfile: resolvedOptions.outfile,
     tsconfigRaw: resolvedOptions.tsconfigRaw,
+    define: resolvedOptions.define,
   }
 }

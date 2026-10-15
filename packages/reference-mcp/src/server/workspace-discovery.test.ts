@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { discoverProjects } from './workspace-discovery'
+import { discoverProjects, isProjectSynced } from './workspace-discovery'
 import { GlobalProjectRegistry } from './project-registry'
 
 describe('discoverProjects', () => {
@@ -89,5 +89,72 @@ describe('discoverProjects', () => {
 
     const discovered = discoverProjects(testDir, { scanPath: scanRoot, maxDepth: 3 })
     expect(discovered.some(d => d.source === 'scan')).toBe(true)
+  })
+
+  it('reports hasArtifacts false when only the MCP model cache exists', () => {
+    const projectDir = join(testDir, 'cache-only')
+    mkdirSync(join(projectDir, '.reference-ui', 'mcp'), { recursive: true })
+    writeFileSync(join(projectDir, 'ui.config.ts'), 'export default {}')
+    writeFileSync(join(projectDir, '.reference-ui', 'mcp', 'model.json'), '{}')
+
+    const cwd = discoverProjects(projectDir).find(d => d.source === 'cwd')
+    expect(cwd?.hasArtifacts).toBe(false)
+  })
+
+  it('reports hasArtifacts true once the types manifest exists', () => {
+    const projectDir = join(testDir, 'manifest-synced')
+    mkdirSync(join(projectDir, '.reference-ui', 'types', 'tasty'), { recursive: true })
+    writeFileSync(join(projectDir, 'ui.config.ts'), 'export default {}')
+    writeFileSync(join(projectDir, '.reference-ui', 'types', 'tasty', 'manifest.js'), 'export {}\n')
+
+    const cwd = discoverProjects(projectDir).find(d => d.source === 'cwd')
+    expect(cwd?.hasArtifacts).toBe(true)
+  })
+})
+
+describe('isProjectSynced', () => {
+  let projectDir: string
+
+  beforeEach(() => {
+    projectDir = mkdtempSync(join(tmpdir(), 'ref-test-synced-'))
+  })
+
+  afterEach(() => {
+    rmSync(projectDir, { recursive: true, force: true })
+  })
+
+  function writeManifest(): void {
+    mkdirSync(join(projectDir, '.reference-ui', 'types', 'tasty'), { recursive: true })
+    writeFileSync(join(projectDir, '.reference-ui', 'types', 'tasty', 'manifest.js'), 'export {}\n')
+  }
+
+  function writeModelCache(): void {
+    mkdirSync(join(projectDir, '.reference-ui', 'mcp'), { recursive: true })
+    writeFileSync(join(projectDir, '.reference-ui', 'mcp', 'model.json'), '{}')
+  }
+
+  it('is false for a project with no generated artifacts', () => {
+    expect(isProjectSynced(projectDir)).toBe(false)
+  })
+
+  it('is false when only the MCP model cache exists', () => {
+    writeModelCache()
+    expect(isProjectSynced(projectDir)).toBe(false)
+  })
+
+  it('is true when the types manifest exists, with or without a model cache', () => {
+    writeManifest()
+    expect(isProjectSynced(projectDir)).toBe(true)
+
+    writeModelCache()
+    expect(isProjectSynced(projectDir)).toBe(true)
+  })
+
+  it('is false again once the manifest is removed, even if the model cache remains', () => {
+    writeManifest()
+    writeModelCache()
+
+    rmSync(join(projectDir, '.reference-ui', 'types'), { recursive: true, force: true })
+    expect(isProjectSynced(projectDir)).toBe(false)
   })
 })

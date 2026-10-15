@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
 
 const analyzeDetailed = vi.fn()
 const createReferenceApi = vi.fn(() => ({}))
@@ -81,6 +82,7 @@ describe('buildMcpArtifact', () => {
       rootDir: '',
       include: ['src/components/**'],
       exclude: ['src/components/internal/**'],
+      observe: [{ source: '@reference-ui/react', names: REFERENCE_UI_PRIMITIVE_NAMES }],
     })
     expect(loadMcpReferenceData).toHaveBeenCalledWith(
       {},
@@ -92,6 +94,45 @@ describe('buildMcpArtifact', () => {
       '/workspace/app',
       expect.objectContaining({ name: 'test-system' })
     )
+  })
+
+  it('builds primitive components from the observed elements Atlas returns', async () => {
+    analyzeDetailed.mockResolvedValueOnce({
+      components: [],
+      diagnostics: [],
+      observed: [
+        {
+          name: 'Button',
+          source: '@reference-ui/react',
+          count: 3,
+          usage: 'very common',
+          examples: ['<Button disabled />'],
+          filePresence: 1,
+          props: [
+            { name: 'disabled', count: 1, usage: 'occasional', values: { true: 'occasional' } },
+          ],
+          usedWith: {},
+        },
+      ],
+    })
+    const { generateMcpArtifact } = await import('./build')
+
+    const artifact = await generateMcpArtifact({ cwd: '/workspace/observed-app' })
+
+    expect(artifact.components.find(component => component.name === 'Button')).toMatchObject({
+      kind: 'primitive',
+      count: 3,
+      usage: 'very common',
+      examples: ['<Button disabled />'],
+      props: expect.arrayContaining([
+        expect.objectContaining({
+          name: 'disabled',
+          count: 1,
+          origin: 'observed',
+          values: { true: 'occasional' },
+        }),
+      ]),
+    })
   })
 
   it('separates MCP generation from artifact writing', async () => {

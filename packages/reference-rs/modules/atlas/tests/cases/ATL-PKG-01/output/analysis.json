@@ -31,9 +31,7 @@
           "examples": [
             "<DemoUi.Badge count={1}>"
           ],
-          "usedWith": {
-            "Button": "very common"
-          }
+          "usedWith": {}
         },
         {
           "name": "Button",
@@ -64,9 +62,7 @@
             "<DemoUi.Button variant=\"solid\">",
             "<DemoUi.Button variant=\"ghost\">"
           ],
-          "usedWith": {
-            "Badge": "very common"
-          }
+          "usedWith": {}
         }
       ]
     }

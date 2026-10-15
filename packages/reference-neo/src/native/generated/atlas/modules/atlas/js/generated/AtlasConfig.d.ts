@@ -6,8 +6,10 @@
  * Regen: cd packages/reference-neo && node tools/vendor-rust-atlas-dts.mjs
  */
 
+import type { ObserveSpec } from "./ObserveSpec.js";
 export type AtlasConfig = {
     rootDir: string;
     include?: Array<string>;
     exclude?: Array<string>;
+    observe?: Array<ObserveSpec>;
 };

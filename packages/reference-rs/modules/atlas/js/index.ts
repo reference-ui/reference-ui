@@ -13,5 +13,7 @@ export type {
   ComponentInterface,
   ComponentProp,
   AtlasConfig,
+  ObserveSpec,
+  ObservedElement,
   Usage,
 } from './types'

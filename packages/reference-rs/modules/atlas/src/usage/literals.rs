@@ -1,10 +1,11 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Small readers that turn oxc JSX nodes into the plain strings and values Atlas records.
+//! They name a JSX tag or attribute, decide whether a child is meaningful, slice a span out of the
+//! source, and read an attribute's literal value when it has one. They take borrowed AST nodes and
+//! emit owned data, so the usage walker can drop the parse arena as soon as a module is read.
 
 use crate::internal::JsxAttribute;
 use oxc_ast::ast::{
-    ExportDefaultDeclarationKind, Expression, JSXAttributeItem, JSXAttributeName,
+    Expression, JSXAttributeItem, JSXAttributeName,
     JSXAttributeValue, JSXChild, JSXElementName, JSXExpression, JSXMemberExpressionObject,
 };
 use oxc_span::{GetSpan, Span};
@@ -45,17 +46,6 @@ pub(super) fn jsx_child_is_meaningful(child: &JSXChild<'_>) -> bool {
     match child {
         JSXChild::Text(text) => !text.value.trim().is_empty(),
         _ => true,
-    }
-}
-
-pub(super) fn export_default_expression<'a>(
-    expression: &'a ExportDefaultDeclarationKind<'a>,
-) -> Option<&'a Expression<'a>> {
-    match expression {
-        ExportDefaultDeclarationKind::FunctionDeclaration(_) => None,
-        ExportDefaultDeclarationKind::ClassDeclaration(_) => None,
-        ExportDefaultDeclarationKind::TSInterfaceDeclaration(_) => None,
-        _ => Some(expression.to_expression()),
     }
 }
 

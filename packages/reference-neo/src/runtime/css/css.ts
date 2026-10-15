@@ -17,6 +17,7 @@ import {
   serializeCanonicalJson,
   type ScoredDeclaration,
 } from './plans.ts'
+import { isProductionBuild } from '../env.ts'
 import { applyFamilyScope } from './scope.ts'
 
 /** Author style object: flat declarations plus nested conditions. */
@@ -47,14 +48,6 @@ let heldMissCandidates: MissCandidate[] = []
 
 /** True once the load flush below is armed; one listener per wait. */
 let loadFlushArmed = false
-
-function isProductionBuild(): boolean {
-  return (
-    typeof process !== 'undefined' &&
-    typeof process.env !== 'undefined' &&
-    process.env.NODE_ENV === 'production'
-  )
-}
 
 /**
  * Frames belonging to this runtime, skipped while locating the css() caller.

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'n
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import fg from 'fast-glob'
 import { resolveRefConfigFile } from '../neo/paths'
-import { getMcpModelPath, getMcpTypesManifestPath } from '../pipeline/paths'
+import { getMcpTypesManifestPath } from '../pipeline/paths'
 import { GlobalProjectRegistry } from './project-registry'
 
 export const SCAN_EXCLUDE_DIRS = new Set([
@@ -48,12 +48,12 @@ function canonicalizePath(rawPath: string): string {
 }
 
 /**
- * A project is synced when its generated artifacts exist: the types manifest that `ref sync`
- * writes, or the MCP model cache. The manifest alone is enough, because a fresh sync has no
- * model until the first build writes one.
+ * A project is synced when its types manifest exists: the file `ref sync` writes and the MCP build
+ * requires. The manifest alone is enough, since the build writes the model cache itself. The model
+ * cache never counts: a leftover cache must not mark a project synced once its manifest is gone.
  */
 export function isProjectSynced(projectPath: string): boolean {
-  return existsSync(getMcpTypesManifestPath(projectPath)) || existsSync(getMcpModelPath(projectPath))
+  return existsSync(getMcpTypesManifestPath(projectPath))
 }
 
 function parsePnpmWorkspaceGlobs(workspaceRoot: string): string[] {

@@ -7,7 +7,9 @@
  */
 
 import type { Component } from "./Component.js";
+import type { ObservedElement } from "./ObservedElement.js";
 export type AtlasAnalysisResult = {
     components: Array<Component>;
     diagnostics: Array<import("../../../diagnostics/js/generated/Diagnostic.js").Diagnostic>;
+    observed?: Array<ObservedElement>;
 };

@@ -21,10 +21,7 @@
         "examples": [
           "<Badge>"
         ],
-        "usedWith": {
-          "Button": "very common",
-          "Card": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "Button",
@@ -46,7 +43,7 @@
           "<Button>"
         ],
         "usedWith": {
-          "Badge": "very common",
+          "Badge": "common",
           "Card": "very common"
         }
       },
@@ -70,7 +67,7 @@
           "<Card>"
         ],
         "usedWith": {
-          "Badge": "very common",
+          "Badge": "common",
           "Button": "very common"
         }
       }

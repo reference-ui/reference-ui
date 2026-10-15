@@ -197,6 +197,10 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
       // bound while the map keeps it debuggable. Names mangle, so the miss
       // call-site probe keeps only the react.mjs file marker (by design).
       minify: true,
+      // A minified browser build makes esbuild define NODE_ENV=production on
+      // its own; keep the expression so the consumer's bundler decides dev vs
+      // prod for the runtime's dev-only warnings (runtime/env.ts).
+      define: { 'process.env.NODE_ENV': 'process.env.NODE_ENV' },
       keepNames: false,
       sourcemap: 'linked',
       // Live base: the map's external sources resolve one `../` shallower.

@@ -4,7 +4,7 @@
 
 use crate::config::AtlasConfig;
 use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
-use crate::internal::{component_key, create_usage_state};
+use crate::internal::{component_key, create_usage_state, ModuleInfo};
 use crate::model::Component;
 use crate::output::AtlasAnalysisResult;
 use crate::parser::parse_modules;
@@ -14,9 +14,12 @@ use crate::resolver::{
     resolve_package_index,
 };
 use crate::scanner::Scanner;
-use crate::usage::{collect_usage_for_module, finalize_components};
+use crate::usage::{collect_usage_for_module, finalize_components, observe_elements};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
+
+#[cfg(test)]
+mod tests;
 
 pub struct AtlasAnalyzer {
     pub config: AtlasConfig,
@@ -89,6 +92,7 @@ impl AtlasAnalyzer {
                     "**/*.test.*".to_string(),
                     "**/*.spec.*".to_string(),
                 ]),
+                observe: Vec::new(),
             };
 
             let files = match package_scanner.discover_files(&package_config) {
@@ -178,18 +182,15 @@ impl AtlasAnalyzer {
             })
             .collect::<BTreeMap<_, _>>();
 
-        let mut app_modules: Vec<&crate::internal::ModuleInfo> = modules
-            .values()
-            .filter(|m| m.path.starts_with(&app_root))
-            .collect();
-        app_modules.sort_by_key(|m| &m.path);
+        let app_modules = select_app_modules(&modules, &local_files, &app_root);
 
-        for module in app_modules {
+        for module in &app_modules {
             let snapshot = states.clone();
             collect_usage_for_module(module, &modules, &snapshot, &mut states);
         }
 
         Ok(AtlasAnalysisResult {
+            observed: observe_elements(&app_modules, &self.config.observe),
             components: finalize_components(states),
             diagnostics: normalize_diagnostics(diagnostics),
         })
@@ -213,10 +214,36 @@ impl AtlasAnalyzer {
     }
 }
 
+/// The modules usage and observation are counted over, in path order: the files discovery found
+/// for the project itself. Package sources join `modules` afterwards, and one reached through a
+/// `node_modules` symlink or a sibling directory keeps a path under the app root, so the path alone
+/// cannot tell app code from a dependency. Dependency files an include glob names are read for
+/// resolution but are not app code either.
+fn select_app_modules<'a>(
+    modules: &'a HashMap<PathBuf, ModuleInfo>,
+    discovered: &[PathBuf],
+    app_root: &Path,
+) -> Vec<&'a ModuleInfo> {
+    discovered
+        .iter()
+        .filter(|path| !is_dependency_path(path, app_root))
+        .filter_map(|path| modules.get(path))
+        .collect()
+}
+
+fn is_dependency_path(path: &Path, app_root: &Path) -> bool {
+    path.strip_prefix(app_root).is_ok_and(|relative| {
+        relative
+            .components()
+            .any(|component| component.as_os_str() == "node_modules")
+    })
+}
+
 fn failed_result(message: &str) -> Result<AtlasAnalysisResult, DiagnosticError> {
     Ok(AtlasAnalysisResult {
         components: Vec::new(),
         diagnostics: vec![crate::diagnostics::scan_failed(message)?],
+        observed: Vec::new(),
     })
 }
 

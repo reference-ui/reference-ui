@@ -1,0 +1,164 @@
+{
+  "caseName": "ATL-WALK-01",
+  "analyses": {
+    "default": [
+      {
+        "name": "Badge",
+        "interface": {
+          "name": "BadgeProps",
+          "source": "./components/Badge.tsx"
+        },
+        "source": "./components/Badge.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "tone",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "new": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Badge tone=\"new\">"
+        ],
+        "usedWith": {}
+      },
+      {
+        "name": "Banner",
+        "interface": {
+          "name": "BannerProps",
+          "source": "./components/Banner.tsx"
+        },
+        "source": "./components/Banner.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "tone",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "error": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Banner tone=\"error\">"
+        ],
+        "usedWith": {}
+      },
+      {
+        "name": "Fallback",
+        "interface": {
+          "name": "FallbackProps",
+          "source": "./components/Fallback.tsx"
+        },
+        "source": "./components/Fallback.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "tone",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "danger": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Fallback tone=\"danger\">"
+        ],
+        "usedWith": {}
+      },
+      {
+        "name": "Label",
+        "interface": {
+          "name": "LabelProps",
+          "source": "./components/Label.tsx"
+        },
+        "source": "./components/Label.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "tone",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "primary": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Label tone=\"primary\">"
+        ],
+        "usedWith": {}
+      },
+      {
+        "name": "Notice",
+        "interface": {
+          "name": "NoticeProps",
+          "source": "./components/Notice.tsx"
+        },
+        "source": "./components/Notice.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "tone",
+            "count": 1,
+            "usage": "very common",
+            "values": {
+              "info": "very common"
+            }
+          }
+        ],
+        "usage": "common",
+        "examples": [
+          "<Notice tone=\"info\">"
+        ],
+        "usedWith": {}
+      }
+    ],
+    "withIncludes": {},
+    "observed": [
+      {
+        "name": "Button",
+        "source": "@reference-ui/react",
+        "count": 5,
+        "usage": "very common",
+        "examples": [
+          "<Button tone=\"class\">",
+          "<Button tone=\"optional\">",
+          "<Button tone=\"throw\">",
+          "<Button tone=\"template\">",
+          "<Button tone=\"new\">"
+        ],
+        "filePresence": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 5,
+            "usage": "very common"
+          },
+          {
+            "name": "tone",
+            "count": 5,
+            "usage": "very common",
+            "values": {
+              "class": "common",
+              "new": "common",
+              "optional": "common",
+              "template": "common",
+              "throw": "common"
+            }
+          }
+        ],
+        "usedWith": {}
+      }
+    ]
+  }
+}

@@ -63,9 +63,7 @@
           "examples": [
             "<AppButton variant=\"solid\">"
           ],
-          "usedWith": {
-            "Button": "very common"
-          }
+          "usedWith": {}
         },
         {
           "name": "Button",
@@ -98,7 +96,7 @@
             "<PackageButton variant=\"solid\">"
           ],
           "usedWith": {
-            "AppButton": "very common"
+            "AppButton": "common"
           }
         }
       ]

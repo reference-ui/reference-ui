@@ -10,7 +10,6 @@ import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
 import type { McpBuildArtifact } from './types'
 import { loadMcpTokens } from './tokens'
-import { collectReferenceUiPrimitiveUsage } from './primitive-usage'
 import { createObservedReferenceUiPrimitives } from './primitives'
 
 const mcpAtlasBuildCache = new Map<
@@ -55,9 +54,7 @@ export async function generateMcpArtifact(
     manifestPath,
     atlas,
     tokens: await loadMcpTokensSafely(cwd, config),
-    primitiveComponents: createObservedReferenceUiPrimitives(
-      await loadReferenceUiPrimitiveUsageSafely(cwd, config)
-    ),
+    primitiveComponents: createObservedReferenceUiPrimitives(atlas.observed ?? []),
     config,
   })
 }
@@ -180,18 +177,6 @@ export async function generateMcpArtifactFromAtlas(input: {
   }
 
   return artifact
-}
-
-async function loadReferenceUiPrimitiveUsageSafely(
-  cwd: string,
-  config: McpAwareConfig | undefined
-) {
-  try {
-    return await collectReferenceUiPrimitiveUsage(cwd, config)
-  } catch (error) {
-    log.warn('[mcp] Primitive usage collection failed:', error)
-    return []
-  }
 }
 
 async function loadMcpTokensSafely(

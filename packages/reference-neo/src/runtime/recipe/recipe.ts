@@ -9,6 +9,7 @@
 
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import type { SystemStyleObject } from '../css/css.ts'
+import { isProductionBuild } from '../env.ts'
 import { lowerResponsiveStyles } from '../css/lowerResponsiveStyles.ts'
 
 /** One variant axis value an author may pass: strings, or booleans for true/false options. */
@@ -74,6 +75,42 @@ export function registerRecipeData(
 
 function qualifiedName(system: string, className: string): string {
   return system === '' ? className : `${system}__${className}`
+}
+
+/** Qualified keys already reported as having no compiled table; repeats stay silent. */
+const warnedMissingTables = new Set<string>()
+
+function hasLiteralClassName(value: unknown): boolean {
+  return typeof value === 'string' && value !== ''
+}
+
+/**
+ * Name the fix for a missing table. Without a literal className the runtime
+ * has no key to look up, so the message asks for one; with a className the
+ * message names the qualified key and points at a re-sync.
+ */
+function missingTableMessage(key: string, className: unknown): string {
+  if (!hasLiteralClassName(className)) {
+    return (
+      '[reference-ui] recipe(): needs a literal `className` (string) in its config so the ' +
+      'runtime can find its compiled table. This call has none, so it resolves to nothing.'
+    )
+  }
+  return (
+    `[reference-ui] recipe(): no compiled table found for \`${key}\`; re-run \`ref sync\` ` +
+    'to emit it. Until then this recipe resolves to nothing.'
+  )
+}
+
+/**
+ * Dev-only diagnostic for a lookup that misses. The silent empty string hides
+ * an unsynced or misnamed recipe, so warn once per qualified key and stay
+ * quiet in production builds (the same guard css() uses).
+ */
+function warnMissingTable(key: string, className: unknown): void {
+  if (isProductionBuild() || warnedMissingTables.has(key)) return
+  warnedMissingTables.add(key)
+  console.warn(missingTableMessage(key, className))
 }
 
 function lowerRecipeDefinition(config: RecipeConfig): RecipeConfig {
@@ -324,7 +361,8 @@ function mergeRawStyles(
  * each call against the registered table: defaults fill gaps, base plus
  * variant and compound classes compose for the selection (a legacy shipped
  * combinations map still wins on hit), responsive objects append one derived
- * class per breakpoint, and unknown recipes resolve to nothing.
+ * class per breakpoint, and unknown recipes resolve to nothing (dev warns once
+ * per key).
  */
 export function recipe(config: RecipeConfig): RecipeRuntimeFn {
   const lowered = lowerRecipeDefinition(config)
@@ -335,7 +373,10 @@ export function recipe(config: RecipeConfig): RecipeRuntimeFn {
     }
     const key = qualifiedName(active.system, lowered.className)
     const table: RecipeRuntimeTable | undefined = active.tables[key]
-    if (!table) return ''
+    if (!table) {
+      warnMissingTable(key, lowered.className)
+      return ''
+    }
     const stem = table.qualifiedName ?? key
     const { plain, responsive } = splitResponsiveProps(props)
     const selection = resolveSelection(tableDefaults(table), plain)

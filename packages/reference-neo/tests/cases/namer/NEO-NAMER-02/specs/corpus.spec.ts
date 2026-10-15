@@ -38,9 +38,9 @@ const GOLDEN: Record<string, string> = {
 // The static `ATM-COND-05` oracle pins bare weights beside a family to that
 // family's scale (`sans.thin`→200, `serif.normal`→373, `mono.normal`→393).
 // The world mirrors the lib font table; the runtime must spell the same
-// `fontWeight_<scale>` class for every family × keyword, and a scale miss
-// passes the scoped name through raw (`mono.black` → `mono.black`), matching
-// the static `lower_weight` fallback.
+// `fontWeight_<scale>` class for every family × keyword. A scale miss falls
+// back to the CSS keyword of its suffix (`mono.black` → `fontWeight_900`),
+// matching the static `lower_weight` fallback.
 const FAMILIES = ['sans', 'serif', 'mono'];
 const KEYWORDS = ['thin', 'light', 'normal', 'semibold', 'bold', 'black'];
 const SCALES: Record<string, Record<string, string>> = {
@@ -62,7 +62,7 @@ const KEYWORD_FALLBACK: Record<string, string> = {
 const WEIGHT_GOLDEN: Record<string, string> = {};
 for (const family of FAMILIES) {
   for (const keyword of KEYWORDS) {
-    const value = SCALES[family]?.[keyword] ?? `${family}.${keyword}`;
+    const value = SCALES[family]?.[keyword] ?? KEYWORD_FALLBACK[keyword];
     WEIGHT_GOLDEN[`f-${family}-${keyword}`] =
       `${PREFIX}font-family_${family} ${PREFIX}font-weight_${value}`;
   }
@@ -161,6 +161,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
     ['f-sans-thin', '200'],
     ['f-serif-normal', '373'],
     ['f-mono-normal', '393'],
+    ['f-mono-black', '900'],
   ] as const) {
     const probe = await computedOf(page, id);
     assert.equal(

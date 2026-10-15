@@ -5,13 +5,16 @@
 use crate::internal::UsageState;
 use crate::model::Component;
 use crate::resolver::{build_alias_map, resolve_occurrence_key};
-use crate::usage_policy::score_usage;
+use crate::usage_policy::{score_usage, score_used_with};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 
 mod literals;
+mod observe;
+mod scope;
 mod walker;
 
+pub use observe::observe_elements;
 use walker::find_jsx_occurrences;
 
 pub fn collect_usage_for_module(
@@ -150,11 +153,8 @@ pub fn finalize_components(states: BTreeMap<String, UsageState>) -> Vec<Componen
             .component
             .props
             .sort_by(|left, right| left.name.cmp(&right.name));
-        state.component.used_with = state
-            .used_with_counts
-            .into_iter()
-            .map(|(name, count)| (name, score_usage(count, state.file_presence_count)))
-            .collect();
+        state.component.used_with =
+            score_used_with(&state.used_with_counts, state.file_presence_count);
         components.push(state.component);
     }
 

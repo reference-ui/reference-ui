@@ -36,6 +36,8 @@ export interface MicroBundleOptions {
   sourcemap?: esbuild.BuildOptions['sourcemap']
   /** Output path naming the bundle; in-memory builds still honor it for map naming. */
   outfile?: string
+  /** Expression replacements; the react bundle pins `process.env.NODE_ENV` to itself. */
+  define?: Record<string, string>
   /** Additional esbuild plugins. */
   plugins?: esbuild.Plugin[]
 }

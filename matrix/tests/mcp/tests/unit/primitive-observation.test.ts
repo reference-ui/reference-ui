@@ -115,7 +115,8 @@ describe('primitive observation', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
         ]),
       }),
     )
-    expect(examples.examples.join('\n')).toContain('src/Index.tsx')
+    // Atlas records opening tags only. Exact equality also rejects library-internal Code markup.
+    expect(examples.examples).toEqual(['<Code>'])
   })
 
   it('does not expose unused primitives as components', async () => {

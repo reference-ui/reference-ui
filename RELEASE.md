@@ -29,6 +29,9 @@ tick it when its check passes.
 - [ ] `docs.yml` artifact path fixed.
 - [ ] npm-tarball fallback for unbuildable explicit targets.
 - [ ] GitHub Actions and repo settings configured.
+- [x] Matrix MCP model cache never invalidates: the build returns early when
+      `model.json` exists, so a stale model survives any Atlas change. Key the
+      cache on the Atlas build (or its inputs) so CI can't pass on old data.
 
 ## 3. Publish (in this order)
 
@@ -42,6 +45,12 @@ tick it when its check passes.
       `private`, 0.0.0) and make every README's `defineConfig` /
       `extendSystem` import match.
 - [ ] `@reference-ui/lib`.
+- [x] Before publishing, reproduce whether the content-version stamps in
+      `.reference-ui/{system,types}/package.json` match a recompute of their
+      dirs (see neo `src/packager/content-version.ts`). On 2026-10-15 react's
+      matched and system's and types' did not; suspects are stray files in
+      those dirs (compile-request.json, evaluated-system.json,
+      jsx-elements.json, a stale system.mjs). Fix before any version ships.
 - [ ] After each publish: the packed-consumer type probe against the real
       registry (TS 7 and 5.9; bundler, node16, nodenext; `skipLibCheck` on
       and off) gives 0 errors on the positive file and exact errors on the
@@ -59,10 +68,19 @@ tick it when its check passes.
 - [ ] Dev warnings may print in production. Lib's "not production" check reads
       `globalThis.process`; a browser bundle with no `process` shim may count
       as development, so Slider, Splitter, Tabs and the four new out-of-range
-      warnings could reach real users' consoles. One shared helper, proven in
-      a production build.
+      warnings could reach real users' consoles. Neo's `isProductionBuild`
+      (runtime `css()` misses and the new recipe missing-table warning) has the
+      same `typeof process` gap. One shared helper, proven in a production build.
 - [ ] Listbox: an uncontrolled `selection="multiple"` Listbox with options
       never settles, because `Listbox.tsx:57` makes a new `[]` every render.
+- [x] A user `ui.config` that imports the `@reference-ui/lib` barrel pays
+      ~1.5s of config evaluation on every sync; only in-repo configs are
+      guarded (neo `src/config/base-system-import.test.ts`). Document the
+      `@reference-ui/lib/baseSystem` subpath, or warn when config eval is slow.
+- [x] Atlas undercounts usage (non-blocking). Its JSX walker skips class
+      bodies, optional-chain calls, `throw`, template literals and `new`
+      arguments, so a component used only there (e.g. inside an
+      `ErrorBoundary` class) is missing from component and primitive stats.
 - [ ] Repo hygiene: sweep crew-era handoff docs (mission codes, dead
       `docs/MISSIONS` links) before the repo goes public.
 - [ ] Branding.

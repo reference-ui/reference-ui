@@ -1,3 +1,4 @@
+import { isStylePropName as isVocabularyStylePropName } from '@reference-ui/neo/style-vocabulary'
 import { COLOR_PROP_KEYS } from './constants'
 import type { McpGetStylePropsInput } from './types'
 
@@ -204,19 +205,9 @@ export const STYLE_PROP_CATEGORIES: StylePropCategory[] = [
   },
 ]
 
-const STYLE_PROP_NAMES = new Set(
-  STYLE_PROP_CATEGORIES.flatMap(category => category.props)
-)
-
-const STYLE_PROP_PATTERNS = [
-  /^(?:_)?(?:hover|focus|active|disabled|visited|checked|expanded|open|closed)$/,
-  /^(?:margin|padding|border|rounded|grid|flex|align|justify|font|text|box|background|bg)/,
-  /(?:Color|Width|Height|Size|Radius|Shadow|Spacing|Gap|Inset|Opacity|Transform|Transition)$/,
-  /^Webkit/,
-]
-
+/** Judged by the compiler's vocabulary; the category lists above only group the docs. */
 export function isStylePropName(name: string): boolean {
-  return STYLE_PROP_NAMES.has(name) || STYLE_PROP_PATTERNS.some(pattern => pattern.test(name))
+  return isVocabularyStylePropName(name)
 }
 
 function getCategoryProps(props: string[], query: string | undefined, hasExactPropMatch: boolean): string[] {

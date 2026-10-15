@@ -2,7 +2,7 @@
 // They take authored configs plus selections and assert resolved classes.
 // Registration is module state, so the suite registers once up front.
 
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import { recipe, registerRecipeData, type RecipeConfig } from './recipe.ts'
 
@@ -36,6 +36,11 @@ const CONFIG: RecipeConfig = {
 
 beforeAll(() => {
   registerRecipeData('test', { [STEM]: TABLE })
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.restoreAllMocks()
 })
 
 describe('recipe() resolution', () => {
@@ -76,6 +81,7 @@ describe('recipe() resolution', () => {
   })
 
   it('resolves unknown recipes to nothing', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
     const ghost = recipe({ className: 'ghost' })
     expect(ghost({ tone: 'accent' })).toBe('')
   })
@@ -317,5 +323,46 @@ describe('recipe() without registration', () => {
     const button = fresh.recipe(CONFIG)
 
     expect(() => button({ tone: 'accent' })).toThrowError(/registerRecipeData/)
+  })
+})
+
+describe('recipe() missing table diagnostics', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  function warnings(): string[] {
+    return vi.mocked(console.warn).mock.calls.map(args => String(args[0]))
+  }
+
+  it('resolves to nothing and warns once per qualified key', () => {
+    const missing = recipe({ className: 'diag-once' })
+    expect(missing({ tone: 'accent' })).toBe('')
+    expect(missing()).toBe('')
+    expect(missing({ tone: 'muted' })).toBe('')
+    expect(warnings()).toHaveLength(1)
+    expect(warnings()[0]).toContain('test__diag-once')
+    expect(warnings()[0]).toContain('ref sync')
+  })
+
+  it('warns separately for each distinct missing key', () => {
+    recipe({ className: 'diag-first' })({ tone: 'accent' })
+    recipe({ className: 'diag-second' })({ tone: 'accent' })
+    expect(warnings()).toHaveLength(2)
+  })
+
+  it('stays silent in production builds', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    expect(recipe({ className: 'diag-prod' })({ tone: 'accent' })).toBe('')
+    expect(warnings()).toHaveLength(0)
+  })
+
+  it('asks for a literal className when the config carries none', () => {
+    // The type requires className; a JS caller can still omit it at runtime.
+    const stripped: Partial<RecipeConfig> = { ...CONFIG }
+    delete stripped.className
+    expect(recipe(stripped as RecipeConfig)({ tone: 'accent' })).toBe('')
+    expect(warnings()).toHaveLength(1)
+    expect(warnings()[0]).toContain('literal `className` (string)')
   })
 })

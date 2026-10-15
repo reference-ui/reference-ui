@@ -152,10 +152,18 @@ function fontPairs(ctx: LowerContext): LoweredPair[] {
   return [...pairs.entries()].map(([prop, val]): LoweredPair => [prop, val])
 }
 
-/** `weight`: scoped scale, else keyword table, else raw. */
+/**
+ * `weight`: scoped scale, else keyword table on the whole value, else keyword
+ * table on the suffix after the first dot (a scale miss such as `mono.black`
+ * names a CSS keyword), else raw. Mirrors `weight.rs::lower_weight`.
+ */
 function weightPairs(ctx: LowerContext): LoweredPair[] {
   const raw = ctx.rendered
-  const mapped = scopedWeight(raw, ctx.tables) ?? keywordWeight(raw, ctx.tables) ?? raw
+  const mapped =
+    scopedWeight(raw, ctx.tables) ??
+    keywordWeight(raw, ctx.tables) ??
+    suffixKeywordWeight(raw, ctx.tables) ??
+    raw
   return [['fontWeight', { kind: 'string', text: mapped }]]
 }
 
@@ -172,6 +180,13 @@ function keywordWeight(raw: string, tables: NamerTables): string | undefined {
     if (name === raw) return val
   }
   return undefined
+}
+
+/** CSS keyword named by the part after the first dot, for a scale miss on `family.keyword`. */
+function suffixKeywordWeight(raw: string, tables: NamerTables): string | undefined {
+  const dot = raw.indexOf('.')
+  if (dot < 0) return undefined
+  return keywordWeight(raw.slice(dot + 1), tables)
 }
 
 /** Emit declarations: literals, or `$` for the rendered value. */

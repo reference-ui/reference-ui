@@ -1,13 +1,13 @@
 // Unit tests for the content-addressed versions of generated packages.
-// They build small package trees in a temp dir and assert that a version is the base plus a hash of the package's own bytes, that equal bytes give equal versions, that the root manifest never feeds its own hash, and that stamping writes every generated manifest and rewrites identical bytes.
+// They build small package trees in a temp dir and assert that a version is the base plus a hash of the package's own bytes, that equal bytes give equal versions, that the root manifest never feeds its own hash, and that stamping writes every generated manifest and rewrites identical bytes, and that a stamp still recomputes equal once sync's compile request and the tasty dir land after it.
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { GENERATED_VERSION } from './constants.ts'
-import { contentVersion, stampContentVersions } from './content-version.ts'
+import { contentVersion, findStampMismatches, stampContentVersions } from './content-version.ts'
 import { getPackageDir } from './layout.ts'
-import { PACKAGES } from './packages.ts'
+import { PACKAGES, SYSTEM_PACKAGE, TYPES_PACKAGE } from './packages.ts'
 
 const tempDirs: string[] = []
 
@@ -103,5 +103,30 @@ describe('stampContentVersions', () => {
     stampContentVersions(outDir)
     const secondPass = PACKAGES.map((pkg) => readFileSync(join(getPackageDir(outDir, pkg.name), 'package.json'), 'utf-8'))
     expect(secondPass).toEqual(firstPass)
+  })
+
+  it('keeps every stamp equal to a recompute after the late entries other owners land', () => {
+    const outDir = makeDir()
+    for (const pkg of PACKAGES) {
+      writeTree(getPackageDir(outDir, pkg.name), { 'index.mjs': `export const name = ${JSON.stringify(pkg.name)}\n` })
+    }
+    stampContentVersions(outDir)
+    // Sync writes its compile request after assembly; the tasty phase lands its dir (and temps) later still.
+    writeTree(getPackageDir(outDir, SYSTEM_PACKAGE.name), { 'compile-request.json': '{"root":"/abs/checkout"}\n' })
+    writeTree(getPackageDir(outDir, TYPES_PACKAGE.name), {
+      'tasty/manifest.js': 'export default {}\n',
+      'tasty.tmp-123-abc/manifest.js': 'export default {}\n',
+    })
+    expect(findStampMismatches(outDir)).toEqual([])
+  })
+
+  it('still names a stamp whose shipped files changed after stamping', () => {
+    const outDir = makeDir()
+    for (const pkg of PACKAGES) {
+      writeTree(getPackageDir(outDir, pkg.name), { 'index.mjs': 'export const x = 1\n' })
+    }
+    stampContentVersions(outDir)
+    writeTree(getPackageDir(outDir, SYSTEM_PACKAGE.name), { 'evaluated-system.json': '{}\n' })
+    expect(findStampMismatches(outDir).map((mismatch) => mismatch.name)).toEqual([SYSTEM_PACKAGE.name])
   })
 })

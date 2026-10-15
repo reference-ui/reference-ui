@@ -25,7 +25,7 @@ packages/reference-mcp/
 │   │   ├── library-catalog.ts       # 24 @reference-ui/lib component specs & examples
 │   │   ├── icons-catalog.ts         # 2,500+ @reference-ui/icons search index
 │   │   ├── primitives.ts            # Built-in @reference-ui/react HTML primitives catalog
-│   │   ├── primitive-usage.ts       # Observes which primitives are actually used in JSX
+│   │   ├── (Atlas observe)          # Counts primitive usage in JSX; primitives.ts maps the result
 │   │   ├── style-props.ts           # Token category mappings & StyleProps guide
 │   │   ├── tokens.ts                # Token tree collector and compression
 │   │   ├── queries.ts               # Component & token lookup engine
@@ -81,7 +81,7 @@ Discovers all Reference UI projects in the current workspace, the global user ma
     "sanitizedStaleCount": 0
   }
   ```
-`hasArtifacts` is `true` when a project is synced: its `ref sync` types manifest or its MCP model exists. Default selection only picks synced projects.
+`hasArtifacts` is `true` when a project is synced, which the `ref sync` types manifest decides (`.reference-ui/types/tasty/manifest.js`). The MCP model (`.reference-ui/mcp/model.json`) is only a cache, so a model without a manifest does not count. Default selection only picks synced projects.
 
 #### `select_project`
 Sets the active project for the current MCP session and immediately triggers background warmup of its Atlas AST and model artifacts.

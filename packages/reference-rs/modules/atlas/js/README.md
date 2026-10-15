@@ -59,7 +59,32 @@ Each component includes:
 - `props`: observed prop inventory with usage and literal-value summaries
 - `count`: JSX call-site count
 - `examples`: representative JSX snippets, deduplicated by shape
-- `usedWith`: components that commonly appear alongside it
+- `usedWith`: components that commonly appear alongside it (only for components in 2+ files; scored over max(files, 3), rare entries dropped, at most 12)
+
+Call sites are counted in the project's own sources only. Package sources (an included or
+referenced scoped package, even one reached through a `node_modules` symlink) and any file under
+`node_modules` are read to resolve components and types but never count as app usage, for
+components and for observed elements alike.
+
+### Observing elements
+
+`config.observe` lists import sources and the element names to count from each, for
+elements that are not components Atlas indexes (for example library primitives).
+The result then carries `observed`, one entry per element actually seen.
+
+```ts
+const { observed } = await analyzeDetailed('/absolute/path/to/app', {
+  observe: [{ source: '@reference-ui/react', names: ['Div', 'Button'] }],
+})
+```
+
+A tag counts as element `N` from source `S` when it is imported from `S` as `N` (aliases
+included), reached as a member of a namespace import of `S`, or left unbound in a file that
+imports from `S` while nothing else declares the name. Each observed element carries
+`name`, `source`, `count`, `usage` (over all observed counts), `examples`, `filePresence`,
+`props` (the props actually passed, with count, usage and literal values; `children` when
+present) and `usedWith` (among observed names only). `observed` is absent when `observe` is
+empty or nothing was seen.
 
 ## Scope Boundaries
 

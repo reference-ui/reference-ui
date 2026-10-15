@@ -135,9 +135,18 @@ const EXPECTED_BYTES = {
   // follows the ancestor's system (c2eb26281, NEO-LAYERS-09) -> 153626/37786
   // (+157/+48): the context.ts stamp rule, react.mjs-only; A/B with only that
   // file reverted reproduces 153469/37738 exactly, CSS pins untouched.
+  // 2026-10-15 recipe dev-warn (0fc03d92b) and namer weight fallback
+  // (5e674e69d) -> 154208/38004 (+582/+218): recipe.ts + css.ts at a9a304ef0
+  // give 153716/37805 (+492/+199), lower.ts at a9a304ef0 gives 154118/37986
+  // (+90/+18); raw sums to the total, gzip leaves one byte (9710d40bf and
+  // d8db2b7f5 not A/B'd); 4e469336 is mcp-only; CSS pins untouched.
+  // 2026-10-15 runtime prod gate -> 154213/38023 (+5/+19): runtime/env.ts
+  // replaces the typeof-process guard and the packager keeps
+  // process.env.NODE_ENV unbaked for the consumer's bundler; A/B with only
+  // those neo files reverted reproduces 154208/38004 exactly, CSS pins untouched.
   // Re-verify if acceptance moves bytes.
-  reactRaw: 153626,
-  reactGzip: 37786,
+  reactRaw: 154213,
+  reactGzip: 38023,
   fixtureRules: 3693,
   m500Rules: 33806,
 }

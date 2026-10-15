@@ -40,6 +40,26 @@ pub struct Component {
     pub used_with: BTreeMap<String, Usage>,
 }
 
+/// One configured element (for example a library primitive) counted at its JSX call sites.
+/// Unlike a `Component` it has no declared interface, so `props` lists the props actually passed.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    export_to = "modules/atlas/js/generated/",
+    rename_all = "camelCase"
+)]
+pub struct ObservedElement {
+    pub name: String,
+    pub source: String,
+    pub count: u32,
+    pub usage: Usage,
+    pub examples: Vec<String>,
+    pub file_presence: u32,
+    pub props: Vec<ComponentProp>,
+    pub used_with: BTreeMap<String, Usage>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(

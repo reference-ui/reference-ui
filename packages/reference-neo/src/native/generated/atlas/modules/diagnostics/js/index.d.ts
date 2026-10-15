@@ -83,11 +83,8 @@ export declare function hint(text: string): string;
 export declare function didYouMean(known: string): string;
 /** Join message lines with newlines; line one stays the complete subject. */
 export declare function joinLines(lines: string[]): string;
-/**
- * Codes whose failure is an unknown name drawn from a finite known set: the only codes
- * `suggestForCode` will suggest for. Mirrors the Rust gate exactly; opaque names and every
- * other failure class stay silent even when a candidate looks near.
- */
+/** The fix hint for a warning code, or undefined when the code has none. */
+export declare function warningHintFor(code: string | undefined): string | undefined;
 export declare const SUGGESTION_CODES: readonly string[];
 /** Whether `code` may carry a did-you-mean suggestion: membership in `SUGGESTION_CODES`. */
 export declare function supportsSuggestions(code: string): boolean;

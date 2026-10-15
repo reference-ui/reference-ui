@@ -15,6 +15,7 @@
   "fontWeight:400": "@reference-ui/lib__font-weight_400",
   "fontWeight:500": "@reference-ui/lib__font-weight_500",
   "fontWeight:700": "@reference-ui/lib__font-weight_700",
+  "fontWeight:900": "@reference-ui/lib__font-weight_900",
   "fontWeight:normal": "@reference-ui/lib__font-weight_normal",
   "height:20px": "@reference-ui/lib__h_20px",
   "letterSpacing:-0.01em": "@reference-ui/lib__tracking_-0.01em",

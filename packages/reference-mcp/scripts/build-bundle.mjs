@@ -38,6 +38,7 @@ const NEO_ALIAS = {
   '@reference-ui/neo/fragments/tokens': neo('collect/surface/tokens.ts'),
   '@reference-ui/neo/system/base/fragments': neo('system/base/fragments.ts'),
   '@reference-ui/neo/microbundle': neo('lib/microbundle/index.ts'),
+  '@reference-ui/neo/style-vocabulary': neo('native/style-vocabulary.ts'),
 }
 
 /** @type {import('esbuild').Plugin} */

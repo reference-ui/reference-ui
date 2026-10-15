@@ -24,7 +24,8 @@
       "@reference-ui/neo/fragments/scanner": ["../reference-neo/src/collect/lib/scan/scanner.ts"],
       "@reference-ui/neo/fragments/tokens": ["../reference-neo/src/collect/surface/tokens.ts"],
       "@reference-ui/neo/system/base/fragments": ["../reference-neo/src/system/base/fragments.ts"],
-      "@reference-ui/neo/microbundle": ["../reference-neo/src/lib/microbundle/index.ts"]
+      "@reference-ui/neo/microbundle": ["../reference-neo/src/lib/microbundle/index.ts"],
+      "@reference-ui/neo/style-vocabulary": ["../reference-neo/src/native/style-vocabulary.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

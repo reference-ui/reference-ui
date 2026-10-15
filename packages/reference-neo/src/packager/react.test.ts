@@ -256,3 +256,13 @@ describe('react.d.mts synced register', () => {
     expect(consumer).not.toContain('export interface SyncedSystem')
   }, 120000)
 })
+
+describe('react bundle NODE_ENV pass-through', () => {
+  it('ships process.env.NODE_ENV unbaked so the consumer bundler decides dev vs prod', () => {
+    // esbuild's minified browser build would define NODE_ENV=production on its
+    // own; the runtime gate (runtime/env.ts, proven in env.test.ts) needs the
+    // expression to reach the consumer's bundler intact.
+    const code = readFileSync(join(live, 'react', 'react.mjs'), 'utf-8')
+    expect(code).toContain('process.env.NODE_ENV==="production"')
+  })
+})

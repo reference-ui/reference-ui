@@ -1,0 +1,10 @@
+{
+  "name": "@fixtures/atlas-observe-unbound-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@reference-ui/react": "*",
+    "react": "*"
+  }
+}

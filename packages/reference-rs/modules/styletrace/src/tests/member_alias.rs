@@ -267,7 +267,11 @@ fn member_surface() -> StyleSurface {
     )
 }
 
-fn trace_scratch(name: &str, files: &[(&str, &str)], entry: &str) -> crate::TraceOutcome {
+pub(super) fn trace_scratch(
+    name: &str,
+    files: &[(&str, &str)],
+    entry: &str,
+) -> crate::TraceOutcome {
     trace_scratch_entries(name, files, &[entry])
 }
 
@@ -294,7 +298,7 @@ fn trace_scratch_entries(
     trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), &surface, &sources)
 }
 
-fn binding_names(outcome: &crate::TraceOutcome) -> Vec<String> {
+pub(super) fn binding_names(outcome: &crate::TraceOutcome) -> Vec<String> {
     outcome
         .bindings
         .iter()

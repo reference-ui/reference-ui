@@ -1,0 +1,743 @@
+{
+  "caseName": "ATL-PAIR-02",
+  "analyses": {
+    "default": [
+      {
+        "name": "Alert",
+        "interface": {
+          "name": "AlertProps",
+          "source": "./components/Alert.tsx"
+        },
+        "source": "./components/Alert.tsx",
+        "count": 4,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Alert />"
+        ],
+        "usedWith": {
+          "Avatar": "very common",
+          "Badge": "common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "very common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "very common",
+          "Radio": "very common",
+          "Table": "very common"
+        }
+      },
+      {
+        "name": "Avatar",
+        "interface": {
+          "name": "AvatarProps",
+          "source": "./components/Avatar.tsx"
+        },
+        "source": "./components/Avatar.tsx",
+        "count": 7,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Avatar />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Badge": "occasional",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "occasional",
+          "Dialog": "occasional",
+          "Divider": "occasional",
+          "Heading": "very common",
+          "Icon": "occasional",
+          "Input": "very common",
+          "Link": "common",
+          "Table": "common"
+        }
+      },
+      {
+        "name": "Badge",
+        "interface": {
+          "name": "BadgeProps",
+          "source": "./components/Badge.tsx"
+        },
+        "source": "./components/Badge.tsx",
+        "count": 11,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Badge />"
+        ],
+        "usedWith": {
+          "Button": "very common",
+          "Card": "occasional",
+          "Checkbox": "common",
+          "Icon": "common",
+          "Label": "very common",
+          "Menu": "common",
+          "Select": "occasional",
+          "Stack": "common",
+          "Switch": "common",
+          "Tabs": "common",
+          "Text": "common",
+          "Tooltip": "common"
+        }
+      },
+      {
+        "name": "Button",
+        "interface": {
+          "name": "ButtonProps",
+          "source": "./components/Button.tsx"
+        },
+        "source": "./components/Button.tsx",
+        "count": 21,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "occasional",
+        "examples": [
+          "<Button />"
+        ],
+        "usedWith": {
+          "Alert": "occasional",
+          "Avatar": "common",
+          "Badge": "common",
+          "Card": "very common",
+          "Heading": "occasional",
+          "Icon": "common",
+          "Input": "common",
+          "Label": "common",
+          "Link": "occasional",
+          "Stack": "occasional",
+          "Tabs": "occasional",
+          "Tooltip": "common"
+        }
+      },
+      {
+        "name": "Card",
+        "interface": {
+          "name": "CardProps",
+          "source": "./components/Card.tsx"
+        },
+        "source": "./components/Card.tsx",
+        "count": 13,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Card />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "very common",
+          "Badge": "occasional",
+          "Button": "very common",
+          "Heading": "common",
+          "Icon": "common",
+          "Input": "very common",
+          "Label": "common",
+          "Link": "common",
+          "Select": "common",
+          "Tabs": "common",
+          "Tooltip": "common"
+        }
+      },
+      {
+        "name": "Checkbox",
+        "interface": {
+          "name": "CheckboxProps",
+          "source": "./components/Checkbox.tsx"
+        },
+        "source": "./components/Checkbox.tsx",
+        "count": 3,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Checkbox />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "common",
+          "Label": "very common",
+          "Stack": "very common"
+        }
+      },
+      {
+        "name": "Dialog",
+        "interface": {
+          "name": "DialogProps",
+          "source": "./components/Dialog.tsx"
+        },
+        "source": "./components/Dialog.tsx",
+        "count": 1,
+        "props": [
+          {
+            "name": "children",
+            "count": 1,
+            "usage": "very common"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Dialog>"
+        ],
+        "usedWith": {}
+      },
+      {
+        "name": "Divider",
+        "interface": {
+          "name": "DividerProps",
+          "source": "./components/Divider.tsx"
+        },
+        "source": "./components/Divider.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Divider />"
+        ],
+        "usedWith": {
+          "Alert": "very common",
+          "Avatar": "common",
+          "Badge": "common",
+          "Button": "common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "very common",
+          "Label": "common",
+          "Link": "common"
+        }
+      },
+      {
+        "name": "Heading",
+        "interface": {
+          "name": "HeadingProps",
+          "source": "./components/Heading.tsx"
+        },
+        "source": "./components/Heading.tsx",
+        "count": 4,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Heading />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "very common",
+          "Badge": "common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Icon": "common",
+          "Input": "very common",
+          "Label": "common",
+          "Link": "common"
+        }
+      },
+      {
+        "name": "Icon",
+        "interface": {
+          "name": "IconProps",
+          "source": "./components/Icon.tsx"
+        },
+        "source": "./components/Icon.tsx",
+        "count": 8,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Icon />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Divider": "common",
+          "Input": "very common",
+          "Menu": "common",
+          "Radio": "common",
+          "Select": "common",
+          "Stack": "common",
+          "Tabs": "very common"
+        }
+      },
+      {
+        "name": "Input",
+        "interface": {
+          "name": "InputProps",
+          "source": "./components/Input.tsx"
+        },
+        "source": "./components/Input.tsx",
+        "count": 10,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Input />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "common",
+          "Link": "common",
+          "Radio": "common",
+          "Select": "common",
+          "Table": "common",
+          "Tabs": "common"
+        }
+      },
+      {
+        "name": "Label",
+        "interface": {
+          "name": "LabelProps",
+          "source": "./components/Label.tsx"
+        },
+        "source": "./components/Label.tsx",
+        "count": 9,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Label />"
+        ],
+        "usedWith": {
+          "Alert": "occasional",
+          "Avatar": "occasional",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "common",
+          "Checkbox": "common",
+          "Dialog": "occasional",
+          "Link": "common",
+          "Stack": "common",
+          "Switch": "common",
+          "Text": "common",
+          "Tooltip": "very common"
+        }
+      },
+      {
+        "name": "Link",
+        "interface": {
+          "name": "LinkProps",
+          "source": "./components/Link.tsx"
+        },
+        "source": "./components/Link.tsx",
+        "count": 4,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Link />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "very common",
+          "Badge": "common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Input": "very common",
+          "Label": "very common",
+          "Tooltip": "very common"
+        }
+      },
+      {
+        "name": "Menu",
+        "interface": {
+          "name": "MenuProps",
+          "source": "./components/Menu.tsx"
+        },
+        "source": "./components/Menu.tsx",
+        "count": 3,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Menu />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "common",
+          "Tabs": "very common"
+        }
+      },
+      {
+        "name": "Radio",
+        "interface": {
+          "name": "RadioProps",
+          "source": "./components/Radio.tsx"
+        },
+        "source": "./components/Radio.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Radio />"
+        ],
+        "usedWith": {
+          "Alert": "very common",
+          "Avatar": "common",
+          "Badge": "common",
+          "Button": "common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "very common",
+          "Label": "common"
+        }
+      },
+      {
+        "name": "Select",
+        "interface": {
+          "name": "SelectProps",
+          "source": "./components/Select.tsx"
+        },
+        "source": "./components/Select.tsx",
+        "count": 3,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Select />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "very common",
+          "Input": "very common",
+          "Tabs": "very common"
+        }
+      },
+      {
+        "name": "Stack",
+        "interface": {
+          "name": "StackProps",
+          "source": "./components/Stack.tsx"
+        },
+        "source": "./components/Stack.tsx",
+        "count": 5,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Stack />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "common",
+          "Checkbox": "very common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "common",
+          "Label": "very common",
+          "Text": "very common"
+        }
+      },
+      {
+        "name": "Switch",
+        "interface": {
+          "name": "SwitchProps",
+          "source": "./components/Switch.tsx"
+        },
+        "source": "./components/Switch.tsx",
+        "count": 4,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Switch />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "common",
+          "Label": "very common",
+          "Tooltip": "very common"
+        }
+      },
+      {
+        "name": "Table",
+        "interface": {
+          "name": "TableProps",
+          "source": "./components/Table.tsx"
+        },
+        "source": "./components/Table.tsx",
+        "count": 2,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Table />"
+        ],
+        "usedWith": {
+          "Alert": "very common",
+          "Avatar": "very common",
+          "Badge": "common",
+          "Button": "common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Icon": "common",
+          "Input": "very common",
+          "Label": "common"
+        }
+      },
+      {
+        "name": "Tabs",
+        "interface": {
+          "name": "TabsProps",
+          "source": "./components/Tabs.tsx"
+        },
+        "source": "./components/Tabs.tsx",
+        "count": 5,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Tabs />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Icon": "very common",
+          "Input": "common",
+          "Menu": "very common",
+          "Select": "very common"
+        }
+      },
+      {
+        "name": "Text",
+        "interface": {
+          "name": "TextProps",
+          "source": "./components/Text.tsx"
+        },
+        "source": "./components/Text.tsx",
+        "count": 4,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Text />"
+        ],
+        "usedWith": {
+          "Alert": "common",
+          "Avatar": "common",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "common",
+          "Checkbox": "common",
+          "Dialog": "common",
+          "Divider": "common",
+          "Heading": "common",
+          "Label": "very common",
+          "Stack": "very common",
+          "Tooltip": "very common"
+        }
+      },
+      {
+        "name": "Tooltip",
+        "interface": {
+          "name": "TooltipProps",
+          "source": "./components/Tooltip.tsx"
+        },
+        "source": "./components/Tooltip.tsx",
+        "count": 6,
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused"
+          }
+        ],
+        "usage": "rare",
+        "examples": [
+          "<Tooltip />"
+        ],
+        "usedWith": {
+          "Alert": "occasional",
+          "Avatar": "occasional",
+          "Badge": "very common",
+          "Button": "very common",
+          "Card": "very common",
+          "Checkbox": "occasional",
+          "Dialog": "occasional",
+          "Divider": "occasional",
+          "Label": "very common",
+          "Link": "common",
+          "Switch": "very common",
+          "Text": "common"
+        }
+      }
+    ],
+    "withIncludes": {}
+  }
+}

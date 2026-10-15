@@ -67,8 +67,13 @@ export function writeMockProject(projectDir: string, options: MockProjectOptions
     writeFileSync(configPath, `export default { name: 'test-system', include: ['src/**/*.{ts,tsx}']${extra} }\n`, 'utf8')
   }
 
-  // 2. Artifacts (.reference-ui/mcp/model.json)
+  // 2. Artifacts: the types manifest that `ref sync` writes (what makes a project synced), and the
+  // MCP model cache that the build derives from it.
   if (options.hasArtifacts !== false) {
+    const manifestDir = join(projectDir, '.reference-ui', 'types', 'tasty')
+    mkdirSync(manifestDir, { recursive: true })
+    writeFileSync(join(manifestDir, 'manifest.js'), 'export {}\n', 'utf8')
+
     const modelDir = join(projectDir, '.reference-ui', 'mcp')
     mkdirSync(modelDir, { recursive: true })
     const modelPath = join(modelDir, 'model.json')

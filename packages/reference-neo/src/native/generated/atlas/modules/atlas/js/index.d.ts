@@ -13,4 +13,4 @@
  * use `analyzeDetailed()`; `analyze()` returns components only for convenience.
  */
 export { analyze, analyzeDetailed } from './analyzer.js';
-export type { AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode, Component, ComponentInterface, ComponentProp, AtlasConfig, Usage, } from './types.js';
+export type { AtlasAnalysisResult, AtlasDiagnostic, AtlasDiagnosticCode, Component, ComponentInterface, ComponentProp, AtlasConfig, ObserveSpec, ObservedElement, Usage, } from './types.js';

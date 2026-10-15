@@ -155,9 +155,8 @@ describe('executeWithProject default resolution', () => {
     expect(lost.content[0]?.text).toBe(notSyncedMessage(synced))
     expect(lost.content[0]?.text).toContain("Run 'ref sync'")
 
-    // A re-sync brings the project back without a restart: the dropped cache is rebuilt.
-    mkdirSync(join(synced, '.reference-ui', 'mcp'), { recursive: true })
-    writeFileSync(join(synced, '.reference-ui', 'mcp', 'model.json'), '{"schemaVersion":1,"components":[],"tokens":[]}')
+    // A re-sync writes the manifest again; the dropped cache is rebuilt on the next read.
+    writeProject(synced, { synced: true })
     const restored = await runTool(pm)
     expect(restored.isError).toBeUndefined()
     expect(restored.structuredContent).toMatchObject({ answered: true, activeProject: synced })

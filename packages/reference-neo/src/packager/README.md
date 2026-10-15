@@ -22,7 +22,11 @@ The assembly runs serially by construction: shells first, then the
 runtime data, then the bundles that read it, then the declarations
 wired onto the bundles. Sync commits the assembled stage live and
 links the packages after, so every junction lands on a complete
-package. There are no workers, no thread pool, no event bus:
+package. The version stamp runs last: each package's version is the
+base plus a hash of the files assembly wrote for it, and never of
+what other owners land after the stamp (sync's compile request in
+system, the session-owned tasty dir in types), so a recompute of a
+committed folder always equals its stamps. There are no workers, no thread pool, no event bus:
 natives compile fast and serial, and an ordered await chain is the
 whole orchestration.
 

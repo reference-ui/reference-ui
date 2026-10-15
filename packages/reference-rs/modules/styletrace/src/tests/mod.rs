@@ -8,6 +8,7 @@ mod fixtures;
 mod hermetic_roots;
 mod ident_alias;
 mod member_alias;
+mod member_alias_forward_ref;
 mod neo_decl_roots;
 mod owned_forwarded;
 mod owned_props;

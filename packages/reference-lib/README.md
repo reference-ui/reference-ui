@@ -34,7 +34,9 @@ Notes:
   run `ref sync` with `extends: [baseSystem]` to compile your own sheet. In
   `ui.config.ts`, import it from `@reference-ui/lib/baseSystem`; importing the
   component barrel instead evaluates ~3,900 icon modules (~1.5 s) on every
-  `ref sync` startup.
+  `ref sync` startup. Sync names that cost: when `ui.config` takes over 750 ms
+  to evaluate, it prints one `BSS-W-SLOW-CONFIG` warning naming the barrel and
+  the subpath to import instead.
 
 ## Your tokens on lib props
 

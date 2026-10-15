@@ -7,6 +7,8 @@ It answers three core architecture questions for a codebase:
 - Which props interface type does each component map to?
 - How are those components, props, and values actually used in JSX call sites across the application?
 
+It can also observe elements it does not index as components, such as a library's primitives. A caller names an import source and element names in `observe`, and Atlas returns the same call-site statistics for them, bound by import (named, aliased or namespace) rather than by component resolution.
+
 ## Architecture
 
 Atlas is structured as a self-contained module containing its Rust engine, JavaScript wrapper, and test suite:

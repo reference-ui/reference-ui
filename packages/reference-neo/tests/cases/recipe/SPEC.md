@@ -16,6 +16,7 @@ compoundVariants })` and call the bound helper with plain props
 `{ base: 'solid', md: 'outline' }` (ATM-RECIPE-07).
 `recipe(...).raw(props)` returns the merged style object for `css()`.
 `className` is required and explicit; duplicates in one system fail sync.
+A missing table resolves to `''`; dev warns once per qualified key, production stays silent.
 
 ## Engine stations
 

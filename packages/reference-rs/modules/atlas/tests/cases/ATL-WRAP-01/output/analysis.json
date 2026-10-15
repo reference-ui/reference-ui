@@ -31,9 +31,7 @@
           "<DirectRefBox size=\"sm\">",
           "<DirectRefBox size=\"md\">"
         ],
-        "usedWith": {
-          "DirectMemo": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "DirectMemo",
@@ -64,9 +62,7 @@
           "<DirectMemo tone=\"loud\">",
           "<DirectMemo tone=\"quiet\">"
         ],
-        "usedWith": {
-          "DirectForwardRef": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "FancyButton",
@@ -105,9 +101,7 @@
           "<CTAButton variant=\"solid\">",
           "<CTAButton variant=\"ghost\" disabled>"
         ],
-        "usedWith": {
-          "SearchInput": "very common"
-        }
+        "usedWith": {}
       },
       {
         "name": "SearchInput",
@@ -138,9 +132,7 @@
           "<SearchBox size=\"sm\">",
           "<SearchBox size=\"md\">"
         ],
-        "usedWith": {
-          "FancyButton": "very common"
-        }
+        "usedWith": {}
       }
     ],
     "withIncludes": {}
