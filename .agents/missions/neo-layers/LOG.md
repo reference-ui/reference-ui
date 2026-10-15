@@ -1,7 +1,7 @@
 # Mission: Neo `layers` coverage + reference-rs test layout
 
 Branch `neo-layers-tests` (worktree `.claude/worktrees/neo-layers`), rebased onto
-public-release at 32f4cbd92 on 2026-10-13. Not merged by this mission.
+public-release at 25fcabfce on 2026-10-13. Not merged by this mission.
 
 ## Track 1 — Neo-native coverage for `layers`
 
@@ -114,31 +114,31 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
 
 | Module | `agentrs c` | `agentrs v` | Commit |
 | --- | --- | --- | --- |
-| atlas | 24 = | 61 / 6 = | 4114d29c0, 755c4a536 |
-| styletrace | 89 = | 32 / 3 = | e89ae8c7d |
-| atomic | 856 = (6 lines) | 320 / 15 = | 9924b2da8 |
-| module-graph | 109 = (16 lines) | n/a | 19905fe85 |
-| typegen | 75 = (base after AnimationToken rebase) | 56 / 8 = | eabd217c6 |
-| canon | 58 = | 15 / 1 = | eabd217c6 |
-| primitives | n/a | 29 / 5 = | eabd217c6 |
+| atlas | 24 = | 61 / 6 = | 8ea71c38f, 26878b55f |
+| styletrace | 89 = | 32 / 3 = | 25c07eae0 |
+| atomic | 856 = (6 lines) | 320 / 15 = | 98c54a4a0 |
+| module-graph | 109 = (16 lines) | n/a | 03d12bd4c |
+| typegen | 75 = (base after AnimationToken rebase) | 56 / 8 = | 34240e4bc |
+| canon | 58 = | 15 / 1 = | 34240e4bc |
+| primitives | n/a | 29 / 5 = | 34240e4bc |
 | tasty | 90 = (cook's working tree) | 83 / 5 = | NOT LANDED (see Left) |
 
-## Landings (hashes after the final rebase onto public-release c56c9a291)
+## Landings (hashes after the final rebase onto public-release 5de2bb470)
 
 | Hash | What | Proof |
 | --- | --- | --- |
-| ae874b410, 32223e614 | NEO-LAYERS-01 + layers group SPEC/TESTS | PASS |
-| b9aed3381 | NEO-LAYERS-05 + 2 layers unit tests (validate.test.ts 9 → 11) | PASS |
-| 262945c01 | NEO-LAYERS-02/03 | PASS |
-| 566407ae8 | NEO-LAYERS-04/06 (06 red on bare legs = B1) | 04 PASS |
-| e5fc0d990 | B1 fix: config bundle inlines published upstream baseSystem | NEO-LAYERS-06 PASS; reload.test.ts fails without fix |
-| 82362c3b8 | refiner: regression test pins unresolvable/builtin/alias imports external | src/config 39 passed |
-| fe7d7f098 | chain/layer docs point layers legs at NEO-LAYERS | grep "no Neo case authors" empty |
-| 4114d29c0 … eabd217c6 | track 2 module migrations (table above) | counts equal |
+| b182307c7, f8a68d54c | NEO-LAYERS-01 + layers group SPEC/TESTS | PASS |
+| 017e825fd | NEO-LAYERS-05 + 2 layers unit tests (validate.test.ts 9 → 11) | PASS |
+| 4f5b2e599 | NEO-LAYERS-02/03 | PASS |
+| 9afd8d40e | NEO-LAYERS-04/06 (06 red on bare legs = B1) | 04 PASS |
+| 4c03eeaa1 | B1 fix: config bundle inlines published upstream baseSystem | NEO-LAYERS-06 PASS; reload.test.ts fails without fix |
+| a50ffbd63 | refiner: regression test pins unresolvable/builtin/alias imports external | src/config 39 passed |
+| 597005c7a | chain/layer docs point layers legs at NEO-LAYERS | grep "no Neo case authors" empty |
+| 8ea71c38f … 34240e4bc | track 2 module migrations (table above) | counts equal |
 
 ## Bugs
 
-- B1 (real, Neo, FIXED e5fc0d990 + 82362c3b8): a consumer config importing an
+- B1 (real, Neo, FIXED 4c03eeaa1 + a50ffbd63): a consumer config importing an
   upstream baseSystem by BARE specifier kept the first-loaded upstream for the
   life of the process (`src/config/bundle.ts` `packages: 'external'` + entry-only
   cache-bust in `src/config/evaluate.ts:30`); hit watch mode for reference-lib's
@@ -153,12 +153,12 @@ Playwright), so the layers legs no longer depend on matrix `chain-t2`/`chain-t8`
   `world/decl/.reference-ui`. styletrace `loads_real_reference_core_style_props`
   fails if `packages/reference-lib/.reference-ui` exists but is partial.
 
-## Verified at eabd217c6
+## Verified at 34240e4bc
 
 - `pnpm agentneo run NEO-LAYERS-01..06`, NEO-CHAIN-06, NEO-SYNC-08, NEO-WATCH-01 → PASS.
 - `pnpm agentneo q` (61 files: layers cases, src/config, validate.test.ts) → 0/0.
 - `npx vitest run src/config src/system/base/validate.test.ts` → 50 passed.
-- Full `pnpm agentneo run` (on 82362c3b8, pre-typegen-move; neo untouched since)
+- Full `pnpm agentneo run` (on a50ffbd63, pre-typegen-move; neo untouched since)
   → failures = the 12 known (MERGE-06, SITE-06/23/26/27, STATIC-01/02/03,
   NAMER-03/04, REF-04/11) + NEO-DIAG-56/57, which pass once their gitignored
   `world/decl/.reference-ui` is cloned from main → no new failures.

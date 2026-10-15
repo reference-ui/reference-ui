@@ -31,7 +31,7 @@ root reads `--colors-probe-ink` from the upstream's scope and paints the upstrea
 
 Why the colour-mode legs matter: `LayerScopeContext` was one boolean shared across every system. A
 primitive under any ancestor primitive skipped its stamp whenever a colour mode was in effect, so the
-consumer child inside the upstream root lost its stamp in legs 2 and 3. Commit c2eb26281 carries the
+consumer child inside the upstream root lost its stamp in legs 2 and 3. Commit 0b124ea85 carries the
 nearest ancestor's layer name instead: a primitive whose ancestor belongs to another system always
 stamps. Leg 1 has no colour mode in effect, so it passes both before and after that fix.
 
@@ -41,4 +41,4 @@ name), `src/config/types.ts` (the `layers` field), `src/sync/index.ts` (the upst
 published react entry). Siblings: NEO-LAYERS-09 (the upstream probe under a consumer primitive),
 NEO-LAYERS-01 (a layer paints between extends and own), NEO-LAYERS-02 (the layered visual-only boundary).
 
-> Search terms: layers, layered component, consumer content, children, nested primitive, same-named token, probeInk, data-layer, data-color-mode, colour mode, dark mode, LayerScopeContext, custom property inheritance, c2eb26281, NEO-LAYERS-01, NEO-LAYERS-02, NEO-LAYERS-09
+> Search terms: layers, layered component, consumer content, children, nested primitive, same-named token, probeInk, data-layer, data-color-mode, colour mode, dark mode, LayerScopeContext, custom property inheritance, 0b124ea85, NEO-LAYERS-01, NEO-LAYERS-02, NEO-LAYERS-09

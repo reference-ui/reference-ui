@@ -132,14 +132,14 @@ const EXPECTED_BYTES = {
   // exactly. 2026-10-10 F2 diagnostic miss-message change -> 153469/37738
   // (+12/+3): the css() miss message carries the class name and the call
   // site, react.mjs-only with all CSS pins green. 2026-10-13 data-layer stamp
-  // follows the ancestor's system (c2eb26281, NEO-LAYERS-09) -> 153626/37786
+  // follows the ancestor's system (0b124ea85, NEO-LAYERS-09) -> 153626/37786
   // (+157/+48): the context.ts stamp rule, react.mjs-only; A/B with only that
   // file reverted reproduces 153469/37738 exactly, CSS pins untouched.
-  // 2026-10-15 recipe dev-warn (0fc03d92b) and namer weight fallback
-  // (5e674e69d) -> 154208/38004 (+582/+218): recipe.ts + css.ts at a9a304ef0
-  // give 153716/37805 (+492/+199), lower.ts at a9a304ef0 gives 154118/37986
-  // (+90/+18); raw sums to the total, gzip leaves one byte (9710d40bf and
-  // d8db2b7f5 not A/B'd); 4e469336 is mcp-only; CSS pins untouched.
+  // 2026-10-15 recipe dev-warn (3eefd6318) and namer weight fallback
+  // (3eefd6318) -> 154208/38004 (+582/+218): recipe.ts + css.ts at dc35f0c6a
+  // give 153716/37805 (+492/+199), lower.ts at dc35f0c6a gives 154118/37986
+  // (+90/+18); raw sums to the total, gzip leaves one byte (77b21e2bf and
+  // 45ad65b9d not A/B'd); 3eefd631 is mcp-only; CSS pins untouched.
   // 2026-10-15 runtime prod gate -> 154213/38023 (+5/+19): runtime/env.ts
   // replaces the typeof-process guard and the packager keeps
   // process.env.NODE_ENV unbaked for the consumer's bundler; A/B with only

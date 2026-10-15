@@ -12,6 +12,6 @@ The checks typecheck each consumer with the NEO-TYPE-01 options (NodeNext, `skip
 - Unsynced, with no generated folder: exit 0. Lib's own open types apply with zero errors and no peer dependency.
 - Sanity flip: the strict world with the `declare module` block stripped from its `react.d.mts`: exit 0. The register is what narrows, not the env line alone.
 
-Evidence: commit `1ed2d5477` (role detection and the register emit), NEO-TYPE-01 (the tsc options and the consumer compile), NEO-TYPE-09 (strict colours narrow on JSX).
+Evidence: commit `1a0ef649e` (role detection and the register emit), NEO-TYPE-01 (the tsc options and the consumer compile), NEO-TYPE-09 (strict colours narrow on JSX).
 
 > Search terms: SyncedSystem, register, module augmentation, declare module, lib props, consumer types, publisher, consumer, strict colours, unsynced, env.d.ts, reference types, type/synced-register, NEO-TYPE-01, NEO-TYPE-09

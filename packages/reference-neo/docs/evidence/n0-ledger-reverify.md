@@ -59,7 +59,7 @@ drifts (two stale count comments, one PLAN unblocks cell); zero data drift.
 
 Commands (from `packages/reference-neo`): `rg -n "^\| NEO-.*blocked-on-rs"
 tests/cases/*/TESTS.md`; `rg -n "blocked-on-rs" tests/cases/*/TESTS.md`;
-`git show 84fc4eaac^:packages/reference-neo/PLAN.md | rg -n "^\| RS-"`; `rg -n "RS-<n>\b" tests/cases/*/TESTS.md` and `git show 84fc4eaac^:packages/reference-neo/PLAN.md | rg -n "RS-<n>\b"` per cited RS; `rg -n "\| open \||\| in-progress \|"
+`git show 66dd6b792^:packages/reference-neo/PLAN.md | rg -n "^\| RS-"`; `rg -n "RS-<n>\b" tests/cases/*/TESTS.md` and `git show 66dd6b792^:packages/reference-neo/PLAN.md | rg -n "RS-<n>\b"` per cited RS; `rg -n "\| open \||\| in-progress \|"
 tests/cases/*/TESTS.md` (no matches, exit 1); `rg -c "id: '"
 tests/cases/parity/NEO-PARITY-02/specs/census-union.ts` (152);
 `rg -n "151-entry\|150 group\|151 entries total\|152" <census files>`;

@@ -1,6 +1,6 @@
 # ATM-SITE-91 — A package root's types declaration never shadows its exports source, so a value read through the package folds
 
-Pins the atomic half of commit `5c643c4c2`. That commit made the shared ladder
+Pins the atomic half of commit `41e62639d`. That commit made the shared ladder
 source-first for package roots (styletrace's default) and left atomic on
 `RootEntryPolicy::TypesFirst`, so atomic's value walk tries a root's top-level
 `types` before its `exports` entry.

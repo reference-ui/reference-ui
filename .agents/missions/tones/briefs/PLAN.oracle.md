@@ -2,7 +2,7 @@
 
 Reply with `STATUS: DONE` (or `STATUS: REFUSED`) as your first line.
 
-Pinned commit: `7c4651378` (branch `public-release`). Read-only review of a
+Pinned commit: `dcbc3534a` (branch `public-release`). Read-only review of a
 design before implementation. Argue from the code; open every file you cite.
 
 ## Objective (owner-ratified shape — review the details, not the shape)

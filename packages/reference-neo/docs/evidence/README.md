@@ -4,7 +4,7 @@ Read-only findings gathered on 2026-09-17 by nine scouts, each answering one
 question and writing one report. Nothing here is a contract; every report
 cites the files and tests it read so a claim can be re-checked, and the
 campaign plan cited these reports instead of re-probing. That plan,
-`packages/reference-neo/PLAN.md`, was retired in `84fc4eaac`. The reports cite its sections and row IDs (D7, RS-12, PARITY-02 and so on) by name; recover its text with `git show 84fc4eaac^:packages/reference-neo/PLAN.md`.
+`packages/reference-neo/PLAN.md`, was retired in `66dd6b792`. The reports cite its sections and row IDs (D7, RS-12, PARITY-02 and so on) by name; recover its text with `git show 66dd6b792^:packages/reference-neo/PLAN.md`.
 The folder is called `evidence` rather than `research` because
 the repository root ignores every `research/` directory.
 

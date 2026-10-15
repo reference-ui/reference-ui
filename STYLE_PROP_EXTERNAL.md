@@ -416,7 +416,7 @@ Objectives in order, per the owner:
 | W3 | fix | crew **C13-fix** land transitive qualifiers + full re-sync + hermetic gates | ✅ DONE (handoff C13-fix.md; **T17 14/14 + T16 6/6 native & hermetic**) |
 | W4 | impl | crew **T10** docs consumer revert (A4 → plain `color`) | ✅ DONE (handoff T10.md; 17 sites; `reference-icons__c_diagram*` backing; 0 miss; docs gate clean) |
 | G2 | gate | pre-commit arc review | ✅ DONE (REVISE → 5 file-assignment fixes applied) |
-| — | commit | C1 `0c07ee60c` · C2 `57621cc88` · C4 `86f4487cf` · S1 `f5ca6e524` · S2 `ec7650d61` · C3 `4af0cbcbf` · C5 `1c253a28c` | ✅ **MISSION COMPLETE** |
+| — | commit | C1 `33bb4e310` · C2 `b720bbfde` · C4 `25350c1a9` · S1 `26fd142a1` · S2 `db591c7d8` · C3 `da3873096` · C5 `23c28548c` | ✅ **MISSION COMPLETE** |
 
 > **COMPLETE.** Engine fan-out landed and verified (T16 6/6, T17 14/14 native + hermetic, cargo 808, seam 315/315); docs diagrams render on the plain `color` prop; infra slowness fixed (matrix ~20min → ~1–4min); NEO-CSS-14 fixed and guarded by `ATM-HARVEST-07`. Committed in the G2-ratified order; only the planner (`STYLE_PROP_EXTERNAL.md`) and `.agents/` remain untracked (excluded by design).
 | W3 | impl | crew **T09-fixes** forwarding (Overlay Arrow/Handle) | ✅ DONE (handoff T09-fixes.md; default unchanged, override wins; CT 120/19/15 green) |

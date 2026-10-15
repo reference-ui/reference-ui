@@ -1,4 +1,4 @@
-Goal: pin TONES in the atomic spec stations and the Neo diagnostic repro suite. The engine already implements tones (commit def96d905); this job writes contract tests and their docs only. Do not change any Rust or TS source outside the test/case/spec files named here — if a station exposes an engine bug, stop and report it with the failing assertion.
+Goal: pin TONES in the atomic spec stations and the Neo diagnostic repro suite. The engine already implements tones (commit d30cdbe51); this job writes contract tests and their docs only. Do not change any Rust or TS source outside the test/case/spec files named here — if a station exposes an engine bug, stop and report it with the failing assertion.
 
 ## What tones are (implemented)
 
