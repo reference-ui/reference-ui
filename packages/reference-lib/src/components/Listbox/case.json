@@ -766,6 +766,69 @@
       "kind": "unit",
       "file": "virtual/adapter.test.ts",
       "title": "toMountedIndexEntries projects indexed records and skips unindexed ones"
+    },
+    {
+      "id": "LIB-LISTBOX-110",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-01: single-mode unmatched value warns with the exact text and selects nothing",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-01: single-mode unmatched value warns with the exact text and selects nothing"
+    },
+    {
+      "id": "LIB-LISTBOX-111",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-02: multiple-mode unmatched entries warn once, listing every unmatched entry",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-02: multiple-mode unmatched entries warn once, listing every unmatched entry"
+    },
+    {
+      "id": "LIB-LISTBOX-112",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-03: virtual-mode unmatched value lists the logical items, not only the mounted rows",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-03: virtual-mode unmatched value lists the logical items, not only the mounted rows"
+    },
+    {
+      "id": "LIB-LISTBOX-113",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-04: virtual-mode value naming an unmounted logical item stays silent",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-04: virtual-mode value naming an unmounted logical item stays silent"
+    },
+    {
+      "id": "LIB-LISTBOX-114",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-05: matched single, multiple, and null values stay silent",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-05: matched single, multiple, and null values stay silent"
+    },
+    {
+      "id": "LIB-LISTBOX-115",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-06: a normal mount with a matched value stays silent, StrictMode included",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-06: a normal mount with a matched value stays silent, StrictMode included"
+    },
+    {
+      "id": "LIB-LISTBOX-116",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-07: options that resolve later never warn on an empty registry, then warn once they arrive without the value",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-07: options that resolve later never warn on an empty registry, then warn once they arrive without the value"
+    },
+    {
+      "id": "LIB-LISTBOX-117",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-08: warns once per distinct offending value across StrictMode and re-renders",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-08: warns once per distinct offending value across StrictMode and re-renders"
+    },
+    {
+      "id": "LIB-LISTBOX-118",
+      "name": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-09: uncontrolled and Combobox-owned values stay silent",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-09: uncontrolled and Combobox-owned values stay silent"
     }
   ]
 }

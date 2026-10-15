@@ -26,7 +26,7 @@ in CT.
 | [`virtual/`](./virtual) | Adapter validation contract |
 | [`typeahead/`](./typeahead) | Buffer advance and wrapping match order |
 | [`navigation/`](./navigation) | Arrow-target index resolution |
-| [`shared/`](./shared) | Interactive-descendant press guard |
+| [`shared/`](./shared) | Interactive-descendant press guard and dev warn channel |
 
 `context.ts` scopes the private option subtree (the Law 3 allowance):
 options read selection, focus, registration, typeahead, and navigation

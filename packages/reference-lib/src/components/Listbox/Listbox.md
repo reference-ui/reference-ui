@@ -76,6 +76,16 @@ interface ListboxOptionProps<TValue extends string = string>
 Omitted selection/value/orientation means controlled single/null/vertical;
 explicit multiple selection with omitted value uses a controlled empty array.
 
+A controlled `value` that matches no registered Option (or, in virtual mode, no
+logical item) is never clamped or guessed: that entry selects nothing, and its
+Option reports `aria-selected="false"`. Development builds report it once per
+distinct value with `console.error`, as `[Reference UI Listbox] value "<v>" matches
+no option (registered values: a, b, c).`; multiple selection lists every unmatched
+entry in one warning, as `value contains "<x>", "<y>" matching no option (...)`.
+The check waits for the first option to register, so an empty or still-loading
+list never warns, and it stays silent for `null`, uncontrolled `value`, and
+Combobox-owned selection. Production builds never warn.
+
 Options may be nested in application-authored `div[role=group]` regions named
 with ordinary ARIA. Listbox flattens registered Options in current composed DOM
 order for focus/typeahead while leaving group labels and other non-options out

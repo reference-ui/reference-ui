@@ -17,6 +17,7 @@ import {
   useListboxTypeahead,
   useOptionRegistry,
   useRovingFocus,
+  useUnmatchedValueWarning,
 } from './hooks'
 import { ListboxOption } from './parts/Option'
 import { ListboxEmpty, ListboxHeader, ListboxSection } from './parts/Section'
@@ -75,6 +76,16 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       virtual,
       getOrderedOptions
     )
+    // Combobox owns the value when nested (controlledValue is combobox.value), so
+    // only a standalone controlled Listbox can be unmatched in its own right.
+    useUnmatchedValueWarning({
+      selection,
+      value: controlledValue,
+      isControlled: !combobox && valueProp !== undefined,
+      items: virtual?.items,
+      getOrderedOptions,
+      registryVersion: session.optionsVersion,
+    })
     const { navigateVirtual, navigateStandalone } = useListboxNavigation(
       session,
       orientation,

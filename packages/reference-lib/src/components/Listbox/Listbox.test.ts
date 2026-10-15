@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { createRoot } from 'react-dom/client'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   Listbox,
   validateVirtualAdapter,
@@ -517,6 +517,245 @@ describe('Listbox Unit Contract', () => {
         )
       )
       expect(html).toContain('role="listbox"')
+    })
+  })
+
+  describe('Unmatched controlled value dev warnings', () => {
+    let container: HTMLDivElement
+    let root: ReturnType<typeof createRoot>
+    let errors: unknown[][]
+    let errorSpy: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      container = document.createElement('div')
+      document.body.appendChild(container)
+      root = createRoot(container)
+      errors = []
+      errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+        errors.push(args)
+      })
+    })
+
+    afterEach(async () => {
+      errorSpy.mockRestore()
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
+    })
+
+    // Only this channel's lines count; React's own console noise is not evidence here.
+    function listboxWarnings() {
+      return errors
+        .map(args => args.map(part => String(part)).join(' '))
+        .filter(text => text.startsWith('[Reference UI Listbox] '))
+    }
+
+    // Props plus plain string-valued options; the cast keeps the fixture types loose.
+    const ListboxLoose = Listbox as unknown as React.FC<Record<string, unknown>>
+    function listbox(props: Record<string, unknown>, values: string[]) {
+      const children = values.map(value =>
+        React.createElement(Listbox.Option, { key: value, value }, value)
+      )
+      return React.createElement(ListboxLoose, props, ...children)
+    }
+    const abc = ['alpha', 'bravo', 'charlie']
+
+    it('OOR-LB-01: single-mode unmatched value warns with the exact text and selects nothing', async () => {
+      await React.act(async () => {
+        root.render(
+          listbox({ value: 'nope', onChange: () => {} }, ['alpha', 'bravo', 'charlie'])
+        )
+      })
+      expect(listboxWarnings()).toEqual([
+        '[Reference UI Listbox] value "nope" matches no option (registered values: alpha, bravo, charlie).',
+      ])
+      // No clamping and no lying ARIA: nothing is aria-selected.
+      expect(container.querySelectorAll('[aria-selected="true"]')).toHaveLength(0)
+    })
+
+    it('OOR-LB-02: multiple-mode unmatched entries warn once, listing every unmatched entry', async () => {
+      await React.act(async () => {
+        root.render(
+          listbox(
+            { selection: 'multiple', value: ['alpha', 'x', 'y'], onChange: () => {} },
+            ['alpha', 'bravo']
+          )
+        )
+      })
+      expect(listboxWarnings()).toEqual([
+        '[Reference UI Listbox] value contains "x", "y" matching no option (registered values: alpha, bravo).',
+      ])
+      // Matched entries stay selected; the unknown ones are kept, not clamped away.
+      expect(
+        container.querySelector('[data-value="alpha"]')?.getAttribute('aria-selected')
+      ).toBe('true')
+      expect(
+        container.querySelector('[data-value="bravo"]')?.getAttribute('aria-selected')
+      ).toBe('false')
+    })
+
+    it('OOR-LB-03: virtual-mode unmatched value lists the logical items, not only the mounted rows', async () => {
+      const adapter: VirtualFocusAdapter = {
+        items: [
+          { value: 'a', textValue: 'A' },
+          { value: 'b', textValue: 'B' },
+          { value: 'c', textValue: 'C' },
+        ],
+        scrollToIndex: vi.fn(),
+      }
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Listbox,
+            { value: 'zz', onChange: () => {}, virtual: adapter },
+            React.createElement(Listbox.Option, { value: 'a', index: 0 }, 'A'),
+            React.createElement(Listbox.Option, { value: 'b', index: 1 }, 'B')
+          )
+        )
+      })
+      expect(listboxWarnings()).toEqual([
+        '[Reference UI Listbox] value "zz" matches no option (registered values: a, b, c).',
+      ])
+    })
+
+    it('OOR-LB-04: virtual-mode value naming an unmounted logical item stays silent', async () => {
+      const adapter: VirtualFocusAdapter = {
+        items: [
+          { value: 'a', textValue: 'A' },
+          { value: 'b', textValue: 'B' },
+          { value: 'c', textValue: 'C' },
+        ],
+        scrollToIndex: vi.fn(),
+      }
+      // Only index 0 is mounted; 'c' is a real logical item that is not rendered.
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            Listbox,
+            { value: 'c', onChange: () => {}, virtual: adapter },
+            React.createElement(Listbox.Option, { value: 'a', index: 0 }, 'A')
+          )
+        )
+      })
+      expect(listboxWarnings()).toEqual([])
+    })
+
+    it('OOR-LB-05: matched single, multiple, and null values stay silent', async () => {
+      await React.act(async () => {
+        root.render(listbox({ value: 'bravo', onChange: () => {} }, abc))
+      })
+      await React.act(async () => {
+        root.render(listbox({ value: null, onChange: () => {} }, abc))
+      })
+      await React.act(async () => {
+        root.render(
+          listbox(
+            { selection: 'multiple', value: ['alpha', 'charlie'], onChange: () => {} },
+            abc
+          )
+        )
+      })
+      await React.act(async () => {
+        root.render(
+          listbox({ selection: 'multiple', value: [], onChange: () => {} }, abc)
+        )
+      })
+      expect(listboxWarnings()).toEqual([])
+      expect(
+        container.querySelector('[data-value="charlie"]')?.getAttribute('aria-selected')
+      ).toBe('false')
+    })
+
+    it('OOR-LB-06: a normal mount with a matched value stays silent, StrictMode included', async () => {
+      await React.act(async () => {
+        root.render(listbox({ value: 'alpha', onChange: () => {} }, abc))
+      })
+      expect(listboxWarnings()).toEqual([])
+
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            React.StrictMode,
+            null,
+            listbox({ value: 'alpha', onChange: () => {} }, abc)
+          )
+        )
+      })
+      expect(listboxWarnings()).toEqual([])
+    })
+
+    it('OOR-LB-07: options that resolve later never warn on an empty registry, then warn once they arrive without the value', async () => {
+      await React.act(async () => {
+        root.render(listbox({ value: 'delta', onChange: () => {} }, []))
+      })
+      expect(listboxWarnings()).toEqual([])
+
+      await React.act(async () => {
+        root.render(listbox({ value: 'delta', onChange: () => {} }, ['alpha', 'bravo']))
+      })
+      expect(listboxWarnings()).toEqual([
+        '[Reference UI Listbox] value "delta" matches no option (registered values: alpha, bravo).',
+      ])
+
+      // Once the value resolves to a registered option, the verdict clears silently.
+      await React.act(async () => {
+        root.render(
+          listbox({ value: 'delta', onChange: () => {} }, ['alpha', 'bravo', 'delta'])
+        )
+      })
+      expect(listboxWarnings()).toHaveLength(1)
+    })
+
+    it('OOR-LB-08: warns once per distinct offending value across StrictMode and re-renders', async () => {
+      const strict = (props: Record<string, unknown>) =>
+        React.createElement(React.StrictMode, null, listbox(props, abc))
+
+      await React.act(async () => {
+        root.render(strict({ value: 'nope', onChange: () => {} }))
+      })
+      expect(listboxWarnings()).toHaveLength(1)
+
+      // A parent re-render with the same unmatched value (fresh props) does not repeat it.
+      await React.act(async () => {
+        root.render(strict({ value: 'nope', onChange: () => {}, className: 'again' }))
+      })
+      expect(listboxWarnings()).toHaveLength(1)
+
+      // A different unmatched value is a new verdict and warns again.
+      await React.act(async () => {
+        root.render(strict({ value: 'nope-2', onChange: () => {} }))
+      })
+      expect(listboxWarnings()).toEqual([
+        '[Reference UI Listbox] value "nope" matches no option (registered values: alpha, bravo, charlie).',
+        '[Reference UI Listbox] value "nope-2" matches no option (registered values: alpha, bravo, charlie).',
+      ])
+    })
+
+    it('OOR-LB-09: uncontrolled and Combobox-owned values stay silent', async () => {
+      await React.act(async () => {
+        root.render(listbox({ onChange: () => {} }, ['alpha', 'bravo']))
+      })
+      // Uncontrolled multiple is left out: its omitted-value default is a fresh [] on
+      // every render, which re-registers options in a render loop that predates this check.
+      expect(listboxWarnings()).toEqual([])
+
+      // Inside Combobox the value is combobox.value, which Combobox reports, not Listbox.
+      const fakeCombobox = {
+        value: 'nope',
+        activeValue: null,
+        activeOptionId: null,
+      } as unknown as React.ContextType<typeof ComboboxContext>
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            ComboboxContext.Provider,
+            { value: fakeCombobox },
+            listbox({ value: 'nope' }, ['alpha', 'bravo'])
+          )
+        )
+      })
+      expect(listboxWarnings()).toEqual([])
     })
   })
 })
