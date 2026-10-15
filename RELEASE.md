@@ -56,6 +56,13 @@ tick it when its check passes.
       NumberField renders `999` with `max={10}` verbatim; Calendar marks a
       disabled out-of-range day `aria-selected`; Listbox and Tree ignore an
       unmatched value or id without a word (mirror Tabs' warning).
+- [ ] Dev warnings may print in production. Lib's "not production" check reads
+      `globalThis.process`; a browser bundle with no `process` shim may count
+      as development, so Slider, Splitter, Tabs and the four new out-of-range
+      warnings could reach real users' consoles. One shared helper, proven in
+      a production build.
+- [ ] Listbox: an uncontrolled `selection="multiple"` Listbox with options
+      never settles, because `Listbox.tsx:57` makes a new `[]` every render.
 - [ ] Repo hygiene: sweep crew-era handoff docs (mission codes, dead
       `docs/MISSIONS` links) before the repo goes public.
 - [ ] Branding.
