@@ -49,7 +49,7 @@ tick it when its check passes.
 
 ## 4. Launch
 
-- [ ] Out-of-range controlled values (non-blocking). The rule: a component
+- [x] Out-of-range controlled values (non-blocking). The rule: a component
       given a value outside its range either clamps it, so render and ARIA
       agree, or warns in dev, naming component, prop, value and valid range;
       it never fails silently. Slider and Splitter comply. Four don't:
