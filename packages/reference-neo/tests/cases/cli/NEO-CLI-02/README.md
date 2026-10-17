@@ -2,7 +2,7 @@
 
 Evidence: install-dimension investigation NATIVE GAP (LOG-2 §2 —
 no native test spawns the `neo sync --watch` binary) over the bin
-flag path (`bin/neo.ts:86-111` cmdWatch).
+flag path (`packages/reference-neo/src/cli/sync.ts:107`).
 
 The runner syncs this world fresh, then the spec spawns the real
 `ref sync --watch` binary against it and proves four legs. Boot:

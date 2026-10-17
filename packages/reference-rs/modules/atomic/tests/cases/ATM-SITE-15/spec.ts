@@ -1,5 +1,5 @@
 /**
- * Binding-identity station. Namespace `R.css` and the internal
+ * Binding-identity case. Namespace `R.css` and the internal
  * `__reference_ui_css` / `__reference_ui_recipe` aliases extract;
  * type-only and default `css` imports produce no sites.
  */

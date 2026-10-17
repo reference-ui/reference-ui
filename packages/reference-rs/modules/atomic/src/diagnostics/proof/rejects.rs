@@ -3,7 +3,7 @@
 //! Proof joins these against analysis expectations: a rejection whose exact
 //! key an expectation names either proves its miss (absent) or falls silent
 //! (present). Refusals of the hole value `false` never join — runtime skips
-//! them without querying, so they can never be userspace misses (F6). Only
+//! them without querying, so they can never be userspace misses. Only
 //! `Rejected` outcomes join; passthroughs paint and advisories aggregate.
 
 use super::super::{

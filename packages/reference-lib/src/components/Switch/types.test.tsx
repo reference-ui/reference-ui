@@ -20,10 +20,10 @@ describe('Switch type contract', () => {
 
     const validThumbProps: SwitchThumbProps = {
       width: '2r',
-      bg: 'bg',
+      bg: 'design.bg.muted',
     }
     expect(validThumbProps.width).toBe('2r')
-    expect(validThumbProps.bg).toBe('bg')
+    expect(validThumbProps.bg).toBe('design.bg.muted')
 
     const element = (
       <Switch {...validProps}>

@@ -1,5 +1,5 @@
 /**
- * `token()` / `token.var()` call surface (ATM-SITE-45, SPEC-V2-61). Paths fold
+ * `token()` / `token.var()` call surface (ATM-SITE-45). Paths fold
  * to `{path}` references that print theme-live `var()` aliases — never
  * parse-time hex; unknown paths with a fallback carry it, without one they
  * error with no ghost. Aliases, const paths, const fallbacks, static
@@ -55,8 +55,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: #111;')
     expect(sheet).not.toContain('nope.996')
 
-    // Call refusals + sink info ride the opt-in channel now (S6 E8-class
-    // re-point); the fatal token error + three warn-and-paint passthroughs
+    // Call refusals + sink info ride the opt-in channel; the fatal token error + three warn-and-paint passthroughs
     // stay default (fatals never move; R9 per O8 R3).
     const defaults = result.diagnostics ?? []
     const defaultWarnsAndErrors = defaults.filter(d => d.severity !== 'info')

@@ -1,4 +1,4 @@
-// React bundle map suite for the publish leg (F-A). It builds
+// React bundle map suite for the publish leg. It builds
 // `publishReactBundle` for real, no bundler mock, in a scratch stage whose
 // live twin sits at a real package depth, so the map's `../../../` external
 // hops land on the repo's `packages/` exactly as a real sync's do. It asserts
@@ -9,10 +9,10 @@
 // asserted by name, not resolved.
 //
 // The same file also unit-tests the live-map plugin's re-homing rules: a
-// staged relative import reports at its live twin (B3D-P3-1), the stage-prefix
-// test is separator-insensitive (B3D-P3-2), an unknown staged extension throws
-// (B3D-P4-1), and a generic walk resolves every non-synthetic source of every
-// emitted `.map` (B3D-P4-3).
+// staged relative import reports at its live twin, the stage-prefix
+// test is separator-insensitive, an unknown staged extension throws
+// and a generic walk resolves every non-synthetic source of every
+// emitted `.map`.
 
 import {
   existsSync,

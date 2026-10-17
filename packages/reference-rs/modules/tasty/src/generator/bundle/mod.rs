@@ -17,14 +17,12 @@ use self::modules::{
 use super::symbols::emit_chunk_module;
 use crate::model::TypeScriptBundle;
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(crate) struct TypeScriptArtifactBundle {
     pub modules: BTreeMap<String, String>,
     pub type_declarations: BTreeMap<String, String>,
 }
 
-#[allow(dead_code)]
 pub(crate) fn emit_artifact_bundle(
     bundle: &TypeScriptBundle,
 ) -> Result<TypeScriptArtifactBundle, String> {

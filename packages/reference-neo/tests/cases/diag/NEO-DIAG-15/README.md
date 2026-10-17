@@ -4,6 +4,6 @@ The source failed to parse; compile continues. The world carries the minimal fix
 
 Raised in: `modules/atomic/src/stream.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-E-PARSE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-PARSE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-PARSE, atm-e-parse, diagnostics case index, NEO-DIAG-15

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ISODate as ISODateCanonical } from './iso'
+import type { CanonicalISODate as ISODateCanonical } from './iso'
 import {
   type ISOMonth,
   type ISOYear,
@@ -25,7 +25,7 @@ import {
   getDayOfWeek,
 } from '../index'
 
-// Ported from quarantine b19c73bee matrix unit suite (import path only:
+// Ported from b19c73bee matrix unit suite (import path only:
 // '@reference-ui/lib' -> './index', proving the curated public kit export).
 // Skipped here by triage: CA-ISO-06/07 (fail-closed render-'').
 describe('Calendar ISO kit', () => {

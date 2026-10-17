@@ -5,7 +5,7 @@
  * unselectable date never paints and never emits. Ascends lexically and
  * fails closed at the Gregorian domain edge.
  */
-import { addCalendarDays, type ISODate as CanonicalISODate } from './iso'
+import { addCalendarDays, type CanonicalISODate } from './iso'
 import type { ISODate } from '../types'
 
 export function rangeSpanHasBlockedDate(

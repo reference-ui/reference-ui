@@ -18,7 +18,7 @@ export interface DateRangeValue {
   end: ISODate | null
 }
 
-/** Render state for the `Day` render prop (W-20): the four flags a custom
+/** Render state for the `Day` render prop: the four flags a custom
  * day cell needs. `disabled` merges both unselectable reasons (outside
  * `min`/`max`, or refused by `isDateUnavailable`); the cell chrome —
  * button, roving tabindex, ARIA — stays lib-owned either way. */
@@ -29,7 +29,7 @@ export interface CalendarDayRenderState {
   today: boolean
 }
 
-/** Custom day-cell content (W-20). Return `null` (or `undefined`) to keep
+/** Custom day-cell content. Return `null` (or `undefined`) to keep
  * the default locale day number. Called for every rendered day button —
  * including outside-month, disabled, and unavailable days — never for
  * void (out-of-domain) padding cells, which have no button. */
@@ -67,8 +67,8 @@ export type CalendarDaysRenderer = (day: CalendarDayState) => React.ReactElement
 
 export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' | 'defaultValue'> & {
   /** Required BCP 47 locale (FEATURES #3): drives headers, grid padding,
-   * week boundaries, and every label. There is no default — freeze
-   * decision 6 forbids a server-environment-dependent fallback. */
+   * week boundaries, and every label. There is no default:
+   * a server-environment-dependent fallback is forbidden. */
   locale: string
   /** Optional weekday-token override for the locale's CLDR week start
    * (FEATURES #3). Short kit tokens (`'sun'`…`'sat'`); an unrecognized
@@ -78,7 +78,7 @@ export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'valu
   onMonthChange?: (month: ISOMonth) => void
   min?: ISODate
   max?: ISODate
-  /** Per-date availability predicate (W-21, exact React Aria name +
+  /** Per-date availability predicate (exact React Aria name +
    * semantics). An unavailable date stays focusable — roving tabindex,
    * arrows, Home/End, and Page keys all land on it — but is unselectable
    * in every modality (`aria-disabled`, greyed, `data-unavailable`, never
@@ -86,7 +86,7 @@ export type CalendarSharedProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'valu
    * disabled and skipped by keyboard. Called only with valid canonical
    * in-domain dates. */
   isDateUnavailable?: (date: ISODate) => boolean
-  /** Custom day-cell content (W-20): `Day={(date, state) => node}`.
+  /** Custom day-cell content: `Day={(date, state) => node}`.
    * Replaces only the button's content — selection, disabled/unavailable,
    * and keyboard behavior stay lib-owned. A `null` return keeps the
    * default locale day number. */

@@ -57,7 +57,7 @@ function parseStylePropUnion(dts: string): string[] {
 // The seam leg: the E1 key set binds through configurePrimitives today,
 // returning one bound component per roster name. Binding never renders —
 // the stub css throws if anything touches it — so this proves the bind
-// path accepts the shelf's keys while render behavior waits on W4.
+// path accepts the shelf's keys while render behavior waits on the per-system assembly.
 async function assertSeamBinds(jsxNames: readonly string[], stylePropNames: readonly string[]): Promise<void> {
   const entry = (await import('@reference-ui/rust/primitives')) as unknown as Record<string, unknown>;
   const raw = entry['configurePrimitives'];

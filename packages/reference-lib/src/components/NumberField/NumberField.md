@@ -1,6 +1,6 @@
 # NumberField
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct NumberField --e2e`).
 
 Locale-aware numeric text editing and discrete stepping. NumberField owns the
 hard boundary between an ephemeral localized edit string and one controlled
@@ -326,13 +326,14 @@ An out-of-range controlled `value` (finite, below `min` or above `max`) renders
 exactly as given: nothing clamps during render, and under the default
 `commitBehavior: "none"` the field owns no invalid state. In development the
 field logs `Reference UI: NumberField value (<value>) is outside [<min>, <max>];
-it renders as given and snaps into range on the next commit.` once per distinct
-message, printing an absent bound as `-Infinity` or `Infinity`. A value equal to
-the field's latest `onChange` request is exempt, because live typing requests raw
-candidates such as `150` toward `max={100}` and a consumer echoes them back; the
-next commit then clamps under `"none"`, snaps under `"snap"`, and under
-`"validate"` retains the rounded raw candidate, so the message's snapping wording
-describes only the first two policies.
+it renders as given and <wording>` once per distinct message, printing an absent
+bound as `-Infinity` or `Infinity`. The wording names what the next commit does
+under the field's mode: `"none"` gets `clamps into range on the next commit.`,
+`"snap"` gets `snaps into range on the next commit.`, and `"validate"` gets
+`is kept on the next commit and reported invalid.`, because validate requests the
+rounded raw candidate as-is and reports it invalid. A value equal to the field's
+latest `onChange` request is exempt, because live typing requests raw candidates
+such as `150` toward `max={100}` and a consumer echoes them back.
 
 ## Parsing, formatting, and input mode
 

@@ -10,7 +10,7 @@ This directory contains the canonical source of truth for the `<Reference />` an
 2. **Interactive Cosmos Harness**:
    `reference-lib` runs a [React Cosmos](https://reactcosmos.org/) environment. The `fixtures/` directory contains visual fixtures (e.g. `Overview.fixture.tsx`, `ReferencePrototype.fixture.tsx`, `StylePropsApiReference.fixture.tsx`) allowing interactive design, responsiveness testing, and dark/light theme checks.
 
-3. **Mirroring to `reference-core`**:
-   During build / package preparation, `packages/reference-core/tools/copy-reference-api-component.mjs` scoops / portals these files into `packages/reference-core/src/reference/browser-component` and adapts `@reference-ui/types` imports to the local browser adapter.
+3. **Mirroring to `reference-core` (retired)**:
+   The retired core package is no longer a mirror target: nothing copies these files into it, and no step adapts `@reference-ui/types` imports for it any more.
 
 For a full technical overview of how `<Reference />` is orchestrated across the monorepo, see [REFERENCE_COMPONENT.md](../../../../../REFERENCE_COMPONENT.md) at the repository root.

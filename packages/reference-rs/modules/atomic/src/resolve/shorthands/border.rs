@@ -33,7 +33,7 @@ fn is_whole_value(raw: &str) -> bool {
 /// True only for width/style/color trios (border, outline, column/row rules).
 pub(crate) fn is_border_family(longhands: &[&str]) -> bool {
     // Gate on family, not on count: flex, columns, lineClamp and friends are
-    // len-3 trios of other families and must never classify as border (RS-39).
+    // len-3 trios of other families and must never classify as border.
     let [width, style, color] = longhands else {
         return false;
     };
@@ -47,7 +47,7 @@ pub(crate) fn is_outline_prop(canon_name: &str) -> bool {
 }
 
 /// Rejection pre-filter over trio-owner name shapes, derived from the
-/// `CANONICAL_PROPERTIES` longhands (wave-1 `maybe_alias` method): the
+/// `CANONICAL_PROPERTIES` longhands (the `maybe_alias` method): the
 /// border and outline families pass by prefix, the two rule trios pass by
 /// exact name. Members always pass (pinned by
 /// `trio_prefilter_table_contract`); misses skip the `find_property` probe.

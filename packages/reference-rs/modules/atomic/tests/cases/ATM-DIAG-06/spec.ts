@@ -1,8 +1,8 @@
 /**
- * Unicode-positions station (ATM-DIAG-06, Operation Error Correct Slice 0).
+ * Unicode-positions (ATM-DIAG-06).
  * RED: columns must count UTF-16 code units and the global-surface
  * diagnostic must carry a location. No panic on non-ASCII source.
- * (S6 E8-class re-point: the dynamic-identifier refusal rides the opt-in
+ * (the dynamic-identifier refusal rides the opt-in
  * compiler channel with its UTF-16 column intact; the global-surface line
  * stays default per the O8 R3 adjudication, still located.)
  */

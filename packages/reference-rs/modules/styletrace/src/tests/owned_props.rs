@@ -12,7 +12,7 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rustc_hash::FxHashMap;
 
-use crate::analysis::{trace_style_bindings_with_surface, StyleSurface};
+use crate::analysis::{trace_style_bindings_with_surface, StyleSurface, SurfaceTrace};
 
 use super::fixtures::workspace_scratch_dir;
 
@@ -58,7 +58,13 @@ pub(super) fn trace_scratch(
         staged: &staged,
         programs: &programs,
     };
-    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), surface, &sources)
+    trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface,
+        sources: &sources,
+    })
 }
 
 #[test]
@@ -219,30 +225,30 @@ fn staged_content_matches_disk_trace() {
     let entries = vec![scratch.root().join("Button.tsx")];
     let empty = FxHashMap::default();
     let no_programs = FxHashMap::default();
-    let from_disk = trace_style_bindings_with_surface(
-        &entries,
-        scratch.root(),
-        scratch.root(),
-        &surface,
-        &crate::TraceSources {
+    let from_disk = trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface: &surface,
+        sources: &crate::TraceSources {
             staged: &empty,
             programs: &no_programs,
         },
-    );
+    });
     let staged: FxHashMap<PathBuf, &str> = files
         .iter()
         .map(|(rel, content)| (scratch.root().join(rel), *content))
         .collect();
-    let from_staged = trace_style_bindings_with_surface(
-        &entries,
-        scratch.root(),
-        scratch.root(),
-        &surface,
-        &crate::TraceSources {
+    let from_staged = trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface: &surface,
+        sources: &crate::TraceSources {
             staged: &staged,
             programs: &no_programs,
         },
-    );
+    });
     assert_eq!(from_disk, from_staged);
 }
 
@@ -261,16 +267,16 @@ fn reused_programs_match_fresh_parse_trace() {
         .map(|(rel, content)| (scratch.root().join(rel), *content))
         .collect();
     let no_programs = FxHashMap::default();
-    let fresh = trace_style_bindings_with_surface(
-        &entries,
-        scratch.root(),
-        scratch.root(),
-        &surface,
-        &crate::TraceSources {
+    let fresh = trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface: &surface,
+        sources: &crate::TraceSources {
             staged: &staged,
             programs: &no_programs,
         },
-    );
+    });
     // Main-phase options (atomic `parse_source`): TS on for every extension.
     let button_alloc = Allocator::default();
     let button_parsed = Parser::new(
@@ -299,15 +305,15 @@ fn reused_programs_match_fresh_parse_trace() {
     ]
     .into_iter()
     .collect();
-    let reused = trace_style_bindings_with_surface(
-        &entries,
-        scratch.root(),
-        scratch.root(),
-        &surface,
-        &crate::TraceSources {
+    let reused = trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface: &surface,
+        sources: &crate::TraceSources {
             staged: &staged,
             programs: &programs,
         },
-    );
+    });
     assert_eq!(fresh, reused);
 }

@@ -15,7 +15,7 @@ Atlas is structured as a self-contained module containing its Rust engine, JavaS
 
 - **Rust Domain Core (`atlas/src/`)**: High-performance AST scanner built on OXC. Walks files, resolves imports/exports, tracks barrel re-exports, matches JSX call sites, and aggregates usage statistics and representative code snippets.
 - **JavaScript Interface (`atlas/js/`)**: Ergonomic, thin wrapper around the N-API addon (`@reference-ui/rust/atlas`). Exposes `analyze()` for simple component lists and `analyzeDetailed()` for full results with diagnostic warnings.
-- **Test Suite (`atlas/tests/`)**: Fixture projects with realistic application structures. Each case is `tests/cases/<ID>/` named by its raw station id (e.g. `ATL-BAR-01`), where `spec.ts` is the case specification; `analysis.json` and `diagnostics.json` provide deterministic fixture outputs for inspection. Vitest entries live in `tests/suites/` and shared helpers in `tests/harness/`.
+- **Test Suite (`atlas/tests/`)**: Fixture projects with realistic application structures. Each case is `tests/cases/<ID>/` named by its raw case id (e.g. `ATL-BAR-01`), where `spec.ts` is the case specification; `analysis.json` and `diagnostics.json` provide deterministic fixture outputs for inspection. Vitest entries live in `tests/suites/` and shared helpers in `tests/harness/`.
 
 ## Key Invariants
 

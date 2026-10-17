@@ -1,5 +1,5 @@
 /**
- * Property alias and duplicate key collapse station (ATM-MERGE-02).
+ * Property alias and duplicate key collapse (ATM-MERGE-02).
  * Asserts that aliases and duplicate keys resolve to the last authored value per cascade slot.
  */
 import { expect } from 'vitest'

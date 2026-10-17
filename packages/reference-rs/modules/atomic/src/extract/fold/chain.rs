@@ -73,37 +73,57 @@ fn chain_links(chain: &ChainExpression<'_>) -> Option<(String, Vec<String>)> {
     let mut links = Vec::new();
     let mut element = &chain.expression;
     loop {
-        let mut object = match element {
-            ChainElement::StaticMemberExpression(mem) => {
-                // tokens?.color  — one transparent hop over a known base
-                links.push(mem.property.name.to_string());
-                &mem.object
+        let object = chain_element_object(element, &mut links)?;
+        match walk_object_links(object, &mut links)? {
+            ObjectStep::Base(name) => {
+                links.reverse();
+                return Some((name, links));
             }
-            // tokens?.color!  — `!` erases exactly like the plain member
-            ChainElement::TSNonNullExpression(non_null) => &non_null.expression,
-            // getColor?.() refuses at the SITE-32 pins; sizes?.[k] folds at
-            // SITE-48; private fields never appear in style positions.
-            _ => return None,
-        };
-        loop {
-            object = peel_wrappers(object);
-            match object {
-                Expression::Identifier(base) => {
-                    links.reverse();
-                    return Some((base.name.to_string(), links));
-                }
-                Expression::ChainExpression(inner) => {
-                    element = &inner.expression;
-                    break;
-                }
-                Expression::StaticMemberExpression(mem) => {
-                    // `t?.colors?.red` nests bare members under one wrapper.
-                    links.push(mem.property.name.to_string());
-                    object = &mem.object;
-                }
-                _ => return None,
-            }
+            ObjectStep::Chained(next) => element = next,
         }
+    }
+}
+
+/// Where a chain's object spine ends: at an identifier base, or at a nested chain to keep walking.
+enum ObjectStep<'a, 'e> {
+    Base(String),
+    Chained(&'e ChainElement<'a>),
+}
+
+/// The object one chain element reads from, recording its member link when it has one.
+fn chain_element_object<'a, 'e>(
+    element: &'e ChainElement<'a>,
+    links: &mut Vec<String>,
+) -> Option<&'e Expression<'a>> {
+    match element {
+        ChainElement::StaticMemberExpression(mem) => {
+            // tokens?.color  — one transparent hop over a known base
+            links.push(mem.property.name.to_string());
+            Some(&mem.object)
+        }
+        // tokens?.color!  — `!` erases exactly like the plain member
+        ChainElement::TSNonNullExpression(non_null) => Some(&non_null.expression),
+        // getColor?.() refuses at the SITE-32 pins; sizes?.[k] folds at
+        // SITE-48; private fields never appear in style positions.
+        _ => None,
+    }
+}
+
+/// Walk an object spine through bare members and transparent wrappers until its base or a nested
+/// chain.
+fn walk_object_links<'a, 'e>(
+    object: &'e Expression<'a>,
+    links: &mut Vec<String>,
+) -> Option<ObjectStep<'a, 'e>> {
+    match peel_wrappers(object) {
+        Expression::Identifier(base) => Some(ObjectStep::Base(base.name.to_string())),
+        Expression::ChainExpression(inner) => Some(ObjectStep::Chained(&inner.expression)),
+        Expression::StaticMemberExpression(mem) => {
+            // `t?.colors?.red` nests bare members under one wrapper.
+            links.push(mem.property.name.to_string());
+            walk_object_links(&mem.object, links)
+        }
+        _ => None,
     }
 }
 

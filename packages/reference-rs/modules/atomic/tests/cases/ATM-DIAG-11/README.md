@@ -1,4 +1,4 @@
-# ATM-DIAG-11 — Unknown-values station (ATM-DIAG-11, Operation Error Correct, Slice 5)
+# ATM-DIAG-11 — Unknown-values
 
 Unknown values stay compiler-only: identifiers, member expressions,
 `` `${n}px` `` and `` `${color}` `` templates, call expressions, `a + b`
@@ -17,4 +17,4 @@ exact expected lookup), and audience policy routes unknown-value facts to
 the compiler channel only. Related: `ATM-DIAG-02` (fail-closed warnings),
 `ATM-DIAG-05` (diagnostic precision), `ATM-DIAG-07` (channel isolation),
 `ATM-SITE-33` (binary folds and refusals). Contract: [SPEC.md](../../../SPEC.md).
-Operation Error Correct, Slice 0.
+.

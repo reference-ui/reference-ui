@@ -40,9 +40,9 @@ test.describe('Popover Composition Gates & Browser Proofs', () => {
     const content = page.getByTestId('popover-content')
 
     await trigger.click()
-    // FINISH-02F-WK (F14, DIAG D1/D5): WebKit clicks never focus buttons, so
+    // WebKit clicks never focus buttons, so
     // the opener chain is empty and restore no-ops. Deliver the Chromium focus
-    // state directly (FocusLock DIAG-D1 precedent) — Escape-dismiss + restore
+    // state directly (FocusLock precedent) — Escape-dismiss + restore
     // below are the product contract and run identically.
     if (isWebKit(page)) await trigger.focus()
     await expect(content).toBeVisible()

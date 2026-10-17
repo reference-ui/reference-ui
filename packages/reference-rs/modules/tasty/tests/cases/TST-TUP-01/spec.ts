@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TUP-01.
+ * Case specification for TST-TUP-01.
  * Verifies labeled, optional, rest, and readonly tuple structures.
  * Proves primary SPEC ID anchor TST-TUP-01.
  */

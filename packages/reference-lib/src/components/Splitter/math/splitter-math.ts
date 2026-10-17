@@ -570,10 +570,10 @@ export function isMeasuredLength(value: string): boolean {
 
 export type SplitterStructurePart = 'panel' | 'handle'
 
-// FEATURES #9: strict structural validation over merged document order.
+// Strict structural validation over merged document order.
 // Pure (the caller merges registrations by document position), so the
 // message wording is unit-pinned and the component only decides severity.
-// Message wording is a DRAFT for the HQ wording check (FEATURES #6).
+// Message wording is provisional.
 export function validateSplitterStructure(
   sequence: SplitterStructurePart[],
   valueLength: number

@@ -4,6 +4,6 @@ Unknown breakpoint name in an `r` prop object. The world carries the minimal fix
 
 Raised in: `modules/atomic/src/extract/expressions/object/keys.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-BREAKPOINT (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-BREAKPOINT (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-BREAKPOINT, atm-w-unknown-breakpoint, diagnostics case index, NEO-DIAG-32

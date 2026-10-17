@@ -65,7 +65,7 @@ test.describe('Switch CT', () => {
   })
 })
 
-test.describe('Switch quarantine parity', () => {
+test.describe('Switch parity', () => {
   test.beforeEach(async ({ mount, page }) => {
     await mount('components/Switch/Switch/ParityFixture')
     await expect(page.getByTestId('switch-parity-root')).toBeVisible()
@@ -136,12 +136,12 @@ test.describe('Switch quarantine parity', () => {
     await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
     await expect(page.getByTestId('sw-dom-04-thumb-tag')).toHaveText('SPAN')
 
-    // PATCHES item 1: Fragment-wrapped authored thumb replaces the default.
+    // Fragment-wrapped authored thumb replaces the default.
     await page.getByTestId('sw-dom-04-to-fragment').click()
     await expect(page.getByTestId('sw-dom-04-fragment-thumb')).toBeVisible()
     await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)
 
-    // PATCHES item 1: HOC-forwarded authored thumb replaces the default.
+    // HOC-forwarded authored thumb replaces the default.
     await page.getByTestId('sw-dom-04-to-forwarded').click()
     await expect(page.getByTestId('sw-dom-04-forwarded-thumb')).toBeVisible()
     await expect(sw.locator('[data-reference-switch-thumb]')).toHaveCount(1)

@@ -4,6 +4,6 @@ A tagged template on a live `css` binding. The world carries the minimal fixture
 
 Raised in: `modules/atomic/src/extract/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-TAGGED-TEMPLATE-SITE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-TAGGED-TEMPLATE-SITE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-TAGGED-TEMPLATE-SITE, atm-w-tagged-template-site, diagnostics case index, NEO-DIAG-37

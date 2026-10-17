@@ -5,34 +5,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RecipeRuntimeTable } from '@reference-ui/rust/contracts'
 import { recipe, registerRecipeData, type RecipeConfig } from './recipe.ts'
-
-const STEM = 'test__button'
-
-// New-contract table: derivation inputs only, no pre-composed maps.
-const TABLE: RecipeRuntimeTable = {
-  variantMap: {
-    tone: ['accent', 'muted'],
-    size: ['sm', 'lg'],
-  },
-  defaultVariants: { tone: 1, size: 0 },
-  compoundVariants: [{ predicates: { tone: ['accent'], size: ['lg'] } }],
-  responsiveBreakpoints: ['md', 'lg'],
-}
-
-const MUTED_SM = `${STEM}__base ${STEM}_t_muted ${STEM}_s_sm`
-const ACCENT_SM = `${STEM}__base ${STEM}_t_accent ${STEM}_s_sm`
-const ACCENT_LG = `${STEM}__base ${STEM}_t_accent ${STEM}_s_lg ${STEM}_c_accent_lg`
-
-const CONFIG: RecipeConfig = {
-  className: 'button',
-  base: { display: 'inline-flex' },
-  variants: {
-    tone: { accent: { color: 'brand' }, muted: { color: 'paper' } },
-    size: { sm: { p: 'sm' }, lg: { p: 'lg' } },
-  },
-  defaultVariants: { tone: 'muted', size: 'sm' },
-  compoundVariants: [{ tone: 'accent', size: 'lg', css: { backgroundColor: 'ink' } }],
-}
+import { STEM, TABLE, CONFIG, MUTED_SM, ACCENT_SM, ACCENT_LG } from './__fixtures__/recipe-fixtures.ts'
 
 beforeAll(() => {
   registerRecipeData('test', { [STEM]: TABLE })

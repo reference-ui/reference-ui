@@ -1,5 +1,5 @@
 /**
- * Continuity rhythm station. Arbitrary magnitudes (`140r`, `220r`), an
+ * Continuity rhythm case. Arbitrary magnitudes (`140r`, `220r`), an
  * arbitrary fraction (`137.5r`), and a negative fraction (`-2.5r`) compute
  * to root calc formulas with zero diagnostics, on min/max props (the legacy
  * gap) via both css() longhands and the JSX maxW/minH aliases.

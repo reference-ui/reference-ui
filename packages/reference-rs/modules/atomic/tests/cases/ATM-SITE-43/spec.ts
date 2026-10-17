@@ -1,5 +1,5 @@
 /**
- * TS enum member fence (ATM-SITE-43, SPEC-V2-45). Initialized string, numeric,
+ * TS enum member fence (ATM-SITE-43). Initialized string, numeric,
  * unary-numeric, boolean, and computed (`+` binaries, templates, `!`/`~`,
  * wrapped) members fold; member-reference and uninitialized members warn
  * per member with siblings kept; an inner const shadows the enum. Boolean
@@ -49,8 +49,7 @@ const spec: AtomicCaseSpec = {
     const plans = result.stylePlans
     expect(plans).toHaveLength(22)
 
-    // Member refusals + sink infos ride the opt-in channel now (S6
-    // E8-class re-point); the two `true` flexGrow refusals are genuine
+    // Member refusals + sink infos ride the opt-in channel; the two `true` flexGrow refusals are genuine
     // runtime misses (runtime queries `true`) and stay default.
     const defaults = result.diagnostics ?? []
     expect(defaults).toHaveLength(2)

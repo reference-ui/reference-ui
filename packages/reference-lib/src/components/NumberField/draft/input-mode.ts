@@ -1,5 +1,5 @@
 /**
- * Grammar-derived keyboard hint (freeze decision 11, NF-ENV-07): the
+ * Grammar-derived keyboard hint (NF-ENV-07): the
  * inputMode follows the accepted character grammar and commit policy —
  * never UA detection, never resolved display rounding alone. Validate
  * mode and scientific grammars need the full keyboard; a nonnegative
@@ -9,7 +9,7 @@
  */
 import type { NumberFieldCommitBehavior } from '../types'
 
-// Grammar-derived inputMode (freeze decision 11, NF-ENV-07): follows the
+// Grammar-derived inputMode (NF-ENV-07): follows the
 // accepted character grammar and commit policy, never UA detection or
 // resolved display rounding alone.
 export function deriveInputMode(args: {
@@ -26,7 +26,7 @@ export function deriveInputMode(args: {
   // Scientific/engineering grammars need exponent and sign characters.
   if (notation === 'scientific' || notation === 'engineering') return 'text'
   // Minus is accepted unless a nonnegative lower bound rejects it. 'none'
-  // derives like snap (flagged for HQ in the mission log): it differs in
+  // derives like snap: it differs in
   // commit coercion, not in the minus grammar of nonnegative fields.
   if (min === -Infinity || min < 0) return 'text'
   // A fraction is admitted by authored precision or a fractional display

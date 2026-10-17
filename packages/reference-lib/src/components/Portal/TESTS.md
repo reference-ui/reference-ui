@@ -1,16 +1,12 @@
 # Portal test contract
 
-Playwright: `matrix/lib/tests/e2e/portal.spec.ts`  
+Playwright: `src/components/Portal/__e2e__/*.spec.ts` (run with `pnpm agentct Portal --e2e`)  
 Page: `/portal`
 
 Portal owns relocation only. It renders no host node.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/portal/src/portal.test.tsx` —
-  “spreads them onto the element it renders inside a given `container`”.
-- `vendor/radix-primitives/packages/react/portal/src/portal.tsx` — delays the
-  default `document.body` lookup until mount.
 - Radix's default wrapper and `asChild` tests are contrast: Reference UI always
   has children-only output.
 

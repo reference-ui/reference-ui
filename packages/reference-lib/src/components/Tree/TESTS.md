@@ -1,9 +1,9 @@
 # Tree test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Tree --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/tree.spec.ts`  
-Unit: `matrix/lib/tests/unit/tree.test.ts`
+Playwright: `src/components/Tree/__e2e__/*.spec.ts` (run with `pnpm agentct Tree --e2e`)  
+Unit: `src/components/Tree/**/*.test.ts(x)`
 Page: `/tree`
 
 Tree owns one minimal APG tree: visible-hierarchy traversal, controlled
@@ -33,11 +33,6 @@ Tree state.
 
 - Zag `packages/machines/tree-view` — APG tree roles, `visibleNodes`, disabled
   navigation, selection, expand/collapse key map, RTL, and typeahead.
-- `vendor/zag/packages/utilities/collection/tests/tree-collection.test.ts` —
-  nesting, parent/child traversal, mutation, and disabled-node skipping.
-- `vendor/react-spectrum/packages/react-aria-components/test/Tree.test.tsx` —
-  dynamic trees, visible-row Up/Down/Home/End, typeahead, collapse-to-parent,
-  and editable-descendant event boundaries.
 - React Aria `TreeCollection` expansion filtering is useful; its public
   `role=treegrid` widget, multi-selection, virtualization, and DnD are contrast.
 
@@ -375,8 +370,7 @@ Tree state.
 
 - [x] `TR-DYNAMIC-01` `[vendor]` `[browser]` —
   **Tree's hierarchy model should recompute metadata and traversal after structural edits.**
-  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
-  note: the shipped engine traverses live DOM, so the metadata/traversal
+  (The shipped engine traverses live DOM, so the metadata/traversal
   recompute is proven end-to-end through the real component.)
   Insert, remove, and reorder both leaves and branches at root and nested
   levels, including empty and single-branch trees. Assert parent lookup,
@@ -385,8 +379,7 @@ Tree state.
   collection traversal/remove/replace cases.
 - [x] `TR-DYNAMIC-02` `[vendor]` `[browser]` —
   **Tree's hierarchy model should preserve value identity when moving a branch with descendants.**
-  (Re-targeted `[unit]` → `[browser]` 2026-09-28, see SPEC.md Finish-line
-  note: branch moves with identity preserved are proven end-to-end
+  (Branch moves with identity preserved are proven end-to-end
   through the real component.)
   Move a multi-level branch within its parent and then to another parent while
   retaining the same values. Assert every descendant's parent path, level,
@@ -504,7 +497,7 @@ Tree state.
   **Tree branch focus ring should resolve to a real token with no template placeholder.**
   Mount the Basic fixture and scan the injected stylesheets for the branch
   `:focus-visible > [data-slot="row"]` rule. Assert the rule exists, declares
-  `outline-color`, and contains no `{...}` theme placeholder (H-2: a literal
+  `outline-color`, and contains no `{...}` theme placeholder (a literal
   `{colors…}` in a component-level `css()` value ships verbatim and is
   unresolvable at runtime).
 

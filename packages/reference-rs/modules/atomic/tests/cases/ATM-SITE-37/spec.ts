@@ -1,5 +1,5 @@
 /**
- * Array-spread station (ATM-SITE-37, Overmatch Ph1 refuse + Ph3 flatten).
+ * Array-spread (ATM-SITE-37, refuse + flatten).
  * Literal and const-array spreads flatten in place — value arrays keep
  * breakpoint arity slot-for-slot, merge lists merge element-wise — while
  * dynamic, object-carrying, and reassigned spreads refuse with a located
@@ -60,7 +60,7 @@ const spec: AtomicCaseSpec = {
     ).toBe(true)
 
     // Five spreads, five located diagnostics, three codes — on the
-    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    // opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-37', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

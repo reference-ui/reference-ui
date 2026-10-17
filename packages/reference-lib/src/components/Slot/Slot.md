@@ -1,6 +1,6 @@
 # Slot
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slot --e2e`).
 
 Named-region registration for declarative component APIs. A part registers
 an element into a slot id; the host reads the shared registry and renders
@@ -167,7 +167,7 @@ provider.
 
 ## Problems we own
 
-**Vendor.** `vendor/design-system/page-layout/slots` — lift the **API**
+**Prior art.** The design system's page-layout slots — lift the **API**
 (`SlotRoot`, `createSlotRootContext`, `resolveSlotVisibility`,
 `createSlotCacheKey`, `transformSlotElements`) and the live-content
 registration contract. **Leave** PageLayout, sidebars,
@@ -200,7 +200,7 @@ Version bumps only for the **set**: presence, `slotId`, and `deps`.
 Visibility flags belong in `deps` — a fresh `visibility` object each
 render is not a signal.
 
-**Vendor.** `slots/core/react.tsx` snapshots the closure, so content goes
+**Prior art.** `slots/core/react.tsx` snapshots the closure, so content goes
 stale. Live getters live only in the PageLayout wrapper hook. **Lift**
 that contract into the kernel. **Leave** a second, weaker core hook.
 
@@ -210,7 +210,7 @@ A `slotId` / `deps` change overwrites the same registration id.
 Unregister runs only when the filler unmounts. A visibility toggle must
 not transiently remove the entry, so a `hidden` subtree can stay mounted.
 
-**Vendor.** PageLayout splits register and unregister effects.
+**Prior art.** PageLayout splits register and unregister effects.
 Region-visibility tests spy the pair on toggle. **Lift** the split.
 **Leave** PageLayout region chrome.
 

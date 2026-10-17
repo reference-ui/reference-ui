@@ -1,5 +1,5 @@
 /**
- * Radius-longhand station (§10). Every corner longhand resolves bare
+ * Radius-longhand (§10). Every corner longhand resolves bare
  * values against `radii` like `borderRadius` does, and the four side pairs
  * expand to their corners before lookup. No mismatch, no passthrough.
  */

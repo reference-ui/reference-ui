@@ -1,5 +1,5 @@
 /**
- * Array-css-prop station (ATM-SITE-19, RS-23). `<Div css={[{...}, {...}]} />`
+ * Array-css-prop (ATM-SITE-19). `<Div css={[{...}, {...}]} />`
  * extracts every element like the `css([...])` call form: one utility per
  * leaf, merged into the class set. The single-object form is the control.
  */

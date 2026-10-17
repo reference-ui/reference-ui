@@ -1,5 +1,5 @@
 /**
- * Import-bound css()/recipe() station. Shadowed parameters and local
+ * Import-bound css()/recipe() case. Shadowed parameters and local
  * helpers named css must not extract. The live Reference import still does.
  */
 import { expect } from 'vitest'

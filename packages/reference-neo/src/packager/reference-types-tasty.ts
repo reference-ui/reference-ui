@@ -42,7 +42,8 @@ function parseSpecifiers(list: string): Specifier[] {
 }
 
 function resolveModuleFile(fromFile: string, specifier: string): string {
-  const base = resolve(dirname(fromFile), specifier)
+  // Declaration imports name the emitted `.js` module; the file on disk is its `.d.ts`.
+  const base = resolve(dirname(fromFile), specifier.replace(/\.[mc]?js$/, ''))
   for (const candidate of [`${base}.d.ts`, resolve(base, 'index.d.ts')]) {
     if (existsSync(candidate)) return candidate
   }

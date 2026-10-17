@@ -4,7 +4,7 @@
  * order and unknown application values trailing in incoming order
  * (TR-EXPAND-06); getBatchExpanded folds a whole sibling set into one
  * emission so asterisk expansion never fires N stale-closure toggles
- * (W-17). Pure — the expansion hook calls both and emits once.
+ * Pure — the expansion hook calls both and emits once.
  */
 
 export function getDeterministicExpanded(

@@ -57,7 +57,7 @@ export const Basic = () => {
 }
 
 export const Parity = () => {
-  // Main Tree state (mirrors the quarantine matrix fixture testids)
+  // Main Tree state (mirrors the matrix fixture testids)
   const [value, setValue] = React.useState<string | null>('doc-1')
   const [expanded, setExpanded] = React.useState<string[]>(['folder-1'])
 

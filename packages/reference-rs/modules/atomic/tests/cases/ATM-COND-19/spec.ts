@@ -1,5 +1,5 @@
 /**
- * Supports-routing station (ATM-COND-19, RS-15). `@supports` keys lower to
+ * Supports-routing (ATM-COND-19). `@supports` keys lower to
  * at-rules: `@supports` nests outside `@container` with the pseudo on the
  * selector, never a `:@supports` selector fragment. Supports sorts first.
  */

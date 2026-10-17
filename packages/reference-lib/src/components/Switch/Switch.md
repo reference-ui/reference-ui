@@ -1,6 +1,6 @@
 # Switch
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Switch --e2e`).
 
 A compact on/off control with variable specificity. Mount `Switch` alone and
 it is a complete control: StyleProps land on the track, and a default thumb
@@ -135,7 +135,7 @@ spans forces a wrapping label and a hidden control. The button host keeps
 anatomy visible: the track is the control, the thumb is a child, and `id` /
 `htmlFor` still work.
 
-**Vendor.** Radix and Base UI Switch render a `button` with a Thumb child.
+**Prior art.** Radix and Base UI Switch render a `button` with a Thumb child.
 React Aria Switch is an `input` — **leave** that host.
 
 **Lift** the two-part button anatomy. Do not add a hidden checkbox.

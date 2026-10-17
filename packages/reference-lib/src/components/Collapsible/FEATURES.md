@@ -1,9 +1,8 @@
 # Collapsible features (need design)
 
-Design-gated follow-ups split from DECISIONS.md. Each entry needs a
-product/UX call before TESTS.md cases can be written.
+Design-gated follow-ups. Each entry needs a product or UX call before TESTS.md cases can be written.
 
-## 1. hiddenUntilFound / beforematch find-in-page reveal (from DECISIONS candidate #1, DEFERRED)
+## 1. hiddenUntilFound / beforematch find-in-page reveal
 
 What it does: closed panels stay Ctrl+F-discoverable by rendering
 `hidden="until-found"` instead of unmounting, and a `beforematch` event
@@ -22,17 +21,11 @@ API:
 // transition/animation durations for one frame, then restores.
 ```
 
-Open design calls: root-only vs root + Content override; what
-`aria-controls` points at while closed-hidden; whether skip-motion-once
-also zeroes GSAP duration; SSR story for `hidden="until-found"`.
-Source: quarantine `43f0b03cc`, `Collapsible.tsx` (root + Content
-`hiddenUntilFound`, `beforematch` listener, `skipMotionOnceRef`); SPEC.md
-freeze Surface table, Gaps list, work-order item 4 (no TESTS.md case ID).
+Open design calls: root-only vs root + Content override; what `aria-controls` points at while closed-hidden; whether skip-motion-once also zeroes GSAP duration; SSR story for `hidden="until-found"`.
 
-Maintainer take: good to add once HQ settles the prop shape — it is the only path to findable closed panels.
+Recommendation: Good to add once the prop shape is settled. It is the only path to findable closed panels.
 
-**LANDED 2026-09-28 (CO-MOUNT-01–05, 08, 10).** Settled: root + Content
-override (Content wins); `aria-controls` keeps pointing at the
+**Implemented (CO-MOUNT-01–05, 08, 10).** Root + Content override (Content wins); `aria-controls` keeps pointing at the
 mounted-hidden panel while closed-hidden; skip-motion-once zeroes the GSAP
 path (no finite enter tween — stronger than zeroing durations, so no
 style-restore frame); SSR renders `hidden=""` declaratively with the
@@ -42,7 +35,7 @@ evaluated after dispatch so a later-registered canceler still wins; a
 rejected reveal arms the skip consumed by the next committed open
 (CO-MOUNT-08).
 
-## 2. forceMount (always-mounted Content) (from DECISIONS gap #1, OPEN)
+## 2. forceMount (always-mounted Content)
 
 What it does: lets closed content stay in the DOM for measurement,
 print, or SEO instead of always unmounting through Presence, matching
@@ -59,16 +52,11 @@ API:
 // follow open as today.
 ```
 
-Open design calls: closed mounted content `hidden`, `inert`, or pure
-author CSS; whether focus evacuation runs when nothing unmounts; how it
-composes with a future `hiddenUntilFound` (two props or one).
-Source: no quarantine source — vendor parity vs Radix collapsible +
-Presence/measure cited in SPEC.md Vendor section; no consumer pain filed.
+Open design calls: closed mounted content `hidden`, `inert`, or pure author CSS; whether focus evacuation runs when nothing unmounts; how it composes with a future `hiddenUntilFound` (two props or one). Vendor parity reference: Radix collapsible, with Presence and measure.
 
-Maintainer take: good to add only on real consumer demand, not for parity alone.
+Recommendation: Good to add only on real consumer demand, not for parity alone.
 
-**LANDED 2026-09-28 (CO-MOUNT-06–07; finish-line disclosure P2D).** Settled:
-pure author CSS — closed `forceMount` Content carries no `hidden`, no
+**Implemented (CO-MOUNT-06–07).** Pure author CSS — closed `forceMount` Content carries no `hidden`, no
 inert, no `aria-hidden`, no pointer-events kill, and no collapse inline
 styles (the collapse engine is bypassed entirely in both states); focus
 evacuation does not run when nothing unmounts (CO-PRES-07 preserved for the

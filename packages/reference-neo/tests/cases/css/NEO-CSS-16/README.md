@@ -13,7 +13,7 @@ diagnostic naming the prop, the value, and the call site. Scanned steps
 paint; unscanned steps warn.
 
 Evidence: OPERATION CONTINUITY-01 (`140r`/`137.5r` emit with exit 0, zero
-diagnostics); `[atm]` ATM-RHYTHM-06 (compile seam, JSX aliases);
+diagnostics); ATM-RHYTHM-06 (compile seam, JSX aliases);
 contrast `NEO-CSS-12` (small steps) and `NEO-NAMER-03` (color miss shape).
 
 > Search terms: continuity, arbitrary rhythm, unseen scale value, min max width rhythm, harvest miss, unscanned value, miss class, dev diagnostic, computed max-width, spacing root

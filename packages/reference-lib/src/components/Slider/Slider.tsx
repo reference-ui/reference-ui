@@ -68,8 +68,8 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       return [typeof currentValue === 'number' ? currentValue : min]
     }, [currentValue, min])
 
-    // W-35 clamp-or-warn: an out-of-range controlled value clamps (render +
-    // ARIA agree — see the B-29 ariaNow clamp in SliderThumb) AND dev-warns
+    // Clamp-or-warn: an out-of-range controlled value clamps (render +
+    // ARIA agree — see the ariaNow clamp in SliderThumb) AND dev-warns
     // naming component, prop, value, and valid range. Clamp-silently matches
     // Radix/RAC/native; the dev warning is our addition.
     if (!isProductionEnv()) {

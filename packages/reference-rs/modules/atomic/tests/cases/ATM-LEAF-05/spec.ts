@@ -1,5 +1,5 @@
 /**
- * Responsive-array extract station. Items map onto base/sm/md; null holes
+ * Responsive-array extract case. Items map onto base/sm/md; null holes
  * skip; a ternary inside an item scoops both arms onto that when.
  */
 import { expect } from 'vitest'

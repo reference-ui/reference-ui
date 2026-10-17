@@ -229,7 +229,7 @@ describe('ATM-SEAM-01 atomic runtime style plans', () => {
       ],
     })
 
-    // SPEC-V2-79: '01' canonicalizes to the numeric atom (the spacing token
+    // '01' canonicalizes to the numeric atom (the spacing token
     // wins in this fixture system); hex, Infinity, and NaN still refuse.
     expect(result.stylesheet).toContain('padding: var(--spacing-1);')
     expect(result.diagnostics.length).toBeGreaterThanOrEqual(3)

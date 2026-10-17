@@ -11,6 +11,7 @@
 use oxc_ast::ast::{Expression, PropertyKey};
 
 use super::element::fold_element_access;
+use super::key::wrapped_key_expression;
 use super::member::{member_path_residue, member_path_text};
 use crate::extract::constants::ConstObject;
 use crate::extract::scope::Scoped;
@@ -59,21 +60,33 @@ fn scan_expr(expr: &Expression<'_>, scoped: Scoped<'_>, bake: bool) -> Option<Bo
 /// Direct entry reads: identifiers, members, and elements.
 fn direct_entry_residue(expr: &Expression<'_>, scoped: Scoped<'_>, bake: bool) -> Option<Box<str>> {
     match expr {
-        Expression::Identifier(ident) => {
-            if bake {
-                ident_entry_residue(ident.name.as_str(), scoped)
-            } else {
-                None
-            }
-        }
+        Expression::Identifier(ident) => identifier_residue(ident.name.as_str(), scoped, bake),
         Expression::StaticMemberExpression(mem) => {
             member_entry_residue(mem, scoped).or_else(|| scan_expr(&mem.object, scoped, bake))
         }
-        Expression::ComputedMemberExpression(mem) => element_entry_residue(mem, scoped)
-            .or_else(|| scan_expr(&mem.object, scoped, bake))
-            .or_else(|| scan_expr(&mem.expression, scoped, bake)),
+        Expression::ComputedMemberExpression(mem) => element_read_residue(mem, scoped, bake),
         _ => None,
     }
+}
+
+/// A bare identifier read: its recorded entry matters only when the entry is baked.
+fn identifier_residue(name: &str, scoped: Scoped<'_>, bake: bool) -> Option<Box<str>> {
+    if bake {
+        ident_entry_residue(name, scoped)
+    } else {
+        None
+    }
+}
+
+/// An element read: its own entry, then the object and the index expression.
+fn element_read_residue(
+    mem: &oxc_ast::ast::ComputedMemberExpression<'_>,
+    scoped: Scoped<'_>,
+    bake: bool,
+) -> Option<Box<str>> {
+    element_entry_residue(mem, scoped)
+        .or_else(|| scan_expr(&mem.object, scoped, bake))
+        .or_else(|| scan_expr(&mem.expression, scoped, bake))
 }
 
 /// Composite reads: templates, operators, ternaries, objects, and arrays.
@@ -89,11 +102,33 @@ fn composite_entry_residue(
             .find_map(|part| scan_expr(part, scoped, bake)),
         Expression::BinaryExpression(bin) => pair_residue(&bin.left, &bin.right, scoped, bake),
         Expression::UnaryExpression(unary) => scan_expr(&unary.argument, scoped, bake),
+        _ => branching_composite_residue(expr, scoped, bake),
+    }
+}
+
+/// Logical and ternary reads, or the literal containers they may sit in.
+fn branching_composite_residue(
+    expr: &Expression<'_>,
+    scoped: Scoped<'_>,
+    bake: bool,
+) -> Option<Box<str>> {
+    match expr {
         Expression::LogicalExpression(log) => pair_residue(&log.left, &log.right, scoped, bake),
         Expression::ConditionalExpression(cond) => {
             pair_residue(&cond.test, &cond.consequent, scoped, bake)
                 .or_else(|| scan_expr(&cond.alternate, scoped, bake))
         }
+        _ => literal_composite_residue(expr, scoped, bake),
+    }
+}
+
+/// Object and array literal members, scanned in source order.
+fn literal_composite_residue(
+    expr: &Expression<'_>,
+    scoped: Scoped<'_>,
+    bake: bool,
+) -> Option<Box<str>> {
+    match expr {
         Expression::ObjectExpression(obj) => obj.properties.iter().find_map(|prop| {
             let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(prop) = prop else {
                 return None;
@@ -159,21 +194,9 @@ fn key_operand_residue(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<Box<
     }
 }
 
-/// Key wrapper reads: parens and the transparent TS casts, or nothing.
+/// Key wrapper reads: parens and the transparent TS casts and assertions, or nothing.
 fn key_wrapped_residue(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<Box<str>> {
-    match key {
-        PropertyKey::ParenthesizedExpression(paren) => scan_expr(&paren.expression, scoped, false),
-        PropertyKey::TSAsExpression(cast) => scan_expr(&cast.expression, scoped, false),
-        PropertyKey::TSSatisfiesExpression(sat) => scan_expr(&sat.expression, scoped, false),
-        PropertyKey::TSNonNullExpression(non_null) => {
-            scan_expr(&non_null.expression, scoped, false)
-        }
-        PropertyKey::TSTypeAssertion(assertion) => scan_expr(&assertion.expression, scoped, false),
-        PropertyKey::TSInstantiationExpression(instantiation) => {
-            scan_expr(&instantiation.expression, scoped, false)
-        }
-        _ => None,
-    }
+    wrapped_key_expression(key).and_then(|inner| scan_expr(inner, scoped, false))
 }
 
 /// The first residue read across two operand expressions.

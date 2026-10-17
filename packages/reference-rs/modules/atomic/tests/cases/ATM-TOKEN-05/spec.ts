@@ -1,5 +1,5 @@
 /**
- * Custom BaseSystem ingest station. Declared `colors.brand` resolves from
+ * Custom BaseSystem ingest case. Declared `colors.brand` resolves from
  * the passed dump. Lib-fixture `blue.600` is unknown here: pass through plus
  * warning. Do not invent tokens.
  */

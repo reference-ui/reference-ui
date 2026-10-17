@@ -1,5 +1,5 @@
 /**
- * Bare-value station (§11). A bare miss on a color prop warns unknown-color,
+ * Bare-value (§11). A bare miss on a color prop warns unknown-color,
  * and a bare miss on a font-size prop warns unknown-token, because no
  * font-size token is named `sm` here. The radius token `sm` never answers a
  * font-size prop (the cross-category story is retired), while `borderRadius`

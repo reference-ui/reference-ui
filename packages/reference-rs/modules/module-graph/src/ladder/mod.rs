@@ -264,7 +264,7 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
         let base = if subpath == "." {
             pkg_dir.to_string()
         } else {
-            join_with(&pkg_dir, '/', subpath.trim_start_matches("./"))
+            join_with(pkg_dir, '/', subpath.trim_start_matches("./"))
         };
         self.probe_hit(&base)
     }

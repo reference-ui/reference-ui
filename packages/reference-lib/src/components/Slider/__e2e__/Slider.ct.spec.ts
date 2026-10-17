@@ -33,11 +33,11 @@ test.describe('Slider CT', () => {
     await expect(display).toHaveText('Current value: 30')
   })
 
-  test('B-29: out-of-range controlled value clamps ARIA like the visual', async ({
+  test('out-of-range controlled value clamps ARIA like the visual', async ({
     mount,
     page,
   }) => {
-    // Playtest repro: value 999 with max 24 rendered the thumb at 100%
+    // Repro: value 999 with max 24 rendered the thumb at 100%
     // while aria-valuenow lied 999. Both now agree on 24.
     const overflow = await mount('components/Slider/Slider/LoggedFixture', { initial: 999, min: 0, max: 24 })
 
@@ -61,11 +61,11 @@ test.describe('Slider CT', () => {
     expect(underPosition).toBe('0%')
   })
 
-  test('W-35: out-of-range controlled value dev-warns naming component, prop, value, and range', async ({
+  test('out-of-range controlled value dev-warns naming component, prop, value, and range', async ({
     mount,
     page,
   }) => {
-    // Clamp (B-29) plus the dev warning: the browser console names all four
+    // Clamp plus the dev warning: the browser console names all four
     // parts while render and ARIA agree on the clamped 24.
     const errors: string[] = []
     page.on('console', msg => {
@@ -258,7 +258,7 @@ test.describe('Slider CT', () => {
   })
 })
 
-test.describe('Slider PATCHES pins', () => {
+test.describe('Slider pins', () => {
   test('SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL', async ({
     mount,
     page,
@@ -559,10 +559,10 @@ test.describe('Slider PATCHES pins', () => {
 
     await page.mouse.move(box!.x + 90, y)
     await page.mouse.down()
-    // FINISH-02F-SL (F38): FF/WebKit deliver `gotpointercapture` lazily — the
-    // event flushes on the NEXT input event, never on its own task (D1
-    // telemetry: hasPointerCapture true at down, `got` absent after 1s idle,
-    // flushed by the following move; proven r17 FF+WK). Capture is genuinely
+    // FF/WebKit deliver `gotpointercapture` lazily — the
+    // event flushes on the NEXT input event, never on its own task.
+    // Telemetry: hasPointerCapture true at down, `got` absent after 1s idle,
+    // flushed by the following move; proven r17 FF+WK. Capture is genuinely
     // owned at down-time; this 1px move (30 -> 30.33, snaps to 30, no log
     // entry) only flushes the engine's notification. Poll text unchanged.
     await page.mouse.move(box!.x + 91, y)
@@ -570,7 +570,7 @@ test.describe('Slider PATCHES pins', () => {
     await expect.poll(() => page.evaluate(() => (window as any).__cap.length)).toBe(1)
 
     // Drags beyond both ends keep requesting, clamped to the bounds.
-    // FINISH-02F-SL (F38): 10px beyond the edge (x~6) stays inside the 800px
+    // 10px beyond the edge (x~6) stays inside the 800px
     // viewport; FF reports out-of-window moves with buttons=0, which the
     // pinned buttons-zero path (SD-END-03) rightly cancels. Beyond-ness and
     // the 0/100 clamps are what's pinned, not the overshoot distance.
@@ -692,11 +692,11 @@ test.describe('Slider PATCHES pins', () => {
     await expect(page.getByTestId('constraint-slider')).toHaveAttribute('data-disabled', '')
 
     // Real lostpointercapture mid-drag cancels without an end report.
-    // FINISH-02F-SL (F39): FF/WebKit flush `gotpointercapture` only on the
-    // next input event (D1 telemetry, r17 FF+WK proven), so a `got` listener
+    // FF/WebKit flush `gotpointercapture` only on the
+    // next input event, so a `got` listener
     // would idle forever here — yet capture IS owned at down-time
     // (hasPointerCapture true). Record the real session pointer id from
-    // pointerdown instead. D3 telemetry adds a second FF rule: releasing
+    // pointerdown instead. Firefox adds a second rule: releasing
     // while `got` is still pending silently swallows it (no `got`, no `lost`,
     // session survives), so the same-coordinate move below first flushes a
     // real `got` (value-neutral 40 -> 40, no log entry — and a no-op on
@@ -896,9 +896,9 @@ test.describe('Slider PATCHES pins', () => {
       const box = await track.boundingBox()
       await page.mouse.move(box!.x + 120, box!.y + box!.height / 2)
       await page.mouse.down()
-      // FINISH-02F-SL (F40): 1px flush move (40 -> 40.33, snaps to 40, no log
+      // 1px flush move (40 -> 40.33, snaps to 40, no log
       // entry) — FF/WebKit deliver `gotpointercapture` only on the next input
-      // event (D1 telemetry, r17 FF+WK proven; see SD-POINTER-04). Ownership
+      // event (see SD-POINTER-04). Ownership
       // itself is real at down-time; the poll below is unchanged.
       await page.mouse.move(box!.x + 121, box!.y + box!.height / 2)
       await expect(page.getByTestId('logged-changes')).toHaveText('[40]')
@@ -1112,13 +1112,13 @@ test.describe('Slider PATCHES pins', () => {
     page,
     browserName,
   }) => {
-    // FINISH-02F-SL (F41): HARNESS class (H1 precedent — Combobox CB-COMP
+    // HARNESS class (precedent — Combobox CB-COMP
     // touch leg): CDP touch injection (`page.context().newCDPSession`) exists
     // only in Chromium (`CDP session is only available in Chromium` on
     // FF/WebKit by construction). The whole test is CDP-driven, so it is
     // chromium-only; the owned-touchpoint contract stays pinned on Chromium.
     // No product change.
-    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only (H-class)')
+    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only')
     await mount('components/Slider/Slider/LoggedFixture', { initial: 20, width: 300 })
     const track = page.getByTestId('logged-track')
     const thumb = page.getByTestId('logged-thumb-0')
@@ -1165,10 +1165,10 @@ test.describe('Slider PATCHES pins', () => {
     page,
     browserName,
   }) => {
-    // FINISH-02F-SL (F42): HARNESS class, same CDP wall as SD-POINTER-05
-    // (F41; H1 precedent): `newCDPSession` is Chromium-only, and the whole
+    // HARNESS class, same CDP wall as SD-POINTER-05
+    // `newCDPSession` is Chromium-only, and the whole
     // test is CDP-driven touch. Chromium-only; no product change.
-    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only (H-class)')
+    test.skip(browserName !== 'chromium', 'CDP touch injection is Chromium-only')
     await mount('components/Slider/Slider/LoggedFixture', {
       initial: 50,
       orientation: 'vertical',
@@ -1311,8 +1311,8 @@ test.describe('Slider PATCHES pins', () => {
     expect(tbox).not.toBeNull()
     await page.mouse.move(tbox!.x + tbox!.width / 2, tbox!.y + tbox!.height / 2)
     await page.mouse.down()
-    // FINISH-02F-SL (F43): 10px beyond the edge (x~6) stays inside the 800px
-    // viewport (D2 telemetry: trackBox.x=16, so -50 lands at x=-34). FF
+    // 10px beyond the edge (x~6) stays inside the 800px
+    // viewport (trackBox.x=16, so -50 lands at x=-34). FF
     // reports out-of-window moves with buttons=0, which the pinned
     // buttons-zero path (SD-END-03) rightly cancels — the old -50 drag lost
     // the whole session on FF. Beyond-ness and the 100 clamp are what's

@@ -1,5 +1,5 @@
 /**
- * Bare-at-rule station (ATM-COND-21, RS-29). A queryless `@supports` (or
+ * Bare-at-rule (ATM-COND-21). A queryless `@supports` (or
  * `@media`, `@container`) key is not a wrap: the want is refused with a
  * diagnostic and nothing prints. The queried form is the control.
  */

@@ -1,15 +1,13 @@
 # NEO-PARITY-01 — the mini-lib world syncs and paints in light and dark
 
-Evidence: all groups (leans, owns no engine); R1 probes `/tmp/parity-r1/amp.test.ts`,
-`/tmp/parity-r1/slash.test.ts`, `/tmp/parity-r1/probes.test.ts`,
-`/tmp/parity-r1/followup.test.ts`, `/tmp/parity-r1/micro.test.ts`.
+Evidence: all groups (leans, owns no engine); parity probes (amp, slash, probes, follow-up, micro).
 
 One world authored the way `packages/reference-lib/src` is: light/dark
 tokens, one `font()` with a two-entry `fontFace` array, one `keyframes()`,
 nine `.ref-*` tag recipes via `globalCss()`, two `recipe()`s, primitives, a
 field bezel with `data-slot`, one named `container` region, and a small
 `staticCss` map. Six components paint in light and dark across a
-`data-color-mode` flip, and the W4 probe roster asserts per probe:
+`data-color-mode` flip, and the probe roster asserts per probe:
 P1/P2/P3/P4/P5/P6/P7/P8/P9/P10/P11/P12/P13/P14/P15/P16/P17/P18/P19/P20/P21
 plus F1 live here — P4 pair shorthands expand to corners (RS-25/SHORT-09),
 P8 prints both faces (RS-24/LAYER-11), P14 emits the gradient clip trio

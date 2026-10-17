@@ -1,5 +1,6 @@
 //! Extracts component signatures and bodies from TSX source code.
 //! Identifies components from the presence of style pipeline usage or JSX returns, and builds the component value of a function, arrow or React wrapper expression.
+//! A bare declaration whose body reaches no primitive keeps a declared-only record when it owns props, so those props still reach the trace; strict callers never see that record.
 //! Populates the intermediate trace representation; factories and higher-order components live in `factory.rs`.
 
 use oxc_ast::ast::{Expression, FormalParameter, Statement};
@@ -9,7 +10,7 @@ use super::context::ParserContext;
 use super::pipeline::component_uses_style_pipeline;
 use super::types::parse_prop_bindings;
 use crate::analysis::model::{ComponentEdge, PropBindings, TraceComponent, WrapperProps};
-use crate::analysis::util::is_component_name;
+use crate::analysis::util::{is_component_name, transparent_inner};
 use crate::analysis::walk::{collect_edges_from_statement, WalkContext};
 use crate::resolver::StyleTraceError;
 
@@ -20,7 +21,8 @@ pub struct FunctionLikeContext<'a, 'b, 'c> {
     pub wrapper_props: WrapperProps,
 }
 
-pub fn component_from_function_declaration(
+/// The component a top-level function declaration declares, traced or declared-only.
+pub fn declared_from_function_declaration(
     function: &oxc_allocator::Box<'_, oxc_ast::ast::Function<'_>>,
     ctx: &ParserContext,
 ) -> Result<Option<(String, TraceComponent)>, StyleTraceError> {
@@ -36,11 +38,14 @@ pub fn component_from_function_declaration(
         wrapper_props: WrapperProps::default(),
     };
 
-    let component = component_from_function_like(&fl_ctx, ctx)?;
+    let component = declared_from_function_like(&fl_ctx, ctx)?;
 
     Ok(component.map(|c| (name, c)))
 }
 
+/// The component an expression yields when it can reach a primitive. Calls recurse into their
+/// arguments here, so only a traced component answers: a declared-only record would hide the
+/// factory and wrapper paths that the same call may take.
 pub fn component_from_expression(
     name: &str,
     expression: &Expression<'_>,
@@ -48,48 +53,74 @@ pub fn component_from_expression(
     wrapper_props: WrapperProps,
 ) -> Result<Option<TraceComponent>, StyleTraceError> {
     match expression {
-        Expression::ArrowFunctionExpression(arrow) => component_from_function_like(
-            &FunctionLikeContext {
-                name,
-                first_param: arrow.params.items.first(),
-                body_statements: Some(&arrow.body.statements),
-                wrapper_props,
-            },
-            ctx,
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => Ok(
+            declared_from_function_expression(name, expression, ctx, wrapper_props)?
+                .filter(TraceComponent::has_style_path),
         ),
-        Expression::FunctionExpression(function) => component_from_function_like(
-            &FunctionLikeContext {
-                name,
-                first_param: function.params.items.first(),
-                body_statements: function.body.as_ref().map(|body| &body.statements),
-                wrapper_props,
-            },
-            ctx,
-        ),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            component_from_expression(name, &parenthesized.expression, ctx, wrapper_props)
-        }
-        Expression::TSAsExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
-        }
-        Expression::TSSatisfiesExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            component_from_expression(name, &asserted.expression, ctx, wrapper_props)
-        }
-        Expression::TSInstantiationExpression(instantiated) => {
-            let next_wrapper = super::types::wrapper_props_from_type_arguments(
-                ctx,
-                instantiated.type_arguments.params.iter().nth(1),
-            )?;
-            component_from_expression(name, &instantiated.expression, ctx, next_wrapper)
-        }
         Expression::CallExpression(call) => extract_component_from_call(name, call, ctx),
-        _ => Ok(None),
+        _ => component_from_other_expression(name, expression, ctx, wrapper_props),
+    }
+}
+
+/// The component a top-level binding declares. A bare arrow or function keeps its declared-only
+/// record; every other initializer follows `component_from_expression`, so the wrapper and factory
+/// paths that a call initializer takes stay exactly as they were.
+pub fn declared_component_from_binding(
+    name: &str,
+    expression: &Expression<'_>,
+    ctx: &ParserContext,
+) -> Result<Option<TraceComponent>, StyleTraceError> {
+    match expression {
+        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
+            declared_from_function_expression(name, expression, ctx, WrapperProps::default())
+        }
+        _ => component_from_expression(name, expression, ctx, WrapperProps::default()),
+    }
+}
+
+/// The declared record of an arrow or function expression; any other expression declares nothing.
+fn declared_from_function_expression(
+    name: &str,
+    expression: &Expression<'_>,
+    ctx: &ParserContext,
+    wrapper_props: WrapperProps,
+) -> Result<Option<TraceComponent>, StyleTraceError> {
+    let fl_ctx = match expression {
+        Expression::ArrowFunctionExpression(arrow) => FunctionLikeContext {
+            name,
+            first_param: arrow.params.items.first(),
+            body_statements: Some(&arrow.body.statements),
+            wrapper_props,
+        },
+        Expression::FunctionExpression(function) => FunctionLikeContext {
+            name,
+            first_param: function.params.items.first(),
+            body_statements: function.body.as_ref().map(|body| &body.statements),
+            wrapper_props,
+        },
+        _ => return Ok(None),
+    };
+    declared_from_function_like(&fl_ctx, ctx)
+}
+
+/// Parenthesis and TS assertion wrappers pass the same props to their inner expression. TS
+/// instantiation is the one wrapper that replaces them, with props read from its type arguments.
+fn component_from_other_expression(
+    name: &str,
+    expression: &Expression<'_>,
+    ctx: &ParserContext,
+    wrapper_props: WrapperProps,
+) -> Result<Option<TraceComponent>, StyleTraceError> {
+    if let Expression::TSInstantiationExpression(instantiated) = expression {
+        let next_wrapper = super::types::wrapper_props_from_type_arguments(
+            ctx,
+            instantiated.type_arguments.params.get(1),
+        )?;
+        return component_from_expression(name, &instantiated.expression, ctx, next_wrapper);
+    }
+    match transparent_inner(expression) {
+        Some(inner) => component_from_expression(name, inner, ctx, wrapper_props),
+        None => Ok(None),
     }
 }
 
@@ -115,7 +146,18 @@ fn extract_component_from_call(
     Ok(None)
 }
 
+/// The traced component a function-like yields, if any. Strict: a declared-only record is dropped.
 pub fn component_from_function_like(
+    fl_ctx: &FunctionLikeContext<'_, '_, '_>,
+    ctx: &ParserContext,
+) -> Result<Option<TraceComponent>, StyleTraceError> {
+    Ok(declared_from_function_like(fl_ctx, ctx)?.filter(TraceComponent::has_style_path))
+}
+
+/// The record a function-like declares. A body that reaches a primitive gives the traced record.
+/// A body that reaches none, but owns props, gives a declared-only record: no edges, no style
+/// props exposed, so its host decision stays off and only its owned names reach the trace.
+pub fn declared_from_function_like(
     fl_ctx: &FunctionLikeContext<'_, '_, '_>,
     ctx: &ParserContext,
 ) -> Result<Option<TraceComponent>, StyleTraceError> {
@@ -149,16 +191,18 @@ pub fn component_from_function_like(
 
     let uses_style_pipeline =
         component_uses_style_pipeline(body_statements, ctx.source, ctx.imports, &bindings);
-
-    if edges.is_empty() && !uses_style_pipeline {
+    let has_style_path = uses_style_pipeline || !edges.is_empty();
+    let owned_props = shadowed_owned_props(&bindings, &forwarded_props);
+    if !has_style_path && owned_props.is_empty() {
         return Ok(None);
     }
 
     Ok(Some(TraceComponent {
-        exposes_style_props: bindings.exposes_style_props(),
+        // A declared-only record has no style path, so it exposes no style props either.
+        exposes_style_props: has_style_path && bindings.exposes_style_props(),
         uses_style_pipeline,
         edges,
-        owned_props: shadowed_owned_props(&bindings, &forwarded_props),
+        owned_props,
     }))
 }
 

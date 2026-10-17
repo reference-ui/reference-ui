@@ -1,5 +1,5 @@
 /**
- * Callee-identity station (ATM-SITE-36, SPEC-V2-37). Shadowed and
+ * Callee-identity (ATM-SITE-36). Shadowed and
  * non-allowlisted callees skip silently with zero wants; self-init,
  * cycles, no-init lets, bare functions, and missing members warn once
  * each while their margin siblings extract with runtime plans.
@@ -39,8 +39,7 @@ const spec: AtomicCaseSpec = {
     const plans = result.stylePlans
     expect(plans).toHaveLength(7)
 
-    // Callee refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Callee refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-36', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

@@ -167,10 +167,10 @@ fn from_number(prop: &str, n: Box<str>, session: &mut ResolveSession<'_, '_>) ->
 }
 
 fn from_string(prop: &str, s: Box<str>, session: &mut ResolveSession<'_, '_>) -> Option<CssValue> {
-    // SPEC-V2-14: structural runs collapse before anything else reads the
+    // structural runs collapse before anything else reads the
     // string, so spaced twins share one numeric parse and one atom.
     let collapsed: Box<str> = super::normalize::collapse_boxed(s);
-    // Finite numeric spellings canonicalize to the numeric atom (SPEC-V2-79).
+    // Finite numeric spellings canonicalize to the numeric atom.
     // The magnitude fence bites only where canonicalization applies: color
     // props keep their string passthrough for out-of-range spellings.
     match canonical_number(&collapsed) {

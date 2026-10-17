@@ -1,6 +1,6 @@
 # NEO-WATCH-09 — concurrent one-shots end in exit 0 or exit 75, never by a signal or exit 1, and the last sync wins
 
-Evidence: `[neo]` the sync session lock (`src/sync/session.ts`, `session-hold.ts`, `session-claim.ts`). A burst of
+Evidence: the sync session lock (`src/sync/session.ts`, `session-hold.ts`, `session-claim.ts`). A burst of
 one-shot syncs against one project is the last-wins contract under load: every newcomer kills the holder it finds, so
 the losers must leave by exit 75 naming their superseder and exactly the last one must finish with exit 0.
 

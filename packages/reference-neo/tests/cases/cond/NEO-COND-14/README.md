@@ -5,7 +5,7 @@ checked checkbox plus a `data-state="checked"` twin. The spec checks the
 sheet pairs `::placeholder` with `[data-placeholder]`, lowers `_file` to
 `::file-selector-button`, twins `_checked` four ways, and each probe paints.
 
-Evidence: `[lib]` styles-css L538 twin lists, `::file-selector-button` ×3;
-`[atm]` ATM-COND-18 (RS-17 landed).
+Evidence: reference-lib styles-css L538 twin lists, `::file-selector-button` ×3;
+ATM-COND-18 (RS-17).
 
 > Search terms: data-checked, file upload, form controls, pseudo-elements, form twins, conditions/placeholder, conditions/file, conditions/checked, NEO-COND-08

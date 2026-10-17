@@ -5,5 +5,4 @@
 must be visible: the scan warns `TST-W-UNSUPPORTED-AUGMENTATION`, naming the augmenting file and the module
 `./base`, and `Base` keeps only the member it declares itself. The warning is the only diagnostic.
 
-Origin: doom round break TST-DOOM-14. Before the fix, the `declare module` block was dropped without any
-warning.
+Guards against the `declare module` block being dropped without any warning.

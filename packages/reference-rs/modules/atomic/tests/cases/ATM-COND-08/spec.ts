@@ -1,5 +1,5 @@
 /**
- * Host color-mode station. `_dark` / `_light` wrap with
+ * Host color-mode case. `_dark` / `_light` wrap with
  * `[data-color-mode=…]`, not `.dark` / `.light`. Single stamp:
  * no `data-panda-theme`, no `data-theme` for color mode.
  */

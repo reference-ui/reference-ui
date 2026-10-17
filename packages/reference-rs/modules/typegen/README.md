@@ -22,7 +22,7 @@ typechecks. The type does not care whether the engine will print `.bg_n300`.
 `SpacingToken`, …) plus an aggregate `Tokens` interface indexed by dump
 category names (`colors`, `fontSizes`, `zIndex`). Literals are category-relative
 (`brand.primary`, not `colors.brand.primary`), sorted unique, and quoted. The
-`tones` category is a special station: `ToneToken` is the sorted, deduped
+`tones` category is a special case: `ToneToken` is the sorted, deduped
 **first** path segment of each `tones` entry (`medium.surface`/`medium.line` →
 `medium`; flat `hush` → `hush`), never the full role leaf, and
 `TonedColorToken` is the template `` `${ColorToken}/${ToneToken}` ``. `Tokens`
@@ -66,7 +66,7 @@ API.
 - Emit runtime token JS (`tokens.mjs`, `token(`)
 - Depend on `atomic`
 - Dump all of `csstype.Properties` or import `@reference-ui/styled`
-- Host-wire the printer into `reference-core` — that was Track T of the retired campaign plan
+- Host-wire the printer into the packager (`packages/reference-neo/src/packager`)
 
 We author `css()`; we still generate the unions. The **input** is the base
 system either way.

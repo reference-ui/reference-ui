@@ -185,6 +185,13 @@
       "kind": "ct",
       "file": "__e2e__/ReferenceLibrary.hardening.ct.spec.ts",
       "title": "ReferenceLibrary mounted election contracts RL-LIFE-06: StrictMode elects one runtime and preserves queued work through rerender"
+    },
+    {
+      "id": "LIB-REFERENCELIBRARY-027",
+      "name": "ReferenceLibrary Color Mode Placement & Browser Proofs RL-DOM-05: runtime hosts follow the color mode of the root they are mounted in",
+      "kind": "ct",
+      "file": "__e2e__/ReferenceLibrary.ct.spec.ts",
+      "title": "ReferenceLibrary Color Mode Placement & Browser Proofs RL-DOM-05: runtime hosts follow the color mode of the root they are mounted in"
     }
   ]
 }

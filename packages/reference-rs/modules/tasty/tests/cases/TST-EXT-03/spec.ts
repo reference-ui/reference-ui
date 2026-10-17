@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-03.
+ * Case specification for TST-EXT-03.
  * `declare module './base' { interface Base { extra } }` is a module augmentation tasty does not merge.
  * The scan must warn TST-W-UNSUPPORTED-AUGMENTATION naming the augmenting file and module, and `Base`
  * keeps only its own member, so the augmentation is visible and not merged silently.

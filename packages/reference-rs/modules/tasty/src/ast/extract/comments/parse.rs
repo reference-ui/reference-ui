@@ -75,7 +75,7 @@ impl JsDocParserState {
         if !value.is_empty() {
             self.current_tag_lines.push(value);
         }
-        self.current_tag_name = (!name.is_empty()).then(|| name);
+        self.current_tag_name = (!name.is_empty()).then_some(name);
     }
 
     fn push_tag_line(&mut self, line: &str) {

@@ -1,4 +1,4 @@
-// Local-over-upstream token shadows (E13): the token merge that also records where a value
+// Local-over-upstream token shadows: the token merge that also records where a value
 // was replaced. It takes the scoped token fragments in merge order and emits one shadow per
 // path, where a local leaf replaces an upstream leaf with a different value. Upstream over
 // upstream is normal later-wins, equal values stay silent, and `extend:<base>` nodes are
@@ -58,8 +58,8 @@ function shadowOf(r: Replacement, upstreamNames: ReadonlySet<string>): TokenShad
 }
 
 /**
- * Merge the scoped token fragments in order (E14), recording the first shadow per path
- * (E13). The origin of each leaf is the source of the fragment that last wrote it, so a
+ * Merge the scoped token fragments in order, recording the first shadow per path
+ * The origin of each leaf is the source of the fragment that last wrote it, so a
  * replacement knows whether the value it replaces came from upstream.
  */
 export function mergeTokenFragmentsWithShadows(

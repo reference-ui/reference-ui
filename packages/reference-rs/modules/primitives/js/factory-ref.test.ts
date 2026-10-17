@@ -6,11 +6,11 @@
 
 import type * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { createPrimitive, type CssFn, type PrimitiveComponent } from './factory.ts'
-import { createPropSplitter } from './split.ts'
+import { createPrimitive, type CssFn, type PrimitiveComponent } from './factory.js'
+import { createPropSplitter } from './split.js'
 
-vi.mock('./context.ts', async importOriginal => {
-  const actual = await importOriginal<typeof import('./context.ts')>()
+vi.mock('./context.js', async importOriginal => {
+  const actual = await importOriginal<typeof import('./context.js')>()
   return {
     ...actual,
     usePrimitiveContext: () => ({

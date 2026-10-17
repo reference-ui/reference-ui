@@ -5,7 +5,7 @@ The spec checks the sheet carries both background atoms, the emitted class
 string is exactly the `background` atom, and the element paints the clay
 background — the alias and the longhand share one cascade slot.
 
-Evidence: `[atm]` MERGE-02 (`docs/evidence/atomic-claims.md` §2); station
+Evidence: ATM-MERGE-02; case
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-02`.
 
 > Search terms: shorthand, canonicalization, prop normalization, twin props, merge/alias-collapse, NEO-MERGE-01

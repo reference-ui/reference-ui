@@ -7,7 +7,7 @@
 import type { ComboboxAutocomplete } from './combobox-context'
 
 /**
- * Mode gate for inline completion (W-24). `inline` and `both` complete the
+ * Mode gate for inline completion. `inline` and `both` complete the
  * active label with suffix-only selection; `none` and `list` leave typed
  * text untouched during navigation.
  */

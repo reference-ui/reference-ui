@@ -1,4 +1,4 @@
-# ATM-SITE-83 — JSX spread-bag station (Forge §12)
+# ATM-SITE-83 — JSX spread-bag
 
 A spread bag on a JSX host has attribute semantics: `css` and `r` recurse like their attribute spellings, style and condition keys extract, and `style`, `data-*`, handlers, and class names stay silent — while `css()` keeps style-object semantics and still warns on `css: 1`.
 Symbols: `BagSemantics`, `ObjectWalk`, `walk_css_value`, `walk_r_value`, `lower_css_entry`, `lower_r_entry`.

@@ -1,4 +1,4 @@
-# ATM-TOKEN-18 — Tokens-layer composite station
+# ATM-TOKEN-18 — Tokens-layer composite
 
 `{category.path}` refs embedded in a composite token value expand to `var(--…)`
 inside `@layer tokens`, light and dark blocks alike — the tokens-layer half of

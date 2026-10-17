@@ -4,8 +4,8 @@
  * Resolves style-bearing JSX component names and module-qualified bindings through the native Rust engine.
  * Emits serialized component identifiers and bindings for the Reference UI style compiler.
  */
-import { callNativeJson } from '../../runtime/js/native'
-import type { StyletraceDetailedResult, TracedBinding } from './index'
+import { callNativeJson } from '../../runtime/js/native.js'
+import type { StyletraceDetailedResult, TracedBinding } from './index.js'
 
 export const STYLETRACE_NATIVE_EXPORTS = [
   'analyzeStyletrace',

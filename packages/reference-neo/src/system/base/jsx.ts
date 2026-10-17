@@ -3,7 +3,7 @@
 // emits the styletrace input shape. Local is traced union configured, so
 // config stays the override: names the tracer misses still land. Owned prop
 // names ride beside the roster as a component-to-props map that prints only
-// when it names a prop. Primitives come from the E1 element vocabulary on the
+// when it names a prop. Primitives come from the element vocabulary on the
 // committed shelf, so downstream extends consumers read the roster without
 // tracing it.
 
@@ -49,7 +49,7 @@ function mergeOwned(sources: ReadonlyArray<OwnedProps | undefined>): Record<stri
   return Object.fromEntries(entries.filter(([, props]) => props.length > 0))
 }
 
-// The E1 vocabulary is the committed shelf the PGEN parity cases gate:
+// The element vocabulary is the committed shelf the PGEN parity cases gate:
 // 101 elements with jsx names. A shelf that cannot be read or parsed
 // fails loudly — a silent empty roster would re-darken the discovery
 // the feed exists to light.

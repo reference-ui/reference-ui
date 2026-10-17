@@ -69,24 +69,24 @@
     },
     {
       "id": "LIB-MENUBAR-010",
-      "name": "Menubar stale entry intent pins P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first",
+      "name": "Menubar stale entry intent pins trigger-arrow switch after Up-on-open-trigger lands container-or-first",
       "kind": "unit",
       "file": "Menubar.test.tsx",
-      "title": "Menubar stale entry intent pins P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first"
+      "title": "Menubar stale entry intent pins trigger-arrow switch after Up-on-open-trigger lands container-or-first"
     },
     {
       "id": "LIB-MENUBAR-011",
-      "name": "Menubar stale entry intent pins P2: content-arrow switch after Up-on-open-trigger lands container-or-first",
+      "name": "Menubar stale entry intent pins content-arrow switch after Up-on-open-trigger lands container-or-first",
       "kind": "unit",
       "file": "Menubar.test.tsx",
-      "title": "Menubar stale entry intent pins P2: content-arrow switch after Up-on-open-trigger lands container-or-first"
+      "title": "Menubar stale entry intent pins content-arrow switch after Up-on-open-trigger lands container-or-first"
     },
     {
       "id": "LIB-MENUBAR-012",
-      "name": "Menubar stale entry intent pins P3: programmatic open after Up-on-open-trigger lands container-or-first",
+      "name": "Menubar stale entry intent pins programmatic open after Up-on-open-trigger lands container-or-first",
       "kind": "unit",
       "file": "Menubar.test.tsx",
-      "title": "Menubar stale entry intent pins P3: programmatic open after Up-on-open-trigger lands container-or-first"
+      "title": "Menubar stale entry intent pins programmatic open after Up-on-open-trigger lands container-or-first"
     },
     {
       "id": "LIB-MENUBAR-013",

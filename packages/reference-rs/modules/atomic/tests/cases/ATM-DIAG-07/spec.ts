@@ -1,9 +1,9 @@
 /**
- * Channel-isolation station (ATM-DIAG-07, Operation Error Correct, Slice 5).
+ * Channel-isolation.
  * The default channel carries no dynamic, spread, harvest-sink, or
  * dead-branch diagnostics; those ride the opt-in `compilerDiagnostics`
- * channel (`logs: ['compiler']`, additive-optional per the Q2 ruling).
- * Guard correction (E8-class): non-vacuity reads the opt-in channel, since
+ * channel (`logs: ['compiler']`, additive-optional).
+ * Guard correction: non-vacuity reads the opt-in channel, since
  * the default channel must carry none of these by contract.
  */
 import { expect } from 'vitest'
@@ -41,7 +41,7 @@ const spec: AtomicCaseSpec = {
 
     // Guard: the fixture must actually produce channel-family items, or the
     // isolation assertions below would pass vacuously. Reads the opt-in
-    // channel (E8-class correction — the default must carry none).
+    // channel (the default must carry none).
     expect(
       compilerDiags!.some(d => isChannelItem(d.code)),
       'fixture produces no channel-family items to isolate'
@@ -54,7 +54,7 @@ const spec: AtomicCaseSpec = {
       `channel items leaked onto default: ${leaked.map(d => d.code).join(', ')}`
     ).toHaveLength(0)
 
-    // Additive-optional half of the Q2 ruling: the field is absent unless
+    // Additive-optional: the field is absent unless
     // the channel was requested.
     expect('compilerDiagnostics' in result).toBe(false)
 

@@ -1,5 +1,5 @@
 /**
- * Default variants and boolean variant keys station.
+ * Default variants and boolean variant keys case.
  * defaultVariants must be preserved in RecipeRuntimeTable, boolean variant keys
  * normalized, and classes emitted in @layer recipes.
  */

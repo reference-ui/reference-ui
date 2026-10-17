@@ -153,7 +153,7 @@ test.describe('Button Component', () => {
   })
 })
 
-test('B-40: bare primitive Button is inline shrink-to-fit, matching native button', async ({
+test('bare primitive Button is inline shrink-to-fit, matching native button', async ({
   mount,
   page,
 }) => {

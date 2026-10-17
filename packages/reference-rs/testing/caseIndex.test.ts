@@ -1,8 +1,8 @@
 /**
- * Unit tests for the case-folder convention the station runner enforces.
+ * Unit tests for the case-folder convention the case runner enforces.
  * Covers the case.json rules and the on-disk read in readCaseIndex against temporary
  * case folders, the stray-folder rule, and the README first-line heading, so a broken
- * folder fails here before any station runs.
+ * folder fails here before any case runs.
  */
 import fs from 'node:fs'
 import os from 'node:os'

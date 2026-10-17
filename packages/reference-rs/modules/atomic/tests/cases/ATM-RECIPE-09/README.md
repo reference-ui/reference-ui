@@ -1,4 +1,4 @@
-# ATM-RECIPE-09 — Observed-use gating station
+# ATM-RECIPE-09 — Observed-use gating
 
 Observed-use emission gating. Recipes print plain rules only when called;
 responsive `(value, breakpoint)` rules print only for observed literal

@@ -1,5 +1,5 @@
 /**
- * Custom-prop shape station. Scalar, array, and object `--x` forms all
+ * Custom-prop shape case. Scalar, array, and object `--x` forms all
  * compile as declarations; the object form mints one whole-object plan
  * with per-breakpoint declarations. Analysis predicts that same
  * whole-object lookup on the channel — never nested `base`/`md` exacts

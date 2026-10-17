@@ -1,8 +1,8 @@
 # Tabs test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Tabs --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/tabs.spec.ts`  
+Playwright: `src/components/Tabs/__e2e__/*.spec.ts` (run with `pnpm agentct Tabs --e2e`)  
 Page: `/tabs`
 
 Tabs owns controlled selection, automatic/manual activation, and tab/panel ARIA
@@ -15,12 +15,6 @@ matching APG/vendor convergence.
 
 ## Source evidence
 
-- `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js` —
-  ARIA/DOM props, disabled selection, orientation/RTL, manual activation,
-  dynamic and nested tabs, panel ID updates, and composed popups.
-- `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx` — focus/blur
-  ordering and regressions where Space/Enter from nested or portalled editable
-  descendants incorrectly activate a tab.
 - React Aria `useTab.ts`, Radix `activationMode`, and Zag `activationMode`
   converge on automatic vs manual behavior.
 
@@ -46,7 +40,7 @@ do not repeat the generic StyleProps matrix.
   Start horizontal, rerender with `orientation="vertical"`, and assert that the
   same List changes both `aria-orientation` and `data-orientation` from
   `horizontal` to `vertical` without changing selection.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “should support orientation” while keeping state on Reference UI's List.
 - [x] `TB-DOM-03` `[vendor]` `[browser]` —
   **Tabs should distinguish controlled selection from the current roving tab stop when values render.**
@@ -54,7 +48,7 @@ do not repeat the generic StyleProps matrix.
   `aria-selected="true"`, `data-state="active"`, and initially `tabIndex=0`,
   while the others are false/inactive and exactly one enabled current Tab is
   the sole `tabIndex=0`.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “should support selected state” and prevents selection state from being
   inferred from focus after manual navigation.
 - [x] `TB-DOM-04` `[convergence]` `[browser]` —
@@ -70,7 +64,7 @@ do not repeat the generic StyleProps matrix.
   change `value` from `general` to `billing` and assert every ID is unchanged,
   every `aria-labelledby` names its matching Tab, only `billing` is visible,
   and the other mounted Panels have `hidden`.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “should update TabPanel ID when current tab is changed” while freezing
   Reference UI's mounted-inactive-panel policy.
 - [x] `TB-DOM-06` `[reference]` `[browser]` —
@@ -96,7 +90,7 @@ do not repeat the generic StyleProps matrix.
   from `general` to prove it is skipped and emits no request, while a later
   controlled `value="billing"` may mark it selected and show its Panel without
   making it focusable.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “should support isDisabled prop on tab” and “finds the first non-disabled
   tab,” adapted to the documented native button.
 - [x] `TB-DOM-09` `[reference]` `[browser]` —
@@ -121,7 +115,7 @@ do not repeat the generic StyleProps matrix.
   `onChange`, and the `billing` Panel may remain visible with its Tab still
   natively disabled.
   This deliberately rejects the upstream
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  React Aria's `Tabs.test.js`
   “selects first tab if all tabs are disabled” focus fallback because a
   disabled button cannot be made interactive.
 - [x] `TB-DOM-12` `[reference]` `[browser]` —
@@ -158,7 +152,7 @@ do not repeat the generic StyleProps matrix.
   other value, and focus remaining on the `billing` button in Chromium,
   Firefox, and WebKit.
   This ports the mouse row of
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  React Aria's `Tabs.test.js`
   “should support changing the selected tab regardless of interaction type.”
 - [x] `TB-SELECT-02` `[reference]` `[browser]` —
   **Tabs should retain controlled selection when the parent rejects a pointer request.**
@@ -175,7 +169,7 @@ do not repeat the generic StyleProps matrix.
   `tabIndex=0`, `aria-controls`, and visible Panel all move to `security`
   without `onChange`.
   This is the controlled counterpart to
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  React Aria's `Tabs.test.js`
   “should update TabPanel ID when current tab is changed.”
 - [x] `TB-SELECT-04` `[vendor]` `[browser]` —
   **Tabs should suppress redundant requests when a pointer targets selected or disabled Tabs.**
@@ -202,7 +196,7 @@ do not repeat the generic StyleProps matrix.
   Focus an input inside the visible `general` Panel, click `billing`, and log
   input `blur`, Tab `focus`, and `onChange`; assert blur occurs once before the
   new Tab focus/request and the accepted rerender shows `billing`.
-  This ports `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx`
+  This ports Radix's `tabs.test.tsx`
   “fires onBlur on an input inside the active tab when clicking another
   trigger.”
 - [x] `TB-SELECT-07` `[reference]` `[browser]` —
@@ -219,7 +213,7 @@ do not repeat the generic StyleProps matrix.
   `mousedown` on `billing` without `pointerup`; assert one
   `onChange("billing")` is already requested, then finish the click and assert
   no second request.
-  This ports `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx`
+  This ports Radix's `tabs.test.tsx`
   “still activates a tab on mousedown (before the click completes)” and freezes
   the event boundary needed for deterministic blur ordering.
 
@@ -246,7 +240,7 @@ do not repeat the generic StyleProps matrix.
   `security` then `billing`, then press ArrowLeft and ArrowRight in both LTR and
   RTL and assert no focus, `tabIndex`, selection, Panel, or callback change.
   This ports the vertical orientation coverage in
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  React Aria's `Tabs.test.js`
   while explicitly rejecting its legacy horizontal-key behavior for vertical
   RTL tabs.
 - [x] `TB-AUTO-04` `[vendor]` `[browser]` —
@@ -282,7 +276,7 @@ do not repeat the generic StyleProps matrix.
   and ArrowLeft; assert focus and the sole roving `tabIndex=0` follow each
   enabled destination while `onChange` remains empty, `general` stays
   `aria-selected="true"`, and its Panel remains visible.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “should support keyboardActivation=manual.”
 - [x] `TB-MANUAL-02` `[vendor]` `[browser:all]` —
   **Tabs should request the focused value when Space activates an unselected manual Tab.**
@@ -291,7 +285,7 @@ do not repeat the generic StyleProps matrix.
   `onChange("billing")`, focus on `billing`, and accepted selection/Panel state
   in all engines.
   This follows native button Space timing and the manual-activation path in
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  React Aria's `Tabs.test.js`
   “should support press events on items when using keyboard.”
 - [x] `TB-MANUAL-03` `[vendor]` `[browser:all]` —
   **Tabs should request the focused value when Enter activates an unselected manual Tab.**
@@ -299,7 +293,7 @@ do not repeat the generic StyleProps matrix.
   `onChange("billing")` on keydown/click, no duplicate on keyup, focus remaining
   on `billing`, and accepted selected/Panel state in all engines.
   This ports the trigger-focused half of
-  `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx` “still
+  Radix's `tabs.test.tsx` “still
   activates the tab via Space/Enter when the trigger itself is focused.”
 - [x] `TB-MANUAL-04` `[reference]` `[browser]` —
   **Tabs should emit no redundant request when manual activation targets the selected Tab.**
@@ -335,7 +329,7 @@ do not repeat the generic StyleProps matrix.
   type a Space and Enter into it, and assert its text/native editing behavior
   remains intact while `onChange`, selected ARIA, and visible Panel do not
   change.
-  This ports `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx`
+  This ports Radix's `tabs.test.tsx`
   “does not activate a tab from Space typed into a nested editable input” and
   protects the event-target guard rather than stopping bubbling globally.
 - [x] `TB-EVENT-02` `[vendor]` `[browser]` —
@@ -343,7 +337,7 @@ do not repeat the generic StyleProps matrix.
   Render an input as a React portal child of the `billing` Tab, focus the
   portalled input, and press Space then Enter; assert its value/focus remain
   intact and no `onChange`, selected-state, or Panel change occurs.
-  This ports `vendor/radix-primitives/packages/react/tabs/src/tabs.test.tsx`
+  This ports Radix's `tabs.test.tsx`
   “does not activate a tab from Space/Enter typed into a portaled focusable
   descendant.”
 - [x] `TB-EVENT-03` `[reference]` `[browser]` —
@@ -359,7 +353,7 @@ do not repeat the generic StyleProps matrix.
   `billing` after `security`; assert `billing` stays selected and linked to the
   same keyed Panel, generated IDs for surviving parts stay stable, focus stays
   on the same value when present, and no `onChange` fires.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “can add tabs and keep the current selected key.”
 - [x] `TB-DYNAMIC-02` `[reference]` `[browser]` —
   **Tabs should avoid fallback selection when the controlled selected value is removed.**
@@ -384,7 +378,7 @@ do not repeat the generic StyleProps matrix.
   ArrowRight; assert only inner focus/value/callback/Panel state changes while
   outer selected `general`, outer focus bookkeeping, and outer callback log
   remain unchanged.
-  This ports `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`
+  This ports React Aria's `Tabs.test.js`
   “supports nested tabs.”
 - [x] `TB-NEST-02` `[vendor]` `[browser]` —
   **Tabs should preserve selection when popup triggers inside a Panel are operated.**
@@ -395,7 +389,7 @@ do not repeat the generic StyleProps matrix.
   This consolidates the upstream titles “supports Menu inside Tabs,” “supports
   Select inside Tabs,” “supports ComboBox inside Tabs,” “supports tooltips,”
   and “supports DialogTrigger inside Tabs” from
-  `vendor/react-spectrum/packages/react-aria-components/test/Tabs.test.js`.
+  React Aria's `Tabs.test.js`.
 
 ### Environments
 

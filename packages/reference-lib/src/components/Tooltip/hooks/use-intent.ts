@@ -29,13 +29,13 @@ export interface TooltipIntent {
   value: TooltipContextValue
 }
 
-interface Session {
+interface TooltipIntentSession {
   timer: ReturnType<typeof setTimeout> | null
   fromPointer: boolean
   suppressHover: boolean
 }
 
-function emptySession(): Session {
+function emptySession(): TooltipIntentSession {
   return { timer: null, fromPointer: false, suppressHover: false }
 }
 
@@ -52,7 +52,7 @@ export function useTooltipIntent({
   const parentContext = React.useContext(TooltipContext)
   const isControlled = openProp !== undefined
   const isOpen = isControlled ? openProp : internalOpen
-  const session = React.useRef<Session>(emptySession())
+  const session = React.useRef<TooltipIntentSession>(emptySession())
   const contentId = React.useId().replace(/:/g, '')
 
   const store = React.useMemo(

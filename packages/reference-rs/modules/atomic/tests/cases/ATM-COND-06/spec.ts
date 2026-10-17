@@ -1,5 +1,5 @@
 /**
- * Runtime-owned prop station. `variant` / `colorMode` stay off the
+ * Runtime-owned prop case. `variant` / `colorMode` stay off the
  * stylesheet. Sibling `mt` still emits a utility.
  */
 import { expect } from 'vitest'

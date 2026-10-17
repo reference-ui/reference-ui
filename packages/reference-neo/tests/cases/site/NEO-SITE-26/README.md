@@ -10,10 +10,7 @@ paint, and ocean-only paint on the refused node, the sheet carries exactly
 the five utilities, and the frozen-request recompile carries exactly the
 one positioned part warning naming `dyn`.
 
-Evidence: `[atm]` ATM-SITE-51 (template fold table);
-`[overmatch]` SPEC-V2-67; `[panda-v2]`
-`vendor/panda/crates/pandacss_extractor/tests/scope.rs:868`, `:887`,
-`calls.rs:1214`, `:1420`, `:1972`.
+Evidence: ATM-SITE-51 (template fold table); Panda v2 scope and call tests.
 
 Repin (Forge Slice 3): the `fan` node paints CSS `plum`
 (rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the

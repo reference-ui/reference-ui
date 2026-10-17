@@ -3,14 +3,14 @@
  * substitution can merge the class into a longer identifier or an
  * unparsable selector, so the runtime class never appears as a standalone
  * selector in `@layer utilities`. Entries are exact class strings for one
- * station, each citing the v2 test that prints the same shape. The ghost
+ * case, each citing the v2 test that prints the same shape. The ghost
  * gauge skips them for presence but fails if one goes stale (now appears,
  * or is no longer emitted), so the list cannot rot or hide a real ghost.
  */
 import { expect } from 'vitest'
 
 export const UNMATCHABLE_CLASSES: Record<string, readonly string[]> = {
-  // ATM-COND-27 (SPEC-V2-72): `&_elem` → `.<cls>_elem` (:48), `&html` →
+  // ATM-COND-27: `&_elem` → `.<cls>_elem` (:48), `&html` →
   // `.<cls>html` (:279), `&h1, &h2` → `.<cls>h1, .<cls>h2` (:378), and
   // `&(:focus)` → `.<cls>(:focus)` (:532) — the last also unparsable (see
   // css-quarantine.ts). Both engines print these byte-for-byte; the pin

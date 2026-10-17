@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-SNK-01.
+ * Case specification for TST-SNK-01.
  * Verifies comprehensive component typing, mapped types, inheritance, and JSDoc.
  * Proves primary SPEC ID anchor TST-SNK-01.
  */

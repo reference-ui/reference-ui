@@ -8,8 +8,8 @@ selectors in `@layer global`, then checks computed paint against reference
 elements styled with the same mixes in hex: the hover twin and the active
 press ring match their references exactly.
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-styles-css.md` L477–481 hover
-mix and press ring; `[lib]` `docs/evidence/lib-sheet-global-css.md`
-Trace C; `[atm]` ATM-TOKEN-06.
+Evidence: reference-lib L477–481 hover
+mix and press ring; reference-lib
+Trace C; ATM-TOKEN-06.
 
 > Search terms: color interpolation, tints, press state, color blend, global/color-mix, global/hover, NEO-GLOBAL-03

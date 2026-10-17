@@ -14,8 +14,7 @@ element carries `neo-chain8-up__c_chain8Ink` with no backing rule, so it
 faints and the runtime warns `no compiled class`. That polarity is the point —
 a same-scope `Div` twin would pass vacuously and is refused here.
 
-Evidence: `CONSULT.style-external` F1 (extraction drops capitalized non-host
-tags while the foreign runtime mints), `PLAN.oracle` Q3 Venue-2 (no twin
-without a real prebuilt dist), `extract/jsx/mod.rs:50`, `runtime/css/css.ts:271`.
+Evidence: extraction drops capitalized non-host
+tags while the foreign runtime mints; no twin without a real prebuilt dist; `packages/reference-rs/modules/atomic/src/extract/jsx/mod.rs:50`, `packages/reference-neo/src/runtime/css/css.ts:271`.
 
 > Search terms: prebuilt dist, fan-out, external style props, bound react.mjs, foreign qualifier, same-scope vacuous twin, NEO-CHAIN-06, NEO-CHAIN-07

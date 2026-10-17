@@ -2,7 +2,7 @@
 //!
 //! Userspace hears existing fatals plus proof-backed absent-key warnings;
 //! the compiler backchannel hears everything useful that cannot clear that
-//! bar. Slice 4 joined proof over the pushed lines; Slice 5 partitions the
+//! bar. Proof joins over the pushed lines; the channel partition splits the
 //! rest behind the opt-in channel per this table. Wording lives here too:
 //! per-family `render_*` functions own every sentence template,
 //! byte-identical to the legacy call-site strings.
@@ -33,7 +33,7 @@ pub enum Audience {
 /// and hole-valued (`false`) resolve refusals ride the opt-in compiler
 /// channel. Resolve passthroughs/advisories, host skips, and static/global
 /// lines stay default pending the deferred token-passthrough/host policy.
-/// Wave-1b carve-out: extract facts carrying `UnknownProperty` stay
+/// extract facts carrying `UnknownProperty` stay
 /// userspace — the located gate warning restores proof F2's visibility
 /// premise (the exact key is queried-and-missed at runtime).
 pub struct Policy;
@@ -55,7 +55,7 @@ impl Policy {
     }
 
     /// Extract facts ride the compiler channel — except unknown-prop gate
-    /// warnings, which stay userspace (Wave-1b carve-out: the located gate
+    /// warnings, which stay userspace (the located gate
     /// sentence restores proof F2's visibility premise for the exact
     /// queried-and-missed key).
     fn extract_audience(fact: &DiagnosticFact) -> Audience {

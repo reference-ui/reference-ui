@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-09.
+ * Case specification for TST-EXT-09.
  * A generic method keeps its own type parameter when an inherited extends clause binds a parent parameter of the
  * same name: `keep` takes the clause's argument, while `run<A>(input: A): A` still returns the method's own `A`.
  * Proves that the substitution of inherited members does not capture a method's shadowing parameter, for an

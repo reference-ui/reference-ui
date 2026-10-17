@@ -3,9 +3,10 @@
 Rust tests are split by concern so resolver failures and wrapper-analysis
 failures stay easy to diagnose.
 
-## Files
+## Layout
 
-- `mod.rs` — test module wiring
-- `fixtures.rs` — scratch directories and shared case-fixture lookup
-- `prop_resolution.rs` — type-surface resolver coverage
-- `tracing.rs` — wrapper-analysis coverage
+Shared scratch directories and case-fixture lookup live in one fixtures module.
+Resolver coverage (the type-surface resolver) and wrapper-analysis coverage are
+kept apart. Compound-member alias coverage is split by topic: local and imported
+targets, reassignment, shapes that stay silent, barrel re-exports, and export
+collisions, with the `forwardRef` variants in their own module.

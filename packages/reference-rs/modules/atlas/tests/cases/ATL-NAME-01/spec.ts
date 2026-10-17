@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-NAME-01.
+ * Case specification for ATL-NAME-01.
  * Validates distinct indexing and source separation for identically named components
  * residing in different local directories.
  * Proves primary SPEC anchor ATL-NAME-01.

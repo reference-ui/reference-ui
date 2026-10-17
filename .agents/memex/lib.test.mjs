@@ -13,13 +13,9 @@ import assert from 'node:assert/strict'
 import {
   collectMarkdown,
   collectNeo,
-  collectPerf,
   collectRs,
   collectRsCases,
-  formatPerfShow,
   matchGlob,
-  perfCounts,
-  substringSearch,
 } from './adapters.mjs'
 import { chainShow, extractHeader, readmeChain } from './graph.mjs'
 import { buildIndex, loadAll, loadManifests, search, show } from './lib.mjs'
@@ -332,141 +328,6 @@ describe('reference-rs case docs in this repo', () => {
   })
 })
 
-describe('perf', () => {
-  const entries = [
-    {
-      id: 'PERF-W1-A',
-      wave: 'wave-1',
-      topic: 'clone plasma',
-      kind: 'diet',
-      verdict: 'BANK',
-      effect: { ms: 3 },
-      files: [],
-      report: 'r.md',
-      patch: null,
-      summary: 'clones less',
-      log: 'landed set-1',
-    },
-    {
-      id: 'PERF-W1-B',
-      wave: 'wave-2',
-      topic: 'hashers',
-      kind: 'diet',
-      verdict: 'CUT',
-      effect: {},
-      files: [],
-      report: 'r.md',
-      patch: null,
-      summary: 'no win',
-      log: null,
-    },
-  ]
-
-  it('substring search ANDs words and ranks exact id hits first', () => {
-    assert.deepEqual(
-      substringSearch(entries, 'clone plasma').map(e => e.id),
-      ['PERF-W1-A']
-    )
-    assert.deepEqual(substringSearch(entries, 'clone hashers'), [])
-    assert.deepEqual(
-      substringSearch(entries, 'perf-w1-a').map(e => e.id),
-      ['PERF-W1-A']
-    )
-  })
-
-  it('field:value tokens filter exactly; unknown fields stay literal', () => {
-    assert.deepEqual(
-      substringSearch(entries, 'verdict:bank').map(e => e.id),
-      ['PERF-W1-A']
-    )
-    assert.deepEqual(
-      substringSearch(entries, 'verdict:BANK wave:wave-2').map(e => e.id),
-      []
-    )
-    assert.deepEqual(
-      substringSearch(entries, 'verdict:cut hashers').map(e => e.id),
-      ['PERF-W1-B']
-    )
-    assert.deepEqual(
-      substringSearch(entries, 'rs:atlas').map(e => e.id),
-      []
-    )
-  })
-
-  it('overrule notes are searchable and marked on one-liners', () => {
-    const over = [
-      {
-        id: 'INT-1',
-        wave: 'wave-1',
-        topic: 'set',
-        kind: 'integration',
-        verdict: 'LAND',
-        effect: {},
-        files: [],
-        report: 'r.md',
-        patch: null,
-        summary: 's',
-        log: null,
-        overruledBy: 'INT-2 — captain held x',
-      },
-    ]
-    assert.deepEqual(
-      substringSearch(over, 'overruled').map(e => e.id),
-      ['INT-1']
-    )
-    assert.deepEqual(substringSearch(entries, 'overruled'), [])
-    const { dir, done } = fixture()
-    try {
-      const p = join(dir, 'perf-index.json')
-      writeFileSync(p, JSON.stringify({ count: 1, built: 'today', entries: over }))
-      const { docs } = collectPerf(p, 'perf')
-      assert.ok(docs[0].extra.includes('† superseded by INT-2'))
-    } finally {
-      done()
-    }
-  })
-
-  it('counts waves and verdicts', () => {
-    assert.deepEqual(perfCounts(entries), {
-      waves: { 'wave-1': 1, 'wave-2': 1 },
-      verdicts: { BANK: 1, CUT: 1 },
-    })
-  })
-
-  it('show format carries report, files, summary, and log', () => {
-    const text = formatPerfShow({
-      ...entries[0],
-      files: ['a.rs'],
-      landedIn: 'tree',
-      landing: 'abc',
-      overruledBy: null,
-    })
-    for (const needle of [
-      'PERF-W1-A',
-      'report: r.md',
-      'a.rs',
-      'clones less',
-      'landed set-1',
-      'abc',
-    ]) {
-      assert.ok(text.includes(needle), needle)
-    }
-  })
-
-  it('collects index json into docs', () => {
-    const { dir, done } = fixture()
-    try {
-      const p = join(dir, 'perf-index.json')
-      writeFileSync(p, JSON.stringify({ count: 2, built: 'today', entries }))
-      const { docs } = collectPerf(p, 'perf')
-      assert.equal(docs.length, 2)
-      assert.equal(docs[0].extra, '[BANK]  3ms')
-    } finally {
-      done()
-    }
-  })
-})
-
 describe('graph headers', () => {
   it('extracts block, line, and shebang headers; nothing when bare', () => {
     assert.equal(
@@ -522,10 +383,10 @@ describe('graph headers', () => {
 })
 
 describe('engine', () => {
-  it('loads six manifests plus the graph system collection', () => {
+  it('loads four manifests plus the graph system collection', () => {
     const manifests = loadManifests()
     const names = manifests.map(m => m.name)
-    for (const name of ['cases', 'components', 'doom', 'flames', 'graph', 'perf', 'surfaces']) {
+    for (const name of ['cases', 'components', 'graph', 'rs-cases', 'surfaces']) {
       assert.ok(names.includes(name), name)
     }
     assert.equal(manifests.find(m => m.name === 'graph').system, true)
@@ -680,7 +541,7 @@ describe('engine', () => {
   it('show resolves basenames, rs aliases, and .md forgiveness', () => {
     const docs = [
       {
-        collection: 'flames',
+        collection: 'notes',
         kind: 'markdown',
         id: 'x/summary.md',
         title: 'X',
@@ -691,7 +552,7 @@ describe('engine', () => {
         payload: { raw: 'XXX' },
       },
       {
-        collection: 'flames',
+        collection: 'notes',
         kind: 'markdown',
         id: 'y/summary.md',
         title: 'Y',
@@ -737,7 +598,7 @@ describe('engine', () => {
 
   it('show pages candidates and returns them structured', () => {
     const docs = Array.from({ length: 12 }, (_, n) => ({
-      collection: 'flames',
+      collection: 'notes',
       kind: 'markdown',
       id: `d${n}/note.md`,
       title: `N${n}`,
@@ -772,22 +633,20 @@ describe('engine', () => {
     }
     const docs = [
       {
-        collection: 'perf',
-        kind: 'perf',
-        id: 'P1',
+        collection: 'notes',
+        kind: 'markdown',
+        id: 'N1',
         title: 'T',
-        extra: '[BANK]',
+        extra: '',
         path: 'r.md',
         snippetText: '',
         fields: {},
-        payload: {
-          entry: { id: 'P1', topic: 'T', kind: 'diet', verdict: 'BANK', report: 'r.md' },
-        },
+        payload: { raw: 'NNN' },
       },
     ]
     const all = { docs, manifests: [], manifest: () => ({ weights: {} }) }
-    assert.equal(show(all, 'P1', { up: 0, upExplicit: true }).misuse, true)
-    assert.ok(show(all, 'P1', {}).text.includes('P1'))
+    assert.equal(show(all, 'N1', { up: 0, upExplicit: true }).misuse, true)
+    assert.ok(show(all, 'N1', {}).text.includes('N1'))
   })
 })
 

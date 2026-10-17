@@ -34,17 +34,17 @@
     },
     {
       "id": "LIB-TREE-005",
-      "name": "Tree Unit Proofs W-17: getBatchExpanded should fold deterministic emission over a sibling set in document order",
+      "name": "Tree Unit Proofs getBatchExpanded should fold deterministic emission over a sibling set in document order",
       "kind": "unit",
       "file": "Tree.test.tsx",
-      "title": "Tree Unit Proofs W-17: getBatchExpanded should fold deterministic emission over a sibling set in document order"
+      "title": "Tree Unit Proofs getBatchExpanded should fold deterministic emission over a sibling set in document order"
     },
     {
       "id": "LIB-TREE-006",
-      "name": "Tree Unit Proofs W-17: getBatchExpanded should be a stable no-op for an empty sibling set",
+      "name": "Tree Unit Proofs getBatchExpanded should be a stable no-op for an empty sibling set",
       "kind": "unit",
       "file": "Tree.test.tsx",
-      "title": "Tree Unit Proofs W-17: getBatchExpanded should be a stable no-op for an empty sibling set"
+      "title": "Tree Unit Proofs getBatchExpanded should be a stable no-op for an empty sibling set"
     },
     {
       "id": "LIB-TREE-007",
@@ -83,367 +83,367 @@
     },
     {
       "id": "LIB-TREE-012",
-      "name": "Tree Quarantine Parity TR-DOM-03: Tree should expose expansion state only on items that currently own children",
+      "name": "Tree parity TR-DOM-03: Tree should expose expansion state only on items that currently own children",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-03: Tree should expose expansion state only on items that currently own children"
+      "title": "Tree parity TR-DOM-03: Tree should expose expansion state only on items that currently own children"
     },
     {
       "id": "LIB-TREE-013",
-      "name": "Tree Quarantine Parity TR-DOM-04: Tree items should mirror controlled selection and disabled state independently",
+      "name": "Tree parity TR-DOM-04: Tree items should mirror controlled selection and disabled state independently",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-04: Tree items should mirror controlled selection and disabled state independently"
+      "title": "Tree parity TR-DOM-04: Tree items should mirror controlled selection and disabled state independently"
     },
     {
       "id": "LIB-TREE-014",
-      "name": "Tree Quarantine Parity TR-DOM-05: Tree should report each item's position within its actual sibling set",
+      "name": "Tree parity TR-DOM-05: Tree should report each item's position within its actual sibling set",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-05: Tree should report each item's position within its actual sibling set"
+      "title": "Tree parity TR-DOM-05: Tree should report each item's position within its actual sibling set"
     },
     {
       "id": "LIB-TREE-015",
-      "name": "Tree Quarantine Parity TR-DOM-06: Tree data-state hooks should stay synchronized with their authoritative ARIA state",
+      "name": "Tree parity TR-DOM-06: Tree data-state hooks should stay synchronized with their authoritative ARIA state",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-06: Tree data-state hooks should stay synchronized with their authoritative ARIA state"
+      "title": "Tree parity TR-DOM-06: Tree data-state hooks should stay synchronized with their authoritative ARIA state"
     },
     {
       "id": "LIB-TREE-016",
-      "name": "Tree Quarantine Parity TR-DOM-07: Tree parts should preserve all fixed native element contracts without polymorphic hosts",
+      "name": "Tree parity TR-DOM-07: Tree parts should preserve all fixed native element contracts without polymorphic hosts",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-07: Tree parts should preserve all fixed native element contracts without polymorphic hosts"
+      "title": "Tree parity TR-DOM-07: Tree parts should preserve all fixed native element contracts without polymorphic hosts"
     },
     {
       "id": "LIB-TREE-017",
-      "name": "Tree Quarantine Parity TR-DOM-08: Tree should reject duplicate item values while preserving path-like and zero-like strings as opaque identities",
+      "name": "Tree parity TR-DOM-08: Tree should reject duplicate item values while preserving path-like and zero-like strings as opaque identities",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-08: Tree should reject duplicate item values while preserving path-like and zero-like strings as opaque identities"
+      "title": "Tree parity TR-DOM-08: Tree should reject duplicate item values while preserving path-like and zero-like strings as opaque identities"
     },
     {
       "id": "LIB-TREE-018",
-      "name": "Tree Quarantine Parity TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target",
+      "name": "Tree parity TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target"
+      "title": "Tree parity TR-DOM-09: Empty Tree should expose its role without inventing a sequential focus target"
     },
     {
       "id": "LIB-TREE-019",
-      "name": "Tree Quarantine Parity TR-DOM-10: Tree should expand and select through state when only expansion props are omitted",
+      "name": "Tree parity TR-DOM-10: Tree should expand and select through state when only expansion props are omitted",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-10: Tree should expand and select through state when only expansion props are omitted"
+      "title": "Tree parity TR-DOM-10: Tree should expand and select through state when only expansion props are omitted"
     },
     {
       "id": "LIB-TREE-020",
-      "name": "Tree Quarantine Parity TR-DOM-11: Tree Expander should be a named non-tab-stop button linked to its branch Group",
+      "name": "Tree parity TR-DOM-11: Tree Expander should be a named non-tab-stop button linked to its branch Group",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-11: Tree Expander should be a named non-tab-stop button linked to its branch Group"
+      "title": "Tree parity TR-DOM-11: Tree Expander should be a named non-tab-stop button linked to its branch Group"
     },
     {
       "id": "LIB-TREE-021",
-      "name": "Tree Quarantine Parity TR-DOM-12: Tree should remove collapsed descendants from the rendered accessibility and focus tree",
+      "name": "Tree parity TR-DOM-12: Tree should remove collapsed descendants from the rendered accessibility and focus tree",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DOM-12: Tree should remove collapsed descendants from the rendered accessibility and focus tree"
+      "title": "Tree parity TR-DOM-12: Tree should remove collapsed descendants from the rendered accessibility and focus tree"
     },
     {
       "id": "LIB-TREE-022",
-      "name": "Tree Quarantine Parity TR-SELECT-01: Tree should request one controlled selection for each supported item activation",
+      "name": "Tree parity TR-SELECT-01: Tree should request one controlled selection for each supported item activation",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-01: Tree should request one controlled selection for each supported item activation"
+      "title": "Tree parity TR-SELECT-01: Tree should request one controlled selection for each supported item activation"
     },
     {
       "id": "LIB-TREE-023",
-      "name": "Tree Quarantine Parity TR-SELECT-02: Tree should select a branch without implicitly changing its expansion",
+      "name": "Tree parity TR-SELECT-02: Tree should select a branch without implicitly changing its expansion",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-02: Tree should select a branch without implicitly changing its expansion"
+      "title": "Tree parity TR-SELECT-02: Tree should select a branch without implicitly changing its expansion"
     },
     {
       "id": "LIB-TREE-024",
-      "name": "Tree Quarantine Parity TR-SELECT-03: Tree should treat activation of the already-selected item as idempotent",
+      "name": "Tree parity TR-SELECT-03: Tree should treat activation of the already-selected item as idempotent",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-03: Tree should treat activation of the already-selected item as idempotent"
+      "title": "Tree parity TR-SELECT-03: Tree should treat activation of the already-selected item as idempotent"
     },
     {
       "id": "LIB-TREE-025",
-      "name": "Tree Quarantine Parity TR-SELECT-04: Tree should preserve controlled selection when the parent rejects a request",
+      "name": "Tree parity TR-SELECT-04: Tree should preserve controlled selection when the parent rejects a request",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-04: Tree should preserve controlled selection when the parent rejects a request"
+      "title": "Tree parity TR-SELECT-04: Tree should preserve controlled selection when the parent rejects a request"
     },
     {
       "id": "LIB-TREE-026",
-      "name": "Tree Quarantine Parity TR-SELECT-05: Tree should apply programmatic selection without moving focus or firing callbacks",
+      "name": "Tree parity TR-SELECT-05: Tree should apply programmatic selection without moving focus or firing callbacks",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-05: Tree should apply programmatic selection without moving focus or firing callbacks"
+      "title": "Tree parity TR-SELECT-05: Tree should apply programmatic selection without moving focus or firing callbacks"
     },
     {
       "id": "LIB-TREE-027",
-      "name": "Tree Quarantine Parity TR-SELECT-06: Tree should prevent disabled items from being selected by any modality",
+      "name": "Tree parity TR-SELECT-06: Tree should prevent disabled items from being selected by any modality",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-06: Tree should prevent disabled items from being selected by any modality"
+      "title": "Tree parity TR-SELECT-06: Tree should prevent disabled items from being selected by any modality"
     },
     {
       "id": "LIB-TREE-028",
-      "name": "Tree Quarantine Parity TR-SELECT-07: Tree should retain a controlled selected descendant while its ancestor is collapsed",
+      "name": "Tree parity TR-SELECT-07: Tree should retain a controlled selected descendant while its ancestor is collapsed",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-07: Tree should retain a controlled selected descendant while its ancestor is collapsed"
+      "title": "Tree parity TR-SELECT-07: Tree should retain a controlled selected descendant while its ancestor is collapsed"
     },
     {
       "id": "LIB-TREE-029",
-      "name": "Tree Quarantine Parity TR-SELECT-08: Tree Expander pointer activation should change only expansion",
+      "name": "Tree parity TR-SELECT-08: Tree Expander pointer activation should change only expansion",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-SELECT-08: Tree Expander pointer activation should change only expansion"
+      "title": "Tree parity TR-SELECT-08: Tree Expander pointer activation should change only expansion"
     },
     {
       "id": "LIB-TREE-030",
-      "name": "Tree Quarantine Parity TR-EXPAND-01: Tree should request addition of a collapsed branch when its Expander is activated",
+      "name": "Tree parity TR-EXPAND-01: Tree should request addition of a collapsed branch when its Expander is activated",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-01: Tree should request addition of a collapsed branch when its Expander is activated"
+      "title": "Tree parity TR-EXPAND-01: Tree should request addition of a collapsed branch when its Expander is activated"
     },
     {
       "id": "LIB-TREE-031",
-      "name": "Tree Quarantine Parity TR-EXPAND-02: Tree should request removal of an expanded branch when its Expander is activated",
+      "name": "Tree parity TR-EXPAND-02: Tree should request removal of an expanded branch when its Expander is activated",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-02: Tree should request removal of an expanded branch when its Expander is activated"
+      "title": "Tree parity TR-EXPAND-02: Tree should request removal of an expanded branch when its Expander is activated"
     },
     {
       "id": "LIB-TREE-032",
-      "name": "Tree Quarantine Parity TR-EXPAND-03: Tree should leave branch DOM and ARIA unchanged when expansion is rejected",
+      "name": "Tree parity TR-EXPAND-03: Tree should leave branch DOM and ARIA unchanged when expansion is rejected",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-03: Tree should leave branch DOM and ARIA unchanged when expansion is rejected"
+      "title": "Tree parity TR-EXPAND-03: Tree should leave branch DOM and ARIA unchanged when expansion is rejected"
     },
     {
       "id": "LIB-TREE-033",
-      "name": "Tree Quarantine Parity TR-EXPAND-04: Tree should reveal and hide Groups from programmatic expansion updates without side effects",
+      "name": "Tree parity TR-EXPAND-04: Tree should reveal and hide Groups from programmatic expansion updates without side effects",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-04: Tree should reveal and hide Groups from programmatic expansion updates without side effects"
+      "title": "Tree parity TR-EXPAND-04: Tree should reveal and hide Groups from programmatic expansion updates without side effects"
     },
     {
       "id": "LIB-TREE-034",
-      "name": "Tree Quarantine Parity TR-EXPAND-05: Tree should never offer or request expansion for a leaf",
+      "name": "Tree parity TR-EXPAND-05: Tree should never offer or request expansion for a leaf",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-05: Tree should never offer or request expansion for a leaf"
+      "title": "Tree parity TR-EXPAND-05: Tree should never offer or request expansion for a leaf"
     },
     {
       "id": "LIB-TREE-035",
-      "name": "Tree Quarantine Parity TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order",
+      "name": "Tree parity TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order"
+      "title": "Tree parity TR-EXPAND-06: Tree should emit deterministic deduplicated expanded arrays in current traversal order"
     },
     {
       "id": "LIB-TREE-036",
-      "name": "Tree Quarantine Parity TR-EXPAND-07: Tree should move focus to a branch before collapsing its focused descendant",
+      "name": "Tree parity TR-EXPAND-07: Tree should move focus to a branch before collapsing its focused descendant",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-07: Tree should move focus to a branch before collapsing its focused descendant"
+      "title": "Tree parity TR-EXPAND-07: Tree should move focus to a branch before collapsing its focused descendant"
     },
     {
       "id": "LIB-TREE-037",
-      "name": "Tree Quarantine Parity TR-EXPAND-08: Tree should let the Expander's consumer handler cancel its expansion default",
+      "name": "Tree parity TR-EXPAND-08: Tree should let the Expander's consumer handler cancel its expansion default",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-08: Tree should let the Expander's consumer handler cancel its expansion default"
+      "title": "Tree parity TR-EXPAND-08: Tree should let the Expander's consumer handler cancel its expansion default"
     },
     {
       "id": "LIB-TREE-038",
-      "name": "Tree Quarantine Parity TR-EXPAND-09: Tree should keep a disabled branch expansion-controlled while allowing independently enabled descendants",
+      "name": "Tree parity TR-EXPAND-09: Tree should keep a disabled branch expansion-controlled while allowing independently enabled descendants",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-EXPAND-09: Tree should keep a disabled branch expansion-controlled while allowing independently enabled descendants"
+      "title": "Tree parity TR-EXPAND-09: Tree should keep a disabled branch expansion-controlled while allowing independently enabled descendants"
     },
     {
       "id": "LIB-TREE-039",
-      "name": "Tree Quarantine Parity TR-KEY-03: LTR Tree should request expansion on Right while keeping focus on a controlled collapsed branch",
+      "name": "Tree parity TR-KEY-03: LTR Tree should request expansion on Right while keeping focus on a controlled collapsed branch",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-03: LTR Tree should request expansion on Right while keeping focus on a controlled collapsed branch"
+      "title": "Tree parity TR-KEY-03: LTR Tree should request expansion on Right while keeping focus on a controlled collapsed branch"
     },
     {
       "id": "LIB-TREE-040",
-      "name": "Tree Quarantine Parity TR-KEY-04: LTR Tree should enter an expanded branch's first enabled child on Right and ignore Right on leaves",
+      "name": "Tree parity TR-KEY-04: LTR Tree should enter an expanded branch's first enabled child on Right and ignore Right on leaves",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-04: LTR Tree should enter an expanded branch's first enabled child on Right and ignore Right on leaves"
+      "title": "Tree parity TR-KEY-04: LTR Tree should enter an expanded branch's first enabled child on Right and ignore Right on leaves"
     },
     {
       "id": "LIB-TREE-041",
-      "name": "Tree Quarantine Parity TR-KEY-05: LTR Tree should collapse an expanded branch or move a collapsed item to its parent on Left",
+      "name": "Tree parity TR-KEY-05: LTR Tree should collapse an expanded branch or move a collapsed item to its parent on Left",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-05: LTR Tree should collapse an expanded branch or move a collapsed item to its parent on Left"
+      "title": "Tree parity TR-KEY-05: LTR Tree should collapse an expanded branch or move a collapsed item to its parent on Left"
     },
     {
       "id": "LIB-TREE-042",
-      "name": "Tree Quarantine Parity TR-KEY-06: RTL Tree should mirror horizontal hierarchy keys without changing vertical traversal",
+      "name": "Tree parity TR-KEY-06: RTL Tree should mirror horizontal hierarchy keys without changing vertical traversal",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-06: RTL Tree should mirror horizontal hierarchy keys without changing vertical traversal"
+      "title": "Tree parity TR-KEY-06: RTL Tree should mirror horizontal hierarchy keys without changing vertical traversal"
     },
     {
       "id": "LIB-TREE-043",
-      "name": "Tree Quarantine Parity TR-KEY-07: Tree navigation should skip each disabled item without implicitly disabling its descendants",
+      "name": "Tree parity TR-KEY-07: Tree navigation should skip each disabled item without implicitly disabling its descendants",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-07: Tree navigation should skip each disabled item without implicitly disabling its descendants"
+      "title": "Tree parity TR-KEY-07: Tree navigation should skip each disabled item without implicitly disabling its descendants"
     },
     {
       "id": "LIB-TREE-044",
-      "name": "Tree Quarantine Parity TR-KEY-08: Tree should exclude every collapsed descendant from all keyboard and search paths",
+      "name": "Tree parity TR-KEY-08: Tree should exclude every collapsed descendant from all keyboard and search paths",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-08: Tree should exclude every collapsed descendant from all keyboard and search paths"
+      "title": "Tree parity TR-KEY-08: Tree should exclude every collapsed descendant from all keyboard and search paths"
     },
     {
       "id": "LIB-TREE-045",
-      "name": "Tree Quarantine Parity TR-KEY-09: Tree arrow navigation should move focus without changing controlled selection",
+      "name": "Tree parity TR-KEY-09: Tree arrow navigation should move focus without changing controlled selection",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-09: Tree arrow navigation should move focus without changing controlled selection"
+      "title": "Tree parity TR-KEY-09: Tree arrow navigation should move focus without changing controlled selection"
     },
     {
       "id": "LIB-TREE-046",
-      "name": "Tree Quarantine Parity TR-KEY-10: Tree should preserve keyboard ownership for editable and interactive item descendants",
+      "name": "Tree parity TR-KEY-10: Tree should preserve keyboard ownership for editable and interactive item descendants",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-10: Tree should preserve keyboard ownership for editable and interactive item descendants"
+      "title": "Tree parity TR-KEY-10: Tree should preserve keyboard ownership for editable and interactive item descendants"
     },
     {
       "id": "LIB-TREE-047",
-      "name": "Tree Quarantine Parity TR-KEY-11: Tree should honor consumer key cancellation and leave unsupported modified keys untouched",
+      "name": "Tree parity TR-KEY-11: Tree should honor consumer key cancellation and leave unsupported modified keys untouched",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-11: Tree should honor consumer key cancellation and leave unsupported modified keys untouched"
+      "title": "Tree parity TR-KEY-11: Tree should honor consumer key cancellation and leave unsupported modified keys untouched"
     },
     {
       "id": "LIB-TREE-048",
-      "name": "Tree Quarantine Parity TR-KEY-12: Tree asterisk key should expand per APG across closed branch, open branch, and leaf",
+      "name": "Tree parity TR-KEY-12: Tree asterisk key should expand per APG across closed branch, open branch, and leaf",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-12: Tree asterisk key should expand per APG across closed branch, open branch, and leaf"
+      "title": "Tree parity TR-KEY-12: Tree asterisk key should expand per APG across closed branch, open branch, and leaf"
     },
     {
       "id": "LIB-TREE-049",
-      "name": "Tree Quarantine Parity TR-KEY-13: Tree asterisk key should never enter the typeahead buffer",
+      "name": "Tree parity TR-KEY-13: Tree asterisk key should never enter the typeahead buffer",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-KEY-13: Tree asterisk key should never enter the typeahead buffer"
+      "title": "Tree parity TR-KEY-13: Tree asterisk key should never enter the typeahead buffer"
     },
     {
       "id": "LIB-TREE-050",
-      "name": "Tree Quarantine Parity TR-TYPE-01: Tree typeahead should wrap through enabled visible items in depth-first order",
+      "name": "Tree parity TR-TYPE-01: Tree typeahead should wrap through enabled visible items in depth-first order",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-TYPE-01: Tree typeahead should wrap through enabled visible items in depth-first order"
+      "title": "Tree parity TR-TYPE-01: Tree typeahead should wrap through enabled visible items in depth-first order"
     },
     {
       "id": "LIB-TREE-051",
-      "name": "Tree Quarantine Parity TR-TYPE-02: Tree typeahead should ignore a matching descendant when its ancestor is collapsed",
+      "name": "Tree parity TR-TYPE-02: Tree typeahead should ignore a matching descendant when its ancestor is collapsed",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-TYPE-02: Tree typeahead should ignore a matching descendant when its ancestor is collapsed"
+      "title": "Tree parity TR-TYPE-02: Tree typeahead should ignore a matching descendant when its ancestor is collapsed"
     },
     {
       "id": "LIB-TREE-052",
-      "name": "Tree Quarantine Parity TR-TYPE-03: Tree typeahead should use the current visible set when expansion changes mid-buffer",
+      "name": "Tree parity TR-TYPE-03: Tree typeahead should use the current visible set when expansion changes mid-buffer",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-TYPE-03: Tree typeahead should use the current visible set when expansion changes mid-buffer"
+      "title": "Tree parity TR-TYPE-03: Tree typeahead should use the current visible set when expansion changes mid-buffer"
     },
     {
       "id": "LIB-TREE-053",
-      "name": "Tree Quarantine Parity TR-TYPE-04: Tree should integrate the full RovingFocus typeahead session for visible items",
+      "name": "Tree parity TR-TYPE-04: Tree should integrate the full RovingFocus typeahead session for visible items",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-TYPE-04: Tree should integrate the full RovingFocus typeahead session for visible items"
+      "title": "Tree parity TR-TYPE-04: Tree should integrate the full RovingFocus typeahead session for visible items"
     },
     {
       "id": "LIB-TREE-054",
-      "name": "Tree Quarantine Parity TR-TYPE-05: Tree typeahead should prefer current explicit textValue over nested or decorative text",
+      "name": "Tree parity TR-TYPE-05: Tree typeahead should prefer current explicit textValue over nested or decorative text",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-TYPE-05: Tree typeahead should prefer current explicit textValue over nested or decorative text"
+      "title": "Tree parity TR-TYPE-05: Tree typeahead should prefer current explicit textValue over nested or decorative text"
     },
     {
       "id": "LIB-TREE-055",
-      "name": "Tree Quarantine Parity TR-DYNAMIC-03: Tree should recover focus predictably when the focused item is removed",
+      "name": "Tree parity TR-DYNAMIC-03: Tree should recover focus predictably when the focused item is removed",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DYNAMIC-03: Tree should recover focus predictably when the focused item is removed"
+      "title": "Tree parity TR-DYNAMIC-03: Tree should recover focus predictably when the focused item is removed"
     },
     {
       "id": "LIB-TREE-056",
-      "name": "Tree Quarantine Parity TR-DYNAMIC-04: Tree should preserve controlled selected and expanded values after their items unmount",
+      "name": "Tree parity TR-DYNAMIC-04: Tree should preserve controlled selected and expanded values after their items unmount",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DYNAMIC-04: Tree should preserve controlled selected and expanded values after their items unmount"
+      "title": "Tree parity TR-DYNAMIC-04: Tree should preserve controlled selected and expanded values after their items unmount"
     },
     {
       "id": "LIB-TREE-057",
-      "name": "Tree Quarantine Parity TR-DYNAMIC-05: Tree should update semantics and keys when an item changes between leaf and branch",
+      "name": "Tree parity TR-DYNAMIC-05: Tree should update semantics and keys when an item changes between leaf and branch",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DYNAMIC-05: Tree should update semantics and keys when an item changes between leaf and branch"
+      "title": "Tree parity TR-DYNAMIC-05: Tree should update semantics and keys when an item changes between leaf and branch"
     },
     {
       "id": "LIB-TREE-058",
-      "name": "Tree Quarantine Parity TR-DYNAMIC-06: Tree should remove stale navigation targets when current or ancestor disabled state changes",
+      "name": "Tree parity TR-DYNAMIC-06: Tree should remove stale navigation targets when current or ancestor disabled state changes",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-DYNAMIC-06: Tree should remove stale navigation targets when current or ancestor disabled state changes"
+      "title": "Tree parity TR-DYNAMIC-06: Tree should remove stale navigation targets when current or ancestor disabled state changes"
     },
     {
       "id": "LIB-TREE-059",
-      "name": "Tree Quarantine Parity TR-A11Y-01: Tree should pass accessibility checks across every frozen hierarchy state",
+      "name": "Tree parity TR-A11Y-01: Tree should pass accessibility checks across every frozen hierarchy state",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-A11Y-01: Tree should pass accessibility checks across every frozen hierarchy state"
+      "title": "Tree parity TR-A11Y-01: Tree should pass accessibility checks across every frozen hierarchy state"
     },
     {
       "id": "LIB-TREE-060",
-      "name": "Tree Quarantine Parity TR-COMP-01: Tree should support a controlled two-level navigation composition with mixed leaves and branches",
+      "name": "Tree parity TR-COMP-01: Tree should support a controlled two-level navigation composition with mixed leaves and branches",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-COMP-01: Tree should support a controlled two-level navigation composition with mixed leaves and branches"
+      "title": "Tree parity TR-COMP-01: Tree should support a controlled two-level navigation composition with mixed leaves and branches"
     },
     {
       "id": "LIB-TREE-061",
-      "name": "Tree Quarantine Parity TR-COMP-02: Tree should keep collapsed descendants out of a three-level composition's visible set",
+      "name": "Tree parity TR-COMP-02: Tree should keep collapsed descendants out of a three-level composition's visible set",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-COMP-02: Tree should keep collapsed descendants out of a three-level composition's visible set"
+      "title": "Tree parity TR-COMP-02: Tree should keep collapsed descendants out of a three-level composition's visible set"
     },
     {
       "id": "LIB-TREE-062",
-      "name": "Tree Quarantine Parity TR-ENV-03: Tree should discover focus and traverse visible hierarchy inside a ShadowRoot",
+      "name": "Tree parity TR-ENV-03: Tree should discover focus and traverse visible hierarchy inside a ShadowRoot",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-ENV-03: Tree should discover focus and traverse visible hierarchy inside a ShadowRoot"
+      "title": "Tree parity TR-ENV-03: Tree should discover focus and traverse visible hierarchy inside a ShadowRoot"
     },
     {
       "id": "LIB-TREE-063",
-      "name": "Tree Quarantine Parity TR-CSS-01: Tree branch focus ring should resolve to a real token with no template placeholder",
+      "name": "Tree parity TR-CSS-01: Tree branch focus ring should resolve to a real token with no template placeholder",
       "kind": "ct",
       "file": "__e2e__/Tree.ct.spec.ts",
-      "title": "Tree Quarantine Parity TR-CSS-01: Tree branch focus ring should resolve to a real token with no template placeholder"
+      "title": "Tree parity TR-CSS-01: Tree branch focus ring should resolve to a real token with no template placeholder"
     },
     {
       "id": "LIB-TREE-064",
@@ -745,6 +745,27 @@
       "kind": "unit",
       "file": "diagnostics/unmatched.test.ts",
       "title": "Tree unmatched-id decision words the value and expanded warnings with the pinned text"
+    },
+    {
+      "id": "LIB-TREE-107",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-12: a child that registers on the next commit under an expanded branch cancels the pending warning",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-12: a child that registers on the next commit under an expanded branch cancels the pending warning"
+    },
+    {
+      "id": "LIB-TREE-108",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-13: a child that registers after a 30ms timer under an expanded branch cancels the pending warning",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-13: a child that registers after a 30ms timer under an expanded branch cancels the pending warning"
+    },
+    {
+      "id": "LIB-TREE-109",
+      "name": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-14: a truly unknown value warns exactly once, and only after the settle window",
+      "kind": "unit",
+      "file": "Tree.test.tsx",
+      "title": "Tree out-of-range proofs (dev warning on unmatched value and expanded ids) OOR-TREE-14: a truly unknown value warns exactly once, and only after the settle window"
     }
   ]
 }

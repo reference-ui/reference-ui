@@ -1,4 +1,4 @@
-# ATM-TOKEN-12 — Missing-reference station
+# ATM-TOKEN-12 — Missing-reference
 
 A `{path}` reference that names no token in the dump is a sync-failing
 error diagnostic naming the ref with file:line, never Panda's silently

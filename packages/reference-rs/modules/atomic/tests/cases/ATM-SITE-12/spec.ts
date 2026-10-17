@@ -1,5 +1,5 @@
 /**
- * Tagged-template refusal station. css`…` on the live binding produces no
+ * Tagged-template refusal case. css`…` on the live binding produces no
  * wants plus one located diagnostic per tag; non-css tags stay silent,
  * while the neighbouring object call still extracts.
  */
@@ -13,7 +13,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(1)
 
     // Both live `css` tags diagnose on the opt-in channel; the
-    // `styled.div` tag stays silent. (S6 E8-class re-point; default silent.)
+    // `styled.div` tag stays silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-12', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

@@ -4,6 +4,6 @@ Verifies emission of additive resolved payloads for value-derived types such as 
 Ensures evaluated union values are attached alongside structural definitions.
 Proves primary SPEC ID anchor TST-VAL-01.
 
-Also pins cross-file composition (doom-night C): `keyof typeof
+Also pins cross-file composition: `keyof typeof
 importedSizes` over a named value import resolves to the key union,
 proving imported `typeof` payloads feed downstream evaluation.

@@ -20,9 +20,9 @@ const here = dirname(dirname(fileURLToPath(import.meta.url)))
 const neo = p => resolve(here, '../reference-neo/src', p)
 const STAGE_SUFFIX = '.__stage'
 
-// F1 specifier wiring: the virtual `@reference-ui/neo/*` ids resolve to Neo
+// Specifier wiring: the virtual `@reference-ui/neo/*` ids resolve to Neo
 // source files at build time (mirrors tsconfig paths). Aliased modules bundle
-// into dist (F4: shipped installs carry no neo dependency); bare externals
+// into dist (shipped installs carry no neo dependency); bare externals
 // (esbuild, fast-glob, @reference-ui/rust/*, node builtins) stay external.
 /** @type {Record<string, string>} */
 const NEO_ALIAS = {

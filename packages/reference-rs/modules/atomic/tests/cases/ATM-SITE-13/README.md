@@ -1,4 +1,4 @@
-# ATM-SITE-13 — Missing-graph station (ATM-SITE-13, RS-5)
+# ATM-SITE-13 — Missing-graph
 
 Styletrace gating fails closed: with no hosts resolvable (empty graph,
 no Reference imports), style-bearing JSX extracts nothing and reports

@@ -1,5 +1,5 @@
 /**
- * Exact-plan-present station (ATM-DIAG-08, Operation Error Correct, Slice 0).
+ * Exact-plan-present (ATM-DIAG-08).
  * Diagnostics predicts a static runtime query, the same key is in
  * `stylePlans`, and userspace is silent. The RED HINGE is the opt-in
  * compiler channel recording the exact expected lookup: no independent

@@ -1,5 +1,5 @@
 /**
- * Logical-operator extract station. Guards keep the guard rule; all-literal
+ * Logical-operator extract case. Guards keep the guard rule; all-literal
  * non-guard operands fold to the picked operand with no dead atom.
  * Unresolvable dynamic identifiers emit diagnostic warnings while resolving valid operands.
  */
@@ -33,8 +33,7 @@ const spec: AtomicCaseSpec = {
     // sink infos zero while the refusals still diagnose.
     expect(harvestWants(result)).toHaveLength(0)
     expect(result.wants ?? []).toHaveLength(7)
-    // Refusals + sink infos ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Refusals + sink infos ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-LEAF-04', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

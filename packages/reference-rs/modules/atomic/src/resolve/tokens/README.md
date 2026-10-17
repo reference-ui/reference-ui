@@ -33,7 +33,7 @@ such as the colour longhand a `border` shorthand decomposes into, is refused the
 same way.
 
 OKLCH and semantic color-mode resolution already have an owner: `tokens()`
-in reference-core / Atlas. This module **looks up** the compiled dictionary
+in `packages/reference-neo/src/collect/surface/tokens.ts`. This module **looks up** the compiled dictionary
 from `BaseSystem`. It does not become a second color science crate.
 
 `_dark` / `_light` are pseudo-props (`resolve/conditions/pseudoprops`), not token

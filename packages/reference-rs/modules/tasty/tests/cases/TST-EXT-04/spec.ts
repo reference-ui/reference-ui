@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-04.
+ * Case specification for TST-EXT-04.
  * `declare global`, `import x = require()`, and `export =` each warn TST-W-UNSUPPORTED-SYNTAX once in
  * their own file, naming the construct. The skipped global `Window` never becomes a symbol, and the
  * named declarations beside each statement still extract.

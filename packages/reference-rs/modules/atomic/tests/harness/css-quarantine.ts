@@ -40,7 +40,7 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
 
   // §11 silent bare-value passthrough (intended, permanent): a bare miss
   // passes its authored text through for the browser to drop, so the sheet
-  // holds declarations the lexer rejects. Forge Slice 1, ATM-TOKEN-16.
+  // holds declarations the lexer rejects. ATM-TOKEN-16.
   'ATM-TOKEN-16': ['font-size: sm', 'color: md'],
 
   // Intentional parity pin: `&(:focus)` substitutes textually to
@@ -48,7 +48,7 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // shape). The author wrote an invalid selector; both engines keep it.
   'ATM-COND-27': ['Identifier is expected'],
 
-  // Non-ASCII probe input (diagnostics station, not a content-emit pin):
+  // Non-ASCII probe input (diagnostics case, not a content-emit pin):
   // the author wrote an unquoted `content` string to place the emoji ahead
   // of the refused identifier; the verbatim string policy keeps it as-is
   // (cf. ATM-LEAF-10, where the author includes their own quotes).
@@ -58,13 +58,13 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
   // classes for the browser to drop; the namer never refuses them.
   'ATM-NAME-08': ['padding: a b', 'padding: a\uFEFFb', 'color: İnk'],
 
-  // Non-canon font extras (permanent, doom-4 T3): authored system data the
+  // Non-canon font extras (permanent): authored system data the
   // oracle emits verbatim (unknown props bypass the style-prop gate only
   // through extras); the browser drops the unknown declarations while both
   // namers spell the verbatim classes. `--brandX` needs no entry: custom
   // properties validate.
   'ATM-COND-05': ['MyProp: 2px', 'myProp: 2px', 'mozFoo: 2px'],
-  // Doom-r fortify (CONTINUITY-01 r-computation, close (a)): refused
+  // CONTINUITY-01 r-computation, close (a): refused
   // non-finite rhythm stems pass through raw (permanent, like ATM-TOKEN-16) —
   // the author wrote them, the browser drops them. The identifier-shaped
   // stems also warn ATM-W-UNKNOWN-TOKEN (ATM-TOKEN-24 rule). The sheet-text

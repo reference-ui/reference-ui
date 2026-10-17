@@ -168,9 +168,9 @@ async function assertWarning(c: NeoCase): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  // S6 E8-class re-point: the refusal proves no exact runtime miss, so it
+  // The refusal proves no exact runtime miss, so it
   // rides the opt-in channel; the default carries only the aggregate
-  // container-root advisory (R3, stays default per the S6 adjudication).
+  // container-root advisory.
   const defaults = result.diagnostics ?? [];
   assert.equal(defaults.length, 1, `default carries only the advisory, got ${JSON.stringify(defaults)}`);
   assert.equal(defaults[0].code, 'ATM-W-MISSING-CONTAINER-ROOT');

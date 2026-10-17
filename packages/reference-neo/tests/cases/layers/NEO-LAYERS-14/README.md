@@ -26,7 +26,7 @@ The legs, with the check that owns each (`src/system/base/validate.ts`):
 5. `extends: [b, b]`, a name repeated within extends. The same check, on the other field.
 6. `extends: [b], layers: [b]`, a system named in both fields. `validateSharedBaseSystems`:
    `extends` already includes everything `layers` gives, so the layers entry is rejected, not merged
-   (the owner's ruling, D6 in `layers/SPEC.md`). The message names the system.
+   (the owner's ruling, in `layers/SPEC.md`). The message names the system.
 7. `layers: [unsynced]`, an installed package whose published system was never generated. Its
    exports name a file that is not there, so the config load fails and `LoadConfigError` appends
    the sync hint (`src/config/errors.ts`). The package is created for this leg only and removed in

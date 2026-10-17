@@ -23,7 +23,7 @@ export function chainSlotRefs(...refs: unknown[]): (node: HTMLElement | null) =>
 }
 
 // Pre-19 React strips ref from props into element.ref; 19 exposes both.
-// Descriptor-only read (B-03): touching element.ref trips React 19's
+// Descriptor-only read: touching element.ref trips React 19's
 // removed-accessor warning, so child refs survive via the shared helper.
 export function getChildRef(child: React.ReactElement): unknown {
   return getElementRef(child)

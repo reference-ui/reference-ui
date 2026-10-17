@@ -1,4 +1,6 @@
-//! Pipeline tracing for style usage.
+//! Pipeline tracing for style usage: decides whether a component's body routes style props into a styling pipeline.
+//! It takes a component's body statements with its prop bindings and import table, and walks them in source order.
+//! It emits `uses_style_pipeline` through `PipelineState`, which the component parser records on the component.
 
 pub mod expr;
 pub mod jsx;
@@ -56,6 +58,7 @@ pub fn component_uses_style_pipeline(
     ctx.state.uses_style_pipeline
 }
 
+/// Value statements are dispatched here; blocks and control flow fall through to `walk_nested_statement`.
 pub fn walk_pipeline_statement(statement: &Statement<'_>, ctx: &mut PipelineContext) {
     match statement {
         Statement::ExpressionStatement(expr) => {
@@ -63,6 +66,12 @@ pub fn walk_pipeline_statement(statement: &Statement<'_>, ctx: &mut PipelineCont
         }
         Statement::ReturnStatement(ret) => walk_return(ret, ctx),
         Statement::VariableDeclaration(decl) => walk_var_decl(decl, ctx),
+        _ => walk_nested_statement(statement, ctx),
+    }
+}
+
+fn walk_nested_statement(statement: &Statement<'_>, ctx: &mut PipelineContext) {
+    match statement {
         Statement::BlockStatement(block) => walk_block(block, ctx),
         Statement::IfStatement(if_stmt) => walk_if(if_stmt, ctx),
         Statement::SwitchStatement(switch_stmt) => walk_switch(switch_stmt, ctx),

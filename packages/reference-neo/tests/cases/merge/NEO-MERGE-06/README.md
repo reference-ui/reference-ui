@@ -7,8 +7,6 @@ stays classless on inherited ink, and both the page and a node-side call
 report exactly one diagnostic naming the value, the prop, and the call
 site — never a ghost class.
 
-Evidence: `[atm]` GHOST (`docs/evidence/atomic-claims.md` §6); station
-`packages/reference-rs/modules/atomic/tests/cases/ATM-GHOST-02`;
-`[decision D11]`.
-
+Evidence: ATM-GHOST; case
+`packages/reference-rs/modules/atomic/tests/cases/ATM-GHOST-02`.
 > Search terms: unknown value, unextractable, dynamic value, dev warning, missing utility, phantom class, merge/miss-diagnostic, diagnostics/runtime-miss

@@ -1,5 +1,5 @@
 /**
- * css() call-site extract station. css, css.object, and multi-arg css all
+ * css() call-site extract case. css, css.object, and multi-arg css all
  * produce wants from every static leaf they contain. recipe() is ATM-SITE-03.
  */
 import { expect } from 'vitest'

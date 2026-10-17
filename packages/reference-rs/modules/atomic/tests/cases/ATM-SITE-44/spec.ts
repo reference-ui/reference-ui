@@ -1,5 +1,5 @@
 /**
- * Param type-literal fence (ATM-SITE-44, SPEC-V2-46). Required literal members
+ * Param type-literal fence (ATM-SITE-44). Required literal members
  * fold through member reads and destructured twins (plain and rename).
  * Patterns are per-name lenient, verbatim v2's `resolve_pattern_path`:
  * rest binds the unlisted members, defaults fire only on missing keys, and
@@ -55,8 +55,7 @@ const spec: AtomicCaseSpec = {
     const plans = result.stylePlans
     expect(plans).toHaveLength(16)
 
-    // Refusals + sink infos ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Refusals + sink infos ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-44', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

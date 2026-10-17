@@ -1,20 +1,16 @@
 # Overlay features (needs design)
 
-Every open/deferred Overlay item needs an HQ product/design call before any
-test could pin it. Source: `DECISIONS.md` suspected gaps #1–#6 (5 OPEN,
-1 DEFERRED). Mechanical list: `PATCHES.md` (empty — zero test-pinnable gaps).
+Every open or deferred Overlay item needs a product or design decision before any test could pin it.
 
-### 1. Documented shadow destination rule for overlay consumers (from DECISIONS gap #1, OPEN) — LANDED 2026-09-26
+### 1. Documented shadow destination rule for overlay consumers
 
-**Decision: AUTOMATIC.** Omitted `Overlay.Portal container` follows the
+**Automatic container.** Omitted `Overlay.Portal container` follows the
 trigger: `trigger.getRootNode()` when it is a ShadowRoot, else Portal's
 `document.body` fallback; explicit `container` (including `null`) always
 wins. Implemented in `parts/portal-container.ts`, wired into Content +
 Backdrop, unit-tested, documented in `Overlay.md` ("Shadow destination
 rule"), proven end to end by `OV-ENV-05`. Shadow+modal keeps the full
-`OV-ENV-03` contract. Unblocks `DF-COMP-04`, `MN-ENV-03`,
-`CB-ENV-03`/`CB-COMP-04`; Menu PATCHES #3 + DateField PATCHES #7
-remainders go to micro-crews.
+`OV-ENV-03` contract. Unblocks `DF-COMP-04`, `MN-ENV-03`, `CB-ENV-03`/`CB-COMP-04`. The remaining Menu and DateField items are separate follow-ups.
 
 **What it does:** Tells overlay consumers where to portal when the trigger
 lives in a ShadowRoot, and who owns composed-path dismissal there. The
@@ -29,9 +25,9 @@ one consumer-level CT (DateField picker in shadow). Design calls: is the
 destination consumer-authored (`container={shadowRoot}`) or automatic
 (`getRootNode()` default), and is shadow+modal supported at all.
 
-**Maintainer take:** Good to add — the kernel is proven and four sibling cases are parked on the rule, so writing it unblocks real consumers.
+**Recommendation:** Good to add — the kernel is proven and four sibling cases are parked on the rule, so writing it unblocks real consumers.
 
-### 2. Layer/dismissal accounting audit for composed consumers (from DECISIONS gap #2, OPEN) — LANDED 2026-09-26
+### 2. Layer/dismissal accounting audit for composed consumers
 
 **Decision: coordinator-logs + prose/CT audit.** One layer entry per
 coordinator/Content pair, logged by the coordinator's own Overlay root;
@@ -54,9 +50,9 @@ proof, or a dev diagnostic on double registration. Design calls: who logs the
 layer (coordinator, parent Overlay, or both-as-branch) and whether ordering is
 asserted per modality.
 
-**Maintainer take:** Good to add — kernel halves are frozen, so blessing the consumer-facing accounting shape turns folklore into an assertable contract.
+**Recommendation:** Good to add — kernel halves are frozen, so blessing the consumer-facing accounting shape turns folklore into an assertable contract.
 
-### 3. Granular dismiss-handler vocabulary as the shared contract (from DECISIONS gap #3, OPEN) — LANDED 2026-09-26
+### 3. Granular dismiss-handler vocabulary as the shared contract
 
 **Decision: real-events-everywhere.** The proven `OV-ESC`/`OV-OUT`
 shape is canonical: `onEscape(KeyboardEvent)` /
@@ -70,9 +66,7 @@ candidate #7 either way.
 
 **What it does:** Blesses Overlay's existing dismiss vocabulary as the
 canonical shape Popover/Combobox/Menu reuse for their own granular handlers,
-instead of each consumer inventing its own event type (quarantine's synthetic
-`{key: 'Escape'}` is the invention to avoid). Unblocks Combobox candidate #7
-either way.
+instead of each consumer inventing its own event type (a synthetic `{key: 'Escape'}` event is the invention to avoid). Unblocks Combobox item 7 either way.
 
 **API:** No new Overlay props — reuse `onEscape` / `onOutsidePress` running
 first with `onDismiss` firing unless `preventDefault()` (proven `OV-ESC-01/02`,
@@ -81,9 +75,9 @@ semantics. Design calls: real `KeyboardEvent`/`PointerEvent` everywhere or are
 synthetic cancelable events ever acceptable, and does revert-text-but-stay-open
 need a distinct verb.
 
-**Maintainer take:** Good to add — declaring the proven vocabulary canonical costs nothing and stops per-component event inventions.
+**Recommendation:** Good to add — declaring the proven vocabulary canonical costs nothing and stops per-component event inventions.
 
-### 4. Closed-content observability for coordinators (from DECISIONS gap #4, OPEN) — LANDED 2026-09-26
+### 4. Closed-content observability for coordinators
 
 **Decision: NON-GOAL (b).** Unmount-when-closed stays absolute; Overlay
 exposes no closed-content metadata or registry. Coordinators answer
@@ -103,9 +97,9 @@ authored children plus collection metadata above the mount and Overlay keeps
 unmount-when-closed absolute. Design calls: does "content exists" need Overlay
 at all, and if (a), what query surface pays for its staleness proofs.
 
-**Maintainer take:** Good to decide, leaning non-goal — keeping unmount-when-closed absolute wins unless a coordinator proves authored-children inspection insufficient.
+**Recommendation:** Good to decide, leaning non-goal — keeping unmount-when-closed absolute wins unless a coordinator proves authored-children inspection insufficient.
 
-### 5. Trigger-toggle focus retention (from DECISIONS gap #5, OPEN) — LANDED 2026-09-28
+### 5. Trigger-toggle focus retention
 
 **Decision: RETURN-TO-COORDINATOR-TARGET, coordinator-named only.**
 `Overlay.Trigger` performs no focus management on toggle: native focus
@@ -134,9 +128,9 @@ button and `OV-RESTORE-*` covers close paths but not toggle-to-input. Design
 calls: keep focus (never move) vs return focus (move then restore), and all
 Trigger toggles vs only coordinator-named targets.
 
-**Maintainer take:** Good to add — the cheapest open choreography call, with a directly feelable DateField payoff.
+**Recommendation:** Good to add — the cheapest open choreography call, with a directly feelable DateField payoff.
 
-### 6. Tab-bridge reject semantics (from DECISIONS gap #6, DEFERRED) — LANDED 2026-09-28
+### 6. Tab-bridge reject semantics
 
 **Decision: OPTIMISTIC-STANDS, documented final, joint with Menu.**
 Tab past the last Content control (`isolation` focus off) preventDefaults,
@@ -168,4 +162,4 @@ behind the controlled-accept handshake design shared with Menu candidate #9
 (strict `MN-CLOSE-08`): is prevent-then-restore acceptable Tab latency, or
 does the contract need a synchronous will-you-accept signal.
 
-**Maintainer take:** Good to add jointly with the Menu/Popover handshake, not alone — half a contract would pin the wrong latency shape.
+**Recommendation:** Good to add jointly with the Menu/Popover handshake, not alone — half a contract would pin the wrong latency shape.

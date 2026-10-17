@@ -4,6 +4,6 @@ A `token()` shape the call surface refused. The world carries the minimal fixtur
 
 Raised in: `modules/atomic/src/extract/fold/token.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-TOKEN-CALL-REFUSED (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-TOKEN-CALL-REFUSED (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-TOKEN-CALL-REFUSED, atm-w-token-call-refused, diagnostics case index, NEO-DIAG-40

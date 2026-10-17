@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-OBS-03.
+ * Case specification for ATL-OBS-03.
  * Validates the unbound-tag rule: `<Div>` counts in the one file that imports from the observed
  * source and leaves the name undeclared, and does not count when it is imported from another
  * module, defined as a local function, declared by destructuring, or used without any import.

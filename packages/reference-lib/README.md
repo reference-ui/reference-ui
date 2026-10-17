@@ -131,7 +131,7 @@ pnpm run dev    # Watch mode
 
 ## Testing
 
-Component primitives are implemented in this package and proven in `matrix/lib` with Playwright. React 19 is the default agent loop; 17 and 18 are compatibility jobs for that fixture only. See [TESTING.md](./TESTING.md).
+Component primitives are implemented in this package and proven with Playwright in each component's `__e2e__` suite. React 19 is the default agent loop; 17 and 18 are compatibility jobs (`pnpm agentct <Name> --e2e --react 17,18`). See [TESTING.md](./TESTING.md).
 
 ## Component playground (Book)
 

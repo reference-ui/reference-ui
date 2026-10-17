@@ -1,5 +1,5 @@
 /**
- * Layer-population station. Fixture globalCss prints into `@layer global`
+ * Layer-population case. Fixture globalCss prints into `@layer global`
  * and token light/dark values populate `@layer tokens`. Empty reset/recipes
  * stay omitted. Utility rules stay inside `@layer utilities`.
  */

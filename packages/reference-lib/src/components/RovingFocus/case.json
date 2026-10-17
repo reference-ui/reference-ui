@@ -111,17 +111,17 @@
     },
     {
       "id": "LIB-ROVINGFOCUS-016",
-      "name": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing",
+      "name": "RovingFocus Space typeahead guard RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing",
       "kind": "ct",
       "file": "__e2e__/RovingFocus.ct.spec.ts",
-      "title": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing"
+      "title": "RovingFocus Space typeahead guard RF-TYPE-06: Space with a nonempty buffer matches a space-containing label and activates nothing"
     },
     {
       "id": "LIB-ROVINGFOCUS-017",
-      "name": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06 complement: Space with an empty buffer keeps native button activation",
+      "name": "RovingFocus Space typeahead guard RF-TYPE-06 complement: Space with an empty buffer keeps native button activation",
       "kind": "ct",
       "file": "__e2e__/RovingFocus.ct.spec.ts",
-      "title": "RovingFocus Space typeahead guard (PATCHES #1) RF-TYPE-06 complement: Space with an empty buffer keeps native button activation"
+      "title": "RovingFocus Space typeahead guard RF-TYPE-06 complement: Space with an empty buffer keeps native button activation"
     },
     {
       "id": "LIB-ROVINGFOCUS-018",

@@ -102,7 +102,7 @@ describe('sync published folder', () => {
       expect(existsSync(outFile(dir, file))).toBe(true)
     }
 
-    // D2: the styled dir carries no global.css; global rules live in styles.css.
+    // The styled dir carries no global.css; global rules live in styles.css.
     expect(existsSync(outFile(dir, 'styled/global.css'))).toBe(false)
 
     // Note d: no eval droppings survive under tmp/ — empty or gone entirely.

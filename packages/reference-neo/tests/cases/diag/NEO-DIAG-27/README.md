@@ -4,6 +4,6 @@ Interpolated template over unfoldable parts. The world carries the minimal fixtu
 
 Raised in: `modules/atomic/src/extract/expressions/literal.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-TEMPLATE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-TEMPLATE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-TEMPLATE, atm-w-dynamic-template, diagnostics case index, NEO-DIAG-27

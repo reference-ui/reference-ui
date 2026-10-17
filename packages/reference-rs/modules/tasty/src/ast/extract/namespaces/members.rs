@@ -9,6 +9,7 @@ use oxc_ast::ast::Comment;
 use oxc_span::GetSpan;
 
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
+use super::super::ShellSink;
 use super::super::ExtractionContext;
 use super::expand::expand_alias;
 use super::table::{MemberDecl, MemberKind, NamespaceTable};
@@ -88,23 +89,18 @@ impl NamespaceView<'_, '_, '_> {
             library: &file.library,
         };
         let mut shells = Vec::new();
+        let mut sink = ShellSink {
+            file_id: &file.file_id,
+            ctx: &ctx,
+            exports: &mut shells,
+        };
         match &member.kind {
-            MemberKind::Interface(decl) => push_interface_shell(
-                &file.file_id,
-                &ctx,
-                decl,
-                decl.span(),
-                member.exported,
-                &mut shells,
-            ),
-            MemberKind::TypeAlias(decl) => push_type_alias_shell(
-                &file.file_id,
-                &ctx,
-                decl,
-                decl.span(),
-                member.exported,
-                &mut shells,
-            ),
+            MemberKind::Interface(decl) => {
+                push_interface_shell(&mut sink, decl, decl.span(), member.exported)
+            }
+            MemberKind::TypeAlias(decl) => {
+                push_type_alias_shell(&mut sink, decl, decl.span(), member.exported)
+            }
         }
         let mut shell = shells.pop()?;
         shell.name = key.to_string();

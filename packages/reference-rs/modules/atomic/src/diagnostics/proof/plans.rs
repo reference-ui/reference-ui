@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn build_with_keys_carries_the_emitted_set() {
         use crate::atom::AtomSet;
-        use crate::runtime::PlanBuilder;
+        use crate::runtime::{PlanBuilder, PlanSinks};
         let system = base_system::BaseSystem::lib_fixture();
         let decls = keyed_fixture_decls();
         let mut atom_set = AtomSet::new();
@@ -181,10 +181,12 @@ mod tests {
         let mut builder = PlanBuilder::new(
             "lib",
             system,
-            &mut atom_set,
-            &mut external_atom_set,
             &[],
-            &mut diagnostics,
+            PlanSinks {
+                atom_set: &mut atom_set,
+                external_atom_set: &mut external_atom_set,
+                diagnostics: &mut diagnostics,
+            },
         );
         let (plans, keys) = builder.build_with_keys(&decls);
         assert_eq!(plans.len(), 2);
@@ -199,7 +201,7 @@ mod tests {
     #[test]
     fn build_diet_matches_keys_placeholders_and_inserts() {
         use crate::atom::AtomSet;
-        use crate::runtime::PlanBuilder;
+        use crate::runtime::{PlanBuilder, PlanSinks};
         let system = base_system::BaseSystem::lib_fixture();
         let decls = keyed_fixture_decls();
         let mut diet_set = AtomSet::new();
@@ -208,10 +210,12 @@ mod tests {
         let mut diet_builder = PlanBuilder::new(
             "lib",
             system,
-            &mut diet_set,
-            &mut diet_external,
             &[],
-            &mut diet_diagnostics,
+            PlanSinks {
+                atom_set: &mut diet_set,
+                external_atom_set: &mut diet_external,
+                diagnostics: &mut diet_diagnostics,
+            },
         );
         let (plans, keys) = diet_builder.build_diet(&decls);
         assert_eq!(plans.len(), 2);
@@ -234,10 +238,12 @@ mod tests {
         let mut full_builder = PlanBuilder::new(
             "lib",
             system,
-            &mut full_set,
-            &mut full_external,
             &[],
-            &mut full_diagnostics,
+            PlanSinks {
+                atom_set: &mut full_set,
+                external_atom_set: &mut full_external,
+                diagnostics: &mut full_diagnostics,
+            },
         );
         let (full_plans, _) = full_builder.build_with_keys(&decls);
         assert_eq!(diet_set.len(), full_set.len());

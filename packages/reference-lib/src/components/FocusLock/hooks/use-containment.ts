@@ -2,8 +2,9 @@
  * Live containment: useContainment owns the keydown/focus/mutation effect
  * that keeps an active lock closed. Tab wraps through the live candidate
  * list, focusin/focusout reclaim escapes to the inside fallback, and a
- * mutation observer repairs focus when the current node is removed or
- * invalidated — all gated on this lock being the document's top entry.
+ * mutation observer repairs focus synchronously when the current node is
+ * removed or invalidated, before a key can target the detached node. All of
+ * it is gated on this lock being the document's top entry.
  */
 import * as React from 'react'
 import { getTabbableCandidates } from '../catalog/candidates'
@@ -23,7 +24,7 @@ export function useContainment(
   }
 ): void {
   const { disabled, rememberInside, pickInsideFallback } = options
-  const { clearReclaimFrame, lockId } = session
+  const { lockId } = session
 
   React.useEffect(() => {
     if (disabled) return
@@ -66,15 +67,6 @@ export function useContainment(
       safeFocus(fallback)
       session.movingFocusRef.current = false
       rememberInside(fallback)
-    }
-
-    const queueReclaim = () => {
-      if (session.reclaimFrameRef.current != null) return
-      session.reclaimFrameRef.current = requestAnimationFrame(() => {
-        session.reclaimFrameRef.current = null
-        if (!container.isConnected) return
-        reclaimToFallback()
-      })
     }
 
     const handleFocusIn = (event: FocusEvent) => {
@@ -145,7 +137,8 @@ export function useContainment(
         rememberInside(focusedElement)
         return
       }
-      queueReclaim()
+      if (!container.isConnected) return
+      reclaimToFallback()
     })
     mutationObserver.observe(doc.documentElement, {
       childList: true,
@@ -168,11 +161,10 @@ export function useContainment(
     doc.addEventListener('focusout', handleFocusOut)
 
     return () => {
-      clearReclaimFrame()
       mutationObserver.disconnect()
       doc.removeEventListener('keydown', handleKeyDown)
       doc.removeEventListener('focusin', handleFocusIn)
       doc.removeEventListener('focusout', handleFocusOut)
     }
-  }, [clearReclaimFrame, disabled, lockId, pickInsideFallback, rememberInside])
+  }, [disabled, lockId, pickInsideFallback, rememberInside])
 }

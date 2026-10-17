@@ -1,4 +1,4 @@
-# ATM-LAYER-14 — Keyframe-alias station (ATM-LAYER-14, RS-30)
+# ATM-LAYER-14 — Keyframe-alias
 
 Keyframe bodies run props through the canon alias table and values through
 the `css()` unit chain, so `h: '4'` lowers to `height` plus the sizes token

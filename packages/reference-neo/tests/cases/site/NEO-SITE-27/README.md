@@ -7,9 +7,7 @@ node paints nothing (no utility, one located warning via the frozen
 recompile) while the twin paints ocean — so an identifier resolves
 through its binding, never through a project-wide name bag.
 
-Evidence: `[atm]` ATM-SITE-53 (scope-aware identifier resolution);
-`[overmatch]` SPEC-V2-75; `[panda-v2]`
-`vendor/panda/crates/pandacss_extractor/tests/scope.rs:1349`, `:1369`
+Evidence: ATM-SITE-53 (scope-aware identifier resolution); Panda v2 scope tests
 (inner scope shadows outer).
 
 > Search terms: shadowing, param shadows const, scope chain, binding, cross-file collision, site/scope, NEO-SITE-06, NEO-SITE-07

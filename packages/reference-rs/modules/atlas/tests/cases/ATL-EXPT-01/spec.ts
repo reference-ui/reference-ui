@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-EXPT-01.
+ * Case specification for ATL-EXPT-01.
  * Validates default export tracking, canonical component name preservation,
  * and call-site alias retention in usage examples.
  * Proves primary SPEC anchor ATL-EXPT-01.

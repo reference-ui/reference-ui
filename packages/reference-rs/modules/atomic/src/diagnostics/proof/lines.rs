@@ -9,7 +9,7 @@ use super::super::{Diagnostic, DiagnosticCode, DiagnosticLocation};
 
 /// The first pushed line matching code, location, and message, if any.
 pub fn find_line<'d>(
-    diagnostics: &'d mut Vec<Diagnostic>,
+    diagnostics: &'d mut [Diagnostic],
     code: DiagnosticCode,
     location: &DiagnosticLocation,
     message: &str,
@@ -72,15 +72,13 @@ mod tests {
             "second",
         );
         assert_eq!(found.map(|line| line.message.as_str()), Some("second"));
-        assert!(
-            find_line(
-                &mut diagnostics,
-                DiagnosticCode::UnknownCondition,
-                &located(),
-                "nope",
-            )
-            .is_none()
-        );
+        assert!(find_line(
+            &mut diagnostics,
+            DiagnosticCode::UnknownCondition,
+            &located(),
+            "nope",
+        )
+        .is_none());
     }
 
     #[test]

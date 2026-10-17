@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-REXP-01.
+ * Case specification for ATL-REXP-01.
  * Validates local component tracking and canonical interface propagation
  * across barrel re-export boundaries.
  * Proves primary SPEC anchor ATL-REXP-01.

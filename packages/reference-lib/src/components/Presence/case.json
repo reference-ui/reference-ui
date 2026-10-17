@@ -146,45 +146,45 @@
     },
     {
       "id": "LIB-PRESENCE-021",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit",
+      "name": "Presence onExitComplete PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit"
+      "title": "Presence onExitComplete PR-EXIT-01: Fires onExitComplete exactly once after a completed transition exit"
     },
     {
       "id": "LIB-PRESENCE-022",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-02: Fires onExitComplete for instant exits",
+      "name": "Presence onExitComplete PR-EXIT-02: Fires onExitComplete for instant exits",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-02: Fires onExitComplete for instant exits"
+      "title": "Presence onExitComplete PR-EXIT-02: Fires onExitComplete for instant exits"
     },
     {
       "id": "LIB-PRESENCE-023",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-03: Does not fire onExitComplete on interrupted exits",
+      "name": "Presence onExitComplete PR-EXIT-03: Does not fire onExitComplete on interrupted exits",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-03: Does not fire onExitComplete on interrupted exits"
+      "title": "Presence onExitComplete PR-EXIT-03: Does not fire onExitComplete on interrupted exits"
     },
     {
       "id": "LIB-PRESENCE-024",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-04: Does not fire onExitComplete on initial mount",
+      "name": "Presence onExitComplete PR-EXIT-04: Does not fire onExitComplete on initial mount",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-04: Does not fire onExitComplete on initial mount"
+      "title": "Presence onExitComplete PR-EXIT-04: Does not fire onExitComplete on initial mount"
     },
     {
       "id": "LIB-PRESENCE-025",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-05: Fires through the born-closed nested wedge (B-01 overlay shape)",
+      "name": "Presence onExitComplete PR-EXIT-05: Fires through the born-closed nested wedge (overlay shape)",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-05: Fires through the born-closed nested wedge (B-01 overlay shape)"
+      "title": "Presence onExitComplete PR-EXIT-05: Fires through the born-closed nested wedge (overlay shape)"
     },
     {
       "id": "LIB-PRESENCE-026",
-      "name": "Presence onExitComplete (W-09) PR-EXIT-06: Fires once per Presence when nested parent and child exit together",
+      "name": "Presence onExitComplete PR-EXIT-06: Fires once per Presence when nested parent and child exit together",
       "kind": "ct",
       "file": "__e2e__/Presence.ct.spec.ts",
-      "title": "Presence onExitComplete (W-09) PR-EXIT-06: Fires once per Presence when nested parent and child exit together"
+      "title": "Presence onExitComplete PR-EXIT-06: Fires once per Presence when nested parent and child exit together"
     },
     {
       "id": "LIB-PRESENCE-027",

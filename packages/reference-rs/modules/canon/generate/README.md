@@ -56,8 +56,10 @@ cargo fmt -p canon
 
 The emitter writes compact chunks; `cargo fmt` expands them to the committed
 form, so a clean regen plus fmt diffs only the rows you meant to change.
-Vendor-prefixed rows live in `overlay/vendors.ts` (GAP-04a, derived from
-csstype, never hand-extended); unitless rows union `overlay/unitless.ts`.
+Vendor-prefixed rows live in `overlay/vendor-extensions.ts` and their React
+spellings in `overlay/vendor-aliases.ts` (, derived from csstype, never
+hand-extended; `overlay/vendors.ts` records the provenance and re-exports both);
+unitless rows union `overlay/unitless.ts`.
 
 Do not hand-edit generated tables under `src/`. Lookup facades live in `src/lib.rs`
 and are re-emitted with the tables.

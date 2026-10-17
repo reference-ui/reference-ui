@@ -4,6 +4,6 @@ A compile request carrying both `files` and a `retentionToken`. The world carrie
 
 Raised in: `modules/atomic/src/sources.rs`. Driver: native compile over the case world with the registry-documented request mutation.
 
-Evidence: `[diag]` ATM-E-CONFLICTING-SCAN-INPUTS (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-CONFLICTING-SCAN-INPUTS (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-CONFLICTING-SCAN-INPUTS, atm-e-conflicting-scan-inputs, diagnostics case index, NEO-DIAG-41

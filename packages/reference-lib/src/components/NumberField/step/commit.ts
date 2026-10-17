@@ -60,7 +60,7 @@ export function decideCommit(input: CommitInput): CommitDecision {
   if (Number.isNaN(parsed)) {
     return { kind: 'failed' }
   }
-  // NFLAST ruling (b): validate retains and reports — request the
+  // Validate retains and reports — request the
   // rounded raw candidate as-is (never snap, never clamp); managed
   // invalid state derives from the controlled value and blocks submit.
   // onInvalidCommit is advisory: it fires after the onChange request
@@ -80,7 +80,7 @@ export function decideCommit(input: CommitInput): CommitDecision {
     }
     return decision
   }
-  // NFLAST ruling (a) snap order (NF-MATH-12): endpoint-preservation
+  // Snap order (NF-MATH-12): endpoint-preservation
   // or nearest lattice, then authored rounding, then final clamp — one
   // request, never an invalid-commit report.
   if (commitBehavior === 'snap') {

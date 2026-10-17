@@ -1,6 +1,6 @@
 # Menu
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Menu --e2e`).
 
 `role="menu"` keyboard navigation, item activation, typeahead, nested submenu
 orchestration. Built on `RovingFocus`. Composes with `Popover` for dropdown and
@@ -211,7 +211,7 @@ wrapped `Overlay.Content`. Depth is ordinary nesting.
 
 Diagonal pointer travel toward a submenu must not close it or switch to a neighbour. This is the same class of problem as Popover `openOnHover`, with tighter timing.
 
-**Vendor.** Zag `intentPolygon` / `isPointInPolygon` (`packages/machines/menu`). Radix `pointerGraceIntent` / `isPointerInGraceArea` (`packages/react/menu`). Aria `useSafelyMouseToSubmenu.ts` — atan2 angle + 500ms timeout.
+**Prior art.** Zag `intentPolygon` / `isPointInPolygon` (`packages/machines/menu`). Radix `pointerGraceIntent` / `isPointerInGraceArea` (`packages/react/menu`). Aria `useSafelyMouseToSubmenu.ts` — atan2 angle + 500ms timeout.
 
 **Lift** the converged safe-polygon behavior. The exact internal polygon helper
 may be shared with Popover; observable delays, padding, cancellation, and
@@ -221,7 +221,7 @@ submenu retention are fixed here.
 
 Space mid-typeahead must not activate the item or open a submenu.
 
-**Vendor.** Base UI `MenuRoot.test.tsx`. Aria `useTypeSelect`. Radix typeahead via `textContent`.
+**Prior art.** Base UI `MenuRoot.test.tsx`. Aria `useTypeSelect`. Radix typeahead via `textContent`.
 
 **Lift** RovingFocus typeahead-session gate (Listbox shares it).
 
@@ -233,7 +233,7 @@ Overlay behind the menu tree. A menu opened from a dialog is a child layer.
 This level-local policy intentionally differs from vendor menus that close the
 whole tree from one Escape.
 
-**Vendor.** Radix Menu on `DismissableLayer` + focus-scope branches. e2e `e2e/dropdown-menu.spec.ts`. Zag layer interact-outside.
+**Prior art.** Radix Menu on `DismissableLayer` + focus-scope branches. Zag layer interact-outside.
 
 **Lift** Radix nesting/e2e onto the shared Overlay/Popover/Menu stack. Portalled submenu registers as a FocusLock shard of the ancestor dialog.
 

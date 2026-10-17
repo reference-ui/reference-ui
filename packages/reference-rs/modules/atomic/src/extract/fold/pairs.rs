@@ -115,10 +115,20 @@ fn numeric_pair(op: BinaryOperator, left: &AtomValue, right: &AtomValue) -> Pair
 fn apply_numeric(op: BinaryOperator, x: f64, y: f64) -> Option<f64> {
     match op {
         BinaryOperator::Subtraction => Some(x - y),
+        BinaryOperator::Exponential => Some(x.powf(y)),
+        BinaryOperator::Multiplication | BinaryOperator::Division | BinaryOperator::Remainder => {
+            apply_multiplicative(op, x, y)
+        }
+        _ => None,
+    }
+}
+
+/// `*`, `/`, and `%`; a zero divisor yields a non-finite result that the caller refuses.
+fn apply_multiplicative(op: BinaryOperator, x: f64, y: f64) -> Option<f64> {
+    match op {
         BinaryOperator::Multiplication => Some(x * y),
         BinaryOperator::Division => Some(x / y),
         BinaryOperator::Remainder => Some(x % y),
-        BinaryOperator::Exponential => Some(x.powf(y)),
         _ => None,
     }
 }

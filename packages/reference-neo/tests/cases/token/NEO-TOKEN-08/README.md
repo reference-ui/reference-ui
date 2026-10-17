@@ -7,8 +7,7 @@ token plus `marginTop: '-1r'` and `marginTop: '-4r'` rhythm sugar over a
 `calc(-4 * …)`), keeps the minus in the class names, and that each probe
 computes its negative pixel value like its inline reference.
 
-Evidence: `[lib]` 368 negatives; `[panda-v1]`
-`token-dictionary/__tests__/spacing.test.ts`; `[atm]` P1 #8, ATM-TOKEN-07,
+Evidence: reference-lib 368 negatives; Panda v1 spacing tests; ATM-TOKEN-07,
 ATM-RHYTHM-05.
 
 > Search terms: negation, offset, overlap, outdent, token/rhythm, token/negation, NEO-TOKEN-07

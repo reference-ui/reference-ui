@@ -25,7 +25,7 @@ interface SystemEntry {
 }
 
 // The runner synced this world before serving: the system entry imports
-// node-side with the D6 authoring surface, and getRhythm(4) equals the calc
+// node-side with the authoring surface, and getRhythm(4) equals the calc
 // the engine emitted for the 4r padding want in the styled sheet.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
@@ -81,7 +81,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.deepEqual(
     pkg.exports?.['.'],
     { types: './system.d.mts', import: './system.mjs' },
-    'system exports map pins the D6 entry filenames',
+    'system exports map pins the entry filenames',
   );
   assert.deepEqual(
     pkg.exports?.['./baseSystem'],

@@ -11,6 +11,7 @@ mod branches;
 mod calls;
 mod gating;
 mod identity;
+mod identity_terminal;
 mod responsive;
 mod selection;
 mod site_plan;
@@ -24,7 +25,10 @@ fn compile_code(code: &str) -> crate::CompileResult {
 }
 
 fn compile_code_logs(code: &str) -> crate::CompileResult {
-    compile_code_inner(code, Some(vec!["compiler".to_string(), "proof".to_string()]))
+    compile_code_inner(
+        code,
+        Some(vec!["compiler".to_string(), "proof".to_string()]),
+    )
 }
 
 fn compile_code_inner(code: &str, logs: Option<Vec<String>>) -> crate::CompileResult {

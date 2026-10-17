@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TMP-01.
+ * Case specification for TST-TMP-01.
  * Verifies template literal type structures and keyof operator parts.
  * Proves primary SPEC ID anchor TST-TMP-01.
  */

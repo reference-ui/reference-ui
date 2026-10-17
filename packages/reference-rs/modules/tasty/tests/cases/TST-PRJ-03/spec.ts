@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-PRJ-03.
+ * Case specification for TST-PRJ-03.
  * Verifies display-member projection terminates on alias-definition cycles.
  * Proves primary SPEC ID anchor TST-PRJ-03.
  */

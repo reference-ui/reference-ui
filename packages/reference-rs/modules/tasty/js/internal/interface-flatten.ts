@@ -2,20 +2,20 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { RawTastySymbolRef, TastyMember, TastySymbol } from '../api-types'
-import type { TastyApiRuntime } from './api-runtime'
+import type { RawTastySymbolRef, TastyMember, TastySymbol } from '../api-types.js'
+import type { TastyApiRuntime } from './api-runtime.js'
 import {
   projectInstantiatedTypeMembers,
   projectMembersFromInterfaceExtends,
-} from './object-projection'
+} from './object-projection.js'
 import {
   buildTypeSubstitutions,
   instantiateMember,
   instantiateTypeAliasDefinition,
   instantiateTypeRef,
   type TypeSubstitutions,
-} from './object-projection-instantiation'
-import { isInterfaceSymbol, isTypeAliasSymbol } from './shared'
+} from './object-projection-instantiation.js'
+import { isInterfaceSymbol, isTypeAliasSymbol } from './shared.js'
 
 /**
  * The members an interface inherits and declares, with its own type parameters bound to `substitutions`. Each

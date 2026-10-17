@@ -47,7 +47,7 @@ export function initReference(
 
 /**
  * Drain the scheduled tasty build for a source dir, if one is pending. The
- * in-process sync path never calls this (background loop only, S5); the
+ * in-process sync path never calls this (background loop only); the
  * one-shot CLI must (its process exits before the loop runs). Resolves
  * undefined when nothing is pending — either the build already landed in the
  * session cache or none was ever scheduled. Without the drain, types.mjs

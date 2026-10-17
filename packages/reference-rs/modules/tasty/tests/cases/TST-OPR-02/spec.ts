@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-OPR-02.
+ * Case specification for TST-OPR-02.
  * keyof answers a key union only for a plain interface. An interface that extends another, and an
  * index signature, stay unresolved, and a call signature never contributes a key.
  */

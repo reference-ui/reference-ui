@@ -109,7 +109,7 @@ fn has_container_root(system: &BaseSystem) -> bool {
 /// `@media` query for a globalCss breakpoint key: plain scale names plus the
 /// `*Down` / `*Only` / `*To*` ranges. Bounds come from the `@container`
 /// twins below with only the at-rule retargeted, so ranges agree on both
-/// paths (utilities print `@container`, global CSS prints `@media`, RS-28).
+/// paths (utilities print `@container`, global CSS prints `@media`).
 pub fn breakpoint_media_query(key: &str, system: &BaseSystem) -> Option<String> {
     if key == "base" {
         return None;

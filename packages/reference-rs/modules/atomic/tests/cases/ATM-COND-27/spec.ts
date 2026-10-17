@@ -1,6 +1,6 @@
 /**
  * Tag / class / BEM compounds, ancestors, tails, and bare `&`
- * (ATM-COND-27, SPEC-V2-72). Textual substitution covers the
+ * (ATM-COND-27). Textual substitution covers the
  * whole one-level grammar — including absurd-but-total spellings like
  * `&html` and `&(:focus)` — plus the three-level `.c &` tail. Bare `&`
  * is a distinct key with a class-only selector (v2 mints `[\&]` too).

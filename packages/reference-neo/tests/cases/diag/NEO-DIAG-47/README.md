@@ -4,6 +4,6 @@ Same-file alias/mixed same-name group keeps the last shell. The world carries th
 
 Raised in: `modules/tasty/src/ast/resolve/merge.rs`. Driver: the whole tasty compiler (`buildTasty` over the case world).
 
-Evidence: `[diag]` TST-W-DUPLICATE-DECLARATION (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-W-DUPLICATE-DECLARATION (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-W-DUPLICATE-DECLARATION, tst-w-duplicate-declaration, diagnostics case index, NEO-DIAG-47

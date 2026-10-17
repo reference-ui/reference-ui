@@ -146,7 +146,7 @@ function onPointerUp(event: PointerEvent) {
 function bindEscapeSync(doc: Document) {
   // Escape binds synchronously: openers are pointer gestures, so there is no
   // same-tick opener hazard for keydown, and a fast post-open Escape must
-  // never fall into the deferred-bind window (02-F59).
+  // never fall into the deferred-bind window.
   if (escapeBound.has(doc)) return
   doc.addEventListener('keydown', onEscape)
   escapeBound.add(doc)

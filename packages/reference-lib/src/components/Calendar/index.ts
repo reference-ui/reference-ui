@@ -1,8 +1,8 @@
 export * from './Calendar'
-// Gregorian ISO kit (ported verbatim from quarantine b19c73bee; see dates/iso.ts).
-// Curated — NOT `export *` — because dates/iso.ts also declares ISODate and
-// CalendarMode, and star-export ambiguity would silently drop both names,
-// breaking DateField's `import { type ISODate } from '../Calendar'`.
+// Gregorian ISO kit (ported verbatim from b19c73bee; see dates/iso.ts).
+// Curated — NOT `export *` — so only the names listed here leave dates/iso.ts.
+// Its template-literal date type is CanonicalISODate; the public ISODate
+// (= string, owned by Calendar.tsx) stays what DateField imports from '../Calendar'.
 // Calendar.tsx remains the owner of the public ISODate (= string),
 // CalendarMode, and DateRangeValue names.
 export {

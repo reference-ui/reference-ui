@@ -1,5 +1,5 @@
 /**
- * Member-host station (ATM-SITE-22, RS-36). `<Overlay.Content />` extracts
+ * Member-host (ATM-SITE-22). `<Overlay.Content />` extracts
  * when `OverlayContent` is a host; `<Accordion.Content />` with no host
  * stays silent. Zero diagnostics either way.
  */

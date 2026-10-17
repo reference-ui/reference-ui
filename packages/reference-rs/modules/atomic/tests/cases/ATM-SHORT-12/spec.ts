@@ -1,5 +1,5 @@
 /**
- * Axis-shorthand station (ATM-SHORT-12). The four logical axis spellings
+ * Axis-shorthand (ATM-SHORT-12). The four logical axis spellings
  * parse from JSX props and compile to single-declaration utilities on the
  * my/mx/px/py twin classes — never forked top/bottom halves, never dropped.
  */

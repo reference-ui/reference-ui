@@ -4,7 +4,7 @@
  * content-side read backing default placement and intent math. Pure
  * over event fields and attributes; unit-tested.
  */
-import type { Side as IntentSide } from '../intent/menu-intent'
+import type { Side as IntentSide } from '../../Overlay/geometry/floating'
 
 export function hoverCapablePointer(pointerType: string, pressure = 0): boolean {
   if (pointerType === 'touch') return false

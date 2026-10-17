@@ -1,5 +1,5 @@
 /**
- * Element-access station (ATM-SITE-48, SPEC-V2-63). Reads over const
+ * Element-access (ATM-SITE-48). Reads over const
  * objects, const arrays, and inline literals fold through the shared
  * element node — literal, const-identifier (single- and multi-leaf),
  * member, nested, optional-chain, concat, and interpolated-template
@@ -89,7 +89,7 @@ const spec: AtomicCaseSpec = {
     }
 
     // Eleven refusals, each located at the failing side with the key named —
-    // on the opt-in channel now (S6 E8-class re-point); the default is silent.
+    // on the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-48', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

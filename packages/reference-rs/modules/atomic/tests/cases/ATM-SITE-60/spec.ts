@@ -1,5 +1,5 @@
 /**
- * Token-scalar dedupe station (ATM-SITE-60, SPEC-V2-04 GAP-04b). Numeric
+ * Token-scalar dedupe (ATM-SITE-60). Numeric
  * `margin: 4` and string `margin: '4'` resolve against the spacing scale
  * identically: the token wins over px, both spellings land on one class,
  * and the sheet carries exactly one rule. Panda twin:

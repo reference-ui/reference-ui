@@ -28,7 +28,7 @@ proptest! {
 
 #[test]
 fn normalize_relative_path_preserves_leading_dot_dot_escapes() {
-    // Regression pin (Objective 1 RS fix): leading `..` (dot-dot file ids
+    // Regression pin: leading `..` (dot-dot file ids
     // above the scan root) must survive, or barrel hops from followed
     // packages resolve to bogus in-root candidates.
     let cases = [

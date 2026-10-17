@@ -1,15 +1,13 @@
 # FocusLock
 
-Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct FocusLock --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
 Used by: [Overlay](../Overlay/Overlay.md) when isolation `focus` is on.
 
 Contains keyboard focus inside a subtree: Tab cycles, programmatic focus is reclaimed, focus is restored when the lock deactivates. Overlay uses this internally. Distinct from `RovingFocus`, which moves `tabindex` among items inside a composite widget.
 
 Overlay owns Escape, outside-press, inert, scroll lock, and **when** restore runs (after Presence). FocusLock owns **where** focus goes.
 
-Gate 3 freeze: [SPEC.md](./SPEC.md) — FocusLock × Overlay. Overlay is production.
-This primitive is production for containment: Presence-trap, nested pause,
-Overlay-portalled shards, proximity walk, and the tabbable catalog are proven.
+FocusLock × Overlay is covered by the Overlay CT suite (`Overlay/__e2e__/OverlayFocus.ct.spec.ts`, cases FL-OV-01 to FL-OV-05). Its passing titles cover the Presence trap, the nested pause, the Overlay-portalled shard, and the proximity walk. The tabbable catalog and the lock behavior are covered by the FocusLock CT suite (`pnpm agentct FocusLock --e2e`).
 
 Does not add a wrapper node. Slots onto a single child. Overlay.Content is the lock container for dialogs; this primitive exists so that containment is not Overlay-only.
 
@@ -78,7 +76,7 @@ One solver in production. Pairing two focus libraries causes recursive `focus()`
 
 “What Tab lands on” is not `querySelector('[tabindex]')`. Radio groups are one tab stop (checked, or all if none). Disabled fieldsets, closed `<details>`, `contenteditable="false"`, `inert` ancestors, and zero-area nodes all lie.
 
-**Vendor.** `vendor/tabbable/src` is the strictest catalog (`isTabbableRadio`, `CSS.escape`, fieldset+legend, `details:not([open])`). focus-lock `focusables.ts` / `correctFocus.ts` is simpler (no fieldset-disabled, no closed-details). Ariakit’s radio rule is coupled to `activeElement` and disagrees with the browser — **leave**. Radix `getTabbableCandidates` ignores positive `tabindex` (document order only).
+**Prior art.** tabbable is the strictest catalog (`isTabbableRadio`, `CSS.escape`, fieldset+legend, `details:not([open])`). focus-lock `focusables.ts` / `correctFocus.ts` is simpler (no fieldset-disabled, no closed-details). Ariakit’s radio rule is coupled to `activeElement` and disagrees with the browser — **leave**. Radix `getTabbableCandidates` ignores positive `tabindex` (document order only).
 
 **Lift** tabbable’s cases as the shared catalog for FocusLock **and** Overlay
 `initialFocus`. Positive `tabindex` still uses deterministic document order
@@ -88,7 +86,7 @@ inside the lock. Do not ship tabbable’s `displayCheck` modes as public API.
 
 A Popover portalled out of a Dialog is outside the lock DOM. Without registration, the trap yanks focus back.
 
-**Vendor.** react-focus-lock `shards` (`Lock.js` `workingArea = [observed, ...shards]`). Radix FocusScope `branches` + registry (issue #3423). Aria uses a focus-scope **tree** (portals as child scopes) — no shards prop. focus-trap multi-`containers` throws if positive tabindex spans containers.
+**Prior art.** react-focus-lock `shards` (`Lock.js` `workingArea = [observed, ...shards]`). Radix FocusScope `branches` + registry (issue #3423). Aria uses a focus-scope **tree** (portals as child scopes) — no shards prop. focus-trap multi-`containers` throws if positive tabindex spans containers.
 
 **Lift** Radix `branches` semantics under our name `shards`. **Leave** `group` / `whiteList` / `data-focus-lock` / sidecar as public props.
 
@@ -121,7 +119,7 @@ a lock-authored move.
 
 Chrome can CPU-spin focusing a deleted node. `focusout` with `relatedTarget === null` is not a reliable “escaped.”
 
-**Vendor.** Radix: do nothing on null `relatedTarget`; MutationObserver when focus falls to `body` after removal. Aria: skip virtual modality on Android Chrome TalkBack.
+**Prior art.** Radix: do nothing on null `relatedTarget`; MutationObserver when focus falls to `body` after removal. Aria: skip virtual modality on Android Chrome TalkBack.
 
 **Lift** Radix null-relatedTarget + removed-node → focus container.
 

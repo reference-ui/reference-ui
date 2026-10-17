@@ -7,10 +7,8 @@ one important class and beat the later plain utility in computed color
 while plain alone paints yellow, and the content string stays intact and
 unimportant.
 
-Evidence: `[atm]` P0 #5 (`docs/evidence/atomic-claims.md`), ATM-LEAF-09,
-ATM-LEAF-10; `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:10` "respect
-important syntax" (contrast: `vendor/panda-v1/packages/shared/src/important.ts`
-matches `!` anywhere, Atomic strips suffixes only).
+Evidence: ATM-LEAF-09, ATM-LEAF-10; Panda v1 test "respect important syntax"
+(contrast: Panda's important helper matches `!` anywhere, Atomic strips suffixes
+only).
 
 > Search terms: specificity, cascade, trailing bang, override, exclamation mark, bang suffix, css/important, css/bang-suffix

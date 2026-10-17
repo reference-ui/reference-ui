@@ -1,6 +1,6 @@
 //! Differential fuzzing for the scalar lookup-key fast frame: seeded PRNG
 //! tuples plus container shapes, every case byte-compared under each live
-//! `W` against the landed diet body kept here as the oracle. Takes no
+//! `W` against the diet body kept here as the oracle. Takes no
 //! inputs and emits only pass/fail; determinism comes from the fixed seeds,
 //! so any failure reproduces exactly.
 
@@ -9,7 +9,7 @@ use atomic::runtime::serializer::{
 };
 use serde_json::Value;
 
-/// Landed-diet body kept as the differential oracle.
+/// Diet body kept as the differential oracle.
 fn serde_tuple_diet<W: serde::Serialize + ?Sized>(key: &LookupKey<'_, W>) -> String {
     let canonical_val;
     let value = match key.value {

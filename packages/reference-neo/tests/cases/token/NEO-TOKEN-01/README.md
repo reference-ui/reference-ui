@@ -6,9 +6,9 @@ checks the sheet carries the ref as `var(--colors-red-500)` across the
 longhands the engine splits the shorthand into, and that the probe computes
 exactly like the hex reference.
 
-Evidence: `[panda-v1]` `core/__tests__/style-decoder.test.ts` "should resolve
-references" (`border: '2px solid {colors.red.300}'`); `[lib]` 3 leftover refs
-(`lib-sheet-styles-css.md` L8308/L8326/L27410, one failed lower); `[atm]`
+Evidence: Panda v1 test "should resolve
+references" (`border: '2px solid {colors.red.300}'`); reference-lib 3 leftover refs
+(one failed lower); 
 ATM-TOKEN-08.
 
 > Search terms: curly, brace, interpolation, border-color, token/refs, NEO-TOKEN-12

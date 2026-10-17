@@ -1,5 +1,5 @@
 /**
- * AtomSet dedup station. The same `bg="n300"` in two files becomes one
+ * AtomSet dedup case. The same `bg="n300"` in two files becomes one
  * class. A distinct `color` atom still appears.
  */
 import { expect } from 'vitest'

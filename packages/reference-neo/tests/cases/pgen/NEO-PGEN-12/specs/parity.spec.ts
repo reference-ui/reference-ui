@@ -106,7 +106,7 @@ function parseOverlayPartition(overlayText: string): { html: string[]; svg: stri
 
 // Live canon: ELEMENTS plus PRIMITIVE_JSX parsed from the current Rust
 // sources with the generator's own block discipline, partitioned by the live
-// overlay into the 101 HTML tags this station pins and the 24 retired SVG
+// overlay into the 101 HTML tags this case pins and the 24 retired SVG
 // children. Canon has no napi export, so source import is the live read.
 async function readLiveCanon(): Promise<{ htmlDom: string[]; htmlJsx: string[]; svgJsx: string[] }> {
   const htmlRs = readCanonSource('html.rs');

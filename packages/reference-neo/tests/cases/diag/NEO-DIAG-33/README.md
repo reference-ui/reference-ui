@@ -4,6 +4,6 @@ Condition key whose value is not an object. The world carries the minimal fixtur
 
 Raised in: `modules/atomic/src/extract/expressions/object/condition.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-NON-OBJECT-CONDITION (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-NON-OBJECT-CONDITION (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-NON-OBJECT-CONDITION, atm-w-non-object-condition, diagnostics case index, NEO-DIAG-33

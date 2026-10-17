@@ -1,5 +1,5 @@
 /**
- * Global sibling-distribution station (ATM-LAYER-09, RS-11). `&`
+ * Global sibling-distribution (ATM-LAYER-09). `&`
  * substitution in the global walker distributes over comma members with
  * `:is()` around members that contain a combinator, so `'& ~ &'` nests
  * match siblings instead of every first child.

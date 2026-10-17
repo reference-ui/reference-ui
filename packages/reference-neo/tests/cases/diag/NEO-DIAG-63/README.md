@@ -4,6 +4,6 @@ A strict name outside colors/radii/spacing; skipped with a near-match nudge. The
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-UNKNOWN-STRICT-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-UNKNOWN-STRICT-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-UNKNOWN-STRICT-CATEGORY, tgn-w-unknown-strict-category, diagnostics case index, NEO-DIAG-63

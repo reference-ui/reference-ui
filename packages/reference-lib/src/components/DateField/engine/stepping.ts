@@ -6,7 +6,7 @@
  * domain, or the landing refuses constraints — the keys stay native
  * no-ops and the text is kept.
  */
-import type { ISODate as CanonicalISODate } from '../../Calendar/dates/iso'
+import type { CanonicalISODate } from '../../Calendar/dates/iso'
 import { formatLocalDate, getSegmentAtCaret, stepDateSegment } from './parse'
 
 export interface StepBase {

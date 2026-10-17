@@ -4,6 +4,6 @@ Unterminated `{` inside a value. The world carries the minimal fixture (theme/br
 
 Raised in: `modules/atomic/src/resolve/tokens/interpolate.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNTERMINATED-BRACE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNTERMINATED-BRACE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNTERMINATED-BRACE, atm-w-unterminated-brace, diagnostics case index, NEO-DIAG-10

@@ -6,7 +6,7 @@ the sheet carries exactly the member's two utilities, the member paints both
 props, and the twin renders unstyled — the Panda discovery spelling core
 emits for `<Overlay.Content />` and friends.
 
-Evidence: `[atm]` ATM-SITE-22; `[lib]` `Menu.tsx` `<Overlay.Content
+Evidence: ATM-SITE-22; reference-lib `Menu.tsx` `<Overlay.Content
 minW="40r">`, `Showcase.book.tsx` modal (RS-36).
 
 > Search terms: namespaced component, compound component, dot-notation, site/member-tags, NEO-SITE-11

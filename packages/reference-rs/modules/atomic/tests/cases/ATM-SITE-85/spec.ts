@@ -1,5 +1,5 @@
 /**
- * Declared-props shadow station (Forge §14). A host's own declared props
+ * Declared-props shadow case. A host's own declared props
  * are attributes on that host: Button's `size` never reaches the
  * resolver, while Div — which declares no `size` — still folds the
  * macro, and Button's `color` (inherited through StyleProps, not owned)
@@ -35,7 +35,7 @@ const spec: AtomicCaseSpec = {
 
     // Button's own honest rest-spread rides the opt-in channel: owned
     // shadowing itself warns nothing, spreads stay host-blind, and the
-    // default is silent (S6 E8-class re-point).
+    // default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-85', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

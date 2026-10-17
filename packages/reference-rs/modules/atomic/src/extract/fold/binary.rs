@@ -123,15 +123,26 @@ pub fn fold_binary<'ast, 'expr>(
     }
     let left_leaves = operand_values(op, left, scoped, &mut fold);
     let right_leaves = operand_values(op, right, scoped, &mut fold);
-    for left_leaf in &left_leaves {
-        for right_leaf in &right_leaves {
-            match apply_pair(op, left_leaf, right_leaf) {
-                PairOutcome::Value(value) => fold.values.push(value),
-                PairOutcome::Refuse(refusal) => fold.refusals.push(refusal),
-            }
+    fold_pairs(op, &left_leaves, &right_leaves, &mut fold);
+    fold
+}
+
+/// Apply the operator to every left-major leaf pair, collecting values and refusals in order.
+fn fold_pairs<'ast, 'expr>(
+    op: BinaryOperator,
+    left: &[AtomValue],
+    right: &[AtomValue],
+    fold: &mut BinaryFold<'ast, 'expr>,
+) {
+    let pairs = left
+        .iter()
+        .flat_map(|left_leaf| right.iter().map(move |right_leaf| (left_leaf, right_leaf)));
+    for (left_leaf, right_leaf) in pairs {
+        match apply_pair(op, left_leaf, right_leaf) {
+            PairOutcome::Value(value) => fold.values.push(value),
+            PairOutcome::Refuse(refusal) => fold.refusals.push(refusal),
         }
     }
-    fold
 }
 
 /// True for the operators the table folds: arithmetic, concat, comparison.

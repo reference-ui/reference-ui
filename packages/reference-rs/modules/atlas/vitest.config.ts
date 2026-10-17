@@ -1,7 +1,7 @@
 /**
  * Vitest configuration for the atlas module test suite.
  * Configures test inclusion for JSX usage analysis, component indexing, and diagnostic assertions.
- * Discovers case stations and runs module-level integration tests.
+ * Discovers cases and runs module-level integration tests.
  */
 import { defineConfig } from 'vitest/config'
 

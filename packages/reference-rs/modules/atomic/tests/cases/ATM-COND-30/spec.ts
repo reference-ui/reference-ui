@@ -1,5 +1,5 @@
 /**
- * Sibling-combinator station (SPEC-V2-47 utility half). `& + &` and `& ~ &`
+ * Sibling-combinator (utility half). `& + &` and `& ~ &`
  * authored in `css()` substitute both positions, two-level stacks apply in
  * order, and comma descendant lists scope every member.
  */

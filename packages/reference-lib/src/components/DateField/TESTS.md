@@ -1,9 +1,9 @@
 # DateField test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct DateField --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/date-field.spec.ts`  
-Unit: `matrix/lib/tests/unit/date-field.test.tsx`  
+Playwright: `src/components/DateField/__e2e__/*.spec.ts` (run with `pnpm agentct DateField --e2e`)  
+Unit: `src/components/DateField/**/*.test.ts(x)`  
 Page: `/date-field`
 
 DateField owns the boundary between a localized dirty edit string and one

@@ -1,5 +1,5 @@
 /**
- * Ambiguous star station (Forge §1). A named import that two `export *`
+ * Ambiguous star case. A named import that two `export *`
  * barrels declare with different origins refuses: no fold at the site, and
  * each use diagnoses exactly as an unresolvable import does. Neither twin
  * literal harvests below: both are unlicensed (the color allowlist), so
@@ -29,9 +29,8 @@ const spec: AtomicCaseSpec = {
     expect(harvestWants(result)).toHaveLength(0)
     expect(result.wants ?? []).toHaveLength(1)
 
-    // Refusal + spread + sink info ride the opt-in channel now (S6
-    // E8-class re-point); but the uncovered `color: red` lookup proves an
-    // exact miss, so it warns on the default (Wave-1b carve-out: harvest
+    // Refusal + spread + sink info ride the opt-in channel; but the uncovered `color: red` lookup proves an
+    // exact miss, so it warns on the default (harvest
     // no longer hides it).
     expect(result.diagnostics ?? []).toEqual([
       expect.objectContaining({

@@ -1,5 +1,5 @@
 /**
- * Optional-chain drop station (SPEC-V2-44). `?.` on an unresolvable base
+ * Optional-chain drop case. `?.` on an unresolvable base
  * warns once and mints nothing at the site while static siblings in the
  * same object still extract with their runtime plans.
  */
@@ -15,8 +15,7 @@ const spec: AtomicCaseSpec = {
       result.stylePlans.find(p => p.prop === 'padding' && p.value === '4px'),
     ).toBeDefined()
 
-    // The chain refusal rides the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // The chain refusal rides the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-74', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

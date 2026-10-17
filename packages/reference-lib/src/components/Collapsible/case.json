@@ -160,10 +160,10 @@
     },
     {
       "id": "LIB-COLLAPSIBLE-023",
-      "name": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: quarantine controlled-only does not apply, uncontrolled API preserved)",
+      "name": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: controlled-only does not apply, uncontrolled API preserved)",
       "kind": "unit",
       "file": "Collapsible.test.tsx",
-      "title": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: quarantine controlled-only does not apply, uncontrolled API preserved)"
+      "title": "Collapsible Unit Contract CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: controlled-only does not apply, uncontrolled API preserved)"
     },
     {
       "id": "LIB-COLLAPSIBLE-024",
@@ -209,10 +209,10 @@
     },
     {
       "id": "LIB-COLLAPSIBLE-030",
-      "name": "Collapsible Unit Contract B-12: Collapsible should fire both onChange and onOpenChange when both are passed",
+      "name": "Collapsible Unit Contract Collapsible should fire both onChange and onOpenChange when both are passed",
       "kind": "unit",
       "file": "Collapsible.test.tsx",
-      "title": "Collapsible Unit Contract B-12: Collapsible should fire both onChange and onOpenChange when both are passed"
+      "title": "Collapsible Unit Contract Collapsible should fire both onChange and onOpenChange when both are passed"
     },
     {
       "id": "LIB-COLLAPSIBLE-031",
@@ -237,157 +237,157 @@
     },
     {
       "id": "LIB-COLLAPSIBLE-034",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements"
     },
     {
       "id": "LIB-COLLAPSIBLE-035",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-DOM-03: Collapsible should keep its relationship valid throughout a closed exit and remove it after unmount"
     },
     {
       "id": "LIB-COLLAPSIBLE-036",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-DOM-04: Collapsible should expose authoritative open, closed, and disabled state on its rendered parts"
     },
     {
       "id": "LIB-COLLAPSIBLE-037",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-ACT-01: Collapsible should request opening once when an enabled closed trigger is clicked"
     },
     {
       "id": "LIB-COLLAPSIBLE-038",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-ACT-02: Collapsible should request closing once when an enabled open trigger is clicked"
     },
     {
       "id": "LIB-COLLAPSIBLE-039",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-ACT-03: Collapsible should use native button keyboard activation without duplicate toggle requests"
     },
     {
       "id": "LIB-COLLAPSIBLE-040",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-01: Collapsible should keep transitioning Content mounted until its own exit completes"
     },
     {
       "id": "LIB-COLLAPSIBLE-041",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-02: Collapsible should ignore descendant end events during exit and unmount on its own completion (re-targeted: CT harness disables CSS keyframes, GSAP holds the exit)"
     },
     {
       "id": "LIB-COLLAPSIBLE-042",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-03: Collapsible should remove closed Content immediately when no finite exit motion exists (re-targeted: reduced-motion stub zeroes the GSAP exit)"
     },
     {
       "id": "LIB-COLLAPSIBLE-043",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-04: Collapsible should cancel an in-flight exit when controlled state reopens"
     },
     {
       "id": "LIB-COLLAPSIBLE-044",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-05: Collapsible should give each exit a fresh lifecycle without replaying mount-only motion (re-targeted: GSAP skipEnter probe + close/reopen/close lifecycle)"
     },
     {
       "id": "LIB-COLLAPSIBLE-045",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-07: Collapsible should evacuate focus before closing Content becomes inert"
     },
     {
       "id": "LIB-COLLAPSIBLE-046",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-PRES-08: Collapsible should isolate visually exiting closed Content and restore only isolation it owns"
     },
     {
       "id": "LIB-COLLAPSIBLE-047",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-SIZE-01 (exact): Collapsible should publish exact border-box measurements under GSAP-owned box-sizing"
     },
     {
       "id": "LIB-COLLAPSIBLE-048",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-SIZE-02: Collapsible should snapshot the last open size before closed CSS can collapse the box"
     },
     {
       "id": "LIB-COLLAPSIBLE-049",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-SIZE-03: Collapsible should refresh open measurements without taking ownership of application layout or motion styles"
     },
     {
       "id": "LIB-COLLAPSIBLE-050",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-COMP-01: A plain Collapsible should provide a complete controlled disclosure without requiring motion CSS"
     },
     {
       "id": "LIB-COLLAPSIBLE-051",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-COMP-02: An animated Collapsible should survive a close that is interrupted by reopening"
     },
     {
       "id": "LIB-COLLAPSIBLE-052",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-COMP-03: Collapsible should remain the disclosure runtime when composed as a nested Accordion item"
     },
     {
       "id": "LIB-COLLAPSIBLE-053",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-01: closed hidden-until-found content stays in the DOM, rendering-skipped, and linked"
     },
     {
       "id": "LIB-COLLAPSIBLE-054",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-02: native beforematch opens hidden-until-found content; a cancelled reveal stays closed"
     },
     {
       "id": "LIB-COLLAPSIBLE-055",
-      "name": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it",
+      "name": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it",
       "kind": "ct",
       "file": "__e2e__/Collapsible.ct.spec.ts",
-      "title": "Collapsible Quarantine Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it"
+      "title": "Collapsible Ports (GSAP-owned motion) CO-MOUNT-CT-03: forceMount closed content stays visible and keeps focus inside it"
     },
     {
       "id": "LIB-COLLAPSIBLE-056",

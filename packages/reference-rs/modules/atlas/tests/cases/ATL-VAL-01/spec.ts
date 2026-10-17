@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-VAL-01.
+ * Case specification for ATL-VAL-01.
  * Validates tracking of dynamic JSX prop expressions without fabricating false
  * literal string value records in distribution maps.
  * Proves primary SPEC anchor ATL-VAL-01.

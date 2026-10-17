@@ -1,7 +1,7 @@
 /**
- * Tasty station suite executor.
- * Discovers TST-* case stations, executes on-demand scanning and emission,
- * runs station semantic specifications, enforces standing schema gauges,
+ * Tasty case suite executor.
+ * Discovers TST-* cases, executes on-demand scanning and emission,
+ * runs case semantic specifications, enforces standing schema gauges,
  * and asserts committed manifest and declaration goldens.
  */
 import { afterAll } from 'vitest'

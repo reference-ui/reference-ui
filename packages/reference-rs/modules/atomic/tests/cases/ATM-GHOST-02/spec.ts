@@ -1,5 +1,5 @@
 /**
- * Runtime class-map station. Keys are prop:value(:when) spellings and
+ * Runtime class-map case. Keys are prop:value(:when) spellings and
  * values match the selectors printed in the stylesheet. Goldens are css.json.
  */
 import { expect } from 'vitest'

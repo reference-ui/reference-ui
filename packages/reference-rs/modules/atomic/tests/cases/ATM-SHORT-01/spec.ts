@@ -1,5 +1,5 @@
 /**
- * borderBottom shorthand station. Width and style longhands emit;
+ * borderBottom shorthand case. Width and style longhands emit;
  * currentColor is never synthesized, so sibling borderColor wins.
  */
 import { expect } from 'vitest'

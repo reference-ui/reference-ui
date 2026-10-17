@@ -1,5 +1,5 @@
 /**
- * Raw pseudo-element station (SPEC-V2-48 raw arm). `&::after` lowers like
+ * Raw pseudo-element (raw arm). `&::after` lowers like
  * the `_after` dialect, single-level `&:hover::before` compounds keep
  * pseudo-class before pseudo-element, and comma pseudo-element lists emit.
  */

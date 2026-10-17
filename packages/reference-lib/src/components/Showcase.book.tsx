@@ -614,7 +614,7 @@ export default function ShowcaseFixture() {
       {/* Header */}
       <Div
         p="6r"
-        borderRadius="xl"
+        borderRadius="lg"
         bg="ui.dialog.background"
         border="1px solid"
         borderColor="ui.dialog.border"

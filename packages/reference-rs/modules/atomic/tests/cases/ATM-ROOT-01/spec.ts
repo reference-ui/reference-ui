@@ -1,5 +1,5 @@
 /**
- * Baked root-default station. A system with no author `:root` and an input
+ * Baked root-default case. A system with no author `:root` and an input
  * with zero rhythm values still emits `@layer root` first: the default is
  * unconditional, so rhythm rules can never dangle. The default is the only
  * `--spacing-root` definition in the sheet.

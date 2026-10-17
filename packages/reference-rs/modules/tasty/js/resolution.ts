@@ -2,7 +2,7 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { TastyTypeRef } from './api-types'
+import type { TastyTypeRef } from './api-types.js'
 
 export function getTastyResolvedType(
   typeRef: TastyTypeRef | undefined

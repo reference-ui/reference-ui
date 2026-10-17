@@ -53,7 +53,7 @@ export function SplitterThumb({
       pointerEvents="none"
       transition="opacity 150ms ease, border-color 150ms ease"
       style={{
-        // H-1: gap is computed, so it rides inline — never a dynamic
+        // Gap is computed, so it rides inline — never a dynamic
         // template through css(), whose value space can't be extracted.
         gap: `${dotGap}px`,
         transform: 'translate(-50%, -50%)',

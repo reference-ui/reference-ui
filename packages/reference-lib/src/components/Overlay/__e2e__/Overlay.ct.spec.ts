@@ -1734,7 +1734,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Entering content activates trap
       await page.getByTestId('focus-no-initial-btn-1').click()
-      // FINISH-02F-VH (F54, F14 vehicle): WebKit clicks never focus buttons —
+      // WebKit clicks never focus buttons —
       // deliver the Chromium focus state so the trap engages; the reclaim
       // contract below runs identically.
       if (isWebKit(page)) await page.getByTestId('focus-no-initial-btn-1').focus()
@@ -2974,7 +2974,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
 
       // Open modeless overlay from Trigger
       await openTrg.click()
-      // FINISH-02F-VH (F55, F14 vehicle): WebKit clicks never focus buttons —
+      // WebKit clicks never focus buttons —
       // deliver the Chromium focus state; the Tab bridge starts from the trigger.
       if (isWebKit(page)) await openTrg.focus()
       await expect(content).toBeVisible()
@@ -3008,7 +3008,7 @@ test.describe('Overlay Deep SPEC & Production Verification Suite', () => {
       const logEl = page.getByTestId('trg-05-reject-log')
 
       await openTrg.click()
-      // FINISH-02F-VH (F55 reject, F14 vehicle): WebKit clicks never focus —
+      // reject: WebKit clicks never focus —
       // deliver the Chromium focus state; the Tab bridge starts from the trigger.
       if (isWebKit(page)) await openTrg.focus()
       await expect(content).toBeVisible()

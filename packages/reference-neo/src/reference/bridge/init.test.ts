@@ -1,5 +1,5 @@
 // Reference tasty phase scheduler suite: it takes the mocked runner plus the
-// mocked session cache and emits the S5 pins — scheduling never blocks,
+// mocked session cache and emits the pins — scheduling never blocks,
 // cold start pays once per source dir, cached builds skip, failures retry.
 // The background loop here is real setImmediate, drained, never faked.
 

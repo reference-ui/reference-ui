@@ -1,9 +1,9 @@
 # Splitter test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Splitter --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/splitter.spec.ts`  
-Unit: `matrix/lib/tests/unit/splitter.test.ts`
+Playwright: `src/components/Splitter/__e2e__/*.spec.ts` (run with `pnpm agentct Splitter --e2e`)  
+Unit: `src/components/Splitter/**/*.test.ts(x)`
 Page: `/splitter`
 
 Splitter owns a 1D flex partition, separator ARIA, pointer/touch drag with
@@ -57,16 +57,9 @@ Omitted orientation is horizontal.
 
 ## Source evidence
 
-- `vendor/react-resizable-panels/lib` tests for
-  `calculatePanelConstraints`, `adjustLayoutByDelta`, keyboard handling,
-  separator ARIA, dynamic panels, nested groups, and pointer sessions.
-- `vendor/zag/packages/machines/splitter/tests/splitter.utils.test.ts` and
-  Splitter machine — value normalization, collapse/expand, user-select, cursor,
-  and orientation behavior.
-- `vendor/design-system/resizable` — direct DOM size writes
-  (`Handle/domHelpers.ts`), capture-at-down constraint resolution,
-  ARIA isolated from the 60 fps path (`WcagContext`), Handle
-  `touch-action: none`, immediate pointer capture. Leave layout-agnostic
+- The design system's resizable — direct DOM size writes, capture-at-down
+  constraint resolution, ARIA isolated from the 60 fps path (`WcagContext`),
+  Handle `touch-action: none`, immediate pointer capture. Leave layout-agnostic
   `width` writes, `position: fixed` + rAF polling, and one-box-in-foreign-grid
   as a public mode.
 
@@ -119,7 +112,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   equals its own primary Panel's current percentage, and min/max reflect all
   feasible redistribution on the correct boundary.
   This extends the separator ARIA tests in
-  `vendor/react-resizable-panels/lib/components/separator/Separator.test.tsx`
+  react-resizable-panels' `Separator.test.tsx`
   to the three-Panel indexing regression that two-Panel fixtures cannot catch.
 - [x] `SP-DOM-04` `[convergence]` `[browser]` —
   **Splitter should expose perpendicular separator orientation when the Panel layout axis changes.**
@@ -227,7 +220,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   `[50,50]`; apply `-15` from the same baseline and assert `[25,75]`, with the
   total exactly `100` and no nonadjacent entry.
   This ports the basic `[1++,2]`/`[1--,2]` cases in
-  `vendor/react-resizable-panels/lib/global/utils/adjustLayoutByDelta.test.ts`.
+  react-resizable-panels' `adjustLayoutByDelta.test.ts`.
 - [x] `SP-MATH-03` `[vendor]` `[unit]` —
   **Splitter should apply only the feasible portion of a delta when either adjacent constraint binds.**
   From `[50,50]` with first Panel `min=20,max=60` and second
@@ -241,7 +234,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   assert Panels are consumed nearest-first to `[75,0,0,25]`; add
   `min=10` to Panels 2–4, request `100`, and assert `[70,10,10,10]`.
   This ports the four-Panel `[1++,2,3,4]` matrices in
-  `vendor/react-resizable-panels/lib/global/utils/adjustLayoutByDelta.test.ts`
+  react-resizable-panels' `adjustLayoutByDelta.test.ts`
   and prevents nondeterministic jumping.
 - [x] `SP-MATH-05` `[vendor]` `[unit]` —
   **Splitter should retain the previous valid layout when constraints make a requested result impossible.**
@@ -305,8 +298,8 @@ coexistence and do not repeat the generic StyleProps matrix.
   `[42,58]`, `[45,55]`, and `[50,50]` with no drift from skipped intermediate
   events.
   This is the origin-relative rule in
-  `vendor/react-resizable-panels/lib/global/utils/updateActiveHitRegion.ts`
-  and `vendor/design-system/resizable/Handle/domHelpers.ts`.
+  react-resizable-panels' `updateActiveHitRegion.ts`
+  and the design system's resizable Handle DOM helpers.
 
 ### Controlled values
 
@@ -411,7 +404,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   the first move), one session holding origin pointer and `[40,60]`, and
   documented `data-resizing` before any movement or callback in all engines.
   Immediate capture is
-  `vendor/design-system/resizable/Handle/index.tsx`. react-resizable-panels
+  the design system's resizable Handle. react-resizable-panels
   delays capture to preserve click; Splitter has no click contract.
 - [x] `SP-DRAG-02` `[vendor]` `[browser:all]` —
   **Splitter should map horizontal physical drag to logical Panel growth when direction is LTR or RTL.**
@@ -494,7 +487,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   then press/release the right button before releasing left; assert resizing
   becomes inactive, the accepted layout remains `[60,40]`, and later left
   movement/release is a no-op with all resources restored.
-  This exactly ports `vendor/react-resizable-panels/lib/components/group/Group.test.tsx`
+  This exactly ports react-resizable-panels' `Group.test.tsx`
   “should not break if right click occurs while left click is active.”
 
 ### Keyboard resize
@@ -619,7 +612,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   `14`; assert the midpoint value stays/returns expanded at `20`, while the
   below-midpoint value collapses to `10`, mirrored for either adjacent side and
   with total `100`.
-  This ports `vendor/react-resizable-panels/lib/global/utils/validatePanelGroupLayout.test.ts`
+  This ports react-resizable-panels' `validatePanelGroupLayout.test.ts`
   “should collapse a panel once it drops below the halfway point between
   collapsed and minimum percentage sizes” and the threshold matrices in
   `adjustLayoutByDelta.test.ts`.
@@ -694,7 +687,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   unchanged across those moves and that `data-resizing` does not toggle
   per move.
   A correct solver that still re-renders editors every move is a failed port
-  of `vendor/design-system/resizable/Handle/domHelpers.ts`. Parent `setState`
+  of the design system's resizable Handle DOM helpers. Parent `setState`
   on `onChange` is application-owned; this case proves Splitter itself does
   not commit.
 - [x] `SP-PERF-02` `[reference]` `[browser]` —
@@ -711,7 +704,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   assert `aria-valuenow` / `valuemin` / `valuemax` stay at the pre-session
   values until pointerup, when they match the last candidate (or snap to
   controlled `value` if rejected, per `SP-CTRL-02`).
-  This is `vendor/design-system/resizable` WcagContext isolation: ARIA is not
+  This is the design system's resizable WcagContext isolation: ARIA is not
   a 60 fps subscriber.
 - [x] `SP-PERF-04` `[reference]` `[browser]` —
   **Splitter should write CSS size signals on the same turn as a changed pointermove.**
@@ -726,7 +719,7 @@ coexistence and do not repeat the generic StyleProps matrix.
   Assert no looping poll while idle (ResizeObserver/window resize are
   allowed) and that drag frames are produced from pointermove without a rAF
   throttle or overlay-handle chase.
-  `vendor/design-system/resizable` rAF-polled a `position: fixed` handle;
+  The design system's resizable handle rAF-polled a `position: fixed` handle;
   in-flow Handles do not need that.
 - [x] `SP-PERF-06` `[reference]` `[browser]` —
   **Splitter should resolve CSS and `r` constraints at pointerdown, not on pointermove.**

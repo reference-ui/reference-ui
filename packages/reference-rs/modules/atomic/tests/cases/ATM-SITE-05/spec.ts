@@ -1,5 +1,5 @@
 /**
- * Object-spread extract station. Inline spreads unpack; logical and ternary
+ * Object-spread extract case. Inline spreads unpack; logical and ternary
  * spreads keep siblings and both arms. Same-key ternary spreads yield two wants.
  * Dynamic unresolvable spread guards emit diagnostic warnings.
  */
@@ -15,8 +15,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'padding', '10px')).toBe(true)
     expect(hasWant(result, 'margin', '20px')).toBe(true)
 
-    // The two spread refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // The two spread refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-05', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

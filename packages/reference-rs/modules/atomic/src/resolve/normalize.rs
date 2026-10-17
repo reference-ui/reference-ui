@@ -1,4 +1,4 @@
-//! Value whitespace canonicalization (SPEC-V2-14).
+//! Value whitespace canonicalization.
 //!
 //! Structural whitespace runs in authored values collapse to one space, so
 //! spaced twins (`'1px  solid red'`, multiline backtick grids) mint one atom,

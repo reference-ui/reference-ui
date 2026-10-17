@@ -1,4 +1,4 @@
-// parity.ts — shared set-parity helpers for the PGEN station specs. Takes the
+// parity.ts — shared set-parity helpers for the PGEN specs. Takes the
 // vendored E1/E4 shelf, the live RS tables, and candidate sets, and emits loud
 // diffs naming every missing or extra member. It owns no verdict on its own:
 // each spec feeds it the three legs of its parity triangle plus corrupted

@@ -6,8 +6,8 @@ no Panda type re-export or module augmentation. The world is the TYPE-01 token
 set; the spec walks the generated folder asserting zero matches and asserts
 the brand probe paints.
 
-No engine rung beyond R1's emit-string check (`emitDtsSync` output mentions
-no `@pandacss`, no atomic class names, no jsx farm); no host change was
+No engine rung beyond the emit-string check (`emitDtsSync` output mentions
+no `@pandacss`, no atomic class names, no jsx farm); no host change is
 needed.
 
 Evidence: PLAN §4.1 forbidden; TYP-NATIVE-06.

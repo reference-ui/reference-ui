@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(key, r#"["lib-test-system",[],"marginTop",{"$r":2},true]"#);
     }
 
-    /// Landed-diet body kept as the differential oracle: canonicalize
+    /// Diet body kept as the differential oracle: canonicalize
     /// containers, borrow scalars, always write through the serde tuple.
     fn serde_tuple_diet<W: serde::Serialize + ?Sized>(key: &LookupKey<'_, W>) -> String {
         let canonical_val;

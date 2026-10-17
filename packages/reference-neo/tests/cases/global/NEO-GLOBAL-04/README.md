@@ -6,7 +6,7 @@ The world authors one `.ref-q` global rule with a token text colour plus
 paints the token colour and both pseudos paint it computed with their
 quote glyphs. One rule per node, no shared-declaration merging.
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace D
-(`inline.ts` 60–69 → `global.css` 1493–1504); `[atm]` ATM-LAYER-03.
+Evidence: reference-lib Trace D
+(`inline.ts` 60–69 → `global.css` 1493–1504); ATM-LAYER-03.
 
 > Search terms: pseudo-elements, content, generated content, color, quotation marks, generated quotes, global/pseudo-elements, global/token-ref

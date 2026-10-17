@@ -11,7 +11,7 @@ import {
   analyzeStyletrace,
   analyzeStyletraceBindings,
   analyzeStyletraceDetailed,
-} from './runtime'
+} from './runtime.js'
 
 export interface TracedBinding {
   module: string

@@ -12,7 +12,7 @@ import {
   getDayOfWeek,
   getDaysInMonth,
   parseISODate,
-  type ISODate as CanonicalISODate,
+  type CanonicalISODate,
 } from '../dates/iso'
 import { shiftMonth } from '../dates/pane'
 import type { ISODate } from '../types'

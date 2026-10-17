@@ -1,5 +1,5 @@
 /**
- * Undefined-omission station. Ternary arms that are `undefined` or `void 0`
+ * Undefined-omission case. Ternary arms that are `undefined` or `void 0`
  * do not become wants. Only the defined literal arm is pushed.
  */
 import { expect } from 'vitest'

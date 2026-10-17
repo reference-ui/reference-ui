@@ -1,6 +1,6 @@
 # Popover
 
-Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Popover --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
 Kernel: [Overlay](../Overlay/Overlay.md).
 
 **Thin policy on Overlay.** Popover is Overlay with `isolation` frozen off,
@@ -152,7 +152,7 @@ parts. See Overlay.md.
 
 The hard part of hover-opened interactive content is not the open delay. It is pointer travel from trigger into content without dismissing.
 
-**Vendor.** Floating UI `packages/react/src/safePolygon.ts` — cursor triangle + trough, speed intent, opposite-side leave. Aria `useSafeArea.ts` — convex hull of both padded rects (placement-agnostic). Radix HoverCard is **delay-only** (no polygon) — weaker diagonal travel. Zag `rect/src/polygon.ts` is submenu intent (reusable math). Radix Tooltip hoverable uses a hull with padding 5.
+**Prior art.** Floating UI `packages/react/src/safePolygon.ts` — cursor triangle + trough, speed intent, opposite-side leave. Aria `useSafeArea.ts` — convex hull of both padded rects (placement-agnostic). Radix HoverCard is **delay-only** (no polygon) — weaker diagonal travel. Zag `rect/src/polygon.ts` is submenu intent (reusable math). Radix Tooltip hoverable uses a hull with padding 5.
 
 **Lift** a first-class placement-aware safe polygon into Popover
 `openOnHover`: pad Trigger and Content by 5px, protect direct diagonal travel
@@ -168,7 +168,7 @@ reposition. Combobox and Tooltip must not add independent document listeners.
 
 Hover opens; the user clicks within ~500ms intending to “open,” but click dismisses.
 
-**Vendor.** Base UI `stickIfOpen` / `PATIENT_CLICK_THRESHOLD` in Popover store.
+**Prior art.** Base UI `stickIfOpen` / `PATIENT_CLICK_THRESHOLD` in Popover store.
 
 **Lift** the behaviour. **Shipped** (Gate 4, 300ms). **Leave** the store API.
 
@@ -176,7 +176,7 @@ Hover opens; the user clicks within ~500ms intending to “open,” but click di
 
 Same layer stack: Escape closes the popover first. Outside-press inside a nested popup does not dismiss the parent. Portalled popover registers as a FocusLock shard / dismissable branch.
 
-**Vendor.** Radix popover + dismissable-layer + `useFocusScopeBranch`. e2e `popover.spec.ts` (modal vs non-modal in dialog).
+**Prior art.** Radix popover + dismissable-layer + `useFocusScopeBranch`. e2e `popover.spec.ts` (modal vs non-modal in dialog).
 
 **Lift** into the shared stack. **Leave** `FloatingFocusManager`.
 

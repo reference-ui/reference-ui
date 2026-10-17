@@ -5,7 +5,7 @@ symbol queries, the full browser render contract, rename refresh, the runtime sh
 projector, and the tasty deprioritization the perf law rests on. Worlds duplicate the small oracle fixture
 corpus per case on purpose — each world stays a self-contained fixture in the SYNC-world pattern.
 
-> Search terms: reference parity, NEO-REF, render contract, symbol queries, tasty deprioritization, Voyage Objective 1
+> Search terms: reference parity, NEO-REF, render contract, symbol queries, tasty deprioritization
 
 ## Cases
 
@@ -14,7 +14,7 @@ corpus per case on purpose — each world stays a self-contained fixture in the 
 - NEO-REF-03 — reference render contract: all 18 oracle browser tests ported as specs.
 - NEO-REF-04 — reference refresh after rename: manifest refresh plus browser update across the resync.
 - NEO-REF-05 — reference runtime shell: loading, error, degenerate, provider, and provider-required states.
-- NEO-REF-09 — reference type-parameter projector: the A4 numbers plus the scoped-miss mechanism.
+- NEO-REF-09 — reference type-parameter projector: the counts plus the scoped-miss mechanism.
 - NEO-REF-11 — tasty deprioritization proof: sync-complete before manifest-ready plus identical output.
 
 REF-10 is the lib re-commission, proven outside cases by lib typecheck plus Book fixtures. REF-06, REF-07,

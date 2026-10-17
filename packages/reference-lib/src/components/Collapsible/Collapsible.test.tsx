@@ -698,7 +698,7 @@ describe('Collapsible Unit Contract', () => {
     container.remove()
   })
 
-  it('CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: quarantine controlled-only does not apply, uncontrolled API preserved)', async () => {
+  it('CO-ACT-10: Standalone Collapsible with omitted state starts closed and toggles through its internal store (re-targeted: controlled-only does not apply, uncontrolled API preserved)', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
@@ -1049,7 +1049,7 @@ describe('Collapsible Unit Contract', () => {
     container.remove()
   })
 
-  it('B-12: Collapsible should fire both onChange and onOpenChange when both are passed', async () => {
+  it('Collapsible should fire both onChange and onOpenChange when both are passed', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)

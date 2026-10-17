@@ -85,8 +85,8 @@ impl StyleSurface {
 pub struct TraceOutcome {
     pub bindings: Vec<TracedBinding>,
     pub diagnostics: Vec<StyletraceDiagnostic>,
-    /// Each traced export name to its owned declared prop names (§14),
-    /// unioned with the input surface's seeds.
+    /// Each export name that declares props to the prop names its declaration
+    /// keeps for itself (§14), traced or not, unioned with the input surface's seeds.
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
 }
 
@@ -171,28 +171,40 @@ fn trace_outcome_with_hint(
         staged: &staged,
         programs: &programs,
     };
-    Ok(trace_style_bindings_with_surface(
-        &entries,
-        &normalized_source,
-        &resolved_decl_root,
-        &surface,
-        &sources,
-    ))
+    Ok(trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: &normalized_source,
+        package_root: &resolved_decl_root,
+        surface: &surface,
+        sources: &sources,
+    }))
+}
+
+/// One entry-listed trace over a prebuilt surface: the entries, the source and package roots that
+/// anchor resolution, the surface to resolve names against, and the sources that carry the caller's
+/// file bytes and already-parsed programs.
+pub struct SurfaceTrace<'a> {
+    pub entries: &'a [PathBuf],
+    pub source_root: &'a Path,
+    pub package_root: &'a Path,
+    pub surface: &'a StyleSurface,
+    pub sources: &'a TraceSources<'a>,
 }
 
 /// Trace explicit entries against a prebuilt surface. Entries that fail to
 /// parse yield one diagnostic each and contribute no hosts; edge targets
 /// that fail to parse are recorded by the walker; siblings still trace.
-/// `package_root` anchors import resolution. `sources` carries the caller's
-/// file bytes plus already-parsed programs by path; absent paths parse
-/// from bytes (or disk) exactly as before.
-pub fn trace_style_bindings_with_surface(
-    entries: &[PathBuf],
-    source_root: &Path,
-    package_root: &Path,
-    surface: &StyleSurface,
-    sources: &TraceSources,
-) -> TraceOutcome {
+/// The request's `package_root` anchors import resolution, and its `sources`
+/// carry the caller's file bytes plus already-parsed programs by path; absent
+/// paths parse from bytes (or disk) exactly as before.
+pub fn trace_style_bindings_with_surface(request: SurfaceTrace<'_>) -> TraceOutcome {
+    let SurfaceTrace {
+        entries,
+        source_root,
+        package_root,
+        surface,
+        sources,
+    } = request;
     SurfaceTraceSession {
         source_root,
         package_root,

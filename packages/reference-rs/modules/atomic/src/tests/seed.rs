@@ -1,7 +1,7 @@
 //! Seed contract for the atomic compile pipeline: an empty request emits
 //! the baked root default plus the six-layer preamble with no plans, no
 //! diagnostics, and no tokens. Takes the default CompileRequest; anchors
-//! every station's empty baseline.
+//! every case's empty baseline.
 
 use crate::{compile, CompileRequest};
 

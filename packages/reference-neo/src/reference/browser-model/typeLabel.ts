@@ -11,11 +11,14 @@ const REFERENCE_TYPE_LABEL_ALIASES = new Map<TastySemanticKind, string>([
   ['template_literal', 'template literal'],
 ])
 
+// Members whose label is their semantic-kind word (or its alias), never the declared type.
+const KIND_WORD_LABEL_KINDS = new Set<TastySemanticKind>(['function', 'constructor', 'index'])
+
 export function getReferenceTypeLabel(member: TastyMember, type: TastyTypeRef | undefined): string {
   const semanticKind = getTastyMemberSemanticKind(member)
   if (!type) return 'unknown'
 
-  if (semanticKind === 'function' || semanticKind === 'constructor' || semanticKind === 'index') {
+  if (KIND_WORD_LABEL_KINDS.has(semanticKind)) {
     return REFERENCE_TYPE_LABEL_ALIASES.get(semanticKind) ?? semanticKind
   }
 

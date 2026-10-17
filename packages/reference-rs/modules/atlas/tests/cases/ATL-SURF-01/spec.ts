@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-SURF-01.
+ * Case specification for ATL-SURF-01.
  * Validates baseline analysis across local components, composition wrappers,
  * and included external library package exports.
  * Proves primary SPEC anchor ATL-SURF-01.

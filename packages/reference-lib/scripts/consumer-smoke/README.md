@@ -1,4 +1,4 @@
-# Consumer smoke gate (W-31)
+# Consumer smoke gate
 
 Packs the lib exactly as published, scaffolds a bare Vite + React consumer in
 a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
@@ -36,9 +36,9 @@ pnpm --dir packages/reference-lib run smoke            # full gate
 node packages/reference-lib/scripts/consumer-smoke/run.mjs --keep   # keep scaffold
 ```
 
-The gate intentionally fails on B-03 `element.ref` noise (W-31 acceptance) —
+The gate intentionally fails on `element.ref` noise —
 those errors are counted under a separate `b03` bucket so the verdict names
-the owner. The B-11 degenerate Splitter diagnostic (`[Reference UI Splitter]`)
+the owner. The degenerate Splitter diagnostic (`[Reference UI Splitter]`)
 is allowlisted only after a positive assertion that the fail-fast path fired.
-The B-11 Presence check tolerates the open B-01 exit wedge (it asserts
+The Presence check tolerates the known exit wedge (it asserts
 recovery on re-show, never removal on hide).

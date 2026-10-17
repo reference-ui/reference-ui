@@ -7,7 +7,7 @@ spec asserts the rejection names the ref and the authoring file with line,
 never Panda's escaped literal (`colors\.nope`) or a `var(--colors-nope)`
 ghost, and leaves no half-written folder behind.
 
-Evidence: `[panda-v1]` `core/__tests__/serialize.test.ts` (contrast: Panda
-escapes the literal); `[atm]` ATM-TOKEN-12; `[decision D13]`.
+Evidence: Panda v1 serialize tests (contrast: Panda
+escapes the literal); ATM-TOKEN-12.
 
 > Search terms: typo, unknown token, unresolved, file:line, token/refs, token/diagnostics, NEO-TOKEN-01

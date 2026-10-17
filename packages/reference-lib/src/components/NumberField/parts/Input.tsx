@@ -120,7 +120,7 @@ export const NumberFieldInput = React.forwardRef<HTMLInputElement, NumberFieldIn
 
     // Managed authority (NF-TYPE-03, NF-DOM-06): behavior-owned props are
     // stripped so conflicting consumer casts cannot break the field.
-    // B-26 / SPEC: Input keeps plain textbox semantics — no role recast,
+    // Input keeps plain textbox semantics — no role recast,
     // no numeric aria-value* — so stripping also enforces their absence.
     // Input alone carries native readOnly/required; Group never renders
     // aria-readonly/aria-required. The authored id is consumed by the root

@@ -20,7 +20,6 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `matrix/*` (kept chain and MCP suites), `packages/reference-mcp`, `pipeline/*`, hermetic bundler contracts | **test-core** (`pnpm agent`) |
 | Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
-| Serial `sync()` speed in `packages/reference-rs` (diets, alloc kills, lookup restructure) | `agent-perf` skill: the perf index and its tools (Memex `perf` collection) |
 | Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
 
 If a lib-component task also modified `matrix/*`, `pipeline/*` or `packages/reference-mcp`, finish `test-component` for the component, then **switch to test-core** for that proof. `pnpm agentct` does not cover them. Neo and reference-rs changes go to `agent-neo` / `agent-rs` (table above).
@@ -78,7 +77,7 @@ into your response**. When a screenshot must be kept as a file, save it under
 the repository-root `.screenshots/`: the one gitignored place for agent
 snapshots, never nested inside a package. Kept files are temporary.
 
-Browser tools are for design work and playtests. A failing Playwright test is
+Browser tools are for design work and manual exploratory checks. A failing Playwright test is
 debugged from its own artifacts instead: failure screenshots, `frames.png`
 stills beside each video where the runner makes them, and the trace, read as
 text with `npx playwright trace open <trace.zip>` then `errors` / `actions` /

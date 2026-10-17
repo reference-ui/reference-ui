@@ -18,7 +18,7 @@ const CONFIG_HOSTS = ['CardFrame', 'PanelShell'];
 // The runner synced this world before serving: compile-request.json carries
 // exactly the six frozen keys with the bytes sync() sent, jsxHosts unions
 // the config hosts with the generated primitives, and jsx-elements.json pins
-// the merged multi-host content (coverage-map note a).
+// the merged multi-host content.
 export default async function run({ case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
   const requestPath = path.join(outDir, 'system', 'compile-request.json');

@@ -1,7 +1,6 @@
 # Splitter features
 
-Design-gated follow-ups: each needs a product, UX, or API call before
-implementation. Provenance in DECISIONS.md.
+Design-gated follow-ups: each needs a product, UX, or API call before implementation.
 
 ## Required controlled `value` + v2 Root contract
 
@@ -21,7 +20,7 @@ gone, and the Root sheds props that belong to Handles.
 requests each changed complete array; `onChangeEnd` fires the last
 requested layout once per interaction.
 
-**Maintainer take:** Right direction for a v2 major, but only together
+**Recommendation:** Right direction for a v2 major, but only together
 with the `min`/`max` rename as one breaking release with a codemod.
 
 ## Panel `min`/`max` + DOM-order registration
@@ -41,7 +40,7 @@ style surface so apps cannot fight the kernel.
 Numbers are percentage points; strings are measured lengths resolved
 against available Panel-axis size.
 
-**Maintainer take:** The rename is worth doing exactly once, in the
+**Recommendation:** The rename is worth doing exactly once, in the
 same breaking release as required `value`.
 
 ## Measured CSS-length constraints
@@ -61,7 +60,7 @@ and on idle resize, never per move.
 root. Math helpers (`parseCssLengthToPx`,
 `resolveConstraintToPercentage`) are already in the tree, unwired.
 
-**Maintainer take:** Worth adding when the first fixed-sidebar consumer
+**Recommendation:** Worth adding when the first fixed-sidebar consumer
 appears; needs the SSR story and the parse-failure diagnostic decided
 first.
 
@@ -83,8 +82,8 @@ publishes `--reference-splitter-panel-size` and sizes via
 Splitter never writes inline `flex-basis`/`width` or
 `grid-template-*` as a competing signal.
 
-**Maintainer take:** Good as the hot-path write target for the frame
-budget, but it is an observable-DOM change that needs HQ sign-off.
+**Recommendation:** Good as the hot-path write target for the frame
+budget, but it is an observable-DOM change that needs sign-off.
 
 ## Pointer-session frame budget
 
@@ -98,7 +97,7 @@ or listener churn until pointerup.
 `SP-PERF-01`–`SP-PERF-07` (origin-relative math already landed; the
 session around it did not).
 
-**Maintainer take:** The highest-leverage perf investment here, but it
+**Recommendation:** The highest-leverage perf investment here, but it
 is a rewrite-class drag loop that must land with measured constraints
 and the CSS-variable contract.
 
@@ -113,9 +112,8 @@ transient trees fail locally with a diagnostic.
 **API:** No new props — a state-model contract over the existing
 `value` array (positional, atomic value/order updates).
 
-**Maintainer take:** Needed for any dynamic-panel consumer, but the
-reinsert-recovery semantics (may vs. must) and the invalid-tree
-diagnostic wording need HQ answers first.
+**Recommendation:** Needed for any dynamic-panel consumer, but the
+reinsert-recovery semantics (may vs. must) and the invalid-tree diagnostic wording need decisions first.
 
 ## Disabled/blocked Handle determinism
 
@@ -128,7 +126,7 @@ order.
 **API:** No new props — every feasible Handle is a `tabIndex=0`
 separator in DOM order; blocked Handles report `aria-disabled`.
 
-**Maintainer take:** Good a11y hardening, blocked on one UX call:
+**Recommendation:** Good a11y hardening, blocked on one UX call:
 focusable-but-inert vs. leaving the tab order.
 
 ## Drag denominator is the Panel-axis sum
@@ -141,7 +139,7 @@ recipes agree with the solver.
 **API:** No new props — e.g. `min="100px"` in a 516px Root with a 16px
 Handle resolves to 20, not ~19.4.
 
-**Maintainer take:** Correct by definition once measured constraints
+**Recommendation:** Correct by definition once measured constraints
 exist, but it changes shipped drag feel on thick Handles, so it ships
 only as part of that reviewed delta.
 
@@ -155,9 +153,8 @@ ARIA, pointer capture, or listeners are installed.
 **API:** No new props — same validation already in
 `splitter-math.ts`, escalated in severity.
 
-**Maintainer take:** Fail-fast is the right instinct, but throwing
-turns today's silently odd trees into crashes, so HQ must pick throw
-vs. dev-only error vs. render-nothing-with-diagnostic first.
+**Recommendation:** Fail-fast is the right instinct, but throwing
+turns today's silently odd trees into crashes, so the choice between throwing, a dev-only error, and rendering nothing with a diagnostic must be made first.
 
 ## Default min floor 0 vs shipped 5%
 
@@ -167,9 +164,7 @@ drag) or the shipped 5% clamp.
 
 **API:** No new props — a single default plus solver re-proof.
 
-**Maintainer take:** Keep 5% unless HQ explicitly wants
-disappearing-by-drag, which also needs a screen-reader story to
-distinguish it from `collapsible` collapse.
+**Recommendation:** Keep 5% unless disappearing-by-drag is explicitly wanted. That also needs a screen-reader story to distinguish it from `collapsible` collapse.
 
 ## 9px Handle vs 24px pointer target
 
@@ -181,17 +176,13 @@ growing the visible bar, with a touch-target story for coarse pointers.
 **API:** Most likely no new props (pure CSS/geometry), or a `hitSize` /
 StyleProps-documented target convention.
 
-**Maintainer take:** The invisible-hit-area option preserves the
-signed visuals and is probably right, but HQ must accept the click-strip
-trade-off first.
+**Recommendation:** The invisible-hit-area option preserves the
+signed visuals and is probably right, but the click-strip trade-off must be accepted first.
 
-**Status (2026-09-28): LANDED per HQ FULL-BLAST order on the maintainer
-recommendation — WITHOUT explicit HQ acceptance of the click-strip
-trade-off.** Transparent `::before` strip on the Handle (±8px into each
+**Implemented.** Transparent `::before` strip on the Handle (±8px into each
 neighbor, 25px total); 9px visuals and all 7 baselines unchanged. Clicks
 within 8px of the Handle now land on the separator instead of neighboring
-content. Pinned by the `FEATURES #11` CT test (`elementFromPoint` both
-axes).
+content. Pinned by a CT test (`elementFromPoint` on both axes).
 
 ## Root-level `disabled` freeze or removal
 
@@ -202,6 +193,6 @@ new `SP-*` cases) or remove it and let products disable per-Handle.
 **API:** Either a specified `disabled?: boolean` on Root with group
 announce semantics, or no such prop.
 
-**Maintainer take:** Per-Handle disable plus host `aria-disabled`
+**Recommendation:** Per-Handle disable plus host `aria-disabled`
 likely covers every real need; keep root `disabled` only if a product
 shows a whole-group case distinct from "every Handle disabled".

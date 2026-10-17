@@ -7,9 +7,8 @@ runtime values. The spec checks the sheet carries exactly three atoms —
 the overlap dedups instead of doubling — then checks computed: all three
 probes paint their shade, so the wildcard expanded the whole category.
 
-Evidence: `[panda-v1]`
-`packages/core/__tests__/static-css.test.ts` "works" (`color: ['*']`
-expansion); `[atm]` ATM-STATIC-02 (AST + static dedup); `[decision D14]`
+Evidence: Panda v1 static-css tests "works" (`color: ['*']`
+expansion); ATM-STATIC-02 (AST + static dedup)
 (real tokens only — the count is the token count).
 
 > Search terms: glob, asterisk, dedupe, deduplication, star operator, static/wildcard, static/dedup, NEO-STATIC-01

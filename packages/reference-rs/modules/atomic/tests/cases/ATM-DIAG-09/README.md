@@ -1,4 +1,4 @@
-# ATM-DIAG-09 — Exact-plan-absent station (ATM-DIAG-09, Operation Error Correct Slice 0)
+# ATM-DIAG-09 — Exact-plan-absent
 
 Exact plan absent: when diagnostics predicts a static runtime query
 and the final plan omits it, the author gets one located non-fatal
@@ -16,15 +16,13 @@ exact absent declaration (`color`, `red.500`).
 
 Mechanism: `resolve/mod.rs::lower_conditions` drops the whole want
 with the exact key (raw `when` + prop + authored value) in hand, but
-pushes an unlocated warning naming only the condition. Prime witness
-per architect ruling Q4 (`VOYAGE-LOG-2.md`); whether runtime actually
-queries that key awaits the parallel Slice-0 witness-hunt verdict —
-if the hunt finds no witness, this station's target release carries
+pushes an unlocated warning naming only the condition. Prime witness: whether runtime actually
+queries that key awaits a witness search —
+if the search finds no witness, this case's target release carries
 zero new userspace warnings instead. Related: `ATM-DIAG-08` (exact
 plan present), `ATM-DIAG-10` (incidental coverage), `ATM-DIAG-11`
 (unknown values stay compiler-only), `ATM-COND-12` (drop shape).
-Contract: `docs/MISSIONS/OPERATION_ERROR_CORRECT.md` stations +
-[atomic SPEC.md](../../../SPEC.md) (row pending sibling crew).
-Operation Error Correct Slice 0; observed red hinge: the warning is
+Contract: [atomic SPEC.md](../../../SPEC.md).
+observed red hinge: the warning is
 unlocated and names only `_hovr`, not the declaration.
 Search: diagnostics exact absent plan proof UnknownCondition miss.

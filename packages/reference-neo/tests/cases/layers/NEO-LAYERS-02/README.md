@@ -20,7 +20,7 @@ Phase A (`layers: [up]`) proves, from the synced artefacts and computed style:
 3. Paint: the upstream utility paints `rgb(190, 24, 93)` and the upstream recipe paints
    `font-size: 20px` on probes in `index.html`. Those probes carry `data-layer="neo-layers2-up"`
    the way the upstream's own primitives would, because its portable token variable resolves only
-   under that scope (`[data-layer]`, D3 in `layers/SPEC.md`). Without the scope the utility paints
+   under that scope (`[data-layer]`, in `layers/SPEC.md`). Without the scope the utility paints
    nothing, which is the same rule the probe would show for any layer-only token.
 4. A consumer `css({ color: 'upInk' })` under layers is not a sync error. Sync resolves with one
    `ATM-W-UNKNOWN-COLOR` warning at the consumer's `src/app.ts` call, naming `upInk`, and emits the
@@ -39,9 +39,9 @@ upstream recipe also prints inside the own block, because the own spec now holds
 duplication is current behaviour and is not asserted here.
 
 Evidence: `src/config/types.ts:44-49` (the `layers` contract: streams join, fragments and roster
-stay extends-only), `src/sync/index.ts:161-169` (upstream names, extends then layers),
-`src/sync/index.ts:219-223` (the merge reads both buckets), `src/collect/lib/evaluate.ts:133,164`
-(fragments read extends only), `src/system/base/jsx.ts:71` (the roster reads extends only),
+stay extends-only), `src/sync/index.ts:135-143` (upstream names, extends then layers),
+`src/sync/index.ts:204-207` (the merge reads both buckets), `src/collect/lib/evaluate.ts:63,110`
+(fragments read extends only), `src/system/base/jsx.ts:112` (the roster reads extends only),
 `src/packager/system.ts:23-39` (the published artefacts), `src/system/base/streams.ts:185-214`
 (the statement and blocks). Siblings: NEO-LAYERS-01 (a layer paints between extends and own),
 NEO-CHAIN-06 (real upstream sync under extends), NEO-SYNC-08 (the rejection pattern, which this

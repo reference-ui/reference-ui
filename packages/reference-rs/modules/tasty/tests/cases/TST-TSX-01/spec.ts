@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TSX-01.
+ * Case specification for TST-TSX-01.
  * Verifies symbol loading from TSX source files and optional member detection.
  * Proves primary SPEC ID anchor TST-TSX-01.
  */

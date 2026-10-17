@@ -51,7 +51,7 @@ export const DefaultOpen = () => {
   )
 }
 
-// Quarantine-port fixtures below. Probe controls are plain buttons (not the
+// Ported fixtures below. Probe controls are plain buttons (not the
 // component under test); programmatic close buttons keep focus where it is so
 // focus-evacuation cases observe the component, not the click.
 const keepFocusOnMouseDown = (e: React.MouseEvent) => {

@@ -7,7 +7,7 @@
  * moves, and scrollToIndex for unmounted virtual targets.
  */
 import * as React from 'react'
-// Kernel seam (F2 #2): direction converges on RovingFocus.
+// Kernel seam: direction converges on RovingFocus.
 import { getDirection } from '../../RovingFocus/RovingFocus'
 import { resolveStandaloneTarget, resolveVirtualTarget } from '../navigation/targets'
 import type { ListboxSession } from './use-listbox-session'

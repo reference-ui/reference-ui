@@ -1,5 +1,5 @@
 /**
- * Scope-chain station (ATM-SITE-53, SPEC-V2-75). A value-position identifier
+ * Scope-chain (ATM-SITE-53). A value-position identifier
  * resolves through its binding: a `Card({ color })` param shadows the
  * cross-file `export const color` (diagnostic, zero wants), an inner `const`
  * shadows an outer same-named const (innermost leaves only), and imported
@@ -73,7 +73,7 @@ const spec: AtomicCaseSpec = {
 
     // The dynamic identifier warns and mints nothing at the site; its sink
     // infos a zero count (the pool holds no compatible value) — both on the
-    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    // opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-53', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

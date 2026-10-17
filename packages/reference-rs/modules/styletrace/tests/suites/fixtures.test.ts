@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { traceBindings } from '../../js/index'
+import { traceBindings } from '../../js/index.js'
 import {
   createNeoSyncedWorkspaceFixture,
   createNodeBuiltinHelperFixture,
@@ -18,7 +18,7 @@ import {
   traceDirWithHint,
   traceDirWithoutHint,
   traceFixtureDir,
-} from '../harness/helpers'
+} from '../harness/helpers.js'
 
 const TESTS_DIR = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 

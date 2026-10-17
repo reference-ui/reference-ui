@@ -1,5 +1,5 @@
 /**
- * Source-modes station (ATM-DIAG-14, Error Correct Slice 2 + 5 channel).
+ * Source-modes.
  * .ts/.tsx/.js/.jsx use the one compiler parse; JSX mode, parse errors,
  * and UTF-16 locations do not drift between extraction and diagnostics.
  * The opt-in `compilerDiagnostics` channel (`logs: ['compiler']`) records

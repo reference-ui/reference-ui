@@ -7,8 +7,8 @@
  * each napi build (.github/workflows/rust-compile.yml) and uploads the stamp
  * beside its binary.
  */
-import { nativeDir, packageDir } from '../shared/paths'
-import { writeNativeStamp } from '../shared/native-freshness'
+import { nativeDir, packageDir } from '../shared/paths.js'
+import { writeNativeStamp } from '../shared/native-freshness.js'
 
 const triple = process.argv.slice(2).find(arg => arg !== '--')
 if (!triple) {

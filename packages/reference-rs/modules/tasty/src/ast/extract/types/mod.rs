@@ -95,45 +95,10 @@ impl<'a> LoweringContext<'a> {
             .collect()
     }
 
+    /// The one exhaustive match over the oxc `TSType` variants. Each arm sends one family to its function, and no
+    /// family calls another, so a variant that oxc adds is a compile error here until it is routed.
     pub(super) fn lower_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
-        if let Some(intrinsic) = self.lower_keyword_type(type_annotation) {
-            return intrinsic;
-        }
-
         match type_annotation {
-            TSType::TSIntrinsicKeyword(keyword) => self.lower_intrinsic_keyword(keyword),
-            TSType::TSLiteralType(literal) => self.lower_literal_type(literal),
-            TSType::TSUnionType(union) => TypeRef::Union {
-                types: self.lower_type_list(&union.types),
-            },
-            TSType::TSArrayType(array_type) => self.lower_array_type(array_type),
-            TSType::TSTupleType(tuple_type) => self.lower_tuple_type(tuple_type),
-            TSType::TSIntersectionType(intersection) => TypeRef::Intersection {
-                types: self.lower_type_list(&intersection.types),
-            },
-            TSType::TSTypeLiteral(type_literal) => self.lower_type_literal(type_literal),
-            TSType::TSParenthesizedType(parenthesized) => {
-                self.lower_type(&parenthesized.type_annotation)
-            }
-            TSType::TSTypeReference(reference) => self.lower_type_reference(reference),
-            TSType::TSNamedTupleMember(named) => self.lower_named_tuple_member_type(named),
-            TSType::TSIndexedAccessType(indexed_access) => {
-                self.lower_indexed_access_type(indexed_access)
-            }
-            TSType::TSImportType(_) | TSType::TSInferType(_) => self.raw_type(type_annotation),
-            TSType::TSFunctionType(function_type) => self.lower_function_type(function_type),
-            TSType::TSConstructorType(constructor_type) => {
-                self.lower_constructor_type(constructor_type)
-            }
-            TSType::TSTypeOperatorType(operator) => self.lower_type_operator_type(operator),
-            TSType::TSTypeQuery(query) => self.lower_type_query(query),
-            TSType::TSConditionalType(conditional) => self.lower_conditional_type(conditional),
-            TSType::TSMappedType(mapped) => self.lower_mapped_type(mapped),
-            TSType::TSTemplateLiteralType(template) => self.lower_template_literal_type(template),
-            TSType::TSTypePredicate(_) | TSType::TSThisType(_) => self.raw_type(type_annotation),
-            TSType::JSDocNullableType(_)
-            | TSType::JSDocNonNullableType(_)
-            | TSType::JSDocUnknownType(_) => self.raw_type(type_annotation),
             TSType::TSStringKeyword(_)
             | TSType::TSNumberKeyword(_)
             | TSType::TSBooleanKeyword(_)
@@ -145,9 +110,116 @@ impl<'a> LoweringContext<'a> {
             | TSType::TSBigIntKeyword(_)
             | TSType::TSSymbolKeyword(_)
             | TSType::TSNeverKeyword(_)
-            | TSType::TSVoidKeyword(_) => {
-                unreachable!("keyword types handled in lower_keyword_type")
+            | TSType::TSVoidKeyword(_)
+            | TSType::TSIntrinsicKeyword(_)
+            | TSType::TSLiteralType(_)
+            | TSType::TSImportType(_)
+            | TSType::TSInferType(_)
+            | TSType::TSTypePredicate(_)
+            | TSType::TSThisType(_)
+            | TSType::JSDocNullableType(_)
+            | TSType::JSDocNonNullableType(_)
+            | TSType::JSDocUnknownType(_) => self.lower_leaf_type(type_annotation),
+            TSType::TSUnionType(_)
+            | TSType::TSIntersectionType(_)
+            | TSType::TSArrayType(_)
+            | TSType::TSTupleType(_) => self.lower_list_type(type_annotation),
+            TSType::TSTypeLiteral(_)
+            | TSType::TSNamedTupleMember(_)
+            | TSType::TSIndexedAccessType(_)
+            | TSType::TSTypeOperatorType(_) => self.lower_member_type(type_annotation),
+            TSType::TSFunctionType(_)
+            | TSType::TSConstructorType(_)
+            | TSType::TSTypeQuery(_)
+            | TSType::TSMappedType(_) => self.lower_signature_type(type_annotation),
+            TSType::TSParenthesizedType(_)
+            | TSType::TSTypeReference(_)
+            | TSType::TSConditionalType(_)
+            | TSType::TSTemplateLiteralType(_) => self.lower_nested_type(type_annotation),
+        }
+    }
+
+    /// Keywords, intrinsic keywords, literal types, and the variants that stay raw. Each lowers to one scalar or to
+    /// its source text, with no child types to lower.
+    fn lower_leaf_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSStringKeyword(_)
+            | TSType::TSNumberKeyword(_)
+            | TSType::TSBooleanKeyword(_)
+            | TSType::TSUnknownKeyword(_)
+            | TSType::TSAnyKeyword(_)
+            | TSType::TSUndefinedKeyword(_)
+            | TSType::TSNullKeyword(_)
+            | TSType::TSObjectKeyword(_)
+            | TSType::TSBigIntKeyword(_)
+            | TSType::TSSymbolKeyword(_)
+            | TSType::TSNeverKeyword(_)
+            | TSType::TSVoidKeyword(_) => self.lower_keyword_type(type_annotation),
+            TSType::TSIntrinsicKeyword(keyword) => self.lower_intrinsic_keyword(keyword),
+            TSType::TSLiteralType(literal) => self.lower_literal_type(literal),
+            TSType::TSImportType(_)
+            | TSType::TSInferType(_)
+            | TSType::TSTypePredicate(_)
+            | TSType::TSThisType(_)
+            | TSType::JSDocNullableType(_)
+            | TSType::JSDocNonNullableType(_)
+            | TSType::JSDocUnknownType(_) => self.raw_type(type_annotation),
+            _ => unreachable!("lower_type routes only leaf variants here"),
+        }
+    }
+
+    /// Unions, intersections, arrays, and tuples.
+    fn lower_list_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSUnionType(union) => TypeRef::Union {
+                types: self.lower_type_list(&union.types),
+            },
+            TSType::TSIntersectionType(intersection) => TypeRef::Intersection {
+                types: self.lower_type_list(&intersection.types),
+            },
+            TSType::TSArrayType(array_type) => self.lower_array_type(array_type),
+            TSType::TSTupleType(tuple_type) => self.lower_tuple_type(tuple_type),
+            _ => unreachable!("lower_type routes only list variants here"),
+        }
+    }
+
+    /// Type literals, named tuple members, and indexed or operator access.
+    fn lower_member_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSTypeLiteral(type_literal) => self.lower_type_literal(type_literal),
+            TSType::TSNamedTupleMember(named) => self.lower_named_tuple_member_type(named),
+            TSType::TSIndexedAccessType(indexed_access) => {
+                self.lower_indexed_access_type(indexed_access)
             }
+            TSType::TSTypeOperatorType(operator) => self.lower_type_operator_type(operator),
+            _ => unreachable!("lower_type routes only member variants here"),
+        }
+    }
+
+    /// Function and constructor types, type queries, and mapped types.
+    fn lower_signature_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSFunctionType(function_type) => self.lower_function_type(function_type),
+            TSType::TSConstructorType(constructor_type) => {
+                self.lower_constructor_type(constructor_type)
+            }
+            TSType::TSTypeQuery(query) => self.lower_type_query(query),
+            TSType::TSMappedType(mapped) => self.lower_mapped_type(mapped),
+            _ => unreachable!("lower_type routes only signature variants here"),
+        }
+    }
+
+    /// Parentheses, type references, and conditional and template literal types. Each lowers child types of its own,
+    /// and a parenthesized type passes straight through to the type it wraps.
+    fn lower_nested_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        match type_annotation {
+            TSType::TSParenthesizedType(parenthesized) => {
+                self.lower_type(&parenthesized.type_annotation)
+            }
+            TSType::TSTypeReference(reference) => self.lower_type_reference(reference),
+            TSType::TSConditionalType(conditional) => self.lower_conditional_type(conditional),
+            TSType::TSTemplateLiteralType(template) => self.lower_template_literal_type(template),
+            _ => unreachable!("lower_type routes only nested variants here"),
         }
     }
 

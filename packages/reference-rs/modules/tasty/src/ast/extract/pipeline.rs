@@ -7,6 +7,7 @@ use oxc_ast::ast::{Comment, Statement, TSInterfaceDeclaration, TSTypeAliasDeclar
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
+use super::module_bindings::{ExportOutputs, ExportScope};
 use super::namespaces::{collect_namespace_table, NamespaceView};
 use super::statements::{
     exports_from_statement, import_bindings_from_statement, unresolved_import_diagnostics,
@@ -14,7 +15,7 @@ use super::statements::{
 };
 use super::symbols::{push_interface_shell, push_type_alias_shell};
 use super::values::value_bindings_from_statement;
-use super::ExtractionContext;
+use super::{ExtractionContext, ShellSink, StatementScope};
 use crate::ast::model::{ImportBinding, ParsedFileAst, SymbolShell};
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::diagnostics::{DiagnosticError, TastyDiagnostic};
@@ -61,8 +62,14 @@ fn extract_file(
     let mut bindings = FileBindings::default();
     bindings.import_bindings.extend(namespaces.aliases.clone());
 
+    let scope = StatementScope {
+        resolver,
+        file_id_set,
+        scanned_file,
+        comments,
+    };
     for statement in parsed.program.body.iter() {
-        bindings.apply_statement(resolver, scanned_file, file_id_set, statement, comments);
+        bindings.apply_statement(&scope, statement);
     }
 
     bindings.materialize_library_export_closure(scanned_file, &parsed.program.body, comments);
@@ -81,7 +88,6 @@ fn extract_file(
         file_id: scanned_file.file_id.clone(),
         module_specifier: scanned_file.module_specifier.clone(),
         library: scanned_file.library.clone(),
-        source: scanned_file.source.clone(),
         import_bindings: bindings.import_bindings,
         value_bindings: bindings.value_bindings,
         export_bindings: bindings.export_bindings,
@@ -102,41 +108,37 @@ struct FileBindings {
 }
 
 impl FileBindings {
-    fn apply_statement(
-        &mut self,
-        resolver: &ImportResolver,
-        scanned_file: &ScannedFile,
-        file_id_set: &std::collections::BTreeSet<String>,
-        statement: &Statement<'_>,
-        comments: &[Comment],
-    ) {
-        import_bindings_from_statement(
-            resolver,
-            scanned_file,
-            statement,
-            file_id_set,
-            &mut self.import_bindings,
-        );
+    fn apply_statement(&mut self, scope: &StatementScope<'_>, statement: &Statement<'_>) {
+        import_bindings_from_statement(scope, statement, &mut self.import_bindings);
         let value_ctx = ExtractionContext {
-            source: &scanned_file.source,
+            source: &scope.scanned_file.source,
             comments: &[],
             import_bindings: &self.import_bindings,
-            module_specifier: &scanned_file.module_specifier,
-            library: &scanned_file.library,
+            module_specifier: &scope.scanned_file.module_specifier,
+            library: &scope.scanned_file.library,
         };
         value_bindings_from_statement(statement, &value_ctx, &mut self.value_bindings);
-        exports_from_statement(
-            resolver,
-            file_id_set,
-            scanned_file,
-            statement,
-            comments,
-            &mut self.import_bindings,
-            &mut self.export_bindings,
-            &mut self.reexport_target,
-            &mut self.export_all_targets,
-            &mut self.exports,
-        );
+
+        let export_ctx = ExtractionContext {
+            source: &scope.scanned_file.source,
+            comments: scope.comments,
+            import_bindings: &self.import_bindings,
+            module_specifier: &scope.scanned_file.module_specifier,
+            library: &scope.scanned_file.library,
+        };
+        let export_scope = ExportScope {
+            file_id: &scope.scanned_file.file_id,
+            ctx: &export_ctx,
+            resolver: scope.resolver,
+            file_id_set: scope.file_id_set,
+        };
+        let mut outputs = ExportOutputs {
+            export_bindings: &mut self.export_bindings,
+            reexport_target: &mut self.reexport_target,
+            export_all_targets: &mut self.export_all_targets,
+            exports: &mut self.exports,
+        };
+        exports_from_statement(&export_scope, statement, &mut outputs);
     }
 
     fn materialize_library_export_closure(
@@ -149,26 +151,7 @@ impl FileBindings {
             return;
         }
 
-        enum LocalTypeDecl<'a> {
-            Interface(&'a TSInterfaceDeclaration<'a>),
-            TypeAlias(&'a TSTypeAliasDeclaration<'a>),
-        }
-
-        let local_decls = statements
-            .iter()
-            .filter_map(|statement| match statement {
-                Statement::TSInterfaceDeclaration(interface_decl) => Some((
-                    interface_decl.id.name.to_string(),
-                    LocalTypeDecl::Interface(interface_decl),
-                )),
-                Statement::TSTypeAliasDeclaration(type_alias) => Some((
-                    type_alias.id.name.to_string(),
-                    LocalTypeDecl::TypeAlias(type_alias),
-                )),
-                _ => None,
-            })
-            .collect::<BTreeMap<_, _>>();
-
+        let local_decls = local_type_decls(statements);
         if local_decls.is_empty() {
             return;
         }
@@ -206,39 +189,60 @@ impl FileBindings {
             };
 
             let export_len_before = self.exports.len();
-            let is_exported = exported_locals.contains(&local_name);
-
-            match local_decl {
-                LocalTypeDecl::Interface(interface_decl) => push_interface_shell(
-                    &scanned_file.file_id,
-                    &ctx,
-                    interface_decl,
-                    interface_decl.span(),
-                    is_exported,
-                    &mut self.exports,
-                ),
-                LocalTypeDecl::TypeAlias(type_alias) => push_type_alias_shell(
-                    &scanned_file.file_id,
-                    &ctx,
-                    type_alias,
-                    type_alias.span(),
-                    is_exported,
-                    &mut self.exports,
-                ),
-            }
+            let mut sink = ShellSink {
+                file_id: &scanned_file.file_id,
+                ctx: &ctx,
+                exports: &mut self.exports,
+            };
+            push_local_decl(local_decl, &mut sink, exported_locals.contains(&local_name));
 
             let Some(shell) = self.exports.get(export_len_before) else {
                 continue;
             };
-
             emitted.insert(shell.id.clone());
+            pending.extend(
+                local_references_in_file(shell, &scanned_file.module_specifier)
+                    .into_iter()
+                    .filter(|referenced_local| local_decls.contains_key(referenced_local)),
+            );
+        }
+    }
+}
 
-            for referenced_local in local_references_in_file(shell, &scanned_file.module_specifier)
-            {
-                if local_decls.contains_key(&referenced_local) {
-                    pending.push(referenced_local);
-                }
-            }
+/// A local interface or type alias that a library export closure may emit.
+enum LocalTypeDecl<'a> {
+    Interface(&'a TSInterfaceDeclaration<'a>),
+    TypeAlias(&'a TSTypeAliasDeclaration<'a>),
+}
+
+/// The interface and type-alias declarations of a file, keyed by name. A later declaration with the same name
+/// replaces an earlier one, as it did when the map was collected in one pass.
+fn local_type_decls<'a>(statements: &'a [Statement<'a>]) -> BTreeMap<String, LocalTypeDecl<'a>> {
+    statements.iter().filter_map(local_type_decl).collect()
+}
+
+fn local_type_decl<'a>(statement: &'a Statement<'a>) -> Option<(String, LocalTypeDecl<'a>)> {
+    match statement {
+        Statement::TSInterfaceDeclaration(interface_decl) => Some((
+            interface_decl.id.name.to_string(),
+            LocalTypeDecl::Interface(interface_decl),
+        )),
+        Statement::TSTypeAliasDeclaration(type_alias) => Some((
+            type_alias.id.name.to_string(),
+            LocalTypeDecl::TypeAlias(type_alias),
+        )),
+        _ => None,
+    }
+}
+
+/// Pushes one local declaration's symbol shell into the sink, marked exported or not.
+fn push_local_decl(local_decl: &LocalTypeDecl<'_>, sink: &mut ShellSink<'_, '_>, exported: bool) {
+    match local_decl {
+        LocalTypeDecl::Interface(interface_decl) => {
+            push_interface_shell(sink, interface_decl, interface_decl.span(), exported)
+        }
+        LocalTypeDecl::TypeAlias(type_alias) => {
+            push_type_alias_shell(sink, type_alias, type_alias.span(), exported)
         }
     }
 }

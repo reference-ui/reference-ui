@@ -138,9 +138,7 @@ trace (`atomic/src/hosts/diagnostics.rs`). The empty host set is reported by
 atomic extraction, not by a styletrace error: with no host, style-bearing JSX gets one
 ATM-E-MISSING-HOST-GRAPH per file (ATM-SITE-13, `extract/jsx/mod.rs`
 `report_dropped_tag` into `extract/context.rs` `report_missing_graph`), and
-extraction fails closed without scanning every tag. The voyage that
-made Neo-synced trees traceable is recorded in
-[styletrace.md](../../../../docs/MISSIONS/COMPLETED/STYLETRACE.md). Do not close
+extraction fails closed without scanning every tag. Do not close
 the gap with a PascalCase name list.
 
 Class components are not traced in v1. A class whose props expose StyleProps emits a `STT-W-CLASS-COMPONENT` warning instead, and a higher-order component whose argument names no component emits `STT-W-UNRESOLVED-HOC-ARGUMENT` rather than a guess.

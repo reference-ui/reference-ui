@@ -13,7 +13,7 @@ import { useChoiceDismiss } from '../hooks'
 import type { MenuCheckboxItemProps } from '../types'
 import { ChoiceIndicator, choiceItemLayout } from './indicator'
 
-// --- Choice items (W-28) ------------------------------------------------------
+// --- Choice items ------------------------------------------------------
 // Controlled choice commands. Activation order (MN-CHOICE-06): native
 // handler → cancelable onSelect → one checked/value request → optional
 // deepest-first dismissal. closeOnSelect defaults false; cancellation in a

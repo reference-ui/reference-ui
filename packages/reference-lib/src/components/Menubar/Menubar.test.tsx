@@ -401,7 +401,7 @@ describe('Menubar value coordination', () => {
   })
 })
 
-// Red-team Hunt 1 fortify pins: a no-op entry key (Up/Down/Enter/Space) on an
+// Fortify pins: a no-op entry key (Up/Down/Enter/Space) on an
 // already-open trigger must plant no entry intent, so the next unrelated
 // open (switch or programmatic) lands container-or-first per SPEC MB-KEY-03.
 describe('Menubar stale entry intent pins', () => {
@@ -482,7 +482,7 @@ describe('Menubar stale entry intent pins', () => {
     return el.hasAttribute('data-reference-menu-content')
   }
 
-  it('P1: trigger-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
+  it('trigger-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
     const seen: (string | null)[] = []
     await React.act(async () => {
       root.render(<Bar seen={seen} />)
@@ -515,7 +515,7 @@ describe('Menubar stale entry intent pins', () => {
     ).toBe(true)
   })
 
-  it('P2: content-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
+  it('content-arrow switch after Up-on-open-trigger lands container-or-first', async () => {
     await React.act(async () => {
       root.render(<Bar />)
     })
@@ -540,7 +540,7 @@ describe('Menubar stale entry intent pins', () => {
     ).toBe(true)
   })
 
-  it('P3: programmatic open after Up-on-open-trigger lands container-or-first', async () => {
+  it('programmatic open after Up-on-open-trigger lands container-or-first', async () => {
     const control = { setValue: (_v: string | null) => {} }
     await React.act(async () => {
       root.render(<Bar control={control} />)

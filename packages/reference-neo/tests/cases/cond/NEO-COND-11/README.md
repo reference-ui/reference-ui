@@ -9,8 +9,7 @@ and the group child paints brand under a real hover of the group while
 the peer sibling paints brand while the peer has focus — each returning
 to ink after.
 
-Evidence: `[atm]` P1 #13 (group/peer COND-09); R1 probe
-`/tmp/cond-batch4-r1/probe.mjs` emits
+Evidence: group/peer COND-09; probes emits
 `:is(:where(.group, [data-group]):is(:hover, [data-hover]) *)` and
 `:is(:where(.peer, [data-peer]):is(:focus, [data-focus]) ~ *)`.
 

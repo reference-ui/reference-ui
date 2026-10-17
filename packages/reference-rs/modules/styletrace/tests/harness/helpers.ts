@@ -15,7 +15,7 @@ import {
   traceDetailed,
   type StyletraceDiagnostic,
   type TracedBinding,
-} from '../../js/index'
+} from '../../js/index.js'
 import {
   createVirtualWorkspace,
   type GoldenDefinition,

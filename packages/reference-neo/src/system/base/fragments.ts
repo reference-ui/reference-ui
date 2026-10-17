@@ -17,8 +17,8 @@ export function createPortableFragmentBundle(
 }
 
 /**
- * The fragment nodes one system publishes; a legacy entry is one opaque node named after it (E15). An
- * extendSystem result adds its override node last, so under extends its tokens land after the base's (E14).
+ * The fragment nodes one system publishes; a legacy entry is one opaque node named after it. An
+ * extendSystem result adds its override node last, so under extends its tokens land after the base's.
  */
 export function fragmentNodesOf(system: BaseSystem): FragmentNode[] {
   const nodes = ownFragmentNodes(system)
@@ -34,7 +34,7 @@ function ownFragmentNodes(system: BaseSystem): FragmentNode[] {
   return []
 }
 
-/** Concatenates node lists in declared order and keeps each name at its first occurrence (E1, E2). */
+/** Concatenates node lists in declared order and keeps each name at its first occurrence. */
 export function linearizeFragmentNodes(lists: readonly (readonly FragmentNode[])[]): FragmentNode[] {
   const seen = new Set<string>()
   const nodes: FragmentNode[] = []

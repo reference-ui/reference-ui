@@ -1,4 +1,4 @@
-// Ported from quarantine c7bdd1f7c matrix/lib/tests/unit/splitter.test.ts (SP-MATH-*, SP-COLLAPSE-07/08 only).
+// Splitter geometry math: SP-MATH-* and SP-COLLAPSE-07/08 cases.
 // SP-TYPE-01 is NOT ported here: it encodes the mangled API (required value, min/max rename,
 // omitted layout props, no root disabled). The current-API contract lives in Splitter.contract.test.tsx.
 import { describe, expect, it } from 'vitest'

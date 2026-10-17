@@ -1,4 +1,4 @@
-# ATM-LAYER-13 — Global-breakpoint station (ATM-LAYER-13, RS-28 + tails-c)
+# ATM-LAYER-13 — Global-breakpoint
 
 Breakpoint keys and conditional values in `globalCss` lower through the
 scale's `@media` queries, including `*Only` / `*Down` / `*To*` ranges.

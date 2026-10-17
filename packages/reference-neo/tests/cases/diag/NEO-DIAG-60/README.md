@@ -4,6 +4,6 @@ A recipe name that cannot PascalCase to a TypeScript identifier; the recipe is o
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-INVALID-RECIPE-NAME (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-INVALID-RECIPE-NAME (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-INVALID-RECIPE-NAME, tgn-w-invalid-recipe-name, diagnostics case index, NEO-DIAG-60

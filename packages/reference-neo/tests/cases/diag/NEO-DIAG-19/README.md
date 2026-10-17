@@ -4,6 +4,6 @@ Two recipes claim one className within a system. The world carries the minimal f
 
 Raised in: `modules/atomic/src/assembly.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-E-DUPLICATE-RECIPE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-DUPLICATE-RECIPE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-DUPLICATE-RECIPE, atm-e-duplicate-recipe, diagnostics case index, NEO-DIAG-19

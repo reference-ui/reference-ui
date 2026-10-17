@@ -53,7 +53,7 @@ exactly one place: the code is always present, always documented.
   module-local telemetry (atomic's `ATM-I-*`) stays module-local.
 - Suggestions are gated: `suggest_for_code` fires only for the
   unknown-X-from-known-set codes in `SUGGESTION_CODES`, with candidates wired
-  per call by the producing module. Rendered frames are playtested, never
+  per call by the producing module. Rendered frames are reviewed by hand, never
   golden-pinned — contract tests assert structure, never pretty bytes.
 - The js mirror validates identically to Rust; the cross-language goldens in
   `src/transport.rs` and `js/index.test.ts` are byte-identical by construction.

@@ -265,332 +265,332 @@
     },
     {
       "id": "LIB-LISTBOX-038",
-      "name": "Listbox Composition Gates & Browser Proofs B-02: interactive and portaled row content never (de)selects",
+      "name": "Listbox Composition Gates & Browser Proofs interactive and portaled row content never (de)selects",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox Composition Gates & Browser Proofs B-02: interactive and portaled row content never (de)selects"
+      "title": "Listbox Composition Gates & Browser Proofs interactive and portaled row content never (de)selects"
     },
     {
       "id": "LIB-LISTBOX-039",
-      "name": "Listbox Composition Gates & Browser Proofs B-38: selected option uses the muted wash, not the button token",
+      "name": "Listbox Composition Gates & Browser Proofs selected option uses the muted wash, not the button token",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox Composition Gates & Browser Proofs B-38: selected option uses the muted wash, not the button token"
+      "title": "Listbox Composition Gates & Browser Proofs selected option uses the muted wash, not the button token"
     },
     {
       "id": "LIB-LISTBOX-040",
-      "name": "Listbox finish-line P2A gaps LB-DOM-04: Listbox should keep disabled options out of every interactive path",
+      "name": "Listbox behavior CT LB-DOM-04: Listbox should keep disabled options out of every interactive path",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-04: Listbox should keep disabled options out of every interactive path"
+      "title": "Listbox behavior CT LB-DOM-04: Listbox should keep disabled options out of every interactive path"
     },
     {
       "id": "LIB-LISTBOX-041",
-      "name": "Listbox finish-line P2A gaps LB-DOM-05: Listbox should preserve native root and option contracts for each orientation",
+      "name": "Listbox behavior CT LB-DOM-05: Listbox should preserve native root and option contracts for each orientation",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-05: Listbox should preserve native root and option contracts for each orientation"
+      "title": "Listbox behavior CT LB-DOM-05: Listbox should preserve native root and option contracts for each orientation"
     },
     {
       "id": "LIB-LISTBOX-042",
-      "name": "Listbox finish-line P2A gaps LB-DOM-07: Listbox should remain semantically empty without inventing a focus target",
+      "name": "Listbox behavior CT LB-DOM-07: Listbox should remain semantically empty without inventing a focus target",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-07: Listbox should remain semantically empty without inventing a focus target"
+      "title": "Listbox behavior CT LB-DOM-07: Listbox should remain semantically empty without inventing a focus target"
     },
     {
       "id": "LIB-LISTBOX-043",
-      "name": "Listbox finish-line P2A gaps LB-DOM-09: Listbox typeahead should use explicit text before current meaningful rendered text",
+      "name": "Listbox behavior CT LB-DOM-09: Listbox typeahead should use explicit text before current meaningful rendered text",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-09: Listbox typeahead should use explicit text before current meaningful rendered text"
+      "title": "Listbox behavior CT LB-DOM-09: Listbox typeahead should use explicit text before current meaningful rendered text"
     },
     {
       "id": "LIB-LISTBOX-044",
-      "name": "Listbox finish-line P2A gaps LB-DOM-11: Listbox should represent a controlled selected-disabled option without making it interactive",
+      "name": "Listbox behavior CT LB-DOM-11: Listbox should represent a controlled selected-disabled option without making it interactive",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-11: Listbox should represent a controlled selected-disabled option without making it interactive"
+      "title": "Listbox behavior CT LB-DOM-11: Listbox should represent a controlled selected-disabled option without making it interactive"
     },
     {
       "id": "LIB-LISTBOX-045",
-      "name": "Listbox finish-line P2A gaps LB-DOM-12: Listbox should deliver native scroll events from its fixed root without interpreting them",
+      "name": "Listbox behavior CT LB-DOM-12: Listbox should deliver native scroll events from its fixed root without interpreting them",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DOM-12: Listbox should deliver native scroll events from its fixed root without interpreting them"
+      "title": "Listbox behavior CT LB-DOM-12: Listbox should deliver native scroll events from its fixed root without interpreting them"
     },
     {
       "id": "LIB-LISTBOX-046",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-01: Listbox should preserve native group roles and accessible labels around nested Options",
+      "name": "Listbox behavior CT LB-GROUP-01: Listbox should preserve native group roles and accessible labels around nested Options",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-01: Listbox should preserve native group roles and accessible labels around nested Options"
+      "title": "Listbox behavior CT LB-GROUP-01: Listbox should preserve native group roles and accessible labels around nested Options"
     },
     {
       "id": "LIB-LISTBOX-047",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-02: Listbox should flatten grouped and ungrouped Options in current composed DOM order",
+      "name": "Listbox behavior CT LB-GROUP-02: Listbox should flatten grouped and ungrouped Options in current composed DOM order",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-02: Listbox should flatten grouped and ungrouped Options in current composed DOM order"
+      "title": "Listbox behavior CT LB-GROUP-02: Listbox should flatten grouped and ungrouped Options in current composed DOM order"
     },
     {
       "id": "LIB-LISTBOX-048",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-03: Listbox typeahead should cross native group boundaries while excluding group labels",
+      "name": "Listbox behavior CT LB-GROUP-03: Listbox typeahead should cross native group boundaries while excluding group labels",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-03: Listbox typeahead should cross native group boundaries while excluding group labels"
+      "title": "Listbox behavior CT LB-GROUP-03: Listbox typeahead should cross native group boundaries while excluding group labels"
     },
     {
       "id": "LIB-LISTBOX-049",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-04: Listbox should recompute flattened order when Options move between native groups",
+      "name": "Listbox behavior CT LB-GROUP-04: Listbox should recompute flattened order when Options move between native groups",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-04: Listbox should recompute flattened order when Options move between native groups"
+      "title": "Listbox behavior CT LB-GROUP-04: Listbox should recompute flattened order when Options move between native groups"
     },
     {
       "id": "LIB-LISTBOX-050",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-05: Listbox should ignore group markup when deriving option state",
+      "name": "Listbox behavior CT LB-GROUP-05: Listbox should ignore group markup when deriving option state",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-05: Listbox should ignore group markup when deriving option state"
+      "title": "Listbox behavior CT LB-GROUP-05: Listbox should ignore group markup when deriving option state"
     },
     {
       "id": "LIB-LISTBOX-051",
-      "name": "Listbox finish-line P2A gaps LB-GROUP-06: Virtual Listbox should keep logical position metadata independent of group depth",
+      "name": "Listbox behavior CT LB-GROUP-06: Virtual Listbox should keep logical position metadata independent of group depth",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-GROUP-06: Virtual Listbox should keep logical position metadata independent of group depth"
+      "title": "Listbox behavior CT LB-GROUP-06: Virtual Listbox should keep logical position metadata independent of group depth"
     },
     {
       "id": "LIB-LISTBOX-052",
-      "name": "Listbox finish-line P2A gaps LB-SINGLE-02: Listbox should request one single selection when Space activates the focused option",
+      "name": "Listbox behavior CT LB-SINGLE-02: Listbox should request one single selection when Space activates the focused option",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-SINGLE-02: Listbox should request one single selection when Space activates the focused option"
+      "title": "Listbox behavior CT LB-SINGLE-02: Listbox should request one single selection when Space activates the focused option"
     },
     {
       "id": "LIB-LISTBOX-053",
-      "name": "Listbox finish-line P2A gaps LB-SINGLE-03: Listbox should request the same single selection when Enter activates an option",
+      "name": "Listbox behavior CT LB-SINGLE-03: Listbox should request the same single selection when Enter activates an option",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-SINGLE-03: Listbox should request the same single selection when Enter activates an option"
+      "title": "Listbox behavior CT LB-SINGLE-03: Listbox should request the same single selection when Enter activates an option"
     },
     {
       "id": "LIB-LISTBOX-054",
-      "name": "Listbox finish-line P2A gaps LB-SINGLE-06: Listbox should preserve controlled selection when its parent rejects a request",
+      "name": "Listbox behavior CT LB-SINGLE-06: Listbox should preserve controlled selection when its parent rejects a request",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-SINGLE-06: Listbox should preserve controlled selection when its parent rejects a request"
+      "title": "Listbox behavior CT LB-SINGLE-06: Listbox should preserve controlled selection when its parent rejects a request"
     },
     {
       "id": "LIB-LISTBOX-055",
-      "name": "Listbox finish-line P2A gaps LB-SINGLE-07: Listbox should adopt a programmatically selected mounted option without emitting a request",
+      "name": "Listbox behavior CT LB-SINGLE-07: Listbox should adopt a programmatically selected mounted option without emitting a request",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-SINGLE-07: Listbox should adopt a programmatically selected mounted option without emitting a request"
+      "title": "Listbox behavior CT LB-SINGLE-07: Listbox should adopt a programmatically selected mounted option without emitting a request"
     },
     {
       "id": "LIB-LISTBOX-056",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-02: Listbox should remove only the activated selected value in multiple mode",
+      "name": "Listbox behavior CT LB-MULTI-02: Listbox should remove only the activated selected value in multiple mode",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-02: Listbox should remove only the activated selected value in multiple mode"
+      "title": "Listbox behavior CT LB-MULTI-02: Listbox should remove only the activated selected value in multiple mode"
     },
     {
       "id": "LIB-LISTBOX-057",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-04: Listbox should keep multiple selection unchanged during every focus-only movement",
+      "name": "Listbox behavior CT LB-MULTI-04: Listbox should keep multiple selection unchanged during every focus-only movement",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-04: Listbox should keep multiple selection unchanged during every focus-only movement"
+      "title": "Listbox behavior CT LB-MULTI-04: Listbox should keep multiple selection unchanged during every focus-only movement"
     },
     {
       "id": "LIB-LISTBOX-058",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-05: Listbox should not invent range or select-all behavior for modifier keys",
+      "name": "Listbox behavior CT LB-MULTI-05: Listbox should not invent range or select-all behavior for modifier keys",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-05: Listbox should not invent range or select-all behavior for modifier keys"
+      "title": "Listbox behavior CT LB-MULTI-05: Listbox should not invent range or select-all behavior for modifier keys"
     },
     {
       "id": "LIB-LISTBOX-059",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-06: Listbox should keep multiple selection fully controlled across rejection and programmatic updates",
+      "name": "Listbox behavior CT LB-MULTI-06: Listbox should keep multiple selection fully controlled across rejection and programmatic updates",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-06: Listbox should keep multiple selection fully controlled across rejection and programmatic updates"
+      "title": "Listbox behavior CT LB-MULTI-06: Listbox should keep multiple selection fully controlled across rejection and programmatic updates"
     },
     {
       "id": "LIB-LISTBOX-060",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-07: Listbox should retain controlled disabled and unmounted values without activating them",
+      "name": "Listbox behavior CT LB-MULTI-07: Listbox should retain controlled disabled and unmounted values without activating them",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-07: Listbox should retain controlled disabled and unmounted values without activating them"
+      "title": "Listbox behavior CT LB-MULTI-07: Listbox should retain controlled disabled and unmounted values without activating them"
     },
     {
       "id": "LIB-LISTBOX-061",
-      "name": "Listbox finish-line P2A gaps LB-MULTI-08: Listbox should default omitted multiple value to a controlled empty array",
+      "name": "Listbox behavior CT LB-MULTI-08: Listbox should default omitted multiple value to a controlled empty array",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-MULTI-08: Listbox should default omitted multiple value to a controlled empty array"
+      "title": "Listbox behavior CT LB-MULTI-08: Listbox should default omitted multiple value to a controlled empty array"
     },
     {
       "id": "LIB-LISTBOX-062",
-      "name": "Listbox finish-line P2A gaps LB-KEY-06: Listbox should leave unsupported navigation keys and modifiers to the browser or application",
+      "name": "Listbox behavior CT LB-KEY-06: Listbox should leave unsupported navigation keys and modifiers to the browser or application",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-KEY-06: Listbox should leave unsupported navigation keys and modifiers to the browser or application"
+      "title": "Listbox behavior CT LB-KEY-06: Listbox should leave unsupported navigation keys and modifiers to the browser or application"
     },
     {
       "id": "LIB-LISTBOX-063",
-      "name": "Listbox finish-line P2A gaps LB-KEY-07: Listbox should ignore composite keyboard commands originating in interactive descendants",
+      "name": "Listbox behavior CT LB-KEY-07: Listbox should ignore composite keyboard commands originating in interactive descendants",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-KEY-07: Listbox should ignore composite keyboard commands originating in interactive descendants"
+      "title": "Listbox behavior CT LB-KEY-07: Listbox should ignore composite keyboard commands originating in interactive descendants"
     },
     {
       "id": "LIB-LISTBOX-064",
-      "name": "Listbox finish-line P2A gaps LB-POINTER-02: Listbox should select once from direct touch activation without a hover prerequisite",
+      "name": "Listbox behavior CT LB-POINTER-02: Listbox should select once from direct touch activation without a hover prerequisite",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-POINTER-02: Listbox should select once from direct touch activation without a hover prerequisite"
+      "title": "Listbox behavior CT LB-POINTER-02: Listbox should select once from direct touch activation without a hover prerequisite"
     },
     {
       "id": "LIB-LISTBOX-065",
-      "name": "Listbox finish-line P2A gaps LB-POINTER-03: Listbox should leave focus and selection unchanged when an option is only hovered",
+      "name": "Listbox behavior CT LB-POINTER-03: Listbox should leave focus and selection unchanged when an option is only hovered",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-POINTER-03: Listbox should leave focus and selection unchanged when an option is only hovered"
+      "title": "Listbox behavior CT LB-POINTER-03: Listbox should leave focus and selection unchanged when an option is only hovered"
     },
     {
       "id": "LIB-LISTBOX-066",
-      "name": "Listbox finish-line P2A gaps LB-POINTER-04: Disabled Listbox options should remain inert across all input modalities while preserving authored props",
+      "name": "Listbox behavior CT LB-POINTER-04: Disabled Listbox options should remain inert across all input modalities while preserving authored props",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-POINTER-04: Disabled Listbox options should remain inert across all input modalities while preserving authored props"
+      "title": "Listbox behavior CT LB-POINTER-04: Disabled Listbox options should remain inert across all input modalities while preserving authored props"
     },
     {
       "id": "LIB-LISTBOX-067",
-      "name": "Listbox finish-line P2A gaps LB-DYNAMIC-03: Listbox should not correct a controlled value when its selected option is removed",
+      "name": "Listbox behavior CT LB-DYNAMIC-03: Listbox should not correct a controlled value when its selected option is removed",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DYNAMIC-03: Listbox should not correct a controlled value when its selected option is removed"
+      "title": "Listbox behavior CT LB-DYNAMIC-03: Listbox should not correct a controlled value when its selected option is removed"
     },
     {
       "id": "LIB-LISTBOX-068",
-      "name": "Listbox finish-line P2A gaps LB-DYNAMIC-04: Listbox should remove a newly disabled option from navigation without clearing controlled selection",
+      "name": "Listbox behavior CT LB-DYNAMIC-04: Listbox should remove a newly disabled option from navigation without clearing controlled selection",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DYNAMIC-04: Listbox should remove a newly disabled option from navigation without clearing controlled selection"
+      "title": "Listbox behavior CT LB-DYNAMIC-04: Listbox should remove a newly disabled option from navigation without clearing controlled selection"
     },
     {
       "id": "LIB-LISTBOX-069",
-      "name": "Listbox finish-line P2A gaps LB-DYNAMIC-05: Listbox should replace an option registration when its value changes",
+      "name": "Listbox behavior CT LB-DYNAMIC-05: Listbox should replace an option registration when its value changes",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DYNAMIC-05: Listbox should replace an option registration when its value changes"
+      "title": "Listbox behavior CT LB-DYNAMIC-05: Listbox should replace an option registration when its value changes"
     },
     {
       "id": "LIB-LISTBOX-070",
-      "name": "Listbox finish-line P2A gaps LB-DYNAMIC-06: Listbox should use current option labels and text values after descendants rerender",
+      "name": "Listbox behavior CT LB-DYNAMIC-06: Listbox should use current option labels and text values after descendants rerender",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-DYNAMIC-06: Listbox should use current option labels and text values after descendants rerender"
+      "title": "Listbox behavior CT LB-DYNAMIC-06: Listbox should use current option labels and text values after descendants rerender"
     },
     {
       "id": "LIB-LISTBOX-071",
-      "name": "Listbox finish-line P2A gaps LB-VIRT-04: Virtual Listbox should make Home and End target logical boundaries outside the window",
+      "name": "Listbox behavior CT LB-VIRT-04: Virtual Listbox should make Home and End target logical boundaries outside the window",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-VIRT-04: Virtual Listbox should make Home and End target logical boundaries outside the window"
+      "title": "Listbox behavior CT LB-VIRT-04: Virtual Listbox should make Home and End target logical boundaries outside the window"
     },
     {
       "id": "LIB-LISTBOX-072",
-      "name": "Listbox finish-line P2A gaps LB-VIRT-06: Virtual Listbox should coalesce rapid navigation while a requested window is rendering",
+      "name": "Listbox behavior CT LB-VIRT-06: Virtual Listbox should coalesce rapid navigation while a requested window is rendering",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-VIRT-06: Virtual Listbox should coalesce rapid navigation while a requested window is rendering"
+      "title": "Listbox behavior CT LB-VIRT-06: Virtual Listbox should coalesce rapid navigation while a requested window is rendering"
     },
     {
       "id": "LIB-LISTBOX-073",
-      "name": "Listbox finish-line P2A gaps LB-VIRT-08: Virtual Listbox should preserve logical metadata and active visibility through resize",
+      "name": "Listbox behavior CT LB-VIRT-08: Virtual Listbox should preserve logical metadata and active visibility through resize",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-VIRT-08: Virtual Listbox should preserve logical metadata and active visibility through resize"
+      "title": "Listbox behavior CT LB-VIRT-08: Virtual Listbox should preserve logical metadata and active visibility through resize"
     },
     {
       "id": "LIB-LISTBOX-074",
-      "name": "Listbox finish-line P2A gaps LB-VIRT-09: Virtual Listbox should atomically replace logical metadata and its scroll callback",
+      "name": "Listbox behavior CT LB-VIRT-09: Virtual Listbox should atomically replace logical metadata and its scroll callback",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-VIRT-09: Virtual Listbox should atomically replace logical metadata and its scroll callback"
+      "title": "Listbox behavior CT LB-VIRT-09: Virtual Listbox should atomically replace logical metadata and its scroll callback"
     },
     {
       "id": "LIB-LISTBOX-075",
-      "name": "Listbox finish-line P2A gaps LB-VIRT-10: Virtual Listbox should cancel an unresolved focus target when it unmounts during scroll work",
+      "name": "Listbox behavior CT LB-VIRT-10: Virtual Listbox should cancel an unresolved focus target when it unmounts during scroll work",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-VIRT-10: Virtual Listbox should cancel an unresolved focus target when it unmounts during scroll work"
+      "title": "Listbox behavior CT LB-VIRT-10: Virtual Listbox should cancel an unresolved focus target when it unmounts during scroll work"
     },
     {
       "id": "LIB-LISTBOX-076",
-      "name": "Listbox finish-line P2A gaps LB-CB-01: Listbox should switch to Combobox virtual focus without changing option selection semantics",
+      "name": "Listbox behavior CT LB-CB-01: Listbox should switch to Combobox virtual focus without changing option selection semantics",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-CB-01: Listbox should switch to Combobox virtual focus without changing option selection semantics"
+      "title": "Listbox behavior CT LB-CB-01: Listbox should switch to Combobox virtual focus without changing option selection semantics"
     },
     {
       "id": "LIB-LISTBOX-077",
-      "name": "Listbox finish-line P2A gaps LB-CB-02: windowed Combobox Listbox withholds the active descendant until the virtual target mounts",
+      "name": "Listbox behavior CT LB-CB-02: windowed Combobox Listbox withholds the active descendant until the virtual target mounts",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-CB-02: windowed Combobox Listbox withholds the active descendant until the virtual target mounts"
+      "title": "Listbox behavior CT LB-CB-02: windowed Combobox Listbox withholds the active descendant until the virtual target mounts"
     },
     {
       "id": "LIB-LISTBOX-078",
-      "name": "Listbox finish-line P2A gaps LB-CB-03: Listbox should yield commit callback authority to its containing Combobox",
+      "name": "Listbox behavior CT LB-CB-03: Listbox should yield commit callback authority to its containing Combobox",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-CB-03: Listbox should yield commit callback authority to its containing Combobox"
+      "title": "Listbox behavior CT LB-CB-03: Listbox should yield commit callback authority to its containing Combobox"
     },
     {
       "id": "LIB-LISTBOX-079",
-      "name": "Listbox finish-line P2A gaps LB-CB-04: Listbox should publish local active styling state when Combobox virtually focuses one mounted Option",
+      "name": "Listbox behavior CT LB-CB-04: Listbox should publish local active styling state when Combobox virtually focuses one mounted Option",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-CB-04: Listbox should publish local active styling state when Combobox virtually focuses one mounted Option"
+      "title": "Listbox behavior CT LB-CB-04: Listbox should publish local active styling state when Combobox virtually focuses one mounted Option"
     },
     {
       "id": "LIB-LISTBOX-080",
-      "name": "Listbox finish-line P2A gaps LB-ENV-03: Listbox should preserve roving, typeahead, and virtual scrolling inside a ShadowRoot",
+      "name": "Listbox behavior CT LB-ENV-03: Listbox should preserve roving, typeahead, and virtual scrolling inside a ShadowRoot",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-ENV-03: Listbox should preserve roving, typeahead, and virtual scrolling inside a ShadowRoot"
+      "title": "Listbox behavior CT LB-ENV-03: Listbox should preserve roving, typeahead, and virtual scrolling inside a ShadowRoot"
     },
     {
       "id": "LIB-LISTBOX-081",
-      "name": "Listbox finish-line P2A gaps LB-A11Y-01: Listbox should pass accessibility checks across every frozen semantic shape",
+      "name": "Listbox behavior CT LB-A11Y-01: Listbox should pass accessibility checks across every frozen semantic shape",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-A11Y-01: Listbox should pass accessibility checks across every frozen semantic shape"
+      "title": "Listbox behavior CT LB-A11Y-01: Listbox should pass accessibility checks across every frozen semantic shape"
     },
     {
       "id": "LIB-LISTBOX-082",
-      "name": "Listbox finish-line P2A gaps LB-COMP-01: Standalone Listbox should support a complete controlled single-select composition",
+      "name": "Listbox behavior CT LB-COMP-01: Standalone Listbox should support a complete controlled single-select composition",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-COMP-01: Standalone Listbox should support a complete controlled single-select composition"
+      "title": "Listbox behavior CT LB-COMP-01: Standalone Listbox should support a complete controlled single-select composition"
     },
     {
       "id": "LIB-LISTBOX-083",
-      "name": "Listbox finish-line P2A gaps LB-COMP-02: Standalone Listbox should support controlled multiple selection in horizontal RTL",
+      "name": "Listbox behavior CT LB-COMP-02: Standalone Listbox should support controlled multiple selection in horizontal RTL",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-COMP-02: Standalone Listbox should support controlled multiple selection in horizontal RTL"
+      "title": "Listbox behavior CT LB-COMP-02: Standalone Listbox should support controlled multiple selection in horizontal RTL"
     },
     {
       "id": "LIB-LISTBOX-084",
-      "name": "Listbox finish-line P2A gaps LB-COMP-03: Windowed Listbox should coordinate logical navigation with an application virtualizer",
+      "name": "Listbox behavior CT LB-COMP-03: Windowed Listbox should coordinate logical navigation with an application virtualizer",
       "kind": "ct",
       "file": "__e2e__/Listbox.ct.spec.ts",
-      "title": "Listbox finish-line P2A gaps LB-COMP-03: Windowed Listbox should coordinate logical navigation with an application virtualizer"
+      "title": "Listbox behavior CT LB-COMP-03: Windowed Listbox should coordinate logical navigation with an application virtualizer"
     },
     {
       "id": "LIB-LISTBOX-085",
@@ -829,6 +829,13 @@
       "kind": "unit",
       "file": "Listbox.test.ts",
       "title": "Listbox Unit Contract Unmatched controlled value dev warnings OOR-LB-09: uncontrolled and Combobox-owned values stay silent"
+    },
+    {
+      "id": "LIB-LISTBOX-119",
+      "name": "Listbox Unit Contract Uncontrolled multiple settlement LB-MULTI-08 (unit): Listbox should settle with an omitted multiple value, reusing one stable empty array",
+      "kind": "unit",
+      "file": "Listbox.test.ts",
+      "title": "Listbox Unit Contract Uncontrolled multiple settlement LB-MULTI-08 (unit): Listbox should settle with an omitted multiple value, reusing one stable empty array"
     }
   ]
 }

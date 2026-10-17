@@ -1,7 +1,7 @@
-// W-31 runner: build -> check:dist -> pack -> bare Vite consumer app ->
+// Runner: build -> check:dist -> pack -> bare Vite consumer app ->
 // vite build (warning scan) -> tsc types check (skipLibCheck on, then off for
 // lib's declarations, then the SyncedSystem probe: a strict consumer's fill
-// must reach lib's props) -> dev-server Playwright probe (mount-all + B-11
+// must reach lib's props) -> dev-server Playwright probe (mount-all +
 // behaviors + zero console errors) -> layered override (extendSystem through a
 // real ref sync: the served sheet checked as text, then a lib Button painted in
 // light and dark against the override and against lib's own default).
@@ -336,7 +336,7 @@ async function cleanup({ failed }) {
 
 try {
   // 1. Dist must be fresh: the gate smokes what `pnpm build` just produced,
-  // never a stale artifact (B-11).
+  // never a stale artifact.
   step('check:dist')
   run(process.execPath, ['scripts/check-dist-fresh.mjs'])
 
@@ -387,7 +387,7 @@ try {
   console.log(baseSystemProbe.trim())
 
   // 4. Types must resolve through the published exports map, including the
-  // new ./primitives types chain (B-13) and the ./baseSystem types probe.
+  // new ./primitives types chain and the ./baseSystem types probe.
   step('tsc --noEmit (consumer types)')
   try {
     run('npx', ['tsc', '--noEmit', '-p', 'tsconfig.json'], { cwd: scaffold })
@@ -456,7 +456,7 @@ try {
   }
 
   // 5. Production build must succeed with zero node-builtin/externalization
-  // warnings (B-35 regression scan).
+  // warnings (regression scan).
   step('vite build (warning scan)')
   let buildOutput = ''
   try {
@@ -473,11 +473,11 @@ try {
   )
   if (noiseHits.length > 0) {
     console.error(noiseHits.slice(0, 10).join('\n'))
-    throw new Error('smoke: consumer build mentions externalized/node builtins (B-35?)')
+    throw new Error('smoke: consumer build mentions externalized/node builtins')
   }
   console.log('smoke: vite build clean')
 
-  // 6. Dev server + Playwright probe (dev React: B-03 noise and dev
+  // 6. Dev server + Playwright probe (dev React: element.ref noise and dev
   // diagnostics only fire outside production builds).
   step(`vite dev + probe (port ${port})`)
   await startDevServer(scaffold, port)

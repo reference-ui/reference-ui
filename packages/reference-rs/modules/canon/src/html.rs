@@ -148,7 +148,7 @@ pub const ELEMENTS: &[Element] = &[
 ];
 
 /// All canonical JSX primitive component names, sorted lexicographically.
-pub const PRIMITIVE_JSX: &[&'static str] = &[
+pub const PRIMITIVE_JSX: &[&str] = &[
     "A",
     "Abbr",
     "Address",

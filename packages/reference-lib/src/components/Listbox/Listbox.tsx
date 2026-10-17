@@ -23,6 +23,11 @@ import { ListboxOption } from './parts/Option'
 import { ListboxEmpty, ListboxHeader, ListboxSection } from './parts/Section'
 import type { ListboxContextValue, ListboxProps } from './types'
 
+// The omitted multiple value: one frozen empty selection shared by every render.
+// A fresh [] per render changes the context value identity, so each Listbox
+// update re-registers its options and schedules another update, never settling.
+const EMPTY_MULTIPLE_VALUE: string[] = Object.freeze([] as string[]) as string[]
+
 export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProps>(
   function Listbox(
     {
@@ -54,7 +59,7 @@ export const ListboxComponentBase = React.forwardRef<HTMLDivElement, ListboxProp
       : valueProp !== undefined
         ? valueProp
         : selection === 'multiple'
-          ? []
+          ? EMPTY_MULTIPLE_VALUE
           : null
 
     const session = useListboxSession(valueProp)

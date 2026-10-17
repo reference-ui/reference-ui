@@ -129,7 +129,7 @@ export const MenuContent: React.ForwardRefExoticComponent<
       level.requestClose()
       return
     }
-    // B-33, submenu level: container-focused edge navigation.
+    // Submenu level: container-focused edge navigation.
     handleContentContainerKey(e, level.getContentNode())
   }
 

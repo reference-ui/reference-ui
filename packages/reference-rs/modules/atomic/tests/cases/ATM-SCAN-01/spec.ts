@@ -1,5 +1,5 @@
 /**
- * Include scoping station (RS-10). The frozen request's `include` globs scope
+ * Include scoping case. The frozen request's `include` globs scope
  * both the sourceRoot scan and the legacy virtual `files` list: a `css()` in
  * `outside/` yields no utility under `include: ['theme/**']`, while an absent
  * or empty include preserves the legacy scan-all behavior without new diagnostics.

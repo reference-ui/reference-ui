@@ -22,7 +22,5 @@ mod tests;
 pub use analyzer::AtlasAnalyzer;
 pub use config::{AtlasConfig, ObserveSpec};
 pub use diagnostics::{AtlasDiagnostic, AtlasDiagnosticCode};
-#[allow(unused_imports)]
 pub use model::{Component, ComponentInterface, ComponentProp, ObservedElement, Usage};
-#[allow(unused_imports)]
 pub use output::AtlasAnalysisResult;

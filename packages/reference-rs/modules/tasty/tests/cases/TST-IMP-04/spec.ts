@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-04.
+ * Case specification for TST-IMP-04.
  * Verifies that an unresolved bare package import emits no warning and keeps its reference external.
  * Proves primary SPEC ID anchor TST-IMP-04.
  */

@@ -5,12 +5,8 @@ This is the normative proof architecture for Reference UI's runtime primitives.
 The public design and freeze gates live in
 [`src/components/components.md`](./src/components/components.md). Shared
 internal state uses Zustand plus `src/core/hooks`
-([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Every runtime
-primitive uses `src/components/<Name>/SPEC.md` as the executable driver.
-`TESTS.md` is the case catalog SPEC points at (setup / action / assert).
-`[x]` in SPEC.md means a passing test title contains the ID. TESTS.md
-checkboxes mean specified, not proven.
-Implementation lives in this package. Black-box proof lives in `matrix/lib`.
+([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Every runtime primitive is indexed by `src/components/<Name>/case.json`, which `pnpm agentct check` validates. Where a component has a `TESTS.md`, it is the case catalog (setup / action / assert). A case is proven when a passing test title contains its ID (`pnpm agentct <Name> --e2e`). `TESTS.md` checkboxes mean specified, not proven.
+Implementation lives in this package. Black-box proof lives in each component's `__e2e__` suite (`pnpm agentct <Name> --e2e`) and in the kept chain suites under `matrix/tests/chain` (T2 and T8 are examples).
 Cosmos is for looking; Playwright is for asserting.
 
 In this document, **freeze** means “the current falsifiable design decision,”
@@ -33,14 +29,14 @@ primitive, an internal kernel, native HTML, or a documented composition.
 | Public design and omissions | `src/components/components.md` |
 | Zustand + core hooks spec | `src/core/hooks/hooks.md` |
 | High-level component contract | `src/components/<Name>/<Name>.md` |
-| Driver (freeze, gaps, proof, work order) | `SPEC.md` |
-| Case catalog (setup / action / assert) | `TESTS.md` when SPEC points at it |
+| Case index (checked by `pnpm agentct check`) | `src/components/<Name>/case.json` |
+| Case catalog (setup / action / assert) | `src/components/<Name>/TESTS.md` (not present for Overlay, Popover, Toast, Tooltip) |
 | Visual exploration | this package's Cosmos fixtures |
-| Public-API browser proof | `matrix/lib/tests/e2e/<name>.spec.ts` |
-| Pure model proof | `matrix/lib/tests/unit/<name>.test.ts` |
-| Consumer fixtures | `matrix/lib/src/<name>.tsx` |
+| Public-API browser proof | `src/components/<Name>/__e2e__/*.spec.ts` (`pnpm agentct <Name> --e2e`); kept chain suites in `matrix/tests/chain/T*` |
+| Pure model proof | colocated `*.test.ts(x)` beside the code, e.g. `src/components/FocusLock/catalog/*.test.ts` |
+| Consumer fixtures | `matrix/fixtures/<name>/` |
 
-`matrix/lib` imports only from `@reference-ui/lib`. A case that passes only by
+The kept chain suites import the library through `@reference-ui/react`. A case that passes only by
 importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
@@ -53,28 +49,28 @@ composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),
   [Portal](./src/components/Portal/TESTS.md),
-  [Overlay](./src/components/Overlay/SPEC.md),
-  [Popover](./src/components/Popover/SPEC.md),
-  [Toast](./src/components/Toast/SPEC.md)
-- **ARIA widgets:** [Listbox](./src/components/Listbox/SPEC.md),
-  [Combobox](./src/components/Combobox/SPEC.md),
-  [Menu](./src/components/Menu/SPEC.md),
-  [Tabs](./src/components/Tabs/SPEC.md),
-  [Slider](./src/components/Slider/SPEC.md),
-  [Switch](./src/components/Switch/SPEC.md),
-  [Tree](./src/components/Tree/SPEC.md),
-  [NumberField](./src/components/NumberField/SPEC.md),
-  [DateField](./src/components/DateField/SPEC.md),
-  [Calendar](./src/components/Calendar/SPEC.md),
-  [Collapsible](./src/components/Collapsible/SPEC.md),
-  [Accordion](./src/components/Accordion/SPEC.md),
-  [Splitter](./src/components/Splitter/SPEC.md),
-  [Tooltip](./src/components/Tooltip/SPEC.md)
-- **Visual chrome:** [Field](./src/components/Field/SPEC.md)
-- **Authoring machinery:** [Slot](./src/components/Slot/SPEC.md),
-  [Presence](./src/components/Presence/SPEC.md),
-  [RovingFocus](./src/components/RovingFocus/SPEC.md),
-  [FocusLock](./src/components/FocusLock/SPEC.md)
+  [Overlay](./src/components/Overlay/case.json),
+  [Popover](./src/components/Popover/case.json),
+  [Toast](./src/components/Toast/case.json)
+- **ARIA widgets:** [Listbox](./src/components/Listbox/TESTS.md),
+  [Combobox](./src/components/Combobox/TESTS.md),
+  [Menu](./src/components/Menu/TESTS.md),
+  [Tabs](./src/components/Tabs/TESTS.md),
+  [Slider](./src/components/Slider/TESTS.md),
+  [Switch](./src/components/Switch/TESTS.md),
+  [Tree](./src/components/Tree/TESTS.md),
+  [NumberField](./src/components/NumberField/TESTS.md),
+  [DateField](./src/components/DateField/TESTS.md),
+  [Calendar](./src/components/Calendar/TESTS.md),
+  [Collapsible](./src/components/Collapsible/TESTS.md),
+  [Accordion](./src/components/Accordion/TESTS.md),
+  [Splitter](./src/components/Splitter/TESTS.md),
+  [Tooltip](./src/components/Tooltip/case.json)
+- **Visual chrome:** [Field](./src/components/Field/TESTS.md)
+- **Authoring machinery:** [Slot](./src/components/Slot/TESTS.md),
+  [Presence](./src/components/Presence/TESTS.md),
+  [RovingFocus](./src/components/RovingFocus/TESTS.md),
+  [FocusLock](./src/components/FocusLock/TESTS.md)
 
 The count is intentionally not a promise that every case becomes a separate
 test function. Parameterized tests may prove a matrix under one stable case
@@ -117,9 +113,7 @@ Design one component in this order:
 
 ## Contract vocabulary
 
-Every checklist item in a component `SPEC.md` is required unless it appears
-under **Deferred** or **Out of scope**. `TESTS.md` is the case catalog SPEC
-points at; its checkboxes mean specified, not proven.
+Every case in a component's `TESTS.md` is required unless it appears under **Deferred** or **Out of scope**. `TESTS.md` is the case catalog; its checkboxes mean specified, not proven.
 
 Case IDs are stable and become the beginning of the test title:
 
@@ -131,7 +125,7 @@ Provenance tags describe why a case exists:
 
 - **`[vendor]`** — ports one observable upstream test.
 - **`[convergence]`** — resolves equivalent or conflicting behavior across
-  vendors into one Reference UI contract.
+  upstream libraries into one Reference UI contract.
 - **`[reference]`** — proves a Reference UI-specific API, ownership rule, or
   freeze gate.
 
@@ -148,12 +142,11 @@ Execution tags keep the matrix intentional:
 - **`[release]`** — a required release gate whose result must be recorded
   before release.
 
-Each case must say enough to implement without reopening vendor source:
-fixture state, user action, and observable result. Every `[vendor]` case must
-resolve to a path in that file's Source evidence section; when it ports one
-specific named regression rather than a merged behavior matrix, include the
-upstream test title inline. Generic headings such as "keyboard works" are not
-cases.
+Each case must say enough to implement without reopening upstream source:
+fixture state, user action, and observable result. A `[vendor]` case names the
+upstream library it ports; when it ports one specific named regression rather
+than a merged behavior matrix, include the upstream test title inline. Generic
+headings such as "keyboard works" are not cases.
 
 ### Case writing standard
 
@@ -354,26 +347,18 @@ This is a freeze gate, not a subjective demo review.
 ## Harness shape
 
 ```text
-matrix/lib/
-  matrix.json
-  src/
-    app.tsx
-    overlay.tsx
-    popover.tsx
-    ...
-  tests/
-    e2e/
-      overlay.spec.ts
-      popover.spec.ts
-      ...
-    unit/
-      slot.test.ts
-      calendar.test.ts
-      ...
+src/components/<Name>/
+  <Name>.md          high-level component contract
+  case.json          case index, checked by pnpm agentct check
+  TESTS.md           case catalog: setup / action / assert (where present)
+  __e2e__/           browser proofs: pnpm agentct <Name> --e2e
+  *.test.ts(x)       colocated unit tests (where present)
+
+matrix/tests/chain/T*/   kept chain suites: pnpm agent pw chain/T8
+matrix/fixtures/         consumer fixture libraries
 ```
 
-- The Vite app is a small router: `/overlay`, `/popover`, and so on.
-- One page may expose several named fixtures, selected by query string.
+- `pnpm agentct` runs component suites through a shared Vite daemon.
 - Fixture controls expose callback order and controlled state as visible text
   or DOM attributes so Playwright never imports internals.
 - Use role/name selectors for semantics. Use test IDs only for geometry,
@@ -431,7 +416,7 @@ At minimum, the targeted environment fixtures cover:
 
 Vendored repositories are references, not dependencies.
 
-1. Read the relevant component design and `SPEC.md` (driver). Use `TESTS.md` for case prose when SPEC points at it.
+1. Read the relevant component design (`<Name>/<Name>.md`) and its `case.json`. Use `TESTS.md` for case prose where the component has one.
 2. Search the actual vendor tests, not only source or docs.
 3. Copy the observable bug/behavior into a case; discard vendor anatomy,
    provider contracts, styling, uncontrolled conveniences, and unrelated
@@ -447,9 +432,9 @@ Vendored repositories are references, not dependencies.
    blocker**, not a silently skipped test and not automatic permission to add
    a component.
 
-The current source map is [`vendor/VENDOR.md`](../../vendor/VENDOR.md). Vendor
-clones are intentionally ignored; record their commit SHAs in the implementation
-PR so a later upstream rename does not erase provenance.
+Upstream reference clones are intentionally not committed; record their commit
+SHAs in the implementation PR so a later upstream rename does not erase
+provenance.
 
 ## Pre-manufacture coverage closure
 
@@ -601,41 +586,35 @@ to preserve the ledger, nor automatically solved by adding a duplicate runtime.
 Work one primitive at a time:
 
 ```bash
-cd matrix/lib
-pnpm exec playwright test tests/e2e/overlay.spec.ts
+pnpm agentct Overlay --e2e
 ```
 
 Run one contract by stable ID:
 
 ```bash
-cd matrix/lib
-pnpm exec playwright test tests/e2e/overlay.spec.ts -g "OV-DISMISS-04"
+pnpm agentct Overlay "OV-ESC-01"
 ```
 
-Run all implemented primitives:
+Run each primitive's browser proof in turn:
 
 ```bash
-cd matrix/lib
-pnpm exec playwright test
+pnpm agentct <Component> --e2e
 ```
 
 The one-spec command must stay fast: host Playwright, workspace React, existing
 `node_modules`, no Dagger, registry, or Webpack. If generated primitives are
 stale, run this package's `pnpm run sync`, then rerun the spec.
 
-## Compatibility pipeline
+## Compatibility runs
 
 ```bash
-pnpm pipeline test --packages=@matrix/lib
-pnpm pipeline test --packages=@matrix/lib --react=react19
-pnpm pipeline test --packages=@matrix/lib --react=react17
-pnpm pipeline test --packages=@matrix/lib --full
+pnpm agentct <Component> --e2e --react 17
+pnpm agentct <Component> --e2e --react 18
+pnpm agentct <Component> --e2e --react 19
+pnpm agentct <Component> --e2e --react all
 ```
 
-`--packages=@matrix/lib` selects only this matrix package. `--react` pins one
-declared runtime. `--full` expands the package's declared React × bundler
-matrix. React 17/18 compatibility remains in the Dagger consumer because two
-React versions cannot share the host `node_modules`.
+`--react` pins one declared runtime (17, 18, 19, or all).
 
 Do not use the full repository pipeline as the daily component loop.
 
@@ -643,7 +622,7 @@ Do not use the full repository pipeline as the daily component loop.
 
 A primitive freezes only when:
 
-1. Every required checklist case in its `SPEC.md` exists and passes (a passing test title contains the ID).
+1. Every required case in its `case.json` exists and passes (a passing test title contains the ID).
 2. No API blocker or vendor disagreement remains undecided.
 3. Exact DOM, native props, controlled state, event order/cancellation, IDs,
    refs, and state attributes pass universal conformance.

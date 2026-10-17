@@ -15,7 +15,7 @@ import { isEqualFormatOptions, type DraftNumberSymbols } from '../draft/symbols'
 import { useIsomorphicLayoutEffect } from '../shared/dom'
 import type { NumberFieldCommitBehavior } from '../types'
 
-export interface EditSessionOptions {
+export interface NumberEditSessionOptions {
   value: number | null
   displayValue: string
   locale: string
@@ -57,7 +57,7 @@ export interface EditSession {
   requestValue: (candidate: number | null) => void
 }
 
-export function useEditSession(options: EditSessionOptions): EditSession {
+export function useEditSession(options: NumberEditSessionOptions): EditSession {
   const {
     value,
     displayValue,
@@ -74,8 +74,8 @@ export function useEditSession(options: EditSessionOptions): EditSession {
     onChange,
   } = options
 
-  // The dirty edit session (B-19 verbatim draft + NFLAST ruling (c)
-  // live-request). Typing stages the draft verbatim so bounded decimals
+  // The dirty edit session (verbatim draft + live
+  // requests). Typing stages the draft verbatim so bounded decimals
   // like "2.5" survive the "." keystroke instead of clamping to the max;
   // newly parseable meanings are requested live (raw); commit boundaries
   // (blur, Enter, handled steps) flush whatever differs from control.
@@ -110,7 +110,7 @@ export function useEditSession(options: EditSessionOptions): EditSession {
   // it advances; the post-reset sync effect re-syncs controlled inputs.
   const [resetEpoch, setResetEpoch] = React.useState(0)
 
-  // NFLAST ruling (c): the latest requested numeric meaning (live or
+  // The latest requested numeric meaning (live or
   // commit). A controlled value change matching it is the latest echo —
   // the dirty session survives with exact text/caret (NF-COMMIT-08);
   // anything else is a stale echo or an unrelated replacement: the
@@ -176,7 +176,7 @@ export function useEditSession(options: EditSessionOptions): EditSession {
     }
   }, [value, clearTransientFailures, invalidateComposition, displayValue])
 
-  // W-25: an effective locale/format change replaces a dirty draft from
+  // An effective locale/format change replaces a dirty draft from
   // controlled state (React Aria parity); a referentially new but
   // effectively equal formatOptions object preserves the session.
   // Effective changes are authoritative and clear failed/pending too.

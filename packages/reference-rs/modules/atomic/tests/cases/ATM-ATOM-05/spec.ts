@@ -1,5 +1,5 @@
 /**
- * Custom-property station. `--brand-x` compiles as a declaration whose
+ * Custom-property case. `--brand-x` compiles as a declaration whose
  * value resolves tokens, under a system-qualified selector.
  * It is never mistaken for a condition key.
  */

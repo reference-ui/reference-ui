@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { traceDetailed } from '../../js/index'
+import { traceDetailed } from '../../js/index.js'
 import { createVirtualWorkspace } from '../../../../testing/index.js'
 
 const TESTS_DIR = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..')

@@ -1,6 +1,6 @@
 # DateField
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct DateField --e2e`).
 
 Locale-aware editing of date values. `DateField` is the recipe:
 - **Childless (folded)**: collapses directly to `DateField.Input`, rendering one
@@ -440,7 +440,7 @@ Renders the shared `Field` bezel containing:
   availability).
 - Apply / Cancel / Escape transactions on popup close and commit.
 
-Settled range takes (finish-line P2B): the folded picker applies on
+The folded picker applies on
 completion — there is no Apply button, and `canApply=false` blocks the
 commit, never the close. A pending Calendar anchor stays in the draft
 (never publishes); the anchor click restarts the draft and clears the
@@ -628,8 +628,7 @@ grid engine. Neither layer locks out the other.
 
 ## Ecosystem comparison
 
-**Vendor.** React Aria `DateField` / `DatePicker` / `HiddenDateInput`
-(`vendor/react-spectrum/packages/react-aria-components`). Stately
+**Prior art.** React Aria `DateField` / `DatePicker` / `HiddenDateInput`. Stately
 `useDateFieldState`. `@internationalized/date` `parseDate` / Gregorian
 queries. Zag `date-input` / `date-picker` (segment machines, ISO parse).
 react-day-picker has no field.

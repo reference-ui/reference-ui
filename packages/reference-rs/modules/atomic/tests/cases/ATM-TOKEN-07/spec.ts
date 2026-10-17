@@ -1,5 +1,5 @@
 /**
- * Negative-scale station. `mt: '-4'` emits a negated custom property
+ * Negative-scale case. `mt: '-4'` emits a negated custom property
  * reference, `mb: '4'` the plain reference, and the class keeps the minus.
  */
 import { expect } from 'vitest'

@@ -7,7 +7,7 @@
  */
 
 import { describe, it } from 'vitest'
-import { compile, expectTscOk, expectTscReject, readGolden } from '../harness/tsc'
+import { compile, expectTscOk, expectTscReject, readGolden } from '../harness/tsc.js'
 
 describe('TYP-TONE tsc consumers', () => {
   const openDts = readGolden('tones.d.ts')

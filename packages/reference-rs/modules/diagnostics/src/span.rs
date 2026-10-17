@@ -44,6 +44,11 @@ impl ByteSpan {
         self.end.saturating_sub(self.start)
     }
 
+    /// Whether the span covers no bytes: the same zero-length test as `len`.
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
+
     /// Whether the span is a zero-width caret.
     pub fn is_point(self) -> bool {
         self.start == self.end

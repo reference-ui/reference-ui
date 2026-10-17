@@ -1,7 +1,7 @@
 //! CSS length recognizer: a number with a unit, or unitless zero.
 //!
-//! Seeded from atomic's `is_length_width` unit list, extended to the mission's
-//! table (viewport, container, font-relative, angle, time, and `fr` units).
+//! Seeded from atomic's `is_length_width` unit list, extended with viewport,
+//! container, font-relative, angle, time, and `fr` units.
 //! Rhythm (`r`, fractions) is deliberately absent: `Nr` is atomic's grammar,
 //! not CSS, and bare nonzero numbers are unit-stage business, not lengths.
 
@@ -66,8 +66,8 @@ mod tests {
 
     #[test]
     fn seed_absolute_units_survive() {
-        // `pt` and `pc` come from the `is_length_width` seed; the mission
-        // table omits them, but they are real lengths, so the fence honors them.
+        // `pt` and `pc` come from the `is_length_width` seed; the extension
+        // list omits them, but they are real lengths, so the fence honors them.
         assert!(is_length("12pt"));
         assert!(is_length("1pc"));
     }

@@ -6,7 +6,7 @@ shorthand per side with each ref resolved to its `var()`, the sheet leaves
 no unresolved brace behind, and the probe computes the 4px/8px pair like
 its inline reference.
 
-Evidence: `[panda-v1]` `core/__tests__/serialize.test.ts` "expand multiple
-references" (`padding: '{spacing.3} {spacing.5}'`); `[atm]` ATM-TOKEN-08.
+Evidence: Panda v1 test "expand multiple
+references" (`padding: '{spacing.3} {spacing.5}'`); ATM-TOKEN-08.
 
 > Search terms: double, twin, dual, two refs, token/refs, NEO-TOKEN-01

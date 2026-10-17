@@ -7,10 +7,7 @@ with a distinct color leaf. The spec asserts every node paints its leaf,
 the sheet carries exactly the six utilities, and the frozen-request
 recompile carries zero diagnostics: wrappers erase, they never refuse.
 
-Evidence: `[atm]` ATM-SITE-26 (call-arg unwraps);
-`[overmatch]` SPEC-V2-06, SPEC-V2-07; `[panda-v2]`
-`vendor/panda/crates/pandacss_extractor/tests/calls.rs:1001`, `:1017`,
-`:1033`, `:1052`, `:1068`.
+Evidence: ATM-SITE-26 (call-arg unwraps); Panda v2 call tests.
 
 Repin (Forge Slice 3): the `asserted` node paints CSS `plum`
 (rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the

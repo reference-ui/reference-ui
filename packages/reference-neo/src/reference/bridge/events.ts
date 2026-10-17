@@ -1,7 +1,7 @@
 // Reference bridge result payloads: they take build outcomes and emit the
 // structured serial-phase results. Neo has no event bus, so onRunBuild returns
 // these instead of emitting `reference:complete` / `reference:failed`; the
-// shapes stay close to the old events for the consumers Crew C2 wires later.
+// shapes stay close to the old events for the consumers that wire up later.
 
 import type { TastyBuildDiagnostic } from '@reference-ui/rust/tasty/build'
 

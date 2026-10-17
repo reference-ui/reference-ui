@@ -3,7 +3,7 @@
  * Provides pure functions for standardizing line endings, whitespace,
  * stripping non-deterministic runtime tokens, rewriting checkout-absolute
  * paths out of compiler artifacts, and collapsing base-system CSS layer bodies
- * so per-case goldens stay independent of lib token values. Used by station
+ * so per-case goldens stay independent of lib token values. Used by
  * runners and golden diff engines across reference-rs suites.
  */
 

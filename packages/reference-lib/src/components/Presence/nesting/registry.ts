@@ -3,7 +3,7 @@
  * suspends until its own effects finish and every registered descendant exit
  * reports back; `createDescendantRegistry` owns that pending set. Descendants
  * register at exit-start only — never on mount, so a born-closed child has no
- * exit to report and cannot strand the parent (B-01) — and every release path
+ * exit to report and cannot strand the parent — and every release path
  * (`unregister` for interruption/removal, `complete` for a finished exit)
  * funnels through `onSettled`, which is where the hook re-checks the release
  * predicate. The settlement call fires unconditionally, matching the

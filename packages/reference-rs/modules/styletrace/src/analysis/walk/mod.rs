@@ -20,27 +20,48 @@ pub struct WalkContext<'a> {
     pub forwarded_props: &'a mut BTreeSet<String>,
 }
 
+/// Dispatches one statement by family: value statements here, nested blocks and control flow in
+/// `walk_nested_statement`, and declarations in `walk_declaration_statement`.
 pub fn collect_edges_from_statement(statement: &Statement<'_>, ctx: &mut WalkContext<'_>) {
     match statement {
         Statement::ExpressionStatement(expression) => {
             expr::collect_edges_from_expression(&expression.expression, ctx)
         }
         Statement::ReturnStatement(return_statement) => {
-            if let Some(argument) = &return_statement.argument {
-                expr::collect_edges_from_expression(argument, ctx);
-            }
+            walk_return_statement(return_statement, ctx)
         }
         Statement::VariableDeclaration(declaration) => walk_variable_declaration(declaration, ctx),
+        _ => walk_nested_statement(statement, ctx),
+    }
+}
+
+fn walk_nested_statement(statement: &Statement<'_>, ctx: &mut WalkContext<'_>) {
+    match statement {
         Statement::BlockStatement(block) => walk_block_statement(block, ctx),
         Statement::IfStatement(if_statement) => walk_if_statement(if_statement, ctx),
         Statement::SwitchStatement(switch_statement) => {
             walk_switch_statement(switch_statement, ctx)
         }
+        _ => walk_declaration_statement(statement, ctx),
+    }
+}
+
+fn walk_declaration_statement(statement: &Statement<'_>, ctx: &mut WalkContext<'_>) {
+    match statement {
         Statement::FunctionDeclaration(function) => walk_function_declaration(function, ctx),
         Statement::ExportNamedDeclaration(export_decl) => {
             walk_export_named_declaration(export_decl, ctx)
         }
         _ => {}
+    }
+}
+
+fn walk_return_statement(
+    return_statement: &oxc_ast::ast::ReturnStatement<'_>,
+    ctx: &mut WalkContext<'_>,
+) {
+    if let Some(argument) = &return_statement.argument {
+        expr::collect_edges_from_expression(argument, ctx);
     }
 }
 

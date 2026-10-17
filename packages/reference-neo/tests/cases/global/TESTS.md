@@ -2,21 +2,21 @@
 
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| NEO-GLOBAL-01 | Trace A: token ref + literal `:focus-visible` selector in `globalCss` paints | done | ATM-LAYER-03 | — | focus element; computed outline colour | `[lib]` global-css Trace A (`base.ts` 9–13 → `global.css` 21–24) |
-| NEO-GLOBAL-02 | Trace B: rhythm aliases + `containerType` on `body` + `:root` var merge | done | ATM-LAYER-03, ATM-COND-16 | — | computed font-size; `container-type` | `[lib]` global-css Trace B (`global.ts` 3–20) |
-| NEO-GLOBAL-03 | Trace C: nested `&` + `_hover`/`_disabled`/`_focusVisible` twins on a tag recipe (`.ref-button`) | done | ATM-LAYER-03, ATM-COND-10 | — | hover/focus/disabled twins | `[lib]` global-css Trace C; styles-css L461–475; bare/&-descendant/:not()/hover-nest/class-append corners verified (F1/F2/F3/H8/H10), css() bare parents fold to COND-05 |
-| NEO-GLOBAL-04 | Trace D: `_before`/`_after` with token colour | done | ATM-LAYER-03 | — | `::before` computed | `[lib]` global-css Trace D (`inline.ts` 60–69) |
-| NEO-GLOBAL-05 | Trace E: `undefined` entries strip; `_placeholder`; rhythm token vs calc | done | ATM-LAYER-03 | none (JSON seam drops `undefined`; colocated test pins it) | no `display` rule; placeholder colour | `[lib]` global-css Trace E (`inputs.ts` 19–31) |
-| NEO-GLOBAL-06 | `'& ~ &'` under a comma selector becomes `:is()` siblings | done | ATM-LAYER-09 (RS-11 landed) | — | second sibling margin | `[panda-v1]` `core/__tests__/global-css.test.ts:243` "complex recursive nesting"; `[atm]` ATM-LAYER-09; single &~/&+ lower directly (E1/F4/H11), css() twins G3/G4 |
-| NEO-GLOBAL-07 | Nested `@media` inside `globalCss` (and `@container`) wraps the rule | done | ATM-COND-11 | — | matching query paints, far query holds, container flips across widths | `[panda-v1]` `core/__tests__/global-css.test.ts:285` "nested at-rule"; nested-@supports top-level + in-selector print correctly (H4/H5) |
-| NEO-GLOBAL-08 | `font()` emits `@font-face` with `src` lists, `size-adjust`, `descent-override` | done | RS-2 landed | `font.ts` (no change: fields already carried) | sheet text + `document.fonts` presence + computed families (loading not asserted) | `[lib]` styles-css L1771–1801 (3 faces); `[panda-v1]` `core/__tests__/global-fontface.test.ts` |
-| NEO-GLOBAL-09 | No `--made-with-panda`, no `*` transform/filter var dump, no `global.css` file | done | none | `publish.ts` (no change: SYNC-02 already omits it) | negative sheet + fs assertions | `[decision D2,D7]`; coverage-map row 11 |
-| NEO-GLOBAL-10 | `:has()` selectors pass through and match | done | ATM-LAYER-03 | — | field bezel reacts to inner `aria-invalid` | `[lib]` styles-css `:has(` ×8, L1044 |
-| NEO-GLOBAL-11 | Vendor pseudo-elements (`::-webkit-slider-thumb`, `::file-selector-button`) pass through unchanged | done | ATM-LAYER-03 | — | sheet text + computed where Chromium exposes it | `[lib]` styles-css vendor family (L811–1200); N12 repair 2026-09-18: world authors lowercase-w `webkitAppearance` (P18 spelling, hyphenates to `-webkit-appearance` verbatim) — hyphen-prefixed keys warn+drop under N12; genuinely-unknown keys still drop |
-| NEO-GLOBAL-12 | Colour mixes inside `globalCss` hover rules (`color-mix(in oklch, … 15.2%, …)`) paint | done | ATM-TOKEN-06 | — | hover computed | `[lib]` styles-css L477–481; global-css Trace C |
-| NEO-GLOBAL-13 | Bare token names in `globalCss` resolve through the property's category and paint | done | ATM-LAYER-15 (RS-35) | — | card computes resolved radius/ring/ink/family; global layer prints `var()` forms | `[atm]` LAYER-15; `[lib]` `global.ts`, `disclosure.ts`, `shared.ts` |
+| NEO-GLOBAL-01 | Trace A: token ref + literal `:focus-visible` selector in `globalCss` paints | done | ATM-LAYER-03 | — | focus element; computed outline colour | reference-lib global-css Trace A (`base.ts` 9–13 → `global.css` 21–24) |
+| NEO-GLOBAL-02 | Trace B: rhythm aliases + `containerType` on `body` + `:root` var merge | done | ATM-LAYER-03, ATM-COND-16 | — | computed font-size; `container-type` | reference-lib global-css Trace B (`global.ts` 3–20) |
+| NEO-GLOBAL-03 | Trace C: nested `&` + `_hover`/`_disabled`/`_focusVisible` twins on a tag recipe (`.ref-button`) | done | ATM-LAYER-03, ATM-COND-10 | — | hover/focus/disabled twins | reference-lib global-css Trace C; styles-css L461–475; bare/&-descendant/:not()/hover-nest/class-append corners verified (F1/F2/F3/H8/H10), css() bare parents fold to COND-05 |
+| NEO-GLOBAL-04 | Trace D: `_before`/`_after` with token colour | done | ATM-LAYER-03 | — | `::before` computed | reference-lib global-css Trace D (`inline.ts` 60–69) |
+| NEO-GLOBAL-05 | Trace E: `undefined` entries strip; `_placeholder`; rhythm token vs calc | done | ATM-LAYER-03 | none (JSON seam drops `undefined`; colocated test pins it) | no `display` rule; placeholder colour | reference-lib global-css Trace E (`inputs.ts` 19–31) |
+| NEO-GLOBAL-06 | `'& ~ &'` under a comma selector becomes `:is()` siblings | done | ATM-LAYER-09 (RS-11) | — | second sibling margin | Panda v1 test "complex recursive nesting"; ATM-LAYER-09; single &~/&+ lower directly (E1/F4/H11), css() twins G3/G4 |
+| NEO-GLOBAL-07 | Nested `@media` inside `globalCss` (and `@container`) wraps the rule | done | ATM-COND-11 | — | matching query paints, far query holds, container flips across widths | Panda v1 test "nested at-rule"; nested-@supports top-level + in-selector print correctly (H4/H5) |
+| NEO-GLOBAL-08 | `font()` emits `@font-face` with `src` lists, `size-adjust`, `descent-override` | done | RS-2 is in place | `font.ts` (no change: fields already carried) | sheet text + `document.fonts` presence + computed families (loading not asserted) | reference-lib styles-css L1771–1801 (3 faces); Panda v1 global-fontface tests |
+| NEO-GLOBAL-09 | No `--made-with-panda`, no `*` transform/filter var dump, no `global.css` file | done | none | `publish.ts` (no change: SYNC-02 already omits it) | negative sheet + fs assertions | |
+| NEO-GLOBAL-10 | `:has()` selectors pass through and match | done | ATM-LAYER-03 | — | field bezel reacts to inner `aria-invalid` | reference-lib styles-css `:has(` ×8, L1044 |
+| NEO-GLOBAL-11 | Vendor pseudo-elements (`::-webkit-slider-thumb`, `::file-selector-button`) pass through unchanged | done | ATM-LAYER-03 | — | sheet text + computed where Chromium exposes it | reference-lib styles-css vendor family (L811–1200); world authors lowercase-w `webkitAppearance` (P18 spelling, hyphenates to `-webkit-appearance` verbatim) — hyphen-prefixed keys warn+drop under N12; genuinely-unknown keys still drop |
+| NEO-GLOBAL-12 | Colour mixes inside `globalCss` hover rules (`color-mix(in oklch, … 15.2%, …)`) paint | done | ATM-TOKEN-06 | — | hover computed | reference-lib styles-css L477–481; global-css Trace C |
+| NEO-GLOBAL-13 | Bare token names in `globalCss` resolve through the property's category and paint | done | ATM-LAYER-15 (RS-35) | — | card computes resolved radius/ring/ink/family; global layer prints `var()` forms | ATM-LAYER-15; reference-lib `global.ts`, `disclosure.ts`, `shared.ts` |
 
-## RS-35 — landed as ATM-LAYER-15 (waiting Neo case NEO-GLOBAL-13, done)
+## RS-35 — covered by ATM-LAYER-15
 
 `globalCss` string values printed bare token spellings verbatim —
 `fontFamily: 'sans'` → `font-family: sans`, `borderRadius: 'md'` → `md`,
@@ -36,11 +36,11 @@ misses warn.
   `var(--colors-ui-focus-ring)`, verbatim `display: flex`, zero diagnostics.
 - Waiting Neo case: NEO-GLOBAL-13 (done).
 
-## RS-11 — landed as ATM-LAYER-09 (unblocked NEO-GLOBAL-06)
+## RS-11 — covered by ATM-LAYER-09
 
-R1 2026-09-17: the global walker substitutes `&` textually without comma
+the global walker substitutes `&` textually without comma
 distribution or `:is()` wrapping, so every multi-`&` or comma-parent nest is
-cascade-wrong. Probes `/tmp/neo-global-r1.mjs`, `/tmp/neo-global-r1b.mjs`
+cascade-wrong. Probes 
 (direct `compile()` calls, `globalCss` entries only):
 
 - `globalCss({ '.ref-stack > p, .ref-stack > ul': { margin: 0, '& ~ &': { marginTop: '10px' } } })`
@@ -53,53 +53,55 @@ cascade-wrong. Probes `/tmp/neo-global-r1.mjs`, `/tmp/neo-global-r1b.mjs`
   `.ref-a, .ref-b .ref-kid` — the bare first member matches everything.
 
 Input style object (waiting case NEO-GLOBAL-06): `globalCss({ 'body > p,
-body > ul': { margin: 0, '& ~ &': { marginTop: 10 } } })`, the panda
-`global-css.test.ts:243` shape.
+body > ul': { margin: 0, '& ~ &': { marginTop: 10 } } })`, the panda shape.
 
 Expected CSS: per-member distribution with `:is()` around members that
 contain a combinator —
 `:is(body > p) ~ :is(body > p), :is(body > ul) ~ :is(body > ul) {
 margin-top: … }`. Comma members without a combinator distribute bare
 (`.ref-a ~ .ref-a, .ref-b ~ .ref-b`); plain descendant nests distribute too
-(`.ref-a .ref-kid, .ref-b .ref-kid`). Note the D7 contrast: Panda's own
+(`.ref-a .ref-kid, .ref-b .ref-kid`). Note the contrast: Panda's own
 snapshot wraps only the first member (`:is(body > p) ~ :is(body > p), body >
 ul ~ body > ul`) — the unwrapped second member is a Panda bug, not parity;
 Neo wraps every combinator member.
 
-Suggested station: ATM-LAYER-09 (global-walker family) at the liaison's
-call — ATM-COND-14 already pins this contract for `css()` utilities, and
-its gauges pass here (only its golden is stale, see the cook report).
+Suggested reference-rs case: ATM-LAYER-09 (global-walker family) — ATM-COND-14 already pins this contract for `css()` utilities, and
+its gauges pass here (only its golden is stale).
 
-## RS-26 — globalCss bare numerics print unitless (S1 sweep N1)
+## RS-26 — globalCss bare numerics unitize like css()
 
-**RS-26 — LANDED as ATM-UNIT-03 (NEO-PARITY-01 P19 live; gap text below kept for provenance).**
+**RS-26** is covered by ATM-UNIT-03.
 
-Input `globalCss({ 'body > p, body > ul': { '& ~ &': { marginTop: 10 } } })`
-(Panda `global-css.test.ts:243` shape) should emit `margin-top: 10px` — the
-`css()` path unitizes (probe A1) — but the global path prints `margin-top:
-10`, which browsers drop, with zero diagnostics. Probe `/tmp/s1-sweep/b1.mjs`
-E2 (H11 control: literal `0` correctly prints `0`). Unitless-stay props
-(`zIndex`, `lineHeight`, …) must NOT unitize (Panda
-`rule-processor.test.ts:1215`). Waiting: PARITY-01 sub-probe (number at the
-N3 cook's call). Station at the liaison's call.
+Current behaviour: a bare number in `globalCss` unitizes like `css()`.
+`globalCss({ 'body > p, body > ul': { '& ~ &': { marginTop: 10 } } })`
+(Panda shape) emits `margin-top: 10px` with zero
+diagnostics. Unitless-stay props (`zIndex`, `lineHeight`, …) stay bare
+(Panda v1 test "unitless"), and so do custom props and a literal
+`0`. ATM-UNIT-03 asserts this; NEO-PARITY-01 probe P19 pins the unitized
+output live on the Neo side.
 
-## RS-27 — top-level at-rules print braceless (S1 sweep N2)
+## RS-27 — top-level at-rules brace their inner selectors
 
-**RS-27 — LANDED as ATM-LAYER-12 (NEO-PARITY-01 P20 live; gap text below kept for provenance).**
+**RS-27** is covered by ATM-LAYER-12.
 
-Input `globalCss({ '@media (min-width: 640px)': { body: { … } } })` (Panda
-`global-css.test.ts:266`) should emit a braced `@media` block but prints
-`@media (min-width: 640px) body { … }` — invalid CSS, dropped — with zero
-diagnostics. Probes F5/H1/H12 (`/tmp/s1-sweep/b{1,2}.mjs`); nested
-at-rules are proven (GLOBAL-07). Waiting: PARITY-01 sub-probe. Station at
-the liaison's call.
+Current behaviour: a top-level at-rule key in `globalCss` prints a braced
+block. `globalCss({ '@media (min-width: 640px)': { body: { … } } })` (Panda shape) emits `@media (min-width: 640px) { body { … } }`,
+and valid at-rule keys raise no diagnostic. Stacked at-rules nest in author
+order, and nested at-rules are proven by GLOBAL-07. A bare at-rule key with
+no query, such as `@supports`, is refused with an "Empty at-rule query"
+diagnostic and is never printed. ATM-LAYER-12 asserts this; NEO-PARITY-01
+probe P20 pins the braced output live on the Neo side.
 
-## RS-28 — breakpoint keys + conditional values print as descendants (S1 sweep N3)
+## RS-28 — breakpoint keys + conditional values lower through @media
 
-**RS-28 — LANDED as ATM-LAYER-13 (NEO-PARITY-01 P21 live; gap text below kept for provenance).**
+**RS-28** is covered by ATM-LAYER-13.
 
-Input `globalCss` `.btn` with an `sm:` key and `width: { base, lg }`
-(Panda `global-css.test.ts:13`) should lower through breakpoints but prints
-garbage descendant selectors (`.btn width { base: 40px }`, `.btn sm { … }`)
-with zero diagnostics. Probe H6 (`/tmp/s1-sweep/b2.mjs`). Waiting:
-PARITY-01 sub-probe. Station at the liaison's call.
+Current behaviour: breakpoint keys and conditional values in `globalCss`
+lower through the scale's `@media` queries. Input `globalCss` `.btn` with an
+`sm:` key and `width: { base, lg }` (Panda shape)
+prints `width: 40px` bare for `base` and `width: 90px` under
+`@media (min-width: 1024px)` for `lg`, with zero diagnostics. An unknown
+conditional key such as `nope` refuses with an "Unknown conditional key"
+diagnostic and prints nothing, never a descendant selector. ATM-LAYER-13
+asserts this; NEO-PARITY-01 probe P21 pins the breakpoint lowering live on
+the Neo side.

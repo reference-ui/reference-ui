@@ -117,13 +117,18 @@ function providedLayerScope(inheritedScope: LayerScope, layerName: string | unde
  * is unset (at document level or outside the React tree).
  */
 export function readDocumentColorMode(doc?: Document | null): string | undefined {
-  const targetDoc = doc ?? (typeof document !== 'undefined' ? document : null)
+  const targetDoc = doc ?? globalDocument()
   if (!targetDoc) return undefined
-  return (
-    targetDoc.documentElement?.getAttribute(DATA_COLOR_MODE_ATTR) ??
-    targetDoc.body?.getAttribute(DATA_COLOR_MODE_ATTR) ??
-    undefined
-  )
+  return modeAttrOf(targetDoc.documentElement) ?? modeAttrOf(targetDoc.body)
+}
+
+function globalDocument(): Document | null {
+  return typeof document !== 'undefined' ? document : null
+}
+
+/** The mode attribute on one element, or undefined when the element is absent or unmarked. */
+function modeAttrOf(element: Element | null | undefined): string | undefined {
+  return element?.getAttribute(DATA_COLOR_MODE_ATTR) ?? undefined
 }
 
 /** Read the inherited or document-level color mode within a React tree. */

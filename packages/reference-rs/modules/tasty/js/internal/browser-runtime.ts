@@ -7,9 +7,9 @@ import type {
   TastyApi,
   TastyBrowserRuntime,
   TastyRuntimeModule,
-} from '../api-types'
-import { extractTastyRuntimeModule, wrapRuntimeError } from './shared'
-import { createTastyApiFromManifest } from './api-runtime'
+} from '../api-types.js'
+import { extractTastyRuntimeModule, wrapRuntimeError } from './shared.js'
+import { createTastyApiFromManifest } from './api-runtime.js'
 
 export class TastyBrowserRuntimeImpl implements TastyBrowserRuntime {
   private runtimeModulePromise: Promise<TastyRuntimeModule> | undefined

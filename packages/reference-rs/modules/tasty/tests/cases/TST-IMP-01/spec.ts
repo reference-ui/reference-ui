@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-01.
+ * Case specification for TST-IMP-01.
  * Verifies default, namespace, and named import symbol resolution and dependency graphs.
  * Proves primary SPEC ID anchor TST-IMP-01.
  */

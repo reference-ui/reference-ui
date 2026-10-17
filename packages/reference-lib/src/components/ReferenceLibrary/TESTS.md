@@ -1,6 +1,6 @@
 # ReferenceLibrary test contract
 
-Playwright: `matrix/lib/tests/e2e/reference-library.spec.ts`
+Playwright: `src/components/ReferenceLibrary/__e2e__/*.spec.ts` (run with `pnpm agentct ReferenceLibrary --e2e`)
 Page: `/reference-library`
 
 ReferenceLibrary owns the document-level mount and failover policy for Toast,
@@ -21,9 +21,6 @@ duplication. Different `Document` objects have independent hosts.
 
 ## Source evidence
 
-- `vendor/sonner/test/tests/basic.spec.ts` — “toast created before the Toaster
-  mounts is still shown”.
-- `vendor/sonner/src/state.ts` — replay-on-subscribe queue semantics.
 - React Aria's live announcer and Radix `announce` — one document-level live
   region and delayed clearing.
 - Radix Tooltip Provider `skipDelayDuration`, React Aria `globalWarmedUp`, Zag
@@ -65,6 +62,14 @@ duplication. Different `Document` objects have independent hosts.
   warm window does not restart or disappear, preventing child reconciliation
   from remounting global systems.
 
+- [x] `RL-DOM-05` `[reference]` `[browser]` —
+  **ReferenceLibrary should give runtime hosts the color mode of the root they
+  are mounted in.** Mount the library inside a `colorMode="dark"` application
+  root, read `data-color-mode` from the Toast host's nearest ancestor, then
+  toggle the root to light and back. Assert the host's mode follows each change
+  through React context and DOM ancestry, because the host renders where the
+  library is mounted rather than in a portal.
+
 ### Before mount, mount, and unmount
 
 - [x] `RL-LIFE-01` `[vendor]` `[browser]` —
@@ -74,7 +79,7 @@ duplication. Different `Document` objects have independent hosts.
   then mount ReferenceLibrary in that document. Assert one `"pre"` wrapper
   renders with `"Draft"` and the original 4000ms duration starts at host
   activation; this ports
-  `vendor/sonner/test/tests/basic.spec.ts` “toast created before the Toaster
+  Sonner `basic.spec.ts` “toast created before the Toaster
   mounts is still shown” without adopting its Toaster API.
 - [x] `RL-LIFE-02` `[convergence]` `[browser]` —
   **ReferenceLibrary should deliver a pending announcement when its target
@@ -157,7 +162,7 @@ duplication. Different `Document` objects have independent hosts.
   and close A, and enter B within 299ms and again after 300ms. Assert zero
   always requires B's normal opening delay, whereas 300 makes the within-window
   handoff instant and the later handoff delayed; this ports Radix
-  `vendor/radix-primitives/packages/react/tooltip/src/tooltip.test.tsx` “does
+  `tooltip.test.tsx` “does
   not skip the delay when skipDelayDuration is 0” without adding a Provider.
 - [x] `RL-CONFIG-06` `[reference]` `[browser]` —
   **ReferenceLibrary should use the active host's current skip delay when

@@ -258,12 +258,12 @@ describe('Splitter contract', () => {
       expect(errors).toEqual([])
     })
 
-    it('W-35: off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing', () => {
+    it('off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing', () => {
       const errors: string[] = []
       vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
         errors.push(args.map(String).join(' '))
       })
-      // B-11 shape (entries that do not sum to 100): loud in dev, and both
+      // Entries that do not sum to 100: loud in dev, and both
       // panels still mount with their declared sizes — never a silent 13px
       // collapse.
       const el = mount(
@@ -292,13 +292,13 @@ describe('Splitter contract', () => {
       ).toBe('30%')
     })
 
-    it('W-35: value/Panel count mismatch dev-warns and throws (never a silent collapse)', () => {
+    it('value/Panel count mismatch dev-warns and throws (never a silent collapse)', () => {
       const errors: string[] = []
       vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
         errors.push(args.map(String).join(' '))
       })
-      // The exact B-11 instance: 3 value entries on 2 Panels. FEATURES #9
-      // throws; W-35 adds the dev warning carrying the same diagnostic.
+      // The exact failing shape: 3 value entries on 2 Panels. The throw is
+      // unchanged; the dev warning carries the same diagnostic.
       expect(() =>
         mount(
           <Splitter value={[10, 10, 80]}>
@@ -339,7 +339,7 @@ describe('Splitter contract', () => {
       expect(handle?.getAttribute('aria-valuemax')).toBe('95')
     })
 
-    it('B-28: min/max/index never leak to css() or the DOM', () => {
+    it('min/max/index never leak to css() or the DOM', () => {
       // min/max drive the solver. Without the destructure they would flow
       // ...props → Div → css() ("no compiled class" spam) or land on the
       // DOM as unknown attributes.

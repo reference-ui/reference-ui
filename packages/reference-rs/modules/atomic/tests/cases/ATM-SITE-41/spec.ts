@@ -1,8 +1,8 @@
 /**
- * Barrel-proof station (ATM-SITE-41, SPEC-V2-56 build via SPEC-V2-76).
+ * Barrel-proof (ATM-SITE-41, build via).
  * Same-name chains through one, two, and three barrel hops resolve to the
  * origin const by binding, and the aliased re-export (`export { gap as
- * space }`) resolves too — the Ph2 probe's merge-era warn-and-drop is
+ * space }`) resolves too — the probe's pre-binding warn-and-drop is
  * the recorded before-picture (see README), not the behavior.
  */
 import { expect } from 'vitest'

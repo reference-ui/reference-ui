@@ -21,7 +21,7 @@ export interface RovingFocusContextValue {
 
 export const RovingFocusContext = React.createContext<RovingFocusContextValue | null>(null)
 
-// Composed-policy seam (finish-line P2D): Tabs owns activation policy, so
+// Composed-policy seam: Tabs owns activation policy, so
 // it syncs selection into kernel currentness through this hook — reading
 // currentId and writing it on selection/registry changes. Additive export
 // only; kernel movement, settlement, and slot behavior are unchanged.

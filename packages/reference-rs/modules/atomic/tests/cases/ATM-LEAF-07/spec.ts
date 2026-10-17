@@ -1,5 +1,5 @@
 /**
- * Dynamic-sibling extract station. Unresolvable properties and call-expression
+ * Dynamic-sibling extract case. Unresolvable properties and call-expression
  * ternary arms diagnose; static neighbours and the literal arm still become wants.
  */
 import { expect } from 'vitest'
@@ -18,7 +18,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'black')).toBe(true)
     expect(getWantsForProp(result, 'color').length).toBeGreaterThanOrEqual(2)
 
-    // The refusals ride the opt-in channel now (S6 E8-class re-point);
+    // The refusals ride the opt-in channel;
     // the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-LEAF-07', { logs: ['compiler'] })

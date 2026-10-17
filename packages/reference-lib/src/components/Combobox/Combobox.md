@@ -1,6 +1,6 @@
 # Combobox
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Combobox --e2e`).
 
 Coordinates an input with an associated popup while preserving DOM focus and native text editing. Active-descendant, autocomplete modes, suggestion navigation, value commitment, dismissal, restoration of the previous value.
 
@@ -217,7 +217,7 @@ This is not an overlay library. The nasty problem is **keeping DOM focus in the 
 
 APG Combobox: the user edits in the text field. The list is `aria-activedescendant`. Moving DOM focus into the list (Headless Listbox) breaks typing.
 
-**Vendor.** Downshift `useCombobox` — activedescendant on the input. Aria `useComboBox.ts`. Zag `combobox.connect.ts`. All three keep focus on the input.
+**Prior art.** Downshift `useCombobox` — activedescendant on the input. Aria `useComboBox.ts`. Zag `combobox.connect.ts`. All three keep focus on the input.
 
 **Lift** all three. Downshift is the clearest prop-getter story for “input owns focus.”
 
@@ -243,7 +243,7 @@ replace/clear/preserve policies are deliberately left.
 
 No text field. Focus on a button with `role="combobox"`, typeahead on the button, list still virtual.
 
-**Vendor.** Downshift `useSelect`. Aria Combobox’s button press focuses an input — different shape.
+**Prior art.** Downshift `useSelect`. Aria Combobox’s button press focuses an input — different shape.
 
 **Lift** Downshift `useSelect` for the Select composition. Do not invent a second Combobox primitive.
 

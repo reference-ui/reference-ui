@@ -1,17 +1,17 @@
 ---
 name: test-core
-description: Core and matrix verification runner for Reference UI (the pipeline runner — not a component skill). Activate when modifying packages/reference-core, matrix packages, pipeline, Vite/Webpack plugins, sync, packager, or hermetic React/bundler contracts. CLI is `pnpm agent`. Do not use test-component for core changes.
+description: Matrix and pipeline verification runner for Reference UI (the pipeline runner — not a component skill). Activate when modifying matrix packages, pipeline, packages/reference-mcp, or hermetic React/bundler contracts. CLI is `pnpm agent`. Do not use test-component for those changes.
 ---
 
-# Core / Matrix Test Runner (`test-core`)
+# Matrix / Pipeline Test Runner (`test-core`)
 
-**This is not a skill.** `view-story`, `test-component` and `ux-designer` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for `packages/reference-core` and the matrix.
+**This is not a skill.** `view-story`, `test-component` and `ux-designer` are component workflows for `@reference-ui/lib`. `test-core` is the pipeline runner: the CLI (`pnpm agent`) and the verification layer for the matrix and the pipeline.
 
 The docs live under `.agents/skills/test-core` only so agents can find the runner. Treat it as infrastructure, not a loop to work through.
 
 Use `test-core` when you changed any of:
 
-- `packages/reference-core` (CLI, sync, Vite/Webpack plugins, packager, types, Book discovery, Playwright host, React runtime aliases, virtual FS, …)
+- hermetic React and bundler contracts under `matrix/*` and `pipeline/*` (the Neo runtime they drive is proven by agent-neo, in `packages/reference-neo`)
 - `packages/reference-mcp` (the MCP server; its unit tests run with `pnpm agent vt packages/reference-mcp`, its matrix suite is `matrix/tests/mcp`)
 - `matrix/*` packages
 - pipeline / Dagger / hermetic React + bundler contracts
@@ -52,7 +52,7 @@ pnpm agent vitest lib -t "Dialog"
 pnpm agent vitest -t "Overlay"
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
-# 4. Fast 4-Phase Component Verification (lib, after core is already green):
+# 4. Fast 4-Phase Component Verification (lib, after the Neo or reference-rs proof is already green):
 # (Runs typecheck -> vitest -> build -> targeted Playwright E2E spec in one command)
 pnpm agent verify Toast
 pnpm agent verify Combobox
@@ -63,7 +63,7 @@ pnpm agent verify:all --packages=@matrix/lib  # targeted matrix
 pnpm agent verify:all --no-fail-fast          # runs matrix even if CT fails
 
 # 6. Full Hermetic Matrix Tests (Dagger containers across React versions & bundlers):
-# This is the default proof after a reference-core change.
+# This is the default proof after a Neo or reference-rs change that the matrix consumes.
 pnpm agent test --packages=@matrix/lib
 pnpm agent test matrix --packages=@matrix/tokens
 pnpm agent test:matrix  # Full matrix run across all variants (--full)
@@ -78,12 +78,12 @@ pnpm agent clean
 pnpm agent setup --packages=@matrix/distro --sync
 ```
 
-### After a `reference-core` change
+### After a Neo or reference-rs change
 
-1. Unit/typecheck in core: `pnpm agent vitest core` (and `pnpm agent run pnpm --filter @reference-ui/core typecheck` if needed).
+1. Prove the owning package first: `pnpm agentneo run` for `packages/reference-neo`, `pnpm agentrs v` and `pnpm agentrs c` for `packages/reference-rs`.
 2. Rebuild what the matrix consumes (`pnpm agent` auto-builds `@reference-ui/lib` dist when Playwright needs it; pass `--build` to force).
 3. Run the matrix package(s) that cover the surface you touched, e.g. `@matrix/virtual`, `@matrix/session`, `@matrix/mcp`, `@matrix/typescript`, `@matrix/distro`, `@matrix/system`, `@matrix/playwright`.
-4. Do not stop at `pnpm agentct`. Component CT does not exercise core.
+4. Do not stop at `pnpm agentct`. Component CT does not exercise Neo or reference-rs.
 
 ### Process Lifecycle, Signal Control & Pass Signaling
 
@@ -105,7 +105,7 @@ await runPlaywright(['overlays', '-g', 'OV-OUT'])
 
 // Run native Vitest unit tests:
 await runVitest(['lib', '-t', 'Dialog'])
-await runVitest(['core'])
+await runVitest(['packages/reference-mcp'])
 
 // Run matrix tests in Dagger:
 await runMatrix({
@@ -149,7 +149,7 @@ Terms are stemmed (`queries` matches `query`) and typo-tolerant
 (fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
 Resolve ids with `show`, not `search`. There is no metadata sidecar —
 enrich the index by writing a detailed README: describe the behavior,
-name the symbols, cite sibling case/station ids (cited ids surface as
+name the symbols, cite sibling case ids (cited ids surface as
 `related`). Everything reads live: new docs are searchable immediately,
 no rebuild step.
 

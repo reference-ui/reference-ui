@@ -236,7 +236,7 @@ function assertNotRepeated(
 /**
  * Links between one field's entries and the consumer's own name. An entry reaches
  * the own name when its name, any fragment node name, or any stream name equals it,
- * which covers a self-named entry and a cycle through an upstream's expansion (E7).
+ * which covers a self-named entry and a cycle through an upstream's expansion.
  * A name listed twice in one field is rejected; a repeat reached only through another
  * system is left to the dedupe.
  */
@@ -256,9 +256,9 @@ export function validateBaseSystemLinks(
 
 /**
  * A system named in both fields. `extends` already includes everything `layers`
- * gives, so the layers entry is rejected rather than merged (the owner's ruling,
- * D6). Config calls this only after each field passes on its own, so every entry
- * it reads is a valid system with a name. Only direct names are compared.
+ * gives, so the layers entry is rejected rather than merged. Config calls this
+ * only after each field passes on its own, so every entry it reads is a valid
+ * system with a name. Only direct names are compared.
  */
 export function validateSharedBaseSystems(
   extendsSystems: BaseSystem[] | undefined,

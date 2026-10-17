@@ -5,6 +5,7 @@
 //! logical spreads lower every live arm; anything else warns once with its
 //! siblings kept, naming the write when the base was mutated.
 
+use super::lower::LowerSite;
 use oxc_ast::ast::{ConditionalExpression, Expression, SpreadElement};
 use oxc_span::{GetSpan, Span};
 use smallvec::SmallVec;
@@ -57,6 +58,18 @@ fn walk_spread_value(
             unpack_local_const_object(ctx, ident.name.as_str(), when, ident.span);
             true
         }
+        _ => walk_spread_access(ctx, expr, when),
+    }
+}
+
+/// Spreads that read through parentheses, a member hop, or a call; anything else is not a spread
+/// source.
+fn walk_spread_access(
+    ctx: &mut ObjectWalk<'_>,
+    expr: &Expression<'_>,
+    when: &SmallVec<[Box<str>; 2]>,
+) -> bool {
+    match expr {
         Expression::ParenthesizedExpression(p) => {
             // ...({ margin: '10px' })
             walk_spread_argument(ctx, &p.expression, when);
@@ -151,7 +164,9 @@ fn emit_spread_residue(ctx: &mut ObjectWalk<'_>, span: Span, residue: Option<&st
             span,
             DiagnosticCode::PartialObjectProp,
             format!("{subject} drops a dynamic arm with no static style value"),
-            vec![format!("make the dynamic arm of {subject} static or drop it")],
+            vec![format!(
+                "make the dynamic arm of {subject} static or drop it"
+            )],
         );
     }
 }
@@ -167,7 +182,15 @@ fn unpack_member_const_object(
 ) {
     if let Some(obj) = crate::extract::fold::member_path_object(mem, ctx.scopes) {
         let name = crate::extract::fold::member_path_text(mem);
-        lower_const_object(ctx, &name, obj, when, mem.span);
+        lower_const_object(
+            ctx,
+            obj,
+            LowerSite {
+                name: &name,
+                when,
+                span: mem.span,
+            },
+        );
         return;
     }
     // ...styles.missing  — not a recorded object; a rootless base warns generic
@@ -280,7 +303,7 @@ fn unpack_local_const_object(
         return;
     };
     emit_import_residue(ctx, name, span);
-    lower_const_object(ctx, name, obj, when, span);
+    lower_const_object(ctx, obj, LowerSite { name, when, span });
 }
 
 /// Diagnose nested spreads the imported object could not unfold, one per
@@ -300,83 +323,4 @@ fn emit_import_residue(ctx: &mut ObjectWalk<'_>, name: &str, span: Span) {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::{compile, CompileRequest, VirtualSource};
-
-    fn compile_logs(code: &str) -> crate::CompileResult {
-        let req = CompileRequest {
-            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
-            base_system: crate::BaseSystem::lib_fixture().clone(),
-            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
-            ..Default::default()
-        };
-        compile(&req).expect("compile succeeds")
-    }
-
-    fn channel_for(
-        res: &crate::CompileResult,
-        code: crate::diagnostics::DiagnosticCode,
-    ) -> Vec<crate::Diagnostic> {
-        res.compiler_diagnostics
-            .as_deref()
-            .expect("compiler channel requested")
-            .iter()
-            .filter(|diag| diag.code == code)
-            .cloned()
-            .collect()
-    }
-
-    /// An unresolvable spread names the base in its define-or-inline fix.
-    #[test]
-    fn unknown_spread_help_names_the_base() {
-        let res = compile_logs(
-            "import { css } from '@reference-ui/react';\
-             declare const unknown: object;\
-             export const cls = css({ ...unknown });",
-        );
-        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::UnfoldableSpread);
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].help,
-            Some(vec!["define 'unknown' as a static style object or inline it".to_string()])
-        );
-    }
-
-    /// A mutated spread base names the hoist fix with its write phrase.
-    #[test]
-    fn mutated_spread_help_names_hoist_with_write() {
-        let res = compile_logs(
-            "import { css } from '@reference-ui/react';\
-             let palette = { color: 'red' };\
-             palette = { color: 'blue' };\
-             export const cls = css({ ...palette });",
-        );
-        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::MutatedBinding);
-        assert_eq!(hits.len(), 1);
-        let help = hits[0].help.clone().expect("mutated spread carries help");
-        assert_eq!(help.len(), 1);
-        assert!(
-            help[0].starts_with("hoist 'palette' above the style call and stop reassigning it ("),
-            "unexpected help: {help:?}"
-        );
-        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
-    }
-
-    /// A refused call fragment inside a folded spread carries the hoist fix.
-    #[test]
-    fn spread_call_refusal_help_names_the_hoist_fix() {
-        let res = compile_logs(
-            "import { css } from '@reference-ui/react';\
-             declare const flag: boolean;\
-             declare const dyn: string;\
-             function getStyles(n) { return { color: n }; }\
-             export const cls = css({ ...getStyles(flag ? 'red' : dyn) });",
-        );
-        let hits = channel_for(&res, crate::diagnostics::DiagnosticCode::DynamicExpression);
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].help,
-            Some(vec!["hoist the expression into a static literal or variant".to_string()])
-        );
-    }
-}
+mod tests;

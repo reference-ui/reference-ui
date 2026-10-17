@@ -100,7 +100,7 @@ case, not a silent edit.
 - `[x]` — a test asserts the prose at the production bar (not just the ID).
 - `[ ]` — specified; not yet proven. The engine may already exist in source.
 - `[reference]` original Reference UI contract · `[vendor]` ported from
-  `vendor/design-system/resizable` · `[floating-ui]` ported from Floating UI
+  the design system's resizable · `[floating-ui]` ported from Floating UI
   `autoUpdate` / `observeMove`.
 - `[unit]` jsdom/happy-dom · `[ssr]` `renderToString` · `[browser]` real
   ResizeObserver in Playwright · `[react:all]` React 17/18/19 + StrictMode.
@@ -109,7 +109,7 @@ case, not a silent edit.
 
 ## Source evidence
 
-- `vendor/design-system/resizable/shared/useBoundingClientRect/`
+- The design system's `useBoundingClientRect` hook, file by file:
   - `useBoundingClientRect.ts` — the adaptive `isAnimating` switch we split.
   - `useRealtimeUpdate.ts` — always-on 60fps rAF, `!==` compare incl.
     `right`/`bottom`, never sleeps. **Anti-pattern; left behind.**

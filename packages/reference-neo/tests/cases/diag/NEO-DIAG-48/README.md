@@ -4,6 +4,6 @@ Merged interfaces declare one member twice; keeps the first. The world carries t
 
 Raised in: `modules/tasty/src/ast/resolve/merge.rs`. Driver: the whole tasty compiler (`buildTasty` over the case world).
 
-Evidence: `[diag]` TST-W-DUPLICATE-MEMBER (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-W-DUPLICATE-MEMBER (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-W-DUPLICATE-MEMBER, tst-w-duplicate-member, diagnostics case index, NEO-DIAG-48

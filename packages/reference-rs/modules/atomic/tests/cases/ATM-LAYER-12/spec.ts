@@ -1,5 +1,5 @@
 /**
- * Top-level-at-rule station (ATM-LAYER-12, RS-27). At-rule keys at the top
+ * Top-level-at-rule (ATM-LAYER-12). At-rule keys at the top
  * of `globalCss` brace their inner selectors; stacked at-rules nest in
  * author order. In-selector nesting is the unchanged control.
  */

@@ -148,7 +148,7 @@ test.describe('Presence', () => {
   })
 })
 
-test.describe('Presence onExitComplete (W-09)', () => {
+test.describe('Presence onExitComplete', () => {
   test.beforeEach(async ({ mount }) => {
     await mount('components/Presence/Presence/PresenceExitCompleteFixture')
   })
@@ -220,7 +220,7 @@ test.describe('Presence onExitComplete (W-09)', () => {
     }
   })
 
-  test('PR-EXIT-05: Fires through the born-closed nested wedge (B-01 overlay shape)', async ({
+  test('PR-EXIT-05: Fires through the born-closed nested wedge (overlay shape)', async ({
     page,
   }) => {
     const parent = page.getByTestId('exit-wedge-parent')

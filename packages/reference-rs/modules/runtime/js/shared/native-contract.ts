@@ -3,11 +3,11 @@
  * Combines the minimal host export requirement with product-level native export manifests.
  * Consulted during build verification, native loading sanity checks, and binary compatibility inspection.
  */
-import { ATLAS_NATIVE_EXPORTS } from '../../../atlas/js/runtime'
-import { STYLETRACE_NATIVE_EXPORTS } from '../../../styletrace/js/runtime'
-import { ATOMIC_NATIVE_EXPORTS } from '../../../atomic/js/runtime'
-import { TASTY_NATIVE_EXPORTS } from '../../../tasty/js/runtime'
-import { TYPEGEN_NATIVE_EXPORTS } from '../../../typegen/js/runtime'
+import { ATLAS_NATIVE_EXPORTS } from '../../../atlas/js/runtime.js'
+import { STYLETRACE_NATIVE_EXPORTS } from '../../../styletrace/js/runtime.js'
+import { ATOMIC_NATIVE_EXPORTS } from '../../../atomic/js/runtime.js'
+import { TASTY_NATIVE_EXPORTS } from '../../../tasty/js/runtime.js'
+import { TYPEGEN_NATIVE_EXPORTS } from '../../../typegen/js/runtime.js'
 
 export const HOST_NATIVE_EXPORTS = ['getNativeCapabilities'] as const
 

@@ -1,5 +1,5 @@
 /**
- * Exact-plan-absent station (ATM-DIAG-09, Operation Error Correct Slice 0).
+ * Exact-plan-absent (ATM-DIAG-09).
  * RED: a static runtime query the final plan omits must produce one located
  * non-fatal warning naming that exact declaration. The current
  * UnknownCondition warning is unlocated and names only the condition.

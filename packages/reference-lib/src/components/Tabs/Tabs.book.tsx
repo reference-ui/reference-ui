@@ -2,9 +2,8 @@ import * as React from 'react'
 import { A, Div, Span } from '@reference-ui/react'
 import { Tabs, tabsListRecipe, tabsTabRecipe } from './index'
 
-// Optional value (HQ EOD 2026-09-26 optional-value exception: `value`
-// optional, omitted = self-managed from the first tab, no seeding
-// prop); the Book stories stay controlled throughout.
+// Optional value: `value` is optional, omitted = self-managed from the
+// first tab, no seeding prop; the Book stories stay controlled throughout.
 // `variant` stays in the kernel (permanent API): line/pill ship prepackaged
 // as system recipes, extended userland via normal css()/recipe().
 

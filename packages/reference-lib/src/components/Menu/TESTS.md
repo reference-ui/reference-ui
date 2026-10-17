@@ -1,9 +1,9 @@
 # Menu test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Menu --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/menu.spec.ts`  
-Unit: `matrix/lib/tests/unit/menu-intent.test.ts`
+Playwright: `src/components/Menu/__e2e__/*.spec.ts` (run with `pnpm agentct Menu --e2e`)  
+Unit: `src/components/Menu/**/*.test.ts(x)`
 Page: `/menu`
 
 Menu owns APG menu navigation, command activation, and controlled submenu
@@ -39,15 +39,6 @@ ContextMenu component.
 
 ## Source evidence
 
-- `vendor/radix-primitives/e2e/{dropdown-menu,context-menu,menubar}.spec.ts` —
-  repeated pointer-intent, submenu keyboard, active-menu typeahead, item close,
-  and RTL cases consolidated here.
-- `vendor/base-ui/packages/react/src/menu` tests — event cancellation, Space
-  during typeahead, submenu ARIA/focus, detached/nested contrast, checkbox/
-  radio state, links, close-on-click policy, and current callback behavior.
-- `vendor/react-spectrum/packages/react-aria-components/test/Menu.test.tsx` —
-  roles, disabled items, checkbox/radio selection, native links, action,
-  context trigger, nested submenu restore, and focus/press modalities.
 - Zag Menu `intentPolygon` and React Aria `useSafelyMouseToSubmenu` — diagonal
   grace geometry.
 
@@ -178,7 +169,7 @@ ContextMenu component.
   navigation and with ordinary Tab entry in separate fixtures, without
   pointer hover or an activation key. Assert the Menu.Trigger becomes the sole
   current tab stop while `aria-expanded` remains false, `onOpen` is empty, and
-  Menu.Content stays absent. This ports Radix `e2e/dropdown-menu.spec.ts`
+  Menu.Content stays absent. This ports the Radix dropdown-menu e2e test
   “should not open submenu when moving focus to trigger.”
 - [x] `MN-TYPE-01` `[vendor]` `[browser]` —
   **Menu typeahead should search and wrap only within the currently active menu level.**
@@ -492,8 +483,7 @@ ContextMenu component.
   Hover-open a controlled nested Menu without moving focus into it, keep focus on its
   Menu.Trigger, and press ArrowRight in LTR or ArrowLeft in RTL. Assert no second
   `onOpen`, focus moves once to the first enabled mounted Menu.Content item, and
-  parent/root state remains open. This ports Radix
-  `e2e/dropdown-menu.spec.ts` “focus first item when pressing right arrow after
+  parent/root state remains open. This ports the Radix dropdown-menu e2e test “focus first item when pressing right arrow after
   opening submenu with mouse.”
 
 ### Pointer submenu intent
@@ -635,7 +625,7 @@ ContextMenu component.
   and accept the Menu close request. Assert the initial outside path requests
   one complete-tree dismissal, later blocked events add no duplicate, all
   Submenus close deepest-first, and focus follows the root policy. This ports
-  Radix `e2e/dropdown-menu.spec.ts`; modal Overlay intentionally remains open
+  the Radix dropdown-menu e2e test; modal Overlay intentionally remains open
   for the corresponding `OV-OUT-07` fixture.
 - [x] `MN-CLOSE-10` `[vendor]` `[browser]` —
   **Menu should keep its tree open when Shift+Tab moves within a nested dialog

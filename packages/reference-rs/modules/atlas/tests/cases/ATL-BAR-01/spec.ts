@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-BAR-01.
+ * Case specification for ATL-BAR-01.
  * Validates local namespace imports exported through local barrel modules,
  * ensuring correct component identification and interface preservation.
  * Proves primary SPEC anchor ATL-BAR-01.

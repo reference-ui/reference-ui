@@ -517,7 +517,7 @@ async function blurSource(el: Element, relatedTarget: EventTarget | null) {
   })
 }
 
-describe('Combobox quarantine reconciliation (CB case IDs)', () => {
+describe('Combobox reconciliation (CB case IDs)', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
   })
@@ -2069,7 +2069,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     expect(calls).toEqual(['open'])
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
 
-    // B-36: recommitting the identical value is silent, so the commit
+    // Recommitting the identical value is silent, so the commit
     // moves to charlie first — the exactly-once assertion stays on a
     // changed value.
     await pressKey(trigger, 'ArrowDown')
@@ -2094,7 +2094,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
     calls.length = 0
     await pressKey(trigger2, ' ')
     expect(calls).toEqual(['open'])
-    // B-36: identical recommit is silent — move to bravo before Space.
+    // Identical recommit is silent — move to bravo before Space.
     await pressKey(trigger2, 'ArrowDown')
     expect(trigger2.getAttribute('aria-activedescendant')).toBe(optionOf('bravo')!.id)
     await pressKey(trigger2, ' ')
@@ -2316,7 +2316,7 @@ describe('Combobox quarantine reconciliation (CB case IDs)', () => {
   })
 })
 
-describe('Combobox PATCHES #1: shadow portal destination', () => {
+describe('Combobox shadow portal destination', () => {
   it('shadowContainerForSource resolves the containing open ShadowRoot, nothing otherwise', async () => {
     const { shadowContainerForSource } = await import('./combobox-context')
 
@@ -2874,7 +2874,7 @@ describe('Combobox cluster B: content gate, escape hook, completion, grid timing
   })
 })
 
-describe('Combobox W-24: inline mode + custom values', () => {
+describe('Combobox inline mode + custom values', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
   })
@@ -3065,7 +3065,7 @@ describe('Combobox W-24: inline mode + custom values', () => {
     outside.remove()
   })
 
-  it('W-24 custom Tab: Tab with unmatched text commits the custom value and stays native', async () => {
+  it('custom Tab: Tab with unmatched text commits the custom value and stays native', async () => {
     const calls: string[] = []
     const { container, root } = await mount(
       <Combobox
@@ -3091,7 +3091,7 @@ describe('Combobox W-24: inline mode + custom values', () => {
     await unmount(container, root)
   })
 
-  it('W-24 custom Escape: Escape reverts unmatched text even when custom values are allowed', async () => {
+  it('custom Escape: Escape reverts unmatched text even when custom values are allowed', async () => {
     const calls: string[] = []
     const { container, root } = await mount(
       <Combobox
@@ -3119,7 +3119,7 @@ describe('Combobox W-24: inline mode + custom values', () => {
   })
 })
 
-describe('Combobox finish-line P2A unit', () => {
+describe('Combobox granular callbacks and adapter diagnostics unit', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
   })
@@ -3285,8 +3285,8 @@ describe('Combobox finish-line P2A unit', () => {
     )
     expect(errors.some(e => e.includes('must not carry its own onChange'))).toBe(true)
     // Activating the treeitem invokes at most one update path — never
-    // both. (Today the nested path fires; the Tree crew reroutes to the
-    // root path. This assert is stable across that landing.)
+    // both. (Today the nested path fires; Tree reroutes to the
+    // root path. This assert is stable across that change.)
     const item = document.body.querySelector('[role="treeitem"]') as HTMLElement
     await React.act(async () => {
       item.dispatchEvent(new MouseEvent('click', { bubbles: true }))

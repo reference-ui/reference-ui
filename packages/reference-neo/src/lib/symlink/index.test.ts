@@ -173,7 +173,9 @@ describe('removeGeneratedLink', () => {
     expect(removeGeneratedLink(linkPath, outDir)).toBe(false)
     expect(existsSync(linkPath)).toBe(true)
   })
+})
 
+describe('removeGeneratedLink keeps foreign paths', () => {
   it('keeps a link pointing outside the out dir and returns false', () => {
     const root = mkdtempSync(join(tmpdir(), 'ref-unlink-'))
     created.push(root)

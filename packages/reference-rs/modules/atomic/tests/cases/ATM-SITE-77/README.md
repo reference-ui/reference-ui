@@ -1,11 +1,11 @@
 # ATM-SITE-77 — branching leaves in const objects fan out on spread
 
-Overmatch Ph3 fold-side of SPEC-V2-55 (imported conditional both arms).
+Fold side of the imported conditional (both arms).
 
 Both collectors record branching leaves in const-object inits — ternary
 and nullish props scoop their static leaves — and every use fans out:
 spreads lower one want and one authored plan per leaf, member reads
-resolve every leaf, and the imported instance (via the merge-era project
+resolve every leaf, and the imported instance (via the project
 bag) behaves exactly like the same-file one. Same-file spreads of
 branching objects were fully silent before this slice (zero entries,
 zero diagnostics); now they paint.
@@ -16,12 +16,12 @@ located `property 'x' of 'y' has no static style value` diagnostic with
 static siblings kept. Partially static props (one literal arm, one
 dynamic arm) keep the static arm and diagnose the dropped arm at every
 use: the collector flags the loss on the recorded entry at collect
-time (Ph4 residue channel — the Ph3 silence pin, flipped), and
+time (residue channel — the silence pin, flipped), and
 spreads, member reads (single and multi-hop), element reads, computed
 keys, `?.` chains, and fenced calls over the entry each warn
 `ATM-W-PARTIAL-OBJECT-PROP` with siblings kept. The imported nullish
 twin's dropped `left` arm diagnoses too (same paint as v2's silent
-right-operand rule, plus our diagnostic — the S2 pattern). Genuinely
+right-operand rule, plus our diagnostic). Genuinely
 empty objects stay silent.
 
 Reads consumed mid-fold (binary/unary/template operands, call
@@ -43,10 +43,7 @@ union arms that prove residue threads through spread merging),
 plus `via-barrel.ts` (re-exported conditional, nullish, and partial
 objects), and the `cycle-*` pair plus `cycled.ts` (re-export cycle).
 
-Panda: `cross_file.rs:1368`
-(`imported_conditional_object_keeps_encode_branches`).
-
-Ph4 binding remainder (crew B, SPEC-V2-52 over SPEC-V2-55): aliased
+Aliased
 imports of the conditional objects fan out exactly like the plain
 instance, and barrel re-exports — including the aliased `fb` and
 `partial` hops — resolve by binding with the residue flag riding the

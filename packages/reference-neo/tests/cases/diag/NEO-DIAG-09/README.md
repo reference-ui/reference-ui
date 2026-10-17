@@ -4,6 +4,6 @@ Malformed `/opacity` modifier on a token path. The world carries the minimal fix
 
 Raised in: `modules/atomic/src/resolve/tokens/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-MALFORMED-OPACITY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-MALFORMED-OPACITY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-MALFORMED-OPACITY, atm-w-malformed-opacity, diagnostics case index, NEO-DIAG-09

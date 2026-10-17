@@ -4,14 +4,14 @@
 //! offered values, minted nothing net-new, and every offered value is a
 //! final plan — so the site's harvest story is fully redundant with static
 //! plans. Vacuous (unoffered), uncovered, and minting sinks keep their info
-//! and funnel lines; their warnings stay until Slice 5 moves channels.
+//! and funnel lines; their warnings stay on the default channel for now.
 
 use std::collections::BTreeSet;
 
 use super::super::{
     adapters::{extract::ExtractReport, harvest::HarvestReport},
-    Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, ExtractOutcome,
-    OwnedLookupKey, Policy,
+    Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation, ExtractOutcome, OwnedLookupKey,
+    Policy,
 };
 use super::lines::remove_line;
 
@@ -85,7 +85,7 @@ impl<'a> Sinks<'a> {
     fn collect_funnel(
         &mut self,
         location: &'a DiagnosticLocation,
-        prop: &'a Box<str>,
+        prop: &'a str,
         when: &'a Vec<Box<str>>,
         outcome: &'a ExtractOutcome,
     ) {
@@ -99,7 +99,7 @@ impl<'a> Sinks<'a> {
         }
         let report = ExtractReport {
             location: location.clone(),
-            prop: prop.clone(),
+            prop: prop.into(),
             when: when.to_vec(),
             code: *code,
             detail: detail.clone(),
@@ -107,7 +107,7 @@ impl<'a> Sinks<'a> {
         };
         self.funnels.push(Funnel {
             location,
-            prop: prop.as_ref(),
+            prop,
             when: when.as_slice(),
             code: *code,
             legacy_message: Policy::render_extract(&report).message,
@@ -260,7 +260,9 @@ mod tests {
             prop: "color".into(),
             when: Vec::new(),
             code: DiagnosticCode::DynamicIdentifier,
-            detail: ExtractDetail::Leaf(LeafDetail::Identifier { name: "theme".into() }),
+            detail: ExtractDetail::Leaf(LeafDetail::Identifier {
+                name: "theme".into(),
+            }),
             sink_recorded: true,
         };
         let line = Policy::render_extract(&report);
@@ -311,8 +313,12 @@ mod tests {
         let (uncovered_fact, uncovered_line) = harvest_sink(0, &["blue"]);
         let (minting_fact, minting_line) = harvest_sink(1, &["red"]);
         let (funnel_fact, funnel_line) = funnel_refusal();
-        let mut diagnostics =
-            vec![funnel_line.clone(), vacuous_line, uncovered_line, minting_line];
+        let mut diagnostics = vec![
+            funnel_line.clone(),
+            vacuous_line,
+            uncovered_line,
+            minting_line,
+        ];
         let emitted = emitted_keys(&[plan("color", serde_json::json!("red"))]);
         let facts = vec![vacuous_fact, uncovered_fact, minting_fact, funnel_fact];
         Sinks::collect(&facts).render_covered("lib", &[], &emitted, &mut diagnostics);

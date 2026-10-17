@@ -22,39 +22,39 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
 
   if (layout === 'shell') {
     return (
-      <ReferenceLibrary>
-        <Div
-          colorMode={theme}
-          display="flex"
-          height="100vh"
-          width="100vw"
-          overflow="hidden"
-          bg={isDark ? 'gray.950' : 'gray.50'}
-          color={isDark ? 'gray.100' : 'gray.900'}
-          position="relative"
-          fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        >
-          {children}
-        </Div>
-      </ReferenceLibrary>
-    )
-  }
-
-  return (
-    <ReferenceLibrary>
       <Div
         colorMode={theme}
         display="flex"
-        flexDirection="column"
-        boxSizing="border-box"
-        height="100%"
-        minHeight="100%"
-        width="100%"
+        height="100vh"
+        width="100vw"
+        overflow="hidden"
         bg={isDark ? 'gray.950' : 'gray.50'}
         color={isDark ? 'gray.100' : 'gray.900'}
         position="relative"
         fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
       >
+        <ReferenceLibrary>
+          {children}
+        </ReferenceLibrary>
+      </Div>
+    )
+  }
+
+  return (
+    <Div
+      colorMode={theme}
+      display="flex"
+      flexDirection="column"
+      boxSizing="border-box"
+      height="100%"
+      minHeight="100%"
+      width="100%"
+      bg={isDark ? 'gray.950' : 'gray.50'}
+      color={isDark ? 'gray.100' : 'gray.900'}
+      position="relative"
+      fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    >
+      <ReferenceLibrary>
         <Div
           flex="1"
           minHeight="0"
@@ -67,7 +67,7 @@ export function BookDecorator({ children, theme = 'dark', layout = 'story' }: Bo
             {children}
           </Div>
         </Div>
-      </Div>
-    </ReferenceLibrary>
+      </ReferenceLibrary>
+    </Div>
   )
 }

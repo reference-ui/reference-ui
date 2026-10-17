@@ -96,7 +96,7 @@ export const TreeExpander: React.ForwardRefExoticComponent<
       height="6r"
       p="0"
       flexShrink={0}
-      borderRadius="xs"
+      borderRadius="sm"
       _hover={{
         color: 'inherit',
         bg: 'color-mix(in oklch, currentColor 14%, transparent)',

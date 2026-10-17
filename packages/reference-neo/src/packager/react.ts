@@ -6,11 +6,11 @@
 // imports 'react' and the consumer provides the copy. No react-dom edge:
 // consumers bring their own copy, and packages built on the entry import
 // clean where react-dom is absent (core contract).
-// css()/recipe() bundle in pre-registered over this system's runtime-data
-// (D4: styled stays data-only).
+// css()/recipe() bundle in pre-registered over this system's runtime-data;
+// styled stays data-only.
 // The synced stage sits one level deeper than the live folder the commit
 // renames it into, so the linked map's sources are emitted relative to the
-// live folder while the bytes still land in the stage (F-A): every source
+// live folder while the bytes still land in the stage: every source
 // must resolve after the commit, or devtools and IDEs read the wrong file.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -47,7 +47,7 @@ function runtimeModulePath(...parts: string[]): string {
 }
 
 function primitivesModulePath(): string {
-  // The E2 primitives surface, live from the workspace package (never
+  // The primitives roster surface, live from the workspace package (never
   // copied, never tree-relative: no relative hop survives src vs dist vs
   // packed depths and the packed tree has no reference-rs). The exports map
   // is the contract, so this resolves through it — workspace src/dist via
@@ -76,7 +76,7 @@ const STAGED_LOADERS: Record<string, esbuild.Loader> = {
 }
 
 /** Forward-slash form of a path so a `/`-presented stage path matches a
- * `\`-joined prefix and vice versa (B3D-P3-2). */
+ * `\`-joined prefix and vice versa. */
 function toForwardSlashes(value: string): string {
   return value.replace(/\\/g, '/')
 }
@@ -84,7 +84,7 @@ function toForwardSlashes(value: string): string {
 /**
  * True when `path` sits under `stageDir`, comparing separator-insensitively so
  * a `/`-presented plugin path still matches on Win32 and never silently
- * no-ops the re-home (B3D-P3-2); `stageDir` itself counts as under. Exported
+ * no-ops the re-home; `stageDir` itself counts as under. Exported
  * for the separator unit test.
  */
 export function isStagedPath(stageDir: string, path: string): boolean {
@@ -95,7 +95,7 @@ export function isStagedPath(stageDir: string, path: string): boolean {
 
 /**
  * Loader for a staged input by extension. An unknown extension throws instead
- * of silently loading as `js` (B3D-P4-1); live inputs are `.mts`/`.mjs` only,
+ * of silently loading as `js`; live inputs are `.mts`/`.mjs` only,
  * so this is defensive. Exported for the unit test.
  */
 export function stagedLoaderFor(stagedPath: string): esbuild.Loader {
@@ -110,7 +110,7 @@ export function stagedLoaderFor(stagedPath: string): esbuild.Loader {
 }
 
 /**
- * Re-home staged bundle inputs at their eventual live paths (F-A). Esbuild
+ * Re-home staged bundle inputs at their eventual live paths. Esbuild
  * derives the linked map's `sources` from each input's path relative to
  * `outfile`; the entry and runtime data live under the stage, one level
  * deeper than the live folder, so a live `outfile` base would orphan every
@@ -129,7 +129,7 @@ export function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Pl
     setup(build) {
       build.onResolve({ filter: /.*/ }, (args) => {
         // A relative specifier is joined against the importer's dir before the
-        // stage test, or a staged relative import never re-homes (B3D-P3-1).
+        // stage test, or a staged relative import never re-homes.
         // Absolute specifiers pass through unchanged.
         const staged = args.path.startsWith('.')
           ? resolve(args.resolveDir, args.path)
@@ -154,7 +154,7 @@ export function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Pl
 
 /**
  * Publish the generated react package: bundle the bound entry (the live
- * E2 roster bound per system, with css()/recipe() pre-registered over
+ * primitives roster bound per system, with css()/recipe() pre-registered over
  * this system's data) and write the standalone types. The shell already
  * wrote the final manifest plus the styles.css copy; this leg only adds
  * the bundle. The map is emitted live-relative while react.mjs and its
@@ -173,7 +173,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
 
   // Stable entry path under the output tmp dir: esbuild stamps the entry path
   // into the bundle as a module comment, so a random scratch name would make
-  // consecutive syncs differ by bytes (SYNC-06). Scoped per output dir, so
+  // consecutive syncs differ by bytes (NEO-SYNC-06). Scoped per output dir, so
   // concurrent syncs of different projects never share it.
   const entryPath = join(stageDir, 'tmp', 'react-entry.mts')
   mkdirSync(join(stageDir, 'tmp'), { recursive: true })

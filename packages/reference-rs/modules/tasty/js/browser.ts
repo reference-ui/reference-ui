@@ -12,7 +12,7 @@ export {
   getTastyMemberId,
   normalizeTastyInlineValue,
   parseTastyParamTag,
-} from './index'
+} from './index.js'
 
 export type {
   CreateTastyApiFromManifestOptions,
@@ -48,4 +48,4 @@ export type {
   TastySymbolRef,
   TastySymbolSearchResult,
   TastyTypeRef,
-} from './index'
+} from './index.js'

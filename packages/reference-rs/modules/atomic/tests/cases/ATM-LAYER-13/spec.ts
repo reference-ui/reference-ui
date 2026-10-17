@@ -1,5 +1,5 @@
 /**
- * Global-breakpoint station (ATM-LAYER-13, RS-28 + tails-c). Breakpoint
+ * Global-breakpoint (ATM-LAYER-13). Breakpoint
  * keys lower through the scale's `@media` query, including `*Only` /
  * `*Down` / `*To*` ranges with the utility `@container` bounds retargeted
  * to `@media`; conditional values print `base` bare with breakpoint members

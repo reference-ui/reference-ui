@@ -1,7 +1,7 @@
 /**
- * Specifier-resolution station (ATM-SITE-54, SPEC-V2-76 Ph4 row 1). Two
+ * Specifier-resolution (ATM-SITE-54, row 1). Two
  * files declare `gap` with different values and two importers each read
- * ONLY their own target — the Ph4 exit bar, never crossing. The same
+ * ONLY their own target — the acceptance bar, never crossing. The same
  * compile pins the four specifier rungs: relative joins, `tsconfig`
  * `paths`/`baseUrl`, extension and directory-index probing, and
  * `package.json` `exports` mapping into `node_modules` (via a manifest

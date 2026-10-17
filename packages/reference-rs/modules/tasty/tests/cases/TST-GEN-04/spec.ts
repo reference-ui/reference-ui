@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-GEN-04.
+ * Case specification for TST-GEN-04.
  * A type parameter default that names an earlier parameter is evaluated where that parameter is bound to its
  * argument, so `Two<number>` gives `second: number` and a same-named top-level `A` never captures the default.
  * Proves the default for a supplied argument, the chained defaults of a bare reference, and a nested default.

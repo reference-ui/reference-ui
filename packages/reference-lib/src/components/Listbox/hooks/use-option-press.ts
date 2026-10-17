@@ -5,7 +5,7 @@
  * options are strictly inert — no consumer activation, defaults
  * suppressed so the press cannot start a focus/selection path
  * (LB-DOM-04, LB-POINTER-04). Portaled row content and interactive
- * descendants are never option presses (B-02).
+ * descendants are never option presses.
  */
 import * as React from 'react'
 import type { ComboboxContextValue } from '../../Combobox/combobox-context'
@@ -44,7 +44,7 @@ export function useOptionPress({
 
   const handlePressStart = (e: React.SyntheticEvent<HTMLDivElement>) => {
     if (isDisabled) return
-    // B-02: presses from portaled row content (Menu/Popover React-tree
+    // Presses from portaled row content (Menu/Popover React-tree
     // children) or interactive in-row content (button/input/...) are not
     // option presses — same guard family as keydown below.
     if (!e.currentTarget.contains(e.target as Node)) return
@@ -108,7 +108,7 @@ export function useOptionPress({
       hasTriggeredPressRef.current = false
       return
     }
-    // B-02: clicks from portaled row content bubble through the React tree
+    // Clicks from portaled row content bubble through the React tree
     // into this handler — without a DOM-containment check every menu action
     // re-toggles the row. In-row interactive content (a ⋯ Menu trigger)
     // must not select either.

@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path'
  * need to execute user fragment files so token, font, keyframe, and pattern
  * collectors can build the evaluated spec. This map points those imports back
  * at the Neo-owned root barrel, and react imports at the unbound react shim
- * (E2 roster plus runtime css and recipe), so fragment execution can happen
+ * (unbound primitives roster plus runtime css and recipe), so fragment execution can happen
  * first. Fragment evaluation never renders and unbound primitives throw on
  * render, so the eval-safe barrel contract holds by construction.
  *

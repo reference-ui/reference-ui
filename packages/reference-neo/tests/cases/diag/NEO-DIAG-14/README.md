@@ -4,6 +4,6 @@ A StyleTrace file skipped with its siblings kept. The world carries the minimal 
 
 Raised in: `modules/atomic/src/hosts/diagnostics.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-TRACE-SKIPPED (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-TRACE-SKIPPED (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-TRACE-SKIPPED, atm-w-trace-skipped, diagnostics case index, NEO-DIAG-14

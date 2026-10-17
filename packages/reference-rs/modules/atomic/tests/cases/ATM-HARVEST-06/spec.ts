@@ -1,5 +1,5 @@
 /**
- * Color allowlist station. The pool holds a spacing `var()`, an `oklch()`
+ * Color allowlist case. The pool holds a spacing `var()`, an `oklch()`
  * value, an unlicensed named color, and `'inherit'`; a dynamic `color`
  * site and a dynamic `width` site sink side by side. The color sink mints
  * only the allowlisted word — expressions and unlicensed words never mint

@@ -2,7 +2,7 @@
  * Regression guard for the tasty scratch roots under modules/tasty/.scratch.
  * Two module instances stand in for two test files running at once: each must own a distinct
  * root, and disposing one must leave the other's artifacts on disk. Before this guard every file
- * wrote the same station directory, so a reader could import a manifest or chunk that another
+ * wrote the same case directory, so a reader could import a manifest or chunk that another
  * writer was still rewriting.
  */
 import fs from 'node:fs'

@@ -1,6 +1,6 @@
 /**
- * Computed-key station (ATM-SITE-49, SPEC-V2-64 static + folded halves,
- * entry-40 helper-key fold). Static keys (`['color']`, `` [`...`] ``,
+ * Computed-key (ATM-SITE-49, static and folded keys,
+ * helper-key fold). Static keys (`['color']`, `` [`...`] ``,
  * `[42]`) and single-leaf folded keys (`[k]`, `[t.p]`, `[s[0]]`, `[hov]`
  * conditions, `[gh('cool')]` helper calls, `['col'+'or']` concats)
  * resolve exactly like their bare spellings; multi-leaf and genuinely
@@ -36,8 +36,8 @@ const spec: AtomicCaseSpec = {
     }
     // The computed `['color']` and the bare control are the same leaf twice;
     // `[k]` adds a third base `color: red`, `[hov]` nests two more under the
-    // condition, the entry-40 `[gh('cool')]` key nests one under the
-    // group selector, and the entry-64 `['col'+'or']` key adds a fourth
+    // condition, the `[gh('cool')]` key nests one under the
+    // group selector, and the `['col'+'or']` key adds a fourth
     // base leaf. Nothing mints from refused or numeric keys.
     expect(getWantsForProp(result, 'color')).toHaveLength(7)
     expect(getWantsForProp(result, 'backgroundColor')).toHaveLength(1)
@@ -97,7 +97,7 @@ const spec: AtomicCaseSpec = {
     for (const { className } of EXPECTED) {
       expect(utilities).toContain(className)
     }
-    // The entry-40 helper key mints a real group-selector rule.
+    // The helper key mints a real group-selector rule.
     expect(result.stylesheet).toContain('[data-group="cool"] { color: red; }')
 
     const index = createStylePlanIndex(result.stylePlans)
@@ -109,8 +109,8 @@ const spec: AtomicCaseSpec = {
 
     // `[42]` folds to its spelling, then rides the ordinary unknown-property
     // path — never UnfoldableKey. Each dynamic key warns once, located. The
-    // three unknown-prop lines stay default (Wave-1b carve-out); the four
-    // unfoldable-key lines ride the opt-in channel (S6 E8-class re-point).
+    // three unknown-prop lines stay default; the four
+    // unfoldable-key lines ride the opt-in channel.
     const defaults = result.diagnostics ?? []
     expect(defaults).toHaveLength(3)
     for (const [suffix, line, message] of [
@@ -152,7 +152,7 @@ const spec: AtomicCaseSpec = {
       expect(diag!.line).toBe(line)
       expect(diag!.column).toBe(8)
     }
-    // The multi-leaf key refuses with siblings kept. The entry-40 helper
+    // The multi-leaf key refuses with siblings kept. The helper
     // key folds (pinned above) instead of refusing.
     const foldedByLine = new Map(foldedDiags.map(d => [d.line, d]))
     for (const [line, code, pattern] of [

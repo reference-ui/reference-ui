@@ -1,5 +1,5 @@
 //! Rust-side smoke tests for the TypeScript scanner. Bundle output is emitted by the
-//! compiled napi-rs runtime when Vitest runs a station; the station specs under
+//! compiled napi-rs runtime when Vitest runs a case; the case specs under
 //! `modules/tasty/tests/cases/<ID>/spec.ts` then load and assert on that output.
 
 mod error_paths;
@@ -12,3 +12,4 @@ mod type_parameter_refs;
 mod type_ref_map;
 mod type_ref_map_identity;
 mod type_ref_proptest;
+mod type_ref_strategy;

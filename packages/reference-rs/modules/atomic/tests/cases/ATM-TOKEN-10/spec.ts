@@ -1,5 +1,5 @@
 /**
- * Foreign-spec rejection station. Core's portable `{ name, fragment, jsxElements }`
+ * Foreign-spec rejection case. Core's portable `{ name, fragment, jsxElements }`
  * shape shares a name with the evaluated spec but none of its collections, so the
  * seam must refuse it by name with an error diagnostic and a preamble-only sheet.
  */

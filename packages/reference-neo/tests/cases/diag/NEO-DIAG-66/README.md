@@ -4,6 +4,6 @@ The baseSystem spec failed contract validation; the request is refused as a code
 
 Raised in: `modules/typegen/native.rs`. Driver: the whole typegen printer over a bad base system (coded throw).
 
-Evidence: `[diag]` TGN-E-INVALID-BASE-SYSTEM (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-E-INVALID-BASE-SYSTEM (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-E-INVALID-BASE-SYSTEM, tgn-e-invalid-base-system, diagnostics case index, NEO-DIAG-66

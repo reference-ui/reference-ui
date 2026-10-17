@@ -650,7 +650,7 @@ export const RowActions = () => {
 }
 
 // ---------------------------------------------------------------------------
-// Finish-line P2A fixtures (one per gap case; shared CaptureBoundary below)
+// Fixtures (one per gap case; shared CaptureBoundary below)
 // ---------------------------------------------------------------------------
 
 class CaptureBoundary extends React.Component<{

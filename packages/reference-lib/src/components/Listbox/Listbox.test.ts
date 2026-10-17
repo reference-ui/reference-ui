@@ -14,6 +14,7 @@ import {
   type ListboxOptionProps,
 } from './index'
 import { ComboboxContext } from '../Combobox/combobox-context'
+import { ListboxContext } from './context'
 
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -324,6 +325,60 @@ describe('Listbox Unit Contract', () => {
       // Activate unselected bravo:
       const next = computeNextMultipleSelection(incoming, 'bravo', collectionOrder)
       expect(next).toEqual(['alpha', 'bravo', 'charlie', 'unknown-2', 'unknown-1'])
+    })
+  })
+
+  describe('Uncontrolled multiple settlement', () => {
+    it('LB-MULTI-08 (unit): Listbox should settle with an omitted multiple value, reusing one stable empty array', async () => {
+      // A context consumer under the Listbox re-renders each time the context
+      // value identity changes. An omitted multiple value must not mint a fresh
+      // array per render, or every Listbox update re-registers its options and
+      // schedules another update. The guard turns a runaway loop into a captured
+      // error instead of hanging the run.
+      let renders = 0
+      function ContextProbe() {
+        React.useContext(ListboxContext)
+        renders += 1
+        if (renders > 50) throw new Error(`Listbox did not settle after ${renders} renders`)
+        return null
+      }
+
+      const errors: Error[] = []
+      const onChange = vi.fn()
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const root = createRoot(container)
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        await React.act(async () => {
+          root.render(
+            boundary(
+              React.createElement(
+                Listbox,
+                { selection: 'multiple', onChange },
+                React.createElement(ContextProbe),
+                React.createElement(Listbox.Option, { value: 'alpha' }, 'Alpha'),
+                React.createElement(Listbox.Option, { value: 'bravo' }, 'Bravo'),
+                React.createElement(Listbox.Option, { value: 'charlie' }, 'Charlie')
+              ),
+              errors
+            )
+          )
+        })
+      } finally {
+        errSpy.mockRestore()
+      }
+
+      expect(errors.map(error => error.message)).toEqual([])
+      expect(renders).toBeLessThanOrEqual(5)
+      expect(container.querySelectorAll('[role="option"]')).toHaveLength(3)
+      expect(container.querySelectorAll('[aria-selected="true"]')).toHaveLength(0)
+      expect(onChange).not.toHaveBeenCalled()
+
+      await React.act(async () => {
+        root.unmount()
+      })
+      container.remove()
     })
   })
 
@@ -736,8 +791,12 @@ describe('Listbox Unit Contract', () => {
       await React.act(async () => {
         root.render(listbox({ onChange: () => {} }, ['alpha', 'bravo']))
       })
-      // Uncontrolled multiple is left out: its omitted-value default is a fresh [] on
-      // every render, which re-registers options in a render loop that predates this check.
+      expect(listboxWarnings()).toEqual([])
+      // Uncontrolled multiple has no controlled value to name either; its omitted
+      // value is the shared frozen empty selection, so it settles and stays silent.
+      await React.act(async () => {
+        root.render(listbox({ selection: 'multiple', onChange: () => {} }, ['alpha', 'bravo']))
+      })
       expect(listboxWarnings()).toEqual([])
 
       // Inside Combobox the value is combobox.value, which Combobox reports, not Listbox.

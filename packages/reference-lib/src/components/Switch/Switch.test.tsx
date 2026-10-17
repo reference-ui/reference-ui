@@ -172,7 +172,7 @@ describe('Switch environments', () => {
     container.remove()
   })
 
-  it('PATCHES-01: Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs', async () => {
+  it('Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs', async () => {
     async function thumbCountFor(node: React.ReactNode): Promise<number> {
       const container = document.createElement('div')
       document.body.appendChild(container)

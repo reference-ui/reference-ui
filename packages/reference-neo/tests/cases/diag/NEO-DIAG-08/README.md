@@ -4,6 +4,6 @@ Octal, hex, binary, `Infinity`, or `NaN` numeric spelling. The world carries the
 
 Raised in: `modules/atomic/src/resolve/unit.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-NON-CANONICAL-NUMERIC (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-NON-CANONICAL-NUMERIC (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-NON-CANONICAL-NUMERIC, atm-w-non-canonical-numeric, diagnostics case index, NEO-DIAG-08

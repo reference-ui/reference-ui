@@ -7,8 +7,6 @@ containers. A `globalCss` `:root` rule provides the rhythm root. The spec
 checks computed padding per container width, exactly three utilities (no
 rule for the hole), and the sm/md container at-rules in the sheet.
 
-Evidence: `[atm]` ATM-LEAF-05, P1 #10; `[panda-v1]`
-`vendor/panda-v1/packages/parser/__tests__/output.test.ts:2441` ("array
-syntax" cases).
+Evidence: ATM-LEAF-05; Panda v1 test ("array syntax" cases).
 
 > Search terms: container queries, @container, tuple, sparse, container ladder, prim/container-queries, prim/responsive-array

@@ -1,5 +1,5 @@
 /**
- * Parse-failure isolation station (ATM-SITE-57). One unparsable file under
+ * Parse-failure isolation (ATM-SITE-57). One unparsable file under
  * include yields exactly one located trace warning naming the file while
  * siblings still trace and configured hosts still gate; the compile itself
  * does not fail.
@@ -26,8 +26,7 @@ const spec: AtomicCaseSpec = {
     expect(traceWarnings[0]!.message).toContain('Broken.tsx')
     expect(traceWarnings[0]!.file).toMatch(/input\/src\/Broken\.tsx$/)
     // The host warning stays default (H1 per O8 R3); extraction's
-    // rest-spread note for Card rides the opt-in channel (S6 E8-class
-    // re-point).
+    // rest-spread note for Card rides the opt-in channel.
     expect(warnings).toHaveLength(1)
     const opted = await compileCase('ATM-SITE-57', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

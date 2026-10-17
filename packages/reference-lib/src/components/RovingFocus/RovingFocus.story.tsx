@@ -153,7 +153,7 @@ export function RovingFocusFixture() {
   )
 }
 
-// PATCHES #1 (RF-TYPE-06) fixture: separate story so the main fixture — and
+// (RF-TYPE-06) fixture: separate story so the main fixture — and
 // its snapshots — stay byte-identical. "Blueberry" vs "Blue Berry" keeps the
 // "blue" prefix ambiguous until Space disambiguates; the counter records
 // every native button activation.
@@ -222,7 +222,7 @@ export function RovingFocusSpaceFixture() {
   )
 }
 
-// ---------- Finish-line proof fixtures (grid, slot, keys, nesting) ----------
+// ---------- Proof fixtures (grid, slot, keys, nesting) ----------
 
 const proofButtonStyle: React.CSSProperties = {
   padding: '8px 16px',

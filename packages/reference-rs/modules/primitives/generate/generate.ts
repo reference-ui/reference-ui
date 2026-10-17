@@ -1,7 +1,8 @@
 /**
  * Entry point for the primitives generator (`pnpm run primitives`).
- * Collects the canon HTML roster plus the live typegen vocabulary, prints E1
- * (vocabulary.json), E2 (primitives.mjs), and E4 (primitives.d.ts), scans
+ * Collects the canon HTML roster plus the live typegen vocabulary, prints the
+ * vocabulary (vocabulary.json), the roster module (primitives.mjs), and the
+ * primitive types (primitives.d.ts), scans
  * tripwires, and writes all three files. Deterministic: identical sources always
  * yield byte-identical output. Exits nonzero on any fail-closed violation with
  * the offending source named.

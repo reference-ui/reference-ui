@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-QRY-01.
+ * Case specification for TST-QRY-01.
  * Verifies typeof query expressions across aliases and member wrappers.
  * Proves primary SPEC ID anchor TST-QRY-01.
  */

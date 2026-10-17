@@ -1,5 +1,5 @@
 /**
- * Surface-parity station (ATM-DIAG-12, Error Correct Slice 2, red shell).
+ * Surface-parity.
  * Imported css() and traced JSX predict the same expected lookup key for
  * equivalent declarations; native `style` and `globalCss` predict none.
  * RED: no independent diagnostics analysis and no opt-in compiler channel
@@ -61,7 +61,7 @@ const spec: AtomicCaseSpec = {
     expect(jsxFacts.map(keyShape).sort()).toEqual(facts.map(keyShape).sort())
     // Native `style` predicts no expected key. (`globalCss` rides the
     // base-system config, not source input; its exclusion is pinned by
-    // the same channel shape plus Slice 2 unit tests.)
+    // the same channel shape plus unit tests.)
     expect(nativeFacts).toHaveLength(0)
   },
 }

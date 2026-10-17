@@ -4,16 +4,16 @@
  * Mirrors the structure of the canon crate to provide direct 1:1 mapping with generated Rust modules.
  */
 
-export { formatChunks } from './format';
-export { emitHtmlRs } from './html';
-export { emitDialectRs } from './dialect';
-export { emitConditionsRs } from './conditions';
+export { formatChunks } from './format.js';
+export { emitHtmlRs } from './html.js';
+export { emitDialectRs } from './dialect.js';
+export { emitConditionsRs } from './conditions.js';
 export {
   emitCssModRs,
   emitCssLonghandsRs,
   emitCssColorRs,
   emitCssPropertiesRs,
   emitCssUnrealizableRs,
-} from './css';
-export { emitLibRs } from './lib';
-export { emitTestsRs } from './tests/index';
+} from './css.js';
+export { emitLibRs } from './lib.js';
+export { emitTestsRs } from './tests/index.js';

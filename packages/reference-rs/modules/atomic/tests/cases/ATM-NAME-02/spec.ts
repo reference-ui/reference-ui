@@ -1,5 +1,5 @@
 /**
- * Condition-prefix class-name station. `_hover` and `_dark`+_hover` become
+ * Condition-prefix class-name case. `_hover` and `_dark`+_hover` become
  * `hover:` / `dark:hover:` prefixes on the runtime class string.
  */
 import { expect } from 'vitest'

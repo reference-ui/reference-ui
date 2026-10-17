@@ -1,5 +1,5 @@
 /**
- * Destructuring station (ATM-SITE-42, SPEC-V2-32, Overmatch Ph3). Object and
+ * Destructuring (ATM-SITE-42). Object and
  * array patterns bind the const entries they select — shorthand, rename,
  * rest, indices, defaults, and computed keys — so uses resolve exactly like
  * the member or index they abbreviate. Unresolvable sources stay dynamic

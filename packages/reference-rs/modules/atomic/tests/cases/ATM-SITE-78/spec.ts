@@ -1,5 +1,5 @@
 /**
- * Cross-file fold station (Forge §1). A nested import spread folds across
+ * Cross-file fold case. A nested import spread folds across
  * three files, named imports resolve through an `export *` barrel, a value
  * chase that cycles keeps its literal siblings with one located
  * `ATM-W-UNFOLDABLE-SPREAD` naming the cycle, and an inner origin refused
@@ -33,8 +33,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: chartreuse;')
 
     // The cycle arm's residue marker — located at the use site, naming
-    // the origin spread and the cycle — rides the opt-in channel now (S6
-    // E8-class re-point); the default is silent.
+    // the origin spread and the cycle — rides the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-78', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

@@ -1,5 +1,5 @@
 /**
- * Category-prefixed token station. `colors.blue.600` / `radii.md` /
+ * Category-prefixed token case. `colors.blue.600` / `radii.md` /
  * `fonts.mono` become canonical custom properties against the lib fixture.
  */
 import { expect } from 'vitest'

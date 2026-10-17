@@ -1,5 +1,5 @@
 /**
- * outline shorthand station. Width and style longhands emit; default
+ * outline shorthand case. Width and style longhands emit; default
  * outline color is never synthesized, so sibling outlineColor wins.
  */
 import { expect } from 'vitest'

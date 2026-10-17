@@ -1,6 +1,6 @@
 # Slider
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Slider --e2e`).
 
 Pointer drag math, multi-thumb collision, keyboard stepping (arrows, PageUp/PageDown, Home/End), ARIA value ranges (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`).
 
@@ -95,7 +95,7 @@ steps greater than or equal to one tenth of the range, and therefore at least
 one step. There is no configurable `largeStep`. Home/End move to bounds.
 Horizontal RTL reverses increase direction. Vertical is independent of RTL.
 
-**Vendor.** Aria `useSliderThumb`. Radix `PAGE_KEYS` + dir-keyed maps.
+**Prior art.** Aria `useSliderThumb`. Radix `PAGE_KEYS` + dir-keyed maps.
 
 **Lift** Aria/Radix key maps. RTL is a freeze-gate, not an afterthought.
 

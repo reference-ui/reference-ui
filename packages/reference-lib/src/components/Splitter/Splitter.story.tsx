@@ -8,9 +8,9 @@ import { Splitter } from './index'
 // fractional under the Panel-axis-sum denominator); exact request arrays are
 // proven through raw *-last-request logs, never these lines.
 
-// W-35 clamp-or-warn: a bad panel layout (entries sum to 60, not 100).
+// Clamp-or-warn: a bad panel layout (entries sum to 60, not 100).
 // Dev-warns with the diagnostic; both panels still mount with declared
-// sizes — never the B-11 silent 13px collapse.
+// sizes — never the silent 13px collapse.
 export const BadLayout = () => {
   const [value, setValue] = React.useState<number[]>([30, 30])
 
@@ -1657,7 +1657,7 @@ export const InnerGrid = () => {
   )
 }
 
-// B-28: constrained call-site shape (min/max + a stale deleted `index`,
+// Constrained call-site shape (min/max + a stale deleted `index`,
 // as still seen in consumer code). `index` is a deleted prop — a type
 // error by design — so it rides a spread (no excess-prop check on
 // spreads) while proving the runtime strips it from css()/DOM.
@@ -1722,7 +1722,7 @@ export const NoLeakProps = () => {
   )
 }
 
-// --- FINISH-LINE P2F tail fixtures ---
+// --- Remaining fixtures ---
 
 // SP-DOM-04: orientation toggles while the controlled value stays put.
 export const OrientationToggle = () => {

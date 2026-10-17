@@ -4,6 +4,6 @@ Unresolvable member expression in value position. The world carries the minimal 
 
 Raised in: `modules/atomic/src/extract/expressions/walk/member.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-MEMBER (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-MEMBER (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-MEMBER, atm-w-dynamic-member, diagnostics case index, NEO-DIAG-26

@@ -1,4 +1,4 @@
-// Native-scan lifecycle battery (F1 §6.8 tests 10-13 plus harness extras).
+// Native-scan lifecycle battery, with harness extras.
 // It takes temp trees and asserts token release, fail-loud errors, the
 // exactly-one-of rejection, retain:false parity, the TS escape hatch, and the
 // functional backfill proof: retained bytes survive disk mutation while the

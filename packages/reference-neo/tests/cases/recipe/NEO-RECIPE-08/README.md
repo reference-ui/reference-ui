@@ -7,7 +7,6 @@ plus the `md:` class, the sheet wraps the `md` rule in its container query
 after the plain rules, and resizing the live container across 768px flips
 the painted background and color.
 
-Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:226` responsive
-variant; `[atm]` ATM-RECIPE-07.
+Evidence: Panda v1 recipe tests (responsive variant); ATM-RECIPE-07.
 
 > Search terms: @container, viewport resize, mobile-first, recipe/responsive, recipe/breakpoints, NEO-RECIPE-01

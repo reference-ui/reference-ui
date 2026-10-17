@@ -6,8 +6,8 @@
  */
 import path from 'node:path'
 
-import { analyzeDetailed as analyzeDetailedNative } from './runtime'
-import type { AtlasAnalysisResult, AtlasConfig, Component } from './types'
+import { analyzeDetailed as analyzeDetailedNative } from './runtime.js'
+import type { AtlasAnalysisResult, AtlasConfig, Component } from './types.js'
 
 /**
  * Analyze a project and return Atlas components only.

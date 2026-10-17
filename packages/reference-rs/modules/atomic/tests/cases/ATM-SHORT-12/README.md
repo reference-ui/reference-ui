@@ -1,4 +1,4 @@
-# ATM-SHORT-12 — Axis-shorthand station (ATM-SHORT-12)
+# ATM-SHORT-12 — Axis-shorthand
 
 `marginX` / `marginY` / `paddingX` / `paddingY` resolve to their logical
 canonicals (`marginInline` / `marginBlock` / `paddingInline` /

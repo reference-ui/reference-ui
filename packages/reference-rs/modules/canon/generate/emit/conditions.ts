@@ -4,8 +4,8 @@
  * Emits zero-allocation binary-searchable static slices into modules/canon/src/conditions.rs.
  */
 
-import type { DialectData } from '../dialect';
-import { formatChunks } from './format';
+import type { DialectData } from '../dialect.js';
+import { formatChunks } from './format.js';
 
 export function emitConditionsRs(dialect: DialectData): string {
   const condChunks = dialect.conditions.map((c) => `"${c}"`);

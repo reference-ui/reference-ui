@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-INT-04.
+ * Case specification for TST-INT-04.
  * Verifies same-file interface declaration merging folds into one symbol
  * carrying the union of members, silently (legal TS, no diagnostic owed).
  * Proves primary SPEC ID anchor TST-INT-04.

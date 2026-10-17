@@ -1,9 +1,9 @@
 # Slot test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Slot --e2e`).
 
-Vitest: `matrix/lib/tests/unit/slot.test.ts`
-Browser smoke: `matrix/lib/tests/e2e/slot.spec.ts`
+Vitest: `src/components/Slot/**/*.test.ts(x)`
+Browser smoke: `src/components/Slot/__e2e__/*.spec.ts` (run with `pnpm agentct Slot --e2e`)
 Page: `/slot`
 
 Slot is the named-region registry: `SlotRoot` plus
@@ -13,7 +13,7 @@ regions.
 
 ## Source evidence
 
-Lift cases from `vendor/design-system/page-layout/slots`, not the
+Lift cases from the design system's page-layout slots, not the
 implementation:
 
 - `slots/core/core.test.ts` — register, overwrite by registration id,
@@ -34,7 +34,7 @@ implementation:
 
 Contrast only:
 
-- `vendor/radix-primitives/packages/react/slot` — `asChild` merge. Not this
+- Radix's slot — `asChild` merge. Not this
   primitive.
 - PageLayout `getRegisteredSlots`, sidebar pipelines, and product part
   wrappers — consume vendor `scanById` / `scanAll`; they are not Slot API.

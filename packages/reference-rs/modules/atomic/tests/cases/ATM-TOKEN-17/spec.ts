@@ -1,5 +1,5 @@
 /**
- * Negated-brace station. A leading `-` distributes over an explicit braced
+ * Negated-brace case. A leading `-` distributes over an explicit braced
  * lookup: `-{spacing.4}` calc-wraps silently, opacity composes in either
  * brace position (`-{path/50}`, `-{path}/50`), `-{unknown.path}` fails
  * closed with an `UnknownTokenReference` error plus a dropped declaration

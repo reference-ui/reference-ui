@@ -12,9 +12,6 @@ pub(crate) struct ParsedFileAst {
     pub(crate) file_id: String,
     pub(crate) module_specifier: String,
     pub(crate) library: String,
-    /// Source text from scan; not read after extract today (the extract pass uses [`crate::scanner::ScannedFile::source`] directly).
-    #[allow(dead_code)]
-    pub(crate) source: String,
     pub(crate) import_bindings: BTreeMap<String, ImportBinding>,
     pub(crate) value_bindings: BTreeMap<String, TypeRef>,
     pub(crate) export_bindings: BTreeMap<String, String>,

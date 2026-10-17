@@ -1,4 +1,4 @@
-// Native-scan differential battery (F1 §6.8 tests 1-9): matches, manifest, and
+// Native-scan differential battery: matches, manifest, and
 // edge parity between the native and TS scans on tricky trees. Each test takes
 // a temp tree and asserts bit-exact reproduction; tokens release before drop.
 

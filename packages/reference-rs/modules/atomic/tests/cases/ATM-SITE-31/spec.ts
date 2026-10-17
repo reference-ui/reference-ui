@@ -1,5 +1,5 @@
 /**
- * Fenced pure-helper station (ATM-SITE-31, SPEC-V2-39). Closed helpers fold
+ * Fenced pure-helper (ATM-SITE-31). Closed helpers fold
  * in value position and spread object returns into css() and JSX, while
  * fence edges refuse with a diagnostic and keep their static siblings.
  */
@@ -32,19 +32,19 @@ const spec: AtomicCaseSpec = {
     for (const value of ['1r', '2r', '3r', '4r', '5r', '6r', '7r', '8r']) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
-    // 39-F2 refuse pins keep their margin siblings, colors refused; 39-F3
-    // (Forge §5) folds its color through the post-attach init pass.
+    // Refuse pins keep their margin siblings, colors refused;
+    // folds its color through the post-attach init pass.
     for (const value of ['9r', '10r', '11r', '12r', '13r']) {
       expect(hasWant(result, 'margin', value)).toBe(true)
     }
     expect(hasWant(result, 'color', 'x')).toBe(false)
     expect(hasWant(result, 'color', 'a')).toBe(false)
     expect(hasWant(result, 'color', 'b')).toBe(false)
-    // Cross-file arms (SPEC-V2-57): the imported arrow mints a new value,
+    // Cross-file arms: the imported arrow mints a new value,
     // the decl/width/spread arms reuse proven values, the impure arm refuses.
     expect(hasWant(result, 'color', 'orange.600')).toBe(true)
     expect(hasWant(result, 'margin', '14r')).toBe(true)
-    // Binding-walk arms (SPEC-V2-57, Ph4 fix): collision, barrels, bare,
+    // Binding-walk arms (fix): collision, barrels, bare,
     // alias, re-export. Each resolves by binding, never the name bag.
     expect(hasWant(result, 'color', 'coral')).toBe(true)
     expect(hasWant(result, 'backgroundColor', 'gold')).toBe(true)
@@ -79,8 +79,7 @@ const spec: AtomicCaseSpec = {
     // unlicensed.
     expect(result.stylePlans).toHaveLength(37)
 
-    // Fence refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Fence refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-31', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

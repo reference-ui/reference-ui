@@ -140,7 +140,7 @@ interface DifferentialGate {
 
 // The differential core: the runtime namer over the authored request
 // covers the compiled plan's declarations as an ORDERED LIST (slot,
-// className, order, multiplicity — R3 pins every emit order), modulo the
+// className, order, multiplicity — every emit order is pinned), modulo the
 // token-refusal carve-out for namer-side surplus. The matched subsequence
 // must equal the oracle exactly, slot for slot in order — unless the
 // integer-key substrate carve takes it (order-exact failure plus 2+
@@ -221,7 +221,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
       expectEqual({ namer, tables: cc.tables, sheet: cc.sheet, where: cc.id, stats }, plan);
     }
   }
-  // Integer-pin assertions (doom-5, fortify-5): the NAME-08 non-ascending
+  // Integer-pin assertions: the NAME-08 non-ascending
   // plan clears via the new arm ONLY (it exact-fails first — the carve never
   // runs on an exact pass), and the ascending control clears via the old
   // arm. Exact-equality, so any unexpected carve fails loud.

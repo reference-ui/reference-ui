@@ -4,6 +4,6 @@ An entry or edge file failed to parse or read; the file is skipped, siblings kep
 
 Raised in: `modules/styletrace/src/analysis/surface.rs`, `modules/styletrace/src/analysis/analyzer.rs`. Driver: the whole styletrace tracer (`traceDetailed` over the case world).
 
-Evidence: `[diag]` STT-W-SKIPPED-FILE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: STT-W-SKIPPED-FILE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: STT-W-SKIPPED-FILE, stt-w-skipped-file, diagnostics case index, NEO-DIAG-56

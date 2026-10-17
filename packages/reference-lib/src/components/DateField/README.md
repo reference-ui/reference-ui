@@ -26,6 +26,4 @@ behavior proves out in CT.
 | [`shared/`](./shared) | Prop merging, caret restore |
 
 Two roots, not one: `DateField.tsx` and `DateFieldRange.tsx` are sibling
-hosts over the same engine, slots, and shared helpers. The deep import
-of Calendar's date kernel is owned inside this mission's group, not a
-public contract.
+hosts over the same engine, slots, and shared helpers. The deep import of Calendar's date kernel is internal to the Calendar and DateField pair, not a public contract.

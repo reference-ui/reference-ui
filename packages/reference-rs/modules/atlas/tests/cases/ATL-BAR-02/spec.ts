@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-BAR-02.
+ * Case specification for ATL-BAR-02.
  * Validates package entrypoint barrel resolution, local wrapper interface linking,
  * and suppression of unexported internal components.
  * Proves primary SPEC anchor ATL-BAR-02.

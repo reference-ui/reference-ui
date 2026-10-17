@@ -142,7 +142,7 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     await expect(handle).toHaveAttribute('aria-valuenow', '40')
   })
 
-  test('B-28: Panel constraint props never leak onto the DOM', async ({ mount, page }) => {
+  test('Panel constraint props never leak onto the DOM', async ({ mount, page }) => {
     // min/max/collapsible/collapsedSize are solver inputs, not DOM
     // attributes: no React unknown-prop errors, no css() miss-spam.
     const errors: string[] = []
@@ -178,7 +178,7 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
     expect(errors.filter(t => /collapsible|collapsedSize|minSize|maxSize/.test(t))).toEqual([])
   })
 
-  test('B-28: min/max/index never leak to css() or the DOM', async ({
+  test('min/max/index never leak to css() or the DOM', async ({
     mount,
     page,
   }) => {
@@ -220,17 +220,17 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
 
     // Zero miss-spam for the stripped names (minSize/maxSize are deleted
     // aliases — they must never surface). Targeted (not blanket
-    // zero-warnings): the H-6 dev-race can warn for values whose rules exist,
+    // zero-warnings): the dev-race can warn for values whose rules exist,
     // so only the leak signature fails here.
     const leak = /minSize|maxSize|collapsible|collapsedSize/
     expect(errors.filter(t => leak.test(t))).toEqual([])
     expect(warnings.filter(t => leak.test(t))).toEqual([])
   })
 
-  test('W-35: bad panel layout dev-warns and never silently collapses', async ({ mount, page }) => {
-    // B-11 instance shape: entries sum to 60, not 100. Dev warns naming
+  test('bad panel layout dev-warns and never silently collapses', async ({ mount, page }) => {
+    // Instance shape: entries sum to 60, not 100. Dev warns naming
     // component, prop, value, and range; both panels stay measurable —
-    // never the silent ~13px collapse dist shipped.
+    // never the silent ~13px collapse a stale dist shipped.
     const errors: string[] = []
     page.on('console', msg => {
       if (msg.type() === 'error') errors.push(msg.text())
@@ -411,7 +411,7 @@ test.describe('Splitter Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
+test.describe('Splitter pointer-session robustness', () => {
   test('SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move', async ({
     mount,
     page,
@@ -1070,7 +1070,7 @@ test.describe('Splitter PATCHES item 1: pointer-session robustness', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 2: keyboard interaction sessions', () => {
+test.describe('Splitter keyboard interaction sessions', () => {
   test('SP-END-02: Repeated keys form one interaction ending on keyup', async ({
     mount,
     page,
@@ -1212,7 +1212,7 @@ test.describe('Splitter PATCHES item 2: keyboard interaction sessions', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 3: Enter collapse and restore', () => {
+test.describe('Splitter Enter collapse and restore', () => {
   test('SP-COLLAPSE-01: Enter on an expanded collapsible panel requests collapsed size', async ({
     mount,
     page,
@@ -1341,7 +1341,7 @@ test.describe('Splitter PATCHES item 3: Enter collapse and restore', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 4: RTL direction wiring', () => {
+test.describe('Splitter RTL direction wiring', () => {
   test('SP-MATH-09: RTL reverses primary interpretation without touching values', async ({
     mount,
     page,
@@ -1467,7 +1467,7 @@ test.describe('Splitter PATCHES item 4: RTL direction wiring', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 6: reduced motion', () => {
+test.describe('Splitter reduced motion', () => {
   test('Handle transitions suppress under prefers-reduced-motion only', async ({
     mount,
     page,
@@ -1511,7 +1511,7 @@ test.describe('Splitter PATCHES item 6: reduced motion', () => {
   })
 })
 
-test.describe('Splitter PATCHES item 7: accessibility sweep', () => {
+test.describe('Splitter accessibility sweep', () => {
   test('SP-A11Y-01: Frozen layout variants expose honest separator semantics', async ({
     mount,
     page,
@@ -2841,7 +2841,7 @@ test.describe('Splitter controlled sessions and compositions', () => {
   })
 })
 
-test.describe('Splitter FINISH-LINE P2F tails', () => {
+test.describe('Splitter DOM, keyboard, and environment CT', () => {
   test('SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis', async ({
     mount,
     page,
@@ -3239,7 +3239,7 @@ test.describe('Splitter FINISH-LINE P2F tails', () => {
     await page.keyboard.press('ArrowUp')
     await expect(page.getByText('Top (50%)')).toBeVisible()
     // CT runs Chromium; Firefox/WebKit parity for this key matrix is a
-    // matrix remainder (see PATCHES #5 / SP-ENV-04).
+    // matrix remainder (see SP-ENV-04).
   })
 
   test('SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds', async ({
@@ -3449,7 +3449,7 @@ test.describe('Splitter FINISH-LINE P2F tails', () => {
     expect(settled.panelVar).toBe(settled.root1)
     expect(Math.round(parseFloat(settled.panelVar))).toBe(Number(settled.now))
     // CT runs Chromium; Firefox/WebKit legs of this smoke are a matrix
-    // remainder (see PATCHES #5).
+    // remainder.
   })
 
   test('FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px', async ({

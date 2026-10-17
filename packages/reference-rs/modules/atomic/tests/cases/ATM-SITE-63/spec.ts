@@ -1,5 +1,5 @@
 /**
- * Partial-ternary station (SPEC-V2-16 GAP-16). An open-test ternary with one
+ * Partial-ternary case. An open-test ternary with one
  * unresolvable arm keeps the resolvable arm as a want plus its runtime style
  * plan, and warns exactly once on the dynamic arm, in both arm positions.
  */
@@ -32,7 +32,7 @@ const spec: AtomicCaseSpec = {
       plans.find(p => p.prop === 'backgroundColor' && p.value === 'black'),
     ).toBeUndefined()
 
-    // Arm refusals ride the opt-in channel now (S6 E8-class re-point);
+    // Arm refusals ride the opt-in channel;
     // the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-63', { logs: ['compiler'] })

@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-01.
+ * Case specification for TST-EXT-01.
  * Verifies external library references, extends inheritance chains, and member flattening.
  * Proves primary SPEC ID anchor TST-EXT-01.
  */
@@ -54,7 +54,7 @@ const spec: StationSpec<TastyCaseResult> = {
       'JSON Schema extension for button component configuration.'
     )
 
-    // Scan boundary pin (Objective 3 wave 1 find c): `internal-only.ts`
+    // Scan boundary pin: `internal-only.ts`
     // plain-imports `css-tree` without re-exporting it, so the user-owned
     // `InternalUsage` documents while no `css-tree` symbol may reach the
     // manifest — unlike the bridged `csstype` / `json-schema` packages above.

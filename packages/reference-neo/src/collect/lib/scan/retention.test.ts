@@ -1,7 +1,7 @@
 // Differential: TS retention scan vs native disk scan over a tricky tree.
 // It takes a fixture (dotfile, d.ts, dist/-nested, node_modules/, json,
 // negation-only, empty-match, match-before-filter) and asserts compile({files}) is byte-identical
-// to compile({rootDir}) on wants, sheets, and diagnostics — the C3 mirror
+// to compile({rootDir}) on wants, sheets, and diagnostics — the mirror
 // contract — plus the production files+rootDir shape on every arm.
 
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -53,7 +53,7 @@ async function compile(request: TestCompileRequest): Promise<TestCompileResult> 
   return atomic.compile(request)
 }
 
-// Symlinked-prefix coverage for path-string identity (ruling f): /tmp is a
+// Symlinked-prefix coverage for path-string identity: /tmp is a
 // symlink on macOS, and neither side canonicalizes, so both string-join the
 // same unmodified root. Elsewhere fall back to the real tmpdir.
 function fixtureBase(): string {
@@ -100,7 +100,7 @@ function colorWants(result: TestCompileResult): string[] {
     .sort()
 }
 
-// GAPS-2 signals: fragment imports in files retention must drop (IGNORE
+// Fragment imports in files retention must drop (IGNORE
 // dir, non-source extension). The dist carrier still matches (bundleable);
 // the json carrier matches nowhere. Retention keeps neither, so both
 // compile sides stay bare of their signals.
@@ -119,40 +119,42 @@ function expectIdentical(actual: TestCompileResult, expected: TestCompileResult)
   expect(actual.diagnostics).toEqual(expected.diagnostics)
 }
 
-describe('retention scan differential', () => {
-  let root = ''
-  let spec: EvaluatedSystemSpec | undefined
+// Fixture state shared by every case in this file. The cases run in declaration order, and the
+// last one extends the shared tree, so that order is part of the contract.
+let root = ''
+let spec: EvaluatedSystemSpec | undefined
 
-  beforeAll(() => {
-    root = mkdtempSync(join(fixtureBase(), 'lanea-retention-'))
-    for (const [rel, content] of FIXTURE_FILES) {
-      const full = join(root, rel)
-      mkdirSync(dirname(full), { recursive: true })
-      writeFileSync(full, content)
-    }
-    spec = libSystemSpec()
-  })
-
-  afterAll(() => {
-    if (root !== '') rmSync(root, { recursive: true, force: true })
-  })
-
-  async function compileArms(include: string[]) {
-    const config: ReferenceUIConfig = { name: 'retention', include }
-    const { matches, scannedSources } = await scanFragmentFiles(root, config)
-    const baseSystem = spec as EvaluatedSystemSpec
-    const fromFiles = await compile({ baseSystem, files: scannedSources, include, logs: ['proof'] })
-    const fromRoot = await compile({ baseSystem, rootDir: root, include, logs: ['proof'] })
-    const production = await compile({
-      baseSystem,
-      rootDir: root,
-      files: scannedSources,
-      include,
-      logs: ['proof'],
-    })
-    return { matches, scannedSources, fromFiles, fromRoot, production }
+beforeAll(() => {
+  root = mkdtempSync(join(fixtureBase(), 'lanea-retention-'))
+  for (const [rel, content] of FIXTURE_FILES) {
+    const full = join(root, rel)
+    mkdirSync(dirname(full), { recursive: true })
+    writeFileSync(full, content)
   }
+  spec = libSystemSpec()
+})
 
+afterAll(() => {
+  if (root !== '') rmSync(root, { recursive: true, force: true })
+})
+
+async function compileArms(include: string[]) {
+  const config: ReferenceUIConfig = { name: 'retention', include }
+  const { matches, scannedSources } = await scanFragmentFiles(root, config)
+  const baseSystem = spec as EvaluatedSystemSpec
+  const fromFiles = await compile({ baseSystem, files: scannedSources, include, logs: ['proof'] })
+  const fromRoot = await compile({ baseSystem, rootDir: root, include, logs: ['proof'] })
+  const production = await compile({
+    baseSystem,
+    rootDir: root,
+    files: scannedSources,
+    include,
+    logs: ['proof'],
+  })
+  return { matches, scannedSources, fromFiles, fromRoot, production }
+}
+
+describe('retention scan differential', () => {
   it('star include: provided files equal the disk scan, decoys dropped both sides', async () => {
     const { matches, scannedSources, fromFiles, fromRoot, production } = await compileArms(['**/*'])
     expectIdentical(fromFiles, fromRoot)
@@ -196,7 +198,7 @@ describe('retention scan differential', () => {
 
   it('negation-only include: empty retention falls back to the disk scan', async () => {
     // fg has no positive base for negation-only, so retention is empty and
-    // sync omits `files`; native then scans disk itself (ruling e). The
+    // sync omits `files`; native then scans disk itself. The
     // production shape proves the fallback equals the plain disk compile.
     const { matches, scannedSources, fromFiles, fromRoot, production } = await compileArms([
       '!**/excluded/**',
@@ -208,6 +210,9 @@ describe('retention scan differential', () => {
     expect(fromFiles.wants ?? []).toEqual([])
   })
 
+})
+
+describe('retention scan differential: empty and unretained signals', () => {
   it('empty-match include: retention is empty and both compiles are bare', async () => {
     const { matches, scannedSources, fromFiles, fromRoot, production } = await compileArms([
       'nowhere/**',
@@ -220,7 +225,7 @@ describe('retention scan differential', () => {
   })
 
   it('match-before-filter: IGNORE-dir signals match; non-source signals match nowhere', async () => {
-    // GAPS-2: matches cover every JS-bundleable fg hit (dot/d.ts excluded
+    // Matches cover every JS-bundleable fg hit (dot/d.ts excluded
     // only), so the dist carrier matches yet compiles from neither side
     // while the json carrier — unbundleable as a fragment — matches nowhere.
     // Runs last: it extends the shared root, so it must not precede

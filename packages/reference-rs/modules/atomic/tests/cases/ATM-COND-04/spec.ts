@@ -1,5 +1,5 @@
 /**
- * Nested condition station. Outer-to-inner when order is preserved on the
+ * Nested condition case. Outer-to-inner when order is preserved on the
  * want and in the class-name prefix. Single presets are ATM-COND-02/03.
  */
 import { expect } from 'vitest'

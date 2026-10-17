@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-COL-01.
+ * Case specification for TST-COL-01.
  * Verifies duplicate user symbol discovery, ambiguity diagnostics, and lookup rejection.
  * Proves primary SPEC ID anchor TST-COL-01.
  */

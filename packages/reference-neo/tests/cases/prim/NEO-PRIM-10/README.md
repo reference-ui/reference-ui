@@ -11,7 +11,6 @@ importing the whole surface — tags, `css`/`recipe`, `StyleProps`,
 `SystemStyleObject`, `CssStyles`, and the font registry types — typechecks
 with `tsc --noEmit`.
 
-Evidence: generated-folder-shape §7 items 2–4; coverage-map rows 18/20;
-`[decision D5]`; cross-ref NEO-SYNC-05.
+Evidence: cross-ref NEO-SYNC-05.
 
 > Search terms: public api, dts, entrypoint, api surface, surface audit, prim/entry-exports, prim/consumer-types, NEO-PRIM-09

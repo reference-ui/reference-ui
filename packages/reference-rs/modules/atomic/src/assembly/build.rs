@@ -36,7 +36,7 @@ pub(super) fn build_atom_sets(
     let (own_wants, external_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
         wants.iter().partition(|want| !want.external);
     let own = build_atom_set(&own_wants, system, diagnostics, sink.as_deref_mut());
-    let external = build_atom_set(&external_wants, system, diagnostics, sink.as_deref_mut());
+    let external = build_atom_set(&external_wants, system, diagnostics, sink);
     (own, external)
 }
 

@@ -6,10 +6,9 @@
  * Dangling ARIA is prevented separately at render by the parts.
  */
 import * as React from 'react'
+import { isDevelopment } from '../../../core/env/dev'
 import type { TabsPanelEntry, TabsTabEntry } from '../context'
 import { warnTabs } from '../shared/warn'
-
-const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
 
 export function useTabsDiagnostics({ registryVersion, listCount, tabEntries, panelEntries, listCountRef }: {
   registryVersion: number
@@ -25,7 +24,7 @@ export function useTabsDiagnostics({ registryVersion, listCount, tabEntries, pan
   // prevented at render (Tab/Panel omit the reference when the live
   // registry lacks the counterpart on the client).
   React.useEffect(() => {
-    if (globalProcess?.env?.NODE_ENV === 'production') return
+    if (!isDevelopment()) return
     const tabs = Array.from(tabEntries.current.keys())
     const panels = Array.from(panelEntries.current.keys())
     if (tabs.length === 0 && panels.length === 0) return

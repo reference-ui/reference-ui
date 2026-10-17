@@ -1,9 +1,9 @@
 # Combobox test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Combobox --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/combobox.spec.ts`  
-Unit: `matrix/lib/tests/unit/combobox.test.ts`
+Playwright: `src/components/Combobox/__e2e__/*.spec.ts` (run with `pnpm agentct Combobox --e2e`)  
+Unit: `src/components/Combobox/**/*.test.ts(x)`
 Page: `/combobox`
 
 Combobox owns coordination between an editable input or select-only button and
@@ -49,16 +49,8 @@ Autocomplete, or CommandPalette primitives.
 
 ## Source evidence
 
-- `vendor/downshift/src/hooks/useCombobox/__tests__/getInputProps.test.js` —
-  input role/ARIA, active descendant, controlled handlers, Arrow/Page/Home/End
-  contrast, Escape/Enter/Tab, IME, disabled options, blur, and outside touch.
 - Downshift `useSelect` tests — button combobox, selected-item highlight,
   typeahead, disabled skip, and controlled state.
-- `vendor/react-spectrum/packages/react-aria/test/combobox/useComboBox.test.js`
-  and
-  `vendor/react-spectrum/packages/react-aria-components/test/ComboBox.test.js`
-  — commit on keyboard/Tab, form/read-only contrast, virtualization, scroll
-  close, focus-style restoration, disabled/empty filtering, and Shadow DOM.
 - Zag Combobox machine/connect — `none|list|both` input behavior and active
   descendant state.
 

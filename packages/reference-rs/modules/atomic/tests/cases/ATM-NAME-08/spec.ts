@@ -1,5 +1,5 @@
 /**
- * Lexical-function station (ATM-NAME-08). The class stem passes only through
+ * Lexical-function (ATM-NAME-08). The class stem passes only through
  * explicit lexical functions -- never a host default. Every builtin divergence
  * carries a compiled input and a pinned outcome: radix and blank spellings
  * refuse with no class, -0 folds to 0, magnitudes outside the canonical range
@@ -45,7 +45,7 @@ const spec: AtomicCaseSpec = {
     const width = result.stylePlans.filter(plan => plan.prop === 'width')
     expect(width).toHaveLength(1)
     expect(width[0]!.declarations.map(d => d.slot)).toEqual(['width@md', 'width@base'])
-    // Integer-keyed per-prop order follows the author too (doom-5): the
+    // Integer-keyed per-prop order follows the author too: the
     // non-ascending plan emits [10, 2], the ascending control [2, 10].
     // Distinct values per shape so each plan is addressable by value.
     const intPlans = result.stylePlans.filter(plan => plan.prop === 'color' && isIntValue(plan.value))

@@ -1,6 +1,6 @@
 # NEO-WATCH-01 — live-edit→paint loop: watch resync repaints the browser
 
-Evidence: `[core]` watch contract (`matrix/watch/tests/e2e/watch-contract.spec.ts`,
+Evidence: watch contract (`matrix/watch/tests/e2e/watch-contract.spec.ts`,
 all 3 tests: css/primitive/recipe/token edits, config-dependency edits, and
 fragment add/delete — each ending in a browser-paint assert).
 

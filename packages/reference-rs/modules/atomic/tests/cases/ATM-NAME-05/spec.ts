@@ -1,5 +1,5 @@
 /**
- * Whitespace-sanitize station. Spaces in authored values become `_` in
+ * Whitespace-sanitize case. Spaces in authored values become `_` in
  * class names so they remain valid DOM tokens.
  */
 import { expect } from 'vitest'

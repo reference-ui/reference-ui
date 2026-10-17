@@ -1,4 +1,4 @@
-// probes.spec.ts — spec for NEO-PARITY-01, the live W4 probe roster. Takes
+// probes.spec.ts — spec for NEO-PARITY-01, the live probe roster. Takes
 // { page } from the runner with the world freshly synced and the page already
 // navigated to it. Emits nothing on success; throws naming the first probe
 // whose paint, flip, or viewport branch fails on failure. P9 runs last: it

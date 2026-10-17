@@ -11,15 +11,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { countLeaves, mergeKeyframeTables, mergeTokenTrees, type LeafShapes } from './merge';
+import { countLeaves, mergeKeyframeTables, mergeTokenTrees, type LeafShapes } from './merge.js';
 import {
   fail,
   parseFontsObject,
   parseKeyframesArguments,
   parseTokensArguments,
   type JsonObject,
-} from './parse';
-import { FONT_FILE, KEYFRAME_FILES, libPath, specPath, TOKEN_FILES } from './sources';
+} from './parse.js';
+import { FONT_FILE, KEYFRAME_FILES, libPath, specPath, TOKEN_FILES } from './sources.js';
 
 const SYSTEM_NAME = '@reference-ui/lib';
 

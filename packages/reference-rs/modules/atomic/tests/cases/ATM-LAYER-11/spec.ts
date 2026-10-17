@@ -1,5 +1,5 @@
 /**
- * Font-face-array station (ATM-LAYER-11, RS-24). A `fontFace` array syncs
+ * Font-face-array (ATM-LAYER-11). A `fontFace` array syncs
  * and prints one `@font-face` block per entry; the single-object form
  * keeps printing exactly one block. Empty arrays mean absent (cargo).
  */

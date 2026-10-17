@@ -1,5 +1,5 @@
 /**
- * Global bare-token station (ATM-LAYER-15, RS-35). `globalCss` values
+ * Global bare-token (ATM-LAYER-15). `globalCss` values
  * resolve bare token names through the shared value resolver with the
  * authored prop, so category lookup fires exactly like the atomic path.
  */

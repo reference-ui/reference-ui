@@ -1,4 +1,4 @@
-# ATM-LAYER-02 — Empty-layer station
+# ATM-LAYER-02 — Empty-layer
 
 Empty layers stay omitted: reset, base, and recipes are not printed as
 empty blocks. The six-layer preamble is always present. Fixture tokens and

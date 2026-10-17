@@ -33,12 +33,12 @@ const EXPECTED_FILES = [
   'styled/types/prop-type.d.ts',
   'styled/types/style-props.d.ts',
   'react/package.json',
-  // Post-D5 react filenames (flipped in the D4/D5 migration follow-up).
+  // React entry filenames as published.
   'react/react.mjs',
   'react/react.d.mts',
 ];
 
-// Landed §4.1 forbidden paths (styled/css.mjs pinned since SYNC-13/D4).
+// Forbidden paths: styled/css.mjs stays gone (pinned by SYNC-13).
 const FORBIDDEN_PATHS = [
   'styled/global.css',
   'styled/css.mjs',

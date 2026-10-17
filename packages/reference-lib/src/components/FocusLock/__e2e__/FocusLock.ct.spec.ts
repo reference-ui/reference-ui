@@ -2,10 +2,10 @@ import { test, expect, snap } from '../../../../playwright/ct'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
-// sweep vehicle). Traversal findings (F45/F46/F49-F52/F55) compensate the
-// Safari no-click-focus delivery (DIAG D1) or assert its deterministic
-// outcome. Restore (F47/F48/F53/F54/F56) + trap (F57/F58) are UNTOUCHED-HELD
-// pending the HQ focus ruling — never scope them here.
+// sweep vehicle). Traversal assertions compensate the
+// Safari no-click-focus delivery or assert its deterministic
+// outcome. Restore and trap-hardening cases are left unchanged for now,
+// pending a focus-policy decision — never scope them here.
 function engineOf(): 'chromium' | 'firefox' | 'webkit' {
   const project = test.info().project.name
   if (project.includes('webkit')) return 'webkit'
@@ -77,7 +77,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
 
     const shardBtn = page.getByTestId('shard-button')
     await shardBtn.click()
-    // P1 (F45, DIAG D1): WebKit clicks never focus buttons, so deliver the
+    // WebKit clicks never focus buttons, so deliver the
     // Chromium focus state directly — the permit-vs-reclaim decision below is
     // the product contract and runs identically (a reclaim would pull away).
     if (engineOf() === 'webkit') await shardBtn.focus()
@@ -161,15 +161,14 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
 
     await page.getByTestId('btn-close-inner-lock').click()
     await expect(page.getByTestId('inner-lock-container')).toHaveCount(0)
-    // P2 (F46, DIAG D1): the inner lock captured its origin as body — the
+    // The inner lock captured its origin as body — the
     // opening click never focused the opener on WebKit — so deactivation
     // restores body, never the opener (the Chromium contract below). The
     // settled WK end-state is delivery-order racy (body when the parent trap's
-    // body+null-relatedTarget guard slips per F57, parent-contained when the
+    // body+null-relatedTarget guard slips, parent-contained when the
     // parent reclaims first — observed both across suite runs), so accept the
     // settled set. The pause/resume assertions above hold on both engines;
-    // the restore/trap-hardening tail itself is HQ-held (F47/F48/F53/F54/F56,
-    // F57/F58) — untouched.
+    // the restore/trap-hardening cases themselves are left unchanged.
     if (engineOf() === 'webkit') {
       await expect
         .poll(async () =>
@@ -391,7 +390,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-open-tab-lab').click()
     await page.getByTestId('tab-b').focus()
     await page.getByTestId('btn-insert-d').click()
-    // P1 (F49, DIAG D1): the Tab below is resolved from the insert button on
+    // the Tab below is resolved from the insert button on
     // Chromium (click-focus); WebKit clicks leave focus on body, so deliver
     // the same origin — the live-order computation then runs identically.
     if (engineOf() === 'webkit') await page.getByTestId('btn-insert-d').focus()
@@ -465,7 +464,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     expect(order).toContain('exotica-after')
     expect(order).not.toContain('closed-inner')
     await page.getByTestId('portal-shadow-shard-btn').click()
-    // P1 (F50, DIAG D1): WebKit clicks never focus buttons, so deliver the
+    // WebKit clicks never focus buttons, so deliver the
     // Chromium focus state directly — the shard-sticks-vs-outside assertions
     // below are the product contract and run identically.
     if (engineOf() === 'webkit') await page.getByTestId('portal-shadow-shard-btn').focus()
@@ -523,6 +522,34 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await expect(page.getByTestId('trap-c')).toHaveCount(0)
   })
 
+  test('FL-TRAP-08: removing the focused node reclaims focus before the next task', async ({
+    page,
+  }) => {
+    await page.getByTestId('btn-trap-mode-remove').click()
+    await page.getByTestId('btn-open-trap').click()
+    // Activation's initial focus runs in a passive effect; React 17 can flush it
+    // inside the focus call below and move focus back to trap-a. Wait for it first.
+    await expect(page.getByTestId('trap-a')).toBeFocused()
+    const result = await page.evaluate(async () => {
+      const node = document.querySelector<HTMLElement>('[data-testid="trap-c"]')
+      node?.focus()
+      if (!node || document.activeElement !== node) {
+        throw new Error('trap-c must hold focus before removal')
+      }
+      node.remove()
+      // remove() queues the lock's observer microtask ahead of this continuation:
+      // the repair must land without waiting for an animation frame.
+      await Promise.resolve()
+      const lock = document.querySelector('[data-testid="trap-lock"]')
+      return {
+        inside: Boolean(lock?.contains(document.activeElement)),
+        body: document.activeElement === document.body,
+      }
+    })
+    expect(result.inside).toBe(true)
+    expect(result.body).toBe(false)
+  })
+
   test('FL-TRAP-05: disabling the focused node moves once to a valid candidate', async ({ page }) => {
     await page.getByTestId('btn-open-trap').click()
     await page.getByTestId('trap-b').focus()
@@ -566,7 +593,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-attach-shard').click()
     await expect(page.getByTestId('delayed-shard-btn')).toBeVisible()
     await page.getByTestId('delayed-shard-btn').click()
-    // P1 (F51, DIAG D1): WebKit clicks never focus buttons, so deliver the
+    // WebKit clicks never focus buttons, so deliver the
     // Chromium focus state directly — the join-permits-focus assertion below
     // is the product contract and runs identically.
     if (engineOf() === 'webkit') await page.getByTestId('delayed-shard-btn').focus()
@@ -594,18 +621,18 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
     await page.getByTestId('btn-open-shard-lab').click()
     await page.getByTestId('btn-attach-shard').click()
     await page.getByTestId('delayed-shard-btn').click()
-    // P1 (F52, DIAG D1): WebKit clicks never focus buttons, so deliver the
+    // WebKit clicks never focus buttons, so deliver the
     // Chromium focus state directly — the remove-reclaims-inside assertion
     // below is the product contract and runs identically.
     if (engineOf() === 'webkit') await page.getByTestId('delayed-shard-btn').focus()
     await expect(page.getByTestId('delayed-shard-btn')).toBeFocused()
     await page.getByTestId('btn-remove-focused-shard').click()
-    // P1-extend (F52, DIAG D1): on Chromium the remove click focus-lands
+    // On Chromium the remove click focus-lands
     // inside the lock; on WebKit mousedown pre-blurs the shard to body, so at
     // removal time focus is already outside and the removal-fallback never
     // engages (focus stays body). Re-deliver the Chromium end-state; whether
-    // the lock should reclaim from a pre-blurred body is trap-hardening and
-    // HQ-held with F57/F58 — not scoped here.
+    // the lock should reclaim from a pre-blurred body is trap-hardening, a
+    // separate change — not scoped here.
     if (engineOf() === 'webkit') await page.getByTestId('btn-remove-focused-shard').focus()
     await expect(page.getByTestId('delayed-shard')).toHaveCount(0)
     const inside = await page.evaluate(() => {
@@ -644,14 +671,14 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
   })
 
   test('FL-NEST-06: one lock stack per Document', async ({ page }) => {
-    // FINISH-02F-WK (F13): the docs lab mounts extra roots via createRoot,
-    // which the r17 harness shims as undefined (react-17/client.ts; D9c
-    // TypeError x2 — shared gap with Measure F44 / Overlay F45). Skip on the
+    // the docs lab mounts extra roots via createRoot,
+    // which the r17 harness shims as undefined (react-17/client.ts;
+    // TypeError x2 — shared gap with Measure and Overlay). Skip on the
     // r17 gallery; the per-Document contract is proven on r18/r19.
     const galleryMajor = await page.evaluate(
       () => document.documentElement.getAttribute('data-react-version') ?? '',
     )
-    test.skip(galleryMajor.startsWith('17'), 'r17 gallery has no createRoot (shared harness gap F44/F45)')
+    test.skip(galleryMajor.startsWith('17'), 'the React 17 gallery has no createRoot; React 18 and 19 prove the per-Document contract')
     await page.getByTestId('btn-open-docs').click()
     await expect(page.getByTestId('fl-root-a-trigger')).toBeVisible()
     await page.getByTestId('fl-root-a-trigger').click()
@@ -755,7 +782,7 @@ test.describe('FocusLock Composition Gates & Browser Proofs', () => {
   test('FL-COMP-02: portalled shard plus open shadow is one lock', async ({ page }) => {
     await page.getByTestId('btn-open-shadow-exotica').click()
     await page.getByTestId('portal-shadow-shard-btn').click()
-    // P1 (F55, DIAG D1): WebKit clicks never focus buttons, so deliver the
+    // WebKit clicks never focus buttons, so deliver the
     // Chromium focus state directly — the one-lock Tab-order assertion below
     // is the product contract and runs identically.
     if (engineOf() === 'webkit') await page.getByTestId('portal-shadow-shard-btn').focus()

@@ -2,7 +2,7 @@
  * Atlas usage statistics, example extraction, and co-usage test suite.
  * Verifies call site metrics, usage tier rankings, string union distributions,
  * JSX element example truncation, and component co-appearance analysis.
- * Complements station specifications with cross-cutting feature verification.
+ * Complements case specifications with cross-cutting feature verification.
  */
 import { describe, expect, it } from 'vitest'
 import type { Usage } from '../../js/types.js'

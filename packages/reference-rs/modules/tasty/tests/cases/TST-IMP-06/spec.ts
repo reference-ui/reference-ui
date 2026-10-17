@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-06.
+ * Case specification for TST-IMP-06.
  * Verifies that relative .js, .mjs and .cjs specifiers resolve to their TypeScript source siblings
  * (.tsx, .ts, .mts and .cts) with no unresolved-import warning, and that the imported names stay
  * user-owned symbols.

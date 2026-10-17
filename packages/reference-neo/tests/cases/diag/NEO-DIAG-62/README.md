@@ -4,6 +4,6 @@ A compound row naming an unknown axis or value; the row is skipped. The world ca
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-INVALID-COMPOUND-VARIANT (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-INVALID-COMPOUND-VARIANT (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-INVALID-COMPOUND-VARIANT, tgn-w-invalid-compound-variant, diagnostics case index, NEO-DIAG-62

@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-PAT-01.
+ * Case specification for TST-PAT-01.
  * Verifies real-world ecosystem type structures including React, Zod, and styled system patterns.
  * Proves primary SPEC ID anchor TST-PAT-01.
  */

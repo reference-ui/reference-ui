@@ -4,6 +4,6 @@ A font family declaring no weights; omitted from the registry. The world carries
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-EMPTY-FONT-FAMILY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-EMPTY-FONT-FAMILY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-EMPTY-FONT-FAMILY, tgn-w-empty-font-family, diagnostics case index, NEO-DIAG-65

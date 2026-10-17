@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-OBS-02.
+ * Case specification for ATL-OBS-02.
  * Validates the binding rules for aliases and namespaces: `<Box>` imported as Div and `<R.Div>`
  * from a namespace import both count as Div, while the unlisted Section never counts.
  * Proves ATL-OBS-02 (src/usage/observe.rs).

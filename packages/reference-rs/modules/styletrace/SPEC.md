@@ -2,7 +2,7 @@
 
 Current freeze, cases, and proof. Design narrative: [README.md](./README.md). Diagnostic codes and refusal rules: [src/diagnostics/README.md](./src/diagnostics/README.md).
 
-Harness: `pnpm agentrs v styletrace` (Vitest: station suite plus `tests/suites/`) | `pnpm agentrs c styletrace` (Cargo, not proof; see Legend)
+Harness: `pnpm agentrs v styletrace` (Vitest: case suite plus `tests/suites/`) | `pnpm agentrs c styletrace` (Cargo, not proof; see Legend)
 
 ---
 
@@ -14,10 +14,10 @@ Harness: `pnpm agentrs v styletrace` (Vitest: station suite plus `tests/suites/`
 
 ## 2. Legend
 
-- `[x]` Proven by a station folder under `tests/cases/` named by the cited ID, or by a named suite under `tests/suites/`. Cargo tests in `src/` are not proof.
-- `[ ]` Unproven: no station or suite in the committed tree pins the claim yet. A case named here but not yet committed does not count.
+- `[x]` Proven by a case folder under `tests/cases/` named by the cited ID, or by a named suite under `tests/suites/`. Cargo tests in `src/` are not proof.
+- `[ ]` Unproven: no case or suite in the committed tree pins the claim yet. A case named here but not yet committed does not count.
 
-Every station also runs the standing gauges (names unique and sorted) and its `output/components.json` golden; see `tests/harness/helpers.ts`.
+Every case also runs the standing gauges (names unique and sorted) and its `output/components.json` golden; see `tests/harness/helpers.ts`.
 
 ---
 
@@ -78,9 +78,9 @@ Every station also runs the standing gauges (names unique and sorted) and its `o
 ### 3.6 Robustness and output
 
 - [x] STT-27 Malformed but parseable user code, such as a style helper called with no arguments, never crashes the trace. Proof: STT-NEG-03.
-- [x] STT-28 The trace returns unique names in sorted order, and each station pins them in `output/components.json`. Proof: every STT station (standing gauges and goldens in `tests/harness/helpers.ts`).
+- [x] STT-28 The trace returns unique names in sorted order, and each case pins them in `output/components.json`. Proof: every STT case (standing gauges and goldens in `tests/harness/helpers.ts`).
 - [x] STT-34 A component name whose first letter is a non-ASCII capital (`Ärger`) traces, and an empty or BOM-only file parses with no diagnostic. Proof: STT-WRAP-11.
-- [x] STT-41 `traceDetailed()` returns `owned`: each traced export name mapped to the sorted, unique prop names it declares and keeps for itself. A destructured prop stops being owned only when it reaches an element under the same prop name: a JSX attribute `name={...}` whose value reads the prop's local (`size={size}`), or a spread whose object literal still contains that name (`{...{ size }}`, `{...{ size: size }}`). The key is always present and `{}` when no traced component owns a prop. Proof: `tests/suites/detailed.test.ts` (exact wire bytes).
+- [x] STT-41 `traceDetailed()` returns `owned`: each export name that declares props mapped to the sorted, unique prop names its declaration keeps for itself, whether or not the component traces. A component's own declared props (destructured, not forwarded) are never styles, whether or not the component is a host: a component that reaches no primitive is not a host, but its declared props still ride `owned`. A destructured prop stops being owned only when it reaches an element under the same prop name: a JSX attribute `name={...}` whose value reads the prop's local (`size={size}`), or a spread whose object literal still contains that name (`{...{ size }}`, `{...{ size: size }}`). The key is always present and `{}` when no exported component owns a prop. Proof: `tests/suites/detailed.test.ts` (exact wire bytes); `src/tests/owned_provider.rs` and `src/tests/detailed_owned.rs` (a provider-only component, direct, through a named barrel and through `export *`).
 
 ---
 

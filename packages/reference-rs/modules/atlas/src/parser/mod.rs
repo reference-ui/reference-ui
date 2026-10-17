@@ -1,27 +1,28 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Walks each source file's top-level statements and records what the file imports, declares and exports
+//! into a `ModuleInfo`. Collection is split by statement family: imports here, components in `components`,
+//! export statements in `exports`, and type shapes in `types`, all sharing one per-file `FileCtx` and one
+//! mutable `ModuleParseState`. `parse_modules` takes the discovered source files and returns the module map
+//! keyed by path.
+
+mod components;
+mod exports;
+mod jsx;
+mod types;
+mod utils;
 
 use crate::internal::{ComponentDecl, ImportBinding, ImportKind, ModuleInfo, ReExport, TypeDef};
 use crate::scanner::SourceFile;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Declaration, ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ImportOrExportKind,
-    Statement,
+    ExportAllDeclaration, Function, ImportDeclarationSpecifier, ImportOrExportKind, Statement,
+    TSInterfaceDeclaration, TSTypeAliasDeclaration,
 };
 use oxc_parser::Parser;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-mod components;
-mod jsx;
-mod types;
-mod utils;
-
-use components::{
-    collect_variable_components, component_from_arrow, component_from_expression,
-    component_from_function_declaration, component_from_function_like,
-};
+use components::{collect_variable_components, component_from_function_declaration};
+use exports::{collect_default_export, collect_export_named_declaration};
 use types::{type_expr_from_interface, type_expr_from_type};
 use utils::{
     default_export_name, local_source_display, module_export_name_to_string, path_to_posix,
@@ -60,17 +61,16 @@ fn parse_module(
     let parsed = Parser::new(&allocator, &source_file.content, source_file.source_type).parse();
     let mut state = ModuleParseState::default();
     let default_name = default_export_name(&source_file.path);
+    let ctx = FileCtx {
+        file_path: &source_file.path,
+        display_source,
+        app_relative_path: app_relative_path.as_ref(),
+        source: &source_file.content,
+        default_name: &default_name,
+    };
 
     for statement in parsed.program.body.iter() {
-        collect_statement(
-            statement,
-            &source_file.path,
-            display_source,
-            app_relative_path.as_ref(),
-            &source_file.content,
-            &default_name,
-            &mut state,
-        );
+        collect_statement(statement, &ctx, &mut state);
     }
 
     let namespace_imports = state
@@ -95,6 +95,16 @@ fn parse_module(
     }
 }
 
+/// What the file being read exposes to every collector: its path and display name, its app-relative
+/// path when it has one, the text its spans slice, and the name a default export takes.
+struct FileCtx<'a> {
+    file_path: &'a Path,
+    display_source: &'a str,
+    app_relative_path: Option<&'a String>,
+    source: &'a str,
+    default_name: &'a str,
+}
+
 #[derive(Default)]
 struct ModuleParseState {
     imports: HashMap<String, ImportBinding>,
@@ -107,79 +117,64 @@ struct ModuleParseState {
     star_reexports: Vec<String>,
 }
 
-fn collect_statement(
-    statement: &Statement<'_>,
-    file_path: &Path,
-    display_source: &str,
-    app_relative_path: Option<&String>,
-    source: &str,
-    default_name: &str,
-    state: &mut ModuleParseState,
-) {
+fn collect_statement(statement: &Statement<'_>, ctx: &FileCtx<'_>, state: &mut ModuleParseState) {
     match statement {
-        Statement::ImportDeclaration(import_decl) => collect_imports(import_decl, state, source),
-        Statement::FunctionDeclaration(function) => {
-            if let Some(component) = component_from_function_declaration(
-                function,
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-            ) {
-                state
-                    .local_components
-                    .insert(component.name.clone(), component);
-            }
+        Statement::ImportDeclaration(import_decl) => collect_imports(import_decl, state, ctx.source),
+        Statement::VariableDeclaration(declaration) => {
+            collect_variable_components(declaration.declarations.iter(), ctx, state, false)
         }
-        Statement::VariableDeclaration(declaration) => collect_variable_components(
-            declaration.declarations.iter(),
-            file_path,
-            display_source,
-            app_relative_path,
-            source,
-            state,
-            false,
-        ),
+        Statement::ExportNamedDeclaration(export_decl) => {
+            collect_export_named_declaration(export_decl, ctx, state)
+        }
+        Statement::ExportDefaultDeclaration(export_default) => {
+            collect_default_export(export_default, ctx, state)
+        }
+        _ => collect_other_statement(statement, ctx, state),
+    }
+}
+
+fn collect_other_statement(statement: &Statement<'_>, ctx: &FileCtx<'_>, state: &mut ModuleParseState) {
+    match statement {
+        Statement::FunctionDeclaration(function) => collect_function_declaration(function, ctx, state),
         Statement::TSInterfaceDeclaration(interface_decl) => {
-            state.types.insert(
-                interface_decl.id.name.to_string(),
-                TypeDef {
-                    expr: type_expr_from_interface(interface_decl, source),
-                },
-            );
+            collect_interface(interface_decl, ctx.source, state)
         }
-        Statement::TSTypeAliasDeclaration(type_alias) => {
-            state.types.insert(
-                type_alias.id.name.to_string(),
-                TypeDef {
-                    expr: type_expr_from_type(&type_alias.type_annotation, source),
-                },
-            );
-        }
-        Statement::ExportNamedDeclaration(export_decl) => collect_export_named_declaration(
-            export_decl,
-            file_path,
-            display_source,
-            app_relative_path,
-            source,
-            state,
-        ),
-        Statement::ExportDefaultDeclaration(export_default) => collect_default_export(
-            export_default,
-            file_path,
-            display_source,
-            app_relative_path,
-            source,
-            default_name,
-            state,
-        ),
-        Statement::ExportAllDeclaration(export_all) => {
-            if export_all.exported.is_none() {
-                let source_module = unquote(slice_span(source, export_all.source.span));
-                state.star_reexports.push(source_module);
-            }
-        }
+        Statement::TSTypeAliasDeclaration(type_alias) => collect_type_alias(type_alias, ctx.source, state),
+        Statement::ExportAllDeclaration(export_all) => collect_export_all(export_all, ctx.source, state),
         _ => {}
+    }
+}
+
+fn collect_function_declaration(function: &Function<'_>, ctx: &FileCtx<'_>, state: &mut ModuleParseState) {
+    if let Some(component) = component_from_function_declaration(function, ctx) {
+        state
+            .local_components
+            .insert(component.name.clone(), component);
+    }
+}
+
+fn collect_interface(interface_decl: &TSInterfaceDeclaration<'_>, source: &str, state: &mut ModuleParseState) {
+    state.types.insert(
+        interface_decl.id.name.to_string(),
+        TypeDef {
+            expr: type_expr_from_interface(interface_decl, source),
+        },
+    );
+}
+
+fn collect_type_alias(type_alias: &TSTypeAliasDeclaration<'_>, source: &str, state: &mut ModuleParseState) {
+    state.types.insert(
+        type_alias.id.name.to_string(),
+        TypeDef {
+            expr: type_expr_from_type(&type_alias.type_annotation, source),
+        },
+    );
+}
+
+fn collect_export_all(export_all: &ExportAllDeclaration<'_>, source: &str, state: &mut ModuleParseState) {
+    if export_all.exported.is_none() {
+        let source_module = unquote(slice_span(source, export_all.source.span));
+        state.star_reexports.push(source_module);
     }
 }
 
@@ -235,209 +230,5 @@ fn collect_imports(
                 );
             }
         }
-    }
-}
-
-fn collect_export_named_declaration(
-    export_decl: &oxc_allocator::Box<'_, oxc_ast::ast::ExportNamedDeclaration<'_>>,
-    file_path: &Path,
-    display_source: &str,
-    app_relative_path: Option<&String>,
-    source: &str,
-    state: &mut ModuleParseState,
-) {
-    if let Some(declaration) = export_decl.declaration.as_ref() {
-        match declaration {
-            Declaration::FunctionDeclaration(function) => {
-                if let Some(component) = component_from_function_declaration(
-                    function,
-                    file_path,
-                    display_source,
-                    app_relative_path,
-                    source,
-                ) {
-                    state
-                        .local_components
-                        .insert(component.name.clone(), component.clone());
-                    state
-                        .exported_components
-                        .insert(component.name.clone(), component);
-                }
-            }
-            Declaration::VariableDeclaration(declaration) => collect_variable_components(
-                declaration.declarations.iter(),
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-                state,
-                true,
-            ),
-            Declaration::TSInterfaceDeclaration(interface_decl) => {
-                state.types.insert(
-                    interface_decl.id.name.to_string(),
-                    TypeDef {
-                        expr: type_expr_from_interface(interface_decl, source),
-                    },
-                );
-            }
-            Declaration::TSTypeAliasDeclaration(type_alias) => {
-                state.types.insert(
-                    type_alias.id.name.to_string(),
-                    TypeDef {
-                        expr: type_expr_from_type(&type_alias.type_annotation, source),
-                    },
-                );
-            }
-            _ => {}
-        }
-        return;
-    }
-
-    let type_only_declaration = export_decl.export_kind == ImportOrExportKind::Type;
-    let source_module = export_decl
-        .source
-        .as_ref()
-        .map(|value| unquote(slice_span(source, value.span)));
-
-    for specifier in &export_decl.specifiers {
-        let local = module_export_name_to_string(&specifier.local);
-        let exported = module_export_name_to_string(&specifier.exported);
-        let type_only = type_only_declaration || specifier.export_kind == ImportOrExportKind::Type;
-
-        if let Some(source_module) = &source_module {
-            let reexport = ReExport {
-                source: source_module.clone(),
-                imported: local,
-            };
-            if type_only {
-                state.named_type_reexports.insert(exported, reexport);
-            } else {
-                state.named_component_reexports.insert(exported, reexport);
-            }
-            continue;
-        }
-
-        if type_only {
-            continue;
-        }
-
-        if let Some(component) = state.local_components.get(&local).cloned() {
-            let mut exported_component = component;
-            exported_component.name = exported.clone();
-            state
-                .exported_components
-                .insert(exported, exported_component);
-        }
-    }
-}
-
-fn collect_default_export(
-    export_default: &oxc_allocator::Box<'_, oxc_ast::ast::ExportDefaultDeclaration<'_>>,
-    file_path: &Path,
-    display_source: &str,
-    app_relative_path: Option<&String>,
-    source: &str,
-    default_name: &str,
-    state: &mut ModuleParseState,
-) {
-    match &export_default.declaration {
-        ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let component_name = function
-                .id
-                .as_ref()
-                .map(|id| id.name.to_string())
-                .unwrap_or_else(|| default_name.to_string());
-            if let Some(component) = component_from_function_like(
-                &component_name,
-                function.params.items.first(),
-                function.body.as_ref().map(|body| &body.statements),
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-            ) {
-                state
-                    .local_components
-                    .insert(component.name.clone(), component.clone());
-                state
-                    .exported_components
-                    .insert(component.name.clone(), component.clone());
-                state.default_component = Some(component.name);
-            }
-        }
-        ExportDefaultDeclarationKind::Identifier(identifier) => {
-            let name = identifier.name.to_string();
-            if let Some(component) = state.local_components.get(&name).cloned() {
-                state
-                    .exported_components
-                    .entry(name.clone())
-                    .or_insert(component);
-                state.default_component = Some(name);
-            }
-        }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            if let Some(component) = component_from_arrow(
-                default_name,
-                arrow,
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-            ) {
-                state
-                    .exported_components
-                    .insert(component.name.clone(), component.clone());
-                state.default_component = Some(component.name);
-            }
-        }
-        ExportDefaultDeclarationKind::FunctionExpression(function) => {
-            let component_name = function
-                .id
-                .as_ref()
-                .map(|id| id.name.to_string())
-                .unwrap_or_else(|| default_name.to_string());
-            if let Some(component) = component_from_function_like(
-                &component_name,
-                function.params.items.first(),
-                function.body.as_ref().map(|body| &body.statements),
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-            ) {
-                state
-                    .local_components
-                    .insert(component.name.clone(), component.clone());
-                state
-                    .exported_components
-                    .insert(component.name.clone(), component.clone());
-                state.default_component = Some(component.name);
-            }
-        }
-        ExportDefaultDeclarationKind::CallExpression(_) => {
-            // Direct `export default memo(...)`: route through the shared
-            // wrapper-unwrap with the file-derived name; the inner id is incidental.
-            let Some(expression) = export_default.declaration.as_expression() else {
-                return;
-            };
-            if let Some(component) = component_from_expression(
-                default_name,
-                expression,
-                file_path,
-                display_source,
-                app_relative_path,
-                source,
-            ) {
-                state
-                    .local_components
-                    .insert(component.name.clone(), component.clone());
-                state
-                    .exported_components
-                    .insert(component.name.clone(), component.clone());
-                state.default_component = Some(component.name);
-            }
-        }
-        _ => {}
     }
 }

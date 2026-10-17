@@ -1090,7 +1090,7 @@ type LegacyDom = {
 function renderInto(node: React.ReactNode, container: Element): () => void {
   if (typeof createRoot === 'function') {
     const root = createRoot(container)
-    // FINISH-02F-F30: React 18.3.1 drops a nested bare root.render() scheduled
+    // React 18.3.1 drops a nested bare root.render() scheduled
     // inside the outer host's flushSync (empty 43-char shadow mount on r18
     // FF+WK+Chromium; r17/r19 immune). flushSync the inner render, mirroring
     // playwright/runtimes/react-18/host.ts.

@@ -6,4 +6,4 @@ file, and name the construct in the message: `globals.ts` holds `declare global 
 the global `Window` never becomes a symbol. The named declarations beside each statement still extract
 (`Local`, `Sided`). The warnings reach the manifest `warnings` channel as well as the emitted diagnostics.
 
-Origin: doom round break TST-DOOM-14 asked that these silent drops become visible as well.
+These silent drops must be visible as well.

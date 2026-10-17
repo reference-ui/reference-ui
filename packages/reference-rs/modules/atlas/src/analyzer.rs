@@ -1,19 +1,20 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Runs one Atlas analysis over a project: discovers and parses the app's sources, loads the packages it references
+//! or includes, builds the tracked component set, counts usage and observations across the app's modules, and
+//! assembles the result. It takes an `AtlasConfig` and emits an `AtlasAnalysisResult`. A scan or parse failure
+//! becomes a result with one diagnostic and no components, so a bad tree never surfaces as a Rust error.
 
 use crate::config::AtlasConfig;
 use crate::diagnostics::{AtlasDiagnostic, DiagnosticError};
-use crate::internal::{component_key, create_usage_state, ModuleInfo};
+use crate::internal::{component_key, create_usage_state, ComponentTemplate, ModuleInfo};
 use crate::model::Component;
 use crate::output::AtlasAnalysisResult;
 use crate::parser::parse_modules;
 use crate::resolver::{
     apply_excludes, build_component_template, collect_included_packages,
     collect_public_package_components, collect_referenced_packages, is_local_component_module,
-    resolve_package_index,
+    resolve_package_index, PublicPackageComponent, TypeScope,
 };
-use crate::scanner::Scanner;
+use crate::scanner::{Scanner, SourceFile};
 use crate::usage::{collect_usage_for_module, finalize_components, observe_elements};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -48,126 +49,23 @@ impl AtlasAnalyzer {
         let app_root = PathBuf::from(&self.config.root_dir);
         let mut diagnostics = Vec::new();
 
-        let local_files = match self.scanner.discover_files(&self.config) {
-            Ok(files) => files,
-            Err(err) => {
-                return failed_result(&format!("Failed to discover Atlas files: {err}"));
-            }
-        };
-
-        let local_sources = match self.scanner.parse_files(&local_files) {
-            Ok(files) => files,
-            Err(err) => {
-                return failed_result(&format!("Failed to parse Atlas files: {err}"));
-            }
+        let (local_files, local_sources) = match self.discover_local_sources() {
+            Ok(found) => found,
+            Err(message) => return failed_result(&message),
         };
 
         let mut modules = parse_modules(&local_sources, Some(&app_root), None);
-        let referenced_packages = collect_referenced_packages(modules.values());
         let include_packages = collect_included_packages(&self.config);
-        let packages_to_load = referenced_packages
-            .into_iter()
-            .chain(include_packages.keys().cloned())
-            .collect::<BTreeSet<_>>();
+        let package_indexes =
+            self.load_packages(&mut modules, &include_packages, &mut diagnostics)?;
 
-        let mut package_indexes = HashMap::new();
-        for package_name in packages_to_load {
-            let Some(package_src) = self.resolve_package_src(&package_name) else {
-                if include_packages.contains_key(&package_name) {
-                    diagnostics.push(crate::diagnostics::unresolved_include_package(
-                        &package_name,
-                    )?);
-                }
-                continue;
-            };
-
-            let package_scanner = Scanner::new(package_src.to_string_lossy().as_ref());
-            let package_config = AtlasConfig {
-                root_dir: package_src.to_string_lossy().to_string(),
-                include: None,
-                exclude: Some(vec![
-                    "**/node_modules/**".to_string(),
-                    "**/dist/**".to_string(),
-                    "**/build/**".to_string(),
-                    "**/*.test.*".to_string(),
-                    "**/*.spec.*".to_string(),
-                ]),
-                observe: Vec::new(),
-            };
-
-            let files = match package_scanner.discover_files(&package_config) {
-                Ok(files) => files,
-                Err(err) => {
-                    diagnostics.push(crate::diagnostics::package_scan_failed(&package_name, err)?);
-                    continue;
-                }
-            };
-            let source_files = match package_scanner.parse_files(&files) {
-                Ok(files) => files,
-                Err(err) => {
-                    diagnostics.push(crate::diagnostics::package_scan_failed(&package_name, err)?);
-                    continue;
-                }
-            };
-
-            let package_modules = parse_modules(&source_files, None, Some(&package_name));
-            if let Some(index_path) = resolve_package_index(package_modules.keys()) {
-                package_indexes.insert(package_name.clone(), index_path);
-            }
-            modules.extend(package_modules);
-        }
-
+        let scope = TypeScope {
+            modules: &modules,
+            package_indexes: &package_indexes,
+        };
         let mut tracked = BTreeMap::new();
-        for module in modules.values() {
-            if !is_local_component_module(module, &app_root) {
-                continue;
-            }
-
-            for component in module.components.values() {
-                if let Some(template) = build_component_template(
-                    component,
-                    module,
-                    &modules,
-                    &package_indexes,
-                    &mut diagnostics,
-                )? {
-                    tracked.insert(component_key(&template.name, &template.source), template);
-                }
-            }
-        }
-
-        for (package_name, selectors) in include_packages {
-            let Some(index_path) = package_indexes.get(&package_name) else {
-                continue;
-            };
-
-            for public_component in collect_public_package_components(&modules, index_path) {
-                if !selectors.is_empty()
-                    && !selectors.contains(&public_component.export_name)
-                    && !selectors.contains(&public_component.component_name)
-                {
-                    continue;
-                }
-
-                let Some(module) = modules.get(&public_component.module_path) else {
-                    continue;
-                };
-                let Some(component) = module.components.get(&public_component.component_name)
-                else {
-                    continue;
-                };
-
-                if let Some(template) = build_component_template(
-                    component,
-                    module,
-                    &modules,
-                    &package_indexes,
-                    &mut diagnostics,
-                )? {
-                    tracked.insert(component_key(&template.name, &template.source), template);
-                }
-            }
-        }
+        insert_local_templates(scope, &app_root, &mut tracked, &mut diagnostics)?;
+        insert_include_templates(scope, &include_packages, &mut tracked, &mut diagnostics)?;
 
         apply_excludes(&mut tracked, &self.config, &app_root);
 
@@ -196,6 +94,86 @@ impl AtlasAnalyzer {
         })
     }
 
+    fn discover_local_sources(&self) -> Result<(Vec<PathBuf>, Vec<SourceFile>), String> {
+        let local_files = self
+            .scanner
+            .discover_files(&self.config)
+            .map_err(|err| format!("Failed to discover Atlas files: {err}"))?;
+        let local_sources = self
+            .scanner
+            .parse_files(&local_files)
+            .map_err(|err| format!("Failed to parse Atlas files: {err}"))?;
+        Ok((local_files, local_sources))
+    }
+
+    /// Loads each referenced or included package into `modules`, and returns where each package's index file sits.
+    fn load_packages(
+        &self,
+        modules: &mut HashMap<PathBuf, ModuleInfo>,
+        include_packages: &BTreeMap<String, BTreeSet<String>>,
+        diagnostics: &mut Vec<AtlasDiagnostic>,
+    ) -> Result<HashMap<String, PathBuf>, DiagnosticError> {
+        let referenced_packages = collect_referenced_packages(modules.values());
+        let packages_to_load = referenced_packages
+            .into_iter()
+            .chain(include_packages.keys().cloned())
+            .collect::<BTreeSet<_>>();
+
+        let mut package_indexes = HashMap::new();
+        for package_name in packages_to_load {
+            let Some(package_src) = self.resolve_package_src(&package_name) else {
+                if include_packages.contains_key(&package_name) {
+                    diagnostics.push(crate::diagnostics::unresolved_include_package(
+                        &package_name,
+                    )?);
+                }
+                continue;
+            };
+            if let Some(index_path) =
+                self.load_package(&package_name, &package_src, modules, diagnostics)?
+            {
+                package_indexes.insert(package_name, index_path);
+            }
+        }
+        Ok(package_indexes)
+    }
+
+    /// Scans and parses one package. A failed scan records a diagnostic and loads nothing from that package.
+    fn load_package(
+        &self,
+        package_name: &str,
+        package_src: &Path,
+        modules: &mut HashMap<PathBuf, ModuleInfo>,
+        diagnostics: &mut Vec<AtlasDiagnostic>,
+    ) -> Result<Option<PathBuf>, DiagnosticError> {
+        let package_scanner = Scanner::new(package_src.to_string_lossy().as_ref());
+        let package_config = AtlasConfig {
+            root_dir: package_src.to_string_lossy().to_string(),
+            include: None,
+            exclude: Some(vec![
+                "**/node_modules/**".to_string(),
+                "**/dist/**".to_string(),
+                "**/build/**".to_string(),
+                "**/*.test.*".to_string(),
+                "**/*.spec.*".to_string(),
+            ]),
+            observe: Vec::new(),
+        };
+
+        let source_files = match scan_package(&package_scanner, &package_config) {
+            Ok(files) => files,
+            Err(err) => {
+                diagnostics.push(crate::diagnostics::package_scan_failed(package_name, err)?);
+                return Ok(None);
+            }
+        };
+
+        let package_modules = parse_modules(&source_files, None, Some(package_name));
+        let index_path = resolve_package_index(package_modules.keys());
+        modules.extend(package_modules);
+        Ok(index_path)
+    }
+
     fn resolve_package_src(&self, package: &str) -> Option<PathBuf> {
         let root = Path::new(&self.config.root_dir);
         let fixture_name = package.rsplit('/').next()?;
@@ -212,6 +190,78 @@ impl AtlasAnalyzer {
         ];
         candidates.into_iter().find(|path| path.exists())
     }
+}
+
+fn scan_package(scanner: &Scanner, config: &AtlasConfig) -> Result<Vec<SourceFile>, String> {
+    let files = scanner.discover_files(config)?;
+    scanner.parse_files(&files)
+}
+
+/// Adds every component the app declares in its own modules to `tracked`.
+fn insert_local_templates(
+    scope: TypeScope<'_>,
+    app_root: &Path,
+    tracked: &mut BTreeMap<String, ComponentTemplate>,
+    diagnostics: &mut Vec<AtlasDiagnostic>,
+) -> Result<(), DiagnosticError> {
+    for module in scope.modules.values() {
+        if !is_local_component_module(module, app_root) {
+            continue;
+        }
+        for component in module.components.values() {
+            if let Some(template) =
+                build_component_template(component, module, scope, diagnostics)?
+            {
+                tracked.insert(component_key(&template.name, &template.source), template);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Adds the components each include entry selects from a package's public surface.
+fn insert_include_templates(
+    scope: TypeScope<'_>,
+    include_packages: &BTreeMap<String, BTreeSet<String>>,
+    tracked: &mut BTreeMap<String, ComponentTemplate>,
+    diagnostics: &mut Vec<AtlasDiagnostic>,
+) -> Result<(), DiagnosticError> {
+    for (package_name, selectors) in include_packages {
+        let Some(index_path) = scope.package_indexes.get(package_name) else {
+            continue;
+        };
+        for public_component in collect_public_package_components(scope.modules, index_path) {
+            if is_selected(selectors, &public_component) {
+                insert_public_template(scope, &public_component, tracked, diagnostics)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// No selectors takes every public component; otherwise the export or component name must be listed.
+fn is_selected(selectors: &BTreeSet<String>, public_component: &PublicPackageComponent) -> bool {
+    selectors.is_empty()
+        || selectors.contains(&public_component.export_name)
+        || selectors.contains(&public_component.component_name)
+}
+
+fn insert_public_template(
+    scope: TypeScope<'_>,
+    public_component: &PublicPackageComponent,
+    tracked: &mut BTreeMap<String, ComponentTemplate>,
+    diagnostics: &mut Vec<AtlasDiagnostic>,
+) -> Result<(), DiagnosticError> {
+    let Some(module) = scope.modules.get(&public_component.module_path) else {
+        return Ok(());
+    };
+    let Some(component) = module.components.get(&public_component.component_name) else {
+        return Ok(());
+    };
+    if let Some(template) = build_component_template(component, module, scope, diagnostics)? {
+        tracked.insert(component_key(&template.name, &template.source), template);
+    }
+    Ok(())
 }
 
 /// The modules usage and observation are counted over, in path order: the files discovery found

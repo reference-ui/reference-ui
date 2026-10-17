@@ -1,6 +1,6 @@
 /**
  * Test code emitters for unitless properties and vendor-prefixed canon rows.
- * Ports the hand-written unitless gate into the generator and pins GAP-04a:
+ * Ports the hand-written unitless gate into the generator and pins 
  * capital-first Webkit/Moz/Ms spellings resolve, hyphenate with a leading
  * dash, and inherit unitless/color semantics from their canonical rows.
  * Consumed by emit/tests/index.ts to assemble the complete tests.rs module.

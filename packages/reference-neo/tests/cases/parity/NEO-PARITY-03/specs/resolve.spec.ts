@@ -107,7 +107,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   const types = importersOf(libSrc, '@reference-ui/types');
   assert.ok(
     types.length >= 1 && types.length <= 13,
-    `D19 types caveat still live and bounded: ${types.length} importers (evidence 13)`,
+    `@reference-ui/types caveat still live and bounded: ${types.length} importers (limit 13)`,
   );
   const react = importersOf(libSrc, '@reference-ui/react');
   const system = importersOf(libSrc, '@reference-ui/system');

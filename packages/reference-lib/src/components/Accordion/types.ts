@@ -11,7 +11,7 @@ import type {
   PrimitiveTag,
 } from '@reference-ui/react'
 
-type ReferencePartProps<Tag extends PrimitiveTag> =
+type AccordionReferencePartProps<Tag extends PrimitiveTag> =
   PrimitiveProps<Tag> & React.RefAttributes<PrimitiveElement<Tag>>
 
 export type AccordionExpansion = 'single' | 'multiple'
@@ -19,7 +19,7 @@ export type AccordionKeyboard = 'headers' | 'none' | 'arrows'
 export type AccordionValue = string | string[] | null
 
 export interface AccordionProps
-  extends Omit<ReferencePartProps<'div'>, 'onChange' | 'value' | 'defaultValue'> {
+  extends Omit<AccordionReferencePartProps<'div'>, 'onChange' | 'value' | 'defaultValue'> {
   children?: React.ReactNode
   expansion?: AccordionExpansion
   /** Optional value. Single uses string|null, multiple uses string[]. Omitted = self-managed from the natural zero state (null single, [] multiple). */

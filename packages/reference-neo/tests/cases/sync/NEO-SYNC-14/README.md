@@ -1,6 +1,6 @@
 # NEO-SYNC-14 — watch resyncs on change and deletion
 
-Evidence: `[core]` watch behaviour (`packages/reference-core/src/watch/`
+Evidence: watch behaviour (`sync/watch.ts`
 maps parcel `create/update/delete` to `add/change/unlink`, filters by
 `ui.config.include`, and ignores `node_modules`, `.reference-ui`, `.git`,
 and gitignored paths before matching).

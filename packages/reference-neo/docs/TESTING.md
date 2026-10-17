@@ -70,7 +70,7 @@ across groups (duplicates fail loud):
   plus live assertions plus settled snapshots where rendering matters.
 
 Unit tests colocate with the code they cover in `src/`. Cases are not
-compiler stations: no rigid inputs/outputs contract, no goldens. The
+compiler cases: no rigid inputs/outputs contract, no goldens. The
 case defines its world; the spec asserts its outcome.
 
 ## Artifacts

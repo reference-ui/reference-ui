@@ -1,7 +1,7 @@
 /**
  * Injectivity quarantine meta-tests, ghost-gauge failure proof, and a
  * two-file reverse-file ORDER-06 check. Reads committed css.json goldens: a
- * listed station whose class names are now unique must leave
+ * listed case whose class names are now unique must leave
  * INJECTIVITY_QUARANTINE. A bogus extra ID fails the same way. Ghost membership
  * is css-tree class selectors inside `@layer utilities`, not a TypeScript escaper.
  */

@@ -158,12 +158,8 @@ fn object_leaves(obj: &oxc_ast::ast::ObjectExpression<'_>) -> Option<BTreeMap<St
         let ObjectPropertyKind::ObjectProperty(prop) = prop_kind else {
             return None;
         };
-        let Some(key) = property_key(&prop.key) else {
-            return None;
-        };
-        let Some(leaf) = literal_leaf(unwrap_expression(&prop.value)) else {
-            return None;
-        };
+        let key = property_key(&prop.key)?;
+        let leaf = literal_leaf(unwrap_expression(&prop.value))?;
         leaves.insert(key, leaf);
     }
     Some(leaves)

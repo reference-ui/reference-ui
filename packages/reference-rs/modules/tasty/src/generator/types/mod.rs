@@ -1,29 +1,34 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Lowers a `TypeRef` to the JS object literal the generated manifest carries. `emit_type_ref` is the one exhaustive
+//! match over all seventeen variants: each arm sends one family to its dispatcher, and a dispatcher matches only its
+//! own variants before calling an emitter in `emit_variants` or `emit_compounds`. No dispatcher calls another, so a
+//! new variant is a compile error at the router until it is routed. Each emitter writes a `kind` discriminant first
+//! and adds `resolved` only when the resolution is present.
 
 mod emit_collections;
 mod emit_compounds;
 mod emit_leaves;
+mod emit_variants;
 
 use std::collections::BTreeMap;
 
 use crate::generator::util::{emit_field, emit_object, indent_block, to_js_literal};
-use crate::model::TypeRef;
+use crate::model::{TypeRef, TypeScriptBundle};
 
-use emit_collections::emit_fn_params;
 pub(crate) use emit_collections::emit_type_ref_array;
 pub(super) use emit_collections::{emit_members, emit_type_parameters};
-use emit_compounds::{
-    emit_constructor_type_ref, emit_mapped_type_ref, emit_reference_type_ref,
-    emit_reference_with_type_arguments,
+use emit_compounds::{emit_constructor_type_ref, emit_mapped_type_ref, emit_reference_type_ref};
+use emit_variants::{
+    emit_array_type_ref, emit_conditional_type_ref, emit_function_type_ref,
+    emit_indexed_access_type_ref, emit_intrinsic_type_ref, emit_list_type_ref,
+    emit_literal_type_ref, emit_object_type_ref, emit_raw_type_ref,
+    emit_template_literal_type_ref, emit_tuple_type_ref, emit_type_operator_type_ref,
+    emit_type_query_type_ref,
 };
-use emit_leaves::{emit_template_literal_part, emit_tuple_element};
 
 pub(super) use emit_leaves::emit_jsdoc;
 
 pub(super) fn emit_optional_type_ref(
-    bundle: &crate::model::TypeScriptBundle,
+    bundle: &TypeScriptBundle,
     type_ref: Option<&TypeRef>,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
@@ -33,202 +38,148 @@ pub(super) fn emit_optional_type_ref(
     }
 }
 
+/// The one exhaustive match over the seventeen variants. Each arm hands a whole family to one dispatcher, so no arm
+/// needs a catch-all for a variant that a sibling family owns.
 pub(super) fn emit_type_ref(
-    bundle: &crate::model::TypeScriptBundle,
+    bundle: &TypeScriptBundle,
     type_ref: &TypeRef,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
     match type_ref {
-        TypeRef::Intrinsic { name } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("intrinsic")?),
-            emit_field("name", to_js_literal(name)?),
-        ])),
-        TypeRef::Literal { value } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("literal")?),
-            emit_field("value", to_js_literal(value)?),
-        ])),
-        TypeRef::Reference {
-            type_arguments: Some(args),
-            ..
-        } => emit_reference_with_type_arguments(bundle, type_ref, args, export_names),
+        TypeRef::Reference { .. } | TypeRef::Intrinsic { .. } | TypeRef::Literal { .. } => {
+            emit_reference_or_leaf_type_ref(bundle, type_ref, export_names)
+        }
+        TypeRef::Raw { .. }
+        | TypeRef::Object { .. }
+        | TypeRef::Union { .. }
+        | TypeRef::Array { .. } => emit_member_type_ref(bundle, type_ref, export_names),
+        TypeRef::Tuple { .. }
+        | TypeRef::Intersection { .. }
+        | TypeRef::IndexedAccess { .. }
+        | TypeRef::TypeOperator { .. } => {
+            emit_tuple_access_type_ref(bundle, type_ref, export_names)
+        }
+        TypeRef::Function { .. } | TypeRef::Constructor { .. } | TypeRef::TypeQuery { .. } => {
+            emit_signature_type_ref(bundle, type_ref, export_names)
+        }
+        TypeRef::Conditional { .. } | TypeRef::Mapped { .. } | TypeRef::TemplateLiteral { .. } => {
+            emit_binder_type_ref(bundle, type_ref, export_names)
+        }
+    }
+}
+
+/// A reference, which the reference emitter builds from its descriptor, and the two leaf kinds, one scalar each.
+fn emit_reference_or_leaf_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    match type_ref {
         TypeRef::Reference { .. } => emit_reference_type_ref(bundle, type_ref, export_names),
-        TypeRef::Object { members } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("object")?),
-            emit_field("members", emit_members(bundle, members, export_names)?),
-        ])),
-        TypeRef::Union { types } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("union")?),
-            emit_field("types", emit_type_ref_array(bundle, types, export_names)?),
-        ])),
-        TypeRef::Array { element } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("array")?),
-            emit_field("element", emit_type_ref(bundle, element, export_names)?),
-        ])),
-        TypeRef::Tuple { elements } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("tuple")?),
-            emit_field(
-                "elements",
-                emit_indented_array(elements, |element| {
-                    emit_tuple_element(bundle, element, export_names)
-                })?,
-            ),
-        ])),
-        TypeRef::Intersection { types } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("intersection")?),
-            emit_field("types", emit_type_ref_array(bundle, types, export_names)?),
-        ])),
-        TypeRef::IndexedAccess {
-            object,
-            index,
-            resolved,
-        } => emit_type_ref_with_optional_resolved(
-            "indexed_access",
-            vec![
-                emit_field("object", emit_type_ref(bundle, object, export_names)?),
-                emit_field("index", emit_type_ref(bundle, index, export_names)?),
-            ],
-            bundle,
-            resolved.as_deref(),
-            export_names,
-        ),
+        TypeRef::Intrinsic { name } => emit_intrinsic_type_ref(name),
+        TypeRef::Literal { value } => emit_literal_type_ref(value),
+        _ => unreachable!("emit_type_ref routes only reference and leaf variants here"),
+    }
+}
+
+/// Raw source text, object literals, unions, and arrays.
+fn emit_member_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    match type_ref {
+        TypeRef::Raw { summary } => emit_raw_type_ref(summary),
+        TypeRef::Object { members } => emit_object_type_ref(bundle, members, export_names),
+        TypeRef::Union { types } => emit_list_type_ref("union", types, bundle, export_names),
+        TypeRef::Array { element } => emit_array_type_ref(bundle, element, export_names),
+        _ => unreachable!("emit_type_ref routes only member variants here"),
+    }
+}
+
+/// Tuples, intersections, and the indexed and operator types.
+fn emit_tuple_access_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    match type_ref {
+        TypeRef::Tuple { elements } => emit_tuple_type_ref(bundle, elements, export_names),
+        TypeRef::Intersection { types } => {
+            emit_list_type_ref("intersection", types, bundle, export_names)
+        }
+        TypeRef::IndexedAccess { .. } => {
+            emit_indexed_access_type_ref(bundle, type_ref, export_names)
+        }
+        TypeRef::TypeOperator { .. } => emit_type_operator_type_ref(bundle, type_ref, export_names),
+        _ => unreachable!("emit_type_ref routes only tuple_access variants here"),
+    }
+}
+
+/// Function and construct signatures, and type queries.
+fn emit_signature_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
+    export_names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    match type_ref {
         TypeRef::Function {
             params,
             return_type,
-        } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("function")?),
-            emit_field("params", emit_fn_params(bundle, params, export_names)?),
-            emit_field(
-                "returnType",
-                emit_type_ref(bundle, return_type, export_names)?,
-            ),
-        ])),
-        TypeRef::Constructor {
-            r#abstract,
-            type_parameters,
-            params,
-            return_type,
-        } => emit_constructor_type_ref(
-            bundle,
-            *r#abstract,
-            type_parameters,
-            params,
-            return_type,
-            export_names,
-        ),
-        TypeRef::TypeOperator {
-            operator,
-            target,
-            resolved,
-        } => emit_type_ref_with_optional_resolved(
-            "type_operator",
-            vec![
-                emit_field("operator", to_js_literal(operator.as_str())?),
-                emit_field("target", emit_type_ref(bundle, target, export_names)?),
-            ],
-            bundle,
-            resolved.as_deref(),
-            export_names,
-        ),
+        } => emit_function_type_ref(bundle, params, return_type, export_names),
+        TypeRef::Constructor { .. } => emit_constructor_type_ref(bundle, type_ref, export_names),
         TypeRef::TypeQuery {
             expression,
             resolved,
-        } => emit_type_ref_with_optional_resolved(
-            "type_query",
-            vec![emit_field("expression", to_js_literal(expression)?)],
-            bundle,
-            resolved.as_deref(),
-            export_names,
-        ),
-        TypeRef::Conditional {
-            check_type,
-            extends_type,
-            true_type,
-            false_type,
-            resolved,
-        } => emit_type_ref_with_optional_resolved(
-            "conditional",
-            vec![
-                emit_field(
-                    "checkType",
-                    emit_type_ref(bundle, check_type, export_names)?,
-                ),
-                emit_field(
-                    "extendsType",
-                    emit_type_ref(bundle, extends_type, export_names)?,
-                ),
-                emit_field("trueType", emit_type_ref(bundle, true_type, export_names)?),
-                emit_field(
-                    "falseType",
-                    emit_type_ref(bundle, false_type, export_names)?,
-                ),
-            ],
-            bundle,
-            resolved.as_deref(),
-            export_names,
-        ),
-        TypeRef::Mapped {
-            type_param,
-            source_type,
-            name_type,
-            optional_modifier,
-            readonly_modifier,
-            value_type,
-        } => emit_mapped_type_ref(
-            bundle,
-            type_param,
-            source_type,
-            name_type.as_deref(),
-            optional_modifier.as_str(),
-            readonly_modifier.as_str(),
-            value_type.as_deref(),
-            export_names,
-        ),
-        TypeRef::TemplateLiteral { parts, resolved } => emit_type_ref_with_optional_resolved(
-            "template_literal",
-            vec![emit_field(
-                "parts",
-                emit_indented_array(parts, |part| {
-                    emit_template_literal_part(bundle, part, export_names)
-                })?,
-            )],
-            bundle,
-            resolved.as_deref(),
-            export_names,
-        ),
-        TypeRef::Raw { summary } => Ok(emit_object(vec![
-            emit_field("kind", to_js_literal("raw")?),
-            emit_field("summary", to_js_literal(summary)?),
-        ])),
+        } => emit_type_query_type_ref(bundle, expression, resolved.as_deref(), export_names),
+        _ => unreachable!("emit_type_ref routes only signature variants here"),
     }
 }
 
-fn emit_type_ref_with_optional_resolved(
-    kind: &str,
-    mut fields: Vec<String>,
-    bundle: &crate::model::TypeScriptBundle,
-    resolved: Option<&TypeRef>,
+/// Conditional, mapped, and template literal types, which bind names of their own.
+fn emit_binder_type_ref(
+    bundle: &TypeScriptBundle,
+    type_ref: &TypeRef,
     export_names: &BTreeMap<String, String>,
 ) -> Result<String, String> {
+    match type_ref {
+        TypeRef::Conditional { .. } => emit_conditional_type_ref(bundle, type_ref, export_names),
+        TypeRef::Mapped { .. } => emit_mapped_type_ref(bundle, type_ref, export_names),
+        TypeRef::TemplateLiteral { parts, resolved } => emit_template_literal_type_ref(
+            bundle,
+            parts,
+            resolved.as_deref(),
+            export_names,
+        ),
+        _ => unreachable!("emit_type_ref routes only binder variants here"),
+    }
+}
+
+/// `{ kind, ...fields, ...optional }`, with the kind discriminant first.
+pub(super) fn emit_kind_object(
+    kind: &str,
+    mut fields: Vec<String>,
+    optional: Option<String>,
+) -> Result<String, String> {
     fields.insert(0, emit_field("kind", to_js_literal(kind)?));
-    push_optional_type_ref_field(&mut fields, "resolved", bundle, resolved, export_names)?;
+    fields.extend(optional);
     Ok(emit_object(fields))
 }
 
-fn push_optional_type_ref_field(
-    fields: &mut Vec<String>,
+/// The field a present optional type reference contributes, or nothing when the reference is absent.
+pub(super) fn optional_type_ref_field(
     name: &str,
-    bundle: &crate::model::TypeScriptBundle,
     type_ref: Option<&TypeRef>,
+    bundle: &TypeScriptBundle,
     export_names: &BTreeMap<String, String>,
-) -> Result<(), String> {
-    if let Some(type_ref) = type_ref {
-        fields.push(emit_field(
-            name,
-            emit_type_ref(bundle, type_ref, export_names)?,
-        ));
-    }
-
-    Ok(())
+) -> Result<Option<String>, String> {
+    let Some(type_ref) = type_ref else {
+        return Ok(None);
+    };
+    Ok(Some(emit_field(
+        name,
+        emit_type_ref(bundle, type_ref, export_names)?,
+    )))
 }
 
 fn emit_indented_array<T>(

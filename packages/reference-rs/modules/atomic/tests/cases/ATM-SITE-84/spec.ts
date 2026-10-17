@@ -1,5 +1,5 @@
 /**
- * Origin-precision station (Forge §3). An import resolves to its origin
+ * Origin-precision case. An import resolves to its origin
  * binding only: a same-named write in another file never blocks an import
  * that resolves to an unmutated export, while the written file's own uses
  * still diagnose the write.
@@ -15,7 +15,7 @@ const spec: AtomicCaseSpec = {
     expect(result.wants ?? []).toHaveLength(1)
 
     // The written file's own use names its write on the opt-in channel
-    // (S6 E8-class re-point); the default is silent.
+    // The default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-84', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

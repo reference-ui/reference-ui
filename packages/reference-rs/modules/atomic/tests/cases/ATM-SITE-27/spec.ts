@@ -1,6 +1,5 @@
 /**
- * Object-arm and mid-array ternary station (ATM-SITE-27, SPEC-V2-17 +
- * SPEC-V2-27 + §3 S3). Object-valued arms compile per arm; a lone
+ * Object-arm and mid-array ternary (ATM-SITE-27). Object-valued arms compile per arm; a lone
  * unfoldable arm keeps its resolvable sibling plus one warning. Mid-array
  * ternaries project both arms at one breakpoint, elision keeps arity, and
  * top-level ternary args extract both arms.
@@ -65,8 +64,7 @@ const spec: AtomicCaseSpec = {
       p => p.prop === 'color' && p.value === 'white' && p.when.length === 0,
     )).toBe(false)
 
-    // Warns + sink info ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Warns + sink info ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-27', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

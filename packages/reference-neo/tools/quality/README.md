@@ -108,9 +108,9 @@ the date, so a future reader can tell policy from drift.
 
 No recommended rule has needed tuning yet: the one Biome error the self-run
 surfaced, a `valueOf` parameter shadowing a restricted name, was a legitimate
-catch and got renamed, not silenced. The self-run keeps two non-failing
-warn-tier hits on the prose checker, whose prior-run source is carried
-byte-identical by contract; they stay loud until that file is revisited. One
+catch and got renamed, not silenced. The prose checker's two warn-tier hits
+(cognitive and cyclomatic complexity on `leadingCommentLines`) were cleared by
+splitting that function into named steps, with no change in what it reports. One
 precision note: the warn pass also emits Biome's own `suppressions/unused`
 engine note on files that carry suppression comments, since every rule is off
 there. That is bookkeeping, not an enabled rule, and those files already fail

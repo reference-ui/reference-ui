@@ -1,5 +1,5 @@
 /**
- * Alphabet-fence station (§9). Complete CSS values pass through without a
+ * Alphabet-fence (§9). Complete CSS values pass through without a
  * dictionary lookup and without diagnostics; the dotted control still
  * resolves through the dictionary, and the dotted miss still warns. A
  * color-mix carrying `{token}` refs is not a complete CSS value: the fence

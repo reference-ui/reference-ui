@@ -1,5 +1,5 @@
 /**
- * Binding-inferred recipe identity station.
+ * Binding-inferred recipe identity case.
  * A missing `className` prop resolves from a `<Name>Recipe` declarator with
  * explicit-className parity; bare or non-suffixed bindings still refuse.
  */

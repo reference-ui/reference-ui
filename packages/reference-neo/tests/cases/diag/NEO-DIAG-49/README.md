@@ -4,6 +4,6 @@
 
 Raised in: `modules/tasty/src/ast/resolve/index.rs`. Driver: the whole tasty compiler (`buildTasty` over the case world).
 
-Evidence: `[diag]` TST-W-STAR-AMBIGUITY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-W-STAR-AMBIGUITY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-W-STAR-AMBIGUITY, tst-w-star-ambiguity, diagnostics case index, NEO-DIAG-49

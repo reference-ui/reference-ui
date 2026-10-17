@@ -1,7 +1,7 @@
 # Atlas cases
 
 Each direct subfolder of this directory is one Atlas scenario. Folders are named by
-the raw station id (`ATL-<AREA>-NN`); the descriptive slug lives in the first line of
+the raw case id (`ATL-<AREA>-NN`); the descriptive slug lives in the first line of
 the case README.
 
 The intended layout mirrors Tasty closely, but Atlas is still earlier in its
@@ -10,7 +10,7 @@ implementation. Each case should own:
 - `input/app/` — the project root Atlas analyzes
 - `input/demo-ui/` or other support packages — local library-style modules used by the app
 - `input/observe.json` — optional `ObserveSpec[]`; when present the case analyzes with that `observe` config and the golden gains `analyses.observed`
-- `spec.ts` — the station specification: scenario-local assertions
+- `spec.ts` — the case specification: scenario-local assertions
 - `output/` — reserved for known analysis output once Atlas emits real artifacts
 
 Current seed case:

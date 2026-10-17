@@ -1,5 +1,5 @@
 /**
- * Strict recipe identity and refusal station.
+ * Strict recipe identity and refusal case.
  * Validates compiler rejection of missing className, dynamic arguments,
  * and duplicate recipe className in the same system with descriptive error diagnostics.
  */
@@ -36,7 +36,7 @@ const spec: AtomicCaseSpec = {
     expect(tables[0]?.qualifiedName).toBeUndefined()
     expect(Object.keys(result.runtime.recipes)).toEqual(['@reference-ui/lib__duplicateBadge'])
 
-    // RS-18: every refusal carries file/line/column at the offending call
+    // every refusal carries file/line/column at the offending call
     expect(result.diagnostics).toHaveLength(3)
     const [missing, dynamic, duplicate] = result.diagnostics
     expect(missing!.file).toMatch(/input\/src\/recipe\.ts$/)

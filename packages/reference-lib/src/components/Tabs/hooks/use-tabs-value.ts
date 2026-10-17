@@ -31,7 +31,7 @@ const isControlled = valueProp !== undefined
     if (first !== undefined) setInternalValue(first)
   }, [isControlled, internalValue, registryVersion, getOrderedEnabledTabs])
 
-// Unmatched controlled value (W-16, near-verbatim MUI precedent): a
+// Unmatched controlled value (near-verbatim MUI precedent): a
   // typo'd controlled value renders a silently blank panel, so dev names
   // the component, the bad value, and the registered values. Uncontrolled
   // mode never warns (seed and transitions always come from registered

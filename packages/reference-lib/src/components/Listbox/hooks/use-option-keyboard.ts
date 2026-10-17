@@ -8,7 +8,7 @@
  */
 import * as React from 'react'
 import type { ComboboxContextValue } from '../../Combobox/combobox-context'
-// Kernel seam (F2 #2): the typeahead entry guard converges on RovingFocus;
+// Kernel seam: the typeahead entry guard converges on RovingFocus;
 // the search model stays local (TypeaheadModel lacks the LB-KEY-04
 // empty-buffer cycle branch).
 import { shouldIgnoreTypeaheadKey } from '../../RovingFocus/RovingFocus'
@@ -53,7 +53,7 @@ export function useOptionKeyboard({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // B-02: keydowns from portaled row content are not this option's keys.
+    // Keydowns from portaled row content are not this option's keys.
     if (!e.currentTarget.contains(e.target as Node)) return
     if (isInteractiveDescendant(e.target, e.currentTarget)) return
 

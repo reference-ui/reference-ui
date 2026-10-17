@@ -4,6 +4,6 @@ Boolean or null where CSS needs a value. The world carries the minimal fixture (
 
 Raised in: `modules/atomic/src/resolve/unit.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-INVALID-CSS-VALUE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-INVALID-CSS-VALUE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-INVALID-CSS-VALUE, atm-w-invalid-css-value, diagnostics case index, NEO-DIAG-02

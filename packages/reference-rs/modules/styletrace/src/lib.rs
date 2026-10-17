@@ -16,7 +16,8 @@ pub use analysis::{
     fold_trace_module, trace_style_bindings, trace_style_bindings_detailed,
     trace_style_bindings_with_hint, trace_style_bindings_with_modules,
     trace_style_bindings_with_surface, trace_style_jsx_names, trace_style_jsx_names_with_hint,
-    ModulesTraceInputs, StyleSurface, TraceModule, TraceOutcome, TraceSources, TracedBinding,
+    ModuleFold, ModulesTraceInputs, StyleSurface, SurfaceTrace, TraceModule, TraceOutcome,
+    TraceSources, TracedBinding,
 };
 pub use diagnostics::{StyletraceDiagnostic, StyletraceDiagnosticCode};
 pub use output::StyletraceDetailedResult;

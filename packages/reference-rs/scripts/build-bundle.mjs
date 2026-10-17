@@ -18,7 +18,7 @@ const DIST = join(PKG, 'dist')
 const STAGE_SUFFIX = '.__stage'
 
 // Same entries the tsup leg bundled: system aliases the atomic entry, and the
-// committed E4 primitives roster bundles the authored trio in.
+// committed roster module (primitives.mjs) bundles the authored trio in.
 const ENTRIES = {
   index: 'modules/runtime/js/index.ts',
   tasty: 'modules/tasty/js/index.ts',

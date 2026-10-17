@@ -1,8 +1,8 @@
 # Accordion test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Accordion --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/accordion.spec.ts`  
+Playwright: `src/components/Accordion/__e2e__/*.spec.ts` (run with `pnpm agentct Accordion --e2e`)  
 Page: `/accordion`
 
 Accordion owns collection policy over Collapsible plus optional APG header
@@ -25,14 +25,6 @@ out of traversal with `keyboard="none"`.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/accordion/src/accordion.test.tsx` —
-  single/multiple policy, disabled items, orientation key matrices, wrapping,
-  Home/End, and accessibility checks.
-- `vendor/base-ui/packages/react/src/accordion/root/AccordionRoot.test.tsx` —
-  controlled values, generated/manual trigger-panel IDs, cancellation,
-  disabled items, multiple expansion, and keyboard activation.
-- `vendor/react-spectrum/packages/react-aria-components/test/Disclosure.test.js`
-  — one-vs-many disclosure groups, controlled expanded keys, nested groups.
 - Zag Accordion's next/previous/first/last events are a second opinion on the
   header traversal policy.
 

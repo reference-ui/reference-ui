@@ -10,7 +10,7 @@ import {
   validateLocale,
 } from '../index'
 
-// Ported from quarantine b19c73bee matrix unit suite (import path only:
+// Ported from b19c73bee matrix unit suite (import path only:
 // '@reference-ui/lib' -> './index', proving the curated public kit export).
 describe('Calendar week-start and month grid', () => {
   it('CA-LOC-01: Calendar should derive Sunday-first US weeks and Monday-first British weeks from the required locale', () => {

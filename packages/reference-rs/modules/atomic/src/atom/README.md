@@ -109,7 +109,7 @@ hashing the pair — runtime would then need that pair as a key.
 
 ## Example (Panda)
 
-`vendor/panda/crates/pandacss_encoder/src/lib.rs` — `Atom { prop, value,
-conditions }`, `process_atomic`, `FxHashSet` dedup. That record is the
+Panda's encoder builds `Atom { prop, value,
+conditions }` records in `process_atomic` and dedups them with `FxHashSet`. That record is the
 grain. Their input is `Literal` from the evaluator; ours is a `Want`
 from leaves.

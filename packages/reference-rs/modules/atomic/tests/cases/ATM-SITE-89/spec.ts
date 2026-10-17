@@ -1,5 +1,5 @@
 /**
- * Trace-failure station (ATM-SITE-89). Card's props type comes from an
+ * Trace-failure (ATM-SITE-89). Card's props type comes from an
  * unparsable file, so its style trace fails. The host trace reports that once,
  * naming Card.tsx; the unparsable types.ts reports its own parse failure; and
  * App.tsx's style-bearing Card gets the missing-graph error from extraction.

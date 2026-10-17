@@ -254,7 +254,7 @@ async function clickPopoverChrome(page: Page, popover: Locator) {
   await page.mouse.click(box!.x + 3, box!.y + gap / 2)
 }
 
-test.describe('Combobox quarantine reconciliation CT', () => {
+test.describe('Combobox reconciliation CT', () => {
   test('CB-DOM-01: transparent coordinator with native parts and controlled relationships', async ({
     mount,
     page,
@@ -290,8 +290,8 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     const before = page.getByTestId('tab-before')
     const input = page.getByTestId('tab-input')
     const after = page.getByTestId('tab-after')
-    // DIAG D1: WebKit click never focuses buttons and Tab skips them;
-    // text inputs stay tab stops (SCOPE-1 P-TAB probe).
+    // WebKit click never focuses buttons and Tab skips them;
+    // text inputs stay tab stops.
     const isWebKit = browserName === 'webkit'
 
     if (isWebKit) {
@@ -450,7 +450,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await input.click()
     await expect(input).toHaveAttribute('aria-expanded', 'true')
 
-    // DIAG D3: bare Home/End are caret no-ops in Firefox/WebKit native
+    // bare Home/End are caret no-ops in Firefox/WebKit native
     // editing (identical key events, different default action), so the
     // click-placed caret (end, 11) stays put there. The product contract
     // — keys unhandled, active option unchanged, zero callbacks — is
@@ -756,7 +756,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
     // Second Enter commits the active option (not a toggle): one scalar
     // commit plus dismissal, no synthetic click duplicate, no text callback.
-    // B-36: identical recommit is silent, so the commit moves to charlie.
+    // Identical recommit is silent, so the commit moves to charlie.
     await page.keyboard.press('ArrowDown')
     await expectActiveDescendant(trigger, page.getByTestId('select-opt-charlie'))
     await page.keyboard.press('Enter')
@@ -789,7 +789,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(log.filter(e => e === 'dismiss').length).toBe(1)
     await expect(input).toHaveAttribute('aria-expanded', 'false')
     if (browserName === 'webkit') {
-      // DIAG D1: revert + dismiss proven above; native traversal
+      // revert + dismiss proven above; native traversal
       // skips the Clear-log button to body (probe P-TAB).
       expect(await focusedTestId(page)).toBeNull()
     } else {
@@ -816,7 +816,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     expect(log.filter(e => e === 'dismiss').length).toBe(1)
     await expect(input).toHaveAttribute('aria-expanded', 'false')
     if (browserName === 'webkit') {
-      // DIAG D1: same button-skip landing as CB-COMMIT-07 above.
+      // same button-skip landing as CB-COMMIT-07 above.
       expect(await focusedTestId(page)).toBeNull()
     } else {
       await expect(page.getByTestId('log-clear')).toBeFocused()
@@ -947,9 +947,9 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     const trigger = page.getByTestId('select-trigger')
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+      // WebKit click never focuses the
       // trigger, so Home/End would go to body (proven: active=body,
-      // activedescendant stuck). Programmatic focus lands (D1B) and the
+      // activedescendant stuck). Programmatic focus lands and the
       // control leg proves the handler jumps correctly given focus.
       await trigger.focus()
     }
@@ -973,9 +973,9 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await mount('components/Combobox/Combobox/SelectOnlyTabOrder')
 
     const trigger = page.getByTestId('sel-tab-trigger')
-    // DIAG D1 + SCOPE-1 P-F16/P-F26 probes: WebKit click never focuses
+    // WebKit click never focuses
     // the trigger, so every click-open below is followed by a
-    // programmatic focus (D1B: lands fine) to replicate the focused
+    // programmatic focus (it lands fine) to replicate the focused
     // state Chromium gets from the click — including the blur leg,
     // which needs focus inside the trigger for the blur to exist.
     const isWebKit = browserName === 'webkit'
@@ -1008,7 +1008,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
     await page.keyboard.press('Tab')
     if (isWebKit) {
       // Commit + dismiss proven below; native traversal skips the
-      // After button to body (probe P3-F17).
+      // Tab past the button lands on body.
       expect(await focusedTestId(page)).toBeNull()
     } else {
       await expect(page.getByTestId('sel-tab-after')).toBeFocused()
@@ -1033,7 +1033,7 @@ test.describe('Combobox quarantine reconciliation CT', () => {
   })
 })
 
-test.describe('Combobox PATCHES CT', () => {
+test.describe('Combobox CT', () => {
   test('CB-CLOSE-03 escape: one layer, one positioned popover, one ordered revert-before-dismiss', async ({
     mount,
     page,
@@ -1894,7 +1894,7 @@ test.describe('Combobox cluster B CT', () => {
     await input.press('Tab')
     expect(await logOf(page, 'fb-log')).toEqual(['dismiss'])
     if (browserName === 'webkit') {
-      // DIAG D1: dismiss proven above; native traversal skips the
+      // dismiss proven above; native traversal skips the
       // After button to body (probe P-TAB).
       expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
         null
@@ -1914,8 +1914,8 @@ test.describe('Combobox cluster B CT', () => {
   })
 })
 
-test.describe('Combobox playtest CT', () => {
-  test('B-20: escape restores committed text over stale input', async ({
+test.describe('Combobox text restore, dialog blur, and custom value CT', () => {
+  test('escape restores committed text over stale input', async ({
     mount,
     page,
   }) => {
@@ -1931,7 +1931,7 @@ test.describe('Combobox playtest CT', () => {
     await expect(input).toHaveValue('Bravo')
   })
 
-  test('B-20: blur restores committed text over stale input', async ({
+  test('blur restores committed text over stale input', async ({
     mount,
     page,
   }) => {
@@ -1947,7 +1947,7 @@ test.describe('Combobox playtest CT', () => {
     await expect(input).toHaveValue('Bravo')
   })
 
-  test('B-21: tabbing into the input never opens the popup', async ({
+  test('tabbing into the input never opens the popup', async ({
     mount,
     page,
   }) => {
@@ -1961,7 +1961,7 @@ test.describe('Combobox playtest CT', () => {
     await expect(page.getByTestId('tab-popover')).toHaveCount(0)
   })
 
-  test('B-22: combobox in a dialog closes on blur and never breaks the trap', async ({
+  test('combobox in a dialog closes on blur and never breaks the trap', async ({
     mount,
     page,
   }) => {
@@ -1991,7 +1991,7 @@ test.describe('Combobox playtest CT', () => {
     expect(activeRole).not.toBe('option')
   })
 
-  test('B-36: recommitting the identical value emits no onChange', async ({
+  test('recommitting the identical value emits no onChange', async ({
     mount,
     page,
   }) => {
@@ -2101,7 +2101,7 @@ test.describe('Combobox playtest CT', () => {
     ])
   })
 
-  test('W-24: unmatched pointer blur inside a dialog reverts, closes, and keeps the trap', async ({
+  test('unmatched pointer blur inside a dialog reverts, closes, and keeps the trap', async ({
     mount,
     page,
   }) => {
@@ -2140,7 +2140,7 @@ test.describe('Combobox playtest CT', () => {
     expect(activeRole).not.toBe('option')
   })
 
-  test('W-24: closeOnBlur=false inside a dialog preserves open text and the trap', async ({
+  test('closeOnBlur=false inside a dialog preserves open text and the trap', async ({
     mount,
     page,
   }) => {
@@ -2175,7 +2175,7 @@ test.describe('Combobox playtest CT', () => {
   })
 })
 
-test.describe('Combobox finish-line P2A CT', () => {
+test.describe('Combobox virtual listbox and tree bridge CT', () => {
   test('CB-VIRT-01: windowed Listbox target scrolls into the DOM before its active ID publishes', async ({
     mount,
     page,
@@ -2270,7 +2270,7 @@ test.describe('Combobox finish-line P2A CT', () => {
 
     const trigger = page.getByTestId('wt-trigger')
     const popover = page.getByTestId('wt-popover')
-    // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+    // WebKit click never focuses the
     // trigger, so arrows after click-open would go to body and no
     // scroll would pend. Programmatic focus replicates the Chromium
     // click-focused state; the window/scroll contract stays proven.
@@ -2306,7 +2306,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     await expect(opt75).toHaveAttribute('aria-posinset', '76')
     await expect(opt75).toHaveAttribute('aria-selected', 'true')
 
-    // Recommitting the already-selected value is silent (B-36) while
+    // Recommitting the already-selected value is silent while
     // dismissal still runs.
     await trigger.focus()
     await page.keyboard.press('Enter')
@@ -2441,9 +2441,9 @@ test.describe('Combobox finish-line P2A CT', () => {
 
     const trigger = page.getByTestId('wt-trigger')
     const popover = page.getByTestId('wt-popover')
-    // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses the
+    // WebKit click never focuses the
     // trigger; without the workaround the pointer legs below lose
-    // their arrows to body and wt-opt-77 never mounts (F20's 30s
+    // their arrows to body and wt-opt-77 never mounts (the 30s
     // getAttribute timeout was that cascade, not an env flake).
     const isWebKit = browserName === 'webkit'
     const openTrigger = async () => {
@@ -2527,7 +2527,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     const trigger = page.getByTestId('wt-trigger')
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F16 probe: same click-focus workaround
+      // same click-focus workaround
       // as CB-VIRT-03 — without it End/Home go to body and no scroll
       // pends on WebKit.
       await trigger.focus()
@@ -2723,14 +2723,14 @@ test.describe('Combobox finish-line P2A CT', () => {
     await page.keyboard.press('Tab')
     expect(await readLog(page, 'so-log')).toEqual(['open', 'change:item-5', 'dismiss'])
     await expect(popover).toHaveCount(0)
-    // F10 (Firefox): the FocusLock Tab trap runs (Tab defaultPrevented)
+    // Firefox: the FocusLock Tab trap runs (Tab defaultPrevented)
     // but focus settles on document body with the shadow root holding no
     // active element — stable across 500ms, zero focusin/focusout, commit
     // legs above intact. Combobox never prevents Tab by design
     // (Combobox.tsx "Native traversal is never prevented") and steers no
     // focus on this path, so the landing is FocusLock×shadow×FF routing,
-    // out of Combobox scope (D1-class; HQ focus ruling owns any reclaim
-    // hardening). Pin the FF landing; other engines keep so-input.
+    // out of Combobox scope (FocusLock routing; reclaim hardening
+    // belongs to FocusLock). Pin the FF landing; other engines keep so-input.
     if (browserName === 'firefox') {
       expect(
         await host.evaluate(
@@ -2770,10 +2770,10 @@ test.describe('Combobox finish-line P2A CT', () => {
     // A true outside touch (outside the popover, inside the parent)
     // dismisses only the top affected layer once, with no compat-mouse
     // replay. The locked modal itself takes explicit dismissal.
-    // H1: CDP sessions exist only in Chromium
+    // CDP sessions exist only in Chromium
     // (`browserContext.newCDPSession: CDP session is only available in
     // Chromium`) — the touch leg is unrunnable on FF/WebKit by
-    // construction, so it is chromium-only (F10 scoped the FF leg
+    // construction, so it is chromium-only (the FF leg was scoped
     // first; this extends the same wall to WebKit).
     if (browserName === 'chromium') {
       await input.click()
@@ -2935,8 +2935,8 @@ test.describe('Combobox finish-line P2A CT', () => {
     ])
     await expect(popover).toHaveCount(0)
     if (browserName === 'webkit') {
-      // DIAG D1: commit + dismiss proven by the log above; native
-      // traversal skips the Clear-log button to body (probe P-F11 WK).
+      // commit + dismiss proven by the log above; native
+      // traversal skips the Clear-log button to body.
       expect(await focusedTestId(page)).toBeNull()
     } else {
       expect(await focusedTestId(page)).toBe('log-clear')
@@ -3444,7 +3444,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     // Open and select by keyboard: no submit.
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F24 probe: WebKit click leaves focus on
+      // WebKit click leaves focus on
       // body (proven: ArrowDown no-op, active stuck at bravo), so the
       // keyboard legs below need the programmatic-focus workaround.
       await trigger.focus()
@@ -3522,7 +3522,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     await expect(input).not.toHaveAttribute('aria-activedescendant', /.+/)
     await expect(input).toHaveValue('Banana')
     if (browserName === 'webkit') {
-      // DIAG D1: commit + dismiss + value proven above; backward
+      // commit + dismiss + value proven above; backward
       // traversal skips the Before button to body (probe P-TAB).
       expect(await focusedTestId(page)).toBeNull()
     } else {
@@ -3541,7 +3541,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     const popover = page.getByTestId('sel-tab-popover')
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F26 probe: click leaves focus on body
+      // click leaves focus on body
       // (proven: ArrowDown no-op, active stuck at alpha).
       await trigger.focus()
     }
@@ -3558,7 +3558,7 @@ test.describe('Combobox finish-line P2A CT', () => {
     expect(log.some(entry => entry.startsWith('input:'))).toBe(false)
     if (browserName === 'webkit') {
       // Commit + dismiss proven above; backward traversal skips the
-      // Before button to body (probe P3-F26).
+      // Shift+Tab past the button lands on body.
       expect(await focusedTestId(page)).toBeNull()
     } else {
       expect(await focusedTestId(page)).toBe('sel-tab-before')

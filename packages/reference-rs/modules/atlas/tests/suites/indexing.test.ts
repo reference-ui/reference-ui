@@ -3,7 +3,7 @@
  * Verifies the module correctness and output contracts.
  */
 import { describe, it, expect } from 'vitest'
-import { getComponents, getComponent } from '../harness/helpers'
+import { getComponents, getComponent } from '../harness/helpers.js'
 
 const DEMO_UI = '@fixtures/demo-ui'
 

@@ -9,21 +9,20 @@ use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::members::members_from_signatures;
 use super::super::type_references::collect_references_from_members;
 use super::super::types::{interface_heritage_to_reference, type_parameters_from_oxc};
-use super::super::ExtractionContext;
+use super::super::ShellSink;
 use crate::ast::model::SymbolShell;
 use crate::model::TsSymbolKind;
 use crate::scanner::symbol_id;
 
 pub(crate) fn push_interface_shell<'a>(
-    file_id: &str,
-    ctx: &ExtractionContext<'_>,
+    sink: &mut ShellSink<'_, '_>,
     interface_decl: &TSInterfaceDeclaration<'a>,
     comment_span: Span,
     exported: bool,
-    exports: &mut Vec<SymbolShell>,
 ) {
+    let ctx = sink.ctx;
     let name = interface_decl.id.name.to_string();
-    let id = symbol_id(file_id, &name);
+    let id = symbol_id(sink.file_id, &name);
     let comment = parse_comment_metadata(leading_comment_for_span(
         ctx.source,
         ctx.comments,
@@ -47,7 +46,7 @@ pub(crate) fn push_interface_shell<'a>(
     let references =
         collect_references_from_members(&defined_members, &extends, None, &type_parameters);
 
-    exports.push(SymbolShell {
+    sink.exports.push(SymbolShell {
         id,
         name,
         kind: TsSymbolKind::Interface,

@@ -1,5 +1,5 @@
 /**
- * Bucket station. Unconditioned, then `_hover`, then the `sm` at-rule.
+ * Bucket case. Unconditioned, then `_hover`, then the `sm` at-rule.
  * Authorship order is at-rule / hover / base; the sorter still buckets.
  */
 import { expect } from 'vitest'

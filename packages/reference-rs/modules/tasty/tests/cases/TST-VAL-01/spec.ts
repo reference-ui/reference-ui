@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-VAL-01.
+ * Case specification for TST-VAL-01.
  * Verifies additive resolved payloads for value-derived and indexed access types.
  * Proves primary SPEC ID anchor TST-VAL-01.
  */

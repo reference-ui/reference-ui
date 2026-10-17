@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-GEN-02.
+ * Case specification for TST-GEN-02.
  * Verifies complex generic type patterns, constraints, recursive mappings, and variadic tuples.
  * Proves primary SPEC ID anchor TST-GEN-02.
  */

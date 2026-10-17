@@ -1,7 +1,7 @@
 /**
- * Diagnostic-location station. Unresolvable identifiers, template
+ * Diagnostic-location case. Unresolvable identifiers, template
  * interpolations, and computed keys warn with a file path and do not abort.
- * (S6 E8-class re-point: refusal/harvest lines ride the opt-in compiler
+ * (refusal/harvest lines ride the opt-in compiler
  * channel with their locations intact; the default channel is silent.)
  */
 import { expect } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * One-grain station. Every `@layer utilities` rule contains a single
+ * One-grain case. Every `@layer utilities` rule contains a single
  * CSS declaration. No hashed whole-object classes.
  */
 import { expect } from 'vitest'

@@ -9,7 +9,7 @@
  */
 import * as React from 'react'
 import type { ISODate } from '../../Calendar'
-import { type ISODate as CanonicalISODate, isValidISODate } from '../../Calendar/dates/iso'
+import { type CanonicalISODate, isValidISODate } from '../../Calendar/dates/iso'
 import {
   formatLocalDate,
   isDateWithinConstraints,
@@ -19,7 +19,7 @@ import { resolveStep } from '../engine/stepping'
 import { useCaretRestoration } from './use-caret-restoration'
 import { useFormObservers } from './use-form-observers'
 
-export interface EditSessionOptions {
+export interface DateEditSessionOptions {
   value: ISODate | null
   onChange: (value: ISODate | null) => void
   locale: string
@@ -32,7 +32,7 @@ export interface EditSessionOptions {
   setIsOpen: (open: boolean) => void
 }
 
-export function useEditSession(options: EditSessionOptions) {
+export function useEditSession(options: DateEditSessionOptions) {
   const {
     value,
     onChange,
@@ -60,7 +60,7 @@ export function useEditSession(options: EditSessionOptions) {
       isDateUnavailable
     )
 
-  // Dirty edit session (PATCHES #1): the transient text buffer plus its
+  // Dirty edit session: the transient text buffer plus its
   // flag. A user edit starts the session even when the resulting string
   // equals formatted controlled text — data-editing reflects the flag,
   // not string inequality.
@@ -105,8 +105,8 @@ export function useEditSession(options: EditSessionOptions) {
   // requests null once; incomplete, impossible, or out-of-constraints
   // text reverts to formatted controlled state and fails the boundary,
   // which surfaces managed invalid until the next resolution. Never
-  // clamps, never publishes garbage (B-15), never publishes past
-  // min/max/unavailable (B-16).
+  // clamps, never publishes garbage, never publishes past
+  // min/max/unavailable.
   const commit = React.useCallback(() => {
     if (isComposingRef.current) return
     if (!isDirty) return
@@ -232,7 +232,7 @@ export function useEditSession(options: EditSessionOptions) {
         !e.altKey &&
         !readOnly
       ) {
-        // Caret-aware segment stepping (PATCHES #2): the day/month/year
+        // Caret-aware segment stepping: the day/month/year
         // segment under the caret steps ±1 (Shift = ±10) with Gregorian
         // carry, and each step commits one ISO. From null/incomplete
         // text there is no base date, so the keys stay native no-ops
@@ -322,7 +322,7 @@ export function useEditSession(options: EditSessionOptions) {
     isComposingRef.current = false
   }, [])
 
-  // Form observers (PATCHES #5, NumberField NF-FORM-06/07/08 rules): every
+  // Form observers (NumberField NF-FORM-06/07/08 rules): every
   // dirty field observes each submit; a failed boundary blocks until a
   // documented resolution (valid edit, accepted commit, authoritative
   // value change, or unprevented reset); reset reformats without

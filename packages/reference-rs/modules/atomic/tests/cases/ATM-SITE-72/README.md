@@ -1,5 +1,4 @@
-# ATM-SITE-72 — Param-shadow station (SPEC-V2-33 arrow arm)
+# ATM-SITE-72 — Param-shadow (arrow arm)
 
 Arrow and function params named `css` shadow the import while the outer
-live call extracts. Pins the SPEC-V2-33 arrow arm (v2 `scope.rs:707`;
-function twin `:690`).
+live call extracts. Pins the arrow branch and its function-declaration twin.

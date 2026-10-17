@@ -1,6 +1,6 @@
 # Calendar
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Calendar --e2e`).
 
 Date-grid engine. Locale-aware week start and weekday headings, padded month
 grids, 2D keyboard movement, disabled/unavailable skipping, min/max clamping,
@@ -438,7 +438,7 @@ The locale's CLDR week start is authoritative unless `firstDayOfWeek`
 explicitly overrides it. `en-GB` and another non-Sunday locale are required
 regressions; hardcoding Sunday is the usual US-centric bug.
 
-**Vendor.** `@internationalized/date` `weekStartData.ts` / `startOfWeek(locale)` (CLDR; some Sunday locales omitted and default Sun — know that compression). react-day-picker `weekStartsOn` / locale / `ISOWeek`.
+**Prior art.** `@internationalized/date` `weekStartData.ts` / `startOfWeek(locale)` (CLDR; some Sunday locales omitted and default Sun — know that compression). react-day-picker `weekStartsOn` / locale / `ISOWeek`.
 
 **Lift** week-start tables + tests. **Leave** Aria `CalendarDate` objects and DayPicker extra calendars (buddhist, hijri, …) unless we explicitly take non-Gregorian.
 
@@ -469,7 +469,7 @@ selection.
 
 Day, week, Home/End, PageUp/PageDown for months. Skip disabled/unavailable. Min/max clamp.
 
-**Vendor.** Aria `useCalendarGrid`. DayPicker `getNextFocus`.
+**Prior art.** Aria `useCalendarGrid`. DayPicker `getNextFocus`.
 
 **Lift** Aria keyboard. Outside-month padding from either grid builder.
 
@@ -484,7 +484,7 @@ failure. Month and Year header buttons switch Calendar's private **view**;
 `mode` fixes the product's value shape and home collection. A month picker
 never publishes a day. Typed month/year strings remain DateField leave.
 
-**Vendor.** `vendor/design-system/Date` `mode="day" | "month" | "year"` on
+**Prior art.** The design system's `Date` takes `mode="day" | "month" | "year"` on
 DateInput, DayPicker/MonthPicker/YearPicker, internal view. React Aria
 granularity as contrast. Switch variable specificity for default parts.
 
@@ -503,7 +503,7 @@ They must not become `Calendar.Preset` or gain an imperative Calendar
 context. `DateField.Range` coordinates the range draft machine without
 children dispatching through Calendar.
 
-**Vendor.** design-system `DateRangePresets` + `presets.ts`. **Lift** the
+**Prior art.** design-system `DateRangePresets` + `presets.ts`. **Lift** the
 composition evidence. **Leave** the named preset catalog and hidden
 request channel.
 
@@ -545,7 +545,7 @@ draft range bindings. Presets and recents call `setRange` directly.
 `mode="year"`. Optional Popover. No DateField until DateField takes that
 grammar. Side chrome receives explicit application callbacks.
 
-**Vendor.** `vendor/design-system/Date` exports only DateInput and DateRange;
+**Prior art.** The design system's `Date` exports only DateInput and DateRange;
 DateField, DatePicker, and Calendar are internal. That split is the product
 direction. Reference UI keeps DateField and Calendar public because typed
 input and the grid are the invariants; the packaged Dropdown/DatePicker is

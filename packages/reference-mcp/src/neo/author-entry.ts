@@ -1,7 +1,7 @@
 // Neo author-entry resolution for mcp-side esbuild alias maps.
 // It takes nothing and emits the absolute author file bundling aliases to.
 // Neo computes this path from `import.meta.url`, which breaks once Neo
-// modules are bundled into mcp dist (F4); mcp resolves it explicitly:
+// modules are bundled into mcp dist; mcp resolves it explicitly:
 // the shipped `neo-author.mjs` dist sibling first, the Neo source entry
 // as the dev/vitest fallback. Both candidates are existsSync-gated.
 

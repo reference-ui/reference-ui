@@ -56,7 +56,7 @@ pub(crate) fn render_suite() -> Suite {
         2.5,
         123456.789,
         123456789012345680000.0,
-        // Exact shortest-ties (doom-4 T2): both neighbors round-trip, so
+        // Exact shortest-ties: both neighbors round-trip, so
         // V8 breaks even and Rust breaks away — the expected outputs are
         // the larger magnitudes. Witness, both signs, both tie pairs
         // (`{2,3}` flips, `{7,8}` agrees), and both edges of the possible
@@ -107,7 +107,7 @@ pub(crate) fn numeric_suite() -> Suite {
         ("padding", "nan"),
         ("padding", " 0x10"),
         ("fontFamily", "1e3"),
-        // Shortest-tie stems through the string funnel (doom-4 T2): the
+        // Shortest-tie stems through the string funnel: the
         // witness and its negative render the larger magnitude.
         ("width", "752396555469991.2"),
         ("width", "-1773218474086427.2"),

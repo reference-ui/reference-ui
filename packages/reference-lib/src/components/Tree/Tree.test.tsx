@@ -86,7 +86,7 @@ describe('Tree Unit Proofs', () => {
     ).toThrow('Tree "value" is required')
   })
 
-  it('W-17: getBatchExpanded should fold deterministic emission over a sibling set in document order', () => {
+  it('getBatchExpanded should fold deterministic emission over a sibling set in document order', () => {
     const allKnownBranches = ['a', 'b', 'c']
 
     // Request order does not leak into the payload: document order wins
@@ -100,7 +100,7 @@ describe('Tree Unit Proofs', () => {
     ])
   })
 
-  it('W-17: getBatchExpanded should be a stable no-op for an empty sibling set', () => {
+  it('getBatchExpanded should be a stable no-op for an empty sibling set', () => {
     const current = ['a']
     expect(getBatchExpanded(current, [], ['a', 'b'])).toBe(current)
   })
@@ -148,6 +148,14 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     return errors
       .map((args) => args.join(' '))
       .filter((text) => text.startsWith('[reference-ui] Tree: '))
+  }
+
+  // The warning waits for the registry to settle (a quiet window in the hook),
+  // so every warning assertion first lets that window close.
+  async function settle() {
+    await React.act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 80))
+    })
   }
 
   // One branch, fully expandable: folder contains a and b.
@@ -234,6 +242,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<FolderTree value="ghost" expanded={['folder']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).',
     ])
@@ -246,6 +255,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
         <FolderTree value={null} expanded={['folder', 'ghost']} onExpandedChange={onExpandedChange} />
       )
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: expanded contains "ghost" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
     ])
@@ -260,6 +270,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<TwoBranchTree value="deep" expanded={['open']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
   })
 
@@ -267,6 +278,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<TwoBranchTree value="typo" expanded={['open', 'ghost']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
   })
 
@@ -274,6 +286,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<TwoBranchTree value="deep" expanded={['open', 'closed']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
   })
 
@@ -281,6 +294,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<FolderTree value={null} expanded={['folder']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
   })
 
@@ -292,6 +306,7 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
         </React.StrictMode>
       )
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
   })
 
@@ -303,21 +318,27 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
         </React.StrictMode>
       )
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).',
     ])
   })
 
   it('OOR-TREE-09: equal re-renders never repeat a warning, and a new unknown id names only itself', async () => {
+    // Each render settles first: back-to-back renders are one registry change
+    // and would be named together in one warning.
     await React.act(async () => {
       root.render(<FolderTree value={null} expanded={['folder', 'ghost']} />)
     })
+    await settle()
     await React.act(async () => {
       root.render(<FolderTree value={null} expanded={['folder', 'ghost']} />)
     })
+    await settle()
     await React.act(async () => {
       root.render(<FolderTree value={null} expanded={['folder', 'ghost', 'phantom']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: expanded contains "ghost" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
       '[reference-ui] Tree: expanded contains "phantom" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
@@ -328,10 +349,12 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
     await React.act(async () => {
       root.render(<NestedFolderTree expanded={['folder']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([])
     await React.act(async () => {
       root.render(<NestedFolderTree expanded={['folder', 'phantom']} />)
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: expanded contains "phantom" matching no item (registered ids: folder, a, b); unknown ids are kept and passed through.',
     ])
@@ -355,8 +378,88 @@ describe('Tree out-of-range proofs (dev warning on unmatched value and expanded 
         </Tree>
       )
     })
+    await settle()
     expect(treeWarnings()).toEqual([
       '[reference-ui] Tree: value "typo" matches no item (registered ids: late).',
+    ])
+  })
+
+  it('OOR-TREE-12: a child that registers on the next commit under an expanded branch cancels the pending warning', async () => {
+    function LateChild() {
+      const [ready, setReady] = React.useState(false)
+      React.useEffect(() => {
+        setReady(true)
+      }, [])
+      return ready ? <Tree.Item value="late">Late</Tree.Item> : null
+    }
+    // The first commit already has a pending decision: the branch is expanded
+    // and "late" is absent. Its registration on the next commit must cancel it.
+    await React.act(async () => {
+      root.render(
+        <Tree value="late" onChange={() => {}} expanded={['folder']}>
+          <Tree.Item value="folder">
+            <Tree.Expander />
+            <span>Folder</span>
+            <Tree.Group>
+              <Tree.Item value="a">A</Tree.Item>
+              <LateChild />
+            </Tree.Group>
+          </Tree.Item>
+        </Tree>
+      )
+    })
+    await settle()
+    expect(treeWarnings()).toEqual([])
+  })
+
+  it('OOR-TREE-13: a child that registers after a 30ms timer under an expanded branch cancels the pending warning', () => {
+    function AsyncChild() {
+      const [ready, setReady] = React.useState(false)
+      React.useEffect(() => {
+        const timer = setTimeout(() => setReady(true), 30)
+        return () => clearTimeout(timer)
+      }, [])
+      return ready ? <Tree.Item value="async">Async</Tree.Item> : null
+    }
+    // Fake timers with synchronous act: a timer's state update inside an async
+    // act is held in act's queue until the act ends, so the child could not
+    // register inside the window. Each step flushes its own work at once.
+    vi.useFakeTimers()
+    try {
+      React.act(() => {
+        root.render(
+          <Tree value="async" onChange={() => {}} expanded={['folder']}>
+            <Tree.Item value="folder">
+              <Tree.Expander />
+              <span>Folder</span>
+              <Tree.Group>
+                <Tree.Item value="a">A</Tree.Item>
+                <AsyncChild />
+              </Tree.Group>
+            </Tree.Item>
+          </Tree>
+        )
+      })
+      React.act(() => {
+        vi.advanceTimersByTime(30)
+      })
+      React.act(() => {
+        vi.advanceTimersByTime(120)
+      })
+      expect(treeWarnings()).toEqual([])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('OOR-TREE-14: a truly unknown value warns exactly once, and only after the settle window', async () => {
+    await React.act(async () => {
+      root.render(<FolderTree value="ghost" expanded={['folder']} />)
+    })
+    expect(treeWarnings()).toEqual([])
+    await settle()
+    expect(treeWarnings()).toEqual([
+      '[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).',
     ])
   })
 })

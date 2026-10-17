@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-PRJ-02.
+ * Case specification for TST-PRJ-02.
  * Verifies projection of recursive type aliases and interface structures.
  * Proves primary SPEC ID anchor TST-PRJ-02.
  */

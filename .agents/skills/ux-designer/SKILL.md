@@ -33,7 +33,7 @@ video, read the diff. Never rule from a test count.
 
 ## Verdict
 
-Per component, return: look ruling, feel rulings (each behavior
+Per component, return: look verdict, feel verdicts (each behavior
 change approved or failed with rationale), accessibility findings,
 and the artifacts you judged from (story URLs, video paths, diff
 paths). When unsure, fail closed: the component goes back with the

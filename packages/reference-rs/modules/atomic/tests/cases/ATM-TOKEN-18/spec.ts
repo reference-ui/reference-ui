@@ -1,5 +1,5 @@
 /**
- * Tokens-layer composite station. A `{path}` ref embedded in a composite
+ * Tokens-layer composite case. A `{path}` ref embedded in a composite
  * token value expands to `var(--…)` in `@layer tokens` exactly like the
  * utility path — light and dark blocks alike — while the whole-value alias
  * control keeps working and resolved refs stay silent.

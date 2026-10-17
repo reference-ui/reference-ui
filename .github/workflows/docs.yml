@@ -1,5 +1,4 @@
-# Only GitHub Actions workflow kept in this repo: build and deploy the docs site to GitHub Pages.
-# Package builds, tests, and npm releases run through the Dagger pipeline (`pnpm pipeline`, `pnpm release`).
+# Builds the docs site and deploys it to GitHub Pages, on relevant pushes to main or manually.
 
 name: Docs
 

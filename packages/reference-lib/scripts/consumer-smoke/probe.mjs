@@ -1,18 +1,18 @@
-// W-31 probe: drives the scaffolded bare-Vite consumer app in dev mode
-// (dev React is REQUIRED: B-03 element.ref noise and the Splitter dev
+// Probe: drives the scaffolded bare-Vite consumer app in dev mode
+// (dev React is REQUIRED: element.ref removal warnings and the Splitter dev
 // diagnostics only fire outside production builds).
 //
 // Asserts, in order: every barrel component mounted (each mount isolated by
-// an error boundary that renders MOUNT-FAILED), the six B-11 stale-dist
+// an error boundary that renders MOUNT-FAILED), the six stale-dist
 // behaviors of CURRENT src, zero unexpected console errors/pageerrors, and
-// zero `no compiled class` paint-nothing warnings (B-10 signature).
+// zero `no compiled class` paint-nothing warnings.
 //
-// Two intentional-error categories exist. (1) allowlisted: the B-11
+// Two intentional-error categories exist. (1) allowlisted: the
 // degenerate Splitter fails fast with `[Reference UI Splitter]` by design;
 // the probe asserts that diagnostic fired AND excludes it from the
-// zero-errors gate. (2) known-open: errors matching the B-03 element.ref
-// signature are counted separately — the gate still exits 1 (W-31 says it
-// must fail on B-03 noise) but names the owner instead of burying it.
+// zero-errors gate. (2) known-open: errors matching the element.ref
+// signature are counted separately — the gate still exits 1 (the noise
+// must fail the gate) but names the owner instead of burying it.
 import { chromium } from '@playwright/test'
 
 const url = process.argv[2]
@@ -122,7 +122,7 @@ try {
   check('overlay-dismiss', false, 'overlay content still visible after close')
 }
 
-// --- B-11 stale-dist behaviors (current src) ------------------------------
+// --- stale-dist behaviors (current src) ------------------------------
 check(
   'b11-tree-autodetect',
   (await page.locator('#b11-parent[aria-expanded]').count()) === 1,
@@ -133,9 +133,9 @@ const describeActive = () => {
   const el = document.activeElement
   return el ? el.tagName + ' testid=' + (el.getAttribute('data-testid') || '(none)') : '(none)'
 }
-// B-11 N1b: src is headers-only — arrows from the NESTED trigger neither
+// src is headers-only — arrows from the NESTED trigger neither
 // hijack nor escape (focus stays put); arrows from a HEADER rove to the
-// next header (mirrors the nav crew's verify.mjs header check).
+// next header.
 await page.locator('[data-testid="b11-nested-collapsible-trigger"]').click()
 await page.waitForTimeout(300)
 await page.keyboard.press('ArrowDown')
@@ -187,8 +187,8 @@ check(
     .count()) === 0,
 )
 
-// B-01-tolerant by design: hide, wait WITHOUT asserting removal (the open
-// B-01 wedge keeps it mounted), re-show, assert recovery. Stale dist
+// Tolerant by design: hide, wait WITHOUT asserting removal (the open
+// exit wedge keeps it mounted), re-show, assert recovery. Stale dist
 // bricked here (vanished, never recovered); src recovers.
 await page.locator('[data-testid="b11-presence-content"]').waitFor({ state: 'visible' })
 await page.locator('[data-testid="b11-presence-hide"]').click()
@@ -218,13 +218,13 @@ for (const text of [...errors, ...pageerrors.map((message) => `pageerror: ${mess
 // fail-fast path ran); its console noise is then excused, nothing else is.
 check('b11-splitter-diagnostic-fired', allowlisted.length > 0, 'expected [Reference UI Splitter]')
 check('zero-unexpected-console-errors', unexpected.length === 0, unexpected.slice(0, 3).join(' | '))
-check('zero-b03-noise', b03.length === 0, `${b03.length} element.ref errors (B-03, presence crew)`)
+check('zero-element-ref-noise', b03.length === 0, `${b03.length} element.ref errors (React 19 element.ref removal warning)`)
 
 const missWarnings = warnings.filter((text) => text.includes('no compiled class'))
 // Bucket each miss against the SERVED stylesheet: a warning whose value is
-// absent from the CSS is a deterministic true gap (extraction/coverage —
-// H-5/B-28/H-2 class); a warning for a value the sheet DOES contain is the
-// dev-mode race (css() runs before Vite injects the sheet — H-6 class),
+// absent from the CSS is a deterministic true gap (extraction/coverage);
+// a warning for a value the sheet DOES contain is the
+// dev-mode race (css() runs before Vite injects the sheet),
 // which is timing-flaky by nature: it fails when caught, never when hidden.
 const servedCss = await page.evaluate(() =>
   Array.from(document.querySelectorAll('style'))
@@ -258,7 +258,7 @@ check(
 check(
   'zero-race-style-warnings',
   raceNoise.length === 0,
-  `${raceNoise.length} dev-race warnings (H-6 class, timing-flaky)`,
+  `${raceNoise.length} dev-race warnings (timing-flaky)`,
 )
 for (const text of [...trueGaps, ...raceNoise].slice(0, 8)) {
   console.log(`  miss: ${text.slice(0, 220)}`)
@@ -277,7 +277,7 @@ console.log(
         pageerrors: pageerrors.length,
         warnings: warnings.length,
         allowlisted: allowlisted.length,
-        b03: b03.length,
+        elementRef: b03.length,
         unexpected: unexpected.length,
         missTrueGaps: trueGaps.length,
         missRaceNoise: raceNoise.length,

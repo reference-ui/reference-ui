@@ -7,9 +7,9 @@ computed sides paint: the longhand top wins its side while the shorthand
 holds the other three. Spacing tokens carry the values: rhythm `Nr` atoms
 reference `--spacing-root`, which minimal systems never define.
 
-Evidence: `[atm]` P0 #4 (`docs/evidence/atomic-claims.md` §6); stations
+Evidence: reference-rs cases
 `packages/reference-rs/modules/atomic/tests/cases/ATM-SHORT-06` and
-`ATM-ORDER-04`; `[panda-v1]` `vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1318`
-"resolve property conflicts and order - border example".
+`ATM-ORDER-04`; Panda v1 test "resolve property conflicts and order - border
+example".
 
 > Search terms: box model, per-side, declaration order, expands, padding split, merge/shorthand-longhand, merge/sheet-order, NEO-MERGE-04

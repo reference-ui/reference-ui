@@ -1,5 +1,5 @@
 /**
- * Declaration-root station (ATM-SITE-91). `brand-pkg` carries `types` naming a
+ * Declaration-root (ATM-SITE-91). `brand-pkg` carries `types` naming a
  * body-less declaration beside an `exports` entry that names its real source,
  * the root shape styletrace STT-PKG-04 pins. `App.tsx` reads `brand` through
  * the package, so the value must fold from the source (`purple`), never from

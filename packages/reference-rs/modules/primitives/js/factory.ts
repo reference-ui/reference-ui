@@ -7,9 +7,9 @@
 
 import { createElement, forwardRef } from 'react'
 import type * as React from 'react'
-import type { CssStyles } from './css-types.ts'
-import { ColorModeContext, LayerScopeContext, usePrimitiveContext } from './context.ts'
-import type { PropSplitter } from './split.ts'
+import type { CssStyles } from './css-types.js'
+import { ColorModeContext, LayerScopeContext, usePrimitiveContext } from './context.js'
+import type { PropSplitter } from './split.js'
 
 /** Style resolution seam: the generated entry passes the shared css(). */
 export type CssFn = (...styles: Array<CssStyles | CssStyles[]>) => string

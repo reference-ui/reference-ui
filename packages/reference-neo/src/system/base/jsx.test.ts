@@ -3,7 +3,7 @@
 // assert the resolved artifact. Upstream merges across systems, local unions
 // configured with traced, and every list stays trimmed, deduped, and sorted.
 // Owned props flow through layers while roster names stay extends-only.
-// Primitives mirror the E1 vocabulary's jsx names, so downstream extends
+// Primitives mirror the element vocabulary's jsx names, so downstream extends
 // consumers read the roster without tracing it.
 
 import { readFileSync } from 'node:fs'

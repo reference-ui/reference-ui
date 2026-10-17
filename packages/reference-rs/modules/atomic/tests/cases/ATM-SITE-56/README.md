@@ -1,4 +1,4 @@
-# ATM-SITE-56 — Zero-config discovery station (ATM-SITE-56)
+# ATM-SITE-56 — Zero-config discovery
 
 Zero-config discovery: a local Card forwarding StyleProps into Div extracts with `jsxHosts` absent and no declarations on disk, and `tracedJsxHosts` carries `Card`.
 Random (bare `div`, the NEO-SITE-12 antihost shape) and Label (no style props at its boundary) are not traced and their use sites stay silent.

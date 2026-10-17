@@ -1,5 +1,5 @@
 /**
- * Negative rhythm station. Authored `-1r` / `-2r` extract and compile to
+ * Negative rhythm case. Authored `-1r` / `-2r` extract and compile to
  * negative calc declarations without syntax errors.
  */
 import { expect } from 'vitest'

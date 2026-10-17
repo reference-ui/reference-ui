@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-QRY-02.
+ * Case specification for TST-QRY-02.
  * `typeof f<Args>` keeps the explicit type arguments in the type query expression and resolves no
  * value for them; a plain `typeof f` keeps the bare name. Proves the instantiation lowering.
  */

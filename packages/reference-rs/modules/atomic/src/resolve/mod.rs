@@ -147,7 +147,7 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_, '_>) -> V
         system: outer.system,
         diagnostics: &mut *outer.diagnostics,
         location: want.location(),
-        sink: outer.sink.as_mut().map(|slot| &mut **slot),
+        sink: outer.sink.as_deref_mut(),
         want: Some(WantContext {
             when: want.when.as_slice(),
             important: want.important,

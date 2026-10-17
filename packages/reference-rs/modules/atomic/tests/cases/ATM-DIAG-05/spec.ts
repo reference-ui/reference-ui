@@ -1,10 +1,10 @@
 /**
- * Diagnostic-precision station (ATM-DIAG-05, Overmatch Ph1, SPEC-V2-77).
+ * Diagnostic-precision (ATM-DIAG-05).
  * Every extract refusal carries file:line:col of the offending node plus a
  * stable code; the same authored mistake always reports the same code.
- * (S6 E8-class re-point: all eleven refusals + five sink infos ride the
+ * (all eleven refusals + five sink infos ride the
  * opt-in compiler channel with positions intact; the default is silent.
- * Wave-1b carve-out: the unknown-prop refusal stays default — it names an
+ * the unknown-prop refusal stays default — it names an
  * exact queried-and-missed runtime key — while the other ten refusals +
  * five sink infos stay channel-only.)
  */
@@ -95,7 +95,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('margin-top:')
 
     // The unknown-prop refusal names an exact queried-and-missed runtime
-    // key, so it stays default (Wave-1b carve-out); the other ten refusals
+    // key, so it stays default; the other ten refusals
     // prove no exact miss and ride the opt-in channel.
     const defaults = result.diagnostics ?? []
     expect(defaults).toHaveLength(1)

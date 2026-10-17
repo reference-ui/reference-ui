@@ -1,4 +1,4 @@
-# ATM-SITE-17 — Indirection station (ATM-SITE-17, RS-14)
+# ATM-SITE-17 — Indirection
 
 Wants that arrive through indirection — ternary arms, member access,
 identifier spreads — emit one runtime style plan per want, so the plan

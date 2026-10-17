@@ -18,8 +18,8 @@ import {
   pointInRect as intentPointInRect,
   SUBMENU_CLOSE_DELAY_MS,
   SUBMENU_SAFE_PADDING,
-  type Side as IntentSide,
 } from '../intent/menu-intent'
+import type { Side as IntentSide } from '../../Overlay/geometry/floating'
 
 export function useIntentTravel({ isOpen, intent, parentLevel, contentId, levelValue }: {
   isOpen: boolean

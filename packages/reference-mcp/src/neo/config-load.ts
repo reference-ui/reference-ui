@@ -1,7 +1,7 @@
 // ui.config loading for the mcp child (Neo load.ts shape).
 // It takes a project root and emits the validated config plus dependencies.
 // Retargets Neo's evaluate/validate/errors seams; bundling goes through the
-// mcp-local bundle copy whose author entry resolves in dist (F4).
+// mcp-local bundle copy whose author entry resolves in dist.
 
 import type { ReferenceUIConfig } from '@reference-ui/neo/config/types'
 import { ConfigNotFoundError, LoadConfigError } from '@reference-ui/neo/config/errors'

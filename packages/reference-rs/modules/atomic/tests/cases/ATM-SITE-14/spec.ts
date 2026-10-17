@@ -1,5 +1,5 @@
 /**
- * css-attribute station. `<Div css={{ … }} />` extracts the same wants as
+ * css-attribute case. `<Div css={{ … }} />` extracts the same wants as
  * the equivalent `css({ … })` call: same atoms, same classes, one deduped set.
  */
 import { expect } from 'vitest'

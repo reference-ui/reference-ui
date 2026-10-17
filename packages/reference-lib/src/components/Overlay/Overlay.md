@@ -1,6 +1,6 @@
 # Overlay
 
-Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Overlay --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
 
 One React primitive for content that sits above the application. Popover and
 Tooltip stay **thin policy** on this kernel. FocusLock is the containment
@@ -23,16 +23,16 @@ Semantic role, copy, and appearance stay in application markup. Overlay
 does not infer `role="dialog"` from isolation, and it does not become a
 Dialog, Drawer, or Popover component.
 
-`vendor/floating-ui` core + DOM (`computePosition`, middleware,
+Floating UI core + DOM (`computePosition`, middleware,
 `autoUpdate`) is source to lift — not a runtime import, and not
 `@floating-ui/react`. That React tree (`useDismiss`, `FloatingTree`,
 `FloatingFocusManager`) is a second overlay runtime and stays leave.
 
-`vendor/vaul` is the viewport-edge kernel: bind Content to an edge, drag
+Vaul is the viewport-edge kernel: bind Content to an edge, drag
 from `Overlay.Handle` to dismiss, nested-layer displacement, iOS
 `position: fixed`. Snap points and iOS scale-behind stay leave.
 
-`vendor/sonner` is not a toast Overlay. Toast still owns the queue. What
+Sonner is not a toast Overlay. Toast still owns the queue. What
 Overlay lifts from Sonner is viewport-attached stacking language: swipe
 progress, `--reference-overlay-index` / `--reference-overlay-count` for
 nested layers, and the fact that an isolating top layer pauses toast
@@ -149,7 +149,7 @@ DOM layer ancestor — unless the shadow destination rule applies (below).
 Through the Portal Color Mode Protocol ([`LIB_PORTAL_COLOR_MODE.md`](./LIB_PORTAL_COLOR_MODE.md)),
 `Portal` resets `LayerScopeContext` to `false` and propagates `DocumentContext`,
 allowing the standard primitive hosts (`Div`) of Backdrop and Content to re-emit
-`data-layer` and `data-panda-theme` from logical React context so token-aware StyleProps
+`data-layer` and `data-color-mode` from logical React context so token-aware StyleProps
 such as `ui.dialog.background` resolve correctly in dark and light mode without any custom surface wrappers.
 
 ```tsx
@@ -512,7 +512,7 @@ component.
 
 Escape must close a Menu or Popover inside a Dialog without closing the Dialog. A global Escape listener that does not know about nesting closes everything.
 
-**Vendor.** Radix `DismissableLayer` (`isHighestLayer`, capture `keydown`) in `vendor/radix-primitives/packages/react/dismissable-layer`. Zag `layerStack.isTopMost` in `vendor/zag/packages/utilities/dismissable`. Base UI `useDismiss({ escapeKey: isTopmost })`. a11y-dialog uses a DOM `aria-modal` heuristic — weaker than an explicit stack. Radix e2e: `e2e/dialog.spec.ts` (“Escape closes only the dropdown”).
+**Prior art.** Radix `DismissableLayer` (`isHighestLayer`, capture `keydown`). Zag `layerStack.isTopMost`. Base UI `useDismiss({ escapeKey: isTopmost })`. a11y-dialog uses a DOM `aria-modal` heuristic — weaker than an explicit stack. Radix e2e: `dialog.spec.ts` (“Escape closes only the dropdown”).
 
 **Lift** the Radix/Zag stack model. Overlay, Popover, and Menu register on the same stack. Do not keep private dismissal worlds.
 
@@ -520,7 +520,7 @@ Escape must close a Menu or Popover inside a Dialog without closing the Dialog. 
 
 Clicking a portalled Menu looks “outside” the Dialog’s DOM. Naive `contains` dismisses the parent (or both).
 
-**Vendor.** Radix `DismissableLayerBranch` / FocusScope `branches` (issue #3423). Zag `isInBranch` / `trackDismissableBranch`. React Aria `useInteractOutside` + `shouldCloseOnInteractOutside`. Radix e2e: `e2e/popover.spec.ts`, `e2e/dialog.spec.ts`.
+**Prior art.** Radix `DismissableLayerBranch` / FocusScope `branches` (issue #3423). Zag `isInBranch` / `trackDismissableBranch`. React Aria `useInteractOutside` + `shouldCloseOnInteractOutside`.
 
 **Lift** branch/shard registration. The same nodes are FocusLock `shards` and scroll-lock exceptions. Portalled nested content is inside the parent for dismiss, focus, and scroll.
 
@@ -533,7 +533,7 @@ unmount makes parent behavior timing-dependent.
 
 Dismissing on `pointerdown` races password-manager overlays and other extensions that `stopPropagation` on later mouse events. Touch also has a delayed click that can fire after pointer-events are restored.
 
-**Vendor.** Radix `deferPointerDownOutside` + intercept of pointerup/mousedown/click (`dismissable-layer.tsx`, issues #2055, #2171, #3346). React Aria pairs pointerdown with **click** (Android Chrome pointerup bug). e2e: `dialog--with-extension-overlay`.
+**Prior art.** Radix `deferPointerDownOutside` + intercept of pointerup/mousedown/click (`dismissable-layer.tsx`, issues #2055, #2171, #3346). React Aria pairs pointerdown with **click** (Android Chrome pointerup bug). e2e: `dialog--with-extension-overlay`.
 
 **Lift** Radix defer for isolating Overlay. Backdrop is a dedicated dismiss surface that may still dismiss even when later events are intercepted.
 
@@ -546,7 +546,7 @@ explicitly.
 
 Opening on pointerdown registers a document listener that sees the same event and immediately dismisses.
 
-**Vendor.** Radix `setTimeout(0)` before attaching `pointerdown`. Zag `defer: true`.
+**Prior art.** Radix `setTimeout(0)` before attaching `pointerdown`. Zag `defer: true`.
 
 **Lift.**
 
@@ -554,7 +554,7 @@ Opening on pointerdown registers a document listener that sees the same event an
 
 Portalled content is outside the layer’s DOM ancestor but inside the React subtree. `node.contains(event.target)` lies.
 
-**Vendor.** Radix capture flags (`isPointerInsideReactTreeRef`). Aria `event.composedPath()`. Ariakit composed path + mark-tree.
+**Prior art.** Radix capture flags (`isPointerInsideReactTreeRef`). Aria `event.composedPath()`. Ariakit composed path + mark-tree.
 
 **Lift** capture-flag or `composedPath`. Required because Overlay portals by default.
 
@@ -562,7 +562,7 @@ Portalled content is outside the layer’s DOM ancestor but inside the React sub
 
 Isolating overlays often set `body { pointer-events: none }` and re-enable the top layer. Leaving that on after `open={false}` while Presence still has the node mounted bricks the page. Nested isolating layers need a refcount of which layer is interactive.
 
-**Vendor.** Radix `layersWithOutsidePointerEventsDisabled` (issue #3645). Zag `disablePointerEventsOutside` + MutationObserver. react-remove-scroll’s `inert` PE mode is documented as dangerous with portals — do not default it (`VENDOR.md`).
+**Prior art.** Radix `layersWithOutsidePointerEventsDisabled` (issue #3645). Zag `disablePointerEventsOutside` + MutationObserver. react-remove-scroll’s `inert` PE mode is documented as dangerous with portals — do not default it (`VENDOR.md`).
 
 **Lift** Radix/Zag PE stacking. Keep isolation through the owned Presence
 exit and tear it down once that exit completes; a rapid reopen cancels teardown.
@@ -572,7 +572,7 @@ Prefer native `inert` for AT; PE stacking is pointer UX.
 
 Closing a Dialog must close the nested Menu. Focus moving during nested teardown can falsely dismiss parents.
 
-**Vendor.** Zag `layerStack.remove` → `requestDismiss` on nested layers, plus `recentlyRemoved` suppressing focus-outside for ~2 frames. Radix is unmount-driven (children go with the parent, no preventable cascade event).
+**Prior art.** Zag `layerStack.remove` → `requestDismiss` on nested layers, plus `recentlyRemoved` suppressing focus-outside for ~2 frames. Radix is unmount-driven (children go with the parent, no preventable cascade event).
 
 **Lift** Zag cascade semantics + focus-race guard. Public API stays controlled props, not Zag’s machine.
 
@@ -590,7 +590,7 @@ eligible layer handles a physical event.
 
 Hiding the scrollbar shifts layout. Wheel/touch on the locked page still scrolls the body. Nested scrollables that hit their edge chain to the document.
 
-**Vendor.** `vendor/react-remove-scroll` (`handleScroll.ts`, `SideEffect.tsx`) — non-passive wheel/touch, shards, RTL, shadow DOM, pinch zoom. React Aria `usePreventScroll` — overflow hidden + scrollbar-gutter or padding. Zag scroller html vs body. Base UI gutter probe.
+**Prior art.** react-remove-scroll (`handleScroll.ts`, `SideEffect.tsx`) — non-passive wheel/touch, shards, RTL, shadow DOM, pinch zoom. React Aria `usePreventScroll` — overflow hidden + scrollbar-gutter or padding. Zag scroller html vs body. Base UI gutter probe.
 
 **Lift** Kashey remove-scroll + Aria/Zag gap compensation. Allow scroll inside Overlay content and shards until the edge. Runs only when isolation `scroll` is on.
 
@@ -598,7 +598,7 @@ Hiding the scrollbar shifts layout. Wheel/touch on the locked page still scrolls
 
 `overflow: hidden` does not stop Safari. Focusing an input scrolls the window and jumps `position: fixed` UI. `visualViewport` ≠ layout viewport.
 
-**Vendor.** React Aria `preventScrollMobileWebKit` in `vendor/react-spectrum/packages/react-aria/src/overlays` — overscroll-behavior, touchmove prevent, `HTMLElement.prototype.focus` patch, visualViewport `scrollIntoView`. That path has evolved past Vaul’s copy in `vendor/vaul/src/use-prevent-scroll.ts`. Vaul `use-position-fixed.ts` — Safari `body { position: fixed }` with scroll restore; skip nested/PWA.
+**Prior art.** React Aria `preventScrollMobileWebKit` in its overlays module — overscroll-behavior, touchmove prevent, `HTMLElement.prototype.focus` patch, visualViewport `scrollIntoView`. That code has evolved past Vaul’s copy in `use-prevent-scroll.ts`. Vaul `use-position-fixed.ts` — Safari `body { position: fixed }` with scroll restore; skip nested/PWA.
 
 **Lift** Aria iOS prevent-scroll as canonical. Lift Vaul `use-position-fixed` for isolating edge Overlay (drawer/sheet). **Leave** `use-scale-background.ts` and `use-snap-points.ts`.
 
@@ -606,7 +606,7 @@ Hiding the scrollbar shifts layout. Wheel/touch on the locked page still scrolls
 
 AT must not reach background content. Double-hide breaks restore. Live regions and toasts must stay reachable. Dynamic DOM needs a MutationObserver. Shadow roots need a TreeWalker.
 
-**Vendor.** `vendor/aria-hidden` — `hideOthers` / `inertOthers`, refcount, preserve pre-hidden, keep `[aria-live]`. Aria `ariaHideOutside.ts` — TreeWalker + MutationObserver, keep `[data-live-announcer]`, `role=row` VoiceOver special case. `vendor/inert` — polyfill edge cases; prefer native `inert` in Overlay, steal tests not the polyfill (`VENDOR.md`).
+**Prior art.** aria-hidden — `hideOthers` / `inertOthers`, refcount, preserve pre-hidden, keep `[aria-live]`. Aria `ariaHideOutside.ts` — TreeWalker + MutationObserver, keep `[data-live-announcer]`, `role=row` VoiceOver special case. The inert polyfill: edge cases; prefer native `inert` in Overlay, steal tests not the polyfill.
 
 **Lift** sibling-walk + refcount + live-region exceptions. Prefer native `inert` on Overlay. Do not require an OverlayProvider as a public app wrapper. The shared layer stack is a document-scoped Zustand store ([hooks.md](../../core/hooks/hooks.md)).
 
@@ -618,7 +618,7 @@ duplicating ownership on every descendant.
 
 Restoring focus while the exit animation still has focus inside feels wrong. Restoring into an unmounted trigger fails. Overlay restores **after Presence reports exit complete** — stricter than Radix FocusScope’s `setTimeout(0)` on unmount.
 
-**Vendor.** Radix restore on FocusScope cleanup. Base UI `onOpenChangeComplete`. a11y-dialog restores immediately. None of them know Presence.
+**Prior art.** Radix restore on FocusScope cleanup. Base UI `onOpenChangeComplete`. a11y-dialog restores immediately. None of them know Presence.
 
 **Lift** our documented order. FocusLock stays enabled while closed-state
 Content is still mounted for exit, then deactivates/restores after Presence
@@ -628,7 +628,7 @@ completes. See `FocusLock.md`.
 
 Escape must not close `role="alertdialog"`. An open native `:popover-open` should steal Escape first.
 
-**Vendor.** a11y-dialog skips Escape for alertdialog. Zag `closeOnInteractOutside: modal && !alertDialog`. Aria `isKeyboardDismissDisabled`.
+**Prior art.** a11y-dialog skips Escape for alertdialog. Zag `closeOnInteractOutside: modal && !alertDialog`. Aria `isKeyboardDismissDisabled`.
 
 **Lift** as composition policy on Overlay handlers, not a second primitive.
 
@@ -636,7 +636,7 @@ Escape must not close `role="alertdialog"`. An open native `:popover-open` shoul
 
 `event.target` is the shadow host. False outside-dismiss and missed focusables follow.
 
-**Vendor.** a11y-dialog `composedPath` + custom `closest`. Aria interact-outside and ariaHideOutside. remove-scroll shadow parent bubbling.
+**Prior art.** a11y-dialog `composedPath` + custom `closest`. Aria interact-outside and ariaHideOutside. remove-scroll shadow parent bubbling.
 
 **Lift.**
 
@@ -647,9 +647,9 @@ opposite-axis, then `bestFit`. Shift clamps into view without detaching from
 the reference (`limitShift`). Flip's `reset` restarts the middleware chain
 (max 50) — arrow `alignmentOffset` must short-circuit or you thrash.
 
-**Vendor.** `vendor/floating-ui/packages/core/src/computePosition.ts` plus
-`middleware/{flip,shift,offset}.ts`, `detectOverflow.ts`. Functional tests
-in `packages/dom/test/functional/`. Spectrum `calculatePosition.ts` —
+**Prior art.** Floating UI's `computePosition` plus its `flip`, `shift`, and
+`offset` middleware, and `detectOverflow`. Functional tests in its DOM
+package. Spectrum `calculatePosition.ts` —
 **leave**. Radix `popper` — **leave**.
 
 **Lift** core middleware + Playwright cases (not PNG snapshots) onto
@@ -660,7 +660,7 @@ anchored Overlay.Content. This is Overlay's engine, not Popover's.
 Arrow `edgePadding` can nudge the floating element. That reset must not
 re-trigger flip (`middlewareData.arrow?.alignmentOffset`).
 
-**Vendor.** `middleware/arrow.ts` + `dom/test/functional/arrow.test.ts`.
+**Prior art.** `middleware/arrow.ts` + `dom/test/functional/arrow.test.ts`.
 
 **Lift** the math onto `Overlay.Arrow`. **Leave** `FloatingArrow` chrome.
 
@@ -671,7 +671,7 @@ instead of overflowing. Size middleware depends on whether shift already
 ran. ResizeObserver + size can loop (`autoUpdate` unobserves floating for a
 frame — Floating UI #1740).
 
-**Vendor.** `middleware/size.ts`, `dom/src/autoUpdate.ts`.
+**Prior art.** `middleware/size.ts`, `dom/src/autoUpdate.ts`.
 
 **Lift** size middleware onto Overlay.Content. CSS custom properties are
 `--reference-overlay-*`.
@@ -682,7 +682,7 @@ Context menus are a point. Selection menus are a rect. Canvas/table cells
 are a `getBoundingClientRect`. autoUpdate must follow `contextElement`
 scroll/resize even when the reference is virtual.
 
-**Vendor.** Floating UI `VirtualElement` (`packages/dom/src/types.ts`),
+**Prior art.** Floating UI `VirtualElement` (`packages/dom/src/types.ts`),
 `virtual-element.test.ts`. Base UI `PopoverPositioner` `anchor`. Aria
 `targetRect`. `useClientPoint.ts` is the cursor-follow factory — steal the
 virtual-element idea, not the React hook package.
@@ -708,9 +708,9 @@ idle measurement and rAF are exclusive for the *reference*; window
 `document.hidden`, and wakes on related `animationstart` / layout
 `transitionstart`. Splitter must not use this poll — its handle is in-flow.
 
-**Vendor.** `vendor/floating-ui/packages/dom/src/autoUpdate.ts` and its
+**Prior art.** Floating UI's `autoUpdate.ts` and its
 functional tests (`scroll`, `iframe`, `shadow-dom`, `top-layer`, `zoom`).
-`vendor/design-system/resizable/shared/useBoundingClientRect` for settle /
+The design system's resizable `useBoundingClientRect` for settle /
 single-shot rAF / exclusive idle-vs-hot discipline, not `useRealtimeUpdate`.
 
 **Lift** the whole `autoUpdate` + tests onto anchored Overlay.
@@ -722,7 +722,7 @@ reimplement the listener.
 
 A floating layer can stay logically open while visually orphaned.
 
-**Vendor.** `middleware/hide.ts` (`referenceHidden` / `escaped`).
+**Prior art.** `middleware/hide.ts` (`referenceHidden` / `escaped`).
 
 **Lift** `data-anchor-hidden` / `data-escaped`. Policy (close vs hide
 visually) is product. Tooltip usually **closes** on scroll.
@@ -744,7 +744,7 @@ Trigger must remain in source DOM as the restore target and expanded
 control. Portalling it with Content loses the page location and breaks
 the Tab bridge.
 
-**Vendor.** Radix Dialog/Popover `Trigger` stays in place; Content
+**Prior art.** Radix Dialog/Popover `Trigger` stays in place; Content
 portals. Vaul uses Radix Dialog.Trigger the same way.
 
 **Lift** that split. Overlay.Trigger never portals. Overlay.Portal
@@ -766,7 +766,7 @@ position-fixed follows `scroll` on edge overlays. No `modal` prop.
 Vaul defaults to dragging the whole surface, then uses `scrollLockTimeout`
 to recover from inner scroll. That races every drawer with a list.
 
-**Vendor.** Vaul `handleOnly`, `onDrag` / `onRelease`,
+**Prior art.** Vaul `handleOnly`, `onDrag` / `onRelease`,
 `CLOSE_THRESHOLD` 0.25, `VELOCITY_THRESHOLD`. Sonner swipe directions
 and `--index` while dragging.
 

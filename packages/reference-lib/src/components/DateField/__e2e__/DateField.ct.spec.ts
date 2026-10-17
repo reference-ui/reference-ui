@@ -3,7 +3,7 @@ import { test, expect, snap } from '../../../../playwright/ct'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
-// sweep vehicle) for per-engine delivery/expectations (DIAG D1/D2).
+// sweep vehicle) for per-engine delivery/expectations.
 function engineOf(): 'chromium' | 'firefox' | 'webkit' {
   const project = test.info().project.name
   if (project.includes('webkit')) return 'webkit'
@@ -169,7 +169,7 @@ test.describe('DateField CT', () => {
   })
 })
 
-test.describe('DateField quarantine re-targets', () => {
+test.describe('DateField re-targets', () => {
   test('DF-DOM-01: childless DateField resolves directly to one visible text input', async ({
     mount,
     page,
@@ -498,7 +498,7 @@ test.describe('DateField quarantine re-targets', () => {
     await expect(picker).toBeVisible()
 
     // Marked unavailable: day stays enabled (context isDateUnavailable reaches
-    // Calendar only via PATCHES #4, still blocked) — DateField-side rejection
+    // Calendar only via a pending change, still blocked) — DateField-side rejection
     // refuses the commit without dismiss.
     await page.locator('button[data-date="2026-08-12"]').click()
     await expect(display).toHaveText('Value: 2026-08-15')
@@ -568,7 +568,7 @@ test.describe('DateField quarantine re-targets', () => {
 
     await expect(page.getByTestId('shadow-form-host')).toBeVisible()
 
-    // Quarantine parity: the shadow tree owns the field's inputs.
+    // Parity: the shadow tree owns the field's inputs.
     const shadowInputCount = await page.evaluate(() => {
       const host = document.querySelector('[data-testid="shadow-form-host"]')
       return host?.shadowRoot ? host.shadowRoot.querySelectorAll('input').length : 0
@@ -601,7 +601,7 @@ test.describe('DateField quarantine re-targets', () => {
     await input.focus()
     await input.dispatchEvent('compositionstart')
     // Typing during composition joins the buffer but publishes nothing.
-    // P1 (F36, SCOPE2 probe P-F36): fill() on Firefox synthesizes a complete
+    // fill() on Firefox synthesizes a complete
     // native composition session (start/update/insertCompositionText/end) that
     // the product correctly commits — no real IME flow mirrors that inside an
     // open session (other DF composition tests are green on FF). Keystrokes
@@ -677,7 +677,7 @@ test.describe('DateField quarantine re-targets', () => {
   })
 })
 
-test.describe('DateField engine (PATCHES #1: B-15/B-16/B-24)', () => {
+test.describe('DateField engine', () => {
   test('DF-FMT-01/DF-EDT-03/DF-EDT-07: en-GB displays day/month/year and a complete valid edit requests once', async ({
     mount,
     page,
@@ -907,7 +907,7 @@ test.describe('DateField engine (PATCHES #1: B-15/B-16/B-24)', () => {
     await expect(page.getByTestId('engine-last')).toHaveText('Last: "2025-01-30"')
   })
 
-  test('B-15: garbage, out-of-shape, and impossible text never publishes', async ({
+  test('garbage, out-of-shape, and impossible text never publishes', async ({
     mount,
     page,
   }) => {
@@ -1116,7 +1116,7 @@ test.describe('DateField engine (PATCHES #1: B-15/B-16/B-24)', () => {
   })
 })
 
-test.describe('DateField stepping (PATCHES #2)', () => {
+test.describe('DateField stepping', () => {
   test('DF-KEY-01: ArrowUp/Down step the caret day/month/year segment and commit one ISO', async ({
     mount,
     page,
@@ -1231,7 +1231,7 @@ test.describe('DateField stepping (PATCHES #2)', () => {
   })
 })
 
-test.describe('DateField submit/reset (PATCHES #5)', () => {
+test.describe('DateField submit/reset', () => {
   test('DF-FRM-03: requestSubmit blocks on a failed commit boundary until resolution', async ({
     mount,
     page,

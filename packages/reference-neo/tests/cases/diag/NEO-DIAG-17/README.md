@@ -4,6 +4,6 @@ Spread inside a `recipe(...)` object literal. The world carries the minimal fixt
 
 Raised in: `modules/atomic/src/extract/recipes/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-E-RECIPE-SPREAD (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-RECIPE-SPREAD (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-RECIPE-SPREAD, atm-e-recipe-spread, diagnostics case index, NEO-DIAG-17

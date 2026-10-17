@@ -1,5 +1,5 @@
 /**
- * Responsive variant value station. Each variant value also compiles to one
+ * Responsive variant value case. Each variant value also compiles to one
  * `{breakpoint}:`-prefixed class per width breakpoint, wrapped in that
  * breakpoint's `@container` query, so a runtime `{ base: 'solid', md: 'outline' }`
  * selection paints by emitting both classes from the runtime table.

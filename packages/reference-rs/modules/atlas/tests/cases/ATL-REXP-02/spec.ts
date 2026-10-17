@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-REXP-02.
+ * Case specification for ATL-REXP-02.
  * Validates default export tracking through named re-export alias chains,
  * preserving canonical interface identity and call-site example aliases.
  * Proves primary SPEC anchor ATL-REXP-02.

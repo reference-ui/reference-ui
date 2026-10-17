@@ -1,5 +1,5 @@
 /**
- * Exports-condition station (ATM-SITE-92). `cond-pkg` nests `types` beside
+ * Exports-condition (ATM-SITE-92). `cond-pkg` nests `types` beside
  * `import` inside its `exports` condition maps, at the root and at `./tokens`.
  * Each declaration is body-less, so a consumer value read through it cannot
  * fold; each `import` target names the source that does. `App.tsx` reads both

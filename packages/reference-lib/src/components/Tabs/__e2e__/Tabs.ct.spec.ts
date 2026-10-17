@@ -169,7 +169,7 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     expect(pillBg).not.toBe('rgba(0, 0, 0, 0)')
     expect(pillBg).not.toBe('transparent')
 
-    // B-08: selected pill text must be DARK against the static light bg.
+    // Selected pill text must be DARK against the static light bg.
     // Both candidate flipping tokens are white in exactly one mode; the
     // fix (gray.950) is static-dark, so this dark-mode assertion plus
     // token-staticness covers both modes (CT runs dark scheme).
@@ -208,7 +208,7 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await snap(page, 'pill-activity-focused')
   })
 
-  // Assertion-only browser proofs for quarantine-landing stability ports.
+  // Assertion-only browser proofs for landing stability ports.
   // No snapshots: these pin behavior, and visuals must not move.
 
   test('TB-MANUAL-01: Manual arrows move focus and the tab stop without selecting', async ({
@@ -467,7 +467,7 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     })
   })
 
-  test('W-15: root keepMounted keeps inactive panels in the DOM and preserves form state', async ({
+  test('root keepMounted keeps inactive panels in the DOM and preserves form state', async ({
     mount,
     page,
   }) => {
@@ -903,8 +903,8 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
 
     // Menu: pointer open (click), keyboard select-and-close (Enter on
     // the focused item fires onSelect). No dismiss-stack Escape for the
-    // menu: it flakes under parallel load on React 17/18 (flagged
-    // Overlay-crew follow-up); popup keyboard behavior is proven in the
+    // menu: it flakes under parallel load on React 17/18, so it is left to
+    // an Overlay follow-up; popup keyboard behavior is proven in the
     // popup suites.
     await page.getByTestId('ws-menu-trigger').click()
     await expect(page.getByTestId('ws-menu-item-edit')).toBeVisible()
@@ -914,9 +914,8 @@ test.describe('Tabs Composition Gates & Browser Proofs', () => {
     await expectTabsCalm()
 
     // Combobox: pointer open (click), keyboard close (Escape). (No
-    // type-to-filter: the sibling Combobox crew has 500-line in-flight
-    // surgery that currently poisons later tooltip hover after typing —
-    // flagged; open/close + Tabs-calm is this case's contract.)
+    // type-to-filter is left out: typing currently poisons later tooltip
+    // hover, so open/close + Tabs-calm is this case's contract.)
     await page.getByTestId('ws-combo-input').click()
     await expect(page.getByTestId('ws-combo-apple')).toBeVisible()
     await page.keyboard.press('Escape')

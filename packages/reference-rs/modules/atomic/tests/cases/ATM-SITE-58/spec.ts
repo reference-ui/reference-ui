@@ -1,5 +1,5 @@
 /**
- * Wipe-state discovery station (ATM-SITE-58). Both wrappers use
+ * Wipe-state discovery (ATM-SITE-58). Both wrappers use
  * `PrimitiveProps`-family boundaries (the 50-wrapper lib shape) while the
  * fixture's `@reference-ui/react` self-link dangles exactly as in-sync wipe
  * (no `.reference-ui` dir); the tracer must resolve the surface-type names
@@ -26,8 +26,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('mt_2r')
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     // Discovery itself is silent here; extraction's rest-spread notes for
-    // Card's and Badge's `{...rest}` forwarders ride the opt-in channel (S6
-    // E8-class re-point); the default is silent.
+    // Card's and Badge's `{...rest}` forwarders ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-58', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

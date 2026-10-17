@@ -22,12 +22,10 @@ use canon::is_known_style_prop;
 /// single-leaf entries lower like const-object leaves with plans, unknown
 /// keys warn like literals. Merge-list spreads lower through here, so array
 /// and const-object spreads paint alike.
-pub fn lower_array_object(
+pub(crate) fn lower_array_object(
     ctx: &mut ObjectWalk<'_>,
-    name: &str,
     map: &BTreeMap<String, AtomValue>,
-    when: &SmallVec<[Box<str>; 2]>,
-    span: Span,
+    site: LowerSite<'_>,
 ) {
     let obj: ConstObject = map
         .iter()
@@ -43,11 +41,12 @@ pub fn lower_array_object(
             )
         })
         .collect();
-    lower_const_object(ctx, name, &obj, when, span);
+    lower_const_object(ctx, &obj, site);
 }
 
 /// Where one const-object lowering sits: whose object, under which
 /// conditions, diagnosed at which span.
+#[derive(Clone, Copy)]
 pub(crate) struct LowerSite<'a> {
     pub(crate) name: &'a str,
     pub(crate) when: &'a SmallVec<[Box<str>; 2]>,
@@ -59,15 +58,8 @@ pub(crate) struct LowerSite<'a> {
 /// keys, entries with no static value diagnosed, nested conditions scoped
 /// under their key (SPEC-V2-24). Whole-object `css()` args and JSX style
 /// blocks lower through here, so arg and spread paint agree.
-pub fn lower_const_object(
-    ctx: &mut ObjectWalk<'_>,
-    name: &str,
-    obj: &ConstObject,
-    when: &SmallVec<[Box<str>; 2]>,
-    span: Span,
-) {
-    warn_unknown_spread_keys(ctx, obj, span);
-    let site = LowerSite { name, when, span };
+pub(crate) fn lower_const_object(ctx: &mut ObjectWalk<'_>, obj: &ConstObject, site: LowerSite<'_>) {
+    warn_unknown_spread_keys(ctx, obj, site.span);
     // `r` is a known style prop, but under `JsxAttributes` the css/r loop
     // below owns both keys — the style loop would double-lower them.
     let jsx_attrs = matches!(ctx.bag, BagSemantics::JsxAttributes);
@@ -127,7 +119,10 @@ mod tests {
 
     fn compile_code(code: &str) -> crate::CompileResult {
         let req = CompileRequest {
-            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            files: Some(vec![VirtualSource {
+                path: "test.tsx".into(),
+                content: code.into(),
+            }]),
             base_system: crate::BaseSystem::lib_fixture().clone(),
             logs: Some(vec!["proof".to_string()]),
             ..Default::default()

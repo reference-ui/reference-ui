@@ -1,5 +1,5 @@
 /**
- * Placeholder/file/checked twin station (ATM-COND-18, RS-17). `_placeholder`
+ * Placeholder/file/checked twin (ATM-COND-18). `_placeholder`
  * prints `::placeholder` plus the `[data-placeholder]` twin, `_file` lowers
  * to `::file-selector-button` instead of warning unknown, and `_checked`
  * keeps the four-member lib twin list. All three wants resolve to plans.

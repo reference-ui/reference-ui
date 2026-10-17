@@ -26,7 +26,7 @@ export interface AvailabilityOptions {
 export function useAvailability(options: AvailabilityOptions) {
   const { min, max, isDateUnavailable } = options
 
-  // Out-of-bounds day state (W-21): outside the canonical bounds.
+  // Out-of-bounds day state: outside the canonical bounds.
   // Natively disabled, keyboard-skipped, never the roving target.
   // Lexical comparison is exact here — bounds passed the CA-ISO-04
   // canonical gate and grid dates are canonical by construction.
@@ -39,7 +39,7 @@ export function useAvailability(options: AvailabilityOptions) {
     [min, max]
   )
 
-  // Predicate-only unavailable state (W-21): refused by
+  // Predicate-only unavailable state: refused by
   // `isDateUnavailable`, regardless of bounds. Focusable but
   // unselectable; the Grid intersects it with in-bounds for paint.
   const isDateUnavailableDay = React.useCallback(
@@ -48,7 +48,7 @@ export function useAvailability(options: AvailabilityOptions) {
   )
 
   // Merged unselectable state: activation, month/year disabling, and
-  // the W-20 Day `disabled` flag all read this.
+  // the Day `disabled` flag all read this.
   const isDateUnselectable = React.useCallback(
     (dateStr: ISODate) => isDateDisabled(dateStr) || isDateUnavailableDay(dateStr),
     [isDateDisabled, isDateUnavailableDay]

@@ -1,7 +1,7 @@
 /**
- * Mutation station (ATM-SITE-28, Overmatch Ph1). A `let`/`var` with any
+ * Mutation (ATM-SITE-28). A `let`/`var` with any
  * assignment drops to a diagnostic naming the write; unmutated `let`/`var`
- * (SPEC-V2-02) and unmutated `export let` (SPEC-V2-53) resolve like `const`.
+ * and unmutated `export let` resolve like `const`.
  */
 import { expect } from 'vitest'
 import {
@@ -18,7 +18,7 @@ const EXPECTED: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'amber.500' },
 ]
 
-// SPEC-V2-34 object half (Overmatch Ph3): const objects record identifier
+// Object half: const objects record identifier
 // values and static spreads. Pure reads only — every source here is an
 // unmutated const.
 const OBJECTS: Array<{ prop: string; value: string }> = [
@@ -31,7 +31,7 @@ const OBJECTS: Array<{ prop: string; value: string }> = [
   { prop: 'padding', value: '1px' },
 ]
 
-// SPEC-V2-34 cross-file (R3b): the imported spread object resolves both
+// Cross-file: the imported spread object resolves both
 // entries, whole-object and spread uses alike — each value wants twice.
 const CROSS: Array<{ prop: string; value: string }> = [
   { prop: 'color', value: 'plum' },
@@ -48,7 +48,7 @@ const MUTATED: Array<{ name: string; site: string }> = [
   { name: 'shifted', site: 'tokens.ts:5:1' },
 ]
 
-// SPEC-V2-81 (oracle follow-up on 35): `delete` poisons like an
+// `delete` poisons like an
 // assignment. The sibling margin survives; every deleted read drops.
 const DELETE_WANTS: Array<{ prop: string; value: string }> = [
   { prop: 'margin', value: '3px' },
@@ -105,7 +105,7 @@ const spec: AtomicCaseSpec = {
     }
 
     // Every mutated use warns once and names its write site — on the
-    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    // opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-28', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

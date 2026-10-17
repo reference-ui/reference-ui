@@ -1,7 +1,7 @@
 /**
- * Responsive `r` station. Numeric and named keys become `@container`
+ * Responsive `r` case. Numeric and named keys become `@container`
  * wrappers. Unknown names warn and do not emit a rule.
- * (S6 E8-class re-point: the unknown-breakpoint refusal rides the opt-in
+ * (the unknown-breakpoint refusal rides the opt-in
  * compiler channel; the default channel is silent.)
  */
 import { expect } from 'vitest'

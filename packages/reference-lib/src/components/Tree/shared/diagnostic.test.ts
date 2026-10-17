@@ -3,6 +3,7 @@ import { treeDiagnostic } from './diagnostic'
 
 describe('treeDiagnostic', () => {
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 
@@ -15,19 +16,9 @@ describe('treeDiagnostic', () => {
   })
 
   it('stays silent in production', () => {
-    const proc = (globalThis as { process: { env: Record<string, string | undefined> } }).process
-    const prev = proc.env.NODE_ENV
-    proc.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
-    try {
-      treeDiagnostic('silent probe')
-      expect(error).not.toHaveBeenCalled()
-    } finally {
-      if (prev === undefined) {
-        delete proc.env.NODE_ENV
-      } else {
-        proc.env.NODE_ENV = prev
-      }
-    }
+    treeDiagnostic('silent probe')
+    expect(error).not.toHaveBeenCalled()
   })
 })

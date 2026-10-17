@@ -11,6 +11,7 @@ import * as React from 'react'
 import { Listbox, ListboxEmpty, ListboxOption, ListboxSection } from '../Listbox'
 import { Tree, TreeItem } from '../Tree'
 import { Overlay } from '../Overlay'
+import { isDevelopment } from '../../core/env/dev'
 import {
   ComboboxContext,
   type ComboboxContextValue,
@@ -36,11 +37,6 @@ import { ComboboxPopover } from './parts/Popover'
 import { ComboboxTrigger } from './parts/Trigger'
 import { ComboboxVirtualItem } from './parts/VirtualItem'
 import type { ComboboxProps } from './types'
-
-// The package declares no node types, so the bare `process` global is
-// unresolvable in the narrow build program — read it through globalThis
-// with a file-local shape instead. Same pattern as Overlay's warn helper.
-const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
 
 // Historical `./Combobox` surface: parts, diagnostic, and vocabulary
 // re-exported so deep imports (tests) keep resolving to the real parts.
@@ -89,7 +85,7 @@ export function Combobox({
   noResultsMessage = 'No results found',
 }: ComboboxProps) {
   // Controlled-only: value + onChange are required; there is no uncontrolled branch.
-  if (globalProcess?.env?.NODE_ENV !== 'production') {
+  if (isDevelopment()) {
     if (value === undefined) {
       const err =
         '[reference-ui] Combobox: Missing required "value" prop. Combobox is controlled-only: pass value + onChange.'

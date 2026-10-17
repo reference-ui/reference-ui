@@ -1,9 +1,11 @@
-//! Pipeline utility functions.
+//! Predicates and recorders for the style-signal pipeline: which expressions read a style signal, and which bindings they mint.
+//! It takes an expression or a binding pattern with the pipeline context, reading the prop bindings and the signal sets it carries.
+//! It emits recorded signals and class-name bindings into `PipelineState`, and boolean verdicts for the walkers in `expr` and `jsx`.
 
 use super::{PipelineContext, PipelineState};
 use crate::analysis::model::{PropBindings, TraceImport};
 use crate::analysis::util::{
-    is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest,
+    is_identifier, parse_object_pattern_bindings, parse_object_pattern_rest, transparent_inner,
 };
 use oxc_ast::ast::{Argument, Expression};
 use rustc_hash::FxHashMap;
@@ -13,25 +15,13 @@ pub fn record_pipeline_binding(
     init: &Expression<'_>,
     ctx: &mut PipelineContext,
 ) {
-    let init_uses_style_signal = expression_reads_style_signal(init, ctx.bindings, ctx.state)
-        || matches!(init, Expression::CallExpression(call) if call_has_style_signal_arg(call, ctx.bindings, ctx.state));
-
+    let init_uses_style_signal = init_reads_style_signal(init, ctx);
     if pattern_source.starts_with('{') && init_uses_style_signal {
-        for binding in parse_object_pattern_bindings(pattern_source) {
-            ctx.state.style_signals.insert(binding.local_name);
-        }
-        if let Some(rest_binding) = parse_object_pattern_rest(pattern_source) {
-            ctx.state.style_signals.insert(rest_binding);
-        }
+        record_object_pattern_signals(pattern_source, ctx);
         return;
     }
 
-    if pattern_source.starts_with('[')
-        && matches!(init, Expression::CallExpression(call) if is_split_css_props_call(call, ctx.imports))
-        && call_first_argument(init).is_some_and(|argument| {
-            expression_reads_style_signal(argument, ctx.bindings, ctx.state)
-        })
-    {
+    if pattern_source.starts_with('[') && split_css_props_reads_style_signal(init, ctx) {
         if let Some(first_binding) = parse_array_pattern_first_binding(pattern_source) {
             ctx.state.style_signals.insert(first_binding);
         }
@@ -39,17 +29,51 @@ pub fn record_pipeline_binding(
     }
 
     if is_identifier(pattern_source) {
-        if pattern_source.to_ascii_lowercase().contains("class")
-            && matches!(init, Expression::CallExpression(call) if call_has_style_signal_arg(call, ctx.bindings, ctx.state))
-        {
-            ctx.state
-                .class_name_bindings
-                .insert(pattern_source.to_string());
-        }
+        record_identifier_binding(pattern_source, init, ctx);
+    }
+}
 
-        if expression_directly_derives_from_style_signal(init, ctx.bindings, ctx.state) {
-            ctx.state.style_signals.insert(pattern_source.to_string());
-        }
+/// An initializer reads a style signal directly, or through the style arguments of a call.
+fn init_reads_style_signal(init: &Expression<'_>, ctx: &PipelineContext) -> bool {
+    expression_reads_style_signal(init, ctx.bindings, ctx.state)
+        || matches!(init, Expression::CallExpression(call) if call_has_style_signal_arg(call, ctx.bindings, ctx.state))
+}
+
+/// `const { a, ...rest } = <style source>` makes each destructured local and the rest binding signals.
+fn record_object_pattern_signals(pattern_source: &str, ctx: &mut PipelineContext) {
+    for binding in parse_object_pattern_bindings(pattern_source) {
+        ctx.state.style_signals.insert(binding.local_name);
+    }
+    if let Some(rest_binding) = parse_object_pattern_rest(pattern_source) {
+        ctx.state.style_signals.insert(rest_binding);
+    }
+}
+
+/// `const [first] = splitCssProps(<style source>)` makes the first array binding a signal.
+fn split_css_props_reads_style_signal(init: &Expression<'_>, ctx: &PipelineContext) -> bool {
+    matches!(init, Expression::CallExpression(call) if is_split_css_props_call(call, ctx.imports))
+        && call_first_argument(init).is_some_and(|argument| {
+            expression_reads_style_signal(argument, ctx.bindings, ctx.state)
+        })
+}
+
+/// A plain identifier binding: a class-name binding when it is named like a class and fed a style
+/// signal, and a style signal when its initializer derives directly from one.
+fn record_identifier_binding(
+    pattern_source: &str,
+    init: &Expression<'_>,
+    ctx: &mut PipelineContext,
+) {
+    if pattern_source.to_ascii_lowercase().contains("class")
+        && matches!(init, Expression::CallExpression(call) if call_has_style_signal_arg(call, ctx.bindings, ctx.state))
+    {
+        ctx.state
+            .class_name_bindings
+            .insert(pattern_source.to_string());
+    }
+
+    if expression_directly_derives_from_style_signal(init, ctx.bindings, ctx.state) {
+        ctx.state.style_signals.insert(pattern_source.to_string());
     }
 }
 
@@ -89,31 +113,39 @@ pub fn expression_reads_style_signal(
                 || state.style_signals.contains(identifier.name.as_str())
         }
         Expression::StaticMemberExpression(member) => {
-            if let Expression::Identifier(identifier) = &member.object {
-                return bindings.expression_reads_style_prop(expression)
-                    || state.style_signals.contains(identifier.name.as_str());
-            }
-            expression_reads_style_signal(&member.object, bindings, state)
+            static_member_reads_style_signal(expression, &member.object, bindings, state)
         }
         Expression::ComputedMemberExpression(member) => {
             expression_reads_style_signal(&member.object, bindings, state)
                 || expression_reads_style_signal(&member.expression, bindings, state)
         }
-        Expression::ParenthesizedExpression(paren) => {
-            expression_reads_style_signal(&paren.expression, bindings, state)
-        }
-        Expression::TSAsExpression(asserted) => {
-            expression_reads_style_signal(&asserted.expression, bindings, state)
-        }
-        Expression::TSSatisfiesExpression(asserted) => {
-            expression_reads_style_signal(&asserted.expression, bindings, state)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            expression_reads_style_signal(&asserted.expression, bindings, state)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            expression_reads_style_signal(&asserted.expression, bindings, state)
-        }
+        _ => branch_reads_style_signal(expression, bindings, state),
+    }
+}
+
+/// `signal.color` reads a signal directly when its base is a plain identifier; any other base is
+/// searched recursively.
+fn static_member_reads_style_signal(
+    expression: &Expression<'_>,
+    object: &Expression<'_>,
+    bindings: &PropBindings,
+    state: &PipelineState,
+) -> bool {
+    if let Expression::Identifier(identifier) = object {
+        return bindings.expression_reads_style_prop(expression)
+            || state.style_signals.contains(identifier.name.as_str());
+    }
+    expression_reads_style_signal(object, bindings, state)
+}
+
+/// Logical and conditional nodes read through their value positions; containers and wrappers
+/// fall through to `container_reads_style_signal`.
+fn branch_reads_style_signal(
+    expression: &Expression<'_>,
+    bindings: &PropBindings,
+    state: &PipelineState,
+) -> bool {
+    match expression {
         Expression::LogicalExpression(logical) => {
             expression_reads_style_signal(&logical.left, bindings, state)
                 || expression_reads_style_signal(&logical.right, bindings, state)
@@ -123,13 +155,22 @@ pub fn expression_reads_style_signal(
             expression_reads_style_signal(&conditional.consequent, bindings, state)
                 || expression_reads_style_signal(&conditional.alternate, bindings, state)
         }
-        Expression::ObjectExpression(object) => {
-            object_reads_style_signal(object, bindings, state)
-        }
-        Expression::ArrayExpression(array) => {
-            array_reads_style_signal(array, bindings, state)
-        }
-        _ => false,
+        _ => container_reads_style_signal(expression, bindings, state),
+    }
+}
+
+/// Object and array literals read through their members; parenthesis and TS wrappers read through
+/// their inner expression. Every other node reads no style signal.
+fn container_reads_style_signal(
+    expression: &Expression<'_>,
+    bindings: &PropBindings,
+    state: &PipelineState,
+) -> bool {
+    match expression {
+        Expression::ObjectExpression(object) => object_reads_style_signal(object, bindings, state),
+        Expression::ArrayExpression(array) => array_reads_style_signal(array, bindings, state),
+        _ => transparent_inner(expression)
+            .is_some_and(|inner| expression_reads_style_signal(inner, bindings, state)),
     }
 }
 
@@ -200,22 +241,8 @@ pub fn expression_uses_class_name_binding(
         Expression::Identifier(identifier) => {
             state.class_name_bindings.contains(identifier.name.as_str())
         }
-        Expression::ParenthesizedExpression(paren) => {
-            expression_uses_class_name_binding(&paren.expression, state)
-        }
-        Expression::TSAsExpression(asserted) => {
-            expression_uses_class_name_binding(&asserted.expression, state)
-        }
-        Expression::TSSatisfiesExpression(asserted) => {
-            expression_uses_class_name_binding(&asserted.expression, state)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            expression_uses_class_name_binding(&asserted.expression, state)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            expression_uses_class_name_binding(&asserted.expression, state)
-        }
-        _ => false,
+        _ => transparent_inner(expression)
+            .is_some_and(|inner| expression_uses_class_name_binding(inner, state)),
     }
 }
 
@@ -242,21 +269,17 @@ pub fn is_direct_style_pipeline_call(
     let Expression::Identifier(identifier) = &call.callee else {
         return false;
     };
-    match imports.get(identifier.name.as_str()) {
-        Some(import_binding)
-            if import_binding.source == "@reference-ui/styled/css"
-                && import_binding.imported_name == "css" =>
-        {
-            true
-        }
-        Some(import_binding)
-            if import_binding.source.contains("/patterns/box")
-                && import_binding.imported_name == "box" =>
-        {
-            true
-        }
-        _ => matches!(identifier.name.as_str(), "css" | "box" | "splitCssProps"),
-    }
+    let imported_style_entry = imports
+        .get(identifier.name.as_str())
+        .is_some_and(is_style_pipeline_import);
+    imported_style_entry || matches!(identifier.name.as_str(), "css" | "box" | "splitCssProps")
+}
+
+/// The styled `css` export and the pattern `box` export each start a style pipeline.
+fn is_style_pipeline_import(import_binding: &TraceImport) -> bool {
+    (import_binding.source == "@reference-ui/styled/css" && import_binding.imported_name == "css")
+        || (import_binding.source.contains("/patterns/box")
+            && import_binding.imported_name == "box")
 }
 
 pub fn is_split_css_props_call(

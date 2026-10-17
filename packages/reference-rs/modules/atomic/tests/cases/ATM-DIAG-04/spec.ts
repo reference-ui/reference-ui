@@ -1,8 +1,8 @@
 /**
- * Located-diagnostics station (ATM-DIAG-04, Operation Error Correct Slice 0).
+ * Located-diagnostics (ATM-DIAG-04).
  * RED: every diagnostic must carry file+line+column, but token-resolution
  * warnings still carry no position at all.
- * (S6 E8-class re-point: the dynamic-identifier refusal rides the opt-in
+ * (the dynamic-identifier refusal rides the opt-in
  * compiler channel with its location intact; the resolve passthrough stays
  * default per the O8 R3 adjudication, still located.)
  */

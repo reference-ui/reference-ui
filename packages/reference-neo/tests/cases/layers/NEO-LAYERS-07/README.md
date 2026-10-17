@@ -29,9 +29,9 @@ warning, no raw declaration survives in the sheet, and every probe paints the up
 `rgb(190, 24, 93)`, `13px`, `9px`, `Georgia, serif` and `21px`.
 
 Evidence: `packages/reference-rs/modules/atomic/src/resolve/tokens/bare_name.rs` (the bare-name
-warning, which only the length categories reach), `.../tokens/scale.rs:22-24` (spacing, radii,
-sizes and fontSizes are the length categories), `.../tokens/mod.rs:275-280` (the category each
-prop maps to), and `.../diagnostics/codes.rs:254,281` (the two codes). Siblings: NEO-LAYERS-02
+warning, which only the length categories reach), `packages/reference-rs/modules/atomic/src/resolve/tokens/scale.rs:22-24` (spacing, radii,
+sizes and fontSizes are the length categories), `packages/reference-rs/modules/atomic/src/resolve/tokens/mod.rs:275-280` (the category each
+prop maps to), and `packages/reference-rs/modules/atomic/src/diagnostics/codes.rs:253,280` (the two codes). Siblings: NEO-LAYERS-02
 (one colour use under layers warns and paints nothing, under extends it paints), NEO-LAYERS-16
 (the same boundary seen by the typechecker).
 

@@ -2,7 +2,7 @@
 
 `lib-system-spec.json` is the frozen `@reference-ui/lib` design system
 expressed as an `EvaluatedSystemSpec`, the same shape typegen consumes. Case
-stations without their own `input/baseSystem.json` compile against it via
+cases without their own `input/baseSystem.json` compile against it via
 `tests/harness/helpers.ts`, which keeps the suite's proven lib-token assertions
 meaningful while the production seam takes an explicit spec.
 

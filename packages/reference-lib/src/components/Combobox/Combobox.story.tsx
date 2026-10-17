@@ -57,13 +57,13 @@ function LogCombobox({
   initialValue = null,
   initialInput = '',
   autocomplete,
-  filter = false,
+  filterOptions = false,
   allowCustomValue = false,
 }: {
   initialValue?: string | null
   initialInput?: string
   autocomplete?: ComboboxAutocomplete
-  filter?: boolean
+  filterOptions?: boolean
   allowCustomValue?: boolean
 }) {
   const [open, setOpen] = React.useState(false)
@@ -71,7 +71,7 @@ function LogCombobox({
   const [inputValue, setInputValue] = React.useState(initialInput)
   const [log, setLog] = React.useState<string[]>([])
   const push = (entry: string) => setLog(prev => [...prev, entry])
-  const options = filter
+  const options = filterOptions
     ? logOptions.filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
     : logOptions
 
@@ -93,7 +93,7 @@ function LogCombobox({
             onChange={v => {
               push(`change:${v}`)
               setValue(v)
-              // Custom values round-trip as their own display text (W-24).
+              // Custom values round-trip as their own display text.
               setInputValue(logOptions.find(o => o.value === v)?.label ?? v ?? '')
             }}
             inputValue={inputValue}
@@ -143,11 +143,11 @@ export const SelectedLog = () => <LogCombobox initialValue="bravo" initialInput=
 export const InlineLog = () => <LogCombobox autocomplete="inline" />
 
 export const CustomLog = () => (
-  <LogCombobox initialValue="bravo" initialInput="Bravo" filter allowCustomValue />
+  <LogCombobox initialValue="bravo" initialInput="Bravo" filterOptions allowCustomValue />
 )
 
 export const NoCustomLog = () => (
-  <LogCombobox initialValue="bravo" initialInput="Bravo" filter />
+  <LogCombobox initialValue="bravo" initialInput="Bravo" filterOptions />
 )
 
 export const SelectOnlyStory = () => {
@@ -2285,8 +2285,8 @@ export const DialogCombo = () => <DialogComboInner />
 export const DialogComboPersist = () => <DialogComboInner closeOnBlur={false} />
 
 // ---------------------------------------------------------------------------
-// P2A finish-line stories: windowed Listbox driver (CB-VIRT-*), Tree bridge
-// (CB-TREE-01), loading/async (FEATURES #4), and partial-closing fixtures.
+// Stories: windowed Listbox driver (CB-VIRT-*), Tree bridge
+// (CB-TREE-01), loading/async, and partial-closing fixtures.
 // ---------------------------------------------------------------------------
 
 const windowedItems10 = Array.from({ length: 10 }, (_, i) => ({
@@ -2516,13 +2516,13 @@ export const WindowedTriggerLog = () => {
 }
 
 // ---------------------------------------------------------------------------
-// Tree bridge (FEATURES #6). Native registration (TR-CB-01..06): every
+// Tree bridge. Native registration (TR-CB-01..06): every
 // visible TreeItem registers {value, id, node, disabled, textValue,
 // isBranch} on mount with unmount cleanup in live-DOM order, and the
 // Tree root consumes the sequenced treeExpansionRequest (real changes
 // emit onExpandedChange once; redundant ones move virtual-active with no
-// emission). The TEMP TreeBridgeHarness was deleted when native
-// registration landed. Nested Trees carry no value/onChange (optional
+// emission).
+// Nested Trees carry no value/onChange (optional
 // under Combobox); commits route solely through root onChange (TR-CB-04).
 // ---------------------------------------------------------------------------
 

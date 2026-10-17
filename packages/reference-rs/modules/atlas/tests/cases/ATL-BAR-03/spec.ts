@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-BAR-03.
+ * Case specification for ATL-BAR-03.
  * Validates package entrypoints forwarding default exports, confirming
  * external component resolution and local wrapper interface provenance.
  * Proves primary SPEC anchor ATL-BAR-03.

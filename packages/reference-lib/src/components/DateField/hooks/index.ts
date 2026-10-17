@@ -1,6 +1,6 @@
 /** DateField hooks: single edit session, range draft, form observers. */
 export { useEditSession } from './use-edit-session'
-export type { EditSessionOptions } from './use-edit-session'
+export type { DateEditSessionOptions } from './use-edit-session'
 export { useRangeDraft } from './use-range-draft'
 export type { RangeDraftOptions } from './use-range-draft'
 export { useRangeCommit } from './use-range-commit'

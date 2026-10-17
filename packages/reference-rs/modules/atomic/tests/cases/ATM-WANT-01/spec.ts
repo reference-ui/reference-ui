@@ -1,5 +1,5 @@
 /**
- * Want IR station. Compile surfaces property, typed value, when chain,
+ * Want IR case. Compile surfaces property, typed value, when chain,
  * important flag, and origin on each extracted want.
  */
 import { expect } from 'vitest'

@@ -1,4 +1,4 @@
-// Worked system-variant example (HQ mechanism): a userland Tabs flavor with
+// Worked system-variant example: a userland Tabs flavor with
 // its own TYPED variant name, styled by its own recipes. No variants prop,
 // no theme registry — normal recipe() calls with userland classNames, plus
 // the open kernel `variant` prop carrying the name through. Not exported

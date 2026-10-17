@@ -6,7 +6,7 @@ class string is exactly the second atom, and the element paints the second
 color — the runtime merge collapses the shared slot while the stylesheet
 stays complete.
 
-Evidence: `[atm]` P0 #7 (`docs/evidence/atomic-claims.md` §6); station
+Evidence: reference-rs case
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-01`.
 
 > Search terms: override, precedence, conflict, duplicate property, variadic, repeat prop, merge/last-wins, merge/slot-collapse, NEO-MERGE-02

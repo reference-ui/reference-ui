@@ -1,5 +1,5 @@
 /**
- * Unconditioned class-name station. Runtime strings stay unescaped:
+ * Unconditioned class-name case. Runtime strings stay unescaped:
  * `<system>__mt_2r`, `<system>__p_10px`, `<system>__c_blue.600`.
  */
 import { expect } from 'vitest'

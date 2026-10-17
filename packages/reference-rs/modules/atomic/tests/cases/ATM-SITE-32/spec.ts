@@ -1,7 +1,7 @@
 /**
- * Per-shape refuse station (ATM-SITE-32, SPEC-V2-42). Ten impure shapes
+ * Per-shape refuse (ATM-SITE-32). Ten impure shapes
  * each warn once and mint zero site wants while their static margin sibling
- * extracts with a runtime plan. Doom tripwires for the Ph3 fold table. The
+ * extracts with a runtime plan. Tripwires for the fold table. The
  * refused color position harvests nothing below: 'red' is unlicensed (the
  * color allowlist), so the sink infos zero.
  */
@@ -30,8 +30,7 @@ const spec: AtomicCaseSpec = {
     expect(plans).toHaveLength(10)
     expect(plans.some(p => p.prop === 'color' && p.value === 'red')).toBe(false)
 
-    // Per-shape refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Per-shape refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-32', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

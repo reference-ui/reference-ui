@@ -8,21 +8,20 @@ use oxc_span::Span;
 use super::super::comments::{leading_comment_for_span, parse_comment_metadata};
 use super::super::type_references::collect_references_from_members;
 use super::super::types::{type_parameters_from_oxc, type_to_ref};
-use super::super::ExtractionContext;
+use super::super::ShellSink;
 use crate::ast::model::SymbolShell;
 use crate::model::TsSymbolKind;
 use crate::scanner::symbol_id;
 
 pub(crate) fn push_type_alias_shell<'a>(
-    file_id: &str,
-    ctx: &ExtractionContext<'_>,
+    sink: &mut ShellSink<'_, '_>,
     type_alias: &TSTypeAliasDeclaration<'a>,
     comment_span: Span,
     exported: bool,
-    exports: &mut Vec<SymbolShell>,
 ) {
+    let ctx = sink.ctx;
     let name = type_alias.id.name.to_string();
-    let id = symbol_id(file_id, &name);
+    let id = symbol_id(sink.file_id, &name);
     let comment = parse_comment_metadata(leading_comment_for_span(
         ctx.source,
         ctx.comments,
@@ -35,7 +34,7 @@ pub(crate) fn push_type_alias_shell<'a>(
     let references =
         collect_references_from_members(&[], &[], underlying.as_ref(), &type_parameters);
 
-    exports.push(SymbolShell {
+    sink.exports.push(SymbolShell {
         id,
         name,
         kind: TsSymbolKind::TypeAlias,

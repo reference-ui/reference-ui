@@ -1,5 +1,5 @@
 /**
- * Virtual-source station (ATM-SITE-90). Card and Badge arrive as virtual
+ * Virtual-source (ATM-SITE-90). Card and Badge arrive as virtual
  * sources, so no style trace reads them: Card's props type fails to parse on
  * disk and Badge's props are inline. The spec compiles the virtual files alone
  * (a small compile) and again past the 64-file lane threshold; both must agree

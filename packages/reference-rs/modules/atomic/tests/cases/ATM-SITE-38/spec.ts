@@ -1,5 +1,5 @@
 /**
- * Unary fold-or-refuse station (ATM-SITE-38, SPEC-V2-09/78, GAP-05b).
+ * Unary fold-or-refuse (ATM-SITE-38).
  * `-`/`+`/`!`/`~` fold over literal and const-resolved numeric/boolean
  * operands with the operator applied to every leaf; anything else refuses
  * with a located diagnostic and zero wants. TS non-null `!` is transparent
@@ -77,7 +77,7 @@ const spec: AtomicCaseSpec = {
       }
     }
 
-    // GAP-05b: TS non-null `!` is transparent — plain wants, plain plans.
+    // TS non-null `!` is transparent — plain wants, plain plans.
     for (const prop of ['width', 'padding']) {
       const want = (result.wants ?? []).find(w => w.prop === prop)
       expect(want?.important).toBe(false)
@@ -89,7 +89,7 @@ const spec: AtomicCaseSpec = {
 
     // Eight unary refusals: zero wants from those positions, one located
     // `ATM-W-DYNAMIC-UNARY` diagnostic each, naming the operator — on the
-    // opt-in channel now (S6 E8-class re-point).
+    // opt-in channel.
     const opted = await compileCase('ATM-SITE-38', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
     const diagnostics = opted.compilerDiagnostics ?? []
@@ -123,7 +123,7 @@ const spec: AtomicCaseSpec = {
     expect(mutated?.message).toContain('reassigned at')
 
     // The three folded bools fail CSS validation at resolve, like bare
-    // bools — split by value (F6): the `true` is a genuine runtime miss
+    // bools — split by value: the `true` is a genuine runtime miss
     // (runtime queries `true`) and stays default; the two `false` ride the
     // channel (runtime `isHole` skips them).
     const defaults = result.diagnostics ?? []

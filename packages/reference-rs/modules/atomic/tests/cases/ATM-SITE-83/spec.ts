@@ -1,5 +1,5 @@
 /**
- * JSX spread-bag station (Forge §12). A spread bag on a JSX host has
+ * JSX spread-bag case. A spread bag on a JSX host has
  * attribute semantics: `css` and `r` recurse like their attribute
  * spellings, style and condition keys extract, and `style`, `data-*`,
  * `aria-*`, handlers, and class names stay silent. `css()` keeps
@@ -37,8 +37,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('background-color: transparent;')
 
     // The css() control diagnoses on the default channel: no bag warns,
-    // and the unknown-prop line stays default (Wave-1b carve-out; S6
-    // E8-class re-point moved it opt-in, the carve-out restores it).
+    // and the unknown-prop line stays default (a carve-out keeps it there).
     const defaults = result.diagnostics ?? []
     expect(defaults).toHaveLength(1)
     expect(defaults[0]).toMatchObject({

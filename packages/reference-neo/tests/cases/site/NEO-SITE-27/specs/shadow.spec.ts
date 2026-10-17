@@ -55,7 +55,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
   const atomic = (await import('@reference-ui/rust/atomic')) as unknown as AtomicModule;
   const result = await atomic.compile(request);
-  // S6 E8-class re-point: the refusal proves no exact runtime miss, so the
+  // The refusal proves no exact runtime miss, so the
   // default is silent; the same line rides the opt-in channel.
   assert.equal((result.diagnostics ?? []).length, 0, `default is silent, got ${JSON.stringify(result.diagnostics)}`);
   const opted = await atomic.compile({ ...request, logs: ['compiler'] });

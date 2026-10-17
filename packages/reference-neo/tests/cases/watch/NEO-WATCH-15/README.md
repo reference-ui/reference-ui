@@ -9,7 +9,7 @@ The runner syncs this world fresh. The spec spawns the real `ref sync --watch` C
 `specs/shim/` that holds the watch's first subscribe for three seconds and writes a mark when that subscribe is
 reached. The spec saves a new brand token as soon as the mark appears, inside that hold, and waits for the boot block.
 The generated sheet must carry the saved brand at boot. Under the old order the baseline had already read the old token
-when the save landed, so the boot printed the stale brand. The child stops and the token file is restored in a
+when the save completed, so the boot printed the stale brand. The child stops and the token file is restored in a
 `finally`.
 
 > Search terms: boot edit, boot window, baseline sync, subscribe order, edit during boot, buffered events, catch-up sync, stale boot output, loader hook, NEO-WATCH-15, NEO-WATCH-14

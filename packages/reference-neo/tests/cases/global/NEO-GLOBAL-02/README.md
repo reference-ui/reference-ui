@@ -9,8 +9,8 @@ selector) and always lowers rhythm to `calc()`, both cascade-equal to
 the lib sheet; Panda's `--made-with-panda` signature is GLOBAL-09's
 claim, not asserted here.
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace B
-(`global.ts` 3–20 → `global.css` 2–15); `[atm]` ATM-LAYER-03,
+Evidence: reference-lib Trace B
+(`global.ts` 3–20 → `global.css` 2–15); ATM-LAYER-03,
 ATM-COND-16.
 
 > Search terms: container queries, @container, font-size, spacing scale, body styles, global/body, global/rhythm, global/container-type

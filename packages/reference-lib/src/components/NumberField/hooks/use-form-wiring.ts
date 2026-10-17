@@ -49,7 +49,7 @@ export function useFormWiring(options: FormWiringOptions): void {
     setResetEpoch,
   } = session
 
-  // Native submit/reset observation (PATCHES §5): resolved through the
+  // Native submit/reset observation: resolved through the
   // owned inputs' .form so lookup stays scoped to the owner tree (open
   // ShadowRoot included — never document-global). Every dirty field
   // processes the same submit independently: listeners never

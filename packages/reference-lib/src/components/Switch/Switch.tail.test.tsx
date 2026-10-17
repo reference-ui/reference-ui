@@ -7,11 +7,10 @@ import { Switch } from './Switch'
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-// FINISH-LINE P2C tail: the three pinnable cases from the 23/27 tail.
-// SW-COMP-03 stays CUT (Overlay/RovingFocus territory per the landing note —
-// re-blessed in SPEC.md, flagged for HQ).
+// Colocated pins for the three remaining cases.
+// SW-COMP-03 stays CUT (it belongs to the Overlay/RovingFocus work).
 
-describe('Switch finish-line tail', () => {
+describe('Switch style isolation, composition, and ShadowRoot', () => {
   it('SW-DOM-08: Switch should isolate StyleProps between the track and an authored Thumb', async () => {
     const container = document.createElement('div')
     document.body.appendChild(container)

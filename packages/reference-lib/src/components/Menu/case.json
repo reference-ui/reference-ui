@@ -153,10 +153,10 @@
     },
     {
       "id": "LIB-MENU-022",
-      "name": "Menu plant-site pin P4: Up/Down on an already-open trigger plants no consumable intent",
+      "name": "Menu plant-site pin Up/Down on an already-open trigger plants no consumable intent",
       "kind": "unit",
       "file": "Menu.test.tsx",
-      "title": "Menu plant-site pin P4: Up/Down on an already-open trigger plants no consumable intent"
+      "title": "Menu plant-site pin Up/Down on an already-open trigger plants no consumable intent"
     },
     {
       "id": "LIB-MENU-023",
@@ -174,199 +174,199 @@
     },
     {
       "id": "LIB-MENU-025",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-01: Menu renders trigger, content, items, and separator with documented native roles",
+      "name": "Menu parity (root-level re-targets) MN-DOM-01: Menu renders trigger, content, items, and separator with documented native roles",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-01: Menu renders trigger, content, items, and separator with documented native roles"
+      "title": "Menu parity (root-level re-targets) MN-DOM-01: Menu renders trigger, content, items, and separator with documented native roles"
     },
     {
       "id": "LIB-MENU-026",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-02: Menu marks disabled entries and keeps them inert",
+      "name": "Menu parity (root-level re-targets) MN-DOM-02: Menu marks disabled entries and keeps them inert",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-02: Menu marks disabled entries and keeps them inert"
+      "title": "Menu parity (root-level re-targets) MN-DOM-02: Menu marks disabled entries and keeps them inert"
     },
     {
       "id": "LIB-MENU-027",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-03: Menu trigger exposes expansion and a stable relationship to content",
+      "name": "Menu parity (root-level re-targets) MN-DOM-03: Menu trigger exposes expansion and a stable relationship to content",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-03: Menu trigger exposes expansion and a stable relationship to content"
+      "title": "Menu parity (root-level re-targets) MN-DOM-03: Menu trigger exposes expansion and a stable relationship to content"
     },
     {
       "id": "LIB-MENU-028",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-04: Menu parts preserve native attributes and refs through interaction",
+      "name": "Menu parity (root-level re-targets) MN-DOM-04: Menu parts preserve native attributes and refs through interaction",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-04: Menu parts preserve native attributes and refs through interaction"
+      "title": "Menu parity (root-level re-targets) MN-DOM-04: Menu parts preserve native attributes and refs through interaction"
     },
     {
       "id": "LIB-MENU-029",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-05: Menu typeahead prefers explicit textValue over rendered text",
+      "name": "Menu parity (root-level re-targets) MN-DOM-05: Menu typeahead prefers explicit textValue over rendered text",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-05: Menu typeahead prefers explicit textValue over rendered text"
+      "title": "Menu parity (root-level re-targets) MN-DOM-05: Menu typeahead prefers explicit textValue over rendered text"
     },
     {
       "id": "LIB-MENU-030",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-06: Menu represents empty content and separators without roving items",
+      "name": "Menu parity (root-level re-targets) MN-DOM-06: Menu represents empty content and separators without roving items",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-06: Menu represents empty content and separators without roving items"
+      "title": "Menu parity (root-level re-targets) MN-DOM-06: Menu represents empty content and separators without roving items"
     },
     {
       "id": "LIB-MENU-031",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-07: Menu generates collision-free stable IDs across roots",
+      "name": "Menu parity (root-level re-targets) MN-DOM-07: Menu generates collision-free stable IDs across roots",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-07: Menu generates collision-free stable IDs across roots"
+      "title": "Menu parity (root-level re-targets) MN-DOM-07: Menu generates collision-free stable IDs across roots"
     },
     {
       "id": "LIB-MENU-032",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DOM-09: Menu defaults to vertical roving semantics",
+      "name": "Menu parity (root-level re-targets) MN-DOM-09: Menu defaults to vertical roving semantics",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DOM-09: Menu defaults to vertical roving semantics"
+      "title": "Menu parity (root-level re-targets) MN-DOM-09: Menu defaults to vertical roving semantics"
     },
     {
       "id": "LIB-MENU-033",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-01: Menu chooses its entry item from the keyboard command that opened it",
+      "name": "Menu parity (root-level re-targets) MN-FOCUS-01: Menu chooses its entry item from the keyboard command that opened it",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-01: Menu chooses its entry item from the keyboard command that opened it"
+      "title": "Menu parity (root-level re-targets) MN-FOCUS-01: Menu chooses its entry item from the keyboard command that opened it"
     },
     {
       "id": "LIB-MENU-034",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-02: Menu does not move focus into items after pointer opening",
+      "name": "Menu parity (root-level re-targets) MN-FOCUS-02: Menu does not move focus into items after pointer opening",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-02: Menu does not move focus into items after pointer opening"
+      "title": "Menu parity (root-level re-targets) MN-FOCUS-02: Menu does not move focus into items after pointer opening"
     },
     {
       "id": "LIB-MENU-035",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-03: Vertical Menu provides complete wrapped roving focus over enabled commands",
+      "name": "Menu parity (root-level re-targets) MN-FOCUS-03: Vertical Menu provides complete wrapped roving focus over enabled commands",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-03: Vertical Menu provides complete wrapped roving focus over enabled commands"
+      "title": "Menu parity (root-level re-targets) MN-FOCUS-03: Vertical Menu provides complete wrapped roving focus over enabled commands"
     },
     {
       "id": "LIB-MENU-036",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-05: Menu leaves focus at its source when no enabled entry item exists",
+      "name": "Menu parity (root-level re-targets) MN-FOCUS-05: Menu leaves focus at its source when no enabled entry item exists",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-FOCUS-05: Menu leaves focus at its source when no enabled entry item exists"
+      "title": "Menu parity (root-level re-targets) MN-FOCUS-05: Menu leaves focus at its source when no enabled entry item exists"
     },
     {
       "id": "LIB-MENU-037",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-TYPE-01: Menu typeahead searches and wraps within the open level",
+      "name": "Menu parity (root-level re-targets) MN-TYPE-01: Menu typeahead searches and wraps within the open level",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-TYPE-01: Menu typeahead searches and wraps within the open level"
+      "title": "Menu parity (root-level re-targets) MN-TYPE-01: Menu typeahead searches and wraps within the open level"
     },
     {
       "id": "LIB-MENU-038",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-TYPE-04: Menu integrates timed, Unicode, disabled, no-match, and descendant typeahead edges",
+      "name": "Menu parity (root-level re-targets) MN-TYPE-04: Menu integrates timed, Unicode, disabled, no-match, and descendant typeahead edges",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-TYPE-04: Menu integrates timed, Unicode, disabled, no-match, and descendant typeahead edges"
+      "title": "Menu parity (root-level re-targets) MN-TYPE-04: Menu integrates timed, Unicode, disabled, no-match, and descendant typeahead edges"
     },
     {
       "id": "LIB-MENU-039",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-ACT-01: Menu invokes one cancelable item selection for a primary pointer click",
+      "name": "Menu parity (root-level re-targets) MN-ACT-01: Menu invokes one cancelable item selection for a primary pointer click",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-ACT-01: Menu invokes one cancelable item selection for a primary pointer click"
+      "title": "Menu parity (root-level re-targets) MN-ACT-01: Menu invokes one cancelable item selection for a primary pointer click"
     },
     {
       "id": "LIB-MENU-040",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-ACT-02: Menu invokes one item selection for either Enter or Space with keyboard metadata",
+      "name": "Menu parity (root-level re-targets) MN-ACT-02: Menu invokes one item selection for either Enter or Space with keyboard metadata",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-ACT-02: Menu invokes one item selection for either Enter or Space with keyboard metadata"
+      "title": "Menu parity (root-level re-targets) MN-ACT-02: Menu invokes one item selection for either Enter or Space with keyboard metadata"
     },
     {
       "id": "LIB-MENU-041",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-ACT-03: Menu lets consumer handlers cancel selection and dismissal",
+      "name": "Menu parity (root-level re-targets) MN-ACT-03: Menu lets consumer handlers cancel selection and dismissal",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-ACT-03: Menu lets consumer handlers cancel selection and dismissal"
+      "title": "Menu parity (root-level re-targets) MN-ACT-03: Menu lets consumer handlers cancel selection and dismissal"
     },
     {
       "id": "LIB-MENU-042",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-ACT-06: Menu keeps disabled items outside action and dismissal paths",
+      "name": "Menu parity (root-level re-targets) MN-ACT-06: Menu keeps disabled items outside action and dismissal paths",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-ACT-06: Menu keeps disabled items outside action and dismissal paths"
+      "title": "Menu parity (root-level re-targets) MN-ACT-06: Menu keeps disabled items outside action and dismissal paths"
     },
     {
       "id": "LIB-MENU-043",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-ACT-08: Menu uses current item callbacks and disabled membership after rerender",
+      "name": "Menu parity (root-level re-targets) MN-ACT-08: Menu uses current item callbacks and disabled membership after rerender",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-ACT-08: Menu uses current item callbacks and disabled membership after rerender"
+      "title": "Menu parity (root-level re-targets) MN-ACT-08: Menu uses current item callbacks and disabled membership after rerender"
     },
     {
       "id": "LIB-MENU-044",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-CHOICE-08: Menu applies closeOnSelect defaults and honors explicit overrides",
+      "name": "Menu parity (root-level re-targets) MN-CHOICE-08: Menu applies closeOnSelect defaults and honors explicit overrides",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-CHOICE-08: Menu applies closeOnSelect defaults and honors explicit overrides"
+      "title": "Menu parity (root-level re-targets) MN-CHOICE-08: Menu applies closeOnSelect defaults and honors explicit overrides"
     },
     {
       "id": "LIB-MENU-045",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-INTENT-10: Menu does not open an activation-owned root on hover",
+      "name": "Menu parity (root-level re-targets) MN-INTENT-10: Menu does not open an activation-owned root on hover",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-INTENT-10: Menu does not open an activation-owned root on hover"
+      "title": "Menu parity (root-level re-targets) MN-INTENT-10: Menu does not open an activation-owned root on hover"
     },
     {
       "id": "LIB-MENU-046",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-01: Menu unwinds on a press outside the root subtree",
+      "name": "Menu parity (root-level re-targets) MN-CLOSE-01: Menu unwinds on a press outside the root subtree",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-01: Menu unwinds on a press outside the root subtree"
+      "title": "Menu parity (root-level re-targets) MN-CLOSE-01: Menu unwinds on a press outside the root subtree"
     },
     {
       "id": "LIB-MENU-047",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-04: Menu cascades a programmatic root close and restores only the root trigger",
+      "name": "Menu parity (root-level re-targets) MN-CLOSE-04: Menu cascades a programmatic root close and restores only the root trigger",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-04: Menu cascades a programmatic root close and restores only the root trigger"
+      "title": "Menu parity (root-level re-targets) MN-CLOSE-04: Menu cascades a programmatic root close and restores only the root trigger"
     },
     {
       "id": "LIB-MENU-048",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-05: Menu closes on Tab and continues relative to the root trigger",
+      "name": "Menu parity (root-level re-targets) MN-CLOSE-05: Menu closes on Tab and continues relative to the root trigger",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-05: Menu closes on Tab and continues relative to the root trigger"
+      "title": "Menu parity (root-level re-targets) MN-CLOSE-05: Menu closes on Tab and continues relative to the root trigger"
     },
     {
       "id": "LIB-MENU-049",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-08: Menu retains open DOM when its parent rejects a Tab-close request",
+      "name": "Menu parity (root-level re-targets) MN-CLOSE-08: Menu retains open DOM when its parent rejects a Tab-close request",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-CLOSE-08: Menu retains open DOM when its parent rejects a Tab-close request"
+      "title": "Menu parity (root-level re-targets) MN-CLOSE-08: Menu retains open DOM when its parent rejects a Tab-close request"
     },
     {
       "id": "LIB-MENU-050",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DYNAMIC-01: Menu updates roving order and typeahead when items change while open",
+      "name": "Menu parity (root-level re-targets) MN-DYNAMIC-01: Menu updates roving order and typeahead when items change while open",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DYNAMIC-01: Menu updates roving order and typeahead when items change while open"
+      "title": "Menu parity (root-level re-targets) MN-DYNAMIC-01: Menu updates roving order and typeahead when items change while open"
     },
     {
       "id": "LIB-MENU-051",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-DYNAMIC-03: Menu uses current labels and disabled state on the next interaction",
+      "name": "Menu parity (root-level re-targets) MN-DYNAMIC-03: Menu uses current labels and disabled state on the next interaction",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-DYNAMIC-03: Menu uses current labels and disabled state on the next interaction"
+      "title": "Menu parity (root-level re-targets) MN-DYNAMIC-03: Menu uses current labels and disabled state on the next interaction"
     },
     {
       "id": "LIB-MENU-052",
-      "name": "Menu Quarantine Parity (root-level re-targets) MN-A11Y-01: Menu exposes exact roles, names, states, and one tab stop",
+      "name": "Menu parity (root-level re-targets) MN-A11Y-01: Menu exposes exact roles, names, states, and one tab stop",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Quarantine Parity (root-level re-targets) MN-A11Y-01: Menu exposes exact roles, names, states, and one tab stop"
+      "title": "Menu parity (root-level re-targets) MN-A11Y-01: Menu exposes exact roles, names, states, and one tab stop"
     },
     {
       "id": "LIB-MENU-053",
@@ -503,297 +503,297 @@
     },
     {
       "id": "LIB-MENU-072",
-      "name": "Menu ShadowRoot ownership (PATCHES #3) MN-ENV-03: Menu preserves composed-path ownership and submenu behavior from a ShadowRoot",
+      "name": "Menu ShadowRoot ownership MN-ENV-03: Menu preserves composed-path ownership and submenu behavior from a ShadowRoot",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu ShadowRoot ownership (PATCHES #3) MN-ENV-03: Menu preserves composed-path ownership and submenu behavior from a ShadowRoot"
+      "title": "Menu ShadowRoot ownership MN-ENV-03: Menu preserves composed-path ownership and submenu behavior from a ShadowRoot"
     },
     {
       "id": "LIB-MENU-073",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items (B-33)",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items (B-33)"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items"
     },
     {
       "id": "LIB-MENU-074",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-FOCUS-07-sub: Submenu content moves container keys to its own edge items",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-FOCUS-07-sub: Submenu content moves container keys to its own edge items",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-FOCUS-07-sub: Submenu content moves container keys to its own edge items"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-FOCUS-07-sub: Submenu content moves container keys to its own edge items"
     },
     {
       "id": "LIB-MENU-075",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CLOSE-11: Adjacent trigger press closes the open menu before opening its own",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CLOSE-11: Adjacent trigger press closes the open menu before opening its own",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CLOSE-11: Adjacent trigger press closes the open menu before opening its own"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CLOSE-11: Adjacent trigger press closes the open menu before opening its own"
     },
     {
       "id": "LIB-MENU-076",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-01: Choice items expose exact roles, checked states, and group naming",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-01: Choice items expose exact roles, checked states, and group naming",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-01: Choice items expose exact roles, checked states, and group naming"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-01: Choice items expose exact roles, checked states, and group naming"
     },
     {
       "id": "LIB-MENU-077",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-02: CheckboxItem requests the opposite boolean once per modality and stays open",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-02: CheckboxItem requests the opposite boolean once per modality and stays open",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-02: CheckboxItem requests the opposite boolean once per modality and stays open"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-02: CheckboxItem requests the opposite boolean once per modality and stays open"
     },
     {
       "id": "LIB-MENU-078",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-04: RadioItem requests its value once while the group stays controlled",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-04: RadioItem requests its value once while the group stays controlled",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-04: RadioItem requests its value once while the group stays controlled"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-04: RadioItem requests its value once while the group stays controlled"
     },
     {
       "id": "LIB-MENU-079",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-08: Choices default to staying open and honor explicit closeOnSelect",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-08: Choices default to staying open and honor explicit closeOnSelect",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-08: Choices default to staying open and honor explicit closeOnSelect"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-08: Choices default to staying open and honor explicit closeOnSelect"
     },
     {
       "id": "LIB-MENU-080",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-07: Choice cancellation stops both the state request and dismissal",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-07: Choice cancellation stops both the state request and dismissal",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-07: Choice cancellation stops both the state request and dismissal"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-07: Choice cancellation stops both the state request and dismissal"
     },
     {
       "id": "LIB-MENU-081",
-      "name": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-09: Roving and typeahead treat choices as commands, skipping group structure",
+      "name": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-09: Roving and typeahead treat choices as commands, skipping group structure",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss) MN-CHOICE-09: Roving and typeahead treat choices as commands, skipping group structure"
+      "title": "Menu keyboard, choice items, and adjacent dismiss MN-CHOICE-09: Roving and typeahead treat choices as commands, skipping group structure"
     },
     {
       "id": "LIB-MENU-082",
-      "name": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-04: RTL mirrors submenu open and close arrows without changing activation",
+      "name": "Menu controlled submenu keyboard completions MN-SUBKEY-04: RTL mirrors submenu open and close arrows without changing activation",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-04: RTL mirrors submenu open and close arrows without changing activation"
+      "title": "Menu controlled submenu keyboard completions MN-SUBKEY-04: RTL mirrors submenu open and close arrows without changing activation"
     },
     {
       "id": "LIB-MENU-083",
-      "name": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-06: Rejected submenu open and close requests stay visibly controlled",
+      "name": "Menu controlled submenu keyboard completions MN-SUBKEY-06: Rejected submenu open and close requests stay visibly controlled",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-06: Rejected submenu open and close requests stay visibly controlled"
+      "title": "Menu controlled submenu keyboard completions MN-SUBKEY-06: Rejected submenu open and close requests stay visibly controlled"
     },
     {
       "id": "LIB-MENU-084",
-      "name": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-07: Consumer key cancellation wins before submenu and roving defaults",
+      "name": "Menu controlled submenu keyboard completions MN-SUBKEY-07: Consumer key cancellation wins before submenu and roving defaults",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-07: Consumer key cancellation wins before submenu and roving defaults"
+      "title": "Menu controlled submenu keyboard completions MN-SUBKEY-07: Consumer key cancellation wins before submenu and roving defaults"
     },
     {
       "id": "LIB-MENU-085",
-      "name": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-08: Disabled triggers stay inert even when externally open",
+      "name": "Menu controlled submenu keyboard completions MN-SUBKEY-08: Disabled triggers stay inert even when externally open",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu controlled submenu keyboard completions (P2E) MN-SUBKEY-08: Disabled triggers stay inert even when externally open"
+      "title": "Menu controlled submenu keyboard completions MN-SUBKEY-08: Disabled triggers stay inert even when externally open"
     },
     {
       "id": "LIB-MENU-086",
-      "name": "Menu controlled submenu keyboard completions (P2E) MN-TYPE-03: Typeahead buffers reset and scope as submenu ownership changes",
+      "name": "Menu controlled submenu keyboard completions MN-TYPE-03: Typeahead buffers reset and scope as submenu ownership changes",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu controlled submenu keyboard completions (P2E) MN-TYPE-03: Typeahead buffers reset and scope as submenu ownership changes"
+      "title": "Menu controlled submenu keyboard completions MN-TYPE-03: Typeahead buffers reset and scope as submenu ownership changes"
     },
     {
       "id": "LIB-MENU-087",
-      "name": "Menu tree dismissal completions (P2E) MN-CLOSE-02: Interaction in portalled descendants stays inside the root subtree",
+      "name": "Menu tree dismissal completions MN-CLOSE-02: Interaction in portalled descendants stays inside the root subtree",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu tree dismissal completions (P2E) MN-CLOSE-02: Interaction in portalled descendants stays inside the root subtree"
+      "title": "Menu tree dismissal completions MN-CLOSE-02: Interaction in portalled descendants stays inside the root subtree"
     },
     {
       "id": "LIB-MENU-088",
-      "name": "Menu tree dismissal completions (P2E) MN-CLOSE-06: Removing a submenu trigger before close falls back to a live item",
+      "name": "Menu tree dismissal completions MN-CLOSE-06: Removing a submenu trigger before close falls back to a live item",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu tree dismissal completions (P2E) MN-CLOSE-06: Removing a submenu trigger before close falls back to a live item"
+      "title": "Menu tree dismissal completions MN-CLOSE-06: Removing a submenu trigger before close falls back to a live item"
     },
     {
       "id": "LIB-MENU-089",
-      "name": "Menu tree dismissal completions (P2E) MN-CLOSE-06: Disabling a submenu trigger before close falls back to a live item",
+      "name": "Menu tree dismissal completions MN-CLOSE-06: Disabling a submenu trigger before close falls back to a live item",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu tree dismissal completions (P2E) MN-CLOSE-06: Disabling a submenu trigger before close falls back to a live item"
+      "title": "Menu tree dismissal completions MN-CLOSE-06: Disabling a submenu trigger before close falls back to a live item"
     },
     {
       "id": "LIB-MENU-090",
-      "name": "Menu tree dismissal completions (P2E) MN-CLOSE-07: One layer per root popup and open submenu, one request per event",
+      "name": "Menu tree dismissal completions MN-CLOSE-07: One layer per root popup and open submenu, one request per event",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu tree dismissal completions (P2E) MN-CLOSE-07: One layer per root popup and open submenu, one request per event"
+      "title": "Menu tree dismissal completions MN-CLOSE-07: One layer per root popup and open submenu, one request per event"
     },
     {
       "id": "LIB-MENU-091",
-      "name": "Menu tree dismissal completions (P2E) MN-CLOSE-09: Extension overlay interaction dismisses once despite stopped mouse events",
+      "name": "Menu tree dismissal completions MN-CLOSE-09: Extension overlay interaction dismisses once despite stopped mouse events",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu tree dismissal completions (P2E) MN-CLOSE-09: Extension overlay interaction dismisses once despite stopped mouse events"
+      "title": "Menu tree dismissal completions MN-CLOSE-09: Extension overlay interaction dismisses once despite stopped mouse events"
     },
     {
       "id": "LIB-MENU-092",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-02: Diagonal travel toward content keeps the submenu open",
+      "name": "Menu pointer submenu intent MN-INTENT-02: Diagonal travel toward content keeps the submenu open",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-02: Diagonal travel toward content keeps the submenu open"
+      "title": "Menu pointer submenu intent MN-INTENT-02: Diagonal travel toward content keeps the submenu open"
     },
     {
       "id": "LIB-MENU-093",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-03: Travel clearly away requests closure at 300ms, not before",
+      "name": "Menu pointer submenu intent MN-INTENT-03: Travel clearly away requests closure at 300ms, not before",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-03: Travel clearly away requests closure at 300ms, not before"
+      "title": "Menu pointer submenu intent MN-INTENT-03: Travel clearly away requests closure at 300ms, not before"
     },
     {
       "id": "LIB-MENU-094",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-04: Returning through the submenu path duplicates no callbacks",
+      "name": "Menu pointer submenu intent MN-INTENT-04: Returning through the submenu path duplicates no callbacks",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-04: Returning through the submenu path duplicates no callbacks"
+      "title": "Menu pointer submenu intent MN-INTENT-04: Returning through the submenu path duplicates no callbacks"
     },
     {
       "id": "LIB-MENU-095",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-05: Switching to another parent entry closes the open submenu once",
+      "name": "Menu pointer submenu intent MN-INTENT-05: Switching to another parent entry closes the open submenu once",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-05: Switching to another parent entry closes the open submenu once"
+      "title": "Menu pointer submenu intent MN-INTENT-05: Switching to another parent entry closes the open submenu once"
     },
     {
       "id": "LIB-MENU-096",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-05: Switching to an enabled trigger closes the old level and opens the new one",
+      "name": "Menu pointer submenu intent MN-INTENT-05: Switching to an enabled trigger closes the old level and opens the new one",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-05: Switching to an enabled trigger closes the old level and opens the new one"
+      "title": "Menu pointer submenu intent MN-INTENT-05: Switching to an enabled trigger closes the old level and opens the new one"
     },
     {
       "id": "LIB-MENU-097",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-06: Grace geometry follows the resolved collision side",
+      "name": "Menu pointer submenu intent MN-INTENT-06: Grace geometry follows the resolved collision side",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-06: Grace geometry follows the resolved collision side"
+      "title": "Menu pointer submenu intent MN-INTENT-06: Grace geometry follows the resolved collision side"
     },
     {
       "id": "LIB-MENU-098",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-07: RTL mirrors toward-and-away intent geometry",
+      "name": "Menu pointer submenu intent MN-INTENT-07: RTL mirrors toward-and-away intent geometry",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-07: RTL mirrors toward-and-away intent geometry"
+      "title": "Menu pointer submenu intent MN-INTENT-07: RTL mirrors toward-and-away intent geometry"
     },
     {
       "id": "LIB-MENU-099",
-      "name": "Menu pointer submenu intent (P2E) MN-INTENT-08: Touch starts no hover timers and activates the trigger once",
+      "name": "Menu pointer submenu intent MN-INTENT-08: Touch starts no hover timers and activates the trigger once",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu pointer submenu intent (P2E) MN-INTENT-08: Touch starts no hover timers and activates the trigger once"
+      "title": "Menu pointer submenu intent MN-INTENT-08: Touch starts no hover timers and activates the trigger once"
     },
     {
       "id": "LIB-MENU-100",
-      "name": "Menu placement and dynamic ownership (P2E) MN-DOM-08: Submenu content uses the shared Popover engine from its trigger",
+      "name": "Menu placement and dynamic ownership MN-DOM-08: Submenu content uses the shared Popover engine from its trigger",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu placement and dynamic ownership (P2E) MN-DOM-08: Submenu content uses the shared Popover engine from its trigger"
+      "title": "Menu placement and dynamic ownership MN-DOM-08: Submenu content uses the shared Popover engine from its trigger"
     },
     {
       "id": "LIB-MENU-101",
-      "name": "Menu placement and dynamic ownership (P2E) MN-DOM-10: Mirrored default placement with explicit geometry passthrough",
+      "name": "Menu placement and dynamic ownership MN-DOM-10: Mirrored default placement with explicit geometry passthrough",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu placement and dynamic ownership (P2E) MN-DOM-10: Mirrored default placement with explicit geometry passthrough"
+      "title": "Menu placement and dynamic ownership MN-DOM-10: Mirrored default placement with explicit geometry passthrough"
     },
     {
       "id": "LIB-MENU-102",
-      "name": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-02: Removing an open submenu cleans timers, layers, and branches",
+      "name": "Menu placement and dynamic ownership MN-DYNAMIC-02: Removing an open submenu cleans timers, layers, and branches",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-02: Removing an open submenu cleans timers, layers, and branches"
+      "title": "Menu placement and dynamic ownership MN-DYNAMIC-02: Removing an open submenu cleans timers, layers, and branches"
     },
     {
       "id": "LIB-MENU-103",
-      "name": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-02: Moving an open submenu registers once with its new parent",
+      "name": "Menu placement and dynamic ownership MN-DYNAMIC-02: Moving an open submenu registers once with its new parent",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-02: Moving an open submenu registers once with its new parent"
+      "title": "Menu placement and dynamic ownership MN-DYNAMIC-02: Moving an open submenu registers once with its new parent"
     },
     {
       "id": "LIB-MENU-104",
-      "name": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-04: Submenu control relationships follow a trigger id change",
+      "name": "Menu placement and dynamic ownership MN-DYNAMIC-04: Submenu control relationships follow a trigger id change",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu placement and dynamic ownership (P2E) MN-DYNAMIC-04: Submenu control relationships follow a trigger id change"
+      "title": "Menu placement and dynamic ownership MN-DYNAMIC-04: Submenu control relationships follow a trigger id change"
     },
     {
       "id": "LIB-MENU-105",
-      "name": "Menu dynamic choice and link parts (P2E) MN-CHOICE-10: Dynamic choice values, handlers, and group membership stay current",
+      "name": "Menu dynamic choice and link parts MN-CHOICE-10: Dynamic choice values, handlers, and group membership stay current",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu dynamic choice and link parts (P2E) MN-CHOICE-10: Dynamic choice values, handlers, and group membership stay current"
+      "title": "Menu dynamic choice and link parts MN-CHOICE-10: Dynamic choice values, handlers, and group membership stay current"
     },
     {
       "id": "LIB-MENU-106",
-      "name": "Menu dynamic choice and link parts (P2E) MN-LINK-06: Nested target and download links keep native effects with tree dismissal",
+      "name": "Menu dynamic choice and link parts MN-LINK-06: Nested target and download links keep native effects with tree dismissal",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu dynamic choice and link parts (P2E) MN-LINK-06: Nested target and download links keep native effects with tree dismissal"
+      "title": "Menu dynamic choice and link parts MN-LINK-06: Nested target and download links keep native effects with tree dismissal"
     },
     {
       "id": "LIB-MENU-107",
-      "name": "Menu dynamic choice and link parts (P2E) MN-LINK-06: Nested download links dismiss the tree without navigating",
+      "name": "Menu dynamic choice and link parts MN-LINK-06: Nested download links dismiss the tree without navigating",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu dynamic choice and link parts (P2E) MN-LINK-06: Nested download links dismiss the tree without navigating"
+      "title": "Menu dynamic choice and link parts MN-LINK-06: Nested download links dismiss the tree without navigating"
     },
     {
       "id": "LIB-MENU-108",
-      "name": "Menu dynamic choice and link parts (P2E) MN-LINK-09: Dynamic links use current href, label, state, and close policy",
+      "name": "Menu dynamic choice and link parts MN-LINK-09: Dynamic links use current href, label, state, and close policy",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu dynamic choice and link parts (P2E) MN-LINK-09: Dynamic links use current href, label, state, and close policy"
+      "title": "Menu dynamic choice and link parts MN-LINK-09: Dynamic links use current href, label, state, and close policy"
     },
     {
       "id": "LIB-MENU-109",
-      "name": "Menu composition gates (P2E) MN-COMP-01: MenuButton composes Button, Popover, and Menu with one authority",
+      "name": "Menu composition gates MN-COMP-01: MenuButton composes Button, Popover, and Menu with one authority",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu composition gates (P2E) MN-COMP-01: MenuButton composes Button, Popover, and Menu with one authority"
+      "title": "Menu composition gates MN-COMP-01: MenuButton composes Button, Popover, and Menu with one authority"
     },
     {
       "id": "LIB-MENU-110",
-      "name": "Menu composition gates (P2E) MN-COMP-02: ContextMenu composes a virtual anchor with Menu and no trigger markup",
+      "name": "Menu composition gates MN-COMP-02: ContextMenu composes a virtual anchor with Menu and no trigger markup",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu composition gates (P2E) MN-COMP-02: ContextMenu composes a virtual anchor with Menu and no trigger markup"
+      "title": "Menu composition gates MN-COMP-02: ContextMenu composes a virtual anchor with Menu and no trigger markup"
     },
     {
       "id": "LIB-MENU-111",
-      "name": "Menu composition gates (P2E) MN-COMP-03: Two-level submenu ownership across keyboard, intent, and dismissal",
+      "name": "Menu composition gates MN-COMP-03: Two-level submenu ownership across keyboard, intent, and dismissal",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu composition gates (P2E) MN-COMP-03: Two-level submenu ownership across keyboard, intent, and dismissal"
+      "title": "Menu composition gates MN-COMP-03: Two-level submenu ownership across keyboard, intent, and dismissal"
     },
     {
       "id": "LIB-MENU-112",
-      "name": "Menu composition gates (P2E) MN-COMP-04: Settings menu composes controlled choices with per-item close policy",
+      "name": "Menu composition gates MN-COMP-04: Settings menu composes controlled choices with per-item close policy",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu composition gates (P2E) MN-COMP-04: Settings menu composes controlled choices with per-item close policy"
+      "title": "Menu composition gates MN-COMP-04: Settings menu composes controlled choices with per-item close policy"
     },
     {
       "id": "LIB-MENU-113",
-      "name": "Menu composition gates (P2E) MN-COMP-05: Mixed link-and-command menu keeps native link gestures",
+      "name": "Menu composition gates MN-COMP-05: Mixed link-and-command menu keeps native link gestures",
       "kind": "ct",
       "file": "__e2e__/Menu.ct.spec.ts",
-      "title": "Menu composition gates (P2E) MN-COMP-05: Mixed link-and-command menu keeps native link gestures"
+      "title": "Menu composition gates MN-COMP-05: Mixed link-and-command menu keeps native link gestures"
     },
     {
       "id": "LIB-MENU-114",

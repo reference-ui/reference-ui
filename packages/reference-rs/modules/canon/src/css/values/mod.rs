@@ -1,7 +1,7 @@
 //! CSS value alphabet: recognizers for complete CSS values in source.
 //!
 //! The alphabet answers one question — *is this string complete CSS?* — so the
-//! token resolver (§9 fence) and the harvest pass (Slice 4) never mistake a
+//! token resolver (§9 fence) and the harvest pass never mistake a
 //! color, length, or function for a token path. Rhythm (`Nr`) stays atomic's;
 //! everything here is pure CSS grammar over closed tables and balanced parens.
 

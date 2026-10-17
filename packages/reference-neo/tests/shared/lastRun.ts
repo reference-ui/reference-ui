@@ -20,12 +20,13 @@ export interface LastRunLog {
 
 export const LAST_RUN_FILE: string = path.join(ARTIFACTS_DIR, 'last-run.json');
 
+// An entry may omit status (older logs) but never carries any value outside this set.
+const ENTRY_STATUSES: ReadonlySet<unknown> = new Set<unknown>([undefined, 'ok', 'failed', 'degraded']);
+
 function isEntry(value: unknown): value is LastRunEntry {
   if (typeof value !== 'object' || value === null) return false;
   const row = value as Record<string, unknown>;
-  const status = row.status;
-  const statusOk = status === undefined || status === 'ok' || status === 'failed' || status === 'degraded';
-  return typeof row.id === 'string' && typeof row.ok === 'boolean' && typeof row.ms === 'number' && statusOk;
+  return typeof row.id === 'string' && typeof row.ok === 'boolean' && typeof row.ms === 'number' && ENTRY_STATUSES.has(row.status);
 }
 
 // The last-run log, or null when no usable log exists (missing file, bad JSON, wrong shape).

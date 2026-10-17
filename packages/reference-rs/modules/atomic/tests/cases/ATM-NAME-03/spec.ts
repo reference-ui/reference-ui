@@ -1,5 +1,5 @@
 /**
- * Important class-name station. Authored `2r!` becomes runtime
+ * Important class-name case. Authored `2r!` becomes runtime
  * `<system>__mt_2r!` and a system-qualified `.mt_2r\!` selector.
  */
 import { expect } from 'vitest'

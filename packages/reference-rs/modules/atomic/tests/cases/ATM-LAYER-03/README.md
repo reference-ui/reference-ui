@@ -1,4 +1,4 @@
-# ATM-LAYER-03 — Layer-population station
+# ATM-LAYER-03 — Layer-population
 
 BaseSystem populates `@layer global` (stored globalCss) and `@layer tokens`
 (custom properties on `:root` plus dark overrides). Empty reset/recipes stay

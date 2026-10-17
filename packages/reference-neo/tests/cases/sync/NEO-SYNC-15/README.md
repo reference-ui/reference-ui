@@ -14,8 +14,8 @@ carries exactly the Card-site utility with no `Random` ghost, `#card` paints
 4px of padding, both probes stay classless, and a second sync leaves the
 discovery artifacts byte-equal.
 
-Evidence: `[atm]` ATM-SITE-56 (engine twin: same Card/Random/Label world at
-the seam); `[decision D12]` (frozen request). Siblings: NEO-SYNC-04 (request
+Evidence: ATM-SITE-56 (engine twin: same Card/Random/Label world at
+the seam; frozen request). Siblings: NEO-SYNC-04 (request
 pin), NEO-SYNC-06 (determinism), NEO-SYNC-10 (merged shape), NEO-SITE-11
 (configured-host twin), NEO-SITE-12 (anti-host trio).
 

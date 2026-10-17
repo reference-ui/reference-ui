@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-PRJ-01.
+ * Case specification for TST-PRJ-01.
  * Verifies object-like projection over interface and alias chains.
  * Proves primary SPEC ID anchor TST-PRJ-01.
  */

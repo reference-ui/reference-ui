@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-03.
+ * Case specification for TST-IMP-03.
  * Verifies that a dangling `export *` and a dangling `export { X } from` each warn once, and that
  * the names they would provide never reach the manifest while the barrel's own declarations do.
  * Proves primary SPEC ID anchor TST-IMP-03.

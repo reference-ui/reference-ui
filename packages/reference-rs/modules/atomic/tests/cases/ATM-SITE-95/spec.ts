@@ -1,5 +1,5 @@
 /**
- * Compiled-icon station (ATM-SITE-95): the docs icon path. `icon-pkg` ships compiled
+ * Compiled-icon (ATM-SITE-95): the docs icon path. `icon-pkg` ships compiled
  * dist only (`dist/*.mjs`, jsx-runtime calls, no generics), the way `@reference-ui/icons`
  * does, so no source or declaration names what `CodeIcon` consumes and the tag stays an
  * external component at the call site. The package's published roster arrives as

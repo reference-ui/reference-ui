@@ -6,9 +6,7 @@ carries exactly the live utility, the mixed call resolves to that one class
 and paints, and the holes-only call resolves to the empty string with the
 element resting on its inherited color.
 
-Evidence: `[atm]` ATM-LEAF-03, ATM-GHOST-02; `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:1205`
-"ignores declarations with null"; `[decision D11]` (holes vanish, never a
-ghost class).
+Evidence: ATM-LEAF-03, ATM-GHOST-02; Panda v1 test "ignores declarations with
+null"; holes vanish, never a ghost class.
 
 > Search terms: falsy, nullish, nil, conditional styles, missing declarations, css/holes, css/falsy-leaves

@@ -1,5 +1,5 @@
 /**
- * Seed station. Empty extract still returns the compile contract: layer
+ * Seed case. Empty extract still returns the compile contract: layer
  * preamble, no utility rules, empty class map, no diagnostics. Fixture
  * tokens/global may fill those layers (ATM-LAYER-03).
  */

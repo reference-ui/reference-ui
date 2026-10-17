@@ -5,7 +5,7 @@
  * another package's nested utilities. The baked `@layer root` spacing-root
  * default is the one layer ahead of the wrap, ranking below every package.
  * This module owns the order string, the lib package open line, the standing
- * nesting gauge (M0-fix21-A), and the one station exempt from system-layer
+ * nesting gauge (M0-fix21-A), and the one case exempt from system-layer
  * golden normalization (ATM-SYS-01).
  */
 import { expect } from 'vitest'
@@ -15,13 +15,13 @@ export const LAYER_PREAMBLE = '@layer reset, global, base, tokens, recipes, util
 /** Baked `@layer root` spacing-root default block, verbatim engine bytes. */
 export const ROOT_DEFAULT_BLOCK = '@layer root {\n  :root { --spacing-root: 0.25rem }\n}\n'
 
-/** Package open line for stations compiling the frozen lib spec. */
+/** Package open line for cases compiling the frozen lib spec. */
 export const LIB_PACKAGE_OPEN = '@layer \\@reference-ui\\/lib {'
 
 /**
- * The single station whose committed stylesheet is not system-layer normalized.
+ * The single case whose committed stylesheet is not system-layer normalized.
  * It pins the canonical lib `@layer global` / `@layer tokens` emission in full;
- * every other station collapses those bodies so lib token values never churn
+ * every other case collapses those bodies so lib token values never churn
  * the suite. See `normalizeSystemLayers` in `testing/normalizers.ts`.
  */
 export const SYSTEM_EMISSION_ANCHOR = 'ATM-SYS-01'

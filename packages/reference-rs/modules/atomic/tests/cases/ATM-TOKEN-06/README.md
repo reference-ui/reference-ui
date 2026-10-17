@@ -1,4 +1,4 @@
-# ATM-TOKEN-06 — Opacity-modifier station
+# ATM-TOKEN-06 — Opacity-modifier
 
 Opacity-modifier parsing ignores slashes that belong to the CSS value and
 refuses empty segments. Contract: [SPEC.md](../../../SPEC.md).

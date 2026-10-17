@@ -1,6 +1,6 @@
 # Field
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Field --e2e`).
 
 The visual bezel around a form control. Field owns chrome: background,
 radius, spacing, prefix/suffix layout, and the visible focus ring.
@@ -289,7 +289,7 @@ Field exists so the descendant recipe turns off that chrome exactly when
 the ancestor is Field. The selector is the invariant; a Context flag
 would let bezel and input disagree if the flag drifted.
 
-**Vendor.** Base UI / React Aria `Field` are form-wiring providers
+**Prior art.** Base UI / React Aria `Field` are form-wiring providers
 (label, description, error context). **Leave.** This component is visual
 only.
 

@@ -107,7 +107,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       overlay.setIsOpen(false)
       restoreFocusToTrigger(overlay.triggerRef.current as HTMLElement | null)
     } else {
-      // B-33: arrows/Home/End with focus on the container itself move to
+      // Arrows/Home/End with focus on the container itself move to
       // the edge item. No-ops unless the container is the key target.
       handleContentContainerKey(e, menuRef.current)
     }

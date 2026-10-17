@@ -23,7 +23,7 @@ Each claim is proven by the cases listed, or marked `open` (no case yet) or `pen
 - **E8 No repeats in one field.** A name repeated within one field is rejected. A transitive repeat is deduped, not rejected.
   - Proof: NEO-LAYERS-14 legs 4-5 (repeats in `layers` and in `extends`). Transitive dedupe: NEO-CHAIN-10 (the shared base is one node in the list).
 - **E9 Not both.** A system in both `extends` and `layers` is rejected.
-  - Proof: pending (being added to NEO-LAYERS-03 or NEO-LAYERS-14). NEO-LAYERS-03 variant 3 pins acceptance today; D6 is held in `packages/reference-neo/tests/cases/layers/SPEC.md`.
+  - Proof: pending (being added to NEO-LAYERS-03 or NEO-LAYERS-14). NEO-LAYERS-03 variant 3 pins acceptance today; is held in `packages/reference-neo/tests/cases/layers/SPEC.md`.
 - **E10 Private stripped.** Upstream `_private` is stripped at any depth. The system's own `_private` is kept.
   - Proof: NEO-SYNC-17.
 - **E11 No fragment globalCss.** Upstream globalCss is not collected from fragments. It ships through streams.

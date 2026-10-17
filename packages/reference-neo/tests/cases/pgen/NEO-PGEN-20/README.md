@@ -8,6 +8,6 @@ Related: NEO-PGEN-19 (the refs twin), NEO-TYPE-06 (the precedent).
 
 There is no positive file by design: the claim is absence, and absence is
 proved by red consumers plus a clean text sweep. The map rule fails closed in
-the generator, and this case is the station side of that closure — if a future
+the generator, and this case is the Neo side of that closure — if a future
 emission ever prints a pattern component or a factory, the imports consumer is
 the first alarm.

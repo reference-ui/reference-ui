@@ -4,8 +4,8 @@
  * Emits zero-allocation binary-searchable static slices into modules/canon/src/html.rs.
  */
 
-import type { DialectData } from '../dialect';
-import { formatChunks } from './format';
+import type { DialectData } from '../dialect.js';
+import { formatChunks } from './format.js';
 
 export function emitHtmlRs(dialect: DialectData): string {
   const elementChunks = dialect.elements.map(

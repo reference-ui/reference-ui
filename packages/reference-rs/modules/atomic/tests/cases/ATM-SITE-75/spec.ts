@@ -1,5 +1,5 @@
 /**
- * Cross-file refuse station (SPEC-V2-54 SUPERIOR, SPEC-V2-58). An
+ * Cross-file refuse (SUPERIOR). An
  * unresolvable specifier, a missing export, and a bare imported function
  * value each warn once and mint nothing while static siblings extract —
  * fail-closed-plus-diagnostic where v2 drops silently.
@@ -25,8 +25,7 @@ const spec: AtomicCaseSpec = {
     // unlicensed under the color allowlist) and info zero.
     expect(harvestWants(result)).toHaveLength(3)
 
-    // Import refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Import refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-75', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

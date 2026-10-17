@@ -4,7 +4,6 @@
 //! export stable TypeScript and the hand-written string emitter in
 //! `generator/types` stays aligned with that shape. `TastyManifest` (and index
 //! entries) are the exception — see `generator/bundle/modules/manifest.rs`.
-#![allow(dead_code)]
 
 mod docs;
 mod members;

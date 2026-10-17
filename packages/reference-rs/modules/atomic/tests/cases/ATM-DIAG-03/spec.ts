@@ -1,5 +1,5 @@
 /**
- * Parse-error station. Malformed source records severity error diagnostics
+ * Parse-error case. Malformed source records severity error diagnostics
  * and still yields a CompileResult (stylesheet + class map).
  */
 import { expect } from 'vitest'

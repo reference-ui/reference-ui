@@ -1,6 +1,6 @@
 # Tabs
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Tabs --e2e`).
 
 Directional keyboard cycling, automatic vs. manual activation, `aria-controls` / `aria-labelledby` linking. Built on `RovingFocus`.
 
@@ -97,7 +97,7 @@ Tabs is RovingFocus plus an activation policy. Typeahead stays off.
 
 Automatic: focus selects. Manual: arrows move focus; Space/Enter selects. Getting this wrong is the usual APG miss.
 
-**Vendor.** Radix `activationMode` (default automatic). Aria `keyboardActivation` / `selectOnFocus`. Zag `activationMode`. Aligned.
+**Prior art.** Radix `activationMode` (default automatic). Aria `keyboardActivation` / `selectOnFocus`. Zag `activationMode`. Aligned.
 
 **Lift.** Our name is `activation`.
 

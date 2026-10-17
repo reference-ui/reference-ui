@@ -5,10 +5,10 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import type { CssStyles } from './css-types.ts'
-import { createPropSplitter } from './split.ts'
-import { createPrimitive, joinClassName, type CssFn, type PrimitiveComponent } from './factory.ts'
-import { ColorModeContext, DocumentContext, LayerScopeContext } from './context.ts'
+import type { CssStyles } from './css-types.js'
+import { createPropSplitter } from './split.js'
+import { createPrimitive, joinClassName, type CssFn, type PrimitiveComponent } from './factory.js'
+import { ColorModeContext, DocumentContext, LayerScopeContext } from './context.js'
 
 const split = createPropSplitter(['color', 'p'])
 

@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn test_non_finite_stems_refuse_silently() {
-        // doom-r-rule: named spellings, overflow, and case variants refuse
+        // named spellings, overflow, and case variants refuse
         // (close (a) passthrough) — Rust Display never mints into the sheet.
         for stem in [
             "infr",

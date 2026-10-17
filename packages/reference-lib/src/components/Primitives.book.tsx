@@ -737,7 +737,7 @@ export function PrimitivesOverview() {
       {/* Header Banner */}
       <Div
         p="6r"
-        borderRadius="xl"
+        borderRadius="lg"
         bg="ui.dialog.background"
         border="1px solid"
         borderColor="ui.dialog.border"

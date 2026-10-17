@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-UNI-02.
+ * Case specification for TST-UNI-02.
  * Verifies discriminated union patterns, exhaustive switches, and handler signatures.
  * Proves primary SPEC ID anchor TST-UNI-02.
  */

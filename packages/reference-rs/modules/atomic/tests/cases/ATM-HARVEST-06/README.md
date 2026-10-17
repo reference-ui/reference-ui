@@ -1,6 +1,6 @@
-# ATM-HARVEST-06 — Color allowlist station
+# ATM-HARVEST-06 — Color allowlist
 
-The color allowlist station. A dynamic `color` site sinks beside a dynamic
+The color allowlist case. A dynamic `color` site sinks beside a dynamic
 `width` site while the pool holds a spacing `var()`, an `oklch()` value, an
 unlicensed named color, and `'inherit'`: the color sink mints only the
 allowlisted word (expressions and unlicensed words never mint a color),

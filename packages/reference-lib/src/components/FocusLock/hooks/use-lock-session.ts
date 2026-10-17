@@ -18,7 +18,6 @@ export type FocusLockSession = {
   previousActiveElementRef: React.MutableRefObject<RestoreSnapshot | null>
   restoredRef: React.MutableRefObject<boolean>
   restoreTimerRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>
-  reclaimFrameRef: React.MutableRefObject<number | null>
   addedTabIndexRef: React.MutableRefObject<boolean>
   movingFocusRef: React.MutableRefObject<boolean>
   restoreFocusRef: React.MutableRefObject<FocusLockProps['restoreFocus']>
@@ -27,7 +26,6 @@ export type FocusLockSession = {
   getResolvedShardsRef: React.MutableRefObject<() => HTMLElement[]>
   latestForwardedRef: React.MutableRefObject<React.Ref<HTMLElement>>
   latestChildRef: React.MutableRefObject<React.Ref<HTMLElement> | undefined>
-  clearReclaimFrame: () => void
 }
 
 export function useLockSession(options: {
@@ -44,7 +42,6 @@ export function useLockSession(options: {
   const previousActiveElementRef = React.useRef<RestoreSnapshot | null>(null)
   const restoredRef = React.useRef(false)
   const restoreTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  const reclaimFrameRef = React.useRef<number | null>(null)
   const addedTabIndexRef = React.useRef(false)
   const movingFocusRef = React.useRef(false)
 
@@ -66,13 +63,6 @@ export function useLockSession(options: {
   latestForwardedRef.current = forwardedRef
   const latestChildRef = React.useRef<React.Ref<HTMLElement> | undefined>(undefined)
 
-  const clearReclaimFrame = React.useCallback(() => {
-    if (reclaimFrameRef.current != null) {
-      cancelAnimationFrame(reclaimFrameRef.current)
-      reclaimFrameRef.current = null
-    }
-  }, [])
-
   return React.useMemo(
     () => ({
       lockId,
@@ -82,7 +72,6 @@ export function useLockSession(options: {
       previousActiveElementRef,
       restoredRef,
       restoreTimerRef,
-      reclaimFrameRef,
       addedTabIndexRef,
       movingFocusRef,
       restoreFocusRef,
@@ -91,7 +80,6 @@ export function useLockSession(options: {
       getResolvedShardsRef,
       latestForwardedRef,
       latestChildRef,
-      clearReclaimFrame,
     }),
     [
       lockId,
@@ -101,7 +89,6 @@ export function useLockSession(options: {
       previousActiveElementRef,
       restoredRef,
       restoreTimerRef,
-      reclaimFrameRef,
       addedTabIndexRef,
       movingFocusRef,
       restoreFocusRef,
@@ -110,7 +97,6 @@ export function useLockSession(options: {
       getResolvedShardsRef,
       latestForwardedRef,
       latestChildRef,
-      clearReclaimFrame,
     ]
   )
 }

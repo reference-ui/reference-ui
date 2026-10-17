@@ -1,9 +1,9 @@
 /**
- * Value-unwrap station (ATM-SITE-61, SPEC-V2-05 GAP-05a). Parens, `as`,
+ * Value-unwrap (ATM-SITE-61). Parens, `as`,
  * `satisfies`, and postfix `!` are transparent in value position: each
  * wrapped value extracts exactly like the bare literal, nested wrappers
  * unwrap through every layer, and JSX style attrs unwrap the same way.
- * Plans agree with wants on every arm (GAP-05b transparent-in-both),
+ * Plans agree with wants on every arm (transparent-in-both),
  * including `!` which carries no important flag. Panda twins:
  * `calls.rs` `nested_unwraps_and_folding`, `jsx.rs` wrap arms.
  */

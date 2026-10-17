@@ -76,10 +76,10 @@
     },
     {
       "id": "LIB-BUTTON-011",
-      "name": "B-40: bare primitive Button is inline shrink-to-fit, matching native button",
+      "name": "bare primitive Button is inline shrink-to-fit, matching native button",
       "kind": "ct",
       "file": "__e2e__/Button.ct.spec.ts",
-      "title": "B-40: bare primitive Button is inline shrink-to-fit, matching native button"
+      "title": "bare primitive Button is inline shrink-to-fit, matching native button"
     }
   ]
 }

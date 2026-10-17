@@ -40,8 +40,8 @@ export function DateFieldCalendar(props: DateFieldCalendarProps) {
     return <Calendar {...calendarProps} />
   }
   // Context isDateUnavailable stays DateField-side until DateField
-  // PATCHES #4 wires the bound alias; a caller-provided predicate spreads
-  // through `rest` onto the Calendar #6 prop and works today.
+  // the pending change wires the bound alias; a caller-provided predicate spreads
+  // through `rest` onto the Calendar isDateUnavailable prop and works today.
   // Single-spread object: Calendar props are a mode-keyed union, so
   // caller `value`/`onChange`/`locale` merge explicitly and everything
   // else spreads through. Caller props still override context, as before.

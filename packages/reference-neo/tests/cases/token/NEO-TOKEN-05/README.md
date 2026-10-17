@@ -7,8 +7,8 @@ two probes with it: one under `html`, one inside a nested
 brand var in each, then flips the attribute on `html` and on the nested
 island and asserts computed colour each time.
 
-Evidence: `[atm]` P0 #1, ATM-COND-03/08; `[lib]` light/dark islands;
-`[panda-v1]` `generator/__tests__/generate-token.test.ts` (contrast:
-`:where([data-theme=dark], .dark)`); `[decision D1]`.
+Evidence: ATM-COND-03/08; reference-lib light/dark islands;
+Panda v1 generate-token tests (contrast:
+`:where([data-theme=dark], .dark)`).
 
 > Search terms: theming, prefers-color-scheme, day/night, appearance, token/color-mode, NEO-TOKEN-14, ATM-COND-08

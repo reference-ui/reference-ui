@@ -24,7 +24,7 @@ vi.mock('@reference-ui/react', () => import('../../../../book/.reference-ui/reac
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-describe('Tabs system variants (HQ mechanism)', () => {
+describe('Tabs system variants', () => {
   let container: HTMLDivElement
   let root: Root
 

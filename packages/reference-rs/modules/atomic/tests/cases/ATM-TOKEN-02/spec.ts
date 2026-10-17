@@ -1,5 +1,5 @@
 /**
- * Bare-color station. `blue.600` / `gray.800` on color props become
+ * Bare-color case. `blue.600` / `gray.800` on color props become
  * `--colors-…`. `mt="blue.600"` stays raw and warns.
  */
 import { expect } from 'vitest'

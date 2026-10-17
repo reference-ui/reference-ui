@@ -1,5 +1,5 @@
 /**
- * Colliding-spread union station (ATM-SITE-24, SPEC-V2-22). A static key
+ * Colliding-spread union (ATM-SITE-24). A static key
  * plus a spread ternary on the same key unions all three values, with the
  * static key after or before the spread. One want and one runtime plan per
  * value; zero diagnostics.

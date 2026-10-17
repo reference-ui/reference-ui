@@ -6,6 +6,6 @@ utilities instead of scanning every tag, and the frozen request recompiled
 with emptied hosts fails closed with the located `no StyleProps hosts
 resolvable` error and zero wants.
 
-Evidence: `[atm]` ATM-SITE-13 (RS-5 landed).
+Evidence: ATM-SITE-13 (RS-5).
 
 > Search terms: fail-closed, unresolvable hosts, empty registry, graceful failure, site/host-resolution, NEO-SITE-12

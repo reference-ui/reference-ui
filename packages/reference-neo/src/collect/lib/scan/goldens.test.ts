@@ -1,4 +1,4 @@
-// Four-scale golden reproduction (F1 §6.8 test 14): the diet replays the
+// Four-scale golden reproduction: the diet replays the
 // base-sealed goldens bit-exactly. It takes the seeded generators plus the
 // committed fixtures and asserts matches, retention, stylesheet, runtime, and
 // diagnostics reproduce on small, medium, enterprise, and churn, with ×3 scan

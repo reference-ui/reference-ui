@@ -99,7 +99,7 @@ export function useEditHandlers(options: EditHandlersOptions): EditHandlers {
       // NF-EDIT-11: mid-composition input stages the buffer verbatim but
       // never publishes — not even a parseable final-looking string.
       if (composingRef.current) return
-      // NFLAST ruling (c) live requests (NF-EDIT-03/04/05): a newly
+      // Live requests (NF-EDIT-03/04/05): a newly
       // parseable meaning is requested immediately — raw, never
       // clamped/snapped/rounded (those are commit-time, NF-COMMIT-05).
       // Incomplete grammar stays silent; repeated meanings dedupe

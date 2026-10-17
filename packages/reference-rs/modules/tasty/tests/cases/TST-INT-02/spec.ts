@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-INT-02.
+ * Case specification for TST-INT-02.
  * Verifies Omit, Pick, Partial, Required, Record, and Readonly utility compositions in interface heritage.
  * Proves primary SPEC ID anchor TST-INT-02.
  */

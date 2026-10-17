@@ -1,5 +1,5 @@
 /**
- * Numeric unit policy station (ATM-UNIT-01).
+ * Numeric unit policy (ATM-UNIT-01).
  * Asserts that dimensional properties gain `px`, unitless properties stay bare numbers,
  * zero stays bare (0, not 0px), and custom properties stay unitless.
  */

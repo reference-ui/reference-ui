@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-NAME-02.
+ * Case specification for ATL-NAME-02.
  * Validates canonical component name resolution and call-site counting
  * when local imports are renamed at consumption sites.
  * Proves primary SPEC anchor ATL-NAME-02.

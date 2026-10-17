@@ -7,11 +7,10 @@ type State = { error: Error | null }
 
 function ErrorDisplay({ error }: { error: Error }) {
   const { colorMode } = useDocsTheme()
-  const themeAttr = colorMode === 'dark' ? 'dark' : undefined
 
   return (
     <Div
-      colorMode={themeAttr}
+      colorMode={colorMode}
       padding="2rem"
       fontFamily="mono"
       whiteSpace="pre-wrap"

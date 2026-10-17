@@ -34,7 +34,8 @@ fn infer_name(summary: &str) -> Option<String> {
     rest.split_whitespace().next().map(str::to_string)
 }
 
-/// Child types of the variants that hold their children directly.
+/// Child types of the variants that hold their children directly. Each step of the chain covers a few variant
+/// families and hands the rest to the next step.
 fn child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
     match type_ref {
         TypeRef::Reference {
@@ -43,6 +44,13 @@ fn child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
         } => arguments.iter().collect(),
         TypeRef::Union { types } | TypeRef::Intersection { types } => types.iter().collect(),
         TypeRef::Array { element } => vec![element.as_ref()],
+        other => element_child_types(other),
+    }
+}
+
+/// Child types of tuples, object literals, and function or constructor signatures.
+fn element_child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
+    match type_ref {
         TypeRef::Tuple { elements } => elements.iter().map(|element| &element.element).collect(),
         TypeRef::Object { members } => members
             .iter()
@@ -57,46 +65,55 @@ fn child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
             return_type,
             ..
         } => signature_types(params, return_type),
-        _ => wrapper_child_types(type_ref),
+        other => slot_child_types(other),
     }
 }
 
 /// Child types of the variants that keep their children in optional or boxed slots.
-fn wrapper_child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
-    let mut children = Vec::new();
+fn slot_child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
     match type_ref {
         TypeRef::IndexedAccess {
             object,
             index,
             resolved,
         } => {
-            children.extend([object.as_ref(), index.as_ref()]);
+            let mut children = vec![object.as_ref(), index.as_ref()];
             children.extend(resolved.as_deref());
+            children
         }
         TypeRef::TypeOperator {
             target, resolved, ..
         } => {
-            children.push(target.as_ref());
+            let mut children = vec![target.as_ref()];
             children.extend(resolved.as_deref());
+            children
         }
+        other => wrapper_child_types(other),
+    }
+}
+
+/// Child types of the mapped, template literal, and type query variants.
+fn wrapper_child_types(type_ref: &TypeRef) -> Vec<&TypeRef> {
+    match type_ref {
         TypeRef::Mapped {
             source_type,
             name_type,
             value_type,
             ..
         } => {
-            children.push(source_type.as_ref());
+            let mut children = vec![source_type.as_ref()];
             children.extend(name_type.as_deref());
             children.extend(value_type.as_deref());
+            children
         }
         TypeRef::TemplateLiteral { parts, resolved } => {
-            children.extend(parts.iter().filter_map(template_part_type));
+            let mut children: Vec<&TypeRef> = parts.iter().filter_map(template_part_type).collect();
             children.extend(resolved.as_deref());
+            children
         }
-        TypeRef::TypeQuery { resolved, .. } => children.extend(resolved.as_deref()),
-        _ => {}
+        TypeRef::TypeQuery { resolved, .. } => resolved.as_deref().into_iter().collect(),
+        _ => Vec::new(),
     }
-    children
 }
 
 fn template_part_type(part: &TemplateLiteralPart) -> Option<&TypeRef> {

@@ -3,10 +3,31 @@
 //! Evaluates and formats these elements to extract canonical names and paths.
 //! Emits standardized string representations used consistently across the analysis models.
 
-use oxc_ast::ast::{JSXElementName, JSXMemberExpressionObject};
+use oxc_ast::ast::{Expression, JSXElementName, JSXMemberExpressionObject};
 use oxc_span::GetSpan;
 
 use super::model::ObjectPatternBinding;
+
+/// The inner expression of a parenthesis or TS assertion wrapper; `None` for every other node.
+/// TS instantiation (`f<T>`) is not a transparent wrapper: callers that need it handle it apart.
+pub(super) fn transparent_inner<'a, 'b>(expression: &'a Expression<'b>) -> Option<&'a Expression<'b>> {
+    if let Expression::ParenthesizedExpression(parenthesized) = expression {
+        return Some(&parenthesized.expression);
+    }
+    if let Expression::TSAsExpression(asserted) = expression {
+        return Some(&asserted.expression);
+    }
+    if let Expression::TSSatisfiesExpression(asserted) = expression {
+        return Some(&asserted.expression);
+    }
+    if let Expression::TSTypeAssertion(asserted) = expression {
+        return Some(&asserted.expression);
+    }
+    if let Expression::TSNonNullExpression(asserted) = expression {
+        return Some(&asserted.expression);
+    }
+    None
+}
 
 pub(super) fn module_source_literal(source: &str, span: oxc_span::Span) -> String {
     slice_span(source, span)
@@ -134,7 +155,7 @@ fn process_char(ch: char, current: &mut String, depth: &mut i32, parts: &mut Vec
     }
 }
 
-pub(super) fn slice_span<'a>(source: &'a str, span: oxc_span::Span) -> &'a str {
+pub(super) fn slice_span(source: &str, span: oxc_span::Span) -> &str {
     source
         .get(span.start as usize..span.end as usize)
         .unwrap_or_default()

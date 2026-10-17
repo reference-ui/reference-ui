@@ -102,17 +102,25 @@ export function scanCases(): CaseScan {
     if (problems.length > 0) broken.push({ folder, problems });
     else conforming.push(folder);
   }
-  const loaded = conforming.map(loadCase);
+  const unique = splitDuplicateIds(conforming.map(loadCase));
+  const cases = unique.cases;
+  broken.push(...unique.broken);
+  cases.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  broken.sort((a, b) => (a.folder < b.folder ? -1 : a.folder > b.folder ? 1 : 0));
+  return { cases, broken };
+}
+
+// Loaded cases whose id no other folder carries; every folder sharing an id goes to broken.
+function splitDuplicateIds(loaded: NeoCase[]): { cases: NeoCase[]; broken: BrokenCase[] } {
   const foldersById = new Map<string, string[]>();
   for (const c of loaded) foldersById.set(c.id, [...(foldersById.get(c.id) ?? []), c.folder]);
   const cases: NeoCase[] = [];
+  const broken: BrokenCase[] = [];
   for (const c of loaded) {
     const others = (foldersById.get(c.id) ?? []).filter((f) => f !== c.folder);
     if (others.length > 0) broken.push({ folder: c.folder, problems: [`duplicate case id ${c.id} also in ${others.join(', ')}`] });
     else cases.push(c);
   }
-  cases.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  broken.sort((a, b) => (a.folder < b.folder ? -1 : a.folder > b.folder ? 1 : 0));
   return { cases, broken };
 }
 

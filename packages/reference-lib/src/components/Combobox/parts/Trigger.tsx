@@ -68,7 +68,7 @@ export const ComboboxTrigger: React.ForwardRefExoticComponent<
     onClick?.(e)
     if (!e.defaultPrevented && !isDisabled) {
       // Safari never focuses buttons on pointer activation, which strands
-      // follow-up keyboard handling on body (F16/F24/F26). Re-deliver the
+      // follow-up keyboard handling on body. Re-deliver the
       // focused state the click carries on Chromium/Firefox (no-op there).
       e.currentTarget.focus()
       context.setIsOpen(!context.isOpen)

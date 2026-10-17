@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 
 use rustc_hash::FxHashMap;
 
-use crate::analysis::{trace_style_bindings_with_surface, StyleSurface};
+use crate::analysis::{trace_style_bindings_with_surface, StyleSurface, SurfaceTrace};
 
 use super::fixtures::workspace_scratch_dir;
 
@@ -170,7 +170,13 @@ fn trace_scratch_with_trust(
         staged: &staged,
         programs: &programs,
     };
-    trace_style_bindings_with_surface(&entries, scratch.root(), scratch.root(), &surface, &sources)
+    trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: scratch.root(),
+        package_root: scratch.root(),
+        surface: &surface,
+        sources: &sources,
+    })
 }
 
 fn binding_names(outcome: &crate::TraceOutcome) -> Vec<String> {

@@ -1,5 +1,5 @@
 /**
- * Dimensional token-count station. `padding: 10px 20px` becomes four longhands.
+ * Dimensional token-count case. `padding: 10px 20px` becomes four longhands.
  * `padding: 10px`, `p: 1r`, and `m: 2r` stay one atom each.
  */
 import { expect } from 'vitest'

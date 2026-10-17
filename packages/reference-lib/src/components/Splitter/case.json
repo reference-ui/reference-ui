@@ -41,17 +41,17 @@
     },
     {
       "id": "LIB-SPLITTER-006",
-      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client W-35: off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing",
+      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing",
       "kind": "unit",
       "file": "Splitter.contract.test.tsx",
-      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client W-35: off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing"
+      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client off-100 layouts dev-warn naming component, prop, value, and range instead of silently collapsing"
     },
     {
       "id": "LIB-SPLITTER-007",
-      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client W-35: value/Panel count mismatch dev-warns and throws (never a silent collapse)",
+      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client value/Panel count mismatch dev-warns and throws (never a silent collapse)",
       "kind": "unit",
       "file": "Splitter.contract.test.tsx",
-      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client W-35: value/Panel count mismatch dev-warns and throws (never a silent collapse)"
+      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client value/Panel count mismatch dev-warns and throws (never a silent collapse)"
     },
     {
       "id": "LIB-SPLITTER-008",
@@ -62,10 +62,10 @@
     },
     {
       "id": "LIB-SPLITTER-009",
-      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client B-28: min/max/index never leak to css() or the DOM",
+      "name": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client min/max/index never leak to css() or the DOM",
       "kind": "unit",
       "file": "Splitter.contract.test.tsx",
-      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client B-28: min/max/index never leak to css() or the DOM"
+      "title": "Splitter contract SP-ENV-01: registration resolves order and constraints on the client min/max/index never leak to css() or the DOM"
     },
     {
       "id": "LIB-SPLITTER-010",
@@ -83,24 +83,24 @@
     },
     {
       "id": "LIB-SPLITTER-012",
-      "name": "Splitter Composition Gates & Browser Proofs B-28: Panel constraint props never leak onto the DOM",
+      "name": "Splitter Composition Gates & Browser Proofs Panel constraint props never leak onto the DOM",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter Composition Gates & Browser Proofs B-28: Panel constraint props never leak onto the DOM"
+      "title": "Splitter Composition Gates & Browser Proofs Panel constraint props never leak onto the DOM"
     },
     {
       "id": "LIB-SPLITTER-013",
-      "name": "Splitter Composition Gates & Browser Proofs B-28: min/max/index never leak to css() or the DOM",
+      "name": "Splitter Composition Gates & Browser Proofs min/max/index never leak to css() or the DOM",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter Composition Gates & Browser Proofs B-28: min/max/index never leak to css() or the DOM"
+      "title": "Splitter Composition Gates & Browser Proofs min/max/index never leak to css() or the DOM"
     },
     {
       "id": "LIB-SPLITTER-014",
-      "name": "Splitter Composition Gates & Browser Proofs W-35: bad panel layout dev-warns and never silently collapses",
+      "name": "Splitter Composition Gates & Browser Proofs bad panel layout dev-warns and never silently collapses",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter Composition Gates & Browser Proofs W-35: bad panel layout dev-warns and never silently collapses"
+      "title": "Splitter Composition Gates & Browser Proofs bad panel layout dev-warns and never silently collapses"
     },
     {
       "id": "LIB-SPLITTER-015",
@@ -153,199 +153,199 @@
     },
     {
       "id": "LIB-SPLITTER-022",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move",
+      "name": "Splitter pointer-session robustness SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move"
+      "title": "Splitter pointer-session robustness SP-DRAG-01: Primary pointerdown focuses, captures, and marks resizing before any move"
     },
     {
       "id": "LIB-SPLITTER-023",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-04: Captured drag continues beyond the handle, group, and edges",
+      "name": "Splitter pointer-session robustness SP-DRAG-04: Captured drag continues beyond the handle, group, and edges",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-04: Captured drag continues beyond the handle, group, and edges"
+      "title": "Splitter pointer-session robustness SP-DRAG-04: Captured drag continues beyond the handle, group, and edges"
     },
     {
       "id": "LIB-SPLITTER-024",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-05: Touch session isolates its pointer id (first slice)",
+      "name": "Splitter pointer-session robustness SP-DRAG-05: Touch session isolates its pointer id (first slice)",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-05: Touch session isolates its pointer id (first slice)"
+      "title": "Splitter pointer-session robustness SP-DRAG-05: Touch session isolates its pointer id (first slice)"
     },
     {
       "id": "LIB-SPLITTER-025",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-06: Only primary button-0 input starts a session",
+      "name": "Splitter pointer-session robustness SP-DRAG-06: Only primary button-0 input starts a session",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-06: Only primary button-0 input starts a session"
+      "title": "Splitter pointer-session robustness SP-DRAG-06: Only primary button-0 input starts a session"
     },
     {
       "id": "LIB-SPLITTER-026",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-07: Active drag locks selection and shows the resize cursor",
+      "name": "Splitter pointer-session robustness SP-DRAG-07: Active drag locks selection and shows the resize cursor",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-07: Active drag locks selection and shows the resize cursor"
+      "title": "Splitter pointer-session robustness SP-DRAG-07: Active drag locks selection and shows the resize cursor"
     },
     {
       "id": "LIB-SPLITTER-027",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-08: Release outside the handle cleans up once and keeps focus",
+      "name": "Splitter pointer-session robustness SP-DRAG-08: Release outside the handle cleans up once and keeps focus",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-08: Release outside the handle cleans up once and keeps focus"
+      "title": "Splitter pointer-session robustness SP-DRAG-08: Release outside the handle cleans up once and keeps focus"
     },
     {
       "id": "LIB-SPLITTER-028",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-09: Cancel paths abort the drag with one cleanup and no end",
+      "name": "Splitter pointer-session robustness SP-DRAG-09: Cancel paths abort the drag with one cleanup and no end",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-09: Cancel paths abort the drag with one cleanup and no end"
+      "title": "Splitter pointer-session robustness SP-DRAG-09: Cancel paths abort the drag with one cleanup and no end"
     },
     {
       "id": "LIB-SPLITTER-029",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-09: Disable, handle removal, and unmount abort the drag",
+      "name": "Splitter pointer-session robustness SP-DRAG-09: Disable, handle removal, and unmount abort the drag",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-09: Disable, handle removal, and unmount abort the drag"
+      "title": "Splitter pointer-session robustness SP-DRAG-09: Disable, handle removal, and unmount abort the drag"
     },
     {
       "id": "LIB-SPLITTER-030",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-10: Only the first pointer owns the group",
+      "name": "Splitter pointer-session robustness SP-DRAG-10: Only the first pointer owns the group",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-10: Only the first pointer owns the group"
+      "title": "Splitter pointer-session robustness SP-DRAG-10: Only the first pointer owns the group"
     },
     {
       "id": "LIB-SPLITTER-031",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-11: Nested groups resize only the owning group",
+      "name": "Splitter pointer-session robustness SP-DRAG-11: Nested groups resize only the owning group",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-11: Nested groups resize only the owning group"
+      "title": "Splitter pointer-session robustness SP-DRAG-11: Nested groups resize only the owning group"
     },
     {
       "id": "LIB-SPLITTER-032",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-12: Secondary click terminates the drag; the held release is a no-op",
+      "name": "Splitter pointer-session robustness SP-DRAG-12: Secondary click terminates the drag; the held release is a no-op",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-DRAG-12: Secondary click terminates the drag; the held release is a no-op"
+      "title": "Splitter pointer-session robustness SP-DRAG-12: Secondary click terminates the drag; the held release is a no-op"
     },
     {
       "id": "LIB-SPLITTER-033",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-END-03: Canceled keyboard sessions emit no end",
+      "name": "Splitter pointer-session robustness SP-END-03: Canceled keyboard sessions emit no end",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-END-03: Canceled keyboard sessions emit no end"
+      "title": "Splitter pointer-session robustness SP-END-03: Canceled keyboard sessions emit no end"
     },
     {
       "id": "LIB-SPLITTER-034",
-      "name": "Splitter PATCHES item 1: pointer-session robustness SP-END-04: Rejected requests report the last request to the latest handler",
+      "name": "Splitter pointer-session robustness SP-END-04: Rejected requests report the last request to the latest handler",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 1: pointer-session robustness SP-END-04: Rejected requests report the last request to the latest handler"
+      "title": "Splitter pointer-session robustness SP-END-04: Rejected requests report the last request to the latest handler"
     },
     {
       "id": "LIB-SPLITTER-035",
-      "name": "Splitter PATCHES item 2: keyboard interaction sessions SP-END-02: Repeated keys form one interaction ending on keyup",
+      "name": "Splitter keyboard interaction sessions SP-END-02: Repeated keys form one interaction ending on keyup",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 2: keyboard interaction sessions SP-END-02: Repeated keys form one interaction ending on keyup"
+      "title": "Splitter keyboard interaction sessions SP-END-02: Repeated keys form one interaction ending on keyup"
     },
     {
       "id": "LIB-SPLITTER-036",
-      "name": "Splitter PATCHES item 2: keyboard interaction sessions SP-END-02: Enter collapse and restore each end once on keyup",
+      "name": "Splitter keyboard interaction sessions SP-END-02: Enter collapse and restore each end once on keyup",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 2: keyboard interaction sessions SP-END-02: Enter collapse and restore each end once on keyup"
+      "title": "Splitter keyboard interaction sessions SP-END-02: Enter collapse and restore each end once on keyup"
     },
     {
       "id": "LIB-SPLITTER-037",
-      "name": "Splitter PATCHES item 2: keyboard interaction sessions SP-KEY-02: Cross-axis Arrows pass through to the application",
+      "name": "Splitter keyboard interaction sessions SP-KEY-02: Cross-axis Arrows pass through to the application",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 2: keyboard interaction sessions SP-KEY-02: Cross-axis Arrows pass through to the application"
+      "title": "Splitter keyboard interaction sessions SP-KEY-02: Cross-axis Arrows pass through to the application"
     },
     {
       "id": "LIB-SPLITTER-038",
-      "name": "Splitter PATCHES item 2: keyboard interaction sessions SP-KEY-07: Modified, special, and printable keys pass through",
+      "name": "Splitter keyboard interaction sessions SP-KEY-07: Modified, special, and printable keys pass through",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 2: keyboard interaction sessions SP-KEY-07: Modified, special, and printable keys pass through"
+      "title": "Splitter keyboard interaction sessions SP-KEY-07: Modified, special, and printable keys pass through"
     },
     {
       "id": "LIB-SPLITTER-039",
-      "name": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-01: Enter on an expanded collapsible panel requests collapsed size",
+      "name": "Splitter Enter collapse and restore SP-COLLAPSE-01: Enter on an expanded collapsible panel requests collapsed size",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-01: Enter on an expanded collapsible panel requests collapsed size"
+      "title": "Splitter Enter collapse and restore SP-COLLAPSE-01: Enter on an expanded collapsible panel requests collapsed size"
     },
     {
       "id": "LIB-SPLITTER-040",
-      "name": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-02: Enter restores the last feasible expanded size",
+      "name": "Splitter Enter collapse and restore SP-COLLAPSE-02: Enter restores the last feasible expanded size",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-02: Enter restores the last feasible expanded size"
+      "title": "Splitter Enter collapse and restore SP-COLLAPSE-02: Enter restores the last feasible expanded size"
     },
     {
       "id": "LIB-SPLITTER-041",
-      "name": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-03: Enter beside a non-collapsible panel stays unprevented",
+      "name": "Splitter Enter collapse and restore SP-COLLAPSE-03: Enter beside a non-collapsible panel stays unprevented",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 3: Enter collapse and restore SP-COLLAPSE-03: Enter beside a non-collapsible panel stays unprevented"
+      "title": "Splitter Enter collapse and restore SP-COLLAPSE-03: Enter beside a non-collapsible panel stays unprevented"
     },
     {
       "id": "LIB-SPLITTER-042",
-      "name": "Splitter PATCHES item 3: Enter collapse and restore SP-COMP-01: Collapsible sidebar resizes and restores in LTR and RTL",
+      "name": "Splitter Enter collapse and restore SP-COMP-01: Collapsible sidebar resizes and restores in LTR and RTL",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 3: Enter collapse and restore SP-COMP-01: Collapsible sidebar resizes and restores in LTR and RTL"
+      "title": "Splitter Enter collapse and restore SP-COMP-01: Collapsible sidebar resizes and restores in LTR and RTL"
     },
     {
       "id": "LIB-SPLITTER-043",
-      "name": "Splitter PATCHES item 4: RTL direction wiring SP-MATH-09: RTL reverses primary interpretation without touching values",
+      "name": "Splitter RTL direction wiring SP-MATH-09: RTL reverses primary interpretation without touching values",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 4: RTL direction wiring SP-MATH-09: RTL reverses primary interpretation without touching values"
+      "title": "Splitter RTL direction wiring SP-MATH-09: RTL reverses primary interpretation without touching values"
     },
     {
       "id": "LIB-SPLITTER-044",
-      "name": "Splitter PATCHES item 4: RTL direction wiring SP-KEY-05: RTL reverses horizontal Arrows onto the logical primary",
+      "name": "Splitter RTL direction wiring SP-KEY-05: RTL reverses horizontal Arrows onto the logical primary",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 4: RTL direction wiring SP-KEY-05: RTL reverses horizontal Arrows onto the logical primary"
+      "title": "Splitter RTL direction wiring SP-KEY-05: RTL reverses horizontal Arrows onto the logical primary"
     },
     {
       "id": "LIB-SPLITTER-045",
-      "name": "Splitter PATCHES item 4: RTL direction wiring SP-KEY-08: Mid-focus direction switches apply immediately",
+      "name": "Splitter RTL direction wiring SP-KEY-08: Mid-focus direction switches apply immediately",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 4: RTL direction wiring SP-KEY-08: Mid-focus direction switches apply immediately"
+      "title": "Splitter RTL direction wiring SP-KEY-08: Mid-focus direction switches apply immediately"
     },
     {
       "id": "LIB-SPLITTER-046",
-      "name": "Splitter PATCHES item 4: RTL direction wiring SP-DRAG-02: Horizontal drag reverses under RTL",
+      "name": "Splitter RTL direction wiring SP-DRAG-02: Horizontal drag reverses under RTL",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 4: RTL direction wiring SP-DRAG-02: Horizontal drag reverses under RTL"
+      "title": "Splitter RTL direction wiring SP-DRAG-02: Horizontal drag reverses under RTL"
     },
     {
       "id": "LIB-SPLITTER-047",
-      "name": "Splitter PATCHES item 4: RTL direction wiring SP-DOM-05: Handles link the logical primary in LTR and RTL",
+      "name": "Splitter RTL direction wiring SP-DOM-05: Handles link the logical primary in LTR and RTL",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 4: RTL direction wiring SP-DOM-05: Handles link the logical primary in LTR and RTL"
+      "title": "Splitter RTL direction wiring SP-DOM-05: Handles link the logical primary in LTR and RTL"
     },
     {
       "id": "LIB-SPLITTER-048",
-      "name": "Splitter PATCHES item 6: reduced motion Handle transitions suppress under prefers-reduced-motion only",
+      "name": "Splitter reduced motion Handle transitions suppress under prefers-reduced-motion only",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 6: reduced motion Handle transitions suppress under prefers-reduced-motion only"
+      "title": "Splitter reduced motion Handle transitions suppress under prefers-reduced-motion only"
     },
     {
       "id": "LIB-SPLITTER-049",
-      "name": "Splitter PATCHES item 7: accessibility sweep SP-A11Y-01: Frozen layout variants expose honest separator semantics",
+      "name": "Splitter accessibility sweep SP-A11Y-01: Frozen layout variants expose honest separator semantics",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter PATCHES item 7: accessibility sweep SP-A11Y-01: Frozen layout variants expose honest separator semantics"
+      "title": "Splitter accessibility sweep SP-A11Y-01: Frozen layout variants expose honest separator semantics"
     },
     {
       "id": "LIB-SPLITTER-050",
@@ -538,87 +538,87 @@
     },
     {
       "id": "LIB-SPLITTER-077",
-      "name": "Splitter FINISH-LINE P2F tails SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis",
+      "name": "Splitter DOM, keyboard, and environment CT SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis"
+      "title": "Splitter DOM, keyboard, and environment CT SP-DOM-04: Separator orientation stays perpendicular while Root/part hooks follow the Panel axis"
     },
     {
       "id": "LIB-SPLITTER-078",
-      "name": "Splitter FINISH-LINE P2F tails SP-DOM-06: State hooks update while authored classes and styles stay exact",
+      "name": "Splitter DOM, keyboard, and environment CT SP-DOM-06: State hooks update while authored classes and styles stay exact",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-DOM-06: State hooks update while authored classes and styles stay exact"
+      "title": "Splitter DOM, keyboard, and environment CT SP-DOM-06: State hooks update while authored classes and styles stay exact"
     },
     {
       "id": "LIB-SPLITTER-079",
-      "name": "Splitter FINISH-LINE P2F tails SP-DOM-07: Native props, handlers, and refs reach every part and clean up the same nodes",
+      "name": "Splitter DOM, keyboard, and environment CT SP-DOM-07: Native props, handlers, and refs reach every part and clean up the same nodes",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-DOM-07: Native props, handlers, and refs reach every part and clean up the same nodes"
+      "title": "Splitter DOM, keyboard, and environment CT SP-DOM-07: Native props, handlers, and refs reach every part and clean up the same nodes"
     },
     {
       "id": "LIB-SPLITTER-080",
-      "name": "Splitter FINISH-LINE P2F tails SP-DOM-10: Omitted orientation means horizontal Panels with a vertical separator",
+      "name": "Splitter DOM, keyboard, and environment CT SP-DOM-10: Omitted orientation means horizontal Panels with a vertical separator",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-DOM-10: Omitted orientation means horizontal Panels with a vertical separator"
+      "title": "Splitter DOM, keyboard, and environment CT SP-DOM-10: Omitted orientation means horizontal Panels with a vertical separator"
     },
     {
       "id": "LIB-SPLITTER-081",
-      "name": "Splitter FINISH-LINE P2F tails SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0",
+      "name": "Splitter DOM, keyboard, and environment CT SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0"
+      "title": "Splitter DOM, keyboard, and environment CT SP-DOM-11: Omitted collapsible/disabled default to plain resize; opt-in collapse resolves size 0"
     },
     {
       "id": "LIB-SPLITTER-082",
-      "name": "Splitter FINISH-LINE P2F tails SP-CTRL-03: Programmatic values update hooks and ARIA on the same nodes with focus kept",
+      "name": "Splitter DOM, keyboard, and environment CT SP-CTRL-03: Programmatic values update hooks and ARIA on the same nodes with focus kept",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-CTRL-03: Programmatic values update hooks and ARIA on the same nodes with focus kept"
+      "title": "Splitter DOM, keyboard, and environment CT SP-CTRL-03: Programmatic values update hooks and ARIA on the same nodes with focus kept"
     },
     {
       "id": "LIB-SPLITTER-083",
-      "name": "Splitter FINISH-LINE P2F tails SP-KEY-01: Unmodified axis Arrows request one point per keydown, horizontal and vertical",
+      "name": "Splitter DOM, keyboard, and environment CT SP-KEY-01: Unmodified axis Arrows request one point per keydown, horizontal and vertical",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-KEY-01: Unmodified axis Arrows request one point per keydown, horizontal and vertical"
+      "title": "Splitter DOM, keyboard, and environment CT SP-KEY-01: Unmodified axis Arrows request one point per keydown, horizontal and vertical"
     },
     {
       "id": "LIB-SPLITTER-084",
-      "name": "Splitter FINISH-LINE P2F tails SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds",
+      "name": "Splitter DOM, keyboard, and environment CT SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds"
+      "title": "Splitter DOM, keyboard, and environment CT SP-KEY-03: Shift+Arrow requests ten points through the same solver, clamped at bounds"
     },
     {
       "id": "LIB-SPLITTER-085",
-      "name": "Splitter FINISH-LINE P2F tails SP-ENV-02: StrictMode mounts, reorders, drags, and unmounts with single registration",
+      "name": "Splitter DOM, keyboard, and environment CT SP-ENV-02: StrictMode mounts, reorders, drags, and unmounts with single registration",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-ENV-02: StrictMode mounts, reorders, drags, and unmounts with single registration"
+      "title": "Splitter DOM, keyboard, and environment CT SP-ENV-02: StrictMode mounts, reorders, drags, and unmounts with single registration"
     },
     {
       "id": "LIB-SPLITTER-086",
-      "name": "Splitter FINISH-LINE P2F tails SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance",
+      "name": "Splitter DOM, keyboard, and environment CT SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance"
+      "title": "Splitter DOM, keyboard, and environment CT SP-ENV-03: A ShadowRoot Splitter keeps focus and drag cleanup inside its instance"
     },
     {
       "id": "LIB-SPLITTER-087",
-      "name": "Splitter FINISH-LINE P2F tails SP-ENV-04: Two-Panel parity smoke — constrained drag, Arrows, and Enter collapse/restore",
+      "name": "Splitter DOM, keyboard, and environment CT SP-ENV-04: Two-Panel parity smoke — constrained drag, Arrows, and Enter collapse/restore",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails SP-ENV-04: Two-Panel parity smoke — constrained drag, Arrows, and Enter collapse/restore"
+      "title": "Splitter DOM, keyboard, and environment CT SP-ENV-04: Two-Panel parity smoke — constrained drag, Arrows, and Enter collapse/restore"
     },
     {
       "id": "LIB-SPLITTER-088",
-      "name": "Splitter FINISH-LINE P2F tails FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px",
+      "name": "Splitter DOM, keyboard, and environment CT FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px",
       "kind": "ct",
       "file": "__e2e__/Splitter.ct.spec.ts",
-      "title": "Splitter FINISH-LINE P2F tails FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px"
+      "title": "Splitter DOM, keyboard, and environment CT FEATURES #11: Invisible hit area widens the pointer target while visuals stay 9px"
     },
     {
       "id": "LIB-SPLITTER-089",

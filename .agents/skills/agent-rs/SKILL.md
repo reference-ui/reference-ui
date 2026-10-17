@@ -44,7 +44,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | Module | What a test is | Harness & Outputs | Command |
 | --- | --- | --- | --- |
 | **atomic** | `compile()` contract | **spec + committed snapshot**; do **not** rewrite every run. Golden updates via CLI `--update-goldens`. | `pnpm agentrs v atomic` |
-| **canon** | dictionary membership & fail-closed join | Cargo unit tests on generated tables + Vitest join stations. Generator join is `pnpm canon`. | `pnpm agentrs c canon` / `pnpm agentrs v canon` |
+| **canon** | dictionary membership & fail-closed join | Cargo unit tests on generated tables + Vitest join cases. Generator join is `pnpm canon`. | `pnpm agentrs c canon` / `pnpm agentrs v canon` |
 | **base-system** | definition artefact | Cargo unit tests. Stub until `compile()` takes a base system. | `pnpm agentrs c base_system` |
 | **typegen** | `.d.ts` unions | Cargo printer tests + Vitest `tsc --noEmit` consumers. Goldens: `TYPEGEN_UPDATE_GOLDENS=1 pnpm agentrs c typegen`. | `pnpm agentrs c typegen` / `v typegen` |
 | **tasty** | scan types, emit modules, assert API | **spec + committed goldens** (`manifest.js`, `chunks.json`). Runtime emit goes to `.scratch/`. | `pnpm agentrs v tasty` |
@@ -54,7 +54,7 @@ Do **not** hunt for one harness. Each module has different testing needs:
 | **Rust Domain Units** | Cargo unit tests | Pure Rust tests for algorithms and data structures. | `pnpm agentrs c [module]` |
 | **Full Dev Loop** | Native Build -> Cargo -> Vitest -> Quality | Complete verification in under 5 seconds. | `pnpm agentrs t` |
 
-**Case folders.** Every station is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex indexes each case as `rs-cases`. The shared convention is in `AGENTS.md` section 7.
+**Case folders.** Every case is a case folder named by its raw ID, holding `case.json` (`{"id", "name"}`), `README.md`, `spec.ts`, `input/` and `output/`. The runner fails a folder that breaks this, and Memex indexes each case as `rs-cases`. The shared convention is in `AGENTS.md` section 7.
 
 ---
 
@@ -246,7 +246,7 @@ Terms are stemmed (`queries` matches `query`) and typo-tolerant
 (fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
 Resolve ids with `show`, not `search`. There is no metadata sidecar —
 enrich the index by writing a detailed README: describe the behavior,
-name the symbols, cite sibling case/station ids (cited ids surface as
+name the symbols, cite sibling case ids (cited ids surface as
 `related`). Everything reads live: new docs are searchable immediately,
 no rebuild step.
 

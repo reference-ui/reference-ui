@@ -1,7 +1,7 @@
 /**
  * TypeScript type definitions for Reference UI atomic compiler inputs, outputs, and intermediate data structures.
  * Defines contracts for virtual sources, compilation requests, diagnostic reporting, CSS runtime maps, recipe tables, and authored wants.
- * `compile()` accepts the legacy `{ baseSystem }` shape and the frozen `NativeCompileRequest` for one wave; both lower to the same native compile.
+ * `compile()` accepts the legacy `{ baseSystem }` shape and the frozen `NativeCompileRequest` for now; both lower to the same native compile.
  */
 import type {
   EvaluatedSystemSpec,
@@ -145,16 +145,16 @@ export interface CompileRequest {
    */
   upstreamContainerRoot?: boolean
   /**
-   * Glob scope (RS-10, station ATM-SCAN-01) relative to `rootDir`: only
+   * Glob scope (case ATM-SCAN-01) relative to `rootDir`: only
    * matching sources compile and the rest are skipped silently. Absent or
    * empty preserves the legacy scan-all behavior.
    */
   include?: string[]
   /**
-   * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
+   * Opt-in diagnostic channels (backchannel): when `logs` contains
    * 'compiler', the result also carries `compilerDiagnostics`; when it
    * contains 'proof', the result also carries the compile-internal rows
-   * stations read. Unknown channels are ignored so channels evolve additively.
+   * cases read. Unknown channels are ignored so channels evolve additively.
    */
   logs?: LogChannel[]
 }
@@ -226,7 +226,7 @@ export interface NativeRuntimeArtifact {
 }
 
 /**
- * The own system's per-layer streams (S2 oracle channel): the 9-key object
+ * The own system's per-layer streams (oracle channel): the 9-key object
  * the engine ships verbatim beside the joined sheets, on both the slim and
  * proof channels. Both token variants ride here; empty blocks stay empty
  * strings, never omitted. Required on schema 2; fail-closed artifacts carry
@@ -264,10 +264,10 @@ export interface CompileResult {
    * Compile-internal plans: the compiler rows, surfaced for proof and the
    * differential. Present only when the request's `logs` includes 'proof';
    * production reads the sheets, runtime, diagnostics, and hosts. The
-   * station harness always requests proof, so specs read this directly.
+   * case harness always requests proof, so specs read this directly.
    */
   stylePlans?: RuntimeStylePlan[]
-  /** Per-atom class map. Proof channel only; stations pin css.json goldens off it. */
+  /** Per-atom class map. Proof channel only; cases pin css.json goldens off it. */
   css?: CssRuntime
   diagnostics: Diagnostic[]
   /** Extraction rows with origin/file/line. Proof channel only. */
@@ -285,6 +285,6 @@ export interface CompileResult {
    * StyleTrace found. Absent when no component owns a prop.
    */
   tracedJsxOwned?: Record<string, string[]>
-  /** Opt-in compiler backchannel (S5): present only when requested via `logs`. */
+  /** Opt-in compiler backchannel: present only when requested via `logs`. */
   compilerDiagnostics?: Diagnostic[]
 }

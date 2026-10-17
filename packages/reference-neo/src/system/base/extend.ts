@@ -252,7 +252,7 @@ function streamsWithBlock(streams: readonly SystemStreams[], name: string, block
 }
 
 /**
- * Theme a published base system (E13, E14). The result keeps the base's name, fragments, jsxElements and
+ * Theme a published base system. The result keeps the base's name, fragments, jsxElements and
  * jsxOwned, and every stream entry is unchanged except the own entry, which gains one override block after its
  * tokens. A chained call merges its overrides with mergeTokenTree and re-emits from the original base, so
  * the result never stacks blocks. It throws ExtendSystemError for an unknown token, a self-reference, a

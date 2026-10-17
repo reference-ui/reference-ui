@@ -1,6 +1,6 @@
 # Tooltip
 
-Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Tooltip --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
 Kernel: [Overlay](../Overlay/Overlay.md).
 
 **Thin policy on Overlay.** Tooltip is Overlay with `isolation={false}`,
@@ -80,7 +80,7 @@ the button host; Tooltip.Trigger stays a Slot onto one child.
 
 Too short flickers; too long fails WCAG. Keyboard focus should open immediately (focus-visible); hover is delayed. Leave cancels a pending open.
 
-**Vendor.** Radix default 700ms. Aria 1500 / close 500. Zag machine `opening`/`closing` (400 / 150) — clearest states. Floating UI `useHover` `delay` / `restMs`; touch → 0.
+**Prior art.** Radix default 700ms. Aria 1500 / close 500. Zag machine `opening`/`closing` (400 / 150) — clearest states. Floating UI `useHover` `delay` / `restMs`; touch → 0.
 
 **Lift** the Zag-style state machine with the frozen defaults above.
 
@@ -88,7 +88,7 @@ Too short flickers; too long fails WCAG. Keyboard focus should open immediately 
 
 After one tooltip shows, moving to the next opens **instantly** for a short window. Only one visible. Opening another closes the current, often without animation.
 
-**Vendor.** Radix Provider `skipDelayDuration` 300. Aria `globalWarmedUp` + `tooltips` map. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
+**Prior art.** Radix Provider `skipDelayDuration` 300. Aria `globalWarmedUp` + `tooltips` map. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
 
 **Lift** the algorithm onto a document-scoped Zustand group mounted with
 `ReferenceLibrary`. **Leave** `Tooltip.Provider` as a public API
@@ -101,7 +101,7 @@ non-interactive Content and the Tooltip remains open. Tooltip Content is
 **non-interactive** — no buttons, no links. Interactive hover is Popover
 `openOnHover`.
 
-**Vendor.** Radix `DismissableLayer` and hover-retention behavior. Aria Escape
+**Prior art.** Radix `DismissableLayer` and hover-retention behavior. Aria Escape
 in `useTooltipTrigger`. Zag `closeOnEscape` supplies contrast for the frozen
 unconditional non-interactive Content behavior.
 
@@ -113,7 +113,7 @@ content uses Popover instead.
 
 Popover **repositions** (`autoUpdate`). Tooltip usually **closes** — a stale description beside a scrolled-away trigger is worse. Ignore scroll inside `input`/`textarea`.
 
-**Vendor.** Radix capture-phase scroll if target contains trigger. Aria `useCloseOnScroll.ts`. Zag `closeOnScroll` default true.
+**Prior art.** Radix capture-phase scroll if target contains trigger. Aria `useCloseOnScroll.ts`. Zag `closeOnScroll` default true.
 
 **Lift** close-on-scroll for Tooltip. Do not default Tooltip onto Popover’s living position.
 
@@ -121,7 +121,7 @@ Popover **repositions** (`autoUpdate`). Tooltip usually **closes** — a stale d
 
 Synthetic hover after keyboard can reopen. Press should close. Hover only if modality is pointer; focus opens when focus-visible.
 
-**Vendor.** Aria `getInteractionModality` / `isFocusVisible`. Zag `trackFocusVisible`.
+**Prior art.** Aria `getInteractionModality` / `isFocusVisible`. Zag `trackFocusVisible`.
 
 **Lift.**
 

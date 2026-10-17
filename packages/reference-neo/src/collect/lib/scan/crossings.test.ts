@@ -1,4 +1,4 @@
-// Native-scan crossing census (F1 COUNT prong, extra X2): steady-state sync
+// Native-scan crossing census: steady-state sync
 // crosses the seam exactly twice (scan plus compile) with release only on the
 // error path. It takes a mocked native module plus a temp project and counts
 // the calls sync makes on the happy path and when compile throws.

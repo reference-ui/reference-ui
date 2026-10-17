@@ -12,31 +12,31 @@ use oxc_ast::ast::{Expression, UnaryOperator};
 pub(crate) fn unwrap_wrapper_target<'a, 'b>(
     expr: &'b Expression<'a>,
 ) -> Option<&'b Expression<'a>> {
+    cast_wrapper_target(expr).or_else(|| assertion_wrapper_target(expr))
+}
+
+/// Parentheses and the `as` / `satisfies` casts around an expression.
+fn cast_wrapper_target<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
     match expr {
-        Expression::ParenthesizedExpression(p) => {
-            // ('2r')
-            Some(&p.expression)
-        }
-        Expression::TSAsExpression(as_expr) => {
-            // '2r' as const
-            Some(&as_expr.expression)
-        }
-        Expression::TSSatisfiesExpression(sat) => {
-            // '2r' satisfies string
-            Some(&sat.expression)
-        }
-        Expression::TSNonNullExpression(non_null) => {
-            // '2r'!
-            Some(&non_null.expression)
-        }
-        Expression::TSTypeAssertion(assertion) => {
-            // <string>'2r'  (.ts only)
-            Some(&assertion.expression)
-        }
-        Expression::TSInstantiationExpression(instantiation) => {
-            // w<string>  — type arguments erase, like `as`
-            Some(&instantiation.expression)
-        }
+        // ('2r')
+        Expression::ParenthesizedExpression(p) => Some(&p.expression),
+        // '2r' as const
+        Expression::TSAsExpression(as_expr) => Some(&as_expr.expression),
+        // '2r' satisfies string
+        Expression::TSSatisfiesExpression(sat) => Some(&sat.expression),
+        _ => None,
+    }
+}
+
+/// Non-null, angle-bracket, and instantiation assertions around an expression.
+fn assertion_wrapper_target<'a, 'b>(expr: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    match expr {
+        // '2r'!
+        Expression::TSNonNullExpression(non_null) => Some(&non_null.expression),
+        // <string>'2r'  (.ts only)
+        Expression::TSTypeAssertion(assertion) => Some(&assertion.expression),
+        // w<string>  — type arguments erase, like `as`
+        Expression::TSInstantiationExpression(instantiation) => Some(&instantiation.expression),
         _ => None,
     }
 }
@@ -61,21 +61,33 @@ pub(crate) fn is_silent_block_value(expr: &Expression<'_>) -> bool {
 pub(crate) fn block_value_kind(expr: &Expression<'_>) -> String {
     match expr {
         Expression::Identifier(ident) => format!("identifier '{}'", ident.name.as_str()),
+        _ => shape_kind(expr).to_string(),
+    }
+}
+
+/// The shape name of a non-identifier style-block value: member reads, calls, and logicals.
+fn shape_kind(expr: &Expression<'_>) -> &'static str {
+    match expr {
         Expression::StaticMemberExpression(_)
         | Expression::ComputedMemberExpression(_)
         | Expression::PrivateFieldExpression(_)
-        | Expression::ChainExpression(_) => "member expression".to_string(),
-        Expression::CallExpression(_) => "call expression".to_string(),
-        Expression::LogicalExpression(_) => "logical expression".to_string(),
+        | Expression::ChainExpression(_) => "member expression",
+        Expression::CallExpression(_) => "call expression",
+        Expression::LogicalExpression(_) => "logical expression",
+        _ => operator_or_literal_kind(expr),
+    }
+}
+
+/// The shape name of templates, unary operators, and function-like values.
+fn operator_or_literal_kind(expr: &Expression<'_>) -> &'static str {
+    match expr {
         Expression::TemplateLiteral(_) | Expression::TaggedTemplateExpression(_) => {
-            "template expression".to_string()
+            "template expression"
         }
-        Expression::UnaryExpression(_) | Expression::UpdateExpression(_) => {
-            "unary expression".to_string()
-        }
+        Expression::UnaryExpression(_) | Expression::UpdateExpression(_) => "unary expression",
         Expression::ArrowFunctionExpression(_)
         | Expression::FunctionExpression(_)
-        | Expression::ClassExpression(_) => "function expression".to_string(),
-        _ => "expression".to_string(),
+        | Expression::ClassExpression(_) => "function expression",
+        _ => "expression",
     }
 }

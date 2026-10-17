@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Div } from '@reference-ui/react'
 import { ReferenceLibrary } from './ReferenceLibrary'
 import { toast } from '../Toast'
 import { announce } from '../Announcer'
@@ -151,5 +152,23 @@ export function StrictRuntimeHarness({
         </React.StrictMode>
       )}
     </div>
+  )
+}
+
+export function ColorModeRoot() {
+  const [mode, setMode] = React.useState<'light' | 'dark'>('dark')
+
+  return (
+    <Div colorMode={mode}>
+      <ReferenceLibrary>
+        <button
+          type="button"
+          data-testid="rl-color-toggle"
+          onClick={() => setMode(current => (current === 'dark' ? 'light' : 'dark'))}
+        >
+          Toggle
+        </button>
+      </ReferenceLibrary>
+    </Div>
   )
 }

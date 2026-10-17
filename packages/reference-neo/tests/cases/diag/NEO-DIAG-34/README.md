@@ -4,6 +4,6 @@ A `css()` argument, merge-list element, or conditional arm is not a static style
 
 Raised in: `modules/atomic/src/extract/css/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-NON-OBJECT-CSS-ARG (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-NON-OBJECT-CSS-ARG (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-NON-OBJECT-CSS-ARG, atm-w-non-object-css-arg, diagnostics case index, NEO-DIAG-34

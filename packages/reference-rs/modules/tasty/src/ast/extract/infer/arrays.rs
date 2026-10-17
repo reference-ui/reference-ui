@@ -69,6 +69,21 @@ fn infer_array_element_type(
 
     match element {
         El::SpreadElement(_) | El::Elision(_) => None,
+        El::ObjectExpression(object) => infer_object_type(object, ctx, const_asserted),
+        El::ArrayExpression(array) => infer_array_type(array, ctx, const_asserted),
+        other => infer_literal_element_type(other, ctx, const_asserted),
+    }
+}
+
+/// Literal elements lower to their widened or const-asserted primitive types.
+fn infer_literal_element_type(
+    element: &ArrayExpressionElement<'_>,
+    ctx: &ExtractionContext<'_>,
+    const_asserted: bool,
+) -> Option<TypeRef> {
+    use ArrayExpressionElement as El;
+
+    match element {
         El::NullLiteral(_) => Some(null_type()),
         El::BooleanLiteral(e) => Some(infer_boolean_type_span(
             ctx.source,
@@ -81,8 +96,19 @@ fn infer_array_element_type(
             const_asserted,
         )),
         El::StringLiteral(e) => Some(infer_string_type_span(ctx.source, e.span(), const_asserted)),
-        El::ObjectExpression(object) => infer_object_type(object, ctx, const_asserted),
-        El::ArrayExpression(array) => infer_array_type(array, ctx, const_asserted),
+        other => infer_asserted_element_type(other, ctx, const_asserted),
+    }
+}
+
+/// A type assertion or `satisfies` lowers to the type of its inner expression; anything else has no inferable type.
+fn infer_asserted_element_type(
+    element: &ArrayExpressionElement<'_>,
+    ctx: &ExtractionContext<'_>,
+    const_asserted: bool,
+) -> Option<TypeRef> {
+    use ArrayExpressionElement as El;
+
+    match element {
         El::TSAsExpression(assertion) => infer_ts_as_expression(assertion, ctx, const_asserted),
         El::TSSatisfiesExpression(satisfies) => {
             infer_ts_satisfies_expression(satisfies, ctx, const_asserted)

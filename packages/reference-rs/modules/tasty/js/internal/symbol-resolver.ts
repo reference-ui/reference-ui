@@ -7,15 +7,15 @@ import type {
   RawTastySymbolIndexEntry,
   TastySymbol,
   TastySymbolSearchResult,
-} from '../api-types'
-import { TastySymbolImpl } from './wrappers'
+} from '../api-types.js'
+import { TastySymbolImpl } from './wrappers.js'
 import {
   createAmbiguousSymbolNameError,
   extractChunkSymbol,
   type TastySymbolModel,
-} from './shared'
-import type { TastyApiRuntime } from './api-runtime'
-import { ChunkLoader } from './chunk-loader'
+} from './shared.js'
+import type { TastyApiRuntime } from './api-runtime.js'
+import { ChunkLoader } from './chunk-loader.js'
 
 interface SymbolResolverOptions {
   api: TastyApiRuntime

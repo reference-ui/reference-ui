@@ -6,7 +6,7 @@
 //! hottest feasible public unit; both cases share the same declaration set.
 
 use atomic::atom::AtomSet;
-use atomic::runtime::{AuthoredDeclaration, PlanBuilder};
+use atomic::runtime::{AuthoredDeclaration, PlanBuilder, PlanSinks};
 use atomic::BaseSystem;
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
@@ -95,10 +95,12 @@ fn full(criterion: &mut Criterion) {
             let mut builder = PlanBuilder::new(
                 &system.name,
                 system,
-                &mut atoms,
-                &mut external,
                 &[],
-                &mut diagnostics,
+                PlanSinks {
+                    atom_set: &mut atoms,
+                    external_atom_set: &mut external,
+                    diagnostics: &mut diagnostics,
+                },
             );
             black_box(builder.build(black_box(&decls)))
         });
@@ -117,10 +119,12 @@ fn diet(criterion: &mut Criterion) {
             let mut builder = PlanBuilder::new(
                 &system.name,
                 system,
-                &mut atoms,
-                &mut external,
                 &[],
-                &mut diagnostics,
+                PlanSinks {
+                    atom_set: &mut atoms,
+                    external_atom_set: &mut external,
+                    diagnostics: &mut diagnostics,
+                },
             );
             black_box(builder.build_diet(black_box(&decls)))
         });

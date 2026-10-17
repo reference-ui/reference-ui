@@ -19,9 +19,9 @@ trailing-`!`, and the macros (`font`, `size`, `border`, radius pairs,
 reads the namer tables plus its procedures; it never consults the sheet
 and never looks up a per-atom row.
 
-## 3. Engine stations leaned on
+## 3. Reference-rs cases leaned on
 
-| Station | Proves | Used by |
+| Reference-rs case | Proves | Used by |
 | --- | --- | --- |
 | ATM-SEAM-06 | The shipped artifact carries no per-atom row; the namer tables are present | NEO-NAMER-01 |
 | ATM-SEAM-07 | Artifact bytes are independent of atom count | NEO-NAMER-01 |
@@ -31,7 +31,7 @@ and never looks up a per-atom row.
 Host: the runtime namer (`@reference-ui/rust/namer`) behind `css()`, the
 rules-version check in `registerRuntimeData`, and the browser-dev miss
 diagnostic. NAMER-02's class lists equal the pre-cutover plan-derived
-golden; NAMER-03's miss contract is host R2 work, not an engine gap.
+golden; NAMER-03's miss contract is host work, not an engine gap.
 
 ## 4. Decisions
 
@@ -48,7 +48,7 @@ golden; NAMER-03's miss contract is host R2 work, not an engine gap.
 - Token, rhythm, and wrap recomputation in the runtime namer: the class
   carries authored spellings and paths, so bodies stay compiler-side.
 - A node-side miss catalog: refused by the miss-shape decision above.
-- GHOST-04 namer injectivity: stays an rs station; both sides
+- GHOST-04 namer injectivity: stays an rs case; both sides
   canonicalize first, so it is orthogonal to the mirror.
 
 ## 6. Out of scope (not this group's dialect)

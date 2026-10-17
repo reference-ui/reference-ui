@@ -8,27 +8,27 @@
 //! borrowed outputs, so the visitor can build an ephemeral context per
 //! node without cloning either side.
 
+mod diagnostics;
+mod walks;
+
+pub use walks::WalkSite;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use oxc_span::Span;
 use rustc_hash::FxHashSet;
 
 use crate::atom::Want;
-use crate::diagnostics::adapters::extract::{extract_note, extract_note_with_help};
-use crate::diagnostics::{
-    byte_span, line_col, Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity,
-    DiagnosticSink, DiagnosticsSession, LineIndex, Policy,
-};
+use crate::diagnostics::{Diagnostic, DiagnosticsSession, LineIndex};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 
 use super::bindings::{self, ExtractBindings};
-use super::expressions::{BagSemantics, ExpressionWalk, ObjectWalk};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
-use super::wrapper_thread::WrapperThreads;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{BindingInit, BindingKind, Lookup, ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
+use super::wrapper_thread::WrapperThreads;
 
 /// Configuration references passed into style extraction contexts.
 pub struct ExtractConfig<'a> {
@@ -48,8 +48,8 @@ pub struct ExtractSinks<'a> {
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
     pub session: &'a mut DiagnosticsSession,
-    pub recipe_bindings: &'a mut Vec<RecipeBinding>,
-    pub tentative: &'a mut Vec<TentativeSelection>,
+    pub(crate) recipe_bindings: &'a mut Vec<RecipeBinding>,
+    pub(crate) tentative: &'a mut Vec<TentativeSelection>,
 }
 
 /// Context for extracting style declarations across an AST file.
@@ -74,8 +74,8 @@ pub struct ExtractContext<'a> {
     pub authored: &'a mut Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: &'a mut Vec<harvest::Sink>,
     pub session: &'a mut DiagnosticsSession,
-    pub recipe_bindings: &'a mut Vec<RecipeBinding>,
-    pub tentative: &'a mut Vec<TentativeSelection>,
+    pub(crate) recipe_bindings: &'a mut Vec<RecipeBinding>,
+    pub(crate) tentative: &'a mut Vec<TentativeSelection>,
     pub(crate) missing_graph_reported: bool,
 }
 
@@ -216,183 +216,8 @@ impl<'a> ExtractContext<'a> {
             && self.wrapper_threads.is_some_and(|t| t.threads_css(tag))
     }
 
-    /// Report a diagnostic warning at the offending node's span.
-    pub fn warn(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
-        let message: String = message.into();
-        let (line, column) = self
-            .source
-            .and_then(|source| line_col(source, span.start))
-            .unzip();
-        let location = DiagnosticLocation {
-            file: Some(self.file.to_string()),
-            line,
-            column,
-            span: Some(byte_span(span)),
-        };
-        self.diagnostics
-            .push(location.warning(code, message.clone()));
-        self.session
-            .report(extract_note(location, DiagnosticSeverity::Warning, code, message));
-    }
-
-    /// Report a warning with instance help at the offending node's span.
-    /// The help rides the pushed line and the session fact alike, so the
-    /// compiler re-render re-attaches it.
-    pub fn warn_help(
-        &mut self,
-        span: Span,
-        code: DiagnosticCode,
-        message: impl Into<String>,
-        help: Vec<String>,
-    ) {
-        let message: String = message.into();
-        let (line, column) = self
-            .source
-            .and_then(|source| line_col(source, span.start))
-            .unzip();
-        let location = DiagnosticLocation {
-            file: Some(self.file.to_string()),
-            line,
-            column,
-            span: Some(byte_span(span)),
-        };
-        self.diagnostics.push(Policy::attach_help(
-            location.warning(code, message.clone()),
-            help.clone(),
-        ));
-        self.session.report(extract_note_with_help(
-            location,
-            DiagnosticSeverity::Warning,
-            code,
-            message,
-            Some(help),
-        ));
-    }
-
-    /// Report an info diagnostic at the offending node's span.
-    pub fn info(&mut self, span: Span, code: DiagnosticCode, message: impl Into<String>) {
-        let message: String = message.into();
-        let (line, column) = self
-            .source
-            .and_then(|source| line_col(source, span.start))
-            .unzip();
-        let location = DiagnosticLocation {
-            file: Some(self.file.to_string()),
-            line,
-            column,
-            span: Some(byte_span(span)),
-        };
-        self.diagnostics.push(location.info(code, message.clone()));
-        self.session
-            .report(extract_note(location, DiagnosticSeverity::Info, code, message));
-    }
-
-    /// Record the missing-graph error once per file. With no hosts
-    /// resolvable, style-bearing JSX is skipped instead of scanned.
-    pub fn report_missing_graph(&mut self, tag: &str, line: Option<u32>, column: Option<u32>) {
-        if self.missing_graph_reported {
-            return;
-        }
-        self.missing_graph_reported = true;
-        self.diagnostics.push(
-            Diagnostic::error(
-                DiagnosticCode::MissingHostGraph,
-                format!(
-                    "no StyleProps hosts resolvable (missing primitive graph); skipped styles on <{tag}>"
-                ),
-            )
-            .with_location(self.file, line, column),
-        );
-    }
-
     /// The identifier lookup handle fixed at this context's use-site scope.
     pub fn scoped(&self) -> Scoped<'a> {
         self.chain.at(self.scope)
-    }
-
-    /// Build this file's line-start table on first walk construction.
-    /// Files that never construct a walk never pay for the scan.
-    fn ensure_line_index(&mut self) {
-        if self.line_index.is_none() {
-            self.line_index = self.source.map(LineIndex::for_source);
-        }
-    }
-
-    /// Create an ObjectWalk context for traversing a style object.
-    pub fn object_walk<'b>(
-        &'b mut self,
-        origin: Option<&'b str>,
-        important: bool,
-        external: bool,
-    ) -> ObjectWalk<'b> {
-        self.ensure_line_index();
-        ObjectWalk {
-            origin,
-            important,
-            external,
-            file: self.file,
-            source: self.source,
-            line_index: self.line_index.as_ref(),
-            scopes: self.scoped(),
-            breakpoints: self.breakpoints,
-            wants: self.wants,
-            diagnostics: self.diagnostics,
-            authored: Some(self.authored),
-            bag: BagSemantics::StyleObject,
-            sinks: self.sinks,
-            session: self.session,
-        }
-    }
-
-    /// Walk a style object into an explicit want list (recipe leaves).
-    pub fn object_walk_into<'b>(
-        &'b mut self,
-        origin: Option<&'b str>,
-        wants: &'b mut Vec<Want>,
-        external: bool,
-    ) -> ObjectWalk<'b> {
-        self.ensure_line_index();
-        ObjectWalk {
-            origin,
-            important: false,
-            external,
-            file: self.file,
-            source: self.source,
-            line_index: self.line_index.as_ref(),
-            scopes: self.scoped(),
-            breakpoints: self.breakpoints,
-            wants,
-            diagnostics: self.diagnostics,
-            authored: None,
-            bag: BagSemantics::StyleObject,
-            sinks: self.sinks,
-            session: self.session,
-        }
-    }
-
-    /// Create an ExpressionWalk context for traversing a single property expression.
-    pub fn expression_walk<'b>(
-        &'b mut self,
-        prop: &'b str,
-        origin: Option<&'b str>,
-        important: bool,
-        external: bool,
-    ) -> ExpressionWalk<'b> {
-        self.ensure_line_index();
-        ExpressionWalk {
-            prop,
-            origin,
-            important,
-            external,
-            file: self.file,
-            source: self.source,
-            line_index: self.line_index.as_ref(),
-            scopes: self.scoped(),
-            breakpoints: self.breakpoints,
-            wants: self.wants,
-            diagnostics: self.diagnostics,
-            sinks: self.sinks,
-            session: self.session,
-        }
     }
 }

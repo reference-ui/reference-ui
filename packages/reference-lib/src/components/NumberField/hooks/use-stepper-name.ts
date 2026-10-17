@@ -1,5 +1,5 @@
 /**
- * useStepperName: the required-name gate (PATCHES §6). A present
+ * useStepperName: the required-name gate. A present
  * labelledby overrides aria-label per platform semantics, so it must
  * resolve to a nonempty name even when a label is also authored.
  * Labelledby targets only exist in committed DOM, so verification runs
@@ -13,7 +13,7 @@ import { numberFieldDevDiagnostic } from '../shared/dev'
 import { useIsomorphicLayoutEffect } from '../shared/dom'
 import { stepperNameIds, stepperNameText } from '../shared/names'
 
-// PATCHES §6 runtime: missing, empty, or unresolved stepper naming fails
+// Runtime: missing, empty, or unresolved stepper naming fails
 // with a descriptive dev diagnostic; the offender renders nothing and so
 // neither registers nor activates (no registration system exists until §4).
 // Labelledby targets only exist in committed DOM, so verification runs in a

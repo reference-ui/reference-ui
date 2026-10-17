@@ -1,5 +1,5 @@
 /**
- * Group/peer and arbitrary `&` station. Fixture wraps survive into the
+ * Group/peer and arbitrary `&` case. Fixture wraps survive into the
  * sheet; `'&[data-slot=inner]'` is a css() key, not a JSX attribute.
  */
 import { expect } from 'vitest'

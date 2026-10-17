@@ -67,7 +67,7 @@ export const RovingFocusItem = React.forwardRef<HTMLElement, RovingFocusItemProp
       context.onItemKeyDown(e, id)
     }
 
-    // Pointer press sets currentness (RF-TAB-04, FEATURES #4): taps that never
+    // Pointer press sets currentness (RF-TAB-04): taps that never
     // move DOM focus (touch, Safari click) still choose the re-entry stop.
     // Currentness-only — never focuses, so composed focus policies (Menu
     // click-open restore) keep full authority. Consumer preventDefault opts out.

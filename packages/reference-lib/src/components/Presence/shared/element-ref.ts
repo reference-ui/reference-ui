@@ -9,7 +9,7 @@ import * as React from 'react'
  * carries a ref). React 18.3 added an `isReactWarning` getter on `props.ref`
  * instead, with the real ref on `element.ref`. So neither property is safe to
  * read blindly on every major — this helper inspects property descriptors
- * only and never invokes a getter. (B-03)
+ * only and never invokes a getter.
  */
 export function getElementRef(element: React.ReactElement<any>): React.Ref<any> | undefined {
   const propsDescriptor = Object.getOwnPropertyDescriptor(element.props, 'ref')

@@ -49,7 +49,7 @@ a red file behind.
   stability. No repro, no case.
 - `ATM-I-*` (4 rows) — module-local telemetry on the legacy/native
   compiler channel only, no typed transport; the template carries
-  warnings and errors only. Pinned by RS stations (ATM-DIAG-07,
+  warnings and errors only. Pinned by RS cases (ATM-DIAG-07,
   ATM-ATOM-06, harvest-census), no case.
 - `RS-W-EXAMPLE-*` / `RS-E-EXAMPLE-*` — template tests and docs only,
   never emitted by shipped code. No case.
@@ -59,6 +59,6 @@ a red file behind.
 
 | Feature | Reason |
 | --- | --- |
-| Rendered frame quality (spans, gutters, suggestions) | Judged by playtest agents against the rubric, never by these cases |
+| Rendered frame quality (spans, gutters, suggestions) | Judged by review against the rubric, never by these cases |
 | Byte snapshots of pretty output | Forbidden: they punish style improvement |
 | Codes without a shared-suite repro | The repro suite is the living side of the registry; a code earns its case by earning its row first |

@@ -17,7 +17,7 @@ import { packedTarballName, stagingDir } from './paths.js'
 // (`.cargo/config.toml`) and is the big one: copied whole it drags tens of GB of
 // incremental debug output that `pnpm pack` never ships. Excludes are matched on
 // paths RELATIVE to the package root, never bare basenames, because core/lib/
-// mcp/icons ship their whole `dist/` via `files` (see pipeline/performance.md).
+// mcp/icons ship their whole `dist/` via `files`: a bare `dist` match would break them.
 const stagingCopyExcludedPathSegments = new Set(['.git', 'node_modules'])
 const stagingCopyExcludedRelativePaths = ['target', 'dist/cargo', '.turbo', 'coverage'] as const
 

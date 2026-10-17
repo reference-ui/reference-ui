@@ -4,7 +4,7 @@
  * Restricted to unambiguous abbreviations that cannot collide with tags, units, or CSS values.
  */
 
-import type { CanonicalTarget } from './prefixes';
+import type { CanonicalTarget } from './prefixes.js';
 
 export const ALIASES = {
   m: 'margin',

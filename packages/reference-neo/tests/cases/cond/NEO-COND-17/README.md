@@ -9,8 +9,7 @@ utility plus one comma utility whose class appears on both selectors
 brand, while an only-child outside the class and the first-child
 control stay ink — so the bare member paints only under the class.
 
-Evidence: `[atm]` ATM-COND-23 (SPEC-V2-68); `[panda-v2]`
-`vendor/panda/crates/pandacss_stylesheet/tests/nested_selector_parity.rs:642`
+Evidence: ATM-COND-23; Panda v2 test
 `nested_comma_group_scopes_member_without_ampersand`.
 
 > Search terms: comma member scoping, bare member, selector list scoping, only-child leak, descendant scoping, selectors/comma, conditions/nesting, NEO-COND-09

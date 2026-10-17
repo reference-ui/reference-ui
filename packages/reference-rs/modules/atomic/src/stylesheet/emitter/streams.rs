@@ -2,23 +2,22 @@
 //! Each field holds one contiguous chunk of the emitter's existing push sequence,
 //! and concatenation reproduces today's bytes exactly. The dual-sheet entry point
 //! builds these streams then joins them; the single-sheet builds stay sequential
-//! as the byte-identity oracle. S2 carries these across N-API verbatim as the
+//! as the byte-identity oracle. carries these across N-API verbatim as the
 //! 10-key own object: the system name plus one string per layer block.
 
 use serde::{Deserialize, Serialize};
 
-use super::StylesheetSinks;
+use super::{SheetInput, StylesheetSinks};
 use super::super::global::append_reset_css;
 use super::super::layers::{LAYER_PREAMBLE, wrap_package_layer};
 use super::super::root_default::append_root_default;
 use super::super::system_layers::{append_global, append_tokens, own_token_scope, TokenScope};
 use crate::atom::AtomSet;
 use crate::recipes::CompiledRecipe;
-use base_system::BaseSystem;
 
 /// One captured chunk per layer block, plus the package name the wrap prints.
-/// Vocabulary A (PLAN §3.6, Final): names as data + one string per layer block
-/// + package name. Field order is the emitter's push order. Serde carries the
+/// Vocabulary A (PLAN §3.6, Final): names as data, one string per layer block,
+/// plus the package name. Field order is the emitter's push order. Serde carries the
 /// 10-key N-API own object verbatim (snake→camel); empty blocks stay empty
 /// strings, never omitted, so the oracle channel needs no refold.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -105,13 +104,16 @@ impl StylesheetStreams {
 /// once; each pass still runs against its own sink so diagnostics land exactly
 /// where the sequential build put them.
 pub fn build_stylesheet_streams(
-    own: &AtomSet,
-    external: &AtomSet,
-    qualifiers: &[String],
-    system: &BaseSystem,
-    recipes: &[CompiledRecipe],
+    input: &SheetInput<'_>,
     sinks: StylesheetSinks<'_>,
 ) -> StylesheetStreams {
+    let SheetInput {
+        own,
+        external,
+        qualifiers,
+        system,
+        recipes,
+    } = *input;
     let mut reset = String::new();
     append_reset_css(&mut reset, system, sinks.primary);
     let mut portable_reset = String::new();

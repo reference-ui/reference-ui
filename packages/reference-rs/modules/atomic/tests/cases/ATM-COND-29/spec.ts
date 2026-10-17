@@ -1,5 +1,5 @@
 /**
- * Stacked pseudo-compound reorder station (ATM-COND-29, SPEC-V2-80). A
+ * Stacked pseudo-compound reorder (ATM-COND-29). A
  * pseudo-class stacked under a pseudo-element parent reorders before the
  * pseudo-element in the same compound. Selectors mirror v2
  * `nested_selector_parity.rs:455/:466` plus the dialect and depth arms.

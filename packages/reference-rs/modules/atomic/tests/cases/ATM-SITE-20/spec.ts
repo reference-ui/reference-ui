@@ -1,5 +1,5 @@
 /**
- * Unknown-prop-policy station (ATM-SITE-20, N12 + tails-d). One policy,
+ * Unknown-prop-policy (ATM-SITE-20, N12). One policy,
  * every path: unknown style keys warn and drop — `css()` literals, const
  * spreads, and `globalCss` declarations alike. No silent swallows, no
  * hyphenated dead properties.
@@ -29,10 +29,9 @@ const spec: AtomicCaseSpec = {
       'color:green': `${SYSTEM}__c_green`,
     })
 
-    // One policy, one channel (Wave-1b carve-out restores the S6 E8-class
-    // re-point): adjudicated per line — the global-CSS line stays default
-    // per O8 R3, and the three css-surface extract refusals (two literals
-    // via object/mod.rs, one const spread via lower.rs) return to default.
+    // One policy, one channel: the global-CSS line stays default, and the
+    // three css-surface extract refusals (two literals via object/mod.rs, one
+    // const spread via lower.rs) return to default.
     const defaults = result.diagnostics ?? []
     expect(defaults).toHaveLength(4)
     for (const [suffix, line, column, message] of [

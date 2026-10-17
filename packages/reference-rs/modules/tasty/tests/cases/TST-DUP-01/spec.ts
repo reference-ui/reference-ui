@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-DUP-01.
+ * Case specification for TST-DUP-01.
  * Verifies preservation of duplicate symbol names in manifest and lookup rejection.
  * Proves primary SPEC ID anchor TST-DUP-01.
  */

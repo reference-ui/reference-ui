@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TMP-02.
+ * Case specification for TST-TMP-02.
  * Verifies complex template literal patterns, union explosions, and intrinsics.
  * Proves primary SPEC ID anchor TST-TMP-02.
  */

@@ -1,4 +1,4 @@
-// B-11: fail when the shippable dist/ (and the generated .reference-ui/system
+// Fail when the shippable dist/ (and the generated .reference-ui/system
 // baseSystem payloads it ships) is older than the sources it was built from.
 // dist/ is git-ignored, so staleness is a local/pack-time hazard: a file:-linked
 // consumer silently runs last week's behavior. CI runs build -> check:dist ->
@@ -178,7 +178,7 @@ if (newestSyncInput.mtimeMs > buildStamp) {
 }
 
 if (stale.length > 0) {
-  console.error('check:dist FAIL — dist is stale (B-11):')
+  console.error('check:dist FAIL — dist is stale:')
   for (const { input, output } of stale) {
     console.error(`  ${label(input.path)} is newer than ${output}`)
   }

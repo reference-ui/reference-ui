@@ -4,8 +4,8 @@
  * Serializes virtual file configurations into JSON strings for the Rust engine.
  * Deserializes compiler output containing generated stylesheets, runtime maps, and diagnostics.
  */
-import { callNativeJson } from '../../runtime/js/native'
-import type { CompileResult, ReleaseScanResponse, ScanResponse } from './types'
+import { callNativeJson } from '../../runtime/js/native.js'
+import type { CompileResult, ReleaseScanResponse, ScanResponse } from './types.js'
 
 export const ATOMIC_NATIVE_EXPORTS = ['compileSystem', 'scanSystem', 'releaseScan'] as const
 

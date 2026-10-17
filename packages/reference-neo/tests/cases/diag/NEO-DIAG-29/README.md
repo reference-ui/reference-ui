@@ -4,6 +4,6 @@ Operator or pair the binary fold refused. The world carries the minimal fixture 
 
 Raised in: `modules/atomic/src/extract/expressions/walk/leaf.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-BINARY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-BINARY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-BINARY, atm-w-dynamic-binary, diagnostics case index, NEO-DIAG-29

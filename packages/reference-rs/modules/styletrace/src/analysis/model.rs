@@ -8,6 +8,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use oxc_ast::ast::Expression;
 use rustc_hash::FxHashMap;
 
+use super::util::transparent_inner;
+
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -139,6 +141,14 @@ pub(super) struct TraceComponent {
     pub(super) owned_props: BTreeSet<String>,
 }
 
+impl TraceComponent {
+    /// True when the body can reach a primitive: a style pipeline or an edge. A record without one
+    /// only carries the props its declaration owns, so it never answers a trace.
+    pub(super) fn has_style_path(&self) -> bool {
+        self.uses_style_pipeline || !self.edges.is_empty()
+    }
+}
+
 #[derive(Clone)]
 pub(super) struct ComponentEdge {
     pub(super) target: EdgeTarget,
@@ -206,38 +216,37 @@ impl PropBindings {
     pub(super) fn expression_reads_style_prop(&self, expression: &Expression<'_>) -> bool {
         match expression {
             Expression::Identifier(identifier) => {
-                self.direct_style_bindings
-                    .contains(identifier.name.as_str())
-                    || self.spread_bindings.contains(identifier.name.as_str())
+                self.identifier_reads_style_prop(identifier.name.as_str())
             }
             Expression::StaticMemberExpression(member) => {
-                if let Expression::Identifier(identifier) = &member.object {
-                    return self
-                        .props_object_bindings
-                        .contains(identifier.name.as_str())
-                        || self.spread_bindings.contains(identifier.name.as_str());
-                }
-                self.expression_reads_style_prop(&member.object)
+                self.static_member_reads_style_prop(&member.object)
             }
             Expression::ComputedMemberExpression(member) => {
                 self.expression_reads_style_prop(&member.object)
                     || self.expression_reads_style_prop(&member.expression)
             }
-            Expression::ParenthesizedExpression(parenthesized) => {
-                self.expression_reads_style_prop(&parenthesized.expression)
-            }
-            Expression::TSAsExpression(asserted) => {
-                self.expression_reads_style_prop(&asserted.expression)
-            }
-            Expression::TSSatisfiesExpression(asserted) => {
-                self.expression_reads_style_prop(&asserted.expression)
-            }
-            Expression::TSTypeAssertion(asserted) => {
-                self.expression_reads_style_prop(&asserted.expression)
-            }
-            Expression::TSNonNullExpression(asserted) => {
-                self.expression_reads_style_prop(&asserted.expression)
-            }
+            _ => self.compound_reads_style_prop(expression),
+        }
+    }
+
+    fn identifier_reads_style_prop(&self, name: &str) -> bool {
+        self.direct_style_bindings.contains(name) || self.spread_bindings.contains(name)
+    }
+
+    /// `props.color` reads a style prop when `props` is a props object or spread binding; any
+    /// other object is searched recursively.
+    fn static_member_reads_style_prop(&self, object: &Expression<'_>) -> bool {
+        if let Expression::Identifier(identifier) = object {
+            return self.props_object_bindings.contains(identifier.name.as_str())
+                || self.spread_bindings.contains(identifier.name.as_str());
+        }
+        self.expression_reads_style_prop(object)
+    }
+
+    /// Logical and conditional nodes read through their value positions; wrappers read through
+    /// their inner expression. Anything else reads no style prop.
+    fn compound_reads_style_prop(&self, expression: &Expression<'_>) -> bool {
+        match expression {
             Expression::LogicalExpression(logical) => {
                 self.expression_reads_style_prop(&logical.left)
                     || self.expression_reads_style_prop(&logical.right)
@@ -248,7 +257,8 @@ impl PropBindings {
                 self.expression_reads_style_prop(&conditional.consequent)
                     || self.expression_reads_style_prop(&conditional.alternate)
             }
-            _ => false,
+            _ => transparent_inner(expression)
+                .is_some_and(|inner| self.expression_reads_style_prop(inner)),
         }
     }
 }

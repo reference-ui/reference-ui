@@ -77,7 +77,7 @@ if (danglingSpecifiers.length > 0) {
 // register types would hide a component from consumer fills. Fail naming it.
 assertNoRegisterPins(distDir)
 
-// B-35: the bundled tasty manifest runtime (pulled in via @reference-ui/types
+// The bundled tasty manifest runtime (pulled in via @reference-ui/types
 // values used by the Reference browser) carries a Node-only branch,
 // `await import("url")`, which makes every consumer Vite build warn about a
 // browser-externalized builtin. The branch is dead in the packaged artifact:
@@ -128,7 +128,7 @@ async function stripNodeUrlBranches() {
       throw error
     }
   }
-  console.log(`build-package: B-35 node:url branches patched: ${patched}`)
+  console.log(`build-package: node:url branches patched: ${patched}`)
 }
 
 await stripNodeUrlBranches()

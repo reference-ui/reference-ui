@@ -7,7 +7,7 @@
 //! leaves that marker in place.
 
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
-use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
+use crate::shared::type_ref_map::{map_type_ref, ConditionalParts, ReferenceParts, TypeRefMap};
 
 pub(super) fn clear_binder_targets(type_ref: TypeRef) -> TypeRef {
     map_type_ref(&mut ClearBinderTargets, type_ref)
@@ -16,14 +16,14 @@ pub(super) fn clear_binder_targets(type_ref: TypeRef) -> TypeRef {
 struct ClearBinderTargets;
 
 impl TypeRefMap for ClearBinderTargets {
-    fn map_reference(
-        &mut self,
-        name: String,
-        target_id: Option<String>,
-        source_module: Option<String>,
-        type_arguments: Option<Vec<TypeRef>>,
-        type_parameter: bool,
-    ) -> TypeRef {
+    fn map_reference(&mut self, reference: ReferenceParts) -> TypeRef {
+        let ReferenceParts {
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+            type_parameter,
+        } = reference;
         let target_id = if type_parameter && target_id.as_deref() == Some(name.as_str()) {
             None
         } else {
@@ -76,14 +76,14 @@ impl TypeRefMap for ClearBinderTargets {
         }
     }
 
-    fn map_conditional(
-        &mut self,
-        check_type: TypeRef,
-        extends_type: TypeRef,
-        true_type: TypeRef,
-        false_type: TypeRef,
-        resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_conditional(&mut self, parts: ConditionalParts) -> TypeRef {
+        let ConditionalParts {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+            resolved,
+        } = parts;
         TypeRef::Conditional {
             check_type: Box::new(check_type),
             extends_type: Box::new(extends_type),

@@ -16,8 +16,7 @@ Neo is the code word for the **runtime portion of reference-rs**: TypeScript
   `globalCss()`, `recipe()`. Neo evaluates fragments once in Node, produces
   an `EvaluatedSystemSpec`, hands it to Rust (`compile()` / typegen /
   styletrace), then publishes the generated packages.
-- Neo is **not a fork of reference-core**. Core stays Panda-stable, keeps
-  its folder and npm name, and keeps shipping. Neo never edits core.
+- Neo is the runtime that replaced the retired `packages/reference-core` (`b2c666a73`). It is **not a fork** of it.
 - Wire format is frozen in `reference-rs/contracts/`. Do not mint a second
   `EvaluatedSystemSpec`. Do not lower styles in TypeScript; do not invent
   a second Atomic.
@@ -38,12 +37,6 @@ pnpm agentneo q [paths]       # quality gate (section 6)
   (Vite). Matrix install/bundler-chain proof is for the day Neo is the
   installed core — not today.
 - **Stance:** `packages/reference-neo/README.md` (what Neo is and refuses).
-- **Plan:** `plan.md` at the repo root (the one plan: production-readiness status,
-  now/later items, owner decisions).
-- **Evidence:** `packages/reference-neo/docs/evidence/` — the nine
-  read-only probe reports the parity campaign was planned from (lib sheet,
-  generated folder, core API, Atomic claims, Panda v1 corpus, Neo state).
-  Read `docs/evidence/README.md` first; cite these instead of re-probing.
 - **Usage:** `packages/reference-neo/docs/TESTING.md` (how to run the harness).
 - **Nomenclature:** `packages/reference-neo/docs/DOMAIN.md` (the naming
   authority — check before naming anything load-bearing).
@@ -103,12 +96,12 @@ Subcommands: `list`, `search <query>`, `run [case-id]`, `q [paths]`.
 | Rust, N-API, system compiler, anything in `packages/reference-rs` | `agent-rs` skill (`pnpm agentrs`) | `packages/reference-rs` |
 | `@reference-ui/lib` look / feel / polish | `view-story` skill | `packages/reference-lib` |
 | `@reference-ui/lib` component logic, CT, snapshots | `test-component` skill (`pnpm agentct`) | `packages/reference-lib` |
-| Core, matrix, pipeline, bundler contracts | **test-core** (`pnpm agent`) | `packages/reference-core`, `matrix/*`, `pipeline/*` |
+| Matrix, pipeline, bundler contracts, MCP | **test-core** (`pnpm agent`) | `matrix/*`, `pipeline/*`, `packages/reference-mcp` |
 | Neo runtime work (this skill) | **agent-neo** (`pnpm agentneo`) | `packages/reference-neo` only |
 
 Neo **touches none of those trees**. If a Neo task implies a Rust change,
 hand that part to `agent-rs`. If it implies a lib change, hand it to
-`view-story` / `test-component`. If it implies core or matrix work,
+`view-story` / `test-component`. If it implies matrix or pipeline work,
 hand it to **test-core**.
 
 ## 6. Quality Gate
@@ -120,7 +113,7 @@ pnpm agentneo q [paths]    # gate over specific files or dirs
 
 Run the gate after every generation or modification step.
 
-- **Neo's OWN Biome config — never core's.** Core's warn-only posture is
+- **Neo's OWN Biome config.** A warn-only posture is
   the anti-pattern this gate exists to kill. Neo fails loud.
 - **Fail line (errors):** cyclomatic complexity **12**, cognitive
   complexity **20**, params **5**, function length **120**, file length
@@ -150,8 +143,7 @@ Run the gate after every generation or modification step.
 
 ## 7. Development Loop
 
-1. Read the stance (`README.md`), the plan (`plan.md`) and the evidence it
-   cites (`docs/evidence/`, start at its README), the usage doc
+1. Read the stance (`README.md`), the usage doc
    (`docs/TESTING.md`), and the nomenclature authority (`docs/DOMAIN.md`).
 2. Find your case: `pnpm agentneo list` / `search <query>`.
 3. Implement in `packages/reference-neo` only.
@@ -207,7 +199,7 @@ renders a lie. Theme flips via `?theme=light`; routes come from
 - You may add scratch pages; never restructure the shell architecture or
   the token set.
 - Presentation duty: the playground is the window onto the engine. After a
-  slice lands, add or extend a page showing the landed behavior, named for
+  slice lands, add or extend a page showing the behavior, named for
   the case id, screenshot it in the built-in browser, and take pride in it:
   make it sharp and futuristic with whatever the system can do today — states,
   hovers, animations as they land — so the engine shows off, not demos in a
@@ -241,7 +233,7 @@ Terms are stemmed (`queries` matches `query`) and typo-tolerant
 (fuzzy+prefix); `search` caps at 15 hits unless `--limit N` raises it.
 Resolve ids with `show`, not `search`. There is no metadata sidecar —
 enrich the index by writing a detailed README: describe the behavior,
-name the symbols, cite sibling case/station ids (cited ids surface as
+name the symbols, cite sibling case ids (cited ids surface as
 `related`). Everything reads live: new docs are searchable immediately,
 no rebuild step.
 

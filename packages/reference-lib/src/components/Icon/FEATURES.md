@@ -1,3 +1,3 @@
 # Icon features
 
-No design-needing features pending — Icon had no quarantine freeze and no API/behavior proposals on record.
+No design-needing features are pending. Icon has no open API or behavior proposals.

@@ -1,9 +1,9 @@
 # Listbox test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Listbox --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/listbox.spec.ts`  
-Unit: `matrix/lib/tests/unit/listbox.test.ts`
+Playwright: `src/components/Listbox/__e2e__/*.spec.ts` (run with `pnpm agentct Listbox --e2e`)  
+Unit: `src/components/Listbox/**/*.test.ts(x)`
 Page: `/listbox`
 
 Listbox owns option registration and controlled single/multiple selection. A
@@ -36,16 +36,8 @@ uncontrolled selection store.
 
 ## Source evidence
 
-- `vendor/react-spectrum/packages/react-aria-components/test/ListBox.test.js`
-  and `ListBox.browser.test.tsx` — roles/data, single/multiple interaction,
-  disabled options, orientation, dynamic collections, and virtualization.
-- `vendor/react-spectrum/packages/react-aria/test/selection/useSelectableCollection.test.js`
-  and `react-aria/src/selection/{ListKeyboardDelegate,useTypeSelect}.ts` —
-  focus entry, movement, wrapping, and typeahead.
 - React Aria `useOption.ts` — `aria-setsize`/`aria-posinset` for virtualized
   collections.
-- Zag collection/listbox and `vendor/tanstack-virtual/packages/virtual-core` —
-  disabled navigation and scroll-to-index.
 
 ## Required cases
 

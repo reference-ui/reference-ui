@@ -3,7 +3,7 @@
 //! source, and read an attribute's literal value when it has one. They take borrowed AST nodes and
 //! emit owned data, so the usage walker can drop the parse arena as soon as a module is read.
 
-use crate::internal::JsxAttribute;
+use crate::internal::{wrapped_expression, JsxAttribute};
 use oxc_ast::ast::{
     Expression, JSXAttributeItem, JSXAttributeName,
     JSXAttributeValue, JSXChild, JSXElementName, JSXExpression, JSXMemberExpressionObject,
@@ -84,31 +84,22 @@ fn jsx_expression_literal_value(expression: &JSXExpression<'_>, source: &str) ->
 }
 
 fn expression_literal_value(expression: &Expression<'_>, source: &str) -> Option<String> {
+    if let Some(inner) = wrapped_expression(expression) {
+        return expression_literal_value(inner, source);
+    }
     match expression {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::BooleanLiteral(literal) => Some(literal.value.to_string()),
-        Expression::NumericLiteral(_) => {
-            Some(slice_span(source, expression.span()).trim().to_string())
-        }
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
-            slice_span(source, template.span())
-                .trim_matches('`')
-                .to_string(),
-        ),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_literal_value(&parenthesized.expression, source)
-        }
-        Expression::TSAsExpression(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        Expression::TSSatisfiesExpression(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            expression_literal_value(&asserted.expression, source)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            expression_literal_value(&asserted.expression, source)
+        _ => source_literal_value(expression, source),
+    }
+}
+
+/// Numeric literals keep their source text; an interpolation-free template keeps its text without backticks.
+fn source_literal_value(expression: &Expression<'_>, source: &str) -> Option<String> {
+    match expression {
+        Expression::NumericLiteral(_) => Some(slice_span(source, expression.span()).trim().to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(slice_span(source, template.span()).trim_matches('`').to_string())
         }
         _ => None,
     }

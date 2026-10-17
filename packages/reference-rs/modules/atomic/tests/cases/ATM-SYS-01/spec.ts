@@ -1,7 +1,7 @@
 /**
  * System emission anchor. Compiles with the frozen lib spec so its committed
  * stylesheet pins the canonical `@layer global` and `@layer tokens` emission in
- * full; every other station collapses those bodies via `normalizeSystemLayers`.
+ * full; every other case collapses those bodies via `normalizeSystemLayers`.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'

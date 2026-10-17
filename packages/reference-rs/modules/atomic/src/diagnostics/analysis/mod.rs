@@ -49,16 +49,35 @@ pub struct CompileParse<'a> {
     pub parsed: &'a [oxc_parser::ParserReturn<'a>],
 }
 
-impl<'a> AnalysisInput<'a> {
-    /// Build the analysis input for one compile: every unpanicked source
-    /// becomes an analyzed source in input order. No source is reparsed.
-    pub fn for_compile(
-        parse: &CompileParse<'a>,
+/// The per-compile frame `AnalysisInput::for_compile` borrows beside the parses:
+/// host resolution, const values, and the composed-system name and qualifiers.
+pub struct AnalysisScope<'a> {
+    hosts: &'a ResolvedHosts,
+    constants: &'a LocalConstants,
+    system: &'a str,
+    qualifiers: &'a [String],
+}
+
+impl<'a> AnalysisScope<'a> {
+    pub fn new(
         hosts: &'a ResolvedHosts,
         constants: &'a LocalConstants,
         system: &'a str,
         qualifiers: &'a [String],
     ) -> Self {
+        Self {
+            hosts,
+            constants,
+            system,
+            qualifiers,
+        }
+    }
+}
+
+impl<'a> AnalysisInput<'a> {
+    /// Build the analysis input for one compile: every unpanicked source
+    /// becomes an analyzed source in input order. No source is reparsed.
+    pub fn for_compile(parse: &CompileParse<'a>, scope: AnalysisScope<'a>) -> Self {
         let analyzed = parse
             .sources
             .iter()
@@ -72,10 +91,10 @@ impl<'a> AnalysisInput<'a> {
             .collect();
         Self {
             sources: analyzed,
-            hosts,
-            constants,
-            system,
-            qualifiers,
+            hosts: scope.hosts,
+            constants: scope.constants,
+            system: scope.system,
+            qualifiers: scope.qualifiers,
         }
     }
 }
@@ -103,12 +122,7 @@ pub struct AnalysisCtx<'a> {
 /// Predict exact expected lookups plus dynamic-shape facts for every source.
 /// Sources keep their input order and each becomes one [`SourceId`] by index.
 pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
-    let ctx = context(
-        input.hosts,
-        input.constants,
-        input.system,
-        input.qualifiers,
-    );
+    let ctx = context(input.hosts, input.constants, input.system, input.qualifiers);
     let mut facts = Vec::new();
     for (index, source) in input.sources.iter().enumerate() {
         let source_id = SourceId(index as u32);
@@ -194,7 +208,7 @@ pub fn is_shadowed(shadows: &[FxHashSet<String>], name: &str) -> bool {
 /// defaulted, nested, and rest elements alike — exactly like extraction's
 /// scope table, which binds destructured params as params (scope/collect).
 /// Missing a binding lets a param resolve to a cross-file same-named const,
-/// a false exact (SITE-53's SPEC-V2-75 ghost).
+/// a false exact (SITE-53's ghost).
 pub fn record_param_shadows(
     shadows: &mut [FxHashSet<String>],
     params: &oxc_ast::ast::FormalParameters<'_>,
@@ -221,10 +235,7 @@ fn bind_pattern_names(pattern: &oxc_ast::ast::BindingPattern<'_>, scope: &mut Fx
 }
 
 /// Every identifier an object pattern declares: listed values plus rest.
-fn bind_object_pattern_names(
-    obj: &oxc_ast::ast::ObjectPattern<'_>,
-    scope: &mut FxHashSet<String>,
-) {
+fn bind_object_pattern_names(obj: &oxc_ast::ast::ObjectPattern<'_>, scope: &mut FxHashSet<String>) {
     for prop in &obj.properties {
         bind_pattern_names(&prop.value, scope);
     }
@@ -234,10 +245,7 @@ fn bind_object_pattern_names(
 }
 
 /// Every identifier an array pattern declares: elements plus rest.
-fn bind_array_pattern_names(
-    arr: &oxc_ast::ast::ArrayPattern<'_>,
-    scope: &mut FxHashSet<String>,
-) {
+fn bind_array_pattern_names(arr: &oxc_ast::ast::ArrayPattern<'_>, scope: &mut FxHashSet<String>) {
     for element in arr.elements.iter().flatten() {
         bind_pattern_names(element, scope);
     }
@@ -269,104 +277,4 @@ pub fn record_declarator_shadow(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::support::{analyze_source, parse_for_test};
-    use super::*;
-    use crate::extract::constants::LocalConstants;
-
-    #[test]
-    fn analysis_predicts_nothing_for_no_sources() {
-        let hosts = ResolvedHosts {
-            traced: Vec::new(),
-            configured: Vec::new(),
-            owned_props: BTreeMap::new(),
-        };
-        let constants = LocalConstants::new();
-        let input = AnalysisInput {
-            sources: Vec::new(),
-            hosts: &hosts,
-            constants: &constants,
-            system: "test",
-            qualifiers: &[],
-        };
-        assert!(analyze(&input).is_empty());
-    }
-
-    #[test]
-    fn sources_keep_input_order_as_source_ids() {
-        let allocator = oxc_allocator::Allocator::default();
-        let first_src = "import { css } from '@reference-ui/react'; css({ color: 'red' })";
-        let second_src = "import { css } from '@reference-ui/react'; css({ color: 'blue' })";
-        let first = parse_for_test(&allocator, first_src);
-        let second = parse_for_test(&allocator, second_src);
-        let constants =
-            crate::extract::constants::collect_local_constants(&first, "a.ts", Some(first_src));
-        let hosts = ResolvedHosts {
-            traced: Vec::new(),
-            configured: Vec::new(),
-            owned_props: BTreeMap::new(),
-        };
-        let input = AnalysisInput {
-            sources: vec![
-                AnalyzedSource {
-                    path: "a.ts",
-                    content: first_src,
-                    program: &first,
-                },
-                AnalyzedSource {
-                    path: "b.ts",
-                    content: second_src,
-                    program: &second,
-                },
-            ],
-            hosts: &hosts,
-            constants: &constants,
-            system: "test",
-            qualifiers: &[],
-        };
-        let ids: Vec<SourceId> = analyze(&input)
-            .iter()
-            .filter_map(|fact| match fact {
-                DiagnosticFact::ExactLookupExpected { site, .. } => Some(site.source),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(ids, vec![SourceId(0), SourceId(1)]);
-    }
-
-    #[test]
-    fn for_compile_filters_panicked_sources() {
-        let allocator = oxc_allocator::Allocator::default();
-        let sources = vec![("a.ts".to_string(), "css({ color: 'red' })".to_string())];
-        let parsed = vec![parse_raw(&allocator, &sources[0].1)];
-        let hosts = ResolvedHosts {
-            traced: Vec::new(),
-            configured: Vec::new(),
-            owned_props: BTreeMap::new(),
-        };
-        let constants = LocalConstants::new();
-        let parse = CompileParse {
-            sources: &sources,
-            parsed: &parsed,
-        };
-        let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test", &[]);
-        assert_eq!(input.sources.len(), 1);
-        assert_eq!(input.sources[0].path, "a.ts");
-    }
-
-    #[cfg(test)]
-    fn parse_raw<'a>(
-        allocator: &'a oxc_allocator::Allocator,
-        source: &'a str,
-    ) -> oxc_parser::ParserReturn<'a> {
-        use oxc_parser::Parser;
-        use oxc_span::SourceType;
-        Parser::new(allocator, source, SourceType::tsx()).parse()
-    }
-
-    #[test]
-    fn end_to_end_fixture_predicts_both_surfaces() {
-        let facts = analyze_source("import { css, Div } from '@reference-ui/react'; css({ color: 'red' }); const el = <Div mt=\"2r\" />;");
-        assert_eq!(facts.len(), 2);
-    }
-}
+mod tests;

@@ -117,7 +117,7 @@ test.describe('Collapsible Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('Collapsible Quarantine Ports (GSAP-owned motion)', () => {
+test.describe('Collapsible Ports (GSAP-owned motion)', () => {
   test('CO-DOM-01: Collapsible should add no wrapper around its fixed trigger and content elements', async ({
     mount,
     page,
@@ -457,7 +457,7 @@ test.describe('Collapsible Quarantine Ports (GSAP-owned motion)', () => {
     })
 
     // The collapse engine forces border-box: authored 120px + padding + border
-    // measure a 120px border box (quarantine content-box math does not apply).
+    // measure a 120px border box (content-box math does not apply).
     expect(measurements.boxSizing).toBe('border-box')
     expect(parseFloat(measurements.widthVar)).toBeCloseTo(120, 0)
     expect(Math.abs(parseFloat(measurements.widthVar) - measurements.width)).toBeLessThanOrEqual(1)

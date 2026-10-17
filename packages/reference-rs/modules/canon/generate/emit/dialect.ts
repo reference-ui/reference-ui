@@ -4,8 +4,8 @@
  * Emits zero-allocation binary-searchable static slices into modules/canon/src/dialect.rs.
  */
 
-import type { DialectData } from '../dialect';
-import { formatChunks } from './format';
+import type { DialectData } from '../dialect.js';
+import { formatChunks } from './format.js';
 
 export function emitDialectRs(dialect: DialectData): string {
   const aliasChunks = dialect.aliases.map((a) => `Alias::new("${a.alias}", "${a.canonical}")`);

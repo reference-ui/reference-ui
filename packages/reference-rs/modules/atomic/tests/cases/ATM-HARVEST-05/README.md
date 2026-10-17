@@ -1,4 +1,4 @@
-# ATM-HARVEST-05 — Harvest wholesale-in-hole station
+# ATM-HARVEST-05 — Harvest wholesale-in-hole
 
 A holey template is not information, but a wholesale CSS value sitting in
 its hole still is: `` `brand ${'transparent'} tonight` `` puts

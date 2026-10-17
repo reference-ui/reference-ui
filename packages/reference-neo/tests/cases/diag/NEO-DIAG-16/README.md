@@ -4,6 +4,6 @@
 
 Raised in: `modules/atomic/src/extract/recipes/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-E-RECIPE-ARG-SHAPE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-RECIPE-ARG-SHAPE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-RECIPE-ARG-SHAPE, atm-e-recipe-arg-shape, diagnostics case index, NEO-DIAG-16

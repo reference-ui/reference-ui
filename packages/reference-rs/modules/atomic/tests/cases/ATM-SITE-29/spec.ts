@@ -1,5 +1,5 @@
 /**
- * Member-depth station (ATM-SITE-29, SPEC-V2-24/31/34). Multi-hop member
+ * Member-depth (ATM-SITE-29). Multi-hop member
  * reads, member-hop spreads, `!` unwrapping, scalar and object alias
  * chains, and nested conditions all resolve; nested responsive maps lower
  * like inline objects. Zero diagnostics throughout.

@@ -1,5 +1,5 @@
 /**
- * Null-const station (§4). A const bound to `null` is a hole, not a
+ * Null-const (§4). A const bound to `null` is a hole, not a
  * dynamic value: same-file and imported nulls strip silently, exactly
  * like a literal null, with static siblings kept.
  */

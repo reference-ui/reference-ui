@@ -1,4 +1,4 @@
-# ATM-HARVEST-02 — Harvest refusal station (Forge §2 authorship rule)
+# ATM-HARVEST-02 — Harvest refusal (authorship rule)
 
 `` `2${n}r` `` and `` `#${hex}` `` are arithmetic, not values: they mint nothing, their sites still warn `ATM-W-DYNAMIC-TEMPLATE`, and each refused sink infos a zero count, sinks ordered by `(prop, when)`.
 Symbols: `HarvestPool`, `Sink`, `warn_dynamic`, `HarvestSink`.

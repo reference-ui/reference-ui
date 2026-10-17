@@ -1,4 +1,4 @@
-// integer-carve.ts — the integer-key substrate carve (doom-5, fortify-5)
+// integer-carve.ts — the integer-key substrate carve
 // behind the NEO-NAMER-01 differential. V8 destroys author order for 2+
 // integer-like per-prop keys before any namer code runs, so on exact-failure
 // under the narrow trigger the comparison normalizes across per-prop members
@@ -22,7 +22,7 @@ interface CarveNamer {
   name(request: CarveNamerRequest, tables: unknown, system?: string): GateDeclaration[];
 }
 
-// INTEGER-KEY SUBSTRATE CARVE (doom-5, NEO-NAMER-01/R3). V8
+// INTEGER-KEY SUBSTRATE CARVE (NEO-NAMER-01). V8
 // [[OwnPropertyKeys]] enumerates canonical numeric keys ascending at object
 // creation, so author order for 2+ integer-like per-prop keys is DESTROYED
 // before any namer code runs — the namer can only ever emit V8 order while
@@ -43,8 +43,8 @@ interface CarveNamer {
 // members are forgiven along with the integer reorder (the integer-first
 // rule displaces every member, so tighter attribution would need search;
 // the trigger's rarity bounds the hole). Witness: color {"10": red, "2":
-// blue} — oracle [10,2], namer [2,10]. Report: the doom-5 key-order
-// break under .agents/doom/logs/ (2026-09-20).
+// blue} — oracle [10,2], namer [2,10]. Report: the key-order
+// break (2026-09-20).
 
 // V8 canonical numeric index: decimal digits with no leading zeros unless
 // "0" itself, and below 2^32-1 (which V8 keeps insertion-ordered).

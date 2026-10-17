@@ -1,6 +1,6 @@
 // projector.spec.ts — spec for NEO-REF-09, the type-parameter projector pin. Takes { case } with the world
 // freshly synced and the background manifest awaited explicitly. Emits nothing on success; throws naming the
-// first projector number that drifts from the A4 measurement on failure.
+// first projector number that drifts from the measured numbers on failure.
 import assert from 'node:assert/strict'
 import type { NeoCase } from '../../../../shared/cases.ts'
 import type { SpecPage } from '../../../../shared/page.ts'
@@ -23,8 +23,8 @@ function memberNames(members: NamedMember[]): string[] {
 
 const PROJECTOR_LIBRARIES = ['@reference-ui/styled', '@reference-ui/react', '@reference-ui/system', '@reference-ui/types']
 
-// A4 numbers as widened: bare SystemProperties resolves through the neo decl closure with 1391
-// display members — the widened StyleProps key universe (LOG-2 ## Typegen-architect §2: keys mirror
+// The measured numbers, as widened: bare SystemProperties resolves through the neo decl closure with 1391
+// display members — the widened StyleProps key universe (keys mirror
 // build_style_prop_names; verified identical to the emitted decl keys, not trusted).
 async function checkBareFallback(api: TastyApi): Promise<string[]> {
   const symbol = await api.loadSymbolByName('SystemProperties')
@@ -36,7 +36,7 @@ async function checkBareFallback(api: TastyApi): Promise<string[]> {
   return names
 }
 
-// A4 mechanism: every include-matched file is library user, so scoped lookups miss by construction.
+// The mechanism: every include-matched file is library user, so scoped lookups miss by construction.
 // Documented, not a fault: the projector falls back to the bare name below.
 async function checkScopedMiss(api: TastyApi): Promise<void> {
   for (const library of PROJECTOR_LIBRARIES) {
@@ -45,7 +45,7 @@ async function checkScopedMiss(api: TastyApi): Promise<void> {
   }
 }
 
-// The real Crew B projector resolves P to the same 1391 members and declines every other name.
+// The real projector resolves P to the same 1391 members and declines every other name.
 async function checkProjector(api: TastyApi, bareNames: string[]): Promise<void> {
   const project = getReferenceUiTastyApiOptions().projectTypeParameterMembers
   assert.ok(project, 'the reference API options carry a type-parameter projector')

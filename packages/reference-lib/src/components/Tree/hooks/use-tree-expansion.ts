@@ -145,7 +145,7 @@ export function useTreeExpansion(
     }
   }, [combobox, expansionRequest, expanded, getOrderedBranches, setBranchExpanded])
 
-  // Batch expansion (W-17): one deterministic emission for a whole sibling
+  // Batch expansion: one deterministic emission for a whole sibling
   // set. Callers skip the call when there is nothing new to expand, so a
   // no-op asterisk never emits a redundant onExpandedChange.
   const expandItems = React.useCallback(

@@ -1,5 +1,5 @@
 /**
- * Compound and multi-`&` shapes (ATM-COND-26, SPEC-V2-71). `&&`, `&&&`,
+ * Compound and multi-`&` shapes (ATM-COND-26). `&&`, `&&&`,
  * `&.b&`, `&&+&`, `&+&`, `&.b &`, and the three-`&` bar/baz/qux chain
  * each substitute every `&` textually at one level. Selectors mirror v2
  * `nested_selector_parity.rs:235/:257/:268/:323/:345/:367/:400`.

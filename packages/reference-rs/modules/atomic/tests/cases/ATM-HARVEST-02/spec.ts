@@ -1,5 +1,5 @@
 /**
- * Harvest refusal station (Forge §2 authorship rule). `` `2${n}r` `` and
+ * Harvest refusal (authorship rule). `` `2${n}r` `` and
  * `` `#${hex}` `` are arithmetic, not values: they mint nothing, the sites
  * still warn `DYNAMIC-TEMPLATE`, and each refused sink infos a zero count.
  */
@@ -15,7 +15,7 @@ const spec: AtomicCaseSpec = {
 
     // Each site warns at its span; each sink infos its zero count, sinks
     // ordered by (prop, when) so the pair is deterministic — all on the
-    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    // opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-HARVEST-02', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

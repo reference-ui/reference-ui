@@ -1,6 +1,5 @@
 /**
- * Binary fold-bundle station (ATM-SITE-33, SPEC-V2-10/11/12/19, SPEC-V2-66
- * fold half). Arithmetic, string concat, comparison, and all-literal
+ * Binary fold-bundle (ATM-SITE-33). Arithmetic, string concat, comparison, and all-literal
  * short-circuit fold over literal and const-resolved operands; folded
  * ternary tests compile the live arm only and name the dead arm in an
  * info. Refusals diagnose with a code and keep every static sibling.
@@ -120,7 +119,7 @@ const spec: AtomicCaseSpec = {
 
     // Four binary refusals: zero wants from those positions, one located
     // `ATM-W-DYNAMIC-BINARY` diagnostic each, naming the operator — on the
-    // opt-in channel now (S6 E8-class re-point).
+    // opt-in channel.
     const opted = await compileCase('ATM-SITE-33', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
     const diagnostics = opted.compilerDiagnostics ?? []
@@ -165,7 +164,7 @@ const spec: AtomicCaseSpec = {
       expect(match!.column).toBeGreaterThan(0)
     }
 
-    // R7 true/false split (F6): the four folded-`true` zIndex refusals are
+    // R7 true/false split: the four folded-`true` zIndex refusals are
     // genuine runtime misses (runtime queries `true`) and stay default;
     // the `false` refusal rides the channel (runtime `isHole` skips it).
     const defaults = result.diagnostics ?? []

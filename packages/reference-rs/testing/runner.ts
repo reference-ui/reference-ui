@@ -1,7 +1,7 @@
 /**
- * Generic station test runner for Reference RS compiler harnesses.
+ * Generic case test runner for Reference RS compiler harnesses.
  * Replaces boilerplate case loops and eager pre-runners with declarative suites.
- * Discovers case stations, rejects folders under cases/ that are not raw case IDs,
+ * Discovers cases, rejects folders under cases/ that are not raw case IDs,
  * validates filesystem hygiene and each case's index and README heading, executes
  * semantic specs, runs invariant standing gauges, and verifies committed output goldens.
  */
@@ -60,13 +60,13 @@ async function loadSpec<TResult>(
 }
 
 /**
- * Creates a declarative Vitest test suite over a station directory.
+ * Creates a declarative Vitest test suite over a case directory.
  */
 export function createStationSuite<TResult>(config: StationSuiteConfig<TResult>): void {
   const {
     suiteName,
     casesDir,
-    // Default: folder name is the raw station id (ATL-BAR-01); modules pass their own.
+    // Default: folder name is the raw case id (ATL-BAR-01); modules pass their own.
     folderPattern = /^([A-Z]+-[A-Z]+-\d{2})$/,
     compile,
     goldens,

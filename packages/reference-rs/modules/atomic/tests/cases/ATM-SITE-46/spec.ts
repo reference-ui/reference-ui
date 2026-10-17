@@ -1,5 +1,5 @@
 /**
- * Factory const resolution (ATM-SITE-46, SPEC-V2-62). `keyframes()` and
+ * Factory const resolution (ATM-SITE-46). `keyframes()` and
  * `positionTry()` consts resolve to their declared name at consuming sites,
  * through aliases and alias chains; `viewTransition()`, non-object and
  * missing definitions, shadowed, foreign-package, and mutated factories
@@ -21,7 +21,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'animationName', 'aliased')).toBe(true)
     expect(hasWant(result, 'positionTryFallbacks', 'none')).toBe(true)
     expect(hasWant(result, 'animationName', 'early')).toBe(true)
-    // Forge §5: the shadowed callee is a same-file pure arrow, so its call
+    // the shadowed callee is a same-file pure arrow, so its call
     // init folds through the fence exactly like the direct call spelling.
     expect(hasWant(result, 'animationName', 'local')).toBe(true)
     expect(getWantsForProp(result, 'animationName')).toHaveLength(5)
@@ -41,8 +41,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('animation-name: local;')
     expect(sheet).toContain('position-try-fallbacks: none;')
 
-    // Factory refusals ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Factory refusals ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-46', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

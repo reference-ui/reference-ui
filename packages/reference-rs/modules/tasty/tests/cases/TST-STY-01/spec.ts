@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-STY-01.
+ * Case specification for TST-STY-01.
  * Verifies merging Omit projections with public style interfaces.
  * Proves primary SPEC ID anchor TST-STY-01.
  */

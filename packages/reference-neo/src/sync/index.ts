@@ -109,12 +109,12 @@ async function evaluateAndCompile(
 ): Promise<CompiledSystem> {
   let retentionToken = prepared.retentionToken
   try {
-    // The token merge's shadow warnings (E13) join the compile warnings they are reported with.
+    // The token merge's shadow warnings join the compile warnings they are reported with.
     const { spec, diagnostics: shadows } = await evaluatePreparedFragmentsDetailed(cwd, config, prepared)
-    // LAYER-04: the reset fragment rides the spec only when normalizeCss is
+    // NEO-LAYER-04: the reset fragment rides the spec only when normalizeCss is
     // not false; the engine prints reset-sourced fragments into @layer reset.
     applyNormalizeCss(spec, config.normalizeCss)
-    // Frozen D12 request as evolved by RS-10: the engine scans sourceRoot
+    // The request to the engine: it scans sourceRoot
     // itself (no virtual mirror, no staged declarations — both roots are the
     // project), scoped to the config include globs, and admits the configured
     // hosts plus every generated primitive without an import. The request
@@ -126,7 +126,7 @@ async function evaluateAndCompile(
     // set only when one names a prop, which keeps the frozen request byte-identical otherwise.
     if (Object.keys(requested.owned).length > 0) spec.jsxOwned = requested.owned
     // Self excluded: the wire list never carries the consumer's own name; the
-    // engine constructs own-first itself (G0 §E/§F). Each upstream contributes
+    // engine constructs own-first itself. Each upstream contributes
     // its transitively-expanded `streams` names (own entry last, per the
     // published shape), so a system reached only through a nested stream —
     // icons under lib — still becomes a qualifier; `.name` is the fallback
@@ -208,7 +208,7 @@ async function assembleAndCommit(input: PublishInput): Promise<NativeDiagnostic[
     input.result.streams,
     input.spec.name
   )
-  // The published node list: upstream nodes linearized (E1), then the own node. The legacy
+  // The published node list: upstream nodes linearized, then the own node. The legacy
   // `fragment` string is the same nodes concatenated for readers that predate the list.
   const fragments = publishedFragmentNodes(
     input.prepared.upstreamFragments,
@@ -272,7 +272,7 @@ function yieldToEventLoop(): Promise<void> {
  * window (identical bytes keep their mtime, the rest flips by atomic rename
  * over a backup, stale entries retire last), and the scope links land on the
  * complete folder. A failed sync rolls its changes back and keeps the
- * last-good outputs (SYNC-11 for a fresh world); a rollback that cannot restore
+ * last-good outputs (NEO-SYNC-11 for a fresh world); a rollback that cannot restore
  * a file keeps that file's last-good bytes in a `sync.rollback-*` dir beside the
  * stage and names it in the error. A sync that lost the lock
  * mid-commit stops without touching what the new holder wrote. A watch poke

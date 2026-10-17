@@ -341,7 +341,7 @@ test.describe('Tooltip Composition Gates & Browser Proofs', () => {
     await snap(page, 'story-keyboard-focus-open')
   })
 
-  test('B-09: Span inside default Tooltip.Content inherits a legible color with zero overrides', async ({
+  test('Span inside default Tooltip.Content inherits a legible color with zero overrides', async ({
     mount,
     page,
   }) => {

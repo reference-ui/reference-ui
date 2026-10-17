@@ -47,10 +47,10 @@ export function useStructureCheck(
       value.length
     )
     const next = check.valid ? null : (check.error ?? 'Invalid Splitter structure.')
-    // W-35 clamp-or-warn: a bad panel layout (e.g. value=[10,10,80] on 2
-    // panels — the B-11 silent-collapse instance) dev-warns with the same
+    // Clamp-or-warn: a bad panel layout (e.g. value=[10,10,80] on 2
+    // panels — the silent-collapse case) dev-warns with the same
     // diagnostic the throw carries, so the failure is loud twice over and
-    // never a silent 13px collapse. The throw below stays (FEATURES #9).
+    // never a silent 13px collapse. The throw below stays.
     if (!check.valid && next && !isProductionEnv()) {
       warnSplitter(next)
     }

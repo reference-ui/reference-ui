@@ -18,7 +18,7 @@ import { checkReconciled } from './phases.mjs'
 
 export function resolveAllocEvidenceDir(repoRoot, options, pin) {
   if (options.outDir) return path.resolve(options.outDir)
-  return path.join(repoRoot, '.agents', 'rs-index', 'alloc', `${options.scale}-${pin.name}`)
+  return path.join(repoRoot, '.agents', 'rs-evidence', 'alloc', `${options.scale}-${pin.name}`)
 }
 
 function gitStatusExcerpt(repoRoot) {
@@ -181,7 +181,7 @@ function gcLines(gc) {
     '',
     `Events: ${gc.events} (${kinds}). First GC at ${gc.firstGcMs ?? '—'} ms, last at ${gc.lastGcMs ?? '—'} ms.`,
     heapLine(gc),
-    'R1 reference (Wave 4 hunter-r, enterprise): 12sc/0mc whole-run under both paths.',
+    'R1 reference (enterprise): 12sc/0mc whole-run under both paths.',
     'The whole-run count is the re-measurement; the verdict below places each full GC',
     'against the measured compile window (trace leg), which is what R1 turns on.',
     '',

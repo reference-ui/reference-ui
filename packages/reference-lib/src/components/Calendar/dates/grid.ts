@@ -6,7 +6,7 @@
  * cells the predicate or the callbacks could see.
  */
 import {
-  type ISODate,
+  type CanonicalISODate,
   type ISOMonth,
   formatISODate,
   getDaysInMonth,
@@ -17,7 +17,7 @@ import {
 import { validateLocale } from './week'
 
 export interface GridDay {
-  date: ISODate
+  date: CanonicalISODate
   year: number
   month: number
   day: number

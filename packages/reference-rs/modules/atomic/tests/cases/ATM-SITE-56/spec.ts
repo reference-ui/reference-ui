@@ -1,5 +1,5 @@
 /**
- * Zero-config discovery station (ATM-SITE-56). A local Card forwarding
+ * Zero-config discovery (ATM-SITE-56). A local Card forwarding
  * StyleProps into Div extracts with jsxHosts absent and no declarations
  * on disk; tracedJsxHosts carries the discovered name. Random (bare div)
  * and Label (no style props) are not traced and stay silent.
@@ -22,8 +22,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('mt_4r')
     expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     // Discovery itself is silent here; extraction's rest-spread note for
-    // Card's `{...styleProps}` forwarder rides the opt-in channel (S6
-    // E8-class re-point); the default is silent.
+    // Card's `{...styleProps}` forwarder rides the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-56', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

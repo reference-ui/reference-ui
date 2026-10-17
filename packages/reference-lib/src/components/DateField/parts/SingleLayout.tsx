@@ -46,7 +46,7 @@ export function DateFieldLayout() {
     rootInputProps,
   } = context
 
-  // Engine display (PATCHES #1): the dirty buffer while editing, else the
+  // Engine display: the dirty buffer while editing, else the
   // locale-formatted controlled value. A non-canonical programmatic value
   // is author error outside the engine's gate — it passes through verbatim
   // exactly as before, never crashing the formatter.

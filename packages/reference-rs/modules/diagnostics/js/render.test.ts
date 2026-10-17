@@ -15,7 +15,7 @@ import {
   renderBatch,
   renderFrame,
   type Diagnostic,
-} from './index'
+} from './index.js'
 
 const SOURCE = 'import { css } from "./css";\n\nconst style = css({ colr: "red" });\n'
 

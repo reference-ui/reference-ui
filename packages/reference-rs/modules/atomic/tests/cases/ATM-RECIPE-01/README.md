@@ -1,4 +1,4 @@
-# ATM-RECIPE-01 — Closed recipe class station
+# ATM-RECIPE-01 — Closed recipe class
 
 `recipe({ className, base, variants, compoundVariants })` compiles each
 declared variant leaf into one readable class inside `@layer recipes`.

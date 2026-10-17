@@ -74,17 +74,11 @@ pub(super) fn alias_exposures(
 /// resolve through this; member hosts keep their emit loop above.
 pub(super) fn ident_alias_target_is_traced(
     analyzer: &mut StyleTraceAnalyzer<'_>,
-    path: &Path,
-    module: &TraceModule,
+    walk: &WalkModule<'_>,
     target: &str,
     stack: &mut Vec<String>,
 ) -> Result<Option<BTreeSet<String>>, StyleTraceError> {
-    let walk = WalkModule {
-        path,
-        module,
-        aliases: &[],
-    };
-    alias_target_is_traced(analyzer, &walk, target, stack)
+    alias_target_is_traced(analyzer, walk, target, stack)
 }
 
 /// Outcome of one walk step: follow the next link, or finish with a verdict.

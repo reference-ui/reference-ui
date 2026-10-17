@@ -1,5 +1,5 @@
 /**
- * Clean-diagnostics station. Valid StyleProps and css() produce no warnings
+ * Clean-diagnostics case. Valid StyleProps and css() produce no warnings
  * or errors.
  */
 import { expect } from 'vitest'

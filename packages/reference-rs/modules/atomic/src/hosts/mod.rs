@@ -14,7 +14,7 @@ use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
 use styletrace::{
     trace_style_bindings_with_modules, trace_style_bindings_with_surface, ModulesTraceInputs,
-    StyleSurface, TraceModule, TraceOutcome, TraceSources,
+    StyleSurface, SurfaceTrace, TraceModule, TraceOutcome, TraceSources,
 };
 
 use crate::{
@@ -40,8 +40,16 @@ pub use surface::engine_surface;
 pub struct ResolvedHosts {
     pub traced: Vec<String>,
     pub configured: Vec<String>,
-    /// Each traced export name to its owned declared prop names (§14).
+    /// Each export name that declares props to the prop names it keeps for itself (§14), traced or not.
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
+}
+
+/// The inputs `resolve` reads beside the request: the compile's collected sources, the main-phase
+/// parse failures by source index, and the programs the main phase already parsed, by path.
+pub struct ResolveInputs<'a> {
+    pub sources: &'a [(String, String)],
+    pub failed: &'a [bool],
+    pub programs: &'a FxHashMap<PathBuf, &'a Program<'a>>,
 }
 
 impl ResolvedHosts {
@@ -101,27 +109,33 @@ pub fn collect_hosts(request: &CompileRequest) -> FxHashSet<String> {
     // source counts as parsed-clean and the trace gate applies fully.
     let failed = vec![false; sources.len()];
     let programs = FxHashMap::default();
-    resolve(request, &sources, &failed, &mut session, &programs)
-        .0
-        .hosts()
+    let inputs = ResolveInputs {
+        sources: &sources,
+        failed: &failed,
+        programs: &programs,
+    };
+    resolve(request, inputs, &mut session).0.hosts()
 }
 
 /// Trace the include-scoped entry set against the engine surface.
 /// Returns traced and configured names plus trace warnings for the
 /// compile diagnostics, reporting one host fact per skip into the
-/// session. Empty entry sets trace nothing, silently. Takes the
-/// compile's collected sources; the caller collects once. `failed`
-/// marks main-phase parse failures by source index so their entries
-/// survive the trace gate and keep their located warnings (C1).
-/// `programs` reuses the main-phase parse by path; absent paths parse
+/// session. Empty entry sets trace nothing, silently. The caller
+/// collects the compile's sources once and passes them in `inputs`;
+/// its `failed` marks main-phase parse failures by source index so their
+/// entries survive the trace gate and keep their located warnings (C1).
+/// Its `programs` reuse the main-phase parse by path; absent paths parse
 /// from staged bytes exactly as before.
 pub fn resolve(
     request: &CompileRequest,
-    sources: &[(String, String)],
-    failed: &[bool],
+    inputs: ResolveInputs<'_>,
     sink: &mut DiagnosticsSession,
-    programs: &FxHashMap<PathBuf, &Program<'_>>,
 ) -> (ResolvedHosts, Vec<Diagnostic>) {
+    let ResolveInputs {
+        sources,
+        failed,
+        programs,
+    } = inputs;
     let Some(opened) = open_trace(request, sources, failed) else {
         return configured_only(request);
     };
@@ -130,13 +144,13 @@ pub fn resolve(
         staged: &opened.staged,
         programs,
     };
-    let outcome = trace_style_bindings_with_surface(
-        &opened.entries,
-        Path::new(opened.root),
-        Path::new(opened.package_root),
-        &surface,
-        &inputs,
-    );
+    let outcome = trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &opened.entries,
+        source_root: Path::new(opened.root),
+        package_root: Path::new(opened.package_root),
+        surface: &surface,
+        sources: &inputs,
+    });
     hosts_from(request, outcome, sink)
 }
 

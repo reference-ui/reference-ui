@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-05.
+ * Case specification for TST-IMP-05.
  * Verifies that relative specifiers whose basenames contain dots resolve to their TypeScript files
  * with no unresolved-import warning, and that the imported names stay user-owned symbols.
  * Proves primary SPEC ID anchor TST-IMP-05.

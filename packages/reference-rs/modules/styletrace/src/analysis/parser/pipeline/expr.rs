@@ -1,34 +1,37 @@
-//! Walk pipeline expressions.
+//! Walks pipeline expressions and marks the trace when a style signal reaches a pipeline call.
+//! It takes one expression, peels parenthesis and TS wrappers, and recurses through children by
+//! node family: JSX, calls, branching and containers, then functions and member accesses.
+//! It emits state changes on `PipelineContext`, chiefly `uses_style_pipeline` for a call fed a style signal.
 use super::{jsx, util, walk_pipeline_statement, PipelineContext};
-use oxc_ast::ast::{Argument, Expression};
+use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 pub fn walk_pipeline_expression(expression: &Expression<'_>, ctx: &mut PipelineContext) {
+    // Wrappers only forward to their inner expression, so peel them all in one step.
+    let expression = expression.get_inner_expression();
     match expression {
         Expression::JSXElement(element) => jsx::walk_pipeline_jsx_element(element, ctx),
         Expression::JSXFragment(fragment) => jsx::walk_pipeline_jsx_fragment(fragment, ctx),
         Expression::CallExpression(call) => walk_call(call, ctx),
+        _ => walk_branching_expression(expression, ctx),
+    }
+}
+
+/// Conditionals, logicals and literal containers: every child sits in a value position.
+fn walk_branching_expression(expression: &Expression<'_>, ctx: &mut PipelineContext) {
+    match expression {
         Expression::ConditionalExpression(cond) => walk_cond(cond, ctx),
         Expression::LogicalExpression(logical) => walk_logical(logical, ctx),
         Expression::ArrayExpression(array) => walk_array(array, ctx),
         Expression::ObjectExpression(object) => walk_object(object, ctx),
+        _ => walk_function_or_member_expression(expression, ctx),
+    }
+}
+
+/// Function bodies and member accesses: only their statements or object walk can carry signals.
+fn walk_function_or_member_expression(expression: &Expression<'_>, ctx: &mut PipelineContext) {
+    match expression {
         Expression::ArrowFunctionExpression(arrow) => walk_arrow(arrow, ctx),
         Expression::FunctionExpression(function) => walk_function(function, ctx),
-        Expression::ParenthesizedExpression(paren) => {
-            walk_pipeline_expression(&paren.expression, ctx)
-        }
-        Expression::TSAsExpression(asserted) => walk_pipeline_expression(&asserted.expression, ctx),
-        Expression::TSSatisfiesExpression(asserted) => {
-            walk_pipeline_expression(&asserted.expression, ctx)
-        }
-        Expression::TSTypeAssertion(asserted) => {
-            walk_pipeline_expression(&asserted.expression, ctx)
-        }
-        Expression::TSNonNullExpression(asserted) => {
-            walk_pipeline_expression(&asserted.expression, ctx)
-        }
-        Expression::TSInstantiationExpression(instantiated) => {
-            walk_pipeline_expression(&instantiated.expression, ctx)
-        }
         Expression::ComputedMemberExpression(member) => {
             walk_pipeline_expression(&member.object, ctx);
             walk_pipeline_expression(&member.expression, ctx);
@@ -38,23 +41,31 @@ pub fn walk_pipeline_expression(expression: &Expression<'_>, ctx: &mut PipelineC
     }
 }
 
-fn walk_call(call: &oxc_ast::ast::CallExpression<'_>, ctx: &mut PipelineContext) {
-    if util::is_direct_style_pipeline_call(call, ctx.imports)
-        && call.arguments.iter().any(|arg| match arg {
-            Argument::SpreadElement(spread) => {
-                util::expression_reads_style_signal(&spread.argument, ctx.bindings, ctx.state)
-            }
-            _ => util::expression_reads_style_signal(arg.to_expression(), ctx.bindings, ctx.state),
-        })
+fn walk_call(call: &CallExpression<'_>, ctx: &mut PipelineContext) {
+    if util::is_direct_style_pipeline_call(call, ctx.imports) && call_reads_style_signal(call, ctx)
     {
         ctx.state.uses_style_pipeline = true;
     }
     walk_pipeline_expression(&call.callee, ctx);
     for argument in &call.arguments {
-        match argument {
-            Argument::SpreadElement(spread) => walk_pipeline_expression(&spread.argument, ctx),
-            _ => walk_pipeline_expression(argument.to_expression(), ctx),
+        walk_argument(argument, ctx);
+    }
+}
+
+/// Whether any argument of the call, spread or plain, reads a style signal.
+fn call_reads_style_signal(call: &CallExpression<'_>, ctx: &PipelineContext) -> bool {
+    call.arguments.iter().any(|arg| match arg {
+        Argument::SpreadElement(spread) => {
+            util::expression_reads_style_signal(&spread.argument, ctx.bindings, ctx.state)
         }
+        _ => util::expression_reads_style_signal(arg.to_expression(), ctx.bindings, ctx.state),
+    })
+}
+
+fn walk_argument(argument: &Argument<'_>, ctx: &mut PipelineContext) {
+    match argument {
+        Argument::SpreadElement(spread) => walk_pipeline_expression(&spread.argument, ctx),
+        _ => walk_pipeline_expression(argument.to_expression(), ctx),
     }
 }
 

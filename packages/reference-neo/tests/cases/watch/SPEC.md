@@ -152,5 +152,5 @@ Items 1 to 4 closed with NEO-WATCH-26 to 29. The rest keep their numbers, which 
 - approved-absence: the matrix contract's webpack leg is not ported; Neo has no webpack target (H5 retire).
 - out of scope: Windows. The poke and signal legs are POSIX-only (`it.skipIf(!POSIX)`), so no claim covers win32.
 - out of scope, other groups: the normalizeCss reset injection (`sync/reset.ts`, NEO-LAYER-04) and the bench phase marks (`sync/phases.ts`) carry no lifecycle claim.
-- NEO-WATCH-09 to 23 landed from the doom round. NEO-WATCH-24 and 25 cover the dangling-link and symlinked-target fixes (LC-63, LC-30).
-- NEO-WATCH-26 to 29 landed with the config-side lifecycle fixes. NEO-WATCH-30 and up are unassigned.
+- NEO-WATCH-09 to 23 are in place. NEO-WATCH-24 and 25 cover the dangling-link and symlinked-target fixes (LC-63, LC-30).
+- NEO-WATCH-26 to 29 are in place with the config-side lifecycle fixes. NEO-WATCH-30 and up are unassigned.

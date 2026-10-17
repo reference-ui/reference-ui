@@ -1,4 +1,4 @@
-// Unit tests for extendSystem (E13, E14). They take a base system in the engine's Portable token
+// Unit tests for extendSystem. They take a base system in the engine's Portable token
 // format and assert the one override block it appends: the selectors, the light and dark rules, the
 // untouched entries, chained merges, references, the named misuse, and the extends fragment node.
 // The duplicate and self-name rules run through validateConfig, so they read the real config path.

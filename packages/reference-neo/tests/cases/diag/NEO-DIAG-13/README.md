@@ -4,6 +4,6 @@ List or nested value under a conditional key. The world carries the minimal fixt
 
 Raised in: `modules/atomic/src/stylesheet/global/walker.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNSUPPORTED-GLOBAL-VALUE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNSUPPORTED-GLOBAL-VALUE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNSUPPORTED-GLOBAL-VALUE, atm-w-unsupported-global-value, diagnostics case index, NEO-DIAG-13

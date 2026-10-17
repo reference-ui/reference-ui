@@ -4,6 +4,6 @@ Explicit `{path}` reference that names no token. The world carries the minimal f
 
 Raised in: `modules/atomic/src/resolve/tokens/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-E-UNKNOWN-TOKEN (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-UNKNOWN-TOKEN (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-UNKNOWN-TOKEN, atm-e-unknown-token, diagnostics case index, NEO-DIAG-05

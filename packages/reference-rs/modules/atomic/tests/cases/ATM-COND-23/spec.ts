@@ -1,5 +1,5 @@
 /**
- * Comma-member scoping station (ATM-COND-23, SPEC-V2-68). A comma-list
+ * Comma-member scoping (ATM-COND-23). A comma-list
  * selector key scopes every member to the parent: a member without `&`
  * is `& <member>`, and a stacked template distributes over each parent
  * member. Selectors mirror v2 `nested_selector_parity.rs:642/:653/:664`.

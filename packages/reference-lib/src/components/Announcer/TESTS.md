@@ -1,9 +1,9 @@
 # Announcer test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Announcer --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/announcer.spec.ts`
-Unit: `matrix/lib/tests/unit/announcer.test.ts` & `packages/reference-lib/src/components/Announcer/Announcer.test.ts`
+Playwright: `src/components/Announcer/__e2e__/*.spec.ts` (run with `pnpm agentct Announcer --e2e`)
+Unit: `src/components/Announcer/**/*.test.ts(x)` & `packages/reference-lib/src/components/Announcer/Announcer.test.ts`
 Page: `/announcer`
 
 ## Required cases

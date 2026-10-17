@@ -9,6 +9,6 @@ source and the css carries the token var. The named `fragments[]` node list ride
 beside the singular string (E1: upstream first, own node last); no `cssChunks[]`
 survivor and no duplicated `runtime` (the styled leg owns the runtime data).
 
-Evidence: config `BaseSystem` type, generated-folder-shape §6, coverage-map row 3.
+Evidence: config `BaseSystem` type.
 
 > Search terms: snapshot, serializable, deep-freeze, frozen bundle, portable snapshot, sync/base-system, extends shape, publish boundary, NEO-SYNC-05, NEO-SYNC-12

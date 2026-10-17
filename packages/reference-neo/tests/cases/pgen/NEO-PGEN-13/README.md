@@ -11,5 +11,5 @@ The case also proves the E1 key set binds through the E2 configurePrimitives
 seam today, returning one bound component per roster name without rendering.
 That is the honest partial leg: the bind path accepts the shelf's keys now,
 while splitter render behavior — style keys separating from DOM props through
-a bound roster — waits on the W4 per-system assembly. Corrupted copies (color
+a bound roster — waits on the per-system assembly. Corrupted copies (color
 dropped, bogusProp added) must trip the same diff by name, or the case fails.

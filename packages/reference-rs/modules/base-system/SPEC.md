@@ -1,7 +1,7 @@
 # Base System SPEC
 
 Current freeze, cases, and proof. Design narrative: compile against a base system (the missing contract).
-Sequencing: [plan.md](../../../../plan.md). Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
+Architecture: [packages/reference-rs/docs/atomic.md](../../docs/atomic.md). Crate documentation: [README.md](./README.md).
 
 Harness: `cargo test -p base_system` (or `pnpm agentrs c base_system`)
 Verify path: In-memory fixture construction (no sync worker, no packager, no bundler).
@@ -264,7 +264,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 ## 7. "Do Not" / Tripwires
 
 1. **Do not execute author JavaScript or parse TSX in `base-system`.**
-   `reference-core/src/lib/fragments` already executes author files in Node.js and dumps pure JSON. A native fragment evaluator is forbidden.
+   `packages/reference-neo/src/collect` already executes author files in Node.js and dumps pure JSON. A native fragment evaluator is forbidden.
 2. **Do not emit CSS class names, utility atoms, or `.mt_2r`.**
    This crate owns the design-system *definition*, not the *stylesheet compiler*. Class generation belongs solely to `modules/atomic`.
 3. **Do not generate TypeScript types or `.d.ts` files.**
@@ -280,6 +280,6 @@ those jobs. Vendor crates below are example call sites, not our API.
 8. **Do not allocate strings or take locks on hot lookup paths.**
    `is_token`, `get_token_css_var`, and `get_condition` are called millions of times during batch TSX extraction. Lookups must borrow slices in $O(1)$ time without mutex contention.
 9. **Do not synthesize runtime `css()` or `recipe()` closures.**
-   Runtime functions are authored TypeScript in `packages/reference-core/src/system/runtime` and `@reference-ui/react`.
+   Runtime functions are authored TypeScript in `packages/reference-neo/src/runtime`.
 10. **Do not treat `BaseSystem` as a mutable global singleton.**
     Every `BaseSystem` instance must be an immutable, self-contained value that can be constructed, extended, and queried concurrently across threads.

@@ -4,6 +4,6 @@ A dialect extension whose served `css` form is fictional per live webref. The wo
 
 Raised in: `modules/atomic/src/resolve/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNREALIZABLE-EXTENSION (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNREALIZABLE-EXTENSION (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNREALIZABLE-EXTENSION, atm-w-unrealizable-extension, diagnostics case index, NEO-DIAG-22

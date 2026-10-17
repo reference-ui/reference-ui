@@ -21,9 +21,10 @@ pub fn resolve_builtin_props(
         "Omit" => resolve_omit_props(ctx, args),
         "Pick" => resolve_pick_props(ctx, args),
         "Nested" | "Pretty" | "ConditionalValue" | "StylePropValue" | "WithEscapeHatch"
-        | "OnlyKnown" => resolve_pass_through(ctx, args),
+        | "OnlyKnown" | "Partial" | "Required" | "Readonly" | "Array" => {
+            resolve_pass_through(ctx, args)
+        }
         "Assign" | "DistributiveUnion" => resolve_union_props(ctx, args),
-        "Partial" | "Required" | "Readonly" | "Array" => resolve_pass_through(ctx, args),
         _ => Ok(None),
     }
 }

@@ -1,6 +1,6 @@
 # NEO-WATCH-10 — a lock whose pid was recycled to an unrelated process is stale: it is never signaled, attached to, or obeyed
 
-Evidence: `[neo]` the sync session lock (`src/sync/session-identity.ts`). An owner document names a pid, and the OS
+Evidence: the sync session lock (`src/sync/session-identity.ts`). An owner document names a pid, and the OS
 recycles pids: a lock left by a dead sync can name a pid that now belongs to an unrelated process, or to pid 1. The
 owner now records its process start time, and a pid whose running process has a different one is not the holder.
 

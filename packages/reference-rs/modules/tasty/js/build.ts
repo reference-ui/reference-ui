@@ -17,8 +17,8 @@ import {
 } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 
-import { scanAndEmitModules, type TastyDiagnostic } from './runtime'
-import { createTastyApi, type TastyApi } from './index'
+import { scanAndEmitModules, type TastyDiagnostic } from './runtime.js'
+import { createTastyApi, type TastyApi } from './index.js'
 
 interface EmittedModulesPayload {
   modules: Record<string, string>
@@ -168,24 +168,32 @@ function validateEmittedPayload(
 }
 
 function isTastyDiagnostics(value: unknown): value is TastyDiagnostic[] {
+  return Array.isArray(value) && value.every(isTastyDiagnosticEntry)
+}
+
+function isTastyDiagnosticEntry(entry: unknown): entry is TastyDiagnostic {
+  if (entry == null || typeof entry !== 'object') return false
+  return hasRequiredDiagnosticFields(entry) && hasOptionalDiagnosticFields(entry)
+}
+
+function hasRequiredDiagnosticFields(entry: object): boolean {
   return (
-    Array.isArray(value) &&
-    value.every(
-      entry =>
-        entry != null &&
-        typeof entry === 'object' &&
-        'severity' in entry &&
-        (entry.severity === 'warning' || entry.severity === 'error') &&
-        'code' in entry &&
-        typeof entry.code === 'string' &&
-        entry.code.length > 0 &&
-        'message' in entry &&
-        typeof entry.message === 'string' &&
-        entry.message.length > 0 &&
-        (!('file' in entry) || typeof entry.file === 'string') &&
-        (!('line' in entry) || typeof entry.line === 'number') &&
-        (!('column' in entry) || typeof entry.column === 'number')
-    )
+    'severity' in entry &&
+    (entry.severity === 'warning' || entry.severity === 'error') &&
+    'code' in entry &&
+    typeof entry.code === 'string' &&
+    entry.code.length > 0 &&
+    'message' in entry &&
+    typeof entry.message === 'string' &&
+    entry.message.length > 0
+  )
+}
+
+function hasOptionalDiagnosticFields(entry: object): boolean {
+  return (
+    (!('file' in entry) || typeof entry.file === 'string') &&
+    (!('line' in entry) || typeof entry.line === 'number') &&
+    (!('column' in entry) || typeof entry.column === 'number')
   )
 }
 

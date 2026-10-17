@@ -1,10 +1,10 @@
 /**
- * Missing-reference station. A whole-value `{colors.nope}` and an embedded
+ * Missing-reference case. A whole-value `{colors.nope}` and an embedded
  * `{colors.nope}` segment each error naming the ref with file:line, and both
  * declarations are dropped so the sheet stays valid CSS. Valid siblings
  * (`border-width`, `border-style`, the `{colors.gray.800}` control) still
  * emit. Panda's serialize path escapes the literal (`colors\.nope`); this
- * engine fails closed instead. Braceless brace shape (doom-4 T1): `{}}`
+ * engine fails closed instead. Braceless brace shape: `{}}`
  * refuses like a braced ref (starts-with-`{` AND ends-with-`}`) while the
  * runtime namer keeps the stem, so the differential carves the extra.
  */

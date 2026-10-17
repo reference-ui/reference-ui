@@ -1,5 +1,5 @@
 /**
- * Allowlist-escape station. Characters outside `[A-Za-z0-9_-]`, including `*`
+ * Allowlist-escape case. Characters outside `[A-Za-z0-9_-]`, including `*`
  * from `'& > *'`, are escaped in selectors. Runtime class strings stay
  * unescaped. Every emitted selector must parse (CSS gauge).
  */

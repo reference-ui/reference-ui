@@ -120,9 +120,9 @@ describe('Slider contract', () => {
     expect(rangeHtml).toContain('--reference-slider-thumb-position:70%')
   })
 
-  it('B-29: Slider should clamp ARIA to the feasible window when the controlled value is out of range', () => {
-    // The W-35 dev warning fires on these renders; the warning itself is
-    // pinned by the W-35 test below, so silence it here.
+  it('Slider should clamp ARIA to the feasible window when the controlled value is out of range', () => {
+    // The dev warning fires on these renders; the warning itself is
+    // pinned by the test below, so silence it here.
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
     // Overflow: visual sits at 100% and ARIA agrees (was: aria-valuenow=999).
@@ -170,7 +170,7 @@ describe('Slider contract', () => {
     }
   })
 
-  it('W-35: Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range', () => {
+  it('Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range', () => {
     const errors: string[] = []
     const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
       errors.push(args.map(String).join(' '))

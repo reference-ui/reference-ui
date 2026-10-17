@@ -48,21 +48,37 @@ pub(super) fn types_package_to_library_name(package_name: &str) -> String {
 
 pub(super) fn external_package_path_for_file_id(file_id: &str) -> Option<(String, String)> {
     let package_segments = package_segments_after_node_modules(file_id)?;
+    let first = *package_segments.first()?;
 
-    if package_segments.first()? == &TYPES_SCOPE_NAME {
-        let package_name = types_package_to_library_name(package_segments.get(1)?);
-        let subpath = package_segments.get(2..)?.join("/");
-        return Some((package_name, subpath));
+    if first == TYPES_SCOPE_NAME {
+        return types_scoped_package_path(&package_segments);
     }
 
-    if package_segments.first()?.starts_with('@') {
-        let package_name = format!("{}/{}", package_segments.first()?, package_segments.get(1)?);
-        let subpath = package_segments.get(2..)?.join("/");
-        return Some((package_name, subpath));
+    if first.starts_with('@') {
+        return scoped_package_path(&package_segments);
     }
 
-    let package_name = package_segments.first()?.to_string();
-    let subpath = package_segments.get(1..)?.join("/");
+    unscoped_package_path(&package_segments)
+}
+
+/// `@types/<encoded>/<subpath>`: the library name is decoded from the `__` form.
+fn types_scoped_package_path(segments: &[&str]) -> Option<(String, String)> {
+    let package_name = types_package_to_library_name(segments.get(1)?);
+    let subpath = segments.get(2..)?.join("/");
+    Some((package_name, subpath))
+}
+
+/// `@scope/<name>/<subpath>`: the package name keeps its scope.
+fn scoped_package_path(segments: &[&str]) -> Option<(String, String)> {
+    let package_name = format!("{}/{}", segments.first()?, segments.get(1)?);
+    let subpath = segments.get(2..)?.join("/");
+    Some((package_name, subpath))
+}
+
+/// `<name>/<subpath>`: a bare package with no scope.
+fn unscoped_package_path(segments: &[&str]) -> Option<(String, String)> {
+    let package_name = segments.first()?.to_string();
+    let subpath = segments.get(1..)?.join("/");
     Some((package_name, subpath))
 }
 

@@ -1,47 +1,24 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Turns TypeScript type annotations into the `TypeExpr` and `PropValueType` shapes the resolver walks.
+//! Interface and object-literal members become prop definitions, intersections and references stay
+//! symbolic, and unions of literals keep their literal text. Shapes the reader does not model become
+//! `Unknown`, and members whose key cannot be read are skipped. It takes oxc type nodes plus the file
+//! source for span slicing and emits owned data only.
 
 use super::utils::{property_key_name, reference_name, slice_span, strip_wrapped_quotes};
 use crate::internal::{PropDef, PropValueType, TypeExpr};
-use oxc_ast::ast::{TSLiteral, TSSignature, TSType};
+use oxc_ast::ast::{TSInterfaceDeclaration, TSLiteral, TSPropertySignature, TSSignature, TSType};
 use oxc_span::GetSpan;
 
-pub(super) fn type_expr_from_interface(
-    interface_decl: &oxc_allocator::Box<'_, oxc_ast::ast::TSInterfaceDeclaration<'_>>,
-    source: &str,
-) -> TypeExpr {
+pub(super) fn type_expr_from_interface(interface_decl: &TSInterfaceDeclaration<'_>, source: &str) -> TypeExpr {
     let mut parts = interface_decl
         .extends
         .iter()
         .map(|heritage| {
-            TypeExpr::Reference(reference_name(slice_span(
-                source,
-                heritage.expression.span(),
-            )))
+            TypeExpr::Reference(reference_name(slice_span(source, heritage.expression.span())))
         })
         .collect::<Vec<_>>();
 
-    let props = interface_decl
-        .body
-        .body
-        .iter()
-        .filter_map(|signature| match signature {
-            TSSignature::TSPropertySignature(property) => property_key_name(&property.key, source)
-                .map(|name| PropDef {
-                    name,
-                    value_type: property
-                        .type_annotation
-                        .as_ref()
-                        .map(|annotation| {
-                            prop_value_type_from_type(&annotation.type_annotation, source)
-                        })
-                        .unwrap_or(PropValueType::Unknown),
-                }),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-
+    let props = prop_defs(&interface_decl.body.body, source);
     if !props.is_empty() {
         parts.push(TypeExpr::Object(props));
     }
@@ -55,27 +32,7 @@ pub(super) fn type_expr_from_interface(
 
 pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) -> TypeExpr {
     match type_annotation {
-        TSType::TSTypeLiteral(type_literal) => TypeExpr::Object(
-            type_literal
-                .members
-                .iter()
-                .filter_map(|signature| match signature {
-                    TSSignature::TSPropertySignature(property) => {
-                        property_key_name(&property.key, source).map(|name| PropDef {
-                            name,
-                            value_type: property
-                                .type_annotation
-                                .as_ref()
-                                .map(|annotation| {
-                                    prop_value_type_from_type(&annotation.type_annotation, source)
-                                })
-                                .unwrap_or(PropValueType::Unknown),
-                        })
-                    }
-                    _ => None,
-                })
-                .collect(),
-        ),
+        TSType::TSTypeLiteral(type_literal) => TypeExpr::Object(prop_defs(&type_literal.members, source)),
         TSType::TSIntersectionType(intersection) => TypeExpr::Intersection(
             intersection
                 .types
@@ -83,21 +40,46 @@ pub(super) fn type_expr_from_type(type_annotation: &TSType<'_>, source: &str) ->
                 .map(|nested| type_expr_from_type(nested, source))
                 .collect(),
         ),
-        TSType::TSTypeReference(reference) => TypeExpr::Reference(reference_name(slice_span(
-            source,
-            reference.type_name.span(),
-        ))),
+        TSType::TSTypeReference(reference) => {
+            TypeExpr::Reference(reference_name(slice_span(source, reference.type_name.span())))
+        }
+        TSType::TSParenthesizedType(parenthesized) => {
+            type_expr_from_type(&parenthesized.type_annotation, source)
+        }
+        _ => union_or_literal_expr(type_annotation, source),
+    }
+}
+
+fn union_or_literal_expr(type_annotation: &TSType<'_>, source: &str) -> TypeExpr {
+    match type_annotation {
         TSType::TSUnionType(union) => union_literals(union.types.iter().collect(), source)
             .map(TypeExpr::UnionLiterals)
             .unwrap_or(TypeExpr::Unknown),
         TSType::TSLiteralType(literal) => single_literal_value(&literal.literal, source)
             .map(|value| TypeExpr::UnionLiterals(vec![value]))
             .unwrap_or(TypeExpr::Unknown),
-        TSType::TSParenthesizedType(parenthesized) => {
-            type_expr_from_type(&parenthesized.type_annotation, source)
-        }
         _ => TypeExpr::Unknown,
     }
+}
+
+fn prop_defs(members: &[TSSignature<'_>], source: &str) -> Vec<PropDef> {
+    members
+        .iter()
+        .filter_map(|signature| match signature {
+            TSSignature::TSPropertySignature(property) => prop_def(property, source),
+            _ => None,
+        })
+        .collect()
+}
+
+fn prop_def(property: &TSPropertySignature<'_>, source: &str) -> Option<PropDef> {
+    let name = property_key_name(&property.key, source)?;
+    let value_type = property
+        .type_annotation
+        .as_ref()
+        .map(|annotation| prop_value_type_from_type(&annotation.type_annotation, source))
+        .unwrap_or(PropValueType::Unknown);
+    Some(PropDef { name, value_type })
 }
 
 fn prop_value_type_from_type(type_annotation: &TSType<'_>, source: &str) -> PropValueType {

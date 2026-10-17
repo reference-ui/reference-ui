@@ -1,5 +1,5 @@
 /**
- * Compound variant emission order station.
+ * Compound variant emission order case.
  * Rules in @layer recipes must emit base first, simple variants second,
  * and compound variants last so that compound overrides win via CSS cascade source order.
  */

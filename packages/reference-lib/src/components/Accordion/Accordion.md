@@ -1,6 +1,6 @@
 # Accordion
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Accordion --e2e`).
 
 Coordinates a collection of Collapsibles: single/multiple expansion and optional keyboard traversal between headers.
 
@@ -53,7 +53,7 @@ Single: opening one closes the others, and activating the open item always
 permits the controlled `null` all-collapsed state. Reference UI has no separate
 Radix-style `collapsible` prop. Multiple: independent ids in a `string[]`.
 
-**Vendor.** Radix `type` single/multiple. Zag `multiple`. Base UI Accordion-on-Collapsible.
+**Prior art.** Radix `type` single/multiple. Zag `multiple`. Base UI Accordion-on-Collapsible.
 
 **Lift.** Our name is `expansion`.
 
@@ -64,7 +64,7 @@ in the normal Tab sequence as required by the APG accordion pattern. Reuse the
 shared collection ordering/disabled-skip helpers, but do not apply
 RovingFocus's one-tab-stop behavior.
 
-**Vendor.** Radix accordion key handler. Zag `GOTO.NEXT/PREV/FIRST/LAST`.
+**Prior art.** Radix accordion key handler. Zag `GOTO.NEXT/PREV/FIRST/LAST`.
 
 **Lift** behind `keyboard="headers"`. `keyboard="none"` leaves arrow traversal
 to the application.

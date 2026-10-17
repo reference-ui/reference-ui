@@ -1,6 +1,6 @@
 /**
  * Pseudo-element placements and combinator stacks (ATM-COND-28,
- * SPEC-V2-73). Descendant / compound / ancestor `::before` spellings
+ *). Descendant / compound / ancestor `::before` spellings
  * print textually at one level; `&`-first stacks distribute down the
  * chain (`&:last-child` + `& :is()`, the `.b/.c/.d` tower, and the
  * `> .row > .cell` tower). Selectors mirror v2

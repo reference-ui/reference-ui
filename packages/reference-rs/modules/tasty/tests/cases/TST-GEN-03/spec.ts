@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-GEN-03.
+ * Case specification for TST-GEN-03.
  * A type parameter or `infer` variable that shares a name with a top-level symbol binds its own
  * references: they carry no symbol id, while an unshadowed reference still resolves to the symbol.
  * Proves the shadowing claims for interface parameters, method and function-type parameters, conditional

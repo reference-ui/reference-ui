@@ -7,7 +7,7 @@ exactly as lib's Slider `trackBackground` authors it. The spec checks the
 sheet defines the kebab names in both color-mode blocks with no camelCase
 ghosts, and that both probes compute the same gray.
 
-Evidence: `[core]` landing-baseline-core kebab defs; `[lib]`
-`shared.ts` `trackBackground`, `Slider.tsx`; `[atm]` ATM-TOKEN-13 (RS-41).
+Evidence: reference-lib
+`shared.ts` `trackBackground`, `Slider.tsx`; ATM-TOKEN-13 (RS-41).
 
 > Search terms: serialization, naming, case conversion, lowercasing, token/naming, token/color-mode, NEO-TOKEN-05

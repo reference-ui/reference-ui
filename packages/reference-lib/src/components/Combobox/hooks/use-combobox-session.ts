@@ -124,8 +124,8 @@ export function useComboboxSession(
   // closed — and re-arms on every settled render so programmatic prop
   // changes stay callback-free (CB-OPEN-06) yet actionable afterwards.
   const lastOpenRequestRef = React.useRef<boolean>(isOpen)
-  // F11 (SCOPE-1): Tab commits synchronously record here so a same-task
-  // blur (Firefox runs Tab→blur before React flushes, D2 family) skips
+  // Tab commits synchronously record here so a same-task
+  // blur (Firefox runs Tab→blur before React flushes) skips
   // the already-resolved session instead of reverting against stale
   // value/input state. Re-arms on every settled render, like the open
   // request ref above, so later blurs resolve normally.

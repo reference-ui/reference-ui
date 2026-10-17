@@ -1,6 +1,5 @@
 /**
- * Aliased-import station (ATM-SITE-40, SPEC-V2-52 + entry-54 remainder +
- * import cycles). A consumer alias resolves to the declared export in THAT
+ * Aliased-import (ATM-SITE-40, missing export, import cycles). A consumer alias resolves to the declared export in THAT
  * file through scalars, object spreads, member reads, and array indices;
  * a missing export and three cycle shapes each warn once with siblings
  * kept — fail-closed-plus-diagnostic where v2 drops silently.
@@ -72,7 +71,7 @@ const spec: AtomicCaseSpec = {
     // The missing export and the three cycles each warn once, located,
     // with siblings kept. Cycle names are declared nowhere, so the
     // merge-bag fallback genuinely misses and the guard stays observable —
-    // all on the opt-in channel now (S6 E8-class re-point); default silent.
+    // all on the opt-in channel; default silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-40', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

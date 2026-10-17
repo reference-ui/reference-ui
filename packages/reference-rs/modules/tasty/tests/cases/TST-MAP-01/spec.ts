@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-MAP-01.
+ * Case specification for TST-MAP-01.
  * Verifies mapped type extraction, modifiers, key remapping with template literals, and member types.
  * Proves primary SPEC ID anchor TST-MAP-01.
  */

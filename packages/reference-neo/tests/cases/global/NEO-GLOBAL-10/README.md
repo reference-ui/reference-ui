@@ -9,7 +9,7 @@ valid inner input holds base, bezels with an invalid inner input or the
 twin attribute paint the invalid token, and toggling `aria-invalid` live
 flips the bezel both ways.
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-styles-css.md` `:has(` ×8,
-L1044 invalid bezel; `[atm]` ATM-LAYER-03.
+Evidence: reference-lib `:has(` ×8,
+L1044 invalid bezel; ATM-LAYER-03.
 
 > Search terms: form validation, invalid state, parent selector, relational selector, error state, validation twin, global/has, selector :has(), NEO-GLOBAL-03

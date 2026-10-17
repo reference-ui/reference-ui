@@ -42,9 +42,20 @@ export async function resolveTargets(paths: string[]): Promise<string[]> {
   return existing;
 }
 
-async function walk(entry: string, code: Set<string>, readmes: Set<string>): Promise<void> {
+function isInLibMirror(entry: string): boolean {
   const resolved = path.resolve(entry);
-  if (resolved === MIRROR_DIR || resolved.startsWith(MIRROR_DIR + path.sep)) return;
+  return resolved === MIRROR_DIR || resolved.startsWith(MIRROR_DIR + path.sep);
+}
+
+// Sorts one file into the README or code set; every other file is never inspected.
+function collectFile(entry: string, code: Set<string>, readmes: Set<string>): void {
+  const resolved = path.resolve(entry);
+  if (path.basename(entry).toLowerCase() === 'readme.md') readmes.add(resolved);
+  else if (CODE_EXTS.has(path.extname(entry).toLowerCase())) code.add(resolved);
+}
+
+async function walk(entry: string, code: Set<string>, readmes: Set<string>): Promise<void> {
+  if (isInLibMirror(entry)) return;
   let s: Stats;
   try {
     s = await stat(entry);
@@ -52,9 +63,7 @@ async function walk(entry: string, code: Set<string>, readmes: Set<string>): Pro
     return;
   }
   if (!s.isDirectory()) {
-    const resolved = path.resolve(entry);
-    if (path.basename(entry).toLowerCase() === 'readme.md') readmes.add(resolved);
-    else if (CODE_EXTS.has(path.extname(entry).toLowerCase())) code.add(resolved);
+    collectFile(entry, code, readmes);
     return;
   }
   if (GENERATED_DIRS.has(path.basename(entry))) return;

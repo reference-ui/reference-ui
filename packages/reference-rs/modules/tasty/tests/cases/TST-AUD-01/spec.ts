@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-AUD-01.
+ * Case specification for TST-AUD-01.
  * Verifies raw summaries, structural conditionals, and predicate return types.
  * Proves primary SPEC ID anchor TST-AUD-01.
  */

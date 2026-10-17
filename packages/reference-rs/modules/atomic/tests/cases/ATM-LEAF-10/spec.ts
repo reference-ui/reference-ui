@@ -1,5 +1,5 @@
 /**
- * Importance-spelling station. Spaced and case-insensitive `!important`
+ * Importance-spelling case. Spaced and case-insensitive `!important`
  * markers set importance with the marker stripped; a bang inside a quoted
  * string value stays literal and unimportant.
  */

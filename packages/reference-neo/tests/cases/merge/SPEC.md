@@ -4,7 +4,7 @@
 
 This group proves what `css()` does when declarations collide: later wins
 per cascade slot, the sheet keeps every atom, and values with no compiled
-atom never mint ghost classes. Engine stations prove strings and plan keys;
+atom never mint ghost classes. Reference-rs cases prove strings and plan keys;
 these cases prove paint (computed style) and the paints-nothing negative.
 
 ## 2. Dialect the author writes
@@ -14,14 +14,14 @@ array); alias vs longhand (`bg`/`background`, `flexDir`/`flexDirection`);
 shorthand then longhand (`padding`/`paddingTop`, `borderBottom`/`borderColor`);
 trailing-`!` important; conditional object args (`{ _hover: … }`) merged with
 a base arg; `undefined`/`null`/`false` leaves dropped. Runtime-only values
-(call results, strings with no static atom) are D11 values: miss class plus
+(call results, strings with no static atom) are values: miss class plus
 diagnostic — never guessed, never hashed.
 
-## 3. Engine stations leaned on
+## 3. Reference-rs cases leaned on
 
-All confirmed present (`ls` + README read 2026-09-17):
+All confirmed present (`ls` + README read:
 
-| Station | Proves | Used by |
+| Reference-rs case | Proves | Used by |
 | --- | --- | --- |
 | ATM-MERGE-01 | Both atoms in sheet; plan merge resolves last value | NEO-MERGE-01 |
 | ATM-MERGE-02 | Alias/duplicate keys collapse to last per slot | NEO-MERGE-02 |
@@ -37,11 +37,11 @@ Host: `src/runtime/css/plans.ts` (merge-only last-wins `mergeDeclarations` /
 `mergeStylePlans`, unit-pinned with `css.ts` by `css.test.ts` / `eviction.test.ts`) and `css.ts`
 (arg/condition lowering, miss →
 miss class, constructed but unbacked). MERGE-06's one-dev-diagnostic and
-MERGE-07's ` !important` spelling are host R2 work, not engine gaps: no RS rows.
+MERGE-07's ` !important` spelling are host work, not engine gaps: no RS rows.
 
 ## 4. Decisions
 
-- **D11** (taken): dynamic values → diagnostic, no ghost class. MERGE-06 is
+- Dynamic values → diagnostic, no ghost class. MERGE-06 is
   its runtime proof; SITE proves the ternary/extraction half.
 
 ## 5. Approved absences
@@ -53,15 +53,15 @@ MERGE-07's ` !important` spelling are host R2 work, not engine gaps: no RS rows.
   by MERGE-01/02/05.
 - `walkObject` arrays-as-leaves / max-depth (`boxShadow: [a, b]`): Panda
   normalizer internals; Reference arrays are responsive (RESP group).
-- GHOST-04 namer injectivity (`p`/`padding` quarantine): stays an rs station
-  per `atomic-claims.md` §6; not a browser case.
+- GHOST-04 namer injectivity (`p`/`padding` quarantine): stays an rs case
+  not a browser case.
 
 ## 6. Out of scope (not Reference's dialect)
 
 | Panda feature | Reason |
 | --- | --- |
-| `sort-mq` / `sort-css` / `sort-style-rules` / `sort-at-rule` comparators | Panda plugin sort; ORDER/SHORT stations pin print order |
+| `sort-mq` / `sort-css` / `sort-style-rules` / `sort-at-rule` comparators | Panda plugin sort; ORDER/SHORT cases pin print order |
 | `hideFrom` / `hideBelow` | Panda-only utilities; no Reference helper (CSS group absence) |
 | Custom utilities sharing one className | No custom utilities in Neo |
-| `token()` string helper | `{path}` refs only (D15) |
-| Slot/`sva` merge | Out per D9 |
+| `token()` string helper | `{path}` refs only |
+| Slot/`sva` merge | Out |

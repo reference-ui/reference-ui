@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-STY-04.
+ * Case specification for TST-STY-04.
  * Verifies omit key projections through aliased literal unions.
  * Proves primary SPEC ID anchor TST-STY-04.
  */

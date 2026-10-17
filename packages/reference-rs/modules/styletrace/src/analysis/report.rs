@@ -36,15 +36,15 @@ impl StyleTraceAnalyzer<'_> {
         classes.chain(holes).collect()
     }
 
-    /// Drain the owned-props map: each traced export name to the prop
-    /// names its own declaration owns. Same-named exports union.
+    /// Drain the owned-props map: each export name that declares props to the prop
+    /// names its own declaration keeps for itself. Same-named exports union.
     pub(super) fn take_owned_props(&mut self) -> BTreeMap<String, BTreeSet<String>> {
         std::mem::take(&mut self.owned_props)
     }
 
-    /// Record one traced export's owned props under its export name.
-    /// Empty sets stay out: untraced and own-nothing hosts both mean
-    /// no shadow, so the map carries only real shadows.
+    /// Record one export's owned props under its export name, whether or not the
+    /// component traces. Empty sets stay out: an export that owns nothing means no
+    /// shadow, so the map carries only real shadows.
     pub(super) fn record_owned(&mut self, export_name: &str, owned: BTreeSet<String>) {
         if owned.is_empty() {
             return;

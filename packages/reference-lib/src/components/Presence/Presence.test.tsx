@@ -100,7 +100,7 @@ describe('Presence Component Unit Contract', () => {
       caughtError = e
     }
 
-    // Quarantine caught but never asserted; the contract (PR-DOM-08) demands a
+    // Previously caught but never asserted; the contract (PR-DOM-08) demands a
     // descriptive ref/anatomy error rather than silent removal.
     expect(caughtError).toMatchObject({
       message: expect.stringMatching(/observable DOM node/),

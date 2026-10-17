@@ -1,6 +1,6 @@
 # chain-t17 — Fan-out: style prebuilt components with consumer style props
 
-Prover for the fan-out contract (`STYLE_PROP_EXTERNAL.md` §8): a **named style
+Prover for the fan-out contract: a **named style
 prop** passed to an **external (prebuilt) component** always paints. The
 consumer compile keeps the prop on the capitalized non-host JSX tag, resolves
 it against the **consumer's** tokens, and emits the deterministic

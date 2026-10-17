@@ -8,7 +8,7 @@ use super::Resolver;
 use crate::ast::model::ImportBindingKind;
 use crate::constants::libraries::USER_LIBRARY_NAME;
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
-use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
+use crate::shared::type_ref_map::{map_type_ref, ConditionalParts, ReferenceParts, TypeRefMap};
 use crate::shared::type_ref_util::{reference_lookup_name, resolve_object_member_type};
 
 impl<'a> Resolver<'a> {
@@ -110,14 +110,14 @@ impl ResolverTypeRefMap<'_, '_> {
 }
 
 impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
-    fn map_reference(
-        &mut self,
-        name: String,
-        target_id: Option<String>,
-        source_module: Option<String>,
-        type_arguments: Option<Vec<TypeRef>>,
-        type_parameter: bool,
-    ) -> TypeRef {
+    fn map_reference(&mut self, reference: ReferenceParts) -> TypeRef {
+        let ReferenceParts {
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+            type_parameter,
+        } = reference;
         let type_arguments: Option<Vec<TypeRef>> = type_arguments.map(|args| {
             args.into_iter()
                 .map(|arg| map_type_ref(self, arg))
@@ -210,14 +210,14 @@ impl TypeRefMap for ResolverTypeRefMap<'_, '_> {
         }
     }
 
-    fn map_conditional(
-        &mut self,
-        check_type: TypeRef,
-        extends_type: TypeRef,
-        true_type: TypeRef,
-        false_type: TypeRef,
-        _resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_conditional(&mut self, parts: ConditionalParts) -> TypeRef {
+        let ConditionalParts {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+            ..
+        } = parts;
         let resolved = self
             .resolver
             .resolve_conditional_result(&check_type, &extends_type, &true_type, &false_type)

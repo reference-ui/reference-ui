@@ -5,9 +5,6 @@
  * small .json sidecars (flattened). `neo` and `rs` port the case-index
  * collectors verbatim: one doc per case / per module. `rs-case` gives each
  * reference-rs case folder its own doc, keyed by the id in its case.json.
- * `perf` reads the committed perf-index.json and keeps its exact
- * substring-AND search —
- * fuzziness was deliberately rejected there, so MiniSearch never ranks it.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -352,7 +349,7 @@ function readCaseMeta(file) {
 /**
  * One doc per reference-rs case folder: case.json meta + README + spec.ts.
  * A folder whose case.json is missing or unreadable is skipped with a
- * warning; the station runner fails those folders, so this only shows
+ * warning; the case runner fails those folders, so this only shows
  * while a case is being written.
  */
 export function collectRsCases(modulesDir, root, name) {
@@ -403,138 +400,4 @@ function rsCaseDoc(meta, { dir, mod, root, name }) {
       module: mod,
     },
   }
-}
-
-function perfMeta(e) {
-  const parts = []
-  if (e.overruledBy) parts.push('overruled', e.overruledBy)
-  if (e.landing) parts.push(e.landing)
-  if (e.landedIn) parts.push(e.landedIn)
-  if (e.kind) parts.push(e.kind)
-  if (e.wave) parts.push(e.wave)
-  return parts.join(' ')
-}
-
-function overruleMarker(e) {
-  if (!e.overruledBy) return ''
-  return ` † superseded by ${String(e.overruledBy).split(' ')[0]}`
-}
-
-/** Perf entries as memex docs; MiniSearch ranks them only globally. */
-export function collectPerf(indexPath, name) {
-  const index = JSON.parse(readFileSync(indexPath, 'utf8'))
-  const docs = index.entries.map(e => ({
-    collection: name,
-    kind: 'perf',
-    id: e.id,
-    title: e.topic,
-    extra: `[${e.verdict}]${effectSuffix(e)}${overruleMarker(e)}`,
-    path: e.report || '',
-    snippetText: `${e.summary || ''}\n${e.log || ''}\n${perfMeta(e)}`,
-    fields: {
-      id: e.id,
-      topic: e.topic,
-      verdict: e.verdict,
-      summary: e.summary || '',
-      log: e.log || '',
-      meta: perfMeta(e),
-    },
-    payload: { entry: e, built: index.built, count: index.count },
-  }))
-  return { docs, warnings: [], built: index.built, count: index.count }
-}
-
-export function effectSuffix(e) {
-  const p = []
-  if (e.effect?.ms != null) p.push(`${e.effect.ms}ms`)
-  if (e.effect?.pct != null) p.push(`${e.effect.pct}%`)
-  if (e.effect?.pairs) p.push(e.effect.pairs)
-  return p.length ? `  ${p.join(' ')}` : ''
-}
-
-function substrScore(q, s) {
-  q = q.toLowerCase()
-  s = s.toLowerCase()
-  if (!q) return 0
-  if (!s.includes(q)) return -1
-  return q.length * 3 + (s === q ? 50 : 0)
-}
-
-const FILTERABLE_FIELDS = new Set(['verdict', 'wave', 'kind'])
-
-/** Split `field:value` filters (verdict/wave/kind, exact) from plain words. */
-export function parseFieldQuery(query) {
-  const words = []
-  const filters = []
-  for (const token of query.split(/\s+/).filter(Boolean)) {
-    const cut = token.indexOf(':')
-    const field = cut === -1 ? null : token.slice(0, cut).toLowerCase()
-    if (field && FILTERABLE_FIELDS.has(field) && token.slice(cut + 1)) {
-      filters.push({ field, value: token.slice(cut + 1).toLowerCase() })
-    } else {
-      words.push(token.toLowerCase())
-    }
-  }
-  return { words, filters }
-}
-
-/**
- * Exact port of the perf substring-AND ranker: looser matching was tried
- * and rejected. `field:value` tokens filter exactly; the rest AND as
- * substrings over topic/id/verdict/summary/log/overrule-note.
- */
-export function substringSearch(entries, query) {
-  const { words, filters } = parseFieldQuery(query)
-  const out = []
-  for (const e of entries) {
-    if (!filters.every(f => String(e[f.field] || '').toLowerCase() === f.value)) {
-      continue
-    }
-    let score = 0
-    const fields = [
-      [e.topic, 5],
-      [e.id, 4],
-      [e.verdict, 2],
-      [e.summary || '', 2],
-      [e.log || '', 1],
-      [perfMeta(e), 1],
-    ]
-    for (const w of words) {
-      let best = -1
-      for (const [text, wt] of fields) {
-        const s = substrScore(w, text || '')
-        if (s > best) best = s * wt
-      }
-      if (best < 0) {
-        score = -1
-        break
-      }
-      score += best
-    }
-    if (score >= 0) out.push([score, e])
-  }
-  return out.sort((a, b) => b[0] - a[0]).map(([, e]) => e)
-}
-
-export function perfCounts(entries) {
-  const waves = {}
-  const verdicts = {}
-  for (const e of entries) {
-    waves[e.wave] = (waves[e.wave] || 0) + 1
-    verdicts[e.verdict] = (verdicts[e.verdict] || 0) + 1
-  }
-  return { waves, verdicts }
-}
-
-export function formatPerfShow(e) {
-  const lines = [`${e.id}  [${e.kind}/${e.verdict}]  ${e.topic}${effectSuffix(e)}`]
-  lines.push(`report: ${e.report}`)
-  if (e.patch) lines.push(`patch:  ${e.patch}`)
-  if (e.landedIn) lines.push(`IN TREE via: ${e.landedIn}`)
-  if (e.landing) lines.push(`landed: ${e.landing}`)
-  if (e.overruledBy) lines.push(`OVERRULED BY: ${e.overruledBy}`)
-  if (e.files?.length) lines.push(`files:\n  ${e.files.join('\n  ')}`)
-  lines.push(`\n${e.summary || '(no summary)'}`)
-  if (e.log) lines.push(`\n--- LOG.md ---\n${e.log}`)
-  return lines.join('\n')
 }

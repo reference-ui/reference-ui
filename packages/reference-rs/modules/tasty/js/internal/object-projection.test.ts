@@ -3,7 +3,7 @@
  * Contains JS API logic and types.
  */
 import { describe, expect, it } from 'vitest'
-import { isTypeParameterReference } from './object-projection'
+import { isTypeParameterReference } from './object-projection.js'
 
 describe('object-projection type parameter detection', () => {
   it('returns true for type parameter "P"', () => {

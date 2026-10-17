@@ -1,5 +1,5 @@
 /**
- * staticCss station. Dump wildcards and lists become utilities and runtime
+ * staticCss case. Dump wildcards and lists become utilities and runtime
  * map keys so `bg={prop}` can look up at runtime. AST does not author those
  * literals; the dump is the third want source.
  */

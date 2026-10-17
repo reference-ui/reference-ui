@@ -38,6 +38,13 @@ pub fn fold_property_key(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<St
             // [theme.primary]:
             fold_key_member(mem, scoped)
         }
+        _ => fold_key_computed(key, scoped),
+    }
+}
+
+/// Computed keys that read an element, apply an operator or call, or wrap one of those.
+fn fold_key_computed(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<String> {
+    match key {
         PropertyKey::ComputedMemberExpression(mem) => {
             // [sizes[1]]:
             fold_key_element(&mem.object, &mem.expression, scoped)
@@ -82,22 +89,34 @@ fn fold_key_literal(key: &PropertyKey<'_>) -> Option<String> {
 /// Interpolated templates and exotic literals stay dynamic here; their fold
 /// nodes extend this match when a station pins them.
 fn fold_key_wrapped_property(key: &PropertyKey<'_>, scoped: Scoped<'_>) -> Option<String> {
+    // [(k)]:
+    let inner = wrapped_key_expression(key)?;
+    fold_key_expression(inner, scoped)
+}
+
+/// The expression a wrapper key holds, for parentheses, casts, and TS assertions.
+pub(super) fn wrapped_key_expression<'a, 'b>(
+    key: &'b PropertyKey<'a>,
+) -> Option<&'b Expression<'a>> {
+    cast_wrapped_expression(key).or_else(|| assertion_wrapped_expression(key))
+}
+
+/// Parentheses and the `as` / `satisfies` casts around a key expression.
+fn cast_wrapped_expression<'a, 'b>(key: &'b PropertyKey<'a>) -> Option<&'b Expression<'a>> {
     match key {
-        PropertyKey::ParenthesizedExpression(paren) => {
-            // [(k)]:
-            fold_key_expression(&paren.expression, scoped)
-        }
-        PropertyKey::TSAsExpression(cast) => fold_key_expression(&cast.expression, scoped),
-        PropertyKey::TSSatisfiesExpression(sat) => fold_key_expression(&sat.expression, scoped),
-        PropertyKey::TSNonNullExpression(non_null) => {
-            fold_key_expression(&non_null.expression, scoped)
-        }
-        PropertyKey::TSTypeAssertion(assertion) => {
-            fold_key_expression(&assertion.expression, scoped)
-        }
-        PropertyKey::TSInstantiationExpression(instantiation) => {
-            fold_key_expression(&instantiation.expression, scoped)
-        }
+        PropertyKey::ParenthesizedExpression(paren) => Some(&paren.expression),
+        PropertyKey::TSAsExpression(cast) => Some(&cast.expression),
+        PropertyKey::TSSatisfiesExpression(sat) => Some(&sat.expression),
+        _ => None,
+    }
+}
+
+/// Non-null, angle-bracket, and instantiation assertions around a key expression.
+fn assertion_wrapped_expression<'a, 'b>(key: &'b PropertyKey<'a>) -> Option<&'b Expression<'a>> {
+    match key {
+        PropertyKey::TSNonNullExpression(non_null) => Some(&non_null.expression),
+        PropertyKey::TSTypeAssertion(assertion) => Some(&assertion.expression),
+        PropertyKey::TSInstantiationExpression(instantiation) => Some(&instantiation.expression),
         _ => None,
     }
 }
@@ -111,19 +130,27 @@ fn fold_key_expression(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<Stri
         Expression::TemplateLiteral(lit) => static_template_key(lit),
         Expression::Identifier(ident) => fold_key_identifier(ident.name.as_str(), scoped),
         Expression::StaticMemberExpression(mem) => fold_key_member(mem, scoped),
+        _ => fold_key_derived_expression(expr, scoped),
+    }
+}
+
+/// Key expressions built from an element read, an operator, or a call, or a wrapper around one.
+fn fold_key_derived_expression(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<String> {
+    match expr {
         Expression::ComputedMemberExpression(mem) => {
             fold_key_element(&mem.object, &mem.expression, scoped)
         }
         Expression::UnaryExpression(unary) => fold_key_unary(unary, scoped),
         Expression::BinaryExpression(bin) => fold_key_binary(bin, scoped),
         Expression::CallExpression(call) => fold_key_call(call, scoped),
-        _ => {
-            if let Some(inner) = unwrap_wrapper_target(expr) {
-                return fold_key_expression(inner, scoped);
-            }
-            None
-        }
+        _ => fold_key_unwrapped(expr, scoped),
     }
+}
+
+/// A transparent wrapper folds as its inner expression; anything else refuses.
+fn fold_key_unwrapped(expr: &Expression<'_>, scoped: Scoped<'_>) -> Option<String> {
+    let inner = unwrap_wrapper_target(expr)?;
+    fold_key_expression(inner, scoped)
 }
 
 /// Fold literal key-position spellings, or None for every other form.

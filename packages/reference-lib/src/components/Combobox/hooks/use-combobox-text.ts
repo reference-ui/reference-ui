@@ -111,7 +111,7 @@ export function useComboboxText(
     }
   }, [selectOnly, inputValue, handleInputChange, getCommittedLabel])
 
-  // Unmatched-text session resolution (#2, W-24, CB-CUSTOM-01/02). With
+  // Unmatched-text session resolution (#2, CB-CUSTOM-01/02). With
   // `allowCustomValue`, exact input text commits as the value (empty maps
   // to `null`, never normalized); otherwise the committed text is
   // restored. Silent when the text already matches the committed value
@@ -127,7 +127,7 @@ export function useComboboxText(
     // Two-authority conflict (#5, CB-ADAPTER-08): commits stay inert.
     if (collectionConflict) return
     if (inputValue === getCommittedLabel()) return
-    // B-36: re-committing the identical value is silent — dismiss still runs.
+    // Re-committing the identical value is silent — dismiss still runs.
     const nextVal = inputValue === '' ? null : inputValue
     if (nextVal !== value) {
       onChange(nextVal)

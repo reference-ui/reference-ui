@@ -8,7 +8,7 @@
 
 import type { Side } from '../../Overlay/geometry/floating'
 
-export type RectLike = {
+export type HoverPolygonRect = {
   x: number
   y: number
   width: number
@@ -19,7 +19,7 @@ export type RectLike = {
   left: number
 }
 
-export type Point = readonly [number, number]
+export type HoverPolygonPoint = readonly [number, number]
 
 /** SPEC freeze: pad Trigger and Content by 5px. */
 export const SAFE_AREA_PADDING = 5
@@ -42,7 +42,7 @@ export function resolvedSide(content: HTMLElement | null, fallback: Side = 'bott
   return sideFromPlacement(content?.getAttribute('data-side') ?? fallback)
 }
 
-export function asRect(rect: DOMRect | RectLike): RectLike {
+export function asRect(rect: DOMRect | HoverPolygonRect): HoverPolygonRect {
   return {
     x: rect.x,
     y: rect.y,
@@ -55,7 +55,7 @@ export function asRect(rect: DOMRect | RectLike): RectLike {
   }
 }
 
-export function padRect(rect: RectLike, pad: number): RectLike {
+export function padRect(rect: HoverPolygonRect, pad: number): HoverPolygonRect {
   return {
     x: rect.x - pad,
     y: rect.y - pad,
@@ -68,7 +68,7 @@ export function padRect(rect: RectLike, pad: number): RectLike {
   }
 }
 
-export function pointInRect(x: number, y: number, rect: RectLike, pad = 0): boolean {
+export function pointInRect(x: number, y: number, rect: HoverPolygonRect, pad = 0): boolean {
   return (
     x >= rect.left - pad &&
     x <= rect.right + pad &&
@@ -92,7 +92,7 @@ function pointInAxisAligned(
   return x >= minX && x <= maxX && y >= minY && y <= maxY
 }
 
-export function pointInPolygon(point: Point, polygon: Point[]): boolean {
+export function pointInPolygon(point: HoverPolygonPoint, polygon: HoverPolygonPoint[]): boolean {
   const [x, y] = point
   let inside = false
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -108,7 +108,7 @@ export function isOppositeSideLeave(
   side: Side,
   leaveX: number,
   leaveY: number,
-  trigger: RectLike
+  trigger: HoverPolygonRect
 ): boolean {
   if (side === 'top' && leaveY >= trigger.bottom - 1) return true
   if (side === 'bottom' && leaveY <= trigger.top + 1) return true
@@ -121,8 +121,8 @@ export function pointInTrough(
   x: number,
   y: number,
   side: Side,
-  trigger: RectLike,
-  content: RectLike
+  trigger: HoverPolygonRect,
+  content: HoverPolygonRect
 ): boolean {
   const isFloatingWider = content.width > trigger.width
   const isFloatingTaller = content.height > trigger.height
@@ -147,10 +147,10 @@ function cursorTriangle(
   leaveX: number,
   leaveY: number,
   side: Side,
-  trigger: RectLike,
-  content: RectLike,
+  trigger: HoverPolygonRect,
+  content: HoverPolygonRect,
   buffer = POLYGON_BUFFER
-): Point[] {
+): HoverPolygonPoint[] {
   const cursorLeaveFromRight = leaveX > content.right - content.width / 2
   const cursorLeaveFromBottom = leaveY > content.bottom - content.height / 2
   const isFloatingWider = content.width > trigger.width
@@ -282,8 +282,8 @@ export function pointInCursorTriangle(
   leaveX: number,
   leaveY: number,
   side: Side,
-  trigger: RectLike,
-  content: RectLike
+  trigger: HoverPolygonRect,
+  content: HoverPolygonRect
 ): boolean {
   return pointInPolygon([x, y], cursorTriangle(leaveX, leaveY, side, trigger, content))
 }
@@ -304,8 +304,8 @@ export type PointerSafetyInput = {
   leaveX: number
   leaveY: number
   side: Side
-  trigger: RectLike
-  content: RectLike
+  trigger: HoverPolygonRect
+  content: HoverPolygonRect
   hasLanded: boolean
   pad?: number
 }

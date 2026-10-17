@@ -46,7 +46,7 @@ export function useStepActions(options: StepActionsOptions): StepActions {
 
   // A complete dirty candidate (parseable, clamped once) is the step base;
   // empty or incomplete drafts fall back to controlled value, never NaN.
-  // The locale parser (W-25) lets formatted drafts ("1,000", "12" under a
+  // The locale parser lets formatted drafts ("1,000", "12" under a
   // percent style) step from their numeric meaning.
   const stepBase = React.useMemo(() => {
     if (draft === null || draft.trim() === '') return null

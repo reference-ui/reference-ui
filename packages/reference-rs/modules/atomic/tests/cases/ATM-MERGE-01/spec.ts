@@ -1,5 +1,5 @@
 /**
- * Multi-argument css() merge station (ATM-MERGE-01).
+ * Multi-argument css() merge (ATM-MERGE-01).
  * Asserts that @layer utilities contains both system-qualified .m_1r and
  * .m_3r, while the runtime style plan merge resolves to the last authored
  * value (m_3r).

@@ -8,14 +8,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 
-import { getReferenceNativeCompatibilityError } from '../loader'
-import { nativeDir, packageDir } from '../shared/paths'
+import { getReferenceNativeCompatibilityError } from '../loader.js'
+import { nativeDir, packageDir } from '../shared/paths.js'
 import {
   hashNativeInputs,
   nativeBinaryFileName,
   nativeStampFileName,
-} from '../shared/native-inputs'
-import { getRustTarget, getReferenceNativeTriple } from '../shared/targets'
+} from '../shared/native-inputs.js'
+import { getRustTarget, getReferenceNativeTriple } from '../shared/targets.js'
 
 const triple = getReferenceNativeTriple()
 if (!triple) {

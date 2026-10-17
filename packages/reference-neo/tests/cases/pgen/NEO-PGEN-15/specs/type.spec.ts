@@ -73,7 +73,7 @@ export { bad }
 `;
 
 // The bound bake narrows css to the system style object, so the bogus key
-// inside css that assigned against raw E4 now fails with TS2353 — the W4
+// inside css that assigned against raw E4 now fails with TS2353 — the
 // flip of the pinned-open probe.
 const NARROW_CSS = `import type { DivProps } from '@reference-ui/react'
 

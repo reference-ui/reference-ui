@@ -1,7 +1,8 @@
-//! Lists the traced names a module exposes, each with the owned props its declaration keeps.
-//! A module exposes its own exports, the names behind its `export *` barrels, its compound-member aliases, the aliases of its re-exported namespaces, and each `export * as Name` namespace, whose names read `Name.<exposed name>`.
+//! Lists the names a module exposes, each with the owned props its declaration keeps.
+//! A module exposes its own exports, the names behind its `export *` barrels (which skip `default` and any name the module exports itself), its compound-member aliases, the aliases of its re-exported namespaces, and each `export * as Name` namespace, whose names read `Name.<exposed name>`.
+//! An export whose target traces is a traced exposure and lists a binding; one that does not trace, but whose declared component owns props, is a declared exposure that only feeds the owned map.
 //! A default re-export takes the name of the binding it re-exports, since a JSX consumer spells that name; a local default keeps the literal `default`.
-//! Emits unlabelled (name, owned) pairs: the caller stamps the module label and records owned props, so a namespace's names never leak under their bare spelling.
+//! Emits unlabelled exposures: the caller stamps the module label, lists bindings for the traced ones and records owned props for both, so a namespace's names never leak under their bare spelling.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -12,11 +13,49 @@ use super::model::{ExportTarget, MemberAlias, TraceModule};
 use super::parser::exports::{ANONYMOUS_DEFAULT, DEFAULT_EXPORT};
 use crate::resolver::StyleTraceError;
 
-/// One traced name a module exposes, with the owned props its declaration keeps.
-pub(super) type Exposure = (String, BTreeSet<String>);
+/// One name a module exposes, with the owned props its declaration keeps. Only a traced exposure
+/// lists a binding; a declared one carries owned props for a component that does not trace.
+pub(super) struct Exposure {
+    pub(super) name: String,
+    pub(super) owned: BTreeSet<String>,
+    pub(super) traced: bool,
+}
+
+impl Exposure {
+    fn traced(name: String, owned: BTreeSet<String>) -> Self {
+        Self {
+            name,
+            owned,
+            traced: true,
+        }
+    }
+
+    fn declared(name: String, owned: BTreeSet<String>) -> Self {
+        Self {
+            name,
+            owned,
+            traced: false,
+        }
+    }
+}
+
+/// Alias exposures trace or stay silent, so every one of them is a traced exposure.
+fn traced_exposures(pairs: Vec<(String, BTreeSet<String>)>) -> Vec<Exposure> {
+    pairs
+        .into_iter()
+        .map(|(name, owned)| Exposure::traced(name, owned))
+        .collect()
+}
+
+/// Whether a star source of `module` re-exports `name`: never `default`, and never a name `module`
+/// exports itself.
+fn star_reexports(module: &TraceModule, name: &str) -> bool {
+    // ECMA-262 GetExportedNames: a star skips `default`, and a local export shadows a star name.
+    name != DEFAULT_EXPORT && !module.exports.contains_key(name)
+}
 
 impl StyleTraceAnalyzer<'_> {
-    /// Every traced name `module_path` exposes. `expanding` lists the modules whose namespaces are
+    /// Every name `module_path` exposes. `expanding` lists the modules whose namespaces are
     /// being expanded, so a namespace cycle yields nothing instead of recursing forever.
     pub(super) fn module_exposures(
         &mut self,
@@ -49,7 +88,7 @@ impl StyleTraceAnalyzer<'_> {
         Ok(exposures)
     }
 
-    /// The module's own exports that trace, under their public names.
+    /// The module's own exports, under their public names: traced or declared.
     fn own_exposures(
         &mut self,
         module_path: &Path,
@@ -57,17 +96,33 @@ impl StyleTraceAnalyzer<'_> {
     ) -> Result<Vec<Exposure>, StyleTraceError> {
         let mut exposures = Vec::new();
         for export_name in module.exports.keys() {
-            let Some(owned) =
-                self.export_is_traced(module_path, export_name, &mut Vec::new())?
-            else {
-                continue;
-            };
-            exposures.push((self.exposed_name(module_path, export_name)?, owned));
+            exposures.extend(self.export_exposure(module_path, export_name)?);
         }
         Ok(exposures)
     }
 
+    /// One export's exposure: traced when its target traces, declared when its component keeps
+    /// owned props without tracing, and nothing when it keeps none.
+    fn export_exposure(
+        &mut self,
+        module_path: &Path,
+        export_name: &str,
+    ) -> Result<Option<Exposure>, StyleTraceError> {
+        if let Some(owned) = self.export_is_traced(module_path, export_name, &mut Vec::new())? {
+            let name = self.exposed_name(module_path, export_name)?;
+            return Ok(Some(Exposure::traced(name, owned)));
+        }
+        let Some(owned) =
+            self.declared_export_owned(module_path, export_name, &mut Vec::new())?
+        else {
+            return Ok(None);
+        };
+        let name = self.exposed_name(module_path, export_name)?;
+        Ok(Some(Exposure::declared(name, owned)))
+    }
+
     /// The names behind `export *` sources. One level deep, as the export-star walk has always been.
+    /// A star source skips `default` and any name `module` exports itself, which shadows it.
     fn export_all_exposures(
         &mut self,
         module_path: &Path,
@@ -86,8 +141,8 @@ impl StyleTraceAnalyzer<'_> {
                 continue;
             };
             for export_name in target_module.exports.keys() {
-                if let Some(owned) = self.export_is_traced(&target, export_name, &mut Vec::new())? {
-                    exposures.push((self.exposed_name(&target, export_name)?, owned));
+                if star_reexports(module, export_name) {
+                    exposures.extend(self.export_exposure(&target, export_name)?);
                 }
             }
             let aliases = &target_module.member_aliases;
@@ -102,7 +157,8 @@ impl StyleTraceAnalyzer<'_> {
         module: &TraceModule,
         aliases: &[MemberAlias],
     ) -> Result<Vec<Exposure>, StyleTraceError> {
-        alias_exposures(self, &WalkModule { path, module, aliases })
+        let pairs = alias_exposures(self, &WalkModule { path, module, aliases })?;
+        Ok(traced_exposures(pairs))
     }
 
     /// Aliases of each namespace this module re-exports (`export { Tabs as Accordion }`), renamed to the export.
@@ -139,7 +195,7 @@ impl StyleTraceAnalyzer<'_> {
                 module: &target_module,
                 aliases: &remapped,
             };
-            exposures.extend(alias_exposures(self, &walk)?);
+            exposures.extend(traced_exposures(alias_exposures(self, &walk)?));
         }
         Ok(exposures)
     }
@@ -162,8 +218,13 @@ impl StyleTraceAnalyzer<'_> {
                 continue;
             };
             self.ensure_module_loaded(&target)?;
-            for (name, owned) in self.module_exposures(&target, expanding)? {
-                exposures.push((format!("{}.{}", namespace.namespace, name), owned));
+            for exposure in self.module_exposures(&target, expanding)? {
+                let Exposure { name, owned, traced } = exposure;
+                exposures.push(Exposure {
+                    name: format!("{}.{}", namespace.namespace, name),
+                    owned,
+                    traced,
+                });
             }
         }
         Ok(exposures)

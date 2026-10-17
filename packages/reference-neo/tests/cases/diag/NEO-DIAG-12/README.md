@@ -4,6 +4,6 @@ At-rule key with an empty query. The world carries the minimal fixture (theme/em
 
 Raised in: `modules/atomic/src/stylesheet/global/walker.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-EMPTY-AT-RULE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-EMPTY-AT-RULE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-EMPTY-AT-RULE, atm-w-empty-at-rule, diagnostics case index, NEO-DIAG-12

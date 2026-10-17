@@ -1,5 +1,5 @@
 /**
- * Proof stations for locked canon aliases and responsive array scales in atomic.
+ * Proof cases for locked canon aliases and responsive array scales in atomic.
  * Asserts that locked aliases (mt, px, w, flexDir) extract as style props,
  * while refused shortcuts (rounded, c, pos, ps, borderX) do not.
  * Asserts responsive array mapping against the profile scale with authored names appended.

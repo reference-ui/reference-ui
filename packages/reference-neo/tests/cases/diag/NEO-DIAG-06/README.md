@@ -4,6 +4,6 @@ Unknown condition or conditional key. The world carries the minimal fixture (the
 
 Raised in: `modules/atomic/src/resolve/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-CONDITION (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-CONDITION (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-CONDITION, atm-w-unknown-condition, diagnostics case index, NEO-DIAG-06

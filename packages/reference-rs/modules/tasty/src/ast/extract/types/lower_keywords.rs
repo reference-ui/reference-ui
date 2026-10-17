@@ -12,24 +12,12 @@ use super::intrinsic;
 use super::LoweringContext;
 
 impl<'a> LoweringContext<'a> {
-    pub(super) fn lower_keyword_type(&self, type_annotation: &TSType<'_>) -> Option<TypeRef> {
-        let name = match type_annotation {
-            TSType::TSStringKeyword(_) => "string",
-            TSType::TSNumberKeyword(_) => "number",
-            TSType::TSBooleanKeyword(_) => "boolean",
-            TSType::TSUnknownKeyword(_) => "unknown",
-            TSType::TSAnyKeyword(_) => "any",
-            TSType::TSUndefinedKeyword(_) => "undefined",
-            TSType::TSNullKeyword(_) => "null",
-            TSType::TSObjectKeyword(_) => "object",
-            TSType::TSBigIntKeyword(_) => "bigint",
-            TSType::TSSymbolKeyword(_) => "symbol",
-            TSType::TSNeverKeyword(_) => "never",
-            TSType::TSVoidKeyword(_) => "void",
-            _ => return None,
-        };
-
-        Some(intrinsic(name))
+    /// The intrinsic type a keyword annotation lowers to. Only the leaf family calls this, with one of the twelve
+    /// keyword variants, so a name that does not resolve is a routing bug, not an input.
+    pub(super) fn lower_keyword_type(&self, type_annotation: &TSType<'_>) -> TypeRef {
+        keyword_name(type_annotation)
+            .map(intrinsic)
+            .unwrap_or_else(|| unreachable!("lower_type routes only keyword variants here"))
     }
 
     pub(super) fn lower_intrinsic_keyword(
@@ -45,5 +33,43 @@ impl<'a> LoweringContext<'a> {
         TypeRef::Literal {
             value: slice_span(self.ctx.source, literal.span).to_string(),
         }
+    }
+}
+
+/// The name of a keyword annotation. The twelve keywords are split across three matches, each within the arm
+/// budget of the complexity gate; the first match that names the annotation wins.
+fn keyword_name(type_annotation: &TSType<'_>) -> Option<&'static str> {
+    value_keyword_name(type_annotation)
+        .or_else(|| wide_keyword_name(type_annotation))
+        .or_else(|| nullish_keyword_name(type_annotation))
+}
+
+fn value_keyword_name(type_annotation: &TSType<'_>) -> Option<&'static str> {
+    match type_annotation {
+        TSType::TSStringKeyword(_) => Some("string"),
+        TSType::TSNumberKeyword(_) => Some("number"),
+        TSType::TSBooleanKeyword(_) => Some("boolean"),
+        TSType::TSBigIntKeyword(_) => Some("bigint"),
+        _ => None,
+    }
+}
+
+fn wide_keyword_name(type_annotation: &TSType<'_>) -> Option<&'static str> {
+    match type_annotation {
+        TSType::TSAnyKeyword(_) => Some("any"),
+        TSType::TSUnknownKeyword(_) => Some("unknown"),
+        TSType::TSObjectKeyword(_) => Some("object"),
+        TSType::TSSymbolKeyword(_) => Some("symbol"),
+        _ => None,
+    }
+}
+
+fn nullish_keyword_name(type_annotation: &TSType<'_>) -> Option<&'static str> {
+    match type_annotation {
+        TSType::TSUndefinedKeyword(_) => Some("undefined"),
+        TSType::TSNullKeyword(_) => Some("null"),
+        TSType::TSNeverKeyword(_) => Some("never"),
+        TSType::TSVoidKeyword(_) => Some("void"),
+        _ => None,
     }
 }

@@ -17,7 +17,7 @@ import type {
   TastyTypeParameter as RawTastyTypeParameter,
   TastyTypeRef as RawTastyTypeRef,
   TastyTypeReference as RawTastyTypeReference,
-} from './generated'
+} from './generated/index.js'
 
 export type {
   TastyChunkModule as RawTastyChunkModule,
@@ -42,7 +42,7 @@ export type {
   TastyTypeParameter as RawTastyTypeParameter,
   TastyTypeRef as RawTastyTypeRef,
   TastyTypeReference as RawTastyTypeReference,
-} from './generated'
+} from './generated/index.js'
 
 export type TastySymbolKind = 'interface' | 'typeAlias'
 export type TastyTypeKind = RawTastyStructuredTypeRef['kind'] | 'reference'

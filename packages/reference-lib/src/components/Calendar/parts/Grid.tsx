@@ -187,7 +187,7 @@ export function CalendarGrid({
     } else if (key === 'Home' || key === 'End') {
       // Locale week boundary (CA-KEY-02); out-of-bounds boundary dates
       // skip inward toward the origin week interior. Unavailable
-      // boundaries are landing spots (W-21).
+      // boundaries are landing spots.
       candidate = resolveHomeEndTarget(origin, key, weekStart, isDateDisabled)
     } else {
       // Adjacent month preserving the day when possible, constrained at

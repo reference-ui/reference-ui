@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-INT-03.
+ * Case specification for TST-INT-03.
  * Verifies intersection member merging, override semantics, utility combination, and generic intersections.
  * Proves primary SPEC ID anchor TST-INT-03.
  */

@@ -1,5 +1,5 @@
 /**
- * JSX ternary-object station (ATM-SITE-21, RS-34). Ternary arms holding
+ * JSX ternary-object (ATM-SITE-21). Ternary arms holding
  * style objects in `_hover`/`css` props compile every leaf of every arm;
  * the `undefined` arm stays silent with zero diagnostics.
  */

@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-CND-02.
+ * Case specification for TST-CND-02.
  * A conditional on a bare type parameter stays deferred, a union reached through an alias is never
  * distributed, and a naked type parameter instantiated with that union distributes over its members.
  */

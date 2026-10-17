@@ -57,10 +57,12 @@ fn test_build_runtime_style_plans_macro() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 
@@ -108,10 +110,12 @@ fn test_build_runtime_style_plans_dimensional_shorthand() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let dim_plans = builder.build(&dimensional_decls);
     let slots: Vec<&str> = dim_plans[0]
@@ -143,10 +147,12 @@ fn test_build_runtime_style_plans_responsive_array() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 
@@ -176,10 +182,12 @@ fn test_build_runtime_style_plans_responsive_object() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 
@@ -215,10 +223,12 @@ fn test_responsive_object_condition_key_matches_nested_slot() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 
@@ -246,10 +256,12 @@ fn test_responsive_object_unknown_key_warns_and_skips() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 
@@ -290,10 +302,12 @@ fn test_resolve_object_keeps_author_order_reverse_alpha() {
     let mut builder = PlanBuilder::new(
         "lib-test-system",
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(&decls);
 

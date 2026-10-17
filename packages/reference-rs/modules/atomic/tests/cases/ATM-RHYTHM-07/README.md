@@ -1,5 +1,4 @@
-# ATM-RHYTHM-07 — Doom fortify pin for CONTINUITY-01 r-computation (doom-r-rule: BREAK)
-
+# ATM-RHYTHM-07 — Non-finite rhythm stem pins for CONTINUITY-01 r-computation
 Non-finite rhythm stems refuse behind the shared finiteness gate
 (`resolve_single_rhythm` → `lexical::parse_decimal(…).finite()`) and pass
 through raw: `infr`, `nanr`, `infinityr`, `Infinityr`, `-infr`, `1e309r`,
@@ -9,8 +8,7 @@ identifier-shaped stems (`infr`, `nanr`, `infinityr`, `Infinityr`) name no spaci
 token and warn `ATM-W-UNKNOWN-TOKEN`; the number-shaped refusals stay silent,
 because the identifier rule needs a leading letter. Finite controls (`2r`, `1/3r`) and finite-neighbor guards
 (`0.5r`, `1e-3r`, finite-giant `1e308r`) still mint, proving the fence is
-finiteness, not magnitude. Close (a) refuse-to-passthrough per
-`.agents/missions/continuity/doom-r-rule.md`: legacy parity on every named
+finiteness, not magnitude. Close (a) refuse-to-passthrough: legacy parity on every named
 spelling; genuine-overflow singles pass through where legacy mints valid
 `calc(Infinity * …)` (documented GIGO). The refused declarations ride the
 grammar quarantine (`tests/harness/css-quarantine.ts`), like

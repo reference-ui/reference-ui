@@ -1,5 +1,5 @@
 /**
- * Boolean StyleProps station. A valueless known style attribute becomes
+ * Boolean StyleProps case. A valueless known style attribute becomes
  * AtomValue::Bool(true). String attrs are ATM-SITE-01.
  */
 import { expect } from 'vitest'

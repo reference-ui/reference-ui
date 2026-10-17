@@ -4,7 +4,7 @@
  * Tasty consumes ComponentInterface to resolve the full member list, JSDoc, defaults, and optionality.
  */
 import { describe, it, expect } from 'vitest'
-import { getComponent, getComponents } from '../harness/helpers'
+import { getComponent, getComponents } from '../harness/helpers.js'
 
 const DEMO_UI = '@fixtures/demo-ui'
 

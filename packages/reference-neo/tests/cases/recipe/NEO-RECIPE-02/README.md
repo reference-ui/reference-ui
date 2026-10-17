@@ -6,7 +6,6 @@ bare and partial calls resolve through them, and each node paints the
 defaulted axis: computed height from the default size, computed color from
 the default tone.
 
-Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:104` defaults; `[atm]`
-ATM-RECIPE-04 (P2 #17).
+Evidence: Panda v1 recipe tests (defaults); ATM-RECIPE-04 (P2 #17).
 
 > Search terms: fallback values, implicit selection, cva, zero-arg, recipe/defaults, NEO-RECIPE-01

@@ -3,7 +3,7 @@
 Every item below needs a product, UX, or API-design call before it can
 land — new/changed surface, behavior choices, or breaking changes.
 
-## 1. Discriminated mode props + required value (DECISIONS candidate #1, DEFERRED)
+## 1. Discriminated mode props + required value
 
 **What it does:** Makes `value` required and mode-typed, and types
 `onChange` per mode branch instead of `(value: any) => void`, with
@@ -17,9 +17,9 @@ explicit `null` as the controlled empty state.
 <Calendar mode="range" value={range} onChange={(r) => setRange(r)} />
 ```
 
-**Maintainer take:** Yes — required for any type-safe Calendar v2; land together with fail-closed.
+**Recommendation:** Yes — required for any type-safe Calendar v2; land together with fail-closed.
 
-## 2. Fail-closed invalid-prop behavior (DECISIONS candidate #2, OPEN)
+## 2. Fail-closed invalid-prop behavior
 
 **What it does:** Any invalid date-like prop, contradictory `min > max`,
 or mode/value shape mismatch emits one descriptive development
@@ -33,9 +33,9 @@ callback.
 <Calendar month="not-a-month" />
 ```
 
-**Maintainer take:** Yes, but only after HQ picks blank render vs degraded-grid failure UX.
+**Recommendation:** Yes, but only after the failure UX is chosen: blank render or degraded grid.
 
-## 3. Required locale + firstDayOfWeek + CLDR wiring (DECISIONS candidate #3, DEFERRED)
+## 3. Required locale + firstDayOfWeek + CLDR wiring
 
 **What it does:** Makes `locale` required, wires CLDR week start
 through headers, grid padding, Home/End boundaries, and labels, with
@@ -47,9 +47,9 @@ an optional weekday-token override.
 <Calendar locale="en-GB" firstDayOfWeek="monday" />
 ```
 
-**Maintainer take:** Yes — locale-correct headers are table stakes; needs UX paint review first.
+**Recommendation:** Yes — locale-correct headers are table stakes; needs UX paint review first.
 
-## 4. Padded outside-day grid (DECISIONS candidate #4, DEFERRED)
+## 4. Padded outside-day grid
 
 **What it does:** Leading/trailing cells become enabled day buttons for
 the adjacent months' dates instead of empty `<td>` slots; activating
@@ -58,9 +58,9 @@ month acceptance.
 
 **API:** No new props — behavior/paint change, cells marked `data-outside-month`.
 
-**Maintainer take:** Yes — the standard month-grid look; needs frozen-baseline re-approval.
+**Recommendation:** Yes — the standard month-grid look; needs frozen-baseline re-approval.
 
-## 5. Weekdays / Days / Day parts + render-state renderer (DECISIONS candidate #5, DEFERRED)
+## 5. Weekdays / Days / Day parts + render-state renderer
 
 **What it does:** Adds composable `Calendar.Weekdays` / `Calendar.Days`
 / `Calendar.Day` parts with a per-day render function over an exact
@@ -77,9 +77,9 @@ contract violations.
 // disabled, rangeStart, rangeEnd, inRange, preview
 ```
 
-**Maintainer take:** Yes when a consumer needs custom day content; keep the exactness diagnostic.
+**Recommendation:** Yes when a consumer needs custom day content; keep the exactness diagnostic.
 
-## 6. isDateUnavailable + min/max enforcement (DECISIONS candidate #6, DEFERRED)
+## 6. isDateUnavailable + min/max enforcement
 
 **What it does:** Combines one predicate plus ISO `min`/`max` into a
 single non-interactive day state; blocked dates are locked out in
@@ -92,9 +92,9 @@ disabled stays painted but non-interactive.
 <Calendar min="2026-01-01" max="2026-12-31" isDateUnavailable={isHoliday} />
 ```
 
-**Maintainer take:** Yes — disabled dates are unavoidable; DateField range work will force it.
+**Recommendation:** Yes — disabled dates are unavoidable; DateField range work will force it.
 
-## 7. 2D keyboard navigation + unavailable skip (DECISIONS candidate #7, DEFERRED)
+## 7. 2D keyboard navigation + unavailable skip
 
 **What it does:** Arrows move ±1/±7 days (Left/Right swap in RTL),
 Home/End to locale week boundaries, PageUp/Down across months;
@@ -103,9 +103,9 @@ movement skips blocked dates, stops at bounds, and changes only focus
 
 **API:** No new props — keyboard contract over the grid; consumer `onKeyDown` with `preventDefault()` cancels movement/activation.
 
-**Maintainer take:** Yes — the grid is not shippable for keyboard users without it.
+**Recommendation:** Yes — the grid is not shippable for keyboard users without it.
 
-## 8. Today marker (DECISIONS candidate #8, DEFERRED)
+## 8. Today marker
 
 **What it does:** Marks exactly the cell matching the ISO `today` with
 `data-today`, independent of selection, focus, and outside-month
@@ -118,9 +118,9 @@ mount so SSR stays deterministic.
 <Calendar today="2026-09-26" /> // that cell gets data-today
 ```
 
-**Maintainer take:** Yes once UX picks a treatment that does not rely on color alone.
+**Recommendation:** Yes once UX picks a treatment that does not rely on color alone.
 
-## 9. Range preview machine + Tab-commit (DECISIONS candidate #9, DEFERRED)
+## 9. Range preview machine + Tab-commit
 
 **What it does:** First activation requests `{ start, end: null }`;
 hover/focus previews the interval with no callback; second activation
@@ -129,9 +129,9 @@ current valid preview.
 
 **API:** No new props — interaction machine over range mode; crossing an unavailable date rejects with the pending start retained.
 
-**Maintainer take:** Yes — highest-leverage range UX; but confirm Tab-commit vs abandon first.
+**Recommendation:** Yes — highest-leverage range UX; but confirm Tab-commit vs abandon first.
 
-## 10. Month/year product modes + Months/Years parts + private view (DECISIONS candidate #10, DEFERRED)
+## 10. Month/year product modes + Months/Years parts + private view
 
 **What it does:** Adds `mode="month"` / `mode="year"` publishing
 `YYYY-MM` / `YYYY`, `Calendar.Months` / `Calendar.Years` parts, and a
@@ -145,9 +145,9 @@ Calendar-private drill-down view (`data-view`, never a controlled prop).
 <Calendar.Years />   {/* clamped 21-year window, current scrolled into view */}
 ```
 
-**Maintainer take:** Yes when a month/year-picker requirement arrives; not before.
+**Recommendation:** Yes when a month/year-picker requirement arrives; not before.
 
-## 11. Localized Heading + target-month nav names + announcements (DECISIONS candidate #11, DEFERRED)
+## 11. Localized Heading + target-month nav names + announcements
 
 **What it does:** Heading becomes a locale-formatted `div` and the
 polite atomic announcement source (exactly one text mutation per
@@ -156,9 +156,9 @@ their target months while callbacks stay ISO.
 
 **API:** No new props — `"February 2024"` accessible names, Grid `aria-labelledby` to the Heading unless overridden.
 
-**Maintainer take:** Yes — lands with locale + view work; the announcement contract is the right shape.
+**Recommendation:** Yes — lands with locale + view work; the announcement contract is the right shape.
 
-## 12. Controlled-month machine (DECISIONS candidate #12, DEFERRED)
+## 12. Controlled-month machine
 
 **What it does:** Controlled `month` stays independent of `value`; nav
 requests exactly the adjacent ISO month with no optimistic render; nav
@@ -167,9 +167,9 @@ omitted `month` is Calendar-owned state seeded from value/`today`.
 
 **API:** No new props — controlled/uncontrolled pane-state contract over `month` + `onMonthChange`.
 
-**Maintainer take:** Yes — DateField folding needs it; confirm remount re-seed semantics.
+**Recommendation:** Yes — DateField folding needs it; confirm remount re-seed semantics.
 
-## 13. Single-mode selection semantics (DECISIONS candidate #14, DEFERRED)
+## 13. Single-mode selection semantics
 
 **What it does:** Activating an enabled day requests its ISO date
 exactly once; blocked dates are locked out; parent rejection leaves
@@ -178,9 +178,9 @@ move.
 
 **API:** No new props — emission contract over single mode (depends on padded grid + disable).
 
-**Maintainer take:** Yes — cheap once outside-days + disable land; confirm no-op vs toggle on re-activation.
+**Recommendation:** Yes — cheap once outside-days + disable land; confirm no-op vs toggle on re-activation.
 
-## 14. Whole-calendar disabled prop: freeze or remove (DECISIONS gap #2, OPEN)
+## 14. Whole-calendar disabled prop: freeze or remove
 
 **What it does (if frozen):** `disabled` on the root renders an inert
 grid with disabled nav and no callbacks; alternatively the prop is
@@ -193,4 +193,4 @@ removed and products disable via `isDateUnavailable` + host
 <Calendar disabled /> // data-disabled root, inert grid, silent callbacks
 ```
 
-**Maintainer take:** Lean remove — per-day disable covers it unless a product proves otherwise.
+**Recommendation:** Lean remove — per-day disable covers it unless a product proves otherwise.

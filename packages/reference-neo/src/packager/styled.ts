@@ -19,7 +19,7 @@ export function writeStyledDir(input: PublishInput): void {
 
 /**
  * Publish the styled runtime data beside the stylesheet: the compiled plans
- * as pure data. Styled is data-only (D4): no executable css module lives
+ * as pure data. Styled is data-only: no executable css module lives
  * here — the bound css()/recipe() bundle into the react entry, which worlds
  * import through an import map while the compiler extracts the same calls.
  */

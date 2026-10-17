@@ -1,5 +1,5 @@
-/** Transparent-part prop merge for the RovingFocus kernel (components.md
- * merge rules, FEATURES #2). `mergeSlotProps` layers the part props first and
+/** Transparent-part prop merge for the RovingFocus kernel.
+ * `mergeSlotProps` layers the part props first and
  * lets the authored child win, except className (compiled `css` plus both
  * classNames combined), style (shallow-merged, child wins), event handlers
  * (child, then part, then kernel — each gated on defaultPrevented), and

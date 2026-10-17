@@ -11,8 +11,7 @@ The fragment is materialized at spec time because it cannot live in the repo:
 the harness pre-run typecheck resolves `@reference-ui/system` to the stable
 surface, whose wide shapes (one-argument `font`) differ from the generated
 signatures. No engine rung: the surface is host-authored in `publish.ts`, and
-it already declared every D6 name, so no host change was needed.
+it already declared every name, so no host change was needed.
 
-Evidence: `[decision D6]`.
 
 > Search terms: theme, setup, entry point, dsl, type/system-entry, type/authoring, NEO-TYPE-01

@@ -1,6 +1,6 @@
 # Collapsible
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Collapsible --e2e`).
 
 Coordinates a single disclosure trigger and content region: `aria-expanded`, `aria-controls`, controlled visibility.
 
@@ -46,7 +46,7 @@ Native `<details>` exists; this primitive exists for controlled state, Accordion
 
 Content must stay mounted through exit. Height animation needs the measured size **before** `open={false}` collapses — typically CSS variables on the content node.
 
-**Vendor.** Radix Collapsible: Presence + `--radix-collapsible-content-height/width`. Zag collapsible machine. Base UI Accordion builds on Collapsible.
+**Prior art.** Radix Collapsible: Presence + `--radix-collapsible-content-height/width`. Zag collapsible machine. Base UI Accordion builds on Collapsible.
 
 **Lift** Radix Presence+measure mapped to our Presence / `data-state`.
 Content publishes

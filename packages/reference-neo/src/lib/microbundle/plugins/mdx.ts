@@ -6,7 +6,7 @@
 // On a parse failure mdx-rs resolves with an empty fallback module and prints
 // the real error to the native stderr; this plugin detects the fallback shape
 // and throws a named diagnostic instead of silently shipping `export {}` — a
-// deliberate divergence from the legacy transform (captain ruling R5).
+// deliberate divergence from the legacy transform.
 
 import { readFileSync } from 'node:fs'
 import type * as esbuild from 'esbuild'

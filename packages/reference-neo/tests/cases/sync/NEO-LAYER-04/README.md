@@ -7,12 +7,11 @@ the compiled spec at `globalCss[0]`, and the browser agrees — a classless
 `normalizeCss: false` twin world synced node-side keeps the six-name preamble
 but prints no reset body and no reset rules.
 
-Provenance note: this row belongs to the LAYER group (TESTS.md
+Placement note: this row belongs to the LAYER group (TESTS.md
 `NEO-LAYER-04`), but the host rung is SYNC-owned (`sync/index.ts` +
-`sync/reset.ts`), so the SYNC-mop slice proves it here under `sync/`; the
-captain may move the folder home to `layer/` with no id change.
+`sync/reset.ts`), so the case lives under `sync/`.
 
-Evidence: `[lib]` `styles.css` reset layer; `[atm]` ATM-LAYER-08;
-`[core]` `system/stylesheet/reset.ts` (Andy Bell); global-css research §6.3.
+Evidence: reference-lib `styles.css` reset layer; ATM-LAYER-08;
+global-css research §6.3.
 
 > Search terms: box-sizing, user-agent, preflight, opt-out, preflight switch, cascade baseline, layer/reset-layer, sync/normalize-flag, NEO-TOKEN-10

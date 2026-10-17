@@ -1,5 +1,5 @@
 /**
- * Artifact-shape station (ATM-SEAM-06). The shipped runtime artifact carries
+ * Artifact-shape (ATM-SEAM-06). The shipped runtime artifact carries
  * no per-atom row: schema 2, no stylePlans key, and the namer tables — the
  * closed data both namers read — in its place. The compile-internal stylePlans
  * on the result still carry the compiler rows, so the compiler namer stays

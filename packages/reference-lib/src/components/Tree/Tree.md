@@ -1,6 +1,6 @@
 # Tree
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Tree --e2e`).
 
 A minimal APG `role="tree"`. Nested collapse, roving focus among **visible** items, single selection, typeahead. Built on `RovingFocus`.
 
@@ -70,9 +70,9 @@ expansion.
 Selection is fully controlled: `value` and `onChange` are required
 (`null` is the empty value); omitting either fails fast. Omitted
 `expanded` means `[]` via `defaultExpanded` (still uncontrolled —
-pending the HQ call on sibling default props).
+pending a decision on sibling default props).
 
-**Unmatched ids.** A standalone `value` or `expanded` id that names no item is kept and passed through unchanged: selection stays controlled, and emitted arrays keep unknown ids. In development the Tree reports each unmatched id once with `console.error`, such as `[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).`, listing the registered ids in document order. The check decides only when the whole tree is mounted (at least one item registered and every registered branch expanded), because a collapsed Group unmounts its children; while any branch is collapsed it stays silent, even for a truly unknown id. Inside Combobox the value check is skipped because Combobox owns that value, but unknown expanded ids are still reported. A child that mounts later under an already-expanded branch, such as one loaded asynchronously, can be reported until it registers.
+**Unmatched ids.** A standalone `value` or `expanded` id that names no item is kept and passed through unchanged: selection stays controlled, and emitted arrays keep unknown ids. In development the Tree reports each unmatched id once with `console.error`, such as `[reference-ui] Tree: value "ghost" matches no item (registered ids: folder, a, b).`, listing the registered ids in document order. The check decides only when the whole tree is mounted (at least one item registered and every registered branch expanded), because a collapsed Group unmounts its children; while any branch is collapsed it stays silent, even for a truly unknown id. Inside Combobox the value check is skipped because Combobox owns that value, but unknown expanded ids are still reported. The report waits for the tree to settle: it is made only after 50ms with no registration, unregistration, expansion or value change, and only for ids still unmatched then, so a child that registers inside that window is not reported. A child that mounts later than that under an already-expanded branch, such as one loaded asynchronously, is reported until it registers.
 
 ---
 
@@ -91,7 +91,7 @@ Tree's controlled selected state.
 
 Walking children of a collapsed node puts hidden items in Tab/arrow order. AT and keyboard both lie.
 
-**Vendor.** Zag `visibleNodes` + `skip` on visit (`packages/machines/tree-view`). Aria `TreeCollection` only visits children if `expandedKeys.has` — useful algorithm, but Aria `useTree.ts` renders **`role="treegrid"`** via GridList.
+**Prior art.** Zag `visibleNodes` + `skip` on visit (`packages/machines/tree-view`). Aria `TreeCollection` only visits children if `expandedKeys.has` — useful algorithm, but Aria `useTree.ts` renders **`role="treegrid"`** via GridList.
 
 **Lift** Zag (and Aria collection filter as a second opinion). **Leave** Aria `useTree` as the widget — it is treegrid, not APG tree.
 

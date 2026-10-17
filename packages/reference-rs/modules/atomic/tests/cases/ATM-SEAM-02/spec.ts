@@ -1,5 +1,5 @@
 /**
- * Frozen request parity station. The frozen NativeCompileRequest shape must
+ * Frozen request parity case. The frozen NativeCompileRequest shape must
  * compile the same sources to byte-identical artifacts as the legacy shape,
  * while jsxHosts admits a configured host that file-local imports do not list.
  */

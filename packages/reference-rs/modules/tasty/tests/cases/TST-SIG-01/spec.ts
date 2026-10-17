@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-SIG-01.
+ * Case specification for TST-SIG-01.
  * Verifies signature member metadata, callable/constructible types, and wrappers.
  * Proves primary SPEC ID anchor TST-SIG-01.
  */

@@ -360,7 +360,7 @@ describe('NumberField type contract', () => {
   })
 
   it('NF-TYPE-04: Each stepper should require an authored accessible-name prop at the type boundary', () => {
-    // PATCHES §6: nonempty-shaped label, labelledby, and both together
+    // nonempty-shaped label, labelledby, and both together
     // compile on both steppers; runtime emptiness is diagnosed separately.
     const labelOnly: NumberFieldIncrementProps = { 'aria-label': 'Increase' }
     const byOnly: NumberFieldIncrementProps = { 'aria-labelledby': 'inc-label' }
@@ -405,7 +405,7 @@ describe('NumberField type contract', () => {
     expect(_unnamed).toBeDefined()
   })
 
-  it('W-02/W-25: NumberField should type commitBehavior, formatOptions, and onInvalidCommit', () => {
+  it('NumberField should type commitBehavior, formatOptions, and onInvalidCommit', () => {
     const commitProps: NumberFieldProps = {
       value: 2.5,
       locale: 'en-US',

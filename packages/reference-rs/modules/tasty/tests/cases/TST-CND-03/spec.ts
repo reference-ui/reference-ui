@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-CND-03.
+ * Case specification for TST-CND-03.
  * Concrete conditionals over any, unknown, never and fractional operands either agree with TypeScript
  * or stay unresolved. Each row pins the exact answer tasty gives, so a silent change shows up here.
  */

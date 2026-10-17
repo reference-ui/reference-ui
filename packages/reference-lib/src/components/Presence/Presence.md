@@ -1,6 +1,6 @@
 # Presence
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Presence --e2e`).
 
 Keeps unmounting elements in the DOM until CSS animations, CSS transitions, or finite GSAP tweens complete. Overlay and Popover use it internally for the `data-state` exit contract.
 
@@ -41,7 +41,7 @@ Radix Presence listens `animationstart` / `animationend` / `animationcancel` onl
 
 Headless UI `Transition` waits `element.getAnimations()` filtered to **`CSSTransition` only** — the inverse. It also forces a reflow so the first frame after mount actually transitions.
 
-**Vendor.** `vendor/radix-primitives/packages/react/presence`. Zag presence machine (same animation-only family, plus `animationDuration === "0s"` instant unmount and hidden-tab skip). Headless `packages/@headlessui-react` Transition / NestingContext.
+**Prior art.** Radix presence. Zag presence machine (same animation-only family, plus `animationDuration === "0s"` instant unmount and hidden-tab skip). Headless UI Transition / NestingContext.
 
 **Lift** Radix state machine (`mounted` → `unmountSuspended` → `unmounted`) and its flash/ref fixes (issue #1634 style-dirty, #3664 unstable composed refs, React 18 `animationFillMode` flash). **Extend** detection to **both** animation and transition end so Overlay’s `data-state` contract is honest. **Leave** Headless enter/leave class orchestration as a public API.
 
@@ -52,7 +52,7 @@ If every computed animation/transition is `none`, canceled, or effectively
 completed close turn. Presence follows computed effects and does not maintain a
 separate media-query state machine.
 
-**Vendor.** Radix: name unchanged → `UNMOUNT`. Zag: `animationDuration === "0s"`. Headless: empty `getAnimations()` → `done()`.
+**Prior art.** Radix: name unchanged → `UNMOUNT`. Zag: `animationDuration === "0s"`. Headless: empty `getAnimations()` → `done()`.
 
 ### Hidden tab
 

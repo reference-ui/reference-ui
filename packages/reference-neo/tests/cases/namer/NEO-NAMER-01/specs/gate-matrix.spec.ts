@@ -1,6 +1,6 @@
 // gate-matrix.spec.ts — pins the 20-case form-gate matrix behind the
-// differential's widened carve (fortify-4 T1) plus the integer-key carve
-// matrices (fortify-5 doom-5). Takes the gate pieces imported from the
+// differential's widened carve plus the integer-key carve
+// matrices. Takes the gate pieces imported from the
 // sibling carve modules, so every verdict evals the FILE's predicate,
 // never a copy. Pure assertions, no page use; throws naming the first
 // row whose arm verdicts drift on failure.
@@ -38,7 +38,7 @@ interface GateRow {
 // non-blank so the oracle refuses and the tail arm admits; NBSP/NEL/CR
 // interiors are blank so the oracle keeps and the tail arm excludes.
 // All wash through escape-sequence spellings — never literal control or
-// non-ASCII chars in this file (fortify-4 TYPECHECK incident).
+// non-ASCII chars in this file (after a typecheck incident).
 const ROWS: GateRow[] = [
   { label: 'FEFF-refuse', className: 'p_{\uFEFF}', wantOld: true, wantNew: true },
   { label: 'NBSP-keep', className: 'p_{\u00A0}', wantOld: true, wantNew: false },

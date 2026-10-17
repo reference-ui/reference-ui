@@ -1,9 +1,9 @@
 # Slider test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Slider --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/slider.spec.ts`  
-Unit: `matrix/lib/tests/unit/slider.test.ts`
+Playwright: `src/components/Slider/__e2e__/*.spec.ts` (run with `pnpm agentct Slider --e2e`)  
+Unit: `src/components/Slider/**/*.test.ts(x)`
 Page: `/slider`
 
 Slider owns scalar/range value geometry, controlled changes, pointer capture,
@@ -35,15 +35,9 @@ Internal geometry never overwrites consumer transforms or other native styles.
 
 ## Source evidence
 
-- `vendor/react-spectrum/packages/react-aria/test/slider/{useSlider,useSliderThumb}.test.js`
-  — labels/ARIA, drag geometry, vertical/RTL keys, bounds, and multiple thumbs.
-- `vendor/radix-primitives/packages/react/slider/src/slider.test.tsx` and
-  `slider.tsx` — aligned stepping, scientific/fractional precision, Page keys,
-  preserve-order collision, `minStepsBetweenThumbs * step`, stable refs, and
-  commit contrast.
-- `vendor/base-ui/packages/react/src/slider/{root,thumb,control,utils}/*.test.*`
-  — pointer grab offset, track press, controlled out-of-range values, stacked
-  thumb choice, pointer release, cancellation, and collision algorithms.
+- Radix's slider tests and implementation — aligned stepping,
+  scientific/fractional precision, Page keys, preserve-order collision,
+  `minStepsBetweenThumbs * step`, stable refs, and commit contrast.
 - Zag Slider — thumb drag offset and orientation/direction geometry.
 
 Universal `PART-TYPE-01` and `PART-STYLE-01` cover the complete
@@ -84,7 +78,7 @@ validation, without repeating the universal StyleProps matrix.
   `aria-valuenow="20"`, min `0`, max `70`, and the second has value `70`, min
   `20`, max `100`, then update to `[0, 70]` and prove the zero neighbor remains
   the second Thumb's real minimum.
-  This ports `vendor/react-spectrum/packages/react-aria/test/slider/useSliderThumb.test.js`
+  This ports React Aria's `useSliderThumb.test.js`
   “should have the right labels with Slider thumb aria-label” and the zero
   regression in Base UI `getSliderValue.test.ts`.
 - [x] `SD-DOM-03` `[reference]` `[browser]` —
@@ -103,7 +97,7 @@ validation, without repeating the universal StyleProps matrix.
   assert those exact attributes stay on the matching `div[role="slider"]`
   before and after values change.
   This ports the ARIA forwarding matrix in
-  `vendor/base-ui/packages/react/src/slider/thumb/SliderThumb.test.tsx`
+  Base UI's `SliderThumb.test.tsx`
   “forwards aria-label/aria-labelledby/aria-valuetext to the input,” adapted to
   Reference UI's fixed div host without guessing text from visual children.
 - [x] `SD-DOM-05` `[reference]` `[browser]` —
@@ -113,7 +107,7 @@ validation, without repeating the universal StyleProps matrix.
   scalar/array count-and-order error, no `onChange`, and no ARIA or CSS property
   ever contains `NaN`.
   This makes executable the regression
-  `vendor/base-ui/packages/react/src/slider/thumb/SliderThumb.test.tsx` “does
+  in Base UI's `SliderThumb.test.tsx` “does
   not commit NaN when more thumbs are rendered than values.”
 - [x] `SD-DOM-06` `[vendor]` `[browser]` —
   **Slider should span the Range between the correct controlled endpoints when axis direction varies.**
@@ -138,7 +132,7 @@ validation, without repeating the universal StyleProps matrix.
   DOM/value order, then activate the second overlapping Thumb, move focus
   outside, and pointer-press the stack to assert the same logical Thumb is
   chosen without changing DOM order, labels, or refs.
-  This adapts `vendor/base-ui/packages/react/src/slider/thumb/SliderThumb.test.tsx`
+  This adapts Base UI's `SliderThumb.test.tsx`
   “keeps the most recently active thumb on top after focus moves away” to the
   frozen active/index tie rule.
 - [x] `SD-DOM-09` `[reference]` `[browser]` —
@@ -156,7 +150,7 @@ validation, without repeating the universal StyleProps matrix.
   Thumb changes `aria-orientation` exactly from `horizontal` to `vertical`,
   Root/part orientation hooks agree, values and labels remain paired, and no
   `onChange` fires.
-  This ports `vendor/base-ui/packages/react/src/slider/root/SliderRoot.test.tsx`
+  This ports Base UI's `SliderRoot.test.tsx`
   “sets the aria-orientation attribute.”
 - [x] `SD-DOM-11` `[reference]` `[browser]` —
   **Slider should apply deterministic enabled horizontal defaults when optional behavior props are omitted.**
@@ -205,7 +199,7 @@ validation, without repeating the universal StyleProps matrix.
   increase produces `51000`, a second `56000`, and a fresh one-step decrease
   produces `46000`.
   This exactly ports the two
-  `vendor/radix-primitives/packages/react/slider/src/slider.test.tsx`
+  Radix `slider.test.tsx`
   “when the value is off the step grid” cases and prevents a skipped step.
 - [x] `SD-MATH-04` `[vendor]` `[unit]` —
   **Slider should preserve decimal precision when fractional and scientific steps are applied.**
@@ -228,7 +222,7 @@ validation, without repeating the universal StyleProps matrix.
   Evaluate controlled `119.9` and `-7.31` with `min=0,max=100`; assert ARIA and
   geometry resolve to `100`/`100%` and `0`/`0%`, the original supplied values
   are not mutated, and no `onChange` is requested merely to correct them.
-  This ports `vendor/base-ui/packages/react/src/slider/thumb/SliderThumb.test.tsx`
+  This ports Base UI's `SliderThumb.test.tsx`
   “thumb should not go out of bounds when the controlled value goes out of
   bounds” while retaining controlled authority.
 - [x] `SD-MATH-07` `[vendor]` `[unit]` —

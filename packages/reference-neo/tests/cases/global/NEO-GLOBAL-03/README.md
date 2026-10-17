@@ -7,8 +7,8 @@ lists, then checks each twin paints computed: the real `disabled`
 attribute, `data-hover`, and `data-focus-visible`. One rule per node —
 no Panda comma-merge — cascade-equal to the lib sheet.
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-global-css.md` Trace C
-(`button.ts` 20–27, 45–59 → `global.css` 371–407); `[lib]`
-`styles.css` L461–475; `[atm]` ATM-LAYER-03, ATM-COND-10.
+Evidence: reference-lib Trace C
+(`button.ts` 20–27, 45–59 → `global.css` 371–407); reference-lib
+`styles.css` L461–475; ATM-LAYER-03, ATM-COND-10.
 
 > Search terms: nesting, ampersand selector, disabled state, interaction states, data attributes, triple twin, global/nesting, global/conditions, selector :is(), NEO-GLOBAL-12

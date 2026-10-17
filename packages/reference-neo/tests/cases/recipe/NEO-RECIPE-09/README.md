@@ -5,7 +5,6 @@ background arm. The spec checks the hover rule hangs off the variant class,
 no utility is emitted, and hovering the loud probe paints the arm while the
 quiet probe never paints it.
 
-Evidence: `[panda-v1]` `core/__tests__/recipe.test.ts:220` solid hover;
-`[atm]` ATM-RECIPE-02.
+Evidence: Panda v1 recipe tests (solid hover); ATM-RECIPE-02.
 
 > Search terms: pseudo-class arm, :hover, state arm, interactive tone, recipe/pseudo-classes, recipe/hover, NEO-RECIPE-01

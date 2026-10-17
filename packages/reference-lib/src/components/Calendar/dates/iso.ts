@@ -4,9 +4,9 @@
  * the 0001–9999 domain. Everything downstream — the month grid, the text
  * engine in DateField, selection matching — speaks these canonical strings,
  * so lexical comparison is chronological comparison and an invalid string
- * never leaves the gate. Ported verbatim from quarantine b19c73bee.
+ * never leaves the gate. Ported verbatim from b19c73bee.
  */
-export type ISODate = `${number}-${number}-${number}`
+export type CanonicalISODate = `${number}-${number}-${number}`
 export type ISOMonth = `${number}-${number}`
 export type ISOYear = `${number}`
 export type CalendarWeekday =
@@ -17,10 +17,9 @@ export type CalendarWeekday =
   | 'thu'
   | 'fri'
   | 'sat'
-export type CalendarMode = 'day' | 'range' | 'month' | 'year'
 export interface CalendarDateRange {
-  start: ISODate
-  end: ISODate | null
+  start: CanonicalISODate
+  end: CanonicalISODate | null
 }
 
 const ISO_DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -62,7 +61,7 @@ export function getDaysInMonth(year: number, month: number): number {
   }
 }
 
-export function isValidISODate(str: unknown): str is ISODate {
+export function isValidISODate(str: unknown): str is CanonicalISODate {
   if (typeof str !== 'string') return false
   const match = ISO_DATE_REGEX.exec(str)
   if (!match) return false
@@ -134,11 +133,11 @@ export function parseISOYear(str: string): { year: number } {
   }
 }
 
-export function formatISODate(year: number, month: number, day: number): ISODate {
+export function formatISODate(year: number, month: number, day: number): CanonicalISODate {
   const y = String(year).padStart(4, '0')
   const m = String(month).padStart(2, '0')
   const d = String(day).padStart(2, '0')
-  return `${y}-${m}-${d}` as ISODate
+  return `${y}-${m}-${d}` as CanonicalISODate
 }
 
 export function formatISOMonth(year: number, month: number): ISOMonth {
@@ -169,7 +168,7 @@ export function getDayOfWeek(year: number, month: number, day: number): number {
   )
 }
 
-export function addCalendarDays(date: ISODate, days: number): ISODate {
+export function addCalendarDays(date: CanonicalISODate, days: number): CanonicalISODate {
   const { year, month, day } = parseISODate(date)
   let y = year
   let m = month
@@ -206,12 +205,12 @@ export function addCalendarDays(date: ISODate, days: number): ISODate {
   return formatISODate(y, m, d)
 }
 
-export function addCalendarMonths(date: ISODate, months: number): ISODate
+export function addCalendarMonths(date: CanonicalISODate, months: number): CanonicalISODate
 export function addCalendarMonths(month: ISOMonth, amount: number): ISOMonth
 export function addCalendarMonths(
-  dateOrMonth: ISODate | ISOMonth,
+  dateOrMonth: CanonicalISODate | ISOMonth,
   amount: number
-): ISODate | ISOMonth {
+): CanonicalISODate | ISOMonth {
   if (isValidISODate(dateOrMonth)) {
     const { year, month, day } = parseISODate(dateOrMonth)
     const totalMonths = (year - 1) * 12 + (month - 1) + amount
@@ -245,7 +244,7 @@ export function addCalendarMonths(
   )
 }
 
-export function calendarMonth(value: ISODate | ISOMonth | ISOYear): ISOMonth {
+export function calendarMonth(value: CanonicalISODate | ISOMonth | ISOYear): ISOMonth {
   if (isValidISODate(value)) {
     return value.slice(0, 7) as ISOMonth
   }
@@ -260,28 +259,28 @@ export function calendarMonth(value: ISODate | ISOMonth | ISOYear): ISOMonth {
   )
 }
 
-export function startOfCalendarMonth(date: ISODate): ISODate {
+export function startOfCalendarMonth(date: CanonicalISODate): CanonicalISODate {
   const { year, month } = parseISODate(date)
   return formatISODate(year, month, 1)
 }
 
-export function endOfCalendarMonth(date: ISODate): ISODate {
+export function endOfCalendarMonth(date: CanonicalISODate): CanonicalISODate {
   const { year, month } = parseISODate(date)
   const lastDay = getDaysInMonth(year, month)
   return formatISODate(year, month, lastDay)
 }
 
-export function startOfCalendarYear(date: ISODate): ISODate {
+export function startOfCalendarYear(date: CanonicalISODate): CanonicalISODate {
   const { year } = parseISODate(date)
   return formatISODate(year, 1, 1)
 }
 
-export function endOfCalendarYear(date: ISODate): ISODate {
+export function endOfCalendarYear(date: CanonicalISODate): CanonicalISODate {
   const { year } = parseISODate(date)
   return formatISODate(year, 12, 31)
 }
 
-export function compareISODate(a: ISODate, b: ISODate): number {
+export function compareISODate(a: CanonicalISODate, b: CanonicalISODate): number {
   if (!isValidISODate(a) || !isValidISODate(b)) {
     throw new Error(
       `Cannot compare invalid ISO dates: "${a}" and "${b}". Both must be canonical YYYY-MM-DD.`
@@ -301,11 +300,11 @@ export function normalizeDateRange(range: CalendarDateRange): CalendarDateRange 
 }
 
 export function isDateInRange(
-  date: ISODate,
-  start: ISODate,
-  end: ISODate | null
+  date: CanonicalISODate,
+  start: CanonicalISODate,
+  end: CanonicalISODate | null
 ): boolean {
   if (!end) return date === start
   const norm = normalizeDateRange({ start, end })
-  return date >= norm.start && date <= (norm.end as ISODate)
+  return date >= norm.start && date <= (norm.end as CanonicalISODate)
 }

@@ -1,5 +1,5 @@
 /**
- * Color token-license station. The pool holds two named colors the system
+ * Color token-license case. The pool holds two named colors the system
  * declares as `colors` tokens plus one undeclared shade, and a dynamic
  * `color` site sinks. Only the declared token names mint onto the sink —
  * the license arm the tokenless `ATM-HARVEST-06` cannot exercise — while

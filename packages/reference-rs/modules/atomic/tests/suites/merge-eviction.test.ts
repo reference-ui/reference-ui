@@ -1,8 +1,8 @@
 /**
- * Cascade-slot eviction unit tests (RS-9, ATM-COND-17 merge note).
+ * Cascade-slot eviction unit tests (ATM-COND-17 merge note).
  * Exercises mergeDeclarations directly: slot-family parsing, bare-alias
  * eviction of responsive members, symmetric responsive-wins eviction, and
- * condition-family isolation. Station COND-17 proves the same semantic
+ * condition-family isolation. Case COND-17 proves the same semantic
  * through compiled plans; these cases pin the boundary grammar.
  */
 import { describe, expect, it } from 'vitest'

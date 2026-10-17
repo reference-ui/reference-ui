@@ -1,6 +1,6 @@
 # ATM-SITE-45 — `token()` call surface
 
-Overmatch Ph3 (SPEC-V2-61): `token(path)` and `token.var(path)` fold when the
+: `token(path)` and `token.var(path)` fold when the
 callee binds a `token` import from a Reference package — evaluated our way,
 as `{path}` references that print theme-live `var()` aliases, never
 parse-time hex (identical paint in the default theme, and only ours stays
@@ -12,8 +12,5 @@ spread, empty, dynamic, multi-leaf, template, and foreign-member shapes warn
 against the surface; shadowed, foreign-package, and unbound callees are not
 token calls and warn generically.
 
-Interpolated-template paths refuse until the template fold (SPEC-V2-67)
+Interpolated-template paths refuse until the template fold
 lands to compose with; fallbacks are verbatim (no brace expansion).
-
-Panda: `token_calls.rs:92` (call), `:202` (var), `:268` (fallback), `:354`
-(alias), `:382` (identifier path), `:470` (fallback ignored).

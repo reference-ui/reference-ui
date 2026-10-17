@@ -1,5 +1,5 @@
 /**
- * Utilities-encapsulation station. Unconditioned rules and `@container`
+ * Utilities-encapsulation case. Unconditioned rules and `@container`
  * wrappers both sit inside `@layer utilities { ... }`. Tokens/global may
  * appear before that block; utility classes must not.
  */

@@ -6,8 +6,7 @@ token whose negative-delay shorthand holds the end state on first paint.
 The spec checks `@keyframes grow` prints `var()` refs and rhythm calcs with
 no verbatim leftovers, and the probe computes the `to` width and color.
 
-Evidence: `[panda-v1]`
-`generator/__tests__/generate-keyframes.test.ts` ("should allow tokens");
-`[atm]` ATM-LAYER-10 (RS-16 landed).
+Evidence: Panda v1 keyframes tests ("should allow tokens");
+ATM-LAYER-10 (RS-16).
 
 > Search terms: from/to, fill mode, tween, interpolate, token/keyframes, token/refs, NEO-TOKEN-11

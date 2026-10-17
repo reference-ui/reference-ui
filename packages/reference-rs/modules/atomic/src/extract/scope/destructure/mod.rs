@@ -10,7 +10,7 @@
 mod array;
 mod object;
 
-use oxc_ast::ast::{BindingPattern, Expression};
+use oxc_ast::ast::{ArrayPattern, BindingIdentifier, BindingPattern, Expression, ObjectPattern};
 use oxc_span::Span;
 
 use super::binding::{Binding, BindingInit, BindingKind};
@@ -191,34 +191,41 @@ fn shadow_names(
     out: &mut Vec<(String, Binding)>,
 ) {
     match pattern {
-        BindingPattern::BindingIdentifier(ident) => {
-            out.push((
-                ident.name.to_string(),
-                Binding {
-                    kind: kind.clone(),
-                    init: None,
-                    span: ident.span,
-                },
-            ));
-        }
-        BindingPattern::ObjectPattern(obj) => {
-            for prop in &obj.properties {
-                shadow_names(&prop.value, kind, out);
-            }
-            if let Some(rest) = &obj.rest {
-                shadow_names(&rest.argument, kind, out);
-            }
-        }
-        BindingPattern::ArrayPattern(arr) => {
-            for element in arr.elements.iter().flatten() {
-                shadow_names(element, kind, out);
-            }
-            if let Some(rest) = &arr.rest {
-                shadow_names(&rest.argument, kind, out);
-            }
-        }
-        BindingPattern::AssignmentPattern(assign) => {
-            shadow_names(&assign.left, kind, out);
-        }
+        BindingPattern::BindingIdentifier(ident) => out.push(shadow_entry(ident, kind)),
+        BindingPattern::ObjectPattern(obj) => shadow_object(obj, kind, out),
+        BindingPattern::ArrayPattern(arr) => shadow_array(arr, kind, out),
+        BindingPattern::AssignmentPattern(assign) => shadow_names(&assign.left, kind, out),
+    }
+}
+
+/// The valueless shadow entry for one bound identifier.
+fn shadow_entry(ident: &BindingIdentifier<'_>, kind: &BindingKind) -> (String, Binding) {
+    (
+        ident.name.to_string(),
+        Binding {
+            kind: kind.clone(),
+            init: None,
+            span: ident.span,
+        },
+    )
+}
+
+/// Shadow the names an object pattern binds: property values plus rest.
+fn shadow_object(obj: &ObjectPattern<'_>, kind: &BindingKind, out: &mut Vec<(String, Binding)>) {
+    for prop in &obj.properties {
+        shadow_names(&prop.value, kind, out);
+    }
+    if let Some(rest) = &obj.rest {
+        shadow_names(&rest.argument, kind, out);
+    }
+}
+
+/// Shadow the names an array pattern binds: elements plus rest.
+fn shadow_array(arr: &ArrayPattern<'_>, kind: &BindingKind, out: &mut Vec<(String, Binding)>) {
+    for element in arr.elements.iter().flatten() {
+        shadow_names(element, kind, out);
+    }
+    if let Some(rest) = &arr.rest {
+        shadow_names(&rest.argument, kind, out);
     }
 }

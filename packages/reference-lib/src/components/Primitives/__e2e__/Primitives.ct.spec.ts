@@ -4,7 +4,7 @@ test.describe('Primitives Suite (Lib Smoke)', () => {
   test('library harness boots, renders fixture root, and reports valid React version', async ({ mount, page }) => {
     const component = await mount('components/Primitives/Primitives/All')
 
-    // Contracts ported from matrix/lib/smoke.spec.ts
+    // Primitive contracts: render, style props and token enforcement
     const heading = component.getByRole('heading', { name: 'Reference UI Styled Primitives' })
     await expect(heading).toBeVisible()
 

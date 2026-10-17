@@ -87,7 +87,7 @@ pub(crate) fn push_members(results: &mut Vec<TypeRef>, value: TypeRef) {
     }
 }
 
-pub(crate) fn resolved_or_self<'a>(type_ref: &'a TypeRef) -> &'a TypeRef {
+pub(crate) fn resolved_or_self(type_ref: &TypeRef) -> &TypeRef {
     let mut current = type_ref;
 
     loop {

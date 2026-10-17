@@ -47,7 +47,7 @@ test.describe('NumberField CT', () => {
     const root = page.getByTestId('number-field-fixture-root')
     const field = page.getByTestId('number-field-group')
 
-    // B-26 / PATCHES §8: plain textbox semantics, never spinbutton or
+    // Plain textbox semantics, never spinbutton or
     // numeric aria-value*.
     const exposure = await input.evaluate(el => ({
       role: el.getAttribute('role'),
@@ -398,10 +398,10 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    // PATCHES §6: freeze-name proof — label/labelledby variants with exact
+    // freeze-name proof — label/labelledby variants with exact
     // authored names under two locales, native button semantics, stepping
     // control, no tab stop. Resolving aria-controls + explicit/generated IDs
-    // stay with PATCHES §4 (NF-DOM-07 same-commit retargeting).
+    // stay with NF-DOM-07 (same-commit retargeting).
     await mount('components/NumberField/NumberField/NamedStepperFixture')
 
     const inputEn = page.getByTestId('named-en-input')
@@ -457,7 +457,7 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    // PATCHES §6: one descriptive dev diagnostic per offender (absent
+    // one descriptive dev diagnostic per offender (absent
     // naming + unresolving labelledby); neither renders nor activates.
     const errors: string[] = []
     page.on('console', msg => {
@@ -521,7 +521,7 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    // NFLAST ruling (c) re-pin: the cleared null publishes live; the
+    // The cleared null publishes live; the
     // accepted echo preserves the dirty empty state until commit.
     await mount('components/NumberField/NumberField/StepperFixture')
 
@@ -542,9 +542,9 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    // NFLAST ruling (c) re-pin of the B-19 repro: true per-keystroke
+    // Repro: true per-keystroke
     // typing into the empty bounded (min 1, max 10) field. The "."
-    // survives verbatim (the B-19 fix); parseable meanings publish live.
+    // survives verbatim; parseable meanings publish live.
     await mount('components/NumberField/NumberField/BoundedDecimalFixture')
 
     const input = page.getByTestId('bounded-decimal-input')
@@ -579,7 +579,7 @@ test.describe('NumberField CT', () => {
     const display = page.getByTestId('number-field-value-display')
 
     // Zero wheel code in the engine: this title only pins the pass-through
-    // (PATCHES §9). Synthetic wheels never scroll the page themselves, so
+    // Synthetic wheels never scroll the page themselves, so
     // defaultPrevented false + consumer receipt is the native proxy.
     const result = await input.evaluate(node => {
       const el = node as HTMLInputElement
@@ -650,7 +650,7 @@ test.describe('NumberField CT', () => {
     await expect(display).toHaveText('Numeric Value: 42')
   })
 
-  test('W-02: snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit', async ({
+  test('snap commitBehavior publishes live raw meanings then coerces typed 2.5 to 3 at commit', async ({
     mount,
     page,
   }) => {
@@ -676,7 +676,7 @@ test.describe('NumberField CT', () => {
     mount,
     page,
   }) => {
-    // NFLAST ruling (b) re-pin: replaces the W-02 validate-revert title.
+    // Replaces the earlier validate-revert title.
     await mount('components/NumberField/NumberField/ValidateFixture')
 
     const input = page.getByTestId('validate-input')
@@ -757,7 +757,7 @@ test.describe('NumberField CT', () => {
     await expect(input).not.toHaveAttribute('aria-invalid')
   })
 
-  test('W-25: currency formatOptions display formatted text, commit plain numbers', async ({
+  test('currency formatOptions display formatted text, commit plain numbers', async ({
     mount,
     page,
   }) => {
@@ -781,7 +781,7 @@ test.describe('NumberField CT', () => {
     await expect(input).toHaveValue('$99.99')
   })
 
-  test('W-25: percent formatOptions scale typed input to plain fractions', async ({
+  test('percent formatOptions scale typed input to plain fractions', async ({
     mount,
     page,
   }) => {
@@ -1025,7 +1025,7 @@ test.describe('NumberField CT', () => {
     // Platform: bare Home/End are caret no-ops in Firefox/WebKit macOS
     // builds — Playwright delivers identical key events on all engines and
     // the product correctly leaves the keys unhandled on unbounded fields,
-    // but only Chromium binds the native caret move (DIAG D3A). Assert the
+    // but only Chromium binds the native caret move. Assert the
     // native outcome per engine: Chromium moves, FF/WebKit hold position.
     const homeEndMove = browserName === 'chromium'
     const afterClick = await sel()
@@ -1195,7 +1195,7 @@ test.describe('NumberField CT', () => {
     // Platform: Safari never moves focus on click — buttons/links are not
     // click-focusable (only text controls take click focus; mousedown still
     // blurs, so the commit above fires identically). The landing differs,
-    // not the publish (DIAG D1A).
+    // not the publish.
     if (browserName === 'webkit') {
       await expect(page.getByTestId('commit-lab-outside')).not.toBeFocused()
     } else {
@@ -1668,7 +1668,7 @@ test.describe('NumberField CT', () => {
     page,
     browserName,
   }) => {
-    // Zero command-interception code exists in the engine (PATCHES §9
+    // Zero command-interception code exists in the engine (this
     // class): cut/undo/redo/select-all reach the input natively and only
     // newly parseable resulting text publishes (live-request rules).
     await mount('components/NumberField/NumberField/CommitLabFixture')
@@ -1729,7 +1729,7 @@ test.describe('NumberField CT', () => {
     await currency.click()
     await expect(currency).toHaveValue('$1,234.50')
     // Portable caret-to-start: bare Home is a caret no-op on FF/WebKit
-    // macOS builds (DIAG D3A — EDIT-06 pins the platform rule), so
+    // macOS builds (EDIT-06 pins the platform rule), so
     // select-all + ArrowLeft collapse instead of Home. Same SPEC step:
     // cut the individual currency token.
     await page.keyboard.press('ControlOrMeta+a')
@@ -1794,7 +1794,7 @@ test.describe('NumberField CT', () => {
     const currency = page.getByTestId('currency-input')
     const currencyDisplay = page.getByTestId('currency-display')
     await currency.click()
-    // Portable caret-to-start (DIAG D3A: bare Home is a caret no-op on
+    // Portable caret-to-start (bare Home is a caret no-op on
     // FF/WebKit macOS builds) — select-all + ArrowLeft collapse, then
     // select the individual currency token. Same SPEC step as Home.
     await page.keyboard.press('ControlOrMeta+a')
@@ -2748,7 +2748,7 @@ test.describe('NumberField CT', () => {
     // Same-root reset reverts staged invalid text with no request. (Runs
     // before the composition cycle: programmatic staging after a shadow
     // composition invalidation is swallowed on React 17 only — see the
-    // wave log anomaly note. ENV-06 proves the same reset shape.)
+    // log anomaly note. ENV-06 proves the same reset shape.)
     await input.evaluate(el => {
       const target = el as HTMLInputElement
       const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!

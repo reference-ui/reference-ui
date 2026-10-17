@@ -17,13 +17,13 @@ import {
   VENDOR_EXTENSIONS,
   VENDOR_UNITLESS,
   type ExtensionProp,
-} from './overlay';
+} from './overlay/index.js';
 
 export const EXTENSION_ALLOWLIST: readonly ExtensionProp[] = [
   ...EXTENSIONS,
   ...VENDOR_EXTENSIONS,
 ];
-import type { PlatformCss } from './platform';
+import type { PlatformCss } from './platform.js';
 
 export interface DialectElement {
   html: string;

@@ -1,5 +1,5 @@
 /**
- * Dual at-rule wrap station. `_osDark` plus array-slot `sm` must both reach
+ * Dual at-rule wrap case. `_osDark` plus array-slot `sm` must both reach
  * the sheet as nested `@media` / `@container`, in author order. Nested
  * `sm: { … }` object keys are not extract conditions (COND-01 / ORDER-01).
  */

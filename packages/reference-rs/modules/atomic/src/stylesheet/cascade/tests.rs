@@ -3,6 +3,7 @@
 //! They construct atoms directly and assert substring order in the printed utilities.
 
 use super::*;
+use super::width::parse_milli_px;
 use crate::atom::CssValue;
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 use base_system::BaseSystem;

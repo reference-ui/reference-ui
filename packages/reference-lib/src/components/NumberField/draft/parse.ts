@@ -1,5 +1,5 @@
 /**
- * The locale draft parser (W-25): ASCII plus active-numbering-system
+ * The locale draft parser: ASCII plus active-numbering-system
  * digits, configured currency/unit/percent affixes in locale order,
  * locale group/decimal normalization, a single leading sign, and an
  * optional localized exponent. Percent style scales per React Aria.
@@ -83,7 +83,7 @@ export function isValidGroupHead(segments: string[], sizes: { units: number; mid
   return DRAFT_ASCII_DIGITS.test(units) && units.length === sizes.units
 }
 
-// W-25 commit parser: ASCII + active-numbering-system digits (NF-PARSE-02),
+// Commit parser: ASCII + active-numbering-system digits (NF-PARSE-02),
 // configured currency/unit/percent affixes in locale order (NF-PARSE-08),
 // locale group/decimal normalization, a single leading sign, and an
 // optional ASCII exponent. Percent style scales the result (1/100, 1/1000

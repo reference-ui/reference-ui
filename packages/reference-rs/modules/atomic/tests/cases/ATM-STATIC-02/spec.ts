@@ -1,5 +1,5 @@
 /**
- * staticCss overlap station. AST `bg="n300"` and a static list that also
+ * staticCss overlap case. AST `bg="n300"` and a static list that also
  * includes n300 share one atom / one class. n100 still prints from the dump.
  */
 import { expect } from 'vitest'

@@ -2,7 +2,7 @@
 //!
 //! Every diagnostic prints as `{file}:{line}:{col} {code} {message}` so an
 //! author can jump to the sub-expression that stopped extraction and tooling
-//! can filter by kind. The CLI, Neo, and the station specs share this format
+//! can filter by kind. The CLI, Neo, and the case specs share this format
 //! instead of each inventing a layout. Diagnostics without a position omit
 //! the location segments rather than printing placeholders.
 

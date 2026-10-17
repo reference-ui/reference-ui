@@ -1,9 +1,9 @@
 /**
- * Parent-combinator station (ATM-COND-20, RS-12). Keys that carry an
+ * Parent-combinator (ATM-COND-20). Keys that carry an
  * unquoted `&` without starting with it (`'input:hover &'`,
  * `':focus > &'`) extract as selector conditions and emit with the
  * parent selector ahead of the utility class. Covers the COND-05 and
- * COND-10 waiting rows with one station per the RS-9 precedent.
+ * COND-10 waiting rows with one case per the precedent.
  */
 import { expect } from 'vitest'
 import { createStylePlanIndex, mergeStylePlans } from '../../../js/index.js'

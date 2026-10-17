@@ -548,7 +548,7 @@ test.describe('Listbox Composition Gates & Browser Proofs', () => {
     await expect(opt37).toHaveAttribute('data-selected', '')
   })
 
-  test('B-02: interactive and portaled row content never (de)selects', async ({
+  test('interactive and portaled row content never (de)selects', async ({
     mount,
     page,
   }) => {
@@ -575,7 +575,7 @@ test.describe('Listbox Composition Gates & Browser Proofs', () => {
     await expect(display).toHaveText('Selected: events, alerts')
   })
 
-  test('B-38: selected option uses the muted wash, not the button token', async ({
+  test('selected option uses the muted wash, not the button token', async ({
     mount,
     page,
   }) => {
@@ -599,7 +599,7 @@ test.describe('Listbox Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('Listbox finish-line P2A gaps', () => {
+test.describe('Listbox behavior CT', () => {
   test('LB-DOM-04: Listbox should keep disabled options out of every interactive path', async ({
     mount,
     page,
@@ -708,10 +708,10 @@ test.describe('Listbox finish-line P2A gaps', () => {
     await expect(listbox.getByRole('option')).toHaveCount(0)
     await expect(listbox).not.toHaveAttribute('tabindex')
 
-    // DIAG D1 (landing-sequence/DIAG.md): WebKit skips buttons in
+    // WebKit skips buttons in
     // sequential Tab, so the button-to-button walk below cannot run
     // there; the contract (empty listbox never captures the walk) is
-    // pinned with not-focused assertions instead. SCOPE-1 P2-F28 probe.
+    // pinned with not-focused assertions instead.
     const isWebKit = browserName === 'webkit'
 
     // Skipped in tab order initially
@@ -1299,7 +1299,7 @@ test.describe('Listbox finish-line P2A gaps', () => {
     await bravo.focus()
     await page.keyboard.press('Tab')
     if (browserName === 'firefox') {
-      // SCOPE-1 P-F27 probe: Firefox keeps focus on the lone sequential
+      // Firefox keeps focus on the lone sequential
       // stop (two Tabs stay on req-bravo) while Chromium leaves it.
       // Platform wrap, not product hijack: no request was made (calls []
       // above) and focus never enters unmanaged territory.
@@ -1891,9 +1891,9 @@ test.describe('Listbox finish-line P2A gaps', () => {
       })
 
     // Tab crosses into the shadow tree; arrows rove in composed order.
-    // DIAG D1: WebKit skips the sh-mount button between sh-before and
-    // the shadow host, so ONE Tab reaches sh-alpha there (SCOPE-1
-    // P2-F29 probe pins tab1=sh-alpha, tab2=sh-opt-0).
+    // WebKit skips the sh-mount button between sh-before and
+    // the shadow host, so ONE Tab reaches sh-alpha there;
+    // tab1=sh-alpha, tab2=sh-opt-0 are pinned.
     await page.getByTestId('sh-before').focus()
     await page.keyboard.press('Tab')
     if (browserName !== 'webkit') {

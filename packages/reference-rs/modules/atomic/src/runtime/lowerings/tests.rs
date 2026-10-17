@@ -5,6 +5,8 @@
 //! lists the interpreter runs, single-entry serializations, and a
 //! serialize/deserialize round trip over every step.
 
+use super::macros::container_steps;
+use super::steps::trio_steps;
 use super::*;
 
 /// Shape census over every lowering list.

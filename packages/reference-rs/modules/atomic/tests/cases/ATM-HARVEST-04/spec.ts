@@ -1,7 +1,7 @@
 /**
- * Harvest control station (Forge S4-2). A static program — palette array
+ * Harvest control case. A static program — palette array
  * included — harvests nothing: no sinks, no harvest wants, no infos. The
- * sheet is byte-identical before and after Slice 4 (verified against the
+ * sheet is byte-identical before and after the harvest pass (verified against the
  * pre-slice native at land time, not just against these goldens).
  */
 import { expect } from 'vitest'

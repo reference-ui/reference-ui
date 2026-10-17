@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-07.
+ * Case specification for TST-IMP-07.
  * Verifies that import-equals aliases lower to the entity they name: an import namespace member, a namespace
  * declared in the same file, an alias declared inside a namespace block, and an exported alias another module
  * imports. No unsupported-syntax warning is emitted for any of them.

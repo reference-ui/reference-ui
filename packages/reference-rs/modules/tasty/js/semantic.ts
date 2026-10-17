@@ -2,8 +2,8 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { TastyMember, TastyTypeRef } from './api-types'
-import { normalizeTastyInlineValue } from './jsdoc'
+import type { TastyMember, TastyTypeRef } from './api-types.js'
+import { normalizeTastyInlineValue } from './jsdoc.js'
 
 export type TastySemanticKind =
   | 'unknown'
@@ -27,6 +27,23 @@ export type TastySemanticKind =
   | 'reference'
   | 'raw'
 
+// Structured type kinds whose semantic kind is their own name.
+const SELF_NAMED_SEMANTIC_KINDS: ReadonlySet<string> = new Set([
+  'function',
+  'constructor',
+  'array',
+  'tuple',
+  'object',
+  'intersection',
+  'indexed_access',
+  'type_query',
+  'conditional',
+  'mapped',
+  'template_literal',
+  'reference',
+  'raw',
+])
+
 export function getTastyMemberSemanticKind(member: TastyMember): TastySemanticKind {
   switch (member.getKind()) {
     case 'method':
@@ -47,39 +64,17 @@ export function getTastyTypeSemanticKind(
   if (!type) return 'unknown'
   if (type.isLiteral()) return getTastyLiteralSemanticKind(type.getLiteralValue())
   if (type.isUnion()) return inferTastyUnionSemanticKind(type)
+  return getStructuredSemanticKind(type)
+}
 
-  switch (type.getKind()) {
-    case 'function':
-      return 'function'
-    case 'constructor':
-      return 'constructor'
-    case 'array':
-      return 'array'
-    case 'tuple':
-      return 'tuple'
-    case 'object':
-      return 'object'
-    case 'intersection':
-      return 'intersection'
-    case 'indexed_access':
-      return 'indexed_access'
-    case 'type_query':
-      return 'type_query'
-    case 'conditional':
-      return 'conditional'
-    case 'mapped':
-      return 'mapped'
-    case 'template_literal':
-      return 'template_literal'
-    case 'intrinsic':
-      return getIntrinsicSemanticKind(type.describe())
-    case 'reference':
-      return 'reference'
-    case 'raw':
-      return 'raw'
-    default:
-      return 'unknown'
-  }
+function getStructuredSemanticKind(type: TastyTypeRef): TastySemanticKind {
+  const kind = type.getKind()
+  if (kind === 'intrinsic') return getIntrinsicSemanticKind(type.describe())
+  return isSelfNamedSemanticKind(kind) ? kind : 'unknown'
+}
+
+function isSelfNamedSemanticKind(kind: string): kind is TastySemanticKind {
+  return SELF_NAMED_SEMANTIC_KINDS.has(kind)
 }
 
 export function getTastyLiteralSemanticKind(

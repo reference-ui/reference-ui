@@ -1,5 +1,5 @@
 /**
- * Discovery scoping station (ATM-SCAN-02, twin of ATM-SCAN-01). The traced
+ * Discovery scoping (ATM-SCAN-02, twin of ATM-SCAN-01). The traced
  * entry set follows the frozen request's `include` globs: an outside-scope
  * wrapper is not a host even when rendered in scope, while an in-scope
  * wrapper importing it traces under its own name. Open include traces all.

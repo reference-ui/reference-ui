@@ -1,5 +1,5 @@
 /**
- * Imported-spread station (ATM-SITE-39, SPEC-V2-51). An imported const
+ * Imported-spread (ATM-SITE-39). An imported const
  * object spreads at top level beside a static sibling and under `_hover`.
  * One want and one runtime plan per leaf; zero diagnostics.
  */

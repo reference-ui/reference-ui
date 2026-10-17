@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-SIG-02.
+ * Case specification for TST-SIG-02.
  * An interface accessor pair is one property typed by its getter and not readonly; a lone getter
  * is readonly and a lone setter is typed by its parameter. A method stays a method.
  * Proves the accessor folding in interface member lowering.

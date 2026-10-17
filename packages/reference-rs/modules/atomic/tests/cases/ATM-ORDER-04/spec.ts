@@ -1,5 +1,5 @@
 /**
- * Property-priority station. `borderColor` precedes `borderBottomColor` and
+ * Property-priority case. `borderColor` precedes `borderBottomColor` and
  * `padding` precedes `paddingTop` in both authorship orders.
  */
 import { expect } from 'vitest'

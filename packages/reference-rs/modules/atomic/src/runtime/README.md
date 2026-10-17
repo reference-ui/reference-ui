@@ -32,18 +32,12 @@ Disk: `.reference-ui/styled/css`.
 
 They generated `styled-system/css/css` — a JS `css()` that looks up
 spelled class names. We emit namer tables and lowerings; core authors `css()`. Recipe
-runtime on their side is `artifacts/cva.rs` / `sva.rs`. Ours is authored
+runtime on their side is `cva` / `sva`. Ours is authored
 `recipe()`.
 
-| File | Job |
-| :--- | :--- |
-| `vendor/panda/crates/pandacss_codegen/src/artifacts/css/mod.rs` | generated `css` + utility map |
-| `artifacts/css_index.rs` | `css/index` barrel |
-| `artifacts/conditions/mod.rs` | runtime condition helpers |
-| `artifacts/cva.rs`, `sva.rs` | their recipe runtime |
-| `crates/pandacss_project/src/codegen.rs` | when they emit artifacts |
+On their side the generated `css` runtime comes with a utility map, a `css/index` barrel, and condition helpers, and codegen decides when those artifacts are emitted.
 
-**Do not lift** `artifacts/jsx/*`, `types/*`, `patterns/*`, `themes/*`.
+**Do not lift** their JSX, types, patterns, or themes artifacts.
 
 ## Must not
 
@@ -108,8 +102,7 @@ every kebab-pure multiword prop such as `font-weight`); misses —
 reachable only through font `css` extras and `--*` custom props —
 spell the key byte-identical (pinned by
 `every_canon_prefix_resolves_through_table_or_verbatim`). There is no
-kebab arm: doom-4 T3 killed it when the derivation showed the oracle
-never kebabs on a table miss.
+kebab arm: the oracle never kebabs on a table miss.
 
 The 27 unrealizable extensions (`truncate`, `spaceX`, `translateX`,
 …) ship as `keywords.unrealizable` and refuse; the interpreter checks
@@ -166,7 +159,7 @@ compiled case per divergence (`ATM-NAME-08`).
 - **L4 `render_decimal`** — shortest round-trip, never exponent, `-0`
   → `0`, exact ties break away from zero (larger magnitude) like Rust
   `Display` — V8 breaks them even, so the mirror re-breaks every exact
-  tie the oracle way (doom-4 T2). Callers fence first with
+  tie the oracle way. Callers fence first with
   `in_canonical_magnitude` (zero mints; `1e-6 <= |v| < 1e21` renders;
   else refuses upstream), and `$r` renders through the
   `collapse_r_number` wrapper (1e-6 near-integer collapse, saturating
@@ -187,7 +180,7 @@ compiled case per divergence (`ATM-NAME-08`).
 | `str::trim` (every pre-trim site) | `String#trim()` | same two code points | L2 (= trim with L1) |
 | `sanitize_class_value` 3-char map (`escape.rs`) | `.replace(/\s/g, '_')` | `\r` and NBSP survive in Rust, notably inside quotes | L6 three-character map |
 | `to_ascii_lowercase` / `eq_ignore_ascii_case` | `.toLowerCase()` | non-ASCII (`İ`, `ẞ`, final sigma) | L5 ASCII-only fold |
-| `serde_json::Map` iteration (`builder.rs`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in `atomic/Cargo.toml` — and never for 2+ integer-like keys in non-ascending author order: V8 `[[OwnPropertyKeys]]` ascends them at object creation, before any namer code runs (doom-5 substrate limit) | insertion order both sides; the differential carves integer-keyed members as sets, order-pinned within (witness `ATM-NAME-08` intOrder) |
+| `serde_json::Map` iteration (`builder.rs`) | `Object.entries` order assumed | agrees only via explicit `preserve_order` in `atomic/Cargo.toml` — and never for 2+ integer-like keys in non-ascending author order: V8 `[[OwnPropertyKeys]]` ascends them at object creation, before any namer code runs (substrate limit) | insertion order both sides; the differential carves integer-keyed members as sets, order-pinned within (witness `ATM-NAME-08` intOrder) |
 | `IndexMap` (`font/family.rs` extras) | object spread / key order | agrees only via ordered pairs + insert-ordered map with overwrite-keeps-position | `fonts[].css` pairs; interpreter uses `Map` |
 | quote machines ×2 | one shared "quote-aware" helper | collapse is alternation-only with **no escapes**; `has_parent_reference` has backslash escapes + independent quote flags — different inputs, different outputs | **do not unify**: two goldens |
 
@@ -199,9 +192,8 @@ membership-affecting**: an unknown token path drops its declaration
 carves exactly refusal-shaped-plus-absent extras: a namer-side surplus
 is allowed only when its stem is a token-refusal shape — a braced
 (`{…}`) pair or a braceless brace-refusal tail matching the oracle's
-starts-with-`{`-and-ends-with-`}` refusal predicate (doom-4 T1, R4/D4)
+starts-with-`{`-and-ends-with-`}` refusal predicate
 — and its class is absent from the emitted sheet. Author order for 2+
 integer-like per-prop keys is likewise not inherited: V8 destroys it at
 object creation, so the namer correctly emits the received (V8) order
-and the differential compares those members as sets (doom-5 key-order
-report, `.agents/doom/logs/`, 2026-09-20).
+and the differential compares those members as sets.

@@ -1,5 +1,5 @@
 /**
- * Boolean-macro station (ATM-SITE-18, RS-19). `<Div border />` emits the
+ * Boolean-macro (ATM-SITE-18). `<Div border />` emits the
  * width + style utilities with one plan resolving both declarations, like
  * the `container: true` precedent. `color={true}` still warns and skips.
  */

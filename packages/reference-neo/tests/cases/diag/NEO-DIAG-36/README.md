@@ -4,6 +4,6 @@ A spread inside a value array refuses the whole array. The world carries the min
 
 Raised in: `modules/atomic/src/extract/expressions/responsive.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-RESPONSIVE-ARRAY-SPREAD (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-RESPONSIVE-ARRAY-SPREAD (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-RESPONSIVE-ARRAY-SPREAD, atm-w-responsive-array-spread, diagnostics case index, NEO-DIAG-36

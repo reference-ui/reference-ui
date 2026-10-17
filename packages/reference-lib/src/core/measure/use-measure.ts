@@ -38,7 +38,7 @@ function boxOf(rect: RectLike): MeasureBox {
   return { width: rect.width, height: rect.height, top: rect.top, left: rect.left }
 }
 
-type Session<E extends HTMLElement> = {
+type MeasureSession<E extends HTMLElement> = {
   element: E
   settleTimeoutMs: number
   observer: ResizeObserver
@@ -61,7 +61,7 @@ export function useMeasure<E extends HTMLElement = HTMLElement>(
   const [node, setNode] = React.useState<E | null>(null)
   const [rect, setRect] = React.useState<MeasureBox | null>(null)
   const [isSettled, setIsSettled] = React.useState(false)
-  const sessionRef = React.useRef<Session<E> | null>(null)
+  const sessionRef = React.useRef<MeasureSession<E> | null>(null)
   const ref = React.useCallback((element: E | null) => {
     setNode(element)
   }, [])

@@ -7,10 +7,8 @@ second stamp, the element paints its base color with no attribute set,
 and flipping `data-color-mode` first on `html` and then on a nested
 wrapper repaints it to the matching leaf each time.
 
-Evidence: `[atm]` P0 #1 (`docs/evidence/atomic-claims.md` colour-mode
-islands), ATM-COND-03, ATM-COND-08; `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:119`
-"respect color mode" (four-way selectors, the contrast Reference
-refuses); `[decision D1]` (single `data-color-mode` attribute).
+Evidence: colour-mode islands, ATM-COND-03, ATM-COND-08; Panda v1 test "respect
+color mode" (four-way selectors, the contrast Reference refuses); single
+`data-color-mode` attribute.
 
 > Search terms: light mode, dark mode, theming, color scheme, mode switch, light dark, theme toggle, conditions/light, conditions/dark

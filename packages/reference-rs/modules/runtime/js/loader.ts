@@ -2,8 +2,8 @@
  * Load the Rust native addon for Reference UI.
  * Resolves the platform-specific .node binary and validates its export contract.
  *
- * Falls back to null if the native addon is unavailable (e.g. wrong platform,
- * not built, or load error). Callers should use JS fallback when native is null.
+ * Returns null if the native addon is unavailable (e.g. wrong platform,
+ * not built, or load error); native.ts throws a clear error in that case.
  * REFERENCE_UI_NATIVE_PATH overrides the candidate with one explicit file so
  * instrument builds (e.g. `pnpm agentrs alloc`) can load without touching dist.
  */
@@ -19,6 +19,7 @@ import {
   type ReferenceNativeTarget,
 } from './shared/targets.js'
 import { REQUIRED_REFERENCE_NATIVE_EXPORTS } from './shared/native-contract.js'
+import { buildUnavailableMessage } from './unavailable-message.js'
 
 const PACKAGE_JSON = 'package.json'
 const RUST_PACKAGE_NAME = '@reference-ui/rust'
@@ -81,20 +82,12 @@ export function getReferenceNativeCompatibilityError(
   return null
 }
 
-function isContributorCheckout(packageDir: string | null): boolean {
-  return packageDir !== null && !packageDir.split(/[\\/]/).includes('node_modules')
-}
-
 function getDefaultRequire(): RequireFn {
   return createRequire(import.meta.url)
 }
 
 function setDiagnostics(diagnostics: ReferenceNativeDiagnostics): void {
   _diagnostics = diagnostics
-}
-
-function formatSupportedTargets(): string {
-  return SUPPORTED_REFERENCE_NATIVE_TARGETS.join(', ')
 }
 
 export function resolveReferenceRsPackageDir(fromUrl: string = import.meta.url): string {
@@ -165,102 +158,139 @@ export function resolveReferenceNativeBinaryPath(
   )
 }
 
+/** Platform facts captured once per load; `triple` is null on hosts without a prebuilt binary. */
+interface PlatformFacts {
+  platform: NodeJS.Platform
+  arch: string
+  triple: ReferenceNativeTarget | null
+}
+
+type TargetFields = Pick<
+  ReferenceNativeDiagnostics,
+  'targetPackageDir' | 'targetPackageName' | 'candidatePaths'
+>
+
+type AttemptFields = TargetFields & Pick<ReferenceNativeDiagnostics, 'status' | 'cause'>
+
 export function loadReferenceNative(): ReferenceNativeBinding | null {
   if (_native !== undefined) return _native
 
   const platform = process.platform
   const arch = process.arch
   const triple = getReferenceNativeTriple(platform, arch)
+  const facts: PlatformFacts = { platform, arch, triple }
 
   try {
-    const requireImpl = getDefaultRequire()
-    const packageDir = resolveReferenceRsPackageDir()
-    if (!triple) {
-      setDiagnostics({
+    return loadForPlatform(facts)
+  } catch (error) {
+    return settleLoad(exceptionDiagnostics(facts, error), null)
+  }
+}
+
+function loadForPlatform(facts: PlatformFacts): ReferenceNativeBinding | null {
+  const requireImpl = getDefaultRequire()
+  const packageDir = resolveReferenceRsPackageDir()
+  const { triple } = facts
+  if (!triple) {
+    return settleLoad(
+      diagnosticsFor(facts, packageDir, {
         status: 'unsupported-platform',
-        packageDir,
-        platform,
-        arch,
-        triple,
         targetPackageDir: null,
         targetPackageName: null,
         candidatePaths: [],
         cause: null,
-      })
-      _native = null
-      return null
-    }
+      }),
+      null
+    )
+  }
 
-    const targetPackageDir = resolveOptionalTargetPackageDir(triple, requireImpl)
-    const targetPackageName = getReferenceNativePackageName(triple)
-    const candidatePaths = getReferenceNativeCandidatePaths(packageDir, triple, requireImpl)
-    const nodePath = candidatePaths.find(path => existsSync(path)) ?? null
-    if (!nodePath) {
-      setDiagnostics({
-        status: 'binary-not-found',
-        packageDir,
-        platform,
-        arch,
-        triple,
-        targetPackageDir,
-        targetPackageName,
-        candidatePaths,
-        cause: null,
-      })
-      _native = null
-      return null
-    }
+  const { targets, nodePath } = locateBinary(packageDir, triple, requireImpl)
+  if (!nodePath) {
+    return settleLoad(
+      diagnosticsFor(facts, packageDir, { ...targets, status: 'binary-not-found', cause: null }),
+      null
+    )
+  }
 
-    const binding = requireImpl(nodePath) as Record<string, unknown>
-    const compatibilityError = getReferenceNativeCompatibilityError(binding)
-    if (compatibilityError) {
-      setDiagnostics({
+  const binding = requireImpl(nodePath) as Record<string, unknown>
+  const compatibilityError = getReferenceNativeCompatibilityError(binding)
+  if (compatibilityError) {
+    return settleLoad(
+      diagnosticsFor(facts, packageDir, {
+        ...targets,
         status: 'load-failed',
-        packageDir,
-        platform,
-        arch,
-        triple,
-        targetPackageDir,
-        targetPackageName,
         candidatePaths: [nodePath],
         cause: `Incompatible native binary at ${nodePath}: ${compatibilityError}`,
-      })
-      _native = null
-      return null
-    }
+      }),
+      null
+    )
+  }
 
-    setDiagnostics({
+  return settleLoad(
+    diagnosticsFor(facts, packageDir, {
+      ...targets,
       status: 'loaded',
-      packageDir,
-      platform,
-      arch,
-      triple,
-      targetPackageDir,
-      targetPackageName,
       candidatePaths: [nodePath],
       cause: null,
-    })
-    _native = binding as unknown as ReferenceNativeBinding
-    return _native
-  } catch (error) {
-    setDiagnostics({
-      status:
-        error instanceof Error &&
-        error.message.includes('package directory could not be resolved')
-          ? 'package-dir-not-found'
-          : 'load-failed',
-      packageDir: null,
-      platform,
-      arch,
-      triple,
-      targetPackageDir: null,
-      targetPackageName: triple ? getReferenceNativePackageName(triple) : null,
-      candidatePaths: [],
-      cause: error instanceof Error ? error.message : String(error),
-    })
-    _native = null
-    return null
+    }),
+    binding as unknown as ReferenceNativeBinding
+  )
+}
+
+/** Resolves the platform package and candidate paths for one supported triple, and the first path that exists. */
+function locateBinary(
+  packageDir: string,
+  triple: ReferenceNativeTarget,
+  requireImpl: RequireFn
+): { targets: TargetFields; nodePath: string | null } {
+  const targets: TargetFields = {
+    targetPackageDir: resolveOptionalTargetPackageDir(triple, requireImpl),
+    targetPackageName: getReferenceNativePackageName(triple),
+    candidatePaths: getReferenceNativeCandidatePaths(packageDir, triple, requireImpl),
   }
+  const nodePath = targets.candidatePaths.find(path => existsSync(path)) ?? null
+  return { targets, nodePath }
+}
+
+/** Snapshot for a load that threw before recording its own outcome; such loads report no package dir. */
+function exceptionDiagnostics(facts: PlatformFacts, error: unknown): ReferenceNativeDiagnostics {
+  const packageDirMissing =
+    error instanceof Error && error.message.includes('package directory could not be resolved')
+  return diagnosticsFor(facts, null, {
+    status: packageDirMissing ? 'package-dir-not-found' : 'load-failed',
+    targetPackageDir: null,
+    targetPackageName: facts.triple ? getReferenceNativePackageName(facts.triple) : null,
+    candidatePaths: [],
+    cause: error instanceof Error ? error.message : String(error),
+  })
+}
+
+function diagnosticsFor(
+  facts: PlatformFacts,
+  packageDir: string | null,
+  fields: AttemptFields
+): ReferenceNativeDiagnostics {
+  return {
+    status: fields.status,
+    packageDir,
+    platform: facts.platform,
+    arch: facts.arch,
+    triple: facts.triple,
+    targetPackageDir: fields.targetPackageDir,
+    targetPackageName: fields.targetPackageName,
+    candidatePaths: fields.candidatePaths,
+    cause: fields.cause,
+  }
+}
+
+/** Publishes one attempt's diagnostics and caches its result, so later loads return it without retrying. */
+function settleLoad(
+  diagnostics: ReferenceNativeDiagnostics,
+  binding: ReferenceNativeBinding | null
+): ReferenceNativeBinding | null {
+  setDiagnostics(diagnostics)
+  _native = binding
+  return binding
 }
 
 export function getReferenceNative(): ReferenceNativeBinding | null {
@@ -287,63 +317,5 @@ export function getReferenceNativeDiagnostics(): ReferenceNativeDiagnostics {
 }
 
 export function getReferenceNativeUnavailableMessage(feature: string): string {
-  const diagnostics = getReferenceNativeDiagnostics()
-  const messageParts = [
-    `Reference UI could not load the native addon required to ${feature}.`,
-    'Prebuilt binaries for @reference-ui/rust should install automatically during dependency installation.',
-  ]
-
-  switch (diagnostics.status) {
-    case 'unsupported-platform':
-      messageParts.push(
-        `This platform is not currently supported (${diagnostics.platform} ${diagnostics.arch}).`
-      )
-      break
-    case 'binary-not-found':
-      if (diagnostics.targetPackageName) {
-        messageParts.push(
-          `Expected optional target package: ${diagnostics.targetPackageName}.`
-        )
-      }
-      if (diagnostics.targetPackageDir) {
-        messageParts.push(
-          `The platform package resolved to ${diagnostics.targetPackageDir}, but no native binary was present there or in the root @reference-ui/rust package.`
-        )
-      } else if (diagnostics.targetPackageName) {
-        messageParts.push(
-          `The platform package ${diagnostics.targetPackageName} was not installed alongside @reference-ui/rust.`
-        )
-      }
-      messageParts.push(
-        `No native binary was found for ${diagnostics.platform} ${diagnostics.arch}. Reinstall dependencies so your package manager can fetch the correct prebuilt binary.`
-      )
-      if (diagnostics.candidatePaths.length > 0) {
-        messageParts.push(`Searched paths: ${diagnostics.candidatePaths.join(', ')}.`)
-      }
-      break
-    case 'package-dir-not-found':
-      messageParts.push(
-        'The installed @reference-ui/rust package could not be resolved. Reinstall dependencies.'
-      )
-      break
-    case 'load-failed':
-      messageParts.push(
-        diagnostics.cause
-          ? `A native binary was found but failed to load: ${diagnostics.cause}. Reinstall dependencies and verify your Node runtime can load native addons on this platform.`
-          : 'A native binary was found but failed to load. Reinstall dependencies and verify your Node runtime can load native addons on this platform.'
-      )
-      break
-    case 'loaded':
-      break
-  }
-
-  messageParts.push(`Supported targets: ${formatSupportedTargets()}.`)
-
-  if (isContributorCheckout(diagnostics.packageDir)) {
-    messageParts.push(
-      'If you are contributing inside the Reference UI monorepo, run `pnpm --filter @reference-ui/rust run build`.'
-    )
-  }
-
-  return messageParts.join(' ')
+  return buildUnavailableMessage(feature, getReferenceNativeDiagnostics())
 }

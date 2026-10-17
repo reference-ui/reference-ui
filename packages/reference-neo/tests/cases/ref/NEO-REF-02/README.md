@@ -25,7 +25,7 @@ the surface plus their locals (`localTone`, `localFlag`).
 - **Generator inventory (not reference parity):** the oracle asserts a `WebkitAppearance` member and 100+
   counts, but the neo styled generator emits a smaller vendor set (no `Appearance` member anywhere). The
   specs pin `accentColor`/`container` plus 90+ counts instead — the projection mechanism is the reference
-  parity; the vendor inventory belongs to the styled generator's own voyage concern.
+  parity; the vendor inventory belongs to the styled generator itself.
 - The fixture imports `SystemStyleObject` from `@reference-ui/styled/types` (ambient-typed pre-sync, linked
   post-sync) where matrix imports from `@reference-ui/system`: the neo generated system package carries no
   style surface. Same resolved type, honest seam.

@@ -1,4 +1,4 @@
-# ATM-TOKEN-16 — Bare-value station (§11)
+# ATM-TOKEN-16 — Bare-value (§11)
 
 A bare miss warns on its own prop family: `color="md"` warns unknown-color, `fontSize="sm"` warns unknown-token because no font-size token is named `sm` (the baseSystem declares none), and `borderRadius="sm"` still resolves `var(--radii-sm)` — the cross-category radii story is retired.
 Symbols: `warn_unresolved_token`, `warn_unknown_color`, `warn_unknown_token_name`, `DiagnosticCode::UnknownColor`, `DiagnosticCode::UnknownToken`.

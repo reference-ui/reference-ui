@@ -1,7 +1,7 @@
 # NEO-WATCH-22 — a SIGTERM delivered mid-commit is honored: the commit finishes or rolls back, then the sync ends by the signal and releases its lock
 
 The spec changes the brand, then starts a sync armed with the commit's test-only pause point (`REF_TEST_COMMIT_PAUSE`,
-`src/sync/commit-pause.ts`): once the sync's live changes have landed, the commit writes a marker and blocks until the
+`src/sync/commit-pause.ts`): once the sync's live changes have been applied, the commit writes a marker and blocks until the
 spec resumes it. The spec checks the live sheet already carries the new brand, so the signal lands with live changes
 made. While the sync is held there the spec sends it a SIGTERM, then resumes it. The commit is synchronous, so the
 signal is only seen after the commit returns, and the stop handler must still be installed then. The sync must end by

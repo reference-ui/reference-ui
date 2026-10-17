@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-OBS-01.
+ * Case specification for ATL-OBS-01.
  * Validates that the observation pass reads props from the AST: nested braces, an arrow body
  * and a bare attribute yield exactly style, onClick and disabled, with children counted only for
  * the usage that has children.

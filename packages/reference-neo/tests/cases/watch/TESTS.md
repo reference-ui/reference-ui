@@ -2,12 +2,12 @@
 
 Case ledger for the watch group. Claims and their proofs live in `SPEC.md`
 (LC-nn). Statuses follow the SYNC ledger: `done` means the case folder has
-landed with its README and spec; `in-progress` means planned or being written,
+in place with its README and spec; `in-progress` means planned or being written,
 not yet committed; `open` means no case or test proves the claim.
 
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| NEO-WATCH-01 | live-edit→paint loop: a watch resync repaints the browser | done | none | browser | `specs/watch-loop.spec.ts`: css edit, token-value edit, fragment add, fragment delete | `[core]` matrix/watch/tests/e2e/watch-contract.spec.ts; SPEC LC-29 |
+| NEO-WATCH-01 | live-edit→paint loop: a watch resync repaints the browser | done | none | browser | `specs/watch-loop.spec.ts`: css edit, token-value edit, fragment add, fragment delete | — |
 | NEO-WATCH-02 | symlinked project root: watch and engine agree on the compiled file set | done | ATM-SCAN-01 | node | `specs/symlink-root.spec.ts` | SPEC LC-30 |
 | NEO-WATCH-03 | directory move into and out of include: one resync with the engine's file set | done | ATM-SCAN-01 | node | `specs/dir-move.spec.ts` | SPEC LC-32 |
 | NEO-WATCH-04 | symlinked source target edit: watch and engine agree on the target's bytes | done | ATM-SCAN-01 | node | `specs/symlink-target.spec.ts` | SPEC LC-30, note 3 |

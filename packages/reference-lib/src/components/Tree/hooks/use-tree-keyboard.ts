@@ -2,7 +2,7 @@
  * Tree's keyboard commands: the item keydown dispatcher items delegate
  * to. Arrows rove and traverse hierarchy with RTL mirroring, Home/End
  * jump, Enter selects, Space extends an active typeahead buffer or
- * selects, asterisk expands sibling branches (APG, W-17), and printable
+ * selects, asterisk expands sibling branches (APG), and printable
  * keys search the shared typeahead session over the visible set. Pure
  * direction choice lives in navigation/direction; labels in
  * typeahead/labels; this hook owns queries, focus moves, and commits.
@@ -179,7 +179,7 @@ export function useTreeKeyboard(
         }
 
         case '*': {
-          // APG asterisk (W-17): closed branch expands itself; open branch
+          // APG asterisk: closed branch expands itself; open branch
           // expands every closed sibling branch; leaf expands the first
           // closed sibling branch. Focus never moves, and * never enters
           // the typeahead buffer. Direction-independent (RTL unaffected).

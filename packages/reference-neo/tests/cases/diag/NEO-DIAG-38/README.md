@@ -4,6 +4,6 @@ A recorded const-object prop with no static style value. The world carries the m
 
 Raised in: `modules/atomic/src/extract/expressions/object/entries.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNFOLDABLE-OBJECT-PROP (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNFOLDABLE-OBJECT-PROP (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNFOLDABLE-OBJECT-PROP, atm-w-unfoldable-object-prop, diagnostics case index, NEO-DIAG-38

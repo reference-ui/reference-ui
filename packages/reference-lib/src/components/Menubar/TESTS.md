@@ -1,6 +1,6 @@
 # Menubar test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Menubar --e2e`).
 
 Unit: `menubar-nav.test.ts` + `Menubar.test.tsx`
 Page: CT stories in `Menubar.story.tsx` (`Basic`, `Submenu`, `Controlled`, `Loop`, `Rtl`, `Disabled`)
@@ -29,7 +29,7 @@ dismiss. Menubar adds no second overlay runtime.
 5. Escape is Menu-owned at every level: one level per press with focus
    return. Menubar adds no Escape handler of its own.
 6. Tab rides Menu (closes, trigger-relative continuation). It is not
-   menubar-aware: see SPEC.md deviations.
+   menubar-aware.
 7. There is no hover-to-switch and no trigger-row typeahead (APG-optional;
    follow-ups, not freeze gaps).
 
@@ -38,10 +38,6 @@ ContextMenu component.
 
 ## Source evidence
 
-- `vendor/radix-primitives` menubar anatomy + keyboard table — single
-  `value`, `Menu`/`Trigger`/`Content`, Left/Right switch, Esc closes the
-  current menu + focus to Trigger. (Fetched for prior art; see
-  `.agents/missions/playtest/prior-art.md`.)
 - APG menu-and-menubar pattern — Left/Right across the bar and across open
   menus, Tab closes all + moves out, Esc closes only the menu containing
   focus (one level per press). APG contradicts "Esc closes all".

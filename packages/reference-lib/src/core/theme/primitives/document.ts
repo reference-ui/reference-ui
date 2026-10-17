@@ -7,7 +7,7 @@ export const documentPrimitiveStyles = {
       ...baseTypography,
     },
 
-  // B-09/W-03: Span inherits instead of pinning the body text color, so it stays
+  // Span inherits instead of pinning the body text color, so it stays
   // legible on dark/colored surfaces (e.g. the default Tooltip chip) with zero overrides.
   '.ref-span': {
     ...baseTypography,

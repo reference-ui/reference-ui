@@ -11,7 +11,7 @@ use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 
-use crate::diagnostics::analysis::{AnalysisInput, CompileParse};
+use crate::diagnostics::analysis::{AnalysisInput, AnalysisScope, CompileParse};
 use crate::diagnostics::analysis::{css_walk_skip, jsx_walk_skip};
 use crate::diagnostics::{DiagnosticCode, DiagnosticFact, SourceId};
 use crate::hosts::ResolvedHosts;
@@ -224,7 +224,8 @@ fn analyze_with_panic(contents: &[&str], panicked: Option<usize>) -> Vec<Diagnos
         sources: &sources,
         parsed: &parsed,
     };
-    let input = AnalysisInput::for_compile(&parse, &hosts, &constants, "test", &[]);
+    let scope = AnalysisScope::new(&hosts, &constants, "test", &[]);
+    let input = AnalysisInput::for_compile(&parse, scope);
     crate::diagnostics::analysis::analyze(&input)
 }
 

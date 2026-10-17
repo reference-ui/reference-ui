@@ -6,8 +6,7 @@ second probe with a slash that belongs to the CSS value (`rgb(251 146 60 /
 element carrying the same declaration inline, so the engine's emit and the
 browser's paint must agree.
 
-Evidence: `[panda-v1]` `core/__tests__/color-mix.test.ts`; `[lib]` 25 mixes
-(contrast: hand-written `oklch`, not slash opacity); `[atm]` P0 #6,
-ATM-TOKEN-03/06.
+Evidence: Panda v1 color-mix tests; reference-lib 25 mixes
+(contrast: hand-written `oklch`, not slash opacity); ATM-TOKEN-03/06.
 
 > Search terms: alpha, transparency, percentage, translucent, token/opacity, NEO-TOKEN-04, ATM-TOKEN-06

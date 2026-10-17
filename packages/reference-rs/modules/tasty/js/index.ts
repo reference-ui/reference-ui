@@ -44,26 +44,26 @@ export type {
   TastyTypeParameterMemberProjector,
   TastyTypeKind,
   TastyTypeRef,
-} from './api-types'
+} from './api-types.js'
 
 export {
   dedupeTastyMembers,
   getTastyMemberDefaultValue,
   getTastyMemberId,
-} from './members'
+} from './members.js'
 export {
   getTastyJsDocParamDescriptions,
   normalizeTastyInlineValue,
   parseTastyParamTag,
-} from './jsdoc'
+} from './jsdoc.js'
 export {
   getTastyLiteralSemanticKind,
   getTastyMemberSemanticKind,
   getTastyTypeSemanticKind,
   type TastySemanticKind,
-} from './semantic'
-export { formatTastyCallableSignature, getTastyTypeInlineVariants } from './display'
-export { getTastyCallableParameters } from './callables'
-export { getTastyResolvedType } from './resolution'
-export { createTastyApi, createTastyApiFromManifest } from './internal/api-runtime'
-export { createTastyBrowserRuntime } from './internal/browser-runtime'
+} from './semantic.js'
+export { formatTastyCallableSignature, getTastyTypeInlineVariants } from './display.js'
+export { getTastyCallableParameters } from './callables.js'
+export { getTastyResolvedType } from './resolution.js'
+export { createTastyApi, createTastyApiFromManifest } from './internal/api-runtime.js'
+export { createTastyBrowserRuntime } from './internal/browser-runtime.js'

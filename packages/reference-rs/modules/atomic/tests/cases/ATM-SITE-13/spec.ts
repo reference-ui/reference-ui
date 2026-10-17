@@ -1,5 +1,5 @@
 /**
- * Missing-graph station (ATM-SITE-13, RS-5). A hostless `<Foo mt="4r" />`
+ * Missing-graph (ATM-SITE-13). A hostless `<Foo mt="4r" />`
  * extracts zero wants, zero classes, zero plans, and reports one
  * missing-graph error at the tag's file/line/column. The styleless
  * sibling file adds no diagnostics.

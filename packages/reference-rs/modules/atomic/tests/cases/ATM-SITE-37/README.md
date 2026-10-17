@@ -1,6 +1,6 @@
 # ATM-SITE-37 — array spreads flatten or refuse without shifting arity
 
-Overmatch array-spread station (SPEC-V2-28, Ph1 refuse + Ph3 flatten).
+Array-spread (refuse + flatten).
 
 A literal or const-array spread flattens in place: inside a responsive
 value array every spliced leaf lands at its own breakpoint index
@@ -17,6 +17,6 @@ Inputs: `arrays.ts` (refused dynamic/object/stale spreads, literal and
 const twins, clean control), `merge.ts` (refused dynamic/stale spreads,
 literal, const, and leaf-skip twins).
 
-Panda flattens literal spreads (`calls.rs:1265`) and drops unresolvable
-spreads silently (`literal-evaluator.md:47-48`); our diagnostic is the
-upgrade (S5).
+Panda flattens literal spreads and drops unresolvable
+spreads silently; our diagnostic is the
+upgrade.

@@ -1,5 +1,5 @@
 /**
- * Re-export identity station (ATM-SITE-55, SPEC-V2-76 rider S12). Calls and
+ * Re-export identity (ATM-SITE-55, rider). Calls and
  * hosts imported through a consumer wrapper (`export { css } from
  * '@reference-ui/react'`) extract with zero config — the binding walk
  * replaces Panda's `importMap`. Consumer declarations, foreign origins,
@@ -57,7 +57,7 @@ const spec: AtomicCaseSpec = {
       mergeStylePlans(index, [{ system: SYSTEM, prop: 'color', value: 'red' }])
     ).toContain(`${SYSTEM}__c_red`)
 
-    // Miss arms are silent non-sites (SPEC-V2-38 precedent): no wants
+    // Miss arms are silent non-sites (precedent): no wants
     // from them (pinned by the exact counts above) and no diagnostics.
     expect(result.diagnostics).toHaveLength(0)
   },

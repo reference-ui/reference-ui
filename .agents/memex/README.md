@@ -16,9 +16,9 @@ Unknown, repeated, or misplaced flags are rejected, never swallowed.
 
 ```sh
 node .agents/memex/cli.mjs search                                  # list collections
-node .agents/memex/cli.mjs search --in doom                       # roster of one collection
-node .agents/memex/cli.mjs search "namer" --in doom               # ranked hits, labeled
-node .agents/memex/cli.mjs show doom:2026-09-20-jettison-namer-key-order.md
+node .agents/memex/cli.mjs search --in cases                      # roster of one collection
+node .agents/memex/cli.mjs search "namer" --in cases              # ranked hits, labeled
+node .agents/memex/cli.mjs show cases:NEO-NAMER-01
 node .agents/memex/cli.mjs show packages/reference-rs/modules/tasty/README.md
 ```
 
@@ -32,13 +32,10 @@ never across invocations or collections.
 
 | Name       | Kind     | Source                                                             | Owner            |
 | ---------- | -------- | ------------------------------------------------------------------ | ---------------- |
-| `doom`     | markdown | `.agents/doom/logs/*.md`                                           | doom log archive under `.agents/doom/`, no owning skill |
 | `cases`    | neo      | `packages/reference-neo/tests/cases` (case.json + README + specs)  | agent-neo skill  |
 | `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
 | `rs-cases` | rs-case  | `packages/reference-rs/modules/*/tests/cases` (case.json + README + spec.ts) | agent-rs skill |
-| `perf`     | perf     | `.agents/skills/agent-perf/perf-index.json` (committed)            | agent-perf skill |
-| `flames`   | markdown | `.agents/rs-index` (bundle notes + ledgers; raw profiles excluded) | agent-perf skill |
 | `graph`    | system   | built in: every README.md + every file-top header                  | memex itself     |
 
 Global `search` ranks the manifest collections with a prior for
@@ -49,7 +46,7 @@ the graph regardless of collection.
 
 ## Search semantics
 
-MiniSearch collections (everything but targeted perf) stem terms
+MiniSearch collections stem terms
 (`queries` matches `query`), split punctuation (`atomic/namer`
 searches `atomic` + `namer`), drop single-character tokens, and match
 fuzzy + prefix. Hits that matched only fuzzily carry their variant
@@ -57,13 +54,7 @@ fuzzy + prefix. Hits that matched only fuzzily carry their variant
 matched line, de-duplicated across hits, with `…` on truncation.
 
 Snippets ignore query tokens shorter than 3 characters when picking
-lines. Targeted perf search is exact substring-AND (never fuzzy): every
-word must appear verbatim in topic, id, verdict, summary, log, or the
-overrule/landing note. It also takes exact field filters —
-`verdict:BANK wave:wave-2 kind:diet` — combinable with plain words.
-Unknown `field:` prefixes fall back to literal words. Overruled
-entries carry a `† superseded by <id>` marker on one-liners and answer
-to `overruled`.
+lines.
 
 ## Show resolution
 
@@ -77,8 +68,8 @@ errors — a passed flag never silently does nothing.
 
 | Form            | Example                       | Resolves?                           |
 | --------------- | ----------------------------- | ----------------------------------- |
-| `collection:id` | `show perf:PERF-W2-HASHERS`   | always                              |
-| bare id         | `show PERF-W2-HASHERS`        | when unique across collections      |
+| `collection:id` | `show cases:NEO-NAMER-01`     | always                              |
+| bare id         | `show NEO-NAMER-01`           | when unique across collections      |
 | `rs:` ref       | `show rs:tasty`               | to `surfaces:rs:tasty`              |
 | module slug     | `show tasty`                  | to `surfaces:rs:tasty`              |
 | basename        | `show summary.md`             | unique → doc; many → candidate list |
@@ -88,13 +79,11 @@ errors — a passed flag never silently does nothing.
 ## JSON shapes
 
 - `search … --json`: `{total, returned, hits[]}`; hits carry
-  `collection/id/score/title/extra/path/snippet/fuzzy[]` (`score` is
-  null for exact perf hits, `fuzzy` lists matched variants).
-- `search --in <coll> --json`: `{collection, total, returned,
-header, docs[]}`; the perf header carries `{built, waves, verdicts}`.
+  `collection/id/score/title/extra/path/snippet/fuzzy[]` (`fuzzy` lists matched variants).
+- `search --in <coll> --json`: `{collection, total, returned, docs[]}`.
 - bare `search --json`: the complete collections array.
 - `show … --json`: `{ref, text}` plus the doc's structured fields
-  (perf: verdict/wave/kind/report/files/…; neo: family, related, specs; rs: related, suites, caseIds; rs-case: module, related, specs).
+  (neo: family, related, specs; rs: related, suites, caseIds; rs-case: module, related, specs).
 - misses with `--json`: `{error}`; ambiguous ids: `{ref, candidates[]}`
   — both exit 1, so branch on the shape, not the code. Other errors
   with `--json`: `{error}` on stdout with the usual exit code.
@@ -111,20 +100,19 @@ the max per field across collections.
 
 ```json
 {
-  "name": "doom",
-  "description": "Doom hunt reports.",
-  "owner": "doom log archive under .agents/doom/, no owning skill",
+  "name": "notes",
+  "description": "Meeting notes.",
+  "owner": "no owning skill",
   "kind": "markdown",
-  "roots": [".agents/doom/logs"],
+  "roots": ["docs/notes"],
   "include": ["*.md"],
   "id": "basename",
-  "weights": { "title": 3, "module": 2, "verdict": 2, "tags": 2 }
+  "weights": { "title": 3, "tags": 2 }
 }
 ```
 
 Kinds are memex built-ins: `markdown` (.md plus small .json sidecars),
-`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `rs-case` (one doc per reference-rs case), `perf`
-(perf-index.json entries). New markdown knowledge needs only a manifest —
+`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `rs-case` (one doc per reference-rs case). New markdown knowledge needs only a manifest —
 no code, no CLI change.
 
 ## The graph
@@ -141,14 +129,7 @@ the repo root. `--up 0` prints the file alone.
 
 ## Writes
 
-Memex is the read path. Agents write markdown (doom logs, wave filings,
-READMEs) and Memex reads it live — there is no rebuild step. The one
-exception is perf's derived `perf-index.json`: after new filings, the
-owner regenerates it directly:
-
-```sh
-node .agents/skills/agent-perf/scripts/build-index.mjs
-```
+Memex is the read path. Agents write markdown (READMEs, notes) and Memex reads it live — there is no rebuild step.
 
 ## Dependencies
 

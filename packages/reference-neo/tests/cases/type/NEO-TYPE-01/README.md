@@ -13,14 +13,12 @@ paint in the browser.
 The consumer is materialized at spec time because it cannot live in the repo:
 the harness pre-run typecheck resolves `@reference-ui/react` to the stable
 surface, which exports no `css`/`recipe` until the generated named graph lands
-in lockstep. R1 verified the engine (`emitDtsSync` over this world's token and
+in lockstep. The engine (`emitDtsSync` over this world's token and
 recipe shape) prints the unions, `StyleProps`, `SystemStyleObject`, recipe
 variant props, and `FontRegistry` with no forbidden surface; the host leg
-(`publish.ts` writing `styled/types`, react types referencing them) landed with
-the publish tail, as did the `react.d.mts` filename (D5) and the world
-import-graph flip to all-from-react.
+(`publish.ts` writing `styled/types`, react types referencing them) is in place, as are the `react.d.mts` filename and the all-from-react import
+graph.
 
-Evidence: `[core]` `.reference-ui/types`; generated-folder-shape §4;
-`[decision D5]`; typegen goldens `tokens.d.ts`, `styles.d.ts`, `recipes.d.ts`.
+Evidence: generated `.reference-ui/types`; typegen goldens `tokens.d.ts`, `styles.d.ts`, `recipes.d.ts`.
 
 > Search terms: integration, e2e, smoke test, baseline, round trip, full pipeline, type/react-declarations, type/consumer-compile

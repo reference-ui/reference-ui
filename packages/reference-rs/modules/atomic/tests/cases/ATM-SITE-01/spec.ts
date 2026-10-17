@@ -1,6 +1,6 @@
 /**
  * Canon dictionary seam. Style props on real Reference primitives become
- * wants. This station exists so extract does not invent a second tag list.
+ * wants. This case exists so extract does not invent a second tag list.
  */
 import { expect } from 'vitest'
 import { hasWant, type AtomicCaseSpec } from '../../harness/helpers.js'

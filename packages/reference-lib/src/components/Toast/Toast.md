@@ -1,6 +1,6 @@
 # Toast
 
-Proof: [SPEC.md](./SPEC.md). System: [OVERLAYS.md](../../../OVERLAYS.md).
+Proof: [case.json](./case.json) indexes the cases, and a case is proven when a passing test title contains its ID (`pnpm agentct Toast --e2e`). System: [OVERLAYS.md](../../../OVERLAYS.md).
 
 **Separate runtime, one Overlay seam.** Toast is not Overlay: no trap, no
 page inert, no geometry. Queue + host + announce, mounted by
@@ -195,7 +195,7 @@ announce(
 
 Loading → complete is the same toast, not close + add. Spectrum `ToastQueue.add()` always generates a random key — no `update(id)`. Sonner/Base UI/Zag merge by id.
 
-**Vendor.** `vendor/sonner/src/state.ts` — same id merges; `dismissedToasts` prevents resurrection of stale props; StrictMode `dismiss` is deferred via `requestAnimationFrame` so a re-`create` of the same id cancels the pending dismiss. Base UI ignores updates while `transitionStatus === 'ending'`; re-add same id while ending removes then adds.
+**Prior art.** Sonner's `state.ts` — same id merges; `dismissedToasts` prevents resurrection of stale props; StrictMode `dismiss` is deferred via `requestAnimationFrame` so a re-`create` of the same id cancels the pending dismiss. Base UI ignores updates while `transitionStatus === 'ending'`; re-add same id while ending removes then adds.
 
 **Lift** Sonner id / update / dismiss-all. **Leave** `success` / `error` / `loading` chrome — applications model lifecycle by swapping definitions (`toast.update` to a different `define()`).
 
@@ -203,7 +203,7 @@ Loading → complete is the same toast, not close + add. Spectrum `ToastQueue.ad
 
 Hover must pause and resume **remaining** time. Resetting to full duration on every hover cycle extends life forever. `setTimeout(..., Infinity)` fires immediately in browsers — guard it (Sonner). Duration **change** on update may reset the clock (Sonner/Zag do); freeze that.
 
-**Vendor.** Sonner: hover / `document.hidden`. Base UI: remaining subtraction on pause/resume; sticky `areTimersPaused` bug when the last timed toast closes (`store.test.ts`). Spectrum `Timer` starts on mount, not on add; becoming visible again resets full timeout.
+**Prior art.** Sonner: hover / `document.hidden`. Base UI: remaining subtraction on pause/resume; sticky `areTimersPaused` bug when the last timed toast closes (`store.test.ts`). Spectrum `Timer` starts on mount, not on add; becoming visible again resets full timeout.
 
 **Lift** remaining-time math (Base UI tests are the cautionary suite). Pause sources we own: pointer over toast, **and** modal Overlay as top layer. No vendor pauses on modal Overlay — Spectrum/Sonner only mark the region `data-react-aria-top-layer` so overlays don’t hide the toaster. Zag `trackDismissableBranch` so toast clicks don’t dismiss Dialog. Those are coordination flags, not timer pause.
 

@@ -9,12 +9,11 @@ the generated declarations, and asserts the brand probe paints.
 
 The consumers are materialized at spec time because they cannot live in the
 repo: the harness pre-run typecheck resolves `@reference-ui/react` to the
-stable surface, whose wide `StyleProps` would accept the negative. R1 verified
-the engine (`emitDtsSync` over this world's spec) prints
+stable surface, whose wide `StyleProps` would accept the negative. The engine (`emitDtsSync` over this world's spec) prints
 `ColorToken = 'brand' | 'ink' | 'paper'` with the open hatch and no strict
-wrappers; no host change was needed.
+wrappers; no host change is needed.
 
-Evidence: `[panda-v1]` `generate-token-dts.test.ts`; typegen golden
+Evidence: Panda v1 generate-token-dts tests; typegen golden
 `tokens.d.ts`; TYP-STRICT-04.
 
 > Search terms: autocomplete, intellisense, code completion, suggestions, type/token-unions, type/negative-typecheck, NEO-TYPE-01

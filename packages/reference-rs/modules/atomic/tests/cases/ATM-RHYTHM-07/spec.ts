@@ -1,5 +1,5 @@
 /**
- * Doom fortify pin for CONTINUITY-01 r-computation (doom-r-rule: BREAK).
+ * Non-finite rhythm stem pins for CONTINUITY-01 r-computation.
  * Non-finite rhythm stems refuse behind the shared finiteness gate and pass
  * through raw, so the sheet carries no `inf`/`NaN` calc; finite controls and
  * finite neighbors still mint. Close (a) refuse-to-passthrough: legacy parity

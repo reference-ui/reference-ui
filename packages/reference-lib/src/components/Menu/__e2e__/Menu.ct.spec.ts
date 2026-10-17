@@ -3,7 +3,7 @@ import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
-// sweep vehicle) for per-engine delivery/expectations (DIAG D1 + F40 stretch).
+// sweep vehicle) for per-engine delivery/expectations.
 function engineOf(): 'chromium' | 'firefox' | 'webkit' {
   const project = test.info().project.name
   if (project.includes('webkit')) return 'webkit'
@@ -133,7 +133,7 @@ test.describe('Menu Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
+test.describe('Menu parity (root-level re-targets)', () => {
   test('MN-DOM-01: Menu renders trigger, content, items, and separator with documented native roles', async ({
     mount,
     page,
@@ -627,7 +627,7 @@ test.describe('Menu Quarantine Parity (root-level re-targets)', () => {
     await expect(page.getByTestId('menu-content')).toBeVisible()
 
     await page.getByTestId('tab-before').click()
-    // P1 (F41, DIAG D1): WebKit click-focus never lands on buttons, so
+    // WebKit click-focus never lands on buttons, so
     // re-deliver the Chromium focus state; the dismiss + no-steal assertions
     // below then test the outside press on every engine.
     if (engineOf() === 'webkit') await page.getByTestId('tab-before').focus()
@@ -1037,7 +1037,7 @@ test.describe('Menu Nested Submenus (FEATURES #1)', () => {
     await expect(page.getByTestId('menu-sub-content-l2')).toBeVisible()
 
     await page.getByTestId('sub-outside').click()
-    // P1 (F42, DIAG D1): WebKit click-focus never lands on buttons, so
+    // WebKit click-focus never lands on buttons, so
     // re-deliver the Chromium focus state; the unwind + no-steal assertions
     // below then test the outside press on every engine.
     if (engineOf() === 'webkit') await page.getByTestId('sub-outside').focus()
@@ -1088,7 +1088,7 @@ test.describe('Menu LinkItem (FEATURES #3)', () => {
     expect(await page.evaluate(() => window.location.hash)).toBe('#help-section')
     await expect(page.getByTestId('menu-link-root')).toHaveCount(0)
     await expect(page.getByTestId('menu-link-open-logs')).toHaveText('Link Open Logs: true,false')
-    // P2 (F39, SCOPE2 probe P-F39): Firefox resets focus to body on fragment
+    // Firefox resets focus to body on fragment
     // navigation, after the product's trigger restore — Chromium keeps the
     // restored trigger. Dismiss + navigation assertions above hold on both.
     if (engineOf() === 'firefox') {
@@ -1183,7 +1183,7 @@ test.describe('Menu LinkItem (FEATURES #3)', () => {
   })
 })
 
-test.describe('Menu ShadowRoot ownership (PATCHES #3)', () => {
+test.describe('Menu ShadowRoot ownership', () => {
   test('MN-ENV-03: Menu preserves composed-path ownership and submenu behavior from a ShadowRoot', async ({
     mount,
     page,
@@ -1260,7 +1260,7 @@ test.describe('Menu ShadowRoot ownership (PATCHES #3)', () => {
     await page.keyboard.press('Enter')
     await expect(subContent).toBeVisible()
     await page.getByTestId('btn-shadow-outside').click()
-    // P1 (F43, DIAG D1): WebKit click-focus never lands on buttons, so
+    // WebKit click-focus never lands on buttons, so
     // re-deliver the Chromium focus state; the unwind + no-steal assertions
     // below then test the outside path on every engine.
     if (engineOf() === 'webkit') await page.getByTestId('btn-shadow-outside').focus()
@@ -1290,8 +1290,8 @@ test.describe('Menu ShadowRoot ownership (PATCHES #3)', () => {
   })
 })
 
-test.describe('Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss)', () => {
-  test('MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items (B-33)', async ({
+test.describe('Menu keyboard, choice items, and adjacent dismiss', () => {
+  test('MN-FOCUS-07: Menu moves content-focused arrows/Home/End to edge items', async ({
     mount,
     page,
   }) => {
@@ -1612,7 +1612,7 @@ test.describe('Menu Playtest (B-33 keys, W-28 choice, adjacent dismiss)', () => 
   })
 })
 
-test.describe('Menu controlled submenu keyboard completions (P2E)', () => {
+test.describe('Menu controlled submenu keyboard completions', () => {
   test('MN-SUBKEY-04: RTL mirrors submenu open and close arrows without changing activation', async ({
     mount,
     page,
@@ -1815,7 +1815,7 @@ test.describe('Menu controlled submenu keyboard completions (P2E)', () => {
   })
 })
 
-test.describe('Menu tree dismissal completions (P2E)', () => {
+test.describe('Menu tree dismissal completions', () => {
   test('MN-CLOSE-02: Interaction in portalled descendants stays inside the root subtree', async ({
     mount,
     page,
@@ -1947,7 +1947,7 @@ test.describe('Menu tree dismissal completions (P2E)', () => {
     await expect(page.getByTestId('probe-ext-content')).toBeVisible()
 
     await page.getByTestId('probe-extension').click()
-    // P1 (F44, DIAG D1): WebKit click-focus never lands on buttons, so
+    // WebKit click-focus never lands on buttons, so
     // re-deliver the Chromium focus state; the dismiss-once + no-steal
     // assertions below then test the extension press on every engine.
     if (engineOf() === 'webkit') await page.getByTestId('probe-extension').focus()
@@ -1959,7 +1959,7 @@ test.describe('Menu tree dismissal completions (P2E)', () => {
   })
 })
 
-test.describe('Menu pointer submenu intent (P2E)', () => {
+test.describe('Menu pointer submenu intent', () => {
   test('MN-INTENT-02: Diagonal travel toward content keeps the submenu open', async ({
     mount,
     page,
@@ -2191,7 +2191,7 @@ test.describe('Menu pointer submenu intent (P2E)', () => {
   })
 })
 
-test.describe('Menu placement and dynamic ownership (P2E)', () => {
+test.describe('Menu placement and dynamic ownership', () => {
   test('MN-DOM-08: Submenu content uses the shared Popover engine from its trigger', async ({
     mount,
     page,
@@ -2362,7 +2362,7 @@ test.describe('Menu placement and dynamic ownership (P2E)', () => {
   })
 })
 
-test.describe('Menu dynamic choice and link parts (P2E)', () => {
+test.describe('Menu dynamic choice and link parts', () => {
   test('MN-CHOICE-10: Dynamic choice values, handlers, and group membership stay current', async ({
     mount,
     page,
@@ -2474,7 +2474,7 @@ test.describe('Menu dynamic choice and link parts (P2E)', () => {
       'Nested Logs: nested:onOpen,nested:onDismiss'
     )
     await expect(page.getByTestId('menu-link-nested-root')).toHaveCount(0)
-    // P2 (F40, DIAG stretch): a download is not a navigation, but the download
+    // a download is not a navigation, but the download
     // + same-document-fragment interaction is engine-native — Chromium
     // suppresses the fragment nav, Firefox/WebKit perform it (harmless hash).
     expect(await page.evaluate(() => window.location.hash)).toBe(
@@ -2531,7 +2531,7 @@ test.describe('Menu dynamic choice and link parts (P2E)', () => {
   })
 })
 
-test.describe('Menu composition gates (P2E)', () => {
+test.describe('Menu composition gates', () => {
   test('MN-COMP-01: MenuButton composes Button, Popover, and Menu with one authority', async ({
     mount,
     page,

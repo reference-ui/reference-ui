@@ -281,7 +281,14 @@ fn fold_trace(input: &RecordIn<'_>, program: &oxc_ast::ast::Program<'_>) -> Opti
     if !crate::hosts::on_disk_source(path) {
         return None;
     }
-    styletrace::fold_trace_module(path, root, input.content, program, input.surface).ok()
+    styletrace::fold_trace_module(styletrace::ModuleFold {
+        path,
+        workspace_root: root,
+        source: input.content,
+        program,
+        surface: input.surface,
+    })
+    .ok()
 }
 
 /// Guard that remembers whether its mutex was poisoned.

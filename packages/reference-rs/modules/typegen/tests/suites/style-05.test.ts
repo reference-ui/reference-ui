@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { compile, readGolden } from '../harness/tsc'
+import { compile, readGolden } from '../harness/tsc.js'
 
 describe('TYP-STYLE-05 tsc consumers', () => {
   const emptyDts = readGolden('styles.d.ts')

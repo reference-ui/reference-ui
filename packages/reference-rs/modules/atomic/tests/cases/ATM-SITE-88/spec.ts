@@ -1,5 +1,5 @@
 /**
- * Bound-root member station (ATM-SITE-88). `<NS.Panel />` extracts when its
+ * Bound-root member (ATM-SITE-88). `<NS.Panel />` extracts when its
  * root resolves through a same-file const object literal to an admitted host
  * and `NSPanel` is a host; the unconfigured `<Other.Panel />` twin stays
  * silent; the use-before-declare `<Late.Panel />` pair extracts the same.

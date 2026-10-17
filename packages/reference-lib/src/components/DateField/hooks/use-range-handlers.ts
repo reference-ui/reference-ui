@@ -9,7 +9,7 @@
  */
 import * as React from 'react'
 import type { DateRangeValue, ISODate } from '../../Calendar'
-import { type ISODate as CanonicalISODate, isValidISODate, type ISOMonth } from '../../Calendar/dates/iso'
+import { type CanonicalISODate, isValidISODate, type ISOMonth } from '../../Calendar/dates/iso'
 import {
   formatLocalDate,
   isDateWithinConstraints,

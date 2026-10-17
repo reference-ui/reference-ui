@@ -1,5 +1,5 @@
 /**
- * Harvest floor station (Forge §2). `'inherit'` lives only in an array no
+ * Harvest floor case. `'inherit'` lives only in an array no
  * site reads, a dynamic `css({ color })` site exists, and
  * `"color:inherit"` is in the map anyway — minted by harvest onto the
  * refused sink, with one `ATM-I-HARVEST-SINK` counting it. The `'4px'`
@@ -31,7 +31,7 @@ const spec: AtomicCaseSpec = {
     ).toBe(true)
 
     // The site is dynamic but proves no exact miss, so the default is
-    // silent (S6 E8-class re-point); the warn + sink info ride opt-in.
+    // silent; the warn + sink info ride opt-in.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-HARVEST-01', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

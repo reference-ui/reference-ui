@@ -1,7 +1,7 @@
 /**
- * Token custom-property kebab station. Every path segment kebabs (Panda parity):
+ * Token custom-property kebab case. Every path segment kebabs (Panda parity):
  * camelCase leaves and mid-path segments define kebab names, and resolved
- * uses reference those same names — never the camel ghosts (RS-41).
+ * uses reference those same names — never the camel ghosts.
  */
 import { expect } from 'vitest'
 import { type AtomicCaseSpec } from '../../harness/helpers.js'

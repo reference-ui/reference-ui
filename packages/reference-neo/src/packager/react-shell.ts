@@ -9,7 +9,7 @@ import { writePackageJson } from './manifest.ts'
 import { REACT_PACKAGE } from './packages.ts'
 import type { PublishInput } from './types.ts'
 
-// The stylesheet copy lands here (D5) as a filesystem copy of the styled
+// The stylesheet copy lands here as a filesystem copy of the styled
 // leg's file, so the 14 MiB sheet is encoded once. Requires the styled leg
 // to run first — the packager assembly orders the legs.
 export function writeReactDir(input: PublishInput): void {

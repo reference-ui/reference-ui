@@ -57,7 +57,7 @@ export function useSession({
   const skipMotionOnceRef = React.useRef(false)
   const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
-  // B-12: both change handlers fire, non-breaking — either alone behaves
+  // Both change handlers fire, non-breaking — either alone behaves
   // exactly as before (onChange first, preserving the old ?? winner order).
   const notify = React.useCallback(
     (nextOpen: boolean) => {

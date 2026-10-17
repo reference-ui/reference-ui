@@ -1,5 +1,5 @@
 /**
- * Shorthand-then-longhand station. Both classes exist; `padding` prints
+ * Shorthand-then-longhand case. Both classes exist; `padding` prints
  * before `paddingTop` regardless of key order in the two source files.
  */
 import { expect } from 'vitest'

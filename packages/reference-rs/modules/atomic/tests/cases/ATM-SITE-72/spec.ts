@@ -1,5 +1,5 @@
 /**
- * Param-shadow station (SPEC-V2-33 arrow arm). Params named `css` on arrow
+ * Param-shadow (arrow arm). Params named `css` on arrow
  * and function declarations shadow the import: their calls drop silently
  * while the outer live call still extracts.
  */

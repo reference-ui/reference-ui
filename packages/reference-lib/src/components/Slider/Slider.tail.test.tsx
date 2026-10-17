@@ -7,10 +7,8 @@ import { Slider, type SliderValue } from './index'
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-// FINISH-LINE P2C tail: the 24 colocated pins for the IDs left open in
-// SPEC.md (matrix re-target — no slider spec exists under matrix/ on this
-// branch, so the tails land here per PATCHES/FEATURES crew precedent).
-// SD-POINTER-14 is proven by the retitled real-engine CT leg instead:
+// Colocated pins for the 24 IDs that have no slider spec under matrix/, so
+// they live here. SD-POINTER-14 is proven by the real-engine CT leg instead:
 // __e2e__/Slider.ct.spec.ts covers focusVisible modality honestly and
 // happy-dom cannot drive isFocusVisible through real Tab modality.
 
@@ -72,7 +70,7 @@ function quietConsole() {
   return vi.spyOn(console, 'error').mockImplementation(() => {})
 }
 
-describe('Slider finish-line tail', () => {
+describe('Slider behavior contracts', () => {
   let container: HTMLDivElement
   let root: Root
 

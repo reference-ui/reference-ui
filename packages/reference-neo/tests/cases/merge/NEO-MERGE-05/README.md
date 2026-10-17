@@ -6,7 +6,7 @@ checks the sheet carries the base plus hover atoms with no query wrap,
 both class strings match exactly, and hover paints the merged ocean over
 the resting ember — the condition arg joins its own slot either way.
 
-Evidence: Neo `plans.test.ts`; station
+Evidence: Neo `plans.test.ts`; case
 `packages/reference-rs/modules/atomic/tests/cases/ATM-MERGE-03`.
 
 > Search terms: variant, pseudo-class, array form, underscore condition, state layer, merge/conditional, merge/array-form, NEO-MERGE-01

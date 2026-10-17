@@ -1,7 +1,7 @@
 // resolve.spec.ts — spec for NEO-SYNC-05, the consumer-specifier case. Takes
 // { case } from the runner with the world freshly synced and asserts node-side.
 // Emits nothing on success; throws naming the specifier that fails to resolve
-// to its D5 target on failure.
+// to its target file on failure.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,7 +23,7 @@ interface WorldResolver {
 }
 
 // The runner synced this world before serving: the four bare consumer
-// specifiers resolve through the generated exports maps to the D5
+// specifiers resolve through the generated exports maps to the
 // filenames. Resolution runs inside a world-local probe module so the
 // parent is the world (like a real consumer import), not the spec file.
 export default async function run({ case: c }: SpecInput): Promise<void> {
@@ -51,7 +51,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.equal(
     fs.readFileSync(reactCss, 'utf8'),
     fs.readFileSync(path.join(outDir, 'styled', 'styles.css'), 'utf8'),
-    'react/styles.css is the D5 copy of the styled sheet',
+    'react/styles.css is a copy of the styled sheet',
   );
 
   // system.mjs landed with SYNC-12; '.' serves the authoring entry.
@@ -74,7 +74,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
   assert.deepEqual(
     reactPkg.exports?.['.'],
     { types: './react.d.mts', import: './react.mjs' },
-    'react exports map pins the D5 entry filenames',
+    'react exports map pins the entry filenames',
   );
   assert.equal(reactPkg.exports?.['./styles.css'], './styles.css', 'react exports map carries ./styles.css');
 

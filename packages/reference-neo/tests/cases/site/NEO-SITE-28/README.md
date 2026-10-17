@@ -8,28 +8,22 @@ and chain nodes paint cherry and ocean while the miss paints nothing
 with zero recompile diagnostics — so site identity follows bindings
 through re-exports with zero config, replacing Panda's `importMap`.
 
-Evidence: `[atm]` ATM-SITE-55 (re-export identity); `[overmatch]`
-SPEC-V2-76 rider S12; `[panda-v2]` `crates/pandacss_extractor/tests/import_map.rs`
+Evidence: ATM-SITE-55 (re-export identity); Panda v2 import-map tests
 (13 tests, replaced not copied).
 
 > Search terms: re-export identity, wrapper module, importMap replacement, binding walk, site identity, zero config, NEO-SITE-04, ATM-SITE-55
 
-## Sync rider (Ph4 exit filing): dependent invalidation — design note
-
-Status: rev 1 filed by crew D (om-ph4d) 2026-09-19; rev 2 by om-ph4fix
-2026-09-19 answering the oracle's NEEDS-WORK (2 major, 2 minor); not built.
-Review: oracle NEEDS-WORK received and answered item-for-item below;
-re-review pending.
+## Sync rider: dependent invalidation — design note
 
 ### 1. Problem
 
 Sync compiles single-shot today: collect files, extract, print. Once the
-Ph4 binding walk lands, files depend on each other — an edit to
+binding walk lands, files depend on each other — an edit to
 `tokens.ts` changes what `App.tsx` extracts, and an edit to a wrapper
 (`ui.ts`) flips which of its importers' calls are sites at all. Without
 dependent invalidation the next sync either recompiles the world (slow)
 or serves a stale sheet (wrong). This note files the invalidation
-design the Ph4 exit requires. The walk is not the whole dependency
+design the exit requires. The walk is not the whole dependency
 story: merge-bag fallback reads (§3b) and file-set changes (§6) need
 their own edges, or the reverse index is incomplete by construction.
 
@@ -38,8 +32,7 @@ their own edges, or the reverse index is incomplete by construction.
 Three walked/refused shapes, plus the fallback reads that rev 1 missed:
 
 - Walked value edges: `(importer, local)` → `(origin file, declared
-  name)` plus the trail of declared names along the hops. Crew B's
-  `Resolved` already carries origin + trail (for mutation poison); the
+  name)` plus the trail of declared names along the hops. The existing `Resolved` already carries origin + trail (for mutation poison); the
   reverse index reuses it. Complete for named imports the walk hits —
   values, descriptors, and re-export chains alike.
 - Walked identity edges: `(importer, local)` → Reference export plus
@@ -61,7 +54,7 @@ Three walked/refused shapes, plus the fallback reads that rev 1 missed:
   read the scope chain serves when the walk misses or the name is
   unbound — `scalar_leaves`/`object`/`object_prop`/`array` for
   Import-miss and Unbound lookups, plus the name-wide mutation-poison
-  reads. The Ph4 helper fix removed `PureFn` from the bag, so helper
+  reads. The helper fix removed `PureFn` from the bag, so helper
   calls never fall back (an import answers only its walked origin, an
   unbound callee refuses with a diagnostic) and helper edges are
   complete by construction. Value fallbacks remain load-bearing (SITE-28
@@ -191,21 +184,3 @@ with this rider:
 - Granularity: file-level reverse index to start vs `(path, export)`
   level (fallback edges are already name-granular per §3b; walked edges
   graduate when profiles say so).
-
-### 9. Review checklist (rev 2, om-ph4fix)
-
-- [x] No new top-level class: lives in the sync layer plus the resolver
-  cache (`cache.rs`), no engine reshape.
-- [x] Fail-closed: an unknown edge invalidates, never serves stale; a
-  dangling specifier still recompiles its dependents.
-- [x] Cycle-safe: visited sets on the forward walks (landed) and on
-  reverse invalidation.
-- [x] Identity/value split named: wrapper edits re-gate sites, value
-  edits re-resolve leaves, fallback contributors re-read (§3b/§4).
-- [x] Major-1 answered: fallback reads tracked as name-granular edges;
-  helper completeness follows from the bag removal (§2, §3b).
-- [x] Major-2 answered: set-diff detector, negative edges with a
-  full-recompile alternative, persistence explicit (§6).
-- [x] Minor answered: hashing premise corrected (nothing hashes today —
-  §3/§5), default-hop taxonomy struck (refused, not an edge — §2).
-- [ ] Oracle re-review pending.

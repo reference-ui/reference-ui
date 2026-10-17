@@ -121,11 +121,6 @@ test('ANN-API-05: ambiguous untargeted call no-ops with one dev diagnostic (RL-R
   mount,
   page,
 }) => {
-  // Story modules load lazily at mount; a dev-like process global must exist
-  // before Announcer.tsx first evaluates its NODE_ENV gate.
-  await page.evaluate(() => {
-    ;(globalThis as unknown as { process?: unknown }).process = { env: { NODE_ENV: 'test' } }
-  })
   const warnings: string[] = []
   page.on('console', msg => {
     if (msg.type() === 'warning') warnings.push(msg.text())
@@ -151,7 +146,7 @@ test('ANN-API-05: ambiguous untargeted call no-ops with one dev diagnostic (RL-R
   expect(warnings.filter(w => w.includes('ambiguous untargeted call'))).toHaveLength(1)
 })
 
-test('ANN-DOM-01 + PATCHES#1: one host with two contract live regions, no testids, outside the toast host', async ({
+test('ANN-DOM-01: one host with two contract live regions, no testids, outside the toast host', async ({
   mount,
   page,
 }) => {
@@ -175,7 +170,7 @@ test('ANN-DOM-01 + PATCHES#1: one host with two contract live regions, no testid
     page.locator('[data-reference-toast-host] [data-reference-announcer-host]')
   ).toHaveCount(0)
 
-  // PATCHES#1: contract selectors are the only selectors in host output.
+  // contract selectors are the only selectors in host output.
   await expect(host).not.toHaveAttribute('data-testid')
   await expect(host.locator('[data-testid]')).toHaveCount(0)
 })
@@ -255,7 +250,7 @@ test('ANN-DOM-03: live regions stay out of the tab order', async ({ mount, page,
     )
   }
   expect(hits).not.toContain('ANNOUNCER')
-  // DIAG D1 (landing-sequence/DIAG.md): WebKit/Safari skips buttons in
+  // WebKit/Safari skips buttons in
   // sequential Tab (keyboard navigation off by default) and this probe's
   // tabbables are buttons, so the walk legitimately never leaves body.
   // The contract (regions unreachable via Tab) is proven above by the

@@ -1,6 +1,6 @@
 # NEO-SYNC-16 — `logs: ['compiler']` threads the opt-in through sync into the warning summary and the verbose compiler list
 
-Evidence: `[atm]` ATM-DIAG-07 (channel isolation), sibling NEO-SYNC-11 (node-side sync driver).
+Evidence: ATM-DIAG-07 (channel isolation), sibling NEO-SYNC-11 (node-side sync driver).
 
 This case opts OUT of the runner sync hook (`"sync": false`): the spec drives
 `sync()` itself under a `console.warn` spy, like NEO-SYNC-11. The world

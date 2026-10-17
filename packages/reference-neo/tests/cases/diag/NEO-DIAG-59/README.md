@@ -4,6 +4,6 @@ A dump token category with no printed union; its tokens are omitted. The world c
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-UNKNOWN-TOKEN-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-UNKNOWN-TOKEN-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-UNKNOWN-TOKEN-CATEGORY, tgn-w-unknown-token-category, diagnostics case index, NEO-DIAG-59

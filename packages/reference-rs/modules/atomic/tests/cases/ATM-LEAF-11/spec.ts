@@ -1,5 +1,5 @@
 /**
- * Responsive-leaf refusal station. `!` on a responsive-object leaf warns
+ * Responsive-leaf refusal case. `!` on a responsive-object leaf warns
  * `ATM-W-RESPONSIVE-LEAF-IMPORTANT` on default naming prop + leaf, pushes
  * no want (no orphan `!` class), and serves the stripped value through the
  * non-important plan as a diagnosed fallback. Siblings still extract.

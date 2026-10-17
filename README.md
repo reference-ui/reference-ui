@@ -1,64 +1,93 @@
 # Reference UI
 
-Knowledge-first UI tooling and component infrastructure.
+Reference UI is a React component library with a typed design system. Its CSS is compiled at build time: `ref sync` reads your `ui.config.ts` and emits the stylesheet and the TypeScript types for your design tokens, so the components' style props accept your tokens.
 
-This repository is an active monorepo. It contains the Reference UI CLI, the first-party design system built on top of it, a docs site, Rust/native bindings, and pipeline-driven matrix coverage for generated outputs.
+## Packages
 
-## What lives here
+| Package | npm name | Purpose |
+| --- | --- | --- |
+| Component library | `@reference-ui/lib` | React components, layout and text primitives, and the compiled stylesheet |
+| Icons | `@reference-ui/icons` | Material Symbols icons as React components |
+| Native compiler | `@reference-ui/rust` | Rust compiler and N-API bindings used by `ref sync` |
+| MCP server | `@reference-ui/mcp` | Gives AI coding assistants project-aware access to components, tokens and icons |
+| `ref` CLI | — | `ref sync` compiles `ui.config.ts`; `ref sync --watch` keeps the output current |
 
-- `packages/reference-neo` - the `ref` CLI, sync pipeline, config/runtime generation
-- `packages/reference-lib` - the first-party React design system package built on `@reference-ui/neo`
-- `packages/reference-docs` - the Vite-based documentation site driven by the same sync pipeline
-- `packages/reference-rs` - Rust/native bindings used by the platform
-- `matrix/fixtures/*` - consumer-style fixture projects used by the chain matrix suites
-- `matrix/tests/` - kept matrix suites (Vitest, Playwright, install stories) exercised by the Dagger pipeline
+## Quick start
 
-## Stack
+1. Install the library. React 19 is a peer dependency, so your app supplies the one React copy.
 
-- `pnpm` workspaces for package management
-- `Nx` for monorepo task orchestration
-- `TypeScript` across the JS/TS packages
-- `Vite` for local app and docs development
-- `React` for the docs site, consumer fixtures, and the first-party library surface
-- `Vitest` and `Playwright` for automated verification
-- `Rust` plus `napi-rs` for native bindings
+   ```bash
+   npm install @reference-ui/lib react react-dom
+   ```
 
-## Getting started
+2. Create `ui.config.ts` at your app root. It extends the library's design system, so its tokens and types come into your project.
 
-Install dependencies from the repo root:
+   ```ts
+   // ui.config.ts
+   import { defineConfig } from '@reference-ui/neo'
+   import { baseSystem } from '@reference-ui/lib/baseSystem'
 
-```bash
-pnpm install
-```
+   export default defineConfig({
+     name: 'my-app',
+     include: ['src/**/*.{ts,tsx}'],
+     extends: [baseSystem],
+   })
+   ```
 
-Common root commands:
+3. Run sync, and run it again after you install or upgrade `@reference-ui/lib`.
 
-```bash
-pnpm dev           # docs site (or: pnpm dev lib)
-pnpm dev:lib       # ref sync watch + Book for the library
-pnpm test:lib      # library tests
-pnpm test:rs       # Rust/native tests
-pnpm pipeline test # matrix suites (Dagger)
-```
+   ```bash
+   ref sync
+   ```
 
-## Core workflow
+4. Import the stylesheet before your app code, then use a component.
 
-The center of the repo is `ref`, exposed by `@reference-ui/neo`.
+   ```tsx
+   // main.tsx
+   import '@reference-ui/lib/styles.css'
+   import { ReferenceLibrary } from '@reference-ui/lib'
+   import { Button } from '@reference-ui/lib/primitives'
 
-- `ref sync` builds and synchronizes generated design-system output
-- `ref sync --watch` keeps generated output current during development
-- `mcp` runs the Reference UI MCP server (`@reference-ui/mcp`)
+   // ReferenceLibrary mounts the toast host and live-region announcer.
+   export function App() {
+     return (
+       <ReferenceLibrary>
+         <Button variant="primary">Save</Button>
+       </ReferenceLibrary>
+     )
+   }
+   ```
 
-Most package-level dev and test flows build on top of that sync pipeline.
+To have lib's style props reject values outside your tokens, name the categories you want enforced (such as `colors`, `radii` and `spacing`) under `strict` in `ui.config.ts`. The [lib README](packages/reference-lib/README.md) covers the details.
 
 ## Documentation
 
-Product docs live in the docs site and the package READMEs:
+The documentation site lives in [`packages/reference-docs`](packages/reference-docs/). Serve it locally with `pnpm dev:docs`, then open http://localhost:5174.
 
-- [`packages/reference-docs`](./packages/reference-docs/) — the documentation site
-- [`packages/reference-neo/README.md`](./packages/reference-neo/README.md)
-- [`packages/reference-lib/README.md`](./packages/reference-lib/README.md)
+Package READMEs: [`@reference-ui/lib`](packages/reference-lib/README.md), [`@reference-ui/icons`](packages/reference-icons/README.md), [`@reference-ui/mcp`](packages/reference-mcp/README.md).
 
-## Status
+## Repository layout
 
-Production system. `ref sync` builds and synchronizes design-system output, with working build, test, docs, and release workflows (see Getting started above).
+- `packages/reference-lib`: `@reference-ui/lib`, the React component library
+- `packages/reference-icons`: `@reference-ui/icons`, the icon package
+- `packages/reference-rs`: `@reference-ui/rust`, the Rust compiler and native bindings
+- `packages/reference-neo`: the `ref` CLI and sync pipeline (private workspace package)
+- `packages/reference-mcp`: `@reference-ui/mcp`, the MCP server
+- `packages/reference-docs`: the documentation site (private workspace package)
+- `matrix/`: consumer-style fixture projects and the kept matrix test suites
+- `pipeline/`: the Dagger pipeline that builds the workspace and runs the matrix suites
+
+## Development
+
+```bash
+pnpm install         # from the repository root
+pnpm dev:lib         # ref sync --watch plus Book, the component playground, on http://localhost:5000
+pnpm dev:docs        # documentation site on http://localhost:5174
+pnpm test:lib        # library tests: Vitest, then Playwright component tests
+pnpm test:rs         # Rust workspace tests and native binding tests
+pnpm pipeline test   # matrix suites through the Dagger pipeline (needs Docker)
+```
+
+## License
+
+Reference UI is licensed under the [MIT License](LICENSE).

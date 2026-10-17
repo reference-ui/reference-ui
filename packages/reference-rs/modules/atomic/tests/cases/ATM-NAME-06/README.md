@@ -1,4 +1,4 @@
-# ATM-NAME-06 — Digit-leading and `--`-leading class-name station
+# ATM-NAME-06 — Digit-leading and `--`-leading class-name
 
 Class names that begin with a digit or a double dash are hex-escaped in
 the selector so the identifier is valid CSS. Runtime names stay unescaped.

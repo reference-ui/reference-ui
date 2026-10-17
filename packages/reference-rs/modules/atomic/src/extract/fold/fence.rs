@@ -214,12 +214,12 @@ fn lower_callable(
     })
 }
 
+/// Param names paired with their per-slot defaults, in declaration order.
+type LoweredParams = (Vec<Box<str>>, Vec<Option<PureExpr>>);
+
 /// Lower params to names plus per-slot defaults. Rest params and
 /// destructured patterns refuse; each default sees only earlier params.
-fn lower_params(
-    params: &FormalParameters<'_>,
-    scoped: Scoped<'_>,
-) -> Option<(Vec<Box<str>>, Vec<Option<PureExpr>>)> {
+fn lower_params(params: &FormalParameters<'_>, scoped: Scoped<'_>) -> Option<LoweredParams> {
     if params.rest.is_some() {
         return None;
     }

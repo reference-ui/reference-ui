@@ -7,8 +7,8 @@
  */
 import { recipe } from '@reference-ui/react'
 
-// Prepackaged variant styles, authored as system recipes (HQ system-variant
-// mechanism — the strip direction is closed, the kernel keeps line/pill).
+// Prepackaged variant styles, authored as system recipes (the kernel keeps
+// line/pill).
 // Axes hold axis-pure styles only; every cross-term (padding, indicator,
 // selected color, idle hover) lives in a compound keyed on its variant, so
 // unknown author names resolve to base + axis classes with no built-in

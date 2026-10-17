@@ -1,5 +1,5 @@
 /**
- * Post-attach call-init station (Forge §5). A const bound to a pure-helper
+ * Post-attach call-init case. A const bound to a pure-helper
  * call folds exactly like the direct call spelling — scalar, object, and
  * array inits all carry — while an impure-helper init refuses with a
  * diagnostic and keeps its static siblings.
@@ -49,8 +49,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('margin: calc(13 * var(--spacing-root));')
     expect(sheet).toContain('margin-top: 4px;')
 
-    // Refusal + sink info ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Refusal + sink info ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-80', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

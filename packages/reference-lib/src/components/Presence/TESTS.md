@@ -1,6 +1,6 @@
 # Presence test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Presence --e2e`).
 
 Playwright CT: `__e2e__/Presence.ct.spec.ts` (`pnpm agentct Presence`)
 Unit: `Presence.test.tsx` + `elementRef.test.tsx` (colocated Vitest)
@@ -11,17 +11,8 @@ before Presence decides when to remove the child.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/presence/src/presence.test.tsx` —
-  mount/unmount behavior and stable/unstable ref regressions.
-- `vendor/radix-primitives/packages/react/presence/src/presence.tsx` — mounted,
-  suspended, and unmounted state machine; animation-name change detection.
-- `vendor/base-ui/packages/react/src/internals/useAnimationsFinished.test.tsx`
-  and `collapsible/panel/CollapsiblePanel.test.tsx` — transitions, interrupted
-  close/reopen, zero-size exits, and stale completion races.
-- `vendor/headlessui/packages/@headlessui-react/src/components/transition` —
+- Headless UI's Transition —
   `getAnimations()` transition completion and nested-transition contrast.
-- `vendor/zag/packages/machines/presence` — zero-duration and hidden-document
-  completion.
 
 ## Required cases
 
@@ -306,7 +297,7 @@ before Presence decides when to remove the child.
   callback counts are zero with no interaction.
 - [x] `PR-EXIT-05` `[reference]` `[browser:all]` —
   **Presence should fire onExitComplete through a born-closed nested wedge.**
-  Close a 150ms parent containing a never-opened nested Presence (the B-01
+  Close a 150ms parent containing a never-opened nested Presence (the
   closed-overlay shape). Assert the parent removes on its own effect and its
   callback fires once, while the never-exited child callback stays silent.
 - [x] `PR-EXIT-06` `[reference]` `[browser:all]` —

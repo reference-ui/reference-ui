@@ -153,7 +153,7 @@ test.describe('RovingFocus Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('RovingFocus Space typeahead guard (PATCHES #1)', () => {
+test.describe('RovingFocus Space typeahead guard', () => {
   test.beforeEach(async ({ mount, page }) => {
     await mount('components/RovingFocus/RovingFocus/RovingFocusSpaceFixture')
     await expect(page.getByTestId('roving-focus-space-root')).toBeVisible()
@@ -497,7 +497,7 @@ test.describe('RovingFocus one-dimensional keys', () => {
     await b.focus()
     let seen = 0
     // WK reserves Control/Meta+Arrow for browser nav (Control+ArrowLeft unloads
-    // to about:blank, D7) — untestable in-browser; Alt proves the contract on WK.
+    // to about:blank) — untestable in-browser; Alt proves the contract on WK.
     const mods = (['Alt', 'Control', 'Meta'] as const).filter(m => m === 'Alt' || !isWebKit(page))
     for (const mod of mods) {
       for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'] as const) {

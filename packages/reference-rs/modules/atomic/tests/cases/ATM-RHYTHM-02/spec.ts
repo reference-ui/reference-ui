@@ -1,5 +1,5 @@
 /**
- * Rhythm multiplier station. Integer `2r` and decimal `0.5r` lower to
+ * Rhythm multiplier case. Integer `2r` and decimal `0.5r` lower to
  * `calc(N * var(--spacing-root))`.
  */
 import { expect } from 'vitest'

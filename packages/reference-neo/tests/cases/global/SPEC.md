@@ -19,51 +19,50 @@ to strip spread keys — plus `font()` and `keyframes()` fragments. Selectors ar
 literal (commas, `:has()`, vendor pseudos pass through); dark mode is token
 islands, never `[data-*]` rules in this layer.
 
-## Engine stations
+## Reference-rs cases
 
-All confirmed present 2026-09-17 (`ls` + README in
+All confirmed present (`ls` + README in
 `packages/reference-rs/modules/atomic/tests/cases/`): ATM-LAYER-03 (global
 layer population, nested `&`, conditions via the walker), ATM-LAYER-05
 (`@keyframes` in `global`), ATM-LAYER-06 (`@font-face` in `global`),
 ATM-COND-10 (interaction pseudo catalog), ATM-COND-11 (`@media` presets as
 at-rules), ATM-COND-14 (`&` composition, comma scoping), ATM-COND-16
 (`container` forms), ATM-TOKEN-06 (slash/opacity parsing for `color-mix`
-values). One row needs the RS lane: GLOBAL-08 waits on RS-2 (PLAN §5.3).
+values). One row needs a reference-rs change: GLOBAL-08 waits on RS-2 (PLAN §5.3).
 
 ## Decisions
 
-D2 (`styled/global.css` is not written; the one sheet is `styles.css`) and D7
-(Panda chrome and bugs are not parity) both land here in NEO-GLOBAL-09.
+(`styled/global.css` is not written; the one sheet is `styles.css`) and (Panda chrome and bugs are not parity) both land here in NEO-GLOBAL-09.
 Coverage-map row 11 is the input: `styled/global.css` is `covered-against-plan`
-(SYNC-01 asserts the stub D2 forbids); SYNC-02 rewrites SYNC-01 while GLOBAL-09
+(SYNC-01 asserts the stub forbids); SYNC-02 rewrites SYNC-01 while GLOBAL-09
 pins the absence from the stylesheet side (no file, no banner, no var dump).
 
 ## Approved absences
 
-- `--made-with-panda` banner and the `*` transform/filter var dump (D7).
-- Panda's `@layer base` `global.css` file as a build artifact (D2): it was a
+- `--made-with-panda` banner and the `*` transform/filter var dump.
+- Panda's `@layer base` `global.css` file as a build artifact: it is a
   compiler contract read only by `demotePandaGlobalCssLayer`, never a runtime
-  import (evidence §4). Neo emits `@layer global` directly.
+  import. Neo emits `@layer global` directly.
 - `@keyframes` in the tokens layer: Panda puts its 31 keyframes there; Neo
   puts them in `global` per ATM-LAYER-05. Deliberate divergence, same paint.
 - Panda selector comma-merging (`body,.ref-div`): Rust walks one rule per node;
-  cascade-equal, formatting differs (evidence §6.5).
+  cascade-equal, formatting differs.
 - `colorPalette` no-op atoms, `.size_md{width:md}`, the `{…}` leftover class,
-  duplicated dark semantics in the default block (D7).
+  duplicated dark semantics in the default block.
 - Any `[data-theme]`/`[data-panda-theme]` rules inside the global layer: dark
-  is token islands (evidence §6.11; proven by TOKEN-05, not here).
+  is token islands (proven by TOKEN-05, not here).
 
 ## Out of scope (Panda, not Reference)
 
 | Feature | Reason |
 | --- | --- |
-| Panda `themes` JSON / `_themePrimary` | Brand packs, not colour mode (D1) |
-| `:where(html)` vars + `@property` (`global-vars.test.ts`) | Panda global-vars shape; Neo token vars live on `:root,[data-color-mode=…]` |
-| `@position-try` (`global-position-try.test.ts`) | Not in Reference authoring |
+| Panda `themes` JSON / `_themePrimary` | Brand packs, not colour mode |
+| `:where(html)` vars + `@property` (Panda global-vars tests) | Panda global-vars shape; Neo token vars live on `:root,[data-color-mode=…]` |
+| `@position-try` (Panda position-try tests) | Not in Reference authoring |
 | `divideX`/`divideY` in global hover | Pattern pack, out (corpus §5) |
 | Static colour/spacing cardinality | STATIC group, not globalCss |
-| Viewport `@media` breakpoints in globals | D8: `@container` only; nested `@media` itself is still proven (GLOBAL-07) |
+| Viewport `@media` breakpoints in globals | `@container` only; nested `@media` itself is still proven (GLOBAL-07) |
 | `groupHover` / `peerFocus` | COND-11, not globalCss |
-| Slot recipes / `sva` | D9: multi-part anatomy is global CSS + `data-slot` (Trace C is the proof) |
-| `token()` string helper | D15: `{path}` refs only |
+| Slot recipes / `sva` | multi-part anatomy is global CSS + `data-slot` (Trace C is the proof) |
+| `token()` string helper | `{path}` refs only |
 | Panda preflight | Preflight is off; reset is Reference's own (LAYER-04) |

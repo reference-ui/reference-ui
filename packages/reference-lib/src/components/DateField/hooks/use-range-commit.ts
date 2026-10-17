@@ -8,7 +8,7 @@
  */
 import * as React from 'react'
 import type { DateRangeValue, ISODate } from '../../Calendar'
-import { type ISODate as CanonicalISODate, isValidISODate } from '../../Calendar/dates/iso'
+import { type CanonicalISODate, isValidISODate } from '../../Calendar/dates/iso'
 import {
   formatLocalDate,
   isDateWithinConstraints,

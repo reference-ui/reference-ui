@@ -1,6 +1,6 @@
 # Splitter
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Splitter --e2e`).
 
 A 1D flex partition with a window-splitter Handle. Splitter owns layout
 along one axis, the pointer drag loop (direct DOM writes, no React commit

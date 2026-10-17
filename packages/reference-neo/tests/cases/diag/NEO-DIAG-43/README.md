@@ -4,6 +4,6 @@ The baseSystem spec failed contract validation. The world carries the base proje
 
 Raised in: `modules/atomic/native.rs`. Driver: native compile over the case world with the registry-documented request mutation.
 
-Evidence: `[diag]` ATM-E-INVALID-BASE-SYSTEM (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-INVALID-BASE-SYSTEM (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-INVALID-BASE-SYSTEM, atm-e-invalid-base-system, diagnostics case index, NEO-DIAG-43

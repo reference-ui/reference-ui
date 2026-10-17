@@ -19,7 +19,7 @@ interface SpecInput {
 
 const MAX_LINES = 40;
 
-// A fragment file against the generated system entry: config plus every D6
+// A fragment file against the generated system entry: config plus every
 // authoring call. Materialized into a temp dir at spec time because it cannot
 // live in the repo: the harness pre-run typecheck resolves
 // @reference-ui/system to the stable surface, whose wide shapes (one-argument
@@ -147,7 +147,7 @@ async function typecheckFragment(worldDir: string, paths: Record<string, string[
   }
 }
 
-// After sync, the generated system entry types a fragment using the full D6
+// After sync, the generated system entry types a fragment using the full
 // authoring surface, and the same world paints its brand probe.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const paths = readWorldTsconfig(c.worldDir);

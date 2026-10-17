@@ -16,7 +16,23 @@ use super::ts_assertions::{infer_ts_as_expression, infer_ts_satisfies_expression
 use crate::model::{FnParam, JsDoc, TsMember, TsMemberKind, TypeRef};
 use crate::shared::type_ref_util::property_key_name;
 
+/// Infers the type of a value expression. Objects, arrays and recipe calls are handled at the top of the chain;
+/// literals and assertions are one step down, so each match stays within the arm budget.
 pub(crate) fn infer_value_type_with_const_context(
+    expression: &Expression<'_>,
+    ctx: &ExtractionContext<'_>,
+    const_asserted: bool,
+) -> Option<TypeRef> {
+    match expression {
+        Expression::ObjectExpression(object) => infer_object_type(object, ctx, const_asserted),
+        Expression::ArrayExpression(array) => infer_array_type(array, ctx, const_asserted),
+        Expression::CallExpression(call) => infer_call_expression_type(call, ctx),
+        other => infer_literal_expression_type(other, ctx, const_asserted),
+    }
+}
+
+/// Literal expressions lower to their primitive or literal types.
+fn infer_literal_expression_type(
     expression: &Expression<'_>,
     ctx: &ExtractionContext<'_>,
     const_asserted: bool,
@@ -40,17 +56,23 @@ pub(crate) fn infer_value_type_with_const_context(
             expression.span(),
             const_asserted,
         )),
-        Expression::ObjectExpression(object) => {
-            Some(infer_object_type(object, ctx, const_asserted)?)
-        }
-        Expression::ArrayExpression(array) => Some(infer_array_type(array, ctx, const_asserted)?),
+        other => infer_asserted_expression_type(other, ctx, const_asserted),
+    }
+}
+
+/// A type assertion or `satisfies` expression lowers to the type of its inner expression.
+fn infer_asserted_expression_type(
+    expression: &Expression<'_>,
+    ctx: &ExtractionContext<'_>,
+    const_asserted: bool,
+) -> Option<TypeRef> {
+    match expression {
         Expression::TSAsExpression(assertion) => {
             infer_ts_as_expression(assertion, ctx, const_asserted)
         }
         Expression::TSSatisfiesExpression(satisfies) => {
             infer_ts_satisfies_expression(satisfies, ctx, const_asserted)
         }
-        Expression::CallExpression(call) => infer_call_expression_type(call, ctx),
         _ => None,
     }
 }
@@ -63,14 +85,7 @@ fn infer_call_expression_type(
         return None;
     }
 
-    let config = call.arguments.iter().find_map(|argument| match argument {
-        Argument::SpreadElement(_) => None,
-        value => match value.to_expression().get_inner_expression() {
-            Expression::ObjectExpression(object) => Some(object),
-            _ => None,
-        },
-    })?;
-
+    let config = recipe_config_object(call)?;
     let selection = infer_recipe_selection_object(config, ctx)?;
     Some(TypeRef::Function {
         params: vec![FnParam {
@@ -82,6 +97,22 @@ fn infer_call_expression_type(
             name: "string".to_string(),
         }),
     })
+}
+
+/// The first argument of a recipe call that is an object literal. A spread argument never qualifies.
+fn recipe_config_object<'x, 'a>(call: &'x CallExpression<'a>) -> Option<&'x ObjectExpression<'a>> {
+    call.arguments.iter().find_map(argument_object)
+}
+
+fn argument_object<'x, 'a>(argument: &'x Argument<'a>) -> Option<&'x ObjectExpression<'a>> {
+    if matches!(argument, Argument::SpreadElement(_)) {
+        return None;
+    }
+
+    match argument.to_expression().get_inner_expression() {
+        Expression::ObjectExpression(object) => Some(object.as_ref()),
+        _ => None,
+    }
 }
 
 fn is_recipe_factory_call(call: &CallExpression<'_>, ctx: &ExtractionContext<'_>) -> bool {
@@ -153,23 +184,31 @@ fn find_object_property<'a>(
     object
         .properties
         .iter()
-        .find_map(|property| {
-            let ObjectPropertyKind::ObjectProperty(property) = property else {
-                return None;
-            };
-            if property.kind != PropertyKind::Init || property.computed || property.method {
-                return None;
-            }
-            if property_key_name(&property.key, ctx.source)?.as_str() != name {
-                return None;
-            }
+        .find_map(|property| named_object_literal_value(property, name, ctx))
+}
 
-            match property.value.get_inner_expression() {
-                Expression::ObjectExpression(object) => Some(object),
-                _ => None,
-            }
-        })
-        .map(|object| &**object)
+/// The object-literal value of a plain `key: { ... }` property with the given key. Methods, computed keys,
+/// spreads, and every other value shape yield `None`.
+fn named_object_literal_value<'a>(
+    property: &'a ObjectPropertyKind<'a>,
+    name: &str,
+    ctx: &ExtractionContext<'_>,
+) -> Option<&'a ObjectExpression<'a>> {
+    let ObjectPropertyKind::ObjectProperty(property) = property else {
+        return None;
+    };
+
+    if property.kind != PropertyKind::Init || property.computed || property.method {
+        return None;
+    }
+    if property_key_name(&property.key, ctx.source)?.as_str() != name {
+        return None;
+    }
+
+    match property.value.get_inner_expression() {
+        Expression::ObjectExpression(object) => Some(object.as_ref()),
+        _ => None,
+    }
 }
 
 fn collect_object_property_names(

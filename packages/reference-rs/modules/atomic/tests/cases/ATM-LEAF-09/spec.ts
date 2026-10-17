@@ -1,5 +1,5 @@
 /**
- * Authored-important station. Trailing `!` on JSX and css() string leaves
+ * Authored-important case. Trailing `!` on JSX and css() string leaves
  * sets Want.important and names the class `<system>__mt_2r!`.
  */
 import { expect } from 'vitest'

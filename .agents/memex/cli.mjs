@@ -42,9 +42,7 @@ usage:
   search with no query lists collections (--in lists one roster).
   show resolves paths through the graph, ids to docs (--limit pages
   ambiguous-id candidates).
-  ranked search is stemmed + fuzzy (default --limit 15) except
-  targeted perf search, which is exact substring-AND; perf also
-  takes verdict:/wave:/kind: filters. --up applies to paths only.`
+  ranked search is stemmed + fuzzy (default --limit 15). --up applies to paths only.`
 
 function emitError(message, json) {
   if (json) {
@@ -178,7 +176,6 @@ function runSearch(all, opts) {
             collection,
             total: found.total,
             returned: found.docs.length,
-            header: found.header,
             docs: found.docs.map(d => ({
               collection: d.collection,
               id: d.id,
@@ -192,11 +189,6 @@ function runSearch(all, opts) {
         )
       )
     } else {
-      if (found.header) {
-        console.log(
-          `perf-index: ${found.total} entries (built ${found.header.built})\nwaves: ${JSON.stringify(found.header.waves)}\nverdicts: ${JSON.stringify(found.header.verdicts)}`
-        )
-      }
       for (const d of found.docs) {
         const extra = d.extra ? `  ${d.extra}` : ''
         console.log(`${d.collection}:${d.id} — ${d.title}${extra}`)
@@ -224,9 +216,7 @@ function runSearch(all, opts) {
     return
   }
   if (!found.hits.length) {
-    const hint =
-      collection === 'perf' ? ' (every word must appear — try each word alone)' : ''
-    console.log(found.total ? footer(0, found.total) : `no matches for '${query}'${hint}`)
+    console.log(found.total ? footer(0, found.total) : `no matches for '${query}'`)
     return
   }
   for (const hit of found.hits) printHit(hit)
@@ -243,25 +233,6 @@ function showJsonDoc(doc) {
   }
   const p = doc.payload
   switch (doc.kind) {
-    case 'perf': {
-      const e = p.entry
-      return {
-        ...base,
-        verdict: e.verdict,
-        wave: e.wave,
-        kind: e.kind,
-        topic: e.topic,
-        effect: e.effect,
-        report: e.report,
-        patch: e.patch,
-        files: e.files,
-        overruledBy: e.overruledBy ?? null,
-        landing: e.landing ?? null,
-        landedIn: e.landedIn ?? null,
-        summary: e.summary ?? null,
-        log: e.log ?? null,
-      }
-    }
     case 'neo':
       return { ...base, family: p.family, related: p.related, specs: p.specs }
     case 'rs':

@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loadDialect, type DialectData } from './dialect';
+import { loadDialect, type DialectData } from './dialect.js';
 import {
   emitConditionsRs,
   emitCssColorRs,
@@ -21,9 +21,9 @@ import {
   emitHtmlRs,
   emitLibRs,
   emitTestsRs,
-} from './emit';
-import { loadPlatformCss, loadPlatformElements, type PlatformCss } from './platform';
-import { validateJoin } from './join';
+} from './emit/index.js';
+import { loadPlatformCss, loadPlatformElements, type PlatformCss } from './platform.js';
+import { validateJoin } from './join.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

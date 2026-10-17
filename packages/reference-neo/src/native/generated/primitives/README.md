@@ -7,8 +7,8 @@ typegen's prop definitions and prints committed artifacts; nothing on this shelf
 hand-authored, and nothing here is the authority for anything.
 
 What lives here is exactly what crosses the cut as files. The JSON vocabulary is the
-machine contract the per-system emitter and the PGEN station parity cases read: the
-101 HTML elements with their JSX names and station families, the exact style-prop key
+machine contract the per-system emitter and the PGEN case parity cases read: the
+101 HTML elements with their JSX names and case families, the exact style-prop key
 set, the named conditions, the alias map, the reserved keys, and the two host-element
 overrides. The declaration file is the matching raw types: the exact style-prop union,
 the per-tag props, and the shared generics, byte-identical to the generator output
@@ -20,7 +20,7 @@ the code that renders. The per-system bake — layer name, splitter list, css bi
 stays Neo-side at publish time, since only sync sees the system being built.
 
 Freshness has three layers, and this shelf is the middle one. The vendor tool keeps
-the bytes equal to the generator output and fails loudly otherwise; the station parity
+the bytes equal to the generator output and fails loudly otherwise; the case parity
 cases fail on semantic drift against the live canon and typegen tables; the RS golden
 pins the generator output itself. When the generator moves, re-run it, re-run the
 vendor tool from the Neo package directory, and let the quality gate confirm the

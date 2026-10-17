@@ -5,7 +5,7 @@ The world holds a local const style object and passes one member into
 resolved utility and the node paints it. Whole-object `css(styles)` stays
 absented per the site SPEC — members and spreads are the author shapes.
 
-Evidence: `[panda-v1]` `extractor/__tests__/unbox.test.ts` L4304;
-`[atm]` ATM-SITE-06.
+Evidence: Panda v1 extractor unbox tests;
+ATM-SITE-06.
 
 > Search terms: property lookup, dot notation, token reference, site/member-access, NEO-SITE-03

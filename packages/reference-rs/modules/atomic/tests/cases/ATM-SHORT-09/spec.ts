@@ -1,5 +1,5 @@
 /**
- * Radius-pair station (ATM-SHORT-09, RS-25). The six side shorthands copy
+ * Radius-pair (ATM-SHORT-09). The six side shorthands copy
  * one value to both addressed corners; real properties (`borderRadius`,
  * corner longhands) pass through untouched. No dead pair property prints.
  */

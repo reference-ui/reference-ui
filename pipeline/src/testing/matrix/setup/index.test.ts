@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, it } from 'node:test'
 
 import { createManagedMatrixPackageJson } from '../managed/package-json/index.js'
@@ -35,8 +36,8 @@ describe('setupMatrixPackages package generation', () => {
         react: 'react19',
         reactVersions: ['react19'],
       },
-      configPath: '/Users/ryn/Developer/reference-ui/matrix/tests/mcp/matrix.json',
-      dir: '/Users/ryn/Developer/reference-ui/matrix/tests/mcp',
+      configPath: resolve(import.meta.dirname, '../../../../../matrix/tests/mcp/matrix.json'),
+      dir: resolve(import.meta.dirname, '../../../../../matrix/tests/mcp'),
       packageName: '@matrix/mcp',
     })
 

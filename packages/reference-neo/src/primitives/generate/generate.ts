@@ -1,7 +1,7 @@
 // Native generator for the Neo react entry plus its bound per-system types.
-// It takes the system name, the compiled style prop names, the tracked E2
+// It takes the system name, the compiled style prop names, the tracked
 // primitives path, and the spec recipes, and emits the bound entry source
-// plus the complete react.d.mts. The types bake narrows E4 per system:
+// plus the complete react.d.mts. The types bake narrows the primitive types per system:
 // the compiled StylePropName union, SystemStyleObject css, and the typegen
 // recipe-union variant (never when recipes are absent). The synced role
 // decides the SyncedSystem register: a publisher declares it, a consumer
@@ -32,7 +32,7 @@ export interface ReactTypesInput {
  * generated source, never the gitignored dist build. The css() binding is
  * caller-provided: the publisher prepends a runtime header that imports
  * the style runtime plus this system's runtime-data, registers both, and
- * re-exports css/recipe — styled stays data-only (D4). No react-dom
+ * re-exports css/recipe — styled stays data-only. No react-dom
  * re-export: consumers bring their own copy, so the entry stays react-only
  * and packages built on it import clean without react-dom (core contract).
  */
@@ -241,7 +241,7 @@ function namedGraphLines(): string[] {
     '    : Record<string, RecipePropValue | undefined | null>',
     '  : Record<string, RecipePropValue | undefined | null>',
     '/** Resolved recipe function: classes for a selection plus variant metadata. */',
-    '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>> (T3): */',
+    '/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */',
     '/** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */',
     'export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {',
     '  (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string',
@@ -259,12 +259,12 @@ function namedGraphLines(): string[] {
  * Generate the bound react entry types for one system. Every tag gets a
  * props type plus a ref-as-prop component signature; the styled wiring and
  * the named graph arrive complete, so no later leg rewrites this file.
- * StylePropName is the compiled list verbatim (the splitter's list, (g)7);
- * css narrows to SystemStyleObject ((g)9); per-tag variant stays open
+ * StylePropName is the compiled list verbatim (the splitter's list);
+ * css narrows to SystemStyleObject; per-tag variant stays open
  * unknown so user-space spreads compile, while the exported
  * PrimitiveVariantProp alias carries the union of this system's typegen
  * recipe aliases, never when recipes are absent. PrimitiveProps<T>
- * reuses the E4 text verbatim ((g)11).
+ * reuses the primitive types text verbatim.
  */
 export function generateReactTypesSource(input: ReactTypesInput): string {
   const role = input.role ?? 'none'

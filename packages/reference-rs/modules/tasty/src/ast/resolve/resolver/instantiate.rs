@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use super::Resolver;
 use crate::ast::model::SymbolShell;
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
-use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
+use crate::shared::type_ref_map::{map_type_ref, ConditionalParts, ReferenceParts, TypeRefMap};
 
 impl<'a> Resolver<'a> {
     pub(super) fn instantiate_symbol_type_alias(
@@ -92,14 +92,14 @@ struct InstantiateTypeRefMap<'a> {
 }
 
 impl TypeRefMap for InstantiateTypeRefMap<'_> {
-    fn map_reference(
-        &mut self,
-        name: String,
-        target_id: Option<String>,
-        source_module: Option<String>,
-        type_arguments: Option<Vec<TypeRef>>,
-        type_parameter: bool,
-    ) -> TypeRef {
+    fn map_reference(&mut self, reference: ReferenceParts) -> TypeRef {
+        let ReferenceParts {
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+            type_parameter,
+        } = reference;
         // Expansion instantiates a shell's underlying type, where the alias's own parameters are not bound
         // yet, so an unbound name matching one is that parameter. Its source module does not matter: a
         // library alias's references carry the module, and an inner binder's reference is flagged instead.
@@ -152,14 +152,14 @@ impl TypeRefMap for InstantiateTypeRefMap<'_> {
         }
     }
 
-    fn map_conditional(
-        &mut self,
-        check_type: TypeRef,
-        extends_type: TypeRef,
-        true_type: TypeRef,
-        false_type: TypeRef,
-        resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_conditional(&mut self, parts: ConditionalParts) -> TypeRef {
+        let ConditionalParts {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+            resolved,
+        } = parts;
         TypeRef::Conditional {
             check_type: Box::new(check_type),
             extends_type: Box::new(extends_type),

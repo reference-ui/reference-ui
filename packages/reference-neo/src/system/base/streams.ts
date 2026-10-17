@@ -4,7 +4,7 @@
 // the own :root-hoisted tokens, the portable sheet the own self-scoped tokens, while
 // upstream entries print their portable tokens resetless and rootless in both; the
 // own root default hoists ahead of the statement so it ranks below every package.
-// Ported 1:1 from the packed-css oracle the S5 cutover deleted; the corpus holds the join now.
+// Ported 1:1 from the packed-css oracle the cutover deleted; the corpus holds the join now.
 
 import type { SystemStreams } from './types.ts'
 

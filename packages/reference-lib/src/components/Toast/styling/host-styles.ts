@@ -205,7 +205,7 @@ export const TOAST_HOST_STYLES = `
   cursor: pointer;
 }
 
-/* B-37: the default-toast close is an inline trailing circle, fully inside the
+/* The default-toast close is an inline trailing circle, fully inside the
    card. (The data-corner hook name is historical; kept for back-compat.) In-flow
    placement makes RTL automatic, so there are no directional overrides. */
 [data-reference-toast-close][data-corner] {

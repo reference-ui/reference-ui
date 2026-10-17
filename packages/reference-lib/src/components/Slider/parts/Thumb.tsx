@@ -118,7 +118,7 @@ export const SliderThumb: React.ForwardRefExoticComponent<
   const thumbBounds = inRange
     ? getThumbBounds(values, index, min, max, context.step, context.minStepsBetweenThumbs)
     : { min, max }
-  // B-29: the render path clamps ARIA to the feasible window, exactly like
+  // The render path clamps ARIA to the feasible window, exactly like
   // the visual position — a controlled value=999/max=24 exposes 24, never
   // a now/min/max triple AT would reject.
   const thumbMin = Math.max(min, Math.min(max, thumbBounds.min))

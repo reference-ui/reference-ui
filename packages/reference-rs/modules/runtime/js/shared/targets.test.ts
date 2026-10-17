@@ -11,7 +11,7 @@ import {
   getReferenceNativeTriple,
   SUPPORTED_REFERENCE_NATIVE_TARGETS,
   TARGET_TRIPLES,
-} from './targets'
+} from './targets.js'
 
 describe('targets', () => {
   it('keeps supported runtime targets aligned with Rust targets', () => {

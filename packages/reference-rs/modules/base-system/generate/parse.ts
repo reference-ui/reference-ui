@@ -9,7 +9,7 @@
 
 import * as fs from 'node:fs';
 
-import { tokenize, tokenLoc, type Token } from './scan';
+import { tokenize, tokenLoc, type Token } from './scan.js';
 
 export type JsonObject = { [key: string]: JsonValue };
 export type JsonValue = string | JsonObject;

@@ -10,10 +10,9 @@ serialization scheduler, and the handshake a one-shot poke waits on all
 live here, behind one function, instead of scattered as ad-hoc watcher
 calls.
 
-Moved whole from `src/sync/` (WAVE4-WATCH-LIB): legacy kept watch
+Moved whole from `src/sync/`: legacy kept watch
 top-level because it held its own piscina worker plus its own event
-bus, and neither force exists in Neo — parcel subscribe direct, no bus
-by HQ law — so lib/ stands. The picomatch type seam rides along
+bus, and neither force exists in Neo — parcel subscribe direct, no bus — so lib/ stands. The picomatch type seam rides along
 because only the watcher matches globs.
 
 ## What it owns

@@ -5,15 +5,17 @@
 //! including the tsconfig-aliased true miss and the nested-import arm.
 
 use module_graph::ModuleKey;
-use rustc_hash::FxHashMap;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use rustc_hash::FxHashMap;
 
-use super::{
-    ImportRef, LocalConstants, ResolvedExport, RetainedSource, StreamedSource, ValueGraph,
-};
 use super::staging::StagingPlan;
+use super::{
+    GraphInputs, ImportRef, LocalConstants, ResolvedExport, RetainedSource, StreamedSource,
+    ValueGraph,
+};
+use oxc_ast::ast::Program;
 
 /// One differential fixture: path, content, and the stream gate.
 struct Fixture {
@@ -102,7 +104,10 @@ fn resolve_under<'x>(make: &dyn Fn() -> ValueGraph<'x>) -> Vec<(String, Vec<(Str
         .iter()
         .map(|path| {
             let refs = refs_for(path);
-            (path.to_string(), snapshot(graph.resolve_file_imports(path, &refs)))
+            (
+                path.to_string(),
+                snapshot(graph.resolve_file_imports(path, &refs)),
+            )
         })
         .collect()
 }
@@ -118,15 +123,14 @@ fn force_unstage_matches_census_matches_full_staging() {
         .collect();
     sources.push((
         "/v/tsconfig.json".to_string(),
-        "{\"compilerOptions\": {\"baseUrl\": \".\", \"paths\": {\"@/*\": [\"src/*\"]}}}".to_string(),
+        "{\"compilerOptions\": {\"baseUrl\": \".\", \"paths\": {\"@/*\": [\"src/*\"]}}}"
+            .to_string(),
     ));
     let allocators: Vec<Allocator> = files.iter().map(|_| Allocator::default()).collect();
     let parsed: Vec<_> = files
         .iter()
         .zip(allocators.iter())
-        .map(|(file, allocator)| {
-            Parser::new(allocator, file.content, SourceType::ts()).parse()
-        })
+        .map(|(file, allocator)| Parser::new(allocator, file.content, SourceType::ts()).parse())
         .collect();
     for (file, ret) in files.iter().zip(parsed.iter()) {
         assert!(!ret.panicked, "{} parses", file.path);
@@ -136,7 +140,7 @@ fn force_unstage_matches_census_matches_full_staging() {
         .zip(parsed.iter())
         .enumerate()
         .filter(|(_, (file, _))| !file.streamed)
-        .map(|(index, (file, ret))| RetainedSource {
+        .map(|(index, (_, ret))| RetainedSource {
             path: sources[index].0.as_str(),
             content: sources[index].1.as_str(),
             program: &ret.program,
@@ -151,21 +155,18 @@ fn force_unstage_matches_census_matches_full_staging() {
             .collect::<Vec<_>>()
     };
     let project = LocalConstants::new();
-    let full_keys: Vec<ModuleKey> = files
-        .iter()
-        .map(|file| ModuleKey::new(file.path))
-        .collect();
+    let full_keys: Vec<ModuleKey> = files.iter().map(|file| ModuleKey::new(file.path)).collect();
 
     let census = resolve_under(&|| ValueGraph::new(&sources, &retained, streamed(), &project));
     let empty = resolve_under(&|| {
-        ValueGraph::new_with_plan(&sources, &retained, streamed(), &project, StagingPlan::empty())
+        ValueGraph::new_with_plan(
+            GraphInputs::new(&sources, &retained, streamed(), &project),
+            StagingPlan::empty(),
+        )
     });
     let full = resolve_under(&|| {
         ValueGraph::new_with_plan(
-            &sources,
-            &retained,
-            streamed(),
-            &project,
+            GraphInputs::new(&sources, &retained, streamed(), &project),
             StagingPlan::full(full_keys.clone().into_iter()),
         )
     });
@@ -175,12 +176,21 @@ fn force_unstage_matches_census_matches_full_staging() {
     // Sanity: the values actually folded (not identically empty). The
     // alias target is a true census miss, so `gap` proves the fallback.
     let app = &census[0].1;
-    let button = app.iter().find(|(name, _)| name == "button").expect("button folds");
+    let button = app
+        .iter()
+        .find(|(name, _)| name == "button")
+        .expect("button folds");
     assert!(button.1.contains("4px"), "{button:?}");
-    let gap = app.iter().find(|(name, _)| name == "gap").expect("gap folds");
+    let gap = app
+        .iter()
+        .find(|(name, _)| name == "gap")
+        .expect("gap folds");
     assert!(gap.1.contains("12px"), "{gap:?}");
     // `base` fans through the star barrel to base's object.
-    let base = app.iter().find(|(name, _)| name == "base").expect("base folds");
+    let base = app
+        .iter()
+        .find(|(name, _)| name == "base")
+        .expect("base folds");
     assert!(base.1.contains("red"), "{base:?}");
 }
 
@@ -191,27 +201,26 @@ fn census_plan_stages_edges_and_targets_only() {
     let parsed: Vec<_> = files
         .iter()
         .zip(allocators.iter())
-        .map(|(file, allocator)| {
-            Parser::new(allocator, file.content, SourceType::ts()).parse()
-        })
+        .map(|(file, allocator)| Parser::new(allocator, file.content, SourceType::ts()).parse())
         .collect();
     let records: Vec<module_graph::ModuleRecord> = parsed
         .iter()
         .map(|ret| module_graph::ModuleRecord::collect(&ret.program))
         .collect();
-    let keys: Vec<ModuleKey> = files
-        .iter()
-        .map(|file| ModuleKey::new(file.path))
-        .collect();
+    let keys: Vec<ModuleKey> = files.iter().map(|file| ModuleKey::new(file.path)).collect();
     let set: std::collections::HashSet<ModuleKey> = keys.iter().cloned().collect();
-    let plan = StagingPlan::census(
-        keys.iter().cloned().zip(records.iter()),
-        &|key| set.contains(key),
-    );
+    let plan = StagingPlan::census(keys.iter().cloned().zip(records.iter()), &|key| {
+        set.contains(key)
+    });
     // Edged files and relative targets stage; the dead exporter, the
     // alias-only target (bare: a deliberate miss), and the edgeless
     // nested file unstage.
-    for path in ["/v/src/app.ts", "/v/src/tokens.ts", "/v/src/base.ts", "/v/src/barrel.ts"] {
+    for path in [
+        "/v/src/app.ts",
+        "/v/src/tokens.ts",
+        "/v/src/base.ts",
+        "/v/src/barrel.ts",
+    ] {
         assert!(plan.stages(&ModuleKey::new(path)), "{path} stages");
     }
     for path in ["/v/src/aliased.ts", "/v/src/dead.ts", "/v/src/plain.ts"] {
@@ -227,7 +236,8 @@ fn census_plan_stages_edges_and_targets_only() {
 #[test]
 fn nested_import_pinned_to_fallback_identical() {
     use crate::extract::scope;
-    let content = "export const ok = 'yes'\nfunction g() {\n  import { q } from './base'\n  return q\n}";
+    let content =
+        "export const ok = 'yes'\nfunction g() {\n  import { q } from './base'\n  return q\n}";
     let base = "export const base = { color: 'red' }";
     let allocator = Allocator::default();
     let base_allocator = Allocator::default();
@@ -245,18 +255,6 @@ fn nested_import_pinned_to_fallback_identical() {
         ("/v/src/base.ts".to_string(), base.to_string()),
     ];
     let project = LocalConstants::new();
-    let retained = vec![
-        RetainedSource {
-            path: sources[0].0.as_str(),
-            content: sources[0].1.as_str(),
-            program: &ret.program,
-        },
-        RetainedSource {
-            path: sources[1].0.as_str(),
-            content: sources[1].1.as_str(),
-            program: &base_ret.program,
-        },
-    ];
     let refs: Vec<ImportRef> = scope::collect(&ret.program, &project)
         .import_refs()
         .into_iter()
@@ -265,48 +263,69 @@ fn nested_import_pinned_to_fallback_identical() {
     if refs.is_empty() {
         // The visitor drops the nested import: walk-invisible on every
         // arm, so the census correctly unstages the file.
-        let record = module_graph::ModuleRecord::collect(&ret.program);
-        let base_record = module_graph::ModuleRecord::collect(&base_ret.program);
-        let set: std::collections::HashSet<ModuleKey> = ["/v/src/nested.ts", "/v/src/base.ts"]
-            .iter()
-            .map(|key| ModuleKey::new(key))
-            .collect();
-        let plan = StagingPlan::census(
-            [
-                (ModuleKey::new("/v/src/nested.ts"), &record),
-                (ModuleKey::new("/v/src/base.ts"), &base_record),
-            ]
-            .into_iter(),
-            &|key| set.contains(key),
-        );
-        assert!(!plan.stages(&ModuleKey::new("/v/src/nested.ts")));
+        assert_nested_import_unstages(&ret.program, &base_ret.program);
         return;
     }
-    // The visitor binds it: an unstaged walk start, served by the
-    // fallback on the census and empty arms — all three must agree.
+    assert_nested_import_plans_agree(&sources, &ret.program, &base_ret.program, &refs);
+}
+
+/// The census unstages a file whose only import the record cannot see.
+fn assert_nested_import_unstages(nested: &Program<'_>, base: &Program<'_>) {
+    let record = module_graph::ModuleRecord::collect(nested);
+    let base_record = module_graph::ModuleRecord::collect(base);
+    let set: std::collections::HashSet<ModuleKey> = ["/v/src/nested.ts", "/v/src/base.ts"]
+        .iter()
+        .map(|key| ModuleKey::new(key))
+        .collect();
+    let plan = StagingPlan::census(
+        [
+            (ModuleKey::new("/v/src/nested.ts"), &record),
+            (ModuleKey::new("/v/src/base.ts"), &base_record),
+        ]
+        .into_iter(),
+        &|key| set.contains(key),
+    );
+    assert!(!plan.stages(&ModuleKey::new("/v/src/nested.ts")));
+}
+
+/// The visitor binds the nested import: an unstaged walk start, served by
+/// the fallback on the census and empty arms, so all three plans must agree.
+fn assert_nested_import_plans_agree(
+    sources: &[(String, String)],
+    nested: &Program<'_>,
+    base: &Program<'_>,
+    refs: &[ImportRef],
+) {
+    let project = LocalConstants::new();
+    let retained = vec![
+        RetainedSource {
+            path: sources[0].0.as_str(),
+            content: sources[0].1.as_str(),
+            program: nested,
+        },
+        RetainedSource {
+            path: sources[1].0.as_str(),
+            content: sources[1].1.as_str(),
+            program: base,
+        },
+    ];
     let streamed = || Vec::new();
-    let mut census = ValueGraph::new(&sources, &retained, streamed(), &project);
+    let mut census = ValueGraph::new(sources, &retained, streamed(), &project);
     let mut empty = ValueGraph::new_with_plan(
-        &sources,
-        &retained,
-        streamed(),
-        &project,
+        GraphInputs::new(sources, &retained, streamed(), &project),
         StagingPlan::empty(),
     );
     let mut full = ValueGraph::new_with_plan(
-        &sources,
-        &retained,
-        streamed(),
-        &project,
+        GraphInputs::new(sources, &retained, streamed(), &project),
         StagingPlan::full(
             ["/v/src/nested.ts", "/v/src/base.ts"]
                 .iter()
                 .map(|key| ModuleKey::new(key)),
         ),
     );
-    let census_out = snapshot(census.resolve_file_imports("/v/src/nested.ts", &refs));
-    let empty_out = snapshot(empty.resolve_file_imports("/v/src/nested.ts", &refs));
-    let full_out = snapshot(full.resolve_file_imports("/v/src/nested.ts", &refs));
+    let census_out = snapshot(census.resolve_file_imports("/v/src/nested.ts", refs));
+    let empty_out = snapshot(empty.resolve_file_imports("/v/src/nested.ts", refs));
+    let full_out = snapshot(full.resolve_file_imports("/v/src/nested.ts", refs));
     assert_eq!(census_out, empty_out);
     assert_eq!(census_out, full_out);
 }

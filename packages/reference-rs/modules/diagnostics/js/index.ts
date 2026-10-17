@@ -4,84 +4,34 @@
  * Emits parsed diagnostics plus one-line rendering and the message-pattern helpers, so both sides of the
  * boundary construct, carry, and display identical values. Codes validate in `parseCode`, never in the type.
  */
-import type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic'
-import type { Severity } from './generated/Severity'
-import type { DiagnosticLocation } from './location'
-import { parseLocation } from './location'
+import type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic.js'
+import type { Severity } from './generated/Severity.js'
+import type { DiagnosticLocation } from './location.js'
+import { parseLocation } from './location.js'
+import { DiagnosticParseError, codeSeverityTag, parseCode } from './codes.js'
 
-export type { Severity } from './generated/Severity'
-export type { ByteSpan } from './generated/ByteSpan'
-export type { Label } from './generated/Label'
-export type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic'
-export { createLabel, createSpan, parseLocation } from './location'
-export type { DiagnosticLocation } from './location'
-export { MAX_FRAMES, renderBatch, renderFrame } from './render'
-
-/** Wire code text (`NS-SEV-NAME`); validated by `parseCode`, not by the type. */
-export type DiagnosticCode = string
+export type { Severity } from './generated/Severity.js'
+export type { ByteSpan } from './generated/ByteSpan.js'
+export type { Label } from './generated/Label.js'
+export type { Diagnostic as GeneratedDiagnostic } from './generated/Diagnostic.js'
+export { createLabel, createSpan, parseLocation } from './location.js'
+export type { DiagnosticLocation } from './location.js'
+export { MAX_FRAMES, renderBatch, renderFrame } from './render.js'
+export {
+  DiagnosticParseError,
+  REGISTERED_NAMESPACES,
+  TEMPLATE_NAMESPACE,
+  codeNamespace,
+  codeSeverityTag,
+  isRegisteredNamespace,
+  parseCode,
+} from './codes.js'
+export type { DiagnosticCode } from './codes.js'
+export { warningHintFor } from './hints.js'
+export { SUGGESTION_CODES, supportsSuggestions, suggest, suggestForCode } from './suggest.js'
 
 /** Parsed diagnostic: the generated wire shape, guaranteed valid by construction or `parseDiagnostic`. */
 export type Diagnostic = GeneratedDiagnostic
-
-/** Namespace owned by the template itself; mirrors `TEMPLATE_NAMESPACE` in Rust. */
-export const TEMPLATE_NAMESPACE = 'RS'
-
-/**
- * Machine-readable copy of the REGISTRY.md namespace table; mirrors `REGISTERED_NAMESPACES`.
- * Advisory only: parsing stays shape-open so consumers keep reading newer codes.
- */
-export const REGISTERED_NAMESPACES: readonly string[] = [
-  'RS',
-  'ATM',
-  'ATL',
-  'TST',
-  'STT',
-  'TGN',
-  'CAN',
-  'BSS',
-  'MGP',
-]
-
-const CODE_PATTERN = /^([A-Z][A-Z0-9]{1,3})-([WE])-([A-Z0-9]+(?:-[A-Z0-9]+)*)$/
-const MAX_CODE_LENGTH = 64
-
-/** A payload that failed template validation, carrying the reason. */
-export class DiagnosticParseError extends Error {
-  override name = 'DiagnosticParseError'
-}
-
-/** Parse and validate a wire code; anything off-shape throws with the reason. */
-export function parseCode(input: unknown): DiagnosticCode {
-  if (typeof input !== 'string')
-    throw new DiagnosticParseError('diagnostic code must be a string')
-  if (input.length > MAX_CODE_LENGTH) {
-    throw new DiagnosticParseError('diagnostic code exceeds 64 characters')
-  }
-  if (input.split('-')[1] === 'I') {
-    throw new DiagnosticParseError(
-      'severity tag `I` is reserved; the template carries warnings and errors only'
-    )
-  }
-  if (!CODE_PATTERN.test(input)) {
-    throw new DiagnosticParseError(`invalid diagnostic code: ${input}`)
-  }
-  return input
-}
-
-/** Namespace segment of a validated code, e.g. `ATM`. */
-export function codeNamespace(code: DiagnosticCode): string {
-  return code.split('-')[0]!
-}
-
-/** Severity tag a code was minted with: `W` or `E`. */
-export function codeSeverityTag(code: DiagnosticCode): 'W' | 'E' {
-  return code.split('-')[1] === 'E' ? 'E' : 'W'
-}
-
-/** Advisory check against the registry table; unregistered but well-shaped codes still parse. */
-export function isRegisteredNamespace(code: DiagnosticCode): boolean {
-  return REGISTERED_NAMESPACES.includes(codeNamespace(code))
-}
 
 /** Build a warning; throws `DiagnosticParseError` on a bad code, tag mismatch, or blank message. */
 export function createWarning(
@@ -262,158 +212,4 @@ export function didYouMean(known: string): string {
 /** Join message lines with newlines; line one stays the complete subject. */
 export function joinLines(lines: string[]): string {
   return lines.join('\n')
-}
-
-/**
- * Codes whose failure is an unknown name drawn from a finite known set: the only codes
- * `suggestForCode` will suggest for. Mirrors the Rust gate exactly; opaque names and every
- * other failure class stay silent even when a candidate looks near.
- */
-/**
- * Warning fix hints: the one-line remedies the verbose list prints. Takes stable warning
- * codes and emits the author-facing fix line for each known code, or undefined when a code
- * has none. Warnings only: infos are compiler telemetry with no author action, and errors
- * throw unchanged. Codes missing here print without a hint — never a guessed one.
- */
-const WARNING_HINTS: Record<string, string> = {
-  'ATM-W-DYNAMIC-EXPRESSION': 'hoist the expression into a static literal or variant',
-  'ATM-W-DYNAMIC-MEMBER': 'replace the member lookup with a literal value',
-  'ATM-W-DYNAMIC-IDENTIFIER': 'replace the identifier with a literal or token',
-  'ATM-W-MUTATED-BINDING': 'stop reassigning the binding before the style call',
-  'ATM-W-DYNAMIC-TEMPLATE': 'use a static string instead of the template',
-  'ATM-W-DYNAMIC-UNARY': 'fold the unary expression to a literal',
-  'ATM-W-DYNAMIC-BINARY': 'fold the binary expression to a literal',
-  'ATM-W-UNFOLDABLE-KEY': 'use a static key instead of the computed key',
-  'ATM-W-UNKNOWN-PROPERTY': 'remove it or check the property spelling',
-  'ATM-W-UNKNOWN-BREAKPOINT': 'use a breakpoint from the theme',
-  'ATM-W-NON-OBJECT-CONDITION': 'give the condition key a style object',
-  'ATM-W-UNFOLDABLE-SPREAD': 'inline the spread or keep only static props',
-  'ATM-W-UNKNOWN-CONDITION': 'use a condition from the theme',
-  'ATM-W-MISSING-CONTAINER-ROOT': 'add a container root for the @container atom',
-  'ATM-W-NON-CANONICAL-NUMERIC': 'use a plain decimal number',
-  'ATM-W-INVALID-CSS-VALUE': 'use a CSS keyword, token, or value the prop accepts',
-  'ATM-W-MALFORMED-OPACITY': 'write the opacity modifier as /<0-100>',
-  'ATM-W-UNKNOWN-TOKEN-PATH': 'point the path at an existing token',
-  'ATM-W-UNKNOWN-TOKEN': 'declare the name in its theme category or write a CSS value',
-  'ATM-W-UNBRACED-TOKEN-REF':
-    'write the token reference in braces, like `{colors.gray.900}`',
-  'ATM-W-TOKEN-CATEGORY-MISMATCH': 'use a token from the matching category',
-  'ATM-W-UNKNOWN-COLOR': 'use a color token or a CSS color',
-  'ATM-W-UNKNOWN-TONE':
-    "declare the tone with tokens({ tones: { …: { value: '10%' } } }) or use /<0-100>",
-  'ATM-W-UNTERMINATED-BRACE': 'close the { brace in the value',
-  'ATM-W-STATIC-WILDCARD': 'use a concrete value; this prop has no token category',
-  'ATM-W-EMPTY-AT-RULE': 'fill in the at-rule query or drop the key',
-  'ATM-W-UNSUPPORTED-GLOBAL-VALUE': 'use a single value under the conditional key',
-  'ATM-W-TRACE-SKIPPED': 'check the StyleTrace host graph for the skipped file',
-  'ATM-W-NON-OBJECT-CSS-ARG': 'pass a static style object to css()',
-  'ATM-W-NON-OBJECT-JSX-STYLE': 'pass a static style object to the style prop',
-  'ATM-W-RESPONSIVE-ARRAY-SPREAD': 'remove the spread from the value array',
-  'ATM-W-TAGGED-TEMPLATE-SITE': 'call css() with an object instead of a template',
-  'ATM-W-UNFOLDABLE-OBJECT-PROP': 'give the const-object prop a static value',
-  'ATM-W-PARTIAL-OBJECT-PROP': 'make the dynamic arm static or drop the prop',
-  'ATM-W-TOKEN-CALL-REFUSED': 'use a supported token() shape',
-  'ATM-W-MISSING-STYLE-PLAN': 'make the lookup static so the plan can serve it',
-  'ATM-W-RESPONSIVE-LEAF-IMPORTANT': 'drop the ! marker; per-leaf important is refused',
-  'ATM-W-UNREALIZABLE-EXTENSION': 'drop the prop; the dialect has no served css form',
-  'TST-W-PARSE-ERROR': 'fix the syntax error so the file parses cleanly',
-  'TST-W-DUPLICATE-DECLARATION': 'merge the duplicate declarations or rename one',
-  'TST-W-DUPLICATE-MEMBER': 'remove the duplicate member or rename one',
-  'TST-W-STAR-AMBIGUITY': 're-export the name explicitly from the barrel',
-  'TST-W-DUPLICATE-SYMBOL-NAME': 'use the symbol id or a scoped lookup to disambiguate',
-  'TST-W-UNRESOLVED-IMPORT': 'create the file it names or correct the specifier',
-  'TST-W-UNSUPPORTED-AUGMENTATION': 'declare the members in the augmented module itself',
-  'TST-W-UNSUPPORTED-SYNTAX': 're-declare what it provides as named exports',
-  'ATL-W-UNRESOLVED-PROPS-TYPE': 'import the props type or define it in scope',
-  'ATL-W-UNSUPPORTED-PROPS-ANNOTATION': 'name the props type instead of inlining the object',
-  'ATL-W-UNRESOLVED-INCLUDE-PACKAGE': 'check the package name or install it alongside the app',
-  'ATL-W-PACKAGE-SCAN-FAILED': 'fix the package dir so it scans or drop it from include',
-  'STT-W-SKIPPED-FILE': 'fix the file so it parses and reads cleanly',
-  'STT-W-CLASS-COMPONENT':
-    'rewrite it as a function component so its style props are traced',
-  'STT-W-UNRESOLVED-HOC-ARGUMENT':
-    'pass a component by name in that argument, not a call result',
-  'TGN-W-UNKNOWN-TOKEN-CATEGORY': 'move the tokens into a printed category',
-  'TGN-W-INVALID-RECIPE-NAME': 'rename the recipe so it forms a TypeScript type name',
-  'TGN-W-EMPTY-RECIPE': 'fill in the variant axes or drop the recipe',
-  'TGN-W-INVALID-COMPOUND-VARIANT': 'point the compound row at declared axes and values',
-  'TGN-W-UNKNOWN-STRICT-CATEGORY': 'use colors, radii, or spacing for strict',
-  'TGN-W-ABSENT-STRICT-CATEGORY': 'declare tokens in the category or drop it from strict',
-  'TGN-W-EMPTY-FONT-FAMILY': 'declare weights for the family or drop it',
-  'TGN-W-DUPLICATE-RECIPE-STEM': 'rename one recipe so each stem stays unique',
-}
-
-/** The fix hint for a warning code, or undefined when the code has none. */
-export function warningHintFor(code: string | undefined): string | undefined {
-  if (code === undefined) return undefined
-  return WARNING_HINTS[code]
-}
-
-export const SUGGESTION_CODES: readonly string[] = [
-  'ATM-W-UNKNOWN-PROPERTY',
-  'ATM-W-UNKNOWN-BREAKPOINT',
-  'ATM-W-UNKNOWN-CONDITION',
-  'ATM-W-UNKNOWN-TOKEN-PATH',
-  'ATM-W-UNKNOWN-COLOR',
-  'ATM-W-UNKNOWN-TONE',
-  'ATM-E-UNKNOWN-TOKEN',
-  'TGN-W-UNKNOWN-TOKEN-CATEGORY',
-  'TGN-W-UNKNOWN-STRICT-CATEGORY',
-]
-
-/** Whether `code` may carry a did-you-mean suggestion: membership in `SUGGESTION_CODES`. */
-export function supportsSuggestions(code: string): boolean {
-  return SUGGESTION_CODES.includes(code)
-}
-
-/**
- * Pick the closest candidate for one diagnostic code, or undefined when the code is not a
- * suggestion code or all candidates are far off. Modules wire their own known sets as
- * `candidates`; the gate decides whether suggesting is legitimate, the distance decides
- * whether any candidate is near enough.
- */
-export function suggestForCode(
-  code: string,
-  unknown: string,
-  candidates: string[]
-): string | undefined {
-  if (!supportsSuggestions(code)) return undefined
-  return suggest(unknown, candidates)
-}
-
-/**
- * Pick the closest candidate to an unknown name, or undefined when all are far off.
- * Mirrors the Rust helper exactly: within a third of the name, minimum three edits.
- */
-export function suggest(unknown: string, candidates: string[]): string | undefined {
-  const budget = Math.max(3, Math.floor(unknown.length / 3))
-  let best: string | undefined
-  let bestDistance = Number.POSITIVE_INFINITY
-  for (const candidate of candidates) {
-    const distance = editDistance(unknown, candidate)
-    if (distance < bestDistance) {
-      best = candidate
-      bestDistance = distance
-    }
-  }
-  return bestDistance <= budget ? best : undefined
-}
-
-function editDistance(first: string, second: string): number {
-  const left = [...first]
-  const right = [...second]
-  let prev = right.map((_, index) => index)
-  prev.push(right.length)
-  for (let row = 0; row < left.length; row++) {
-    const current = new Array<number>(right.length + 1)
-    current[0] = row + 1
-    for (let col = 0; col < right.length; col++) {
-      const deletion = prev[col + 1]! + 1
-      const insertion = current[col]! + 1
-      const substitution = prev[col]! + (left[row] === right[col] ? 0 : 1)
-      current[col + 1] = Math.min(deletion, insertion, substitution)
-    }
-    prev = current
-  }
-  return prev[right.length]!
 }

@@ -1,7 +1,7 @@
 // sheet.spec.ts — spec for NEO-PARITY-01, the sheet-shape probes plus the
 // dialect guards. Takes { page, case } from the runner with the world freshly
 // synced. Emits nothing on success; throws naming the missing sheet rule or
-// the forbidden authoring form found in world sources on failure. Every W4
+// the forbidden authoring form found in world sources on failure. Every
 // probe is live: the shape blocks pin each landing's spelling, and the
 // dialect guards cover the two remaining out-of-dialect forms (RS-11, RS-17).
 import assert from 'node:assert/strict';

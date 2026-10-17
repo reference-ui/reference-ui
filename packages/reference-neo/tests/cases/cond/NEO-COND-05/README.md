@@ -9,7 +9,6 @@ the positive arm is sheet-proven. (The composition is descendant-shaped and
 inputs are void, so no live hover could paint a descendant anyway; the claim
 is the engine composition, pinned by the sheet.)
 
-Evidence: `[panda-v1]` `core/__tests__/atomic-rule.test.ts:231` "[parent
-selector]"; `[atm]` ATM-COND-20 (RS-12 landed).
+Evidence: Panda v1 test "[parent selector]"; ATM-COND-20 (RS-12).
 
 > Search terms: nesting, ancestor hover, form control, gating, outside-in hover, conditions/hover, parent-keys, NEO-COND-10

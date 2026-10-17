@@ -1,5 +1,5 @@
 /**
- * Local-const station. `const theme = { primary: 'n300' }` resolves at
+ * Local-const case. `const theme = { primary: 'n300' }` resolves at
  * JSX and css() sites as a want, without evaluating author JS.
  */
 import { expect } from 'vitest'

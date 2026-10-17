@@ -4,6 +4,6 @@ A `retentionToken` drained by an earlier compile. The world carries the base pro
 
 Raised in: `modules/atomic/src/sources.rs`. Driver: native compile over the case world with the registry-documented request mutation.
 
-Evidence: `[diag]` ATM-E-DRAINED-RETENTION-TOKEN (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-E-DRAINED-RETENTION-TOKEN (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-E-DRAINED-RETENTION-TOKEN, atm-e-drained-retention-token, diagnostics case index, NEO-DIAG-45

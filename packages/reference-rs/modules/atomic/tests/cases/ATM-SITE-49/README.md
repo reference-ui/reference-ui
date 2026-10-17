@@ -1,6 +1,6 @@
 # ATM-SITE-49 — Computed Keys (Static + Folded Arms)
 
-Probes SPEC-V2-64 end to end. Static keys (`['color']`, ``[`color`]``,
+Probes computed keys end to end. Static keys (`['color']`, ``[`color`]``,
 `[42]`) and single-leaf folded keys (`[k]` over `const k`, `[t.p]`,
 `[s[0]]`, `[hov]` conditions including nested `{ [hov]: { [k]: v } }`)
 resolve exactly like their bare spellings; folded numerics (`[n]`, `[-pad]`)

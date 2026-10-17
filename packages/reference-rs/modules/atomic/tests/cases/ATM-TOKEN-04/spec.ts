@@ -1,5 +1,5 @@
 /**
- * Keyword passthrough station. `transparent` / `currentColor` / `black` /
+ * Keyword passthrough case. `transparent` / `currentColor` / `black` /
  * `white` stay raw CSS, never `var(--colors-transparent)`.
  */
 import { expect } from 'vitest'

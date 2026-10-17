@@ -1,4 +1,4 @@
-# ATM-DIAG-05 — Diagnostic-precision station (ATM-DIAG-05, Overmatch Ph1, SPEC-V2-77)
+# ATM-DIAG-05 — Diagnostic-precision
 
 Diagnostic precision: every refusal the extractor emits carries
 `file:line:col` of the offending sub-expression plus a stable
@@ -18,6 +18,5 @@ offending `Span` and resolve it through `line_col`; `Diagnostic` carries
 a `DiagnosticCode` from the `diagnostics/codes` table, rendered as
 `{file}:{line}:{col} {code} {message}`. Messages and warn-vs-silent
 behavior are unchanged from `ATM-DIAG-02`. Related: `ATM-DIAG-02`
-(fail-closed warnings), `ATM-DIAG-04` (positions beyond extract, open),
+(fail-closed warnings), `ATM-DIAG-04` (positions beyond extract),
 `ATM-SITE-28` (mutated bindings). Contract: [SPEC.md](../../../SPEC.md).
-Overmatch SPEC-V2-77, Ph1.

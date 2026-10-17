@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-STY-02.
+ * Case specification for TST-STY-02.
  * Verifies projection of style-props alias chains and enhanced type descriptions.
  * Proves primary SPEC ID anchor TST-STY-02.
  */

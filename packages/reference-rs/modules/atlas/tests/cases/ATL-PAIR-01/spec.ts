@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-PAIR-01.
+ * Case specification for ATL-PAIR-01.
  * Validates deterministic component co-usage calculation and frequency-based
  * usage rating prioritization.
  * Proves primary SPEC anchor ATL-PAIR-01.

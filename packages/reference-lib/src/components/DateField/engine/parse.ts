@@ -6,7 +6,7 @@
  * candidates become ISO the parent ever sees.
  */
 import {
-  type ISODate,
+  type CanonicalISODate,
   parseISODate,
   formatISODate,
   isValidISODate,
@@ -65,7 +65,7 @@ export function normalizeDigits(str: string): { text: string; valid: boolean } {
   return { text: result, valid: true }
 }
 
-export function formatLocalDate(dateStr: ISODate, locale: string): string {
+export function formatLocalDate(dateStr: CanonicalISODate, locale: string): string {
   const { year, month, day } = parseISODate(dateStr)
   const d = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
   if (locale.startsWith('ja')) {
@@ -106,7 +106,7 @@ export function getLocaleSegmentOrder(locale: string): Array<'day' | 'month' | '
 export interface ParseResult {
   valid: boolean
   incomplete: boolean
-  iso: ISODate | null
+  iso: CanonicalISODate | null
   error?: string
 }
 
@@ -230,10 +230,10 @@ export function getSegmentAtCaret(
 }
 
 export function stepDateSegment(
-  date: ISODate,
+  date: CanonicalISODate,
   segment: 'day' | 'month' | 'year',
   delta: number
-): ISODate | null {
+): CanonicalISODate | null {
   if (segment === 'day') {
     try {
       return addCalendarDays(date, delta)
@@ -283,10 +283,10 @@ export function assertValidDateBounds(min?: unknown, max?: unknown): void {
 }
 
 export function isDateWithinConstraints(
-  date: ISODate,
-  min?: ISODate,
-  max?: ISODate,
-  isDateUnavailable?: (date: ISODate) => boolean
+  date: CanonicalISODate,
+  min?: CanonicalISODate,
+  max?: CanonicalISODate,
+  isDateUnavailable?: (date: CanonicalISODate) => boolean
 ): boolean {
   if (min && compareISODate(date, min) < 0) return false
   if (max && compareISODate(date, max) > 0) return false

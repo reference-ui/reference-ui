@@ -12,7 +12,7 @@ export type TabsOrientation = 'horizontal' | 'vertical'
 export type TabsActivation = 'automatic' | 'manual'
 export type TabsVariant = 'line' | 'pill'
 /**
- * System-level variant (HQ system-variant mechanism): the prepackaged
+ * System-level variant: the prepackaged
  * `line`/`pill` names plus any author recipe name. Custom names typecheck
  * here and render through the author's own recipe classes; the kernel
  * recipes below resolve unknown names to base + axis classes with no
@@ -31,7 +31,7 @@ export interface TabsProps {
   activation?: TabsActivation
   variant?: TabsVariantProp
   /**
-   * Keep every panel mounted when inactive (W-15, Base UI parity).
+   * Keep every panel mounted when inactive (Base UI parity).
    * Default false (current behavior: inactive panels unmount their
    * children). True keeps all children alive under native `hidden`.
    * OR-ed with the per-panel `keepMounted` on `TabPanel`.

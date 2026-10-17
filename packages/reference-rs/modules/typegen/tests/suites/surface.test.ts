@@ -13,11 +13,11 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { loadDialect } from '../../../canon/generate/dialect'
-import { loadPlatformCss } from '../../../canon/generate/platform'
+import { loadDialect } from '../../../canon/generate/dialect.js'
+import { loadPlatformCss } from '../../../canon/generate/platform.js'
 import { emitDtsSync } from '../../js/index.js'
 import type { EvaluatedSystemSpec } from '../../js/types.js'
-import { compile, expectTscOk, expectTscReject } from '../harness/tsc'
+import { compile, expectTscOk, expectTscReject } from '../harness/tsc.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const contractsDir = resolve(here, '../../../../contracts/fixtures')

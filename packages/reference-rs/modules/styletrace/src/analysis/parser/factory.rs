@@ -8,7 +8,7 @@ use oxc_ast::ast::{
 };
 use rustc_hash::FxHashMap;
 
-use super::component::{component_from_expression, component_from_function_declaration};
+use super::component::{component_from_expression, declared_from_function_declaration};
 use super::context::ParserContext;
 use super::types::unwrap_transparent_expression;
 use super::ParseState;
@@ -129,7 +129,7 @@ fn collect_inner_components(
         let Statement::FunctionDeclaration(function) = statement else {
             continue;
         };
-        if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
+        if let Some((name, component)) = declared_from_function_declaration(function, ctx)? {
             local.components.insert(name, component);
         }
     }
@@ -151,14 +151,18 @@ fn returned_expression<'a>(
     }
 }
 
-/// The component a returned expression yields: a local component by name, or an inline one.
+/// The component a returned expression yields: a local component by name, or an inline one. A
+/// declared-only local record names no primitive, so it is never the product.
 fn factory_product(
     expression: &Expression<'_>,
     local: &FxHashMap<String, TraceComponent>,
     ctx: &ParserContext,
 ) -> Result<Option<TraceComponent>, StyleTraceError> {
     if let Expression::Identifier(identifier) = expression {
-        return Ok(local.get(identifier.name.as_str()).cloned());
+        return Ok(local
+            .get(identifier.name.as_str())
+            .filter(|component| component.has_style_path())
+            .cloned());
     }
     component_from_expression("FactoryProduct", expression, ctx, WrapperProps::default())
 }

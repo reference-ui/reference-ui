@@ -1,4 +1,4 @@
-// Unit tests for the token shadow merge (E13) and its sync warning.
+// Unit tests for the token shadow merge and its sync warning.
 // They take tagged token fragments in merge order and assert which replacements
 // raise a shadow: a local leaf over a different upstream leaf, once per path. Equal
 // values, upstream over upstream, local over local, and extend: nodes stay silent.

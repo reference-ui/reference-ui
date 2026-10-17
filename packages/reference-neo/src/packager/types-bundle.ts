@@ -3,7 +3,7 @@
 // categories, and emits the central styled declarations, the classic subpath
 // modules, and the typegen diagnostics. The react entry types arrive complete
 // from the bound bake, already wired onto this graph, so this leg never
-// rewrites them. Styled stays data-only (D4).
+// rewrites them. Styled stays data-only.
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -17,7 +17,7 @@ import { BASE_SYSTEM_HEADER } from './constants.ts'
  * entry, the tokens module, and the three classic types modules. Every file
  * re-exports or derives from the central typegen index, so the subpaths track
  * the evaluated spec with no second source of truth. Runs inside the
- * declaration leg; styled stays data-only (D4).
+ * declaration leg; styled stays data-only.
  */
 function writeStyledSubpathDecls(outDir: string): void {
   const styledDir = join(outDir, 'styled')
@@ -45,7 +45,7 @@ function writeStyledSubpathDecls(outDir: string): void {
 /**
  * Publish the styled type declarations typegen prints from the evaluated
  * spec into styled/types, plus the classic subpaths. Runs after the react
- * bundle; styled stays data-only (D4). Returns the typegen diagnostics so
+ * bundle; styled stays data-only. Returns the typegen diagnostics so
  * sync reports them beside the other warnings.
  */
 export async function publishTypesBundle(

@@ -4,9 +4,9 @@
  * at its fix. Silent in production; structural diagnostics stay warnings
  * (async anatomy resolving must never false-positive), duplicates throw.
  */
-const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+import { isDevelopment } from '../../../core/env/dev'
 
 export function warnTabs(message: string) {
-  if (globalProcess?.env?.NODE_ENV === 'production') return
+  if (!isDevelopment()) return
   console.error(`Reference UI: Tabs ${message}`)
 }

@@ -1,6 +1,6 @@
 ---
 name: test-component
-description: Component verification skill for @reference-ui/lib only. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Switch React 17/18/19 locally with --react (Vite aliases, no pipeline). Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified. If packages/reference-core was modified, hand off to test-core (the pipeline runner, not a skill) — do not use this skill for core.
+description: Component verification skill for @reference-ui/lib only. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Switch React 17/18/19 locally with --react (Vite aliases, no pipeline). Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified. If packages/reference-neo, packages/reference-rs, the matrix or the pipeline was modified, hand off to the matching runner (agent-neo, agent-rs or test-core, the pipeline runner and not a skill) — do not use this skill for them.
 ---
 
 # Component Testing Skill (`test-component`)
@@ -11,9 +11,9 @@ Use this skill whenever you need to **verify whether a component passes logic, b
 
 ### Scope: `@reference-ui/lib` only
 
-This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-core`, matrix packages, or the pipeline.
+This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-neo`, `packages/reference-rs`, matrix packages, or the pipeline.
 
-If you modified `packages/reference-core` (Vite plugin, Playwright host, sync, packager, types, Book discovery, React runtime aliases, virtual FS, …) or `packages/reference-mcp` (MCP), **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the core/matrix verification harness. `pnpm agentct` will not prove a core change.
+If you modified `packages/reference-neo` (sync, packager, runtime, bundler plugins, …), follow **agent-neo** (`.agents/skills/agent-neo/SKILL.md`). If you modified `packages/reference-mcp` (MCP) or a matrix or pipeline contract, **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the matrix and pipeline verification harness. `pnpm agentct` will not prove a Neo or matrix change.
 
 ---
 
@@ -148,7 +148,7 @@ Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **n
 - Visual snapshots (`snap()`) run **only on React 19**. 17/18 are behavioral. `snap()` is a no-op off 19, so specs stay identical.
 - Do not pass `--update-snapshots` with `--react 17`, `18`, or `all`. The runner refuses.
 
-If the change that forced a React/host tweak lives in `packages/reference-core`, prove it with test-core (`pnpm agent`), not this loop.
+If the change that forced a React/host tweak lives in `packages/reference-neo`, prove it with agent-neo (`pnpm agentneo`), or with test-core (`pnpm agent`) when a matrix contract is involved, not this loop.
 
 Human pairing: `pnpm playbook` opens the Playwright UI.
 
@@ -244,7 +244,7 @@ Return:
 4. **Motion notes** — timestamped observations from the video.
 5. **Drift notes** — if snapshots failed, what changed (spacing, color, missing arrow, etc.).
 6. **Runtime notes** — if `--react` was used, say which majors ran and that paint drift was not compared off 19.
-7. **Handoff** — `pnpm playbook` for interactive debugging.
+7. **Human pairing** — `pnpm playbook` for interactive debugging.
 
 Do not update snapshot baselines as part of the verdict. That is a separate human-gated step.
 
@@ -344,7 +344,7 @@ Terms are stemmed (`queries` matches `query`) and typo-tolerant
 Resolve ids with `show`, not `search`. Component metadata comes from colocated
 `case.json` manifests. For the documentation collections, enrich the index by
 writing a detailed README: describe the behavior,
-name the symbols, cite sibling case/station ids (cited ids surface as
+name the symbols, cite sibling case ids (cited ids surface as
 `related`). Everything reads live: new docs are searchable immediately,
 no rebuild step.
 

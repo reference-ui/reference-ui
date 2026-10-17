@@ -1,5 +1,5 @@
 /**
- * Container-root warning stations for the upstream coverage signal (Addendum B).
+ * Container-root warning cases for the upstream coverage signal (Addendum B).
  * A rootless spec with container-query atoms warns ATM-W-MISSING-CONTAINER-ROOT;
  * the same compile with `upstreamContainerRoot` stays silent while still
  * emitting its `@container` rules.

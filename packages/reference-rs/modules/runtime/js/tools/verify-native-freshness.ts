@@ -8,12 +8,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { nativeDir, packageDir } from '../shared/paths'
-import { hashNativeInputs } from '../shared/native-inputs'
+import { nativeDir, packageDir } from '../shared/paths.js'
+import { hashNativeInputs } from '../shared/native-inputs.js'
 import {
   collectNativeFreshnessIssues,
   formatNativeFreshnessError,
-} from '../shared/native-freshness'
+} from '../shared/native-freshness.js'
 
 interface RustPackageManifest {
   napi?: { targets?: string[] }

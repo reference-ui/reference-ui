@@ -1,9 +1,9 @@
 # Calendar test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Calendar --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/calendar.spec.ts`  
-Unit: `matrix/lib/tests/unit/calendar.test.ts`
+Playwright: `src/components/Calendar/__e2e__/*.spec.ts` (run with `pnpm agentct Calendar --e2e`)  
+Unit: `src/components/Calendar/**/*.test.ts(x)`
 Page: `/calendar`
 
 Calendar owns Gregorian day/range grids and month/year pickers on canonical
@@ -52,19 +52,9 @@ controller stays in the DateField module.
 
 ## Source evidence
 
-- `vendor/react-spectrum/packages/react-aria-components/test/Calendar.test.js`
-  and React Aria calendar hook tests — grid roles, focus, keyboard,
-  min/max/unavailable, controlled navigation, and range behavior.
-- `vendor/react-spectrum/packages/@internationalized/date/src/queries.ts` and
-  `weekStartData.ts` plus their upstream tests — Gregorian arithmetic, locale
-  week start, leap/year/month boundaries, formatting, and
-  timezone-independent date values.
-- `vendor/react-day-picker/packages/react-day-picker/src/DayPicker.test.tsx`
-  and its date utilities — padded month construction, outside days,
-  `getNextFocus`, labels, range preview, and modifier/data-state contrast.
 - Zag date-picker/date-utils tests — month days, week days, locale, year range,
   comparisons, and unavailable skip.
-- `vendor/design-system/Date` — range-native `{ start, end }` painting on
+- The design system's `Date` — range-native `{ start, end }` painting on
   day/month/year cells, heading Month/Year drill-down, DateInput opening on
   the selected month, DateRange field-focus month sync, and day/month/year
   product modes. `Date` objects, date-fns, and ±100 year `new Date()`
@@ -500,7 +490,7 @@ controller stays in the DateField module.
   `aria-disabled="true"`, and `data-disabled`, every allowed day lacks all
   three, and pointer/keyboard cannot activate blocked dates. This combines
   React Spectrum `Calendar.test.js` / “should support unavailable state” and
-  “should support disabled state.” W-21 amendment (2026-09-27): the single
+  “should support disabled state.” Amended 2026-09-27: the single
   state is split — out-of-bounds keeps native `disabled` + `data-disabled`,
   while predicate-unavailable is enabled with `aria-disabled="true"` +
   `data-unavailable`, stays in the roving tab order and under all movement
@@ -513,7 +503,7 @@ controller stays in the DateField module.
   argument is a valid `YYYY-MM-DD`, the committed rendered-date sets are
   evaluated deterministically, A receives no calls after replacement, and
   B alone determines all new `data-disabled` states; stale predicates must not
-  leak through memoized date cells. W-21 amendment (2026-09-27): the
+  leak through memoized date cells. Amended 2026-09-27: the
   predicate now determines `data-unavailable` states; the determinism and
   replacement halves stand unchanged.
 - [x] `CA-STATE-06` `[reference]` `[browser]` —
@@ -524,8 +514,7 @@ controller stays in the DateField module.
   `data-selected`/`aria-selected="true"` but gains all disabled state, loses
   the sole tab stop and `data-focused`, cannot emit `onChange`, and focus
   moves to the nearest enabled date only if focus was inside the grid;
-  controlled selection authority does not imply activation authority. W-21
-  amendment (2026-09-27): predicate-unavailable now keeps focus and the tab
+  controlled selection authority does not imply activation authority. Amended 2026-09-27: predicate-unavailable now keeps focus and the tab
   stop (`data-unavailable`, still silent); only newly out-of-bounds dates
   lose the tab stop and relocate focus to the nearest focusable date.
 - [x] `CA-STATE-07` `[reference]` `[browser]` —
@@ -536,8 +525,7 @@ controller stays in the DateField module.
   focused day after the disabling rerender. Assert every day has
   `tabIndex=-1`, no movement loops or month requests occur, and enabled
   navigation buttons plus surrounding controls remain reachable in native
-  order; an empty focus model must terminate safely. W-21 amendment
-  (2026-09-27): the no-tab-stop case is all-out-of-bounds; an
+  order; an empty focus model must terminate safely. Amended 2026-09-27: the no-tab-stop case is all-out-of-bounds; an
   all-unavailable grid keeps its sole tab stop (first in-bounds day) with
   every activation silent.
 - [x] `CA-STATE-08` `[vendor]` `[browser]` —
@@ -696,7 +684,7 @@ controller stays in the DateField module.
   skipped inward in movement direction and no month or selection callback
   unless the target crosses a controlled month. This ports
   `@internationalized/date` locale week-boundary tests into browser focus.
-  W-21 amendment (2026-09-27): only out-of-bounds boundaries skip inward;
+  Amended 2026-09-27: only out-of-bounds boundaries skip inward;
   unavailable boundaries are focusable landing spots.
 - [x] `CA-KEY-03` `[vendor]` `[browser:all]` —
   **Calendar PageUp and PageDown should request the adjacent month and preserve
@@ -722,7 +710,7 @@ controller stays in the DateField module.
   reaches April 14 and April 10, stays on April 5/20 at the bounds, never wraps
   or selects, and emits no impossible month request. This ports
   react-day-picker `getNextFocus.test.tsx` / “should return the next focus date
-  if it is disabled.” W-21 amendment (2026-09-27): movement lands on
+  if it is disabled.” Amended 2026-09-27: movement lands on
   unavailable dates in sequence and skips only out-of-bounds dates; bound
   stops and no-wrap stand unchanged.
 - [x] `CA-KEY-06` `[reference]` `[browser]` —
@@ -732,7 +720,7 @@ controller stays in the DateField module.
   PageDown repeatedly. Assert focus and the sole tab stop remain on the
   original date, no `onMonthChange` or `onChange` call occurs, and availability
   evaluation terminates at the bound rather than looping; disabled-skip search
-  must be finite. W-21 amendment (2026-09-27): termination now triggers on
+  must be finite. Amended 2026-09-27: termination now triggers on
   out-of-bounds spans (unavailable candidates are landing spots, so the
   "every later candidate unavailable" fixture moves instead of staying).
 - [x] `CA-KEY-07` `[vendor]` `[browser]` —
@@ -795,15 +783,7 @@ controller stays in the DateField module.
   remains empty, the same gridcell stays selected, focus may stay on its day
   button, and no null request is produced; single Calendar selection is not a
   toggle.
-  > PLAYTEST REVERSAL (B-36, 2026-09-27 — SUPERSEDES the FEATURES #13
-  > uniform-request triage below it): re-activating the already-selected
-  > value emits nothing in day, range, month, or year mode. Redundant
-  > identical-value `onChange` emissions re-fire downstream effects for
-  > no change; the mission contract outranks the component triage note.
-  > Flagged for HQ (deliberate design reversal of a triaged decision).
-  > SUPERSEDED TRIAGE (FEATURES #13, uniform-request — no longer in
-  > force): every activation requested its ISO once, so re-activating the
-  > selected date DID emit one request.
+  > Re-activating the already-selected value emits nothing in day, range, month, or year mode. Redundant identical-value `onChange` emissions re-fire downstream effects for no change.
 - [x] `CA-SINGLE-04` `[reference]` `[browser]` —
   **Calendar should prevent every input modality from selecting a blocked
   date.** Test one date below `min`, one above `max`, and one returned by
@@ -1182,8 +1162,7 @@ controller stays in the DateField module.
   April 11 receives sole `tabIndex=0` and DOM focus when focus was in the
   grid, April 10 retains controlled selected state if selected but cannot
   activate, and no callback runs. This adapts react-day-picker's controlled
-  focus-removal regression to constraint updates. W-21 amendment
-  (2026-09-27): relocation fires only when the date leaves the bounds;
+  focus-removal regression to constraint updates. Amended 2026-09-27: relocation fires only when the date leaves the bounds;
   newly unavailable dates keep focus and the tab stop. The relocation
   target is the nearest in-bounds date, unavailable dates included.
 - [x] `CA-DYNAMIC-03` `[reference]` `[browser]` —

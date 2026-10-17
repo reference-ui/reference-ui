@@ -6,12 +6,9 @@ exactly two utilities with the hover list chained into the disabled list
 (including `[aria-disabled=true]`), the data twins and the aria twin paint
 only with both arms, and a real disabled button needs a real hover too.
 
-Evidence: `[atm]` ATM-COND-02, ATM-COND-10 (R1 probe
-`/tmp/cond-batch2-r1/probe.mjs` emits the chained selector);
-`[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:351`
-"nested > nested > property"; `[lib]`
-`packages/reference-lib/.reference-ui/styled/styles.css:454` (the
-disabled twin list on `.ref-button`).
+Evidence: ATM-COND-02, ATM-COND-10 (probes emits the chained selector); Panda v1
+test "nested > nested > property"; reference-lib
+`packages/reference-lib/.reference-ui/styled/styles.css:454` (the disabled twin
+list on `.ref-button`).
 
 > Search terms: data-hover, data-disabled, pseudo-class, :disabled, combined, double bind, conditions/hover, conditions/disabled, selector :is(), NEO-COND-01, NEO-COND-02

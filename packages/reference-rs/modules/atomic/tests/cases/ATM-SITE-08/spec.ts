@@ -1,5 +1,5 @@
 /**
- * Styletrace gating station. Div is a Reference import and extracts.
+ * Styletrace gating case. Div is a Reference import and extracts.
  * Foo is a local component without StyleProps and must not extract,
  * including when it authors known style props. No PascalCase matcher.
  */

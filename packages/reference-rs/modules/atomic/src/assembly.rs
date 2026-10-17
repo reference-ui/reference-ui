@@ -21,6 +21,7 @@ use crate::{
 };
 
 mod build;
+use crate::diagnostics::proof::render::RenderScope;
 use build::{build_atom_sets, build_css_runtime, build_plans, compile_recipes, RecipeInputs};
 
 /// The compile's filled sinks, assembled into the artifact bundle.
@@ -193,15 +194,13 @@ impl PlanStage {
             Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
                 sink.facts(),
                 emitted,
-                scope.qualifiers,
-                &scope.system.name,
+                RenderScope::new(&scope.system.name, scope.qualifiers),
                 diagnostics,
             ),
             None => crate::diagnostics::proof::render::render_session(
                 sink.facts(),
                 &style_plans,
-                scope.qualifiers,
-                &scope.system.name,
+                RenderScope::new(&scope.system.name, scope.qualifiers),
                 diagnostics,
             ),
         };
@@ -238,7 +237,7 @@ fn check_root(
 
 /// Build the plans for the authored declarations. The plan builder borrows both atom
 /// sets and the diagnostics only for its own run, so the sheets read the sets after it.
-/// Plans stay unconditional: the S4 render joins verdicts against them, and the
+/// Plans stay unconditional: the render joins verdicts against them, and the
 /// diagnostics sweep killed proof-gating here (the "no compiled style plan" prefix rides
 /// render_session output). On `!proof` the diet path carries placeholder declarations
 /// (slim drops plans) plus the canonical keys, skipping render's second serialization;
@@ -252,10 +251,12 @@ fn build_plan_stage(
     let mut plan_builder = runtime::PlanBuilder::new(
         &scope.system.name,
         scope.system,
-        &mut atoms.own,
-        &mut atoms.external,
         scope.qualifiers,
-        diagnostics,
+        runtime::PlanSinks {
+            atom_set: &mut atoms.own,
+            external_atom_set: &mut atoms.external,
+            diagnostics,
+        },
     );
     let (style_plans, carried_keys) = build_plans(&mut plan_builder, authored, scope.proof);
     PlanStage {
@@ -288,12 +289,15 @@ fn build_sheets(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> (stylesheet::StylesheetStreams, String, String) {
     let mut portable_sink = Vec::new();
+    let input = stylesheet::SheetInput {
+        own: &atoms.own,
+        external: &atoms.external,
+        qualifiers: scope.qualifiers,
+        system: scope.system,
+        recipes: compiled_recipes,
+    };
     stylesheet::build_stylesheets_with(
-        &atoms.own,
-        &atoms.external,
-        scope.qualifiers,
-        scope.system,
-        compiled_recipes,
+        &input,
         stylesheet::StylesheetSinks {
             primary: diagnostics,
             portable: &mut portable_sink,

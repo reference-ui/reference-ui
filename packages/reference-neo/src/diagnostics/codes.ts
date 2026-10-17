@@ -3,7 +3,7 @@
 // A producer imports its constant from here so each wire string is spelled once, and a new
 // TypeScript-minted code joins the list and gets its row in REGISTRY.md.
 
-/** A local token leaf replaces an upstream value (E13). Namespace BSS, emitted by the collect step. */
+/** A local token leaf replaces an upstream value. Namespace BSS, emitted by the collect step. */
 export const TOKEN_SHADOW_CODE = 'BSS-W-TOKEN-SHADOW'
 
 /** Evaluating ui.config, where base systems are imported, ran past the slow threshold. Namespace BSS, emitted by the config loader. */

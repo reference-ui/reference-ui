@@ -20,10 +20,8 @@ Does not print CSS. Does not name classes. Does not hash a whole object.
 
 ## Example (Panda)
 
-`vendor/panda/crates/pandacss_extractor` — `jsx.rs`, `calls.rs`,
-`matcher.rs` are their “where”. Ours are named after the author API.
-`literal.rs` / `style_tree.rs` / `pure_fn.rs` are the evaluator: walk
-like them, do not fold like them. See [PANDA.md](../../PANDA.md).
+Panda's JSX, call, and matcher modules are their “where”. Ours are named after the author API.
+Their evaluator is the one to walk like, not fold like. See [PANDA.md](../../PANDA.md).
 
 ## Must not
 

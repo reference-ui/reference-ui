@@ -151,7 +151,7 @@ pub(crate) fn tone_names(system: &BaseSystem) -> Vec<&str> {
 /// offered: a neighbour within the gate's budget would be as wrong as its own name.
 pub(crate) fn suggestion_candidates<'a>(system: &'a BaseSystem, query: &str) -> Vec<&'a str> {
     let names = tone_names(system);
-    if names.iter().any(|name| *name == query) {
+    if names.contains(&query) {
         return Vec::new();
     }
     names

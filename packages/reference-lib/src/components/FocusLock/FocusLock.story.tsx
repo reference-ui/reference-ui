@@ -87,8 +87,8 @@ export function FocusLockFixture() {
   const [liveLab, setLiveLab] = React.useState(false)
   const [liveDisabled, setLiveDisabled] = React.useState(false)
   const [liveInert, setLiveInert] = React.useState(false)
-  // FINISH-02F-WK (F11/F12): React 17/18 drop the unknown `inert` JSX prop
-  // (D9b: live-c renders with no inert attribute), so candidates include the
+  // React 17/18 drop the unknown `inert` JSX prop
+  // (live-c renders with no inert attribute), so candidates include the
   // node on r17/r18. The inert IDL reflects to the attribute in all Playwright
   // browsers — set it imperatively so the fixture is major-proof.
   const liveCRef = React.useRef<HTMLButtonElement | null>(null)

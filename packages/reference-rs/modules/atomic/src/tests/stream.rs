@@ -4,7 +4,7 @@
 //! streamed files (direct import, barrel hop into a streamed target, unbound
 //! bag lookup) plus located parse errors and sibling isolation for a
 //! Broken-shaped streamed file. Each case compiles whole files, so staging,
-//! demand-driven refinement, and error replay run exactly as in stations.
+//! demand-driven refinement, and error replay run exactly as in cases.
 
 use crate::{compile, CompileRequest, VirtualSource};
 

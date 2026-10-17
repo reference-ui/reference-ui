@@ -1,5 +1,5 @@
 /**
- * Brace-interpolation station. Token segments inside composite border and
+ * Brace-interpolation case. Token segments inside composite border and
  * shadow values expand to var() references; an unterminated brace stays
  * raw inside its string and warns.
  */

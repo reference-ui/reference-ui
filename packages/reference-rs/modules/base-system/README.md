@@ -14,7 +14,7 @@ wire format (`{ value | light | dark }` leaves, brace aliases intact) —
 what evaluated fragments specify. `BaseSystem::from_json` lowers a spec
 into the indexed `BaseSystem` query engine (flat `category.path` keys,
 precomputed `cssVar`). `compile()` still deserializes the indexed shape
-directly so station `baseSystem.json` files keep working.
+directly so case `baseSystem.json` files keep working.
 `BaseSystem::default()` stays empty. `staticCss` is a property →
 token-list bag (`color: ['*']` or `bg: ['n100']`); the lib fixture leaves
 it empty so AtomSet stays small. `layers` is not here yet. `jsxOwned` maps a

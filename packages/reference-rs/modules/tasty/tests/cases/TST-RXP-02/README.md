@@ -4,12 +4,12 @@ Verifies re-export edge cases including type-only re-exports, mixed re-exports, 
 Ensures symbols across barrel exports and circular references are resolved.
 Proves primary SPEC ID anchor TST-RXP-02.
 
-Also covers star ambiguity (wave 6 find q): `star-ambiguity-a/b.ts`
+Also covers star ambiguity: `star-ambiguity-a/b.ts`
 both export `StarWidget`, the barrel star-re-exports both, and the
 consumer import stays an unresolved external descriptor with exactly
 one diagnostic naming the barrel, the name, and both sources.
 
-Doom-night fortify pins (tasty resolve cluster):
+Pins:
 - B — `export *` never re-exports `default` (`star-default-*`): the
   barrel carries no `"default"`, the phantom default-import consumer
   stays unresolved, and an explicit `export { X as default }` seed

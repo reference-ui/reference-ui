@@ -1,5 +1,5 @@
 /**
- * Variant table station. CompileResult.recipes carries the derivation inputs
+ * Variant table case. CompileResult.recipes carries the derivation inputs
  * (value-name lists, index defaults, unexpanded predicates, breakpoint
  * list) the runtime derives into closed recipe class names; nothing ships
  * pre-composed. Identity rides the runtime-map key, not the table.

@@ -1,5 +1,5 @@
 /**
- * Border zero/whole station. `0` / `0px` become width 0px. `none`, `inherit`,
+ * Border zero/whole case. `0` / `0px` become width 0px. `none`, `inherit`,
  * and `borders.card` stay a single border atom.
  */
 import { expect } from 'vitest'

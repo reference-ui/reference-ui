@@ -90,7 +90,7 @@ function mergeTokenNodes(
 }
 
 /**
- * Merge a later token tree over an earlier one, returning a fresh tree (E14).
+ * Merge a later token tree over an earlier one, returning a fresh tree.
  * A node with a `value`, `light`, or `dark` key is a leaf and replaces the earlier
  * node whole, so a leaf drops any dark or light key it does not repeat, and a leaf
  * over a group drops the group's children. A group merges recursively, and over an

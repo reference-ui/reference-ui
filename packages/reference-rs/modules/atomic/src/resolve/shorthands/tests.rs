@@ -227,7 +227,7 @@ fn test_border_none_stays_bare() {
 
 #[test]
 fn test_flex_single_keywords_emit_panda_triples() {
-    // Panda flex utility values (RS-39): exact, case-sensitive, trim-tolerant.
+    // Panda flex utility values: exact, case-sensitive, trim-tolerant.
     for (input, triple) in [
         ("1", "1 1 0%"),
         ("auto", "1 1 auto"),
@@ -260,7 +260,7 @@ fn test_flex_other_values_pass_through_raw() {
 
 #[test]
 fn test_border_gate_rejects_non_border_trios() {
-    // RS-39 family gate: len-3 trios of other families never classify as
+    // family gate: len-3 trios of other families never classify as
     // border, even when fed straight into the border pass.
     for (prop, val) in [
         ("flex", "1 1 0%"),

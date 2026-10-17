@@ -20,17 +20,17 @@
     },
     {
       "id": "LIB-SLIDER-003",
-      "name": "Slider contract B-29: Slider should clamp ARIA to the feasible window when the controlled value is out of range",
+      "name": "Slider contract Slider should clamp ARIA to the feasible window when the controlled value is out of range",
       "kind": "unit",
       "file": "Slider.contract.test.tsx",
-      "title": "Slider contract B-29: Slider should clamp ARIA to the feasible window when the controlled value is out of range"
+      "title": "Slider contract Slider should clamp ARIA to the feasible window when the controlled value is out of range"
     },
     {
       "id": "LIB-SLIDER-004",
-      "name": "Slider contract W-35: Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range",
+      "name": "Slider contract Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range",
       "kind": "unit",
       "file": "Slider.contract.test.tsx",
-      "title": "Slider contract W-35: Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range"
+      "title": "Slider contract Slider should dev-warn naming component, prop, value, and range when the controlled value is out of range"
     },
     {
       "id": "LIB-SLIDER-005",
@@ -62,318 +62,318 @@
     },
     {
       "id": "LIB-SLIDER-009",
-      "name": "Slider PATCHES pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL",
+      "name": "Slider pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL"
+      "title": "Slider pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL"
     },
     {
       "id": "LIB-SLIDER-010",
-      "name": "Slider PATCHES pins SD-KEY-03: keeps vertical arrow semantics independent of RTL",
+      "name": "Slider pins SD-KEY-03: keeps vertical arrow semantics independent of RTL",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-KEY-03: keeps vertical arrow semantics independent of RTL"
+      "title": "Slider pins SD-KEY-03: keeps vertical arrow semantics independent of RTL"
     },
     {
       "id": "LIB-SLIDER-011",
-      "name": "Slider PATCHES pins SD-KEY-04: snaps Page steps to the grid with one callback per keydown",
+      "name": "Slider pins SD-KEY-04: snaps Page steps to the grid with one callback per keydown",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-KEY-04: snaps Page steps to the grid with one callback per keydown"
+      "title": "Slider pins SD-KEY-04: snaps Page steps to the grid with one callback per keydown"
     },
     {
       "id": "LIB-SLIDER-012",
-      "name": "Slider PATCHES pins SD-END-02: treats key repeats as one interaction ending on the matching keyup",
+      "name": "Slider pins SD-END-02: treats key repeats as one interaction ending on the matching keyup",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-02: treats key repeats as one interaction ending on the matching keyup"
+      "title": "Slider pins SD-END-02: treats key repeats as one interaction ending on the matching keyup"
     },
     {
       "id": "LIB-SLIDER-013",
-      "name": "Slider PATCHES pins SD-END-02: bound keydowns that change nothing create no completion",
+      "name": "Slider pins SD-END-02: bound keydowns that change nothing create no completion",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-02: bound keydowns that change nothing create no completion"
+      "title": "Slider pins SD-END-02: bound keydowns that change nothing create no completion"
     },
     {
       "id": "LIB-SLIDER-014",
-      "name": "Slider PATCHES pins SD-END-03: canceled pointer sessions stay silent and clear once",
+      "name": "Slider pins SD-END-03: canceled pointer sessions stay silent and clear once",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-03: canceled pointer sessions stay silent and clear once"
+      "title": "Slider pins SD-END-03: canceled pointer sessions stay silent and clear once"
     },
     {
       "id": "LIB-SLIDER-015",
-      "name": "Slider PATCHES pins SD-END-03: removing the dragged thumb cancels its session",
+      "name": "Slider pins SD-END-03: removing the dragged thumb cancels its session",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-03: removing the dragged thumb cancels its session"
+      "title": "Slider pins SD-END-03: removing the dragged thumb cancels its session"
     },
     {
       "id": "LIB-SLIDER-016",
-      "name": "Slider PATCHES pins SD-END-03: keyboard sessions invalidated before keyup stay silent",
+      "name": "Slider pins SD-END-03: keyboard sessions invalidated before keyup stay silent",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-03: keyboard sessions invalidated before keyup stay silent"
+      "title": "Slider pins SD-END-03: keyboard sessions invalidated before keyup stay silent"
     },
     {
       "id": "LIB-SLIDER-017",
-      "name": "Slider PATCHES pins SD-END-04: rejected requests end with the last requested candidate on the latest handler",
+      "name": "Slider pins SD-END-04: rejected requests end with the last requested candidate on the latest handler",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-04: rejected requests end with the last requested candidate on the latest handler"
+      "title": "Slider pins SD-END-04: rejected requests end with the last requested candidate on the latest handler"
     },
     {
       "id": "LIB-SLIDER-018",
-      "name": "Slider PATCHES pins SD-END-04: programmatic updates and bound no-ops emit no completion",
+      "name": "Slider pins SD-END-04: programmatic updates and bound no-ops emit no completion",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-END-04: programmatic updates and bound no-ops emit no completion"
+      "title": "Slider pins SD-END-04: programmatic updates and bound no-ops emit no completion"
     },
     {
       "id": "LIB-SLIDER-019",
-      "name": "Slider PATCHES pins SD-DOM-05: diagnoses value-to-Thumb count mismatches when interaction begins",
+      "name": "Slider pins SD-DOM-05: diagnoses value-to-Thumb count mismatches when interaction begins",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DOM-05: diagnoses value-to-Thumb count mismatches when interaction begins"
+      "title": "Slider pins SD-DOM-05: diagnoses value-to-Thumb count mismatches when interaction begins"
     },
     {
       "id": "LIB-SLIDER-020",
-      "name": "Slider PATCHES pins SD-DOM-12: rejects duplicate Track/Range anatomy at commit",
+      "name": "Slider pins SD-DOM-12: rejects duplicate Track/Range anatomy at commit",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DOM-12: rejects duplicate Track/Range anatomy at commit"
+      "title": "Slider pins SD-DOM-12: rejects duplicate Track/Range anatomy at commit"
     },
     {
       "id": "LIB-SLIDER-021",
-      "name": "Slider PATCHES pins SD-DOM-12: missing Track fails before any capture",
+      "name": "Slider pins SD-DOM-12: missing Track fails before any capture",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DOM-12: missing Track fails before any capture"
+      "title": "Slider pins SD-DOM-12: missing Track fails before any capture"
     },
     {
       "id": "LIB-SLIDER-022",
-      "name": "Slider PATCHES pins SD-CTRL-07: rejects programmatic arrays that violate the minimum distance",
+      "name": "Slider pins SD-CTRL-07: rejects programmatic arrays that violate the minimum distance",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-CTRL-07: rejects programmatic arrays that violate the minimum distance"
+      "title": "Slider pins SD-CTRL-07: rejects programmatic arrays that violate the minimum distance"
     },
     {
       "id": "LIB-SLIDER-023",
-      "name": "Slider PATCHES pins SD-CTRL-05: uses current props when configuration changes during a drag",
+      "name": "Slider pins SD-CTRL-05: uses current props when configuration changes during a drag",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-CTRL-05: uses current props when configuration changes during a drag"
+      "title": "Slider pins SD-CTRL-05: uses current props when configuration changes during a drag"
     },
     {
       "id": "LIB-SLIDER-024",
-      "name": "Slider PATCHES pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction",
+      "name": "Slider pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction"
+      "title": "Slider pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction"
     },
     {
       "id": "LIB-SLIDER-025",
-      "name": "Slider PATCHES pins SD-DYNAMIC-03: discards stale drag state when cardinality changes mid-gesture",
+      "name": "Slider pins SD-DYNAMIC-03: discards stale drag state when cardinality changes mid-gesture",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DYNAMIC-03: discards stale drag state when cardinality changes mid-gesture"
+      "title": "Slider pins SD-DYNAMIC-03: discards stale drag state when cardinality changes mid-gesture"
     },
     {
       "id": "LIB-SLIDER-026",
-      "name": "Slider PATCHES pins SD-DOM-06: anchors Range endpoints to the axis direction",
+      "name": "Slider pins SD-DOM-06: anchors Range endpoints to the axis direction",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-DOM-06: anchors Range endpoints to the axis direction"
+      "title": "Slider pins SD-DOM-06: anchors Range endpoints to the axis direction"
     },
     {
       "id": "LIB-SLIDER-027",
-      "name": "Slider PATCHES pins SD-POINTER-09: defers pointer geometry while the track is zero-sized",
+      "name": "Slider pins SD-POINTER-09: defers pointer geometry while the track is zero-sized",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-POINTER-09: defers pointer geometry while the track is zero-sized"
+      "title": "Slider pins SD-POINTER-09: defers pointer geometry while the track is zero-sized"
     },
     {
       "id": "LIB-SLIDER-028",
-      "name": "Slider PATCHES pins SD-POINTER-10: maps physical pointer positions per orientation and direction",
+      "name": "Slider pins SD-POINTER-10: maps physical pointer positions per orientation and direction",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-POINTER-10: maps physical pointer positions per orientation and direction"
+      "title": "Slider pins SD-POINTER-10: maps physical pointer positions per orientation and direction"
     },
     {
       "id": "LIB-SLIDER-029",
-      "name": "Slider PATCHES pins SD-POINTER-03: preserves the grab offset instead of jumping to center",
+      "name": "Slider pins SD-POINTER-03: preserves the grab offset instead of jumping to center",
       "kind": "unit",
       "file": "Slider.patches.test.tsx",
-      "title": "Slider PATCHES pins SD-POINTER-03: preserves the grab offset instead of jumping to center"
+      "title": "Slider pins SD-POINTER-03: preserves the grab offset instead of jumping to center"
     },
     {
       "id": "LIB-SLIDER-030",
-      "name": "Slider finish-line tail SD-DOM-01: renders only documented non-form parts inside a form; submit/reset stay inert",
+      "name": "Slider behavior contracts SD-DOM-01: renders only documented non-form parts inside a form; submit/reset stay inert",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-01: renders only documented non-form parts inside a form; submit/reset stay inert"
+      "title": "Slider behavior contracts SD-DOM-01: renders only documented non-form parts inside a form; submit/reset stay inert"
     },
     {
       "id": "LIB-SLIDER-031",
-      "name": "Slider finish-line tail SD-DOM-02: publishes global and neighbor ARIA bounds across thumbs",
+      "name": "Slider behavior contracts SD-DOM-02: publishes global and neighbor ARIA bounds across thumbs",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-02: publishes global and neighbor ARIA bounds across thumbs"
+      "title": "Slider behavior contracts SD-DOM-02: publishes global and neighbor ARIA bounds across thumbs"
     },
     {
       "id": "LIB-SLIDER-032",
-      "name": "Slider finish-line tail SD-DOM-03: preserves consumer DOM props across a drag and a disabled toggle",
+      "name": "Slider behavior contracts SD-DOM-03: preserves consumer DOM props across a drag and a disabled toggle",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-03: preserves consumer DOM props across a drag and a disabled toggle"
+      "title": "Slider behavior contracts SD-DOM-03: preserves consumer DOM props across a drag and a disabled toggle"
     },
     {
       "id": "LIB-SLIDER-033",
-      "name": "Slider finish-line tail SD-DOM-04: preserves application-provided accessible names and value text",
+      "name": "Slider behavior contracts SD-DOM-04: preserves application-provided accessible names and value text",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-04: preserves application-provided accessible names and value text"
+      "title": "Slider behavior contracts SD-DOM-04: preserves application-provided accessible names and value text"
     },
     {
       "id": "LIB-SLIDER-034",
-      "name": "Slider finish-line tail SD-DOM-07: stays value-stable while the whole control is disabled",
+      "name": "Slider behavior contracts SD-DOM-07: stays value-stable while the whole control is disabled",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-07: stays value-stable while the whole control is disabled"
+      "title": "Slider behavior contracts SD-DOM-07: stays value-stable while the whole control is disabled"
     },
     {
       "id": "LIB-SLIDER-035",
-      "name": "Slider finish-line tail SD-DOM-09: updates frozen percentage hooks without touching consumer geometry",
+      "name": "Slider behavior contracts SD-DOM-09: updates frozen percentage hooks without touching consumer geometry",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-09: updates frozen percentage hooks without touching consumer geometry"
+      "title": "Slider behavior contracts SD-DOM-09: updates frozen percentage hooks without touching consumer geometry"
     },
     {
       "id": "LIB-SLIDER-036",
-      "name": "Slider finish-line tail SD-DOM-10: synchronizes thumb orientation ARIA when root orientation changes",
+      "name": "Slider behavior contracts SD-DOM-10: synchronizes thumb orientation ARIA when root orientation changes",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-10: synchronizes thumb orientation ARIA when root orientation changes"
+      "title": "Slider behavior contracts SD-DOM-10: synchronizes thumb orientation ARIA when root orientation changes"
     },
     {
       "id": "LIB-SLIDER-037",
-      "name": "Slider finish-line tail SD-DOM-11: applies deterministic enabled horizontal defaults for omitted props",
+      "name": "Slider behavior contracts SD-DOM-11: applies deterministic enabled horizontal defaults for omitted props",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DOM-11: applies deterministic enabled horizontal defaults for omitted props"
+      "title": "Slider behavior contracts SD-DOM-11: applies deterministic enabled horizontal defaults for omitted props"
     },
     {
       "id": "LIB-SLIDER-038",
-      "name": "Slider finish-line tail SD-CTRL-01: preserves the public value shape across key, press, and drag",
+      "name": "Slider behavior contracts SD-CTRL-01: preserves the public value shape across key, press, and drag",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-01: preserves the public value shape across key, press, and drag"
+      "title": "Slider behavior contracts SD-CTRL-01: preserves the public value shape across key, press, and drag"
     },
     {
       "id": "LIB-SLIDER-039",
-      "name": "Slider finish-line tail SD-CTRL-02: retains rendered controlled state when the parent rejects requests",
+      "name": "Slider behavior contracts SD-CTRL-02: retains rendered controlled state when the parent rejects requests",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-02: retains rendered controlled state when the parent rejects requests"
+      "title": "Slider behavior contracts SD-CTRL-02: retains rendered controlled state when the parent rejects requests"
     },
     {
       "id": "LIB-SLIDER-040",
-      "name": "Slider finish-line tail SD-CTRL-03: updates geometry without synthetic events on programmatic change",
+      "name": "Slider behavior contracts SD-CTRL-03: updates geometry without synthetic events on programmatic change",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-03: updates geometry without synthetic events on programmatic change"
+      "title": "Slider behavior contracts SD-CTRL-03: updates geometry without synthetic events on programmatic change"
     },
     {
       "id": "LIB-SLIDER-041",
-      "name": "Slider finish-line tail SD-CTRL-04: emits no request when clamping or snapping leaves the value unchanged",
+      "name": "Slider behavior contracts SD-CTRL-04: emits no request when clamping or snapping leaves the value unchanged",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-04: emits no request when clamping or snapping leaves the value unchanged"
+      "title": "Slider behavior contracts SD-CTRL-04: emits no request when clamping or snapping leaves the value unchanged"
     },
     {
       "id": "LIB-SLIDER-042",
-      "name": "Slider finish-line tail SD-CTRL-06: lets consumer preventDefault cancel matching internal changes",
+      "name": "Slider behavior contracts SD-CTRL-06: lets consumer preventDefault cancel matching internal changes",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-06: lets consumer preventDefault cancel matching internal changes"
+      "title": "Slider behavior contracts SD-CTRL-06: lets consumer preventDefault cancel matching internal changes"
     },
     {
       "id": "LIB-SLIDER-043",
-      "name": "Slider finish-line tail SD-CTRL-08: publishes from accepted values across a distance-clamped rejection",
+      "name": "Slider behavior contracts SD-CTRL-08: publishes from accepted values across a distance-clamped rejection",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-CTRL-08: publishes from accepted values across a distance-clamped rejection"
+      "title": "Slider behavior contracts SD-CTRL-08: publishes from accepted values across a distance-clamped rejection"
     },
     {
       "id": "LIB-SLIDER-044",
-      "name": "Slider finish-line tail SD-KEY-01: maps horizontal LTR arrows to one normal step",
+      "name": "Slider behavior contracts SD-KEY-01: maps horizontal LTR arrows to one normal step",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-KEY-01: maps horizontal LTR arrows to one normal step"
+      "title": "Slider behavior contracts SD-KEY-01: maps horizontal LTR arrows to one normal step"
     },
     {
       "id": "LIB-SLIDER-045",
-      "name": "Slider finish-line tail SD-KEY-05: sends Home and End to feasible neighbor bounds in a range",
+      "name": "Slider behavior contracts SD-KEY-05: sends Home and End to feasible neighbor bounds in a range",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-KEY-05: sends Home and End to feasible neighbor bounds in a range"
+      "title": "Slider behavior contracts SD-KEY-05: sends Home and End to feasible neighbor bounds in a range"
     },
     {
       "id": "LIB-SLIDER-046",
-      "name": "Slider finish-line tail SD-KEY-06: changes only the focused logical thumb on a range key",
+      "name": "Slider behavior contracts SD-KEY-06: changes only the focused logical thumb on a range key",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-KEY-06: changes only the focused logical thumb on a range key"
+      "title": "Slider behavior contracts SD-KEY-06: changes only the focused logical thumb on a range key"
     },
     {
       "id": "LIB-SLIDER-047",
-      "name": "Slider finish-line tail SD-KEY-08: keeps focus without duplicate requests when a handled key hits a bound",
+      "name": "Slider behavior contracts SD-KEY-08: keeps focus without duplicate requests when a handled key hits a bound",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-KEY-08: keeps focus without duplicate requests when a handled key hits a bound"
+      "title": "Slider behavior contracts SD-KEY-08: keeps focus without duplicate requests when a handled key hits a bound"
     },
     {
       "id": "LIB-SLIDER-048",
-      "name": "Slider finish-line tail SD-KEY-09: clamps keyboard movement at the minimum-distance boundary",
+      "name": "Slider behavior contracts SD-KEY-09: clamps keyboard movement at the minimum-distance boundary",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-KEY-09: clamps keyboard movement at the minimum-distance boundary"
+      "title": "Slider behavior contracts SD-KEY-09: clamps keyboard movement at the minimum-distance boundary"
     },
     {
       "id": "LIB-SLIDER-049",
-      "name": "Slider finish-line tail SD-POINTER-11: clamps without swapping logical identity at a neighbor",
+      "name": "Slider behavior contracts SD-POINTER-11: clamps without swapping logical identity at a neighbor",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-POINTER-11: clamps without swapping logical identity at a neighbor"
+      "title": "Slider behavior contracts SD-POINTER-11: clamps without swapping logical identity at a neighbor"
     },
     {
       "id": "LIB-SLIDER-050",
-      "name": "Slider finish-line tail SD-POINTER-12: clamps pointer movement from either thumb under a positive minimum distance",
+      "name": "Slider behavior contracts SD-POINTER-12: clamps pointer movement from either thumb under a positive minimum distance",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-POINTER-12: clamps pointer movement from either thumb under a positive minimum distance"
+      "title": "Slider behavior contracts SD-POINTER-12: clamps pointer movement from either thumb under a positive minimum distance"
     },
     {
       "id": "LIB-SLIDER-051",
-      "name": "Slider finish-line tail SD-DYNAMIC-01: preserves surviving thumb identity across cardinality and order changes",
+      "name": "Slider behavior contracts SD-DYNAMIC-01: preserves surviving thumb identity across cardinality and order changes",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DYNAMIC-01: preserves surviving thumb identity across cardinality and order changes"
+      "title": "Slider behavior contracts SD-DYNAMIC-01: preserves surviving thumb identity across cardinality and order changes"
     },
     {
       "id": "LIB-SLIDER-052",
-      "name": "Slider finish-line tail SD-DYNAMIC-04: recomputes minimum distance when step config changes dynamically",
+      "name": "Slider behavior contracts SD-DYNAMIC-04: recomputes minimum distance when step config changes dynamically",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-DYNAMIC-04: recomputes minimum distance when step config changes dynamically"
+      "title": "Slider behavior contracts SD-DYNAMIC-04: recomputes minimum distance when step config changes dynamically"
     },
     {
       "id": "LIB-SLIDER-053",
-      "name": "Slider finish-line tail SD-COMP-02: preserves thumb identities when an RTL range meets at one value",
+      "name": "Slider behavior contracts SD-COMP-02: preserves thumb identities when an RTL range meets at one value",
       "kind": "unit",
       "file": "Slider.tail.test.tsx",
-      "title": "Slider finish-line tail SD-COMP-02: preserves thumb identities when an RTL range meets at one value"
+      "title": "Slider behavior contracts SD-COMP-02: preserves thumb identities when an RTL range meets at one value"
     },
     {
       "id": "LIB-SLIDER-054",
@@ -398,17 +398,17 @@
     },
     {
       "id": "LIB-SLIDER-057",
-      "name": "Slider CT B-29: out-of-range controlled value clamps ARIA like the visual",
+      "name": "Slider CT out-of-range controlled value clamps ARIA like the visual",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider CT B-29: out-of-range controlled value clamps ARIA like the visual"
+      "title": "Slider CT out-of-range controlled value clamps ARIA like the visual"
     },
     {
       "id": "LIB-SLIDER-058",
-      "name": "Slider CT W-35: out-of-range controlled value dev-warns naming component, prop, value, and range",
+      "name": "Slider CT out-of-range controlled value dev-warns naming component, prop, value, and range",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider CT W-35: out-of-range controlled value dev-warns naming component, prop, value, and range"
+      "title": "Slider CT out-of-range controlled value dev-warns naming component, prop, value, and range"
     },
     {
       "id": "LIB-SLIDER-059",
@@ -433,213 +433,213 @@
     },
     {
       "id": "LIB-SLIDER-062",
-      "name": "Slider PATCHES pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL",
+      "name": "Slider pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL"
+      "title": "Slider pins SD-KEY-02: reverses only horizontal Left/Right arrows under inherited RTL"
     },
     {
       "id": "LIB-SLIDER-063",
-      "name": "Slider PATCHES pins SD-KEY-03: keeps vertical arrow semantics independent of RTL",
+      "name": "Slider pins SD-KEY-03: keeps vertical arrow semantics independent of RTL",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-KEY-03: keeps vertical arrow semantics independent of RTL"
+      "title": "Slider pins SD-KEY-03: keeps vertical arrow semantics independent of RTL"
     },
     {
       "id": "LIB-SLIDER-064",
-      "name": "Slider PATCHES pins SD-POINTER-10: maps physical pointer positions when orientation and direction vary",
+      "name": "Slider pins SD-POINTER-10: maps physical pointer positions when orientation and direction vary",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-10: maps physical pointer positions when orientation and direction vary"
+      "title": "Slider pins SD-POINTER-10: maps physical pointer positions when orientation and direction vary"
     },
     {
       "id": "LIB-SLIDER-065",
-      "name": "Slider PATCHES pins SD-DOM-06: right-anchors computed Range geometry in RTL",
+      "name": "Slider pins SD-DOM-06: right-anchors computed Range geometry in RTL",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-DOM-06: right-anchors computed Range geometry in RTL"
+      "title": "Slider pins SD-DOM-06: right-anchors computed Range geometry in RTL"
     },
     {
       "id": "LIB-SLIDER-066",
-      "name": "Slider PATCHES pins SD-POINTER-01: chooses and focuses the nearest movable thumb on track press",
+      "name": "Slider pins SD-POINTER-01: chooses and focuses the nearest movable thumb on track press",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-01: chooses and focuses the nearest movable thumb on track press"
+      "title": "Slider pins SD-POINTER-01: chooses and focuses the nearest movable thumb on track press"
     },
     {
       "id": "LIB-SLIDER-067",
-      "name": "Slider PATCHES pins SD-POINTER-02: resolves stacked track presses by the active/index rule",
+      "name": "Slider pins SD-POINTER-02: resolves stacked track presses by the active/index rule",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-02: resolves stacked track presses by the active/index rule"
+      "title": "Slider pins SD-POINTER-02: resolves stacked track presses by the active/index rule"
     },
     {
       "id": "LIB-SLIDER-068",
-      "name": "Slider PATCHES pins SD-DOM-08: keeps every thumb reachable across focus and stacked presses",
+      "name": "Slider pins SD-DOM-08: keeps every thumb reachable across focus and stacked presses",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-DOM-08: keeps every thumb reachable across focus and stacked presses"
+      "title": "Slider pins SD-DOM-08: keeps every thumb reachable across focus and stacked presses"
     },
     {
       "id": "LIB-SLIDER-069",
-      "name": "Slider PATCHES pins SD-POINTER-03: preserves the grab offset on off-center thumb drags",
+      "name": "Slider pins SD-POINTER-03: preserves the grab offset on off-center thumb drags",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-03: preserves the grab offset on off-center thumb drags"
+      "title": "Slider pins SD-POINTER-03: preserves the grab offset on off-center thumb drags"
     },
     {
       "id": "LIB-SLIDER-070",
-      "name": "Slider PATCHES pins SD-END-01: summarizes a changed pointer interaction once on release",
+      "name": "Slider pins SD-END-01: summarizes a changed pointer interaction once on release",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-END-01: summarizes a changed pointer interaction once on release"
+      "title": "Slider pins SD-END-01: summarizes a changed pointer interaction once on release"
     },
     {
       "id": "LIB-SLIDER-071",
-      "name": "Slider PATCHES pins SD-POINTER-04: retains pointer ownership beyond the track",
+      "name": "Slider pins SD-POINTER-04: retains pointer ownership beyond the track",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-04: retains pointer ownership beyond the track"
+      "title": "Slider pins SD-POINTER-04: retains pointer ownership beyond the track"
     },
     {
       "id": "LIB-SLIDER-072",
-      "name": "Slider PATCHES pins SD-POINTER-06: accepts only primary input",
+      "name": "Slider pins SD-POINTER-06: accepts only primary input",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-06: accepts only primary input"
+      "title": "Slider pins SD-POINTER-06: accepts only primary input"
     },
     {
       "id": "LIB-SLIDER-073",
-      "name": "Slider PATCHES pins SD-POINTER-07: releases capture and ends dragging on pointerup",
+      "name": "Slider pins SD-POINTER-07: releases capture and ends dragging on pointerup",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-07: releases capture and ends dragging on pointerup"
+      "title": "Slider pins SD-POINTER-07: releases capture and ends dragging on pointerup"
     },
     {
       "id": "LIB-SLIDER-074",
-      "name": "Slider PATCHES pins SD-POINTER-08: cleans the session when disabled or capture is lost mid-drag",
+      "name": "Slider pins SD-POINTER-08: cleans the session when disabled or capture is lost mid-drag",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-08: cleans the session when disabled or capture is lost mid-drag"
+      "title": "Slider pins SD-POINTER-08: cleans the session when disabled or capture is lost mid-drag"
     },
     {
       "id": "LIB-SLIDER-075",
-      "name": "Slider PATCHES pins SD-POINTER-09: defers while hidden and resumes when measurable",
+      "name": "Slider pins SD-POINTER-09: defers while hidden and resumes when measurable",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-09: defers while hidden and resumes when measurable"
+      "title": "Slider pins SD-POINTER-09: defers while hidden and resumes when measurable"
     },
     {
       "id": "LIB-SLIDER-076",
-      "name": "Slider PATCHES pins SD-POINTER-13: enforces value-space distance across RTL and vertical axes",
+      "name": "Slider pins SD-POINTER-13: enforces value-space distance across RTL and vertical axes",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-13: enforces value-space distance across RTL and vertical axes"
+      "title": "Slider pins SD-POINTER-13: enforces value-space distance across RTL and vertical axes"
     },
     {
       "id": "LIB-SLIDER-077",
-      "name": "Slider PATCHES pins SD-END-02: merges native key repeats into one interaction",
+      "name": "Slider pins SD-END-02: merges native key repeats into one interaction",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-END-02: merges native key repeats into one interaction"
+      "title": "Slider pins SD-END-02: merges native key repeats into one interaction"
     },
     {
       "id": "LIB-SLIDER-078",
-      "name": "Slider PATCHES pins SD-END-03: stays silent when a changed session is canceled or invalidated",
+      "name": "Slider pins SD-END-03: stays silent when a changed session is canceled or invalidated",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-END-03: stays silent when a changed session is canceled or invalidated"
+      "title": "Slider pins SD-END-03: stays silent when a changed session is canceled or invalidated"
     },
     {
       "id": "LIB-SLIDER-079",
-      "name": "Slider PATCHES pins SD-CTRL-05: uses current props when configuration changes during a drag",
+      "name": "Slider pins SD-CTRL-05: uses current props when configuration changes during a drag",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-CTRL-05: uses current props when configuration changes during a drag"
+      "title": "Slider pins SD-CTRL-05: uses current props when configuration changes during a drag"
     },
     {
       "id": "LIB-SLIDER-080",
-      "name": "Slider PATCHES pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction",
+      "name": "Slider pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction"
+      "title": "Slider pins SD-DYNAMIC-02: rerendered constraints apply to the next interaction"
     },
     {
       "id": "LIB-SLIDER-081",
-      "name": "Slider PATCHES pins SD-DYNAMIC-03: discards stale drag state on mid-gesture cardinality change",
+      "name": "Slider pins SD-DYNAMIC-03: discards stale drag state on mid-gesture cardinality change",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-DYNAMIC-03: discards stale drag state on mid-gesture cardinality change"
+      "title": "Slider pins SD-DYNAMIC-03: discards stale drag state on mid-gesture cardinality change"
     },
     {
       "id": "LIB-SLIDER-082",
-      "name": "Slider PATCHES pins SD-COMP-01: preserves fractional precision across keyboard and drag",
+      "name": "Slider pins SD-COMP-01: preserves fractional precision across keyboard and drag",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-COMP-01: preserves fractional precision across keyboard and drag"
+      "title": "Slider pins SD-COMP-01: preserves fractional precision across keyboard and drag"
     },
     {
       "id": "LIB-SLIDER-083",
-      "name": "Slider PATCHES pins SD-POINTER-05: drives the drag from one owned touchpoint",
+      "name": "Slider pins SD-POINTER-05: drives the drag from one owned touchpoint",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-POINTER-05: drives the drag from one owned touchpoint"
+      "title": "Slider pins SD-POINTER-05: drives the drag from one owned touchpoint"
     },
     {
       "id": "LIB-SLIDER-084",
-      "name": "Slider PATCHES pins SD-COMP-03: retains a vertical touch gesture beyond the track",
+      "name": "Slider pins SD-COMP-03: retains a vertical touch gesture beyond the track",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-COMP-03: retains a vertical touch gesture beyond the track"
+      "title": "Slider pins SD-COMP-03: retains a vertical touch gesture beyond the track"
     },
     {
       "id": "LIB-SLIDER-085",
-      "name": "Slider PATCHES pins SD-A11Y-01: publishes exact role, name, orientation, value, and neighbor bounds",
+      "name": "Slider pins SD-A11Y-01: publishes exact role, name, orientation, value, and neighbor bounds",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-A11Y-01: publishes exact role, name, orientation, value, and neighbor bounds"
+      "title": "Slider pins SD-A11Y-01: publishes exact role, name, orientation, value, and neighbor bounds"
     },
     {
       "id": "LIB-SLIDER-086",
-      "name": "Slider PATCHES pins SD-ENV-02: keeps pointer sessions singular under StrictMode",
+      "name": "Slider pins SD-ENV-02: keeps pointer sessions singular under StrictMode",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-ENV-02: keeps pointer sessions singular under StrictMode"
+      "title": "Slider pins SD-ENV-02: keeps pointer sessions singular under StrictMode"
     },
     {
       "id": "LIB-SLIDER-087",
-      "name": "Slider PATCHES pins SD-ENV-03: preserves the contract inside a ShadowRoot",
+      "name": "Slider pins SD-ENV-03: preserves the contract inside a ShadowRoot",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-ENV-03: preserves the contract inside a ShadowRoot"
+      "title": "Slider pins SD-ENV-03: preserves the contract inside a ShadowRoot"
     },
     {
       "id": "LIB-SLIDER-088",
-      "name": "Slider PATCHES pins SD-ENV-03: honors RTL inherited from outside the ShadowRoot",
+      "name": "Slider pins SD-ENV-03: honors RTL inherited from outside the ShadowRoot",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-ENV-03: honors RTL inherited from outside the ShadowRoot"
+      "title": "Slider pins SD-ENV-03: honors RTL inherited from outside the ShadowRoot"
     },
     {
       "id": "LIB-SLIDER-089",
-      "name": "Slider PATCHES pins FEATURES #6: invisible hit-area reaches 24px without repainting the cap",
+      "name": "Slider pins FEATURES #6: invisible hit-area reaches 24px without repainting the cap",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins FEATURES #6: invisible hit-area reaches 24px without repainting the cap"
+      "title": "Slider pins FEATURES #6: invisible hit-area reaches 24px without repainting the cap"
     },
     {
       "id": "LIB-SLIDER-090",
-      "name": "Slider PATCHES pins SD-KEY-07: Shift+Arrow passes through in a real engine",
+      "name": "Slider pins SD-KEY-07: Shift+Arrow passes through in a real engine",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-KEY-07: Shift+Arrow passes through in a real engine"
+      "title": "Slider pins SD-KEY-07: Shift+Arrow passes through in a real engine"
     },
     {
       "id": "LIB-SLIDER-091",
-      "name": "Slider PATCHES pins SD-DOM-12 and SD-CTRL-07: diagnose malformed anatomy and arrays in the browser",
+      "name": "Slider pins SD-DOM-12 and SD-CTRL-07: diagnose malformed anatomy and arrays in the browser",
       "kind": "ct",
       "file": "__e2e__/Slider.ct.spec.ts",
-      "title": "Slider PATCHES pins SD-DOM-12 and SD-CTRL-07: diagnose malformed anatomy and arrays in the browser"
+      "title": "Slider pins SD-DOM-12 and SD-CTRL-07: diagnose malformed anatomy and arrays in the browser"
     },
     {
       "id": "LIB-SLIDER-092",

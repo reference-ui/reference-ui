@@ -1,5 +1,5 @@
 /**
- * Contract verification suite for Reference RS packet F0 frozen wire fixtures.
+ * Contract verification suite for Reference RS frozen wire fixtures.
  * Asserts that committed JSON fixtures satisfy TypeScript interfaces for all §3 boundaries.
  * Validates positive invariants (schemaVersion === 1, profile === 'reference-ui', owner on plans)
  * and verifies negative fixtures (unsupported versions, unknown fields, layers hosts).

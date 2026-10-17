@@ -4,6 +4,6 @@ Included package resolves nowhere; the package is skipped. The world carries the
 
 Raised in: `modules/atlas/src/analyzer.rs`. Driver: the whole atlas analyzer (`analyzeAtlasDetailed` over the case world).
 
-Evidence: `[diag]` ATL-W-UNRESOLVED-INCLUDE-PACKAGE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATL-W-UNRESOLVED-INCLUDE-PACKAGE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATL-W-UNRESOLVED-INCLUDE-PACKAGE, atl-w-unresolved-include-package, diagnostics case index, NEO-DIAG-54

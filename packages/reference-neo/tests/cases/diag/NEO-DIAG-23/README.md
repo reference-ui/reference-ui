@@ -4,6 +4,6 @@ Unresolvable free identifier in value position. The world carries the minimal fi
 
 Raised in: `modules/atomic/src/extract/expressions/walk/leaf.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-IDENTIFIER (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-IDENTIFIER (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-IDENTIFIER, atm-w-dynamic-identifier, diagnostics case index, NEO-DIAG-23

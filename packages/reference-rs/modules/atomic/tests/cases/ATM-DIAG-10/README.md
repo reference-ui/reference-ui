@@ -1,4 +1,4 @@
-# ATM-DIAG-10 — Incidental-coverage station (ATM-DIAG-10, Operation Error Correct, Slice 0)
+# ATM-DIAG-10 — Incidental-coverage
 
 Incidental coverage: the diagnosed site contributes no plan, but another
 source or harvest contributes the exact key, so runtime paints and
@@ -17,4 +17,4 @@ plan set regardless of which source contributed it; only a miss with an
 exact expected lookup reaches userspace. Related: `ATM-DIAG-07` (channel
 isolation), `ATM-DIAG-08` (exact plan present), `ATM-DIAG-09` (exact plan
 absent, sibling), `ATM-HARVEST-01` (harvest floor, net-new mint).
-Contract: [SPEC.md](../../../SPEC.md). Operation Error Correct, Slice 0.
+Contract: [SPEC.md](../../../SPEC.md).

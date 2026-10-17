@@ -1,5 +1,5 @@
 /**
- * Identifier-spread station. `{...base}` on JSX and inside css() unpacks
+ * Identifier-spread case. `{...base}` on JSX and inside css() unpacks
  * known keys from a file-top const object. Inline object spreads are
  * ATM-SITE-05.
  */

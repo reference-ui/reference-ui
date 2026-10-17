@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "book",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:lib"],
+      "port": 5000
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:docs"],
+      "port": 5174
+    }
+  ]
+}

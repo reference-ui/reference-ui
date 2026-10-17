@@ -4,7 +4,7 @@
  * Emits corresponding re-export stub declaration files at the package root level.
  * This guarantees seamless module resolution for downstream TypeScript consumers importing subpaths.
  * One target is carried, not compiled: tsc emits no output for .d.ts inputs, so the committed
- * primitives E4 ships by copy and its stub resolves the copy like every other entry.
+ * primitive types (primitives.d.ts) ship by copy and their stub resolves the copy like every other entry.
  */
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 const toolsDir = dirname(fileURLToPath(import.meta.url))
 const distDir = resolve(toolsDir, '../../../..', 'dist')
 
-// E4 is committed generator output, not a tsc emit — copy it into dist so the stub below resolves.
+// primitives.d.ts is committed generator output, not a tsc emit — copy it into dist so the stub below resolves.
 const e4Target = resolve(distDir, 'modules/primitives/generated/primitives.d.ts')
 mkdirSync(dirname(e4Target), { recursive: true })
 copyFileSync(resolve(toolsDir, '../../../primitives/generated/primitives.d.ts'), e4Target)

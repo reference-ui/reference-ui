@@ -19,7 +19,7 @@ use crate::model::{Component, ObservedElement};
 )]
 pub struct AtlasAnalysisResult {
     pub components: Vec<Component>,
-    #[ts(type = "Array<import(\"../../../diagnostics/js/generated/Diagnostic\").Diagnostic>")]
+    #[ts(type = "Array<import(\"../../../diagnostics/js/generated/Diagnostic.js\").Diagnostic>")]
     pub diagnostics: Vec<AtlasDiagnostic>,
     // Counts for the configured elements; absent when no `observe` was configured or none was seen.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

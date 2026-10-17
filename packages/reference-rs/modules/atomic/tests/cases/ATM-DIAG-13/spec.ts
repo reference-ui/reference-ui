@@ -1,5 +1,5 @@
 /**
- * Producer-seam station (ATM-DIAG-13, Operation Error Correct Slice 0).
+ * Producer-seam (ATM-DIAG-13).
  * RED: one site identity, deterministic order, stable codes, no duplicate
  * final line. Regression for the Objective-1 carry-forward: hover usages
  * emit exactly 2 file-less warnings each.

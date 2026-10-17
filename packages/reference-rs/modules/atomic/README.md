@@ -11,7 +11,7 @@ name `{ ...base, ...override }`.
 
 This crate is the stylesheet compiler. It is not `@reference-ui/system` (the
 authoring package for fragments) and it is not the host pipeline in
-`reference-core`. The interactive pipeline map is [`map.html`](./map.html) (ecosystem map at [`../map.html`](../map.html)).
+`packages/reference-neo`. The interactive pipeline map is [`map.html`](./map.html) (ecosystem map at [`../map.html`](../map.html)).
 
 ## What it takes
 
@@ -107,7 +107,7 @@ Grain is one class per leaf. Spelling is ours.
 
 ## Verify
 
-v1 must be provable without `reference-core`. The engine is a pure function —
+v1 must be provable without the host pipeline in `packages/reference-neo`. The engine is a pure function —
 sources + base system in, CSS + class map out.
 
 ```bash

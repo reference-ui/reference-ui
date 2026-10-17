@@ -1,4 +1,4 @@
-// Census interpose shim for the Operation Flamegraph counters pass.
+// Census interpose shim: counts file and syscall-adjacent libc calls during a run.
 // Loaded via DYLD_INSERT_LIBRARIES, it interposes 15 libc file/syscall-adjacent
 // calls (16 tuples: close plus its close$NOCANCEL twin, which is the spelling
 // libuv's uv__close_nocancel binds — node would otherwise close invisibly),

@@ -1,4 +1,4 @@
-import { test, expect } from '/Users/ryn/Developer/reference-ui/packages/reference-lib/playwright/ct'
+import { test, expect } from '../../../../playwright/ct'
 
 test('SD-ENV-04 smoke: scalar keyboard plus range track-press and outside-drag', async ({
   mount,

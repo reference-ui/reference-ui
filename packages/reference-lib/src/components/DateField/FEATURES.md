@@ -1,10 +1,8 @@
 # DateField features (design backlog)
 
-OPEN/DEFERRED items from DECISIONS.md that need an HQ product, UX, or
-design call before any code. Each entry states the choice plainly. For
-fully-specified mechanical work, see PATCHES.md.
+Open and deferred items that need a product, UX, or design call before any code. Each entry states the choice plainly.
 
-### 1. Required explicit locale (from DECISIONS candidate #2)
+### 1. Required explicit locale
 
 **What it does:** makes `locale` mandatory so SSR markup is identical
 across environments — no `navigator.language` read, ever.
@@ -18,12 +16,11 @@ across environments — no `navigator.language` read, ever.
 ```
 
 Open choice: throw for all consumers vs require only when a Picker is
-present vs dev-only warning as a middle step. Must be settled in the
-same design pass as PATCHES #1, before any code.
+present vs dev-only warning as a middle step. Must be settled before any code.
 
-**Maintainer take:** good to add with the locale engine, but the breaking cut needs HQ sign-off first.
+**Recommendation:** Good to add with the locale engine, but the breaking change needs a decision first.
 
-### 2. Range namespace (from DECISIONS candidate #5)
+### 2. Range namespace
 
 **What it does:** adds `DateField.Range` / `Start` / `End` — two endpoint
 fields with draft buffers, focused-field pane sync, and
@@ -48,11 +45,11 @@ booking-style range pickers.
 
 Open choices: Apply-on-selection vs explicit Apply button for the folded
 range picker; whether `canApply=false` blocks popover close or just the
-commit. Needs PATCHES #1 first (each endpoint is a dirty session).
+commit. Each endpoint is a dirty session.
 
-**Maintainer take:** good to add — the highest-value new surface, but only after the locale engine lands.
+**Recommendation:** Good to add — the highest-value new surface, but only after the locale engine lands.
 
-### 3. Constraint API (from DECISIONS candidate #6)
+### 3. Constraint API
 
 **What it does:** lets authors mark dates unavailable and enforce
 `min`/`max` on typed input — complete typed dates outside bounds or
@@ -70,13 +67,11 @@ min/max clamp, ever.
 ```
 
 Open choice: `min > max` or non-canonical bounds fail loudly — but throw
-vs dev-warning (wording and mechanism) is undecided. Needs PATCHES #1
-first (gating hooks into the dirty session's publish path); the pure
-predicate is already staged in `parse.ts`.
+vs dev-warning (wording and mechanism) is undecided. Gating hooks into the dirty session's publish path; the pure predicate already exists in `parse.ts`.
 
-**Maintainer take:** good to add — semantics are settled, just pick the diagnostic and land it with the engine.
+**Recommendation:** Good to add. The semantics are settled; pick the diagnostic and add it with the engine.
 
-### 4. Click-to-open vs caret placement (from DECISIONS gap #3)
+### 4. Click-to-open vs caret placement
 
 **What it does:** resolves the conflict where click-anywhere-opens blocks
 caret placement in the text — today a single click in an open field
@@ -87,9 +82,9 @@ places the caret where clicked (open + position in one gesture); (b)
 first click opens, click-while-open positions the caret without toggling
 closed. Typing stays immediate either way.
 
-**Maintainer take:** good to add once HQ picks (a) or (b) against the APG combobox contract — small change, real UX debt.
+**Recommendation:** Good to add once option (a) or (b) is chosen against the APG combobox contract. It is a small change with real UX debt.
 
-### 5. Accessible name for the label-less default (from DECISIONS gap #4)
+### 5. Accessible name for the label-less default
 
 **What it does:** gives bare `<DateField />` (no Label, no children) a
 defined accessible-name policy instead of shipping an unnamed input.
@@ -99,4 +94,4 @@ is author error, Label always required; (b) `placeholder` reflected as
 fallback name; (c) dev-only warning when a childless input has no
 `aria-label`/`aria-labelledby` and no associated Label.
 
-**Maintainer take:** good to add as docs-only (a) unless HQ accepts placeholder-as-name — the cheapest a11y close-out.
+**Recommendation:** Good to add as docs-only (a), unless placeholder-as-name is accepted. It is the cheapest a11y close-out.

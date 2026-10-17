@@ -1,5 +1,5 @@
 /**
- * Closed recipe class station. Each variant permutation is one readable
+ * Closed recipe class case. Each variant permutation is one readable
  * class in @layer recipes. Those selectors must not appear in utilities.
  */
 import { expect } from 'vitest'

@@ -5,7 +5,6 @@ The world defines one `toggle` recipe with a boolean `active` axis mapping to
 own closed class, boolean selections resolve to distinct class strings, and
 each probe paints its computed display.
 
-Evidence: `[panda-v1]` `core/__tests__/rule-processor.test.ts:1162` "cva -
-boolean variant"; `[atm]` ATM-RECIPE-04.
+Evidence: Panda v1 test "cva - boolean variant"; ATM-RECIPE-04.
 
 > Search terms: flag prop, binary axis, two-arm, enabled/disabled, recipe/boolean-variants, NEO-RECIPE-01

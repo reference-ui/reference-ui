@@ -2,6 +2,7 @@
 //! ride beside its binding, keyed by export name, so a caller that only has the compiled
 //! shape of a published component can still tell a style from an attribute the component
 //! keeps for itself. A host that forwards its whole props owns nothing and the map stays `{}`.
+//! A component that reaches no primitive is not a host, but its declared props still ride the map.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -45,6 +46,35 @@ fn detailed_result_keys_owned_props_by_export_name() {
     // The wire shape the JS wrapper parses: an object of sorted arrays.
     let wire = serde_json::to_string(&result.owned).expect("owned serializes");
     assert_eq!(wire, r#"{"Card":["title"]}"#);
+}
+
+/// Overlay's shape: a declared `isolation` and a body that returns only a context provider.
+const PROVIDER_TSX: &str = concat!(
+    "import * as React from 'react'\n",
+    "export interface OverlayProps {\n",
+    "  children?: React.ReactNode\n",
+    "  isolation?: boolean\n",
+    "}\n",
+    "const OverlayContext = React.createContext(true)\n",
+    "export function Overlay({ children, isolation = true }: OverlayProps) {\n",
+    "  return <OverlayContext.Provider value={isolation}>{children}</OverlayContext.Provider>\n",
+    "}\n",
+);
+
+#[test]
+fn provider_only_export_keeps_its_declared_props_without_hosting() {
+    let result = detailed("detailed-owned-provider", PROVIDER_TSX);
+
+    assert!(result.bindings.is_empty(), "bindings: {:?}", result.bindings);
+    assert_eq!(
+        result.owned,
+        BTreeMap::from([(
+            "Overlay".to_string(),
+            BTreeSet::from(["children".to_string(), "isolation".to_string()]),
+        )])
+    );
+    let wire = serde_json::to_string(&result.owned).expect("owned serializes");
+    assert_eq!(wire, r#"{"Overlay":["children","isolation"]}"#);
 }
 
 #[test]

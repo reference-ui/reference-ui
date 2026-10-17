@@ -26,7 +26,7 @@ the css() and css-prop positions narrow with the JSX props.
 
 Evidence: typegen TYP-STRICT-05 (wrappers compose) and TYP-STRICT-07 (StyleProps
 and SystemStyleObject accept tokens, toned colors and keywords, and reject
-off-token colors); D17 in `tests/cases/type/SPEC.md`; NEO-TYPE-02 for the open
+off-token colors); in `tests/cases/type/SPEC.md`; NEO-TYPE-02 for the open
 `ColorToken` position this case narrows.
 
 > Search terms: strict colours, strict colors, off-token, raw opacity, hex colour, css prop, css call, StrictColorProps, type/strict-narrowing, type/negative-typecheck, NEO-TYPE-02, NEO-TYPE-08, TYP-STRICT-07

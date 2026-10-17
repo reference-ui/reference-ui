@@ -66,7 +66,7 @@ Hook and kernel. Proof lives next to the source in `src/core/measure/`.
 ## CPU budgets
 
 These are call-count contracts, not wall-clock benches. They encode
-`vendor/design-system/resizable/shared/useBoundingClientRect`: idle is event
+the design system's resizable `useBoundingClientRect`: idle is event
 driven, hot work sleeps, settle does not thrash React.
 
 - [x] `MS-PERF-01` `[reference]` `[unit]` —

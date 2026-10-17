@@ -1,4 +1,4 @@
-# ATM-ROOT-02 — Author-override station
+# ATM-ROOT-02 — Author-override
 
 An author `:root` definition of `--spacing-root` keeps its value and its
 placement inside `@layer global`, where cascade rank beats the lower baked

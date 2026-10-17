@@ -40,7 +40,7 @@ export function useFieldFormatting(options: FieldFormattingOptions): FieldFormat
   const { value, locale, min, max, stepProp, formatOptions, commitBehavior } = options
 
   // Runtime validation of numeric props (NF-MATH-02, adapted): fail fast
-  // on NaN/unusable props instead of poisoning state. Unlike quarantine,
+  // on NaN/unusable props instead of poisoning state. Unlike the legacy engine,
   // ±Infinity bounds stay legal — they are this engine's unbounded
   // sentinels (the defaults). Render-phase pure checks: StrictMode-safe.
   // FEATURES #1: value is required-controlled (null is the empty value)
@@ -70,7 +70,7 @@ export function useFieldFormatting(options: FieldFormattingOptions): FieldFormat
     throw new Error('Reference UI: NumberField "commitBehavior" must be "snap", "validate", or "none".')
   }
 
-  // W-25: the display formatter. Construction fails fast on a bad locale
+  // The display formatter. Construction fails fast on a bad locale
   // or option pair (Intl RangeError/TypeError) with the props named.
   const formatter = React.useMemo(() => {
     try {
@@ -121,18 +121,18 @@ export function useFieldFormatting(options: FieldFormattingOptions): FieldFormat
     [locale, formatOptions]
   )
 
-  // W-25: percent fields step hundredths by default (React Aria parity);
+  // Percent fields step hundredths by default (React Aria parity);
   // every other style keeps the historic step 1.
   const step = stepProp ?? (percentStyle ? 0.01 : 1)
   if (!Number.isFinite(step) || step <= 0) {
     throw new Error('Reference UI: NumberField "step" must be a finite number greater than 0.')
   }
 
-  // W-02: the ±Infinity sentinels read as absent bounds to the lattice.
+  // The ±Infinity sentinels read as absent bounds to the lattice.
   const latticeMin = min === -Infinity ? undefined : min
   const latticeMax = max === Infinity ? undefined : max
 
-  // W-25: clean-state text is the Intl formatting of the controlled
+  // Clean-state text is the Intl formatting of the controlled
   // value; null is the only clean empty display (NF-FORMAT-02). A
   // programmatic -0 renders "0" (String parity — Intl would print "-0",
   // NF-MATH-14); interaction-produced -0 never reaches here.

@@ -1,5 +1,5 @@
 // Parse-kit contract: pure locale format/parse/step/constrain helpers.
-// Ported verbatim from quarantine 1150c8e6e (parse.ts); staged foundation,
+// Ported verbatim from 1150c8e6e (parse.ts); staged foundation,
 // NOT wired into DateField (wiring = locale display = visual change).
 // Titles carry no DF-* IDs: per TESTS.md, [unit] IDs are proven only by
 // DOM-light renders of public components, never by parser-helper tests.

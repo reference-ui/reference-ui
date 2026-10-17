@@ -1,7 +1,7 @@
 //! Harvest mint wording: one info template per sink. Byte-identical to the
 //! legacy `harvest_info` string it replaces: the prop, its `when`, and the
 //! net-new minted count. Neither zero nor positive proves a failure, so the
-//! line stays compiler-channel telemetry once Slice 5 moves channels.
+//! line stays compiler-channel telemetry.
 
 use super::super::adapters::harvest::HarvestReport;
 use super::super::{Diagnostic, DiagnosticCode};

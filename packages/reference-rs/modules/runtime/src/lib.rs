@@ -7,14 +7,21 @@
 use napi::Result;
 use napi_derive::napi;
 
+// The N-API exports are called only by Node through the cdylib, so test builds leave these
+// product ABI modules out rather than reporting every unreferenced export as dead code.
+#[cfg(not(test))]
 #[path = "../../atlas/native.rs"]
 mod atlas;
+#[cfg(not(test))]
 #[path = "../../atomic/native.rs"]
 mod atomic;
+#[cfg(not(test))]
 #[path = "../../styletrace/native.rs"]
 mod styletrace;
+#[cfg(not(test))]
 #[path = "../../tasty/native.rs"]
 mod tasty;
+#[cfg(not(test))]
 #[path = "../../typegen/native.rs"]
 mod typegen;
 

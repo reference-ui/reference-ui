@@ -372,7 +372,7 @@ export type RecipeVariantProps<T> = T extends RecipeRuntimeFn<infer C>
     : Record<string, RecipePropValue | undefined | null>
   : Record<string, RecipePropValue | undefined | null>
 /** Resolved recipe function: classes for a selection plus variant metadata. */
-/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>> (T3): */
+/** Call positions route through RecipeVariantProps<RecipeRuntimeFn<TConfig>>: */
 /** RecipeVariantProps<TConfig> would miss the fn-config infer and fall wide. */
 export interface RecipeRuntimeFn<TConfig extends RecipeConfig = RecipeConfig> {
   (props?: RecipeVariantProps<RecipeRuntimeFn<TConfig>>): string

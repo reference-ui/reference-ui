@@ -5,9 +5,8 @@ through a namespace `ui.css` call. The spec asserts both nodes paint their
 own color and the sheet carries exactly the two utilities, so binding shape
 never decides what extracts.
 
-Evidence: `[atm]` ATM-SITE-15 (namespace imports and compiler-internal
-aliases extract; type-only and default imports do not); `[panda-v1]`
-`vendor/panda-v1/packages/parser/__tests__/css-2.test.ts:310` (import alias
-`css as nCss` extracts) and `namespace.test.ts:79` (`panda.css` extracts).
+Evidence: ATM-SITE-15 (namespace imports and compiler-internal aliases extract;
+type-only and default imports do not); Panda v1 parser tests (import alias `css
+as nCss` extracts) and namespace tests (`panda.css` extracts).
 
 > Search terms: rename, star-import, dotted call, namespaced call, css alias, site/import-binding, NEO-SITE-05

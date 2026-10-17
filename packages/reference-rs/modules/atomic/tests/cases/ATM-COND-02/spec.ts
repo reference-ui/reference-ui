@@ -1,5 +1,5 @@
 /**
- * Hover preset station. `_hover` lowers to `&:is(:hover, [data-hover])`
+ * Hover preset case. `_hover` lowers to `&:is(:hover, [data-hover])`
  * and that selector is applied to the class. Nested chains are ATM-COND-04.
  */
 import { expect } from 'vitest'

@@ -51,7 +51,7 @@ transient body copy until its target exists.
 
 Portalling to `document.body` on the server crashes. First paint must render nothing, then attach on the client.
 
-**Vendor.** Radix Portal: `mounted` false until layout effect, then `document.body` (`vendor/radix-primitives/packages/react/portal`).
+**Prior art.** Radix Portal: `mounted` false until layout effect, then `document.body`.
 
 **Lift** the mount gate. Overlay and Popover inherit this by using Portal internally.
 
@@ -88,8 +88,8 @@ Portalled subtrees cross DOM boundaries, which severs CSS inheritance of scoped 
 
 1. **Layer scope reset:** On every `createPortal`, `Portal` resets `LayerScopeContext` to `false`.
 2. **No wrapper node:** Portal emits no DOM wrapper element.
-3. **First child primitive:** The first Reference primitive rendered as a child of a portal re-establishes layer scope by stamping `data-layer` and `data-panda-theme` (from logical `ColorModeContext` or destination `Document`). Subsequent nested primitives within that portalled tree stay lean without redundantly repeating the attribute stamps.
-4. **Canonical attribute:** The only physical DOM attribute emitted is `data-panda-theme`. No legacy aliases (`data-color-mode`, `data-theme`) are emitted.
+3. **First child primitive:** The first Reference primitive rendered as a child of a portal re-establishes layer scope by stamping `data-layer` and `data-color-mode` (from logical `ColorModeContext` or destination `Document`). Subsequent nested primitives within that portalled tree stay lean without redundantly repeating the attribute stamps.
+4. **Canonical attribute:** `data-color-mode` is the only color-mode attribute. `data-panda-theme` is retired. `data-theme` is never emitted as a color-mode attribute; Toast uses it for its own chrome.
 
 ---
 

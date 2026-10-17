@@ -13,8 +13,7 @@ plus MCP. Every kept suite installs from packed tarballs via the
 staged registry and runs setup in a virgin container on every run,
 so each one re-proves the install dimension. Chain stays in one
 place to test and reason about between-packages and
-between-environments composition (HQ reversal of the audit's chain
-PORT/DROP verdicts; distro/watch/etc. decommissions stand).
+between-environments composition (distro/watch/etc. are decommissioned).
 
 | Suite | Path | What it proves |
 |---|---|---|
@@ -23,7 +22,7 @@ PORT/DROP verdicts; distro/watch/etc. decommissions stand).
 | `@matrix/chain-t3` | `matrix/tests/chain/T3` | Hybrid: one boundary using `extends` and `layers` at once. |
 | `@matrix/chain-t6` | `matrix/tests/chain/T6` | Transitive extend: the app extends only the outer package, which republishes its base. |
 | `@matrix/chain-t7` | `matrix/tests/chain/T7` | Diamond: two upstreams sharing one base, both extended. |
-| `@matrix/chain-t8` | `matrix/tests/chain/T8` | Policy proof: the same upstream in `extends` and `layers` at once (coded allow-and-document). Content untouched pending the compiler/HQ decision (H4). |
+| `@matrix/chain-t8` | `matrix/tests/chain/T8` | Policy proof: the same upstream in `extends` and `layers` at once (coded allow-and-document). |
 | `@matrix/chain-t9` | `matrix/tests/chain/T9` | Full mix: 2 extends + 2 layers with the `@layer` prelude order asserted. |
 | `@matrix/chain-t10` | `matrix/tests/chain/T10` | Extend chain plus an app-level layered library; layered tokens must not leak. |
 | `@matrix/chain-t11` | `matrix/tests/chain/T11` | Parallel extend chains: two independent transitive paths at one boundary. |
@@ -56,18 +55,17 @@ pnpm agent test --packages=@matrix/mcp
 
 Chain fixtures live at `matrix/fixtures/*` (flat, `@fixtures/*` names
 preserved). Topology semantics: `CHAIN.md`. Composition contract:
-`CHAIN_RULES.md`. Build-out history: `CHAIN_REPORT.md`.
+`CHAIN_RULES.md`.
 
-## Where the retired suites went
+## Coverage homes for the retired suites
 
 Every behavior below is covered EXACTLY once (one-coverage-home).
 PORT = new Neo case authored for it; DROP = pre-existing Neo/RS
 coverage; DROP* = retired-by-design legacy machinery with no home.
 
-### Chain (RESTORED — stays in matrix, not ported)
+### Chain (stays in matrix, not ported)
 
-HQ reversed the audit's chain PORT/DROP verdicts: the 11 tiers in
-the gate above are the coverage home for chain behavior
+The 11 tiers in the gate above are the coverage home for chain behavior
 (packed-boundary proof over installed fixtures — what native
 tests can't show). The `NEO-CHAIN-01..05` tier ports were deleted
 as duplicates (one home = matrix). Kept alongside: `NEO-CHAIN-06`
@@ -75,7 +73,7 @@ as duplicates (one home = matrix). Kept alongside: `NEO-CHAIN-06`
 scenario e2e, CHAIN-06 pins it fast) and pre-existing
 `NEO-SYNC-10` (single-hop adopt). Still uncovered: T4 (parallel
 extends) and T5 (parallel layers) have no tiers, and depth-3
-chains have no tier (CHAIN_REPORT §4.3 still open).
+chains have no tier.
 
 ### Lifecycle (PORT → new `NEO-CLI-*` / `NEO-WATCH-01`)
 

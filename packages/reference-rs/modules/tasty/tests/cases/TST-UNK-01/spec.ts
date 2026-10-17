@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-UNK-01.
+ * Case specification for TST-UNK-01.
  * Verifies complex combinations of indexed access, mapped types, and conditionals.
  * Proves primary SPEC ID anchor TST-UNK-01.
  */

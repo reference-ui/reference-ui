@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-PROP-01.
+ * Case specification for ATL-PROP-01.
  * Validates partial component result retention alongside explicit diagnostic
  * emission when referenced TypeScript interfaces cannot be resolved.
  * Proves primary SPEC anchor ATL-PROP-01.

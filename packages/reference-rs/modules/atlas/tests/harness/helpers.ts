@@ -1,7 +1,7 @@
 /**
  * Atlas test harness helpers and standing fixtures.
  * Provides on-demand case compilation, golden artifact extraction, standing schema gauges,
- * and component lookup utilities for station specifications and unit tests.
+ * and component lookup utilities for case specifications and unit tests.
  * A case that carries input/observe.json also analyzes with that observe config.
  * Standardizes output verification across all Atlas test scenarios.
  */

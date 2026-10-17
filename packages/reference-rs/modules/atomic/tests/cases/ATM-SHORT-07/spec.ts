@@ -1,5 +1,5 @@
 /**
- * Paren-depth station. A function value must not swallow the next token:
+ * Paren-depth case. A function value must not swallow the next token:
  * `calc(1px + 1px) solid` is width + style, and `calc(1r * 2) 3r` is a
  * two-value margin expansion. Rhythm inside the calc body resolves per the
  * core shorthand battery (`calc(1r * 2)` lowers with `var(--spacing-root)`).

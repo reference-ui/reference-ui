@@ -4,8 +4,8 @@
  * Disambiguates SVG presentation attribute collisions without duplicating extension prefixes.
  */
 
-import type { PlatformProp } from '../generated/platform-names';
-import type { EXTENSIONS } from './extensions';
+import type { PlatformProp } from '../generated/platform-names.js';
+import type { EXTENSIONS } from './extensions.js';
 
 export type CanonicalTarget = PlatformProp | (typeof EXTENSIONS)[number]['name'];
 

@@ -1,7 +1,7 @@
 /**
- * Dialect-utility station. `container` / `font` / `weight` / `size`
+ * Dialect-utility case. `container` / `font` / `weight` / `size`
  * expand to longhands. Lib `font="sans"` includes tracking. The `test`
- * family (doom-4 T3) pins non-canon `css` extras: each misses the alias
+ * family pins non-canon `css` extras: each misses the alias
  * and prefix tables, so its class spells the key verbatim.
  */
 import { expect } from 'vitest'
@@ -40,7 +40,7 @@ const spec: AtomicCaseSpec = {
     expect(result.stylesheet).toContain('font-weight: 900;')
     expect(result.stylesheet).not.toContain('mono.black')
     expect(result.diagnostics.filter(d => d.code === 'ATM-W-UNKNOWN-TOKEN-PATH')).toEqual([])
-    // Non-canon extras spell verbatim (doom-4 T3): no kebab, no vendor dash.
+    // Non-canon extras spell verbatim: no kebab, no vendor dash.
     expect(result.stylesheet).toContain('font-family: var(--fonts-test);')
     expect(result.stylesheet).toContain('font-weight: 500;')
     expect(result.stylesheet).toContain('MyProp: 2px;')

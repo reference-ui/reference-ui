@@ -37,7 +37,7 @@ async function importPublishNativeModule(options: {
     },
   })
 
-  vi.doMock('../shared/paths', () => ({
+  vi.doMock('../shared/paths.js', () => ({
     packageDir: options.packageDir,
     distDir: resolve(options.packageDir, 'dist'),
     artifactsDir: options.artifactsDir,
@@ -64,7 +64,7 @@ async function importPublishNativeModule(options: {
     },
   }))
 
-  await import('./publish-native')
+  await import('./publish-native.js')
   return { runCalls }
 }
 
@@ -107,7 +107,7 @@ function filterCommandCalls(
 
 afterEach(() => {
   vi.resetModules()
-  vi.doUnmock('../shared/paths')
+  vi.doUnmock('../shared/paths.js')
   vi.doUnmock('node:child_process')
   vi.unstubAllGlobals()
   vi.restoreAllMocks()

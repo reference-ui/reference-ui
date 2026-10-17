@@ -1,7 +1,6 @@
 # ATM-SITE-50 — whole-object and member args resolve; the rest diagnose
 
-Overmatch Ph1 no-silence sweep plus the Ph3 resolve half (SPEC-V2-65,
-SPEC-V2-38 tagged).
+No silent drops, plus the resolve half.
 
 An argument that folds to an object extracts exactly as if spread: bare
 identifiers over local and imported const objects, single-hop members
@@ -18,7 +17,7 @@ lefts, call-arg spreads, mutated bases (naming the write), and the live
 
 The silence controls pin what stays quiet: `css()`, `css({})`,
 `false`/`null`/`undefined` holes, literal filler args (`css('panda',
-{...})`, SPEC-V2-36), null ternary arms, guard logical lefts, and
+{...})`), null ternary arms, guard logical lefts, and
 non-`css` tags.
 
 Inputs: `args.ts` (whole-object, member, imported, wrapped, call,
@@ -30,9 +29,7 @@ diagnoses, dead tag silent), `jsx.tsx` (identifier / member / logical /
 call / wrapped / spread-list style props, condition-prop blocks),
 `compose.ts` (alias-chain whole object, destructured-rest whole object).
 
-Panda: `scope.rs:43` (const object identifier), chain `:63`/`:671`,
-rest `:587`, staged `calls.rs:548`, positional `None` `:1719`, arg-`&&`
-`atomic.rs:1626` — our positional diagnostic beats the silent slot (S7).
-Alias chains (SPEC-V2-34) and destructured rest (SPEC-V2-32) compose on
-top via `compose.ts`; multi-hop members (SPEC-V2-31) compose when that
+Our positional diagnostic beats the silent slot.
+Alias chains and destructured rest compose on
+top via `compose.ts`; multi-hop members compose when that
 slice lands.

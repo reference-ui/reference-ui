@@ -2,7 +2,7 @@
  * HTML element roster for the primitives vocabulary, joined from two canon sources.
  * The TS overlay partition (HTML vs SVG) selects the namespace while the generated Rust
  * ELEMENTS table supplies the JSX spellings. Only the 101 HTML-namespace tags survive
- * per HQ namespace law — SVG children never emit. Fails closed on overlay/Rust drift,
+ * per the namespace law — SVG children never emit. Fails closed on overlay/Rust drift,
  * JSX collisions, map-rule violations, and uncovered family assignments.
  */
 import { readFileSync } from 'node:fs'

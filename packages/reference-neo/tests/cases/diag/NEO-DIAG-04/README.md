@@ -4,6 +4,6 @@ Dotted path that names no token. The world carries the minimal fixture (theme/pa
 
 Raised in: `modules/atomic/src/resolve/tokens/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-TOKEN-PATH (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-TOKEN-PATH (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-TOKEN-PATH, atm-w-unknown-token-path, diagnostics case index, NEO-DIAG-04

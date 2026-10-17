@@ -42,7 +42,7 @@ thread_local! {
 
 /// RAII mark around one compiler phase. Snapshots the counters on enter and
 /// pushes the delta row on drop; the span drains the rows at compile end.
-/// The landed phases run strictly sequential, so each row slices the span.
+/// The phases run strictly sequential, so each row slices the span.
 pub struct PhaseGuard {
     name: &'static str,
     started: Instant,

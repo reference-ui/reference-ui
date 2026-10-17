@@ -46,29 +46,36 @@ export async function runSyncCommand(dir: string | undefined, options: SyncComma
       return fail(`[ref] sync failed: reference tasty build failed: ${build.message}`)
     }
     if (json) {
-      const { tastyDiagnosticToNative } = await import('../reference/bridge/build-report.ts')
-      const refEntries =
-        build?.status === 'complete' ? build.diagnostics.map(tastyDiagnosticToNative) : []
-      const reported = reportedSyncEntries(result.diagnostics, result.compilerDiagnostics)
-      console.log(formatJsonDiagnostics([...reported, ...refEntries]))
+      await reportJsonRun(build, result)
       return 0
     }
     reportOneShotSuccess({ build, result, started, verbose, quiet })
     return 0
   } catch (err) {
-    if (err instanceof SyncCoveredByWatchError) {
-      // The watch session owns this sync: no diagnostics from this run, so
-      // the JSON array is empty and the note rides stderr.
-      if (json) {
-        console.log(formatJsonDiagnostics([]))
-        console.error(err.message)
-        return 0
-      }
-      console.log(err.message)
-      return 0
-    }
+    if (err instanceof SyncCoveredByWatchError) return reportCoveredByWatch(err, json)
     return fail(`[ref] sync failed: ${messageOf(err)}`)
   }
+}
+
+// The JSON one-shot report: canonical sync diagnostics, plus the reference-build entries
+// when that build completed. Stdout carries only the array.
+async function reportJsonRun(build: ReferenceBuildResult | undefined, result: SyncResult): Promise<void> {
+  const { tastyDiagnosticToNative } = await import('../reference/bridge/build-report.ts')
+  const refEntries = build?.status === 'complete' ? build.diagnostics.map(tastyDiagnosticToNative) : []
+  const reported = reportedSyncEntries(result.diagnostics, result.compilerDiagnostics)
+  console.log(formatJsonDiagnostics([...reported, ...refEntries]))
+}
+
+// The watch session owns this sync: no diagnostics from this run, so the JSON array is
+// empty and the note rides stderr.
+function reportCoveredByWatch(err: SyncCoveredByWatchError, json: boolean): number {
+  if (json) {
+    console.log(formatJsonDiagnostics([]))
+    console.error(err.message)
+    return 0
+  }
+  console.log(err.message)
+  return 0
 }
 
 interface OneShotSuccess {

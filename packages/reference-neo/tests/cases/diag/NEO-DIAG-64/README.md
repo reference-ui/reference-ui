@@ -4,6 +4,6 @@ A known strict category with no tokens in this system; no wrapper is printed. Th
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-ABSENT-STRICT-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-ABSENT-STRICT-CATEGORY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-ABSENT-STRICT-CATEGORY, tgn-w-absent-strict-category, diagnostics case index, NEO-DIAG-64

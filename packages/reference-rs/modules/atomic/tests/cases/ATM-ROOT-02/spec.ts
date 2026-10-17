@@ -1,5 +1,5 @@
 /**
- * Author-override station. The baked default still emits first, but the
+ * Author-override case. The baked default still emits first, but the
  * author's own `:root` definition keeps its value and its placement inside
  * `@layer global`, where cascade rank beats the lower `@layer root`: the
  * author always wins. Rhythm utilities resolve their calc formulas against

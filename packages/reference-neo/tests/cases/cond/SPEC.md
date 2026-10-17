@@ -4,8 +4,7 @@ Conditions are the `_`-prefixed keys (`_hover`, `_dark`), breakpoint keys
 (`sm`), and raw selector keys (`'& > p'`) inside style objects. The engine
 lowers them to `:is()` twin selectors, at-rules, and ancestor/descendant
 wraps; Neo proves in a browser that the painted result matches the claim.
-This group owns no host behaviour beyond `src/runtime/css/**` (shared,
-captain-serialised); most rows expect no host change.
+This group owns no host behaviour beyond `src/runtime/css/**` (shared); most rows expect no host change.
 
 ## Dialect
 
@@ -15,14 +14,14 @@ Authors write `_hover`, `_focus`, `_focusVisible`, `_active`, `_disabled`,
 `_expanded`/`_open`, breakpoint keys, and raw `&` selectors including comma
 lists (`'&:focus, &:hover'`) and parent keys (`'input:hover &'`,
 `':focus > &'`). Interaction pseudos always dual-bind native + data twin:
-`:is(:hover, [data-hover])`. Colour mode is `[data-color-mode=…]` (D1).
+`:is(:hover, [data-hover])`. Colour mode is `[data-color-mode=…]`.
 
-## Engine stations
+## Reference-rs cases
 
-All confirmed present 2026-09-17 (`ls` + README in
+All confirmed present (`ls` + README in
 `packages/reference-rs/modules/atomic/tests/cases/`): ATM-COND-01..16,
 ATM-ORDER-01..04, ATM-LEAF-10. Key leans: COND-02/10 (pseudo catalog),
-COND-03/08 (colour mode, RS-7 retarget landed — goldens emit
+COND-03/08 (colour mode, RS-7 retarget is in place — goldens emit
 `[data-color-mode=…]`), COND-09/14 (group/peer, `&`, comma lists),
 COND-11 (media presets), COND-12 (unknown-condition warning), COND-13
 (ranges, cited by RESP), ORDER-02/03 (bucket + pseudo order), LEAF-10
@@ -30,7 +29,7 @@ COND-11 (media presets), COND-12 (unknown-condition warning), COND-13
 
 ## Decisions
 
-D1 (colour-mode attribute `data-color-mode`; RS-7 done, proven by
+(colour-mode attribute `data-color-mode`; RS-7 done, proven by
 NEO-COND-04 alongside PRIM-07/TOKEN-05).
 
 ## Approved absences
@@ -41,14 +40,14 @@ NEO-COND-04 alongside PRIM-07/TOKEN-05).
   engine-internal composition test, not Reference dialect.
 - Config-defined custom conditions: Neo has no `conditions` table by
   design; authors write raw `&`/at-rule keys instead.
-- W4 DELTA-1: `forced-colors`, `@supports` condition keys, `(hover: hover)`
+- DELTA-1: `forced-colors`, `@supports` condition keys, `(hover: hover)`
   MQs. Zero-count in the lib sheet (F11); `_print`/`_motionReduce`/`_osDark`
-  are covered, these three have no lib author. `@supports` keys landed
+  are covered, these three have no lib author. `@supports` keys are in place
   with RS-15 (COND-15 green, ATM-COND-19); the absence stands on the
-  zero count alone. (w4-synthesis C-DELTA-1.)
-- W4 DELTA-2: zero-count pseudos `:nth-child`, `:empty`, `:invalid`,
+  zero count alone.
+- DELTA-2: zero-count pseudos `:nth-child`, `:empty`, `:invalid`,
   `:visited`, `:indeterminate`. Zero-count in the lib sheet (F13); the COND
-  catalog is positive-only. (w4-synthesis C-DELTA-2.)
+  catalog is positive-only.
 
 ## Out of scope (Panda, not Reference)
 
@@ -57,6 +56,6 @@ NEO-COND-04 alongside PRIM-07/TOKEN-05).
 | `_rtl`/`_ltr` + `:where([dir=…], :dir(…))` wraps | No lib usage; absence above |
 | `@slot` multi-block cartesian conditions | Engine test shape, not author API |
 | Custom `conditions` table in config | No such table in Neo |
-| Four-way dark selectors (`.dark`, `[data-theme]`, self-class) | D1: single `[data-color-mode=…]` ancestor wrap |
+| Four-way dark selectors (`.dark`, `[data-theme]`, self-class) | single `[data-color-mode=…]` ancestor wrap |
 | `_themePrimary` / Panda `themes` JSON | Brand packs, not colour mode |
 | `hideFrom` / `hideBelow` helpers | Panda helper utilities, not shipped |

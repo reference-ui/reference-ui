@@ -1,9 +1,9 @@
 # RovingFocus test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct RovingFocus --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/roving-focus.spec.ts`  
-Unit: `matrix/lib/tests/unit/roving-focus.test.ts`
+Playwright: `src/components/RovingFocus/__e2e__/*.spec.ts` (run with `pnpm agentct RovingFocus --e2e`)  
+Unit: `src/components/RovingFocus/**/*.test.ts(x)`
 Page: `/roving-focus`
 
 RovingFocus owns the composite keyboard kernel. Root and Item are transparent;
@@ -19,18 +19,9 @@ typeahead off.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/roving-focus/src/roving-focus-group.tsx`
-  — one tab stop, orientation, loop, disabled skip, RTL, focus entry.
-- `vendor/radix-primitives/packages/react/accordion/src/accordion.test.tsx` —
+- Radix's accordion test —
   next/previous/Home/End ordering evidence only; Accordion is a negative
   composition because its headers remain separate native Tab stops.
-- `vendor/react-spectrum/packages/react-aria/src/selection/useTypeSelect.ts` and
-  `ListKeyboardDelegate.ts`, plus React Aria Components `ListBox.test.js` grid
-  boundary regressions — typeahead, capture-phase Space, safe boundary
-  termination, and grid navigation.
-- `vendor/ariakit/packages/ariakit-components/src/composite/composite-store.test.ts`
-  and `ariakit-react-components/src/composite/composite-typeahead.tsx` —
-  two-dimensional and Unicode-aware composite behavior.
 
 ## Required cases
 
@@ -352,15 +343,15 @@ typeahead off.
   same keys and props while capturing diagnostics. Assert identical authored
   DOM with exactly the same `tabIndex=0` assignment, no generated wrapper, no
   duplicate registration, and no hydration warning.
-- [ ] ~~`RF-ENV-02`~~ — **CUT (features-triage 2026-09-26, FEATURES #6): shadow-DOM
+- [ ] ~~`RF-ENV-02`~~ — **CUT: shadow-DOM
   navigation is out of scope — no web-components consumer or harness names it.**
-  Cut case text (kept for the record): RovingFocus should navigate by
+  Former case text: RovingFocus should navigate by
   shadow-local focus and DOM order when the composite lives in a ShadowRoot —
   render a reordered collection in an open ShadowRoot, focus an Item, and send
   entry, arrow, Home, and End keys; destinations follow composed shadow order,
   the deepest shadow active element is recognized, and exactly one shadow
   child remains the tab stop. Revisit only with a real shadow consumer.
-  Tabs keeps its own shadow traversal local (Tabs PATCHES #2, unaffected).
+  Tabs keeps its own shadow traversal local and is unaffected.
 - [x] `RF-ENV-03` `[reference]` `[browser:all]` —
   **RovingFocus should keep core one-dimensional and grid behavior consistent when run across browser engines.**
   In Chromium, Firefox, and WebKit, run one horizontal loop/disabled fixture

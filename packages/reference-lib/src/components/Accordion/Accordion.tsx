@@ -8,6 +8,7 @@
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../Collapsible'
+import { isDevelopment } from '../../core/env/dev'
 import { AccordionContext, type AccordionContextValue } from './context'
 import type { AccordionProps } from './types'
 import { AccordionItem } from './parts/Item'
@@ -41,7 +42,7 @@ export const Accordion = React.forwardRef<HTMLDivElement, AccordionProps>(
     },
     forwardedRef
   ) {
-    const isDev = process.env.NODE_ENV !== 'production'
+    const isDev = isDevelopment()
 
     // AC-MULTI-06: Value shape vs expansion mode validation in dev
     if (isDev) {

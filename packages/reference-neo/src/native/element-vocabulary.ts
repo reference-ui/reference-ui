@@ -1,4 +1,4 @@
-// Element roster from the committed E1 vocabulary shelf.
+// Element roster from the committed element vocabulary.
 // It takes the generated vocabulary.json beside this module and emits the
 // platform dom tags plus their JSX names in shelf order. Shelf order is the
 // contract: emitters and requests print the roster positionally, so the
@@ -51,11 +51,11 @@ function readElementRoster(): ElementNamePair[] {
   return elements.map(readElementPair)
 }
 
-/** Roster rows in E1 shelf order, for emitters that print tag and name together. */
+/** Roster rows in element vocabulary order, for emitters that print tag and name together. */
 export const ELEMENT_ROSTER: ReadonlyArray<ElementNamePair> = readElementRoster()
 
-/** Platform dom tags in E1 shelf order. */
+/** Platform dom tags in element vocabulary order. */
 export const ELEMENT_DOM_TAGS: readonly string[] = ELEMENT_ROSTER.map(pair => pair.dom)
 
-/** JSX component names in E1 shelf order, aligned with ELEMENT_DOM_TAGS. */
+/** JSX component names in element vocabulary order, aligned with ELEMENT_DOM_TAGS. */
 export const ELEMENT_JSX_NAMES: readonly string[] = ELEMENT_ROSTER.map(pair => pair.jsx)

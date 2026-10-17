@@ -7,20 +7,15 @@
 //! only. Native `style` is excluded: it never uses the runtime style-plan
 //! lookup. Lowercase DOM tags and attributes emit nothing.
 
-use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use oxc_ast::ast::{
-    BindingPattern, Class, Expression, FormalParameters, Function, JSXAttributeItem,
-    JSXAttributeValue, JSXOpeningElement, Program, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    Expression, JSXAttributeItem, JSXAttributeValue, JSXOpeningElement, VariableDeclarationKind,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::Visit;
 use oxc_span::Span;
-use oxc_syntax::scope::ScopeFlags;
-use oxc_syntax::scope::ScopeId as OxcScopeId;
 
 use super::gate::{is_style_attr, AttrGate};
 use super::imports::FileBindings;
@@ -29,12 +24,14 @@ use super::jsx_attrs::{
     AttrInput,
 };
 use super::object::{Site, WalkCtx};
-use super::{
-    is_shadowed, record_declarator_shadow, record_param_shadows, AnalysisCtx, AnalyzedSource,
-};
+use super::{is_shadowed, AnalysisCtx, AnalyzedSource};
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
-use crate::extract::scope::peel;
+
+use self::aliases::collect_ident_aliases;
+
+mod aliases;
+mod visit;
 
 /// Expectations for the traced JSX surface: one walk per source. The import
 /// bindings arrive scanned: both surfaces share one scan per source.
@@ -61,66 +58,6 @@ pub fn expectations(
     };
     visitor.visit_program(source.program);
     visitor.facts
-}
-
-/// One source's const ident alias edges (`const X = Y`, transparent
-/// wrappers peeled through the extract's own `peel`): the mirror's flat
-/// counterpart to the scope table's alias map. Scope-flattened like every
-/// mirror read (F-G1b): repeated bindings keep the last edge, matching
-/// runtime last-wins in one scope and approximating shadowing across
-/// scopes. The shared peel keeps both paths classifying `as`/parens/
-/// `!` inits identically; the use-site kind gate below covers shadowing.
-fn collect_ident_aliases(program: &Program<'_>) -> FxHashMap<String, String> {
-    let mut collector = AliasCollector {
-        aliases: FxHashMap::default(),
-        kind: VariableDeclarationKind::Var,
-    };
-    collector.visit_program(program);
-    collector.aliases
-}
-
-/// Visitor recording const ident declarators at every depth.
-struct AliasCollector {
-    aliases: FxHashMap<String, String>,
-    kind: VariableDeclarationKind,
-}
-
-impl<'a> Visit<'a> for AliasCollector {
-    fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'a>) {
-        let prev = self.kind;
-        self.kind = decl.kind;
-        walk::walk_variable_declaration(self, decl);
-        self.kind = prev;
-    }
-
-    fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
-        if !is_const_kind(self.kind) {
-            return;
-        }
-        let BindingPattern::BindingIdentifier(ident) = &decl.id else {
-            return;
-        };
-        let Some(init) = decl.init.as_ref() else {
-            return;
-        };
-        if let Expression::Identifier(target) = peel(init) {
-            if target.name.as_str() != ident.name.as_str() {
-                self.aliases
-                    .insert(ident.name.to_string(), target.name.to_string());
-            }
-        }
-    }
-}
-
-/// True for declaration kinds that pin their init: `const` plus the
-/// `using` forms, matching the scope table's kind map.
-fn is_const_kind(kind: VariableDeclarationKind) -> bool {
-    matches!(
-        kind,
-        VariableDeclarationKind::Const
-            | VariableDeclarationKind::Using
-            | VariableDeclarationKind::AwaitUsing
-    )
 }
 
 /// One source's JSX walk: file-local imports plus traced and configured
@@ -304,7 +241,12 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             return;
         }
         let Some(value) = &attr.value else {
-            walk_attr_input(&mut self.walk_ctx(external), &name, AttrInput::Bare, attr.span);
+            walk_attr_input(
+                &mut self.walk_ctx(external),
+                &name,
+                AttrInput::Bare,
+                attr.span,
+            );
             return;
         };
         match value {
@@ -365,71 +307,18 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             return false;
         }
         if let Some(obj) = self.constants.get_object(name) {
-            walk_const_attrs(&mut self.walk_ctx(external), gate, obj, Site::bare(span, &[]));
+            walk_const_attrs(
+                &mut self.walk_ctx(external),
+                gate,
+                obj,
+                Site::bare(span, &[]),
+            );
             return true;
         }
         if self.constants.get_array(name).is_some() {
             return true;
         }
         !self.constants.scalar_leaves(name).is_empty()
-    }
-}
-
-impl<'a, 'b> Visit<'a> for JsxVisitor<'a, 'b> {
-    fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &Cell<Option<OxcScopeId>>) {
-        self.shadows.push(FxHashSet::default());
-        self.opaque.push(FxHashSet::default());
-    }
-
-    fn leave_scope(&mut self) {
-        self.shadows.pop();
-        self.opaque.pop();
-    }
-
-    fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'a>) {
-        let prev = self.decl_kind;
-        self.decl_kind = decl.kind;
-        walk::walk_variable_declaration(self, decl);
-        self.decl_kind = prev;
-    }
-
-    fn visit_formal_parameters(&mut self, params: &FormalParameters<'a>) {
-        record_param_shadows(&mut self.shadows, params);
-        record_param_shadows(&mut self.opaque, params);
-        walk::walk_formal_parameters(self, params);
-    }
-
-    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
-        // The name binds in the enclosing scope, like the collector; opaque
-        // only, never a shadow, matching the extract visitor's silence.
-        if let Some(id) = &func.id {
-            if let Some(scope) = self.opaque.last_mut() {
-                scope.insert(id.name.to_string());
-            }
-        }
-        walk::walk_function(self, func, flags);
-    }
-
-    fn visit_class(&mut self, class: &Class<'a>) {
-        if let Some(id) = &class.id {
-            if let Some(scope) = self.opaque.last_mut() {
-                scope.insert(id.name.to_string());
-            }
-        }
-        walk::walk_class(self, class);
-    }
-
-    fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
-        walk::walk_variable_declarator(self, decl);
-        record_declarator_shadow(&mut self.shadows, decl);
-        if !is_const_kind(self.decl_kind) {
-            record_declarator_shadow(&mut self.opaque, decl);
-        }
-    }
-
-    fn visit_jsx_opening_element(&mut self, elem: &JSXOpeningElement<'a>) {
-        self.handle_opening(elem);
-        walk::walk_jsx_opening_element(self, elem);
     }
 }
 

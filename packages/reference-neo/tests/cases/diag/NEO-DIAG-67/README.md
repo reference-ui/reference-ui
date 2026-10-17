@@ -4,6 +4,6 @@ A bare `base/tone` whose tone name is not declared: `brand/mediun` on a backgrou
 
 Raised in: `modules/atomic/src/resolve/tokens/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-TONE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-TONE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-TONE, atm-w-unknown-tone, diagnostics case index, NEO-DIAG-67

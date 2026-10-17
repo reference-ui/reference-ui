@@ -3,8 +3,8 @@
 Turns a want into an **atom**: CSS value + conditions that belong on
 that utility.
 
-This pass is a 1:1 map of core's dialect utilities
-(`packages/reference-core/src/system/panda/config/extensions/`).
+This pass is a 1:1 map of the canon dialect utilities
+(`packages/reference-rs/modules/canon/generate/overlay/extensions.ts`).
 Each utility owns its expand. Preset values are utterances
 (`font()`, `tokens({ breakpoints })`, the lib theme). They do not
 live in the compiler. There is no `patterns/` module — font owns

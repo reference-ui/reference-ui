@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-07.
+ * Case specification for TST-EXT-07.
  * An `extends Array<T>` clause is a reference to the built-in `Array` with its element as a type argument, so the
  * element is a user-owned dependency at any depth. `Array` itself is listed as a reference-only dependency, the way
  * `extends Omit<...>` lists `Omit`, and it has no manifest symbol to load.

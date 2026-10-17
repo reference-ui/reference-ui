@@ -52,7 +52,7 @@ async function pressKey(input: HTMLInputElement, key: string, caret: number, shi
   })
 }
 
-describe('DateField caret stepping carry (PATCHES #2)', () => {
+describe('DateField caret stepping carry', () => {
   it('DF-KEY-02: day overflow carries with Gregorian constrain', async () => {
     const { container, root, input, seen } = await renderStepField('2024-01-31')
     expect(input.value).toBe('31/01/2024')

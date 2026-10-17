@@ -7,7 +7,7 @@
  * fail. Leaf-shape counts are for the generator log, not a hardcoded contract.
  */
 
-import { fail, type JsonObject, type JsonValue } from './parse';
+import { fail, type JsonObject, type JsonValue } from './parse.js';
 
 export type LeafShapes = {
   total: number;

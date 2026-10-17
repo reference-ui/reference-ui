@@ -1,6 +1,6 @@
 # FocusLock test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct FocusLock --e2e`).
 
 Playwright: `packages/reference-lib/src/components/FocusLock/__e2e__/FocusLock.ct.spec.ts` (44 tests) · `packages/reference-lib/src/components/Overlay/__e2e__/OverlayFocus.ct.spec.ts` (FL-OV-01–05 + combined seam IDs)
 Unit: `catalog/candidates.test.ts` · `catalog/eligibility.test.ts` · `catalog/radio.test.ts` · `catalog/traversal.test.ts` · `restore/proximity.test.ts` · `restore/decision.test.ts` · `restore/pointer-origin.test.ts` · `stack/stack.test.ts` · `containment/tab-loop.test.ts` · `containment/fallback.test.ts` · `shared/{targets,focus,inside,refs,ids}.test.ts` · `types.test.ts` · `FocusLock.ref.test.tsx` · `ssr.test.tsx`
@@ -8,21 +8,6 @@ Story: `FocusLock.story.tsx`
 
 FocusLock owns Tab, reclaim, shard solving, and where restore lands. Overlay
 owns dismiss, isolation, Presence timing, and shard registration.
-
-## Source evidence
-
-- `vendor/radix-primitives/packages/react/focus-scope/src/focus-scope.test.tsx`
-  — Tab loop, negative/hidden skip, branch containment, blur ordering, stable
-  refs, and focusable-container fallback.
-- `vendor/tabbable/test/e2e/{tabbable,isTabbable,isFocusable,shadow-dom}.cy.js`
-  — native candidate catalog, radio groups, fieldsets, details, inert, CSS
-  visibility, and Shadow DOM.
-- `vendor/focus-lock/__tests__/{focusMerge.unit,return-focus,shadow-dom}.spec.ts`
-  — radio order, proximity restoration, removed nodes, and shadow traversal.
-- `vendor/focus-trap/test/suites` — `initialFocus:false`, stacked traps,
-  dynamic containers, and lifecycle timing.
-- `vendor/react-focus-lock` — shards and last-lock-wins behavior; wrappers,
-  sidecars, groups, and whitelist APIs are excluded.
 
 ## Required cases
 
@@ -357,11 +342,10 @@ scroll, or Presence duration.
   candidate, no return to B, and no repeated oscillation or duplicate
   focus/blur cycle.
 - [x] `FL-TRAP-06` `[reference]` `[browser]` —
-  **FocusLock should cancel pending containment when the lock disables or unmounts before reclaim completes.**
-  Trigger outside focus to queue a reclaim, immediately disable or unmount the
-  lock, and then explicitly focus another application control. Assert no stale
-  work steals that later focus, all lock listeners/observers clean up, and no
-  delayed focus call occurs.
+  **FocusLock should leave no stale containment work when the lock disables.**
+  Trigger outside focus, immediately disable the lock, then explicitly focus
+  another application control. Assert no stale work steals that later focus,
+  all lock listeners/observers clean up, and no delayed focus call occurs.
 - [x] `FL-TRAP-07` `[vendor]` `[browser]` —
   **FocusLock should restore its last live inside target when focus returns to
   the document after the browser temporarily loses focus.**
@@ -372,6 +356,12 @@ scroll, or Presence duration.
   use of the pre-activation restore target. This ports React Aria
   `FocusScope.test.js` “restore focus to the last focused element in the scope
   when re-entering the browser.”
+- [x] `FL-TRAP-08` `[reference]` `[browser]` —
+  **FocusLock should reclaim focus inside the lock before the next task when the focused node is removed.**
+  Focus candidate C, remove it, and await one microtask in the same evaluation,
+  with no animation frame. Assert focus is already inside the lock and not on
+  the body: until focus moves, keys reach the detached node and no document
+  listener sees them.
 
 ### Shards
 
@@ -525,7 +515,7 @@ scroll, or Presence duration.
   by the documented client initial-focus behavior.
 - [x] `FL-ENV-02` `[reference]` `[react:all]` —
   **Won't do as a FocusLock fixture.** `[react:all]` is the matrix runner axis
-  (`pnpm agent test --packages=@matrix/lib`). Core lifecycle already runs
+  (`pnpm agentct FocusLock --e2e --react all`). Core lifecycle already runs
   under each supported React there.
 - [x] `FL-ENV-03` `[reference]` `[shadow]` —
   **FocusLock should contain and restore focus when candidates span nested open ShadowRoots.**
@@ -564,10 +554,10 @@ scroll, or Presence duration.
 
 - `as`, wrapper selection, public focus guards, sidecars, focus-lock groups,
   whitelist callbacks, and combining multiple trap engines.
-- Cross-document trapping (`crossFrame`): DEFERRED, not implemented — see
+- Cross-document trapping (`crossFrame`): not implemented — see
   [FEATURES.md](./FEATURES.md) §1. Revisit only on real consumer need; no
   in-repo caller traverses frame content today.
-- TalkBack virtual-modality skip: DEFERRED (parked), not implemented — see
+- TalkBack virtual-modality skip: not implemented — see
   [FEATURES.md](./FEATURES.md) §2. Revisit only with a concrete repro.
 - Escape, outside press, inert, scroll lock, geometry, Handle, Presence
   duration, shard **registration**, nested-modal **wiring**, restore

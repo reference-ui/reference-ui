@@ -19,8 +19,8 @@ import type {
   TastySymbolSearchResult,
   TastyTypeParameterMemberProjector,
   TastyTypeRef,
-} from '../api-types'
-import { dedupeTastyMembers } from '../members'
+} from '../api-types.js'
+import { dedupeTastyMembers } from '../members.js'
 import {
   collectUserOwnedReferencesFromSymbol,
   defaultArtifactImporter,
@@ -31,12 +31,12 @@ import {
   isInterfaceSymbol,
   isTypeAliasSymbol,
   type ArtifactImporter,
-} from './shared'
-import { projectObjectLikeMembers } from './object-projection'
-import { flattenInterfaceMembers } from './interface-flatten'
-import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers'
-import { ChunkLoader } from './chunk-loader'
-import { SymbolResolver } from './symbol-resolver'
+} from './shared.js'
+import { projectObjectLikeMembers } from './object-projection.js'
+import { flattenInterfaceMembers } from './interface-flatten.js'
+import { TastyMemberImpl, TastySymbolRefImpl, TastyTypeRefImpl } from './wrappers.js'
+import { ChunkLoader } from './chunk-loader.js'
+import { SymbolResolver } from './symbol-resolver.js'
 
 interface CreateTastyApiRuntimeOptions {
   manifestPath: string

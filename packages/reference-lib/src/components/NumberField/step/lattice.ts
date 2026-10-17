@@ -6,7 +6,7 @@
  * binary-noise edges. Pure, proven by its colocated suite.
  */
 
-// Float-drift cleanup ported verbatim from quarantine (NF-MATH-07/08/14):
+// Float-drift cleanup ported verbatim (NF-MATH-07/08/14):
 // snaps ordinary decimal stepping (0.1 + 0.2) back to the representable
 // value only when within float epsilon, and canonicalizes -0 to 0.
 export function cleanFloat(value: number): number {
@@ -44,9 +44,8 @@ export function roundToStepPrecision(value: number, step: number): number {
   return roundedValue
 }
 
-// NFLAST ruling (a): the TESTS.md freeze lattice, replacing the signed-off
-// W-02 RAC math (min-anchored, half-up ties, lattice-clamped max) — re-pinned
-// pre-release-cheap per root docs/MISSIONS/DECISIONS.md §3. Zero-anchored nearest lattice
+// The freeze lattice, replacing the earlier RAC math
+// (min-anchored, half-up ties, lattice-clamped max). Zero-anchored nearest lattice
 // with away-from-zero midpoint ties; exact/exceeded non-grid bounds are
 // preserved as endpoints. Order: endpoint-preservation → nearest-lattice →
 // authored rounding (the caller applies displayRoundTrip) → final clamp
@@ -71,7 +70,7 @@ export function isOnStepLattice(value: number, step: number): boolean {
   return roundToStepPrecision(snapped - value, step) === 0
 }
 
-// Directional lattice stepping (NF-MATH-04/06, freeze decision 6): the next
+// Directional lattice stepping (NF-MATH-04/06): the next
 // lattice point strictly in `direction`, then (factor - 1) further lattice
 // steps — Shift+Arrow ≡ 10× Arrow, so off-grid Shift lands where ten single
 // steps would (least-surprise interpolation, flagged in DECISIONS.md).

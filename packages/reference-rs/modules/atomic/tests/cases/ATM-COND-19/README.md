@@ -1,4 +1,4 @@
-# ATM-COND-19 — Supports-routing station (ATM-COND-19, RS-15)
+# ATM-COND-19 — Supports-routing
 
 `@supports` keys lower to at-rules, not selector fragments: `@supports`
 nests outside `@container` with `:hover` on the selector, and supports

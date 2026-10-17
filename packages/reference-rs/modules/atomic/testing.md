@@ -11,23 +11,23 @@ Scope rules, fixed:
   Vitest across the N-API seam. No browser, no dev server, no network.
 - **CSS is validated by a parser, not by a renderer.** Browser-level proof already
   exists one layer up (`test-component`, `test-core` Playwright). Pushing atomic's
-  73 stations through a browser would cost seconds each to re-prove something a
+  73 cases through a browser would cost seconds each to re-prove something a
   parser answers in under a millisecond.
-- **Self-contained.** A station needs its `input/`, a `BaseSystem`, and the
+- **Self-contained.** A case needs its `input/`, a `BaseSystem`, and the
   compiler. Nothing outside `packages/reference-rs`.
 
 ---
 
 ## 1. Current state
 
-> **Implemented 2026-09-15.** §5 steps 1–6 are landed: goldens are portable,
-> `testing/css.ts` holds the validator, `atomicGauges` runs it on every station,
+> §5 steps 1–6 are in place: goldens are portable,
+> `testing/css.ts` holds the validator, `atomicGauges` runs it on every case,
 > the quarantine and its self-cleaning meta-test are in place, the golden writer
 > refuses invalid CSS, root `test:rs` exists, and `.github/workflows/rust-test.yml`
-> runs cargo plus Vitest on `ubuntu-latest`. `pnpm agentrs v atomic` is 80 tests
-> green. Step 7 landed (per-station `baseSystem.json` dumps). Step 8
+> runs cargo plus Vitest on `ubuntu-latest`. Per-case `baseSystem.json` dumps
+> (§5 step 7) are in place. Step 8
 > (token-passthrough policy) remains open by design.
-> The table below is the state this document was written against, kept because it
+> The table below is the baseline the design started from, kept because it
 > explains why the work was shaped this way.
 
 The suites existed and were well built. **Nothing ran them.**
@@ -35,12 +35,12 @@ The suites existed and were well built. **Nothing ran them.**
 | | Reality |
 | :--- | :--- |
 | Cargo tests | 82, green locally, **not in CI** |
-| Vitest stations | 73 under `tests/cases/`, green locally, **not in CI** |
+| Vitest cases | 73 under `tests/cases/`, green locally, **not in CI** |
 | Package script | `pnpm --filter @reference-ui/rust test` already chains `ensure-native && cargo test --workspace && vitest run` — correct, and unreferenced |
 | Vitest projects | `vitest.config.ts` discovers `modules/*/vitest.config.ts`; atomic's project is named `atomic`. Wiring is fine |
 | Root scripts | `test:lib` → `agentct`. **No root script runs reference-rs.** |
 | CI workflows | `docs.yml`, `security.yml`, `rust-compile.yml`. The last only runs `napi build` |
-| Golden portability | 9 `diagnostics.json` goldens embed `/Users/ryn/Developer/reference-ui/…`, so the suite **cannot pass on another checkout** |
+| Golden portability | Resolved: no `diagnostics.json` golden embeds an absolute checkout path (§5 step 1) |
 
 So the gap is not test authorship. It is that a green run is currently a local,
 manual, unreproducible event on one laptop — and that no assertion anywhere asks
@@ -60,7 +60,7 @@ the only one of the three candidates that does **both** halves of the job:
 | :--- | :--- |
 | **`css-tree`** | **Chosen.** Strict parser with `onParseError`, *plus* an mdn-data-driven lexer (`lexer.matchProperty`) that matches declaration values against each property's formal grammar. Pure JS, no native build. |
 | `postcss` | Rejected. Deliberately tolerant — it parses `border: true` and `.2xl\:p_6r` without complaint. A tolerant parser cannot be a validator. |
-| `lightningcss` | Rejected for now. Would catch syntax, but it is a native binary, and `chefs_kiss.md` §5 keeps it out of the compiler — having it as the test oracle invites confusion. Reconsider only if we want a Rust-side gauge (§6). |
+| `lightningcss` | Rejected for now. Would catch syntax, but it is a native binary, and it stays out of the compiler — having it as the test oracle invites confusion. Reconsider only if we want a Rust-side gauge (§6). |
 
 ### Two tiers
 
@@ -90,7 +90,7 @@ and then match. That recovers the coverage tier 2 gives up. Not needed to start.
 ### Cost
 
 Measured over all 73 committed goldens (1,530 KB of CSS): **53 ms total, 0.73 ms
-per station** for parse plus full lexer sweep. This is free. There is no argument
+per case** for parse plus full lexer sweep. This is free. There is no argument
 for sampling or opting out.
 
 ---
@@ -102,13 +102,13 @@ build it, and it is worse than the four known defects.
 
 **Tier 1 — 1 syntax error** (COND-01 `.2xl` closed by NAME-06):
 
-| Station | Error | Cause |
+| Case | Error | Cause |
 | :--- | :--- | :--- |
 | `ATM-SHORT-03` | `Unexpected input` | `border: borders.card` — an unresolved token path emitted as a value |
 
 **Tier 2 — 24 invalid declarations.** That is a count of declaration *nodes*, not
 of distinct `prop: value` strings — `ATM-NAME-02` emits `background: n300` twice
-(hover and `dark:hover`), so the 24 findings collapse to 23 unique station/value
+(hover and `dark:hover`), so the 24 findings collapse to 23 unique case/value
 pairs. They sort into three groups:
 
 1. **The known `Bool`/`Null` defect** (0, closed Move 2): `border: true` no longer
@@ -136,13 +136,13 @@ should atomic emit the declaration anyway? I would say no — warn and skip, so 
 sheet stays valid and the ghost-class gauge catches the now-empty class.
 
 The fixture bug: `n100`/`n200`/`n300`/`n900`/`primary`/`full` are used across
-station inputs and have no entry in `BaseSystem::lib_fixture()`, so they pass
+case inputs and have no entry in `BaseSystem::lib_fixture()`, so they pass
 through raw. `ReferenceTokenConfig` is an open schema — arbitrary categories and
 nesting — so these are perfectly legal token names; they are just not ones
-`@reference-ui/lib` authors. The three stations that ship a custom
+`@reference-ui/lib` authors. The three cases that ship a custom
 `baseSystem.json` declare them and correctly print `var(--colors-n100)`.
 
-**The fix is to declare them per station**, giving these stations their own
+**The fix is to declare them per case**, giving these cases their own
 `baseSystem.json` exactly as `ATM-STATIC-01/02` and `ATM-TOKEN-05` do. That is
 the same move recommended in §3 for golden noise, so it fixes both problems at
 once: the tokens resolve *and* the golden shrinks from 400+ lines of fixture dump
@@ -158,9 +158,9 @@ families, with `spacing` injected by core and no authored breakpoints at all.
 ## 4. Where it plugs in
 
 Atomic already has the right seam. `testing/runner.ts` runs `standingGauges`
-after `spec.verify` for **every** discovered station, and `cases.test.ts` passes
+after `spec.verify` for **every** discovered case, and `cases.test.ts` passes
 `atomicGauges`. A validator added there is automatically woven into all 73
-stations and every future one, with no per-case work.
+cases and every future one, with no per-case work.
 
 Put the generic parser wrapper in `packages/reference-rs/testing/css.ts` — that
 directory *is* the reference-rs harness (`runner.ts`, `goldens.ts`,
@@ -179,7 +179,7 @@ export function validateCss(sheet: string): CssProblem[]
 // tests/harness/helpers.ts — atomic policy, as a standing gauge
 export const atomicGauges = [
   cssIsValid,        // ATM-VALID-01 / ATM-VALID-02
-  noGhostClasses,    // ATM-GHOST-01 (tightened, see chefs_kiss.md Move 3)
+  noGhostClasses,    // ATM-GHOST-01 (tightened)
   ...
 ]
 ```
@@ -208,11 +208,11 @@ export const CSS_QUARANTINE: Record<string, readonly string[]> = {
 }
 ```
 
-Entries match against the problem **message**, so a station that produces both a
+Entries match against the problem **message**, so a case that produces both a
 syntax error and a bad declaration needs **both**. `ATM-SHORT-03` is the example:
 `border: borders.card` trips the lexer *and* the parser, and the parser's message
 is `Unexpected input at 410:38`, which does not contain the declaration text. One
-entry per station is not enough.
+entry per case is not enough.
 
 Plus one meta-test: the quarantine must contain no entry that now passes, so
 fixing a bug without emptying its slot fails the build. That makes the list
@@ -220,8 +220,8 @@ self-cleaning and makes the remaining debt visible in a diff rather than in a
 document.
 
 The allowlist cannot live inside the generic writer — `goldens.ts` has no notion
-of station IDs. Pass it in as a callback from the suite config, otherwise
-`--update-goldens` refuses every quarantined station forever.
+of case IDs. Pass it in as a callback from the suite config, otherwise
+`--update-goldens` refuses every quarantined case forever.
 
 ---
 
@@ -249,7 +249,7 @@ Ordered, each independently landable.
 5. **Land `validateCss` + the gauge + the quarantine.**
 6. **Wire the golden writer** to validate before write.
 7. **Fix the fixture** (`n*` palette and friends), which clears most of group 2.
-   **Done 2026-09-15.** Nine stations now ship a per-station `baseSystem.json`
+   **Done 2026-09-15.** Nine cases now ship a per-case `baseSystem.json`
    declaring the tokens they actually use (`n100`/`n200`/`n300`/`n900`/`primary`
    as colors; `full`/`md` as radii). Their group-2 quarantine slots are empty;
    `ATM-LEAF-08` still quarantines `border-color: 0`.
@@ -266,7 +266,7 @@ concern with no meaning on a CI runner.
 ## 6. Deliberately not doing
 
 - **No browser or headless Chrome in atomic.** Higher layers own rendering proof.
-- **No `lightningcss` in the compiler** (`chefs_kiss.md` §5). A Rust-side gauge
+- **No `lightningcss` in the compiler.** A Rust-side gauge
   using the `lightningcss` crate is a reasonable *future* addition if we want
   `cargo test` to validate CSS too — but the JS gauge covers the seam where the
   goldens actually live, so it comes first and may be enough.
@@ -284,7 +284,7 @@ concern with no meaning on a CI runner.
 
 When this document is fully implemented, a green atomic run means:
 
-1. Every station's emitted stylesheet **parses** as CSS.
+1. Every case's emitted stylesheet **parses** as CSS.
 2. Every non-`var()` declaration **matches its property's grammar**.
 3. Every runtime class has a real selector inside `@layer utilities`, produced by
    the compiler's own namer.
@@ -292,12 +292,10 @@ When this document is fully implemented, a green atomic run means:
    artifacts.
 5. It means the same thing on CI as on a laptop.
 
-As of 2026-09-15, **1, 2, and 5 hold** — modulo the 11 remaining quarantined
-findings (10 stations), which are tracked, owned, and can only shrink. Group 2
-(undeclared tokens) is gone. Items 3 and 4 are SPEC cases
-(`ATM-GHOST-01`, `ATM-ORDER-05/06`) that this harness now makes enforceable but
-does not yet enforce; they are `chefs_kiss.md` Stage 1 items 5–7.
+The defect entries in the CSS quarantine (`tests/harness/css-quarantine.ts`) are
+tracked, owned, and can only shrink. Items 3 and 4 map to the SPEC cases
+`ATM-GHOST-01` and `ATM-ORDER-05/06`.
 
 The honest summary of what changed: a green run used to mean "the compiler printed
 something named the way the author wrote it." It now means "and a CSS parser
-agrees it is CSS, except in 11 places we have written down."
+agrees it is CSS, except in the defect entries the CSS quarantine records."

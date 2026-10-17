@@ -59,14 +59,14 @@ export function resolveDayModels(inputs: DayModelInputs): Map<ISODate, DayCellMo
     const rangeStart = isRangeStart(date)
     const rangeEnd = isRangeEnd(date) || previewBand?.candidate === date
     const disabled = isDisabled(date)
-    // Unavailable is the focusable half of unselectable (W-21):
+    // Unavailable is the focusable half of unselectable:
     // out-of-bounds already implies it, so the flag marks only
     // the in-bounds predicate-refused dates.
     const unavailable = !disabled && isUnavailableDay(date)
     const unselectable = disabled || unavailable
     const isToday = markerToday === date
     const isFocused = focusedDate === date
-    // Custom content (W-20) replaces only the button's children;
+    // Custom content replaces only the button's children;
     // nullish keeps the default locale day number.
     const defaultContent =
       dayRender?.(date, {

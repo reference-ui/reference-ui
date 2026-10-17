@@ -1,5 +1,5 @@
 /**
- * ATL package-scan pin (fortify A): a resolved included package whose
+ * ATL package-scan pin: a resolved included package whose
  * discovery fails surfaces ATL-W-PACKAGE-SCAN-FAILED naming the package,
  * while healthy siblings still index.
  */

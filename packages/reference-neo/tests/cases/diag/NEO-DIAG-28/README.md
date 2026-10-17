@@ -4,6 +4,6 @@ Operator or operand the unary fold refused. The world carries the minimal fixtur
 
 Raised in: `modules/atomic/src/extract/expressions/walk/leaf.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-UNARY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-UNARY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-UNARY, atm-w-dynamic-unary, diagnostics case index, NEO-DIAG-28

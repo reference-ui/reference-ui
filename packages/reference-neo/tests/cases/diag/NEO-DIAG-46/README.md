@@ -4,6 +4,6 @@ A file failed to parse; extraction keeps the recoverable shells. The world carri
 
 Raised in: `modules/tasty/src/ast/extract/pipeline.rs`. Driver: the whole tasty compiler (`buildTasty` over the case world).
 
-Evidence: `[diag]` TST-W-PARSE-ERROR (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-W-PARSE-ERROR (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-W-PARSE-ERROR, tst-w-parse-error, diagnostics case index, NEO-DIAG-46

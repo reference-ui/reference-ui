@@ -40,11 +40,15 @@ export default defineConfig({
   // consumer (docs inherits it transitively via extends). layers carries
   // the compiled CSS only — tokens and the JSX roster stay icons-local.
   //
-  // Fan-out contract (STYLE_PROP_EXTERNAL; plan T09): a named style prop on
-  // an external/prebuilt component ALWAYS paints — on @reference-ui/icons
-  // and on every lib passthrough part alike. The consumer compile keeps the
-  // prop on the capitalized non-host tag, resolves it against the CONSUMER's
-  // tokens, and emits the deterministic `<system>__<stem>` class the foreign
+  // Fan-out contract: a named style prop on an external/prebuilt component
+  // paints — on @reference-ui/icons and on every lib passthrough part alike —
+  // unless the component declares that prop for itself. A prop its own
+  // declaration keeps (destructured, not forwarded) is the component's own
+  // prop, never a style, whether or not the component is a host: StyleTrace
+  // records it as owned, and the consumer compile leaves it an attribute. The
+  // consumer compile keeps the other style props on the capitalized non-host
+  // tag, resolves them against the CONSUMER's tokens, and emits the
+  // deterministic `<system>__<stem>` class the foreign
   // runtime mints into the consumer's own utilities block (one group per
   // composed system, own first). The value lands on the component's
   // outermost element and overrides the package default. There is no

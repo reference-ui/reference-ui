@@ -13,7 +13,7 @@ import {
   getTastyMemberSemanticKind,
   getTastyTypeInlineVariants,
   getTastyTypeSemanticKind,
-} from './index'
+} from './index.js'
 import {
   caseRuntimeDir,
   disposeTastyScratch,

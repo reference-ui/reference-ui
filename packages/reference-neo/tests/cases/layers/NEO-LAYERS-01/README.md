@@ -29,9 +29,9 @@ Layer tokens also never reach the consumer's own `:root`, which holds only the
 extends token (`--colors-ext-ink`).
 
 Evidence: `src/config/types.ts:44-49` (the `layers` field),
-`src/sync/index.ts:162,179,220` (upstream names, container root, bucket merge),
+`src/sync/index.ts:135,152,206` (upstream names, container root, bucket merge),
 `src/system/base/streams.ts:185-214` (statement, blocks, own block),
-`src/collect/lib/evaluate.ts:133,164` and `src/system/base/jsx.ts:71` (fragments and
+`src/collect/lib/evaluate.ts:63,110` and `src/system/base/jsx.ts:112` (fragments and
 roster read `extends` only). Siblings: NEO-CHAIN-06 (real upstream sync under
 `extends`), NEO-LAYER-02 (two-system package nesting).
 

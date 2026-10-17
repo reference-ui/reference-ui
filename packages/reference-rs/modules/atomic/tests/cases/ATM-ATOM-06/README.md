@@ -1,4 +1,4 @@
-# ATM-ATOM-06 — Custom-prop shape station
+# ATM-ATOM-06 — Custom-prop shape
 
 Scalar, array, and object custom properties all compile as declarations.
 The object form mints one whole-object `--x` plan with per-breakpoint

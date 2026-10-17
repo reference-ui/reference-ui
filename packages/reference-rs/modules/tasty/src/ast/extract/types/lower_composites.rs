@@ -82,36 +82,15 @@ impl<'a> LoweringContext<'a> {
         operator: &oxc_ast::ast::TSTypeOperator<'_>,
     ) -> TypeRef {
         let target_type = self.lower_type(&operator.type_annotation);
-
-        // Special handling for readonly tuples - normalize to tuple with readonly elements
-        if matches!(
-            operator.operator,
-            oxc_ast::ast::TSTypeOperatorOperator::Readonly
-        ) {
-            if let TypeRef::Tuple { elements } = target_type {
-                // Convert readonly tuple to tuple with readonly elements
-                let readonly_elements = elements
-                    .into_iter()
-                    .map(|element| TupleElement {
-                        readonly: true,
-                        ..element
-                    })
-                    .collect();
-
-                return TypeRef::Tuple {
-                    elements: readonly_elements,
-                };
-            }
-        }
-
-        TypeRef::TypeOperator {
-            operator: match operator.operator {
-                oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
-                oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
-                oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
+        match (type_operator_kind(&operator.operator), target_type) {
+            (TypeOperatorKind::Readonly, TypeRef::Tuple { elements }) => TypeRef::Tuple {
+                elements: with_readonly_elements(elements),
             },
-            target: Box::new(target_type),
-            resolved: None,
+            (kind, target) => TypeRef::TypeOperator {
+                operator: kind,
+                target: Box::new(target),
+                resolved: None,
+            },
         }
     }
 
@@ -345,4 +324,24 @@ mod tests {
             other => panic!("expected resolved TemplateLiteral, got {other:?}"),
         }
     }
+}
+
+/// The model's operator kind for an Oxc type operator.
+fn type_operator_kind(operator: &oxc_ast::ast::TSTypeOperatorOperator) -> TypeOperatorKind {
+    match operator {
+        oxc_ast::ast::TSTypeOperatorOperator::Keyof => TypeOperatorKind::Keyof,
+        oxc_ast::ast::TSTypeOperatorOperator::Readonly => TypeOperatorKind::Readonly,
+        oxc_ast::ast::TSTypeOperatorOperator::Unique => TypeOperatorKind::Unique,
+    }
+}
+
+/// A readonly tuple normalizes to a tuple whose elements are each readonly.
+fn with_readonly_elements(elements: Vec<TupleElement>) -> Vec<TupleElement> {
+    elements
+        .into_iter()
+        .map(|element| TupleElement {
+            readonly: true,
+            ..element
+        })
+        .collect()
 }

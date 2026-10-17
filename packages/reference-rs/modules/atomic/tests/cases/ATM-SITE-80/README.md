@@ -1,4 +1,4 @@
-# ATM-SITE-80 — Post-attach call-init station (Forge §5)
+# ATM-SITE-80 — Post-attach call-init
 
 A const bound to a pure-helper call folds exactly like the direct call spelling: scalar, object, and array inits carry through the post-attach init pass, while an impure-helper init refuses with a diagnostic and keeps its static siblings.
 Symbols: `fold_call_inits`, `attach_call_init`, `fold_pure_call`, `FenceValue`, `BindingInit`.

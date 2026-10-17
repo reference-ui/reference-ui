@@ -4,6 +4,6 @@ Unresolvable object spread; siblings kept. The world carries the minimal fixture
 
 Raised in: `modules/atomic/src/extract/expressions/object/spread.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNFOLDABLE-SPREAD (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNFOLDABLE-SPREAD (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNFOLDABLE-SPREAD, atm-w-unfoldable-spread, diagnostics case index, NEO-DIAG-24

@@ -9,9 +9,8 @@ fresh compile of the frozen request reports the `color` warning located
 at the world's `app.ts` on the opt-in compiler channel (the default is
 silent since Error Correct Slice 5) — sync itself succeeds.
 
-Evidence: `[atm]` ATM-LEAF-07 (a dynamic key never erases static
-siblings) and ATM-FORBID-02 (calls are not executed); `[panda-v1]`
-`vendor/panda-v1/packages/extractor/__tests__/extract.test.ts:3223`
+Evidence: ATM-LEAF-07 (a dynamic key never erases static siblings) and
+ATM-FORBID-02 (calls are not executed); Panda v1 extractor tests
 (non-deterministic calls extract nothing).
 
 > Search terms: invocation, unevaluated, partial extraction, diagnostic, site/dynamic-value, diagnostics/located-warning

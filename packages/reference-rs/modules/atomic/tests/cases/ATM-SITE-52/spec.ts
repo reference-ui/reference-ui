@@ -1,5 +1,5 @@
 /**
- * Shadow-decision station (ATM-SITE-52, SPEC-V2-74). A JSX tag shadowed by
+ * Shadow-decision (ATM-SITE-52). A JSX tag shadowed by
  * a param stays fail-closed and silent (zero wants, zero diagnostics), the
  * unshadowed control extracts, and an `undefined` shadowed by a param omits
  * exactly like the bare spelling.

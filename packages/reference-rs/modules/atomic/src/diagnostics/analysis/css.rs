@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn destructured_params_shadow_same_named_consts() {
-        // SITE-53's SPEC-V2-75 ghost: the param shadows the cross-file
+        // SITE-53's ghost: the param shadows the cross-file
         // const, so the use is dynamic, never the const's exact key.
         for params in [
             "{ color }",

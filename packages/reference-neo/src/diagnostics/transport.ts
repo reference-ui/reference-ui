@@ -90,16 +90,21 @@ export function toCanonicalRecord(diagnostic: TypedDiagnostic): {
   if (diagnostic.span !== undefined) {
     record.span = { start: diagnostic.span.start, end: diagnostic.span.end }
   }
-  if (diagnostic.labels !== undefined && diagnostic.labels.length > 0) {
+  if (isNonEmptyList(diagnostic.labels)) {
     record.labels = diagnostic.labels.map(label => ({
       span: { start: label.span.start, end: label.span.end },
       message: label.message,
     }))
   }
-  if (diagnostic.help !== undefined && diagnostic.help.length > 0) {
+  if (isNonEmptyList(diagnostic.help)) {
     record.help = [...diagnostic.help]
   }
   return record
+}
+
+// Wire records drop absent and empty label/help lists alike, so both mean "omit".
+function isNonEmptyList<T>(list: T[] | undefined): list is T[] {
+  return list !== undefined && list.length > 0
 }
 
 /** Encode one typed diagnostic to its canonical wire JSON. */

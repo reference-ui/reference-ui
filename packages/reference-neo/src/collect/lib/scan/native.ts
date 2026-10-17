@@ -1,6 +1,6 @@
-// Native single-read scan for fragment discovery (F1 B'': C3-in-reverse).
+// Native single-read scan for fragment discovery.
 // It takes scan options and emits matches plus a retention ref; bytes stay native.
-// fg still enumerates, Rust reads plus gates plus retains, and the verbatim T1
+// fg still enumerates, Rust reads plus gates plus retains, and the verbatim
 // splitScan confirms the needle-hits, so match order and selection never drift.
 
 import { sep } from 'node:path'
@@ -181,7 +181,7 @@ async function scanNative(options: ScanOptions, retain: boolean): Promise<Fragme
   const { include, exclude = RETENTION_EXCLUDE, cwd = process.cwd() } = options
   const patterns = discoveryPatternsOf(options)
   // Retention glob: dotfiles included (dot:true), node_modules pruned.
-  // fg.sync: the async walker regressed the warm-cache scan (GAPS-1).
+  // fg.sync: the async walker regressed the warm-cache scan.
   const candidates = fg.sync(include, {
     cwd,
     absolute: true,
@@ -207,18 +207,18 @@ async function scanNative(options: ScanOptions, retain: boolean): Promise<Fragme
     walkComplete: isCompleteWalkInclude(include, exclude),
     include,
   })
-  // Hit-only confirm through the verbatim T1 splitScan: misses contribute no
+  // Hit-only confirm through the verbatim splitScan: misses contribute no
   // matches (a regex match implies the needle bytes), and the scannedSources
   // part is discarded (retention lives native-side behind the token). `.mdx`
   // hits confirm through the same MDX-scoped matcher the TS path uses, so the
   // two selections cannot drift.
-  const { matches } = splitScan(
-    response.hits.map(hit => hit.path),
-    response.hits.map(hit => hit.content),
+  const { matches } = splitScan({
+    candidates: response.hits.map(hit => hit.path),
+    contents: response.hits.map(hit => hit.content),
     cwd,
-    patterns,
-    createMdxImportPatterns(options.importFrom)
-  )
+    discoveryPatterns: patterns,
+    mdxPatterns: createMdxImportPatterns(options.importFrom),
+  })
   const retention: NativeScanRetention = retain
     ? { token: response.retentionToken, count: response.retainedCount }
     : { count: 0 }
@@ -227,7 +227,7 @@ async function scanNative(options: ScanOptions, retain: boolean): Promise<Fragme
 
 /**
  * Single native scan over the include globs: fragment matches plus the
- * retained compile set behind a token (C3-in-reverse). Falls back to the TS
+ * retained compile set behind a token. Falls back to the TS
  * scan when the addon is unavailable; retention then rides `files`.
  */
 export async function scanFragmentSourcesNative(options: ScanOptions): Promise<FragmentScanNative> {

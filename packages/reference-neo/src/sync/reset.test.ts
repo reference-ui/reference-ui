@@ -1,6 +1,6 @@
 // Unit tests for the controlled reset injection over synthetic specs.
 // They take the flag states and assert fragment prepend plus rule content.
-// The engine routing itself is proven by station ATM-LAYER-08, not here.
+// The engine routing itself is proven by case ATM-LAYER-08, not here.
 
 import { describe, expect, it } from 'vitest'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'

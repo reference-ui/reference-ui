@@ -1,8 +1,6 @@
 # Slot features (needs design)
 
-Deferred Slot items that change or add API surface. Each entry: what it
-does, a concrete API sketch, and a one-line maintainer take. Source
-decisions stay in [DECISIONS.md](./DECISIONS.md).
+Deferred Slot items that change or add API surface. Each entry: what it does, a concrete API sketch, and a one-line recommendation.
 
 No open items. The one deferred item shipped with the reactive API
 redesign (see below).
@@ -32,6 +30,4 @@ path snapshots `root.getAll()`, the filtered path selects inside
 the `SL-READ-07` analog, pinned by `SL-READ-11`, with `SL-READ-08`–`10`
 and `SL-READ-12` covering order, emptiness, updates, and inline filters).
 
-**Maintainer take:** Shipped as the `useSlots(filter)` overload instead of a
-third hook — one selection hook, optional filter, per the HQ no-`scan`
-redesign.
+**Resolution:** Shipped as the `useSlots(filter)` overload instead of a third hook: one selection hook, optional filter, per the no-`scan` redesign.

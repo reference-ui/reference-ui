@@ -1,5 +1,5 @@
 /**
- * Import-identity station (SPEC-V2-59 alias + I2 arms). Aliased, named
+ * Import-identity (alias + I2 arms). Aliased, named
  * multi-declaration, and string-literal `css` imports are all live sites.
  */
 import { expect } from 'vitest'

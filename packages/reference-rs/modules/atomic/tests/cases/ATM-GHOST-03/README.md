@@ -1,4 +1,4 @@
-# ATM-GHOST-03 — Seed station
+# ATM-GHOST-03 — Seed
 
 Empty extract still returns the compile contract: layer preamble, empty
 class map, no diagnostics, no utility rules. Fixture tokens and globalCss

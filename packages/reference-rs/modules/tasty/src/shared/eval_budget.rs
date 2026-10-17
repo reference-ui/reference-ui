@@ -8,7 +8,7 @@ use std::cell::Cell;
 
 /// Alias expansions nested inside one evaluation. TypeScript stops instantiation at depth 100. Each
 /// level costs roughly 5 to 10 KB of native stack in a release build (a 256 KB stack overflows on the
-/// deepest station, a 512 KB one does not), so 50 levels stay inside a 1 MB main-thread stack.
+/// deepest case, a 512 KB one does not), so 50 levels stay inside a 1 MB main-thread stack.
 pub(crate) const MAX_ALIAS_DEPTH: u32 = 50;
 
 /// Alias expansions across one outermost evaluation. This bounds union fan-out as well as depth,

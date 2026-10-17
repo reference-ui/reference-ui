@@ -60,10 +60,10 @@ pub struct CompileRequest {
     pub jsx_hosts: Option<Vec<String>>,
     #[serde(default)]
     pub declaration_root: Option<String>,
-    /// Glob scope (RS-10): only matching sources compile; absent or empty scans all.
+    /// Glob scope: only matching sources compile; absent or empty scans all.
     #[serde(default)]
     pub include: Option<Vec<String>>,
-    /// Opt-in diagnostic channels (S5 backchannel): `compiler` renders
+    /// Opt-in diagnostic channels (backchannel): `compiler` renders
     /// `compiler_diagnostics`. Unknown channels are ignored.
     #[serde(default)]
     pub logs: Option<Vec<String>>,
@@ -95,13 +95,13 @@ pub struct CompileResult {
     pub stylesheet: String,
     #[serde(default)]
     pub portable_stylesheet: String,
-    /// The own system's per-layer streams (S2 oracle channel): the 10-key
+    /// The own system's per-layer streams (oracle channel): the 10-key
     /// object with both token variants, shipped verbatim next to the joined
     /// sheets. Required on schema 2; fail-closed artifacts carry preamble-only.
     pub streams: StylesheetStreams,
     pub runtime: NativeRuntimeArtifact,
     /// Compile-internal plans: the compiler rows, surfaced for proof,
-    /// stations, and the differential gate. The artifact carries no
+    /// cases, and the differential gate. The artifact carries no
     /// per-atom rows.
     pub style_plans: Vec<RuntimeStylePlan>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -125,7 +125,7 @@ pub struct CompileResult {
     /// beside the host roster.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub traced_jsx_owned: BTreeMap<String, Vec<String>>,
-    /// Opt-in compiler backchannel (S5): present only when requested.
+    /// Opt-in compiler backchannel: present only when requested.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub compiler_diagnostics: Option<Vec<Diagnostic>>,
 }

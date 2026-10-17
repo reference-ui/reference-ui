@@ -16,6 +16,6 @@ mod types;
 mod util;
 mod values;
 
-pub(crate) use context::ExtractionContext;
+pub(crate) use context::{ExtractionContext, ShellSink, StatementScope};
 pub(super) use pipeline::extract_files;
 pub(super) use util::slice_span;

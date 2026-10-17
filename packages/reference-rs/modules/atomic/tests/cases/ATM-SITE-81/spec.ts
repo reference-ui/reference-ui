@@ -1,5 +1,5 @@
 /**
- * Member-path object station (Forge §13). A const bound to a nested style
+ * Member-path object case. A const bound to a nested style
  * object carries its entries: the alias lowers as a JSX condition block and
  * spreads into `css()` exactly like the member it abbreviates, and member
  * spreads record through const object inits. A write to the root poisons
@@ -42,7 +42,7 @@ const spec: AtomicCaseSpec = {
 
     // The alias drops as an unfoldable spread (existing alias vocabulary);
     // the member spread names the write to the root — both on the opt-in
-    // channel now (S6 E8-class re-point); the default is silent.
+    // channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-81', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

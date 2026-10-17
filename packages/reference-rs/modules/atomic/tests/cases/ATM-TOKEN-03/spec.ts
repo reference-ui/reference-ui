@@ -1,5 +1,5 @@
 /**
- * Opacity-modifier station. Slash opacity on color tokens becomes
+ * Opacity-modifier case. Slash opacity on color tokens becomes
  * `color-mix(in srgb, var(--colors-…) N%, transparent)`.
  */
 import { expect } from 'vitest'

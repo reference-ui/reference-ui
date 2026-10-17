@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use oxc_ast::ast::{BindingPattern, Expression, ObjectPattern, PropertyKey};
+use oxc_ast::ast::{BindingPattern, Expression, IdentifierReference, ObjectPattern, PropertyKey};
 
 use super::super::binding::{Binding, BindingInit};
 use super::super::table::ScopeId;
@@ -299,30 +299,32 @@ fn pattern_key(
     key: &PropertyKey<'_>,
 ) -> Option<(String, Option<KeyProvenance>)> {
     match key {
-        PropertyKey::StaticIdentifier(ident) => {
-            // { color }  /  { primary: color }
-            Some((ident.name.to_string(), None))
-        }
-        PropertyKey::StringLiteral(lit) => {
-            // { 'color': c }  /  { ['color']: c } — the spelling is static
-            Some((lit.value.to_string(), None))
-        }
-        PropertyKey::Identifier(id) => {
-            // { [key]: color }  after  const key = 'primary'
-            let (leaf, src_scope) = value::single_scalar(ctx.table, ctx.scope, id.name.as_str())?;
-            if let AtomValue::String(name) = leaf {
-                let prov = KeyProvenance {
-                    key: name.to_string(),
-                    src_scope,
-                    src_name: id.name.to_string(),
-                    src_key: None,
-                };
-                return Some((name.to_string(), Some(prov)));
-            }
-            None
-        }
+        // { color }  /  { primary: color }
+        PropertyKey::StaticIdentifier(ident) => Some((ident.name.to_string(), None)),
+        // { 'color': c }  /  { ['color']: c } — the spelling is static
+        PropertyKey::StringLiteral(lit) => Some((lit.value.to_string(), None)),
+        // { [key]: color }  after  const key = 'primary'
+        PropertyKey::Identifier(id) => computed_pattern_key(ctx, id),
         _ => None,
     }
+}
+
+/// A computed key that names a recorded single string: the spelling plus its provenance.
+fn computed_pattern_key(
+    ctx: &PatternCtx<'_, '_>,
+    id: &IdentifierReference<'_>,
+) -> Option<(String, Option<KeyProvenance>)> {
+    let (leaf, src_scope) = value::single_scalar(ctx.table, ctx.scope, id.name.as_str())?;
+    let AtomValue::String(name) = leaf else {
+        return None;
+    };
+    let prov = KeyProvenance {
+        key: name.to_string(),
+        src_scope,
+        src_name: id.name.to_string(),
+        src_key: None,
+    };
+    Some((name.to_string(), Some(prov)))
 }
 
 /// One rest entry with member references stripped: the rest names another

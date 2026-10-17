@@ -7,8 +7,8 @@
  * unresolvable (no file, no spans, dangling offsets) reports undefined so the caller falls back to a
  * one-liner instead of guessing. Columns count UTF-16 code units to match editor carets.
  */
-import type { Diagnostic } from './generated/Diagnostic'
-import { renderOneLine } from './index'
+import type { Diagnostic } from './generated/Diagnostic.js'
+import { renderOneLine } from './index.js'
 
 /**
  * Default cap for `renderBatch`: the first eight diagnostics get full frames while the rest stay

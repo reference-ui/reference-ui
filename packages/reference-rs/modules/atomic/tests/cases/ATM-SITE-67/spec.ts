@@ -1,5 +1,5 @@
 /**
- * Overlapping-spread station (SPEC-V2-23 GAP-23). Two inline-object spreads
+ * Overlapping-spread case. Two inline-object spreads
  * writing the same key mint both atoms; the runtime style-plan merge
  * resolves the slot to the last spread, matching multi-arg last-wins.
  */

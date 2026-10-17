@@ -1,5 +1,5 @@
 /**
- * Harvest condition station (Forge §2 sinks). A sink under `_hover` mints
+ * Harvest condition (sinks). A sink under `_hover` mints
  * `"_hover:color:..."` only: the pool crosses the sink carrying the sink's
  * `when`, and no unconditioned twins leak into the map.
  */
@@ -25,8 +25,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('color: inherit;')
     expect(sheet).toContain('color: currentColor;')
 
-    // Warn + sink info ride the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // Warn + sink info ride the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-HARVEST-03', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

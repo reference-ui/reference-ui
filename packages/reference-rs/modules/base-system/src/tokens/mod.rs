@@ -1,6 +1,6 @@
 //! Indexed token dictionary for one design-system utterance.
 //! Keys are `category.path` (`colors.gray.800`, `radii.md`) or an authored bare
-//! key (`md`) when a station spec never prefixed the category. Each entry stores
+//! key (`md`) when a case spec never prefixed the category. Each entry stores
 //! the CSS custom property name, the light value, and an optional dark override —
 //! `None` means no dark variant, not a copy of light. Lookup is FxHashMap on
 //! the hot path; emit order stays on the IndexMap. The inner table is Arc so

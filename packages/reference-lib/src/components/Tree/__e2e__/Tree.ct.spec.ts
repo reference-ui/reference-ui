@@ -177,7 +177,7 @@ test.describe('Tree Composition Gates & Browser Proofs', () => {
   })
 })
 
-test.describe('Tree Quarantine Parity', () => {
+test.describe('Tree parity', () => {
   test('TR-DOM-03: Tree should expose expansion state only on items that currently own children', async ({
     mount,
     page,
@@ -333,9 +333,9 @@ test.describe('Tree Quarantine Parity', () => {
     await expect(btnBefore).toBeFocused()
     await page.keyboard.press('Tab')
     if (browserName === 'webkit') {
-      // DIAG D1: WebKit skips buttons in sequential Tab, so the walk
+      // WebKit skips buttons in sequential Tab, so the walk
       // sails over btn-after-empty AND the tabindex-less empty tree to
-      // the next real stop (SCOPE-1 P-TAB probe: omitted-branch). The
+      // the next real stop (omitted-branch). The
       // contract — empty tree invents no sequential target — holds.
       await expect(emptyTree).not.toBeFocused()
       await expect(btnAfter).not.toBeFocused()
@@ -1438,7 +1438,7 @@ test.describe('Tree Quarantine Parity', () => {
     const folder = page.getByTestId('tree-item-folder-1')
     await expect(folder).toBeVisible()
 
-    // H-2: the branch focus rule must exist in the injected sheet AND be
+    // the branch focus rule must exist in the injected sheet AND be
     // fully resolved — a literal {colors…} theme placeholder in a
     // component-level css() value ships verbatim and is unresolvable.
     const probe = await page.evaluate(() => {
@@ -1646,9 +1646,9 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
     await expect(trigger).toHaveAttribute('aria-haspopup', 'tree')
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F16 probe: WebKit click never focuses
+      // WebKit click never focuses
       // buttons, so ArrowDown would go to body and the bridge legs
-      // below could not run. Programmatic focus lands (D1B) and
+      // below could not run. Programmatic focus lands and
       // replicates the focused state Chromium gets from the click, so
       // the bridge contract stays proven on WebKit.
       await trigger.focus()
@@ -1700,7 +1700,7 @@ test.describe('Tree Combobox Bridge (TR-CB / TR-COMP-03)', () => {
     const trigger = page.getByTestId('cbs-trigger')
     await trigger.click()
     if (browserName === 'webkit') {
-      // DIAG D1 + SCOPE-1 P-F16 probe: same click-focus workaround as
+      // Click-focus probe: same workaround as
       // TR-CB-03 — without it ArrowDown/Space go to body on WebKit.
       await trigger.focus()
     }

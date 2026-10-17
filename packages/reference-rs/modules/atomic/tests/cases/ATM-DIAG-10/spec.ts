@@ -1,5 +1,5 @@
 /**
- * Incidental-coverage station (ATM-DIAG-10, Operation Error Correct, Slice 0).
+ * Incidental-coverage (ATM-DIAG-10).
  * RED: the diagnosed site contributes no plan, but another source (plus the
  * harvest pool) contributes the exact key, so runtime paints and userspace
  * must stay silent. Today the dynamic warning still fires on default and no

@@ -638,7 +638,7 @@ test.describe('Field CT', () => {
     page,
   }) => {
     // Field-owned bezel share plus the hosted typing/publish session
-    // (PATCHES #2): the session contract belongs to DateField, which has
+    // the session contract belongs to DateField, which has
     // proven it — Field only hosts the wrap/trigger/portal around it.
     await mount('components/Field/Field/DateCompoundFixture')
 
@@ -692,7 +692,7 @@ test.describe('Field CT', () => {
     mount,
     page,
   }) => {
-    // Range share of PATCHES #2: the Range bezel is itself the
+    // Range-share case: the Range bezel is itself the
     // Field-surface host (no nested Field), embedding both endpoints.
     await mount('components/Field/Field/RangeHostedFixture')
 
@@ -770,10 +770,10 @@ test.describe('Field CT', () => {
     page,
   }) => {
     // Field-owned subset (label/input-embed/opener/chips/portal/invalid-bezel)
-    // plus hosted commit/remove flows (PATCHES #3): Combobox owns the
+    // plus hosted commit/remove flows: Combobox owns the
     // semantics (CB-COMMIT/CB-SELECT proven), Field only hosts the bezel
     // around them. Focus-ring-on-opener assertions stay omitted: they need
-    // the shared-theme focus propagation change (FI-CSS-06, theme crew).
+    // the shared-theme focus propagation change (FI-CSS-06).
     await mount('components/Field/Field/TokenPickerFixture')
 
     const label = page.getByTestId('comp-people-label')

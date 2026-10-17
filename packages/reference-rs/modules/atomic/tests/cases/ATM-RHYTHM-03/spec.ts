@@ -1,5 +1,5 @@
 /**
- * Fractional rhythm station. `1/3r` and `2/3r` lower to division formulas
+ * Fractional rhythm case. `1/3r` and `2/3r` lower to division formulas
  * against `--spacing-root`. Class keys keep the slash.
  */
 import { expect } from 'vitest'

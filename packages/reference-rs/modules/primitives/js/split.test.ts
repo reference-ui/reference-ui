@@ -4,7 +4,7 @@
 // except condition arms, which ride to style resolution as whens.
 
 import { describe, expect, it } from 'vitest'
-import { createPropSplitter } from './split.ts'
+import { createPropSplitter } from './split.js'
 
 const split = createPropSplitter(['color', 'p', 'backgroundColor'])
 

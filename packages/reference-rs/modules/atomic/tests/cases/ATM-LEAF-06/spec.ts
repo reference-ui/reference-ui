@@ -1,5 +1,5 @@
 /**
- * Computed-key station. `[dynamicKey]` in a style object warns and does not
+ * Computed-key case. `[dynamicKey]` in a style object warns and does not
  * become a want. Static sibling properties still extract.
  */
 import { expect } from 'vitest'
@@ -11,8 +11,7 @@ const spec: AtomicCaseSpec = {
     expect(hasWant(result, 'color', 'red')).toBe(true)
     expect(hasWant(result, 'mt', '10px')).toBe(false)
 
-    // The computed-key refusal rides the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // The computed-key refusal rides the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-LEAF-06', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

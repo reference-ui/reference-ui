@@ -15,12 +15,12 @@ consumer. Never reverse; never hand-edit the mirror.
 - **Runtime** (`src/reference/browser/`, neo-owned): loads symbol
   graphs through the tasty browser runtime, exposes the provider,
   hooks, and shell factory. No presentation imports.
-- **Adapter** (`browser/component-api.ts`, seam S2): the narrow
+- **Adapter** (`browser/component-api.ts`): the narrow
   `@reference-ui/types` contract the mirror consumes — provider,
   context hook, default runtime, type-parameter formatter, types.
 - **Presentation** (generated mirror of lib's Reference
   component): renders documents. Owned by lib; mirrored explicitly.
-- **Entry** (Crew C, seam S3): composes runtime + presentation
+- **Entry**: composes runtime + presentation
   into the shipped `Reference` singleton and bundles `types.mjs`.
 - **tasty** (reference-rs, below the cut): owns AST/IR access and
   emits structured type data plus evaluated reductions.

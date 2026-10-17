@@ -123,12 +123,23 @@ impl Usage {
         }
 
         let ratio = count as f64 / total as f64;
-        match ratio {
-            r if r >= thresholds.very_common_min_ratio => Usage::VeryCommon,
-            r if r >= thresholds.common_min_ratio => Usage::Common,
-            r if r >= thresholds.occasional_min_ratio => Usage::Occasional,
-            r if r > 0.0 => Usage::Rare,
-            _ => Usage::Unused,
+        Self::band(ratio, thresholds)
+    }
+
+    /// Bands a usage ratio against the thresholds, highest band first.
+    fn band(ratio: f64, thresholds: &UsageThresholds) -> Self {
+        if ratio >= thresholds.very_common_min_ratio {
+            return Usage::VeryCommon;
         }
+        if ratio >= thresholds.common_min_ratio {
+            return Usage::Common;
+        }
+        if ratio >= thresholds.occasional_min_ratio {
+            return Usage::Occasional;
+        }
+        if ratio > 0.0 {
+            return Usage::Rare;
+        }
+        Usage::Unused
     }
 }

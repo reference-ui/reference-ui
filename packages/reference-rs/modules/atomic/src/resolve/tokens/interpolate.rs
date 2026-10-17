@@ -98,9 +98,7 @@ impl<'a, 's, 'w> SegmentExpander<'a, 's, 'w> {
             }
             if opacity.is_none() {
                 if let Some(tone) = self.expand_tone(inner) {
-                    let Some(css) = tone else {
-                        return None;
-                    };
+                    let css = tone?;
                     self.out.push_str(&css);
                     return Some(&after[close + 1..]);
                 }

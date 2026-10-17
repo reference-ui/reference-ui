@@ -4,6 +4,6 @@ A const-object prop that kept static leaves while dropping a dynamic arm. The wo
 
 Raised in: `modules/atomic/src/extract/expressions/object/entries.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-PARTIAL-OBJECT-PROP (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-PARTIAL-OBJECT-PROP (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-PARTIAL-OBJECT-PROP, atm-w-partial-object-prop, diagnostics case index, NEO-DIAG-39

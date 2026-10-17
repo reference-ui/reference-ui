@@ -10,8 +10,8 @@ use oxc_ast::ast::{
 use oxc_span::GetSpan;
 
 use super::super::slice_span;
+use super::super::StatementScope;
 use crate::ast::model::{ImportBinding, ImportBindingKind};
-use crate::scanner::ImportResolver;
 
 struct ImportBindingEntry {
     local_name: String,
@@ -19,11 +19,8 @@ struct ImportBindingEntry {
 }
 
 pub(in crate::ast::extract) fn collect_import_bindings(
-    resolver: &ImportResolver,
-    current_file_id: &str,
+    scope: &StatementScope<'_>,
     import: &ImportDeclaration<'_>,
-    source: &str,
-    file_id_set: &std::collections::BTreeSet<String>,
     import_bindings: &mut BTreeMap<String, ImportBinding>,
 ) {
     if !matches!(
@@ -37,11 +34,16 @@ pub(in crate::ast::extract) fn collect_import_bindings(
         return;
     };
 
+    let source = scope.scanned_file.source.as_str();
     let source_module = slice_span(source, import.source.span)
         .trim_matches('"')
         .trim_matches('\'')
         .to_string();
-    let target_file_id = resolver.resolve_import(current_file_id, &source_module, file_id_set);
+    let target_file_id = scope.resolver.resolve_import(
+        &scope.scanned_file.file_id,
+        &source_module,
+        scope.file_id_set,
+    );
 
     for specifier in specifiers {
         let entry = import_binding_from_specifier(

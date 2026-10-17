@@ -1,11 +1,11 @@
 //! Node-API bindings for Reference UI atomic style system compilation.
 //! Ingests serialized compilation requests carrying virtual sources and an EvaluatedSystemSpec.
 //! Accepts the legacy `{ baseSystem, rootDir?, files? }` shape and the frozen
-//! `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape for one wave.
+//! `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape for now.
 //! Lowers the spec through base-system's public lowering path, mirroring typegen's seam.
 //! Foreign or malformed specs are rejected with path-bearing error diagnostics, never silently emptied.
 //! Emits the slim serialized result (sheets, runtime, diagnostics, hosts) by default; the
-//! 'proof' logs channel restores the compile-internal rows stations and the differential read.
+//! 'proof' logs channel restores the compile-internal rows cases and the differential read.
 
 use napi::Result;
 use napi_derive::napi;
@@ -124,7 +124,7 @@ pub fn release_scan(token_json: String) -> Result<String> {
 
 /// True when the caller requested the proof backchannel: `logs` containing
 /// 'proof' restores the compile-internal rows the slim default omits. Unknown
-/// channels are ignored so channels evolve additively (S5 precedent).
+/// channels are ignored so channels evolve additively (precedent).
 fn wants_proof(req: &NativeCompileRequest) -> bool {
     req.logs
         .as_ref()
@@ -161,7 +161,7 @@ fn spec_json_text(raw: &serde_json::Value) -> std::result::Result<String, String
     }
 }
 
-/// Preamble-only artifact carrying the rejection diagnostic (station ATM-TOKEN-10).
+/// Preamble-only artifact carrying the rejection diagnostic (case ATM-TOKEN-10).
 fn rejection(message: &str) -> ::atomic::CompileResult {
     let preamble = ::atomic::stylesheet::layers::LAYER_PREAMBLE.to_string();
     ::atomic::CompileResult {
@@ -191,7 +191,7 @@ fn rejection(message: &str) -> ::atomic::CompileResult {
 /// string at enterprise. The portable sheet refolds against the primary
 /// sheet's shared suffix (head + tail length; the wrapper rebuilds the
 /// identical string), saving ~48% of the wire at enterprise. The streams ride
-/// verbatim beside the sheets (no refold): the S2 oracle channel. The
+/// verbatim beside the sheets (no refold): the oracle channel. The
 /// observed `CompileResult` is unchanged.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

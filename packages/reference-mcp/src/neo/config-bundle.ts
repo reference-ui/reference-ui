@@ -2,7 +2,7 @@
 // It takes a config path and emits bundled code plus local dependency paths.
 // Vendored (not retargeted) for one reason only: Neo resolves its author
 // entry from `import.meta.url`, which breaks once bundled into mcp dist
-// (F4). Everything else delegates to Neo's microbundle seam, including the
+// Everything else delegates to Neo's microbundle seam, including the
 // canon base that metafile keys resolve against.
 
 import { existsSync, realpathSync } from 'node:fs'

@@ -11,7 +11,7 @@ import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import { setupFocusVisible } from '../../core/theme/primitives/forms/focus-visible'
 import { NumberFieldContext, type NumberFieldContextValue } from './context'
-import type { NumberFieldProps } from './types'
+import type { NumberFieldCommitBehavior, NumberFieldProps } from './types'
 import { isOnStepLattice, snapValueToLattice } from './step/lattice'
 import { numberFieldDevDiagnostic } from './shared/dev'
 import { useFieldFormatting } from './hooks/use-field-formatting'
@@ -41,6 +41,16 @@ export type {
   NumberFieldStepperName,
 } from './types'
 export { NumberFieldGroup, NumberFieldInput, NumberFieldIncrement, NumberFieldDecrement }
+
+// What the next commit does with an out-of-range controlled value, per mode
+// (step/commit.ts): none clamps; snap snaps through endpoint, lattice, and
+// rounding, then clamps; validate requests the rounded raw candidate as-is and
+// reports it invalid.
+const OUT_OF_RANGE_NEXT_COMMIT: Record<NumberFieldCommitBehavior, string> = {
+  none: 'clamps into range on the next commit.',
+  snap: 'snaps into range on the next commit.',
+  validate: 'is kept on the next commit and reported invalid.',
+}
 
 export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
   function NumberField(
@@ -197,8 +207,9 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
     }, [value, commitBehavior, latticeMin, latticeMax, step, displayRoundTrip])
 
     // Dev-only range diagnostic for a controlled value outside [min, max].
-    // Nothing clamps here: the value renders and reports as given, and the
-    // next commit snaps or clamps it. Absent bounds print as -Infinity and
+    // Nothing clamps here: the value renders and reports as given. The
+    // wording names what the next commit does under this commitBehavior
+    // (OUT_OF_RANGE_NEXT_COMMIT). Absent bounds print as -Infinity and
     // Infinity. Warns once per distinct message; a StrictMode mount re-run
     // repeats the same message and is dropped.
     const lastWarnedRef = React.useRef<string | null>(null)
@@ -213,11 +224,11 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
         lastWarnedRef.current = null
         return
       }
-      const message = `value (${value}) is outside [${String(lower)}, ${String(upper)}]; it renders as given and snaps into range on the next commit.`
+      const message = `value (${value}) is outside [${String(lower)}, ${String(upper)}]; it renders as given and ${OUT_OF_RANGE_NEXT_COMMIT[commitBehavior]}`
       if (lastWarnedRef.current === message) return
       lastWarnedRef.current = message
       numberFieldDevDiagnostic(message)
-    }, [value, min, max])
+    }, [value, min, max, commitBehavior])
 
     // Managed invalid union: application invalid, owned numeric-constraint
     // state, or a retained failed boundary. Application false cannot hide
@@ -243,7 +254,7 @@ export const NumberField = React.forwardRef<HTMLDivElement, NumberFieldProps>(
 
     // Default composition (children omitted): a complete Group with
     // component-authored English stepper names. Consumer-authored steppers
-    // must carry their own aria-label | aria-labelledby (PATCHES §6).
+    // must carry their own aria-label | aria-labelledby.
     const effectiveChildren =
       children ?? (
         <NumberFieldGroup>

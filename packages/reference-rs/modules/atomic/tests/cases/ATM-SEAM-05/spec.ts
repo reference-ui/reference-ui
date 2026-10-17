@@ -1,5 +1,5 @@
 /**
- * Result-carries-discovery station (ATM-SEAM-05). compile() returns
+ * Result-carries-discovery (ATM-SEAM-05). compile() returns
  * tracedJsxHosts on both the legacy and frozen request shapes while the
  * request shape itself is unchanged (no discovery input).
  */

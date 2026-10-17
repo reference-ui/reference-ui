@@ -1,7 +1,7 @@
 /**
- * Atlas station suite executor.
- * Discovers case stations under tests/cases, executes on-demand analysis,
- * runs station semantic specifications, enforces standing schema gauges,
+ * Atlas case suite executor.
+ * Discovers cases under tests/cases, executes on-demand analysis,
+ * runs case semantic specifications, enforces standing schema gauges,
  * and asserts committed JSON analysis and diagnostic goldens.
  */
 import { createStationSuite } from '../../../../testing/index.js'

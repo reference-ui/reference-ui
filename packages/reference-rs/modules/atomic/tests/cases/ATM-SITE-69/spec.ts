@@ -1,5 +1,5 @@
 /**
- * Dynamic-slot station (SPEC-V2-26 GAP-26). An unresolvable identifier in
+ * Dynamic-slot case. An unresolvable identifier in
  * a responsive value array warns once and is omitted while the null hole
  * skips silently; static leaves keep their breakpoints (arity honest).
  */
@@ -28,7 +28,7 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'color')).toHaveLength(1)
     expect(harvestWants(result)).toHaveLength(1)
 
-    // Slot refusals ride the opt-in channel now (S6 E8-class re-point);
+    // Slot refusals ride the opt-in channel;
     // the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-69', { logs: ['compiler'] })

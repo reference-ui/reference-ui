@@ -5,6 +5,7 @@
 
 mod aliases;
 mod analyzer;
+mod declared;
 mod exposure;
 mod hoc;
 mod memo;
@@ -19,9 +20,10 @@ mod util;
 mod walk;
 
 pub use model::{TraceModule, TracedBinding};
-pub use parser::fold_trace_module;
+pub use parser::{fold_trace_module, ModuleFold};
 pub use surface::{
     trace_style_bindings, trace_style_bindings_detailed, trace_style_bindings_with_hint,
     trace_style_bindings_with_modules, trace_style_bindings_with_surface, trace_style_jsx_names,
-    trace_style_jsx_names_with_hint, ModulesTraceInputs, StyleSurface, TraceOutcome, TraceSources,
+    trace_style_jsx_names_with_hint, ModulesTraceInputs, StyleSurface, SurfaceTrace, TraceOutcome,
+    TraceSources,
 };

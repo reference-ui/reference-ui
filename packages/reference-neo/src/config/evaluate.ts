@@ -94,7 +94,7 @@ export async function evaluateConfig(
   } finally {
     await rm(tempDir, { recursive: true, force: true })
     // Drop the project tmp root when this eval leaves it empty, so sync
-    // never strands `.reference-ui/tmp/` behind (coverage-map note d).
+    // never strands `.reference-ui/tmp/` behind.
     // rmdir only removes empty dirs; a shared root stays untouched.
     try {
       await rmdir(tempRoot)
@@ -102,7 +102,7 @@ export async function evaluateConfig(
       // Non-empty or already gone: another eval still owns the root.
     }
     // Drop the output dir itself when the eval leaves it empty, so a
-    // config-load failure leaves no folder behind at all (SYNC-08).
+    // config-load failure leaves no folder behind at all (NEO-SYNC-08).
     try {
       await rmdir(getOutDirPath(dirname(configPath)))
     } catch {

@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-INT-01.
+ * Case specification for TST-INT-01.
  * Verifies Omit utility projection in interface extends clauses and extends chain walking.
  * Proves primary SPEC ID anchor TST-INT-01.
  */

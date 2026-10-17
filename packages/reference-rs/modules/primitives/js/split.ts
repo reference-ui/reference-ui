@@ -6,7 +6,7 @@
 // Everything else passes through untouched, as core's split-props does
 // without its Panda seam.
 
-import type { SystemStyleObject } from './css-types.ts'
+import type { SystemStyleObject } from './css-types.js'
 
 export interface SplitPrimitiveProps {
   className?: string

@@ -141,7 +141,7 @@ const EXPECTED_REACT_DECLS = [
 ] as const;
 
 // Styled-owned names the react entry re-exports through its named graph
-// (generated-folder-shape §7 item 4): the spec pins them in styled types
+// the spec pins them in styled types
 // and proves they import from react in the temp consumer below.
 const EXPECTED_STYLED_NAMES = [
   'StyleProps',

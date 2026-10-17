@@ -30,10 +30,10 @@ use super::css;
 use super::harvest;
 use super::jsx;
 use super::jsx_hosts::JsxHosts;
-use super::wrapper_thread::WrapperThreads;
 use super::recipes;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{ScopeChain, ScopeId, ROOT_SCOPE};
+use super::wrapper_thread::WrapperThreads;
 
 /// AST visitor collecting style wants and diagnostics from JSX and calls.
 pub struct ExtractVisitor<'a> {
@@ -57,8 +57,8 @@ pub struct ExtractVisitor<'a> {
     pub authored: Vec<crate::runtime::AuthoredDeclaration>,
     pub sinks: Vec<harvest::Sink>,
     pub session: DiagnosticsSession,
-    pub recipe_bindings: Vec<RecipeBinding>,
-    pub tentative: Vec<TentativeSelection>,
+    pub(crate) recipe_bindings: Vec<RecipeBinding>,
+    pub(crate) tentative: Vec<TentativeSelection>,
     missing_graph_reported: bool,
 }
 

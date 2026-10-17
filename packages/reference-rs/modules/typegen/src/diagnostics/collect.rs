@@ -2,7 +2,7 @@
 //! Mirrors the printer guards one by one — unknown token categories, unprintable
 //! recipes, invalid compound rows, skipped strict names, weightless font families —
 //! so `emit_dts_detailed` reports exactly what `emit_dts` omits. Rows sort by code
-//! and message and dedupe, keeping station goldens and repro assertions deterministic.
+//! and message and dedupe, keeping case goldens and repro assertions deterministic.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -118,7 +118,7 @@ fn first_unknown_when<'row>(
             .variants
             .get(axis)
             .is_some_and(|values| values.contains_key(value));
-        (!known).then(|| (axis.as_str(), value.as_str()))
+        (!known).then_some((axis.as_str(), value.as_str()))
     })
 }
 

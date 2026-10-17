@@ -1,5 +1,5 @@
 /**
- * Const-branch station (ATM-SITE-23, RS-37). A `const` bound to a ternary
+ * Const-branch (ATM-SITE-23). A `const` bound to a ternary
  * or logical of literals — in a component body or top-level — behaves like
  * the inline branch: one want and one runtime style plan per literal leaf.
  * Fully dynamic identifiers still warn and mint nothing.
@@ -98,7 +98,7 @@ const spec: AtomicCaseSpec = {
 
     // The fully dynamic identifier warns and mints nothing at the site;
     // its sink infos a zero count (the pool holds no compatible value) —
-    // both on the opt-in channel now (S6 E8-class re-point); default silent.
+    // both on the opt-in channel; default silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-23', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

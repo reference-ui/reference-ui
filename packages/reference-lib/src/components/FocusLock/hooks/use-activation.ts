@@ -25,7 +25,7 @@ export function useActivation(
   }
 ): void {
   const { disabled, rememberInside, restoreOnce, scheduleRestore } = options
-  const { clearReclaimFrame, lockId } = session
+  const { lockId } = session
 
   React.useEffect(() => {
     if (disabled) {
@@ -104,7 +104,6 @@ export function useActivation(
     }
 
     return () => {
-      clearReclaimFrame()
       const live = locksForDocument(doc)
       const wasTop = live[live.length - 1]?.id === lockId
       unregisterLock(lockId)
@@ -122,5 +121,5 @@ export function useActivation(
         scheduleRestore(doc, container)
       }
     }
-  }, [clearReclaimFrame, disabled, lockId, rememberInside, scheduleRestore])
+  }, [disabled, lockId, rememberInside, scheduleRestore])
 }

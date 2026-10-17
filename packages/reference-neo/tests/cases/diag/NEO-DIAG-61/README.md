@@ -4,6 +4,6 @@ A recipe with no printable variant axes, or one empty axis; skipped at the repor
 
 Raised in: `modules/typegen/src/diagnostics/collect.rs`. Driver: the whole typegen printer (`emitDtsDetailed` over the case spec).
 
-Evidence: `[diag]` TGN-W-EMPTY-RECIPE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TGN-W-EMPTY-RECIPE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TGN-W-EMPTY-RECIPE, tgn-w-empty-recipe, diagnostics case index, NEO-DIAG-61

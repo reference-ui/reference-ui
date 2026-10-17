@@ -117,8 +117,8 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
     let mut tentative = Vec::new();
     let mut recipe_bindings = Vec::new();
     let mut selections = Vec::new();
-    // One compile-long diagnostics session (S3): analysis reports first,
-    // then producers; proof and the S5 partition render from it at the end.
+    // One compile-long diagnostics session: analysis reports first,
+    // then producers; proof and the partition render from it at the end.
     let mut diag_session = diagnostics::DiagnosticsSession::new();
     // Parse phase: allocators, programs, constants, graphs, and the
     // analysis input borrow the sources and die inside. Only the filled
@@ -221,7 +221,7 @@ pub(crate) fn streaming_candidate(content: &str) -> bool {
 }
 
 /// Parse one source: JSX follows the extension (`.tsx` on, `.ts` off),
-/// so `.ts`-only `<T>` assertions parse only when JSX is off (SPEC-V2-07).
+/// so `.ts`-only `<T>` assertions parse only when JSX is off.
 /// Shared with the resolver's streamed refinement, which re-parses the same
 /// bytes the staging pass already screened.
 pub(crate) fn parse_source<'a>(
@@ -235,37 +235,8 @@ pub(crate) fn parse_source<'a>(
     Parser::new(allocator, content, source_type).parse()
 }
 
-/// Retained-program reuse maps: position-keyed programs for the identity
-/// walk, path-keyed programs for the styletrace re-parse. Panicked
-/// positions stay out of both (each falls back to bytes, preserving the
-/// failure); errored positions stay out of the trace map only, so the
-/// entry re-parse reproduces its diagnostic identically.
-fn reuse_programs<'a>(
-    sources: &'a [(String, String)],
-    parsed: &'a [oxc_parser::ParserReturn<'a>],
-    retained: &[usize],
-    slots: &[stream::SourceSlot],
-    errors: &[Vec<(String, Option<u32>)>],
-) -> (
-    FxHashMap<usize, &'a Program<'a>>,
-    FxHashMap<PathBuf, &'a Program<'a>>,
-) {
-    let mut identity = FxHashMap::default();
-    let mut trace = FxHashMap::default();
-    for (position, &i) in retained.iter().enumerate() {
-        if slots[i].panicked {
-            continue;
-        }
-        identity.insert(i, &parsed[position].program);
-        if errors[i].is_empty() {
-            trace.insert(PathBuf::from(&sources[i].0), &parsed[position].program);
-        }
-    }
-    (identity, trace)
-}
-
 /// Report the independent diagnostics analysis expectations into the
-/// compile session. Renders nothing; Slice 4 joins proof from these facts
+/// compile session. Renders nothing; proof joins from these facts
 /// after plans exist.
 fn report_analysis_expectations(
     analysis: &diagnostics::analysis::AnalysisInput<'_>,

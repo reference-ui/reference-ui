@@ -1,5 +1,5 @@
-# ATM-SITE-76 — Import-identity station (SPEC-V2-59 alias + I2 arms)
+# ATM-SITE-76 — Import-identity (alias + I2 arms)
 
 Aliased, named multi-declaration, and string-literal `css` imports are
-live sites. Pins the SPEC-V2-59 alias arm (v2 `imports.rs:34`) and the
-I2 string-literal arm (`bindings.rs:131`).
+live sites. Pins the alias arm and the
+string-literal arm (`packages/reference-rs/modules/atomic/src/extract/bindings.rs:254`).

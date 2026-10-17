@@ -1,5 +1,5 @@
 /**
- * Dark preset station. `_dark` lowers to `[data-color-mode=dark] &` and
+ * Dark preset case. `_dark` lowers to `[data-color-mode=dark] &` and
  * applies as `[data-color-mode=dark] .<system>__dark\:…`. Host attribute
  * proof is ATM-COND-08. Nested chains are ATM-COND-04.
  */

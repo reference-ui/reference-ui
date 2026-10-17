@@ -5,7 +5,7 @@
  * R1 number:
  * sink census, pool triple, net-new vs gross, byte cells, and Node parse
  * times. Preconditions: the census JSON is fresh, and `dist/namer.mjs` is
- * built for the react bundle. The `react.mjs` cell carries the mission's
+ * built for the react bundle. The `react.mjs` cell carries the
  * re-verify-after-Jettison-acceptance caveat.
  */
 import fs from 'node:fs'
@@ -19,8 +19,18 @@ import { compile } from '../../js/index.js'
 import type { CompileResult, Want } from '../../js/types.js'
 import { LIB_SYSTEM_SPEC } from '../harness/helpers.js'
 import { buildModel, type ModelWhen } from '../harness/harvest-model.js'
-import { publishRuntimeBundle } from '../../../../../reference-neo/src/packager/styled.ts'
-import { publishReactBundle } from '../../../../../reference-neo/src/packager/react.ts'
+import { publishRuntimeBundle } from '../../../../../reference-neo/src/packager/styled.js'
+import { publishReactBundle } from '../../../../../reference-neo/src/packager/react.js'
+import {
+  EXPECTED_BYTES,
+  EXPECTED_COMPILER_CODES,
+  EXPECTED_GROSS,
+  EXPECTED_NET_NEW,
+  EXPECTED_POOL,
+  EXPECTED_SINKS,
+  EXPECTED_TRIPLE,
+  type SinkRow,
+} from '../harness/harvest-census-pins.js'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURE_SRC = path.join(HERE, '..', 'fixtures', 'harvest-enterprise', 'src')
@@ -32,7 +42,7 @@ const CENSUS_JSON = path.join(
   'pool-census.json'
 )
 
-/** Mission M-cells: classes / raw / gzip-6 / brotli-11. Variants pin classes + raw only. */
+/** M-cells: classes / raw / gzip-6 / brotli-11. Variants pin classes + raw only. */
 const M_CELLS: { total: 300 | 500; whens: ModelWhen[]; cells: number[] }[] = [
   { total: 300, whens: ['rest'], cells: [22468, 1561214, 165455, 89987] },
   { total: 500, whens: ['rest'], cells: [33806, 2395791, 249341, 130121] },
@@ -43,124 +53,6 @@ const M_CELLS: { total: 300 | 500; whens: ModelWhen[]; cells: number[] }[] = [
     whens: ['rest', '_hover', '_focusVisible', '_focus', '_active', '_disabled', 'md'],
     cells: [236642, 23531645],
   },
-]
-
-type SinkRow = [prop: string, when: string[], kind: string, minted: number]
-
-/** Expected sink census, `(prop, when)` sorted: the evidence numbers, pinned. */
-const EXPECTED_SINKS: SinkRow[] = [
-  ['backgroundColor', [], 'color', 7],
-  ['backgroundImage', [], 'url', 11],
-  ['bg', [], 'color', 15],
-  ['borderBottomColor', [], 'color', 7],
-  ['borderColor', [], 'color', 6],
-  ['color', [], 'color', 5],
-  ['color', ['_hover'], 'color', 7],
-  ['display', [], 'keyword', 5],
-  ['fill', [], 'color', 8],
-  ['fontSize', [], 'length', 171],
-  ['height', [], 'length', 172],
-  ['margin', [], 'length', 173],
-  ['marginBlock', [], 'length', 172],
-  ['marginBottom', [], 'length', 175],
-  ['marginInline', [], 'length', 174],
-  ['marginLeft', [], 'length', 174],
-  ['marginRight', [], 'length', 175],
-  ['marginTop', [], 'length', 175],
-  ['maxWidth', [], 'length', 172],
-  ['minWidth', [], 'length', 172],
-  ['outlineColor', [], 'color', 7],
-  ['padding', [], 'length', 168],
-  ['paddingBlock', [], 'length', 173],
-  ['paddingBottom', [], 'length', 173],
-  ['paddingInline', [], 'length', 173],
-  ['paddingLeft', [], 'length', 173],
-  ['paddingRight', [], 'length', 173],
-  ['paddingTop', [], 'length', 173],
-  ['stroke', [], 'color', 8],
-  ['transform', [], 'transform', 10],
-  ['width', [], 'length', 171],
-  ['width', ['md'], 'length', 176],
-]
-
-const EXPECTED_NET_NEW = 3554
-const EXPECTED_POOL = { color: 149, keyword: 7, length: 170, math: 0, transform: 6, url: 8 }
-const EXPECTED_GROSS = 3615
-
-/** Expected `(|P-L|, |P∩L|, |P|)` by kind: the D1 bound, pinned. */
-const EXPECTED_TRIPLE: Record<string, [number, number, number]> = {
-  color: [75, 74, 149],
-  keyword: [3, 4, 7],
-  length: [119, 51, 170],
-  math: [0, 0, 0],
-  transform: [4, 2, 6],
-  url: [6, 2, 8],
-}
-
-/** Expected byte cells: filled from the first measured run, then pinned. */
-const EXPECTED_BYTES = {
-  // 2026-10-06 gray re-pin: gray.950 anchored to onyx #040711 with hue matched
-  // up the ramp; token value string lengths moved -19 raw, +4 gzip, +82 brotli.
-  // stylePlans/harvestWants unchanged.
-  // 2026-10-07 color-allowlist re-pin: harvested colors narrow to token-
-  // licensed words + currentColor/transparent + CSS-wide keywords; the 1249
-  // unlicensed color wants leave the sheet (-100075 raw, -13055 gzip,
-  // -5656 brotli) and stylePlans one-for-one.
-  // 2026-10-12 tones re-pin: the lib system ships eight `--tones-*` root
-  // declarations, adding +245 raw, +48 gzip, +7 brotli; stylePlans unchanged.
-  cssRaw: 241240,
-  cssGzip: 28472,
-  cssBrotli: 15592,
-  stylePlans: 3689,
-  harvestWants: EXPECTED_NET_NEW,
-  // C5: +599 raw / +171 gzip is runtime derivation code (stem/key/index/
-  // compound ports); the fixture ships 0 recipes so its data bytes are 0.
-  // Axis shorthands: +42 raw is the four baked names
-  // ("marginX","marginY","paddingX","paddingY"); the rest of the move from
-  // the 149479/32889 pin is in-flight tree drift, re-verify at landing.
-  // 2026-09-25 -> 158073/39595 post-Jettison (Slices 0-4 + W4 legs);
-  // 2026-09-28 landing -> 158317/39664 (+244/+69), react.mjs-only with all
-  // CSS pins green (red since before root-var). 2026-09-28 NAMER ->
-  // 158291/39659 (-26/-5): miss.ts comma-split deletion shrinks the
-  // shipped probe. 2026-10-08 font-weight runtime -> 159077/39933
-  // (+786/+274): scope.ts family scoping ships in react.mjs via css();
-  // A/B without scope.ts reproduces 158291/39659 exactly, CSS pins green
-  // throughout. 2026-10-08 bundler unification Arc D -> 153457/37735
-  // (-5620/-2198): the probe bundles dist/primitives.mjs (minified) in, and
-  // the raw-esbuild leg drops tsup's SWC __name wrappers plus the node:
-  // strip from it; A/B with the tsup-built dist reproduces 159077/39933
-  // exactly. 2026-10-10 F2 diagnostic miss-message change -> 153469/37738
-  // (+12/+3): the css() miss message carries the class name and the call
-  // site, react.mjs-only with all CSS pins green. 2026-10-13 data-layer stamp
-  // follows the ancestor's system (0b124ea85, NEO-LAYERS-09) -> 153626/37786
-  // (+157/+48): the context.ts stamp rule, react.mjs-only; A/B with only that
-  // file reverted reproduces 153469/37738 exactly, CSS pins untouched.
-  // 2026-10-15 recipe dev-warn (3eefd6318) and namer weight fallback
-  // (3eefd6318) -> 154208/38004 (+582/+218): recipe.ts + css.ts at dc35f0c6a
-  // give 153716/37805 (+492/+199), lower.ts at dc35f0c6a gives 154118/37986
-  // (+90/+18); raw sums to the total, gzip leaves one byte (77b21e2bf and
-  // 45ad65b9d not A/B'd); 3eefd631 is mcp-only; CSS pins untouched.
-  // 2026-10-15 runtime prod gate -> 154213/38023 (+5/+19): runtime/env.ts
-  // replaces the typeof-process guard and the packager keeps
-  // process.env.NODE_ENV unbaked for the consumer's bundler; A/B with only
-  // those neo files reverted reproduces 154208/38004 exactly, CSS pins untouched.
-  // Re-verify if acceptance moves bytes.
-  reactRaw: 154213,
-  reactGzip: 38023,
-  fixtureRules: 3693,
-  m500Rules: 33806,
-}
-
-/**
- * Expected backchannel histogram: 135 static-leaf lookups, 33 dynamic sites
- * (32 holes + the gap control), 33 dynamic warnings, but only 32 sink infos
- * — the gap site warns yet never sinks (record-time filter).
- */
-const EXPECTED_COMPILER_CODES: [string, number][] = [
-  ['ATM-I-EXPECTED-LOOKUP', 135],
-  ['ATM-I-DYNAMIC-SLOT', 33],
-  ['ATM-W-DYNAMIC-IDENTIFIER', 33],
-  ['ATM-I-HARVEST-SINK', 32],
 ]
 
 interface PoolCensus {

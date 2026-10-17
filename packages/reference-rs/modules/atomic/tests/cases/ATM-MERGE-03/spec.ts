@@ -1,5 +1,5 @@
 /**
- * Array argument in css() station (ATM-MERGE-03).
+ * Array argument in css() (ATM-MERGE-03).
  * Asserts that array arguments in css() act as unconditioned merge lists,
  * skipping false without diagnostics, and applying no breakpoint conditions.
  */

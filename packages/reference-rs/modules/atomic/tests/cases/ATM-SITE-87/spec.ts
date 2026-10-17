@@ -1,5 +1,5 @@
 /**
- * Member-form collection station (ATM-SITE-87). Compound assignments
+ * Member-form collection (ATM-SITE-87). Compound assignments
  * (`Tabs.Panel = TabPanel`) mint dotted hosts, so member-form use sites
  * collect: inline literals and const spreads alike. `Tabs.List` is the
  * concatenation-coincidence control (it collected even before dotted

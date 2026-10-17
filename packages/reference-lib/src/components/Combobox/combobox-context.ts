@@ -21,10 +21,10 @@ export interface ComboboxOptionEntry {
    */
   index?: number
   /**
-   * Tree-bridge metadata (FEATURES #6). A nested Tree item passes true
+   * Tree-bridge metadata. A nested Tree item passes true
    * when it is a branch (has children); leaves omit it. Combobox uses
    * this to decide whether horizontal keys emit an expansion request —
-   * leaves swallow the key with no request (documented, HQ-flagged).
+   * leaves swallow the key with no request (documented).
    */
   isBranch?: boolean
 }
@@ -46,7 +46,7 @@ export interface ComboboxTreeExpansionRequest {
 }
 
 /**
- * Inline-completion policy (#1, W-24). Mirrors `aria-autocomplete` on the
+ * Inline-completion policy (#1). Mirrors `aria-autocomplete` on the
  * Input verbatim (`inline` is a valid ARIA 1.2 token). `inline` and `both`
  * share completion mechanics (complete + select remainder); the token tells
  * AT whether a list is also presented.
@@ -109,7 +109,7 @@ export interface ComboboxContextValue {
   /** Inline-completion policy (#1, default `list`). */
   autocomplete: ComboboxAutocomplete
   /**
-   * Custom-value policy (#2, W-24, Ark-exact name). `true` commits exact
+   * Custom-value policy (#2, Ark-exact name). `true` commits exact
    * unmatched text as the value on Enter/Tab/blur; `false` reverts.
    */
   allowCustomValue: boolean
@@ -227,7 +227,7 @@ export interface ComboboxContextValue {
   registerPopover: (id?: string) => () => void
   revertToCommittedText: () => void
   /**
-   * Unmatched-text session resolution (#2, W-24). With `allowCustomValue`
+   * Unmatched-text session resolution (#2). With `allowCustomValue`
    * commits exact text (empty maps to `null`); otherwise restores committed
    * text. Silent when the text already matches the committed value.
    * Select-only and two-authority conflicts resolve to no-ops.
@@ -238,7 +238,7 @@ export interface ComboboxContextValue {
 export const ComboboxContext = React.createContext<ComboboxContextValue | null>(null)
 
 /**
- * PATCHES #1 (CB-ENV-03): the popover's portal destination follows the
+ * CB-ENV-03: the popover's portal destination follows the
  * focus source. A source inside an open ShadowRoot keeps its popover in
  * that same root; light-DOM sources (and SSR, where ShadowRoot is
  * undefined) keep the default body destination.

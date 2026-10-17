@@ -11,6 +11,7 @@ function doc(): Document {
 
 describe('announce', () => {
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.useRealTimers()
   })
 
@@ -246,10 +247,7 @@ describe('announce', () => {
   })
 
   it('ANN-API-05: Announcer should stay silent on ambiguous untargeted calls in production', async () => {
-    const proc = (globalThis as { process?: { env: Record<string, string | undefined> } }).process
-    expect(proc).toBeDefined()
-    const prevEnv = proc!.env.NODE_ENV
-    proc!.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     vi.resetModules()
     const fresh = await import('./Announcer')
     const d1 = doc()
@@ -266,11 +264,6 @@ describe('announce', () => {
       fresh.unregisterAnnouncerDocument(d1)
       fresh.unregisterAnnouncerDocument(d2)
       warn.mockRestore()
-      if (prevEnv === undefined) {
-        delete proc!.env.NODE_ENV
-      } else {
-        proc!.env.NODE_ENV = prevEnv
-      }
     }
   })
 })

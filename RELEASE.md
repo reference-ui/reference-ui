@@ -1,6 +1,6 @@
 # Release go-list
 
-Work top to bottom once `plan.md` wraps up. Each box is one shippable step;
+Work top to bottom. Each box is one shippable step;
 tick it when its check passes.
 
 ## 1. Binaries
@@ -35,9 +35,10 @@ tick it when its check passes.
 
 ## 3. Publish (in this order)
 
-- [ ] `@reference-ui/rust`: adds the `contracts`, `diagnostics`,
-      `primitives` and `namer` exports that neo's declarations import (0.0.42
-      lacks them).
+- [ ] `@reference-ui/rust`: publish with all 13 subpath exports; 0.0.42 has
+      6 and lacks `./atomic`, `./namer`, `./system`, `./typegen`,
+      `./diagnostics`, `./primitives` and `./contracts`, which Neo imports.
+      Bump the version (0.0.42 is already on the registry).
 - [ ] `@reference-ui/icons`: republish (0.0.43 ships broken declarations),
       bump lib's icons pin, and drop the lib smoke's `SIBLING_OWNED_PREFIXES`
       tolerance.
@@ -65,14 +66,14 @@ tick it when its check passes.
       NumberField renders `999` with `max={10}` verbatim; Calendar marks a
       disabled out-of-range day `aria-selected`; Listbox and Tree ignore an
       unmatched value or id without a word (mirror Tabs' warning).
-- [ ] Dev warnings may print in production. Lib's "not production" check reads
+- [x] Dev warnings may print in production. Lib's "not production" check reads
       `globalThis.process`; a browser bundle with no `process` shim may count
       as development, so Slider, Splitter, Tabs and the four new out-of-range
       warnings could reach real users' consoles. Neo's `isProductionBuild`
       (runtime `css()` misses and the new recipe missing-table warning) has the
       same `typeof process` gap. One shared helper, proven in a production build.
-- [ ] Listbox: an uncontrolled `selection="multiple"` Listbox with options
-      never settles, because `Listbox.tsx:57` makes a new `[]` every render.
+- [x] Listbox: an uncontrolled `selection="multiple"` Listbox with options
+      never settles, because it made a new `[]` every render.
 - [x] A user `ui.config` that imports the `@reference-ui/lib` barrel pays
       ~1.5s of config evaluation on every sync; only in-repo configs are
       guarded (neo `src/config/base-system-import.test.ts`). Document the
@@ -81,7 +82,7 @@ tick it when its check passes.
       bodies, optional-chain calls, `throw`, template literals and `new`
       arguments, so a component used only there (e.g. inside an
       `ErrorBoundary` class) is missing from component and primitive stats.
-- [ ] Repo hygiene: sweep crew-era handoff docs (mission codes, dead
-      `docs/MISSIONS` links) before the repo goes public.
+- [x] Repo hygiene: remove the working-process docs and the links that
+      pointed at them before the repo goes public.
 - [ ] Branding.
 - [ ] Push `public-release` and open it up.

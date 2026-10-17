@@ -152,7 +152,7 @@ const ListboxOptionBase = React.forwardRef<HTMLDivElement, ListboxOptionProps>(
       fontSize="3.5r"
       lineHeight="5r"
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      /* B-38: standalone selection uses the muted wash (Menu/Tree parity;
+      /* Standalone selection uses the muted wash (Menu/Tree parity;
          ui.button.background renders near-white in dark mode). Combobox
          active-highlight keeps the paired button tokens (transient). */
       bg={

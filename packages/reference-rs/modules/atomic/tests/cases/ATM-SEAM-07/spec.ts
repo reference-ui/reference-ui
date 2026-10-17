@@ -1,5 +1,5 @@
 /**
- * Atom-count independence station (ATM-SEAM-07). The runtime artifact is a
+ * Atom-count independence (ATM-SEAM-07). The runtime artifact is a
  * function of the system, never of the atoms: compiling the fixture plus a
  * file of 500 distinct harvestable hexes and one color hole grows the sheet
  * by 500 rules while the runtime bytes stay identical. The sheet count is

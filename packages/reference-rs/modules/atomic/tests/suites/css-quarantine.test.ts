@@ -1,6 +1,6 @@
 /**
  * CSS quarantine meta-tests and golden-writer guard.
- * Reads committed station goldens, not live compile output: an entry that now
+ * Reads committed case goldens, not live compile output: an entry that now
  * parses must be removed from the list. Also proves `--update-goldens` will
  * refuse a stylesheet that fails validation outside the quarantine, which is
  * how every current defect originally entered the repo.

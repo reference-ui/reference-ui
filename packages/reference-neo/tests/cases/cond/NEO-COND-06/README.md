@@ -6,10 +6,8 @@ checks the sheet carries exactly one utility keeping the `> p`
 combinator, the child paints brand, and the grandchild and the middle
 `div` keep the ink baseline.
 
-Evidence: `[atm]` ATM-COND-14 (R1 probe
-`/tmp/cond-batch2-r1/probe.mjs` emits the `> p` rule); `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:189`
-"[pseudo] should work with nested selector"; `[lib]`
+Evidence: ATM-COND-14 (probes emits the `> p` rule); Panda v1 test "[pseudo]
+should work with nested selector"; reference-lib
 `packages/reference-lib/.reference-ui/styled/styles.css` (15 `>`
 child/descendant selectors, e.g. `.ref-button > svg`).
 

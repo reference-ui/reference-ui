@@ -1,7 +1,7 @@
 /**
  * No-eval tripwire. Function-call leaves diagnose and are dropped. Static
  * siblings still extract. The atomic crate does not depend on a JS VM.
- * (S6 E8-class re-point: the call refusal rides the opt-in compiler
+ * (the call refusal rides the opt-in compiler
  * channel; the default channel is silent.)
  */
 import fs from 'node:fs'

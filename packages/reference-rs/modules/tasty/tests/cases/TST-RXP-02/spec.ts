@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-RXP-02.
+ * Case specification for TST-RXP-02.
  * Verifies complex re-export edge cases, barrels, and circular references.
  * Proves primary SPEC ID anchor TST-RXP-02.
  */
@@ -127,7 +127,7 @@ const spec: StationSpec<TastyCaseResult> = {
       expectUnderlyingPresent(sym)
     }
 
-    // Wave 6 find q: `StarWidget` is provided by two `export *` targets of
+    // `StarWidget` is provided by two `export *` targets of
     // the ambiguity barrel, so the barrel exports nothing (tsc TS2308) and
     // the consumer member stays an unresolved external descriptor.
     const use = await api.loadSymbolByName('StarAmbiguityUse')

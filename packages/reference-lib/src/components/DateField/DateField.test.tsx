@@ -39,7 +39,7 @@ describe('DateField required locale (FEATURES #1)', () => {
     const second = renderToString(
       <DateField value="2024-02-01" onChange={() => {}} locale="en-GB" />
     )
-    // B-24 fix: the visible input shows locale grammar, never raw ISO.
+    // The visible input shows locale grammar, never raw ISO.
     expect(first).toContain('01/02/2024')
     expect(first).not.toContain('2024-02-01')
     expect(second).toBe(first)

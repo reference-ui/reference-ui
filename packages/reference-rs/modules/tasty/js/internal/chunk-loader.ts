@@ -7,7 +7,7 @@ import {
   resolveArtifactPath,
   type ArtifactImporter,
   type ModuleNamespace,
-} from './shared'
+} from './shared.js'
 
 interface ChunkLoaderOptions {
   manifestPath?: string

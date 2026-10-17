@@ -1,5 +1,5 @@
 /**
- * Base rhythm station. `1r` lowers to `var(--spacing-root)`. Multipliers,
+ * Base rhythm case. `1r` lowers to `var(--spacing-root)`. Multipliers,
  * fractions, and authored negatives live in ATM-RHYTHM-02/03/05.
  */
 import { expect } from 'vitest'

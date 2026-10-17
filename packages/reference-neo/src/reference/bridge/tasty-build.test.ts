@@ -1,7 +1,7 @@
 // Reference tasty scan-options suite: it takes a scratch project with a staged
 // outDir and emits the scan-root pins — project root, config includes passed
 // through untouched, the neo decl closure appended only when present. Pure
-// options, no tasty build; the S5 probe proves the closure resolves for real.
+// options, no tasty build; the probe proves the closure resolves for real.
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

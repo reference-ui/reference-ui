@@ -1,5 +1,5 @@
 /**
- * Seam parity station (ATM-SEAM-01).
+ * Seam parity (ATM-SEAM-01).
  * Verifies that the N-API bridge produces valid NativeRuntimeArtifact,
  * stylesheet, portableStylesheet, and diagnostics matching the native Rust contract.
  */

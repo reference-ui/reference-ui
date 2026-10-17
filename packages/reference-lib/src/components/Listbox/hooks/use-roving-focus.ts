@@ -89,7 +89,16 @@ export function useRovingFocus(
           nextTarget = ordered.find(o => !o.disabled)
         }
 
-        if (nextTarget) {
+        // Adopt DOM focus that already sits on a live option. A stale focusedValue can
+        // outlive its option, and this effect may run after a focus event moved focus
+        // to an option, so recovery must not pull that focus back to its own target.
+        const liveFocus =
+          typeof document === 'undefined'
+            ? undefined
+            : ordered.find(o => !o.disabled && o.ref.current === document.activeElement)
+        if (liveFocus) {
+          setFocusedValue(liveFocus.value)
+        } else if (nextTarget) {
           setFocusedValue(nextTarget.value)
           nextTarget.ref.current?.focus()
         } else {

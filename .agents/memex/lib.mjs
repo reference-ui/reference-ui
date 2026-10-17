@@ -1,12 +1,11 @@
 /**
  * Memex engine: manifests in, ranked docs out. No CLI side effects.
  *
- * Manifest collections (doom, cases, rs-cases, surfaces, perf, flames) load from
+ * Manifest collections (cases, rs-cases, surfaces) load from
  * `.agents/memex/collections/*.json`; the graph system collection is
  * built in. Everything is read live on every call, so there is no
  * stale state and no rebuild step. MiniSearch ranks globally over
- * manifest collections, except targeted perf search, which keeps its
- * exact substring-AND semantics. The graph is targeted-only: thousands
+ * manifest collections. The graph is targeted-only: thousands
  * of harvested headers would drown curated hits in a global rank, so
  * it answers --in graph and show <path>.
  */
@@ -18,12 +17,8 @@ import { createRequire } from 'node:module'
 import {
   collectMarkdown,
   collectNeo,
-  collectPerf,
   collectRs,
   collectRsCases,
-  formatPerfShow,
-  perfCounts,
-  substringSearch,
 } from './adapters.mjs'
 import { GRAPH_NAME, chainShow, collectGraph } from './graph.mjs'
 import { collectComponents } from './components.mjs'
@@ -79,7 +74,7 @@ export function loadManifests() {
   return manifests.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-/** Collect every doc of one manifest; perf entries ride along for global rank. */
+/** Collect every doc of one manifest. */
 export function collectCollection(manifest, root = ROOT) {
   switch (manifest.kind) {
     case 'markdown': {
@@ -103,8 +98,6 @@ export function collectCollection(manifest, root = ROOT) {
       return collectRs(join(root, manifest.root), root, manifest.name)
     case 'rs-case':
       return collectRsCases(join(root, manifest.root), root, manifest.name)
-    case 'perf':
-      return collectPerf(join(root, manifest.index), manifest.name)
     case GRAPH_NAME:
       return collectGraph(root)
     default:
@@ -212,30 +205,13 @@ function rankMini(docs, boosts, query, terms, limit, weigh) {
 
 /**
  * Ranked search. No query + no collection lists collections; no query +
- * a collection lists its roster. Targeted perf search keeps exact
- * substring-AND semantics; everything else ranks through MiniSearch.
+ * a collection lists its roster. Everything ranks through MiniSearch.
  * Global rank weights authoritative collections over evidence logs.
  */
 export function search(all, query, { collection = null, limit = DEFAULT_LIMIT } = {}) {
   const terms = query.trim().split(/\s+/).filter(Boolean)
   if (collection != null) {
     const docs = all.docs.filter(d => d.collection === collection)
-    if (collection === 'perf') {
-      const entries = docs.map(d => d.payload.entry)
-      const matches = substringSearch(entries, query)
-      const exclude = new Set()
-      return {
-        hits: matches.slice(0, limit).map(e =>
-          toHit(
-            docs.find(d => d.id === e.id),
-            null,
-            terms,
-            exclude
-          )
-        ),
-        total: matches.length,
-      }
-    }
     const boosts = {}
     for (const [field, weight] of Object.entries(
       all.manifest(collection).weights || {}
@@ -270,16 +246,7 @@ export function loadAll(manifests, root = ROOT) {
 
 export function roster(all, collection, limit = LIST_CAP) {
   const docs = all.docs.filter(d => d.collection === collection)
-  if (collection === 'perf') {
-    const { waves, verdicts } = perfCounts(docs.map(d => d.payload.entry))
-    const built = docs[0]?.payload.built ?? '?'
-    return {
-      docs: docs.slice(0, limit),
-      total: docs.length,
-      header: { built, waves, verdicts },
-    }
-  }
-  return { docs: docs.slice(0, limit), total: docs.length, header: null }
+  return { docs: docs.slice(0, limit), total: docs.length }
 }
 
 export const CANDIDATE_CAP = 10
@@ -329,8 +296,6 @@ function resolvePath(root, ref) {
 function formatDocShow(doc) {
   const head = `${doc.collection}:${doc.id} — ${doc.title}`
   switch (doc.kind) {
-    case 'perf':
-      return formatPerfShow(doc.payload.entry)
     case 'neo': {
       const p = doc.payload
       const lines = [head, `path: ${doc.path}`, `family: ${p.family}`]

@@ -3,7 +3,7 @@ import { Div, Button, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'
 import { Switch, type SwitchThumbProps } from './index'
 
-// PATCHES item 1: HOC-forwarded thumb — an opaque wrapper component that
+// HOC-forwarded thumb — an opaque wrapper component that
 // renders Switch.Thumb inside. Structural detection must see through it
 // (no element-type probing can), so exactly one thumb still renders.
 const ForwardedSwitchThumb = React.forwardRef<HTMLSpanElement, SwitchThumbProps>(
@@ -66,7 +66,7 @@ export const StatesFixture = () => (
   </ReferenceLibrary>
 )
 
-// Quarantine-parity fixture: mirrors matrix/lib/src/switch.tsx section-for-section
+// Parity fixture: a plain Switch demo, one section per prop surface
 // (same testids) so the salvaged SW-* cases run against the preserved API.
 export const ParityFixture = () => {
   const [dom01Checked, setDom01Checked] = React.useState(false)
@@ -150,7 +150,7 @@ export const ParityFixture = () => {
                 ref={el => { setDom04ThumbTag(el ? el.tagName : '') }}
                 data-testid="sw-dom-04-authored-thumb"
                 width="2r"
-                bg="bg"
+                bg="design.bg.muted"
               />
               <span data-testid="sw-dom-04-extra">Extra Visual</span>
             </Switch>

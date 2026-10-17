@@ -1,5 +1,5 @@
 /**
- * `:is()` armour station (ATM-COND-24, SPEC-V2-69). Under a stacked parent
+ * `:is()` armour (ATM-COND-24). Under a stacked parent
  * with a top-level combinator, a template member with multiple `&` means
  * `:is(parent)`; a single leading `&` stays textual. Mirrors v2
  * `nested_selector_parity.rs:675/:686` plus the `:hover` textual control.

@@ -17,7 +17,8 @@ use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
 use super::component::{
-    component_from_function_declaration, component_from_function_like, FunctionLikeContext,
+    component_from_function_like, declared_from_function_declaration,
+    declared_from_function_like, FunctionLikeContext,
 };
 use super::factory::factory_from_function_declaration;
 use super::classes;
@@ -157,7 +158,7 @@ fn collect_function_export(
     ctx: &ParserContext,
     state: &mut ParseState,
 ) -> Result<(), StyleTraceError> {
-    if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
+    if let Some((name, component)) = declared_from_function_declaration(function, ctx)? {
         state.components.insert(name, component);
     }
     if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
@@ -279,7 +280,7 @@ fn collect_default_function(
         body_statements: function.body.as_ref().map(|body| &body.statements),
         wrapper_props: WrapperProps::default(),
     };
-    let Some(component) = component_from_function_like(&context, ctx)? else {
+    let Some(component) = declared_from_function_like(&context, ctx)? else {
         return Ok(());
     };
     state.components.insert(component_name.clone(), component);

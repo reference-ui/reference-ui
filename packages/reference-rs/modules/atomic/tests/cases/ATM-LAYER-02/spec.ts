@@ -1,5 +1,5 @@
 /**
- * Empty-layer station. Reset, base, and recipes stay omitted when the dump
+ * Empty-layer case. Reset, base, and recipes stay omitted when the dump
  * has nothing for them. Fixture globalCss and tokens do populate those layers.
  */
 import { expect } from 'vitest'

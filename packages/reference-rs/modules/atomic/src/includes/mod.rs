@@ -1,4 +1,4 @@
-//! Include-glob scoping for atomic source discovery (RS-10, station ATM-SCAN-01).
+//! Include-glob scoping for atomic source discovery (case ATM-SCAN-01).
 //! Compiles the frozen request's `include` patterns once so the disk scan and the
 //! legacy virtual `files` list honor one scope. Patterns follow fast-glob flavor:
 //! `**` crosses directories, `*` and `?` stay inside a segment, `{a,b}` braces

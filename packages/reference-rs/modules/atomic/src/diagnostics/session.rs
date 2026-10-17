@@ -4,7 +4,7 @@
 //! report [`DiagnosticFact`] values into it through the [`DiagnosticSink`]
 //! protocol, and final proof reads the owned facts back after plans exist.
 //! The session owns data, never AST references, so expectations outlive the
-//! parse they were derived from. Slice 3 wires producers to this store.
+//! parse they were derived from. Producers are wired to this store.
 
 use super::{DiagnosticFact, DiagnosticSink};
 

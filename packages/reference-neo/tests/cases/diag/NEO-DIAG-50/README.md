@@ -4,6 +4,6 @@ One name indexes several symbols; disambiguate by id or scope. The world carries
 
 Raised in: `modules/tasty/src/generator/bundle/modules/manifest.rs`. Driver: the whole tasty compiler (`buildTasty` over the case world).
 
-Evidence: `[diag]` TST-W-DUPLICATE-SYMBOL-NAME (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-W-DUPLICATE-SYMBOL-NAME (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-W-DUPLICATE-SYMBOL-NAME, tst-w-duplicate-symbol-name, diagnostics case index, NEO-DIAG-50

@@ -1,5 +1,5 @@
 /**
- * Observed-use gating station. Literal calls keep plain rules plus exactly
+ * Observed-use gating case. Literal calls keep plain rules plus exactly
  * the observed responsive triples; a spread call fails closed to the full
  * matrix; uncalled, alias-imported, and bare definitions shake their rules
  * while every runtime table still builds.

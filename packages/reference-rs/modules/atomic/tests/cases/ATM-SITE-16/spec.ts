@@ -1,5 +1,5 @@
 /**
- * Cross-file station. A `const` declared in tokens.ts resolves at sites
+ * Cross-file case. A `const` declared in tokens.ts resolves at sites
  * in App.tsx, while styles under node_modules, dist, .reference-ui, and
  * non-source extensions are never compiled.
  */

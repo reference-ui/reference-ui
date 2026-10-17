@@ -1,6 +1,7 @@
-//! Rust source file for Reference UI module.
-//! Responsible for domain logic, AST parsing, or utility functions.
-//! See module README for architecture details.
+//! Export collection for module-level declarations: named `export` declarations, re-export specifiers, and
+//! default-exported interfaces. A statement is read through an [`ExportScope`] (the file, its extraction context,
+//! and the resolver with the workspace file ids) and writes into [`ExportOutputs`] (the export-name map, the
+//! re-export targets, the star list, and the emitted symbol shells).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -12,137 +13,137 @@ use oxc_span::{GetSpan, Span};
 
 use super::super::slice_span;
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
-use super::super::ExtractionContext;
+use super::super::{ExtractionContext, ShellSink};
 use super::imports::module_export_name_to_string;
 use crate::ast::model::SymbolShell;
 use crate::scanner::ImportResolver;
 
+/// Read-only inputs for one file's export statements: the file id, its extraction context, and the resolver with
+/// the workspace file ids.
+pub(crate) struct ExportScope<'s, 'a> {
+    pub(crate) file_id: &'s str,
+    pub(crate) ctx: &'s ExtractionContext<'a>,
+    pub(crate) resolver: &'s ImportResolver,
+    pub(crate) file_id_set: &'s BTreeSet<String>,
+}
+
+/// Mutable destinations for one file's exports: the export-name map, the re-export targets, the star re-export
+/// list, and the emitted symbol shells.
+pub(crate) struct ExportOutputs<'s> {
+    pub(crate) export_bindings: &'s mut BTreeMap<String, String>,
+    pub(crate) reexport_target: &'s mut BTreeMap<String, (String, String)>,
+    pub(crate) export_all_targets: &'s mut Vec<String>,
+    pub(crate) exports: &'s mut Vec<SymbolShell>,
+}
+
 pub(in crate::ast::extract) fn collect_exported_declaration(
-    file_id: &str,
-    ctx: &ExtractionContext<'_>,
+    scope: &ExportScope<'_, '_>,
     export_decl: &ExportNamedDeclaration<'_>,
-    export_bindings: &mut BTreeMap<String, String>,
-    reexport_target: &mut BTreeMap<String, (String, String)>,
-    resolver: &ImportResolver,
-    file_id_set: &BTreeSet<String>,
-    exports: &mut Vec<SymbolShell>,
+    out: &mut ExportOutputs<'_>,
 ) {
     let Some(declaration) = export_decl.declaration.as_ref() else {
-        record_named_reexports(
-            resolver,
-            export_decl,
-            ctx.source,
-            export_bindings,
-            reexport_target,
-            file_id,
-            file_id_set,
-        );
+        record_named_reexports(scope, export_decl, out);
         return;
     };
 
-    let pass = ExportPass::new(file_id, ctx);
-
     match declaration {
         Declaration::TSInterfaceDeclaration(decl) => {
-            pass.named_interface(decl, export_decl.span(), export_bindings, exports);
+            named_interface(scope, decl, export_decl.span(), out);
         }
         Declaration::TSTypeAliasDeclaration(decl) => {
-            pass.named_type_alias(decl, export_decl.span(), export_bindings, exports);
+            named_type_alias(scope, decl, export_decl.span(), out);
         }
         _ => {}
     }
 }
 
 pub(in crate::ast::extract) fn collect_default_export_declaration(
-    file_id: &str,
-    ctx: &ExtractionContext<'_>,
+    scope: &ExportScope<'_, '_>,
     export_default: &ExportDefaultDeclaration<'_>,
-    export_bindings: &mut BTreeMap<String, String>,
-    exports: &mut Vec<SymbolShell>,
+    out: &mut ExportOutputs<'_>,
 ) {
-    let pass = ExportPass::new(file_id, ctx);
-
     match &export_default.declaration {
         ExportDefaultDeclarationKind::TSInterfaceDeclaration(decl) => {
-            pass.default_interface(decl, export_default.span(), export_bindings, exports);
+            default_interface(scope, decl, export_default.span(), out);
         }
         ExportDefaultDeclarationKind::Identifier(id) => {
-            bind_default_to(id.name.as_str(), export_bindings);
+            bind_default_to(id.name.as_str(), out.export_bindings);
         }
         _ => {}
     }
 }
 
-struct ExportPass<'a> {
-    file_id: &'a str,
-    ctx: &'a ExtractionContext<'a>,
+fn named_interface(
+    scope: &ExportScope<'_, '_>,
+    decl: &TSInterfaceDeclaration<'_>,
+    comment_span: Span,
+    out: &mut ExportOutputs<'_>,
+) {
+    let name = decl.id.name.to_string();
+    bind_export_name_to_local(&name, &name, out.export_bindings);
+    let mut sink = ShellSink {
+        file_id: scope.file_id,
+        ctx: scope.ctx,
+        exports: &mut *out.exports,
+    };
+    push_interface_shell(&mut sink, decl, comment_span, true);
 }
 
-impl<'a> ExportPass<'a> {
-    fn new(file_id: &'a str, ctx: &'a ExtractionContext<'a>) -> Self {
-        Self { file_id, ctx }
-    }
+fn named_type_alias(
+    scope: &ExportScope<'_, '_>,
+    decl: &TSTypeAliasDeclaration<'_>,
+    comment_span: Span,
+    out: &mut ExportOutputs<'_>,
+) {
+    let name = decl.id.name.to_string();
+    bind_export_name_to_local(&name, &name, out.export_bindings);
+    let mut sink = ShellSink {
+        file_id: scope.file_id,
+        ctx: scope.ctx,
+        exports: &mut *out.exports,
+    };
+    push_type_alias_shell(&mut sink, decl, comment_span, true);
+}
 
-    fn named_interface(
-        &self,
-        decl: &TSInterfaceDeclaration<'_>,
-        comment_span: Span,
-        export_bindings: &mut BTreeMap<String, String>,
-        exports: &mut Vec<SymbolShell>,
-    ) {
-        let name = decl.id.name.to_string();
-        bind_export_name_to_local(&name, &name, export_bindings);
-        push_interface_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
-    }
-
-    fn named_type_alias(
-        &self,
-        decl: &TSTypeAliasDeclaration<'_>,
-        comment_span: Span,
-        export_bindings: &mut BTreeMap<String, String>,
-        exports: &mut Vec<SymbolShell>,
-    ) {
-        let name = decl.id.name.to_string();
-        bind_export_name_to_local(&name, &name, export_bindings);
-        push_type_alias_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
-    }
-
-    fn default_interface(
-        &self,
-        decl: &TSInterfaceDeclaration<'_>,
-        comment_span: Span,
-        export_bindings: &mut BTreeMap<String, String>,
-        exports: &mut Vec<SymbolShell>,
-    ) {
-        bind_default_to(decl.id.name.as_str(), export_bindings);
-        push_interface_shell(self.file_id, self.ctx, decl, comment_span, true, exports);
-    }
+fn default_interface(
+    scope: &ExportScope<'_, '_>,
+    decl: &TSInterfaceDeclaration<'_>,
+    comment_span: Span,
+    out: &mut ExportOutputs<'_>,
+) {
+    bind_default_to(decl.id.name.as_str(), out.export_bindings);
+    let mut sink = ShellSink {
+        file_id: scope.file_id,
+        ctx: scope.ctx,
+        exports: &mut *out.exports,
+    };
+    push_interface_shell(&mut sink, decl, comment_span, true);
 }
 
 pub(in crate::ast::extract) fn record_named_reexports(
-    resolver: &ImportResolver,
+    scope: &ExportScope<'_, '_>,
     export_decl: &ExportNamedDeclaration<'_>,
-    source: &str,
-    export_bindings: &mut BTreeMap<String, String>,
-    reexport_target: &mut BTreeMap<String, (String, String)>,
-    current_file_id: &str,
-    file_id_set: &BTreeSet<String>,
+    out: &mut ExportOutputs<'_>,
 ) {
+    let source = scope.ctx.source;
     let target_file_id = export_decl.source.as_ref().and_then(|src| {
         let source_module = slice_span(source, src.span)
             .trim_matches('"')
             .trim_matches('\'')
             .to_string();
-        resolver.resolve_import(current_file_id, &source_module, file_id_set)
+        scope
+            .resolver
+            .resolve_import(scope.file_id, &source_module, scope.file_id_set)
     });
 
     for spec in &export_decl.specifiers {
         let local = module_export_name_to_string(&spec.local, source);
         let exported = module_export_name_to_string(&spec.exported, source);
 
-        export_bindings.insert(exported, local.clone());
+        out.export_bindings.insert(exported, local.clone());
         if let Some(ref target) = target_file_id {
-            reexport_target.insert(local.clone(), (target.clone(), local));
+            out.reexport_target
+                .insert(local.clone(), (target.clone(), local));
         }
     }
 }

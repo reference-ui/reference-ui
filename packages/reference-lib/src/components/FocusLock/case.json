@@ -780,6 +780,13 @@
       "kind": "unit",
       "file": "types.test.ts",
       "title": "FL-TYPE-01 exposes the documented child shape and focus option unions"
+    },
+    {
+      "id": "LIB-FOCUSLOCK-112",
+      "name": "FocusLock Composition Gates & Browser Proofs FL-TRAP-08: removing the focused node reclaims focus before the next task",
+      "kind": "ct",
+      "file": "__e2e__/FocusLock.ct.spec.ts",
+      "title": "FocusLock Composition Gates & Browser Proofs FL-TRAP-08: removing the focused node reclaims focus before the next task"
     }
   ]
 }

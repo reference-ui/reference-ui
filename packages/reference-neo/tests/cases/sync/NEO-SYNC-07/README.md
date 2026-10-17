@@ -1,6 +1,6 @@
 # NEO-SYNC-07 — stale files from a previous sync are removed
 
-Evidence: `[core]` clean behaviour (`packages/reference-core/src/clean/command.ts` removes the output dir recursive-force before regenerating).
+Evidence: `sync/index.ts` clean (removes the output dir recursive-force before regenerating).
 
 The runner syncs this world fresh, then the spec plants yesterday's
 leftovers — a top-level junk file, a stale module inside `system/`, and a

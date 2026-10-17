@@ -119,7 +119,7 @@ export function useGridFocus(options: GridFocusOptions) {
       } else {
         // Committed but unusable (out of bounds/removed) → drop and
         // relocate to one valid tab target without stealing focus
-        // (CA-KEY-10). Unavailable targets stay usable (W-21).
+        // (CA-KEY-10). Unavailable targets stay usable.
         pendingFocusRef.current = null
       }
     }

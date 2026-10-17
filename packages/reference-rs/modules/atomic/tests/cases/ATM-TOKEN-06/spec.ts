@@ -1,5 +1,5 @@
 /**
- * Opacity-modifier station. The modern rgb() slash form passes through
+ * Opacity-modifier case. The modern rgb() slash form passes through
  * untouched, malformed modifiers pass through and warn, and only the
  * well-formed modifier produces color-mix.
  */

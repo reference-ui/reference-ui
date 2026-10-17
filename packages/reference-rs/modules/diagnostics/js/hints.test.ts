@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-import { warningHintFor } from './index'
+import { warningHintFor } from './index.js'
 
 /** The five modules whose `codes.rs` tables mint the warning codes hints must cover. */
 const CODE_TABLES = [

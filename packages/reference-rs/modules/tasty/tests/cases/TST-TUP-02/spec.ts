@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TUP-02.
+ * Case specification for TST-TUP-02.
  * Indexing a rest tuple yields the rest element's item type, for a literal index and for `number`.
  * An optional element stays unresolved, because its type would gain `undefined` under strictNullChecks.
  */

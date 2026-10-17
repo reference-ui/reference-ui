@@ -109,7 +109,12 @@ pub fn lower_call_spread(
         } else if super::super::expressions::object::is_condition_key(key, walk.breakpoints) {
             let mut nested_when = when.clone();
             nested_when.push(key.clone());
-            lower_call_condition(walk, value, &nested_when, span, key);
+            let site = ConditionSite {
+                when: &nested_when,
+                span,
+                key,
+            };
+            lower_call_condition(walk, value, site);
         } else if is_known_style_prop(key) {
             plan_call_entry(walk, key, value, when);
             let mut expr_walk = walk.expression_walk(key);
@@ -158,29 +163,36 @@ fn lower_call_r(
         };
         let mut nested_when = when.clone();
         nested_when.push(query.into());
-        lower_call_condition(walk, entry, &nested_when, span, trimmed);
+        let site = ConditionSite {
+            when: &nested_when,
+            span,
+            key: trimmed,
+        };
+        lower_call_condition(walk, entry, site);
     }
 }
 
 /// Lower a folded condition value: objects recurse, anything else warns.
-fn lower_call_condition(
-    walk: &mut ObjectWalk<'_>,
-    value: &FenceValue,
-    when: &SmallVec<[Box<str>; 2]>,
-    span: Span,
-    key: &str,
-) {
+fn lower_call_condition(walk: &mut ObjectWalk<'_>, value: &FenceValue, site: ConditionSite<'_>) {
     match value {
-        FenceValue::Object(entries) => lower_call_spread(walk, entries, when, span),
+        FenceValue::Object(entries) => lower_call_spread(walk, entries, site.when, site.span),
         _ => {
             walk.warn_help(
-                span,
+                site.span,
                 DiagnosticCode::NonObjectCondition,
                 "Condition block expected object expression",
-                vec![format!("give condition '{key}' a style object")],
+                vec![format!("give condition '{}' a style object", site.key)],
             );
         }
     }
+}
+
+/// One condition block being lowered: its nested `when` scope, its authored span, and the key that
+/// names it.
+struct ConditionSite<'a> {
+    when: &'a SmallVec<[Box<str>; 2]>,
+    span: Span,
+    key: &'a str,
 }
 
 /// Plan one known prop of a folded spread: one authored entry per leaf.
@@ -242,99 +254,7 @@ fn json_array(items: &[FenceValue]) -> Option<Value> {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::{compile, CompileRequest, VirtualSource};
-
-    fn compile_logs(code: &str) -> crate::CompileResult {
-        let req = CompileRequest {
-            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
-            base_system: crate::BaseSystem::lib_fixture().clone(),
-            logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
-            ..Default::default()
-        };
-        compile(&req).expect("compile succeeds")
-    }
-
-    fn compile_code(code: &str) -> crate::CompileResult {
-        let req = CompileRequest {
-            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
-            base_system: crate::BaseSystem::lib_fixture().clone(),
-            logs: Some(vec!["proof".to_string()]),
-            ..Default::default()
-        };
-        compile(&req).expect("compile succeeds")
-    }
-
-    /// An unknown folded-spread key suggests like a literal key, userspace.
-    #[test]
-    fn folded_spread_unknown_prop_help_suggests() {
-        let res = compile_code(
-            "import { css } from '@reference-ui/react';\
-             function getStyles() { return { colr: 'red' }; }\
-             export const cls = css({ ...getStyles() });",
-        );
-        let hits: Vec<_> = res
-            .diagnostics
-            .iter()
-            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::UnknownProperty)
-            .collect();
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].help,
-            Some(vec![
-                "did you mean `color`?".to_string(),
-                "remove 'colr' or check its spelling".to_string(),
-            ])
-        );
-    }
-
-    /// An unknown folded `r` key suggests the closest scale name.
-    #[test]
-    fn folded_spread_unknown_breakpoint_help_suggests() {
-        let res = compile_logs(
-            "import { css } from '@reference-ui/react';\
-             function getStyles() { return { r: { md2: { p: '1r' } } }; }\
-             export const cls = css({ ...getStyles() });",
-        );
-        let hits: Vec<_> = res
-            .compiler_diagnostics
-            .as_deref()
-            .expect("compiler channel requested")
-            .iter()
-            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::UnknownBreakpoint)
-            .collect();
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].help,
-            Some(vec![
-                "did you mean `md`?".to_string(),
-                "use a breakpoint from the theme".to_string(),
-            ])
-        );
-    }
-
-    /// A scalar folded condition names its key in the fix.
-    #[test]
-    fn folded_spread_scalar_condition_help_names_the_key() {
-        let res = compile_logs(
-            "import { css } from '@reference-ui/react';\
-             function getStyles() { return { _hover: 'red' }; }\
-             export const cls = css({ ...getStyles() });",
-        );
-        let hits: Vec<_> = res
-            .compiler_diagnostics
-            .as_deref()
-            .expect("compiler channel requested")
-            .iter()
-            .filter(|d| d.code == crate::diagnostics::DiagnosticCode::NonObjectCondition)
-            .collect();
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].help,
-            Some(vec!["give condition '_hover' a style object".to_string()])
-        );
-    }
-}
+mod tests;
 
 /// Every planned JSON leaf of a folded value for multi-valued positions:
 /// leaves fan out (nulls omit), compounds plan as one, mirroring the walker.

@@ -1,5 +1,5 @@
 /**
- * Typegen vocabulary intake for the primitives generator, over the landed W0 napi.
+ * Typegen vocabulary intake for the primitives generator, over the typegen napi.
  * Fetches PropDefs names via primitivesVocabulary() and cross-checks the named
  * conditions against the generated canon Rust table to catch a stale native binary.
  * Fails closed on unsorted props, breakpoint keys in the system-independent set, and

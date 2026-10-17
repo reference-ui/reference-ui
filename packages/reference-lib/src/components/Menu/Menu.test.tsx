@@ -780,7 +780,7 @@ describe('Menu component keyboard navigation and triggers', () => {
   })
 })
 
-// Red-team Hunt 1 fortify pin (P4): entry keys on an ALREADY-OPEN trigger
+// Fortify pin: entry keys on an ALREADY-OPEN trigger
 // plant no consumable intent. Each leg plants from the open trigger, closes,
 // then reopens: genuine key reopens land per the fresh key, and a
 // gesture-free programmatic reopen lands on the container.
@@ -828,7 +828,7 @@ describe('Menu plant-site pin', () => {
     })
   }
 
-  it('P4: Up/Down on an already-open trigger plants no consumable intent', async () => {
+  it('Up/Down on an already-open trigger plants no consumable intent', async () => {
     const control = { setOpen: (_v: boolean) => {} }
     function Harness() {
       const [open, setOpen] = React.useState(false)

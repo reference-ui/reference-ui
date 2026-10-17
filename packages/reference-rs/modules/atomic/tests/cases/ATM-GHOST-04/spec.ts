@@ -1,5 +1,5 @@
 /**
- * Unknown `_nope` collision station. The unrecognised condition must not
+ * Unknown `_nope` collision case. The unrecognised condition must not
  * wrap `:nope` onto the sibling `c_red` class. The standing injectivity
  * gauge stays blocked on ATM-LEAF-05 (`p` / `padding`).
  */

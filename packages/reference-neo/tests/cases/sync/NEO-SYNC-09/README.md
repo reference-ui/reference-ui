@@ -6,8 +6,8 @@ syncs fresh, then the spec counts utilities node-side: the sheet carries
 exactly one `neo-sync09__c_red` and zero `neo-sync09__c_blue`, while
 `system/compile-request.json` pins the `include` globs `sync()` sent on the
 frozen request (RS-10). The skipped file fails silent engine-side — the
-station records zero diagnostics for it — so sync surfaces nothing.
+case records zero diagnostics for it — so sync surfaces nothing.
 
-Evidence: `[panda-v1]` `node/__tests__/glob-dirname.test.ts`, `[atm]` ATM-SCAN-01 (RS-10), TESTS.md RS lane.
+Evidence: Panda v1 glob-dirname tests, ATM-SCAN-01 (RS-10), the reference-rs gaps section of TESTS.md.
 
 > Search terms: allowlist, scan-boundary, silent-skip, deny-by-default, in versus out, scoped scan, sync/include-scope, sync/scan-filtering, NEO-SYNC-04

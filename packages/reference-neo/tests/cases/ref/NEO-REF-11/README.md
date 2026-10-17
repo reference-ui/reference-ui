@@ -12,6 +12,6 @@ and asserts the preserved manifest's bytes are unchanged across `sync`.
 
 ## Oracle mapping
 
-Voyage map section 5 (mandatory): a case asserting sync output identical AND sync-complete before
+Mandatory: a case asserting sync output identical AND sync-complete before
 tasty-manifest-ready. Numbered 11 because 10 is the lib re-commission, which is proven outside cases (lib
 typecheck plus Book fixtures). The snapshot walker mirrors NEO-SYNC-06 minus the background-owned subtree.

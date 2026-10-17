@@ -166,7 +166,7 @@ fn walk_const_flat_object(
 /// Walk one recorded const object in style mode: single-leaf entries go
 /// exact, nested maps recurse as conditions, and multi-leaf, residue, or
 /// empty entries stay dynamic. Recorded responsive objects stay dynamic in
-/// S2: nested const maps never build query values yet. Every fact points at
+/// Nested const maps never build query values yet. Every fact points at
 /// the use-site `span`: the prediction is made from this site.
 pub fn walk_const_object(walk: &mut WalkCtx<'_>, obj: &ConstObject, when: &[Box<str>], span: Span) {
     for (key, prop) in obj.iter() {

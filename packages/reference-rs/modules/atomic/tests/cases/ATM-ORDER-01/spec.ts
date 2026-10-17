@@ -1,5 +1,5 @@
 /**
- * Magnitude sort station. `@container` min-width blocks emit 640 → 1536,
+ * Magnitude sort case. `@container` min-width blocks emit 640 → 1536,
  * not lexicographic 1024-first. `@media` max-width blocks emit descending.
  */
 import { expect } from 'vitest'

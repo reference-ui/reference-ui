@@ -4,6 +4,6 @@ A `!` marker on a responsive-object leaf, refused at the extraction boundary. Th
 
 Raised in: `modules/atomic/src/extract/expressions/responsive.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-RESPONSIVE-LEAF-IMPORTANT (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-RESPONSIVE-LEAF-IMPORTANT (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-RESPONSIVE-LEAF-IMPORTANT, atm-w-responsive-leaf-important, diagnostics case index, NEO-DIAG-21

@@ -20,28 +20,27 @@ stable-surface pre-run typecheck.
 
 ## Engine
 
-No Atomic stations: the engine is typegen `emitDtsDetailed`, verified present
-2026-09-17 (`ls packages/reference-rs/modules/typegen/{js/,README.md,SPEC.md,
+No Atomic cases: the engine is typegen `emitDtsDetailed`, verified present (`ls packages/reference-rs/modules/typegen/{js/,README.md,SPEC.md,
 tests/goldens/}` + README/SPEC/goldens read). It prints `.d.ts` strings from
 `BaseSystem` + canon and never touches `atomic` (TYP-FORBID-06). Leans:
 TYP-TOKEN-01..06 (category unions + `Tokens`), TYP-STYLE-02/03/04/05
 (`StyleProps`, `StyleConditionKey`, `StylePropValue<T> = T | Array<T | null> |
 condition map`, recursion without TS2589), TYP-RECIPE-01/02 (plain optional
 unions), TYP-FONT-01..03, TYP-STRICT-01..05 (callable via `emit_dts_with`,
-exposed as the `strict` config per D17; hatch names stay absent),
+exposed as the `strict` config; hatch names stay absent),
 TYP-FORBID-01..06. Caveats, all settled engine contracts,
 no RS: open mode keeps `Token | (string & {})` (TYP-STRICT-04), so TYPE-02
 asserts at a `ColorToken`-typed position; `StyleConditionKey` carries `@sm`,
-never bare `sm` (TYP-STYLE-03, D8); recipe variants are plain unions, not
+never bare `sm` (TYP-STYLE-03); recipe variants are plain unions, not
 `ConditionalValue`-wrapped (TYP-RECIPE-01).
 
 ## Decisions
 
-D5 (TYPE-01 targets `react/react.d.mts` + `./styles.css` names). D6 (TYPE-05:
+(TYPE-01 targets `react/react.d.mts` + `./styles.css` names). (TYPE-05:
 `defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`,
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
-root). D8/D10 (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
-Panda and typegen agree). D17 (`strict` is wired: config → typegen, validated,
+root). (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
+Panda and typegen agree). (`strict` is wired: config → typegen, validated,
 narrowing JSX style props and css, proved for colours by NEO-TYPE-09 (token,
 toned and keyword colours assign; six off-token colours are rejected at their
 consumer line); lib component props are not promised to follow consumer
@@ -55,7 +54,7 @@ PRIM-10; the single `index.d.mts` must become the named graph).
 
 ## Approved absences
 
-- `strictTokens` / `WithEscapeHatch` / `ImportantMark` hatches (D17): engine
+- `strictTokens` / `WithEscapeHatch` / `ImportantMark` hatches: engine
   support exists (`styles-strict.d.ts` golden, seam TYP-NATIVE-03) but no
   config exposes the hatch names; the `strict` category list is the exposed
   narrowing. Panda `generate-style-props` / `generate-prop-types` are contrast
@@ -64,10 +63,10 @@ PRIM-10; the single `index.d.mts` must become the named graph).
   (`JsxFactory`, `JsxElements`, `HTMLStyledProps`, `Styled`): TYP-FORBID-02/03;
   primitives are authored React, layout is primitives + `css()`.
 - `recipes/*.d.ts` module trees and `tokens.mjs` / `token()` / `token.var`
-  runtime (TYP-FORBID-04/05; D15): one central types string, `{path}` refs only.
+  runtime (TYP-FORBID-04/05;): one central types string, `{path}` refs only.
 - `styled/types/global.d.ts` (`declare module '@pandacss/dev'`): §4.1 forbids
   `@pandacss` anywhere; TYPE-06 asserts it.
-- `TokenCategory` / `ColorPalette` / `colorPalette.*` unions: D14, no lib author
+- `TokenCategory` / `ColorPalette` / `colorPalette.*` unions:, no lib author
   uses the virtual palette.
 - `textStyles` / `layerStyles` / `animationStyles`, asset tokens,
   `formatTokenName` `$` prefixes, hashed var names: zero lib/core matches or
@@ -81,5 +80,5 @@ PRIM-10; the single `index.d.mts` must become the named graph).
 | `ConditionalValue`-wrapped recipe variants | Panda `generate-recipe` shape; Neo prints plain optional unions |
 | `csstype.Properties` dump / `@reference-ui/styled` type re-export | TYP-STYLE-01: `SystemStyleObject` is owned |
 | Atomic class names (`.mt_2r`) in `.d.ts` | TYP-FORBID-01: engine internals, never public API |
-| `cva` alias, `css.raw` | D3/D16: `recipe` / `recipe().raw()` only |
-| `token.var` JS map, `globalVars` unions | No `token()` runtime (D15) |
+| `cva` alias, `css.raw` | `recipe` / `recipe().raw()` only |
+| `token.var` JS map, `globalVars` unions | No `token()` runtime |

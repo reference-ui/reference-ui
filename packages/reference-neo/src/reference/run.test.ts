@@ -170,7 +170,9 @@ describe('reference/bridge/run reporting', () => {
       expect.objectContaining({ status: 'complete', warningCount: 0, diagnosticCount: 0 })
     )
   })
+})
 
+describe('reference/bridge/run json output', () => {
   it('prints the ref array on stdout for unfolded json landings only', async () => {
     const { onRunBuild } = await importRunModule()
     const logged = vi.spyOn(console, 'log').mockImplementation(() => {})

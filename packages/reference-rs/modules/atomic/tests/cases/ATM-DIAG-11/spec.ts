@@ -1,11 +1,11 @@
 /**
- * Unknown-values station (ATM-DIAG-11, Operation Error Correct, Slice 5).
+ * Unknown-values.
  * Identifiers, members, `${n}px` / `${color}` templates, calls, `a+b`
  * binaries, and spreads never become userspace warnings — refusal without
  * an exact expected lookup proves no runtime miss. Those refusals ride the
  * opt-in `compilerDiagnostics` channel (`logs: ['compiler']`); the default
  * channel carries none of them.
- * Guard correction (E8-class): non-vacuity reads the opt-in channel, since
+ * Guard correction: non-vacuity reads the opt-in channel, since
  * the default channel must carry no unknown-value refusals by contract.
  */
 import { expect } from 'vitest'
@@ -39,7 +39,7 @@ const spec: AtomicCaseSpec = {
 
     // Guard: the fixture must actually refuse unknown values today,
     // otherwise the silence assertion below would pass vacuously. Reads
-    // the opt-in channel (E8-class correction — the default must carry none).
+    // the opt-in channel (the default must carry none).
     expect(
       compilerDiags!.some(d => isUnknownValue(d.code ?? '')),
       'fixture refuses no unknown values to silence'

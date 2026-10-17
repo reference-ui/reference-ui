@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-TYPE-01.
+ * Case specification for ATL-TYPE-01.
  * Validates that unsupported inline type annotations are omitted from component
  * inventory and flagged with explicit compiler diagnostics.
  * Proves primary SPEC anchor ATL-TYPE-01.

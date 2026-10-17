@@ -4,6 +4,6 @@ Wildcard on a prop with no token category. The world carries only config plus th
 
 Raised in: `modules/atomic/src/static_css.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-STATIC-WILDCARD (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-STATIC-WILDCARD (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-STATIC-WILDCARD, atm-w-static-wildcard, diagnostics case index, NEO-DIAG-11

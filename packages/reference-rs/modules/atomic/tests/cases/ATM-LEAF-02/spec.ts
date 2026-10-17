@@ -1,5 +1,5 @@
 /**
- * Nested ternary extract station. Every reachable literal arm across nesting
+ * Nested ternary extract case. Every reachable literal arm across nesting
  * depths becomes a want. Logical guards around the ternary do not drop
  * leaves. Undefined omission is ATM-LEAF-03.
  */

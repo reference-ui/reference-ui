@@ -21,6 +21,27 @@ document-scoped Zustand stores, not a context tree. See
 </ReferenceLibrary>
 ```
 
+## Color mode
+
+Runtime hosts (the Toast host) render where `ReferenceLibrary` is mounted, not
+in a portal. Mount it inside the app's `colorMode` root so hosts inherit the
+mode through React context and DOM ancestry, and follow live toggles:
+
+```tsx
+<Div colorMode={mode}>
+  <ReferenceLibrary>
+    <App />
+  </ReferenceLibrary>
+</Div>
+```
+
+That root must not create a containing block for fixed-position descendants:
+no `transform`, `filter`, `contain`, or `container-type`, because toast stacks
+are `position: fixed`. Mounted outside a `colorMode` root, a host reads
+`data-color-mode` from `<html>` once at render and does not follow later
+toggles. Toast chrome colors follow `toaster.theme` (`data-theme`), not color
+mode.
+
 ## Proposed API
 
 ```ts
@@ -35,6 +56,7 @@ interface ReferenceLibraryProps {
     gap?: number
     offset?: number | string
     closeButton?: boolean
+    theme?: ToastTheme
     richColors?: boolean
     invert?: boolean
     dir?: "rtl" | "ltr" | "auto"
@@ -62,13 +84,13 @@ do not require being nested under it.
 
 The toaster renders at the React root without a portal. `announce()` is the same live region without a visual toast. If `toast.show` runs before this mounts, the queue must replay (see `Toast.md`).
 
-**Vendor.** Sonner’s app-level `<Toaster />`. Spectrum OverlayProvider / live announcer — **leave** as a required wrapper for overlays. Our Overlay does not need this node.
+**Prior art.** Sonner’s app-level `<Toaster />`. Spectrum OverlayProvider / live announcer — **leave** as a required wrapper for overlays. Our Overlay does not need this node.
 
 ### Tooltip skip-delay group
 
 After one tooltip shows, neighbours open instantly for a short window. Vendors implement this as `Tooltip.Provider` / `FloatingDelayGroup` / a module `tooltips` map.
 
-**Vendor.** Radix `skipDelayDuration` on Provider. Aria `globalWarmedUp`. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
+**Prior art.** Radix `skipDelayDuration` on Provider. Aria `globalWarmedUp`. Zag `setGlobalId`. Floating UI `FloatingDelayGroup`.
 
 **Lift** the algorithm. **Leave** the public Provider. The group is a
 document-scoped Zustand store mounted here (`components.md`,

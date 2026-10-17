@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-GEN-01.
+ * Case specification for TST-GEN-01.
  * Verifies generic type parameters, constraints, underlying structures, and type arguments.
  * Proves primary SPEC ID anchor TST-GEN-01.
  */

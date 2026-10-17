@@ -7,5 +7,4 @@ reference through `import * as ns` resolves. `relay.ts` re-exports the namespace
 (`export { tree } from './barrel'`), and a consumer that reaches `tree.Leaf` through the relay must resolve
 the same way. A second consumer that imports `Leaf` straight from the barrel must not resolve to it.
 
-Origin: doom round break TST-DOOM-15. Before the fix, `export * as` was read as a plain `export *`, so the
-barrel flattened `Leaf` and the namespace name `tree` was lost.
+Guards against `export * as` being read as a plain `export *`, which would flatten `Leaf` into the barrel and lose the namespace name `tree`.

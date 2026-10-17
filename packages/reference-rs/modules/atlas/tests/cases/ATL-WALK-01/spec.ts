@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-WALK-01.
+ * Case specification for ATL-WALK-01.
  * Validates that the JSX walker reaches every expression position: a class render(), an optional
  * call argument, a throw, a template literal and a `new` argument each yield one call site for the
  * local component placed there, and the observed Button inside each is counted once per form.

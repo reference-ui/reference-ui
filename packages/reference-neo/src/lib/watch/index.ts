@@ -201,6 +201,36 @@ interface WatchRun {
   abort: () => Promise<void>
 }
 
+// What the trigger scope of one run is built from: the initial scope, the roots and the sinks it reports to.
+interface TriggerScopeSetup {
+  projectRoot: string
+  watchRoot: string
+  initial: ReturnType<typeof deriveScope>
+  subscriptions: Map<string, AsyncSubscription>
+  triggers: ResyncTriggers
+  report: (error: Error) => void
+  callbacks: WatchCallbacks
+}
+
+// The classifier state and the trigger scope one run shares. The parcel handler feeds the
+// triggers; the scope records the subscriptions and the roots the watcher currently covers.
+function createTriggerScope(setup: TriggerScopeSetup): TriggerScope {
+  const { projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks } = setup
+  const state: ClassifyState = {
+    watchRoot,
+    isMatch: initial.isMatch,
+    dependencyFiles: initial.dependencyFiles,
+    snapshot: initial.snapshot,
+  }
+  const onEvent = createParcelHandler(
+    state,
+    (change) => callbacks.onChange?.(change),
+    triggers,
+    createWatcherErrorHandler(report, triggers),
+  )
+  return { projectRoot, watchRoot, state, subscriptions, onEvent, report, currentRoots: initial.roots }
+}
+
 // One watch run: the scope, the scheduler, the handshake, and the boot and stop
 // paths. The scope is subscribed before the baseline, and the baseline's end
 // flushes whatever triggers arrived while it ran.
@@ -214,27 +244,7 @@ function createWatchRun(setup: WatchSetup): WatchRun {
   const handshake = createWatchStatePublisher(getSyncLockDir(projectRoot), session.owner, report)
   let stopGuard: () => Promise<void> = async () => {}
   const triggers = gateTriggers(flags, () => scheduler)
-  const state: ClassifyState = {
-    watchRoot,
-    isMatch: initial.isMatch,
-    dependencyFiles: initial.dependencyFiles,
-    snapshot: initial.snapshot,
-  }
-  const onEvent = createParcelHandler(
-    state,
-    (change) => callbacks.onChange?.(change),
-    triggers,
-    createWatcherErrorHandler(report, triggers),
-  )
-  const scope: TriggerScope = {
-    projectRoot,
-    watchRoot,
-    state,
-    subscriptions,
-    onEvent,
-    report,
-    currentRoots: initial.roots,
-  }
+  const scope = createTriggerScope({ projectRoot, watchRoot, initial, subscriptions, triggers, report, callbacks })
   // Re-asserting a vanished lock dir recreates the owner, not the watch-state
   // file, so the counters are published again once the owner is back.
   const reassert = async (): Promise<void> => {
@@ -279,7 +289,7 @@ function createWatchRun(setup: WatchSetup): WatchRun {
     handshake.publish()
     stopGuard = startLockGuard(reassert, report)
     for (const root of scope.currentRoots) {
-      subscriptions.set(root, await subscribe(root, onEvent, { ignore: ENGINE_IGNORE_GLOBS }))
+      subscriptions.set(root, await subscribe(root, scope.onEvent, { ignore: ENGINE_IGNORE_GLOBS }))
     }
     const baseline = await stampedSync(projectRoot, env.reporting)
     const catchUp = await rebuildScope(env, false)

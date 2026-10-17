@@ -4,7 +4,7 @@
  * (before blur, while the registry is still mounted), and the blur path
  * that resolves unmatched text and closes when focus truly leaves.
  * Closed popovers never commit; conflicts hold commits inert; Firefox's
- * same-task Tab→blur skips the synchronously committed session (F11).
+ * same-task Tab→blur skips the synchronously committed session.
  */
 import * as React from 'react'
 import type { ComboboxSession } from './use-combobox-session'
@@ -60,7 +60,7 @@ export function useComboboxCommits(
       // Two-authority conflict (#5, CB-ADAPTER-08): no adapter
       // receives a commit until exactly one authority remains.
       if (collectionConflict) return
-      // B-36: re-committing the identical value is silent (Listbox single
+      // Re-committing the identical value is silent (Listbox single
       // LB-SINGLE-05 parity) — text sync and dismiss still run.
       if (nextVal !== value) {
         onChange(nextVal)
@@ -70,7 +70,7 @@ export function useComboboxCommits(
         const labelText = selectedOpt?.textValue ?? nextVal
         handleInputChange(labelText)
       }
-      // F11: synchronous commit mark (see justCommittedRef).
+      // Synchronous commit mark (see justCommittedRef).
       justCommittedRef.current = true
       setIsOpen(false)
     },
@@ -101,12 +101,12 @@ export function useComboboxCommits(
       // text (custom commit when allowed, else committed-text restore),
       // both shapes clear active, and close is requested unless already
       // requested. Covers keyboard and programmatic focus exits, inside
-      // dialogs or out (CB-CLOSE-02 branch, B-22); pointer exits resolve
+      // dialogs or out (CB-CLOSE-02 branch); pointer exits resolve
       // earlier in handleOutsidePress (while the registry is still
       // mounted) so order stays resolve-before-dismiss. Blur after
       // unmount must NOT resolve: the registry is empty and the raw-value
       // fallback would fabricate a phantom text request.
-      // F11: a same-task blur after a synchronous commit (Firefox
+      // A same-task blur after a synchronous commit (Firefox
       // Tab→blur ordering) skips the resolved session exactly as the
       // post-flush blur does on Chromium (no-op but deduped close).
       if (isOpen && !justCommittedRef.current) {

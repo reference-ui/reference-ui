@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-CND-01.
+ * Case specification for TST-CND-01.
  * Verifies structural conditional type extraction, branch resolution, and member conditionals.
  * Proves primary SPEC ID anchor TST-CND-01.
  */

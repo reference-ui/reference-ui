@@ -9,7 +9,7 @@ live animation, and the family probe paints the `Display` stack. Token
 refs inside keyframe bodies belong to TOKEN-13; the `animations` token
 registry belongs to TOKEN-11 — this case asserts placement and paint.
 
-Evidence: `[lib]` 31 keyframes / 3 faces; `[research]` global-css §6.4;
-`[atm]` ATM-LAYER-05, ATM-LAYER-06; cross-ref TOKEN-11 (registry).
+Evidence: reference-lib 31 keyframes / 3 faces; global-css §6.4;
+ATM-LAYER-05, ATM-LAYER-06; cross-ref TOKEN-11 (registry).
 
 > Search terms: animation-name, font-family, webfont, dedupe, single emission, fade slide, keyframe placement, layer/global, layer/keyframes, layer/font-face

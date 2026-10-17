@@ -146,10 +146,10 @@
     },
     {
       "id": "LIB-ANNOUNCER-021",
-      "name": "ANN-DOM-01 + PATCHES#1: one host with two contract live regions, no testids, outside the toast host",
+      "name": "ANN-DOM-01: one host with two contract live regions, no testids, outside the toast host",
       "kind": "ct",
       "file": "__e2e__/Announcer.ct.spec.ts",
-      "title": "ANN-DOM-01 + PATCHES#1: one host with two contract live regions, no testids, outside the toast host"
+      "title": "ANN-DOM-01: one host with two contract live regions, no testids, outside the toast host"
     },
     {
       "id": "LIB-ANNOUNCER-022",

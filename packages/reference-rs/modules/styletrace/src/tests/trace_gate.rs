@@ -9,7 +9,7 @@ use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 
 use super::fixtures::workspace_scratch_dir;
-use crate::{StyleSurface, TraceOutcome, trace_style_bindings_with_surface};
+use crate::{StyleSurface, SurfaceTrace, TraceOutcome, trace_style_bindings_with_surface};
 
 fn gate_surface() -> StyleSurface {
     StyleSurface::new(
@@ -42,13 +42,13 @@ fn trace_outcome(files: &[(&str, &str)]) -> TraceOutcome {
         staged: &staged,
         programs: &programs,
     };
-    trace_style_bindings_with_surface(
-        &entries,
-        fixture.root(),
-        fixture.root(),
-        &gate_surface(),
-        &sources,
-    )
+    trace_style_bindings_with_surface(SurfaceTrace {
+        entries: &entries,
+        source_root: fixture.root(),
+        package_root: fixture.root(),
+        surface: &gate_surface(),
+        sources: &sources,
+    })
 }
 
 #[test]

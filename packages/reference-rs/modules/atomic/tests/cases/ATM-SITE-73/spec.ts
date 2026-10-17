@@ -1,5 +1,5 @@
 /**
- * Call-discovery station (SPEC-V2-38 discovery half). Literal `css()` calls
+ * Call-discovery (discovery half). Literal `css()` calls
  * inside function bodies and JSX expression containers extract; several
  * calls in one source each extract; multi-arg `css()` merges every arg.
  */

@@ -1,5 +1,5 @@
 /**
- * Unknown `_hovr` station. The unrecognised condition warns and emits no
+ * Unknown `_hovr` case. The unrecognised condition warns and emits no
  * utility; the sibling property still compiles.
  */
 import { expect } from 'vitest'

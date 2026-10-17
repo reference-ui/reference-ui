@@ -18,7 +18,7 @@ export default defineConfig({
   root: playgroundRoot,
   server: { port: 5199, strictPort: true },
   resolve: {
-    // Post-D4/D5: styled is data-only (styles.css + runtime-data.mjs) and the
+    // Styled is data-only (styles.css + runtime-data.mjs) and the
     // bound css()/recipe() runtime ships inside the react bundle, so react is
     // the only alias and styled resolves to nothing.
     alias: [{ find: '@reference-ui/react', replacement: `${playgroundRoot}/.reference-ui/react/react.mjs` }],

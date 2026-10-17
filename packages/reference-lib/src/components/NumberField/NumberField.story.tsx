@@ -92,7 +92,7 @@ export const UnboundedFixture = () => {
   )
 }
 
-// PATCHES §6 (NF-STEP-01): label + labelledby variants under two locales
+// (NF-STEP-01): label + labelledby variants under two locales
 // with identical authored names — locale changes never translate names.
 export const NamedStepperFixture = () => {
   const [valueEn, setValueEn] = React.useState<number | null>(42)
@@ -136,8 +136,8 @@ export const NamedStepperFixture = () => {
   )
 }
 
-// B-19: the exact playtest repro — empty field, min 1, max 10 — with a
-// request counter. Ruling (c) re-pin: parseable meanings publish live
+// The exact repro — empty field, min 1, max 10 — with a
+// request counter. Parseable meanings publish live
 // ([2, 2.5]); the commit lands once with no duplicate request.
 export const BoundedDecimalFixture = () => {
   const [value, setValue] = React.useState<number | null>(null)
@@ -178,7 +178,7 @@ export const BoundedDecimalFixture = () => {
   )
 }
 
-// W-02: snap commit — type 2.5 at step 1, commit once to 3.
+// snap commit — type 2.5 at step 1, commit once to 3.
 export const SnapFixture = () => {
   const [value, setValue] = React.useState<number | null>(null)
   const [requests, setRequests] = React.useState(0)
@@ -217,7 +217,7 @@ export const SnapFixture = () => {
   )
 }
 
-// NFLAST ruling (b): validate commit — invalid attempts are retained and
+// Validate commit: invalid attempts are retained and
 // reported (advisory log); the named field exposes canonical hidden state.
 export const ValidateFixture = () => {
   const [value, setValue] = React.useState<number | null>(5)
@@ -260,7 +260,7 @@ export const ValidateFixture = () => {
   )
 }
 
-// W-25: currency display with plain-number commits.
+// currency display with plain-number commits.
 export const CurrencyFixture = () => {
   const [value, setValue] = React.useState<number | null>(1234.5)
 
@@ -291,7 +291,7 @@ export const CurrencyFixture = () => {
   )
 }
 
-// W-25: percent display with scaled plain-number commits.
+// percent display with scaled plain-number commits.
 export const PercentFixture = () => {
   const [value, setValue] = React.useState<number | null>(0.12)
 
@@ -365,7 +365,7 @@ export const NamedFormFixture = () => {
   )
 }
 
-// Wave-2 commit lab (NF-COMMIT-01/02, NF-EDIT-11/14, NF-FORM-09,
+// Commit lab (NF-COMMIT-01/02, NF-EDIT-11/14, NF-FORM-09,
 // NF-COMP-01): echo toggle for accept/reject runs, consumer-first order log,
 // request log, submit counter, and blur/reset targets.
 export const CommitLabFixture = () => {
@@ -498,7 +498,7 @@ export const CompositionFixture = () => {
   )
 }
 
-// Wave-2 format swap lab (NF-FORMAT-03/04, NF-DYNAMIC-02): swap controls use
+// Format swap lab (NF-FORMAT-03/04, NF-DYNAMIC-02): swap controls use
 // mousedown-prevented buttons so rerenders never blur the dirty Input.
 export const FormatSwapFixture = () => {
   const [value, setValue] = React.useState<number | null>(1234.5)
@@ -575,7 +575,7 @@ export const FormatSwapFixture = () => {
   )
 }
 
-// PATCHES §6 (NF-DOM-09): type-bypassed unnamed steppers — absent naming
+// (NF-DOM-09): type-bypassed unnamed steppers — absent naming
 // on Decrement, an unresolving labelledby on Increment.
 const unnamedDecProps = {} as unknown as NumberFieldDecrementProps
 

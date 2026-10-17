@@ -1,12 +1,12 @@
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 
-// Landing-sequence engine scope (DIAG D1): Safari/WebKit never delivers
+// Landing-sequence engine scope: Safari/WebKit never delivers
 // click-focus to buttons/links (mousedown blurs to body) and its native Tab
 // order skips them, honoring text controls + explicit tabindex stops only.
 // `engineOf` sniffs the Playwright project (`react19` on agentct Chromium,
 // `react19-firefox`/`react19-webkit` on the sweep vehicle) so specs can
-// compensate delivery (P1) or assert the deterministic platform outcome (P2).
+// compensate delivery or assert the deterministic platform outcome.
 function engineOf(): 'chromium' | 'firefox' | 'webkit' {
   const project = test.info().project.name
   if (project.includes('webkit')) return 'webkit'
@@ -143,7 +143,7 @@ test.describe('Calendar CT', () => {
     await expect(page.locator('button[data-date="2024-02-01"]')).toBeFocused()
   })
 
-  test('CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent (B-36); rejection leaves selection', async ({
+  test('CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent; rejection leaves selection', async ({
     mount,
     page,
   }) => {
@@ -173,7 +173,7 @@ test.describe('Calendar CT', () => {
     await page.getByTestId('emit-toggle-accept').click() // accept again
 
     // Re-activating the already-selected date emits nothing — no request,
-    // no null, not a toggle (B-36 restores CA-SINGLE-03's no-emit read).
+    // no null, not a toggle (the identical-value guard restores CA-SINGLE-03's no-emit read).
     await day12.click()
     await expect(log).toHaveText('2024-04-10,2024-04-12,2024-04-10')
     await day12.focus()
@@ -408,7 +408,7 @@ test.describe('Calendar CT', () => {
     await expect(targets).toHaveAttribute('data-date', '2024-04-05')
   })
 
-  test('CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent (W-21)', async ({
+  test('CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent', async ({
     mount,
     page,
   }) => {
@@ -420,7 +420,7 @@ test.describe('Calendar CT', () => {
       await expect(button).toHaveAttribute('aria-disabled', 'true')
       await expect(button).toHaveAttribute('data-disabled', '')
     }
-    // Unavailable (W-21): focusable — no native disabled, aria-disabled,
+    // Unavailable: focusable — no native disabled, aria-disabled,
     // data-unavailable. (Playwright's toBeEnabled treats aria-disabled as
     // disabled, so focusability is asserted by focusing directly.)
     const unavailable = page.locator('button[data-date="2024-04-12"]')
@@ -452,7 +452,7 @@ test.describe('Calendar CT', () => {
     await expect(page.getByTestId('con-changes')).toHaveText('2024-04-10')
   })
 
-  test('CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping (W-21)', async ({
+  test('CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping', async ({
     mount,
     page,
   }) => {
@@ -489,7 +489,7 @@ test.describe('Calendar CT', () => {
     await expect(page.getByTestId('con-changes')).toHaveText('none')
   })
 
-  test('CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates (W-21)', async ({
+  test('CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates', async ({
     mount,
     page,
   }) => {
@@ -655,7 +655,7 @@ test.describe('Calendar CT', () => {
     await expect(page.getByTestId('out-next')).toBeEnabled()
   })
 
-  test('CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved (W-21)', async ({
+  test('CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved', async ({
     mount,
     page,
   }) => {
@@ -691,7 +691,7 @@ test.describe('Calendar CT', () => {
     await expect(selected).toHaveAttribute('tabindex', '-1')
   })
 
-  test('CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing (W-21)', async ({ mount, page }) => {
+  test('CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing', async ({ mount, page }) => {
     await mount('components/Calendar/Calendar/Constrained')
 
     await page.getByTestId('con-toggle-all').click()
@@ -797,7 +797,7 @@ test.describe('Calendar CT', () => {
   })
 })
 
-test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
+test.describe('Calendar month/year views (FEATURES #10)', () => {
   test('CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home', async ({
     mount,
     page,
@@ -1268,7 +1268,7 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
     // Focus stays outside on the mode button; the switch resets the view.
     await page.getByTestId('mswitch-month').focus()
     await page.getByTestId('mswitch-month').click()
-    // P1 (F34, DIAG D1): WebKit click-focus never lands on buttons (mousedown
+    // WebKit click-focus never lands on buttons (mousedown
     // blurs to body), so re-deliver the Chromium focus state; the no-steal
     // assertion below then tests the mode switch on every engine.
     if (engineOf() === 'webkit') await page.getByTestId('mswitch-month').focus()
@@ -1313,7 +1313,7 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
       ''
     )
 
-    // Re-activating the selected month is silent (B-36 in month mode).
+    // Re-activating the selected month is silent (month mode).
     await calendar.locator('button[data-month="2024-06"]').click()
     await expect(page.getByTestId('mmonth-changes')).toHaveText('2024-06')
 
@@ -1342,7 +1342,7 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
     await expect(page.getByTestId('ymode-changes')).toHaveText('2026')
     await expect(page.getByTestId('ymode-value')).toHaveText('2026')
 
-    // Re-activating the selected year is silent (B-36 in year mode).
+    // Re-activating the selected year is silent (year mode).
     await calendar.locator('button[data-year="2026"]').click()
     await expect(page.getByTestId('ymode-changes')).toHaveText('2026')
 
@@ -1396,8 +1396,8 @@ test.describe('Calendar month/year views (FEATURES #10: B-23)', () => {
   })
 })
 
-test.describe('Calendar custom days + week start (W-20/W-21)', () => {
-  test('W-20: Day renders custom content, null keeps the default, selection/disabled/keyboard compose', async ({
+test.describe('Calendar custom days + week start', () => {
+  test('Day renders custom content, null keeps the default, selection/disabled/keyboard compose', async ({
     mount,
     page,
   }) => {
@@ -1435,7 +1435,7 @@ test.describe('Calendar custom days + week start (W-20/W-21)', () => {
     await expect(page.getByTestId('custom-changes')).toHaveText('2024-04-08')
   })
 
-  test('W-21: firstDayOfWeek overrides the locale default in both directions', async ({
+  test('firstDayOfWeek overrides the locale default in both directions', async ({
     mount,
     page,
   }) => {
@@ -1796,7 +1796,7 @@ test.describe('Calendar day parts (FEATURES #5)', () => {
     await expect(day11).toHaveAttribute('data-today', '')
     await expect(day12).toHaveAttribute('aria-disabled', 'true')
     await expect(day12).toHaveAttribute('data-unavailable', '')
-    // Unavailable stays natively enabled (W-21): no native disabled
+    // Unavailable stays natively enabled: no native disabled
     // attribute despite the conflicting consumer prop. (Playwright's
     // toBeEnabled counts aria-disabled, so the native attribute is
     // asserted directly.)
@@ -2296,7 +2296,7 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await page.getByTestId('rmachine-block12').click()
 
     // Force bypasses the aria-disabled actionability gate: the attempt
-    // itself must be silent (W-20 precedent).
+    // itself must be silent.
     await page.locator('button[data-date="2024-04-12"]').click({ force: true })
     await page.locator('button[data-date="2024-04-15"]').click()
     await page.locator('button[data-date="2024-04-15"]').focus()
@@ -2532,7 +2532,7 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await expect(page.getByTestId('rmachine-requests')).toHaveText(
       '{"start":"2024-04-10","end":"2024-04-15"}'
     )
-    // P2 (F35 leg 1, DIAG D1 + SCOPE2 probe P-F35C): the origin day carries
+    // leg 1: the origin day carries
     // roving tabindex -1 (roving never followed the programmatic focus; the
     // 0-stop stays 2024-04-03). Chromium Tabs forward out of the grid;
     // WebKit restarts at the first explicit-tabindex stop. The commit
@@ -2559,7 +2559,7 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await page.locator('button[data-date="2024-04-15"]').focus()
     await page.keyboard.press('Tab')
     await expect(page.getByTestId('rmachine-requests')).toHaveText('none')
-    // P2 (F35 leg 2, same platform split as leg 1; probe P-F35C verified the
+    // leg 2, same platform split as leg 1; verified the
     // 0-stop and landing stay 2024-04-03 across all three legs on WebKit).
     if (engineOf() === 'webkit') {
       await expect(page.locator('button[data-date="2024-04-03"]')).toBeFocused()
@@ -2571,7 +2571,7 @@ test.describe('Calendar range machine (FEATURES #9)', () => {
     await page.getByTestId('rmachine-block12').click()
     await page.locator('button[data-date="2024-04-15"]').focus()
     await page.keyboard.press('Tab')
-    // P1 (F35 leg 3): the rejected path needs grid blur to clear the transient
+    // leg 3: the rejected path needs grid blur to clear the transient
     // band; WebKit Tab stays in-grid (04-03 per the probe above), so move focus
     // out the way Chromium's Tab did — the blur-driven clear then runs
     // identically on both engines.

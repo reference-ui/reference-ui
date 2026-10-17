@@ -1,5 +1,5 @@
 /**
- * The W-09 once-guard for exit completion. Every completion path (event,
+ * The once-guard for exit completion. Every completion path (event,
  * WAAPI, GSAP, fallback timer, descendant release, coordinator release,
  * instant) funnels through one `ExitGuard`: `begin` opens a new exit epoch,
  * `cancel` voids the live epoch when `present` returns (an interrupted exit

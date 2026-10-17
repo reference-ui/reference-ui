@@ -1,6 +1,6 @@
 /**
- * Indirection station (ATM-SITE-17, RS-14). Ternary arms, member access,
- * and identifier spreads already emit wants and utilities; this station
+ * Indirection (ATM-SITE-17). Ternary arms, member access,
+ * and identifier spreads already emit wants and utilities; this
  * proves they also emit one runtime style plan per want, each pointing
  * at its emitted utility, so the runtime plan index resolves every leaf.
  */

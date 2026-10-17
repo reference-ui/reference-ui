@@ -14,7 +14,7 @@ use serde_json::{json, Value};
 use super::Suite;
 use crate::atom::{AtomSet, WhenKind};
 use crate::resolve::conditions::lower_when;
-use crate::runtime::{derive_slot, AuthoredDeclaration, PlanBuilder};
+use crate::runtime::{derive_slot, AuthoredDeclaration, PlanBuilder, PlanSinks};
 use base_system::BaseSystem;
 use probes::{
     container_probes, decl, dispatch_probes, integer_probes, prefix_probes, range_probes,
@@ -243,10 +243,12 @@ fn build_output(system: &BaseSystem, name: &str, decl: &AuthoredDeclaration) -> 
     let mut builder = PlanBuilder::new(
         name,
         system,
-        &mut atom_set,
-        &mut external_atom_set,
         &[],
-        &mut diagnostics,
+        PlanSinks {
+            atom_set: &mut atom_set,
+            external_atom_set: &mut external_atom_set,
+            diagnostics: &mut diagnostics,
+        },
     );
     let plans = builder.build(std::slice::from_ref(decl));
     let declarations: Vec<Value> = plans

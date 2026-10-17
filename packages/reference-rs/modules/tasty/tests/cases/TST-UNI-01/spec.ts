@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-UNI-01.
+ * Case specification for TST-UNI-01.
  * Verifies union structures, literal types, and optional property handling.
  * Proves primary SPEC ID anchor TST-UNI-01.
  */

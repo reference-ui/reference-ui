@@ -120,7 +120,7 @@ export const StepperButton = React.forwardRef<HTMLButtonElement, StepperButtonPr
       [ref]
     )
 
-    // Required-name gate (PATCHES §6): hooks run unconditionally so
+    // Required-name gate: hooks run unconditionally so
     // named↔unnamed transitions never change the hook count; the null
     // return below is the "neither registers nor activates" branch.
     const named = useStepperName(
@@ -138,7 +138,7 @@ export const StepperButton = React.forwardRef<HTMLButtonElement, StepperButtonPr
       return registerPart(kind)
     }, [named, registerPart, kind])
 
-    // Press-and-hold stepping (PATCHES §7): consumer handlers chain first
+    // Press-and-hold stepping: consumer handlers chain first
     // inside the hook, so authored pointer props can never clobber the
     // session machine via the trailing spread.
     const repeat = useStepperRepeat({

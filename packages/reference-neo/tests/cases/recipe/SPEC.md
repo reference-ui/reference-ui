@@ -18,12 +18,12 @@ compoundVariants })` and call the bound helper with plain props
 `className` is required and explicit; duplicates in one system fail sync.
 A missing table resolves to `''`; dev warns once per qualified key, production stays silent.
 
-## Engine stations
+## Reference-rs cases
 
 All confirmed by `ls` + README under
 `packages/reference-rs/modules/atomic/tests/cases/`:
 
-| Station | Proves |
+| Reference-rs case | Proves |
 | --- | --- |
 | ATM-RECIPE-01 | Variant leaves compile to closed classes in `@layer recipes`, never utilities |
 | ATM-RECIPE-02 | `CompileResult` carries the authoritative variant table; runtime consumes it |
@@ -37,22 +37,22 @@ All confirmed by `ls` + README under
 Extract of `base`/variant/`compoundVariants[].css` leaves is ATM-SITE-03;
 `sva`/`tw`/`cx` extract nothing (ATM-SITE-04). ATM-LAYER-01 is a standing
 gauge, not a folder — nothing here cites it. Responsive variant values
-(`{ base, md }`) are covered by ATM-RECIPE-07 (RS-8, landed).
+(`{ base, md }`) are covered by ATM-RECIPE-07 (RS-8).
 
 ## Decisions
 
-- **D3** — no `cva` export; `recipe` only (zero lib call sites).
-- **D9** — no slot recipes / `sva`; multi-part anatomy is global CSS +
+- No `cva` export; `recipe` only (zero lib call sites).
+- No slot recipes / `sva`; multi-part anatomy is global CSS +
   `data-slot`, as lib authors it.
-- **D16** — `css.raw` not shipped; `recipe(...).raw()` is shipped.
-- **D8** — when RS-8 lands, responsive variants lower to `@container`,
+- `css.raw` not shipped; `recipe(...).raw()` is shipped.
+- When RS-8 lands, responsive variants lower to `@container`,
   never Panda's `@media screen`.
 
 ## Approved absences
 
-- Slot recipes / `sva` (D9): lib sheet has 0 `recipes.slots`, no `sva(`
+- Slot recipes / `sva`: lib sheet has 0 `recipes.slots`, no `sva(`
   in lib src; engine refuses the API (BAS-RECIPE-03, ATM-SITE-04).
-- `cva` name (D3): react entry exports `recipe` only.
+- `cva` name: react entry exports `recipe` only.
 - `recipes._base` inner-layer spelling: Reference layers stay flat
   (`reset, global, base, tokens, recipes, utilities`); Panda's
   `@layer recipes { @layer _base }` nesting is not reproduced.
@@ -64,8 +64,8 @@ gauge, not a folder — nothing here cites it. Responsive variant values
 
 | Panda feature | Reason |
 | --- | --- |
-| `sva()` / slot recipes / `@layer recipes.slots` | D9; zero lib usage |
-| `cva` export name | D3; `recipe` only |
+| `sva()` / slot recipes / `@layer recipes.slots` |; zero lib usage |
+| `cva` export name |; `recipe` only |
 | `recipes._base` / nested recipe layers | Flat six-layer sheet (§4.4) |
 | Static expansion of all variant combos at definition | Runtime table selection instead |
 | `staticCss.recipes` cartesian pre-emit | STATIC group scope, not recipe selection |

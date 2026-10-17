@@ -1,5 +1,5 @@
 /**
- * Merge-list station (ATM-SITE-25, SPEC-V2-29). Call-form `css([...])`
+ * Merge-list (ATM-SITE-25). Call-form `css([...])`
  * merges object elements into unconditioned wants and skips falsy holes
  * silently — never responsive. One want and one runtime plan per leaf;
  * zero diagnostics.

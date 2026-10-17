@@ -5,9 +5,9 @@
  * The orchestrator consumes these diagnostics and aborts the build if any check fails.
  */
 
-import { EXTENSION_ALLOWLIST, type DialectData } from './dialect';
-import { SHORT_PREFIXES, type ExtensionProp } from './overlay';
-import type { PlatformCss } from './platform';
+import { EXTENSION_ALLOWLIST, type DialectData } from './dialect.js';
+import { SHORT_PREFIXES, type ExtensionProp } from './overlay/index.js';
+import type { PlatformCss } from './platform.js';
 
 export function isPlatformOrExtension(
   name: string,

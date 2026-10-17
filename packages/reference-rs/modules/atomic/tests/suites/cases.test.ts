@@ -1,6 +1,6 @@
 /**
  * Atomic case executor. Discovers tests/cases, compiles each input tree, runs
- * the spec, then diffs committed output goldens using the shared station runner.
+ * the spec, then diffs committed output goldens using the shared case runner.
  * Standing gauges enforce package-wrapped six-layer preamble, CSS grammar, and zero ghost classes.
  * Diagnostic goldens are path-normalized so they do not embed a checkout root; stylesheet
  * goldens additionally collapse base-system layers, except the ATM-SYS-01 anchor.

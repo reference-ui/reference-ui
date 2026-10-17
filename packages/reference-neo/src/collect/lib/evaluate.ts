@@ -4,19 +4,13 @@
 
 import { randomBytes } from 'node:crypto'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
+import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { ReferenceUIConfig } from '../../config/types.ts'
-import type { NativeDiagnostic } from '../../native/contract.ts'
 import { fragmentNodesOf, linearizeFragmentNodes } from '../../system/base/fragments.ts'
 import type { BaseSystem, FragmentNode } from '../../system/base/types.ts'
-import {
-  CONFIG_FRAGMENT_SOURCE_PROPERTY,
-  CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY,
-  FRAGMENT_IMPORT_NEEDLES,
-  UPSTREAM_FRAGMENT_SOURCE,
-} from '../constants.ts'
+import { CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY, FRAGMENT_IMPORT_NEEDLES } from '../constants.ts'
 import { bundleFragments } from './runner.ts'
 import { scanFragmentSources, type FragmentScan, type ScannedSource } from './scan/scanner.ts'
 import { scanFragmentSourcesNative, type FragmentScanNative } from './scan/native.ts'
@@ -28,20 +22,10 @@ import { createFontCollector } from '../surface/font.ts'
 import { createGlobalCssCollector } from '../surface/globalCss.ts'
 import { createRecipeCollector } from '../surface/recipe.ts'
 import { getFragmentBootstrapImportMap } from './bootstrap.ts'
+import { mergeCollectedSpec, type CollectedBucket, type EvaluatedFragments } from './spec-merge.ts'
 
 export { UPSTREAM_FRAGMENT_SOURCE } from '../constants.ts'
-import {
-  isPlainObject,
-  mergeTokenTree,
-  stripPrivateTokensDeep,
-  tokenLeafPaths,
-} from './merge.ts'
-import {
-  mergeTokenFragmentsWithShadows,
-  tokenShadowDiagnostic,
-} from './shadow.ts'
-
-type SpecProvenance = EvaluatedSystemSpec['provenance']
+export { scopeUpstreamTokenFragment, type EvaluatedFragments } from './spec-merge.ts'
 
 interface EvaluateCollector {
   config: { name: string; targetFunction?: string; globalKey: string }
@@ -53,32 +37,27 @@ interface EvaluateCollector {
 }
 
 export interface PreparedFragments {
-  /** Upstream fragment nodes, linearized: upstream first, each name at its first occurrence (E1). */
+  /** Upstream fragment nodes, linearized: upstream first, each name at its first occurrence. */
   upstreamFragments: FragmentNode[]
   localFragmentBundles: FragmentBundle[]
   /**
-   * Retained compile set from the fragment scan. Native path (C3-in-reverse):
+   * Retained compile set from the fragment scan. Native path:
    * bytes stay engine-side behind `retentionToken` and this stays empty. TS
    * fallback (no addon): every in-scope source with its bytes, for the native
    * request's `files`. Held until compileNative resolves, then dropped.
    */
   scannedSources: ScannedSource[]
   /**
-   * Native retention ref (C3-in-reverse): the compile request carries this
+   * Native retention ref: the compile request carries this
    * instead of `files`, and the engine drains the retained bytes. Absent on
    * the TS fallback path and when retention is empty (negation-only).
    */
   retentionToken?: number
 }
 
-interface CollectedBucket {
-  name: string
-  fragments: unknown[]
-}
-
 /**
  * The upstream fragment nodes a config evaluates: each extends entry's nodes in declared
- * order, each name kept at its first occurrence (E1, E2). A shared base reached through
+ * order, each name kept at its first occurrence. A shared base reached through
  * two branches therefore evaluates once, in the first branch that reaches it.
  */
 export function getUpstreamFragments(systems: BaseSystem[] | undefined): FragmentNode[] {
@@ -159,12 +138,6 @@ export async function evaluatePreparedFragments(
   prepared: PreparedFragments
 ): Promise<EvaluatedSystemSpec> {
   return (await evaluatePreparedFragmentsDetailed(cwd, config, prepared)).spec
-}
-
-/** The evaluated spec plus the sync warnings its merge raised (E13). */
-export interface EvaluatedFragments {
-  spec: EvaluatedSystemSpec
-  diagnostics: NativeDiagnostic[]
 }
 
 /**
@@ -268,186 +241,4 @@ function wrapBundleWithSource(bundle: string, source: string): string {
     `;${bundle}`,
     `;globalThis['${CURRENT_FRAGMENT_SOURCE_GLOBAL_KEY}'] = undefined`,
   ].join('\n')
-}
-
-/**
- * Strip `_private` from one collected token fragment when its source tag
- * names an upstream system. The gate is membership in the upstream name set
- * plus the unnamed-upstream fallback literal — local fragments pass through
- * untouched by reference. The stripped copy keeps the non-enumerable source
- * tag so provenance still cites the upstream. Mirrors the Rust
- * multi-spec boundary, which this single-script path never reaches.
- */
-export function scopeUpstreamTokenFragment(
-  fragment: unknown,
-  upstreamNames: readonly string[]
-): unknown {
-  if (!isPlainObject(fragment)) return fragment
-  const source = fragment[CONFIG_FRAGMENT_SOURCE_PROPERTY]
-  if (typeof source !== 'string') return fragment
-  if (source !== UPSTREAM_FRAGMENT_SOURCE && !upstreamNames.includes(source)) return fragment
-  const stripped = stripPrivateTokensDeep(fragment)
-  Object.defineProperty(stripped, CONFIG_FRAGMENT_SOURCE_PROPERTY, {
-    configurable: true,
-    enumerable: false,
-    value: source,
-  })
-  return stripped
-}
-
-// The collected buckets as one spec: the input the merge reads, named as a whole.
-interface SpecMergeInput {
-  name: string
-  cwd: string
-  collected: CollectedBucket[]
-  staticCss: Record<string, string[]>
-  upstreamNames: readonly string[]
-}
-
-function mergeCollectedSpec({
-  name,
-  cwd,
-  collected,
-  staticCss,
-  upstreamNames,
-}: SpecMergeInput): EvaluatedFragments {
-  const tokens = bucketByName(collected, 'tokens').map(fragment =>
-    scopeUpstreamTokenFragment(fragment, upstreamNames)
-  )
-  const tokenMerge = mergeTokenFragmentsWithShadows(tokens, new Set(upstreamNames))
-  const keyframes = bucketByName(collected, 'keyframes')
-  const fonts = bucketByName(collected, 'font')
-  const css = bucketByName(collected, 'globalCss')
-  const recipes = bucketByName(collected, 'recipe')
-  const mergedFonts = mergeFontRecord(fonts)
-  const spec: EvaluatedSystemSpec = {
-    schemaVersion: 1,
-    profile: 'reference-ui',
-    name,
-    tokens: mergeTokenTree(tokenMerge.tree, buildFontWeightTokens(mergedFonts)),
-    fonts: mergedFonts,
-    globalCss: toGlobalCssEntries(css, cwd),
-    keyframes: mergeRecordFragments(keyframes),
-    recipes: mergeRecipeRecord(recipes),
-    staticCss,
-    provenance: [
-      ...tokenProvenance(tokens, cwd),
-      ...fontProvenance(fonts, cwd),
-      ...keyframeProvenance(keyframes, cwd),
-      ...globalCssProvenance(css, cwd),
-      ...recipeProvenance(recipes, cwd),
-    ],
-  }
-  return { spec, diagnostics: tokenMerge.shadows.map(tokenShadowDiagnostic) }
-}
-
-function bucketByName(collected: CollectedBucket[], name: string): unknown[] {
-  return collected.find(bucket => bucket.name === name)?.fragments ?? []
-}
-
-function sourceOfFragment(fragment: unknown, cwd: string): string {
-  const raw = isPlainObject(fragment) ? fragment[CONFIG_FRAGMENT_SOURCE_PROPERTY] : undefined
-  if (typeof raw !== 'string' || raw === '') return 'unknown fragment'
-  const rel = relative(cwd, raw)
-  if (rel === '' || rel.startsWith('..')) return raw
-  return rel
-}
-
-function mergeRecordFragments(fragments: unknown[]): Record<string, unknown> {
-  let merged: Record<string, unknown> = {}
-  for (const fragment of fragments) {
-    if (!isPlainObject(fragment)) continue
-    merged = mergeTokenTree(merged, fragment)
-  }
-  return merged
-}
-
-function mergeFontRecord(fonts: unknown[]): Record<string, unknown> {
-  const record: Record<string, unknown> = {}
-  for (const fragment of fonts) {
-    if (!isPlainObject(fragment) || typeof fragment.name !== 'string') continue
-    const { name, ...rest } = fragment
-    record[name] = rest
-  }
-  return record
-}
-
-function mergeRecipeRecord(recipes: unknown[]): Record<string, unknown> {
-  const record: Record<string, unknown> = {}
-  for (const fragment of recipes) {
-    if (!isPlainObject(fragment) || typeof fragment.className !== 'string') continue
-    record[fragment.className] = { ...fragment }
-  }
-  return record
-}
-
-// Font-weight tokens from the merged font record (core `buildFontTokens`
-// weights half). The fonts half stays engine-side (duplicate-path error).
-function buildFontWeightTokens(fonts: Record<string, unknown>): Record<string, unknown> {
-  const fontWeights: Record<string, unknown> = {}
-  for (const [name, definition] of Object.entries(fonts)) {
-    if (!isPlainObject(definition) || !isPlainObject(definition.weights)) continue
-    const scoped = weightLeaves(definition.weights)
-    if (Object.keys(scoped).length > 0) fontWeights[name] = scoped
-  }
-  return Object.keys(fontWeights).length > 0 ? { fontWeights } : {}
-}
-
-function weightLeaves(weights: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(weights).map(([leaf, value]) => [leaf, { value }]))
-}
-
-function toGlobalCssEntries(css: unknown[], cwd: string): EvaluatedSystemSpec['globalCss'] {
-  const entries: EvaluatedSystemSpec['globalCss'] = []
-  for (const fragment of css) {
-    if (!isPlainObject(fragment)) continue
-    entries.push({
-      source: sourceOfFragment(fragment, cwd),
-      rules: fragment as Record<string, GlobalStyleNode>,
-    })
-  }
-  return entries
-}
-
-function tokenProvenance(tokens: unknown[], cwd: string): SpecProvenance {
-  return tokens.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'tokens' as const,
-    keys: isPlainObject(fragment) ? tokenLeafPaths(fragment) : [],
-  }))
-}
-
-function fontProvenance(fonts: unknown[], cwd: string): SpecProvenance {
-  return fonts.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'fonts' as const,
-    keys:
-      isPlainObject(fragment) && typeof fragment.name === 'string' ? [fragment.name] : [],
-  }))
-}
-
-function keyframeProvenance(keyframes: unknown[], cwd: string): SpecProvenance {
-  return keyframes.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'keyframes' as const,
-    keys: isPlainObject(fragment) ? Object.keys(fragment) : [],
-  }))
-}
-
-function globalCssProvenance(css: unknown[], cwd: string): SpecProvenance {
-  return css.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'globalCss' as const,
-  }))
-}
-
-function recipeProvenance(recipes: unknown[], cwd: string): SpecProvenance {
-  return recipes.map(fragment => ({
-    source: sourceOfFragment(fragment, cwd),
-    kind: 'recipes' as const,
-    keys:
-      isPlainObject(fragment) && typeof fragment.className === 'string'
-        ? [fragment.className]
-        : [],
-  }))
 }

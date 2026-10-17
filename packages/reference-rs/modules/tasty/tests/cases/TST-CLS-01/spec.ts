@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-CLS-01.
+ * Case specification for TST-CLS-01.
  * Verifies class interface mirrors, implements/extends flattening, and member visibility.
  * Proves primary SPEC ID anchor TST-CLS-01.
  */

@@ -63,7 +63,7 @@ export const PrefixAndSuffix = () => (
 )
 
 // ---------------------------------------------------------------------------
-// Contract fixtures (FI-* cases re-targeted from quarantine matrix coverage)
+// Contract fixtures (FI-* cases re-targeted from matrix coverage)
 // ---------------------------------------------------------------------------
 
 export const ProhibitedPropsFixture = () => {

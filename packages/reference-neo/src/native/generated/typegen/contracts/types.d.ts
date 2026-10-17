@@ -10,7 +10,7 @@
  * Frozen cross-package contract definitions for Reference RS cutover.
  * Defines TypeScript interfaces for EvaluatedSystemSpec, NativeRuntimeArtifact,
  * CompileResult, SystemStreams, PortableBaseSystem, and NativeCompileRequest.
- * Every N and C packet references these types and their committed JSON fixtures.
+ * Every consumer of these shapes references these types and their committed JSON fixtures.
  * Serves as the single source of truth for serialization shapes across JS and Rust.
  */
 export type GlobalDeclarationValue = string | number | boolean | null | GlobalDeclarationValue[] | {
@@ -24,7 +24,7 @@ export interface EvaluatedSystemSpec {
     /**
      * Upstream system names adopted beneath this spec by `BaseSystem::from_specs`
      * (BAS-EXTEND-*). Absent or empty means standalone; order is declaration order
-     * with later upstreams winning. Added by RS-4; existing fixtures omit it.
+     * with later upstreams winning. Existing fixtures omit it.
      */
     extends?: string[];
     /**
@@ -253,7 +253,7 @@ export interface NativeCompileRequest {
     sourceRoot: string;
     declarationRoot: string;
     /**
-     * Glob scope (RS-10, station ATM-SCAN-01) relative to `sourceRoot`: only
+     * Glob scope (case ATM-SCAN-01) relative to `sourceRoot`: only
      * matching sources compile and the rest are skipped silently. Absent or
      * empty preserves the legacy scan-all behavior.
      */
@@ -267,10 +267,10 @@ export interface NativeCompileRequest {
      */
     files?: VirtualSource[];
     /**
-     * Opt-in diagnostic channels (S5 backchannel): when `logs` contains
+     * Opt-in diagnostic channels (backchannel): when `logs` contains
      * 'compiler', the result also carries `compilerDiagnostics`; when it
      * contains 'proof', the result also carries the compile-internal rows
-     * (stylePlans, wants, css, recipes, atomCount) stations read. Unknown
+     * (stylePlans, wants, css, recipes, atomCount) cases read. Unknown
      * channels are ignored so channels evolve additively. User configs only
      * accept 'compiler'; 'proof' is a test-observability channel.
      */

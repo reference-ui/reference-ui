@@ -31,7 +31,7 @@ import {
   suggestForCode,
   supportsSuggestions,
   SUGGESTION_CODES,
-} from './index'
+} from './index.js'
 
 /** Byte-identical to the Rust transport goldens in `src/transport.rs`. */
 const SINGLE_GOLDEN =

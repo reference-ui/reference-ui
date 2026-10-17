@@ -1,5 +1,5 @@
 /**
- * Optional-chain station (ATM-SITE-34, SPEC-V2-43/44, Overmatch Ph3). `?.`
+ * Optional-chain (ATM-SITE-34). `?.`
  * over a known const base unwraps transparently — single-hop and nested —
  * while an unresolvable base warns once and mints nothing at the site (the
  * SITE-74 shape, folded here beside its resolving twins). Harvest floors

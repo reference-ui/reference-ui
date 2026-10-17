@@ -1,5 +1,5 @@
 /**
- * Golden portability meta-tests (ATM-FORBID-07). No committed station
+ * Golden portability meta-tests (ATM-FORBID-07). No committed
  * output file may contain machine-specific state: absolute paths, home
  * directories, or hostnames. Diagnostics `file` fields must be
  * case-relative so the suite passes on any checkout, not just the laptop

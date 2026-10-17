@@ -4,6 +4,6 @@ Dynamic expression in value position; the position is skipped, siblings kept. Th
 
 Raised in: `modules/atomic/src/extract/expressions/walk/call.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-DYNAMIC-EXPRESSION (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-DYNAMIC-EXPRESSION (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-DYNAMIC-EXPRESSION, atm-w-dynamic-expression, diagnostics case index, NEO-DIAG-25

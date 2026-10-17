@@ -1,13 +1,11 @@
 # Typegen SPEC
 
 Current freeze, cases, and proof. Architectural design: [atomic.md](../../docs/atomic.md).
-Sequencing: [plan.md](../../../../plan.md).
-Public types architecture: [plan.md](../../../reference-core/src/types/plan.md).
 Module README: [README.md](./README.md).
 
 Crate: `packages/reference-rs/modules/typegen`  
 Test harness: `pnpm agentrs c typegen` (Cargo) and `pnpm agentrs v typegen` (tsc fixtures)  
-Core generators: `packages/reference-core/src/types/generators`  
+Generators: `packages/reference-rs/modules/typegen/src/emit`  
 
 ---
 
@@ -26,16 +24,16 @@ Typegen is the pure declaration printer for Reference UI's styling system. It ta
 
 ### Current Status (2026-09-15)
 
-**Freeze: Token-union + recipe variant/compound + FontRegistry + FontProps + StyleProps + recursive SystemStyleObject printer in `packages/reference-rs/modules/typegen`; FORBID-01–06 proven on `emit_dts`; STYLE-05 and STRICT-01–05 and 07 proven by `tsc --noEmit`. `TYP-RECIPE-03` (owned recipe contracts) and `TYP-STYLE-01` (owned `SystemStyleObject`, no `@reference-ui/styled` re-export) were proven in `packages/reference-core`, which is retired (`b2c666a73`); both are unticked here until typegen proves them.**  
-Public types are Reference UI-owned declarations. Core `SystemStyleObject` is assembled from `csstype.Properties` plus canon aliases; typegen narrows `StyleProps` over `BaseStyleProps` when `strict` is set. `strict` is a printer option on `emit_dts_with`, not a spec field and not a `ui.config.ts` parse.
+**Freeze: Token-union + recipe variant/compound + FontRegistry + FontProps + StyleProps + recursive SystemStyleObject printer in `packages/reference-rs/modules/typegen`; FORBID-01–06 proven on `emit_dts`; STYLE-05 and STRICT-01–05 and 07 proven by `tsc --noEmit`. `TYP-RECIPE-03` (owned recipe contracts) and `TYP-STYLE-01` (owned `SystemStyleObject`, no `@reference-ui/styled` re-export) were proven in a retired package; both are unticked here until typegen proves them.**  
+Public types are Reference UI-owned declarations. Typegen prints `SystemStyleObject` as a recursive alias over `StyleProps` (the retired core assembled it from `csstype.Properties` plus canon aliases), and narrows `StyleProps` over `BaseStyleProps` when `strict` is set. `strict` is a printer option on `emit_dts_with`, not a spec field and not a `ui.config.ts` parse.
 
 | Metric | Status |
 | :--- | :--- |
-| Engine | Token / recipe / FontRegistry / FontProps / StyleProps / SystemStyleObject printer (`emit_dts(&BaseSystem)` open-mode; `emit_dts_with` for strict wrappers) + Core generator prototype (`refreshGeneratedTypesArtefact`, `renderSystemStyleObjectDts`) |
+| Engine | Token / recipe / FontRegistry / FontProps / StyleProps / SystemStyleObject printer (`emit_dts(&BaseSystem)` open-mode; `emit_dts_with` for strict wrappers) |
 | Named `[x]` | 36 / 36 contract IDs |
 | Named `[ ]` | 0 / 36 contract IDs |
 | Cargo tests | 75 (`src/tests/`) |
-| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–05 and 07 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/suites/` (`pnpm agentrs v typegen` **56**); the core tests for `TYP-STYLE-01` (`generators/strict.test.ts`) went with `packages/reference-core` |
+| Vitest tests | TYP-STYLE-05 + TYP-STRICT-01–05 and 07 + TYP-TONE-07–09 tsc fixtures in `modules/typegen/tests/suites/` (`pnpm agentrs v typegen` **56**); the core tests for `TYP-STYLE-01` (`generators/strict.test.ts`) went with the retired package |
 
 **Named proven:** `TYP-TOKEN-01`–`07`, `TYP-TONE-01`–`09`, `TYP-RECIPE-01`–`02`, `TYP-FONT-01`–`03`, `TYP-STYLE-02`–`05`, `TYP-STRICT-01`–`05` and `07`, `TYP-FORBID-01`–`06`.  
 **Remaining unproven:** none.
@@ -43,18 +41,18 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 ### In the Tree
 
 - `packages/reference-rs/modules/typegen/src/lib.rs` exports `emit_dts(&BaseSystem)` (always open-mode) and `emit_dts_with(system, &EmitOptions { strict })`. Open emit prints category unions plus `Tokens`, `PascalCase(name)VariantProps`, `PascalCase(name)CompoundVariant` when a dump row's `when` is a subset of declared axes, `FontRegistry`, discriminated `FontProps`, and `StyleProps` when the dump has color/spacing tokens plus breakpoints. Style dumps also print recursive `SystemStyleObject` (`StyleProps` plus nested `StyleConditionKey` and `&${string}` selectors). Radius keys from canon (`*Radius`, excluding `webkit*`) print on StyleProps when the dump has a `radii` category; Panda `rounded*` is not invented. Empty categories / recipes are omitted (not `never`). A StyleProps dump without fonts still prints `FontRegistry {}` so `[FontName] extends [never]` falls back to `StylePropValue<string>` instead of collapsing StyleProps. Goldens: `tests/goldens/tokens.d.ts`, `recipes.d.ts`, `compound.d.ts`, `recipes-two.d.ts`, `fonts.d.ts`, `styles.d.ts`, `styles-fonts.d.ts`, `styles-strict.d.ts`, `tones.d.ts`, `tones-strict.d.ts`. The `tones` category is known but is not a `CATEGORIES` row: it prints `ToneToken` from the sorted, deduped first path segment of each entry (`medium.surface`/`medium.line` → `medium`, flat `hush` → `hush`; `never` when absent) plus `TonedColorToken = \`${ColorToken}/${ToneToken}\``. `Tokens` always indexes `tones`, colour props accept `TonedColorToken` on top of the `(string & {})` hatch, and strict colour parts list `TonedColorToken` right after `ColorToken` (but `tones` is not a strict category). Dump font weight keys are authored names (`bold`), not CSS numbers (`700`). Compound `css` is `{ [property: string]: string }`. Unknown compound axis/value rows are skipped. Multiple recipes share one emit string (`ButtonVariantProps` + `BadgeVariantProps`); there is no `recipes/` module tree, no `tokens.mjs`, and no `atomic` crate dependency. `canon` supplies color properties, padding/margin aliases, radius names, and `NAMED_CONDITIONS`. The token catalog dump has no breakpoints so `tokens.d.ts` stays token-only (no StyleProps / SystemStyleObject). StyleProps intersects `FontProps` and adds dialect `container` / recursive `r`; it does not dump `csstype.Properties` or import `@reference-ui/styled`. Open StyleProps keep `Token | (string & {})`. Strict names narrow `StyleProps`: the open object prints as `BaseStyleProps`, and `StyleProps` is `StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>` in declaration order, so JSX style props and `SystemStyleObject` (`StyleProps` plus nested condition keys) both narrow. `r` names `StyleProps` and narrows too. Wrapping the recursive `SystemStyleObject` itself is the TS2456 case, which is why the wrap argument is the non-recursive `BaseStyleProps`. Unknown / duplicate strict names are skipped. `pnpm agentrs v typegen` typechecks consumer fixtures against the style goldens.
-- `packages/reference-core/src/types/generators/fonts.ts` builds `FontRegistry` interfaces and injects them into package `.d.ts` declarations.
-- `packages/reference-core/src/types/generators/strict.ts` prints owned `BaseSystemStyleObject` from `csstype` plus canon aliases, then wraps with `StrictColorProps` / `StrictRadiiProps` based on `ui.config.ts`.
-- `packages/reference-core/src/types/public/` exposes `StyleProps`, `ReferenceProps`, `SafeColorProps`, and `SafeRadiiProps`.
+- `packages/reference-rs/modules/typegen/src/emit/fonts.rs` builds `FontRegistry` interfaces and injects them into package `.d.ts` declarations.
+- `packages/reference-rs/modules/typegen/src/emit/strict.rs` prints the recursive `SystemStyleObject` alias (`SYSTEM_STYLE_OBJECT`) over `StyleProps`, and wraps `BaseStyleProps` with `StrictColorProps` / `StrictRadiiProps` / `StrictSpacingProps` for the categories in `EmitOptions.strict` (it does not parse `ui.config.ts`).
+- `packages/reference-rs/modules/typegen/src/emit/strict.rs` prints `StyleProps`, `ReferenceProps`, `SafeColorProps`, and `SafeRadiiProps`.
 
 ### Defects & Leftovers to Kill
 
-1. **`SystemStyleObject` alias:** **Killed 2026-09-15 (`TYP-STYLE-01`).** `packages/reference-core/src/types/public/system-style-object.ts` owns `SystemStyleObject` from `csstype.Properties` mapped through `StylePropValue`, plus canon aliases (`bg`, `p`/`mt`, `w`/`h`, `flexDir`). `renderSystemStyleObjectDts` wraps `BaseSystemStyleObject` (not the recursive alias — TS2456) and emits zero `@reference-ui/styled` imports.
-2. **`recipe()` re-exports:** **Killed 2026-09-15 (`TYP-RECIPE-03`).** `packages/reference-core/src/types/public/recipe.ts` owns `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, `RecipeVariant`, and `RecipeVariantProps`. Style values still use `SystemStyleObject` from `./system-style-object` (STYLE-01).
-3. **Viewport breakpoint pollution:** `packages/reference-core/src/types/public/conditions.ts` still imports `Conditions` from `@reference-ui/styled/types/conditions` and manually excludes 25 viewport breakpoint keys (`TYP-STYLE-03`).
-4. **Panda `rounded*` on SPEC STRICT-02:** Core `RADII_PROP_KEYS` lists 14 keys including `rounded` / `roundedTop`. Canon has no those aliases. Typegen prints canon `*Radius` names and does not invent Panda keys.
+1. **`SystemStyleObject` alias (resolved):** `packages/reference-rs/modules/typegen/src/emit/strict.rs` prints the recursive alias `SYSTEM_STYLE_OBJECT` over `StyleProps` (nested `StyleConditionKey` and `&${string}` keys). There is no owned `BaseSystemStyleObject` and no `renderSystemStyleObjectDts`, and the golden emits zero `@reference-ui/styled` imports.
+2. **`recipe()` re-exports:** `packages/reference-rs/modules/typegen/src/emit/recipes.rs` and `packages/reference-neo/src/runtime/recipe/recipe.ts` own the recipe declarations (`RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, `RecipeVariant`, and `RecipeVariantProps`). Style values still use `SystemStyleObject` from `./system-style-object` (STYLE-01).
+3. **Viewport breakpoint pollution:** The retired public conditions module imported `Conditions` from `@reference-ui/styled/types/conditions` and manually excludes 25 viewport breakpoint keys (`TYP-STYLE-03`).
+4. **Panda `rounded*` on SPEC STRICT-02:** The retired core `RADII_PROP_KEYS` listed 14 keys including `rounded` / `roundedTop`. Canon has no those aliases. Typegen prints canon `*Radius` names and does not invent Panda keys.
 5. **SPEC STRICT-03 `gap`:** StyleProps still omits `gap` (padding/margin aliases only, same as STYLE-02). Strict spacing wraps those keys; it does not add `gap`.
-6. **Core spacing wrapper is null:** `STRICT_WRAPPER_BY_CATEGORY.spacing` in `generators/strict.ts` is still `null`. Typegen prints `StrictSpacingProps` anyway. Do not rewrite core in this crate.
+6. **Core spacing wrapper (retired):** the retired core `STRICT_WRAPPER_BY_CATEGORY.spacing` in `generators/strict.ts` was `null`. Typegen prints `StrictSpacingProps` anyway.
 
 ---
 
@@ -62,7 +60,7 @@ Public types are Reference UI-owned declarations. Core `SystemStyleObject` is as
 
 Panda treats codegen as a file farm (`styled-system/`). We author
 `css()` / `recipe()` in TypeScript and restrict typegen to unions from
-`BaseSystem`. Vendor paths are the example of the farm we refuse.
+`BaseSystem`. Panda's codegen is the example of the farm we refuse.
 
 | Panda codegen job | Our ID | Disposition |
 | :--- | :--- | :--- |
@@ -75,7 +73,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `styled-system/recipes/*.d.ts` | `TYP-FORBID-04` | **Refuse.** `recipe()` is authored TypeScript. |
 | `styled-system/tokens/index.mjs` | `TYP-FORBID-05` | **Refuse.** Tokens are CSS variables in `@layer tokens`. |
 | Atomic class names in `.d.ts` | `TYP-FORBID-01` | **Refuse.** Users never write `.mt_2r`. |
-| Whole-farm AST in Rust (`pandacss_codegen`, `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`) | `TYP-FORBID-06` | **Refuse.** Typegen does not depend on `atomic`. |
+| Whole-farm AST in Rust (`pandacss_codegen`) | `TYP-FORBID-06` | **Refuse.** Typegen does not depend on `atomic`. |
 | `strictTokens` / `strictPropertyValues` | `TYP-STRICT-01`–`05`, `07` | Owned wrappers via `emit_dts_with` printer options. Typegen does not parse `ui.config.ts`. |
 
 ---
@@ -83,7 +81,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 ## 4. API & Generation Freeze Decisions
 
 1. **BaseSystem + Canon as Exclusive Inputs:** Typegen reads token names and categories from `BaseSystem`, and platform/dialect properties from `canon`. It never accesses compiler internal tables, AST leaves, or the compiled `AtomSet`. If `n300` is declared under `colors`, `bg="n300"` typechecks regardless of whether the engine prints `.bg_n300` or `.background_n300`.
-2. **Own `SystemStyleObject`:** `SystemStyleObject` must be an owned type definition authored in `packages/reference-core/src/types/` (and printed by typegen in generated packages), composed of `csstype.Properties`, Reference UI token unions, dialect property overrides, and recursive nesting. Re-exporting from `@reference-ui/styled/types` is strictly forbidden.
+2. **Own `SystemStyleObject`:** `SystemStyleObject` must be an owned type definition printed by typegen (`packages/reference-rs/modules/typegen/src/emit/strict.rs`) in generated packages, composed of `csstype.Properties`, Reference UI token unions, dialect property overrides, and recursive nesting. Re-exporting from `@reference-ui/styled/types` is strictly forbidden.
 3. **Container-Query-First Condition Keys:** `StylePropValue<T>` supports plain `T`, responsive arrays `Array<T | null>`, and condition object maps. Default public condition keys filter out viewport breakpoints (`sm`, `md`, `lg`, etc.) in favor of container query conditions (`@sm`, `@md`), theme modes (`_dark`, `_light`), and pseudo-selectors (`_hover`, `_focusVisible`).
 4. **Author-Owned FontRegistry Interface Augmentation:** Fonts declared via `font()` generate interface augmentations for `FontRegistry`. When empty, `FontProps` falls back to `string` without causing `StyleProps` to collapse to `never`. When populated, `FontProps` narrows `font` to known names and `weight` to weights registered for that specific font.
 5. **Open Autocomplete by Default, Strict on Opt-In:** By default, token properties use `TokenUnion | (string & {})` to provide instant IDE autocomplete while allowing raw CSS escape hatches. When `strict: ['colors', ...]` is configured in `ui.config.ts`, the `(string & {})` escape hatch is stripped, restricting values strictly to declared tokens plus standardized CSS keywords (`white`, `black`, `currentColor`, `inherit`, `transparent`).
@@ -93,14 +91,14 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 
 ## 5. Source Evidence
 
-- `packages/reference-core/src/types/plan.md`: Mandates owning `SystemStyleObject`, using `csstype`, eliminating viewport breakpoints as public defaults, and treating generated unions as primitive ingredients.
-- `packages/reference-core/src/types/public/system-style-object.ts`: Owned `SystemStyleObject` from `csstype.Properties` plus canon aliases. Zero `@reference-ui/styled` imports.
-- `packages/reference-core/src/types/public/colors.ts`: Canonical catalog of 38 `COLOR_PROP_KEYS` and `StrictColorProps` wrapping logic.
-- `packages/reference-core/src/types/public/radii.ts`: Canonical catalog of 14 `RADII_PROP_KEYS` and `StrictRadiiProps` wrapping logic.
-- `packages/reference-core/src/types/public/fonts.ts`: Implementation of `FontProps` discriminated union and `[FontName] extends [never]` fallback guard.
-- `packages/reference-core/src/types/generators/strict.ts`: Generator orchestrating composition of strict property wrappers based on `ui.config.ts`.
-- `packages/reference-core/src/types/generators/fonts.ts`: Generator compiling `FontDefinition[]` into `FontRegistry` interface declarations.
-- `vendor/panda/crates/pandacss_codegen/src/artifacts/types.rs`: example of the whole-farm failure mode (`types/jsx`, `types/pattern`, `types/recipe`, `types/system`).
+- Public types mandates: owning `SystemStyleObject`, using `csstype`, eliminating viewport breakpoints as public defaults, and treating generated unions as primitive ingredients.
+- `packages/reference-rs/modules/typegen/src/emit/strict.rs`: owned `SystemStyleObject` from `csstype.Properties` plus canon aliases. Zero `@reference-ui/styled` imports.
+- `packages/reference-rs/modules/canon/src/css/color.rs`: canonical color property catalog (`COLOR_PROPERTIES`), and `StrictColorProps` wrapping logic in `packages/reference-rs/modules/typegen/src/emit/strict.rs`.
+- `packages/reference-rs/modules/typegen/src/emit/strict.rs`: `StrictRadiiProps` wrapping logic.
+- `packages/reference-rs/modules/typegen/src/emit/fonts.rs`: Implementation of `FontProps` discriminated union and `[FontName] extends [never]` fallback guard.
+- `packages/reference-rs/modules/typegen/src/emit/strict.rs`: Generator orchestrating composition of strict property wrappers based on `ui.config.ts`.
+- `packages/reference-rs/modules/typegen/src/emit/fonts.rs`: Generator compiling `FontDefinition[]` into `FontRegistry` interface declarations.
+- Panda's `pandacss_codegen` types artifact: example of the whole-farm failure mode (`types/jsx`, `types/pattern`, `types/recipe`, `types/system`).
 
 ---
 
@@ -214,7 +212,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 
 - [ ] `TYP-RECIPE-03` `[reference]` `[unit]` —  
   **Typegen should provide owned RecipeDefinition contracts.**
-  Inspect `packages/reference-core/src/types/public/recipe.ts`. Assert `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, and `RecipeVariantProps` are declared as owned TypeScript interfaces, eliminating all imports from `@reference-ui/styled/types/recipe`. The failure mode is re-exporting recipe types from the generated styled package.
+  Inspect the recipe declarations typegen prints (`packages/reference-rs/modules/typegen/src/emit/recipes.rs`). Assert `RecipeCreatorFn`, `RecipeDefinition`, `RecipeRuntimeFn`, `RecipeSelection`, and `RecipeVariantProps` are declared as owned TypeScript interfaces, eliminating all imports from `@reference-ui/styled/types/recipe`. The failure mode is re-exporting recipe types from the generated styled package.
 
 ---
 
@@ -310,14 +308,14 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 | `TYP-TONE-07` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-07`); `src/tests/goldens.rs::tones_matches_committed_golden` | `[x]` Proven |
 | `TYP-TONE-08` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-08`) | `[x]` Proven |
 | `TYP-TONE-09` | `[unit]` | `tests/suites/tones.test.ts` (`TYP-TONE-09`) | `[x]` Proven |
-| `TYP-STYLE-01` | `[unit]` | none in typegen; the proof was in `packages/reference-core` (retired) | `[ ]` Open |
+| `TYP-STYLE-01` | `[unit]` | none in typegen; the proof was in a retired package | `[ ]` Open |
 | `TYP-STYLE-02` | `[unit]` | `src/tests/style.rs::typ_style_02_narrows_style_props_with_aliases_and_tokens` | `[x]` Proven |
 | `TYP-STYLE-03` | `[unit]` | `src/tests/style.rs::typ_style_03_filters_viewport_keys_from_style_condition_key` | `[x]` Proven |
 | `TYP-STYLE-04` | `[unit]` | `src/tests/style.rs::typ_style_04_layers_dialect_props_and_omits_conflicting_css` | `[x]` Proven |
 | `TYP-STYLE-05` | `[unit]` | `tests/suites/style-05.test.ts` (`pnpm agentrs v typegen`) | `[x]` Proven |
 | `TYP-RECIPE-01` | `[unit]` | `src/tests/recipes.rs::typ_recipe_01_emits_optional_variant_prop_unions` | `[x]` Proven |
 | `TYP-RECIPE-02` | `[unit]` | `src/tests/recipes.rs::typ_recipe_02_emits_compound_variant_subset_unions` | `[x]` Proven |
-| `TYP-RECIPE-03` | `[unit]` | none in typegen; the proof was in `packages/reference-core` (retired) | `[ ]` Open |
+| `TYP-RECIPE-03` | `[unit]` | none in typegen; the proof was in a retired package | `[ ]` Open |
 | `TYP-FONT-01` | `[unit]` | `src/tests/fonts.rs::typ_font_01_emits_font_registry_from_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-02` | `[unit]` | `src/tests/fonts.rs::typ_font_02_narrows_font_props_to_dump_weight_keys` | `[x]` Proven |
 | `TYP-FONT-03` | `[unit]` | `src/tests/fonts.rs::typ_font_03_falls_back_to_string_when_font_registry_is_empty` | `[x]` Proven |
@@ -339,23 +337,23 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 ## 8. Remaining Work Ordered by Priority
 
 1. **Kill the Panda `SystemStyleObject` Alias (`TYP-STYLE-01`):**  
-   **Landed 2026-09-15.** `packages/reference-core/src/types/public/system-style-object.ts` owns `SystemStyleObject` from `csstype.Properties` mapped through `StylePropValue`, plus canon aliases (`bg`, `p`/`mt`, `w`/`h`, `flexDir`). `renderSystemStyleObjectDts` wraps `BaseSystemStyleObject` then intersects nested condition/selector keys. Zero `@reference-ui/styled` / `StyledSystemStyleObject` in this declaration. `csstype` is a dependency of `@reference-ui/core`. Do not copy typegen's color/spacing/radius-only StyleProps into core. Proof: `pnpm agent vitest core -t "strict-token system-style-object"`.
+   `packages/reference-rs/modules/typegen/src/emit/strict.rs` prints the recursive `SystemStyleObject` alias over `StyleProps` (`SYSTEM_STYLE_OBJECT`), intersecting nested condition/selector keys. There is no owned `BaseSystemStyleObject` and no `renderSystemStyleObjectDts`. Zero `@reference-ui/styled` / `StyledSystemStyleObject` in this declaration.
 2. **Kill the Panda Recipe Re-Exports (`TYP-RECIPE-03`):**  
-   **Landed 2026-09-15.** `packages/reference-core/src/types/public/recipe.ts` owns `RecipeCreatorFn` / `RecipeDefinition` / `RecipeRuntimeFn` / `RecipeSelection` / `RecipeVariant` / `RecipeVariantProps`. Zero `@reference-ui/styled` imports. `customCvaFn` still casts into Panda `styledCva`. Style values remain `SystemStyleObject` from `./system-style-object` (STYLE-01). Proof: `pnpm agent vitest core -t "recipe"`.
+   `packages/reference-rs/modules/typegen/src/emit/recipes.rs` owns the recipe declarations (`RecipeCreatorFn` / `RecipeDefinition` / `RecipeRuntimeFn` / `RecipeSelection` / `RecipeVariant` / `RecipeVariantProps`). Zero `@reference-ui/styled` imports. `customCvaFn` still casts into Panda `styledCva`. Style values remain `SystemStyleObject` from `./system-style-object` (STYLE-01).
 3. **Token Category Unions from BaseSystem (`TYP-TOKEN-01`–`06`):**  
-   **Landed 2026-09-15.** `emit_dts(&BaseSystem)` prints sorted unique category unions plus `Tokens`. Empty categories omitted (not `never`). Golden at `tests/goldens/tokens.d.ts`; refresh with `TYPEGEN_UPDATE_GOLDENS=1`.
+   `emit_dts(&BaseSystem)` prints sorted unique category unions plus `Tokens`. Empty categories omitted (not `never`). Golden at `tests/goldens/tokens.d.ts`; refresh with `TYPEGEN_UPDATE_GOLDENS=1`.
 4. **StyleProps Narrowing & Condition Sanitization (`TYP-STYLE-02`–`05`):**  
-   **TYP-STYLE-02/03/04/05 landed 2026-09-15.** `StyleProps` from `canon::COLOR_PROPERTIES` plus color aliases (`bg`) and padding/margin aliases (`p`, `mt`, …) plus those canonical names. Values are `StylePropValue<ColorToken | (string & {})>` / `SpacingToken`. `StyleConditionKey` is `NAMED_CONDITIONS` plus `@${breakpoint}` from the dump (lexicographic); bare `sm`/`md`/`lg`/`smToMd` are not members. Dialect `container?: StylePropValue<string | boolean>` and `r?: StylePropValue<Record<string | number, StyleProps>>` replace omitted CSS `font`/`weight`/`container`/`r`; `FontProps` mixes in by intersection. Recursive `SystemStyleObject` is `StyleProps` plus nested condition keys and `&${string}` selectors; `tsc --noEmit` proves `_hover: { _dark: { color: 'n300' } }` and `_hover: { _dark: { '& > span': { color: 'n300' } } }` without TS2589 (`pnpm agentrs v typegen`). Dedicated dump+golden `styles.d.ts` (catalog tokens + `breakpoints: { sm, md, lg }`, empty `FontRegistry {}`); token golden stays token-only. TYP-STYLE-01 (owned `SystemStyleObject` from csstype in core) landed 2026-09-15. Typegen StyleProps still does not dump all of `csstype.Properties`.
+   **TYP-STYLE-02/03/04/05.** `StyleProps` from `canon::COLOR_PROPERTIES` plus color aliases (`bg`) and padding/margin aliases (`p`, `mt`, …) plus those canonical names. Values are `StylePropValue<ColorToken | (string & {})>` / `SpacingToken`. `StyleConditionKey` is `NAMED_CONDITIONS` plus `@${breakpoint}` from the dump (lexicographic); bare `sm`/`md`/`lg`/`smToMd` are not members. Dialect `container?: StylePropValue<string | boolean>` and `r?: StylePropValue<Record<string | number, StyleProps>>` replace omitted CSS `font`/`weight`/`container`/`r`; `FontProps` mixes in by intersection. Recursive `SystemStyleObject` is `StyleProps` plus nested condition keys and `&${string}` selectors; `tsc --noEmit` proves `_hover: { _dark: { color: 'n300' } }` and `_hover: { _dark: { '& > span': { color: 'n300' } } }` without TS2589 (`pnpm agentrs v typegen`). Dedicated dump+golden `styles.d.ts` (catalog tokens + `breakpoints: { sm, md, lg }`, empty `FontRegistry {}`); token golden stays token-only. TYP-STYLE-01 (owned `SystemStyleObject` from csstype in core). Typegen StyleProps still does not dump all of `csstype.Properties`.
 5. **Strict Token Enforcement (`TYP-STRICT-01`–`05`):**  
-   **Landed 2026-09-15.** `emit_dts` stays open-mode (`Token | (string & {})`). `emit_dts_with` takes `EmitOptions { strict }` — not a spec field, not a `ui.config.ts` parse. Unknown / duplicate names skip in declaration order. Strict colors/radii/spacing wrap `BaseSystemStyleObject` (`StyleProps`) then intersect nested condition keys (`tsc` TS2456 if the full recursive object is the wrap argument). Radius keys are canon `*Radius` excluding `webkit*` (19 names including `borderRadius` and corner longhands); Panda `rounded*` is not printed (`is_known_style_prop("rounded")` is false). Spacing strict exists here even though core `STRICT_WRAPPER_BY_CATEGORY.spacing` is `null`. `gap` is still omitted from StyleProps (STYLE-02 box spacing only). Proof: `pnpm agentrs c typegen` **35**, `pnpm agentrs v typegen` **14**. Superseded for `StyleProps` by item 9 (2026-10-13).
+   `emit_dts` stays open-mode (`Token | (string & {})`). `emit_dts_with` takes `EmitOptions { strict }` — not a spec field, not a `ui.config.ts` parse. Unknown / duplicate names skip in declaration order. Strict colors/radii/spacing wrap `BaseStyleProps` (`StyleProps`), and `SystemStyleObject` then intersects nested condition keys (`tsc` TS2456 if the full recursive object is the wrap argument). Radius keys are canon `*Radius` excluding `webkit*` (19 names including `borderRadius` and corner longhands); Panda `rounded*` is not printed (`is_known_style_prop("rounded")` is false). Spacing strict exists here even though the retired core `STRICT_WRAPPER_BY_CATEGORY.spacing` was `null`. `gap` is still omitted from StyleProps (STYLE-02 box spacing only). Proof: `pnpm agentrs c typegen` **35**, `pnpm agentrs v typegen` **14**. Superseded for `StyleProps` by item 9.
 6. **Recipe Variant Types Derivation (`TYP-RECIPE-01`–`02`):**  
-   **TYP-RECIPE-01/02 landed 2026-09-15.** `ButtonVariantProps` from `list_recipes()`; all axes optional; value unions lexicographic. `ButtonCompoundVariant` reuses those optional axis unions plus `css: { [property: string]: string }`. Compound rows whose `when` names an unknown axis or value are skipped (all-invalid dumps omit the compound type). Recipe names that cannot PascalCase to a TypeScript identifier (`123`) are skipped. `*bad*` PascalCases to `Bad` and would still emit — not a skip. Individually-valid names that PascalCase to one stem (`button` + `Button`) share it first-wins in `list_recipes()` order: the first prints, the loser is skipped (both aliases) with `TGN-W-DUPLICATE-RECIPE-STEM`. TYP-RECIPE-03 landed in core (owned contracts, not typegen emit).
+   **TYP-RECIPE-01/02.** `ButtonVariantProps` from `list_recipes()`; all axes optional; value unions lexicographic. `ButtonCompoundVariant` reuses those optional axis unions plus `css: { [property: string]: string }`. Compound rows whose `when` names an unknown axis or value are skipped (all-invalid dumps omit the compound type). Recipe names that cannot PascalCase to a TypeScript identifier (`123`) are skipped. `*bad*` PascalCases to `Bad` and would still emit — not a skip. Individually-valid names that PascalCase to one stem (`button` + `Button`) share it first-wins in `list_recipes()` order: the first prints, the loser is skipped (both aliases) with `TGN-W-DUPLICATE-RECIPE-STEM`. TYP-RECIPE-03 is in core (owned contracts, not typegen emit).
 7. **Font Registry Typings & Discrimination (`TYP-FONT-01`–`03`):**  
-   **TYP-FONT-01/02/03 landed 2026-09-15.** `FontRegistry` from `fonts.iter()`; family names quoted; dump weight **keys** (`bold`) as `'bold': true`. SPEC draft `['400','700']` / `'400' | 'sans.400'` does not match Dump. Populated dumps print mapped `FontProps` (`'bold' | 'sans.bold'` via dump keys plus a scoped template) mixed into StyleProps (`styles-fonts.d.ts`). Empty registry is `FontRegistry {}` plus `FontProps = [FontName] extends [never] ? FallbackFontProps : ScopedFontProps` so StyleProps stays usable (`styles.d.ts`). Intersecting Fallback with Scoped on a populated registry widens `weight` to `string` and would fail FONT-02 in tsc.
+   **TYP-FONT-01/02/03.** `FontRegistry` from `fonts.iter()`; family names quoted; dump weight **keys** (`bold`) as `'bold': true`. SPEC draft `['400','700']` / `'400' | 'sans.400'` does not match Dump. Populated dumps print mapped `FontProps` (`'bold' | 'sans.bold'` via dump keys plus a scoped template) mixed into StyleProps (`styles-fonts.d.ts`). Empty registry is `FontRegistry {}` plus `FontProps = [FontName] extends [never] ? FallbackFontProps : ScopedFontProps` so StyleProps stays usable (`styles.d.ts`). Intersecting Fallback with Scoped on a populated registry widens `weight` to `string` and would fail FONT-02 in tsc.
 8. **Forbidden Codegen Verification (`TYP-FORBID-01`–`06`):**  
-   **Landed 2026-09-15.** No `.mt_2r` / jsx farm / `BoxProps` / `patterns/` / `recipes/*.d.ts` / `tokens.mjs` / `atomic` crate. Multiple recipes (`button` + `badge`) share one `emit_dts` string (`recipes-two.d.ts`). `canon` is a crate dependency for StyleProps; `atomic` is still forbidden.
+   No `.mt_2r` / jsx farm / `BoxProps` / `patterns/` / `recipes/*.d.ts` / `tokens.mjs` / `atomic` crate. Multiple recipes (`button` + `badge`) share one `emit_dts` string (`recipes-two.d.ts`). `canon` is a crate dependency for StyleProps; `atomic` is still forbidden.
 9. **Strict StyleProps Narrowing (`TYP-STRICT-07`):**  
-   **Landed 2026-10-13.** Strict wrappers narrow `StyleProps`, the JSX prop type, not only `SystemStyleObject`. The open object prints as `BaseStyleProps`, and `StyleProps` is `StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>` in declaration order; `SystemStyleObject` is the open composition `StyleProps & { condition keys } & { &-selectors }` in both modes. `r` names `StyleProps`, so nested responsive values narrow too: no TS2456, because the recursive reference sits in a property, not in the wrap argument. Open-mode output is byte-identical; `styles-strict.d.ts` and `tones-strict.d.ts` are the only goldens that changed. Proof: `pnpm agentrs c typegen` **73**, `pnpm agentrs v typegen` **54**.
+   Strict wrappers narrow `StyleProps`, the JSX prop type, not only `SystemStyleObject`. The open object prints as `BaseStyleProps`, and `StyleProps` is `StrictSpacingProps<StrictRadiiProps<StrictColorProps<BaseStyleProps>>>` in declaration order; `SystemStyleObject` is the open composition `StyleProps & { condition keys } & { &-selectors }` in both modes. `r` names `StyleProps`, so nested responsive values narrow too: no TS2456, because the recursive reference sits in a property, not in the wrap argument. Open-mode output is byte-identical; `styles-strict.d.ts` and `tones-strict.d.ts` are the only goldens that changed. Proof: `pnpm agentrs c typegen` **73**, `pnpm agentrs v typegen` **54**.
 
 ---
 
@@ -364,7 +362,7 @@ Panda treats codegen as a file farm (`styled-system/`). We author
 1. **Do not import `@reference-ui/styled/types` or `@pandacss/*`:** The mandate is to own public style types. Re-exporting or aliasing Panda types is the single largest remaining tech debt in `src/types`.
 2. **Do not make `typegen` depend on `atomic`:** Typegen takes `BaseSystem` and `canon`. It does not take `AtomSet` or stylesheet output. Coupling typegen to atomic compilation causes cyclic dependencies and slow compilation.
 3. **Do not emit atomic class names (`.mt_2r`, `.bg_n300`) into `.d.ts`:** Atomic class names are strictly private compiler output. Users author `StyleProps` and `css()`; they never write or type class names.
-4. **Do not generate a JSX component factory (`styled.div`):** Primitives are authored React in `packages/reference-core/src/system/primitives/`, wrapping the `css()` runtime. Generating a JSX factory is Panda v1/v2 cargo-culting.
+4. **Do not generate a JSX component factory (`styled.div`):** Primitives are authored React in `packages/reference-rs/modules/primitives/js/factory.ts`, wrapping the `css()` runtime. Generating a JSX factory is Panda v1/v2 cargo-culting.
 5. **Do not generate layout pattern helpers (`box`, `flex`, `stack`, `grid`):** Tag primitives (`<Div>`, `<Span>`) handle layout directly. Layout patterns add zero capability while bloating the type surface.
 6. **Do not emit recipes as individual TypeScript modules (`recipes/*.d.ts`):** Recipes are declared data; `recipe()` is an authored TypeScript function in core. Generating a folder of recipe modules is forbidden.
 7. **Do not inherit viewport breakpoints (`sm`, `md`, `lg`) as default conditions:** Reference UI is container-query-first. Default public conditions must never be polluted with 25+ viewport media queries.

@@ -1,4 +1,4 @@
-# ATM-SITE-79 — Ambiguous star station (Forge §1)
+# ATM-SITE-79 — Ambiguous star
 
 A named import declared by two `export *` sources with different origins refuses with `Refused::Ambiguous`: nothing folds, and each use diagnoses exactly as an unresolvable import does — while the spread's static sibling survives.
 Symbols: `BindingWalk`, `Refused::Ambiguous`, `resolve_binding`, `ValueGraph`.

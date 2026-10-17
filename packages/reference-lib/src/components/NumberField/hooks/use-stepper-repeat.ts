@@ -9,7 +9,7 @@
  */
 import * as React from 'react'
 
-// Hold-repeat constants (PATCHES §7 / freeze decision 14): an unprevented
+// Hold-repeat constants: an unprevented
 // primary pointerdown steps immediately, the first repeat fires at exactly
 // 400ms, then every 60ms; touch/pen movement beyond 8 CSS px cancels.
 const REPEAT_START_DELAY = 400
@@ -69,7 +69,7 @@ export interface StepperRepeat {
 
 // Shared press-and-hold machine for both steppers (NF-STEP-02..08/10/12..15):
 // each step calls the root action once, which commits any dirty candidate
-// as its base and ends the edit session (B-19 commit boundary).
+// as its base and ends the edit session (commit boundary).
 // No explicit pointer capture: leave must end the session (NF-STEP-07).
 export function useStepperRepeat(options: StepperRepeatOptions): StepperRepeat {
   const { action, focusInput, disabled, atBound, resetEpoch, replacementEpoch, user } = options

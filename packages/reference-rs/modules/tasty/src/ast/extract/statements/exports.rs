@@ -4,8 +4,6 @@
 //! the same marker a namespace import uses, and never adds the target's names flat; `resolve` rebinds named
 //! imports of that binding to the namespace's file.
 
-use std::collections::BTreeMap;
-
 use oxc_ast::ast::{ModuleExportName, Statement};
 use oxc_span::GetSpan;
 
@@ -13,102 +11,45 @@ use crate::constants::libraries::USER_LIBRARY_NAME;
 
 use super::super::module_bindings::{
     collect_default_export_declaration, collect_exported_declaration, record_named_reexports,
+    ExportOutputs, ExportScope,
 };
 use super::super::slice_span;
 use super::super::symbols::{push_interface_shell, push_type_alias_shell};
-use super::super::ExtractionContext;
-use crate::ast::model::{ImportBinding, SymbolShell};
-use crate::scanner::{ImportResolver, ScannedFile};
+use super::super::ShellSink;
 
 pub(crate) fn exports_from_statement(
-    resolver: &ImportResolver,
-    file_id_set: &std::collections::BTreeSet<String>,
-    scanned_file: &ScannedFile,
+    scope: &ExportScope<'_, '_>,
     statement: &Statement<'_>,
-    comments: &[oxc_ast::ast::Comment],
-    import_bindings: &mut BTreeMap<String, ImportBinding>,
-    export_bindings: &mut BTreeMap<String, String>,
-    reexport_target: &mut BTreeMap<String, (String, String)>,
-    export_all_targets: &mut Vec<String>,
-    exports: &mut Vec<SymbolShell>,
+    out: &mut ExportOutputs<'_>,
 ) {
-    collect_named_export_statement(
-        resolver,
-        file_id_set,
-        scanned_file,
-        statement,
-        comments,
-        import_bindings,
-        export_bindings,
-        reexport_target,
-        exports,
-    );
-    match export_all_binding(resolver, file_id_set, scanned_file, statement) {
-        Some(ExportAllBinding::Star(target)) => export_all_targets.push(target),
+    collect_named_export_statement(scope, statement, out);
+    match export_all_binding(scope, statement) {
+        Some(ExportAllBinding::Star(target)) => out.export_all_targets.push(target),
         Some(ExportAllBinding::Namespace { name, target }) => {
-            reexport_target.insert(name, (target, "*".to_string()));
+            out.reexport_target.insert(name, (target, "*".to_string()));
         }
         None => {}
     }
 
-    let ctx = ExtractionContext {
-        source: &scanned_file.source,
-        comments,
-        import_bindings: &*import_bindings,
-        module_specifier: &scanned_file.module_specifier,
-        library: &scanned_file.library,
-    };
-
-    collect_user_export_statement(scanned_file, &ctx, statement, export_bindings, exports);
-    collect_user_type_shell(scanned_file, &ctx, statement, exports);
+    collect_user_export_statement(scope, statement, out);
+    collect_user_type_shell(scope, statement, out);
 }
 
 fn collect_named_export_statement(
-    resolver: &ImportResolver,
-    file_id_set: &std::collections::BTreeSet<String>,
-    scanned_file: &ScannedFile,
+    scope: &ExportScope<'_, '_>,
     statement: &Statement<'_>,
-    comments: &[oxc_ast::ast::Comment],
-    import_bindings: &mut BTreeMap<String, ImportBinding>,
-    export_bindings: &mut BTreeMap<String, String>,
-    reexport_target: &mut BTreeMap<String, (String, String)>,
-    exports: &mut Vec<SymbolShell>,
+    out: &mut ExportOutputs<'_>,
 ) {
     let Statement::ExportNamedDeclaration(export_decl) = statement else {
         return;
     };
 
     if export_decl.declaration.is_none() {
-        record_named_reexports(
-            resolver,
-            export_decl,
-            scanned_file.source.as_str(),
-            export_bindings,
-            reexport_target,
-            &scanned_file.file_id,
-            file_id_set,
-        );
+        record_named_reexports(scope, export_decl, out);
         return;
     }
 
-    let ctx = ExtractionContext {
-        source: &scanned_file.source,
-        comments,
-        import_bindings: &*import_bindings,
-        module_specifier: &scanned_file.module_specifier,
-        library: &scanned_file.library,
-    };
-
-    collect_exported_declaration(
-        &scanned_file.file_id,
-        &ctx,
-        export_decl,
-        export_bindings,
-        reexport_target,
-        resolver,
-        file_id_set,
-        exports,
-    );
+    collect_exported_declaration(scope, export_decl, out);
 }
 
 /// One resolved `export * from` or `export * as ns from` statement.
@@ -120,9 +61,7 @@ enum ExportAllBinding {
 }
 
 fn export_all_binding(
-    resolver: &ImportResolver,
-    file_id_set: &std::collections::BTreeSet<String>,
-    scanned_file: &ScannedFile,
+    scope: &ExportScope<'_, '_>,
     statement: &Statement<'_>,
 ) -> Option<ExportAllBinding> {
     let Statement::ExportAllDeclaration(export_all) = statement else {
@@ -135,10 +74,12 @@ fn export_all_binding(
         .as_str()
         .trim_matches('"')
         .trim_matches('\'');
-    let target = resolver.resolve_import(&scanned_file.file_id, source_module, file_id_set)?;
+    let target = scope
+        .resolver
+        .resolve_import(scope.file_id, source_module, scope.file_id_set)?;
     Some(match &export_all.exported {
         Some(exported) => ExportAllBinding::Namespace {
-            name: export_name_text(exported, &scanned_file.source),
+            name: export_name_text(exported, scope.ctx.source),
             target,
         },
         None => ExportAllBinding::Star(target),
@@ -152,19 +93,19 @@ fn export_name_text(name: &ModuleExportName<'_>, source: &str) -> String {
         .to_string()
 }
 
-fn collect_user_export_statement(
-    scanned_file: &ScannedFile,
-    ctx: &ExtractionContext<'_>,
-    statement: &Statement<'_>,
-    export_bindings: &mut BTreeMap<String, String>,
-    exports: &mut Vec<SymbolShell>,
-) {
-    // Allow both user files and reference-ui styled packages for symbol extraction
-    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME
-        || scanned_file.library.starts_with("@reference-ui/styled")
-        || scanned_file.library.starts_with("@reference-ui/");
+/// User files and reference-ui packages may contribute symbol shells for their declarations.
+fn emits_symbol_shells(library: &str) -> bool {
+    library == USER_LIBRARY_NAME
+        || library.starts_with("@reference-ui/styled")
+        || library.starts_with("@reference-ui/")
+}
 
-    if !is_allowed_library {
+fn collect_user_export_statement(
+    scope: &ExportScope<'_, '_>,
+    statement: &Statement<'_>,
+    out: &mut ExportOutputs<'_>,
+) {
+    if !emits_symbol_shells(scope.ctx.library) {
         return;
     }
 
@@ -172,47 +113,30 @@ fn collect_user_export_statement(
         return;
     };
 
-    collect_default_export_declaration(
-        &scanned_file.file_id,
-        ctx,
-        export_default,
-        export_bindings,
-        exports,
-    );
+    collect_default_export_declaration(scope, export_default, out);
 }
 
 fn collect_user_type_shell(
-    scanned_file: &ScannedFile,
-    ctx: &ExtractionContext<'_>,
+    scope: &ExportScope<'_, '_>,
     statement: &Statement<'_>,
-    exports: &mut Vec<SymbolShell>,
+    out: &mut ExportOutputs<'_>,
 ) {
-    // Allow both user files and reference-ui styled packages for symbol extraction
-    let is_allowed_library = scanned_file.library == USER_LIBRARY_NAME
-        || scanned_file.library.starts_with("@reference-ui/styled")
-        || scanned_file.library.starts_with("@reference-ui/");
-
-    if !is_allowed_library {
+    if !emits_symbol_shells(scope.ctx.library) {
         return;
     }
 
+    let mut sink = ShellSink {
+        file_id: scope.file_id,
+        ctx: scope.ctx,
+        exports: &mut *out.exports,
+    };
     match statement {
-        Statement::TSInterfaceDeclaration(interface_decl) => push_interface_shell(
-            &scanned_file.file_id,
-            ctx,
-            interface_decl,
-            interface_decl.span(),
-            false,
-            exports,
-        ),
-        Statement::TSTypeAliasDeclaration(type_alias) => push_type_alias_shell(
-            &scanned_file.file_id,
-            ctx,
-            type_alias,
-            type_alias.span(),
-            false,
-            exports,
-        ),
+        Statement::TSInterfaceDeclaration(interface_decl) => {
+            push_interface_shell(&mut sink, interface_decl, interface_decl.span(), false)
+        }
+        Statement::TSTypeAliasDeclaration(type_alias) => {
+            push_type_alias_shell(&mut sink, type_alias, type_alias.span(), false)
+        }
         _ => {}
     }
 }

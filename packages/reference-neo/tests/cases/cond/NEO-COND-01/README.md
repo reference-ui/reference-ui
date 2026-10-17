@@ -7,10 +7,9 @@ spec checks the sheet carries exactly two utilities with a single
 and the live element paints its base color at rest, the hover color under
 a real `page.hover()`, and the base color again after the pointer leaves.
 
-Evidence: `[atm]` ATM-COND-02, ATM-COND-10; `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:317` "simple"
-(grouped conditions lower `_hover` to one `:is()` wrap); `[lib]`
-`packages/reference-lib/.reference-ui/styled/styles.css`
-`:is(:hover, [data-hover])` ×26 (e.g. L475).
+Evidence: ATM-COND-02, ATM-COND-10; Panda v1 test "simple" (grouped conditions
+lower `_hover` to one `:is()` wrap); reference-lib
+`packages/reference-lib/.reference-ui/styled/styles.css` `:is(:hover,
+[data-hover])` ×26 (e.g. L475).
 
 > Search terms: pseudo-class, dual bind, hover twin, conditions/hover, selector :is(), NEO-COND-02

@@ -1,5 +1,5 @@
 /**
- * Plan parity station (RS-14). Every want emits a runtime style plan: ternary
+ * Plan parity case. Every want emits a runtime style plan: ternary
  * arms, member access, and identifier spreads resolve through the same plan
  * index as direct literals, so runtime css() never returns '' for a leaf the
  * sheet printed. Covers css() and JSX, which share the authored capture.

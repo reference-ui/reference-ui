@@ -15,7 +15,7 @@ result.diagnostics
 ```
 
 `baseSystem` is required. Foreign or malformed specs are rejected with an
-error diagnostic (station `ATM-TOKEN-10`); a missing spec throws.
+error diagnostic (case `ATM-TOKEN-10`); a missing spec throws.
 
 No OXC in JS. No walking `virtual/`. Core's sync worker calls this as
 the compile entry — **after** matrix parity, not before.

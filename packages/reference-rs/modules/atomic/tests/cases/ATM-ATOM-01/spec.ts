@@ -1,5 +1,5 @@
 /**
- * Atom hash station. Two files authoring `mt="2r"` emit one class.
+ * Atom hash case. Two files authoring `mt="2r"` emit one class.
  * A different value emits a second class. Importance splits identity.
  */
 import { expect } from 'vitest'

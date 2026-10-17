@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-DSP-01.
+ * Case specification for TST-DSP-01.
  * Verifies rich display representations for complex style props and nested object members.
  * Proves primary SPEC ID anchor TST-DSP-01.
  */

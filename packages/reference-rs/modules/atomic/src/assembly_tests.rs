@@ -104,7 +104,7 @@ fn external_decl_needs_a_foreign_qualifier_to_plan() {
 }
 
 /// A covered external expectation is silent: analysis predicts the
-/// foreign-qualified key and the foreign plan backs it, so the S4 join
+/// foreign-qualified key and the foreign plan backs it, so the join
 /// proves nothing absent.
 #[test]
 fn covered_external_expectation_is_silent() {

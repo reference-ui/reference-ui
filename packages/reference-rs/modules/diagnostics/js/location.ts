@@ -4,9 +4,9 @@
  * resolved line and column, plus the cheap byte-offset span, labeled underlines, and help lines.
  * Every check mirrors the Rust template exactly, so both sides of napi accept and refuse together.
  */
-import type { ByteSpan } from './generated/ByteSpan'
-import type { Label } from './generated/Label'
-import { DiagnosticParseError } from './index'
+import type { ByteSpan } from './generated/ByteSpan.js'
+import type { Label } from './generated/Label.js'
+import { DiagnosticParseError } from './codes.js'
 
 /** Optional source location accepted by the `create*` constructors. */
 export interface DiagnosticLocation {

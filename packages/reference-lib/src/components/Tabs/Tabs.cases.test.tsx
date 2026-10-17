@@ -36,7 +36,7 @@ function hiddenOf(id: string) {
   return (document.getElementById(id) as HTMLElement | null)?.hidden
 }
 
-describe('Tabs finish-line cases (SELECT)', () => {
+describe('Tabs cases (SELECT)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -278,7 +278,7 @@ describe('Tabs finish-line cases (SELECT)', () => {
   })
 })
 
-describe('Tabs finish-line cases (AUTO)', () => {
+describe('Tabs cases (AUTO)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -533,7 +533,7 @@ describe('Tabs finish-line cases (AUTO)', () => {
   })
 })
 
-describe('Tabs finish-line cases (MANUAL funnel + EVENT)', () => {
+describe('Tabs cases (MANUAL funnel + EVENT)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -795,7 +795,7 @@ describe('Tabs finish-line cases (MANUAL funnel + EVENT)', () => {
   })
 })
 
-describe('Tabs finish-line cases (DOM-09 refs + DOM-13 diagnostics)', () => {
+describe('Tabs cases (DOM-09 refs + DOM-13 diagnostics)', () => {
   let container: HTMLDivElement
   let root: Root
 

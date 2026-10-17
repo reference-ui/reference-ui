@@ -4,6 +4,6 @@ Unknown style prop. The world carries only config plus the brand token on the di
 
 Raised in: `modules/atomic/src/resolve/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-PROPERTY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-PROPERTY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-PROPERTY, atm-w-unknown-property, diagnostics case index, NEO-DIAG-01

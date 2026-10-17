@@ -1,8 +1,8 @@
 /**
- * Tasty station test harness helpers and execution pipeline.
+ * Tasty case test harness helpers and execution pipeline.
  * Provides on-demand compilation, module and type declaration emission,
- * standing invariant gauges, and committed golden management for TST-* stations.
- * Enables fast isolated station testing without eager global pre-runners.
+ * standing invariant gauges, and committed golden management for TST-* cases.
+ * Enables fast isolated case testing without eager global pre-runners.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -168,7 +168,7 @@ export function caseOutputDir(caseName: string): string {
 
 /**
  * Scratch root owned by this module instance. Vitest loads each test file in its own module
- * instance, so each file writes under a root of its own and no two writers share a station dir.
+ * instance, so each file writes under a root of its own and no two writers share a case dir.
  */
 let ownedScratchRoot: string | undefined
 
@@ -187,7 +187,7 @@ export function caseRuntimeDir(caseName: string): string {
 /**
  * Removes only the scratch root this module instance created, then forgets its compilations.
  * Roots that belong to files running alongside are never touched. Call it from afterAll in
- * every suite that compiles stations.
+ * every suite that compiles cases.
  */
 export function disposeTastyScratch(): void {
   if (ownedScratchRoot !== undefined) {

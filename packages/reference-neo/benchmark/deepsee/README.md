@@ -1,4 +1,4 @@
-# deepsee — sync observability tooling (Wave 1, lane E)
+# deepsee — sync observability tooling
 
 One-command burndown, RSS attribution, and bundle accounting over the locked
 bench load. New files only; zero engine edits, zero bench edits.

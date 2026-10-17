@@ -45,7 +45,7 @@ export interface ComboboxProps {
    */
   autocomplete?: ComboboxAutocomplete
   /**
-   * Custom-value policy (#2, W-24, Ark-exact name, default `false`).
+   * Custom-value policy (#2, Ark-exact name, default `false`).
    * `true` commits exact unmatched text as the value on Enter, Tab, and
    * blur/outside-press (empty text maps to `null`); the string is never
    * normalized. `false` restores the committed text on those paths with

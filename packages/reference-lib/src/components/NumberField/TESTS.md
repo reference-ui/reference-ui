@@ -1,9 +1,9 @@
 # NumberField test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct NumberField --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/number-field.spec.ts`
-Unit: `matrix/lib/tests/unit/number-field.test.tsx`
+Playwright: `src/components/NumberField/__e2e__/*.spec.ts` (run with `pnpm agentct NumberField --e2e`)
+Unit: `src/components/NumberField/**/*.test.ts(x)`
 Page: `/number-field`
 
 Every case exercises only public exports from `@reference-ui/lib`; automated
@@ -62,45 +62,15 @@ manual release gates.
 
 ### React Spectrum
 
-- `vendor/react-spectrum/packages/react-aria-components/test/NumberField.test.js`
-- `vendor/react-spectrum/packages/react-aria/test/numberfield/useNumberField.test.ts`
-- `vendor/react-spectrum/packages/react-stately/test/numberfield/useNumberFieldState.test.ts`
-- `vendor/react-spectrum/packages/react-aria-components/src/NumberField.tsx`
-- `vendor/react-spectrum/packages/react-aria/src/numberfield/useNumberField.ts`
-- `vendor/react-spectrum/packages/react-aria/src/spinbutton/useSpinButton.ts`
-- `vendor/react-spectrum/packages/react-stately/src/numberfield/useNumberFieldState.ts`
-- `vendor/react-spectrum/packages/@internationalized/number/test/NumberParser.test.js`
-- `vendor/react-spectrum/packages/@internationalized/number/src/NumberParser.ts`
-
-These supply textbox/form anatomy, localized parser/formatter behavior,
-controlled dirty text, format-option stability, non-Latin paste, stepping,
-required state, and mobile-input evidence. Private hooks/state, Provider/slot
-contracts, uncontrolled values, and hidden-number validation are contrast.
+React Spectrum supplies textbox/form anatomy, localized parser/formatter
+behavior, controlled dirty text, format-option stability, non-Latin paste,
+stepping, required state, and mobile-input evidence. Private hooks/state,
+Provider/slot contracts, uncontrolled values, and hidden-number validation are
+contrast.
 
 ### Base UI
 
-- `vendor/base-ui/packages/react/src/number-field/root/NumberFieldRoot.spec.tsx`
-- `vendor/base-ui/packages/react/src/number-field/root/NumberFieldRoot.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/root/NumberFieldRoot.iOS.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/input/NumberFieldInput.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/input/NumberFieldInput.spec.tsx`
-- `vendor/base-ui/packages/react/src/number-field/group/NumberFieldGroup.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/decrement/NumberFieldDecrement.test.tsx`
-- `vendor/base-ui/packages/react/src/number-field/utils/parse.test.ts`
-- `vendor/base-ui/packages/react/src/number-field/utils/validate.test.ts`
-- `vendor/base-ui/packages/react/src/number-field/root/NumberFieldRoot.tsx`
-- `vendor/base-ui/packages/react/src/number-field/input/NumberFieldInput.tsx`
-- `vendor/base-ui/packages/react/src/number-field/group/NumberFieldGroup.tsx`
-- `vendor/base-ui/packages/react/src/number-field/increment/NumberFieldIncrement.tsx`
-- `vendor/base-ui/packages/react/src/number-field/decrement/NumberFieldDecrement.tsx`
-- `vendor/base-ui/packages/react/src/number-field/root/useNumberFieldStepperButton.ts`
-- `vendor/base-ui/packages/react/src/number-field/utils/parse.ts`
-- `vendor/base-ui/packages/react/src/number-field/utils/validate.ts`
-- `vendor/base-ui/packages/react/src/number-field/utils/constants.ts`
-- `vendor/base-ui/packages/react/src/internals/usePressAndHold.ts`
-
-These strengthen input filtering, Unicode digits/signs, Indian and localized
+Base UI strengthens input filtering, Unicode digits/signs, Indian and localized
 grouping, percent/unit/currency/exponent parsing, explicit rounding, decimal
 cleanup, dirty stepping, controlled rejection, caret/paste/composition,
 inputMode contrast, and repeat cleanup. Reasons/details, uncontrolled modes,
@@ -109,11 +79,6 @@ integration, polymorphism, and hidden-number validation are deliberately
 not copied.
 
 ### Zag
-
-- `vendor/zag/packages/machines/number-input/tests/cursor.test.ts`
-- `vendor/zag/packages/machines/number-input/src/cursor.ts`
-- `vendor/zag/packages/machines/number-input/src/number-input.machine.ts`
-- `vendor/zag/packages/machines/number-input/src/number-input.connect.ts`
 
 Cursor vectors are ported through public focused Input rerenders. Zag's string
 machine, spinbutton role, service methods, wheel, and ScrubArea remain

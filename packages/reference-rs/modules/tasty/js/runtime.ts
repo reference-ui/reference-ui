@@ -4,7 +4,7 @@
  * Passes root directory paths and include globs to the Rust scanner.
  * Emits raw serialized module maps and typed diagnostic payloads from the native engine.
  */
-import { callNativeJson } from '../../runtime/js/native'
+import { callNativeJson } from '../../runtime/js/native.js'
 
 export interface TastyDiagnostic {
   severity: 'warning' | 'error'

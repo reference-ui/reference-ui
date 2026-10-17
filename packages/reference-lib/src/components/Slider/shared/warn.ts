@@ -1,14 +1,12 @@
 /**
  * Slider's dev-only diagnostic channel: warnSlider logs a component-tagged
  * error outside production, and isProductionEnv exposes the same gate the
- * root's render-phase checks read. The package declares no node types, so
- * process arrives via globalThis.
+ * root's render-phase checks read. Both read the shared isDevelopment().
  */
-
-const globalProcess = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process
+import { isDevelopment } from '../../../core/env/dev'
 
 export function isProductionEnv(): boolean {
-  return globalProcess?.env?.NODE_ENV === 'production'
+  return !isDevelopment()
 }
 
 export function warnSlider(message: string) {

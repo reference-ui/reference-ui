@@ -99,7 +99,7 @@ fn spec_system() -> base_system::BaseSystem {
         "xDown": "200",
         "empty": "",
     });
-    // Integer-keyed per-prop goldens (doom-5): authored `10` and `2`
+    // Integer-keyed per-prop goldens: authored `10` and `2`
     // answer directly plus their `_10`/`_2` twins. Appended after `__x`
     // so existing twins keep first-wins; no existing probe names these.
     spec["conditions"] = json!({
@@ -107,7 +107,7 @@ fn spec_system() -> base_system::BaseSystem {
         "10": "[data-ten] &",
         "2": "[data-two] &",
     });
-    // Prefix-probe font (doom-4 T3): every extra misses the alias and
+    // Prefix-probe font: every extra misses the alias and
     // prefix tables, so the oracle spells each verbatim. `MyProp` is the
     // filed break, `myProp` kills the generic kebab arm, `--brandX`
     // subsumes the custom-prop arm, and `mozFoo` kills vendor-dashing.

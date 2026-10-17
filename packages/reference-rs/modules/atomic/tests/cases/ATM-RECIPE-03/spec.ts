@@ -1,5 +1,5 @@
 /**
- * Host StyleProps station. Recipe classes sit in @layer recipes. mt/bg on
+ * Host StyleProps case. Recipe classes sit in @layer recipes. mt/bg on
  * the host are utilities. variant stays runtime-owned (ATM-COND-06).
  */
 import { expect } from 'vitest'

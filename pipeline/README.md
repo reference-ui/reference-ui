@@ -20,7 +20,7 @@ The main pipeline areas are:
 
 The registry subsystem is split into focused modules because it now owns a real publish-style staging boundary instead of a single monolithic helper file.
 
-The current E2E matrix migration plan lives in `pipeline/matrix.md`.
+Matrix test modes and the managed registry are described below.
 
 ## Prerequisites
 
@@ -115,6 +115,27 @@ On macOS, Dagger-backed entrypoints now check Docker reachability first and auto
 Matrix runs also fail fast when Colima does not have enough free Docker disk left for the containerized install fanout, with remediation that points at `pnpm pipeline clean` or a larger Colima disk.
 
 Testing and release can then consume the same registry-hosted artifacts instead of rebuilding ad hoc.
+
+## Matrix test modes
+
+A matrix package's `matrix.json` declares `react` (`react17`, `react18`, `react19`, or a non-empty array of them; the first unique entry is the default) and `bundlers` (`vite7`, `webpack5`).
+
+- `pnpm pipeline test` runs the whole matrix fanout. `--packages <names>` limits the run to the named packages.
+- The default run uses each package's first declared React runtime and its latest declared Vite bundler, or its first declared bundler when none is Vite.
+- `--react <runtime>` pins one declared React runtime.
+- `--full` expands every declared React runtime and bundler.
+- A package with Playwright tests runs in the Playwright image for its `@playwright/test` version, or for the managed default when it declares none. Other packages run in `node:24-bookworm`.
+
+## Managed Verdaccio registry
+
+- The managed registry listens on `http://127.0.0.1:4873`. Its config is `pipeline/src/registry/verdaccio/config.yaml`.
+- Its storage is `pipeline/src/registry/.store/storage`. `pnpm pipeline clean` deletes it, and the store is emptied when a package keeps its version but its artifact changes.
+- Packages without a more specific rule are proxied to the `npmjs` uplink (`https://registry.npmjs.org/`). That uplink sets `maxage: 30d` and `cache: false`, so Verdaccio does not store the tarballs it fetches from npm.
+- Matrix containers bind the host registry as the service `registry`, and `npm_config_registry` is `http://registry:4873`.
+
+## Staging copy excludes
+
+Staging omits `.git` and `node_modules` at any depth, and `target`, `dist/cargo`, `.turbo` and `coverage` at the package root. Excludes match paths relative to the package root, never bare basenames: core, lib, mcp and icons ship their whole `dist/` through `files`, so a bare `dist` match would drop it.
 
 ## Current scope
 

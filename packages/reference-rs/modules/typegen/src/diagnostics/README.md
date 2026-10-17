@@ -25,7 +25,7 @@ guess a missing union or wrapper, and no producer invents a code outside the tab
    tokens in this system emit `TGN-W-ABSENT-STRICT-CATEGORY` and print no wrapper.
    Duplicate names stay silent — the first occurrence wins, exactly as the printer runs.
 5. Font families declaring no weights emit `TGN-W-EMPTY-FONT-FAMILY` and are omitted.
-6. `normalize` sorts by code and message, then dedupes identical rows so station
+6. `normalize` sorts by code and message, then dedupes identical rows so
    goldens stay deterministic. The `emit_dts` / `emit_dts_with` strings never change:
    the detailed twin only adds the rows.
 

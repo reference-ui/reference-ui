@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-STY-03.
+ * Case specification for TST-STY-03.
  * Verifies public projections in the presence of local name collisions.
  * Proves primary SPEC ID anchor TST-STY-03.
  */

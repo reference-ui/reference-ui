@@ -1,5 +1,5 @@
 /**
- * Shared-wrapper station. Three `sm` utilities share one `@container` block.
+ * Shared-wrapper case. Three `sm` utilities share one `@container` block.
  * Nested `sm:` object keys are not extract conditions; array slot 1 is `sm`.
  */
 import { expect } from 'vitest'

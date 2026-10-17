@@ -20,7 +20,7 @@ function tabIndexOf(id: string) {
   return document.getElementById(id)?.getAttribute('tabindex')
 }
 
-describe('Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception)', () => {
+describe('Tabs optional-value proofs (optional-value exception)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -305,7 +305,7 @@ describe('Tabs optional-value proofs (HQ EOD 2026-09-26 optional-value exception
   })
 })
 
-describe('Tabs stability proofs (quarantine-landing ports)', () => {
+describe('Tabs stability proofs (landing ports)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -1440,7 +1440,7 @@ describe('Tabs FEATURES #6 proofs (disabled/removed handoff)', () => {
   })
 })
 
-describe('Tabs PATCHES proofs (identity registry)', () => {
+describe('Tabs proofs (identity registry)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -1677,7 +1677,7 @@ describe('Tabs PATCHES proofs (identity registry)', () => {
   })
 })
 
-describe('Tabs W-15 proofs (root keepMounted)', () => {
+describe('Tabs proofs (root keepMounted)', () => {
   let container: HTMLDivElement
   let root: Root
 
@@ -1870,7 +1870,7 @@ describe('Tabs W-15 proofs (root keepMounted)', () => {
   })
 })
 
-describe('Tabs W-16 proofs (dev warning on unmatched controlled value)', () => {
+describe('Tabs proofs (dev warning on unmatched controlled value)', () => {
   let container: HTMLDivElement
   let root: Root
   let errors: Array<Array<unknown>>
@@ -2004,16 +2004,14 @@ describe('Tabs W-16 proofs (dev warning on unmatched controlled value)', () => {
   })
 
   it('stays silent in production', async () => {
-    const prevEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     try {
       await React.act(async () => {
         root.render(<Trio value="setings" onChange={() => {}} />)
       })
       expect(unmatchedWarnings()).toEqual([])
     } finally {
-      if (prevEnv === undefined) delete process.env.NODE_ENV
-      else process.env.NODE_ENV = prevEnv
+      vi.unstubAllEnvs()
     }
   })
 })

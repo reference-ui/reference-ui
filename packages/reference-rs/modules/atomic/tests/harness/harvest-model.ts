@@ -1,13 +1,12 @@
 /**
- * Harvest M-series model: the Method recipe from the harvest mission brief
- * (docs/missions) as a deterministic builder. Takes the pool size (300/500)
+ * Harvest M-series model: the Method recipe as a deterministic builder. Takes the pool size (300/500)
  * plus a `when` list and
  * emits the class count, the sheet, and its gzip-6/brotli-11 bytes. Sink tables are
  * parsed from the Rust sources (never typed in); the four ready-05 pinned readings
  * (spaceless rgba, 0-based url/transform, kebab `focus-visible`, short disabled
  * wrap) are baked in. The last two differ from the real compiler on purpose: the
  * `when`-variant rows are counterfactuals nobody plans around, and the test pins
- * the mission table to prove this builder matches it byte for byte.
+ * the expected table to prove this builder matches it byte for byte.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -111,7 +110,7 @@ function quotedList(source: string, table: string): string[] {
   return [...block[1]!.matchAll(/"([^"]+)"/g)].map(match => match[1]!)
 }
 
-/** Length pool of size n: the mission's first-match generator, i = 1..n. */
+/** Length pool of size n: the first-match generator, i = 1..n. */
 function lengthPool(n: number): string[] {
   const pool: string[] = []
   for (let i = 1; i <= n; i += 1) {
@@ -148,7 +147,7 @@ function transformPool(n: number): string[] {
   return Array.from({ length: n }, (_, i) => `translateX(${i}px)`)
 }
 
-/** Pool mix per total: the mission's 300/500 split. */
+/** Pool mix per total: the 300/500 split. */
 function poolsFor(total: 300 | 500): string[][] {
   const n = total === 300 ? [173, 110, 6, 4] : [281, 190, 12, 10]
   return [

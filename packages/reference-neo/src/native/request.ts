@@ -1,7 +1,7 @@
 // Native request assembly: the one builder for the frozen compile request.
 // It takes the spec, the resolved roster, the primitive names, the roots,
 // and the scope, and emits the six-key request every compile call shares.
-// One home, so the SYNC-04 pin never drifts across call sites again.
+// One home, so the NEO-SYNC-04 pin never drifts across call sites again.
 
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { LogChannel } from '../config/types.ts'
@@ -13,7 +13,7 @@ export function uniqueSorted(names: readonly string[]): string[] {
 
 /**
  * The request parts the builder joins. `primitiveNames` arrives as a plain
- * param: callers read it from the E1 element vocabulary, and the builder
+ * param: callers read it from the element vocabulary, and the builder
  * takes it rather than importing the shelf itself.
  */
 export interface CompileRequestInput {
@@ -27,13 +27,13 @@ export interface CompileRequestInput {
   /**
    * Upstream container root verdict: set only when an extends/layers
    * system roots one, so the key drops from the serialized request
-   * otherwise and the SYNC-04 pin stays byte-identical.
+   * otherwise and the NEO-SYNC-04 pin stays byte-identical.
    */
   upstreamContainerRoot?: boolean
   /**
    * Upstream system names (extends then layers, self excluded) for external
    * want qualification. Set only when non-empty so the key drops from the
-   * serialized request otherwise and the SYNC-04 pin stays byte-identical.
+   * serialized request otherwise and the NEO-SYNC-04 pin stays byte-identical.
    */
   upstreamSystems?: string[]
 }
@@ -49,7 +49,7 @@ export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRe
     logs: input.logs,
     upstreamContainerRoot: input.upstreamContainerRoot || undefined,
     // Arrays are truthy: `|| undefined` would keep the key present-empty and
-    // break the SYNC-04 byte-diff, so length-gate instead.
+    // break the NEO-SYNC-04 byte-diff, so length-gate instead.
     upstreamSystems: input.upstreamSystems?.length ? [...input.upstreamSystems] : undefined,
   }
 }

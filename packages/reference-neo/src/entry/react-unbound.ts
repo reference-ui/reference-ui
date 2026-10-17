@@ -1,4 +1,4 @@
-// Fragment-eval react surface backed by the unbound E2 roster.
+// Fragment-eval react surface backed by the unbound primitives roster.
 // It takes the live workspace primitives surface plus the Neo style runtime
 // and emits every primitive unbound plus css and recipe. Fragment evaluation
 // never renders and unbound primitives throw on render, so the eval-safe
@@ -8,7 +8,7 @@
 // it for the pre-run typecheck, so worlds typecheck against the same
 // unbound surface fragments evaluate.
 
-// The E2 leg ships live from the workspace package (never copied, never
+// The primitives roster leg ships live from the workspace package (never copied, never
 // tree-relative: no relative hop survives src vs dist vs packed depths and
 // the packed tree has no reference-rs). The built primitives surface carries
 // the same roster (configurePrimitives + 101 unbound) in every layout.

@@ -15,14 +15,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { hashNativeInputs } from '../shared/native-inputs'
+import { hashNativeInputs } from '../shared/native-inputs.js'
 import {
   collectArtifactFreshnessIssues,
   collectNativeFreshnessIssues,
   formatNativeFreshnessError,
   tripleForRustTarget,
   writeNativeStamp,
-} from '../shared/native-freshness'
+} from '../shared/native-freshness.js'
 
 const createdDirs: string[] = []
 

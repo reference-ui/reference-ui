@@ -1,5 +1,5 @@
 /**
- * Pseudo precedence station. Authored alphabetically so extract order would
+ * Pseudo precedence case. Authored alphabetically so extract order would
  * put `_active` first; the sorter still emits hover → disabled.
  */
 import { expect } from 'vitest'

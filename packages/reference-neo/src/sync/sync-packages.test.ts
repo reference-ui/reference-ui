@@ -116,14 +116,14 @@ describe('sync generated packages', () => {
     expect(mod.baseSystem.name).toBe('sync-test')
     expect(typeof mod.baseSystem.fragment).toBe('string')
     expect(mod.baseSystem.fragment).toContain('brand')
-    // S5 carriage: own-entry-only payload here; `css` stays dead forever.
+    // Carriage: own-entry-only payload here; `css` stays dead forever.
     expect('css' in mod.baseSystem).toBe(false)
     expect(mod.baseSystem.streams).toHaveLength(1)
     const [own] = mod.baseSystem.streams
     expect(own.name).toBe('sync-test')
     expect(['tokens' in own, typeof own.tokensPortable]).toEqual([false, 'string'])
     expect(mod.baseSystem.jsxElements).toEqual([])
-    // A system with no extends publishes one node: its own, carrying the bundle (E1).
+    // A system with no extends publishes one node: its own, carrying the bundle.
     expect(mod.baseSystem.fragments?.map((node) => node.name)).toEqual(['sync-test'])
     expect(mod.baseSystem.fragments?.[0]?.bundle).toContain('brand')
     expect('cssChunks' in mod.baseSystem).toBe(false)

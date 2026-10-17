@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-02.
+ * Case specification for TST-EXT-02.
  * `export * as tree from './leaf'` exposes one namespace. A consumer's `tree.Leaf` through the barrel
  * resolves to the `Leaf` symbol id, and the barrel exports no flat `Leaf` for a consumer to reach.
  */

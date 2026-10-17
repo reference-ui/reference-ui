@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-OPR-01.
+ * Case specification for TST-OPR-01.
  * Verifies keyof, readonly, and unique type operator extraction across aliases and member types.
  * Proves primary SPEC ID anchor TST-OPR-01.
  */

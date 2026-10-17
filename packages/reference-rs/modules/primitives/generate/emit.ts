@@ -1,5 +1,6 @@
 /**
- * Printers for the three committed primitives artifacts, E1, E2, and E4.
+ * Printers for the three committed primitives artifacts: the vocabulary (vocabulary.json),
+ * the roster module (primitives.mjs), and the primitive types (primitives.d.ts).
  * buildVocabularyJson renders the machine contract with sorted keys and a stable
  * layout; buildPrimitivesMjs renders the raw system-unbound component module with
  * the configurePrimitives seam; buildPrimitivesDts renders the raw types in today's
@@ -64,7 +65,7 @@ const E2_SEAM_DOC = [
 ]
 
 const STYLE_PROPS_WIRING = [
-  "import type { StyleConditionKey, StyleProps as NarrowStyleProps, SystemStyleObject } from '@reference-ui/styled'",
+  "import type { StyleConditionKey, StyleProps as NarrowStyleProps } from '@reference-ui/styled'",
   '/** React style props: typegen precision where tokens exist, open everywhere else. */',
   "export type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {",
   "  [K in Exclude<StylePropName, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown",

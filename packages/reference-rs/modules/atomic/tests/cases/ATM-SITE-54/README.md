@@ -1,6 +1,6 @@
 # ATM-SITE-54 — Specifier Resolution and Collision Control
 
-Pins SPEC-V2-76's Ph4 row 1: specifiers resolve (relative, `tsconfig`
+Pins the specifier rungs: specifiers resolve (relative, `tsconfig`
 `paths`/`baseUrl`, extension and index probing, `package.json` `exports`)
 and the `(path, export)` cache serves them, so two files declaring the same
 const name with different values never cross.

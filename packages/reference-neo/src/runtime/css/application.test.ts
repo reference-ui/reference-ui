@@ -115,7 +115,7 @@ describe('axis shorthands', () => {
   })
 
   it('split onto style resolution, never onto the element', () => {
-    // The E2 seam carries no types (raw roster only), so the test binds
+    // The unbound roster seam carries no types (raw roster only), so the test binds
     // through the same unknown-cast the PGEN parity specs use, then renders
     // one bound primitive and reads the split off css plus the host attrs.
     const entry = primitivesEntry as unknown as {

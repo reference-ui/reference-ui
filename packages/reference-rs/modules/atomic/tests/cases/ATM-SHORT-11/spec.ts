@@ -1,5 +1,5 @@
 /**
- * Flex station (ATM-SHORT-11, RS-39). The four Panda flex utility keywords
+ * Flex (ATM-SHORT-11). The four Panda flex utility keywords
  * map to their emitted triples; every other value passes through raw. No
  * flex value ever decomposes into grow/shrink/basis longhands (the border
  * family gate refuses the len-3 flex trio).
@@ -29,7 +29,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).toContain('flex: 2 30px;')
     expect(sheet).toContain('flex: 2;')
     expect(sheet).toContain('flex: inherit;')
-    // The RS-39 defect shape: never decompose into flex longhands.
+    // The defect shape: never decompose into flex longhands.
     expect(sheet).not.toContain('flex-grow:')
     expect(sheet).not.toContain('flex-shrink:')
     expect(sheet).not.toContain('flex-basis:')

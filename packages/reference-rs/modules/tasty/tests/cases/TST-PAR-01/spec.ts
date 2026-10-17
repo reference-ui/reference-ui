@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-PAR-01.
+ * Case specification for TST-PAR-01.
  * Verifies default values on generic type parameters and partial default configurations.
  * Proves primary SPEC ID anchor TST-PAR-01.
  */

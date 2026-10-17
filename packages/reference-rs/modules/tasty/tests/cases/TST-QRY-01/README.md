@@ -4,7 +4,7 @@ Verifies typeof query expressions preserved across aliases and member wrappers.
 Ensures expressions like typeof themeConfig and typeof tokens.spacing are accurately surfaced.
 Proves primary SPEC ID anchor TST-QRY-01.
 
-Doom-night fortify pin C (tasty resolve cluster): cross-file `typeof`
+Cross-file `typeof`
 over named value imports (`consumer.ts` imports `tokens` from
 `values.ts`, plus the aliased `export { themeTokens as tokens }`
 target) resolves to the same object payload the local twin carries,

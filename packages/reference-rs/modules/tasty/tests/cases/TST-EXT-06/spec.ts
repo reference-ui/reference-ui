@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-06.
+ * Case specification for TST-EXT-06.
  * An interface's inherited members take the type arguments of its extends clause. `extends Holder<number>` shows
  * `number` for the parameter A and for B, whose default is A, and a chain through the generic parent `Outer<T>`
  * passes `string` down to `Holder`. The declaration itself keeps its own parameters.

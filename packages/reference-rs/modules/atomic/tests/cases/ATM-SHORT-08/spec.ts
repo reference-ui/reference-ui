@@ -1,5 +1,5 @@
 /**
- * Text-gradient station (ATM-SHORT-08, RS-22). `textGradient` expands to
+ * Text-gradient (ATM-SHORT-08). `textGradient` expands to
  * the Panda clip trio — `background-image` with resolved refs plus
  * `-webkit-background-clip: text` and `color: transparent` — never the
  * dead `text-gradient` property. Conditions fan out over all three atoms.

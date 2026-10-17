@@ -1,7 +1,7 @@
 /**
- * Namer-golden station (ATM-SEAM-08). The compiler generates one namer golden
+ * Namer-golden (ATM-SEAM-08). The compiler generates one namer golden
  * per lexical function and per procedure — an input to output file the runtime
- * namer must reproduce exactly. This station runs one block per committed
+ * namer must reproduce exactly. This case runs one block per committed
  * file in tests/goldens/namer, lexical functions first, then each procedure,
  * then the composed name() cases, so a drift names the exact function that
  * moved. The compiler namer stays the oracle: this compile's plans anchor it.
@@ -26,7 +26,7 @@ type NamerFn = (input: unknown, tables: unknown, system?: string) => unknown
 /**
  * `$pairs` decode: integer-keyed per-prop golden inputs travel as
  * `{ $pairs: [[key, value], ...] }` in authored order, because JSON.parse
- * would destroy non-V8 order the same way the substrate does (doom-5).
+ * would destroy non-V8 order the same way the substrate does.
  * Rebuilt here into the V8-ordered object the substrate delivers, so the
  * golden pins the algorithm with order given. Sole-key plus pair-array
  * shape required: anything else passes through untouched.

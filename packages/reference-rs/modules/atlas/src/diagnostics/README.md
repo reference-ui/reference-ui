@@ -19,11 +19,11 @@ guess a missing type or package, and no producer invents a code outside the tabl
    `ATL-W-UNRESOLVED-PROPS-TYPE`, while inline object annotations omit the
    component plus `ATL-W-UNSUPPORTED-PROPS-ANNOTATION`.
 4. `normalize_diagnostics` sorts by code, file, and message, then dedupes
-   identical rows so station goldens stay deterministic.
+   identical rows so case goldens stay deterministic.
 
 Positions: component diagnostics carry the display source as `file` (e.g.
 `./components/BrokenCard.tsx`); package and scan failures are request-level and
-carry no file. Proof stations: `ATL-PROP-01`, `ATL-TYPE-01`, `ATL-BAR-01`
+carry no file. Proof cases: `ATL-PROP-01`, `ATL-TYPE-01`, `ATL-BAR-01`
 (`tests/cases/`); whole-compiler repros: Neo's `repro.test.ts` atlas suite.
 
 ## ERROR CODES

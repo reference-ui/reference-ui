@@ -1,8 +1,8 @@
 # Collapsible test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Collapsible --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/collapsible.spec.ts`  
+Playwright: `src/components/Collapsible/__e2e__/*.spec.ts` (run with `pnpm agentct Collapsible --e2e`)  
 Page: `/collapsible`
 
 Collapsible owns one controlled disclosure relationship and its Presence
@@ -15,15 +15,6 @@ transform styles.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/collapsible/src/collapsible.test.tsx`
-  — controlled state, trigger/content linkage, disabled behavior, and native
-  part forwarding.
-- `vendor/base-ui/packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx`
-  — interrupted transitions, measured close, initially-open motion, and stale
-  animation races.
-- `vendor/react-spectrum/packages/react-aria-components/test/Disclosure.test.js`
-  — controlled expansion, click/keyboard activation, disabled and nested
-  disclosures.
 - Ariakit `disclosure` and Zag `collapsible` are equivalent-state references.
 
 ## Required cases

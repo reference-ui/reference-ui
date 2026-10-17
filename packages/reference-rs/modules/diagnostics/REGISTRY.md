@@ -63,7 +63,7 @@ Rules:
 4. **Register the row here.** Append to the inventory below: code, one-line
    meaning, and the file that raises it. A code with no row is unshipped.
 5. **Pin it in a golden.** Every code needs a committed test that asserts its
-   exact wire bytes (Rust transport test or station golden), so renames break loudly.
+   exact wire bytes (Rust transport test or case golden), so renames break loudly.
 6. **Never rename or remove.** Pinned codes are wire contract. Retired failure
    classes keep their row marked retired, exactly like
    `ATM-W-TOKEN-CATEGORY-MISMATCH` today.
@@ -162,8 +162,8 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TST-W-UNRESOLVED-IMPORT` | A relative or absolute import, `export *`, or `export { x } from` names no file on disk; its names stay external | `modules/tasty/src/ast/extract/statements/module_requests.rs` |
 | `TST-W-UNSUPPORTED-AUGMENTATION` | A `declare module './x' { … }` augments a path-shaped module in a user file; tasty does not merge the augmenting declarations | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
 | `TST-W-UNSUPPORTED-SYNTAX` | A user file holds `declare global`, `import x = require()` or `import x = …`, or `export =`; tasty skips the statement and names the construct | `modules/tasty/src/ast/extract/statements/unsupported.rs` |
-| `ATL-W-UNRESOLVED-PROPS-TYPE` | Named props type resolves nowhere; a partial component is kept with empty props | `modules/atlas/src/resolver.rs` |
-| `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | Inline props object annotation; the component is omitted from the inventory | `modules/atlas/src/resolver.rs` |
+| `ATL-W-UNRESOLVED-PROPS-TYPE` | Named props type resolves nowhere; a partial component is kept with empty props | `modules/atlas/src/resolver/template.rs` |
+| `ATL-W-UNSUPPORTED-PROPS-ANNOTATION` | Inline props object annotation; the component is omitted from the inventory | `modules/atlas/src/resolver/template.rs` |
 | `ATL-W-UNRESOLVED-INCLUDE-PACKAGE` | Included package resolves nowhere; the package is skipped | `modules/atlas/src/analyzer.rs` |
 | `ATL-E-SCAN-FAILED` | File discovery or read failed; the analysis is refused with empty components | `modules/atlas/src/analyzer.rs` |
 | `ATL-W-PACKAGE-SCAN-FAILED` | A resolved package's discovery or read failed; the package is skipped, siblings kept | `modules/atlas/src/analyzer.rs` |

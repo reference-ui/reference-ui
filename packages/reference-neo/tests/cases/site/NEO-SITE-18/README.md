@@ -9,7 +9,6 @@ diagnostics. A folded `const u = true` test would prune to the live arm
 with a dead-arm info instead (correct per v2, pinned at ATM-SITE-33) —
 the union needs v2's `unk`.
 
-Evidence: `[atm]` ATM-SITE-24; `[overmatch]` SPEC-V2-22; `[panda-v2]`
-`vendor/panda/crates/pandacss_extractor/tests/conditional_output.rs:363`.
+Evidence: ATM-SITE-24; Panda v2 conditional-output tests.
 
 > Search terms: ternary spread union, colliding spread, static plus spread, order independent, NEO-SITE-08

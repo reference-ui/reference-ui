@@ -8,12 +8,10 @@ utilities, the attribute class escapes its quotes (`\'open\'`), the
 brand, and the closed paragraph keeps the ink baseline while the
 expanded twin paints accent.
 
-Evidence: `[atm]` ATM-COND-09 (R1 probe `/tmp/cond-batch3-r1/probe.mjs`
-emits the `[data-state='open']` rule and the `_expanded` triple list);
-`[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/rule-processor.test.ts:259`
-"css" (`"&[data-attr='test']"` nesting `_expanded`); `[lib]`
-`packages/reference-lib/.reference-ui/styled/styles.css`
-(`[data-slot="icon"]` utilities, e.g. L442).
+Evidence: ATM-COND-09 (probe emits the `[data-state='open']` rule and the
+`_expanded` triple list); Panda v1 test "css" (`"&[data-attr='test']"` nesting
+`_expanded`); reference-lib
+`packages/reference-lib/.reference-ui/styled/styles.css` (`[data-slot="icon"]`
+utilities, e.g. L442).
 
 > Search terms: single quotes, backslash, data attribute, special characters, quote handling, escaping/quotes, conditions/expanded, selector attribute

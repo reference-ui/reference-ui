@@ -29,7 +29,7 @@ const bareSmAbsent: HasBareSm = false
 export const probes = { arms, responsive, bareSmAbsent }
 `;
 
-// Bare sm is not a condition key (@sm only, D8), so a bare-sm keyed object
+// Bare sm is not a condition key (@sm only), so a bare-sm keyed object
 // is rejected with TS2353. Same temp-dir materialization as the positive file.
 const NEGATIVE = `import type { StyleProps } from '@pgen/primitives'
 

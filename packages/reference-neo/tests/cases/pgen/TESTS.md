@@ -1,6 +1,6 @@
 # PGEN ledger
 
-Statuses: `live`, `weak` (positive live, negative needs W4), `blocked-on-w4`,
+Statuses: `live`, `weak` (positive live, negative needs the per-system bake), `blocked-on-per-system`,
 `dropped` (namespace law). Ids are append-only; never renumber. SPEC.md carries
 the full 22-case checklist with missing surfaces; this ledger tracks proof.
 

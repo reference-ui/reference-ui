@@ -1,5 +1,5 @@
 /**
- * Value whitespace collapse station (ATM-SITE-47, SPEC-V2-14). Spaced
+ * Value whitespace collapse (ATM-SITE-47). Spaced
  * string twins and multiline backtick grids collapse outside quotes to one
  * class and one declaration per twin pair; quoted runs (`content`, quoted
  * font names) survive verbatim. Extract keeps raw wants; resolve

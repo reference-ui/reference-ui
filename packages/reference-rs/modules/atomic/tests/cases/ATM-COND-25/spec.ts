@@ -1,5 +1,5 @@
 /**
- * Self-`&` inside functional pseudos (ATM-COND-25, SPEC-V2-70). Every
+ * Self-`&` inside functional pseudos (ATM-COND-25). Every
  * unquoted `&` substitutes — including inside `:not()`, `:has()`, and
  * `:is()` argument lists — at one nesting level. Selectors mirror v2
  * `nested_selector_parity.rs:169/:224/:301/:312/:334/:356/:411/:422`.

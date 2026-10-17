@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-WRAP-01.
+ * Case specification for ATL-WRAP-01.
  * Validates component discovery, call-site counting, and interface mapping
  * for components wrapped in React.memo and React.forwardRef, including
  * direct default-exported wrapper calls (`export default memo(...)`).

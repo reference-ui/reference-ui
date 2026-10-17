@@ -1,5 +1,5 @@
 /**
- * Seam rejection stations for foreign or malformed baseSystem specs (ATM-TOKEN-10).
+ * Seam rejection cases for foreign or malformed baseSystem specs (ATM-TOKEN-10).
  * Proves atomic and typegen share one EvaluatedSystemSpec shape: valid specs compile,
  * foreign dumps and malformed envelopes come back as error diagnostics, and a missing
  * spec throws instead of silently binding an empty system. Also pins the G1 invariants
@@ -131,7 +131,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
   })
 
   /**
-   * RS-KNOWN-RED-001 closed by Forge Slice 1 (§11): the fixture's
+   * RS-KNOWN-RED-001 closed by the fixture's
    * `opacity: "1"` no longer warns at all — bare values miss silently off
    * color props — so the 6-copy cartesian re-warn is gone with the warning.
    */

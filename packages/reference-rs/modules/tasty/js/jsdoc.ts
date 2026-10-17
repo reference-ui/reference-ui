@@ -2,7 +2,7 @@
  * Typescript source file for Reference UI module.
  * Contains JS API logic and types.
  */
-import type { TastyMember } from './api-types'
+import type { TastyMember } from './api-types.js'
 
 export function parseTastyParamTag(value: string | undefined): [string, string] | null {
   if (!value) return null

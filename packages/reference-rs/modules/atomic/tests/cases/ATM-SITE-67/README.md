@@ -1,5 +1,4 @@
-# ATM-SITE-67 — Overlapping-spread station (SPEC-V2-23 GAP-23)
+# ATM-SITE-67 — Overlapping-spread
 
 Overlapping inline-object spreads mint both atoms while the runtime merge
-resolves the shared slot last-wins. Pins SPEC-V2-23 GAP-23 (v2
-`calls.rs:1736` `merge_two_inline_object_spreads_second_wins`).
+resolves the shared slot last-wins. Pins the last-wins rule.

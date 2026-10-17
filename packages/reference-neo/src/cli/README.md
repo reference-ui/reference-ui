@@ -14,7 +14,7 @@ inlined). Commander.js owns argv shape only; the law above is
 unchanged by the framework.
 
 Watch splits at the flag: cli owns `--watch` routing unconditionally,
-while the watch driver's home is WAVE1-WATCH's verdict to keep.
+while the watch driver lives in `src/lib/watch/`.
 Output strings are pinned by the bin tests and the CLI cases, so the
 §3.12 one-line contract (glyph + command + stats) lands as a
 follow-up against those pins — never as a drive-by restyle.

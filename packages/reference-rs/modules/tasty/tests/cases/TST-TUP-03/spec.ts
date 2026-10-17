@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-TUP-03.
+ * Case specification for TST-TUP-03.
  * A labeled rest tuple element keeps its label, rest flag, and array element type, matching the
  * unnamed `...T[]` control. Proves the named-rest lowering in the tuple element path.
  */

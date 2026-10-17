@@ -1,5 +1,5 @@
 /**
- * Unknown-helper station. sva / tw / cx calls are not extract sites.
+ * Unknown-helper case. sva / tw / cx calls are not extract sites.
  * No wants leak from their style-shaped object arguments.
  */
 import { expect } from 'vitest'

@@ -32,7 +32,7 @@ pub(crate) fn handle_identifier_fallback(
     }
     for val in leaves {
         // Recorded leaves split `!` exactly like inline literals (S5-2).
-        push_folded_want(ctx, &val, when, span);
+        push_folded_want(ctx, val, when, span);
     }
 }
 
@@ -184,7 +184,10 @@ mod tests {
 
     fn compile_logs(code: &str) -> crate::CompileResult {
         let req = CompileRequest {
-            files: Some(vec![VirtualSource { path: "test.tsx".into(), content: code.into() }]),
+            files: Some(vec![VirtualSource {
+                path: "test.tsx".into(),
+                content: code.into(),
+            }]),
             base_system: crate::BaseSystem::lib_fixture().clone(),
             logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
             ..Default::default()
@@ -215,6 +218,9 @@ mod tests {
             help[0].starts_with("hoist 'accent' above the style call and stop reassigning it ("),
             "unexpected help: {help:?}"
         );
-        assert!(help[0].contains("reassigned at"), "names the write: {help:?}");
+        assert!(
+            help[0].contains("reassigned at"),
+            "names the write: {help:?}"
+        );
     }
 }

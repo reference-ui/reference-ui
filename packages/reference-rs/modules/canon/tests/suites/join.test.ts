@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { loadDialect, type DialectData } from '../../generate/dialect'
+import { loadDialect, type DialectData } from '../../generate/dialect.js'
 import {
   validateAliasTargetsJoin,
   validateClassPrefixesJoin,
@@ -18,9 +18,9 @@ import {
   validateJoin,
   validateShorthandsJoin,
   validateShortPrefixesJoin,
-} from '../../generate/join'
-import { EXTENSIONS, SHORT_PREFIXES } from '../../generate/overlay'
-import { loadPlatformCss, loadPlatformElements } from '../../generate/platform'
+} from '../../generate/join.js'
+import { EXTENSIONS, SHORT_PREFIXES } from '../../generate/overlay/index.js'
+import { loadPlatformCss, loadPlatformElements } from '../../generate/platform.js'
 
 describe('Canon Join Validation (Fail-Closed Gates)', async () => {
   const platformElements = await loadPlatformElements()

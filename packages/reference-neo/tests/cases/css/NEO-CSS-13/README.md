@@ -7,7 +7,7 @@ raw passthrough for the rest and zero `flex-grow`/`shrink`/`basis` longhands,
 then paints the computed auto-vs-`0%` basis split that the RS-39 mis-expansion
 silently broke.
 
-Evidence: `[audit]` b37-family-audit §2 #7; `[engine]` live Panda 1.11.1
-`utility.transform` probe (`/tmp/flex-probe2.mts`); `[atm]` ATM-SHORT-11.
+Evidence: live Panda 1.11.1
+`utility.transform` probe; ATM-SHORT-11.
 
 > Search terms: flexbox, flex container, flex items, grow/shrink/basis, flex shorthands, css/flex, css/panda-triples

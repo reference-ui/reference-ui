@@ -11,8 +11,7 @@ proof flips a container element's width and reads computed style.
 - Named conditions: `sm: { … }`, `md: { … }`, or per-prop objects
   `width: { base: '50px', md: '60px' }`. `base` is the unprefixed class.
 - Responsive arrays: `width: ['50px', '60px']` maps index 0 → base, 1 →
-  first breakpoint, and so on. `null` (and `undefined`) holes skip a slot
-  (D10): `['50px', null, '60px']` emits base + `md`, no `sm` rule.
+  first breakpoint, and so on. `null` (and `undefined`) holes skip a slot: `['50px', null, '60px']` emits base + `md`, no `sm` rule.
 - Nested conditions require every query: `sm: { md: … }` paints only when
   both container widths hold.
 - Range conditions bound the query: `mdDown` → `@container
@@ -28,7 +27,7 @@ proof flips a container element's width and reads computed style.
   / `body`). Without a root the engine emits the rule **plus a warning**
   diagnostic; the rule then silently never matches.
 
-## Engine stations this group leans on
+## Reference-rs cases this group leans on
 
 All confirmed present under
 `packages/reference-rs/modules/atomic/tests/cases/` (each with
@@ -48,26 +47,25 @@ All confirmed present under
 
 ## Decisions that apply
 
-- **D8** — `@container (min-width: Npx)` stays; no `@media screen`
+- `@container (min-width: Npx)` stays; no `@media screen`
   breakpoints. Neo proves the container-root requirement and the
   `container: true` macro; named ranges are proven, not invented.
-- **D10** — responsive arrays with `null` holes are in; typegen agrees on
+- Responsive arrays with `null` holes are in; typegen agrees on
   `Array<T | null>`.
-- **D18** — `NEO-CSS-02` (responsive lowering parity) keeps its id and its
+- `NEO-CSS-02` (responsive lowering parity) keeps its id and its
   `css/` folder; RESP cross-references it instead of duplicating it.
   NEO-RESP-09 extends it with a runtime/build-time class-equality claim.
 
 ## Approved absences
 
-- `@media screen` viewport breakpoints (D8). Panda v1 emitted
-  `@media screen and (min-width: 40rem)` for `sm:` (`atomic-rule.test.ts`
+- `@media screen` viewport breakpoints. Panda v1 emitted
+  `@media screen and (min-width: 40rem)` for `sm:` (Panda v1 test
   "responsive array"); Reference's dialect is `@container` and the lib
   sheet carries zero `sm:` classes and zero `min-width` queries, so there
   is nothing to be viewport-compatible with.
-- `hideFrom` / `hideBelow` helpers (`atomic-rule.test.ts:671`,
-  `utility.test.ts`). Panda display utilities over viewport media; no
+- `hideFrom` / `hideBelow` helpers. Panda display utilities over viewport media; no
   Reference author API ships them, no lib family needs them.
-- `{sizes.x}` inside a query (`serialize.test.ts:47`). Reference has no
+- `{sizes.x}` inside a query. Reference has no
   `sizes` token category (lib sheet: no `--sizes-*` decls), so a query
   token ref has nothing to resolve against. Pure numeric keys
   (`r={{ 300: … }}`) are the dialect instead.
@@ -76,10 +74,10 @@ All confirmed present under
 
 | Panda feature | Why not a case |
 | --- | --- |
-| `@breakpoint` directive expansion (`breakpoints.test.ts`) | Panda config macro; Reference authors write condition keys, the engine prints `@container` directly |
-| Viewport `@media` ranges / `mdDown` rem epsilon (`breakpoints.test.ts:143`) | Same range idea, different medium; RESP-05 proves the px-epsilon `@container` form the engine emits |
-| RTL × responsive combos (`atomic-rule.test.ts:99/142`) | `_ltr`/`_rtl` are COND's approved absence (lib has 0 `[dir=rtl]`); no responsive axis to cross |
-| Named `@container pb (…)` via `containerNames` (`static-css.test.ts:2162`) | Panda staticCss option shape; engine-side named queries are ATM-COND-16's golden, no Neo authoring surface exists |
-| `sort-mq` plugin ordering of `@media` (`sort-mq.test.ts`) | Plugin internals; RESP-06 proves the equivalent `@container` order in the sheet + cascade |
-| Recipe responsive variants (`recipe.test.ts:226`) | RECIPE-08's row, not this group's |
-| `globalCss` nested responsive keys (`global-css.test.ts:13`) | GLOBAL's rows; RESP worlds use `css()`/StyleProps only |
+| `@breakpoint` directive expansion (Panda v1 breakpoints tests) | Panda config macro; Reference authors write condition keys, the engine prints `@container` directly |
+| Viewport `@media` ranges / `mdDown` rem epsilon | Same range idea, different medium; RESP-05 proves the px-epsilon `@container` form the engine emits |
+| RTL × responsive combos | `_ltr`/`_rtl` are COND's approved absence (lib has 0 `[dir=rtl]`); no responsive axis to cross |
+| Named `@container pb (…)` via `containerNames` | Panda staticCss option shape; engine-side named queries are ATM-COND-16's golden, no Neo authoring surface exists |
+| `sort-mq` plugin ordering of `@media` (Panda v1 sort-mq tests) | Plugin internals; RESP-06 proves the equivalent `@container` order in the sheet + cascade |
+| Recipe responsive variants | RECIPE-08's row, not this group's |
+| `globalCss` nested responsive keys | GLOBAL's rows; RESP worlds use `css()`/StyleProps only |

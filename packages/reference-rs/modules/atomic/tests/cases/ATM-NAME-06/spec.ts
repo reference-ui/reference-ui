@@ -1,5 +1,5 @@
 /**
- * Digit-leading and `--`-leading class-name station. The system segment
+ * Digit-leading and `--`-leading class-name case. The system segment
  * leads every selector, so `2xl:p_6r` and `--brand-x` never start one;
  * no bare digit-leading or hex-escaped selector is emitted. Runtime
  * class strings stay unescaped. Bare hex escapes stay proven by the

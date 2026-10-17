@@ -1,4 +1,4 @@
-# ATM-DIAG-07 — Channel-isolation station (ATM-DIAG-07, Operation Error Correct, Slice 5)
+# ATM-DIAG-07 — Channel-isolation
 
 Channel isolation: the default compile contains no dynamic, spread,
 harvest-sink, or dead-branch diagnostics. Those facts move to the opt-in
@@ -18,8 +18,8 @@ channel plumbing exists.
 
 Mechanism: additive-optional `logs?: LogChannel[]` on the request and
 `compilerDiagnostics?` on the result, populated only when requested so
-default bytes are identical (architect ruling Q2, oracle O1). Related:
+default bytes are identical. Related:
 `ATM-DIAG-02` (fail-closed warnings), `ATM-DIAG-05` (diagnostic precision),
 `ATM-DIAG-11` (unknown values compiler-only), `ATM-HARVEST-01` (harvest
 floor), `ATM-LEAF-01` (dead-branch fold). Contract: [SPEC.md](../../../SPEC.md).
-Operation Error Correct, Slice 0.
+.

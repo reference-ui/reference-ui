@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest'
 import { emitDtsSync } from '../../js/index.js'
 import type { EvaluatedSystemSpec } from '../../js/types.js'
-import { compile, expectTscOk } from '../harness/tsc'
+import { compile, expectTscOk } from '../harness/tsc.js'
 
 function spec(overrides: Partial<EvaluatedSystemSpec> = {}): EvaluatedSystemSpec {
   return {

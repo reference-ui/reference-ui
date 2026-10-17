@@ -1,5 +1,5 @@
 /**
- * Want serde station. Wants that crossed the native JSON seam round-trip
+ * Want serde case. Wants that crossed the native JSON seam round-trip
  * through JSON.stringify/parse without losing prop, value, when, important,
  * or origin.
  */

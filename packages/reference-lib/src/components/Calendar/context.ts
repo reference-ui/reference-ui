@@ -81,18 +81,18 @@ export interface CalendarContextValue {
   isDateInRangeInclusive: (dateStr: ISODate) => boolean
   isRangeStart: (dateStr: ISODate) => boolean
   isRangeEnd: (dateStr: ISODate) => boolean
-  /** Out-of-bounds day state (W-21): outside `min`/`max`. Natively
+  /** Out-of-bounds day state: outside `min`/`max`. Natively
    * disabled, skipped by keyboard, excluded from the roving tab order.
    * Never called with out-of-domain dates. */
   isDateDisabled: (dateStr: ISODate) => boolean
-  /** Predicate-only unavailable state (W-21, exact React Aria): refused
+  /** Predicate-only unavailable state (exact React Aria): refused
    * by `isDateUnavailable` (`false` when no predicate). Focusable but
    * unselectable; the Grid derives `data-unavailable` from it. */
   isDateUnavailableDay: (dateStr: ISODate) => boolean
   /** Merged unselectable state: out of bounds OR unavailable. Guards
    * activation, month/year disabling, and nav-target evaluation. */
   isDateUnselectable: (dateStr: ISODate) => boolean
-  /** Custom day content (W-20); a nullish return keeps the default. */
+  /** Custom day content; a nullish return keeps the default. */
   dayRender?: CalendarDayRenderer
 }
 
@@ -108,7 +108,7 @@ export interface DayCellModel {
   /** Endpoint/single selection: `data-selected` + button paint + the
    * preferred roving target. Range interior is NOT selected here — its
    * band paints via `paintInRange` and its semantics via
-   * `selectedInclusive` (frozen-visuals split, flagged for HQ). */
+   * `selectedInclusive` (frozen-visuals split). */
   selected: boolean
   /** Committed inclusive selection: single match, pending start, or any
    * date inside a completed range. Drives button + td `aria-selected`;

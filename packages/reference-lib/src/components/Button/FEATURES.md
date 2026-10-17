@@ -1,5 +1,5 @@
 # Button features
 
-Design-needing follow-ups (new/changed API surface or behavior choices), split out of DECISIONS.md.
+Follow-ups that need a design decision (new or changed API surface or behavior choices).
 
-None — Button had no quarantine freeze, so no design-needing open/deferred items exist.
+None. Button has no open or deferred items that need a design decision.

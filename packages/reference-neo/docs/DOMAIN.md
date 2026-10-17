@@ -14,7 +14,6 @@ this file in the same pass.
 - **spec** — a Playwright assertion file against a world: static
   checks plus computed styles plus settled snapshots.
 - **server** — the per-case static HTTP server (`tests/shared/`).
-  (Renamed from "bubble" in r5.)
 - **artifact** — run output kept under
   `tests/.artifacts/<case-id>/`: screenshot, accessibility snapshot,
   trace/video on failure.
@@ -25,11 +24,7 @@ this file in the same pass.
   publish, runtime); reference-rs is Rust below (atomic, typegen,
   styletrace).
 - **collect** — the collection subsystem (`src/collect/`): scan,
-  bundle, evaluate-once, merge. Renamed from `fragments` per Tokyo
-  item 3 (HQ 2026-09-23): fragments is not a lib, it is a whole
-  subsystem, and the name was wrong — it is a collection system.
-  The collected units keep the old name (below); only the
-  subsystem moved.
+  bundle, evaluate-once, merge. The collected units are called **fragments** (below).
 - **fragments** — author call sites (`tokens()`, `font()`, …)
   evaluated once in Node. The collected units; the subsystem that
   collects them is **collect**.
@@ -67,25 +62,14 @@ this file in the same pass.
 - **data-layer / data-color-mode / data-variant** — the DOM
   attributes primitives stamp: system name, active color mode,
   variant. Neo-owned names; sheets and primitives agree on them.
-  D1 (human override 2026-09-17): `data-color-mode` is the single
+  `data-color-mode` is the single
   colour-mode attribute — `colorMode` prop in JSX, same concept on
   the DOM. `data-theme` is Toast chrome (lib), never Neo colour
   mode; `data-panda-theme` stays retired.
 - **group** — one feature family under `tests/cases/`: `SPEC.md`,
-  `TESTS.md`, leaf cases. (campaign)
-- **slice** — one case (or a small bundle in one group) taken from
-  engine check → host integration → browser proof. (campaign)
-- **rung** — one slice step: `engine`, `host`, `proof`. (campaign)
-- **station** — a cited Atomic case (`ATM-*`, Vitest golden). Neo
-  cases cite stations; they never duplicate them. (campaign; Neo's
-  own unit stays **case**)
-- **evidence tag** — `[lib]`, `[panda-v1]`, `[atm]`, `[core]`,
-  `[decision Dn]` on every case README. (campaign)
+  `TESTS.md`, leaf cases.
 - **status words** — `open`, `in-progress`, `done`, `blocked-on-rs`,
   `approved-absence`, `retired`: the `TESTS.md` ledger states.
-  (campaign)
-- **roles** — captain, planner, scout, cartographer, line cook, RS
-  liaison, oracle: the voyage crew. (campaign)
 - **host** — a JSX name whose style props extract: primitives carry
   every tag, wrappers earn it by forwarding. (styletrace)
 - **traced** — discovered by StyleTrace inside `compile()`, per
@@ -159,11 +143,9 @@ this file in the same pass.
   There is no panda in neo: copies from core get renamed at the
   boundary, never carried across verbatim.
 - **station** — the compiler-loop word (rs-shaped). Neo tests cases,
-  not stations. (In the campaign it narrowly means a cited `ATM-*`
-  case — see Current.)
+  not stations.
 - **goldens / --update-goldens** — rs proves compilers with goldens;
   Neo proves CSS with cases and human-gated snapshots.
 - **bubble** — cute and confusing. The thing is a server.
-- **data-theme as colour mode** — retired by D1 (human override
-  2026-09-17): colour mode is `data-color-mode`. (`data-theme`
+- **data-theme as colour mode** — retired: colour mode is `data-color-mode`. (`data-theme`
   survives only as Toast chrome in lib, which is not Neo's.)

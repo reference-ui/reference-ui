@@ -1,9 +1,10 @@
 // census-families.ts — the checked-in PARITY-02 family table for
 // NEO-PARITY-02. It takes nothing and emits the 43 census rows (F1–F37 plus
-// T-A–T-F per oracle C §2) with their sheet markers, must-not-appear
+// T-A–T-F) with their sheet markers, must-not-appear
 // strings, union cites, and blocked cites, plus the known-unproven (b)
 // table the census shows with RS owners instead of silently missing.
-// The (b) table is empty: all six N2 rows landed. Markers are verbatim
+// The (b) table is empty: its six rows (TOKEN-13, COND-14/15, SITE-13/14,
+// RECIPE-07) are done. Markers are verbatim
 // sheet substrings proven against the mini-lib sheet.
 
 export interface CensusFamily {

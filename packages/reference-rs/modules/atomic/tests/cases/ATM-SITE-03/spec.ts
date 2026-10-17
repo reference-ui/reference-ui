@@ -1,5 +1,5 @@
 /**
- * recipe() call-site extract station. base, variant, and compoundVariants
+ * recipe() call-site extract case. base, variant, and compoundVariants
  * css leaves compile as closed classes in @layer recipes, not utility wants.
  */
 import { expect } from 'vitest'

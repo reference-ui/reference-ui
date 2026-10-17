@@ -27,6 +27,18 @@ fn extract_at_rules(atom: &Atom) -> Vec<String> {
     at_rule_wraps(atom).map(str::to_string).collect()
 }
 
+/// Shared inputs for every sheet builder: the own and foreign atom sets, the
+/// composed qualifier list (own first), the base system, and the closed recipe
+/// classes. Borrowed fields make the struct `Copy`, so builders take it by reference.
+#[derive(Clone, Copy)]
+pub struct SheetInput<'a> {
+    pub own: &'a AtomSet,
+    pub external: &'a AtomSet,
+    pub qualifiers: &'a [String],
+    pub system: &'a BaseSystem,
+    pub recipes: &'a [CompiledRecipe],
+}
+
 /// Builds complete atomic stylesheet containing layer preambles and generated utility rules.
 pub fn build_stylesheet(
     atom_set: &AtomSet,
@@ -35,11 +47,13 @@ pub fn build_stylesheet(
 ) -> String {
     let qualifiers = [system.name.clone()];
     build_stylesheet_with(
-        atom_set,
-        &AtomSet::new(),
-        &qualifiers,
-        system,
-        &[],
+        &SheetInput {
+            own: atom_set,
+            external: &AtomSet::new(),
+            qualifiers: &qualifiers,
+            system,
+            recipes: &[],
+        },
         diagnostics,
     )
 }
@@ -54,13 +68,16 @@ pub fn build_stylesheet(
 /// output keeps utilities above global; unnamed systems stay flat. Both shapes
 /// open with the baked root default ahead of the wrap, the lowest layer.
 pub fn build_stylesheet_with(
-    own: &AtomSet,
-    external: &AtomSet,
-    qualifiers: &[String],
-    system: &BaseSystem,
-    recipes: &[CompiledRecipe],
+    input: &SheetInput<'_>,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> String {
+    let SheetInput {
+        own,
+        external,
+        qualifiers,
+        system,
+        recipes,
+    } = *input;
     let mut inner = LAYER_PREAMBLE.to_string();
     append_system_layers(&mut inner, system, own_token_scope(qualifiers), diagnostics);
     append_recipes_layer(&mut inner, recipes);
@@ -70,13 +87,16 @@ pub fn build_stylesheet_with(
 
 /// Same as `build_stylesheet_with`, with portable [data-layer] token selectors.
 pub fn build_portable_stylesheet_with(
-    own: &AtomSet,
-    external: &AtomSet,
-    qualifiers: &[String],
-    system: &BaseSystem,
-    recipes: &[CompiledRecipe],
+    input: &SheetInput<'_>,
     diagnostics: &mut Vec<crate::diagnostics::Diagnostic>,
 ) -> String {
+    let SheetInput {
+        own,
+        external,
+        qualifiers,
+        system,
+        recipes,
+    } = *input;
     let mut inner = LAYER_PREAMBLE.to_string();
     append_portable_system_layers(&mut inner, system, diagnostics);
     append_recipes_layer(&mut inner, recipes);
@@ -104,16 +124,12 @@ pub struct StylesheetSinks<'a> {
 /// Build both sheets via captured per-layer streams, then concatenate. Only
 /// the token selectors differ, so recipes+utilities print once and both sheets
 /// stay byte-identical to the paired single builds. Returns the streams first:
-/// S2 ships them verbatim alongside the joined sheets as the oracle channel.
+/// ships them verbatim alongside the joined sheets as the oracle channel.
 pub fn build_stylesheets_with(
-    own: &AtomSet,
-    external: &AtomSet,
-    qualifiers: &[String],
-    system: &BaseSystem,
-    recipes: &[CompiledRecipe],
+    input: &SheetInput<'_>,
     sinks: StylesheetSinks<'_>,
 ) -> (StylesheetStreams, String, String) {
-    let streams = build_stylesheet_streams(own, external, qualifiers, system, recipes, sinks);
+    let streams = build_stylesheet_streams(input, sinks);
     let sheet = streams.stylesheet();
     let portable = streams.portable_stylesheet();
     (streams, sheet, portable)

@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-PAIR-02.
+ * Case specification for ATL-PAIR-02.
  * Validates the usedWith policy: a component found in one file reports no co-usage, and a
  * widely used component keeps at most twelve co-used names with none rated rare.
  * Proves ATL-PAIR-02 (score_used_with in src/usage_policy.rs).

@@ -3,7 +3,7 @@ import { expectNoAxeViolations } from '../../../../playwright/axe'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project
 // (`react19` on agentct Chromium, `react19-firefox`/`react19-webkit` on the
-// sweep vehicle) for per-engine delivery/expectations (DIAG D1).
+// sweep vehicle) for per-engine delivery/expectations.
 function engineOf(): 'chromium' | 'firefox' | 'webkit' {
   const project = test.info().project.name
   if (project.includes('webkit')) return 'webkit'
@@ -426,7 +426,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     await page.keyboard.press('ArrowDown')
     await expect(headerC).toBeFocused()
 
-    // P2 (F37, DIAG D1): the tabIndex + arrow assertions above are the product
+    // the tabIndex + arrow assertions above are the product
     // contract (headers in the tab sequence, arrow moves focus) and hold on
     // WebKit. The native Tab walk below is platform traversal — Safari skips
     // buttons/links — so it runs on Chromium/Firefox only.
@@ -628,7 +628,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     // still paints, so assert the skip, not whole-box hiddenness).
     await expect(content2).toHaveAttribute('hidden', 'until-found')
     expect(await content2.evaluate((el) => getComputedStyle(el).contentVisibility)).toBe('hidden')
-    // P2 (F38): WebKit parses content-visibility:hidden (asserted above) but
+    // WebKit parses content-visibility:hidden (asserted above) but
     // does not skip until-found contents at paint — the span stays visible.
     // The hidden attribute + computed style + beforematch swap below are the
     // product contract and hold on both engines.
@@ -647,7 +647,7 @@ test.describe('Accordion Composition Gates & Browser Proofs', () => {
     await expect(content2).toBeVisible()
     await expect(content1).toHaveAttribute('hidden', 'until-found')
     expect(await content1.evaluate((el) => getComputedStyle(el).contentVisibility)).toBe('hidden')
-    // P2 (F38, swapped leg): same until-found paint split as above.
+    // swapped leg: same until-found paint split as above.
     if (engineOf() === 'webkit') {
       await expect(content1.locator('span')).toBeVisible()
     } else {

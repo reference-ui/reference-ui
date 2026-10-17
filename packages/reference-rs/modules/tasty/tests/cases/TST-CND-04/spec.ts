@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-CND-04.
+ * Case specification for TST-CND-04.
  * Reaching verify means the native scan returned: a stack overflow would kill the worker first. Every
  * recursive alias here must end unresolved, the growing template literal must settle to 'done', and the
  * template literal union at nine parts must expand while the eleven-part one fails closed.

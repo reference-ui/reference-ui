@@ -10,7 +10,7 @@
 use oxc_ast::ast::Expression;
 
 use super::binary::fold_binary;
-use super::element::{fold_element_access, ElementFold};
+use super::element::fold_element_access;
 use super::key::canonical_numeric_key;
 use super::template::fold_template;
 use super::unary::fold_unary;
@@ -160,20 +160,24 @@ fn fold_index_element(
     index: &Expression<'_>,
     scoped: Scoped<'_>,
 ) -> IndexFold {
-    match fold_element_access(object, index, scoped) {
-        ElementFold { values, .. } if !values.is_empty() => {
-            let keys: Vec<String> = values.iter().filter_map(leaf_key).collect();
-            if keys.is_empty() {
-                IndexFold::Dynamic
-            } else {
-                IndexFold::Keys(keys)
-            }
-        }
-        ElementFold { omitted, .. } if omitted => {
-            // m[hole]  — a hole reads undefined, keyed 'undefined'
-            IndexFold::Keys(vec!["undefined".to_string()])
-        }
-        _ => IndexFold::Dynamic,
+    let fold = fold_element_access(object, index, scoped);
+    if !fold.values.is_empty() {
+        return leaf_index_keys(&fold.values);
+    }
+    if fold.omitted {
+        // m[hole]  — a hole reads undefined, keyed 'undefined'
+        return IndexFold::Keys(vec!["undefined".to_string()]);
+    }
+    IndexFold::Dynamic
+}
+
+/// The key spellings of folded index leaves; when none is usable the index stays dynamic.
+fn leaf_index_keys(values: &[AtomValue]) -> IndexFold {
+    let keys: Vec<String> = values.iter().filter_map(leaf_key).collect();
+    if keys.is_empty() {
+        IndexFold::Dynamic
+    } else {
+        IndexFold::Keys(keys)
     }
 }
 

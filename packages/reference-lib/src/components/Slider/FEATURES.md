@@ -1,28 +1,20 @@
 # Slider features — needs design
 
-Each item below needs a product, UX, or API decision before anyone writes
-code. HQ picks a direction; then the item becomes implementable.
+Each item below needs a product, UX, or API decision before anyone writes code. Once a direction is picked, the item becomes implementable.
 
-## Status (2026-09-26, features-triage + FEATURES crew)
+## Status
 
-- #1 controlled-only value — IMPLEMENT-NOW, LANDED (`value` required,
-  `defaultValue`/internal state stripped; all in-repo consumers migrated).
-- #2 thumb identity — decided AUTO mount-order, LANDED (`index` prop
-  stripped, silent `index = 0` default dead).
-- #3 modified-key policy — decided STRIP, LANDED (all modified arrows
-  pass through; Page keys own large steps).
-- #4 dragging data hooks — decided Root + active Thumb `data-dragging`
-  with `data-active` coexisting, LANDED.
-- #5 single-thumb default name — HOLD-FOR-HQ (catalog unlabeled-control
-  policy; untouched).
-- #6 thumb target size — decided invisible hit-area, LANDED (`::before`
-  grows the cross axis to 24px; painted fader cap untouched).
+- #1 controlled-only value: implemented. `value` is required, and `defaultValue` and internal state are stripped. All in-repo consumers are migrated.
+- #2 thumb identity: assigned automatically by mount order (implemented). The `index` prop is stripped, and the old silent `index = 0` default is gone.
+- #3 modified-key policy: Shift+Arrow paging is stripped (implemented). All modified arrows pass through; Page keys own large steps.
+- #4 dragging data hooks: implemented. Root and the active Thumb carry `data-dragging`, with `data-active` coexisting.
+- #5 single-thumb default name: not implemented. It waits on a catalog-wide unlabeled-control policy.
+- #6 thumb target size: implemented as an invisible hit area. The `::before` pseudo-element grows the cross axis to 24px; the painted fader cap is untouched.
 
-## 1. Controlled-only `value` (from DECISIONS candidate #1)
+## 1. Controlled-only `value`
 
 **What it does:** Removes uncontrolled mode entirely — every interaction
-becomes a request the parent must accept, matching the freeze and all 58
-quarantine e2e fixtures.
+becomes a request the parent must accept, matching the freeze and all 58 e2e fixtures.
 
 **API:**
 ```tsx
@@ -33,9 +25,9 @@ quarantine e2e fixtures.
 <Slider.Root value={v} onChange={setV} />  // the only way
 ```
 
-**Maintainer take:** Good to add — all four Book stories are already controlled, so the strip cost looks near-zero; confirm no out-of-Book consumer relies on `defaultValue` first.
+**Recommendation:** Good to add — all four Book stories are already controlled, so the strip cost looks near-zero; confirm no out-of-Book consumer relies on `defaultValue` first.
 
-## 2. Thumb identity: auto mount-order index vs explicit `index` (from DECISIONS candidate #7)
+## 2. Thumb identity: auto mount-order index vs explicit `index`
 
 **What it does:** Decides how `Thumb` binds to a value slot — automatic
 mount-order identity (no `index` prop, matching the Proposed API) or an
@@ -51,9 +43,9 @@ default either way.
 <Slider.Thumb index={1} aria-label="Maximum" />
 ```
 
-**Maintainer take:** Good to add in either direction, but decide before the matrix re-target — every range fixture must be written auto or explicit, and the silent `index = 0` default must go regardless.
+**Recommendation:** Good to add in either direction, but decide before the matrix re-target — every range fixture must be written auto or explicit, and the silent `index = 0` default must go regardless.
 
-## 3. Modified-key policy: strip Shift+Arrow paging to match the freeze (from DECISIONS candidate #8)
+## 3. Modified-key policy: strip Shift+Arrow paging to match the freeze
 
 **What it does:** Picks whether all modified arrows pass through to the
 application untouched (Page keys own large steps, per SD-KEY-07) or
@@ -66,9 +58,9 @@ named freeze exception.
 // Direction (b) bless: Shift+Arrow/Down = Page step (today's behavior), SD-KEY-07 amended with the exception
 ```
 
-**Maintainer take:** Good to resolve now — small, self-contained, and it gates SD-KEY-07 re-targeting; lean strip unless HQ affirmatively wants a modifier-based large step.
+**Recommendation:** Good to resolve now. It is small and self-contained, and it gates SD-KEY-07 re-targeting. Lean toward stripping, unless a modifier-based large step is wanted.
 
-## 4. Documented `dragging` data hooks on Root/parts (from DECISIONS gap #1)
+## 4. Documented `dragging` data hooks on Root/parts
 
 **What it does:** Publishes the "dragging data state" the TESTS.md geometry
 contract already promises, so apps can style the drag session (today only
@@ -84,9 +76,9 @@ the thumb carries `data-active`).
 Open: Root + active Thumb, or all parts (Track/Range too)? Does shipped
 `data-active` get renamed to match, or do both hooks coexist?
 
-**Maintainer take:** Good to add once the parts coverage and naming are pinned — the contract already promises it, so this closes a spec gap rather than inventing surface.
+**Recommendation:** Good to add once the parts coverage and naming are pinned — the contract already promises it, so this closes a spec gap rather than inventing surface.
 
-## 5. Single-thumb default accessible name (from DECISIONS gap #2)
+## 5. Single-thumb default accessible name
 
 **What it does:** Gives unnamed single thumbs (which today publish
 `aria-label={undefined}`) either a default name, a dev-only warning, or an
@@ -94,14 +86,14 @@ explicit documented consumer-owns-naming stance.
 
 **API:**
 ```tsx
-// Direction (a) default name: <Slider.Thumb /> announces e.g. "Value" (HQ picks the string)
+// Direction (a) default name: <Slider.Thumb /> announces e.g. "Value" (the string is a product choice)
 // Direction (b) dev warning: single thumb without aria-label/aria-labelledby warns in dev
 // Direction (c) documented stance: naming is consumer-owned; docs say so
 ```
 
-**Maintainer take:** Worth deciding, but not per-component — wait for a catalog-wide unlabeled-control policy from HQ so Slider doesn't diverge from its siblings.
+**Recommendation:** Worth deciding, but not per-component. Wait for a catalog-wide unlabeled-control policy so Slider does not diverge from its siblings.
 
-## 6. Pointer target size below WCAG 2.5.8 minimum (from DECISIONS gap #3)
+## 6. Pointer target size below WCAG 2.5.8 minimum
 
 **What it does:** Brings the 24×16 thumb token up to the 24×24 WCAG
 target-size minimum — by growing the token, expanding the invisible hit
@@ -118,4 +110,4 @@ conformance exception.
 }
 ```
 
-**Maintainer take:** Good to fix on an a11y-hardening pass with a design eye — prefer the invisible hit-area so the fader-cap aesthetic survives, unless HQ grants the exception.
+**Recommendation:** Good to fix in an a11y-hardening pass with a design eye. Prefer the invisible hit area so the fader-cap aesthetic survives, unless an exception is granted.

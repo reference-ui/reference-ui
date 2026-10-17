@@ -4,7 +4,7 @@
  * detailed results with template diagnostics. Callers needing failure modes
  * use `analyzeDetailed()`; `analyze()` returns components only for convenience.
  */
-export { analyze, analyzeDetailed } from './analyzer'
+export { analyze, analyzeDetailed } from './analyzer.js'
 export type {
   AtlasAnalysisResult,
   AtlasDiagnostic,
@@ -16,4 +16,4 @@ export type {
   ObserveSpec,
   ObservedElement,
   Usage,
-} from './types'
+} from './types.js'

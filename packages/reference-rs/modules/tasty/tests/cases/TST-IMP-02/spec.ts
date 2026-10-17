@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-IMP-02.
+ * Case specification for TST-IMP-02.
  * Verifies that a relative import with no file behind it warns once and keeps its type external.
  * Proves primary SPEC ID anchor TST-IMP-02.
  */

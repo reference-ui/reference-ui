@@ -1,5 +1,5 @@
 /**
- * Escaping-boundary station. The class selector escapes `.`, `(`, `)`,
+ * Escaping-boundary case. The class selector escapes `.`, `(`, `)`,
  * and `/` while the declaration value stays raw in both rules.
  */
 import { expect } from 'vitest'

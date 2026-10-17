@@ -11,7 +11,7 @@ and the document was still loading, so the unfixed early probe would have
 cried wolf here; the injected style's text is byte-equal to the fresh sync
 output, so the late rule is genuinely compiled, never a fixture fiction.
 
-Evidence: H-6 (`docs/evidence/atomic-claims.md` §6 miss shape via
+Evidence: H-6 (miss shape via
 `NEO-NAMER-03`); the deferral is the neo side of the probe race.
 
 > Search terms: miss probe race, false positive warning, late stylesheet, inline style injection, vite dev ordering, load deferral, sheetsComplete, reportMissCandidates, settled document, ordering evidence

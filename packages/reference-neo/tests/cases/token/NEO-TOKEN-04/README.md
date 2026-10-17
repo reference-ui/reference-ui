@@ -6,8 +6,8 @@ over the token var. The spec checks the sheet carries the curly opacity ref
 as a `color-mix` inside the shadow value, and that the probe computes
 exactly like the inline reference.
 
-Evidence: `[panda-v1]` `core/__tests__/color-mix.test.ts` "in token reference
-with curly brackets" (`{colors.pink.400/30}`); `[atm]` ATM-TOKEN-06,
+Evidence: Panda v1 test "in token reference
+with curly brackets" (`{colors.pink.400/30}`); ATM-TOKEN-06,
 ATM-TOKEN-08.
 
 > Search terms: slash, composite value, glow, embedded mix, token/opacity, NEO-TOKEN-03

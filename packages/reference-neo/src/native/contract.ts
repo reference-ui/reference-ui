@@ -10,7 +10,7 @@ import type {
 import type { LogChannel } from '../config/types.ts'
 import type { SystemStreams } from '../system/base/types.ts'
 
-// Structural mirror of the frozen VirtualSource (C3 single read): the shape
+// Structural mirror of the frozen VirtualSource: the shape
 // sync hands to the engine when it already holds the bytes.
 export interface NativeSourceFile {
   path: string
@@ -18,25 +18,25 @@ export interface NativeSourceFile {
 }
 
 /**
- * Frozen compile request plus the RS-10 `include` glob scope. The dist
+ * Frozen compile request plus the `include` glob scope. The dist
  * contracts types trail the frozen source, so the seam carries the scope
  * structurally until the RS-owned dist refresh lands.
  */
 export interface ScopedCompileRequest extends NativeCompileRequest {
   include: string[]
   /**
-   * Opt-in diagnostic channels (S5 backchannel). Carried structurally like
+   * Opt-in diagnostic channels. Carried structurally like
    * `include`: undefined drops from the serialized request when unset.
    */
   logs?: LogChannel[]
   /**
-   * In-memory sources (C3 single read). Carried structurally like `include`:
+   * In-memory sources. Carried structurally like `include`:
    * the dist contracts types trail the frozen source, so the seam describes
    * the field here until the RS-owned dist refresh lands.
    */
   files?: NativeSourceFile[]
   /**
-   * Native retention ref (C3-in-reverse): exactly-one-of with `files`. The
+   * Native retention ref: exactly-one-of with `files`. The
    * engine drains the retained bytes. Neither means the legacy disk scan.
    */
   retentionToken?: number

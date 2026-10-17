@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import {
   NumberField,
+  type NumberFieldCommitBehavior,
   type NumberFieldDecrementProps,
   type NumberFieldGroupProps,
   type NumberFieldIncrementProps,
@@ -96,7 +97,7 @@ describe('NumberField numeric defaults', () => {
 describe('NumberField numeric validation', () => {
   it('NF-MATH-02: Runtime should reject every nonfinite or unusable numeric prop', () => {
     // Landing adaptation: ±Infinity bounds stay legal (this engine's
-    // unbounded sentinels); quarantine required finite min/max.
+    // unbounded sentinels); the legacy engine required finite min/max.
     // FEATURES #1: missing value/locale also throw — required controlled
     // value + required locale, no defaultValue, no env default.
     expect(() => renderToString(<NumberField value={NaN} locale="en-US" />)).toThrow(
@@ -275,7 +276,7 @@ describe('NumberField managed authority', () => {
     // aria-invalid, and the absence of numeric value ARIA; steppers own
     // button semantics, aria-controls, and the absence of state/value ARIA.
     // Forged props arrive through runtime casts (the type boundary rejects
-    // them separately in types.test.tsx). B-26: a forged role or numeric
+    // them separately in types.test.tsx). A forged role or numeric
     // aria-value* on Input loses to managed absence.
     const forgedGroup = {
       role: 'form',
@@ -421,8 +422,8 @@ describe('NumberField managed authority', () => {
   it('NF-EDIT-13: Consumer edit handlers should run in native order without breaking managed state', async () => {
     // Regression: user onChange used to clobber the internal handler via
     // last-spread, silently killing typing.
-    // FEATURES #1: controlled — the App echoes requests into value.
-    // NFLAST ruling (c): the consumer handler runs first in native order,
+    // Controlled — the App echoes requests into value.
+    // The consumer handler runs first in native order,
     // then the managed live request publishes immediately.
     const userEdits: string[] = []
     const managed: Array<number | null> = []
@@ -697,7 +698,7 @@ describe('NumberField keyboard', () => {
   })
 })
 
-describe('NumberField hold-repeat (PATCHES §7)', () => {
+describe('NumberField hold-repeat', () => {
   afterEach(() => {
     vi.useRealTimers()
   })
@@ -818,7 +819,7 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
 
   it('NF-STEP-04 / NF-STEP-05 / NF-STEP-12: Repeats should fire at exactly 400ms then every 60ms, one request per step', async () => {
     // NF-STEP-12 landing adaptation: no dirty candidate exists until
-    // PATCHES §1, so "without an intermediate commit" pins as exactly one
+    // the later change, so "without an intermediate commit" pins as exactly one
     // callback per tick from the current value.
     vi.useFakeTimers()
     const seen: Array<number | null> = []
@@ -1151,7 +1152,7 @@ describe('NumberField hold-repeat (PATCHES §7)', () => {
           extra
         )
       })
-    // This engine has no readOnly prop — that branch lands with PATCHES §5.
+    // This engine has no readOnly prop — that branch lands.
     await renderAt({ max: 10 })
     const inc = container.querySelector('button[aria-label="Increment"]') as HTMLButtonElement
 
@@ -1658,11 +1659,11 @@ describe('NumberField redundant onChange suppression (FEATURES #2)', () => {
   })
 })
 
-describe('NumberField dirty edit session (B-19)', () => {
+describe('NumberField dirty edit session', () => {
   it('NF-EDIT-03: Newly parseable live edits should request numbers while preserving authored text', async () => {
-    // NFLAST ruling (c) re-pin of the B-19 repro: min=1 max=10,
+    // Repro: min=1 max=10,
     // keystroke-type "2.5" into an empty field with an accepting parent.
-    // The "." still survives verbatim (the B-19 fix); parseable meanings
+    // The "." still survives verbatim; parseable meanings
     // publish live instead of waiting for commit.
     const seen: Array<number | null> = []
     function App() {
@@ -1823,7 +1824,7 @@ describe('NumberField dirty edit session (B-19)', () => {
   })
 
   it('Live out-of-range edits should request raw values while none-mode commit clamps once; invalid text reverts silently', async () => {
-    // NFLAST ruling (c): live requests are raw (no clamp until commit).
+    // Live requests are raw (no clamp until commit).
     const seen: Array<number | null> = []
     const { container, root } = mount()
     await React.act(async () => {
@@ -1996,7 +1997,7 @@ describe('NumberField dirty edit session (B-19)', () => {
 
 describe('NumberField live requests (NFLAST ruling c)', () => {
   it('NF-EDIT-04: Clearing should request null once as a live candidate', async () => {
-    // NFLAST ruling (c): clearing publishes null immediately (once);
+    // Clearing publishes null immediately (once);
     // the accepted echo preserves the dirty empty state until commit.
     const seen: Array<number | null> = []
     const { container, root } = mount()
@@ -2337,7 +2338,7 @@ describe('NumberField live requests (NFLAST ruling c)', () => {
 
 describe('NumberField environments', () => {
   it('NF-ENV-01: Server markup should carry textbox semantics for hydration', () => {
-    // B-26 / PATCHES §8: plain textbox, never spinbutton or numeric
+    // Plain textbox, never spinbutton or numeric
     // aria-value* — so unbounded ±Infinity sentinels never reach ARIA.
     const html = renderToString(
       <NumberField value={42} locale="en-US" min={0} max={100}>
@@ -2498,7 +2499,7 @@ describe('NumberField environments', () => {
 
 describe('NumberField required stepper names', () => {
   it('NF-DOM-09: Missing, empty, or unresolved stepper names fail at runtime instead of receiving English fallback text', async () => {
-    // PATCHES §6: bypass types with absent/blank labels and empty/missing
+    // bypass types with absent/blank labels and empty/missing
     // labelledby targets; each offender diagnoses once, renders nothing,
     // and never activates; a valid authored name recovers the part.
     const errors: string[] = []
@@ -2666,7 +2667,7 @@ describe('NumberField required stepper names', () => {
   })
 })
 
-describe('NumberField commitBehavior (W-02)', () => {
+describe('NumberField commitBehavior', () => {
   function snapApp(seen: Array<number | null>, invalid: Array<[number, string]>, extra?: Record<string, unknown>) {
     return function App() {
       const [value, setValue] = React.useState<number | null>(null)
@@ -2693,7 +2694,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     }
   }
 
-  it('W-02 snap: typing 2.5 with step 1 commits 3 with a single onChange', async () => {
+  it('snap: typing 2.5 with step 1 commits 3 with a single onChange', async () => {
     const seen: Array<number | null> = []
     const invalid: Array<[number, string]> = []
     const { container, root } = mount()
@@ -2724,8 +2725,8 @@ describe('NumberField commitBehavior (W-02)', () => {
   })
 
   it('NF-MATH-09: Snap midpoint ties should move away from zero', async () => {
-    // NFLAST ruling (a) re-pin: replaces the signed-off W-02 half-up title.
-    // Freeze decision 7 — symmetric ties, least-surprise.
+    // Replaces the earlier half-up title.
+    // Symmetric ties resolve away from zero: the least surprising choice.
     async function commit(text: string): Promise<{ seen: Array<number | null>; display: string }> {
       const seen: Array<number | null> = []
       const { container, root } = mount()
@@ -2776,7 +2777,7 @@ describe('NumberField commitBehavior (W-02)', () => {
   })
 
   it('NF-MATH-10: Snap should preserve exact and exceeded non-grid maximum endpoints', async () => {
-    // NFLAST ruling (a) re-pin: replaces the W-02 lattice-clamp title.
+    // Replaces the earlier lattice-clamp title.
     // min=0, max=10, step=3 — 10 is off the zero lattice {0,3,6,9,12}.
     async function commit(text: string): Promise<{ seen: Array<number | null>; display: string; hidden: string }> {
       const seen: Array<number | null> = []
@@ -2828,7 +2829,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     expect(await commit('7.4')).toEqual({ seen: [7.4, 6], display: '6', hidden: '6' })
   })
 
-  it('W-02 snap: fractional steps snap to the nearest lattice point', async () => {
+  it('snap: fractional steps snap to the nearest lattice point', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -2904,7 +2905,7 @@ describe('NumberField commitBehavior (W-02)', () => {
   })
 
   it('NF-MATH-11: Snap should preserve exact and exceeded non-grid minimum endpoints', async () => {
-    // NFLAST ruling (a) re-pin: replaces the W-02 min-anchor title. The
+    // Replaces the earlier min-anchor title. The
     // 5.5 vector proves zero-anchoring (→6); min-anchored {1,4,7} gave 7.
     async function commit(
       text: string,
@@ -2961,7 +2962,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     expect(await commit('-8.6', { min: -10, max: 0 })).toEqual({ seen: [-8.6, -9], display: '-9' })
   })
 
-  it('W-02 snap: no-change commits emit nothing; invalid text reverts silently', async () => {
+  it('snap: no-change commits emit nothing; invalid text reverts silently', async () => {
     const seen: Array<number | null> = []
     const invalid: Array<[number, string]> = []
     const { container, root } = mount()
@@ -3005,7 +3006,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     await cleanup(container, root)
   })
 
-  it('W-02 snap: authored display precision applies to the committed number', async () => {
+  it('snap: authored display precision applies to the committed number', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3079,7 +3080,7 @@ describe('NumberField commitBehavior (W-02)', () => {
   }
 
   it('NF-MATH-13: Validate mode should apply authored rounding without snapping or clamping', async () => {
-    // NFLAST ruling (b) re-pin: replaces the two W-02 validate-reject
+    // Replaces the two earlier validate-reject
     // titles. Retain-and-report — the rounded raw candidate is requested
     // as-is; the advisory onInvalidCommit fires after the commit request.
     // (With an immediately accepting parent the commit is a no-op, so the
@@ -3273,7 +3274,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     await cleanup(b.container, b.root)
   })
 
-  it('W-02 validate: on-step in-range commits publish plainly', async () => {
+  it('validate: on-step in-range commits publish plainly', async () => {
     const seen: Array<number | null> = []
     const invalid: Array<[number, string]> = []
     const { container, root } = mount()
@@ -3293,7 +3294,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     await cleanup(container, root)
   })
 
-  it('W-02 none (default): off-step values commit with clamp-only behavior', async () => {
+  it('none (default): off-step values commit with clamp-only behavior', async () => {
     // Omitted commitBehavior and explicit 'none' both preserve 2.5 —
     // today's behavior, unchanged.
     for (const commitBehavior of [undefined, 'none'] as const) {
@@ -3336,7 +3337,7 @@ describe('NumberField commitBehavior (W-02)', () => {
     }
   })
 
-  it('W-02: an unknown commitBehavior throws at render', () => {
+  it('an unknown commitBehavior throws at render', () => {
     expect(() =>
       renderToString(
         <NumberField value={0} locale="en-US" commitBehavior={'clamp' as unknown as 'none'} />
@@ -3378,7 +3379,7 @@ describe('NumberField freeze lattice (NFLAST ruling a)', () => {
   }
 
   it('NF-MATH-03: All interaction should use one zero-anchored step lattice', async () => {
-    // min=1 proves the anchor is zero, not min: the W-02 min-anchored
+    // min=1 proves the anchor is zero, not min: the min-anchored
     // lattice {1,3,5,7} would step 5 up to 7; the freeze gives 6.
     const seen: Array<number | null> = []
     const { container, root } = mount()
@@ -3690,8 +3691,8 @@ describe('NumberField freeze lattice (NFLAST ruling a)', () => {
   })
 })
 
-describe('NumberField formatOptions (W-25)', () => {
-  it('W-25: currency display formats clean state while commits stay plain numbers', async () => {
+describe('NumberField formatOptions', () => {
+  it('currency display formats clean state while commits stay plain numbers', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3730,7 +3731,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: typing never fights the formatter — drafts stay verbatim until commit', async () => {
+  it('typing never fights the formatter — drafts stay verbatim until commit', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3800,7 +3801,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: percent display scales both ways; percent marks reject elsewhere', async () => {
+  it('percent display scales both ways; percent marks reject elsewhere', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3879,7 +3880,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(d.container, d.root)
   })
 
-  it('W-25: percent fields step hundredths by default', async () => {
+  it('percent fields step hundredths by default', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3915,7 +3916,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: de-DE honors locale punctuation; foreign placement reverts', async () => {
+  it('de-DE honors locale punctuation; foreign placement reverts', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -3963,7 +3964,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: grouped drafts parse and step from their numeric meaning', async () => {
+  it('grouped drafts parse and step from their numeric meaning', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     function App() {
@@ -4002,7 +4003,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: null renders empty under any format; clearing commits null', async () => {
+  it('null renders empty under any format; clearing commits null', async () => {
     const { container, root } = mount()
     await React.act(async () => {
       root.render(
@@ -4057,7 +4058,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(c.container, c.root)
   })
 
-  it('W-25: focus and blur without editing never reparse rounded display text', async () => {
+  it('focus and blur without editing never reparse rounded display text', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
     await React.act(async () => {
@@ -4091,7 +4092,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: an effective format change replaces a dirty draft; equal options preserve it', async () => {
+  it('an effective format change replaces a dirty draft; equal options preserve it', async () => {
     const { container, root } = mount()
     function App({ formatOptions }: { formatOptions?: Intl.NumberFormatOptions }) {
       return (
@@ -4128,7 +4129,7 @@ describe('NumberField formatOptions (W-25)', () => {
     await cleanup(container, root)
   })
 
-  it('W-25: an invalid locale or formatOptions pair fails fast naming the props', () => {
+  it('an invalid locale or formatOptions pair fails fast naming the props', () => {
     expect(() =>
       renderToString(
         <NumberField value={0} locale="en-US" formatOptions={{ style: 'currency' }} />
@@ -4149,7 +4150,7 @@ describe('NumberField formatOptions (W-25)', () => {
   })
 })
 
-describe('NumberField freeze anatomy (PATCHES §4)', () => {
+describe('NumberField freeze anatomy', () => {
   it('NF-DOM-01: NumberField should render exactly one root div, group div, text input, and authored stepper buttons', async () => {
     // Unit assist for the [browser] case: fixed tags, role=group,
     // type=text, type=button, authored order, no spinbutton, no
@@ -4691,7 +4692,7 @@ describe('NumberField freeze anatomy (PATCHES §4)', () => {
   })
 })
 
-describe('NumberField hidden form pipeline (PATCHES §5)', () => {
+describe('NumberField hidden form pipeline', () => {
   it('NF-FORM-01: Visible localized text and canonical hidden form value should remain separate', async () => {
     // Decimal, currency, percent, unit, scientific, and null fixtures:
     // visible Input shows localized text with no name; one hidden input
@@ -5002,7 +5003,7 @@ describe('NumberField hidden form pipeline (PATCHES §5)', () => {
   it('NF-FORM-06: Programmatic requestSubmit should process a still-dirty complete candidate and require explicit retry', async () => {
     // One final commit request, prevented first submit, controlled hidden
     // value, no auto-resubmit; accepted canonical payload after retry.
-    // NFLAST ruling (c): the echo is held so the candidate stays
+    // The echo is held so the candidate stays
     // dirty/not-accepted at submit (an immediate echo would clear pending
     // and let the canonical submit through).
     const seen: Array<number | null> = []
@@ -6084,7 +6085,7 @@ function Wave2Field(props: React.ComponentProps<typeof NumberField>) {
   )
 }
 
-describe('NumberField wave-2 formatting', () => {
+describe('NumberField formatting', () => {
   it('NF-FORMAT-01: NumberField should render controlled values with the exact requested Intl format through public Input', async () => {
     const vectors: Array<{ value: number; locale: string; formatOptions?: Intl.NumberFormatOptions }> = [
       { value: 12.5, locale: 'en-US' },
@@ -6459,7 +6460,7 @@ describe('NumberField wave-2 formatting', () => {
   })
 })
 
-describe('NumberField wave-2 parsing', () => {
+describe('NumberField parsing', () => {
   it('NF-PARSE-04: NumberField should preserve incomplete localized grammar as dirty text without publishing a substitute value', async () => {
     // Empty, sign-only, decimal-only, trailing decimal/group, affix
     // partial, and incomplete exponent strings stay verbatim + dirty with
@@ -6715,8 +6716,8 @@ describe('NumberField wave-2 parsing', () => {
     }
     // Under min=0, validate retains the negative underflow (live request
     // echoes, commit noops on the echoed value, managed invalid shows);
-    // snap rejects the minus at commit. Live requests stay raw in both
-    // (NFLAST ruling (c)) — policy is commit-time.
+    // snap rejects the minus at commit. Live requests stay raw in both.
+    // Policy is commit-time.
     const underflowSeen: Array<number | null> = []
     const underflow = mount()
     function ValidateApp() {
@@ -7954,7 +7955,7 @@ describe('NumberField wave-2 parsing', () => {
   })
 })
 
-describe('NumberField wave-2 commit and semantics', () => {
+describe('NumberField commit and semantics', () => {
   it('NF-A11Y-04: Authored descriptions and error relationships should survive managed validity changes', async () => {
     const seen: Array<number | null> = []
     const { container, root } = mount()
@@ -8189,7 +8190,7 @@ describe('NumberField wave-2 commit and semantics', () => {
   })
 })
 
-describe('NumberField wave-2 environment and composition', () => {
+describe('NumberField environment and composition', () => {
   it('NF-ENV-04: Independent SSR roots should require distinct identifierPrefix values or explicit Input IDs', async () => {
     const errors: string[] = []
     const spy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
@@ -8356,8 +8357,15 @@ describe('NumberField out-of-range controlled value', () => {
     }
   }
 
-  function warning(value: string, bounds: string) {
-    return `Reference UI: NumberField value (${value}) is outside [${bounds}]; it renders as given and snaps into range on the next commit.`
+  // The wording each commitBehavior gets for its next commit, pinned here as literals.
+  const nextCommit: Record<NumberFieldCommitBehavior, string> = {
+    none: 'clamps into range on the next commit.',
+    snap: 'snaps into range on the next commit.',
+    validate: 'is kept on the next commit and reported invalid.',
+  }
+
+  function warning(value: string, bounds: string, mode: NumberFieldCommitBehavior = 'none') {
+    return `Reference UI: NumberField value (${value}) is outside [${bounds}]; it renders as given and ${nextCommit[mode]}`
   }
 
   function field(props: {
@@ -8365,6 +8373,7 @@ describe('NumberField out-of-range controlled value', () => {
     min?: number
     max?: number
     name?: string
+    commitBehavior?: NumberFieldCommitBehavior
     onChange?: (value: number | null) => void
   }) {
     return (
@@ -8386,7 +8395,7 @@ describe('NumberField out-of-range controlled value', () => {
         root.render(field({ value: 150, min: 0, max: 100 }))
       })
       expect(diag.range()).toEqual([
-        'Reference UI: NumberField value (150) is outside [0, 100]; it renders as given and snaps into range on the next commit.',
+        'Reference UI: NumberField value (150) is outside [0, 100]; it renders as given and clamps into range on the next commit.',
       ])
       // The same value on a re-render is not a new offense.
       await React.act(async () => {
@@ -8412,7 +8421,7 @@ describe('NumberField out-of-range controlled value', () => {
         root.render(field({ value: -5, min: 0, max: 100 }))
       })
       expect(diag.range()).toEqual([
-        'Reference UI: NumberField value (-5) is outside [0, 100]; it renders as given and snaps into range on the next commit.',
+        'Reference UI: NumberField value (-5) is outside [0, 100]; it renders as given and clamps into range on the next commit.',
       ])
     } finally {
       diag.restore()
@@ -8604,6 +8613,46 @@ describe('NumberField out-of-range controlled value', () => {
         )
       })
       expect(diag.range()).toEqual([warning('150', '0, 100')])
+    } finally {
+      diag.restore()
+      await cleanup(container, root)
+    }
+  })
+
+  it.each([
+    { mode: 'none' as const, wording: 'clamps into range on the next commit.' },
+    { mode: 'snap' as const, wording: 'snaps into range on the next commit.' },
+    { mode: 'validate' as const, wording: 'is kept on the next commit and reported invalid.' },
+  ])(
+    'OOR-NF-10: NumberField should name what the next commit does under commitBehavior "$mode", with the exact text',
+    async ({ mode, wording }) => {
+      const diag = spyDiagnostics()
+      const { container, root } = mount()
+      try {
+        await React.act(async () => {
+          root.render(field({ value: 150, min: 0, max: 100, commitBehavior: mode }))
+        })
+        expect(diag.range()).toEqual([
+          `Reference UI: NumberField value (150) is outside [0, 100]; it renders as given and ${wording}`,
+        ])
+      } finally {
+        diag.restore()
+        await cleanup(container, root)
+      }
+    }
+  )
+
+  it('OOR-NF-11: NumberField should warn again with the new wording when commitBehavior changes at the same out-of-range value', async () => {
+    const diag = spyDiagnostics()
+    const { container, root } = mount()
+    try {
+      await React.act(async () => {
+        root.render(field({ value: 150, min: 0, max: 100 }))
+      })
+      await React.act(async () => {
+        root.render(field({ value: 150, min: 0, max: 100, commitBehavior: 'snap' }))
+      })
+      expect(diag.range()).toEqual([warning('150', '0, 100'), warning('150', '0, 100', 'snap')])
     } finally {
       diag.restore()
       await cleanup(container, root)

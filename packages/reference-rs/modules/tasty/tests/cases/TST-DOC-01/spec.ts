@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-DOC-01.
+ * Case specification for TST-DOC-01.
  * Verifies JSDoc summary and tag extraction on interfaces and property members.
  * Proves primary SPEC ID anchor TST-DOC-01.
  */

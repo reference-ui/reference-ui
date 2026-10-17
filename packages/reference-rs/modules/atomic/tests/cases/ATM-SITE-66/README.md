@@ -1,5 +1,4 @@
-# ATM-SITE-66 — Bare-spread station (SPEC-V2-21 GAP-21)
+# ATM-SITE-66 — Bare-spread
 
 Bare unresolvable spread: `...unknown` warns exactly once and is skipped
-while the `color` sibling extracts. Pins SPEC-V2-21 GAP-21 (v2
-`calls.rs:638` skip; ours adds the diagnostic).
+while the `color` sibling extracts. Pins the bare-spread refusal (v2 skips; ours adds the diagnostic).

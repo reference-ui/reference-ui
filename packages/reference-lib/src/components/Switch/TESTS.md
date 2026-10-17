@@ -1,8 +1,8 @@
 # Switch test contract
 
-Driver: [SPEC.md](./SPEC.md). This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. Proof is `[x]` in SPEC.md only when a passing test title contains the ID.
+Index: [case.json](./case.json), which `pnpm agentct check` validates. This file is the case catalog (setup / action / assert). `[x]` here means the case is **specified**. A case is proven only when a passing test title contains its ID (`pnpm agentct Switch --e2e`).
 
-Playwright: `matrix/lib/tests/e2e/switch.spec.ts`  
+Playwright: `src/components/Switch/__e2e__/*.spec.ts` (run with `pnpm agentct Switch --e2e`)  
 Page: `/switch`
 
 Switch owns one controlled `role="switch"` button. A thumb is always
@@ -19,12 +19,9 @@ Authoring `Switch.Thumb` replaces that default; at most one thumb exists.
 
 ## Source evidence
 
-- `vendor/radix-primitives/packages/react/switch/src/switch.test.tsx` —
-  controlled checked, `onCheckedChange`, disabled, `data-state` on root and
-  thumb, and native button activation.
-- `vendor/base-ui/packages/react/src/switch` — button host, Thumb child,
+- Base UI's switch — button host, Thumb child,
   disabled, and form-control contrast (Reference UI leaves form wiring).
-- `vendor/react-spectrum/packages/react-aria-components/test/Switch.test.js`
+- React Aria's `Switch.test.js`
   — labelled activation, keyboard Space, disabled, and read-only contrast.
   React Aria's `input` host is deliberate contrast, not the freeze anatomy.
 - APG Switch pattern — `role="switch"` with `aria-checked` true/false, not

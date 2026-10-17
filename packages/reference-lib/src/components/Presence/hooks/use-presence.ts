@@ -59,7 +59,7 @@ export function usePresence(present: boolean, options?: UsePresenceOptions) {
   }
   const presenceId = presenceIdRef.current
 
-  // W-09: complete a live exit exactly once. Centralized so every completion
+  // Complete a live exit exactly once. Centralized so every completion
   // path (event, WAAPI, GSAP, fallback, descendant release, coordinator
   // release, instant) reports through one guard. Fires synchronously: a
   // nested child can complete in the same commit its parent removes the
@@ -104,7 +104,7 @@ export function usePresence(present: boolean, options?: UsePresenceOptions) {
 
     if (present) {
       // Returning to present cancels the pending exit: an interrupted exit
-      // never reports completion (W-09).
+      // never reports completion.
       guard.cancel()
       setState('mounted')
       if (el) {
@@ -168,7 +168,7 @@ export function usePresence(present: boolean, options?: UsePresenceOptions) {
       // Suspend unmount while transitions/animations/GSAP tweens complete.
       // The parent waits only for descendants that are actually exiting: a
       // born-closed instance never suspends, so it never registers and can no
-      // longer strand the parent's exit (B-01).
+      // longer strand the parent's exit.
       if (parentPresence) {
         parentPresence.registerDescendant(presenceId)
       }
@@ -199,7 +199,7 @@ export function usePresence(present: boolean, options?: UsePresenceOptions) {
   // Release an exit-start registration if this instance is removed mid-exit
   // (PR-NEST-03). Registration itself happens at exit-start above, never on
   // mount: born-closed descendants have no exit to report, so registering
-  // them would strand the parent forever (B-01).
+  // them would strand the parent forever.
   React.useEffect(() => {
     if (parentPresence) {
       return () => {

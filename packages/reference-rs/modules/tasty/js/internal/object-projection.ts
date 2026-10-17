@@ -3,31 +3,33 @@
  * Contains JS API logic and types.
  */
 import type {
+  RawTastyStructuredTypeRef,
   RawTastyTypeRef,
   RawTastyTypeReference,
   TastyMember,
   TastySymbol,
   TastyTypeParameterMemberProjector,
   TastyTypeRef,
-} from '../api-types'
-import { dedupeTastyMembers } from '../members'
-import { getTastyResolvedType } from '../resolution'
+} from '../api-types.js'
+import { dedupeTastyMembers } from '../members.js'
+import { getTastyResolvedType } from '../resolution.js'
 import {
   instantiateTypeAliasDefinition,
   instantiateTypeRef,
   type TypeSubstitutions,
-} from './object-projection-instantiation'
-import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared'
-import type { TastyApiRuntime } from './api-runtime'
+} from './object-projection-instantiation.js'
+import { collectProjectedKeys } from './object-projection-keys.js'
+import {
+  isTypeParameterReference,
+  loadReferencedSymbol,
+  MAX_PROJECTION_DEPTH,
+  type ProjectionContext,
+  withTypeParameterNames,
+} from './object-projection-references.js'
+import { isInterfaceSymbol, isTypeAliasSymbol, isTypeReference } from './shared.js'
+import type { TastyApiRuntime } from './api-runtime.js'
 
-const MAX_PROJECTION_DEPTH = 32
-
-interface ProjectionContext {
-  visitedSymbolIds: Set<string>
-  depth: number
-  projectTypeParameterMembers?: TastyTypeParameterMemberProjector
-  typeParameterNames?: Set<string>
-}
+export { isTypeParameterReference } from './object-projection-references.js'
 
 export async function projectObjectLikeMembers(
   api: TastyApiRuntime,
@@ -97,41 +99,60 @@ async function projectTypeMembers(
 ): Promise<TastyMember[] | undefined> {
   if (!typeRef || context.depth > MAX_PROJECTION_DEPTH) return undefined
 
-  const concrete = getTastyResolvedType(typeRef) ?? typeRef
-  const raw = concrete.getRaw()
-
+  const raw = concreteTypeRef(typeRef).getRaw()
   if (isTypeReference(raw)) {
     return projectReferenceMembers(api, raw, context)
   }
+  return projectStructuredMembers(api, raw, context)
+}
 
+function concreteTypeRef(typeRef: TastyTypeRef): TastyTypeRef {
+  return getTastyResolvedType(typeRef) ?? typeRef
+}
+
+async function projectStructuredMembers(
+  api: TastyApiRuntime,
+  raw: RawTastyStructuredTypeRef,
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
   switch (raw.kind) {
     case 'object':
       return raw.members.map(member => api.createMember(member))
-    case 'indexed_access': {
-      const parameterMembers = await projectParametersIndexedAccessMembers(
-        api,
-        raw,
-        context
-      )
-      if (parameterMembers) return parameterMembers
-
-      if (raw.resolved) {
-        return projectTypeMembers(api, api.createTypeRef(raw.resolved), context)
-      }
-
-      return undefined
-    }
-    case 'intersection': {
-      const parts = await Promise.all(
-        raw.types.map(item => projectTypeMembers(api, api.createTypeRef(item), context))
-      )
-      const projectableParts = parts.filter((part): part is TastyMember[] => part != null)
-      if (projectableParts.length === 0) return undefined
-      return dedupeTastyMembers(projectableParts.flat())
-    }
+    case 'indexed_access':
+      return projectIndexedAccessMembers(api, raw, context)
+    case 'intersection':
+      return projectIntersectionMembers(api, raw.types, context)
     default:
       return undefined
   }
+}
+
+async function projectIndexedAccessMembers(
+  api: TastyApiRuntime,
+  raw: Extract<RawTastyTypeRef, { kind: 'indexed_access' }>,
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
+  const parameterMembers = await projectParametersIndexedAccessMembers(api, raw, context)
+  if (parameterMembers) return parameterMembers
+
+  if (raw.resolved) {
+    return projectTypeMembers(api, api.createTypeRef(raw.resolved), context)
+  }
+
+  return undefined
+}
+
+async function projectIntersectionMembers(
+  api: TastyApiRuntime,
+  types: RawTastyTypeRef[],
+  context: ProjectionContext
+): Promise<TastyMember[] | undefined> {
+  const parts = await Promise.all(
+    types.map(item => projectTypeMembers(api, api.createTypeRef(item), context))
+  )
+  const projectableParts = parts.filter((part): part is TastyMember[] => part != null)
+  if (projectableParts.length === 0) return undefined
+  return dedupeTastyMembers(projectableParts.flat())
 }
 
 async function projectReferenceMembers(
@@ -185,42 +206,6 @@ async function projectUnresolvedReferenceMembers(
     const projected = await context.projectTypeParameterMembers?.({ api, reference })
     if (projected) return projected
     return []
-  }
-
-  return undefined
-}
-
-function withTypeParameterNames(
-  context: ProjectionContext,
-  names: string[] | undefined
-): ProjectionContext {
-  if (!names?.length) return context
-  return {
-    ...context,
-    typeParameterNames: new Set([...(context.typeParameterNames ?? []), ...names]),
-  }
-}
-
-async function loadReferencedSymbol(
-  api: TastyApiRuntime,
-  reference: RawTastyTypeReference
-): Promise<TastySymbol | undefined> {
-  const manifestEntry = api.getManifestEntry(reference.id)
-  if (manifestEntry) {
-    return api.loadSymbolById(reference.id)
-  }
-
-  try {
-    const scoped = await api.findSymbolByScopedName(reference.library, reference.name)
-    if (scoped) return scoped
-  } catch {
-    // Fall through to a unique bare-name lookup when the emitted library points
-    // at a re-exporting package instead of the defining package.
-  }
-
-  const matches = await api.findSymbolsByName(reference.name)
-  if (matches.length === 1) {
-    return api.loadSymbolById(matches[0]!.id)
   }
 
   return undefined
@@ -356,87 +341,6 @@ async function projectPickMembers(
   if (!baseMembers || !keys) return undefined
 
   return baseMembers.filter(member => keys.has(member.getName()))
-}
-
-async function collectProjectedKeys(
-  api: TastyApiRuntime,
-  typeRef: TastyTypeRef,
-  context: ProjectionContext
-): Promise<Set<string> | undefined> {
-  const concrete = getTastyResolvedType(typeRef) ?? typeRef
-  return collectProjectedKeysFromRaw(api, concrete.getRaw(), context)
-}
-
-async function collectProjectedKeysFromRaw(
-  api: TastyApiRuntime,
-  raw: RawTastyTypeRef,
-  context: ProjectionContext
-): Promise<Set<string> | undefined> {
-  if (isTypeReference(raw)) {
-    if (context.depth > MAX_PROJECTION_DEPTH || context.visitedSymbolIds.has(raw.id)) {
-      return undefined
-    }
-
-    const manifestEntry = api.getManifestEntry(raw.id)
-    if (!manifestEntry) return undefined
-
-    const symbol = await api.loadSymbolById(raw.id)
-    const symbolRaw = symbol.getRaw()
-    if (!isTypeAliasSymbol(symbolRaw)) return undefined
-
-    const instantiated =
-      instantiateTypeAliasDefinition(symbolRaw, raw.typeArguments) ??
-      symbol.getUnderlyingType()?.getRaw()
-
-    if (!instantiated) return undefined
-
-    return collectProjectedKeysFromRaw(api, instantiated, {
-      visitedSymbolIds: new Set(context.visitedSymbolIds).add(raw.id),
-      depth: context.depth + 1,
-      projectTypeParameterMembers: context.projectTypeParameterMembers,
-    })
-  }
-
-  switch (raw.kind) {
-    case 'literal': {
-      const key = normalizeLiteralKey(raw.value)
-      return key == null ? undefined : new Set([key])
-    }
-    case 'union': {
-      const keys = new Set<string>()
-      for (const item of raw.types) {
-        const itemKeys = await collectProjectedKeysFromRaw(api, item, context)
-        if (!itemKeys) return undefined
-        for (const key of itemKeys) keys.add(key)
-      }
-      return keys
-    }
-    default:
-      return undefined
-  }
-}
-
-function normalizeLiteralKey(value: string): string | undefined {
-  const trimmed = value.trim()
-  if (!trimmed) return undefined
-
-  const quoted =
-    (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith('`') && trimmed.endsWith('`'))
-
-  return quoted ? trimmed.slice(1, -1) : trimmed
-}
-
-export function isTypeParameterReference(
-  reference: RawTastyTypeReference,
-  context: Pick<ProjectionContext, 'typeParameterNames'>
-): boolean {
-  return (
-    reference.id === reference.name &&
-    !reference.typeArguments?.length &&
-    context.typeParameterNames?.has(reference.name) === true
-  )
 }
 
 async function projectRawTypeMembers(

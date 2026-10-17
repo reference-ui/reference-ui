@@ -1,5 +1,5 @@
 /**
- * forwardRef owned-props station (ATM-SITE-93). `Tile` is a `forwardRef` whose props
+ * forwardRef owned-props (ATM-SITE-93). `Tile` is a `forwardRef` whose props
  * type sits only in the generic, so its inner function carries no annotation. It pulls
  * `size` and `tone` out by name, so they are the component's own API: `size="lg"` mints
  * no want and no warning. `p` rides `rest` into `Div` and still extracts, and the

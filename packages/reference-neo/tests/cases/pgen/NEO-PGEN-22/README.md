@@ -2,7 +2,7 @@
 
 This world's consumer imports the bound `react.d.mts` (TYPE-01 pattern: the
 world tsconfig maps `@reference-ui/react` at the generated entry, never the
-vendored E4), and proves the W4 bake narrowed rather than widened. System
+vendored E4), and proves the per-system bake narrowed rather than widened. System
 literals assign at the `ColorToken` position and at the style-props color
 position; `StylePropName` is the exact compiled union (a member assigns, and
 it is neither `never` nor `string`); a narrowed `css` object assigns, and a

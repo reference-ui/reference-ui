@@ -1,5 +1,5 @@
 /**
- * Selector-escape station. Slash, dot, colon, and bracket characters are
+ * Selector-escape case. Slash, dot, colon, and bracket characters are
  * escaped in CSS selectors while runtime class strings stay clean.
  */
 import { expect } from 'vitest'

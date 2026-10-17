@@ -1,6 +1,6 @@
 # NEO-CLI-01 — `neo` CLI lifecycle: interrupt recovery and clean restore
 
-Evidence: `[core]` CLI lifecycle (`matrix/distro/tests/unit/distro.test.tsx`
+Evidence: CLI lifecycle (`matrix/distro/tests/unit/distro.test.tsx`
 L280-446: idempotent re-sync, stale runtime rewrite, SIGTERM-interrupt
 recovery, clean-restore round-trip).
 

@@ -12,7 +12,7 @@ pub(crate) mod values;
 
 pub use builder::{
     build_recipe_runtime_tables, build_runtime_style_plans, derive_slot, AuthoredDeclaration,
-    PlanBuilder,
+    PlanBuilder, PlanSinks,
 };
 pub use plan::{
     get_style_prop_names, NativeRuntimeArtifact, RecipeCompoundRecord, RecipeRuntimeTable,

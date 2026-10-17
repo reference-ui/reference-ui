@@ -4,7 +4,7 @@ Current freeze, cases, and proof. Architecture: [README.md](./README.md).
 System orchestration: [atomic.md](../../docs/atomic.md).
 
 Harness: Cargo unittests (`packages/reference-rs/modules/canon/src/tests.rs`) + Vitest (`packages/reference-rs/modules/canon/tests/suites/join.test.ts`)  
-Generator: Platform join validation orchestrator (`pnpm --filter @reference-ui/rust run canon`)
+Generator: Platform join validation (`pnpm --filter @reference-ui/rust run canon`)
 
 ---
 
@@ -16,10 +16,10 @@ Canon is the single source of truth for the Reference UI style engine language: 
 
 ## 2. Legend & Status Counts
 
-- `[x]` Proven by a passing cargo unit test (`src/tests.rs`) or fail-closed Vitest station (`tests/suites/join.test.ts`). Code in `src/` is not proof. A proof-map row that only names a production function is `[ ]`.
-- `[ ]` Specified; not yet proven by a dedicated named station.
+- `[x]` Proven by a passing cargo unit test (`src/tests.rs`) or fail-closed Vitest (`tests/suites/join.test.ts`). Code in `src/` is not proof. A proof-map row that only names a production function is `[ ]`.
+- `[ ]` Specified; not yet proven by a dedicated named case.
 
-Audit: 2026-09-14. Strict 1:1 case-to-spec-ID alignment. Every case is backed by a dedicated named test station.
+Audit: 2026-09-14. Strict 1:1 case-to-spec-ID alignment. Every case is backed by a dedicated named test case.
 
 ### Status Counts
 
@@ -40,7 +40,7 @@ Named proven: `CAN-JOIN-01`–`08`, `CAN-TAG-01`–`05`, `CAN-PROP-01`–`07`, `
 
 - **Rust Unit Tests**: `packages/reference-rs/modules/canon/src/tests.rs` (30 passing tests in `cargo test -p canon`).
 - **Platform Join & Poison Injection Tests**: `packages/reference-rs/modules/canon/tests/suites/join.test.ts` (15 passing tests in `vitest run --project canon`).
-- **Platform Join Orchestrator**: Inverted join validation in generator suite (executes via `pnpm --filter @reference-ui/rust run canon`).
+- **Platform Join Validation**: Inverted join validation in generator suite (executes via `pnpm --filter @reference-ui/rust run canon`).
 
 ---
 
@@ -67,19 +67,19 @@ call sites are examples of the job, not names we ship.
 ### Platform Join & Compilation (`JOIN`)
 
 - [x] `CAN-JOIN-01` `[reference]` `[gen]` —
-  **Dialect JSX primitives must join 100% with living `@webref/elements`.** Ingest all curated dialect element tags from `overlay/` and validate against `@webref/elements` (living HTML + SVG2 host elements, excluding obsolete tags and document chrome). Assert every primitive tag exists in official web standards specifications; validator returns diagnostics and the orchestrator exits process with code 1 immediately if an unrecognized tag is encountered.
+  **Dialect JSX primitives must join 100% with living `@webref/elements`.** Ingest all curated dialect element tags from `overlay/` and validate against `@webref/elements` (living HTML + SVG2 host elements, excluding obsolete tags and document chrome). Assert every primitive tag exists in official web standards specifications; validator returns diagnostics and the generator exits process with code 1 immediately if an unrecognized tag is encountered.
 - [x] `CAN-JOIN-02` `[reference]` `[gen]` —
-  **Full platform CSS emission from `@webref/css` plus allowlisted dialect extensions.** Ingest all living `@webref/css` properties directly into `CANONICAL_PROPERTIES`. Assert any emitted property not defined in W3C standards is explicitly registered in the `EXTENSIONS` table; validator returns diagnostics and the orchestrator exits process with code 1 otherwise. The generated unrealizable set (`EXTENSIONS` rows with `css` absent from webref, no longhands, no platform shadow) must equal the live-oracle recomputation in the same test.
+  **Full platform CSS emission from `@webref/css` plus allowlisted dialect extensions.** Ingest all living `@webref/css` properties directly into `CANONICAL_PROPERTIES`. Assert any emitted property not defined in W3C standards is explicitly registered in the `EXTENSIONS` table; validator returns diagnostics and the generator exits process with code 1 otherwise. The generated unrealizable set (`EXTENSIONS` rows with `css` absent from webref, no longhands, no platform shadow) must equal the live-oracle recomputation in the same test.
 - [x] `CAN-JOIN-03` `[reference]` `[gen]` —
-  **Native CSS shorthands must decompose to identical longhands as `@webref/css`.** Decompose every shorthand in `@webref/css` using its official `longhands` array. Validator returns mismatch diagnostics and the orchestrator aborts with exit code 1 if dialect longhands disagree with `@webref/css`.
+  **Native CSS shorthands must decompose to identical longhands as `@webref/css`.** Decompose every shorthand in `@webref/css` using its official `longhands` array. Validator returns mismatch diagnostics and the generator aborts with exit code 1 if dialect longhands disagree with `@webref/css`.
 - [x] `CAN-JOIN-04` `[reference]` `[unit]` —
   **Emitted static tables must be lexicographically pre-sorted for binary search.** Inspect `ELEMENTS`, `PRIMITIVE_JSX`, `CANONICAL_PROPERTIES`, `ALIASES`, `REFERENCE_PROPS`, `CONDITIONS`, and `COLOR_PROPERTIES` slices in emitted Rust code. Assert all slices are sorted in ascending byte order according to their search keys, ensuring `binary_search_by_key` always succeeds in $O(\log N)$ time without panic. Assert every element in `ELEMENTS` is resolved by `is_primitive_jsx_name`.
 - [x] `CAN-JOIN-05` `[reference]` `[gen]` —
-  **Dialect alias targets must resolve to platform properties or dialect extensions.** Validate that every alias target in `ALIASES` resolves to a valid `@webref/css` property or allowlisted dialect extension; validator returns diagnostics and orchestrator exits process with code 1 otherwise.
+  **Dialect alias targets must resolve to platform properties or dialect extensions.** Validate that every alias target in `ALIASES` resolves to a valid `@webref/css` property or allowlisted dialect extension; validator returns diagnostics and generator exits process with code 1 otherwise.
 - [x] `CAN-JOIN-06` `[reference]` `[gen]` —
-  **Dialect short-prefix properties must exist on platform or dialect allowlist.** Validate that every property specified in short class prefix maps exists in `@webref/css` or dialect extensions; validator returns diagnostics and orchestrator exits process with code 1 otherwise.
+  **Dialect short-prefix properties must exist on platform or dialect allowlist.** Validate that every property specified in short class prefix maps exists in `@webref/css` or dialect extensions; validator returns diagnostics and generator exits process with code 1 otherwise.
 - [x] `CAN-JOIN-07` `[reference]` `[gen]` —
-  **Dialect color extensions must exist on explicit color allowlist.** Validate that every color property in `COLOR_PROPERTIES` is either generated from webref syntax (`<color>`, `<paint>`, `color`, `*-color`, `background`) or registered as a dialect color extension; validator returns diagnostics and orchestrator exits process with code 1 otherwise.
+  **Dialect color extensions must exist on explicit color allowlist.** Validate that every color property in `COLOR_PROPERTIES` is either generated from webref syntax (`<color>`, `<paint>`, `color`, `*-color`, `background`) or registered as a dialect color extension; validator returns diagnostics and generator exits process with code 1 otherwise.
 - [x] `CAN-JOIN-08` `[reference]` `[gen]` `[unit]` —
   **Unique class prefixes across all canonical properties.** Validate that every `class_prefix` in `CANONICAL_PROPERTIES` is globally unique. Ingest both living webref properties and dialect overlays, proving that colliding property pairs (`display`/`d`, `translateX`/`x`, `translateY`/`y`, `zIndex`/`translateZ`, `boxSize`/`size`) are disambiguated. Assert in Rust unit tests that no two `CANONICAL_PROPERTIES` share a `class_prefix`.
 
@@ -157,19 +157,19 @@ call sites are examples of the job, not names we ship.
 - [x] `CAN-FAIL-03` `[forbidden]` `[unit]` —
   **Rejection of bare pseudo selector names without prefix.** Pass unprefixed pseudo names (`hover`, `focus`, `active`) to `is_condition_prop`. Assert all return `false`.
 - [x] `CAN-FAIL-04` `[forbidden]` `[gen]` —
-  **Build abort on unknown dialect HTML tags missing from `@webref/elements`.** Execute `validateElementsJoin` with an injected invalid dialect tag (e.g. `foobar`). Assert the validator produces a failure diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on unknown dialect HTML tags missing from `@webref/elements`.** Execute `validateElementsJoin` with an injected invalid dialect tag (e.g. `foobar`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-05` `[forbidden]` `[gen]` —
-  **Build abort on unverified canonical properties missing from `@webref/css` and allowlist.** Execute `validateDialectExtJoin` with an injected unverified property name (`foobarProp`). Assert the validator produces a failure diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on unverified canonical properties missing from `@webref/css` and allowlist.** Execute `validateDialectExtJoin` with an injected unverified property name (`foobarProp`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-06` `[forbidden]` `[gen]` —
-  **Build abort on native shorthand longhands mismatching `@webref/css`.** Execute `validateShorthandsJoin` with an injected mutated longhand slice. Assert the validator produces a mismatch diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on native shorthand longhands mismatching `@webref/css`.** Execute `validateShorthandsJoin` with an injected mutated longhand slice. Assert the validator produces a mismatch diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-07` `[forbidden]` `[gen]` —
-  **Build abort on unknown dialect alias targets.** Execute `validateAliasTargetsJoin` with an injected invalid alias target (e.g. `badAlias` -> `unrecognizedTarget`). Assert the validator produces a failure diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on unknown dialect alias targets.** Execute `validateAliasTargetsJoin` with an injected invalid alias target (e.g. `badAlias` -> `unrecognizedTarget`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-08` `[forbidden]` `[gen]` —
-  **Build abort on duplicate utility class prefix collision.** Execute `validateClassPrefixesJoin` with two properties assigned the identical class prefix (e.g. `d`). Assert the validator returns an error diagnostic identifying both clashing properties and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on duplicate utility class prefix collision.** Execute `validateClassPrefixesJoin` with two properties assigned the identical class prefix (e.g. `d`). Assert the validator returns an error diagnostic identifying both clashing properties and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-09` `[forbidden]` `[gen]` —
-  **Build abort on dialect short-prefix property missing from platform or allowlist.** Execute `validateShortPrefixesJoin` with an injected unverified short prefix property (e.g. `foobarProp: 'fb'`). Assert the validator produces a failure diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on dialect short-prefix property missing from platform or allowlist.** Execute `validateShortPrefixesJoin` with an injected unverified short prefix property (e.g. `foobarProp: 'fb'`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 - [x] `CAN-FAIL-10` `[forbidden]` `[gen]` —
-  **Build abort on unallowlisted dialect color extension.** Execute `validateColorPropsJoin` with an injected unverified color property (e.g. `unrecognizedColor`). Assert the validator produces a failure diagnostic and the orchestrator aborts with `process.exit(1)`.
+  **Build abort on unallowlisted dialect color extension.** Execute `validateColorPropsJoin` with an injected unverified color property (e.g. `unrecognizedColor`). Assert the validator produces a failure diagnostic and the generator aborts with `process.exit(1)`.
 
 ---
 

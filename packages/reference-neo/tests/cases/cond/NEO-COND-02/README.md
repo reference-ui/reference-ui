@@ -7,11 +7,9 @@ outside the `[data-color-mode=dark]` wrap and one `:is()` hover list,
 the twin paints only with a wide root plus dark mode, and the live
 probe needs a real hover on top of the same two.
 
-Evidence: `[atm]` ATM-COND-01, ATM-COND-02, ATM-COND-03 (R1 probe
-`/tmp/cond-batch2-r1/probe.mjs` 02a emits the triple rule; value-position
-`bg: { sm: … }` warns and emits nothing); `[panda-v1]`
-`vendor/panda-v1/packages/core/__tests__/atomic-rule.test.ts:331`
-"nested > property" (the contrast: Panda `@media` plus four-way dark
-selectors, Reference `@container` plus single D1 wrap).
+Evidence: ATM-COND-01, ATM-COND-02, ATM-COND-03 (probes 02a emits the triple
+rule; value-position `bg: { sm: … }` warns and emits nothing); Panda v1 test
+"nested > property" (the contrast: Panda `@media` plus four-way dark selectors,
+Reference `@container` plus single wrap).
 
 > Search terms: focus, data-hover, data-focus, triple bind, conditions/hover, conditions/focus, selector :is(), NEO-COND-01, ATM-COND-10

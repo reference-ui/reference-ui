@@ -1,5 +1,5 @@
 /**
- * Per-prop responsive object station (ATM-COND-17, RS-9).
+ * Per-prop responsive object (ATM-COND-17).
  * `width: { base, md }` expands onto breakpoint whens with `base`
  * unconditioned; unknown keys warn and skip; plans carry responsive `@`
  * slots keyed by authored spellings, and a later alias evicts the earlier

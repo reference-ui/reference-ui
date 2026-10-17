@@ -88,7 +88,7 @@ function expectWindowError(messages: string[], pattern: RegExp) {
   expect(messages.join('\n')).toMatch(pattern)
 }
 
-describe('Slider PATCHES pins', () => {
+describe('Slider pins', () => {
   let container: HTMLDivElement
   let root: Root
 

@@ -1,5 +1,5 @@
 /**
- * Station specification for ATL-PKG-01.
+ * Case specification for ATL-PKG-01.
  * Validates tracking of external package components consumed via TypeScript
  * namespace imports, including call-site counts and namespace example formatting.
  * Proves primary SPEC anchor ATL-PKG-01.

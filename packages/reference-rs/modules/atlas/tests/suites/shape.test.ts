@@ -3,7 +3,7 @@
  * Verifies the module correctness and output contracts.
  */
 import { describe, it, expect } from 'vitest'
-import { getComponents, USAGE_VALUES } from '../harness/helpers'
+import { getComponents, USAGE_VALUES } from '../harness/helpers.js'
 
 describe('Component shape', () => {
   it('every component has the required top-level fields', async () => {

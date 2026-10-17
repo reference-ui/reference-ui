@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-RXP-01.
+ * Case specification for TST-RXP-01.
  * Verifies external package type re-exports and canonical library symbols.
  * Proves primary SPEC ID anchor TST-RXP-01.
  */

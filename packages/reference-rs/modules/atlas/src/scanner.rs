@@ -24,7 +24,6 @@ const DEPENDENCY_DIR: &str = "node_modules";
 pub struct SourceFile {
     pub path: PathBuf,
     pub content: String,
-    #[allow(dead_code)]
     pub source_type: SourceType,
 }
 

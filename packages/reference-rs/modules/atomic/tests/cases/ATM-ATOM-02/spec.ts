@@ -1,5 +1,5 @@
 /**
- * AtomValue variant station. String, Number, and resolved Token leaves
+ * AtomValue variant case. String, Number, and resolved Token leaves
  * emit distinct class names and CSS declaration values. Bool stays on
  * the want and must not appear as a CSS declaration value.
  */

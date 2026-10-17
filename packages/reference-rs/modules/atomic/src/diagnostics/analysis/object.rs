@@ -9,8 +9,8 @@
 //! dynamic-shape facts, never guessed keys.
 
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
-use rustc_hash::FxHashSet;
 use oxc_span::{GetSpan, Span};
+use rustc_hash::FxHashSet;
 
 use super::block::walk_const_object;
 use super::conditions::{is_style_value_position, static_key, KeyClass};
@@ -190,7 +190,7 @@ fn is_spreadable_scalar(leaves: &[AtomValue]) -> bool {
 }
 
 /// Walk one object entry: unknown keys are dynamic props, `r` objects are
-/// dynamic whens (the `r` lowering is unproven — S2 stays out), object
+/// dynamic whens (the `r` lowering is unproven — stays out), object
 /// values go responsive-or-recurse, and leaves classify or vanish as holes.
 fn walk_entry(walk: &mut WalkCtx<'_>, prop: &oxc_ast::ast::ObjectProperty<'_>, when: &[Box<str>]) {
     let KeyClass::Static(key) = static_key(&prop.key, prop.computed) else {
@@ -291,86 +291,4 @@ fn is_hole_name(name: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::super::support::{dynamic_count, exact_keys, walk_first_object};
-    use super::*;
-    use crate::diagnostics::StyleSurfaceKind;
-
-    fn walk_source(source: &str) -> Vec<DiagnosticFact> {
-        walk_first_object(
-            source,
-            StyleSurfaceKind::Css,
-            &["color", "mt", "width", "padding"],
-        )
-    }
-
-    #[test]
-    fn flat_objects_emit_exact_keys() {
-        let facts = walk_source("css({ color: 'red', mt: '2r' })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![
-                r#"["test",[],"color","red",false]"#.to_string(),
-                r#"["test",[],"mt","2r",false]"#.to_string(),
-            ]
-        );
-        assert_eq!(dynamic_count(&facts), 0);
-    }
-
-    #[test]
-    fn nested_conditions_push_raw_whens() {
-        let facts = walk_source("css({ _hover: { _focus: { color: 'red' } } })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["test",["_hover","_focus"],"color","red",false]"#.to_string()]
-        );
-    }
-
-    #[test]
-    fn unlowerable_conditions_stay_exact() {
-        let facts = walk_source("css({ _hovr: { color: 'red.500' } })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["test",["_hovr"],"color","red.500",false]"#.to_string()]
-        );
-    }
-
-    #[test]
-    fn holes_emit_no_fact() {
-        let facts = walk_source("css({ a: null, b: undefined, c: void 0, d: false, e: 0 })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["test",[],"e",0,false]"#.to_string()]
-        );
-        assert_eq!(dynamic_count(&facts), 0);
-    }
-
-    #[test]
-    fn spreads_and_computed_keys_stay_dynamic() {
-        let facts = walk_source("css({ ...base, [k]: 'red', color: 'red' })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["test",[],"color","red",false]"#.to_string()]
-        );
-        assert_eq!(dynamic_count(&facts), 2);
-    }
-
-    #[test]
-    fn r_objects_stay_dynamic() {
-        let facts = walk_source("css({ r: { 300: { p: '1r' } } })");
-        assert!(exact_keys(&facts).is_empty());
-        assert_eq!(dynamic_count(&facts), 1);
-    }
-
-    #[test]
-    fn custom_prop_objects_predict_one_whole_object_exact() {
-        // `--x` is absent from the style set on purpose: the `--` prefix
-        // rule alone must route the object to one whole-object exact.
-        let facts = walk_source("css({ '--x': { base: '1', md: '2' } })");
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["test",[],"--x",{"base":"1","md":"2"},false]"#.to_string()]
-        );
-        assert_eq!(dynamic_count(&facts), 0);
-    }
-}
+mod tests;

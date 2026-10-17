@@ -6,8 +6,7 @@ alias and the call, never at per-tag DivProps, which stays open unknown by
 user-space law. Related: NEO-PGEN-22 (the bound narrowing that flips it),
 NEO-PGEN-15 (the css twin of this openness story).
 
-The world's tone recipe fragment mints the tone-axis union, and the W4
-flip landed all three negatives: a wrong axis value fails with TS2322 at
+The world's tone recipe fragment mints the tone-axis union, and the per-system narrowing now covers all three negatives: a wrong axis value fails with TS2322 at
 the alias, a nested variant object fails with TS2353 at the call, and a
 bad axis value fails with TS2322 at the flat call. The world, the
 temp-project plumbing, and the paint proof already stand.

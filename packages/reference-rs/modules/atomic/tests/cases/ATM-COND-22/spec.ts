@@ -1,5 +1,5 @@
 /**
- * Nested-functional station (ATM-COND-22, SPEC-V2-49). A css()-nested
+ * Nested-functional (ATM-COND-22). A css()-nested
  * `&:where(:has(> …, > …))` key substitutes the class inside the
  * functional arg with the child combinators, `:only-child`, and comma
  * scoping intact. Selector mirrors v2 `nested_selector_parity.rs:389`.

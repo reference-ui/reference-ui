@@ -9,7 +9,6 @@ Interactive map: open `packages/reference-rs/modules/map.html` in a browser.
 Hover a function to see which module it rests on. tasty, atlas, and
 `modules/runtime` (the `.node` loader) are other products — not this engine.
 
-Current plan: [`plan.md`](../../../plan.md).
 Panda autopsy: [`modules/atomic/PANDA.md`](../modules/atomic/PANDA.md).
 
 ---
@@ -40,7 +39,7 @@ fragment evaluator is Panda v2. Do not.
 
 Bottom-up: build the Rust engines, verify them inside `reference-rs`, then
 worry about host integration. The live wire from atomic CSS into
-`reference-core` already exists at codegen (`@reference-ui/rust/system`). We
+the Neo collector already exists at codegen (`@reference-ui/rust/atomic`, called from `packages/reference-neo/src/collect/lib/scan/native.ts`). We
 emulate one seam cleanly and move the rest slowly.
 
 ---
@@ -51,8 +50,6 @@ Each module has a README, a crate, and a way to verify itself
 (`pnpm agentrs c <crate>`). Do not dump this into one crate.
 
 ### canon — the language
-
-**Status:** extracted sibling. Refine this first.
 
 Platform + dialect. What tags and CSS properties exist. `mt` means
 `marginTop`. `r`, `container`, conditions. Generated from `@webref` plus a
@@ -68,8 +65,6 @@ README: [`modules/canon`](../modules/canon).
 
 ### base-system — the definition
 
-**Status:** crate stub. Core still writes `baseSystem.mjs`.
-
 Consumes the fragment spec from TypeScript — does not evaluate author JS.
 Tokens, fonts, keyframes, globals, declared recipes. What `extends` / `layers`
 pass around.
@@ -83,8 +78,6 @@ Verify: `pnpm agentrs c base_system`.
 README: [`modules/base-system`](../modules/base-system).
 
 ### atomic — stylesheet + class map
-
-**Status:** today's compiler. Was `modules/system`.
 
 Extract → atoms → stylesheet + class map. One namer. Want → Atom → AtomSet.
 Extract both ternary branches (no JS eval). Resolve rhythm, shorthands,
@@ -103,8 +96,6 @@ Verify: `pnpm agentrs c atomic` and `pnpm agentrs v atomic`.
 README: [`modules/atomic`](../modules/atomic).
 
 ### typegen — unions, not a jsx farm
-
-**Status:** crate stub.
 
 `.d.ts` from the base system + canon. Token unions, recipe variants, font
 registry. No jsx factory, no patterns farm, no recipes-as-modules.
@@ -161,7 +152,7 @@ stays TypeScript.
 
 Rust does not execute these functions.
 
-Home: `packages/reference-core/src/lib/fragments`.
+Home: `packages/reference-neo/src/collect` (the surface calls and the collector).
 
 ### Runtime — authored TypeScript, not generated
 

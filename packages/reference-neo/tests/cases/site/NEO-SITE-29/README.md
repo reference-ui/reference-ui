@@ -7,5 +7,4 @@ sheet carries the red utility and the padding sibling, the live node
 paints red while the unstyled control paints nothing, with zero
 recompile diagnostics — so cross-file spreads fold end to end.
 
-Evidence: `[atm]` ATM-SITE-78 (§1 three-file fold); `[overmatch]`
-Forge §1 verdict B.
+Evidence: ATM-SITE-78 (§1 three-file fold).

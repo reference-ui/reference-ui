@@ -1,5 +1,5 @@
 /**
- * Dialect-extension realization station (ATM-EXT-01). Extension props with no
+ * Dialect-extension realization (ATM-EXT-01). Extension props with no
  * CSS lowering refuse at the resolve fall-through: one default-visible
  * `ATM-W-UNREALIZABLE-EXTENSION` warning naming each probed prop, zero dead
  * rules in the sheet, no plans served. Sibling platform props still extract,

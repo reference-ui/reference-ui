@@ -10,7 +10,7 @@ import * as React from 'react'
 
 export interface NumberFieldContextValue {
   value: number | null
-  // W-25: clean-state rendered text (Intl formatting of the controlled
+  // Clean-state rendered text (Intl formatting of the controlled
   // value). The Input shows the verbatim draft while dirty, this otherwise.
   displayValue: string
   min?: number
@@ -26,8 +26,8 @@ export interface NumberFieldContextValue {
   // Stable Input identity: explicit Input id wins, else a pinned useId.
   // Steppers read the same value for aria-controls (same-commit retarget).
   inputId: string
-  // Transient edit buffer (B-19 dirty session + NFLAST ruling (c)
-  // live-request); null means clean (input shows formatted controlled
+  // Transient edit buffer (dirty session + live
+  // request); null means clean (input shows formatted controlled
   // value). Typing stages the verbatim draft and requests newly parseable
   // meanings live; commit boundaries (blur, Enter, step actions) flush.
   draft: string | null
@@ -52,7 +52,7 @@ export interface NumberFieldContextValue {
 
 export const NumberFieldContext = React.createContext<NumberFieldContextValue | null>(null)
 
-// Group membership scope (PATCHES §4): present only inside a Group. Named
+// Group membership scope: present only inside a Group. Named
 // parts throw a part-specific diagnostic when it is absent (misplaced
 // outside any Group); the registry counts catch nested extras that the
 // direct-children scan cannot see.

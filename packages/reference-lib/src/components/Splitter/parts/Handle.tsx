@@ -178,7 +178,7 @@ export const SplitterHandle = React.forwardRef<HTMLDivElement, SplitterHandlePro
     )
   }
 
-  // B-28: strip the deleted `index` prop so stale call sites can't leak
+  // Strip the deleted `index` prop so stale call sites can't leak
   // it onto the DOM. Still a type error by design (see SP-TYPE-01).
   const { index: _handleIndex, ...rest } = props as typeof props & { index?: unknown }
   void _handleIndex

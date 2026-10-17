@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-ERR-01.
+ * Case specification for TST-ERR-01.
  * Verifies that syntax errors in input files surface as diagnostics without halting emission.
  * Proves primary SPEC ID anchor TST-ERR-01.
  */

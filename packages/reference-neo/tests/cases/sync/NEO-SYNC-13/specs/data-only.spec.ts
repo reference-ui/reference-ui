@@ -28,7 +28,7 @@ export default async function run({ case: c }: SpecInput): Promise<void> {
 
   assert.ok(
     !fs.existsSync(path.join(outDir, 'styled', 'css.mjs')),
-    'D4: styled/css.mjs is gone; the bound runtime lives in react',
+    'styled/css.mjs is gone; the bound runtime lives in react',
   );
   const executables = fs
     .readdirSync(path.join(outDir, 'styled'))

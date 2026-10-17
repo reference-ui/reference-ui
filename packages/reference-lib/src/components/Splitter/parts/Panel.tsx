@@ -27,7 +27,7 @@ export const SplitterPanel = React.forwardRef<HTMLDivElement, SplitterPanelProps
   }: SplitterPanelProps,
   forwardedRef
 ) {
-  // B-28: the deleted `index` prop is stripped so stale call sites
+  // The deleted `index` prop is stripped so stale call sites
   // can't leak it to the DOM.
   const { index: _index, ...rest } = props as typeof props & { index?: unknown }
   void _index

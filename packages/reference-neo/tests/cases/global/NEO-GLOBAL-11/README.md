@@ -9,7 +9,7 @@ paint through the pseudo-element Chromium exposes: the file-button text
 and field colours. The thumb is sheet-only (this Chromium returns the
 input's own box for `::-webkit-slider-thumb` computed style).
 
-Evidence: `[lib]` `docs/evidence/lib-sheet-styles-css.md` vendor family,
-L811 range track, L848 Mozilla track; `[atm]` ATM-LAYER-03.
+Evidence: reference-lib vendor family,
+L811 range track, L848 Mozilla track; ATM-LAYER-03.
 
 > Search terms: range input, file input, slider styling, browser prefixes, vendor prefix, global/vendor-pseudos, global/passthrough

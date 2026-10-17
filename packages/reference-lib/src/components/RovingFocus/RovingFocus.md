@@ -1,6 +1,6 @@
 # RovingFocus
 
-Proof: [SPEC.md](./SPEC.md). Cases: [TESTS.md](./TESTS.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct RovingFocus --e2e`).
 
 Composite-widget keyboard kernel: roving `tabindex`, arrow movement,
 Home/End/PageUp/PageDown boundary movement, disabled skipping, optional
@@ -92,7 +92,7 @@ Listbox, Menu, Tabs, and Tree must not each reimplement tabIndex dance, RTL arro
 
 Only one item in the tab sequence. Arrows move among focusable items. Disabled items are not stops. RTL flips horizontal arrows.
 
-**Vendor.** Radix `vendor/radix-primitives/packages/react/roving-focus` — thin, 1D, `loop`, RTL. Aria `useSelectableCollection` is selection-coupled. Ariakit `composite` is the richest.
+**Prior art.** Radix `roving-focus` — thin, 1D, `loop`, RTL. Aria `useSelectableCollection` is selection-coupled. Ariakit `composite` is the richest.
 
 **Lift** Radix as the skeleton (slot onto a child, no extra node).
 
@@ -103,7 +103,7 @@ wrap-around matching. Space during an active search must **not** activate the
 item (capture-phase). Unicode letters matter (Ariakit). Headless UI's 350ms
 timing is deliberately left.
 
-**Vendor.** Aria `useTypeSelect.ts`. Ariakit `composite-typeahead.tsx`. Radix RovingFocus core has **no** typeahead; Radix Menu has its own.
+**Prior art.** Aria `useTypeSelect.ts`. Ariakit `composite-typeahead.tsx`. Radix RovingFocus core has **no** typeahead; Radix Menu has its own.
 
 **Lift** Aria/Ariakit into this primitive so Listbox and Menu do not fork it.
 
@@ -111,7 +111,7 @@ timing is deliberately left.
 
 `orientation="both"` is picker grids (emoji, date-adjacent palettes). Up/down change row; left/right change column.
 
-**Vendor.** Ariakit `rowId` + directional moves. Aria `ListKeyboardDelegate` `layout: 'grid'`. Radix RF is 1D only — insufficient.
+**Prior art.** Ariakit `rowId` + directional moves. Aria `ListKeyboardDelegate` `layout: 'grid'`. Radix RF is 1D only — insufficient.
 
 **Lift** Ariakit rows or Aria grid delegate.
 

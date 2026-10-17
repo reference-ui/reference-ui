@@ -1,5 +1,5 @@
 /**
- * Keyframe-ref station (ATM-LAYER-10, RS-16). Bodies carrying `{colors.brand}`
+ * Keyframe-ref (ATM-LAYER-10). Bodies carrying `{colors.brand}`
  * and `1r`/`4r` emit `var(--colors-brand)` plus the rhythm calc inside
  * `@keyframes grow`; refs no longer print literally. Keyframes are
  * spec-owned, so resolution emits no diagnostics.

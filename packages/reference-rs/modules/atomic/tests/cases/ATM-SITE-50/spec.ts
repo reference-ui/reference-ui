@@ -1,5 +1,5 @@
 /**
- * Whole-object / member-arg station (ATM-SITE-50, Overmatch Ph1+Ph3). An
+ * Whole-object / member-arg (ATM-SITE-50). An
  * argument that folds to an object extracts exactly as if spread —
  * identifiers, single-hop members, conditional arms, and logical operands
  * over const objects — while an argument that does not fold diagnoses with
@@ -99,7 +99,7 @@ const EXPECTED_DIAGNOSTICS: ExpectedDiagnostic[] = [
     message: 'tagged template is not a css() site; use css({...})',
   },
   // jsx.tsx: the logical left and the call condition refuse. The literal
-  // spread element flattens silently (SPEC-V2-28 Ph3, sibling slice).
+  // spread element flattens silently (sibling slice).
   {
     file: 'jsx.tsx',
     line: 14,
@@ -174,7 +174,7 @@ const spec: AtomicCaseSpec = {
     }
 
     // Fifteen positioned refusals plus the mutated-arg write-naming
-    // warning — on the opt-in channel now (S6 E8-class re-point); the
+    // warning — on the opt-in channel; the
     // default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-50', { logs: ['compiler'] })

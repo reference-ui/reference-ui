@@ -1,6 +1,6 @@
 /**
- * Golden suite for the primitives generator (E1 vocabulary.json + E2 primitives.mjs
- * + E4 primitives.d.ts). Rebuilds all three artifacts in memory and pins the committed
+ * Golden suite for the primitives generator (vocabulary.json, primitives.mjs, and
+ * primitives.d.ts). Rebuilds all three artifacts in memory and pins the committed
  * bytes, the 101-element HTML roster, the bound-roster seam, and the style-prop parity
  * with the live napi and typegen goldens. Refreshes only via the generator itself —
  * hand edits to generated/ fail here.
@@ -65,7 +65,7 @@ const FAMILIES = [
 ]
 
 describe('primitives generator goldens', () => {
-  it('PRIMGEN-01 rebuilds byte-identical E1, E2, and E4 from live sources', () => {
+  it('PRIMGEN-01 rebuilds byte-identical vocabulary, roster module and primitive types from live sources', () => {
     const fresh = buildArtifacts()
 
     expect(fresh.vocabularyJson).toBe(readCommitted('vocabulary.json'))

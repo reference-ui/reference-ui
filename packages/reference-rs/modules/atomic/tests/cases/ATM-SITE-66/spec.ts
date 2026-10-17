@@ -1,5 +1,5 @@
 /**
- * Bare-spread station (SPEC-V2-21 GAP-21). An unresolvable bare identifier
+ * Bare-spread case. An unresolvable bare identifier
  * spread warns exactly once and is skipped while static siblings in the
  * same object still extract with their runtime plans.
  */
@@ -15,8 +15,7 @@ const spec: AtomicCaseSpec = {
     ).toBeDefined()
     expect(result.css?.classes?.['color:red']).toBe('@reference-ui/lib__c_red')
 
-    // The bare-spread refusal rides the opt-in channel now (S6 E8-class
-    // re-point); the default is silent.
+    // The bare-spread refusal rides the opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-66', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

@@ -1,5 +1,5 @@
 /**
- * Multi-value rhythm station. `1r 2r` and `1px solid 1/3r` keep non-rhythm
+ * Multi-value rhythm case. `1r 2r` and `1px solid 1/3r` keep non-rhythm
  * tokens in place while each `r` token becomes calc/var.
  */
 import { expect } from 'vitest'

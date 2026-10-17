@@ -25,7 +25,7 @@ export function focusFirstEnabledItem(content: HTMLElement | null) {
   levelItems(content)[0]?.focus()
 }
 
-// B-33: content-focused edge navigation. Pointer-opened menus focus the
+// Content-focused edge navigation. Pointer-opened menus focus the
 // container itself, and RovingFocus keys are item-level only, so the
 // container handles its own arrows/Home/End (mirroring RovingFocus 1D
 // mapping: PageUp→first, PageDown→last). Callers gate on

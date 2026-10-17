@@ -4,6 +4,6 @@ Scan walk, glob, path, or file read failed; the request is refused as a coded th
 
 Raised in: `modules/tasty/src/scanner/workspace/**`. Driver: the whole tasty compiler with an invalid glob (coded throw).
 
-Evidence: `[diag]` TST-E-SCAN-FAILED (REGISTRY.md inventory + the shared repro suite row).
+Evidence: TST-E-SCAN-FAILED (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: TST-E-SCAN-FAILED, tst-e-scan-failed, diagnostics case index, NEO-DIAG-51

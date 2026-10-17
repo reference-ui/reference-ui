@@ -1,5 +1,5 @@
 /**
- * Interpolated-template fold station (ATM-SITE-51, SPEC-V2-67). Templates
+ * Interpolated-template fold (ATM-SITE-51). Templates
  * over foldable parts join one string per combination — const identifiers,
  * members, literals, wrappers, unary parts, nested templates, and
  * multi-leaf fan-out — with one want and one runtime plan per joined
@@ -106,7 +106,7 @@ const spec: AtomicCaseSpec = {
 
     // Three part refusals: zero wants from those templates, one located
     // `ATM-W-DYNAMIC-TEMPLATE` diagnostic each, naming the part — on the
-    // opt-in channel now (S6 E8-class re-point); the default is silent.
+    // opt-in channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-51', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()

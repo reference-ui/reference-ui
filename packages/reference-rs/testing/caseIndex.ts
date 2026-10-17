@@ -1,10 +1,10 @@
 /**
- * Case-folder convention for reference-rs station folders.
+ * Case-folder convention for reference-rs case folders.
  * Every case folder is named by its raw ID and holds case.json, the index metadata
  * Memex reads: {"id": "<ID>", "name": "<claim>"}. Its README.md opens with the heading
  * "# <ID> — <claim>", and that claim is the same text as the name. This module reads those
- * files and returns convention violations as plain messages, so the station runner can
- * fail with the folder name and the fix, and the rules can be tested without a station.
+ * files and returns convention violations as plain messages, so the case runner can
+ * fail with the folder name and the fix, and the rules can be tested without a case.
  */
 import fs from 'node:fs'
 import path from 'node:path'

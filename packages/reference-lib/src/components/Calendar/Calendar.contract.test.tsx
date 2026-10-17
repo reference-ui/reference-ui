@@ -8,7 +8,7 @@ import { Calendar, type CalendarProps } from './index'
 // @ts-ignore
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-// Adapted from quarantine b19c73bee matrix unit suite. Skipped by triage:
+// Adapted from b19c73bee matrix unit suite. Skipped by triage:
 // CA-ISO-06/07 (fail-closed render-''), CA-MODE-04 (discriminated props),
 // CA-ENV-01 today marker (new paint). CA-DAY-13 landed below; CA-DAY-14 is
 // a CT proof (react:all via `pnpm agentct Calendar --react all`).
@@ -253,7 +253,7 @@ describe('Calendar fail-closed (CA-ISO-06 / CA-ISO-07)', () => {
   )
 })
 
-describe('Calendar FEATURES cluster B', () => {
+describe('Calendar locale, grid, and availability contracts', () => {
   const dayButton = (html: string, date: string) => {
     const match = html.match(new RegExp(`<button[^>]*data-date="${date}"[^>]*>`))
     expect(match, `expected a day button for ${date}`).not.toBeNull()
@@ -367,7 +367,7 @@ describe('Calendar FEATURES cluster B', () => {
     expect(ids[0]).not.toBe(ids[1])
   })
 
-  it('CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled (W-21)', () => {
+  it('CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled', () => {
     const html = renderToString(
       <Calendar
         locale="en-US"
@@ -398,7 +398,7 @@ describe('Calendar FEATURES cluster B', () => {
     }
   })
 
-  it('CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop (W-21)', () => {
+  it('CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop', () => {
     const html = renderToString(
       <Calendar
         locale="en-US"
@@ -435,7 +435,7 @@ describe('Calendar FEATURES cluster B', () => {
     expect(boundedTargets[0]).toContain('data-date="2024-06-13"')
   })
 
-  it('CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days (W-21)', () => {
+  it('CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days', () => {
     const bounded = renderToString(
       <Calendar locale="en-US" month="2024-06" value={null} today="2024-07-15" min="2024-06-07" />
     )
@@ -476,7 +476,7 @@ describe('Calendar FEATURES cluster B', () => {
     expect(html).toContain('data-date="2024-07-28"')
   })
 
-  it('W-20: Day replaces cell content with (date, state); null keeps the default number', () => {
+  it('Day replaces cell content with (date, state); null keeps the default number', () => {
     const seen: Array<{ date: string; state: unknown }> = []
     const html = renderToString(
       <Calendar
@@ -518,7 +518,7 @@ describe('Calendar FEATURES cluster B', () => {
     expect(dates).toContain('2024-06-30')
   })
 
-  it('W-20: a non-function Day fails closed naming the prop', () => {
+  it('a non-function Day fails closed naming the prop', () => {
     const { html, errors } = renderInvalidLocale({
       locale: 'en-US',
       month: '2024-06',

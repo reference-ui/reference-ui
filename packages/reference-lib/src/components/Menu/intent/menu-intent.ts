@@ -4,9 +4,9 @@
  * Frozen constants: 100ms open delay, 300ms close delay, 5px grace padding.
  */
 
-export type Side = 'top' | 'right' | 'bottom' | 'left'
+import type { Side } from '../../Overlay/geometry/floating'
 
-export interface RectLike {
+export interface MenuIntentRect {
   x: number
   y: number
   width: number
@@ -23,7 +23,7 @@ export const SUBMENU_SAFE_PADDING = 5
 export const SUBMENU_OPEN_DELAY_MS = 100
 export const SUBMENU_CLOSE_DELAY_MS = 300
 
-export function asRect(rect: DOMRect | RectLike | null | undefined): RectLike {
+export function asRect(rect: DOMRect | MenuIntentRect | null | undefined): MenuIntentRect {
   if (!rect) {
     return { x: 0, y: 0, width: 0, height: 0, top: 0, right: 0, bottom: 0, left: 0 }
   }
@@ -39,7 +39,7 @@ export function asRect(rect: DOMRect | RectLike | null | undefined): RectLike {
   }
 }
 
-export function padRect(rect: RectLike, pad: number): RectLike {
+export function padRect(rect: MenuIntentRect, pad: number): MenuIntentRect {
   return {
     x: rect.left - pad,
     y: rect.top - pad,
@@ -52,7 +52,7 @@ export function padRect(rect: RectLike, pad: number): RectLike {
   }
 }
 
-export function pointInRect(x: number, y: number, rect: RectLike, pad = 0): boolean {
+export function pointInRect(x: number, y: number, rect: MenuIntentRect, pad = 0): boolean {
   if (rect.width <= 0 && rect.height <= 0 && pad === 0) return false
   return (
     x >= rect.left - pad &&
@@ -102,7 +102,7 @@ export function isReverseTravel(side: Side, dx: number, dy: number): boolean {
 export function buildGracePolygon(
   origin: Point,
   side: Side,
-  contentRect: RectLike,
+  contentRect: MenuIntentRect,
   pad = SUBMENU_SAFE_PADDING
 ): Point[] {
   const [ox, oy] = origin
@@ -164,8 +164,8 @@ export interface PointerSample {
 
 export interface IntentEvaluationInput {
   currentPoint: Point
-  triggerRect: RectLike
-  contentRect: RectLike
+  triggerRect: MenuIntentRect
+  contentRect: MenuIntentRect
   side: Side
   leavePoint?: Point
   prevSample?: PointerSample

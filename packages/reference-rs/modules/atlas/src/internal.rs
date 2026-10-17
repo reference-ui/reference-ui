@@ -3,6 +3,7 @@
 //! See module README for architecture details.
 
 use crate::model::{Component, ComponentInterface, ComponentProp, Usage};
+use oxc_ast::ast::Expression;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 
@@ -176,5 +177,24 @@ pub fn create_usage_state(template: ComponentTemplate) -> UsageState {
         file_presence_count: 0,
         example_set: BTreeSet::new(),
         used_with_counts: BTreeMap::new(),
+    }
+}
+
+/// The expression a grouping or TypeScript-only wrapper carries (`(e)`, `e as T`, `e satisfies T`,
+/// `<T>e`, `e!`), or `None` for any other expression. Readers that look through wrappers share this rule.
+pub(crate) fn wrapped_expression<'a, 'b>(expression: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    match expression {
+        Expression::ParenthesizedExpression(wrapper) => Some(&wrapper.expression),
+        Expression::TSAsExpression(wrapper) => Some(&wrapper.expression),
+        Expression::TSSatisfiesExpression(wrapper) => Some(&wrapper.expression),
+        _ => ts_wrapped_expression(expression),
+    }
+}
+
+fn ts_wrapped_expression<'a, 'b>(expression: &'b Expression<'a>) -> Option<&'b Expression<'a>> {
+    match expression {
+        Expression::TSTypeAssertion(wrapper) => Some(&wrapper.expression),
+        Expression::TSNonNullExpression(wrapper) => Some(&wrapper.expression),
+        _ => None,
     }
 }

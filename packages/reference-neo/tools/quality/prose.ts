@@ -21,27 +21,41 @@ export interface Violation {
   message: string;
 }
 
-function leadingCommentLines(text: string): string[] | null {
-  const lines = text.split('\n');
+// The first non-blank line, skipping a shebang on line one. May equal lines.length when none is left.
+function firstContentIndex(lines: string[]): number {
   let i = lines[0]?.startsWith('#!') ? 1 : 0;
   while (i < lines.length && lines[i].trim() === '') i += 1;
-  if (i >= lines.length) return null;
-  if (lines[i].trim().startsWith('/*')) {
-    const buf: string[] = [];
-    while (i < lines.length) {
-      buf.push(lines[i]);
-      if (lines[i].includes('*/')) return buf;
-      i += 1;
-    }
-    return null;
-  }
-  if (!lines[i].trim().startsWith('//')) return null;
+  return i;
+}
+
+// A /* block from start through the line that closes it; null when the block never closes.
+function blockCommentAt(lines: string[], start: number): string[] | null {
   const buf: string[] = [];
+  for (let i = start; i < lines.length; i += 1) {
+    buf.push(lines[i]);
+    if (lines[i].includes('*/')) return buf;
+  }
+  return null;
+}
+
+// The run of consecutive // lines from start.
+function lineCommentsAt(lines: string[], start: number): string[] {
+  const buf: string[] = [];
+  let i = start;
   while (i < lines.length && lines[i].trim().startsWith('//')) {
     buf.push(lines[i]);
     i += 1;
   }
   return buf;
+}
+
+function leadingCommentLines(text: string): string[] | null {
+  const lines = text.split('\n');
+  const start = firstContentIndex(lines);
+  if (start >= lines.length) return null;
+  if (lines[start].trim().startsWith('/*')) return blockCommentAt(lines, start);
+  if (!lines[start].trim().startsWith('//')) return null;
+  return lineCommentsAt(lines, start);
 }
 
 function countSentences(buf: string[]): number {

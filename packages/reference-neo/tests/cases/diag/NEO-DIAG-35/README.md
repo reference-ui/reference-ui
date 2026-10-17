@@ -4,6 +4,6 @@ A `css` / `r` / condition prop value is not a static style object. The world car
 
 Raised in: `modules/atomic/src/extract/jsx/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-NON-OBJECT-JSX-STYLE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-NON-OBJECT-JSX-STYLE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-NON-OBJECT-JSX-STYLE, atm-w-non-object-jsx-style, diagnostics case index, NEO-DIAG-35

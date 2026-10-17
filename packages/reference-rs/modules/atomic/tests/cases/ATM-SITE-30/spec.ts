@@ -1,6 +1,6 @@
 /**
- * Unary-literal pin station (ATM-SITE-30, SPEC-V2-08) with the Ph2 arms for
- * static backticks (SPEC-V2-13) and the micro-fold bundle (SPEC-V2-36).
+ * Unary-literal pin (ATM-SITE-30) covering the
+ * static backticks and the micro-fold bundle.
  * `-4`, `-0.5`, and `+50` fold at the literal with one want and one runtime
  * plan per leaf; `-0` canonicalizes to `0` on both sides. Backtick values
  * fold as plain strings; shorthand, empty, string-head, nested-cx, and

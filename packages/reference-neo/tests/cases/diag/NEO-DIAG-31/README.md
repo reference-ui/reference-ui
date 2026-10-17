@@ -4,6 +4,6 @@ Computed key that does not fold. The world carries the minimal fixture (theme/ke
 
 Raised in: `modules/atomic/src/extract/expressions/object/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNFOLDABLE-KEY (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNFOLDABLE-KEY (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNFOLDABLE-KEY, atm-w-unfoldable-key, diagnostics case index, NEO-DIAG-31

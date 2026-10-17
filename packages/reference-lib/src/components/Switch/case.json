@@ -6,24 +6,24 @@
   "cases": [
     {
       "id": "LIB-SWITCH-001",
-      "name": "Switch finish-line tail SW-DOM-08: Switch should isolate StyleProps between the track and an authored Thumb",
+      "name": "Switch style isolation, composition, and ShadowRoot SW-DOM-08: Switch should isolate StyleProps between the track and an authored Thumb",
       "kind": "unit",
       "file": "Switch.tail.test.tsx",
-      "title": "Switch finish-line tail SW-DOM-08: Switch should isolate StyleProps between the track and an authored Thumb"
+      "title": "Switch style isolation, composition, and ShadowRoot SW-DOM-08: Switch should isolate StyleProps between the track and an authored Thumb"
     },
     {
       "id": "LIB-SWITCH-002",
-      "name": "Switch finish-line tail SW-COMP-01: A settings row should use a low-specificity labelled Switch",
+      "name": "Switch style isolation, composition, and ShadowRoot SW-COMP-01: A settings row should use a low-specificity labelled Switch",
       "kind": "unit",
       "file": "Switch.tail.test.tsx",
-      "title": "Switch finish-line tail SW-COMP-01: A settings row should use a low-specificity labelled Switch"
+      "title": "Switch style isolation, composition, and ShadowRoot SW-COMP-01: A settings row should use a low-specificity labelled Switch"
     },
     {
       "id": "LIB-SWITCH-003",
-      "name": "Switch finish-line tail SW-ENV-03: Switch should keep activation and labeling local to an open ShadowRoot",
+      "name": "Switch style isolation, composition, and ShadowRoot SW-ENV-03: Switch should keep activation and labeling local to an open ShadowRoot",
       "kind": "unit",
       "file": "Switch.tail.test.tsx",
-      "title": "Switch finish-line tail SW-ENV-03: Switch should keep activation and labeling local to an open ShadowRoot"
+      "title": "Switch style isolation, composition, and ShadowRoot SW-ENV-03: Switch should keep activation and labeling local to an open ShadowRoot"
     },
     {
       "id": "LIB-SWITCH-004",
@@ -48,10 +48,10 @@
     },
     {
       "id": "LIB-SWITCH-007",
-      "name": "Switch environments PATCHES-01: Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs",
+      "name": "Switch environments Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs",
       "kind": "unit",
       "file": "Switch.test.tsx",
-      "title": "Switch environments PATCHES-01: Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs"
+      "title": "Switch environments Switch should render exactly one thumb for Fragment-wrapped and HOC-forwarded thumbs"
     },
     {
       "id": "LIB-SWITCH-008",
@@ -83,143 +83,143 @@
     },
     {
       "id": "LIB-SWITCH-012",
-      "name": "Switch quarantine parity SW-DOM-01: Switch should be a complete control when mounted with only StyleProps",
+      "name": "Switch parity SW-DOM-01: Switch should be a complete control when mounted with only StyleProps",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-01: Switch should be a complete control when mounted with only StyleProps"
+      "title": "Switch parity SW-DOM-01: Switch should be a complete control when mounted with only StyleProps"
     },
     {
       "id": "LIB-SWITCH-013",
-      "name": "Switch quarantine parity SW-DOM-02: Switch should expose authoritative checked state on both parts",
+      "name": "Switch parity SW-DOM-02: Switch should expose authoritative checked state on both parts",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-02: Switch should expose authoritative checked state on both parts"
+      "title": "Switch parity SW-DOM-02: Switch should expose authoritative checked state on both parts"
     },
     {
       "id": "LIB-SWITCH-014",
-      "name": "Switch quarantine parity SW-DOM-03: Switch should expose disabled state natively without remaining activatable",
+      "name": "Switch parity SW-DOM-03: Switch should expose disabled state natively without remaining activatable",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-03: Switch should expose disabled state natively without remaining activatable"
+      "title": "Switch parity SW-DOM-03: Switch should expose disabled state natively without remaining activatable"
     },
     {
       "id": "LIB-SWITCH-015",
-      "name": "Switch quarantine parity SW-DOM-04: Switch should replace the default thumb when Switch.Thumb is authored",
+      "name": "Switch parity SW-DOM-04: Switch should replace the default thumb when Switch.Thumb is authored",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-04: Switch should replace the default thumb when Switch.Thumb is authored"
+      "title": "Switch parity SW-DOM-04: Switch should replace the default thumb when Switch.Thumb is authored"
     },
     {
       "id": "LIB-SWITCH-016",
-      "name": "Switch quarantine parity SW-DOM-05: Switch should forward native props and refs to the button and an authored Thumb",
+      "name": "Switch parity SW-DOM-05: Switch should forward native props and refs to the button and an authored Thumb",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-05: Switch should forward native props and refs to the button and an authored Thumb"
+      "title": "Switch parity SW-DOM-05: Switch should forward native props and refs to the button and an authored Thumb"
     },
     {
       "id": "LIB-SWITCH-017",
-      "name": "Switch quarantine parity SW-DOM-06: Switch should not participate in form serialization",
+      "name": "Switch parity SW-DOM-06: Switch should not participate in form serialization",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-06: Switch should not participate in form serialization"
+      "title": "Switch parity SW-DOM-06: Switch should not participate in form serialization"
     },
     {
       "id": "LIB-SWITCH-018",
-      "name": "Switch quarantine parity SW-DOM-07: Switch should keep its button non-submitting",
+      "name": "Switch parity SW-DOM-07: Switch should keep its button non-submitting",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-DOM-07: Switch should keep its button non-submitting"
+      "title": "Switch parity SW-DOM-07: Switch should keep its button non-submitting"
     },
     {
       "id": "LIB-SWITCH-019",
-      "name": "Switch quarantine parity SW-ACT-01: Switch should request on once when an enabled unchecked control is clicked",
+      "name": "Switch parity SW-ACT-01: Switch should request on once when an enabled unchecked control is clicked",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-01: Switch should request on once when an enabled unchecked control is clicked"
+      "title": "Switch parity SW-ACT-01: Switch should request on once when an enabled unchecked control is clicked"
     },
     {
       "id": "LIB-SWITCH-020",
-      "name": "Switch quarantine parity SW-ACT-02: Switch should request off once when an enabled checked control is clicked",
+      "name": "Switch parity SW-ACT-02: Switch should request off once when an enabled checked control is clicked",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-02: Switch should request off once when an enabled checked control is clicked"
+      "title": "Switch parity SW-ACT-02: Switch should request off once when an enabled checked control is clicked"
     },
     {
       "id": "LIB-SWITCH-021",
-      "name": "Switch quarantine parity SW-ACT-03: Switch should request once from native Space or Enter activation",
+      "name": "Switch parity SW-ACT-03: Switch should request once from native Space or Enter activation",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-03: Switch should request once from native Space or Enter activation"
+      "title": "Switch parity SW-ACT-03: Switch should request once from native Space or Enter activation"
     },
     {
       "id": "LIB-SWITCH-022",
-      "name": "Switch quarantine parity SW-ACT-04: Switch should request once when the click target is the thumb",
+      "name": "Switch parity SW-ACT-04: Switch should request once when the click target is the thumb",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-04: Switch should request once when the click target is the thumb"
+      "title": "Switch parity SW-ACT-04: Switch should request once when the click target is the thumb"
     },
     {
       "id": "LIB-SWITCH-023",
-      "name": "Switch quarantine parity SW-ACT-05: Switch should skip its request when the consumer click is canceled",
+      "name": "Switch parity SW-ACT-05: Switch should skip its request when the consumer click is canceled",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-05: Switch should skip its request when the consumer click is canceled"
+      "title": "Switch parity SW-ACT-05: Switch should skip its request when the consumer click is canceled"
     },
     {
       "id": "LIB-SWITCH-024",
-      "name": "Switch quarantine parity SW-ACT-06: Switch should ignore activation when disabled",
+      "name": "Switch parity SW-ACT-06: Switch should ignore activation when disabled",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-06: Switch should ignore activation when disabled"
+      "title": "Switch parity SW-ACT-06: Switch should ignore activation when disabled"
     },
     {
       "id": "LIB-SWITCH-025",
-      "name": "Switch quarantine parity SW-ACT-07: Switch should not emit onChange for programmatic checked updates",
+      "name": "Switch parity SW-ACT-07: Switch should not emit onChange for programmatic checked updates",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-07: Switch should not emit onChange for programmatic checked updates"
+      "title": "Switch parity SW-ACT-07: Switch should not emit onChange for programmatic checked updates"
     },
     {
       "id": "LIB-SWITCH-026",
-      "name": "Switch quarantine parity SW-ACT-08: Switch should hold a controlled checked prop when onChange is omitted",
+      "name": "Switch parity SW-ACT-08: Switch should hold a controlled checked prop when onChange is omitted",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ACT-08: Switch should hold a controlled checked prop when onChange is omitted"
+      "title": "Switch parity SW-ACT-08: Switch should hold a controlled checked prop when onChange is omitted"
     },
     {
       "id": "LIB-SWITCH-027",
-      "name": "Switch quarantine parity SW-NAME-01: Switch should toggle from an associated label htmlFor",
+      "name": "Switch parity SW-NAME-01: Switch should toggle from an associated label htmlFor",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-NAME-01: Switch should toggle from an associated label htmlFor"
+      "title": "Switch parity SW-NAME-01: Switch should toggle from an associated label htmlFor"
     },
     {
       "id": "LIB-SWITCH-028",
-      "name": "Switch quarantine parity SW-NAME-02: Switch should toggle from a wrapping label",
+      "name": "Switch parity SW-NAME-02: Switch should toggle from a wrapping label",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-NAME-02: Switch should toggle from a wrapping label"
+      "title": "Switch parity SW-NAME-02: Switch should toggle from a wrapping label"
     },
     {
       "id": "LIB-SWITCH-029",
-      "name": "Switch quarantine parity SW-ENV-04: Switch should keep checked state physical when direction is RTL",
+      "name": "Switch parity SW-ENV-04: Switch should keep checked state physical when direction is RTL",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-ENV-04: Switch should keep checked state physical when direction is RTL"
+      "title": "Switch parity SW-ENV-04: Switch should keep checked state physical when direction is RTL"
     },
     {
       "id": "LIB-SWITCH-030",
-      "name": "Switch quarantine parity SW-A11Y-01: Switch should remain accessibility-clean in named, disabled, and wrapping-label shapes",
+      "name": "Switch parity SW-A11Y-01: Switch should remain accessibility-clean in named, disabled, and wrapping-label shapes",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-A11Y-01: Switch should remain accessibility-clean in named, disabled, and wrapping-label shapes"
+      "title": "Switch parity SW-A11Y-01: Switch should remain accessibility-clean in named, disabled, and wrapping-label shapes"
     },
     {
       "id": "LIB-SWITCH-031",
-      "name": "Switch quarantine parity SW-COMP-02: A wrapping-label Switch should sit in a form without serializing",
+      "name": "Switch parity SW-COMP-02: A wrapping-label Switch should sit in a form without serializing",
       "kind": "ct",
       "file": "__e2e__/Switch.ct.spec.ts",
-      "title": "Switch quarantine parity SW-COMP-02: A wrapping-label Switch should sit in a form without serializing"
+      "title": "Switch parity SW-COMP-02: A wrapping-label Switch should sit in a form without serializing"
     },
     {
       "id": "LIB-SWITCH-032",

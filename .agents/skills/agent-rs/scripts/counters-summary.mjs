@@ -6,7 +6,7 @@
  * the bounds stated beside the verdicts. It also writes the evidence files
  * (meta.json via the evidence module, census-net.json, summary.md) so the
  * orchestrator stays a thin leg runner. Thresholds here are deliberately
- * coarse — the crew log carries the flame/alloc join and the final verdicts.
+ * coarse — the flame/alloc join and the final verdicts live outside this script.
  */
 
 import { writeFileSync } from 'node:fs'
@@ -280,7 +280,7 @@ function verdictMemory(meta) {
 
 function readingLines(meta) {
   return [
-    '## Floor-vs-waste reading (counters alone; flame/alloc join lives in the crew log)',
+    '## Floor-vs-waste reading (counters alone; the flame/alloc join is in a separate report)',
     '',
     `- File-IO room: ${verdictOpens(meta)}`,
     `- Syscall room: ${verdictSyscalls(meta)}`,

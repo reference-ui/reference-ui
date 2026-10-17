@@ -52,7 +52,7 @@ export function ComboboxPopover({
     }
   }
 
-  // PATCHES #1 (CB-ENV-03): when the focus source lives in an open
+  // CB-ENV-03: when the focus source lives in an open
   // ShadowRoot, portal the popover into that same root. Light-DOM
   // sources leave the default body destination untouched.
   const sourceRef = context?.sourceRef

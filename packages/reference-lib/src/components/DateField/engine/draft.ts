@@ -8,7 +8,7 @@
  * otherwise. Pure in, pure out; the draft hook feeds it the session.
  */
 import type { DateRangeValue, ISODate } from '../../Calendar'
-import type { ISODate as CanonicalISODate } from '../../Calendar/dates/iso'
+import type { CanonicalISODate } from '../../Calendar/dates/iso'
 import { isDateWithinConstraints, parseLocalDate } from './parse'
 import type { DateFieldRangeEndpoint } from '../types'
 

@@ -1,5 +1,5 @@
 /**
- * Ternary-arm shapes station (SPEC-V2-15/16 remainder). Equal branches
+ * Ternary-arm shapes (remainder). Equal branches
  * collapse to one class, mixed-type arms both compile, and per-arm
  * `!important` sticks to the flagged arm only.
  */

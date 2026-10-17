@@ -30,5 +30,4 @@ colocated unit tests; browser behavior proves out in CT.
 | [`parts/`](./parts) | One file per public part |
 | [`shared/`](./shared) | Diagnostics, names, slots, keys, prop gate |
 
-DateField imports the date kernel directly (`dates/iso`); that deep edge
-is owned inside this mission's group, not a public contract.
+DateField imports the date kernel directly (`dates/iso`); that deep edge is internal to the Calendar and DateField pair, not a public contract.

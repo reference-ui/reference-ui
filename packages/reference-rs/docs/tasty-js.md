@@ -216,7 +216,7 @@ Tasty does not model every TypeScript construct as full semantic structure. It m
 
 ## Testing
 
-- Station tests (bundle shape and goldens): `packages/reference-rs/modules/tasty/tests/cases/<ID>/spec.ts`, run by `packages/reference-rs/modules/tasty/tests/suites/cases.test.ts`
+- Case tests (bundle shape and goldens): `packages/reference-rs/modules/tasty/tests/cases/<ID>/spec.ts`, run by `packages/reference-rs/modules/tasty/tests/suites/cases.test.ts`
 - Runtime API tests: `packages/reference-rs/modules/tasty/js/index.test.ts`, `js/utilities.test.ts`, `js/build.test.ts`
 
 For the Rust-side pipeline and types, see [tasty-rs.md](./tasty-rs.md).

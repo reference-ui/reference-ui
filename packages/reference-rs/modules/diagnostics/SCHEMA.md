@@ -3,7 +3,7 @@
 The machine-readable form of the template `Diagnostic`: what crosses napi,
 what `ref sync --json` prints, and what the contract tests pin byte-for-byte.
 Owned by the template beside `REGISTRY.md` — producers mint codes, the center
-owns the bytes. Human frames are playtested and free to improve; this
+owns the bytes. Human frames are reviewed by hand and free to improve; this
 document is law, and renames or reshapes break loudly in the goldens below.
 
 ## The value
@@ -12,7 +12,7 @@ A batch is a JSON array of diagnostics; a single diagnostic is one object.
 The napi transport, the js mirrors, and the Neo CLI all emit the compact
 form — one batch on one line, UTF-8, no trailing newline inside the encoded
 string (printers add it). Parsers accept any JSON whitespace, so the
-pretty-printed station goldens (`output/diagnostics.json`) carry the same
+pretty-printed case goldens (`output/diagnostics.json`) carry the same
 infoset as the compact wire.
 
 ## Fields
@@ -94,5 +94,5 @@ grows no info level to admit them — see `REGISTRY.md`.
   `[]` when clean); human lines move to stderr and the exit code is
   unchanged. Failures exit 1 with the cause on stderr and empty stdout.
   `--verbose` stays orthogonal: the human list still prints to stderr.
-- Station goldens: per-module `output/diagnostics.json` files pin the same
+- Case goldens: per-module `output/diagnostics.json` files pin the same
   infoset pretty-printed; parsers read them identically to the compact wire.

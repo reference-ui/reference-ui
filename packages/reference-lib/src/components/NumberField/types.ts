@@ -8,14 +8,13 @@
  */
 import type { PrimitiveProps } from '@reference-ui/react'
 
-// W-02 commit policy: 'snap' commits via the zero-anchored lattice with endpoint
+// Commit policy: 'snap' commits via the zero-anchored lattice with endpoint
 // preservation (order endpoint→lattice→rounding→final clamp); 'validate'
 // retains finite under/over/off-step candidates (requests the rounded raw
 // candidate, managed invalid state blocks submit) with advisory
 // onInvalidCommit alongside onChange; 'none' clamps at commit, never snaps,
 // and owns no invalid state. Prop name and snap/validate pair mirror React
-// Aria NumberField verbatim; the default ('none') and third value are ours
-// (docs/MISSIONS/WANTS.md W-02).
+// Aria NumberField verbatim; the default ('none') and third value are ours.
 export type NumberFieldCommitBehavior = 'snap' | 'validate' | 'none'
 
 export type NumberFieldInvalidCommitReason = 'off-step' | 'out-of-range'
@@ -28,7 +27,7 @@ export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' 
   max?: number
   step?: number
   disabled?: boolean
-  // PATCHES §5: interaction/form state. readOnly suppresses stepping and
+  // Interaction/form state. readOnly suppresses stepping and
   // numeric submit blocking while still serializing canonical state;
   // required keeps native valueMissing; invalid is an ARIA/style signal
   // that never blocks submit by itself; name/form own the hidden input.
@@ -37,7 +36,7 @@ export type NumberFieldProps = Omit<PrimitiveProps<'div'>, 'onChange' | 'value' 
   invalid?: boolean
   name?: string
   form?: string
-  // W-25: Intl display formatting. The committed value stays a plain
+  // Intl display formatting. The committed value stays a plain
   // number; only the clean (non-editing) rendering is formatted.
   formatOptions?: Intl.NumberFormatOptions
   commitBehavior?: NumberFieldCommitBehavior
@@ -82,7 +81,7 @@ export type NumberFieldGroupProps = Omit<
   status?: 'warning'
 }
 
-// PATCHES §6 / freeze decision 12: each stepper requires an authored
+// Each stepper requires an authored
 // nonempty accessible-name prop — the aria-label | aria-labelledby union
 // (nonempty). Shape mirrors NumberField.md NumberFieldStepperName; runtime
 // emptiness is diagnosed separately per NF-TYPE-04.

@@ -1,7 +1,6 @@
 # ATM-SITE-33 — binary fold bundle with dead-arm elimination
 
-Overmatch Ph3 (SPEC-V2-10, SPEC-V2-11, SPEC-V2-12, SPEC-V2-19, SPEC-V2-66
-fold half). Arithmetic (`+ - * / % **` with JS `Number` coercion),
+Arithmetic (`+ - * / % **` with JS `Number` coercion),
 string concat (`+` with a string side), comparison (`== != === !== <
 <= > >=`), and all-literal short-circuit (`&& || ??`) fold over literal
 and const-resolved operands; folded ternary tests compile the live arm
@@ -20,8 +19,4 @@ control; `flat.tsx` pins JSX parity.
 
 Both walkers call the shared `extract/fold/{binary,logical,conditional}`
 nodes, so want/plan parity is structural. Guards stay authoritative:
-`false && 'x'` and `null ?? 'd'` keep the entry-18 rule and never fold.
-Panda: `calls.rs:1148` (concat), `:1168` (arithmetic), `:1394` (drop
-net), `:1499` (logical literals), `:1535`–`:1614` (equality and
-comparison), `:1443`/`:1635` (folded tests), `conditional_output.rs:47`
-(dead arm), `scope.rs:849` (ident operands).
+`false && 'x'` and `null ?? 'd'` keep the short-circuit rule and never fold.

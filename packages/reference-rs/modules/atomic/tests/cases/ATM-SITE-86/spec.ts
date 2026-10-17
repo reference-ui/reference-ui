@@ -1,5 +1,5 @@
 /**
- * Partial-guard station (Tabs indicator). A binding whose branching init
+ * Partial-guard (Tabs indicator). A binding whose branching init
  * drops a dynamic arm beside kept leaves keeps its values but never folds
  * a test: every guard below stays open with both arms emitting one want
  * and one runtime plan, and the value union still scoops its kept leaf.

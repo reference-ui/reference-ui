@@ -1,5 +1,5 @@
 /**
- * createIcon factory station (ATM-SITE-94). `CodeIcon` is a `createIcon` product: a
+ * createIcon factory (ATM-SITE-94). `CodeIcon` is a `createIcon` product: a
  * `forwardRef` over an inner function that destructures `size` by name and spreads the
  * rest into a `Div` shell. `size="lg"` on the icon mints no want and no warning, while
  * `p` rides `rest` and extracts. The `Div size="2r"` control proves the primitive still

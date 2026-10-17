@@ -8,7 +8,7 @@ brand while the parent holds focus, and returns to ink when focus moves to
 an unrelated control or blurs away — so the arm gates on the parent's focus
 exactly.
 
-Evidence: `[panda-v1]` `core/__tests__/atomic-rule.test.ts` "outlier";
-`[atm]` ATM-COND-20 (RS-12 landed).
+Evidence: Panda v1 test "outlier";
+ATM-COND-20 (RS-12).
 
 > Search terms: focus within, parent focus, child combinator, gated paint, focus parent, conditions/focus, parent-keys, combinators/child, NEO-COND-05, NEO-COND-06

@@ -1,6 +1,6 @@
 //! Exports-map ladder: conditions, stars, and fallthrough.
 //!
-//! Atomic's `exports` arm, verbatim where stations pin it and extended where
+//! Atomic's `exports` arm, verbatim where cases pin it and extended where
 //! nobody does: exact keys, `*` patterns substituted once, condition maps in
 //! the policy's order (source-first: `source`, `import`, `default`, `require`,
 //! then `types`; types-first: `types` leading), and fallthrough to the next

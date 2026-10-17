@@ -4,8 +4,8 @@
  * Translates project paths and scanner configurations into serialized payloads for the Rust addon.
  * Deserializes JSON responses into structured component hierarchies and diagnostic models.
  */
-import { callNativeJson } from '../../runtime/js/native'
-import type { AtlasAnalysisResult } from './types'
+import { callNativeJson } from '../../runtime/js/native.js'
+import type { AtlasAnalysisResult } from './types.js'
 
 export const ATLAS_NATIVE_EXPORTS = ['analyzeAtlas'] as const
 

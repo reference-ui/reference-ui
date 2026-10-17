@@ -12,9 +12,9 @@ import { join } from 'node:path'
 import {
   collectArtifactFreshnessIssues,
   formatNativeFreshnessError,
-} from '../shared/native-freshness'
-import { hashNativeInputs } from '../shared/native-inputs'
-import { artifactsDir, npmDir, packageDir } from '../shared/paths'
+} from '../shared/native-freshness.js'
+import { hashNativeInputs } from '../shared/native-inputs.js'
+import { artifactsDir, npmDir, packageDir } from '../shared/paths.js'
 
 interface PackageJson {
   name: string

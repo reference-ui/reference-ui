@@ -4,6 +4,6 @@ No sync root, StyleProps entrypoint, or primitives surface; the trace is refused
 
 Raised in: `modules/styletrace/src/resolver/sync_root.rs`, `modules/styletrace/src/analysis/surface.rs`. Driver: the whole styletrace tracer against a refused root (coded throw).
 
-Evidence: `[diag]` STT-E-UNRESOLVED-SURFACE (REGISTRY.md inventory + the shared repro suite row).
+Evidence: STT-E-UNRESOLVED-SURFACE (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: STT-E-UNRESOLVED-SURFACE, stt-e-unresolved-surface, diagnostics case index, NEO-DIAG-58

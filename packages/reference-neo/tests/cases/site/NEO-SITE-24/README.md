@@ -12,10 +12,8 @@ surviving utilities, and the frozen-request recompile carries exactly
 the two positioned refusal warnings on the opt-in compiler channel (the
 default is silent since Error Correct Slice 5).
 
-Evidence: `[atm]` ATM-SITE-50 (whole-object / member args);
-`[overmatch]` SPEC-V2-65 Ph3, SPEC-V2-38; `[panda-v2]`
-`vendor/panda/crates/pandacss_extractor/tests/calls.rs:548`, `:1719`,
-`pandacss_stylesheet/tests/atomic.rs:1626`.
+Evidence: ATM-SITE-50 (whole-object / member args); Panda v2 call and atomic
+tests.
 
 Repin (Forge Slice 3): the `logical` node paints CSS `plum`
 (rgb(221, 160, 221)), not the world's `plum` token (#a855f7). Per the

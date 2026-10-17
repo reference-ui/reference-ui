@@ -33,7 +33,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   }
   assert.ok(
     !fs.existsSync(path.join(outDir, 'styled/global.css')),
-    'D2: styled/global.css is gone; global rules live in styles.css',
+    'styled/global.css is gone; global rules live in styles.css',
   );
 
   const styles = fs.readFileSync(path.join(outDir, 'styled/styles.css'), 'utf8');

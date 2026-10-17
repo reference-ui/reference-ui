@@ -4,12 +4,12 @@ import {
   asRect,
   isReverseTravel,
   SUBMENU_SAFE_PADDING,
-  type RectLike,
+  type MenuIntentRect,
 } from './menu-intent'
 
 describe('Menu intent polygon geometry', () => {
   it('MN-INTENT-09: Menu\'s intent polygon should return deterministic decisions for geometric and temporal edge inputs', () => {
-    const triggerRect: RectLike = asRect({
+    const triggerRect: MenuIntentRect = asRect({
       x: 100,
       y: 100,
       width: 120,
@@ -20,7 +20,7 @@ describe('Menu intent polygon geometry', () => {
       right: 220,
     })
 
-    const contentRectRight: RectLike = asRect({
+    const contentRectRight: MenuIntentRect = asRect({
       x: 260,
       y: 100,
       width: 160,
@@ -94,7 +94,7 @@ describe('Menu intent polygon geometry', () => {
     expect(isReverseTravel('top', 0, 5)).toBe(true)
 
     // 6. Zero-size rectangles handled safely without NaN or crash
-    const zeroRect: RectLike = asRect({
+    const zeroRect: MenuIntentRect = asRect({
       x: 0,
       y: 0,
       width: 0,

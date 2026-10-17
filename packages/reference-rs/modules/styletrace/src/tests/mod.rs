@@ -4,14 +4,20 @@
 //! Emits test results, verifying the correctness of type expansion and JSX wrapper tracing.
 
 mod detailed_owned;
+mod export_star;
 mod fixtures;
 mod hermetic_roots;
 mod ident_alias;
 mod member_alias;
+mod member_alias_barrel;
+mod member_alias_collide;
 mod member_alias_forward_ref;
+mod member_alias_reassign;
+mod member_alias_silent;
 mod neo_decl_roots;
 mod owned_forwarded;
 mod owned_props;
+mod owned_provider;
 mod owned_wrappers;
 mod prop_resolution;
 mod trace_gate;

@@ -1,14 +1,12 @@
 # Portal features
 
-## 1. Shadow-portal event contract (from DECISIONS gap #1) — LANDED
+## 1. Shadow-portal event contract
 
-Decided: PORTAL-OWNS. The feared gap ("item handlers never fire", consumer
-ENV-03 skips) does not exist: React 17/18/19 attach their full delegated
+Portal owns the event contract. Item handlers fire in shadow roots: React 17/18/19 attach their full delegated
 listener set to every portal container on mount (`preparePortalMount`), so
 events inside a ShadowRoot destination dispatch with the true target, and a
 destination change remounts the portal (`containerInfo` identity), which
-re-attaches listeners on the new container. No retargeting shim is needed and
-none was added — a Portal-level suppression would break the composed
+re-attaches listeners on the new container. No retargeting shim is needed, and none is added: a Portal-level suppression would break the composed
 outside-press and Escape contracts consumers prove (OV-ENV-03, MN-ENV-03,
 CB-ENV-03, DF-ENV-01, DF-COMP-04, all green with zero skips).
 

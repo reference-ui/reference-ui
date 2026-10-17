@@ -39,7 +39,7 @@ rect chase is not measurement.
 - Not Splitter's drag loop. Splitter must not poll with rAF (`SP-PERF-05`).
   Pass `paused` while a pointer is down if you measure a panel Splitter is
   resizing.
-- Not `vendor/design-system/resizable` `useRealtimeUpdate`. That always-on
+- Not the design system's resizable `useRealtimeUpdate`. That always-on
   RAF handle chase is leave.
 
 ## Adaptive split (vendor `useBoundingClientRect`)

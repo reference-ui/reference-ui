@@ -367,7 +367,6 @@ export default {
                       <Tooltip.Trigger>
                         <Button
                           variant="secondary"
-                          size="sm"
                           data-testid={`chip-tag-${tagId}`}
                         >
                           🏷️ {tag?.label ?? tagId}
@@ -546,7 +545,6 @@ export default {
                     {['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'Quarter to Date'].map(range => (
                       <Button
                         key={range}
-                        size="sm"
                         variant={selectedRange === range ? 'primary' : 'ghost'}
                         justifyContent="flex-start"
                         onClick={() => setSelectedRange(range)}
@@ -558,7 +556,7 @@ export default {
 
                   {/* Tier 3 Popover Trigger inside Tier 2 */}
                   <Overlay open={presetPopoverOpen} onOpenChange={setPresetPopoverOpen} isolation={false}>
-                    <Overlay.Trigger variant="secondary" size="sm" data-testid="btn-open-popover-tier3">
+                    <Overlay.Trigger variant="secondary" data-testid="btn-open-popover-tier3">
                       Advanced Granularity ({activePreset}) →
                     </Overlay.Trigger>
                     <Overlay.Content
@@ -582,7 +580,6 @@ export default {
                         {['P50 1-Minute', 'P95 5-Minute', 'P99 Hourly', 'Daily Rollup'].map(preset => (
                           <Button
                             key={preset}
-                            size="sm"
                             variant={activePreset === preset ? 'primary' : 'ghost'}
                             justifyContent="flex-start"
                             onClick={() => {
@@ -647,7 +644,7 @@ export default {
               </Div>
               <Tooltip openDelay={50}>
                 <Tooltip.Trigger>
-                  <Button variant="secondary" size="sm" data-testid="btn-cluster-health-tooltip">
+                  <Button variant="secondary" data-testid="btn-cluster-health-tooltip">
                     🟢 99.98% Healthy
                   </Button>
                 </Tooltip.Trigger>
@@ -723,7 +720,7 @@ export default {
                       </Popover.Content>
                     </Popover>
 
-                    <Button size="sm" onClick={() => setPopoverOpen(false)}>
+                    <Button onClick={() => setPopoverOpen(false)}>
                       Dismiss
                     </Button>
                   </Div>
@@ -819,8 +816,8 @@ export default {
             color="ui.dialog.foreground"
             borderTop="1px solid"
             borderColor="ui.dialog.border"
-            borderTopLeftRadius="xl"
-            borderTopRightRadius="xl"
+            borderTopLeftRadius="lg"
+            borderTopRightRadius="lg"
             boxShadow="0 -10px 40px rgba(0,0,0,0.3)"
             maxHeight="60vh"
             overflow="auto"
@@ -854,7 +851,7 @@ export default {
                   <P fontSize="3r" m="0" mb="2r">
                     Anchored floating popover nested inside a bottom sheet!
                   </P>
-                  <Button size="sm" onClick={() => setPopoverOpen(false)}>
+                  <Button onClick={() => setPopoverOpen(false)}>
                     Close
                   </Button>
                 </Popover.Content>

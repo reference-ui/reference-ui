@@ -1,6 +1,5 @@
 /**
- * Imported-conditional station (ATM-SITE-77, Overmatch Ph3 fold-side of
- * SPEC-V2-55). Branching leaves in const-object inits fan out on spread
+ * Imported-conditional (ATM-SITE-77). Branching leaves in const-object inits fan out on spread
  * and member read, imported and same-file alike; props with no static
  * value diagnose with the prop named.
  */
@@ -29,7 +28,7 @@ const spec: AtomicCaseSpec = {
     // branch + member); the static padding sibling and the partial white
     // arm arrive once per position. The six residue arms each add one
     // want; the mixed union adds one, the combo union two, and the two
-    // granularity controls one each. The Ph4 binding arms add eleven:
+    // granularity controls one each. The binding arms add eleven:
     // five aliased (theme spread/member twins plus the fb spread), five
     // through the barrel (cond and fb spreads plus the partial spread and
     // member), and the cycled file's surviving padding sibling.
@@ -44,7 +43,7 @@ const spec: AtomicCaseSpec = {
 
     // The dynamic prop and the both-dynamic prop diagnose; static
     // siblings and the partial white arm survive — all on the opt-in
-    // channel now (S6 E8-class re-point); the default is silent.
+    // channel; the default is silent.
     expect(result.diagnostics ?? []).toHaveLength(0)
     const opted = await compileCase('ATM-SITE-77', { logs: ['compiler'] })
     expect(opted.compilerDiagnostics, 'opt-in channel populates').toBeDefined()
@@ -64,8 +63,8 @@ const spec: AtomicCaseSpec = {
       expect(match!.code).toBe('ATM-W-UNFOLDABLE-OBJECT-PROP')
       expect(match!.column).toBeDefined()
     }
-    // Ph4 residue channel: every use of a partially static entry keeps the
-    // static leaves and diagnoses the dropped arm (the Ph3 silence pin,
+    // Residue channel: every use of a partially static entry keeps the
+    // static leaves and diagnoses the dropped arm (the silence pin,
     // flipped — the collector now flags the loss at collect time).
     for (const expected of [
       {
@@ -106,7 +105,7 @@ const spec: AtomicCaseSpec = {
     // silent (the fence still taints whole-object captures — line 50).
     expect(diagnostics.some(d => d.file?.endsWith('app.ts') && d.line === 49)).toBe(false)
 
-    // Ph4 binding remainder (crew B): aliased imports of the conditional
+    // Binding remainder: aliased imports of the conditional
     // objects fan out exactly like the plain instance; barrel re-exports
     // (including the aliased `fb` and `partial` hops) resolve by binding
     // with the residue flag riding the walk; the re-export cycle guards

@@ -4,6 +4,6 @@ Bare value on a color prop that is neither a color token nor a CSS color. The wo
 
 Raised in: `modules/atomic/src/resolve/tokens/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-UNKNOWN-COLOR (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-UNKNOWN-COLOR (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-UNKNOWN-COLOR, atm-w-unknown-color, diagnostics case index, NEO-DIAG-03

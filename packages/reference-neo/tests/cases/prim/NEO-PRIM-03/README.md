@@ -6,10 +6,8 @@ color. The spec checks the sheet carries one `:is()` wrap and two
 utilities, the twin paints through its attribute, and the live probe rests
 on its base, paints under a real hover, and releases back after.
 
-Evidence: `[atm]` ATM-COND-02; `[panda-v1]`
-`vendor/panda-v1/packages/parser/__tests__/jsx.test.ts:352` ("should extract
-conditions"); `[lib]`
-`packages/reference-lib/.reference-ui/styled/styles.css`
+Evidence: ATM-COND-02; Panda v1 test ("should extract conditions");
+reference-lib `packages/reference-lib/.reference-ui/styled/styles.css`
 `:is(:hover, [data-hover])`.
 
 > Search terms: pseudo-class, pointer, conditional, state, state flip, prim/conditional-style, prim/pseudo-class, NEO-COND-02

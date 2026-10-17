@@ -11,13 +11,12 @@ mentions no `ConditionalValue`, and asserts the recipe probe paints.
 
 The consumers are materialized at spec time because they cannot live in the
 repo: the harness pre-run typecheck resolves `@reference-ui/react` to the
-stable surface, which has no `RecipeVariantProps`. R1 verified the engine
-prints plain unions for a declared recipe table; R2 tightened the host call
-position (`RecipeRuntimeFn` methods now take
-`RecipeVariantProps<RecipeRuntimeFn<TConfig>>`, T3) so the direct call infers
+stable surface, which has no `RecipeVariantProps`. The engine prints plain unions for a declared recipe
+table; the host call position (`RecipeRuntimeFn` methods take
+`RecipeVariantProps<RecipeRuntimeFn<TConfig>>`) makes the direct call infer
 literal axes instead of the wide record fallback.
 
-Evidence: `[panda-v1]` `generate-recipe.test.ts` (contrast:
+Evidence: Panda v1 generate-recipe tests (contrast:
 `ConditionalValue`); typegen golden `recipes.d.ts`; TYP-RECIPE-01.
 
 > Search terms: cva, autocomplete, intellisense, typo, type/recipe-variants, type/negative-typecheck, NEO-TYPE-01, NEO-TYPE-02

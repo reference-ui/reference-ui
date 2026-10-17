@@ -5,8 +5,8 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { getReferenceNativePackageName, getReferenceNativeTriple } from './shared/targets'
-import { REQUIRED_REFERENCE_NATIVE_EXPORTS } from './shared/native-contract'
+import { getReferenceNativePackageName, getReferenceNativeTriple } from './shared/targets.js'
+import { REQUIRED_REFERENCE_NATIVE_EXPORTS } from './shared/native-contract.js'
 
 function createDefaultMockBinding() {
   const binding: Record<string, unknown> = {
@@ -58,7 +58,7 @@ async function importLoaderModule(options?: {
     fileURLToPath,
   }))
 
-  const mod = await import('./loader')
+  const mod = await import('./loader.js')
   return {
     ...mod,
     createRequire,

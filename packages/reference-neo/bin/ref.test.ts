@@ -119,7 +119,9 @@ describe('ref bin', () => {
     expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
     expect(run.stdout).toContain('clean takes no --watch');
   });
+});
 
+describe('ref bin sync output', () => {
   it('sync prints the boot block with folded warnings and leaves stderr empty by default', async () => {
     const dir = await makeTempDir();
     plantWarningProject(dir);

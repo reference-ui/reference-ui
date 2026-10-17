@@ -1,7 +1,7 @@
 //! Identity [`TypeRefMap`](crate::shared::type_ref_map::TypeRefMap) for round-trip tests.
 
 use crate::model::{TemplateLiteralPart, TsTypeParameter, TupleElement, TypeOperatorKind, TypeRef};
-use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
+use crate::shared::type_ref_map::{map_type_ref, ConditionalParts, ReferenceParts, TypeRefMap};
 
 /// Passes every [`TypeRef`] through unchanged; [`map_reference`] must still remap
 /// `type_arguments` because [`map_type_ref`] delegates them to the mapper without
@@ -9,14 +9,14 @@ use crate::shared::type_ref_map::{map_type_ref, TypeRefMap};
 pub(crate) struct IdentityMap;
 
 impl TypeRefMap for IdentityMap {
-    fn map_reference(
-        &mut self,
-        name: String,
-        target_id: Option<String>,
-        source_module: Option<String>,
-        type_arguments: Option<Vec<TypeRef>>,
-        type_parameter: bool,
-    ) -> TypeRef {
+    fn map_reference(&mut self, reference: ReferenceParts) -> TypeRef {
+        let ReferenceParts {
+            name,
+            target_id,
+            source_module,
+            type_arguments,
+            type_parameter,
+        } = reference;
         TypeRef::Reference {
             name,
             target_id,
@@ -60,14 +60,14 @@ impl TypeRefMap for IdentityMap {
         }
     }
 
-    fn map_conditional(
-        &mut self,
-        check_type: TypeRef,
-        extends_type: TypeRef,
-        true_type: TypeRef,
-        false_type: TypeRef,
-        resolved: Option<Box<TypeRef>>,
-    ) -> TypeRef {
+    fn map_conditional(&mut self, parts: ConditionalParts) -> TypeRef {
+        let ConditionalParts {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+            resolved,
+        } = parts;
         TypeRef::Conditional {
             check_type: Box::new(check_type),
             extends_type: Box::new(extends_type),

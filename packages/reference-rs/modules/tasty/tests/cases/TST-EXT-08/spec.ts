@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-08.
+ * Case specification for TST-EXT-08.
  * An interface that extends an object type alias with arguments inherits the alias's members with its parameters
  * bound: `extends Alias<number>` shows `number` and `number[]`, and a generic parent `Outer<T> extends Alias<T>`
  * passes its own argument down. Proves the substitution of alias-inherited members through the display API.

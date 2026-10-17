@@ -4,6 +4,6 @@
 
 Raised in: `modules/atomic/src/resolve/conditions/mod.rs`. Driver: the whole compiler (`compileWorld` over the case world).
 
-Evidence: `[diag]` ATM-W-MISSING-CONTAINER-ROOT (REGISTRY.md inventory + the shared repro suite row).
+Evidence: ATM-W-MISSING-CONTAINER-ROOT (REGISTRY.md inventory + the shared repro suite row).
 
 > Search terms: ATM-W-MISSING-CONTAINER-ROOT, atm-w-missing-container-root, diagnostics case index, NEO-DIAG-07

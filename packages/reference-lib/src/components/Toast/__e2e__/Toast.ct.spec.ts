@@ -824,7 +824,7 @@ test.describe('Toast Gate 7', () => {
     expect(closeBox && cardBox).toBeTruthy()
     expect(Math.round(closeBox!.width)).toBe(20)
     expect(Math.round(closeBox!.height)).toBe(20)
-    // B-37: fully inside the card — never straddling the corner (1px rounding slop).
+    // Fully inside the card — never straddling the corner (1px rounding slop).
     expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
     expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
     expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
@@ -991,7 +991,7 @@ test('TO-RIVAL-DIR: dir should flip chrome and the meaning of start and end', as
   const closeBox = await close.boundingBox()
   const cardBox = await root.boundingBox()
   expect(closeBox && cardBox).toBeTruthy()
-  // B-37: fully inside the card in RTL too, at the trailing (inline-end) side.
+  // Fully inside the card in RTL too, at the trailing (inline-end) side.
   expect(closeBox!.x).toBeGreaterThanOrEqual(cardBox!.x - 1)
   expect(closeBox!.y).toBeGreaterThanOrEqual(cardBox!.y - 1)
   expect(closeBox!.x + closeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1)
@@ -1217,7 +1217,7 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
-    // FINISH-02F-VH (F18, F14 vehicle): WebKit clicks never focus buttons, so
+    // WebKit clicks never focus buttons, so
     // the focusin-recorded opener chain stays empty and restore no-ops.
     // Deliver the Chromium focus state; dismiss + restore below are the
     // product contract and run identically.
@@ -1236,8 +1236,8 @@ test.describe('Toast hardening', () => {
     await expect(page.getByTestId('toast-fixture-root')).toBeVisible()
 
     await page.getByTestId('btn-show').click()
-    // FINISH-02F-VH (F19, F14 vehicle): same WebKit click-focus delivery as
-    // F18 — records the opener so the invalid-opener fallback below is tested.
+    // same WebKit click-focus delivery as the sibling case;
+    // records the opener so the invalid-opener fallback below is tested.
     if (isWebKit(page)) await page.getByTestId('btn-show').focus()
     await expect(page.getByTestId('dismiss')).toBeVisible()
     await page.waitForTimeout(300)
@@ -1279,7 +1279,7 @@ test.describe('Toast hardening', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator('[data-reference-toast-id="untimed"]')).toBeVisible()
     await page.getByTestId('btn-away').click()
-    // FINISH-02F-VH (F20, F14 vehicle): WebKit never focuses on click — deliver
+    // WebKit never focuses on click — deliver
     // the focus state directly. The contract (toast is not modal; an outside
     // control stays reachable while the toast is exposed) still runs.
     if (isWebKit(page)) await page.getByTestId('btn-away').focus()

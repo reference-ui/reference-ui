@@ -1,6 +1,6 @@
 # Announcer
 
-Proof: [SPEC.md](./SPEC.md). Mounted by: [ReferenceLibrary](../ReferenceLibrary/ReferenceLibrary.md).
+Proof: [case.json](./case.json) indexes the cases, [TESTS.md](./TESTS.md) holds each case's setup, action, and assert rows, and a case is proven when a passing test title contains its ID (`pnpm agentct Announcer --e2e`). Mounted by: [ReferenceLibrary](../ReferenceLibrary/ReferenceLibrary.md).
 Used by: [Toast](../Toast/Toast.md) `announce` options, and any application
 code that needs assistive-technology status without a visual toast.
 
@@ -23,7 +23,7 @@ Applications never mount `AnnouncerHost`. `ReferenceLibrary` is the only
 supported host. Toast `{ announce: "…" }` is the same path: visual card and
 live text are separate on purpose.
 
-Multi-document topology (decided): mount one `ReferenceLibrary` per
+Multi-document topology: mount one `ReferenceLibrary` per
 document (top page plus each same-origin iframe/microfrontend root) and
 target cross-document speech with `announce(message, { document })`. A
 direct `<AnnouncerHost document={doc}>` mount is test-only — it is not
@@ -61,7 +61,7 @@ Arbitrary toast JSX must not become an accidental AT message. Spectrum’s
 NVDA workaround (`aria-hidden` on visual alert content until layout) is
 deliberately left: we never put live semantics on the visual card.
 
-**Vendor.** React Aria `@react-aria/live-announcer`. Radix `announce`.
+**Prior art.** React Aria `@react-aria/live-announcer`. Radix `announce`.
 Sonner/Spectrum toast tests that assert visual vs live split.
 
 **Lift** polite/assertive regions, same-string clear-then-reinsert, delayed
@@ -85,7 +85,7 @@ create DOM. After the elected host mounts, pending messages replay into a
 First activation is sticky in the current engine (`activated` never resets on
 unmount). Hostless announces after that first mount can land as current store
 text and then appear as initial content on remount — which many AT stacks
-will not speak. That is a production blocker. See [SPEC.md](./SPEC.md).
+will not speak. That is a production blocker.
 
 ### Overlay must not silence or steal the region
 

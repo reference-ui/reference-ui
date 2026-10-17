@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ExitGuard } from './guard'
 
 /**
- * Unit proof for `exit/guard`: the W-09 once-guard. Pins exactly-once exit
+ * Unit proof for `exit/guard`: the once-guard. Pins exactly-once exit
  * completion (PR-EXIT-01/03, PR-RACE-03) without a browser.
  */
 

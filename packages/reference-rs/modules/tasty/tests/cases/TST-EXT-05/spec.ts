@@ -1,5 +1,5 @@
 /**
- * Station specification for TST-EXT-05.
+ * Case specification for TST-EXT-05.
  * The type arguments of an interface's extends clause are user-owned dependencies at any depth, so
  * `Base<UserT>` lists `UserT` as well as `Base`, and a type alias argument also reaches the `types` list.
  * Proves the heritage dependency walk through the public graph API and the emitted symbol.

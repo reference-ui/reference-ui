@@ -90,157 +90,157 @@
     },
     {
       "id": "LIB-CALENDAR-013",
-      "name": "Calendar FEATURES cluster B FEATURES #3: omitted locale fails closed with one required-locale diagnostic",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #3: omitted locale fails closed with one required-locale diagnostic",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #3: omitted locale fails closed with one required-locale diagnostic"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #3: omitted locale fails closed with one required-locale diagnostic"
     },
     {
       "id": "LIB-CALENDAR-014",
-      "name": "Calendar FEATURES cluster B FEATURES #3: structurally invalid locale fails closed naming the bad string",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #3: structurally invalid locale fails closed naming the bad string",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #3: structurally invalid locale fails closed naming the bad string"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #3: structurally invalid locale fails closed naming the bad string"
     },
     {
       "id": "LIB-CALENDAR-015",
-      "name": "Calendar FEATURES cluster B FEATURES #3: explicit non-Gregorian calendar fails closed with no mixed output",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #3: explicit non-Gregorian calendar fails closed with no mixed output",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #3: explicit non-Gregorian calendar fails closed with no mixed output"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #3: explicit non-Gregorian calendar fails closed with no mixed output"
     },
     {
       "id": "LIB-CALENDAR-016",
-      "name": "Calendar FEATURES cluster B CA-LOC-04 (adapted): en-GB headers run Monday-first with short text and full names",
+      "name": "Calendar locale, grid, and availability contracts CA-LOC-04 (adapted): en-GB headers run Monday-first with short text and full names",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-LOC-04 (adapted): en-GB headers run Monday-first with short text and full names"
+      "title": "Calendar locale, grid, and availability contracts CA-LOC-04 (adapted): en-GB headers run Monday-first with short text and full names"
     },
     {
       "id": "LIB-CALENDAR-017",
-      "name": "Calendar FEATURES cluster B FEATURES #3: firstDayOfWeek overrides the locale CLDR week start",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #3: firstDayOfWeek overrides the locale CLDR week start",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #3: firstDayOfWeek overrides the locale CLDR week start"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #3: firstDayOfWeek overrides the locale CLDR week start"
     },
     {
       "id": "LIB-CALENDAR-018",
-      "name": "Calendar FEATURES cluster B CA-GRID-05 (adapted): padded days carry data-outside-month; in-month days do not",
+      "name": "Calendar locale, grid, and availability contracts CA-GRID-05 (adapted): padded days carry data-outside-month; in-month days do not",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-GRID-05 (adapted): padded days carry data-outside-month; in-month days do not"
+      "title": "Calendar locale, grid, and availability contracts CA-GRID-05 (adapted): padded days carry data-outside-month; in-month days do not"
     },
     {
       "id": "LIB-CALENDAR-019",
-      "name": "Calendar FEATURES cluster B CA-GRID-06 (adapted): visible day numbers pair with full locale accessible names",
+      "name": "Calendar locale, grid, and availability contracts CA-GRID-06 (adapted): visible day numbers pair with full locale accessible names",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-GRID-06 (adapted): visible day numbers pair with full locale accessible names"
+      "title": "Calendar locale, grid, and availability contracts CA-GRID-06 (adapted): visible day numbers pair with full locale accessible names"
     },
     {
       "id": "LIB-CALENDAR-020",
-      "name": "Calendar FEATURES cluster B CA-GRID-07 (adapted): day ids are deterministic per instance and unique across instances",
+      "name": "Calendar locale, grid, and availability contracts CA-GRID-07 (adapted): day ids are deterministic per instance and unique across instances",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-GRID-07 (adapted): day ids are deterministic per instance and unique across instances"
+      "title": "Calendar locale, grid, and availability contracts CA-GRID-07 (adapted): day ids are deterministic per instance and unique across instances"
     },
     {
       "id": "LIB-CALENDAR-021",
-      "name": "Calendar FEATURES cluster B CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled (W-21)",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled (W-21)"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-04 (adapted): bounds disable natively; unavailable stays enabled with aria-disabled"
     },
     {
       "id": "LIB-CALENDAR-022",
-      "name": "Calendar FEATURES cluster B CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop (W-21)",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop (W-21)"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-06 (adapted): a selected date that becomes unavailable keeps paint and tab stop; out-of-bounds loses the tab stop"
     },
     {
       "id": "LIB-CALENDAR-023",
-      "name": "Calendar FEATURES cluster B CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days (W-21)",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days (W-21)"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-03 (disabled): the tab target skips out-of-bounds days but lands on unavailable days"
     },
     {
       "id": "LIB-CALENDAR-024",
-      "name": "Calendar FEATURES cluster B CA-STATE-07 (adapted): an all-out-of-bounds grid exposes no day tab stop",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-07 (adapted): an all-out-of-bounds grid exposes no day tab stop",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-07 (adapted): an all-out-of-bounds grid exposes no day tab stop"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-07 (adapted): an all-out-of-bounds grid exposes no day tab stop"
     },
     {
       "id": "LIB-CALENDAR-025",
-      "name": "Calendar FEATURES cluster B FEATURES #3: firstDayOfWeek=\"sun\" overrides the en-GB Monday default",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #3: firstDayOfWeek=\"sun\" overrides the en-GB Monday default",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #3: firstDayOfWeek=\"sun\" overrides the en-GB Monday default"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #3: firstDayOfWeek=\"sun\" overrides the en-GB Monday default"
     },
     {
       "id": "LIB-CALENDAR-026",
-      "name": "Calendar FEATURES cluster B W-20: Day replaces cell content with (date, state); null keeps the default number",
+      "name": "Calendar locale, grid, and availability contracts Day replaces cell content with (date, state); null keeps the default number",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B W-20: Day replaces cell content with (date, state); null keeps the default number"
+      "title": "Calendar locale, grid, and availability contracts Day replaces cell content with (date, state); null keeps the default number"
     },
     {
       "id": "LIB-CALENDAR-027",
-      "name": "Calendar FEATURES cluster B W-20: a non-function Day fails closed naming the prop",
+      "name": "Calendar locale, grid, and availability contracts a non-function Day fails closed naming the prop",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B W-20: a non-function Day fails closed naming the prop"
+      "title": "Calendar locale, grid, and availability contracts a non-function Day fails closed naming the prop"
     },
     {
       "id": "LIB-CALENDAR-028",
-      "name": "Calendar FEATURES cluster B CA-STATE-05 (adapted): the current predicate sees only valid canonical dates, deterministically",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-05 (adapted): the current predicate sees only valid canonical dates, deterministically",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-05 (adapted): the current predicate sees only valid canonical dates, deterministically"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-05 (adapted): the current predicate sees only valid canonical dates, deterministically"
     },
     {
       "id": "LIB-CALENDAR-029",
-      "name": "Calendar FEATURES cluster B CA-MONTH-04 (min/max): nav disables exactly when its target month holds no enabled date",
+      "name": "Calendar locale, grid, and availability contracts CA-MONTH-04 (min/max): nav disables exactly when its target month holds no enabled date",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-MONTH-04 (min/max): nav disables exactly when its target month holds no enabled date"
+      "title": "Calendar locale, grid, and availability contracts CA-MONTH-04 (min/max): nav disables exactly when its target month holds no enabled date"
     },
     {
       "id": "LIB-CALENDAR-030",
-      "name": "Calendar FEATURES cluster B CA-STATE-01/08 (adapted): exactly the today cell carries data-today + aria-current",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-01/08 (adapted): exactly the today cell carries data-today + aria-current",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-01/08 (adapted): exactly the today cell carries data-today + aria-current"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-01/08 (adapted): exactly the today cell carries data-today + aria-current"
     },
     {
       "id": "LIB-CALENDAR-031",
-      "name": "Calendar FEATURES cluster B CA-STATE-11 (adapted): omitted today renders no marker server-side",
+      "name": "Calendar locale, grid, and availability contracts CA-STATE-11 (adapted): omitted today renders no marker server-side",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-STATE-11 (adapted): omitted today renders no marker server-side"
+      "title": "Calendar locale, grid, and availability contracts CA-STATE-11 (adapted): omitted today renders no marker server-side"
     },
     {
       "id": "LIB-CALENDAR-032",
-      "name": "Calendar FEATURES cluster B CA-GRID-09/12 (adapted): Heading is the live atomic div naming the grid unless overridden",
+      "name": "Calendar locale, grid, and availability contracts CA-GRID-09/12 (adapted): Heading is the live atomic div naming the grid unless overridden",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-GRID-09/12 (adapted): Heading is the live atomic div naming the grid unless overridden"
+      "title": "Calendar locale, grid, and availability contracts CA-GRID-09/12 (adapted): Heading is the live atomic div naming the grid unless overridden"
     },
     {
       "id": "LIB-CALENDAR-033",
-      "name": "Calendar FEATURES cluster B CA-LOC-05 (adapted): nav buttons name their target months; callbacks stay ISO",
+      "name": "Calendar locale, grid, and availability contracts CA-LOC-05 (adapted): nav buttons name their target months; callbacks stay ISO",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B CA-LOC-05 (adapted): nav buttons name their target months; callbacks stay ISO"
+      "title": "Calendar locale, grid, and availability contracts CA-LOC-05 (adapted): nav buttons name their target months; callbacks stay ISO"
     },
     {
       "id": "LIB-CALENDAR-034",
-      "name": "Calendar FEATURES cluster B FEATURES #11: disabled nav keeps the generic name at the domain bounds",
+      "name": "Calendar locale, grid, and availability contracts FEATURES #11: disabled nav keeps the generic name at the domain bounds",
       "kind": "unit",
       "file": "Calendar.contract.test.tsx",
-      "title": "Calendar FEATURES cluster B FEATURES #11: disabled nav keeps the generic name at the domain bounds"
+      "title": "Calendar locale, grid, and availability contracts FEATURES #11: disabled nav keeps the generic name at the domain bounds"
     },
     {
       "id": "LIB-CALENDAR-035",
@@ -342,10 +342,10 @@
     },
     {
       "id": "LIB-CALENDAR-049",
-      "name": "Calendar CT CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent (B-36); rejection leaves selection",
+      "name": "Calendar CT CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent; rejection leaves selection",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent (B-36); rejection leaves selection"
+      "title": "Calendar CT CA-SINGLE-01/02/03/05: activation requests its ISO once per gesture; re-activating the selected date is silent; rejection leaves selection"
     },
     {
       "id": "LIB-CALENDAR-050",
@@ -412,24 +412,24 @@
     },
     {
       "id": "LIB-CALENDAR-059",
-      "name": "Calendar CT CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent (W-21)",
+      "name": "Calendar CT CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent (W-21)"
+      "title": "Calendar CT CA-STATE-04/CA-SINGLE-04: out-of-bounds days are natively disabled; unavailable days stay focusable but silent"
     },
     {
       "id": "LIB-CALENDAR-060",
-      "name": "Calendar CT CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping (W-21)",
+      "name": "Calendar CT CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping (W-21)"
+      "title": "Calendar CT CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping"
     },
     {
       "id": "LIB-CALENDAR-061",
-      "name": "Calendar CT CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates (W-21)",
+      "name": "Calendar CT CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates (W-21)"
+      "title": "Calendar CT CA-KEY-02: Home/End reach locale week boundaries, landing on unavailable boundaries and skipping inward past out-of-bounds dates"
     },
     {
       "id": "LIB-CALENDAR-062",
@@ -489,17 +489,17 @@
     },
     {
       "id": "LIB-CALENDAR-070",
-      "name": "Calendar CT CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved (W-21)",
+      "name": "Calendar CT CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved (W-21)"
+      "title": "Calendar CT CA-DYNAMIC-02/CA-STATE-06: newly unavailable keeps focus but goes silent; newly out-of-bounds relocates; selection preserved"
     },
     {
       "id": "LIB-CALENDAR-071",
-      "name": "Calendar CT CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing (W-21)",
+      "name": "Calendar CT CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar CT CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing (W-21)"
+      "title": "Calendar CT CA-STATE-07: an all-unavailable grid keeps its sole tab stop but selects nothing"
     },
     {
       "id": "LIB-CALENDAR-072",
@@ -524,143 +524,143 @@
     },
     {
       "id": "LIB-CALENDAR-075",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-01: folded day Calendar is complete with Month/Year drill-down and the day grid home"
     },
     {
       "id": "LIB-CALENDAR-076",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-02: Month toggles the private month view; consumer preventDefault cancels it",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-02: Month toggles the private month view; consumer preventDefault cancels it",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-02: Month toggles the private month view; consumer preventDefault cancels it"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-02: Month toggles the private month view; consumer preventDefault cancels it"
     },
     {
       "id": "LIB-CALENDAR-077",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-03: Year toggles the private year view and the day grid stands down",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-03: Year toggles the private year view and the day grid stands down",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-03: Year toggles the private year view and the day grid stands down"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-03: Year toggles the private year view and the day grid stands down"
     },
     {
       "id": "LIB-CALENDAR-078",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-04: Months renders twelve locale cells with whole-month min/max disabling",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-04: Months renders twelve locale cells with whole-month min/max disabling",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-04: Months renders twelve locale cells with whole-month min/max disabling"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-04: Months renders twelve locale cells with whole-month min/max disabling"
     },
     {
       "id": "LIB-CALENDAR-079",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-05/CA-MODE-01: an enabled month cell navigates and returns to day view only after the month is accepted",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-05/CA-MODE-01: an enabled month cell navigates and returns to day view only after the month is accepted",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-05/CA-MODE-01: an enabled month cell navigates and returns to day view only after the month is accepted"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-05/CA-MODE-01: an enabled month cell navigates and returns to day view only after the month is accepted"
     },
     {
       "id": "LIB-CALENDAR-080",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-06: Years windows ten either side unbounded, clamps at the domain edges, min-through-max when bounded",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-06: Years windows ten either side unbounded, clamps at the domain edges, min-through-max when bounded",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-06: Years windows ten either side unbounded, clamps at the domain edges, min-through-max when bounded"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-06: Years windows ten either side unbounded, clamps at the domain edges, min-through-max when bounded"
     },
     {
       "id": "LIB-CALENDAR-081",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-07: an enabled year cell navigates preserving the month number",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-07: an enabled year cell navigates preserving the month number",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-07: an enabled year cell navigates preserving the month number"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-07: an enabled year cell navigates preserving the month number"
     },
     {
       "id": "LIB-CALENDAR-082",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-08: Previous/Next are native-disabled and silent in month and year view",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-08: Previous/Next are native-disabled and silent in month and year view",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-08: Previous/Next are native-disabled and silent in month and year view"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-08: Previous/Next are native-disabled and silent in month and year view"
     },
     {
       "id": "LIB-CALENDAR-083",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-08: a completed range survives a view round-trip with no invented completion",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-08: a completed range survives a view round-trip with no invented completion",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-08: a completed range survives a view round-trip with no invented completion"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-08: a completed range survives a view round-trip with no invented completion"
     },
     {
       "id": "LIB-CALENDAR-084",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-09: month and year cells paint range start, end, and in-range without preview",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-09: month and year cells paint range start, end, and in-range without preview",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-09: month and year cells paint range start, end, and in-range without preview"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-09: month and year cells paint range start, end, and in-range without preview"
     },
     {
       "id": "LIB-CALENDAR-085",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-10: month and year grids move focus in a three-column field without selecting",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-10: month and year grids move focus in a three-column field without selecting",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-10: month and year grids move focus in a three-column field without selecting"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-10: month and year grids move focus in a three-column field without selecting"
     },
     {
       "id": "LIB-CALENDAR-086",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-11: view and month announce through one live Heading without a global announcer",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-11: view and month announce through one live Heading without a global announcer",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-11: view and month announce through one live Heading without a global announcer"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-11: view and month announce through one live Heading without a global announcer"
     },
     {
       "id": "LIB-CALENDAR-087",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-11: the folded Heading keeps its live region across view toggles",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-11: the folded Heading keeps its live region across view toggles",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-11: the folded Heading keeps its live region across view toggles"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-11: the folded Heading keeps its live region across view toggles"
     },
     {
       "id": "LIB-CALENDAR-088",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-12: mode changes reset the private view to the home collection without stealing focus",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-12: mode changes reset the private view to the home collection without stealing focus",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-12: mode changes reset the private view to the home collection without stealing focus"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-12: mode changes reset the private view to the home collection without stealing focus"
     },
     {
       "id": "LIB-CALENDAR-089",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-02: month mode publishes YYYY-MM; Year drill-down navigates without selecting",
+      "name": "Calendar month/year views (FEATURES #10) CA-MODE-02: month mode publishes YYYY-MM; Year drill-down navigates without selecting",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-02: month mode publishes YYYY-MM; Year drill-down navigates without selecting"
+      "title": "Calendar month/year views (FEATURES #10) CA-MODE-02: month mode publishes YYYY-MM; Year drill-down navigates without selecting"
     },
     {
       "id": "LIB-CALENDAR-090",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-03: year mode publishes YYYY and Month/Year never reveal a day table",
+      "name": "Calendar month/year views (FEATURES #10) CA-MODE-03: year mode publishes YYYY and Month/Year never reveal a day table",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-03: year mode publishes YYYY and Month/Year never reveal a day table"
+      "title": "Calendar month/year views (FEATURES #10) CA-MODE-03: year mode publishes YYYY and Month/Year never reveal a day table"
     },
     {
       "id": "LIB-CALENDAR-091",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-13 (second fixture): a custom header without Month/Year has no drill-down and stays in day view",
+      "name": "Calendar month/year views (FEATURES #10) CA-VIEW-13 (second fixture): a custom header without Month/Year has no drill-down and stays in day view",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-VIEW-13 (second fixture): a custom header without Month/Year has no drill-down and stays in day view"
+      "title": "Calendar month/year views (FEATURES #10) CA-VIEW-13 (second fixture): a custom header without Month/Year has no drill-down and stays in day view"
     },
     {
       "id": "LIB-CALENDAR-092",
-      "name": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled",
+      "name": "Calendar month/year views (FEATURES #10) CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar month/year views (FEATURES #10: B-23) CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled"
+      "title": "Calendar month/year views (FEATURES #10) CA-MODE-05: a fully unavailable month or year is disabled and silent; partial units stay enabled"
     },
     {
       "id": "LIB-CALENDAR-093",
-      "name": "Calendar custom days + week start (W-20/W-21) W-20: Day renders custom content, null keeps the default, selection/disabled/keyboard compose",
+      "name": "Calendar custom days + week start Day renders custom content, null keeps the default, selection/disabled/keyboard compose",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar custom days + week start (W-20/W-21) W-20: Day renders custom content, null keeps the default, selection/disabled/keyboard compose"
+      "title": "Calendar custom days + week start Day renders custom content, null keeps the default, selection/disabled/keyboard compose"
     },
     {
       "id": "LIB-CALENDAR-094",
-      "name": "Calendar custom days + week start (W-20/W-21) W-21: firstDayOfWeek overrides the locale default in both directions",
+      "name": "Calendar custom days + week start firstDayOfWeek overrides the locale default in both directions",
       "kind": "ct",
       "file": "__e2e__/Calendar.ct.spec.ts",
-      "title": "Calendar custom days + week start (W-20/W-21) W-21: firstDayOfWeek overrides the locale default in both directions"
+      "title": "Calendar custom days + week start firstDayOfWeek overrides the locale default in both directions"
     },
     {
       "id": "LIB-CALENDAR-095",

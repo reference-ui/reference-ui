@@ -1,5 +1,5 @@
 /**
- * Named-breakpoint at-rule station. `sm`/`md`/`lg`/`xl`/`2xl` on `when`
+ * Named-breakpoint at-rule case. `sm`/`md`/`lg`/`xl`/`2xl` on `when`
  * print `@container (min-width: Npx)`. Array indexing is ATM-LEAF-05.
  * The system segment leads every selector, so digit-leading `2xl` never
  * starts one; the bare NAME-06 hex form stays proven by escaper unit tests.

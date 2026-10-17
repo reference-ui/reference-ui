@@ -3,7 +3,7 @@
 // The pure resolver carries the rules; the hook only reads contexts.
 
 import { describe, expect, it } from 'vitest'
-import { DATA_COLOR_MODE_ATTR, resolvePrimitiveContext } from './context.ts'
+import { DATA_COLOR_MODE_ATTR, resolvePrimitiveContext } from './context.js'
 
 describe('resolvePrimitiveContext', () => {
   it('stamps data-layer on the first primitive in a tree', () => {

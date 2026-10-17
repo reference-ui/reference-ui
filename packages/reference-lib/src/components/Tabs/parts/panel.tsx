@@ -32,7 +32,7 @@ export const TabPanel = React.forwardRef<HTMLDivElement, TabPanelProps>(
     void _dropDataState
     const context = React.useContext(TabsContext)
     const isSelected = context ? context.value === value : false
-    // Root keepMounted (W-15) ORs with the per-panel opt-in: either switch
+    // Root keepMounted ORs with the per-panel opt-in: either switch
     // keeps this panel's children alive. Inactive kept panels sit under
     // native `hidden` (display:none drops them from tab order and the
     // accessibility tree, so no aria-hidden/inert is needed).

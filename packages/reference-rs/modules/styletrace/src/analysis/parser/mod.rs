@@ -8,6 +8,7 @@ pub mod context;
 pub mod export_resolve;
 pub mod exports;
 pub mod factory;
+mod imports;
 pub mod member_alias;
 pub mod pipeline;
 pub mod types;
@@ -21,26 +22,28 @@ use rustc_hash::FxHashMap;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    ExportAllDeclaration, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
+    ExportAllDeclaration, ImportOrExportKind, Program, Statement,
 };
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
 use crate::analysis::model::{
     ExportTarget, FactoryCall, MemberAlias, NamespaceExport, TraceComponent, TraceFactory,
-    TraceImport, TraceModule, WrapperProps,
+    TraceModule,
 };
 use crate::analysis::surface::{StyleSurface, TraceSources};
 use crate::analysis::util::{module_export_name, module_source_literal};
 use crate::resolver::StyleTraceError;
 
-use self::component::{component_from_expression, component_from_function_declaration};
+use self::component::{declared_component_from_binding, declared_from_function_declaration};
 use self::context::ParserContext;
 use self::exports::LocalExports;
+use self::imports::collect_imports;
 use self::factory::{
     factory_call_from_expression, factory_from_expression, factory_from_function_declaration,
 };
 
+#[derive(Default)]
 pub struct ParseState {
     pub components: FxHashMap<String, TraceComponent>,
     pub component_factories: FxHashMap<String, FactoryCall>,
@@ -54,23 +57,6 @@ pub struct ParseState {
     pub local_exports: LocalExports,
 }
 
-impl Default for ParseState {
-    fn default() -> Self {
-        Self {
-            components: FxHashMap::default(),
-            component_factories: FxHashMap::default(),
-            factories: FxHashMap::default(),
-            exports: HashMap::new(),
-            export_all_sources: Vec::new(),
-            namespace_exports: Vec::new(),
-            class_components: Vec::new(),
-            member_aliases: Vec::new(),
-            identifier_aliases: FxHashMap::default(),
-            local_exports: LocalExports::default(),
-        }
-    }
-}
-
 pub(super) fn parse_trace_module(
     path: &Path,
     workspace_root: &Path,
@@ -79,7 +65,13 @@ pub(super) fn parse_trace_module(
 ) -> Result<TraceModule, StyleTraceError> {
     let source = module_source(path, sources.staged)?;
     if let Some(program) = sources.programs.get(path) {
-        return fold_trace_module(path, workspace_root, &source, program, surface);
+        return fold_trace_module(ModuleFold {
+            path,
+            workspace_root,
+            source: &source,
+            program,
+            surface,
+        });
     }
 
     let allocator = Allocator::default();
@@ -96,20 +88,37 @@ pub(super) fn parse_trace_module(
         )));
     }
 
-    fold_trace_module(path, workspace_root, &source, &parsed.program, surface)
+    fold_trace_module(ModuleFold {
+        path,
+        workspace_root,
+        source: &source,
+        program: &parsed.program,
+        surface,
+    })
+}
+
+/// One module to fold: its path and workspace root, its source text, the parsed program over that
+/// text, and the style surface it resolves against.
+pub struct ModuleFold<'a, 'b> {
+    pub path: &'a Path,
+    pub workspace_root: &'a Path,
+    pub source: &'a str,
+    pub program: &'a Program<'b>,
+    pub surface: &'a StyleSurface,
 }
 
 /// Fold one program's top level into its trace module. Shared by the
 /// fresh-parse path and the retained-program reuse path: a reused program
 /// comes from the same bytes with identical options, so the walk observes
 /// exactly what a fresh parse of `source` would produce.
-pub fn fold_trace_module(
-    path: &Path,
-    workspace_root: &Path,
-    source: &str,
-    program: &Program<'_>,
-    surface: &StyleSurface,
-) -> Result<TraceModule, StyleTraceError> {
+pub fn fold_trace_module(input: ModuleFold<'_, '_>) -> Result<TraceModule, StyleTraceError> {
+    let ModuleFold {
+        path,
+        workspace_root,
+        source,
+        program,
+        surface,
+    } = input;
     let mut imports = FxHashMap::default();
     let mut state = ParseState::default();
 
@@ -161,55 +170,6 @@ fn module_source<'a>(
         .map_err(|error| StyleTraceError::new(format!("failed to read {}: {error}", path.display())))
 }
 
-fn collect_imports(
-    source: &str,
-    import_decl: &oxc_ast::ast::ImportDeclaration<'_>,
-    imports: &mut FxHashMap<String, TraceImport>,
-) {
-    let source_module = module_source_literal(source, import_decl.source.span());
-    let Some(specifiers) = &import_decl.specifiers else {
-        return;
-    };
-
-    for specifier in specifiers {
-        match specifier {
-            ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                imports.insert(
-                    named.local.name.to_string(),
-                    TraceImport {
-                        source: source_module.clone(),
-                        imported_name: module_export_name(source, &named.imported),
-                        is_namespace: false,
-                    },
-                );
-            }
-            ImportDeclarationSpecifier::ImportDefaultSpecifier(default_specifier) => {
-                if import_decl.import_kind == ImportOrExportKind::Type {
-                    continue;
-                }
-                imports.insert(
-                    default_specifier.local.name.to_string(),
-                    TraceImport {
-                        source: source_module.clone(),
-                        imported_name: "default".to_string(),
-                        is_namespace: false,
-                    },
-                );
-            }
-            ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace_specifier) => {
-                imports.insert(
-                    namespace_specifier.local.name.to_string(),
-                    TraceImport {
-                        source: source_module.clone(),
-                        imported_name: "*".to_string(),
-                        is_namespace: true,
-                    },
-                );
-            }
-        }
-    }
-}
-
 fn collect_statement(
     statement: &Statement<'_>,
     ctx: &ParserContext,
@@ -217,29 +177,41 @@ fn collect_statement(
 ) -> Result<(), StyleTraceError> {
     match statement {
         Statement::FunctionDeclaration(function) => {
-            collect_function_statement(function, ctx, state)?
+            collect_function_statement(function, ctx, state)
         }
         Statement::ClassDeclaration(class) => {
-            classes::note_class(class, ctx, &mut state.class_components)?
+            classes::note_class(class, ctx, &mut state.class_components)
         }
         Statement::VariableDeclaration(declaration) => {
-            collect_variable_symbols(declaration.declarations.iter(), ctx, state)?;
+            collect_variable_symbols(declaration.declarations.iter(), ctx, state)
         }
+        _ => collect_module_statement(statement, ctx, state),
+    }
+}
+
+/// Expression statements and module-level exports; every other statement mints nothing here.
+fn collect_module_statement(
+    statement: &Statement<'_>,
+    ctx: &ParserContext,
+    state: &mut ParseState,
+) -> Result<(), StyleTraceError> {
+    match statement {
         Statement::ExpressionStatement(expression) => {
             member_alias::collect_member_alias(expression, &mut state.member_aliases);
+            Ok(())
         }
         Statement::ExportNamedDeclaration(export_decl) => {
-            exports::collect_export_named_declaration(export_decl, ctx, state)?;
+            exports::collect_export_named_declaration(export_decl, ctx, state)
         }
         Statement::ExportDefaultDeclaration(export_default) => {
-            exports::collect_export_default_declaration(export_default, ctx, state)?;
+            exports::collect_export_default_declaration(export_default, ctx, state)
         }
         Statement::ExportAllDeclaration(export_all) => {
             collect_export_all(export_all, ctx, state);
+            Ok(())
         }
-        _ => {}
+        _ => Ok(()),
     }
-    Ok(())
 }
 
 /// A function declaration may be a component, a factory, or both.
@@ -248,7 +220,7 @@ fn collect_function_statement(
     ctx: &ParserContext,
     state: &mut ParseState,
 ) -> Result<(), StyleTraceError> {
-    if let Some((name, component)) = component_from_function_declaration(function, ctx)? {
+    if let Some((name, component)) = declared_from_function_declaration(function, ctx)? {
         state.components.insert(name, component);
     }
     if let Some((name, factory)) = factory_from_function_declaration(function, ctx)? {
@@ -314,7 +286,7 @@ fn collect_declarator_symbol<'a>(
     if let oxc_ast::ast::Expression::ClassExpression(class) = init {
         return classes::note_named_class(name, class, ctx, &mut state.class_components);
     }
-    if let Some(component) = component_from_expression(name, init, ctx, WrapperProps::default())? {
+    if let Some(component) = declared_component_from_binding(name, init, ctx)? {
         state.components.insert(name.to_string(), component);
         return Ok(());
     }

@@ -1,5 +1,5 @@
 /**
- * Category-breadth station. One property per declared category resolves
+ * Category-breadth case. One property per declared category resolves
  * to its var() form, and a bare spacing value on a zIndex prop passes
  * through silently — bare values never warn off color props (§11).
  */

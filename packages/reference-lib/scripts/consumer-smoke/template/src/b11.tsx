@@ -11,7 +11,7 @@ import {
   Tree,
 } from '@reference-ui/lib'
 
-/** B-11: Tree branch WITHOUT isBranch auto-detects via its Group child. */
+/** Tree branch WITHOUT isBranch auto-detects via its Group child. */
 export function B11TreeAutodetect() {
   return (
     <div data-testid="b11-tree-autodetect">
@@ -29,7 +29,7 @@ export function B11TreeAutodetect() {
   )
 }
 
-/** B-11: nested Collapsible trigger inside Accordion content (arrow scope). */
+/** Nested Collapsible trigger inside Accordion content (arrow scope). */
 export function B11AccordionArrows() {
   const [value, setValue] = React.useState<string | string[] | null>('sec1')
   return (
@@ -55,7 +55,7 @@ export function B11AccordionArrows() {
   )
 }
 
-/** B-11: degenerate value on 2 panels must fail FAST, never silently collapse. */
+/** Degenerate value on 2 panels must fail FAST, never silently collapse. */
 export function B11Splitter() {
   return (
     <div data-testid="b11-splitter">
@@ -93,7 +93,7 @@ class ErrorCatcher extends React.Component<
   }
 }
 
-/** B-11: textValue must not leak to the DOM; onSelect must receive an event. */
+/** textValue must not leak to the DOM; onSelect must receive an event. */
 export function B11Menu() {
   // Starts closed: an open menu's dismiss-restore steals focus from the
   // accordion-arrows check running earlier in the probe. The probe reopens
@@ -123,7 +123,7 @@ export function B11Menu() {
   )
 }
 
-/** B-11: Tree Expander button must not carry aria-hidden. */
+/** Tree Expander button must not carry aria-hidden. */
 export function B11TreeExpander() {
   return (
     <div data-testid="b11-tree-expander-scope">
@@ -145,8 +145,8 @@ export function B11TreeExpander() {
 }
 
 /**
- * B-11: Presence wrapping a (closed) nested overlay must RECOVER on
- * false→true. Tolerates the open B-01 exit wedge by design: after hide we
+ * Presence wrapping a (closed) nested overlay must RECOVER on
+ * false→true. Tolerates the open exit wedge by design: after hide we
  * assert nothing (the wedge keeps it mounted); after re-show the content
  * must be visible again. Stale dist bricked here (vanished, never recovered).
  */
