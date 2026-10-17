@@ -1,17 +1,19 @@
 ---
-title: Colour
-section: Components
-order: 4
-slug: colour
+title: Color
+section: Foundations
+order: 2
+slug: color
 ---
 
 import { ColorComposition } from './color-composition'
 import { IntensityGrid, RoleCases, RoleSpecimens, ShadesAndTones } from './colour-sections'
 import { ComplementaryCards, RelationshipGrid } from './colour-relationships'
+import { ColorModeDemo } from './color-mode-demo'
+import { PaletteDemo } from './palette-demo'
 
-# Colour
+# Color
 
-A colour in use is a shade at a strength. The [palette](/palette) gives you the
+A colour in use is a shade at a strength. The [palette](#palette) gives you the
 shades. This page covers strength, the role a colour plays, and how colours
 combine.
 
@@ -260,3 +262,61 @@ import { Div } from '@reference-ui/react'
 Leave `strict` out to keep open mode, where `blue.500/50` and any CSS colour still
 work. The check runs at the type level, so it shows up in your editor and in
 `tsc`.
+
+## Palette
+
+The palette is one ramp per colour family, from `50` (the lightest step) to `950`
+(the darkest). Each step is a shade: a fixed colour you can name in any colour
+prop. For a colour at a strength rather than a fixed step, use a
+[tone](#shades-and-tones).
+
+### Neutrals
+
+Slate and gray are the neutrals. Use them for surfaces, rules and body text, and
+let the hues carry the meaning.
+
+<PaletteDemo group="neutrals" />
+
+### Hues
+
+Seventeen families, from red through rose. Each is a full ramp, from `50` to
+`950`.
+
+<PaletteDemo group="hues" />
+
+### In use
+
+Name a shade by its family and step. The same name works in every colour prop.
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div bg="blue.100" borderColor="blue.300">
+  <P color="blue.900">A light blue surface with a deep blue label.</P>
+</Div>
+```
+
+## Light & Dark Mode
+
+Theme-aware tokens resolve to different values without swapping components or
+styles. Toggle the preview scope: the same token names (`docsPageBg`,
+`docsText`, `docsBorder`, …) drive both modes.
+
+<ColorModeDemo />
+
+### How it works
+
+Scoping is set with the `colorMode` prop on a primitive, which writes the mode
+to the subtree. Tokens defined with a `dark` override then resolve accordingly —
+the markup is identical in both modes.
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div colorMode="dark" bg="docsPageBg" color="docsText">
+  <P color="docsMuted">Muted copy that adapts to the scope.</P>
+</Div>
+```
+
+The docs shell uses a single toggle that sets this at the root, so every page
+and every component inherits the active mode.

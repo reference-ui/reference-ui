@@ -1,0 +1,91 @@
+# Docs plan
+
+The docs describe what Reference UI is, simply. The authoring surface is
+small (style props, primitives, tokens, CSS); the machinery behind it is
+complex and stays mostly out of view. Every page is written with the
+`technical-writing` skill: one reader goal, one document type, no invented
+behaviour (gaps are `TODO`).
+
+## System vs Foundations
+
+- **System** documents the core APIs (Neo, `reference-neo`): how to
+  define tokens, fonts, animation, global CSS, style props and so on. It
+  never says anything "ships" or is available by default; the core ships no
+  flavour. Examples define their own values.
+- **Foundations** documents what `@reference-ui/lib` ships: its actual
+  colour palette, color modes, typography scale and fonts, and its tokens.
+  It links back to the System page that explains the API it was built with.
+
+## Structure
+
+Sections appear in this order. Type is the skill's document type.
+
+### 1. Getting Started (tutorial)
+
+| Page | Type | Notes |
+| --- | --- | --- |
+| Initialize | tutorial | `npx` path, plus a copyable install prompt for an AI agent. TODO for now. |
+| Sync | tutorial | `ref sync`. TODO for now. |
+
+### 2. System
+
+| Page | Type | Notes |
+| --- | --- | --- |
+| Introduction | explanation | The system diagram (below), then a short account of each layer. |
+| Tokens | explanation + reference | |
+| Spacing | explanation + reference | |
+| Responsive | explanation + reference | |
+| CSS | explanation + reference | |
+| Fonts | explanation + reference | existing `system/fonts.mdx` |
+| Global CSS | explanation + reference | |
+| Animation | explanation + reference | existing `foundations/animations.mdx` moves here |
+| Primitives | reference | existing `components/primitives.mdx` moves here |
+| Style props | reference | |
+
+The Introduction diagram, top to bottom:
+
+```
+ Authoring surface
+ ┌───────────────────────────┬──────────┬────────────┐
+ │ Style props + primitives  │  Tokens  │  CSS & JS  │
+ └───────────────────────────┴──────────┴────────────┘
+                     ↓  ref sync
+ ┌───────────────────────────────────────────────────┐
+ │                  Engine (Rust)                     │
+ └───────────────────────────────────────────────────┘
+                     ↓
+ Outputs:  Stylesheet  ·  Types  ·  Atlas
+```
+
+### 3. Foundations
+
+| Page | Type | Notes |
+| --- | --- | --- |
+| Introduction | explanation | What the foundations are; mentions design tokens. |
+| Color | explanation + reference | existing `components/colour.mdx`, `components/palette.mdx`, `foundations/color-mode.mdx` fold in |
+| Typography | explanation + reference | existing `components/typography.mdx` moves here |
+
+### 4. Components
+
+The component catalog: one reference page per `@reference-ui/lib`
+component. Built after the sections above.
+
+## Rulings
+
+Made where the owner's outline was silent; confirm or overturn.
+
+1. Light & dark mode folds into Foundations → Color rather than its own page.
+2. Palette folds into Foundations → Color.
+3. The old Getting Started pages (`intro`, `get-started`) are replaced by
+   Initialize and Sync; their content is placeholder and is dropped.
+4. `components/example.mdx` and `components/css.mdx` are demo pages; CSS
+   content moves to System → CSS, the example page is dropped.
+
+## Status
+
+- [x] Scaffold: sections and pages in place, new pages as TODO stubs.
+- [ ] System → Introduction with the diagram.
+- [ ] System pages.
+- [ ] Foundations pages.
+- [ ] Getting Started pages.
+- [ ] Component catalog.

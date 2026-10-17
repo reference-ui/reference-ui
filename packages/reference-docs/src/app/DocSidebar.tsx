@@ -60,13 +60,13 @@ function NavDocLink({
   onNavigate?: () => void
 }) {
   const pathname = useRouterState({ select: s => s.location.pathname })
-  const isActive = slug === 'intro' ? pathname === '/' : pathname === `/${slug}`
+  const isActive = slug === 'initialize' ? pathname === '/' : pathname === `/${slug}`
   const className = [navLinkBase, isActive ? navLinkActive : navLinkIdle].join(' ')
 
   return (
     <Link
-      to={slug === 'intro' ? '/' : '/$slug'}
-      params={slug === 'intro' ? undefined : { slug }}
+      to={slug === 'initialize' ? '/' : '/$slug'}
+      params={slug === 'initialize' ? undefined : { slug }}
       className={className}
       onClick={onNavigate}
     >

@@ -67,7 +67,7 @@ function PagerCard({ direction, doc }: { direction: 'prev' | 'next'; doc: DocLin
     </>
   )
 
-  return doc.slug === 'intro' ? (
+  return doc.slug === 'initialize' ? (
     <Link to="/" className={card}>
       {body}
     </Link>
@@ -85,7 +85,7 @@ function PagerSlot({ doc, direction }: { doc?: DocLink; direction: 'prev' | 'nex
 
 export function DocPageNav() {
   const pathname = useRouterState({ select: s => s.location.pathname })
-  const slug = pathname === '/' ? 'intro' : pathname.replace(/^\//, '')
+  const slug = pathname === '/' ? 'initialize' : pathname.replace(/^\//, '')
   const index = docs.findIndex(doc => doc.slug === slug)
   if (index === -1) return null
 

@@ -15,7 +15,7 @@ const docsRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => docsRoute,
   path: '/',
-  component: () => <DocPage slug="intro" />,
+  component: () => <DocPage slug="initialize" />,
 })
 
 const docRoute = createRoute({
@@ -31,12 +31,12 @@ const diagramRoute = createRoute({
   component: DiagramPage,
 })
 
-/** The old Colors page split into Palette and Colour; keep its URL working. */
+/** The old Colors page split into Palette and Colour, now one Color page; keep its URL working. */
 const colorsRedirectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/colors',
   beforeLoad: () => {
-    throw redirect({ to: '/$slug', params: { slug: 'colour' } })
+    throw redirect({ to: '/$slug', params: { slug: 'color' } })
   },
 })
 
