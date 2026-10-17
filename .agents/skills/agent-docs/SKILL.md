@@ -31,6 +31,13 @@ pnpm --filter @reference-ui/reference-docs exec vite build
 Content lives in `src/content/docs/**/*.mdx`; only `.mdx` is collected, so
 frontmatter (`title`, `section`, `order`, `slug`) is the contract.
 
+**Writing a page:** use the `technical-writing` skill (user-level, at
+`~/.claude/skills/technical-writing/`). Read its `SKILL.md`, pick the
+page's document type from `references/document-types.md`, follow
+`references/structure-principles.md` and `references/sentence-style.md`,
+and review the draft against `references/review-rubric.md` before landing.
+Never invent API behaviour: mark a gap `TODO` and report it.
+
 ## 3. Scope Discipline
 
 - Docs only. If a change implies `@reference-ui/lib` behavior, hand it to the
