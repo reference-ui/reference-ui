@@ -7,4 +7,180 @@ slug: initialize
 
 # Initialize
 
-TODO: first draft pending.
+Reference UI is a small authoring surface for React: style props, primitives,
+tokens and CSS. A Rust engine compiles it at build time, so your app ships a
+plain stylesheet and no runtime style injection.
+
+This page takes you from an existing React project to a page styled by
+Reference UI. You either run the commands yourself or hand a prompt to an AI
+coding agent; both paths end in the same setup.
+
+## Prerequisites
+
+- Node.js 22.18.0 or later.
+- A React 19 project with a bundler that imports CSS from JavaScript, such as Vite.
+- Your source under `src/`. If it lives elsewhere, change the `include` globs in step 2.
+
+> TODO: the `ref` CLI ships in `@reference-ui/neo`, which is not yet published
+> to npm. The commands below use that package name; confirm it, and the
+> version to pin, before release. There is no `init` scaffold command yet, so
+> setup is the four steps below.
+
+## Option A: set up with commands
+
+### Step 1: install the packages
+
+Install the component library and React at runtime, and the `ref` CLI as a
+dev dependency. React is a peer dependency, so your app supplies the one copy.
+
+```bash
+npm install @reference-ui/lib react react-dom
+npm install --save-dev @reference-ui/neo
+```
+
+### Step 2: create `ui.config.ts`
+
+Create `ui.config.ts` at the project root, next to `package.json`. `name`
+identifies your design system, `include` lists the files the engine scans,
+and `extends` brings in the library's tokens.
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/neo'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+Import `baseSystem` from the `@reference-ui/lib/baseSystem` subpath, not from
+`@reference-ui/lib`. The full barrel evaluates thousands of icon modules on
+every sync.
+
+### Step 3: run sync
+
+```bash
+npx ref sync
+```
+
+Expected result: `ref` prints a ready line and the stylesheet size.
+
+```text
+  REF  v0.0.0  ready in 840 ms
+
+  ➜  CSS:       41.2 KB
+```
+
+The version, time and size differ in your project. Sync writes the generated
+packages to `.reference-ui/` and links them into `node_modules/@reference-ui/`.
+Add `.reference-ui` to `.gitignore`: sync regenerates it.
+
+### Step 4: import the stylesheet and render a primitive
+
+Import the generated stylesheet once, before your app code, then use a
+primitive with style props.
+
+```tsx
+// src/main.tsx
+import '@reference-ui/react/styles.css'
+import { createRoot } from 'react-dom/client'
+import { Div } from '@reference-ui/react'
+
+function App() {
+  return (
+    <Div display="grid" gap="3r" padding="4r">
+      Hello from Reference UI
+    </Div>
+  )
+}
+
+createRoot(document.getElementById('root')!).render(<App />)
+```
+
+Run `npx ref sync` again after this edit. The engine compiles only the style
+values it finds in your source, so a new value needs a sync before it paints.
+
+## Option B: set up with an AI coding agent
+
+Paste this prompt into your coding agent, such as Claude Code, from the root
+of your project. It carries the same four steps and the checks that prove them.
+
+```text
+Install and configure Reference UI in this project. Follow these steps exactly
+and do not invent commands, flags or config keys beyond the ones listed here.
+
+Context: Reference UI is a React authoring surface (style props, primitives,
+tokens, CSS) compiled at build time by a Rust engine. The `ref sync` command
+reads ui.config.ts and the source files it includes, and writes generated
+packages to .reference-ui/, linked into node_modules/@reference-ui/
+(system, styled, react, types).
+
+Requirements: Node.js 22.18.0 or later, React 19. Use the project's existing
+package manager (npm, pnpm or yarn); the commands below use npm.
+
+1. Install the packages:
+   npm install @reference-ui/lib react react-dom
+   npm install --save-dev @reference-ui/neo
+
+2. Create ui.config.ts at the project root (next to package.json):
+
+   import { defineConfig } from '@reference-ui/neo'
+   import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+   export default defineConfig({
+     name: 'my-app',
+     include: ['src/**/*.{ts,tsx}'],
+     extends: [baseSystem],
+   })
+
+   Replace 'my-app' with this project's package name. Adjust `include` so it covers every file that uses Reference UI style
+   props. Import baseSystem from '@reference-ui/lib/baseSystem', never from
+   '@reference-ui/lib'.
+
+3. Add `.reference-ui` to .gitignore.
+
+4. Add package.json scripts that run sync before the dev server and the
+   build, and keep it running in watch mode during development:
+   "sync": "ref sync"
+   Prefix the existing "build" script with "ref sync && ".
+   Run "ref sync --watch" alongside the existing dev server (for example
+   with the `concurrently` package), after one "ref sync".
+
+5. In the app entry file (for example src/main.tsx), import the generated
+   stylesheet once, before any other app import:
+   import '@reference-ui/react/styles.css'
+
+6. Render one primitive to prove the setup, for example:
+   import { Div } from '@reference-ui/react'
+   <Div display="grid" gap="3r" padding="4r">Hello from Reference UI</Div>
+
+7. Verify, and report the output of each check:
+   - `npx ref sync` exits 0 and prints a ready line with a CSS size.
+   - .reference-ui/ contains system, styled, react and types folders.
+   - The project's type check passes.
+   - The dev server renders the Div with padding applied.
+
+If `ref sync` fails, report its full error message and stop. Do not work
+around the error by editing files inside .reference-ui/ or node_modules/.
+```
+
+## Verify the setup
+
+1. `npx ref sync` exits with code 0 and prints the ready line.
+2. `.reference-ui/` holds four folders: `system`, `styled`, `react` and `types`.
+3. Start your dev server. The `Div` renders with padding and a gap, and its
+   element carries generated class names.
+4. Your type check passes. Style props accept your tokens because sync wrote
+   their types into `@reference-ui/react`.
+
+If sync stops with `No ui.config.ts or ui.config.js found`, run it from the
+directory that holds `ui.config.ts`. Other failures are listed on
+[Sync](/sync).
+
+## Next steps
+
+- [Sync](/sync): what `ref sync` produces, watch mode, and common failures.
+- [System](/system): how style props, tokens and CSS fit together.

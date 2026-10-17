@@ -1,0 +1,70 @@
+---
+title: Popover
+section: Components
+order: 12
+slug: popover
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { PopoverDemo } from './popover-demo'
+
+# Popover
+
+Popover shows interactive content anchored to a trigger without trapping
+focus or blocking the page. It is an [Overlay](/overlay) with isolation off,
+plus optional hover opening.
+
+<Preview>
+  <PopoverDemo />
+</Preview>
+
+```tsx
+import { Popover } from '@reference-ui/lib'
+
+<Popover>
+  <Popover.Trigger>Open filters</Popover.Trigger>
+  <Popover.Content placement="bottom-start">
+    Interactive content anchored to the trigger.
+    <Popover.Close>Close</Popover.Close>
+    <Popover.Arrow />
+  </Popover.Content>
+</Popover>
+```
+
+## Import
+
+```tsx
+import { Popover } from '@reference-ui/lib'
+```
+
+Parts: `Popover.Trigger` (`button`), `Popover.Content` (`div`),
+`Popover.Arrow`, `Popover.Close` (`button`), and `Popover.Portal`.
+
+## Props
+
+### Popover
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Controlled open state. Omit it to let Popover manage its own. |
+| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or dismiss request. |
+| `onOpen` / `onDismiss` | `() => void` | — | Separate open and dismiss requests. |
+| `openOnHover` | `boolean` | `false` | Open on pointer hover as well as click (a hover card). |
+| `openDelay` | `number` | `700` | Hover-open delay in milliseconds. |
+| `closeDelay` | `number` | `300` | Hover-close delay in milliseconds. |
+| `anchor` | element, ref, or `{ x, y }` | — | Position against this reference instead of the Trigger. |
+| `closeOnScroll` | `boolean` | `false` | Dismiss when a scrolling ancestor moves the anchor. |
+
+`Popover.Content` takes the same geometry props as
+[`Overlay.Content`](/overlay#overlaycontent): `placement`, `offset`,
+`collisionPadding`, `initialFocus`, `restoreFocus`.
+
+## Behaviour
+
+- Escape and an outside press dismiss the popover.
+- Tab from an open Trigger moves into Content; tabbing past the last control
+  leaves and dismisses. Focus is not trapped.
+- With `openOnHover`, the pointer can travel diagonally from trigger to
+  content without closing it.
+- For text that only describes the trigger, use [Tooltip](/tooltip).

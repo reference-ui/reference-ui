@@ -7,4 +7,123 @@ slug: responsive
 
 # Responsive
 
-TODO: first draft pending.
+Responsive styles in Reference UI follow the width of a container, not the
+viewport. A card styled to switch to two columns at `md` does so when the
+space it sits in reaches 768px, whether that space is a full page, a sidebar
+or a dialog. You write breakpoints as arrays, objects or condition keys, and
+the compiler prints `@container` queries.
+
+## Mark a container
+
+A container query matches only inside an ancestor that is a container. Make
+an element one with the `container` style prop:
+
+```tsx
+import { Div } from '@reference-ui/react'
+
+<Div container>
+  {/* responsive styles in here follow this Div's width */}
+</Div>
+```
+
+`container` prints `container-type: inline-size`. To make the whole page a
+container, set it in global CSS instead:
+
+```ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  body: { containerType: 'inline-size' },
+})
+```
+
+Without a container ancestor, a responsive rule never matches. When no
+container root exists at all, `ref sync` warns.
+
+## Breakpoints
+
+The engine uses one breakpoint scale:
+
+| Name | Container width |
+| --- | --- |
+| `base` | any (no query) |
+| `sm` | 640px and up |
+| `md` | 768px and up |
+| `lg` | 1024px and up |
+| `xl` | 1280px and up |
+| `2xl` | 1536px and up |
+
+Queries sort mobile-first: smaller `min-width` queries come first, so a wider
+breakpoint overrides a narrower one.
+
+## Three ways to write a breakpoint
+
+**Arrays** list values from `base` upwards. Index 0 is `base`, index 1 is
+`sm`, index 2 is `md`, and so on. `null` skips a breakpoint:
+
+```tsx
+<Div width={['100%', null, '50%']} />  // base 100%, md and up 50%
+```
+
+**Objects** name the breakpoints for one property. `base` is the value with
+no query:
+
+```tsx
+<Div padding={{ base: '2r', md: '4r', xl: '8r' }} />
+```
+
+**Condition keys** group several properties under one breakpoint:
+
+```ts
+import { css } from '@reference-ui/react'
+
+css({
+  display: 'grid',
+  gridTemplateColumns: '1fr',
+  md: { gridTemplateColumns: 'repeat(2, 1fr)' },
+  lg: { gridTemplateColumns: 'repeat(3, 1fr)' },
+})
+```
+
+Nested keys require every query: `sm: { md: { … } }` applies only when both
+hold.
+
+## Ranges
+
+Three suffixes bound a query on both sides:
+
+| Key | Matches | Example query |
+| --- | --- | --- |
+| `<bp>Down` | below `bp` | `mdDown`: `@container (max-width: 767.98px)` |
+| `<bp>Only` | from `bp` up to the next breakpoint | `mdOnly`: `(min-width: 768px) and (max-width: 1023.98px)` |
+| `<from>To<to>` | from `from` up to `to` | `smToLg`: `(min-width: 640px) and (max-width: 1023.98px)` |
+
+The upper bound stops 0.02px short of the next breakpoint, so adjacent ranges
+never overlap.
+
+## Custom widths with `r`
+
+The `r` key takes pixel widths that are not on the scale:
+
+```tsx
+<Div width="100%" r={{ 300: { width: '50%' }, 900: { width: '33%' } }} />
+```
+
+Each number prints `@container (min-width: Npx)`. `r` keys work on primitives
+and in `css()`.
+
+## Viewport queries
+
+When you do need the viewport, write the at-rule as a key. `@media` and
+`@container` keys pass through as written:
+
+```ts
+css({
+  padding: '2r',
+  '@media (min-width: 800px)': { padding: '6r' },
+  '@media (min-height: 700px)': { paddingBlock: '8r' },
+})
+```
+
+In [Global CSS](/global-css), breakpoint names such as `md` print `@media`
+queries instead of `@container`, using the same widths.

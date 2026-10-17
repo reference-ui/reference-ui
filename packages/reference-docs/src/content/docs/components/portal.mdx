@@ -1,0 +1,44 @@
+---
+title: Portal
+section: Components
+order: 50
+slug: portal
+---
+
+# Portal
+
+Portal renders its children somewhere else in the DOM, by default at the end
+of `document.body`, while they stay in place in the React tree. It adds no
+wrapper element and manages nothing else: no stacking, focus, or dismissal.
+
+```tsx
+import { Div } from '@reference-ui/react'
+import { Portal } from '@reference-ui/lib'
+
+<Portal>
+  <Div position="fixed" bottom="4r" right="4r">Saved</Div>
+</Portal>
+```
+
+[Overlay](/overlay), [Popover](/popover), and [Tooltip](/tooltip) portal
+their content already; reach for Portal only for your own layers.
+
+## Import
+
+```tsx
+import { Portal } from '@reference-ui/lib'
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | — | Content to move. |
+| `container` | element, ref, `() => element`, or `null` | `document.body` | Destination. A ref or function can resolve later; until it does, nothing renders. |
+
+## Behaviour
+
+- Portal renders on the client after mount; nothing is moved during server
+  rendering.
+- React events and context still flow through the React tree, not the DOM
+  position.

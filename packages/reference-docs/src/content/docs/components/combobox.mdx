@@ -1,0 +1,86 @@
+---
+title: Combobox
+section: Components
+order: 26
+slug: combobox
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { ComboboxDemo } from './combobox-demo'
+
+# Combobox
+
+Combobox pairs a text input, or a button, with a pop-up list of options.
+Use it for autocomplete, searchable selects, and plain selects. You filter
+the options; Combobox handles keyboard navigation, selection, and
+dismissal.
+
+<Preview>
+  <ComboboxDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Combobox, Field, Listbox } from '@reference-ui/lib'
+
+export function FrameworkPicker({ frameworks }) {
+  const [value, setValue] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const visible = frameworks.filter(f => f.label.toLowerCase().includes(query.toLowerCase()))
+  return (
+    <Combobox value={value} onChange={setValue} inputValue={query} onInputValueChange={setQuery}>
+      <Field>
+        <Combobox.Input aria-label="Framework" />
+      </Field>
+      <Combobox.Popover>
+        <Listbox>
+          {visible.map(f => (
+            <Listbox.Option key={f.value} value={f.value}>
+              {f.label}
+            </Listbox.Option>
+          ))}
+        </Listbox>
+      </Combobox.Popover>
+    </Combobox>
+  )
+}
+```
+
+For a select without typing, use `Combobox.Trigger` in place of the input.
+
+## Import
+
+```tsx
+import { Combobox } from '@reference-ui/lib'
+```
+
+Parts: `Combobox.Input`, `Combobox.Trigger`, `Combobox.Popover` (an
+anchored [Overlay](/overlay) panel). Put a [Listbox](/listbox) or a
+[Tree](/tree) inside the popover.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string \| null` | — | Required. Selected option value. |
+| `onChange` | `(value: string \| null) => void` | — | Required. Called on every selection. |
+| `inputValue` | `string` | — | Controlled input text. |
+| `defaultInputValue` | `string` | — | Initial text when `inputValue` is omitted. |
+| `onInputValueChange` | `(value: string) => void` | — | Called as the user types. |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | — | Popover state; self-managed when omitted. |
+| `autocomplete` | `'none' \| 'inline' \| 'list' \| 'both'` | `'list'` | Whether the input completes the active option inline. |
+| `allowCustomValue` | `boolean` | `false` | Commit unmatched text as the value. |
+| `closeOnBlur` | `boolean` | `true` | Close and revert unmatched text when focus leaves. |
+| `loading` | `boolean` | `false` | Marks the list busy. |
+| `emptyMessage` / `noResultsMessage` | `string` | — | Announced to screen readers when the list is empty. |
+| `disabled` | `boolean` | — | Disables the combobox. |
+
+`Combobox.Input` takes `input` props except `value` and `onChange`; the
+root's `inputValue` owns the text.
+
+## Behaviour
+
+- Focus stays in the input. Arrow keys move the active option; Enter
+  selects it.
+- Escape closes the list and reverts the text.
+- `Listbox.Empty` renders a message when no options match.

@@ -1,0 +1,57 @@
+import { useState } from 'react'
+import { Div, Span, css } from '@reference-ui/react'
+import { Combobox, Field, Listbox } from '@reference-ui/lib'
+import { demoNote, demoStack } from './demo-surface'
+
+const fullWidth = css({ width: '100%' })
+
+const frameworks = [
+  { value: 'react', label: 'React' },
+  { value: 'vue', label: 'Vue' },
+  { value: 'svelte', label: 'Svelte' },
+  { value: 'solid', label: 'Solid' },
+]
+
+function labelOf(value: string | null) {
+  return frameworks.find(item => item.value === value)?.label ?? ''
+}
+
+/** A searchable framework picker; the demo owns filtering. */
+export function ComboboxDemo() {
+  const [value, setValue] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const visible = frameworks.filter(item =>
+    item.label.toLowerCase().includes(query.toLowerCase())
+  )
+  return (
+    <Div className={demoStack}>
+      <Combobox
+        value={value}
+        onChange={next => {
+          setValue(next)
+          setQuery(labelOf(next))
+        }}
+        inputValue={query}
+        onInputValueChange={setQuery}
+      >
+        <Field className={fullWidth}>
+          <Combobox.Input aria-label="Framework" placeholder="Search frameworks…" />
+        </Field>
+        <Combobox.Popover>
+          <Listbox>
+            {visible.length > 0 ? (
+              visible.map(item => (
+                <Listbox.Option key={item.value} value={item.value}>
+                  {item.label}
+                </Listbox.Option>
+              ))
+            ) : (
+              <Listbox.Empty>No frameworks found</Listbox.Empty>
+            )}
+          </Listbox>
+        </Combobox.Popover>
+      </Combobox>
+      <Span className={demoNote}>Selected: {value ?? 'none'}</Span>
+    </Div>
+  )
+}

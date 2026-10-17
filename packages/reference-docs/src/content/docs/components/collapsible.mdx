@@ -1,0 +1,64 @@
+---
+title: Collapsible
+section: Components
+order: 40
+slug: collapsible
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { CollapsibleDemo } from './collapsible-demo'
+
+# Collapsible
+
+Collapsible shows and hides one region of content behind a trigger button.
+
+<Preview>
+  <CollapsibleDemo />
+</Preview>
+
+```tsx
+import { Collapsible } from '@reference-ui/lib'
+
+<Collapsible>
+  <Collapsible.Trigger>Order details</Collapsible.Trigger>
+  <Collapsible.Content>Shipped on 12 October.</Collapsible.Content>
+</Collapsible>
+```
+
+## Import
+
+```tsx
+import { Collapsible } from '@reference-ui/lib'
+```
+
+`Collapsible` renders no element. `Collapsible.Trigger` renders a `button`
+and `Collapsible.Content` a `div`.
+
+## Props
+
+### Collapsible
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Controlled state. Omit it to let Collapsible manage its own. |
+| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when the trigger toggles. `onChange` is an alias. |
+| `disabled` | `boolean` | `false` | Disables the trigger. |
+| `id` | `string` | — | Identity inside an [Accordion](/accordion). |
+| `hiddenUntilFound` | `boolean` | `false` | Keep closed content in the page so the browser's find can reveal it. |
+
+### Collapsible.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `icon` | `ReactNode` | chevron | Replaces the default indicator icon. |
+| `hideIcon` | `boolean` | — | Hides the indicator icon. |
+
+## Behaviour
+
+- The trigger carries `aria-expanded` and `aria-controls`.
+- Content stays mounted until its close animation ends. It publishes
+  `--reference-collapsible-content-height` and
+  `--reference-collapsible-content-width` for height animations.
+- Inside an Accordion, the Accordion owns open state: do not pass `open` to
+  the Collapsible.

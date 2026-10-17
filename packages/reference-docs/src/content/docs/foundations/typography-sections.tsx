@@ -1,42 +1,33 @@
+import type { ReactNode } from 'react'
 import {
   Abbr,
-  B,
-  Blockquote,
-  Cite,
   Code,
   Div,
   Em,
-  I,
+  H1,
+  H2,
+  H3,
+  H4,
+  H5,
+  H6,
   Kbd,
   Mark,
   P,
-  Pre,
-  Q,
-  S,
-  Samp,
   Small,
   Span,
   Strong,
-  Sub,
-  Sup,
-  U,
-  Var,
 } from '@reference-ui/react'
 
 /**
- * Typography specimens for the Typography page. Kept in a component (not MDX)
- * so the style props are statically extracted — inline JSX in MDX is not.
+ * Typography specimens for the Typography page: the three families, the type
+ * scale and lib's inline text styles. Text primitives render with lib's own
+ * styles and no overrides, so the page shows what ships. Kept in a component
+ * (not MDX) so the style props are statically extracted.
  */
+
 function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif' | 'mono'; sample: string }) {
   return (
-    <Div
-      bg="docsPanelBg"
-      borderRadius="md"
-      padding="4r"
-      display="flex"
-      flexDirection="column"
-      gap="3r"
-    >
+    <Div bg="docsPanelBg" borderRadius="md" padding="4r" display="flex" flexDirection="column" gap="3r">
       <Span fontSize="3.5r" fontWeight="600" color="docsMuted">
         {name}
       </Span>
@@ -47,6 +38,7 @@ function FontCard({ name, font, sample }: { name: string; font: 'sans' | 'serif'
   )
 }
 
+/** One card per family, each set with the `font` prop. */
 export function FontFamilies() {
   const sample = 'The quick brown fox jumps over the lazy dog.'
   return (
@@ -63,203 +55,63 @@ export function FontFamilies() {
   )
 }
 
-export function WordOverlay() {
+function ScaleRow({ spec, children }: { spec: string; children: ReactNode }) {
   return (
-    <Div
-      position="relative"
-      width="100%"
-      maxWidth="640px"
-      height="110px"
-      overflow="hidden"
-      borderRadius="md"
-      bg="docsPanelBg"
-    >
-      <Div
-        font="sans"
-        position="absolute"
-        top="12px"
-        left="16px"
-        fontSize="64px"
-        lineHeight="76px"
-        opacity={0.85}
-        whiteSpace="nowrap"
-        color="docsText"
-      >
-        Typography
-      </Div>
-      <Div
-        font="serif"
-        position="absolute"
-        top="12px"
-        left="16px"
-        fontSize="64px"
-        lineHeight="76px"
-        opacity={0.5}
-        whiteSpace="nowrap"
-        color="docsHighlight"
-      >
-        Typography
-      </Div>
-      <Div
-        font="mono"
-        position="absolute"
-        top="12px"
-        left="16px"
-        fontSize="64px"
-        lineHeight="76px"
-        opacity={0.28}
-        whiteSpace="nowrap"
-        color="docsHighlight"
-      >
-        Typography
-      </Div>
+    <Div display="flex" alignItems="baseline" gap="4r" flexWrap="wrap">
+      <Span width="24r" flexShrink="0" fontSize="3.5r" color="docsMuted" fontFamily="mono">
+        {spec}
+      </Span>
+      {children}
     </Div>
   )
 }
 
-const SENTENCE =
-  'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!'
-
-export function SentenceOverlay() {
+/** Headings and body text at lib's sizes, bottom margins cleared so rows sit evenly. */
+export function TypeScale() {
   return (
-    <Div
-      position="relative"
-      width="100%"
-      maxWidth="640px"
-      height="220px"
-      overflow="hidden"
-      borderRadius="md"
-      bg="docsPanelBg"
-    >
-      <Div
-        font="sans"
-        position="absolute"
-        top="16px"
-        left="16px"
-        right="16px"
-        fontSize="30px"
-        lineHeight="40px"
-        opacity={0.85}
-        color="docsText"
-      >
-        {SENTENCE}
-      </Div>
-      <Div
-        font="serif"
-        position="absolute"
-        top="16px"
-        left="16px"
-        right="16px"
-        fontSize="30px"
-        lineHeight="40px"
-        opacity={0.5}
-        color="docsHighlight"
-      >
-        {SENTENCE}
-      </Div>
-      <Div
-        font="mono"
-        position="absolute"
-        top="16px"
-        left="16px"
-        right="16px"
-        fontSize="30px"
-        lineHeight="40px"
-        opacity={0.28}
-        color="docsHighlight"
-      >
-        {SENTENCE}
-      </Div>
-    </Div>
-  )
-}
-
-export function EmphasisSamples() {
-  return (
-    <Div display="flex" flexDirection="column" gap="3r">
-      <P margin="0" color="docsText">
-        This is a paragraph. It flows naturally and carries the system line height.
-      </P>
-      <P margin="0" color="docsMuted">
+    <Div display="flex" flexDirection="column" gap="2r" marginBottom="6r">
+      <ScaleRow spec="H1 · 36px">
+        <H1 marginBottom="0">Heading 1</H1>
+      </ScaleRow>
+      <ScaleRow spec="H2 · 24px">
+        <H2 marginBottom="0">Heading 2</H2>
+      </ScaleRow>
+      <ScaleRow spec="H3 · 20px">
+        <H3 marginBottom="0">Heading 3</H3>
+      </ScaleRow>
+      <ScaleRow spec="H4 · 18px">
+        <H4 marginBottom="0">Heading 4</H4>
+      </ScaleRow>
+      <ScaleRow spec="H5 · 18px">
+        <H5 marginBottom="0">Heading 5</H5>
+      </ScaleRow>
+      <ScaleRow spec="H6 · 14px">
+        <H6 marginBottom="0">Heading 6</H6>
+      </ScaleRow>
+      <ScaleRow spec="P · 16px">
+        <P marginBottom="0">Body text for paragraphs and long reading.</P>
+      </ScaleRow>
+      <ScaleRow spec="Small">
         <Small>Small text for fine print and captions.</Small>
-      </P>
-      <P margin="0" color="docsText">
-        <Strong>Strong for importance</Strong>, <Em>emphasis for stress</Em>, <B>bold</B>,{' '}
-        <I>italic</I>, <U>underline</U>, and <S>strikethrough</S>.
-      </P>
-      <P margin="0" color="docsText">
-        Highlight with <Mark bg="docsActiveBg" color="docsText">a mark</Mark>, and drop reference
-        like H<Sub>2</Sub>O or E = mc<Sup>2</Sup>.
-      </P>
+      </ScaleRow>
     </Div>
   )
 }
 
-export function TechnicalSamples() {
+/** Lib's inline text styles, unstyled by the page. */
+export function InlineSamples() {
   return (
-    <Div display="flex" flexDirection="column" gap="3r">
-      <P margin="0" color="docsText">
-        Use{' '}
-        <Code fontFamily="mono" bg="docsInlineCodeBg" color="docsText" paddingX="1r" paddingY="0.5r" borderRadius="sm">
-          const
-        </Code>{' '}
-        for constants.
+    <Div display="flex" flexDirection="column" gap="1r" marginBottom="6r">
+      <P>
+        <Strong>Strong for importance</Strong>, <Em>emphasis for stress</Em>, and{' '}
+        <Mark>a mark for highlights</Mark>.
       </P>
-      <P margin="0" color="docsText">
-        Press{' '}
-        <Kbd bg="docsInlineCodeBg" color="docsText" paddingX="2r" paddingY="1r" borderRadius="sm" border="1px solid" borderColor="docsBorder">
-          Cmd
-        </Kbd>{' '}
-        +{' '}
-        <Kbd bg="docsInlineCodeBg" color="docsText" paddingX="2r" paddingY="1r" borderRadius="sm" border="1px solid" borderColor="docsBorder">
-          S
-        </Kbd>{' '}
-        to save.
+      <P>
+        Declare it with <Code>const</Code>, or press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd> to save.
       </P>
-      <P margin="0" color="docsText">
-        Output: <Samp fontFamily="mono" color="docsHighlight">Hello, World!</Samp> — variable{' '}
-        <Var fontStyle="italic" color="docsHighlight">x</Var> holds the input.
+      <P marginBottom="0">
+        The <Abbr title="World Wide Web">WWW</Abbr> runs on links.
       </P>
     </Div>
-  )
-}
-
-export function QuoteSamples() {
-  return (
-    <Div display="flex" flexDirection="column" gap="3r">
-      <Blockquote
-        color="docsMuted"
-        borderLeft="4px solid"
-        borderLeftColor="docsBlockquoteBorder"
-        paddingLeft="4r"
-        marginY="4r"
-        fontStyle="italic"
-      >
-        The best way to predict the future is to invent it.
-      </Blockquote>
-      <P margin="0" color="docsText">
-        As they say, <Q color="docsHighlight">less is more</Q>.
-      </P>
-      <P margin="0" color="docsMuted">
-        <Cite fontStyle="normal">— Alan Kay</Cite>
-      </P>
-      <P margin="0" color="docsText">
-        The{' '}
-        <Abbr title="World Wide Web" color="docsHighlight" textDecoration="underline dotted" cursor="help">
-          WWW
-        </Abbr>{' '}
-        changed everything.
-      </P>
-    </Div>
-  )
-}
-
-export function PreSample() {
-  return (
-    <Pre bg="docsPanelBg" color="docsText" borderRadius="md" padding="4r" overflow="auto">
-      {`function greet() {
-  return 'Hello'
-}`}
-    </Pre>
   )
 }

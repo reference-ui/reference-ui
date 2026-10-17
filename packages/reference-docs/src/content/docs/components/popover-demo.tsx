@@ -1,0 +1,22 @@
+import { Div, Span } from '@reference-ui/react'
+import { Popover } from '@reference-ui/lib'
+import { floatingSurface } from './demo-surface'
+
+/** A click-to-open popover anchored to its trigger, with a close button. */
+export function PopoverDemo() {
+  return (
+    <Popover>
+      <Popover.Trigger>Open filters</Popover.Trigger>
+      <Popover.Content placement="bottom-start" className={floatingSurface}>
+        <Div display="flex" flexDirection="column" gap="2r">
+          <Span fontWeight="600">Filters</Span>
+          <Span>Interactive content anchored to the trigger.</Span>
+          <Div>
+            <Popover.Close>Close</Popover.Close>
+          </Div>
+        </Div>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover>
+  )
+}

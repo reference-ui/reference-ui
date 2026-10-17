@@ -7,4 +7,109 @@ slug: style-props
 
 # Style props
 
-TODO: first draft pending.
+Style props are CSS properties written as JSX props on a
+[primitive](/primitives): `<Div padding="4r" color="brand">`. The compiler
+reads them from your source and turns each property and value into an atomic
+class, so styling an element costs no runtime style object. The same keys and
+values work in [`css()`](/css), the `css` prop, recipes and
+[`globalCss()`](/global-css).
+
+## Properties
+
+Every standard CSS property is a style prop, in camelCase: `backgroundColor`,
+`gridTemplateColumns`, `textDecorationLine`. Vendor properties use their
+lowercase-prefixed camelCase spelling, such as `webkitLineClamp`.
+
+### Shorthands
+
+| Shorthand | Property |
+| --- | --- |
+| `p` | `padding` |
+| `pt`, `pr`, `pb`, `pl` | `paddingTop`, `paddingRight`, `paddingBottom`, `paddingLeft` |
+| `px`, `paddingX` | `paddingInline` |
+| `py`, `paddingY` | `paddingBlock` |
+| `m` | `margin` |
+| `mt`, `mr`, `mb`, `ml` | `marginTop`, `marginRight`, `marginBottom`, `marginLeft` |
+| `mx`, `marginX` | `marginInline` |
+| `my`, `marginY` | `marginBlock` |
+| `w`, `h` | `width`, `height` |
+| `minW`, `maxW` | `minWidth`, `maxWidth` |
+| `minH`, `maxH` | `minHeight`, `maxHeight` |
+| `bg` | `background` |
+| `flexDir` | `flexDirection` |
+
+A shorthand and its full name are the same property: when both are set, the
+one written last wins.
+
+### Reference props
+
+These props expand to more than one declaration or add Reference behaviour:
+
+| Prop | Example | Effect |
+| --- | --- | --- |
+| `size` | `size="10r"` | Sets `width` and `height` together. |
+| `font` | `font="display"` | Applies a family from `font()`: stack, default weight and extras. See [Fonts](/fonts). |
+| `weight` | `weight="bold"` | A weight name, resolved against the element's family. See [Fonts](/fonts#weights-belong-to-the-family). |
+| `container` | `container` | Makes the element a container for responsive styles (`container-type: inline-size`). See [Responsive](/responsive). |
+| `r` | `r={{ 480: { p: '6r' } }}` | Styles at custom container widths. See [Responsive](/responsive#custom-widths-with-r). |
+| `css` | `css={{ _hover: { color: 'brand' } }}` | A style object applied like `css()`. It wins over sibling style props. |
+
+## Values
+
+A style prop accepts:
+
+- a token name from the property's category, such as `color="brand"` or
+  `borderRadius="card"`, or the full path, `color="colors.brand"` (see
+  [Tokens](/tokens));
+- a colour with an opacity or tone, `bg="brand/40"` or `bg="brand/soft"`;
+- rhythm units, `padding="4r"` (see [Spacing](/spacing));
+- any CSS value, `width="calc(100% - 2rem)"`;
+- a number: pixels on length properties (`width={42}`), bare otherwise
+  (`opacity={0.5}`);
+- a responsive array or object, `p={['2r', '4r']}` or
+  `p={{ base: '2r', md: '4r' }}` (see [Responsive](/responsive));
+- `null`, `false` or `undefined`, which set nothing.
+
+The value must be readable from source. A value computed at runtime gets no
+CSS rule; see [What the compiler can read](/css#what-the-compiler-can-read).
+
+## Conditions
+
+A prop whose name starts with `_` takes a style object that applies only
+under that condition:
+
+```tsx
+<Button
+  bg="brand"
+  _hover={{ bg: 'brand/80' }}
+  _focusVisible={{ outline: '2px solid {colors.brand}' }}
+  _disabled={{ opacity: 0.5 }}
+/>
+```
+
+Interaction conditions match both the native state and a data attribute:
+`_hover` matches `:hover` and `[data-hover]`, `_disabled` matches `:disabled`
+and its attribute twins. Conditions nest: `_hover={{ _dark: { … } }}` applies
+only when both hold.
+
+| Group | Conditions |
+| --- | --- |
+| Interaction | `_hover`, `_active`, `_focus`, `_focusVisible`, `_focusWithin`, `_visited`, `_target`, `_dragging`, `_grabbed`, `_loading` |
+| Form state | `_disabled`, `_enabled`, `_checked`, `_indeterminate`, `_required`, `_optional`, `_readOnly`, `_readWrite`, `_valid`, `_invalid`, `_userValid`, `_userInvalid`, `_autofill`, `_placeholderShown`, `_default` |
+| Disclosure and selection | `_open`, `_closed`, `_expanded`, `_selected`, `_current`, `_currentPage`, `_currentStep` |
+| Structure | `_first`, `_last`, `_only`, `_even`, `_odd`, `_firstOfType`, `_lastOfType`, `_onlyOfType`, `_empty` |
+| Pseudo-elements | `_before`, `_after`, `_placeholder`, `_selection`, `_marker`, `_file`, `_backdrop` |
+| Group and peer | `_groupHover`, `_groupFocus`, `_groupFocusVisible`, `_groupActive`, `_groupChecked`, `_groupDisabled`, `_groupExpanded`, `_groupInvalid`, `_peerHover`, `_peerFocus`, `_peerFocusVisible`, `_peerActive`, `_peerChecked`, `_peerDisabled`, `_peerExpanded`, `_peerInvalid` |
+| Colour mode | `_light`, `_dark` (a `data-color-mode` ancestor), `_osLight`, `_osDark` (operating system setting) |
+| Media | `_motionReduce`, `_motionSafe`, `_print`, `_portrait`, `_landscape`, `_highContrast`, `_moreContrast`, `_lessContrast`, `_fullscreen` |
+| Direction | `_ltr`, `_rtl` |
+
+`_groupHover` and the other group conditions match when an ancestor with the
+class `group` is in that state; peer conditions match a preceding sibling
+with the class `peer`.
+
+An unknown condition, such as a misspelt `_hovr`, emits nothing and `ref sync`
+warns.
+
+For selectors and at-rules beyond this list, use the `css` prop with `&`,
+`@media` or `@container` keys; see [CSS](/css#conditions).

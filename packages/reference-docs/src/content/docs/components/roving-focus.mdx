@@ -1,0 +1,67 @@
+---
+title: RovingFocus
+section: Components
+order: 53
+slug: roving-focus
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { RovingFocusDemo } from './roving-focus-demo'
+
+# RovingFocus
+
+RovingFocus makes a group of controls one Tab stop and moves focus between
+them with the arrow keys. Use it for toolbars, toggle groups, and grids of
+your own. [Listbox](/listbox), [Menu](/menu), [Tabs](/tabs), and
+[Tree](/tree) are built on it.
+
+<Preview>
+  <RovingFocusDemo />
+</Preview>
+
+```tsx
+import { Button, Div } from '@reference-ui/react'
+import { RovingFocus } from '@reference-ui/lib'
+
+<RovingFocus.Root orientation="horizontal" loop>
+  <Div role="toolbar" aria-label="Formatting">
+    <RovingFocus.Item>
+      <Button>Bold</Button>
+    </RovingFocus.Item>
+    <RovingFocus.Item>
+      <Button>Italic</Button>
+    </RovingFocus.Item>
+  </Div>
+</RovingFocus.Root>
+```
+
+## Import
+
+```tsx
+import { RovingFocus } from '@reference-ui/lib'
+```
+
+`RovingFocus.Root` and `RovingFocus.Item` each take exactly one element child
+and add their behaviour to it; neither renders a wrapper.
+
+## Props
+
+### RovingFocus.Root
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical' \| 'both'` | `'horizontal'` | Arrow-key axis; `both` moves in two dimensions by layout. |
+| `loop` | `boolean` | `false` | Wrap from the last item to the first. |
+| `typeahead` | `boolean` | `false` | Typing a letter jumps to a matching item. |
+
+### RovingFocus.Item
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | — | Skipped by arrow keys. |
+| `textValue` | `string` | text content | Text used for typeahead. |
+
+## Behaviour
+
+- Home and End jump to the first and last items.
+- Clicking an item makes it the Tab stop without moving focus.

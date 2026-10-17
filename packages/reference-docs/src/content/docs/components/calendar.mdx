@@ -1,0 +1,68 @@
+---
+title: Calendar
+section: Components
+order: 25
+slug: calendar
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { CalendarDemo } from './calendar-demo'
+
+# Calendar
+
+Calendar is a month grid for picking a date, a date range, a month, or a
+year. Values are ISO strings, never `Date` objects.
+
+<Preview>
+  <CalendarDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Calendar, type ISODate } from '@reference-ui/lib'
+
+export function DueDate() {
+  const [date, setDate] = useState<ISODate | null>(null)
+  return <Calendar value={date} onChange={setDate} locale="en-GB" />
+}
+```
+
+With no children, Calendar renders a complete control: a header with
+previous and next buttons, a month and year drill-down, and the day grid.
+
+## Import
+
+```tsx
+import { Calendar } from '@reference-ui/lib'
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `'day' \| 'range' \| 'month' \| 'year'` | `'day'` | What a selection picks. |
+| `value` | see below | — | Required. Controlled value; `null` is empty. |
+| `onChange` | `(value) => void` | — | Called with the new value. |
+| `locale` | `string` | — | Required. Drives labels and the first day of the week. |
+| `firstDayOfWeek` | `'sun'` … `'sat'` | locale default | Overrides the week start. |
+| `min` / `max` | `ISODate` | — | Dates outside are disabled and skipped by the keyboard. |
+| `isDateUnavailable` | `(date: ISODate) => boolean` | — | Dates that stay focusable but cannot be selected. |
+| `month` / `onMonthChange` | `ISOMonth` | follows `value` | Control the visible month yourself. |
+| `today` | `ISODate` | current UTC date | Seeds the visible month when there is no value; pass it for consistent server rendering. |
+
+Value types by mode:
+
+| Mode | Value |
+| --- | --- |
+| `day` | `'YYYY-MM-DD'` |
+| `range` | `{ start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }` |
+| `month` | `'YYYY-MM'` |
+| `year` | `'YYYY'` |
+
+## Behaviour
+
+- Arrow keys move by day and week; Page Up and Page Down change month.
+- Calendar does not parse typed dates. For a text input, use
+  [DateField](/date-field).
+- Parts such as `Calendar.Header`, `Calendar.Grid`, and `Calendar.Day` can
+  be authored to customise layout. TODO: document the part anatomy.

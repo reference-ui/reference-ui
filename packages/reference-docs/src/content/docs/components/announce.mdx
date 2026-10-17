@@ -1,0 +1,44 @@
+---
+title: announce
+section: Components
+order: 54
+slug: announce
+---
+
+# announce
+
+`announce()` sends a message to screen readers through a live region,
+without showing anything on screen. Use it for status changes that have no
+visible text, such as "3 results".
+
+```tsx
+import { announce } from '@reference-ui/lib'
+
+announce('3 results')
+announce('Connection lost', { politeness: 'assertive' })
+```
+
+The live region is rendered by [ReferenceLibrary](/reference-library);
+mount it once near your app root.
+
+## Import
+
+```tsx
+import { announce } from '@reference-ui/lib'
+```
+
+## Signature
+
+```ts
+announce(message: string, options?: AnnounceOptions): void
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `politeness` | `'polite' \| 'assertive'` | `'polite'` | `assertive` interrupts the screen reader; keep it for urgent messages. |
+| `document` | `Document` | current document | The document whose live region speaks. |
+
+## Behaviour
+
+- A blank message is ignored.
+- [Toast](/toast) uses the same live region through its `announce` option.

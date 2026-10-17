@@ -1,0 +1,61 @@
+---
+title: Tabs
+section: Components
+order: 33
+slug: tabs
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { TabsDemo } from './tabs-demo'
+
+# Tabs
+
+Tabs show one panel at a time, chosen from a list of tabs.
+
+<Preview>
+  <TabsDemo />
+</Preview>
+
+```tsx
+import { Tabs } from '@reference-ui/lib'
+
+<Tabs>
+  <Tabs.List aria-label="Settings">
+    <Tabs.Tab value="general">General</Tabs.Tab>
+    <Tabs.Tab value="billing">Billing</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel value="general">General settings.</Tabs.Panel>
+  <Tabs.Panel value="billing">Billing settings.</Tabs.Panel>
+</Tabs>
+```
+
+## Import
+
+```tsx
+import { Tabs } from '@reference-ui/lib'
+```
+
+Parts: `Tabs.List` (`role="tablist"`), `Tabs.Tab` (a `button` with
+`role="tab"`), and `Tabs.Panel` (`role="tabpanel"`). `Tabs` itself renders
+no element.
+
+## Props
+
+### Tabs
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | first tab | Selected tab. Omit it to let Tabs manage selection. |
+| `onChange` | `(value: string) => void` | — | Called when the user selects a tab. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Arrow-key axis. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | `automatic` selects on focus; `manual` waits for Enter or Space. |
+| `variant` | `'line' \| 'pill'` or your own recipe name | `'line'` | Built-in look. |
+| `keepMounted` | `boolean` | `false` | Keep inactive panels' content mounted (hidden). |
+
+`Tabs.Tab` and `Tabs.Panel` each require a matching `value`. `Tabs.Panel`
+also takes `keepMounted`.
+
+## Behaviour
+
+- The tab list is one Tab stop; arrow keys move between tabs.
+- Inactive panels carry the native `hidden` attribute.

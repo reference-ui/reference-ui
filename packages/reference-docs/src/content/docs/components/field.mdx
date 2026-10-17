@@ -1,0 +1,55 @@
+---
+title: Field
+section: Components
+order: 20
+slug: field
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { FieldDemo } from './field-demo'
+
+# Field
+
+Field is the visual bezel around a form control: background, border, radius,
+prefix and suffix layout, and the focus ring. The control inside keeps its
+own label, validity, and disabled state.
+
+<Preview>
+  <FieldDemo />
+</Preview>
+
+```tsx
+import { Button, Input, Label, Span } from '@reference-ui/react'
+import { Field } from '@reference-ui/lib'
+
+<Label htmlFor="amount">Amount</Label>
+<Field>
+  <Span aria-hidden="true">£</Span>
+  <Input id="amount" placeholder="0.00" />
+  <Button type="button" aria-label="Clear amount">×</Button>
+</Field>
+```
+
+## Import
+
+```tsx
+import { Field } from '@reference-ui/lib'
+```
+
+## Props
+
+Field renders a `div` and takes every `div` prop and style prop, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `status` | `'warning'` | — | Paints the warning bezel. It does not mark the control invalid. |
+
+## Behaviour
+
+- `Input`, `Textarea`, and `Select` drop their standalone chrome inside a
+  Field, so the bezel is drawn once.
+- Field reacts to the state already on the control: set `aria-invalid`,
+  `disabled`, or `readOnly` on the input, not on Field.
+- Put the label above Field, never inside it.
+- [NumberField](/number-field) and [DateField](/date-field) use the same
+  bezel.

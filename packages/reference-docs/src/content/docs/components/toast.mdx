@@ -1,0 +1,79 @@
+---
+title: Toast
+section: Components
+order: 14
+slug: toast
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { ToastDemo } from './toast-demo'
+
+# Toast
+
+Toasts are brief notifications that appear in a corner of the screen and
+dismiss themselves. Call `toast()` from anywhere; the queue renders inside
+[ReferenceLibrary](/reference-library).
+
+<Preview>
+  <ToastDemo />
+</Preview>
+
+```tsx
+import { Button } from '@reference-ui/react'
+import { toast } from '@reference-ui/lib'
+
+<Button
+  onClick={() =>
+    toast('Changes saved', {
+      description: 'Your settings were updated.',
+      closeButton: true,
+    })
+  }
+>
+  Show toast
+</Button>
+```
+
+Mount `ReferenceLibrary` once near your app root; without it, no toast host
+renders.
+
+## Import
+
+```tsx
+import { toast } from '@reference-ui/lib'
+```
+
+## API
+
+| Call | Returns | Description |
+| --- | --- | --- |
+| `toast(message, options?)` | `string` id | Show a default toast. |
+| `toast.success / error / warning / info (message, options?)` | `string` id | Show a typed toast. |
+| `toast.loading(message, options?)` | `string` id | Show a toast that stays until updated or dismissed. |
+| `toast.promise(promise, { loading, success, error })` | the promise | Show loading, then success or error when the promise settles. |
+| `toast.define({ duration?, position?, render })` | definition | Define a toast with your own markup. Call the definition with its props to show it. |
+| `toast.update(id, message, options?)` | — | Replace the content of a visible toast. |
+| `toast.dismiss(id?)` | — | Dismiss one toast, or every toast when `id` is omitted. `toast.dismissAll()` does the same. |
+
+## Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `description` | `ReactNode` | — | Secondary text under the message. |
+| `duration` | `number \| false` | `5000` | Milliseconds before auto-dismiss; `false` keeps it open. |
+| `position` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | `'bottom-end'` | Screen corner or edge. |
+| `closeButton` | `boolean` | — | Show a close button. |
+| `action` / `cancel` | `{ label, onClick? }` | — | Buttons on the toast. Both dismiss unless `onClick` calls `preventDefault()`. |
+| `id` | `string` | generated | Reuse an id to update a toast in place. |
+| `announce` | `string` | — | Text for screen readers when the toast appears. |
+
+Toaster-wide defaults (position, duration, visible limit) are set on
+[ReferenceLibrary](/reference-library) with the `toaster` prop.
+
+## Behaviour
+
+- At most four toasts are visible by default; extra toasts wait and do not
+  expire unseen.
+- Timers pause while the pointer or keyboard focus is inside a toast, and
+  while an isolating [Overlay](/overlay) is open.
+- Toast does not trap focus or block the page.

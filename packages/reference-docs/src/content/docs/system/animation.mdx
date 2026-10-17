@@ -5,21 +5,116 @@ order: 8
 slug: animation
 ---
 
-import { AnimationsDemo } from './animations-demo'
+import { Preview } from '../../../mdx/Preview'
+import { AnimationDemo } from './animation-demo'
 
 # Animation
 
-Animation tokens bundle a keyframe, duration, easing, and iteration count into a
-single name. Apply one with the `animation` style prop — no keyframes to author.
+Define a motion once and apply it by name. `keyframes()` declares the steps
+of an animation, and an `animations` token bundles those keyframes with a
+duration, an easing and an iteration count. An element then runs it with one
+prop: `animation="fade.in"`.
 
-<AnimationsDemo />
+<Preview>
+  <AnimationDemo />
+</Preview>
 
-```tsx
-import { Div } from '@reference-ui/react'
+## Define keyframes
 
-<Div animation="spin.slow" width="10r" height="10r" />
+Call `keyframes()` with one entry per animation name. Each entry maps steps
+(`from`, `to`, or percentages) to declarations:
+
+```ts
+// src/theme/motion.ts
+import { keyframes } from '@reference-ui/system'
+
+keyframes({
+  fadeIn: {
+    from: { opacity: '0', transform: 'translateY(4px)' },
+    to: { opacity: '1', transform: 'translateY(0)' },
+  },
+  pulse: {
+    '0%, 100%': { opacity: '1' },
+    '50%': { opacity: '0.5' },
+  },
+})
 ```
 
-Groups include `spin`, `fadeIn`, `fadeOut`, `slideUp`, `slideDown`, `scaleIn`,
-`pulse`, `bounce`, and `ping`, each with `quick` / `normal` / `slow` (or `fast`)
-variants.
+The engine prints each one as an `@keyframes` rule, once, in the `global`
+layer. Values inside a step resolve like any style value, so token names,
+`{colors.brand}` references and rhythm units such as `2r` all work.
+
+## Name an animation
+
+Add an `animations` token whose value is a CSS `animation` shorthand that uses
+your keyframes:
+
+```ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  animations: {
+    fade: {
+      in: { value: 'fadeIn 0.2s ease-out both' },
+    },
+    pulse: {
+      slow: { value: 'pulse 2s ease-in-out infinite' },
+    },
+  },
+})
+```
+
+## Run an animation
+
+The `animation` prop and the `animation` key in `css()` look token names up
+in the `animations` category:
+
+```tsx
+import { Div, css } from '@reference-ui/react'
+
+<Div animation="fade.in" />
+
+const loading = css({ animation: 'pulse.slow' })
+```
+
+The utility uses the token's variable, `var(--animations-pulse-slow)`, so
+retuning the token's duration or easing changes every element that uses it.
+
+You can skip the token and write the shorthand directly, as in plain CSS:
+`animation="fadeIn 0.2s ease-out"`. The keyframes still come from
+`keyframes()`.
+
+## Respect reduced motion
+
+The `_motionReduce` condition matches when the user asks for less motion:
+
+```tsx
+<Div animation="pulse.slow" _motionReduce={{ animation: 'none' }} />
+```
+
+`_motionSafe` is its opposite.
+
+## Replay a one-shot animation
+
+An animation that runs once (no `infinite`) runs when the element first
+renders. To run it again, remount the element, for example by changing its
+React `key`. The demo above does this for `example.fade`.
+
+## Reference
+
+```ts
+function keyframes(config: KeyframesConfig): void
+
+type KeyframesConfig = Record<
+  string,                                    // animation name
+  Record<string, Record<string, string | number>>  // step -> declarations
+>
+```
+
+| Token category | Value | Read by |
+| --- | --- | --- |
+| `animations` | A CSS `animation` shorthand | `animation`, `animationName` |
+
+Related token categories for transitions: `durations` (read by
+`transitionDuration`) and `easings` (read by `transitionTimingFunction`). See
+[Tokens](/tokens#categories).

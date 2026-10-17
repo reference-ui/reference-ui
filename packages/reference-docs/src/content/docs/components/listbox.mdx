@@ -1,0 +1,77 @@
+---
+title: Listbox
+section: Components
+order: 30
+slug: listbox
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { ListboxDemo } from './listbox-demo'
+
+# Listbox
+
+Listbox is a list of selectable options with single or multiple selection,
+keyboard navigation, and typeahead. It is also the list inside a
+[Combobox](/combobox).
+
+<Preview>
+  <ListboxDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Listbox } from '@reference-ui/lib'
+
+export function FrameworkList() {
+  const [value, setValue] = useState<string | null>('react')
+  return (
+    <Listbox aria-label="Framework" value={value} onChange={setValue}>
+      <Listbox.Option value="react">React</Listbox.Option>
+      <Listbox.Option value="vue">Vue</Listbox.Option>
+      <Listbox.Option value="angular" disabled>
+        Angular
+      </Listbox.Option>
+    </Listbox>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Listbox } from '@reference-ui/lib'
+```
+
+Parts: `Listbox.Option`, `Listbox.Section` (a titled group),
+`Listbox.Header`, and `Listbox.Empty` (shown when there are no options).
+
+## Props
+
+### Listbox
+
+Listbox renders a `div` and takes its props and style props, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selection` | `'single' \| 'multiple'` | `'single'` | Selection mode. |
+| `value` | `string \| null`, or `string[]` when multiple | `null` / `[]` | Selected value. Listbox is controlled: pass `onChange` to update it. |
+| `onChange` | `(value) => void` | — | Called with the next selection. |
+| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | Arrow-key axis. |
+| `disabled` | `boolean` | — | Disables every option. |
+| `virtual` | `{ items, scrollToIndex }` | — | Adapter for virtualized lists you render yourself. |
+
+### Listbox.Option
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | Required. The option's value. |
+| `disabled` | `boolean` | — | Skipped by the keyboard and not selectable. |
+| `textValue` | `string` | text content | Text used for typeahead. |
+
+## Behaviour
+
+- One Tab stop: arrow keys move between options, Home and End jump to the
+  ends, and typing a letter jumps to a matching option.
+- Disabled options are skipped.
+- Give the listbox an accessible name with `aria-label` or
+  `aria-labelledby`.

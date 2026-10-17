@@ -7,4 +7,68 @@ slug: foundations
 
 # Introduction
 
-TODO: first draft pending.
+The foundations are the design choices `@reference-ui/lib` makes on top of the
+core system: its colors, its fonts, its sizes. The core system gives you the
+APIs, such as `tokens()` and `font()`, and ships no values of its own. Lib uses
+those APIs to define one complete look, and its components are built from it.
+
+This section documents what lib ships. To learn how to define tokens or fonts
+for your own system, see [System](/system).
+
+## Design tokens
+
+A design token is a named value, such as `blue.500` or `md`, that you write in
+a style prop instead of a raw CSS value. Lib defines these tokens:
+
+| Category | Tokens | Page |
+| --- | --- | --- |
+| Colors | A 19-family palette (`blue.500`), semantic tokens with light and dark values (`design.text.base`) | [Color](/color) |
+| Tones | `ghost`, `medium`, `firm` and `strong`, written after a color (`blue.500/medium`) | [Color](/color) |
+| Fonts | `sans`, `serif` and `mono`, each with five weights | [Typography](/typography) |
+| Radii | `sm` (`0.27rem`), `md` (`0.4rem`), `lg` (`0.6rem`), `full` (`9999px`) | — |
+| Animations | Named presets such as `fadeIn.quick` and `spin.slow` | [Animation](/animation) |
+
+Lib also sets the spacing unit: `1r` is `0.25rem`, so `4r` is 16px at the
+browser's default font size. See [Spacing](/spacing).
+
+## Using lib's tokens
+
+Write a token's name as the value of a style prop:
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div bg="design.background" borderRadius="md" padding="4r">
+  <P font="serif" color="design.text.light">Lib's tokens, by name.</P>
+</Div>
+```
+
+Lib's components already use these tokens, so they need no setup.
+
+To use the tokens in your own styles, build your system on lib's. Add lib's
+`baseSystem` to `extends` in `ui.config.ts`, then run `ref sync`:
+
+```ts
+import { defineConfig } from '@reference-ui/neo'
+import { baseSystem } from '@reference-ui/lib/baseSystem'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  extends: [baseSystem],
+})
+```
+
+`ref sync` compiles a stylesheet for the values your code uses and gives your
+style props lib's token names as types. Without it, you can only rely on values
+lib uses itself: lib's shipped stylesheet has no rules for anything else, so
+other values paint nothing and warn in development.
+
+Your own tokens extend lib's. Where you define a token at the same path, yours
+wins, which is how you retheme lib with your brand.
+
+## Related
+
+- [Color](/color): the palette, tones, semantic tokens and color modes.
+- [Typography](/typography): the font families, weights and type scale.
+- [Tokens](/tokens): how to define tokens in your own system.

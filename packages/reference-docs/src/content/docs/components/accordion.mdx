@@ -1,0 +1,63 @@
+---
+title: Accordion
+section: Components
+order: 41
+slug: accordion
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { AccordionDemo } from './accordion-demo'
+
+# Accordion
+
+Accordion groups [Collapsibles](/collapsible) so that one, or several, can
+be open at a time, with arrow-key movement between their headers.
+
+<Preview>
+  <AccordionDemo />
+</Preview>
+
+```tsx
+import { Accordion, Collapsible } from '@reference-ui/lib'
+
+<Accordion>
+  <Collapsible id="billing">
+    <Collapsible.Trigger>Billing</Collapsible.Trigger>
+    <Collapsible.Content>Invoices and payment methods.</Collapsible.Content>
+  </Collapsible>
+  <Collapsible id="team">
+    <Collapsible.Trigger>Team</Collapsible.Trigger>
+    <Collapsible.Content>Members and roles.</Collapsible.Content>
+  </Collapsible>
+</Accordion>
+```
+
+Each child Collapsible needs an `id`; the Accordion value is made of those
+ids.
+
+## Import
+
+```tsx
+import { Accordion, Collapsible } from '@reference-ui/lib'
+```
+
+## Props
+
+Accordion renders a `div` and takes its props and style props, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expansion` | `'single' \| 'multiple'` | `'single'` | One open item, or any number. |
+| `value` | `string \| null`, or `string[]` when multiple | `null` / `[]` | Open item ids. Omit it to let Accordion manage its own. |
+| `onChange` | `(value) => void` | — | Called when an item opens or closes, in both modes. |
+| `keyboard` | `'headers' \| 'none'` | `'headers'` | Arrow-key movement between headers; `none` leaves it to you. |
+| `disabled` | `boolean` | `false` | Disables every item. |
+
+## Behaviour
+
+- In single mode, opening one item closes the others, and the open item can
+  be closed so none is open.
+- Arrow keys, Home, and End move between headers; every header also stays
+  in the normal Tab order.
+- Do not pass `open` or `onChange` to the child Collapsibles; the Accordion
+  owns their state.

@@ -1,0 +1,69 @@
+---
+title: Switch
+section: Components
+order: 21
+slug: switch
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { SwitchDemo } from './switch-demo'
+
+# Switch
+
+Switch is an on/off control with a sliding thumb. It renders a
+`button` with `role="switch"` and draws a default thumb for you.
+
+<Preview>
+  <SwitchDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Label } from '@reference-ui/react'
+import { Switch } from '@reference-ui/lib'
+
+export function AirplaneMode() {
+  const [enabled, setEnabled] = useState(false)
+  return (
+    <>
+      <Label htmlFor="airplane">Airplane mode</Label>
+      <Switch id="airplane" checked={enabled} onChange={setEnabled} />
+    </>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Switch } from '@reference-ui/lib'
+```
+
+## Props
+
+Switch renders the track as a `button` and takes its props, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `checked` | `boolean` | — | Controlled state. |
+| `defaultChecked` | `boolean` | `false` | Initial state when `checked` is omitted. |
+| `onChange` | `(checked: boolean, event) => void` | — | Called with the requested state on click. |
+| `disabled` | `boolean` | `false` | Disables the control. |
+
+To style the thumb, author it yourself: `<Switch.Thumb />` renders a `span`
+and replaces the default thumb.
+
+```tsx
+const thumb = css({ width: '2r' })
+
+<Switch checked={enabled} onChange={setEnabled}>
+  <Switch.Thumb className={thumb} />
+</Switch>
+```
+
+## Behaviour
+
+- Space and Enter toggle it, as on any button.
+- Label it with a `label` element, either with `htmlFor` or by wrapping the
+  Switch.
+- Switch does not submit with a form; serialize the value yourself.

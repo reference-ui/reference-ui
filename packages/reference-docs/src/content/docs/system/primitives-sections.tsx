@@ -1,49 +1,30 @@
-import { A, Div, H2, Li, P, Span, Ul } from '@reference-ui/react'
+import { A, Div, H3, P } from '@reference-ui/react'
 
 /**
- * Live specimens for the Primitives page. Component-hosted so the style props
- * are statically extracted (inline JSX in MDX is not).
+ * Live specimen for the System > Primitives page: a card built from three
+ * primitives with style props only. Kept in a component, not inline in MDX,
+ * so the compiler reads its style props.
  */
-
 export function PrimitiveCard() {
   return (
     <Div
       display="grid"
-      gap="3r"
-      padding="4r"
+      gap="2r"
+      padding="5r"
+      maxWidth="80r"
       borderRadius="md"
-      bg="docsPanelBg"
+      bg="docsPageBg"
+      _hover={{ bg: 'docsHoverBg' }}
     >
-      <Span color="docsMuted">A primitive can be a layout container.</Span>
-      <Span fontWeight="600" color="docsText">
-        It still renders a real element.
-      </Span>
-    </Div>
-  )
-}
-
-export function PrimitiveContent() {
-  return (
-    <Div display="grid" gap="2r">
-      <H2 margin="0">Primitives work well for prose and UI</H2>
+      <H3 margin="0" fontSize="4.5r" color="docsText">
+        A card
+      </H3>
       <P margin="0" color="docsMuted">
-        Use semantic tags for the structure you already want. Style props support
-        the element, they do not replace it.
+        A Div, an H3, a P and an A. Each renders its own HTML element.
       </P>
-      <A href="#" color="docsHighlight" textDecoration="underline">
-        This is still just a link
+      <A href="#primitive-props" color="docsHighlight" textDecoration="underline">
+        Read the props
       </A>
     </Div>
-  )
-}
-
-export function PrimitiveList() {
-  return (
-    <Ul display="grid" gap="1r" paddingLeft="5r">
-      <Li>Prefer semantic elements first.</Li>
-      <Li>Reach for style props before introducing wrappers.</Li>
-      <Li>Extract to `css()` or recipes when repetition shows up.</Li>
-      <Li>Keep primitives boring — HTML with superpowers.</Li>
-    </Ul>
   )
 }

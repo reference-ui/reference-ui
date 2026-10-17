@@ -1,0 +1,55 @@
+---
+title: useMeasure
+section: Components
+order: 55
+slug: use-measure
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { UseMeasureDemo } from './use-measure-demo'
+
+# useMeasure
+
+`useMeasure` reports an element's size and position once its layout has
+stopped changing. It is a hook, not a wrapper component.
+
+<Preview>
+  <UseMeasureDemo />
+</Preview>
+
+```tsx
+import { Textarea } from '@reference-ui/react'
+import { useMeasure } from '@reference-ui/lib'
+
+export function Notes() {
+  const { ref, rect, isSettled } = useMeasure<HTMLTextAreaElement>()
+  return <Textarea ref={ref} />
+}
+```
+
+## Import
+
+```tsx
+import { useMeasure } from '@reference-ui/lib'
+```
+
+## Signature
+
+```ts
+useMeasure<E extends HTMLElement>(options?: UseMeasureOptions): {
+  ref: RefCallback<E>
+  rect: { width: number; height: number; top: number; left: number } | null
+  isSettled: boolean
+}
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `paused` | `boolean` | `false` | Stop observing (during a drag, for example); the last `rect` is kept. |
+| `settleTimeoutMs` | `number` | `20` | Quiet time in milliseconds before `isSettled` turns true. |
+| `target` | `RefObject<HTMLElement>` | — | Measure an element you already hold a ref to, instead of attaching `ref`. |
+
+## Behaviour
+
+- Sizes are border-box, read with a `ResizeObserver`.
+- `rect` is `null` until the first measurement.

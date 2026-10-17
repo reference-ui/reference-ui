@@ -5,62 +5,139 @@ order: 9
 slug: primitives
 ---
 
-import { PrimitiveCard, PrimitiveContent, PrimitiveList } from './primitives-sections'
+import { Preview } from '../../../mdx/Preview'
+import { PrimitiveCard } from './primitives-sections'
 
 # Primitives
 
-Primitives are typed React wrappers around real HTML tags. They keep the
-semantics of native elements like `div`, `a`, and `p` while giving you
-Reference UI style props and generated classes.
+Primitives are typed React components for HTML elements: `Div` renders a
+`div`, `Button` renders a `button`, `H2` renders an `h2`. Each one takes the
+element's normal props plus [style props](/style-props), so you style an
+element where you write it, and the compiler turns those props into classes.
 
-## Why primitives exist
-
-Reference UI starts from the platform. Instead of a generic `Box` or an `as`
-prop, each primitive maps directly to a real element.
-
-- You keep native HTML semantics.
-- You get typed props for the element you are rendering.
-- You can use Reference UI style props directly in JSX.
-- You can still reach for `css()` when you want reusable class composition.
-
-## Mental model
-
-<PrimitiveCard />
+<Preview>
+  <PrimitiveCard />
+</Preview>
 
 ```tsx
-import { Div, Span } from '@reference-ui/react'
+import { A, Div, H3, P } from '@reference-ui/react'
 
 export function Card() {
   return (
-    <Div display="grid" gap="3r" padding="4r" border="1px solid" borderColor="docsBorder" borderRadius="lg">
-      <Span color="docsMuted">Eyebrow</Span>
-      <Span fontWeight="600">Title</Span>
+    <Div display="grid" gap="2r" padding="5r" borderRadius="md" bg="surface" _hover={{ bg: 'raised' }}>
+      <H3 margin="0">A card</H3>
+      <P margin="0" color="muted">A Div, an H3, a P and an A.</P>
+      <A href="/props" color="brand">Read the props</A>
     </Div>
   )
 }
 ```
 
-## Content
+`ref sync` generates the primitives into `@reference-ui/react`, typed against
+your own tokens.
 
-<PrimitiveContent />
+## One component per element
 
-## When to use primitives vs `css()`
+There is no generic `Box` and no `as` prop. You pick the element by picking
+the component, so the HTML stays semantic and the props are typed for that
+element: `A` accepts `href`, `Input` accepts `value`, and `ref` gives you the
+real `HTMLAnchorElement` or `HTMLInputElement`.
 
-- Use primitives when rendering a specific element and styling it inline.
-- Use `css()` when composing styles once and applying them in several places.
-- Use recipes when defining a reusable component with variants and a stronger contract.
+Passing `as` does not change the element; it is not a primitive prop.
 
-## Good defaults
+## Primitive props
 
-<PrimitiveList />
+| Prop | Description |
+| --- | --- |
+| Native props | Everything the element accepts in React: `id`, `className`, `aria-*`, `data-*`, event handlers, `children`. They reach the DOM unchanged. |
+| `ref` | The underlying DOM element. Primitives take `ref` as a plain prop (React 19). |
+| Style props | Every CSS property and the Reference shorthands, values and conditions. See [Style props](/style-props). Style props never reach the DOM as attributes. |
+| `css` | A style object, or an array of them, applied like [`css()`](/css). It wins over a sibling style prop for the same property. |
+| `colorMode` | `'light'` or `'dark'`. Sets `data-color-mode` on the element, so tokens inside it resolve in that mode. See [Tokens](/tokens#light-and-dark-values). |
+| `variant` | Sets `data-variant` on the element, for `globalCss()` rules that select on it. |
 
-## Quick reference
+`className` combines with the classes the primitive generates.
 
 ```tsx
-import { Div, P, A } from '@reference-ui/react'
-
-<Div padding="4r" bg="docsPanelBg">
-  <P color="docsText">Hello world</P>
-  <A href="/more" color="docsHighlight">Learn more</A>
-</Div>
+<Div
+  id="summary"
+  aria-live="polite"
+  onClick={handleClick}
+  padding="4r"
+  css={{ _hover: { bg: 'raised' } }}
+  colorMode="dark"
+/>
 ```
+
+## Colour mode
+
+`colorMode` makes an element an island: it and its children resolve light and
+dark tokens in that mode, whatever the page uses. Islands nest. Read the
+current mode in a component with `useColorMode()`:
+
+```tsx
+import { useColorMode } from '@reference-ui/react'
+
+function ModeLabel() {
+  const mode = useColorMode() // 'light', 'dark', or undefined
+  return <span>{mode ?? 'page default'}</span>
+}
+```
+
+## `data-layer`
+
+The first primitive in a React tree sets `data-layer` to your system's `name`
+from `ui.config.ts`. Primitives nested inside it inherit the scope without
+repeating the attribute; a separately mounted React tree sets it again. The
+stylesheet uses the attribute to keep two Reference systems on one page from
+overriding each other.
+
+## Your own components
+
+A component that forwards style props to a primitive works as a style host
+too, so `<Card padding="4r" />` compiles when `Card` passes its props to a
+`Div`. The compiler finds these wrappers itself. For a component it cannot
+trace, such as a generated one, list its name in `jsxElements` in
+`ui.config.ts`:
+
+```ts
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  jsxElements: ['Chart'],
+})
+```
+
+A prop the component reads for itself and does not pass on, such as a `size`
+it turns into `data-size`, stays the component's own prop and is never
+treated as a style prop.
+
+## Types
+
+Every primitive exports its props type: `DivProps`, `ButtonProps`, and so on.
+`PrimitiveProps<'div'>` is the same shape by tag name, and `StyleProps` is the
+style props alone:
+
+```ts
+import type { PrimitiveProps, StyleProps } from '@reference-ui/react'
+
+type PanelProps = PrimitiveProps<'section'> & { title: string }
+```
+
+## All primitives
+
+There are 101, one per HTML element, named after the tag in PascalCase. The
+one exception is `Obj`, which renders `object`.
+
+`A`, `Abbr`, `Address`, `Area`, `Article`, `Aside`, `Audio`, `B`, `Bdi`,
+`Bdo`, `Blockquote`, `Br`, `Button`, `Canvas`, `Caption`, `Cite`, `Code`,
+`Col`, `Colgroup`, `Data`, `Datalist`, `Dd`, `Del`, `Details`, `Dfn`,
+`Dialog`, `Div`, `Dl`, `Dt`, `Em`, `Embed`, `Fieldset`, `Figcaption`,
+`Figure`, `Footer`, `Form`, `H1`, `H2`, `H3`, `H4`, `H5`, `H6`, `Header`,
+`Hgroup`, `Hr`, `I`, `Iframe`, `Img`, `Input`, `Ins`, `Kbd`, `Label`,
+`Legend`, `Li`, `Main`, `Map`, `Mark`, `Menu`, `Meter`, `Nav`, `Obj`, `Ol`,
+`Optgroup`, `Option`, `Output`, `P`, `Picture`, `Pre`, `Progress`, `Q`, `Rp`,
+`Rt`, `Ruby`, `S`, `Samp`, `Search`, `Section`, `Select`, `Small`, `Source`,
+`Span`, `Strong`, `Sub`, `Summary`, `Sup`, `Svg`, `Table`, `Tbody`, `Td`,
+`Textarea`, `Tfoot`, `Th`, `Thead`, `Time`, `Tr`, `Track`, `U`, `Ul`, `Var`,
+`Video`, `Wbr`.

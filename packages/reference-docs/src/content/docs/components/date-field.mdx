@@ -1,0 +1,77 @@
+---
+title: DateField
+section: Components
+order: 24
+slug: date-field
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { DateFieldDemo } from './date-field-demo'
+
+# DateField
+
+DateField edits a date as locale-formatted text and holds it as an ISO
+string (`YYYY-MM-DD`). Add `DateField.Picker` to get a calendar pop-up.
+
+<Preview>
+  <DateFieldDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Label } from '@reference-ui/react'
+import { DateField, type ISODate } from '@reference-ui/lib'
+
+export function StartDate() {
+  const [date, setDate] = useState<ISODate | null>(null)
+  return (
+    <>
+      <Label htmlFor="start">Start date</Label>
+      <DateField id="start" value={date} onChange={setDate} locale="en-GB">
+        <DateField.Input />
+        <DateField.Trigger aria-label="Open calendar" />
+        <DateField.Picker />
+      </DateField>
+    </>
+  )
+}
+```
+
+Without children, DateField renders just the text input. With only
+`<DateField.Picker />` as a child, it adds a default trigger button for you.
+Author `DateField.Trigger` when you need to name it, as above.
+
+## Import
+
+```tsx
+import { DateField } from '@reference-ui/lib'
+```
+
+## Props
+
+DateField takes `input` props (`id`, `placeholder`, …) plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `ISODate \| null` | — | Required. Controlled date; `null` is empty. |
+| `onChange` | `(value: ISODate \| null) => void` | — | Required. Called when an edit commits. |
+| `locale` | `string` | — | Required. BCP 47 locale for the text format. |
+| `min` / `max` | `ISODate` | — | Earliest and latest allowed dates. |
+| `isDateUnavailable` | `(date: ISODate) => boolean` | — | Marks dates that cannot be chosen. |
+| `name` | `string` | — | Submits the value with a form. |
+| `disabled` | `boolean` | — | Disables the field. |
+
+## Parts
+
+| Part | Purpose |
+| --- | --- |
+| `DateField.Input` | The text input. Author it to style it. |
+| `DateField.Trigger` | The button that opens the picker. |
+| `DateField.Picker` | The pop-up. Childless, it contains a default calendar. |
+| `DateField.Calendar` | The calendar inside the picker. |
+| `DateField.Range` | A start and end date pair, with `DateField.Start` and `DateField.End` inputs. Its value is `{ start, end } \| null`. |
+
+## Behaviour
+
+- Label the field above it, never inside.
+- The calendar grid comes from [Calendar](/calendar).

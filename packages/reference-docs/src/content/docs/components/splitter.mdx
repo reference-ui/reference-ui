@@ -1,0 +1,78 @@
+---
+title: Splitter
+section: Components
+order: 42
+slug: splitter
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { SplitterDemo } from './splitter-demo'
+
+# Splitter
+
+Splitter divides space between resizable panels along one axis, with a
+draggable, keyboard-operable handle between each pair.
+
+<Preview>
+  <SplitterDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { css } from '@reference-ui/react'
+import { Splitter } from '@reference-ui/lib'
+
+const fill = css({ height: '100%' })
+
+export function Layout() {
+  const [sizes, setSizes] = useState([40, 60])
+  return (
+    <Splitter value={sizes} onChange={setSizes} className={fill}>
+      <Splitter.Panel min="20r">Sidebar</Splitter.Panel>
+      <Splitter.Handle aria-label="Resize sidebar" />
+      <Splitter.Panel>Main</Splitter.Panel>
+    </Splitter>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Splitter } from '@reference-ui/lib'
+```
+
+Anatomy is always Panel, then Handle and Panel pairs. For two axes, nest a
+vertical Splitter inside a Panel.
+
+## Props
+
+### Splitter
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number[]` | — | Required. Panel sizes as percentages, in order, summing to 100. |
+| `onChange` | `(value: number[]) => void` | — | Called as a handle moves. |
+| `onChangeEnd` | `(value: number[]) => void` | — | Called once when a drag or key press ends. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Row or column layout. |
+
+### Splitter.Panel
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `min` / `max` | `number \| string` | — | Size limits: a number is a percentage, a string a CSS length such as `'20r'`. |
+| `collapsible` | `boolean` | `false` | Allow collapsing the panel. |
+| `collapsedSize` | `number` | `0` | Size in percent when collapsed. |
+
+### Splitter.Handle
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Locks the handle. |
+| `withThumb` | `boolean` | `true` | Draws the default grip dots. |
+
+## Behaviour
+
+- Each handle has `role="separator"`; give it an `aria-label`.
+- Arrow keys resize from a focused handle.
+- A `value` whose length does not match the panel count is an error.

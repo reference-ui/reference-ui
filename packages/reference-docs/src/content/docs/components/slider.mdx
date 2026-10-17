@@ -1,0 +1,78 @@
+---
+title: Slider
+section: Components
+order: 22
+slug: slider
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { SliderDemo } from './slider-demo'
+
+# Slider
+
+Slider picks a number, or a range of numbers, by dragging a thumb along a
+track or with the keyboard.
+
+<Preview>
+  <SliderDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Slider } from '@reference-ui/lib'
+
+export function Volume() {
+  const [volume, setVolume] = useState(35)
+  return (
+    <Slider value={volume} onChange={setVolume}>
+      <Slider.Track>
+        <Slider.Range />
+        <Slider.Thumb aria-label="Volume" />
+      </Slider.Track>
+    </Slider>
+  )
+}
+```
+
+For a range, pass an array and author one `Slider.Thumb` per value:
+`value={[20, 80]}`.
+
+## Import
+
+```tsx
+import { Slider } from '@reference-ui/lib'
+```
+
+## Props
+
+### Slider
+
+Slider renders a `div` and takes its props and style props, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| number[]` | — | Required. Controlled value; an array gives one thumb per entry. |
+| `onChange` | `(value) => void` | — | Called with every change while dragging or stepping. |
+| `onChangeEnd` | `(value) => void` | — | Called once when a drag or key press ends. |
+| `min` | `number` | `0` | Lowest value. |
+| `max` | `number` | `100` | Highest value. |
+| `step` | `number` | `1` | Increment between values. |
+| `minStepsBetweenThumbs` | `number` | `0` | Minimum gap between thumbs, in steps. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Direction of the track. |
+| `disabled` | `boolean` | `false` | Disables the slider. |
+
+### Slider.Thumb
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `valueText` | `string` | — | Text read by screen readers instead of the number. |
+| `formatValue` | `(value: number) => string` | — | Formats the value for screen readers. |
+
+`Slider.Track` and `Slider.Range` take `div` props and style props.
+
+## Behaviour
+
+- Each thumb has `role="slider"`. Give it an `aria-label`.
+- Arrow keys move by `step`; Page Up and Page Down move further; Home and End
+  jump to `min` and `max`.
+- Thumbs in a range do not pass each other.

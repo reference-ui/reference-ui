@@ -1,0 +1,75 @@
+---
+title: NumberField
+section: Components
+order: 23
+slug: number-field
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { NumberFieldDemo } from './number-field-demo'
+
+# NumberField
+
+NumberField edits a number as locale-formatted text, with optional stepper
+buttons. It accepts partial input while you type and commits one plain
+number.
+
+<Preview>
+  <NumberFieldDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Label } from '@reference-ui/react'
+import { NumberField } from '@reference-ui/lib'
+
+export function Quantity() {
+  const [quantity, setQuantity] = useState<number | null>(1)
+  return (
+    <>
+      <Label htmlFor="quantity">Quantity</Label>
+      <NumberField value={quantity} onChange={setQuantity} locale="en-GB" min={0} max={100}>
+        <NumberField.Group>
+          <NumberField.Decrement aria-label="Decrease quantity" />
+          <NumberField.Input id="quantity" />
+          <NumberField.Increment aria-label="Increase quantity" />
+        </NumberField.Group>
+      </NumberField>
+    </>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { NumberField } from '@reference-ui/lib'
+```
+
+Parts: `NumberField.Group` (the [Field](/field) bezel, `role="group"`),
+`NumberField.Input` (`input type="text"`), and the optional
+`NumberField.Increment` and `NumberField.Decrement` buttons.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| null` | — | Required. Controlled value; `null` is empty. |
+| `onChange` | `(value: number \| null) => void` | — | Called when an edit commits. |
+| `locale` | `string` | — | Required. BCP 47 locale for parsing and display. |
+| `min` / `max` | `number` | — | Bounds. |
+| `step` | `number` | `1` (`0.01` for percent) | Step for arrows and steppers. |
+| `formatOptions` | `Intl.NumberFormatOptions` | `{}` | Display format: currency, percent, units. |
+| `commitBehavior` | `'none' \| 'snap' \| 'validate'` | `'none'` | `none` clamps to bounds; `snap` also rounds to the step; `validate` keeps the value and marks it invalid. |
+| `name` | `string` | — | Submits the value with a form. |
+| `disabled`, `readOnly`, `required`, `invalid` | `boolean` | `false` | Form state. |
+
+`Increment` and `Decrement` each require an `aria-label` or
+`aria-labelledby`; there is no built-in English label.
+
+## Behaviour
+
+- Arrow Up and Down step by `step`; with Shift held they step by
+  `10 × step`. Home and End go to `min` and `max`.
+- The value commits on blur, Enter, and each step, not on every keystroke.
+- There is no uncontrolled mode.

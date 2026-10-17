@@ -7,4 +7,141 @@ slug: global-css
 
 # Global CSS
 
-TODO: first draft pending.
+`globalCss()` writes rules for selectors you choose: `body`, `:root`, a class
+of your own, or an attribute selector. Use it for page-wide defaults, custom
+properties, and styles keyed on markup rather than on a `css()` class. The
+rules take the same values as style props (tokens, rhythm, conditions), and
+they compile into the `global` layer of the one stylesheet.
+
+## Write global rules
+
+```ts
+// src/theme/global.ts
+import { globalCss } from '@reference-ui/system'
+
+globalCss({
+  ':root': {
+    '--header-height': '16r',
+  },
+  body: {
+    fontFamily: 'body', // a family defined with font()
+    color: 'text',
+    backgroundColor: 'surface',
+    containerType: 'inline-size',
+  },
+  'a:focus-visible': {
+    outline: '2px solid {colors.brand}',
+    outlineOffset: '2px',
+  },
+})
+```
+
+Each key is a selector, written as you would in CSS: comma lists, `:has()`,
+`:is()` and vendor pseudo-elements such as `::-webkit-scrollbar` pass through
+unchanged. Call `globalCss()` from as many files as you like; sync collects
+every call.
+
+## Values
+
+Values resolve exactly as they do in `css()`:
+
+- a bare token name resolves through the property's category, so
+  `borderRadius: 'card'` prints `var(--radii-card)`;
+- `{colors.brand}` references expand inside any string, including
+  `color-mix()` and shadows;
+- rhythm units such as `4r` become `calc()` against `--spacing-root`;
+- `undefined` removes a key, which helps when you spread a shared object and
+  want to drop one of its properties.
+
+## Nested selectors and conditions
+
+Inside a rule, `&` stands for the rule's selector, and named conditions work
+as they do on style props:
+
+```ts
+globalCss({
+  '.field': {
+    borderColor: 'line',
+    '& > [data-slot="icon"]': { color: 'muted' },
+    _hover: { borderColor: 'brand' },
+    _focusVisible: { outlineColor: 'brand', outlineWidth: '2px', outlineStyle: 'solid' },
+    _disabled: { opacity: 0.5 },
+    _placeholder: { color: 'muted' },
+  },
+  '.tag': {
+    _before: { content: '"#"', color: 'muted' },
+  },
+})
+```
+
+Interaction conditions match both the native state and a data attribute:
+`_hover` covers `:hover` and `[data-hover]`, so a script can force the state.
+
+## Media and container queries
+
+Nest at-rules as keys. `@media` and `@container` wrap the rule:
+
+```ts
+globalCss({
+  '.sidebar': {
+    display: 'none',
+    '@media (min-width: 900px)': { display: 'block' },
+  },
+  '.chip': {
+    '@container (min-width: 400px)': { paddingInline: '4r' },
+  },
+})
+```
+
+Breakpoint names such as `md` and ranges such as `mdDown` also work here. In
+global CSS they print `@media` queries with the scale's widths, where
+`css()` and style props print `@container` queries (see
+[Responsive](/responsive)).
+
+## Where global rules sit in the cascade
+
+The stylesheet declares its cascade layers in this order, and a later layer
+always wins over an earlier one, whatever the selector specificity:
+
+| Layer | Contents |
+| --- | --- |
+| `reset` | The CSS reset, when `normalizeCss` is on |
+| `global` | `globalCss()` rules, `@keyframes` and `@font-face` |
+| `base` | Base rules |
+| `tokens` | Token custom properties and their light and dark blocks |
+| `recipes` | `recipe()` classes |
+| `utilities` | `css()` classes and style props |
+
+A `css()` class or style prop therefore overrides a global rule for the same
+element without `!important`. Use global CSS for defaults and markup-driven
+styles, and utilities for anything an element should be able to override.
+
+## The reset
+
+`normalizeCss` in `ui.config.ts` turns the built-in reset on or off. It is on
+by default:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/neo'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  normalizeCss: false,
+})
+```
+
+TODO: document what the reset contains, and what the `base` layer holds.
+
+## `globalCss()` reference
+
+```ts
+function globalCss(css: GlobalCssConfig): void
+
+type GlobalCssConfig = Record<string, GlobalCssRule>
+```
+
+A `GlobalCssRule` holds CSS properties in camelCase, custom properties
+(`--name`), nested `&` selectors, named conditions (`_hover`, …), breakpoint
+keys, and at-rule keys (`@media …`, `@container …`).

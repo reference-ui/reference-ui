@@ -1,0 +1,77 @@
+---
+title: Tree
+section: Components
+order: 34
+slug: tree
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { TreeDemo } from './tree-demo'
+
+# Tree
+
+Tree is a nested, collapsible list with single selection, such as a file
+outline.
+
+<Preview>
+  <TreeDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Tree } from '@reference-ui/lib'
+
+export function Files() {
+  const [selected, setSelected] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string[]>(['src'])
+  return (
+    <Tree
+      aria-label="Files"
+      value={selected}
+      onChange={setSelected}
+      expanded={expanded}
+      onExpandedChange={setExpanded}
+    >
+      <Tree.Item value="src">
+        <Tree.Expander aria-label="Toggle src" />
+        src
+        <Tree.Group>
+          <Tree.Item value="src/index">index.ts</Tree.Item>
+        </Tree.Group>
+      </Tree.Item>
+      <Tree.Item value="readme">README.md</Tree.Item>
+    </Tree>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Tree } from '@reference-ui/lib'
+```
+
+Parts: `Tree.Item` (`role="treeitem"`), `Tree.Group` (the nested items of a
+branch), and `Tree.Expander` (a toggle button). An item with a `Tree.Group`
+child is a branch.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string \| null` | — | Required. Selected item; `null` for none. |
+| `onChange` | `(value: string \| null) => void` | — | Required. Called on selection. |
+| `expanded` | `string[]` | — | Controlled expanded branches. |
+| `defaultExpanded` | `string[]` | `[]` | Initial expanded branches when `expanded` is omitted. |
+| `onExpandedChange` | `(expanded: string[]) => void` | — | Called when a branch opens or closes. |
+| `disabled` | `boolean` | `false` | Disables the tree. |
+
+`Tree.Item` takes `value`, `disabled`, and `textValue` (for typeahead).
+
+## Behaviour
+
+- Up and Down move between visible items; Right expands or moves to the
+  first child; Left collapses or moves to the parent.
+- Enter and Space select the focused item; typing jumps to a matching item.
+- Clicking `Tree.Expander` toggles the branch without selecting it.
+- Tree throws if `value` or `onChange` is missing.

@@ -1,0 +1,47 @@
+---
+title: FocusLock
+section: Components
+order: 52
+slug: focus-lock
+---
+
+# FocusLock
+
+FocusLock keeps keyboard focus inside one element: Tab cycles within it,
+and focus returns to where it was when the lock ends. [Overlay](/overlay)
+uses it for isolating dialogs; use it directly only for your own containers.
+
+```tsx
+import { Div } from '@reference-ui/react'
+import { FocusLock } from '@reference-ui/lib'
+
+<FocusLock>
+  <Div role="dialog" aria-modal="true" aria-label="Settings">
+    {children}
+  </Div>
+</FocusLock>
+```
+
+## Import
+
+```tsx
+import { FocusLock } from '@reference-ui/lib'
+```
+
+## Props
+
+FocusLock takes exactly one element child and adds no wrapper.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Turns the lock off. |
+| `initialFocus` | ref, element, function, or `boolean` | first tabbable | Where focus goes when the lock starts; `false` skips the move. |
+| `restoreFocus` | ref, element, function, or `boolean` | `true` | Where focus returns when the lock ends; `false` leaves it. |
+| `shards` | `Array<HTMLElement \| RefObject>` | — | Elements outside the child that also belong to the lock, such as a portalled popover. |
+
+## Behaviour
+
+- Focus that moves outside by script is pulled back.
+- FocusLock does not handle Escape, inert backgrounds, or scroll locking;
+  [Overlay](/overlay) does.
+- For arrow-key movement within a widget, use [RovingFocus](/roving-focus).

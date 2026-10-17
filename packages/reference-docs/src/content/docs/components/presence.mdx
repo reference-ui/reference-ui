@@ -1,0 +1,55 @@
+---
+title: Presence
+section: Components
+order: 51
+slug: presence
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { PresenceDemo } from './presence-demo'
+
+# Presence
+
+Presence keeps an element in the DOM until its exit animation or transition
+finishes, then unmounts it.
+
+<Preview>
+  <PresenceDemo />
+</Preview>
+
+```tsx
+import { Div } from '@reference-ui/react'
+import { Presence } from '@reference-ui/lib'
+
+<Presence present={open}>
+  <Div data-state={open ? 'open' : 'closed'} className={fade}>
+    Fades before it leaves the DOM.
+  </Div>
+</Presence>
+```
+
+Style the exit against `data-state="closed"`. [Overlay](/overlay),
+[Popover](/popover), and [Collapsible](/collapsible) use Presence already;
+do not wrap them in it.
+
+## Import
+
+```tsx
+import { Presence } from '@reference-ui/lib'
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `present` | `boolean` | — | Required. Whether the child should be shown. |
+| `children` | one element | — | The element to keep mounted through its exit. |
+| `onExitComplete` | `() => void` | — | Called once after the exit finishes and the child unmounts. |
+
+## Behaviour
+
+- Presence waits for CSS animations, CSS transitions, and finite GSAP
+  tweens.
+- If nothing animates (including under `prefers-reduced-motion`), the child
+  unmounts straight away.
+- Presence renders no element of its own.

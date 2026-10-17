@@ -2,7 +2,7 @@ import { Div, Span, css } from '@reference-ui/react'
 import { Preview } from '../../../mdx/Preview'
 
 /**
- * Colour specimens for the Colour page, built from real tones. Every value is a
+ * Color specimens for the Color page, built from lib's real tones. Every value is a
  * static class or prop, so the compiler extracts it at build time. A tone is
  * picked from a static map, never built from a string, because computed values
  * are dropped. Each tone tile sets `bg` and `borderColor`, so one tone shows
@@ -196,99 +196,5 @@ export function RoleSpecimens() {
         </Div>
       </Div>
     </Preview>
-  )
-}
-
-const caseGrid = css({
-  display: 'grid',
-  gridTemplateColumns: '1fr',
-  gap: '6r',
-  r: { 640: { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' } },
-})
-
-const caseColumn = css({ display: 'flex', flexDirection: 'column', gap: '3r', minWidth: '0' })
-
-/* No border colour here: every case class owns its own borderColor, so two
- * classes never fight over the same property. */
-const caseBox = css({
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'flex-end',
-  gap: '1r',
-  minHeight: '16r',
-  padding: '4r',
-  borderRadius: 'md',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-})
-
-const surfaceCase = css({ bg: 'blue.500/medium', borderColor: 'blue.500/medium' })
-
-const selectedCase = css({ bg: 'blue.500/strong', borderColor: 'blue.500/strong' })
-
-const edgeCase = css({ borderColor: 'blue.500/strong' })
-
-const graphBox = css({
-  padding: '3r',
-  borderRadius: 'md',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'docsBorder',
-  minHeight: '16r',
-})
-
-const graphArea = css({ fill: 'blue.500/medium' })
-
-const graphEdge = css({ stroke: 'blue.500', fill: 'none', strokeWidth: '2px' })
-
-const caseTitle = css({ fontSize: '4r', fontWeight: '600', color: 'docsText', lineHeight: '1.3' })
-
-const caseSub = css({ fontSize: '3.5r', color: 'docsMuted', lineHeight: '1.5' })
-
-const meterTrack = css({ height: '2r', borderRadius: 'full', bg: 'blue.500/firm' })
-
-const meterFill = css({ height: '2r', width: '62%', borderRadius: 'full', bg: 'blue.500' })
-
-/** Four jobs for one blue: a surface, a selection, a data fill and an accent edge. */
-export function RoleCases() {
-  return (
-    <Div className={caseGrid}>
-      <Div className={caseColumn}>
-        <Span className={eyebrow}>Surface · medium</Span>
-        <Div className={`${caseBox} ${surfaceCase}`}>
-          <Span className={caseTitle}>Filter</Span>
-          <Span className={caseSub}>Low-pass · 24 dB</Span>
-        </Div>
-      </Div>
-      <Div className={caseColumn}>
-        <Span className={eyebrow}>Selected · strong</Span>
-        <Div className={`${caseBox} ${selectedCase}`}>
-          <Span className={caseTitle}>Filter</Span>
-          <Span className={caseSub}>Active module</Span>
-        </Div>
-      </Div>
-      <Div className={caseColumn}>
-        <Span className={eyebrow}>Graph fill · medium</Span>
-        <Div className={graphBox}>
-          <svg viewBox="0 0 240 96" width="100%" height="96" aria-hidden="true" focusable="false">
-            <path
-              className={graphArea}
-              d="M0 78 Q60 78 100 42 T200 22 L240 30 L240 96 L0 96 Z"
-            />
-            <path className={graphEdge} d="M0 78 Q60 78 100 42 T200 22 L240 30" />
-          </svg>
-        </Div>
-      </Div>
-      <Div className={caseColumn}>
-        <Span className={eyebrow}>Accent edge · strong</Span>
-        <Div className={`${caseBox} ${edgeCase}`}>
-          <Span className={caseTitle}>Output</Span>
-          <Div className={meterTrack}>
-            <Div className={meterFill} />
-          </Div>
-          <Span className={caseSub}>−6 dB</Span>
-        </Div>
-      </Div>
-    </Div>
   )
 }

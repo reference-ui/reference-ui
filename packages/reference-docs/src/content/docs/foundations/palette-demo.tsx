@@ -2,10 +2,10 @@ import { Div, H3, Span } from '@reference-ui/react'
 import { colors } from '@reference-ui/lib/theme'
 
 /**
- * Palette reference: every colour ramp and its steps, split into neutrals and
+ * Palette reference: every color ramp in lib and its steps, split into neutrals and
  * hues. Swatches paint the shipped value through an inline background, because
  * the values are data, not authored styles. The semantic `text` group holds
- * references to other steps rather than colour values, so it is not a ramp and
+ * references to other steps rather than color values, so it is not a ramp and
  * is left out here.
  */
 type Scale = Record<string, { value: string }>

@@ -1,0 +1,65 @@
+---
+title: Menubar
+section: Components
+order: 32
+slug: menubar
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { MenubarDemo } from './menubar-demo'
+
+# Menubar
+
+Menubar is a horizontal row of menu triggers, like an application's File
+and Edit menus. One value names the open menu, so opening one closes the
+others.
+
+<Preview>
+  <MenubarDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Menu, Menubar } from '@reference-ui/lib'
+
+export function EditorMenubar() {
+  const [open, setOpen] = useState<string | null>(null)
+  return (
+    <Menubar aria-label="Editor" value={open} onChange={setOpen}>
+      <Menubar.Menu value="file">
+        <Menubar.Trigger>File</Menubar.Trigger>
+        <Menubar.Content aria-label="File">
+          <Menu.Item>New</Menu.Item>
+          <Menu.Item>Open</Menu.Item>
+        </Menubar.Content>
+      </Menubar.Menu>
+    </Menubar>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Menubar, Menu } from '@reference-ui/lib'
+```
+
+`Menubar.Content` hosts a [Menu](/menu): put `Menu.Item` and the other menu
+items directly inside it.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string \| null` | — | Required. The open menu's value; `null` when none is open. |
+| `onChange` | `(value: string \| null) => void` | — | Required. Called when the user opens, switches, or closes a menu. |
+| `loop` | `boolean` | `false` | Wrap arrow-key movement at the ends of the bar. |
+
+`Menubar.Menu` takes a `value` (generated when omitted).
+`Menubar.Trigger` and `Menubar.Content` take the props of
+`Popover.Trigger` and `Popover.Content`.
+
+## Behaviour
+
+- The bar is one Tab stop; Left and Right arrows move between triggers.
+- While a menu is open, Left and Right switch to the neighbouring menu.

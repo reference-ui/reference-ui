@@ -7,4 +7,234 @@ slug: tokens
 
 # Tokens
 
-TODO: first draft pending.
+Tokens name your design values once so every style can use the name. Define
+a colour as `brand`, and `color="brand"`, `css({ bg: 'brand' })` and
+`globalCss()` rules all paint it. Change the value in one place and every use
+follows. A token can also carry a light and a dark value, and the page
+switches between them with one attribute.
+
+## Define tokens
+
+Call `tokens()` with a tree of categories. Each leaf is an object with a
+`value`:
+
+```ts
+// src/theme/tokens.ts
+import { tokens } from '@reference-ui/system'
+
+tokens({
+  colors: {
+    brand: { value: '#4f46e5' },
+    ink: { light: '#111111', dark: '#f5f5f5' },
+  },
+  radii: {
+    card: { value: '0.5rem' },
+  },
+  spacing: {
+    gutter: { value: '1.5rem' },
+  },
+})
+```
+
+Put the call in any file your `ui.config.ts` `include` globs cover. The next
+`ref sync` collects it; there is nothing to import or register. You can call
+`tokens()` in as many files as you like. Sync merges every call into one tree,
+and a later definition of the same path wins.
+
+## Use a token
+
+Write the token's path, without the category, as the value of a property that
+takes that category:
+
+```tsx
+import { Div, css } from '@reference-ui/react'
+
+<Div color="ink" borderRadius="card" padding="gutter" />
+
+const panel = css({ bg: 'brand' })
+```
+
+Nested groups join with a dot: a token at `colors.brand.primary` is written
+`brand.primary`. The full spelling, `colors.brand.primary`, also works.
+
+Each token becomes a CSS custom property in the `tokens` layer, named from its
+path in kebab case: `colors.brand.primary` is `--colors-brand-primary`, and a
+camelCase segment such as `cardBg` becomes `card-bg`. A utility uses the
+variable, never the raw value, so changing a token never changes a class
+name.
+
+A value that names no token is written to CSS as you typed it, so
+`color="#ff0000"` and `color="currentColor"` work beside your tokens.
+
+## Categories
+
+The property decides which category a bare token name is looked up in.
+
+| Category | Used by |
+| --- | --- |
+| `colors` | Every colour property: `color`, `background`, `borderColor`, `fill`, … |
+| `spacing` | `margin*`, `padding*`, `gap`, `rowGap`, `columnGap`, `inset`, `top`, `right`, `bottom`, `left` |
+| `sizes` | `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`, `size` |
+| `radii` | `borderRadius` and every corner radius |
+| `fonts` | `fontFamily` (see [Fonts](/fonts)) |
+| `fontSizes` | `fontSize` |
+| `fontWeights` | `fontWeight` |
+| `lineHeights` | `lineHeight` |
+| `letterSpacings` | `letterSpacing` |
+| `shadows` | `boxShadow` |
+| `zIndex` | `zIndex` |
+| `gradients` | `background`, `backgroundImage` |
+| `easings` | `transitionTimingFunction` |
+| `durations` | `transitionDuration` |
+| `animations` | `animation`, `animationName` (see [Animation](/animation)) |
+| `tones` | The amount after a colour's slash (see [Tones](#tones)) |
+
+Shorthand props such as `p` and `bg` use the category of the property they
+stand for.
+
+## Reference another token
+
+Inside any value, `{category.path}` refers to another token. Use it to build
+aliases and composite values:
+
+```ts
+tokens({
+  colors: {
+    red: { 500: { value: '#ef4444' } },
+    danger: { value: '{colors.red.500}' },
+  },
+  shadows: {
+    focus: { value: '0 0 0 3px {colors.danger}' },
+  },
+})
+```
+
+An alias stays a reference in CSS: `--colors-danger` is
+`var(--colors-red-500)`, so overriding `red.500` moves `danger` too. One value
+can hold several references, and references work the same way in `css()`,
+style props and `globalCss()`.
+
+A reference to a token that does not exist fails `ref sync` with an error
+that points at the reference, rather than printing the braces into CSS.
+
+## Light and dark values
+
+Give a token a `light` and a `dark` value instead of `value`, or keep `value`
+as the light default and add `dark`:
+
+```ts
+tokens({
+  colors: {
+    surface: { light: '#ffffff', dark: '#0b0b0f' },
+    text: { value: '#111111', dark: '#f5f5f5' },
+  },
+})
+```
+
+The `tokens` layer prints the light values under
+`:root, [data-color-mode=light]` and the dark values under
+`[data-color-mode=dark]`. Set `data-color-mode` on any element, and every
+token inside it resolves in that mode. Primitives set the attribute for you
+with the `colorMode` prop:
+
+```tsx
+<Div colorMode="dark" bg="surface" color="text">
+  Dark, whatever the page around it uses.
+</Div>
+```
+
+Islands nest: a `colorMode="light"` element inside a dark one is light again.
+The `_dark` and `_light` conditions apply when any ancestor sets that mode,
+even inside a nested island of the other mode; see
+[Style props](/style-props#conditions). Use mode-specific token values when
+the nearest mode must win.
+
+## Opacity
+
+Append `/` and a percentage to a colour token to mix it with transparent:
+
+```tsx
+<Div bg="brand/40" />
+```
+
+This prints `color-mix(in srgb, var(--colors-brand) 40%, transparent)`. It
+also works inside references, such as `{colors.brand/30}` in a shadow.
+
+## Tones
+
+A tone is a named opacity in the `tones` category. Write the tone name after
+the slash instead of a number:
+
+```ts
+tokens({
+  tones: {
+    soft: { surface: { value: '10%' }, line: { value: '30%' } },
+  },
+})
+```
+
+```tsx
+<Div bg="brand/soft" borderWidth="1px" borderStyle="solid" borderColor="brand/soft" />
+```
+
+The property picks the amount. Text, borders, outlines and strokes use
+`line`; backgrounds and every other property use `surface`. A tone with one
+flat `value` serves both. Because the amount is a token too, a theme can
+retune every tinted surface by changing one value.
+
+## Private tokens
+
+Tokens under a `_private` key resolve inside the package that defines them,
+but a project that extends the package never sees them:
+
+```ts
+tokens({
+  colors: {
+    _private: {
+      focusGlow: { value: '#a5b4fc' },
+    },
+  },
+})
+```
+
+Inside the owning package, write `_private.focusGlow`. Use it for values your
+components need that you do not want to offer as public tokens.
+
+## Restrict values to tokens
+
+By default a style prop accepts any CSS value as well as token names. The
+`strict` option in `ui.config.ts` narrows a category to its tokens only:
+
+```ts
+// ui.config.ts
+import { defineConfig } from '@reference-ui/neo'
+
+export default defineConfig({
+  name: 'my-app',
+  include: ['src/**/*.{ts,tsx}'],
+  strict: ['colors', 'spacing'],
+})
+```
+
+`strict` accepts `colors`, `radii` and `spacing`. In strict mode, a raw string
+such as `color="#ff0000"` or a numeric opacity such as `brand/40` is a type
+error in style props and `css()`. Strict colours still accept tones and the
+keywords `white`, `black`, `inherit`, `currentColor` and `transparent`.
+
+## `tokens()` reference
+
+```ts
+function tokens(config: TokenConfig): void
+```
+
+| Leaf key | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | The token's value. Beside `dark`, the light-mode value. |
+| `light` | `string` | Light-mode value. Use with `dark`. |
+| `dark` | `string` | Dark-mode value. |
+
+A leaf needs `value`, `light` or `dark`. Mode values are most common on
+colours, but any category accepts them.
+
+Group keys are free: any key that does not hold a leaf starts a group. A key
+named `_private` starts a private group.

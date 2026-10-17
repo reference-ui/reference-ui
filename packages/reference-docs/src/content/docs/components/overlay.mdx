@@ -1,0 +1,126 @@
+---
+title: Overlay
+section: Components
+order: 11
+slug: overlay
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { OverlayDemo } from './overlay-demo'
+
+# Overlay
+
+Overlay puts content above the page: dialogs, drawers, sheets, and anchored
+panels. It owns layering, dismissal, focus containment, and positioning; role,
+copy, and appearance stay in your markup.
+
+<Preview>
+  <OverlayDemo />
+</Preview>
+
+```tsx
+import { useState } from 'react'
+import { Button, H2, css } from '@reference-ui/react'
+import { Overlay } from '@reference-ui/lib'
+
+const backdrop = css({ bg: 'rgba(0,0,0,0.5)' })
+const centred = css({
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+})
+
+export function DeleteDialog() {
+  const [open, setOpen] = useState(false)
+  return (
+    <Overlay open={open} onOpenChange={setOpen}>
+      <Overlay.Trigger>Delete project</Overlay.Trigger>
+      <Overlay.Backdrop className={backdrop} />
+      <Overlay.Content
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-title"
+        className={centred}
+      >
+        <H2 id="delete-title">Delete project?</H2>
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+      </Overlay.Content>
+    </Overlay>
+  )
+}
+```
+
+## Import
+
+```tsx
+import { Overlay } from '@reference-ui/lib'
+```
+
+## Parts
+
+| Part | Renders | Purpose |
+| --- | --- | --- |
+| `Overlay` | nothing | Owns open state, isolation, and geometry. |
+| `Overlay.Trigger` | `button` | Requests open while closed and dismiss while open. Optional. |
+| `Overlay.Backdrop` | `div` (portalled) | The dismiss surface behind isolating content. |
+| `Overlay.Content` | `div` (portalled) | The layer itself. |
+| `Overlay.Arrow` | `div` | Points at the anchor in anchored mode. |
+| `Overlay.Handle` | `div` | Drag-to-dismiss affordance; valid only with `edge`. |
+| `Overlay.Portal` | nothing | Sets the portal `container`. Optional. |
+
+## Props
+
+### Overlay
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Controlled open state. Omit it to let Overlay manage its own. |
+| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or dismiss request. |
+| `onOpen` | `() => void` | — | Called when the Trigger requests open. |
+| `onDismiss` | `() => void` | — | Called on Escape, outside press, or Trigger toggle, unless a granular handler prevents it. |
+| `onEscape` | `(event: KeyboardEvent) => void` | — | Runs before `onDismiss`; `preventDefault()` keeps the layer open. |
+| `onOutsidePress` | `(event: PointerEvent) => void` | — | Runs before `onDismiss` on an outside press; `preventDefault()` cancels. |
+| `isolation` | `boolean \| { focus?, inert?, scroll? }` | `true` | Focus lock, inert background, and scroll lock. An object patches the all-on bundle. |
+| `anchor` | element, ref, or `{ x, y, width?, height? }` | — | Positions Content against this reference. |
+| `edge` | `'top' \| 'right' \| 'bottom' \| 'left'` | — | Binds Content to a viewport edge (drawer, sheet). |
+| `closeOnScroll` | `boolean` | `false` | Dismiss once when a scrolling ancestor moves the anchor. |
+
+### Overlay.Content
+
+Content takes every `div` prop and style prop, plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `placement` | `'bottom-start'`, `'top'`, … | `'bottom-start'` | Side and alignment in anchored mode. |
+| `offset` | `number` | `8` | Gap in pixels from the anchor or edge. |
+| `collisionPadding` | `number` | `8` | Space kept from the viewport when flipping and shifting. |
+| `initialFocus` | ref, element, function, or `boolean` | first tabbable | Where focus goes on open; `false` skips the move. |
+| `restoreFocus` | ref, element, function, or `boolean` | `true` | Where focus returns after close. |
+
+## Geometry
+
+Overlay picks its geometry from the props you pass:
+
+| You pass | Result |
+| --- | --- |
+| Trigger, default isolation | Unbound dialog; position it with your own CSS. |
+| Trigger and `isolation={false}` | Panel anchored to the Trigger. |
+| `anchor` | Panel anchored to that reference. |
+| `edge` | Panel bound to a viewport edge. |
+
+## Behaviour
+
+- Isolation is on by default: Tab stays inside Content, the rest of the page
+  is inert, and the document does not scroll.
+- Escape closes only the topmost layer when overlays nest.
+- `open={false}` keeps Backdrop and Content mounted until their exit
+  animation finishes. Style the animation against `data-state="open"` and
+  `data-state="closed"`.
+- Overlay does not add `role="dialog"`; set the role and label yourself.
+
+## Related
+
+- [Popover](/popover) and [Tooltip](/tooltip) are policies on this component.
+- [FocusLock](/focus-lock) is the containment it uses for isolation.

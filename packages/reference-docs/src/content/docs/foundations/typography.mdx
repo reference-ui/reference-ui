@@ -5,73 +5,100 @@ order: 3
 slug: typography
 ---
 
-import {
-  EmphasisSamples,
-  FontFamilies,
-  PreSample,
-  QuoteSamples,
-  SentenceOverlay,
-  TechnicalSamples,
-  WordOverlay,
-} from './typography-sections'
-import { HeadingFamilies } from './typography-heading-families'
+import { FontFamilies, InlineSamples, TypeScale } from './typography-sections'
 import { WeightRamp } from './typography-weight-ramp'
 
 # Typography
 
-One grayscale system, three shipped families, and a full weight ramp for each.
-Every text primitive is token-aware, so the same markup reads correctly in light
-and dark.
+`@reference-ui/lib` ships three font families, five named weights for each, and
+a type scale for its text primitives. Body text is `sans` at 16px. You pick a
+family with the `font` prop and a weight with the `weight` prop:
 
-## Headings
+```tsx
+import { P } from '@reference-ui/react'
 
-Each level in all three families, stacked so their baselines can be compared.
+<P font="serif" weight="semibold">Set in Literata at its semibold weight.</P>
+```
 
-<HeadingFamilies />
+Lib defines its families with `font()`, which [Fonts](/fonts) explains.
 
 ## Font families
 
+| Name | Typeface | Stack | Letter spacing |
+| --- | --- | --- | --- |
+| `sans` | Inter | `"Inter", ui-sans-serif, sans-serif` | `-0.01em` |
+| `serif` | Literata | `"Literata", ui-serif, serif` | `normal` |
+| `mono` | JetBrains Mono | `"JetBrains Mono", ui-monospace, monospace` | `-0.04em` |
+
 <FontFamilies />
 
-## Weight ramp
+Each family loads one variable `woff2` file from Google Fonts with
+`font-display: swap`, so text shows in the fallback font until the file
+arrives.
 
-Grouped by weight, each family stacked so the same weight can be compared
-across all three. The number is what that weight resolves to in the family.
+`font="mono"` sets the family, its default weight and its letter spacing. To
+change only the family and keep the element's own size and weight, use
+`fontFamily="mono"`. [Fonts](/fonts) covers the difference.
+
+## Weights
+
+Every family has the same five weight names. A name resolves to a different
+number in each family, tuned so the families look equally heavy side by side.
+
+| Weight | `sans` | `serif` | `mono` |
+| --- | --- | --- | --- |
+| `thin` | 200 | 200 | 100 |
+| `light` | 285 | 300 | 300 |
+| `normal` | 385 | 373 | 393 |
+| `semibold` | 550 | 550 | 590 |
+| `bold` | 650 | 633 | 700 |
+
+`normal` is each family's default. `bold` is the heaviest weight lib ships.
 
 <WeightRamp />
 
-`bold` is the heaviest shipped weight. The `font()` API can still define a
-`black` stop for a custom family.
+## Type scale
 
-## Word overlay
+Lib's text primitives set these sizes. Sizes are in `r`, the spacing unit:
+lib sets `1r` to `0.25rem`, which is 4px at the browser's default font size.
 
-The three families stacked at the same baseline — a quick way to feel the
-difference in rhythm and apertures.
+| Element | Size | Line height | Weight |
+| --- | --- | --- | --- |
+| `H1` | `9r` (36px) | `15r` (60px) | `semibold` |
+| `H2` | `6r` (24px) | `10r` (40px) | `semibold` |
+| `H3` | `5r` (20px) | `10r` (40px) | `semibold` |
+| `H4` | `4.5r` (18px) | `8r` (32px) | `semibold` |
+| `H5` | `4.5r` (18px) | `8r` (32px) | `semibold` |
+| `H6` | `3.5r` (14px), uppercase | `8r` (32px) | `semibold` |
+| `P` | `4r` (16px) | `1.6` | inherited |
+| `Blockquote` | `4.5r` (18px), italic | `1.6` | inherited |
+| `Small` | the CSS `small` keyword | `1.4` | inherited |
 
-<WordOverlay />
+<TypeScale />
 
-## Sentence overlay
+All of them use `sans`. Most use the `design.text.base` color; `Small`,
+`Blockquote` and `Cite` use the lighter `design.text.light` (see
+[Color](/color)). Override any of these with style props, as in
+`<H2 fontSize="8r">`.
 
-<SentenceOverlay />
+## Inline text and code
 
-## Body & inline emphasis
+Lib also styles inline elements. `Code`, `Kbd`, `Samp` and `Pre` use `mono`;
+`Code` is `0.9em` and `Kbd` is `0.85em` of the surrounding text, so they sit in
+a line at any size.
 
-<EmphasisSamples />
-
-## Code & technical
-
-<TechnicalSamples />
+<InlineSamples />
 
 ```tsx
 import { Code, Kbd, P } from '@reference-ui/react'
 
 <P>
-  Use <Code>const</Code>, or press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd>.
+  Declare it with <Code>const</Code>, or press <Kbd>Cmd</Kbd> + <Kbd>S</Kbd> to save.
 </P>
 ```
 
-## Quotations & abbreviations
+## Related
 
-<QuoteSamples />
-
-<PreSample />
+- [Fonts](/fonts): define a family, its weights and its font files.
+- [Spacing](/spacing): the `r` unit.
+- [Color](/color): the text color tokens.

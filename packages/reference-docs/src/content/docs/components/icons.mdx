@@ -1,0 +1,56 @@
+---
+title: Icons
+section: Components
+order: 56
+slug: icons
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { IconsDemo } from './icons-demo'
+
+# Icons
+
+`@reference-ui/lib` exports the Material Symbols icon set as one React
+component per icon, named `<Name>Icon`.
+
+<Preview>
+  <IconsDemo />
+</Preview>
+
+```tsx
+import { HomeIcon, SearchIcon, SettingsIcon } from '@reference-ui/lib'
+
+<SearchIcon aria-label="Search" />
+<SettingsIcon size="lg" aria-label="Settings" />
+<HomeIcon variant="filled" size="lg" aria-label="Home" />
+```
+
+## Import
+
+```tsx
+import { SearchIcon } from '@reference-ui/lib'
+```
+
+Unused icons are removed by tree-shaking in production builds.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg'`, a number of pixels, an `r` value, or a CSS length | `'md'` (20px) | Width and height. `sm` is 16px and `lg` 24px. |
+| `variant` | `'outline' \| 'filled'` | `'outline'` | Glyph style. |
+| `color` | CSS colour | `'inherit'` | Glyph colour; follows the text colour by default. |
+
+Icons render a `div` and accept its DOM props, such as `aria-label`.
+
+## Styling
+
+Style props such as `margin` passed to an icon have no effect from your app.
+Use `size`, `variant`, `style`, or `className`, or wrap the icon in your own
+element:
+
+```tsx
+<Span marginLeft="3r">
+  <CheckIcon />
+</Span>
+```

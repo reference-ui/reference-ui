@@ -5,24 +5,63 @@ order: 2
 slug: color
 ---
 
-import { ColorComposition } from './color-composition'
-import { IntensityGrid, RoleCases, RoleSpecimens, ShadesAndTones } from './colour-sections'
-import { ComplementaryCards, RelationshipGrid } from './colour-relationships'
+import { IntensityGrid, RoleSpecimens, ShadesAndTones } from './color-sections'
 import { ColorModeDemo } from './color-mode-demo'
 import { PaletteDemo } from './palette-demo'
 
 # Color
 
-A colour in use is a shade at a strength. The [palette](#palette) gives you the
-shades. This page covers strength, the role a colour plays, and how colours
-combine.
+`@reference-ui/lib` ships three layers of color tokens:
 
-## Shades and tones
+- **A palette** of 19 color families, each a ramp of 11 shades from `50` to
+  `950`.
+- **Four tones**, `ghost`, `medium`, `firm` and `strong`, that put any shade at a
+  named strength.
+- **Semantic tokens**, such as `design.background` and `design.text.base`, that
+  hold one value for light mode and one for dark mode.
 
-A **shade** is one fixed step of a ramp, such as `blue.500`. A **tone** is a
-colour at a named strength, written `color/tone`: `blue.500/medium` is blue at
-the medium strength. Reference UI ships four tones, `ghost`, `medium`, `firm`
-and `strong`. Each holds two amounts, a surface and a line.
+You write all three as plain values in color props: `bg="blue.500"`,
+`bg="blue.500/medium"`, `color="design.text.base"`. Each is defined with
+`tokens()`, which [Tokens](/tokens) explains.
+
+## Palette
+
+Each family is a ramp of fixed steps: `50`, `100`, then every hundred to `900`,
+then `950`. `50` is the lightest step and `950` the darkest. A step is a
+**shade**. Every value is an `oklch()` color, and a shade is the same in light
+and dark mode.
+
+Name a shade by family and step. The name works in every color prop.
+
+```tsx
+import { Div, P } from '@reference-ui/react'
+
+<Div bg="blue.100" borderColor="blue.300">
+  <P color="blue.900">A light blue surface with a deep blue label.</P>
+</Div>
+```
+
+### Neutrals
+
+`slate` and `gray` are the neutrals. Lib builds most of its own surfaces, borders and
+text from `gray`.
+
+<PaletteDemo group="neutrals" />
+
+### Hues
+
+Seventeen families, in this order: `red`, `orange`, `amber`, `yellow`, `lime`,
+`green`, `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo`, `violet`,
+`purple`, `magenta`, `pink` and `rose`.
+
+<PaletteDemo group="hues" />
+
+## Tones
+
+A **tone** is a shade at a named strength, written `shade/tone`:
+`blue.500/medium` is `blue.500` at the medium strength. The tone mixes the shade
+with transparency, so the result takes on whatever sits behind it: a pale wash
+on a light page and a dim glow on a dark one, with no separate dark value.
 
 <ShadesAndTones />
 
@@ -32,34 +71,30 @@ import { Div } from '@reference-ui/react'
 // A shade: the solid step.
 <Div bg="blue.500" />
 
-// A tone: the same colour at the medium strength.
+// A tone: the same shade at the medium strength.
 <Div bg="blue.500/medium" />
 ```
 
-### Why tones matter
+### Tone values
 
-- **One colour, every strength.** A tone gives a range of tints from one ramp
-  step, so you do not need a palette step for each lightness.
-- **They take on what is behind them.** A tone mixes its colour with
-  transparency, so `blue.500/medium` is a pale wash on a light page and a dim
-  glow on a dark one, with no per-mode value.
-- **They are retuned in one place.** Each amount is a CSS custom property, such
-  as `--tones-medium-surface`, so changing a strength never touches a
-  component. See [custom tones](#custom-tones).
+Each tone holds two amounts. The **surface** amount paints areas. The **line**
+amount is stronger, so edges and text stay visible.
 
-## Roles
-
-A tone draws one of two amounts, and the property you set decides which.
-
-- **Surface** is the lighter amount, for areas: backgrounds and fills.
-- **Line** is the stronger amount, for edges and marks that need to stay visible
-  at a low opacity: borders, outlines, text, strokes, carets, decoration,
-  shadows and column rules.
-
-| Amount | Props | Default range |
+| Tone | Surface | Line |
 | --- | --- | --- |
-| Surface | `bg`, `fill`, `accentColor`, and every colour prop not in the line row | 4% to 18% |
-| Line | `borderColor` (and per side), `outlineColor`, `color`, `webkitTextFillColor`, `stroke`, `caretColor`, `textDecorationColor`, `boxShadow`, `textShadow`, `columnRuleColor` | 22% to 58% |
+| `ghost` | 4% | 22% |
+| `medium` | 10% | 34% |
+| `firm` | 14% | 46% |
+| `strong` | 18% | 58% |
+
+<IntensityGrid />
+
+### Surface and line
+
+The prop you set decides which amount a tone draws. Border and outline props,
+`color`, text decoration, strokes and shadows draw the line amount. Every other
+color prop, including `bg` and `fill`, draws the surface amount.
+[Tokens](/tokens) covers how roles resolve.
 
 <RoleSpecimens />
 
@@ -76,247 +111,85 @@ import { Div, Span } from '@reference-ui/react'
 <Span color="blue.500/strong">Accent label</Span>
 ```
 
-The same tone reads differently by role: `strong` is 18% as a background and 58%
-as a border or as text. Text takes the line amount, so use a shade such as
-`blue.700` for body copy and keep tones for accents.
+Start at `medium`. Move up when a surface has to stand out, and down when it
+competes with the content around it. Use a shade such as `blue.700`, not a tone,
+for body text.
 
-In open mode a numeric suffix such as `blue.500/50` still works for a one-off
-opacity. Prefer a tone, so one change retunes every use.
+To add a tone or change these amounts, define `tones` in your own `tokens()`
+call; see [Tokens](/tokens).
 
-## Intensity
+## Semantic tokens
 
-Four strengths, from the faintest wash to the most emphatic. Each tile fills with
-the surface amount and draws its edge with the line amount, on a light page and
-on a dark one.
+Semantic tokens name a job rather than a color. Each one points at a palette
+shade in light mode and another in dark mode, so components that use them
+follow the active [color mode](#light-and-dark-mode). Lib's components read
+these tokens, and you can use them in your own styles.
 
-<IntensityGrid />
-
-```tsx
-import { Div, css } from '@reference-ui/react'
-
-const firm = css({ bg: 'blue.500/firm', borderColor: 'blue.500/firm' })
-
-<Div colorMode="dark" bg="docsPageBg">
-  <Div className={firm} height="12r" borderWidth="1px" borderStyle="solid" />
-</Div>
-```
-
-Start at `medium`. Move up when a surface has to be found, and down when it
-competes with the content around it.
-
-## Custom tones
-
-Tones are tokens. Add one, or change a default, with `tokens({ tones })`:
-
-```ts
-import { tokens } from '@reference-ui/system'
-
-tokens({
-  tones: {
-    // A flat leaf serves both roles: 6% as a surface and as a line.
-    hush: { value: '6%' },
-    // Splitting the roles overrides a default.
-    medium: { surface: { value: '12%' }, line: { value: '30%' } },
-  },
-})
-```
-
-Each value must be a percentage written `<number>%`, and a leaf can carry a dark
-override like any other token. Then use the tone by name, as in
-`bg="blue.500/hush"`.
-
-A misspelt tone is caught. A bare `bg="blue.500/mediun"` warns with
-`ATM-W-UNKNOWN-TONE`, suggests `medium` and paints the raw value. Inside braces,
-as in `border: '1px solid {colors.blue.500/mediun}'`, it is an error and that
-colour is dropped.
-
-A tone compiles to a `color-mix` over one custom property per role. A flat tone
-such as `hush` has a single property, `--tones-hush`.
-
-```css
-color-mix(in srgb, var(--colors-blue-500) var(--tones-medium-surface), transparent)
-```
-
-## Composition
-
-Base is the shade at full strength. Medium and strong are the same shade at a
-tone. A tone can paint a background, a border, a graph fill or a foreground; only
-the role and the strength change.
-
-<ColorComposition />
-
-Each step is one class that sets two props. `bg` takes the surface amount and
-`borderColor` takes the line amount, so one tone gives a tint and a matching
-edge.
-
-```tsx
-import { css } from '@reference-ui/react'
-
-const surfaceMedium = css({
-  bg: 'blue.500/medium',
-  borderColor: 'blue.500/medium',
-})
-```
-
-## Choosing a strength
-
-The job decides which strength fits, so the same blue can be a resting surface, a
-selection, a data fill or an accent edge.
-
-| Role | Medium | Strong |
+| Token | Light | Dark |
 | --- | --- | --- |
-| Backgrounds | A quiet tinted surface | A selected or emphasised surface |
-| Borders | A faint outline | A soft accent outline |
-| Hover states | A gentle wash | A clearer highlight |
-| Shadows and glows | Ambient colour | A stronger glow |
-| Graph fills | A light area under a line | An emphasised data region |
-| Overlays | A light wash over content | A stronger overlay |
-| Text | Too faint for copy | An accent label, never body copy |
-| Icons | Too faint | Only an accent icon |
-
-<RoleCases />
-
-```tsx
-import { css } from '@reference-ui/react'
-
-const selected = css({ bg: 'blue.500/strong', borderColor: 'blue.500/strong' })
-const graphFill = css({ fill: 'blue.500/medium' })
-const accentEdge = css({ borderColor: 'blue.500/strong' })
-```
-
-## Complementary accents
-
-Start from a blue surface and keep most of the foreground blue. Give the one
-thing that should stand out an accent from the far side of the wheel.
-
-<ComplementaryCards />
-
-Amber sits almost opposite blue, so the pair reads as warm against cool. Use it
-sparingly: one marker or one meter, not every element.
-
-```tsx
-import { Div } from '@reference-ui/react'
-
-<Div
-  bg="blue.500/medium"
-  borderColor="blue.500/medium"
-  borderWidth="1px"
-  borderStyle="solid"
->
-  <Div bg="amber.500" width="3r" height="3r" borderRadius="full" />
-</Div>
-```
-
-## The four relationships
-
-Four ways to pair an accent with blue, by where the accent sits on the wheel.
-
-<RelationshipGrid />
-
-```tsx
-import { Div } from '@reference-ui/react'
-
-<Div bg="blue.400" />    {/* the source */}
-<Div bg="blue.800" />    {/* monochromatic */}
-<Div bg="violet.500" />  {/* analogous */}
-<Div bg="amber.500" />   {/* complementary */}
-<Div bg="orange.500" />  {/* split complementary, with lime.500 */}
-```
-
-## Enforcing tokens
-
-Open mode, the default, accepts any colour. Strict mode narrows colour props to
-your tokens. Turn it on in `ui.config.ts`:
-
-```ts
-import { defineConfig } from '@reference-ui/neo'
-
-export default defineConfig({
-  name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
-  strict: ['colors'],
-})
-```
-
-`strict` takes any of `'colors'`, `'radii'` and `'spacing'`. Any other value
-throws when the config loads.
-
-With `colors` on, colour props accept only a colour token (`blue.500`), a tone
-(`blue.500/medium`), or one of the keywords `white`, `black`, `inherit`,
-`currentColor` and `transparent`. Non-colour props stay open. The check covers
-your own code: JSX props, `css()` and the `css` prop. It does not narrow the props
-of components from `@reference-ui/lib`.
-
-```tsx
-import { Div } from '@reference-ui/react'
-
-// Accepted: a colour token, a tone, or a keyword.
-<Div bg="blue.500/medium" color="currentColor" />
-
-// Type errors: a raw opacity, a hex value, an unknown name.
-<Div bg="blue.500/50" />
-<Div bg="#3b82f6" />
-<Div bg="not-a-token" />
-```
-
-Leave `strict` out to keep open mode, where `blue.500/50` and any CSS colour still
-work. The check runs at the type level, so it shows up in your editor and in
-`tsc`.
-
-## Palette
-
-The palette is one ramp per colour family, from `50` (the lightest step) to `950`
-(the darkest). Each step is a shade: a fixed colour you can name in any colour
-prop. For a colour at a strength rather than a fixed step, use a
-[tone](#shades-and-tones).
-
-### Neutrals
-
-Slate and gray are the neutrals. Use them for surfaces, rules and body text, and
-let the hues carry the meaning.
-
-<PaletteDemo group="neutrals" />
-
-### Hues
-
-Seventeen families, from red through rose. Each is a full ramp, from `50` to
-`950`.
-
-<PaletteDemo group="hues" />
-
-### In use
-
-Name a shade by its family and step. The same name works in every colour prop.
+| `design.background` | `oklch(100% 0 0)` | `gray.950` |
+| `design.foreground` | `gray.950` | `gray.50` |
+| `design.primary.background` | `gray.950` | `gray.100` |
+| `design.primary.foreground` | `gray.50` | `gray.950` |
+| `design.primary.hover.background` | `gray.900` | `gray.50` |
+| `design.accent.foreground` | `blue.600` | `blue.300` |
+| `design.accent.background` | `gray.100` | `gray.950` |
+| `design.accent.hover` | `blue.800` | `blue.300` |
+| `design.accent.border` | `gray.300` | `blue.950` |
+| `design.text.base` | `gray.950` | `gray.50` |
+| `design.text.light` | `gray.700` | `gray.300` |
+| `design.text.lighter` | `gray.600` | `gray.400` |
+| `design.mark.background` | `blue.200` | `blue.950` |
+| `design.mark.foreground` | `blue.950` | `blue.200` |
+| `design.positive.text` | `green.600` | `green.400` |
+| `design.bg.muted` | `gray.100` | `gray.900` |
 
 ```tsx
 import { Div, P } from '@reference-ui/react'
 
-<Div bg="blue.100" borderColor="blue.300">
-  <P color="blue.900">A light blue surface with a deep blue label.</P>
+<Div bg="design.background" color="design.text.base">
+  <P color="design.text.light">Secondary copy that follows the color mode.</P>
 </Div>
 ```
 
-## Light & Dark Mode
+Lib also defines two narrower groups:
 
-Theme-aware tokens resolve to different values without swapping components or
-styles. Toggle the preview scope: the same token names (`docsPageBg`,
-`docsText`, `docsBorder`, …) drive both modes.
+- `text.*`: `text.primary`, `text.secondary`, `text.disabled`, `text.accent`
+  and `text.highlight`.
+- `ui.*`: one group per element, such as `ui.link.default`, `ui.button.hover`
+  and `ui.focus.ring`. Lib's primitives and components style themselves with
+  these. Each is named for one element, so prefer `design.*` in your own code.
+
+TODO: say whether `text.*` is kept alongside `design.text.*` or due to retire.
+Its dark `text.accent` value is `red.800`, darker than its light value.
+
+## Light and dark mode
+
+Light mode is the default. Dark mode applies when an element, or one of its
+ancestors, carries `data-color-mode="dark"`. Lib's stylesheet does not read the
+operating system's `prefers-color-scheme` setting; your app decides the mode.
+
+Set the mode for a subtree with the `colorMode` prop on any primitive. The
+markup and token names stay the same; only the resolved values change.
 
 <ColorModeDemo />
 
-### How it works
-
-Scoping is set with the `colorMode` prop on a primitive, which writes the mode
-to the subtree. Tokens defined with a `dark` override then resolve accordingly —
-the markup is identical in both modes.
-
 ```tsx
 import { Div, P } from '@reference-ui/react'
 
-<Div colorMode="dark" bg="docsPageBg" color="docsText">
-  <P color="docsMuted">Muted copy that adapts to the scope.</P>
+<Div colorMode="dark" bg="design.background" color="design.text.base">
+  <P color="design.text.light">Copy that resolves to its dark values.</P>
 </Div>
 ```
 
-The docs shell uses a single toggle that sets this at the root, so every page
-and every component inherits the active mode.
+To switch the whole page, set `colorMode` on your root element, or set
+`data-color-mode="dark"` on `<html>` or `<body>`.
+
+Only semantic tokens change between modes. Shades are fixed, and a tone adapts
+because it is see-through, not because it has a dark value.
+
+## Related
+
+- [Tokens](/tokens): define colors, tones and light and dark values.
+- [Foundations](/foundations): what lib ships and how to use its tokens in your
+  own code.

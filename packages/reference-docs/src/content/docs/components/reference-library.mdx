@@ -1,0 +1,59 @@
+---
+title: ReferenceLibrary
+section: Components
+order: 10
+slug: reference-library
+---
+
+# ReferenceLibrary
+
+ReferenceLibrary mounts the document-level runtimes: the [Toast](/toast)
+host, the live region behind [`announce()`](/announce), and the
+[Tooltip](/tooltip) skip-delay group. Mount it once near your app root.
+
+```tsx
+import '@reference-ui/lib/styles.css'
+import { ReferenceLibrary } from '@reference-ui/lib'
+
+<ReferenceLibrary toaster={{ defaultPosition: 'bottom-end', limit: 4 }}>
+  <App />
+</ReferenceLibrary>
+```
+
+It is not a context provider. Children render as they are, and Overlay,
+Popover, and Menu work with or without it.
+
+## Import
+
+```tsx
+import { ReferenceLibrary } from '@reference-ui/lib'
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | — | Your app. |
+| `toaster` | object | see below | Defaults for every toast. |
+| `tooltip.skipDelay` | `number` | `300` | Window in milliseconds during which neighbouring tooltips open without delay. |
+
+### `toaster`
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultPosition` | toast position | `'bottom-end'` | Where toasts appear. |
+| `defaultDuration` | `number \| false` | `5000` | Auto-dismiss time in milliseconds. |
+| `limit` | `number` | `4` | Most toasts visible at once. |
+| `closeButton` | `boolean` | — | Show a close button on every toast. |
+| `richColors` | `boolean` | — | Use coloured backgrounds for typed toasts. |
+| `theme` | toast theme | `'light'` | Toast chrome theme. Toast colours follow this, not color mode. |
+| `hotkey` | `string[] \| false` | `['altKey', 'KeyT']` | Key combination that moves focus into the toasts; `false` turns it off. |
+
+## Behaviour
+
+- Mounting more than one is safe: the earliest live mount hosts the
+  runtimes, and another takes over if it unmounts.
+- Mount it inside your `colorMode` root so toasts follow light and dark
+  mode. That root must not set `transform`, `filter`, `contain`, or
+  `container-type`, because the toast stack is `position: fixed`.
+- On the server it renders only its children.

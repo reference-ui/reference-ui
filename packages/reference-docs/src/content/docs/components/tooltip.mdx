@@ -1,0 +1,65 @@
+---
+title: Tooltip
+section: Components
+order: 13
+slug: tooltip
+---
+
+import { Preview } from '../../../mdx/Preview'
+import { TooltipDemo } from './tooltip-demo'
+
+# Tooltip
+
+Tooltip shows a short, non-interactive description of a control on hover or
+keyboard focus, and links it with `aria-describedby`.
+
+<Preview>
+  <TooltipDemo />
+</Preview>
+
+```tsx
+import { Button } from '@reference-ui/react'
+import { Tooltip } from '@reference-ui/lib'
+
+<Tooltip>
+  <Tooltip.Trigger>
+    <Button>Save</Button>
+  </Tooltip.Trigger>
+  <Tooltip.Content>Save the document</Tooltip.Content>
+</Tooltip>
+```
+
+## Import
+
+```tsx
+import { Tooltip } from '@reference-ui/lib'
+```
+
+`Tooltip.Trigger` renders no element of its own: it takes exactly one child
+and adds its props to that child. `Tooltip.Content` renders a `div` with
+`role="tooltip"`. `Tooltip.Arrow` and `Tooltip.Portal` are optional.
+
+## Props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Controlled open state. Omit it to let Tooltip manage its own. |
+| `defaultOpen` | `boolean` | `false` | Initial state when `open` is omitted. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called on every open or close request. |
+| `openDelay` | `number` | `700` | Hover delay before showing, in milliseconds. |
+| `closeDelay` | `number` | `300` | Delay before hiding, in milliseconds. |
+
+`Tooltip.Content` takes `placement` (default `'top'`) and `offset` (default
+`8`), as on [`Overlay.Content`](/overlay#overlaycontent).
+
+## Behaviour
+
+- Keyboard focus opens the tooltip immediately; hover waits for `openDelay`.
+- After one tooltip shows, neighbouring tooltips open without delay for a
+  short window (300ms by default; set it on
+  [ReferenceLibrary](/reference-library)).
+- Escape hides the tooltip without closing a parent overlay.
+- Content unmounts as soon as it closes; there is no exit animation. For an
+  interactive or animated panel, use [Popover](/popover) with `openOnHover`.
+- If Content has no `id`, Tooltip generates one and wires
+  `aria-describedby` onto the trigger.
