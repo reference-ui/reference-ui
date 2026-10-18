@@ -1,0 +1,10 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-MISSING-STYLE-PLAN",
+    "message": "`p: 1r` has no compiled style plan; this lookup will emit no class",
+    "help": [
+      "make the 'p: 1r' lookup static so the plan can serve it"
+    ]
+  }
+]

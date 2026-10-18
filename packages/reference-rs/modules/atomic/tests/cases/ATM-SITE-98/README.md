@@ -1,0 +1,25 @@
+# ATM-SITE-98 — A same-file css wrapper around a package tag threads external, so the call-site css backs the package's qualifier
+
+A small wrapper that forwards its `css` prop is the common way to reuse a
+component: `const Wrap = ({ css }) => <Button css={css} />`. Here `Button` comes
+from `@reference-ui/lib/primitives`, an installed package whose runtime mints
+classes under lib's own system name, and the call site writes
+`<Wrap css={{ color: 'blue' }} />`. The twin `OwnWrap` forwards its `css` into
+Reference's own `Div` and is called with `css={{ bg: 'red' }}`.
+
+The `css` threading pre-pass reads the same ownership verdict as the JSX walk,
+not the bare name. `Wrap` forwards into a package tag, so its call-site `css`
+lowers as an external want: with one composed upstream
+(`upstreamSystems: ['upstream']`) it plans and paints `upstream__c_blue`, there
+is no `@reference-ui/lib__c_blue` class, and no `ATM-W-MISSING-STYLE-PLAN`
+names `color` (a wrapper recorded as own pointed that warning the wrong way).
+`OwnWrap` forwards into an own host, so its call-site `css` stays own and plans
+`@reference-ui/lib__bg_red`.
+
+The spec compiles twice: the default request (no roster, no upstream; the
+goldens) and Core's request with the primitive roster (`jsxHosts: ['Button']`)
+and the upstream. Nothing is configured by the user. Siblings: ATM-SITE-96
+(direct package import), ATM-SITE-97 (barrel re-export), ATM-SITE-99 (published
+wrapper name).
+
+> Search terms: ownership, provenance, css wrapper, css forwarding, wrapper threading, is_css_forward, HostGate, call-site css, external want, package tag, lib primitives, MISSING-STYLE-PLAN, upstreamSystems
