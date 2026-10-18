@@ -17,17 +17,19 @@ Nothing configures `jsxElements`; ownership comes from provenance alone.
 `@fixtures/primitive-named-library` is a third-party package built on
 Reference UI: it exports the generated `Button` primitive bound to its own
 name, `Tile` (forwards style props, published in `jsxElements`) and `Chip`
-(owns `size`, published in `jsxOwned`). Extending it merges `Button`, `Tile`
-and `Chip` into the app's host roster, which is what today's name-based gate
-trips on. Icons are composed directly in `layers` (plan §9.5), which adds the
-`reference-icons` qualifier and its CSS, not hosts.
+(owns `size`, published in `jsxOwned`). Extending it sends its published
+names with the compile request apart from the app's own hosts
+(`upstreamHosts`); the name-based gate this tier was written against merged
+them into the host roster and tripped on them. Icons are composed directly in
+`layers` (plan §9.5), which adds the `reference-icons` qualifier and its CSS,
+not hosts.
 
 ## Probes
 
 One source file per import shape, each with its own novel consumer token
 (`src/tokens.ts`), so one probe's fan-out never backs another's class.
 
-| File | Shape | Runtime prefix | Today |
+| File | Shape | Runtime prefix | Before provenance |
 | --- | --- | --- | --- |
 | `lib-button.tsx` | `import { Button } from '@reference-ui/lib/primitives'` | `reference-ui__` | pass |
 | `namespace-button.tsx` | `import * as Acme from '@fixtures/…'; <Acme.Button>` | `primitive-named-library__` | pass |
@@ -38,10 +40,10 @@ One source file per import shape, each with its own novel consumer token
 | `wrapper-button.tsx` | same-file `css` wrapper around lib's `Button` | `reference-ui__` | red (probe 3) |
 | `tile.tsx` | `<Tile padding>`, a published `jsxElements` name | `primitive-named-library__` | red (probe 1b) |
 
-The red probes are backed today only as `chain-t18__<stem>`, so the runtime
-class (`primitive-named-library__c_t18AcmeInk`, …) is unbacked, paints nothing
-and logs `no compiled class`. The wrapper also draws three misleading
-`ATM-W-MISSING-STYLE-PLAN` warnings at sync.
+Before provenance the red probes were backed only as `chain-t18__<stem>`, so
+the runtime class (`primitive-named-library__c_t18AcmeInk`, …) was unbacked,
+painted nothing and logged `no compiled class`; the wrapper also drew three
+misleading `ATM-W-MISSING-STYLE-PLAN` warnings at sync. All of them pass now.
 
 ## Icons composition (sync level)
 
@@ -53,32 +55,32 @@ installed `ref sync <dir> --json`:
 - `tests/sync/unbacked` composes nothing: sync must still succeed (pass), the
   unstyled icon draws no warning (pass), and the styled icon must warn
   `ATM-W-EXTERNAL-UNBACKED` once, at its line, naming `@reference-ui/icons`
-  (red: today the batch is `[]`, the silent failure of plan probe 4).
+  (before plan S3 the batch was `[]`, the silent failure of plan probe 4).
 
 ## Contract
 
-1. Each probe's runtime mints its own system's class (passes today; pins
-   that every red failure is the compile half).
+1. Each probe's runtime mints its own system's class (pins that any
+   backing failure is the compile half).
 2. The sheet backs that exact class for the probe stem, never
    `chain-t18__<stem>`, and the element computes the consumer token.
 3. Every class under the root has a backing rule; zero `no compiled class`
    warnings during render.
 4. Probe tokens are absent from every published sheet (novelty).
-5. While the red tier stands: every class on the passing probes is backed,
-   and every runtime miss names a red probe's stem.
+5. Every class on the probes that passed before provenance is backed, and
+   every runtime miss names a provenance probe's stem (the red-tier guard).
 
 ## Red tier and the flip
 
-The red tests are marked expected-fail (`test.fail` in Playwright,
-`it.fails` in vitest): the suite is green while they fail, and both runners
-fail a marked test that starts passing, so a stale mark cannot hide.
+The tier was written red: the provenance tests were marked expected-fail
+(`test.fail` in Playwright, `it.fails` in vitest), and both runners fail a
+marked test that starts passing, so a stale mark cannot hide.
 
-- After plan S1 + S5 land: set `PROVENANCE_LANDED = true` in
-  `tests/e2e/T18-contract.spec.ts`. Flips the four red probe tests plus the
-  two root-wide checks (every class backed, zero misses). The probe
-  `status` field in `src/probe.ts` can then go.
-- After plan S3 lands: set `EXTERNAL_UNBACKED_LANDED = true` in
-  `tests/unit/icons-composition.test.ts`.
+Both flips have landed: `PROVENANCE_LANDED = true` in
+`tests/e2e/T18-contract.spec.ts` (plan S1 + S5: the four provenance probes
+plus the two root-wide checks, every class backed and zero misses) and
+`EXTERNAL_UNBACKED_LANDED = true` in `tests/unit/icons-composition.test.ts`
+(plan S3). The probe `status` field in `src/probe.ts` and the contract's
+check 5 now only guard against a regression and can go.
 
 ## Run
 

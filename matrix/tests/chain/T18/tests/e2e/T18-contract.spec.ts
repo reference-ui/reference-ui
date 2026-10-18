@@ -18,21 +18,21 @@ import {
  * Each probe renders through another package's bundled runtime, so its
  * class carries that package's system name, and the consumer sheet must back
  * exactly that class with the consumer token. The `provenance` probes are the
- * shapes today's name-based gate gets wrong (plan probes 1, 1b, 2, 3): it
- * backs them under `chain-t18__` instead, so they paint nothing and the
- * runtime warns `no compiled class`.
+ * shapes the old name-based gate got wrong (plan probes 1, 1b, 2, 3): it
+ * backed them under `chain-t18__` instead, so they painted nothing and the
+ * runtime warned `no compiled class`.
  *
- * RED TIER. Until the provenance gate lands (component-ownership plan S1,
- * with S5 moving upstream rosters out of the own hosts) those tests are
- * expected to fail. Flip `PROVENANCE_LANDED` to true once S1 + S5 are on the
- * branch: every expected failure then has to pass, and Playwright fails any
- * that still pass while marked, so a stale mark cannot hide.
+ * The provenance gate has landed (component-ownership plan S1, with S5
+ * sending upstream rosters apart from the own hosts), so `PROVENANCE_LANDED`
+ * is true and every probe must pass. Setting it back to false marks the
+ * provenance tests expected-fail again; Playwright fails a marked test that
+ * passes, so a stale mark cannot hide.
  *
  * Re-sync order (as T17): `ref sync` lib, rebuild the fixture, matrix
  * `setup --packages=@matrix/chain-t18 --sync`, then this spec. A stale
  * `.reference-ui` is the classic false pass.
  */
-const PROVENANCE_LANDED = false
+const PROVENANCE_LANDED = true
 const PROVENANCE_PENDING =
   'RED until component-ownership S1 + S5: a Package-bound tag is still gated by name and backed under chain-t18__'
 

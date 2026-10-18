@@ -19,11 +19,12 @@ import { beforeAll, describe, expect, it } from 'vitest'
  *
  * The browser half (an icon paints when composed) is the T18 app's `t18-icon`.
  *
- * RED TIER. Today the uncomposed icon is dropped silently (plan probe 4).
- * Flip `EXTERNAL_UNBACKED_LANDED` to true once the warning (plan S3, on top
- * of S1) is on the branch; vitest then fails if the marked test still fails.
+ * The warning has landed (plan S3, on top of S1), so
+ * `EXTERNAL_UNBACKED_LANDED` is true. Before it, the uncomposed icon was
+ * dropped silently (plan probe 4); setting the flag back to false marks that
+ * test `it.fails` again, and vitest fails a marked test that passes.
  */
-const EXTERNAL_UNBACKED_LANDED = false
+const EXTERNAL_UNBACKED_LANDED = true
 const UNBACKED_CODE = 'ATM-W-EXTERNAL-UNBACKED'
 const SYNC_TIMEOUT_MS = 240_000
 
