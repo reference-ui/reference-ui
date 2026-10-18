@@ -175,3 +175,30 @@ export function ButtonBlockDefault() {
     </Div>
   )
 }
+
+export function ButtonIconColorFixture() {
+  return (
+    <Div data-testid="button-icon-color-root" p="6r" display="flex" gap="3r">
+      <Button type="button" data-testid="icon-color-default">
+        <AddIcon />
+        <span>Default</span>
+      </Button>
+      <Button type="button" variant="primary" data-testid="icon-color-primary">
+        <AddIcon />
+        <span>Primary</span>
+      </Button>
+      <Button type="button" variant="ghost" data-testid="icon-color-ghost">
+        <AddIcon />
+        <span>Ghost</span>
+      </Button>
+      <button type="button" data-testid="icon-color-native" style={{ color: 'rgb(200, 30, 30)' }}>
+        <AddIcon />
+        <span>Native</span>
+      </button>
+      <Button type="button" variant="primary" data-testid="icon-color-explicit">
+        <AddIcon color="red.500" />
+        <span>Explicit</span>
+      </Button>
+    </Div>
+  )
+}

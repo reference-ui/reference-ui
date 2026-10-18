@@ -2,7 +2,10 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography } from './shared'
 
 export const base = {
-  '.ref-div': {
+  // The icon shell is a Div but must inherit its container's colour (e.g. a
+  // primary Button's label). Icons ship in an earlier cascade layer, so a pin
+  // here would beat both their `color: inherit` default and an explicit colour.
+  '.ref-div:not([data-slot="icon"])': {
     ...baseTypography,
   },
 

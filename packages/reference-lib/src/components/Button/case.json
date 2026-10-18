@@ -80,6 +80,13 @@
       "kind": "ct",
       "file": "__e2e__/Button.ct.spec.ts",
       "title": "bare primitive Button is inline shrink-to-fit, matching native button"
+    },
+    {
+      "id": "LIB-BUTTON-012",
+      "name": "BT-ICON-01: icons follow the button text colour unless a colour is passed",
+      "kind": "ct",
+      "file": "__e2e__/Button.ct.spec.ts",
+      "title": "BT-ICON-01: icons follow the button text colour unless a colour is passed"
     }
   ]
 }

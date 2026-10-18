@@ -2,7 +2,8 @@ import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText, focusRingStyles } from './shared'
 
 export const documentPrimitiveStyles = {
-  '.ref-div, .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
+  // Icon shells are Divs; leave their colour to the icon (see base.ts).
+  '.ref-div:not([data-slot="icon"]), .ref-main, .ref-header, .ref-footer, .ref-section, .ref-article, .ref-aside, .ref-nav, .ref-search, .ref-form, .ref-address, .ref-hgroup':
     {
       ...baseTypography,
     },
