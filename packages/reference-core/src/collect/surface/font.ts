@@ -1,6 +1,6 @@
 // Author font() call plus its fragment collector.
 // It takes font definitions from fragment files and emits collected entries.
-// This module is a Neo-owned copy of the core font collector.
+// This module is a core-owned copy of the retired reference-core font collector.
 
 import { createFragmentFunction } from '../lib/collector.ts'
 

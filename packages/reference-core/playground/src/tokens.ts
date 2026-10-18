@@ -5,7 +5,7 @@
 // radii. ink, paper, and brand carry dark leaves, so they flip with the shell
 // theme on their own and need no twins; the palette ramps have none, so pages
 // carry explicit _dark twins wherever they use them.
-import { tokens } from '@reference-ui/neo';
+import { tokens } from '@reference-ui/core';
 
 // The playground's mini token set: tailwind's palette copied verbatim from
 // lib's emitted sheet (oklch), plus our semantic trio (ink/paper flip via

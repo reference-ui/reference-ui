@@ -1,27 +1,27 @@
-// MCP token surface re-expressed onto Neo fragment evaluation (row 10).
+// MCP token surface re-expressed onto Core fragment evaluation (row 10).
 // It takes a project root plus config and emits flattened MCP tokens.
-// Collection mirrors core's retired tokens/load flow — scan fragment files,
+// Collection mirrors the retired reference-core's tokens/load flow — scan fragment files,
 // bundle against the author entry, evaluate the tokens collector, flatten —
-// but every seam is Neo's: the scanner, runner, and tokens collector are
-// bundled Neo modules, and `_private` keeps core's boundary semantics
-// (stripped from upstream fragments, visible on local ones) because Neo
+// but every seam is Core's: the scanner, runner, and tokens collector are
+// bundled Core modules, and `_private` keeps the retired reference-core's boundary semantics
+// (stripped from upstream fragments, visible on local ones) because Core
 // tags fragments with the same source property and literal.
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { ReferenceUIConfig } from '@reference-ui/neo/config/types'
+import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
 import type {
   ReferenceTokenConfig,
   ReferenceTokenLeaf,
-} from '@reference-ui/neo/fragments/tokens'
-import { createTokensCollector } from '@reference-ui/neo/fragments/tokens'
-import { scanForFragments } from '@reference-ui/neo/fragments/scanner'
-import { bundleFragments } from '@reference-ui/neo/fragments/runner'
-import { fragmentNodesOf, linearizeFragmentNodes } from '@reference-ui/neo/system/base/fragments'
-import { getMcpFragmentImportMap, MCP_FRAGMENT_NEEDLES } from '../neo/author-entry'
-import { getOutDirPath } from '../neo/paths'
+} from '@reference-ui/core/fragments/tokens'
+import { createTokensCollector } from '@reference-ui/core/fragments/tokens'
+import { scanForFragments } from '@reference-ui/core/fragments/scanner'
+import { bundleFragments } from '@reference-ui/core/fragments/runner'
+import { fragmentNodesOf, linearizeFragmentNodes } from '@reference-ui/core/system/base/fragments'
+import { getMcpFragmentImportMap, MCP_FRAGMENT_NEEDLES } from '../core/author-entry'
+import { getOutDirPath } from '../core/paths'
 import type { McpToken } from './types'
 
 export type { McpToken } from './types'
@@ -70,9 +70,9 @@ function wrapBundleWithSource(bundle: string, source: string): string {
 type UpstreamFragmentNode = ReturnType<typeof fragmentNodesOf>[number]
 
 /**
- * The upstream fragment nodes MCP evaluates, in Neo's order: each extends entry's nodes, each name kept at its
+ * The upstream fragment nodes MCP evaluates, in Core's order: each extends entry's nodes, each name kept at its
  * first occurrence, so a shared base evaluates once, in the first branch that reaches it. A legacy entry that
- * carries only `fragment` reads as one opaque node, exactly as Neo reads it.
+ * carries only `fragment` reads as one opaque node, exactly as Core reads it.
  */
 export function getUpstreamFragments(
   systems: ReferenceUIConfig['extends']

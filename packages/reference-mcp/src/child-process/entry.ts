@@ -1,10 +1,10 @@
 import { resolve } from 'node:path'
-import { setConfig, setCwd } from '@reference-ui/neo/config/store'
-import { loadUserConfig } from '../neo/config-load'
+import { setConfig, setCwd } from '@reference-ui/core/config/store'
+import { loadUserConfig } from '../core/config-load'
 import {
   ConfigNotFoundError,
   ConfigValidationError,
-} from '@reference-ui/neo/config/errors'
+} from '@reference-ui/core/config/errors'
 import { buildMcpArtifact, prefetchMcpAtlas } from '../pipeline/build'
 import { getMcpModelPath } from '../pipeline/paths'
 
@@ -70,7 +70,7 @@ async function main(): Promise<void> {
       errMsg.includes('Invalid ui.config')
     const isMissingArtifacts =
       errMsg.includes('manifest.js') ||
-      errMsg.includes('neo sync') ||
+      errMsg.includes('core sync') ||
       errMsg.includes('ref sync')
 
     const errorType = isConfigNotFound

@@ -1,5 +1,5 @@
 /**
- * Mirrors `reference-core` `StyleProps`:
+ * Mirrors the retired `reference-core` `StyleProps`:
  * `Omit<SystemStyleObject, 'font' | 'weight' | 'container' | 'r'> & ReferenceProps`
  *
  * If Tasty only projects the `ReferenceProps` branch, `getDisplayMembers` would miss
@@ -30,7 +30,7 @@ export type FontPropsCore = {
 
 export type ReferencePropsCore = ContainerPropsCore & ResponsivePropsCore & FontPropsCore
 
-/** Same structural idea as `packages/reference-core/src/types/style-props.ts` `StyleProps`. */
+/** Same structural idea as the retired `packages/reference-core/src/types/style-props.ts` `StyleProps`. */
 export type StylePropsCore = Omit<
   SystemStyleObjectCore,
   'font' | 'weight' | 'container' | 'r'

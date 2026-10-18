@@ -1,9 +1,9 @@
 /**
  * Vendored primitives declaration file, mechanically copied from the reference-rs generator output.
- * It carries the exact upstream bytes with explicit NodeNext specifiers, so neo typechecks without touching reference-rs.
+ * It carries the exact upstream bytes with explicit NodeNext specifiers, so core typechecks without touching reference-rs.
  * Do not edit this copy; regenerate it with the vendor tool after re-running the primitives generator.
  * @generated from @reference-ui/rust@0.0.42 modules/primitives/generated/primitives.d.ts
- * Regen: pnpm --filter @reference-ui/rust run primitives && cd packages/reference-neo && node tools/vendor-rust-primitives.mjs
+ * Regen: pnpm --filter @reference-ui/rust run primitives && cd packages/reference-core && node tools/vendor-rust-primitives.mjs
  */
 
 /**

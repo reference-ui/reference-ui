@@ -3,7 +3,7 @@ import { tokens } from '@reference-ui/system'
 type ReferenceBrowserTokenConfig = Parameters<typeof tokens>[0]
 
 /**
- * Reference UI browser token palette for this package — **owned here** (mirror of
+ * Reference UI browser token palette for this package — **owned here** (formerly mirrored into the retired
  * `reference-core/src/reference/browser/theme/tokens.ts`). Edit this file; run `ref sync`.
  */
 export const referenceBrowserTokenConfig = {

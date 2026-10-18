@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { loadMcpTokens } from './tokens'
 
-describe('loadMcpTokens (Neo fragment evaluation)', () => {
+describe('loadMcpTokens (Core fragment evaluation)', () => {
   let dir: string
 
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('loadMcpTokens (Neo fragment evaluation)', () => {
     mkdirSync(join(dir, 'src'), { recursive: true })
     writeFileSync(
       join(dir, 'src', 'tokens.ts'),
-      `import { tokens } from '@reference-ui/neo'\n\ntokens({\n  colors: {\n    localPublic: { value: '#ffffff' },\n    _private: {\n      localSecret: { value: '#aaaaaa' },\n    },\n  },\n})\n`
+      `import { tokens } from '@reference-ui/core'\n\ntokens({\n  colors: {\n    localPublic: { value: '#ffffff' },\n    _private: {\n      localSecret: { value: '#aaaaaa' },\n    },\n  },\n})\n`
     )
   })
 

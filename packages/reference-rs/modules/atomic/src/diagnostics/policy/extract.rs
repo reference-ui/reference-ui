@@ -18,7 +18,7 @@ pub fn render(report: &ExtractReport) -> Diagnostic {
 }
 
 /// The instance help for one refusal shape at one style prop: the static
-/// remedy echoed with the refused names, so Neo prints this over the table.
+/// remedy echoed with the refused names, so Core prints this over the table.
 fn help_lines(code: DiagnosticCode, detail: &ExtractDetail, prop: &str) -> Vec<String> {
     match detail {
         ExtractDetail::Leaf(leaf) => leaf_help(code, leaf, prop),

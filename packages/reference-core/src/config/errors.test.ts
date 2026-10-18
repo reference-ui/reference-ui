@@ -1,4 +1,4 @@
-// Unit tests for the Neo config error surface.
+// Unit tests for the Core config error surface.
 // They take a constructed cause and assert the LoadConfigError message, with
 // focus on the upstream-sync hint appended for Reference UI module-resolution
 // misses. No filesystem or resolver work: causes are built in-place.

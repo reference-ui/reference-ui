@@ -1,4 +1,4 @@
-// Vitest configuration for the Neo host unit tests.
+// Vitest configuration for the Core host unit tests.
 // It takes no input and emits a Node environment scoped to unit tests.
 // Src unit tests (colocated or in tests/ folders) plus harness and bin unit tests run here; browser proof stays in cases.
 

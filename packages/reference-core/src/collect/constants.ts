@@ -6,15 +6,14 @@
 // Fragment discovery needles: the module ids whose imports mark a fragment
 // file. Shared by the TS and native scans so the union can never drift.
 export const FRAGMENT_IMPORT_NEEDLES = [
-  '@reference-ui/neo',
-  '@reference-ui/neo/config',
-  '@reference-ui/system',
+  '@reference-ui/core',
   '@reference-ui/core/config',
+  '@reference-ui/system',
   '@reference-ui/cli/config',
 ]
 
 // Source tag for upstream bundles when the extends entry carries no name.
-// Neo tags named upstreams with their system names instead, so the private
+// Core tags named upstreams with their system names instead, so the private
 // gate matches membership in the upstream name set — never this literal
 // alone, or every named upstream would leak through.
 export const UPSTREAM_FRAGMENT_SOURCE = 'upstream system fragment'

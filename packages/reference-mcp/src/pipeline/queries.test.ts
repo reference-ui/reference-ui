@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_OUT_DIR } from '../neo/paths'
+import { DEFAULT_OUT_DIR } from '../core/paths'
 import type { McpBuildArtifact } from './types'
 import {
   compactComponent,

@@ -25,7 +25,7 @@ export function tokensFile(rng: Rng, plan: LoadPlan): string {
     spacing.push(`    ${spaceName(i)}: { value: '${(i + 1) * 0.25}rem' },`)
   }
   return [
-    "import { tokens } from '@reference-ui/neo'",
+    "import { tokens } from '@reference-ui/core'",
     '',
     'tokens({',
     '  colors: {',
@@ -83,7 +83,7 @@ export function appTokensFile(plan: LoadPlan): string {
     spacing.push(`    '${appSpaceName(i)}': { value: '${(i + 1) * 0.25}rem' },`)
   }
   return [
-    "import { tokens } from '@reference-ui/neo'",
+    "import { tokens } from '@reference-ui/core'",
     '',
     'tokens({',
     '  colors: {',

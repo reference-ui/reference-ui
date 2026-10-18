@@ -1,4 +1,4 @@
-// Unit tests for the Neo primitive factory.
+// Unit tests for the Core primitive factory.
 // They take stub css plus props and assert the rendered host attrs.
 // Server rendering stands in for the browser; the case proves the paint.
 

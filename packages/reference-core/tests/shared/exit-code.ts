@@ -1,5 +1,5 @@
 /**
- * Exit codes for the child processes the neo tooling runs. A child killed by a signal has no exit code and
+ * Exit codes for the child processes the core tooling runs. A child killed by a signal has no exit code and
  * must never read as success, so exitCodeOf maps it to 128 plus the signal number (the shell convention) and
  * names the signal. execExitCode reads the error execFile reports for a failed child under the same rule.
  */

@@ -1,4 +1,4 @@
-// Single-sync child worker for Neo benchmarks.
+// Single-sync child worker for Core benchmarks.
 // It takes a project dir plus a sample interval and emits one JSON line.
 // RSS sampling runs on an interval around sync(), so the peak reflects the compile itself.
 // The parent spawns one fresh worker per run: every RSS baseline starts cold.

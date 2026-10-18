@@ -97,7 +97,7 @@ interface StandIn {
 }
 
 async function startStandIn(mood: string, ms = 0): Promise<StandIn> {
-  const cwd = mkdtempSync(join(tmpdir(), 'neo-covered-'))
+  const cwd = mkdtempSync(join(tmpdir(), 'core-covered-'))
   tempDirs.push(cwd)
   const script = join(cwd, 'stand-in.mjs')
   writeFileSync(script, STAND_IN)

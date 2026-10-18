@@ -17,9 +17,9 @@ const PRIMITIVE_DECLARATIONS_ENTRY_STEMS: &[&str] = &[
     "index",
 ];
 
-/// Neo primitive surfaces. Neo publishes no `react/system/`; its `react.d.mts`
+/// Core primitive surfaces. Core publishes no `react/system/`; its `react.d.mts`
 /// declares every primitive, so it doubles as the primitive entrypoint.
-const NEO_PRIMITIVE_ENTRY_FILES: &[&str] = &[
+const CORE_PRIMITIVE_ENTRY_FILES: &[&str] = &[
     ".reference-ui/react/react.d.mts",
     "react/react.d.mts",
 ];
@@ -74,7 +74,7 @@ fn primitive_declaration_candidates(declaration_root: &Path) -> Vec<PathBuf> {
             }
         }
     }
-    for relative in NEO_PRIMITIVE_ENTRY_FILES {
+    for relative in CORE_PRIMITIVE_ENTRY_FILES {
         let candidate = declaration_root.join(relative);
         if candidate.is_file() {
             candidates.push(candidate);

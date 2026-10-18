@@ -12,11 +12,11 @@ describe('matrix runner consumer helpers', () => {
   it('collects only workspace protocol dependency names', () => {
     assert.deepEqual(
       collectWorkspaceProtocolDependencyNames({
-        '@reference-ui/neo': 'workspace:*',
+        '@reference-ui/core': 'workspace:*',
         react: '^19.2.0',
         '@reference-ui/lib': 'workspace:^',
       }),
-      ['@reference-ui/neo', '@reference-ui/lib'],
+      ['@reference-ui/core', '@reference-ui/lib'],
     )
   })
 
@@ -25,30 +25,30 @@ describe('matrix runner consumer helpers', () => {
       createStagedTarballFileName({
         hash: '1234567890abcdef',
         internalDependencies: [],
-        name: '@reference-ui/neo',
-        sourceDir: '/tmp/neo',
-        tarballFileName: 'reference-ui-neo-0.0.41.tgz',
-        tarballPath: '/tmp/neo.tgz',
+        name: '@reference-ui/core',
+        sourceDir: '/tmp/core',
+        tarballFileName: 'reference-ui-core-0.0.41.tgz',
+        tarballPath: '/tmp/core.tgz',
         version: '0.0.41',
       }),
-      'reference-ui-neo-0.0.41-12345678.tgz',
+      'reference-ui-core-0.0.41-12345678.tgz',
     )
   })
 
   it('resolves staged tarball specs for workspace protocol dependencies', () => {
     const manifestPackages: RegistryManifestPackage[] = [
       {
-        hash: 'neohash123456789',
+        hash: 'corehash123456789',
         internalDependencies: [],
-        name: '@reference-ui/neo',
-        sourceDir: '/tmp/neo',
-        tarballFileName: 'reference-ui-neo-0.0.41.tgz',
-        tarballPath: '/tmp/neo.tgz',
+        name: '@reference-ui/core',
+        sourceDir: '/tmp/core',
+        tarballFileName: 'reference-ui-core-0.0.41.tgz',
+        tarballPath: '/tmp/core.tgz',
         version: '0.0.41',
       },
       {
         hash: 'libhash1234567890',
-        internalDependencies: ['@reference-ui/neo'],
+        internalDependencies: ['@reference-ui/core'],
         name: '@reference-ui/lib',
         sourceDir: '/tmp/lib',
         tarballFileName: 'reference-ui-lib-0.0.44.tgz',
@@ -61,7 +61,7 @@ describe('matrix runner consumer helpers', () => {
       resolveMatrixInternalTarballSpecs(
         {
           dependencies: {
-            '@reference-ui/neo': 'workspace:*',
+            '@reference-ui/core': 'workspace:*',
             react: '^19.2.0',
           },
           devDependencies: {
@@ -76,10 +76,10 @@ describe('matrix runner consumer helpers', () => {
       ),
       [
         {
-          absoluteTarballPath: '/tmp/neo.tgz',
-          packageName: '@reference-ui/neo',
-          specifier: 'file:.matrix-tarballs/reference-ui-neo-0.0.41-neohash1.tgz',
-          stagedFileName: 'reference-ui-neo-0.0.41-neohash1.tgz',
+          absoluteTarballPath: '/tmp/core.tgz',
+          packageName: '@reference-ui/core',
+          specifier: 'file:.matrix-tarballs/reference-ui-core-0.0.41-corehash1.tgz',
+          stagedFileName: 'reference-ui-core-0.0.41-corehash1.tgz',
         },
         {
           absoluteTarballPath: '/tmp/lib.tgz',

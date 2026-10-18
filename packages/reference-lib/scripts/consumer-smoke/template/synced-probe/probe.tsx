@@ -10,7 +10,7 @@ export interface SmokeFrameProps extends Omit<PrimitiveProps<'div'>, 'children'>
   label?: string
 }
 
-// 1. A Neo primitive reached through lib.
+// 1. A Core primitive reached through lib.
 export const buttonOff = <Button color="smokeOffToken" />
 export const buttonOn = <Button color="smoke.ink" />
 

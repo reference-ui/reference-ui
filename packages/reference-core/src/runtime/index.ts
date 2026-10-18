@@ -1,4 +1,4 @@
-// Public surface for the Neo style runtime, served to node as @reference-ui/neo/runtime.
+// Public surface for the Core style runtime, served to node as @reference-ui/core/runtime.
 // It takes nothing and re-exports css, recipe, plan registration, plus the
 // unbound styled type graph. Worlds import the generated bundle while specs
 // import this source entry, so the specifier stays put no matter how deep

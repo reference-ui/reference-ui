@@ -16,7 +16,7 @@ const spec: AtomicCaseSpec = {
     )
     // Twin catalog: the `_x` member mints through the twin of authored
     // `__x` while the plan survives carrying the full object value, so
-    // the runtime namer must mint it too (NEO-NAMER-01).
+    // the runtime namer must mint it too (CORE-NAMER-01).
     const twinPlan = result.stylePlans.find(
       p =>
         p.prop === 'color' &&

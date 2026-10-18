@@ -1,8 +1,8 @@
-// Ref forwarding tests for the Neo primitive factory.
+// Ref forwarding tests for the Core primitive factory.
 // They take the forwardRef render plus canned context and assert host attach.
 // The context hook is stubbed so render runs outside a reconciler; the ref
 // wiring under test is the exact path React 17/18/19 invoke. Browser proof
-// stays in NEO-PRIM-08; the $$typeof assertion pins the all-version shape.
+// stays in CORE-PRIM-08; the $$typeof assertion pins the all-version shape.
 
 import type * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'

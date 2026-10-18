@@ -1,7 +1,7 @@
-// Controlled reset injection for the Neo generated stylesheet.
+// Controlled reset injection for the Core generated stylesheet.
 // It takes the evaluated spec plus the normalizeCss flag and prepends the
 // Andy Bell reset fragment unless the flag is false. The engine prints
-// fragments whose source names reset into @layer reset (NEO-LAYER-04).
+// fragments whose source names reset into @layer reset (CORE-LAYER-04).
 
 import type { EvaluatedSystemSpec, GlobalStyleNode } from '@reference-ui/rust/contracts'
 
@@ -10,13 +10,13 @@ export const RESET_FRAGMENT_SOURCE = 'normalizeCss/reset'
 
 const REDUCED_MOTION = '@media (prefers-reduced-motion: reduce)'
 
-/** Reset ships by default; only an explicit false omits it (core parity). */
+/** Reset ships by default; only an explicit false omits it (retired reference-core parity). */
 export function shouldInjectReset(normalizeCss: boolean | undefined): boolean {
   return normalizeCss !== false
 }
 
 /**
- * Fresh Andy Bell reset rules mirrored from core `stylesheet/reset.ts`. Two
+ * Fresh Andy Bell reset rules mirrored from the retired reference-core `stylesheet/reset.ts`. Two
  * spellings adapt to the engine walker: the reduced-motion block nests
  * per-selector (top-level at-rules are not expressible), and the form-element
  * `font: inherit` expands to longhands (the `font` key is the font macro).

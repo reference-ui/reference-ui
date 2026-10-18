@@ -9,7 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "paths": {
-      "@reference-ui/neo": ["../../../../packages/reference-neo/src/author/index.ts"]
+      "@reference-ui/core": ["../../../../packages/reference-core/src/author/index.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*", "ui.config.ts"]

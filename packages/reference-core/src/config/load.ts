@@ -1,6 +1,6 @@
-// Loading for Neo ui.config files from a project root.
+// Loading for Core ui.config files from a project root.
 // It takes a working directory and emits the validated config plus dependencies and load-time warnings.
-// This module is a Neo-owned copy of the core loader with no global registry; it also times the evaluation and
+// This module is a core-owned copy of the retired reference-core loader with no global registry; it also times the evaluation and
 // carries the slow-config warning (slow-evaluation.ts) for sync to report.
 
 import { resolve } from 'node:path'
@@ -11,13 +11,13 @@ import { attemptedDependencyPathsOf, bundleConfigWithDependencies } from './bund
 import { evaluateConfig, type EvaluateConfigOptions } from './evaluate.ts'
 import { validateConfig } from './validate.ts'
 import { slowConfigDiagnostic } from './slow-evaluation.ts'
-import type { NeoDiagnostic } from '../diagnostics/types.ts'
+import type { CoreDiagnostic } from '../diagnostics/types.ts'
 
 export interface LoadedUserConfig {
   config: ReferenceUIConfig
   dependencyPaths: string[]
   /** Load-time warnings: BSS-W-SLOW-CONFIG when evaluation ran past the slow threshold. Absent on hand-built loads. */
-  diagnostics?: NeoDiagnostic[]
+  diagnostics?: CoreDiagnostic[]
 }
 
 // Last successful load per resolved project root: the watch resync path
@@ -63,7 +63,7 @@ export async function loadUserConfigWithDependencies(
 
   let imported: string[] = []
   let raw: unknown
-  let slow: NeoDiagnostic | undefined
+  let slow: CoreDiagnostic | undefined
   try {
     const bundled = await bundleConfigWithDependencies(configPath)
     imported = bundled.dependencyPaths

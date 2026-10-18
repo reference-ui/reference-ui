@@ -1,4 +1,4 @@
-// Native generator for the Neo react entry plus its bound per-system types.
+// Native generator for the Core react entry plus its bound per-system types.
 // It takes the system name, the compiled style prop names, the tracked
 // primitives path, and the spec recipes, and emits the bound entry source
 // plus the complete react.d.mts. The types bake narrows the primitive types per system:
@@ -34,7 +34,7 @@ export interface ReactTypesInput {
  * the style runtime plus this system's runtime-data, registers both, and
  * re-exports css/recipe — styled stays data-only. No react-dom
  * re-export: consumers bring their own copy, so the entry stays react-only
- * and packages built on it import clean without react-dom (core contract).
+ * and packages built on it import clean without react-dom (retired reference-core contract).
  */
 export function generateReactEntrySource(input: ReactEntryInput): string {
   const bound = ELEMENT_JSX_NAMES

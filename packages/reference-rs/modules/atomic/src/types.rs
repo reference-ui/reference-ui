@@ -114,14 +114,14 @@ pub struct CompileResult {
     #[serde(default)]
     pub atom_count: usize,
     /// Component names StyleTrace discovered in this compile (sorted,
-    /// unique). Neo publishes configured ∪ traced downstream.
+    /// unique). Core publishes configured ∪ traced downstream.
     #[serde(default)]
     pub traced_jsx_hosts: Vec<String>,
     /// Prop names each component keeps for itself (never forwarded to a
     /// style primitive), keyed by component name and sorted, unique: the
     /// map the extraction gate read, so the request's `jsxOwned` seeds ride
     /// beside what StyleTrace found. Absent from the wire when empty, so
-    /// results without owned props stay byte-identical. Neo publishes it
+    /// results without owned props stay byte-identical. Core publishes it
     /// beside the host roster.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub traced_jsx_owned: BTreeMap<String, Vec<String>>,

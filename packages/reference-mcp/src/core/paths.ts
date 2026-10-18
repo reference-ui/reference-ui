@@ -1,9 +1,9 @@
-// Generated-folder path helpers vendored from Neo (declaration-safe).
+// Generated-folder path helpers vendored from Core (declaration-safe).
 // They take a project root and emit out-dir paths plus config discovery.
-// Byte-identical in behavior to Neo's lib/paths seam, which is itself a
-// copy of core's; vendored (not retargeted) because pipeline/paths and the
+// Byte-identical in behavior to Core's lib/paths seam, which is itself a
+// copy of the retired reference-core's; vendored (not retargeted) because pipeline/paths and the
 // server project files are reachable from the package `types` entry, where
-// an unresolvable `@reference-ui/neo/*` id would break consumers (TS2307
+// an unresolvable `@reference-ui/core/*` id would break consumers (TS2307
 // proven with skipLibCheck on). Vendoring is explicitly allowed.
 
 import { existsSync } from 'node:fs'

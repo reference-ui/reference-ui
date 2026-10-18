@@ -2,7 +2,7 @@
  * Memex collection adapters: one doc model per kind, no code per collection.
  *
  * `markdown` reads .md files (optional frontmatter, everything kept) plus
- * small .json sidecars (flattened). `neo` and `rs` port the case-index
+ * small .json sidecars (flattened). `core` and `rs` port the case-index
  * collectors verbatim: one doc per case / per module. `rs-case` gives each
  * reference-rs case folder its own doc, keyed by the id in its case.json.
  */
@@ -12,9 +12,9 @@ import { basename, dirname, join, relative } from 'node:path'
 import { extractTitle, firstParagraph, parseFrontmatter, parseTags } from './text.mjs'
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'target', 'build'])
-// Any case-id shape (NEO-, ATM-, ATL-, STT-, TST-, ...), so a cited id links as related.
+// Any case-id shape (CORE-, ATM-, ATL-, STT-, TST-, ...), so a cited id links as related.
 const ID_PATTERN = /\b([A-Z]{2,4}-[A-Z]{2,}-\d+|rs:[a-z-]+)\b/g
-const NEO_CASES_SUBDIR = 'cases'
+const CORE_CASES_SUBDIR = 'cases'
 const RS_CASES_PATH = ['tests', 'cases']
 const CASE_INDEX_FILE = 'case.json'
 
@@ -181,11 +181,11 @@ export function collectMarkdown(root, manifest) {
   return { docs, warnings }
 }
 
-const NEO_SKIP_DIRS = new Set(['node_modules', 'world', 'dist', 'target', '.git'])
+const CORE_SKIP_DIRS = new Set(['node_modules', 'world', 'dist', 'target', '.git'])
 
 function findCaseJsonFiles(dir, out = []) {
   for (const entry of readdirSync(dir)) {
-    if (NEO_SKIP_DIRS.has(entry)) continue
+    if (CORE_SKIP_DIRS.has(entry)) continue
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) findCaseJsonFiles(full, out)
     else if (entry === 'case.json') out.push(full)
@@ -208,8 +208,8 @@ function findSpecFiles(specsDir, out = []) {
   return out.sort()
 }
 
-/** One doc per neo case: case.json meta + README + authorial specs. */
-export function collectNeo(casesDir, root, name) {
+/** One doc per core case: case.json meta + README + authorial specs. */
+export function collectCore(casesDir, root, name) {
   const docs = []
   const files = findCaseJsonFiles(casesDir).sort()
   for (const casePath of files) {
@@ -230,7 +230,7 @@ export function collectNeo(casesDir, root, name) {
     const family = relative(casesDir, dir).split('/')[0]
     docs.push({
       collection: name,
-      kind: 'neo',
+      kind: 'core',
       id: meta.id,
       title: meta.name || meta.id,
       extra: family,
@@ -256,7 +256,7 @@ export function collectNeo(casesDir, root, name) {
 function walkSuites(moduleDir, testsDir) {
   const suites = []
   const stack = [moduleDir]
-  const casesDir = join(testsDir, NEO_CASES_SUBDIR)
+  const casesDir = join(testsDir, CORE_CASES_SUBDIR)
   while (stack.length) {
     const dir = stack.pop()
     if (dir === casesDir) continue

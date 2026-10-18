@@ -1,4 +1,4 @@
-// Postprocess registry for Neo packaged bundles.
+// Postprocess registry for Core packaged bundles.
 // It takes bundle code plus a package definition and emits the code after running the definition's named passes in order.
 // Passes stay pure string transforms — the legs hold the single file write — so each pass unit-pins without touching the filesystem.
 

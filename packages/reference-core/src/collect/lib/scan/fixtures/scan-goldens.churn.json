@@ -30,22 +30,22 @@
     "theme/tokens.ts"
   ],
   "retainedCount": 6122,
-  "manifestSha": "edfcfe1c05ea06a10a723af65770f81eeb8f0c7d2820d9f5c49494757aa04c26",
+  "manifestSha": "9056219ee80e583354d8d90554441cb2057eb98289e4abbff53a3df63d92538c",
   "manifestSample": [
-    [
-      "src/feat0/mod0.ts",
-      "e6f8089eddcbd26e"
-    ],
-    [
-      "src/feat0/mod1.ts",
-      "2123c04d6ae7bf11"
-    ],
-    [
-      "src/feat0/mod10.ts",
-      "0a78958ce0f62b4e"
-    ]
+    {
+      "path": "src/feat0/mod0.ts",
+      "hash": "e6f8089eddcbd26e"
+    },
+    {
+      "path": "src/feat0/mod1.ts",
+      "hash": "2123c04d6ae7bf11"
+    },
+    {
+      "path": "src/feat0/mod10.ts",
+      "hash": "0a78958ce0f62b4e"
+    }
   ],
-  "sourcesSha": "809d39af99ea9b7d9797cbbac7e50487e6852ccaad94a64977003291eaa1575d",
+  "sourcesSha": "cc3dad7ee3cc0aa8354bcca5968285b8f1e58b8a143bf5e8a51b86f78d400816",
   "stylesheetSha": "b85bb7fa358ad40430c4f6d1886a575dc3b5d820c602c9da168fe85ef870ef58",
   "stylesheetBytes": 8289858,
   "portableSha": "a0e2c6b6c8152a3249eb16ba33c25fc3091a632ef0a46f6d736297062300f33a",

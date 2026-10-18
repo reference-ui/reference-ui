@@ -1,4 +1,4 @@
-// typecheck.ts — project type gate for agentneo run. Takes nothing, runs
+// typecheck.ts — project type gate for agentcore run. Takes nothing, runs
 // tsc --noEmit over the package, and emits the diagnostic lines (capped).
 // run refuses when types are red: worlds and specs typecheck on every run,
 // not just in the quality gate, so a broken fixture never reaches a browser.
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { execExitCode } from './exit-code.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
-const NEO_DIR: string = path.dirname(path.dirname(HERE));
+const CORE_DIR: string = path.dirname(path.dirname(HERE));
 const MAX_LINES = 40;
 
 export type TypecheckResult = { ok: true } | { ok: false; lines: string[] };
@@ -21,7 +21,7 @@ interface TscRun {
 
 function runTsc(bin: string): Promise<TscRun> {
   return new Promise((resolve) => {
-    execFile(process.execPath, [bin, '--noEmit', '-p', NEO_DIR], { timeout: 180000 }, (err, stdout, stderr) => {
+    execFile(process.execPath, [bin, '--noEmit', '-p', CORE_DIR], { timeout: 180000 }, (err, stdout, stderr) => {
       if (err && (err.killed || (err as { code?: unknown }).code === 'ETIMEDOUT')) {
         resolve({ code: null, text: 'tsc timed out after 180s' });
         return;

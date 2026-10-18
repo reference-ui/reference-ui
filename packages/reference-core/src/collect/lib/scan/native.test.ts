@@ -10,7 +10,7 @@ import { scanFragmentSourcesNative } from './native.ts'
 import {
   CSS_RED,
   NEEDLES,
-  NEO_IMPORT,
+  CORE_IMPORT,
   TRICKY_MATCHES,
   TRICKY_RETAINED,
   TRICKY_TREE,
@@ -150,11 +150,11 @@ describe('native scan byte edges', () => {
 describe('native scan outside cwd', () => {
   it('(5) out-of-cwd globs match and retain identically', async () => {
     const outsideFiles: Array<[string, string]> = [
-      ['o.ts', NEO_IMPORT],
-      ['.hidden.ts', NEO_IMPORT],
-      ['x.d.ts', NEO_IMPORT],
-      ['data.json', `{"note": "import '@reference-ui/neo'"}\n`],
-      ['node_modules/dropped.ts', NEO_IMPORT],
+      ['o.ts', CORE_IMPORT],
+      ['.hidden.ts', CORE_IMPORT],
+      ['x.d.ts', CORE_IMPORT],
+      ['data.json', `{"note": "import '@reference-ui/core'"}\n`],
+      ['node_modules/dropped.ts', CORE_IMPORT],
     ]
     const root = makeRoot('f1-cwd')
     const outside = makeRoot('f1-outside')
@@ -203,7 +203,7 @@ const canRestrict = typeof process.geteuid === 'function' ? process.geteuid() !=
 
 describe('native scan fs edges', () => {
   it.runIf(canRestrict)('(6) unreadable files drop both sides, never throw', async () => {
-    await withTree('f1-unread', [['src/ok.ts', NEO_IMPORT], ['src/dark.ts', NEO_IMPORT]], async root => {
+    await withTree('f1-unread', [['src/ok.ts', CORE_IMPORT], ['src/dark.ts', CORE_IMPORT]], async root => {
       const dark = join(root, 'src/dark.ts')
       chmodSync(dark, 0o000)
       try {
@@ -268,7 +268,7 @@ describe('native scan symlinks', () => {
   it.runIf(process.platform === 'darwin' || process.platform === 'linux')(
     '(8) symlinked files and dirs verify; dangling drops without throwing',
     async () => {
-      await withTree('f1-links', [['src/real/a.ts', NEO_IMPORT]], async root => {
+      await withTree('f1-links', [['src/real/a.ts', CORE_IMPORT]], async root => {
         symlinkSync(join(root, 'src/real'), join(root, 'src/linkdir'))
         symlinkSync(join(root, 'src/real/a.ts'), join(root, 'src/linkfile.ts'))
         symlinkSync(join(root, 'src/missing.ts'), join(root, 'src/dangling.ts'))
@@ -316,7 +316,7 @@ describe('native scan empty retention', () => {
     const files: Array<[string, string]> = [
       ['src/ok.ts', CSS_RED],
       ['src/excluded/skip.ts', CSS_RED],
-      ['theme/tokens.ts', NEO_IMPORT],
+      ['theme/tokens.ts', CORE_IMPORT],
     ]
     await withTree('f1-negation', files, async root => {
       const include = ['!**/excluded/**']

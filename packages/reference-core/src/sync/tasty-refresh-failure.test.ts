@@ -29,11 +29,11 @@ vi.mock('../reference/bridge/index.ts', async (importOriginal) => {
 
 const WARM_BUILD = {} as ReferenceTastyBuildState
 const FAILURE = 'scan exploded'
-const BACKGROUND_LINE = '[neo] [ref] background tasty refresh failed'
+const BACKGROUND_LINE = '[core] [ref] background tasty refresh failed'
 const tempDirs: string[] = []
 
 const CONFIG = [
-  "import { defineConfig } from '@reference-ui/neo'",
+  "import { defineConfig } from '@reference-ui/core'",
   '',
   'export default defineConfig({',
   "  name: 'tasty-refresh-failure-test',",
@@ -43,7 +43,7 @@ const CONFIG = [
 ].join('\n')
 
 const TOKENS = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',
@@ -66,7 +66,7 @@ afterEach(async () => {
 })
 
 async function writeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-tasty-refresh-failure-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-tasty-refresh-failure-'))
   tempDirs.push(dir)
   await mkdir(join(dir, 'theme'), { recursive: true })
   await writeFile(join(dir, 'ui.config.ts'), CONFIG)

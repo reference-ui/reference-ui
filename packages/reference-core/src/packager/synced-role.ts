@@ -1,4 +1,4 @@
-// Synced role of a Neo project in the SyncedSystem register.
+// Synced role of a Core project in the SyncedSystem register.
 // It takes a project root and emits 'publisher' when the root's package.json names @reference-ui/lib, 'consumer' when node_modules/@reference-ui/lib exists at the root or any ancestor, and 'none' otherwise.
 // The lib check is a plain filesystem walk, never require.resolve, since lib's exports map has no require or package.json entry. Publisher is checked first, so lib never augments its own register.
 

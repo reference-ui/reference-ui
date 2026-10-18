@@ -1,6 +1,6 @@
 // Registry self-check: every diagnostic code cited in REGISTRY.md resolves.
-// It takes the registry markdown plus the five module CODE_TABLEs, Neo's own
-// TypeScript-minted codes (NEO_MINTED_CODES), and the diagnostics crate's
+// It takes the registry markdown plus the five module CODE_TABLEs, Core's own
+// TypeScript-minted codes (CORE_MINTED_CODES), and the diagnostics crate's
 // golden pins, and asserts the cited-minus-defined set is empty with a
 // defined-size floor so it cannot pass vacuously.
 import { readFileSync } from 'node:fs'
@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { NEO_MINTED_CODES } from '../codes.ts'
+import { CORE_MINTED_CODES } from '../codes.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(HERE, '..', '..', '..', '..', '..')
@@ -52,7 +52,7 @@ function definedCodes(): Set<string> {
     const text = readFileSync(join(RS, file), 'utf8')
     for (const m of text.matchAll(keeping)) defined.add(m[0])
   }
-  for (const code of NEO_MINTED_CODES) defined.add(code)
+  for (const code of CORE_MINTED_CODES) defined.add(code)
   return defined
 }
 

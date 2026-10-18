@@ -1,13 +1,13 @@
-// Neo JSON diagnostics: the machine-readable rendering for agents.
+// Core JSON diagnostics: the machine-readable rendering for agents.
 // It takes reported diagnostics and emits the canonical wire batch: one JSON
 // array on one line, typed rows in template field order, legacy carries
 // passed through verbatim. No dedupe, no channel tags, no color — folding
 // and tagging are human presentation, while agents count and filter the raw
 // rows themselves. Bytes are pinned by the contract tests: JSON is wire.
 import { isTypedDiagnostic, toCanonicalRecord } from './transport.ts'
-import type { NeoDiagnostic } from './types.ts'
+import type { CoreDiagnostic } from './types.ts'
 
-function toJsonRow(entry: NeoDiagnostic): unknown {
+function toJsonRow(entry: CoreDiagnostic): unknown {
   if (!isTypedDiagnostic(entry)) return entry
   return toCanonicalRecord(entry)
 }
@@ -20,6 +20,6 @@ function toJsonRow(entry: NeoDiagnostic): unknown {
  * Input order is preserved — channels concatenate caller-side as
  * userspace, compiler, ref.
  */
-export function formatJsonDiagnostics(entries: readonly NeoDiagnostic[]): string {
+export function formatJsonDiagnostics(entries: readonly CoreDiagnostic[]): string {
   return JSON.stringify(entries.map(toJsonRow))
 }

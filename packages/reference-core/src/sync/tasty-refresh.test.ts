@@ -31,7 +31,7 @@ const WARM_BUILD = {} as ReferenceTastyBuildState
 const tempDirs: string[] = []
 
 const CONFIG = [
-  "import { defineConfig } from '@reference-ui/neo'",
+  "import { defineConfig } from '@reference-ui/core'",
   '',
   'export default defineConfig({',
   "  name: 'tasty-refresh-test',",
@@ -41,7 +41,7 @@ const CONFIG = [
 ].join('\n')
 
 const TOKENS = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',
@@ -63,7 +63,7 @@ afterEach(async () => {
 })
 
 async function writeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-tasty-refresh-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-tasty-refresh-'))
   tempDirs.push(dir)
   await mkdir(join(dir, 'theme'), { recursive: true })
   await writeFile(join(dir, 'ui.config.ts'), CONFIG)

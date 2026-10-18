@@ -19,8 +19,8 @@ import { compile } from '../../js/index.js'
 import type { CompileResult, Want } from '../../js/types.js'
 import { LIB_SYSTEM_SPEC } from '../harness/helpers.js'
 import { buildModel, type ModelWhen } from '../harness/harvest-model.js'
-import { publishRuntimeBundle } from '../../../../../reference-neo/src/packager/styled.js'
-import { publishReactBundle } from '../../../../../reference-neo/src/packager/react.js'
+import { publishRuntimeBundle } from '../../../../../reference-core/src/packager/styled.js'
+import { publishReactBundle } from '../../../../../reference-core/src/packager/react.js'
 import {
   EXPECTED_BYTES,
   EXPECTED_COMPILER_CODES,

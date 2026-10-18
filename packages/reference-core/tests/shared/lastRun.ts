@@ -82,7 +82,7 @@ export interface GroupStatus {
 }
 
 // Per-group pass/fail/degraded counts over the log. folders maps case id to
-// its catalog folder (`css/NEO-CSS-01`); the group is the first segment, and
+// its catalog folder (`css/CORE-CSS-01`); the group is the first segment, and
 // ids with no known folder land under `unknown`. Sorted by group.
 export function summarizeByGroup(log: LastRunLog, folders: Map<string, string>): GroupStatus[] {
   const groups = new Map<string, GroupStatus>();

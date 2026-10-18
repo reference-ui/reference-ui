@@ -1,6 +1,6 @@
-// Plugin assembly for Neo microbundle builds from option bags.
+// Plugin assembly for Core microbundle builds from option bags.
 // It takes bundling options and emits the esbuild plugins they imply.
-// This module is a Neo-owned copy of the core plugin wiring.
+// This module is a core-owned copy of the retired reference-core plugin wiring.
 
 import type * as esbuild from 'esbuild'
 import type { MicroBundleOptions } from '../types.ts'

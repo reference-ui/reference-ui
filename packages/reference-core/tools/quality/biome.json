@@ -28,24 +28,16 @@
           "level": "error",
           "options": {
             "paths": {
-              "@reference-ui/core": "Neo is self-contained: copy solved core code into a Neo-owned module instead of importing it.",
-              "@reference-ui/lib": "Neo is self-contained: copy solved lib code into a Neo-owned module instead of importing it.",
-              "reference-core": "Neo is self-contained: copy solved core code into a Neo-owned module instead of importing it.",
-              "reference-lib": "Neo is self-contained: copy solved lib code into a Neo-owned module instead of importing it."
+              "@reference-ui/lib": "Core is self-contained: copy solved lib code into a core-owned module instead of importing it.",
+              "reference-lib": "Core is self-contained: copy solved lib code into a core-owned module instead of importing it."
             },
             "patterns": [
               {
                 "group": [
-                  "@reference-ui/core/*",
-                  "@reference-ui/core/**",
                   "@reference-ui/lib/*",
                   "@reference-ui/lib/**",
-                  "reference-core/*",
-                  "reference-core/**",
                   "reference-lib/*",
                   "reference-lib/**",
-                  "**/reference-core",
-                  "**/reference-core/**",
                   "**/reference-lib",
                   "**/reference-lib/**"
                 ]

@@ -44,7 +44,7 @@ afterEach(() => {
 })
 
 function makeTree(files: string[]): string {
-  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'neo-watch-scope-')))
+  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'core-watch-scope-')))
   tempDirs.push(dir)
   for (const rel of files) {
     mkdirSync(dirname(join(dir, rel)), { recursive: true })

@@ -38,9 +38,9 @@ importers:
 
   matrix/fixtures/aliased-host-library:
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -56,9 +56,9 @@ importers:
 
   matrix/fixtures/extend-library:
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -74,9 +74,9 @@ importers:
 
   matrix/fixtures/extend-library-2:
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -92,9 +92,9 @@ importers:
 
   matrix/fixtures/layer-library:
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -110,9 +110,9 @@ importers:
 
   matrix/fixtures/layer-library-2:
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -132,9 +132,9 @@ importers:
         specifier: workspace:*
         version: link:../extend-library
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -154,9 +154,9 @@ importers:
         specifier: workspace:*
         version: link:../extend-library-2
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -176,9 +176,9 @@ importers:
         specifier: workspace:*
         version: link:../extend-library
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../../../packages/reference-neo
+        version: link:../../../packages/reference-core
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.27
@@ -197,12 +197,12 @@ importers:
       '@fixtures/extend-library':
         specifier: workspace:*
         version: link:../../../fixtures/extend-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -252,12 +252,12 @@ importers:
       '@fixtures/meta-extend-library':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -307,12 +307,12 @@ importers:
       '@fixtures/meta-extend-library-2':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library-2
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -362,12 +362,12 @@ importers:
       '@fixtures/meta-extend-library-sibling':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library-sibling
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -420,12 +420,12 @@ importers:
       '@fixtures/meta-extend-library-2':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library-2
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -472,15 +472,15 @@ importers:
       '@fixtures/aliased-host-library':
         specifier: workspace:*
         version: link:../../../fixtures/aliased-host-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/icons':
         specifier: workspace:*
         version: link:../../../../packages/reference-icons
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -527,15 +527,15 @@ importers:
       '@fixtures/aliased-host-library':
         specifier: workspace:*
         version: link:../../../fixtures/aliased-host-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/icons':
         specifier: workspace:*
         version: link:../../../../packages/reference-icons
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -582,12 +582,12 @@ importers:
       '@fixtures/layer-library':
         specifier: workspace:*
         version: link:../../../fixtures/layer-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -637,12 +637,12 @@ importers:
       '@fixtures/layer-library':
         specifier: workspace:*
         version: link:../../../fixtures/layer-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -689,12 +689,12 @@ importers:
       '@fixtures/meta-extend-library':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -744,12 +744,12 @@ importers:
       '@fixtures/meta-extend-library-sibling':
         specifier: workspace:*
         version: link:../../../fixtures/meta-extend-library-sibling
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -796,12 +796,12 @@ importers:
       '@fixtures/extend-library':
         specifier: workspace:*
         version: link:../../../fixtures/extend-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -857,12 +857,12 @@ importers:
       '@fixtures/layer-library-2':
         specifier: workspace:*
         version: link:../../../fixtures/layer-library-2
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../../packages/reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -909,15 +909,15 @@ importers:
       '@fixtures/extend-library':
         specifier: workspace:*
         version: link:../../fixtures/extend-library
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../../../packages/reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../../../packages/reference-lib
       '@reference-ui/mcp':
         specifier: workspace:*
         version: link:../../../packages/reference-mcp
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../../../packages/reference-neo
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -956,14 +956,84 @@ importers:
         specifier: ^4.1.0
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@18.0.1)(vite@7.3.6(@types/node@25.1.0)(lightningcss@1.33.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
 
+  packages/reference-core:
+    dependencies:
+      '@parcel/watcher':
+        specifier: ^2.6.0
+        version: 2.6.0
+      '@reference-ui/rust':
+        specifier: workspace:*
+        version: link:../reference-rs
+      '@rspress/mdx-rs':
+        specifier: ^0.6.6
+        version: 0.6.6
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
+      esbuild:
+        specifier: ^0.28.1
+        version: 0.28.2
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.3
+      picomatch:
+        specifier: ^4.0.4
+        version: 4.0.7
+      symlink-dir:
+        specifier: ^10.0.3
+        version: 10.0.3
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.5.14
+        version: 2.5.14
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: 'link:'
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      pixelmatch:
+        specifier: ^7.2.0
+        version: 7.2.0
+      playwright:
+        specifier: ^1.63.0
+        version: 1.63.0
+      pngjs:
+        specifier: ^7.0.0
+        version: 7.0.0
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      scheduler:
+        specifier: 0.27.0
+        version: 0.27.0
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+      vite:
+        specifier: ^7.3.5
+        version: 7.3.6(@types/node@25.1.0)(lightningcss@1.33.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@18.0.1)(vite@7.3.6(@types/node@25.1.0)(lightningcss@1.33.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
+
   packages/reference-docs:
     dependencies:
+      '@reference-ui/core':
+        specifier: workspace:*
+        version: link:../reference-core
       '@reference-ui/lib':
         specifier: workspace:*
         version: link:../reference-lib
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: link:../reference-neo
       '@tanstack/react-router':
         specifier: 1.163.2
         version: 1.163.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1038,9 +1108,9 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0(react@19.2.4)
     devDependencies:
-      '@reference-ui/neo':
+      '@reference-ui/core':
         specifier: workspace:*
-        version: link:../reference-neo
+        version: link:../reference-core
       '@types/node':
         specifier: ^25.1.0
         version: 25.1.0
@@ -1181,76 +1251,6 @@ importers:
       vitest:
         specifier: ^4.1.0
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@18.0.1)(vite@8.3.0(@types/node@25.1.0)(esbuild@0.28.2)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
-
-  packages/reference-neo:
-    dependencies:
-      '@parcel/watcher':
-        specifier: ^2.6.0
-        version: 2.6.0
-      '@reference-ui/rust':
-        specifier: workspace:*
-        version: link:../reference-rs
-      '@rspress/mdx-rs':
-        specifier: ^0.6.6
-        version: 0.6.6
-      commander:
-        specifier: ^14.0.3
-        version: 14.0.3
-      esbuild:
-        specifier: ^0.28.1
-        version: 0.28.2
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.3
-      picomatch:
-        specifier: ^4.0.4
-        version: 4.0.7
-      symlink-dir:
-        specifier: ^10.0.3
-        version: 10.0.3
-    devDependencies:
-      '@biomejs/biome':
-        specifier: ^2.5.14
-        version: 2.5.14
-      '@reference-ui/neo':
-        specifier: workspace:*
-        version: 'link:'
-      '@types/node':
-        specifier: ^25.1.0
-        version: 25.1.0
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      pixelmatch:
-        specifier: ^7.2.0
-        version: 7.2.0
-      playwright:
-        specifier: ^1.63.0
-        version: 1.63.0
-      pngjs:
-        specifier: ^7.0.0
-        version: 7.0.0
-      react:
-        specifier: 19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
-      scheduler:
-        specifier: 0.27.0
-        version: 0.27.0
-      typescript:
-        specifier: ~7.0.2
-        version: 7.0.2
-      vite:
-        specifier: ^7.3.5
-        version: 7.3.6(@types/node@25.1.0)(lightningcss@1.33.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
-      vitest:
-        specifier: ^4.1.0
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.1.0)(happy-dom@18.0.1)(vite@7.3.6(@types/node@25.1.0)(lightningcss@1.33.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2))
 
   packages/reference-rs:
     devDependencies:
@@ -7360,7 +7360,7 @@ snapshots:
       esbuild: 0.25.12
       gray-matter: 4.0.3
       p-limit: 6.2.0
-      picomatch: 4.0.4
+      picomatch: 4.0.7
       pluralize: 8.0.0
       serialize-javascript: 7.0.5
       tinyglobby: 0.2.16

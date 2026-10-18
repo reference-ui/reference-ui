@@ -1,5 +1,5 @@
 /**
- * The vendor-freshness tier of the Neo quality gate. It shells out to the primitives
+ * The vendor-freshness tier of the Core quality gate. It shells out to the primitives
  * vendor tool with --check and maps drift lines onto file violations, so a stale shelf
  * fails the gate before the slower tiers run. It takes nothing and returns violations.
  */
@@ -10,8 +10,8 @@ import { execExitCode } from '../../tests/shared/exit-code.ts';
 import type { Violation } from './prose.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
-const NEO_DIR: string = path.dirname(path.dirname(HERE));
-const VENDOR_TOOL: string = path.join(NEO_DIR, 'tools', 'vendor-rust-primitives.mjs');
+const CORE_DIR: string = path.dirname(path.dirname(HERE));
+const VENDOR_TOOL: string = path.join(CORE_DIR, 'tools', 'vendor-rust-primitives.mjs');
 const VENDOR_DRIFT = /^\s*(missing|stale|extra):\s*(.+)$/;
 
 // Runs the vendor --check; drift lines map onto shelf violations, and an unparseable
@@ -21,7 +21,7 @@ export async function vendorTier(): Promise<Violation[]> {
     execFile(
       process.execPath,
       [VENDOR_TOOL, '--check'],
-      { cwd: NEO_DIR, maxBuffer: 32 * 1024 * 1024 },
+      { cwd: CORE_DIR, maxBuffer: 32 * 1024 * 1024 },
       (err, stdout, stderr) => {
         resolve({ code: execExitCode(err), text: `${String(stdout ?? '')}\n${String(stderr ?? '')}` });
       }
@@ -34,11 +34,11 @@ export async function vendorTier(): Promise<Violation[]> {
     if (!hit) continue;
     const rel = hit[2].trim();
     violations.push({
-      file: path.join(NEO_DIR, rel),
+      file: path.join(CORE_DIR, rel),
       line: 1,
-      ruleId: 'neo/vendor-fresh',
+      ruleId: 'core/vendor-fresh',
       severity: 2,
-      message: `neo/vendor-fresh: ${hit[1]} vendored file (${rel}); re-run the primitives vendor tool.`,
+      message: `core/vendor-fresh: ${hit[1]} vendored file (${rel}); re-run the primitives vendor tool.`,
     });
   }
   if (!violations.length) {
@@ -46,9 +46,9 @@ export async function vendorTier(): Promise<Violation[]> {
     violations.push({
       file: VENDOR_TOOL,
       line: 1,
-      ruleId: 'neo/vendor-fresh',
+      ruleId: 'core/vendor-fresh',
       severity: 2,
-      message: `neo/vendor-fresh: ${why}`,
+      message: `core/vendor-fresh: ${why}`,
     });
   }
   return violations;

@@ -1,6 +1,6 @@
 // Author keyframes() call plus its fragment collector.
 // It takes keyframe maps from fragment files and emits collected configs.
-// This module is a Neo-owned copy of the core keyframes collector with a local type.
+// This module is a core-owned copy of the retired reference-core keyframes collector with a local type.
 
 import { createFragmentFunction } from '../lib/collector.ts'
 

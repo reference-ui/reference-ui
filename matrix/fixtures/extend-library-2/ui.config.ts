@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 
 /**
  * Independent extend fixture #2 (A2 in chain matrix). Used together with

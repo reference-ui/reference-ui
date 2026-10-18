@@ -1,4 +1,4 @@
-// cases.ts — case discovery for the neo harness. Takes nothing (reads case
+// cases.ts — case discovery for the core harness. Takes nothing (reads case
 // folders under tests/cases/, grouped at any depth). Emits case records
 // { id, name, folder, dir, worldDir, specsDir, description } via
 // listCases/getCase, plus substring search over id, name, and README
@@ -16,7 +16,7 @@ export const TESTS_DIR: string = path.resolve(HERE, '..');
 export const CASES_DIR: string = path.join(TESTS_DIR, 'cases');
 export const ARTIFACTS_DIR: string = path.join(TESTS_DIR, '.artifacts');
 
-export interface NeoCase {
+export interface CoreCase {
   id: string;
   name: string;
   folder: string;
@@ -52,7 +52,7 @@ function readText(file: string): string {
   }
 }
 
-function loadCase(folder: string): NeoCase {
+function loadCase(folder: string): CoreCase {
   const dir = path.join(CASES_DIR, folder);
   const raw = fs.readFileSync(path.join(dir, 'case.json'), 'utf8');
   const meta = JSON.parse(raw) as CaseMeta;
@@ -87,7 +87,7 @@ function collectCaseFolders(dir: string, prefix: string, out: string[]): void {
 // whether it fails the command. A duplicate id makes every folder carrying it
 // broken, since getCase and the last-run log key on id.
 export interface CaseScan {
-  cases: NeoCase[];
+  cases: CoreCase[];
   broken: BrokenCase[];
 }
 
@@ -111,10 +111,10 @@ export function scanCases(): CaseScan {
 }
 
 // Loaded cases whose id no other folder carries; every folder sharing an id goes to broken.
-function splitDuplicateIds(loaded: NeoCase[]): { cases: NeoCase[]; broken: BrokenCase[] } {
+function splitDuplicateIds(loaded: CoreCase[]): { cases: CoreCase[]; broken: BrokenCase[] } {
   const foldersById = new Map<string, string[]>();
   for (const c of loaded) foldersById.set(c.id, [...(foldersById.get(c.id) ?? []), c.folder]);
-  const cases: NeoCase[] = [];
+  const cases: CoreCase[] = [];
   const broken: BrokenCase[] = [];
   for (const c of loaded) {
     const others = (foldersById.get(c.id) ?? []).filter((f) => f !== c.folder);
@@ -125,20 +125,20 @@ function splitDuplicateIds(loaded: NeoCase[]): { cases: NeoCase[]; broken: Broke
 }
 
 // Strict: list, search, status and run-all need every case folder to conform.
-export function listCases(): NeoCase[] {
+export function listCases(): CoreCase[] {
   const { cases, broken } = scanCases();
   if (broken.length > 0) throw new Error(conventionError(broken));
   return cases;
 }
 
-export function getCase(idOrFolder: string): NeoCase {
+export function getCase(idOrFolder: string): CoreCase {
   const found = listCases().find((c) => c.id === idOrFolder || c.folder === idOrFolder);
   if (!found) throw new Error(`unknown case: ${idOrFolder}`);
   return found;
 }
 
 // Substring match over id, name, and full README text.
-export function searchCases(query: string): NeoCase[] {
+export function searchCases(query: string): CoreCase[] {
   const q = query.toLowerCase();
   if (!q) return listCases();
   return listCases().filter((c) => {
@@ -148,10 +148,10 @@ export function searchCases(query: string): NeoCase[] {
 }
 
 // `run` selection. An exact id or folder wins, otherwise the selector is an id
-// prefix (`agentneo run NEO-COND` runs the group). Only the folders it picks
+// prefix (`agentcore run CORE-COND` runs the group). Only the folders it picks
 // decide failure: a picked broken folder throws with its problems, and broken
 // folders it does not pick are left for the caller to report.
-export function matchCases(selector: string): NeoCase[] {
+export function matchCases(selector: string): CoreCase[] {
   const { cases, broken } = scanCases();
   const picked = broken.filter((b) => selectsFolder(selector, b.folder));
   if (picked.length > 0) throw new Error(conventionError(picked));

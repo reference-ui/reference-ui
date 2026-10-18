@@ -1,4 +1,4 @@
-// Unit tests for the Neo MDX esbuild loader.
+// Unit tests for the Core MDX esbuild loader.
 // They compile a representative MDX source (frontmatter, top-level import and
 // export, JSX, and a fence) through the production microbundle options and
 // assert the react stub resolves every emitted binding; a second case asserts a
@@ -29,7 +29,7 @@ const EXAMPLE = [
 ].join('\n')
 
 async function bundle(source: string): Promise<string> {
-  const dir = mkdtempSync(join(tmpdir(), 'neo-mdx-plugin-'))
+  const dir = mkdtempSync(join(tmpdir(), 'core-mdx-plugin-'))
   const file = join(dir, 'doc.mdx')
   writeFileSync(file, source)
   try {

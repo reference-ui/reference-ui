@@ -12,29 +12,29 @@ import { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
 import { scanFragmentSources } from './scanner.ts'
 
 const CSS = `import { css } from '@reference-ui/react'\nexport const a = css({ color: 'red' })\n`
-const NEO = `import '@reference-ui/neo'\n${CSS}`
-const MDX = `---\ntitle: Docs\n---\n\n\`\`\`ts\n${NEO}\`\`\`\n`
+const CORE = `import '@reference-ui/core'\n${CSS}`
+const MDX = `---\ntitle: Docs\n---\n\n\`\`\`ts\n${CORE}\`\`\`\n`
 
 // [relative path, content]: dotfiles, d.ts, every IGNORE dir, extension traps.
 const FIXTURE_FILES: Array<[string, string]> = [
   ['src/ok.ts', CSS],
   ['src/.hidden.ts', CSS],
-  ['src/.hidden-ref.ts', NEO],
+  ['src/.hidden-ref.ts', CORE],
   ['src/t.d.ts', CSS],
-  ['src/t-ref.d.ts', NEO],
+  ['src/t-ref.d.ts', CORE],
   ['src/excluded/skip.ts', CSS],
   ['src/data.json', '{"note": "not a source"}\n'],
-  ['src/frag-data.json', `{"note": "import '@reference-ui/neo'"}\n`],
+  ['src/frag-data.json', `{"note": "import '@reference-ui/core'"}\n`],
   ['src/doc.mdx', MDX],
-  ['src/frag.mjs', NEO],
-  ['src/frag.cjs', NEO],
-  ['src/frag.mts', NEO],
-  ['theme/tokens.ts', NEO],
+  ['src/frag.mjs', CORE],
+  ['src/frag.cjs', CORE],
+  ['src/frag.mts', CORE],
+  ['theme/tokens.ts', CORE],
   ['dist/a.ts', CSS],
-  ['dist/frag.ts', NEO],
+  ['dist/frag.ts', CORE],
   ['node_modules/pkg/index.ts', CSS],
   ['.git/x.ts', CSS],
-  ['.git/signal.ts', NEO],
+  ['.git/signal.ts', CORE],
   ['build/x.ts', CSS],
   ['.turbo/x.ts', CSS],
   ['target/x.ts', CSS],
@@ -61,7 +61,7 @@ const FIXTURE_FILES: Array<[string, string]> = [
   ['src/a/b/c/deep.ts', CSS],
 ]
 
-// Only the neo importers that survive dot:false plus the d.ts exclusion,
+// Only the core importers that survive dot:false plus the d.ts exclusion,
 // gated to JS-bundleable extensions. The json needle-carrier stays out (it
 // cannot bundle as a fragment) and the mdx needle-carrier stays out because
 // its needle lives only inside a fence, which the MDX matcher strips (the
@@ -96,12 +96,12 @@ const EXPECTED_RETAINED = [
 ]
 
 const OUTSIDE_FILES: Array<[string, string]> = [
-  ['o.ts', NEO],
-  ['.hidden.ts', NEO],
-  ['x.d.ts', NEO],
-  ['data.json', `{"note": "import '@reference-ui/neo'"}\n`],
+  ['o.ts', CORE],
+  ['.hidden.ts', CORE],
+  ['x.d.ts', CORE],
+  ['data.json', `{"note": "import '@reference-ui/core'"}\n`],
   ['doc.mdx', MDX],
-  ['node_modules/dropped.ts', NEO],
+  ['node_modules/dropped.ts', CORE],
 ]
 
 const EXPECTED_OUTSIDE_MATCHES = ['o.ts']

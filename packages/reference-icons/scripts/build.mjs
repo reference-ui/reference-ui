@@ -25,7 +25,7 @@ function run(command, args) {
 await rm(distDir, { recursive: true, force: true })
 
 run(process.execPath, ['scripts/generate.mjs'])
-run(process.execPath, [resolve(packageRoot, '../reference-neo/tools/ensure-dist.mjs')])
+run(process.execPath, [resolve(packageRoot, '../reference-core/tools/ensure-dist.mjs')])
 run('pnpm', ['exec', 'ref', 'sync'])
 run(process.execPath, ['scripts/build-bundle.mjs'])
 run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.build.json'])

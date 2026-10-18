@@ -2,10 +2,10 @@
  * Reference Lib - Design system consumer
  *
  * Minimal config for testing the chainable design system pattern.
- * Uses reference-core as the live config/runtime pipeline.
+ * Uses core as the live config/runtime pipeline.
  */
 
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as iconsBaseSystem } from '@reference-ui/icons/baseSystem'
 
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
   // resolution with byte-identical output (Obj-3, LOG-3.md). Every target
   // stays covered as a direct compile entry. WARNING: if a style call-site
   // ever lands in src/index.ts, this negation silently drops it — the guard
-  // test ../reference-neo/src/sync/lib-barrel-negation.test.ts fails loudly
+  // test ../reference-core/src/sync/lib-barrel-negation.test.ts fails loudly
   // in that case. Keep both.
   // Unit tests are not shipped either: they alone mint 48 utilities (e.g.
   // bd-b-w_-144px) that would otherwise reach the published CSS.

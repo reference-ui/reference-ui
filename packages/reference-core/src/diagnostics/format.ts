@@ -1,9 +1,9 @@
-// Neo warning presentation: the one-line summary plus the verbose list.
+// Core warning presentation: the one-line summary plus the verbose list.
 // It takes diagnostics and emits the yellow count line by default or the
 // location-plus-code-plus-hint rows under --verbose. Every channel rides
 // this shape behind its tag; the strings are pinned by the CLI tests.
 import { warningHintFor } from '@reference-ui/rust/diagnostics'
-import type { DeduplicatedDiagnostic, NeoDiagnostic } from './types.ts'
+import type { DeduplicatedDiagnostic, CoreDiagnostic } from './types.ts'
 
 // U+26A0 WARNING SIGN with no variation selector: terminals render the
 // text glyph in the applied yellow, never the color-emoji presentation.
@@ -38,7 +38,7 @@ export function formatWarningSummary(count: number): string {
   return `${paint(WARN_GLYPH, YELLOW)} ${total} ${noun} [--verbose]`
 }
 
-function diagnosticKey(entry: NeoDiagnostic): string {
+function diagnosticKey(entry: CoreDiagnostic): string {
   return [
     entry.severity,
     entry.code ?? '',
@@ -55,7 +55,7 @@ function diagnosticKey(entry: NeoDiagnostic): string {
 // Collapse exact repeats into counted groups in first-seen order. Same
 // code, message, and location folds to one item with a ×N count; anything
 // else stays its own line, so no warning ever prints twice.
-export function dedupeDiagnostics(entries: readonly NeoDiagnostic[]): DeduplicatedDiagnostic[] {
+export function dedupeDiagnostics(entries: readonly CoreDiagnostic[]): DeduplicatedDiagnostic[] {
   const groups = new Map<string, DeduplicatedDiagnostic>()
   for (const entry of entries) {
     const key = diagnosticKey(entry)
@@ -69,7 +69,7 @@ export function dedupeDiagnostics(entries: readonly NeoDiagnostic[]): Deduplicat
   return [...groups.values()]
 }
 
-function verboseLocation(entry: NeoDiagnostic): string {
+function verboseLocation(entry: CoreDiagnostic): string {
   if (!entry.file) return ''
   if (entry.line === undefined) return entry.file
   if (entry.column === undefined) return `${entry.file}:${entry.line}`
@@ -81,7 +81,7 @@ function verboseLocation(entry: NeoDiagnostic): string {
 // hint for the code, else no tail. Blank help lines never print — the
 // transport already rejects them, so a blank here reads as absent and the
 // static hint still wins over rendering nothing.
-function verboseTail(entry: NeoDiagnostic): string {
+function verboseTail(entry: CoreDiagnostic): string {
   const help = entry.help?.filter(line => line.trim().length > 0) ?? []
   if (help.length > 0) return ` — ${help.join('; ')}`
   const hint = warningHintFor(entry.code)

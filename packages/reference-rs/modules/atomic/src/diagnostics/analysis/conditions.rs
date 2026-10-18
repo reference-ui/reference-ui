@@ -4,7 +4,7 @@
 //! whether an object value sits in a style-value position (responsive query)
 //! or a condition position (nested `when`). Expectations always carry RAW
 //! `when` strings: both key authorities key on raw strings (`AuthoredDeclaration`
-//! keeps authored whens, neo `collectEntries` nests verbatim), so a static but
+//! keeps authored whens, core `collectEntries` nests verbatim), so a static but
 //! unlowerable condition such as `_hovr` still predicts an exact key (ledger
 //! R2, witness P1a). `lower_when` is deliberately unused here: it lowers
 //! wraps for codegen, never key bytes.
@@ -50,7 +50,7 @@ fn uncomputed_key<'a>(key: &PropertyKey<'a>) -> KeyClass<'a> {
 }
 
 /// True when an object value under `prop` is one responsive query instead of
-/// a nested condition. Mirrors neo `collectEntries` exactly: every other key
+/// a nested condition. Mirrors core `collectEntries` exactly: every other key
 /// shape recurses into the `when` stack. Custom props are open-ended style
 /// positions (canon `--*` authority), never conditions.
 pub fn is_style_value_position(prop: &str, style_props: &FxHashSet<String>) -> bool {

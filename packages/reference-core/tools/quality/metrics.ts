@@ -97,10 +97,10 @@ function loadTs(): TsModules {
     const astMod = LOCAL_REQUIRE('typescript/unstable/ast') as { SyntaxKind: Record<string, number>; visitEachChild: VisitEachChild };
     return { API: syncMod.API, SyntaxKind: astMod.SyntaxKind, visitEachChild: astMod.visitEachChild };
   } catch (err) {
-    const missing = new Error('neo/metrics: the typescript package is not resolvable; install dependencies and rerun.') as Error & {
+    const missing = new Error('core/metrics: the typescript package is not resolvable; install dependencies and rerun.') as Error & {
       code: string;
     };
-    missing.code = 'NEO_TOOLING_MISSING';
+    missing.code = 'CORE_TOOLING_MISSING';
     missing.cause = err;
     throw missing;
   }

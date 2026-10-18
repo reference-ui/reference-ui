@@ -1,4 +1,4 @@
-// Project links for the Neo generated packages.
+// Project links for the Core generated packages.
 // It takes the project root plus the output dir and emits the
 // node_modules scope entries pointing at the generated packages.
 

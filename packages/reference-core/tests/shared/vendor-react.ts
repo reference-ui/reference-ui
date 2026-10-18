@@ -49,7 +49,7 @@ export function getVendorReactCode(): Promise<string> {
       platform: 'browser',
       minify: false,
       write: false,
-      banner: { js: '// Neo harness vendor React: pinned production builds, one shared copy.' },
+      banner: { js: '// Core harness vendor React: pinned production builds, one shared copy.' },
     }).then((result) => {
       const out = result.outputFiles?.[0]?.text;
       if (!out) throw new Error('vendor react build produced no output');

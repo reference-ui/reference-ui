@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import pixelmatch from 'pixelmatch';
-import type { NeoCase } from './cases.ts';
+import type { CoreCase } from './cases.ts';
 
 // Per-pixel color distance below which two pixels still match (pixelmatch scale 0-1). At 0.1,
 // identical renders match while genuinely restyled pixels fail; subpixel anti-aliasing jitter
@@ -31,7 +31,7 @@ export interface SnapPage {
 export type SnapFn = (page: SnapPage, name: string) => Promise<void>;
 
 export interface SnapOptions {
-  c: NeoCase;
+  c: CoreCase;
   artifactsDir: string;
   updateSnapshots: boolean;
 }
@@ -83,7 +83,7 @@ export function compareSnapshots(baseline: Buffer, actual: Buffer): SnapshotDiff
   return { width: base.width, height: base.height, diffPixels, total, ratio, passed: ratio <= SNAPSHOT_MAX_DIFF_RATIO, diffPng: PNG.sync.write(diff) };
 }
 
-export function snapshotDir(c: NeoCase): string {
+export function snapshotDir(c: CoreCase): string {
   return path.join(c.dir, SNAPSHOT_DIRNAME);
 }
 

@@ -132,7 +132,7 @@ function mergeRecipeRecord(recipes: unknown[]): Record<string, unknown> {
   return record
 }
 
-// Font-weight tokens from the merged font record (core `buildFontTokens`
+// Font-weight tokens from the merged font record (retired reference-core `buildFontTokens`
 // weights half). The fonts half stays engine-side (duplicate-path error).
 function buildFontWeightTokens(fonts: Record<string, unknown>): Record<string, unknown> {
   const fontWeights: Record<string, unknown> = {}

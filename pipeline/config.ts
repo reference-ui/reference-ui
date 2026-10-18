@@ -29,7 +29,7 @@ export const MATRIX_CONFIG = {
 export const REGISTRY_PACKAGE_NAMES = [
 	'@reference-ui/icons',
 	'@reference-ui/rust',
-	'@reference-ui/neo',
+	'@reference-ui/core',
 	'@reference-ui/lib',
 	'@reference-ui/mcp',
 	'@fixtures/aliased-host-library',

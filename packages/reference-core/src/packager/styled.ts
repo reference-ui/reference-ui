@@ -1,4 +1,4 @@
-// Styled leg of the Neo generated folder.
+// Styled leg of the Core generated folder.
 // It takes the publish input and emits the stylesheet plus the package
 // manifest, then the runtime data beside it.
 

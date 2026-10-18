@@ -40,10 +40,10 @@ describe('case.json convention', () => {
     expect(caseIndexProblems('ATM-TOKEN-06', readCaseIndex(dir))).toEqual([])
   })
 
-  it('ignores extra fields a suite index carries, such as Neo sync', () => {
-    const json = '{"id": "NEO-TYPE-09", "name": "strict colours", "sync": true}\n'
-    const dir = caseFolder('NEO-TYPE-09', json)
-    expect(caseIndexProblems('NEO-TYPE-09', readCaseIndex(dir))).toEqual([])
+  it('ignores extra fields a suite index carries, such as Core sync', () => {
+    const json = '{"id": "CORE-TYPE-09", "name": "strict colours", "sync": true}\n'
+    const dir = caseFolder('CORE-TYPE-09', json)
+    expect(caseIndexProblems('CORE-TYPE-09', readCaseIndex(dir))).toEqual([])
   })
 
   it('reports a missing case.json with the line to add', () => {

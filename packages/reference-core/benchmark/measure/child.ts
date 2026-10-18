@@ -1,4 +1,4 @@
-// Parent-side measurement for Neo sync benchmarks.
+// Parent-side measurement for Core sync benchmarks.
 // It takes a generated project dir and emits run samples plus bundle sizes.
 // Each run syncs in a fresh child process, so no two runs share a heap.
 // Worker output is validated structurally: a malformed line fails the run, never parses silent.

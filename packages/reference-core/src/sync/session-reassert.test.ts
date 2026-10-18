@@ -30,7 +30,7 @@ afterEach(async () => {
 })
 
 async function makeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-reassert-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-reassert-'))
   tempDirs.push(dir)
   return dir
 }

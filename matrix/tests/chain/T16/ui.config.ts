@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
 import { baseSystem as aliasedHostSystem } from '@fixtures/aliased-host-library'
 

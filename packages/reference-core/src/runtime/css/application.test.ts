@@ -1,4 +1,4 @@
-// Runtime application proofs over a real Neo sync with the native compiler.
+// Runtime application proofs over a real Core sync with the native compiler.
 // It takes a temp project styling with axis shorthands (marginX, marginY,
 // paddingX, paddingY) as the vehicle, then asserts the published sheet, the
 // runtime artifact, the primitive splitter, and css() naming. Registration
@@ -25,7 +25,7 @@ afterEach(async () => {
 })
 
 async function writeProject(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-axis-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-axis-'))
   tempDirs.push(dir)
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name)
@@ -36,7 +36,7 @@ async function writeProject(files: Record<string, string>): Promise<string> {
 }
 
 const UI_CONFIG = [
-  "import { defineConfig } from '@reference-ui/neo'",
+  "import { defineConfig } from '@reference-ui/core'",
   '',
   'export default defineConfig({',
   "  name: 'axis-test',",
@@ -46,7 +46,7 @@ const UI_CONFIG = [
 ].join('\n')
 
 const TOKENS_FILE = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',

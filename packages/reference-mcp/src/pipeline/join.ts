@@ -3,7 +3,7 @@ import {
   formatReferenceType,
   type ReferenceDocument,
   type ReferenceMemberDocument,
-} from '@reference-ui/neo/reference'
+} from '@reference-ui/core/reference'
 import type { McpReferenceData } from './reference'
 import type { McpComponent } from './types'
 import { isStylePropName } from './style-props'

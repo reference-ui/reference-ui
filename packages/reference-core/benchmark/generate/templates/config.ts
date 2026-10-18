@@ -14,7 +14,7 @@ function includeLiteral(plan: LoadPlan): string {
 
 export function configFile(plan: LoadPlan): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     '',
     'export default defineConfig({',
     `  name: 'bench-${plan.scale}',`,

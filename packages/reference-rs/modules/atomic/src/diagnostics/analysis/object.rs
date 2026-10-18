@@ -1,7 +1,7 @@
 //! Shared style-object walker for independent diagnostics analysis.
 //!
 //! Walks object literals and recorded const objects, emitting exact expected
-//! lookups and dynamic-shape facts. Dispatch mirrors neo `collectEntries` in
+//! lookups and dynamic-shape facts. Dispatch mirrors core `collectEntries` in
 //! order — objects go responsive-or-recurse, holes vanish, leaves classify —
 //! so expectations name the queries runtime will actually issue. Both the
 //! `css()` and JSX surfaces share this walker; the surface modules only find

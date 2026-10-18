@@ -1,4 +1,4 @@
-// Unit tests for the Neo css() runtime over the runtime namer.
+// Unit tests for the Core css() runtime over the runtime namer.
 // They take style objects and assert constructed classes plus merge behavior.
 // Registration is module state, so the suite registers once up front.
 

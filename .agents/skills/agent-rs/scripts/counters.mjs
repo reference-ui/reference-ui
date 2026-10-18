@@ -125,7 +125,7 @@ async function generateCountersRepo(ctx) {
   const plans = await import(benchModuleUrl(ctx.benchDir, 'generate/plans.ts'))
   const generators = await import(benchModuleUrl(ctx.benchDir, 'generate/generators/index.ts'))
   const plan = plans.resolvePlan(ctx.options.scale, {})
-  const dir = mkdtempSync(path.join(tmpdir(), 'neo-counters-'))
+  const dir = mkdtempSync(path.join(tmpdir(), 'core-counters-'))
   const generated = generators.generateRepo(plan, dir)
   console.log(`[agent-rs] counters repo: ${generated.styleFiles} files, ${generated.cssCalls} css() calls, seed ${plan.seed}`)
   return { dir, plan, generated }
@@ -309,7 +309,7 @@ export async function runCountersCommand(args, repoRoot, rsDir) {
     console.error(`[agent-rs] ${err.message}`)
     return 1
   }
-  const benchDir = path.join(repoRoot, 'packages', 'reference-neo', 'benchmark')
+  const benchDir = path.join(repoRoot, 'packages', 'reference-core', 'benchmark')
   if (options.help) {
     printCountersHelp()
     return 0

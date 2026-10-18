@@ -236,7 +236,7 @@ describe('live-map plugin re-homing', () => {
 describe('react.d.mts synced register', () => {
   it('declares the register for a publisher, fills it for a consumer, and leaves the default open', async () => {
     const declarationFor = async (role?: SyncedRole): Promise<string> => {
-      const stage = mkdtempSync(join(tmpdir(), 'neo-react-role-'))
+      const stage = mkdtempSync(join(tmpdir(), 'core-react-role-'))
       try {
         await publish(stage, undefined, role)
         return readFileSync(join(stage, 'react', 'react.d.mts'), 'utf-8')

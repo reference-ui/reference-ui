@@ -1,4 +1,4 @@
-// Assembly for Neo generated packages.
+// Assembly for Core generated packages.
 // It takes the assembly input sync builds from compile output and emits the complete generated folder in dependency order, plus the typegen diagnostics the declaration leg raised.
 // The order is the contract: shells before the bundles that read them. The legs live beside the assembly; sync calls this one entry with the compile output, commits the result live, then links the packages.
 
@@ -12,7 +12,7 @@ import { publishReactBundle } from './react.ts'
 import { publishReferenceTypesBundle } from './reference-types.ts'
 import { stampContentVersions } from './content-version.ts'
 import { detectSyncedRole, type SyncedRole } from './synced-role.ts'
-import type { NeoDiagnostic } from '../diagnostics/types.ts'
+import type { CoreDiagnostic } from '../diagnostics/types.ts'
 import type { AssemblyInput } from './types.ts'
 
 /**
@@ -31,7 +31,7 @@ export function syncedRoleFor(liveOutDir: string): SyncedRole {
  * live and links the packages after — never this entry. Returns the typegen
  * warnings so sync reports them with the compile warnings.
  */
-export async function assembleSystem(input: AssemblyInput): Promise<NeoDiagnostic[]> {
+export async function assembleSystem(input: AssemblyInput): Promise<CoreDiagnostic[]> {
   mkdirSync(input.outDir, { recursive: true })
   // Ordered: the styled leg stages the stylesheet the react shell copies,
   // and the react leg reads the styled leg's runtime data.

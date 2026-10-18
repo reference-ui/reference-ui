@@ -49,7 +49,7 @@ afterEach(async () => {
 })
 
 async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-commit-reader-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-commit-reader-'))
   tempDirs.push(dir)
   return dir
 }

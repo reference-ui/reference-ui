@@ -27,10 +27,10 @@ const REFERENCE_STYLE_PROPS_ENTRY_STEMS: &[&str] = &[
 const REFERENCE_REACT_ENTRY: &str = ".reference-ui/react/react.d.mts";
 const STYLED_TYPES_ROOT: &str = ".reference-ui/styled/types";
 
-/// Neo exact-file entries as (relative path, export name). Neo publishes no
+/// Core exact-file entries as (relative path, export name). Core publishes no
 /// `react/types/`; its full wired surface lives in `react.d.mts`, with the
 /// narrow typegen surface and the `SystemProperties` alias as fallbacks.
-const NEO_STYLE_PROPS_ENTRY_FILES: &[(&str, &str)] = &[
+const CORE_STYLE_PROPS_ENTRY_FILES: &[(&str, &str)] = &[
     (".reference-ui/react/react.d.mts", "StyleProps"),
     ("react/react.d.mts", "StyleProps"),
     (".reference-ui/styled/types/index.d.ts", "StyleProps"),
@@ -102,7 +102,7 @@ fn style_props_entry_candidates(declaration_root: &Path) -> Vec<(PathBuf, &'stat
             }
         }
     }
-    for (relative, export_name) in NEO_STYLE_PROPS_ENTRY_FILES {
+    for (relative, export_name) in CORE_STYLE_PROPS_ENTRY_FILES {
         let candidate = declaration_root.join(relative);
         if candidate.is_file() {
             candidates.push((candidate, export_name));

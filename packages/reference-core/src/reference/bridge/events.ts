@@ -1,5 +1,5 @@
 // Reference bridge result payloads: they take build outcomes and emit the
-// structured serial-phase results. Neo has no event bus, so onRunBuild returns
+// structured serial-phase results. Core has no event bus, so onRunBuild returns
 // these instead of emitting `reference:complete` / `reference:failed`; the
 // shapes stay close to the old events for the consumers that wire up later.
 

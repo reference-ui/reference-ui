@@ -1,9 +1,9 @@
 /**
  * Vendored typegen declaration file, mechanically copied from the reference-rs dist output.
- * It carries the exact upstream bytes with explicit NodeNext specifiers, so neo typechecks without touching reference-rs.
+ * It carries the exact upstream bytes with explicit NodeNext specifiers, so core typechecks without touching reference-rs.
  * Do not edit this copy; regenerate it with the vendor tool after an RS rebuild.
  * @generated from @reference-ui/rust@0.0.42 dist/contracts/types.d.ts
- * Regen: cd packages/reference-neo && node tools/vendor-rust-typegen-dts.mjs
+ * Regen: cd packages/reference-core && node tools/vendor-rust-typegen-dts.mjs
  */
 
 /**
@@ -180,7 +180,7 @@ export type LogChannel = 'compiler' | 'proof';
 /**
  * Per-layer blocks of ONE system (D17 receive). Served `tokens`
  * rides N-API only; published entries carry `tokensPortable`.
- * Neo's system/base mirror stays field-identical to this.
+ * Core's system/base mirror stays field-identical to this.
  */
 export interface SystemStreams {
     name: string;

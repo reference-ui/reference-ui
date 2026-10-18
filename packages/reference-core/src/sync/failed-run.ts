@@ -30,7 +30,7 @@ async function dropStaleScratch(outDir: string): Promise<void> {
 
 // The stage dies with the failed run while the live folder keeps its
 // last-good outputs. Stale evaluator scratch drops too, so a fresh world still
-// lands nothing at all (NEO-SYNC-11). A run that lost the lock removes neither:
+// lands nothing at all (CORE-SYNC-11). A run that lost the lock removes neither:
 // the stage and scratch belong to the new holder by then.
 export async function dropFailedStageAndScratch(stageDir: string, outDir: string, ownsLock: boolean): Promise<void> {
   if (!ownsLock) return

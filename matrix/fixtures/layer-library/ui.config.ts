@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 
 export default defineConfig({
   name: 'layer-library',

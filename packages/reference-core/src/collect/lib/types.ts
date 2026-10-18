@@ -1,6 +1,6 @@
-// Shared shapes for the Neo fragment collector seam.
+// Shared shapes for the Core fragment collector seam.
 // It takes nothing and emits the collector, scan, and bundle contracts.
-// This module is a Neo-owned copy of the core fragment types trimmed of config templating.
+// This module is a core-owned copy of the retired reference-core fragment types trimmed of config templating.
 
 export interface FragmentCollectorConfig<TInput = unknown, TOutput = TInput> {
   name: string
@@ -37,7 +37,7 @@ export interface ScanOptions {
   include: string[]
   /** Function call names to look for (e.g. ['tokens', 'recipe']). Used when importFrom is not provided. */
   functionNames?: string[]
-  /** Module ids to detect in import statements (e.g. '@reference-ui/neo'). Preferred discovery mode. */
+  /** Module ids to detect in import statements (e.g. '@reference-ui/core'). Preferred discovery mode. */
   importFrom?: string | string[]
   /** Glob patterns to exclude. Defaults to node_modules-only; the d.ts match exclusion is emulated. */
   exclude?: string[]
@@ -56,7 +56,7 @@ export interface FragmentBundle {
 /** Bundle-only API: pass resolved file paths, get portable IIFE bundle strings back */
 export interface BundleFragmentsOptions {
   files: string[]
-  /** Alias module ids to paths when bundling (e.g. @reference-ui/neo → API entry). */
+  /** Alias module ids to paths when bundling (e.g. @reference-ui/core → API entry). */
   alias?: Record<string, string>
   /** Additional externals to avoid bundling. Esbuild requires string[] only. */
   external?: string[]

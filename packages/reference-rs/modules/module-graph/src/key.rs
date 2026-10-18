@@ -244,8 +244,8 @@ mod tests {
             ("/a/b/..", "/a", false),
             ("C:/a", "C:/a", true),
             (
-                "/tmp/neo-bench-XYZ/src/ui12/Card3.ts",
-                "/tmp/neo-bench-XYZ/src/ui12/Card3.ts",
+                "/tmp/core-bench-XYZ/src/ui12/Card3.ts",
+                "/tmp/core-bench-XYZ/src/ui12/Card3.ts",
                 true,
             ),
         ];

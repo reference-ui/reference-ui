@@ -29,7 +29,7 @@ export interface MatrixPackageRunContext {
 
 export interface MatrixPackageExecutionContext {
   consumerWorkspace: dagger.Container
-  neoVersion: string
+  coreVersion: string
   libVersion: string
   manifest: RegistryManifest
   registry: dagger.Service

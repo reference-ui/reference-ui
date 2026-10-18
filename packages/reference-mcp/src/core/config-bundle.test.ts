@@ -26,7 +26,7 @@ describe('bundleConfigWithDependencies', () => {
     await writeFile(
       configPath,
       [
-        "import { defineConfig } from '@reference-ui/neo'",
+        "import { defineConfig } from '@reference-ui/core'",
         "import { include } from './config-shared'",
         '',
         'export default defineConfig({',

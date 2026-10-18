@@ -1,4 +1,4 @@
-// Input shapes for the Neo packager assembly.
+// Input shapes for the Core packager assembly.
 // It takes nothing at runtime and emits the publish input sync fills from compile output plus the assembly input the packager runs on.
 // The assembly input is the packager's entire contract with sync: everything packaging needs, nothing it doesn't.
 

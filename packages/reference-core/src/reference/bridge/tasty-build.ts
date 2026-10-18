@@ -1,7 +1,7 @@
 // Reference tasty build: it takes the phase payload and emits the indexed tasty
-// state (manifest, API, diagnostics) for the project sources plus the neo
+// state (manifest, API, diagnostics) for the project sources plus the core
 // style-prop decls. One module-level session caches per source dir; the scan
-// root is the project itself because neo keeps no virtual mirror.
+// root is the project itself because core keeps no virtual mirror.
 
 import { existsSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
@@ -64,7 +64,7 @@ export async function rebuildReferenceTastyBuild(
 }
 
 /**
- * Scan the project in place (neo keeps no virtual mirror) plus the one neo
+ * Scan the project in place (core keeps no virtual mirror) plus the one core
  * decl root the style-prop projection needs: `style-props.d.ts` alone.
  * `index.d.ts` is deliberately NOT rooted — it declares a top-level
  * `StyleProps` that would index a second entry — while the compiler follows
@@ -76,7 +76,7 @@ export async function rebuildReferenceTastyBuild(
  * dependency trees, which are a large walk, while node_modules matches are
  * dropped from the indexed set anyway — so the exclusion is semantically
  * neutral and keeps the walk small. A dangling link under include is skipped
- * by the walker and named by the sync's include check (NEO-WATCH-24).
+ * by the walker and named by the sync's include check (CORE-WATCH-24).
  * Re-export discovery resolves linked packages through node resolution, not
  * the walker, and is unaffected.
  */

@@ -18,7 +18,7 @@ const spec: AtomicCaseSpec = {
     // Token kinds behind the scalar gate: `token('none')` on `outline`
     // passes through whole (one decl, no ring emit), the red path
     // agrees as the control, so the runtime namer must pass both
-    // through too (NEO-NAMER-01).
+    // through too (CORE-NAMER-01).
     const nonePlan = result.stylePlans.find(
       p =>
         p.prop === 'outline' &&

@@ -5,12 +5,12 @@
  * Same name and layers as lib, so the classes match. Never published.
  */
 
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as iconsBaseSystem } from '@reference-ui/icons/baseSystem'
 
 export default defineConfig({
   name: 'reference-ui',
-  // The config file itself is not a source: its icon and neo imports would
+  // The config file itself is not a source: its icon and core imports would
   // pull their modules into Book's fragments.
   // Keep the unrooted `**` here: a rooted `../book/**` form drops files from
   // the compile, which changes Book's sheet.

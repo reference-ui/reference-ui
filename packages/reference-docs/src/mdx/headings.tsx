@@ -30,7 +30,7 @@ const stepAfterSection = css({
   '&:is(h2 + *)': { marginTop: '6r' },
 })
 
-/** MDX native props minus legacy string-refs, which neo primitives don't take. */
+/** MDX native props minus legacy string-refs, which core primitives don't take. */
 export type MdxProps<T extends keyof JSX.IntrinsicElements> = Omit<JSX.IntrinsicElements[T], 'ref'>
 
 function toText(node: ReactNode): string {

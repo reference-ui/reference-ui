@@ -1,4 +1,4 @@
-// Reference types publishing for the Neo generated folder.
+// Reference types publishing for the Core generated folder.
 // It takes the output dir (with the react leg already landed) and emits the
 // `@reference-ui/types` package: the bundled types.mjs, its manifest, and
 // the declarations. The mirror's `@reference-ui/react` edge aliases to the
@@ -21,7 +21,7 @@ export interface ReferenceTypesPublishInput {
   outDir: string
 }
 
-function neoFilePath(...parts: string[]): string {
+function coreFilePath(...parts: string[]): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), '..', ...parts)
 }
 
@@ -38,12 +38,12 @@ function neoFilePath(...parts: string[]): string {
 export async function publishReferenceTypesBundle(
   input: ReferenceTypesPublishInput
 ): Promise<void> {
-  const bundle = await microBundleWithResult(neoFilePath('entry', 'types.tsx'), {
+  const bundle = await microBundleWithResult(coreFilePath('entry', 'types.tsx'), {
     format: 'esm',
     platform: 'neutral',
     target: 'es2020',
     external: TYPES_BUNDLE_EXTERNALS,
-    // V1a: the neo primitives entry for this sync is the generated react
+    // V1a: the core primitives entry for this sync is the generated react
     // bundle. Without the alias the edge is node-unresolvable and tsconfig
     // discovery would fall back to the types-only surface (empty at
     // runtime); the plugin wins over every resolution regime.
@@ -61,6 +61,6 @@ export async function publishReferenceTypesBundle(
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'types.mjs'), runPostprocess(bundle.code, TYPES_PACKAGE), 'utf-8')
   writePackageJson(dir, TYPES_PACKAGE)
-  const declarations = inlineRustTastyTypes(readFileSync(neoFilePath('entry', 'types.d.mts'), 'utf-8'))
+  const declarations = inlineRustTastyTypes(readFileSync(coreFilePath('entry', 'types.d.mts'), 'utf-8'))
   writeFileSync(join(dir, 'types.d.mts'), `${BASE_SYSTEM_HEADER}\n${declarations}`, 'utf-8')
 }

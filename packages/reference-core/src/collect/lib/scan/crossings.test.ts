@@ -27,7 +27,7 @@ function writeProject(): string {
   writeFileSync(
     join(dir, 'ui.config.ts'),
     [
-      "import { defineConfig } from '@reference-ui/neo'",
+      "import { defineConfig } from '@reference-ui/core'",
       '',
       'export default defineConfig({',
       "  name: 'crossings',",
@@ -36,7 +36,7 @@ function writeProject(): string {
       '',
     ].join('\n')
   )
-  writeFileSync(join(dir, 'theme', 'tokens.ts'), "import '@reference-ui/neo'\n")
+  writeFileSync(join(dir, 'theme', 'tokens.ts'), "import '@reference-ui/core'\n")
   return dir
 }
 

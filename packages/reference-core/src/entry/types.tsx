@@ -4,7 +4,7 @@
 // (entry composition owns them since the mirror shell was buried); the
 // factory, runtimes, provider, hooks, formatter, and document types all
 // re-export from the browser layer untouched, so the `?name=` pages render
-// exactly what core's entry shipped.
+// exactly what the retired reference-core's entry shipped.
 
 import { ReferenceDocumentView } from '../reference/browser-component/components/ReferenceDocumentView.tsx'
 import { ReferenceFrame } from '../reference/browser-component/components/ReferenceFrame.tsx'

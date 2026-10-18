@@ -6,7 +6,7 @@
 
 import { SLOW_CONFIG_CODE } from '../diagnostics/codes.ts'
 import { dedupeDiagnostics, formatVerboseWarningLine } from '../diagnostics/format.ts'
-import type { NeoDiagnostic } from '../diagnostics/types.ts'
+import type { CoreDiagnostic } from '../diagnostics/types.ts'
 
 /** Config evaluation past this many ms warns: a data-only config evaluates in tens of ms, the lib barrel in ~1.5 s. */
 export const CONFIG_SLOW_EVALUATION_MS = 750
@@ -38,7 +38,7 @@ function slowCause(externalImports: readonly string[]): { message: string; help:
 }
 
 /** The slow-config warning for one evaluation, or undefined when it finished under the threshold. */
-export function slowConfigDiagnostic(timing: ConfigEvaluationTiming): NeoDiagnostic | undefined {
+export function slowConfigDiagnostic(timing: ConfigEvaluationTiming): CoreDiagnostic | undefined {
   if (timing.durationMs <= CONFIG_SLOW_EVALUATION_MS) return undefined
   const cause = slowCause(timing.externalImports)
   return {
@@ -56,7 +56,7 @@ export function slowConfigDiagnostic(timing: ConfigEvaluationTiming): NeoDiagnos
  * otherwise a slow config would hide inside the folded warning count.
  */
 export function printConfigWarnings(
-  diagnostics: readonly NeoDiagnostic[],
+  diagnostics: readonly CoreDiagnostic[],
   options: { verbose?: boolean; json?: boolean } = {}
 ): void {
   if (options.verbose === true || options.json === true || diagnostics.length === 0) return

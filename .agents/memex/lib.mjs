@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import {
   collectMarkdown,
-  collectNeo,
+  collectCore,
   collectRs,
   collectRsCases,
 } from './adapters.mjs'
@@ -90,8 +90,8 @@ export function collectCollection(manifest, root = ROOT) {
       }
       return { docs, warnings }
     }
-    case 'neo':
-      return collectNeo(join(root, manifest.root), root, manifest.name)
+    case 'core':
+      return collectCore(join(root, manifest.root), root, manifest.name)
     case 'component':
       return collectComponents(join(root, manifest.root), root, manifest.name)
     case 'rs':
@@ -296,7 +296,7 @@ function resolvePath(root, ref) {
 function formatDocShow(doc) {
   const head = `${doc.collection}:${doc.id} — ${doc.title}`
   switch (doc.kind) {
-    case 'neo': {
+    case 'core': {
       const p = doc.payload
       const lines = [head, `path: ${doc.path}`, `family: ${p.family}`]
       if (p.related.length) lines.push(`related: ${p.related.join(' ')}`)

@@ -12,8 +12,8 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { inlineRustTastyTypes, transformRustTastyModule } from './reference-types-tasty.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const NEO_ROOT = join(HERE, '..', '..')
-const ENTRY_SOURCE = join(NEO_ROOT, 'src', 'entry', 'types.d.mts')
+const CORE_ROOT = join(HERE, '..', '..')
+const ENTRY_SOURCE = join(CORE_ROOT, 'src', 'entry', 'types.d.mts')
 const IMPORTED_NAMES = [
   'RawTastyMappedModifierKind',
   'RawTastyMemberKind',
@@ -125,10 +125,10 @@ describe('inlineRustTastyTypes', () => {
 // off would. An empty string means clean; a spawn failure rethrows, so a missing
 // compiler can never pass as a clean typecheck.
 function typecheckStandalone(source: string): string {
-  const scratch = mkdtempSync(join(tmpdir(), 'neo-rust-tasty-'))
+  const scratch = mkdtempSync(join(tmpdir(), 'core-rust-tasty-'))
   scratchRoots.push(scratch)
   mkdirSync(join(scratch, 'node_modules', '@types'), { recursive: true })
-  symlinkSync(join(NEO_ROOT, 'node_modules', '@types', 'react'), join(scratch, 'node_modules', '@types', 'react'), 'dir')
+  symlinkSync(join(CORE_ROOT, 'node_modules', '@types', 'react'), join(scratch, 'node_modules', '@types', 'react'), 'dir')
   writeFileSync(join(scratch, 'types.d.mts'), source)
   writeFileSync(
     join(scratch, 'tsconfig.json'),
@@ -146,7 +146,7 @@ function typecheckStandalone(source: string): string {
       files: ['./types.d.mts'],
     }),
   )
-  const tsc = join(NEO_ROOT, 'node_modules', '.bin', 'tsc')
+  const tsc = join(CORE_ROOT, 'node_modules', '.bin', 'tsc')
   try {
     execFileSync(tsc, ['-p', join(scratch, 'tsconfig.json'), '--pretty', 'false'], { encoding: 'utf-8', stdio: 'pipe' })
     return ''

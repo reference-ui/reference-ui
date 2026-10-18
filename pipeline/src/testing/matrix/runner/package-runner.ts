@@ -98,7 +98,7 @@ export async function runMatrixPackageInDagger(
   )
   const nodeModulesCacheKey = matrixNodeModulesCacheKey({
     containerImage,
-    neoVersion: executionContext.neoVersion,
+    coreVersion: executionContext.coreVersion,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalPackages: executionContext.manifest.packages.filter(pkg =>
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),
@@ -109,7 +109,7 @@ export async function runMatrixPackageInDagger(
   })
   const sharedNodeModulesCacheKey = matrixSharedNodeModulesCacheKey({
     containerImage,
-    neoVersion: executionContext.neoVersion,
+    coreVersion: executionContext.coreVersion,
     fixturePackageJson: packageRunContext.source.fixturePackageJson,
     internalPackages: executionContext.manifest.packages.filter(pkg =>
       internalTarballSpecs.some(spec => spec.packageName === pkg.name),

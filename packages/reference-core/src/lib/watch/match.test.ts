@@ -26,7 +26,7 @@ afterEach(() => {
 
 // A canonical temp root with the given files written under it.
 function makeTree(files: Record<string, string>): string {
-  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'neo-watch-match-')))
+  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'core-watch-match-')))
   tempDirs.push(dir)
   for (const [rel, body] of Object.entries(files)) {
     mkdirSync(dirname(join(dir, rel)), { recursive: true })

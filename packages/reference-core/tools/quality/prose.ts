@@ -80,15 +80,15 @@ function countSentences(buf: string[]): number {
 }
 
 export function checkHeader(file: string, text: string | null | undefined): Violation | null {
-  const fail = (message: string): Violation => ({ file, line: 1, ruleId: 'neo/header', severity: 2, message });
+  const fail = (message: string): Violation => ({ file, line: 1, ruleId: 'core/header', severity: 2, message });
   const buf = leadingCommentLines(text ?? '');
-  if (!buf) return fail('neo/header: missing file header; open with a 2-6 sentence comment saying what the file is, takes, and emits.');
+  if (!buf) return fail('core/header: missing file header; open with a 2-6 sentence comment saying what the file is, takes, and emits.');
   const n = countSentences(buf);
   if (n < HEADER_MIN_SENTENCES) {
-    return fail(`neo/header: one-liner header (${n} sentence); write ${HEADER_MIN_SENTENCES}-${HEADER_MAX_SENTENCES} complete sentences instead.`);
+    return fail(`core/header: one-liner header (${n} sentence); write ${HEADER_MIN_SENTENCES}-${HEADER_MAX_SENTENCES} complete sentences instead.`);
   }
   if (n > HEADER_MAX_SENTENCES) {
-    return fail(`neo/header: essay header (${n} sentences); trim it to ${HEADER_MIN_SENTENCES}-${HEADER_MAX_SENTENCES} sentences.`);
+    return fail(`core/header: essay header (${n} sentences); trim it to ${HEADER_MIN_SENTENCES}-${HEADER_MAX_SENTENCES} sentences.`);
   }
   return null;
 }
@@ -105,8 +105,8 @@ export function checkReadme(file: string, text: string | null | undefined): Viol
   return {
     file,
     line: hits[0],
-    ruleId: 'neo/readme',
+    ruleId: 'core/readme',
     severity: 2,
-    message: `neo/readme: filename-table README (table rows at lines ${hits.join(', ')} list files); describe the architecture in prose instead.`,
+    message: `core/readme: filename-table README (table rows at lines ${hits.join(', ')} list files); describe the architecture in prose instead.`,
   };
 }

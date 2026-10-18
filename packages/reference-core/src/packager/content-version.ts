@@ -1,4 +1,4 @@
-// Content-addressed versions for Neo generated packages.
+// Content-addressed versions for Core generated packages.
 // It takes a stage dir holding the assembled packages and emits each package.json with GENERATED_VERSION plus a short SHA-256 over that package's versioned files.
 // Versioned means what assembly writes for the package: the root manifest is out (its version is the output), and so are the entries other owners land after the stamp (sync's compile-request diagnostic, the session-owned tasty dir and its writer temps).
 // Two packages share a version only when their bytes match, so TypeScript never dedupes two different copies of one name and version, and a re-sync that changes nothing rewrites the same bytes.

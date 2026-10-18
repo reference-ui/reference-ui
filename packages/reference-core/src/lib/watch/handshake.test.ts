@@ -25,7 +25,7 @@ function readState(): unknown {
 }
 
 beforeEach(() => {
-  const dir = mkdtempSync(join(tmpdir(), 'neo-watch-handshake-'))
+  const dir = mkdtempSync(join(tmpdir(), 'core-watch-handshake-'))
   tempDirs.push(dir)
   lockDir = join(dir, 'sync.lock')
   mkdirSync(lockDir)

@@ -1,4 +1,4 @@
-// Unit tests for the Neo primitive prop splitter.
+// Unit tests for the Core primitive prop splitter.
 // They take props plus a baked name list and assert the style/DOM split.
 // Reserved keys stay out of both buckets; unknowns always reach the DOM
 // except condition arms, which ride to style resolution as whens.

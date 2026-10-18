@@ -46,7 +46,7 @@ packages/reference-icons/src/generated/
 .complexity-temp
 reports/
 # Bench pins are the committed log, not scratch (see benchmark/README.md).
-!packages/reference-neo/benchmark/reports/
+!packages/reference-core/benchmark/reports/
 .eslint-result.txt
 .reference
 packages/.sandbox
@@ -55,9 +55,7 @@ packages/.sandbox
 .pipeline
 .content-collections
 pipeline/src/registry/.store
-packages/reference-core/src/system/styled
 packages/reference-core/src/reference/browser-component/
-packages/reference-neo/src/reference/browser-component/
 
 # Nx
 .nx
@@ -68,9 +66,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 blob-report/
-packages/reference-neo/tests/.artifacts/
-packages/reference-neo/tests/cases/**/dist/
-packages/reference-neo/playground/.captures/
+packages/reference-core/tests/.artifacts/
+packages/reference-core/tests/cases/**/dist/
+packages/reference-core/playground/.captures/
 .playwright-mcp/
 # OpenChamber's agent screenshot spool: scratch captures, never committed.
 .openchamber/

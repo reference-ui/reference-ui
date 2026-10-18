@@ -14,7 +14,7 @@ mod member_alias_collide;
 mod member_alias_forward_ref;
 mod member_alias_reassign;
 mod member_alias_silent;
-mod neo_decl_roots;
+mod core_decl_roots;
 mod owned_forwarded;
 mod owned_props;
 mod owned_provider;

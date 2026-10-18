@@ -18,7 +18,7 @@ import {
   partitionTyped,
   pullSyncDiagnostics,
 } from '../index.ts'
-import type { NeoDiagnostic, TypedDiagnostic } from '../index.ts'
+import type { CoreDiagnostic, TypedDiagnostic } from '../index.ts'
 
 describe('parseCode', () => {
   it('parses warning and error codes into namespace and tag', () => {
@@ -137,12 +137,12 @@ describe('parseTypedBatch', () => {
 
 describe('isTypedDiagnostic', () => {
   it('accepts matching warn/err rows and refuses legacy carries', () => {
-    const warning: NeoDiagnostic = {
+    const warning: CoreDiagnostic = {
       severity: 'warning',
       code: 'ATM-W-UNKNOWN-COLOR',
       message: 'no such color',
     }
-    const error: NeoDiagnostic = { severity: 'error', code: 'ATM-E-UNKNOWN-TOKEN', message: 'refused' }
+    const error: CoreDiagnostic = { severity: 'error', code: 'ATM-E-UNKNOWN-TOKEN', message: 'refused' }
     expect(isTypedDiagnostic(warning)).toBe(true)
     expect(isTypedDiagnostic(error)).toBe(true)
     expect(isTypedDiagnostic({ ...warning, severity: 'info', code: 'ATM-I-HARVEST-SINK' })).toBe(false)
@@ -152,8 +152,8 @@ describe('isTypedDiagnostic', () => {
   })
 
   it('partitions channels into typed rows and legacy carries in order', () => {
-    const typed: NeoDiagnostic = { severity: 'warning', code: 'ATM-W-UNKNOWN-COLOR', message: 'm' }
-    const legacy: NeoDiagnostic = { severity: 'warning', message: 'codeless' }
+    const typed: CoreDiagnostic = { severity: 'warning', code: 'ATM-W-UNKNOWN-COLOR', message: 'm' }
+    const legacy: CoreDiagnostic = { severity: 'warning', message: 'codeless' }
     const split = partitionTyped([legacy, typed])
     expect(split.typed).toEqual([typed])
     expect(split.legacy).toEqual([legacy])
@@ -217,9 +217,9 @@ describe('fromTastyDiagnostic', () => {
 
 describe('pullSyncDiagnostics', () => {
   it('pulls both channels and defaults the compiler list when absent', () => {
-    const userspace: NeoDiagnostic = { severity: 'warning', code: 'ATM-W-UNKNOWN-COLOR', message: 'm' }
+    const userspace: CoreDiagnostic = { severity: 'warning', code: 'ATM-W-UNKNOWN-COLOR', message: 'm' }
     expect(pullSyncDiagnostics({ diagnostics: [userspace] })).toEqual({ userspace: [userspace], compiler: [] })
-    const compiler: NeoDiagnostic = {
+    const compiler: CoreDiagnostic = {
       severity: 'warning',
       code: 'ATM-W-DYNAMIC-IDENTIFIER',
       message: 'n',

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { analyzeDetailed } from '@reference-ui/rust/atlas'
-import { getConfig } from '@reference-ui/neo/config/store'
+import { getConfig } from '@reference-ui/core/config/store'
 import { log } from '../server/logger'
 import { joinMcpComponentWithReference } from './join'
 import { getAtlasMcpConfig, type McpAwareConfig } from './config'

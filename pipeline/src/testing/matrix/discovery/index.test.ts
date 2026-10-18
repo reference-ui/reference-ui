@@ -191,6 +191,6 @@ describe('isMatrixWorkspacePackageDir', () => {
     assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'tests', 'chain', 'T2')), true)
     assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'tests', 'mcp')), true)
     assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'matrix', 'fixtures', 'extend-library')), false)
-    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'packages', 'reference-neo')), false)
+    assert.equal(isMatrixWorkspacePackageDir(resolve(repoRoot, 'packages', 'reference-core')), false)
   })
 })

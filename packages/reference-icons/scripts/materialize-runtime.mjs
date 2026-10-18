@@ -12,7 +12,7 @@ const packagedRuntimeDir = resolve(distDir, 'runtime/reference-ui')
 
 const runtimePackages = ['react', 'styled']
 
-// Neo's styled leg is data-only: no css/jsx/patterns modules exist.
+// Core's styled leg is data-only: no css/jsx/patterns modules exist.
 // The packaged react entry is self-contained JS; its .d.mts references
 // the bare styled id twice (import + export type *), both rewired here.
 const runtimeRewrites = [

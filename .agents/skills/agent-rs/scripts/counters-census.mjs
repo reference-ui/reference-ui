@@ -39,7 +39,7 @@ function ccVersion() {
 
 export function buildCountersShim() {
   const source = shimSourcePath()
-  const dir = mkdtempSync(path.join(tmpdir(), 'neo-counters-shim-'))
+  const dir = mkdtempSync(path.join(tmpdir(), 'core-counters-shim-'))
   const dylib = path.join(dir, 'libcounters-interpose.dylib')
   const build = spawnSync('cc', ['-dynamiclib', '-O2', '-o', dylib, source], { encoding: 'utf-8' })
   if (build.status !== 0) {

@@ -1,4 +1,4 @@
-// Neo diagnostic types: the one typed vocabulary above the native cut.
+// Core diagnostic types: the one typed vocabulary above the native cut.
 // It takes the compile-boundary wire shape and emits the legacy working
 // alias plus the validated typed form the transport enforces. Channels name
 // the three producers the CLI collapses into one report, while options and
@@ -10,7 +10,7 @@ import type { NativeDiagnostic } from '../native/contract.ts'
  * `code` stays optional and `info` stays legal here because the landed
  * channels still carry codeless tasty strings and compiler telemetry.
  */
-export type NeoDiagnostic = NativeDiagnostic
+export type CoreDiagnostic = NativeDiagnostic
 
 /** Severity the typed form admits: warnings continue, errors refuse. */
 export type TypedSeverity = 'warning' | 'error'
@@ -62,7 +62,7 @@ export interface DiagnosticReportOptions {
 
 /** One deduped group: the first-seen entry plus its repeat count. */
 export interface DeduplicatedDiagnostic {
-  entry: NeoDiagnostic
+  entry: CoreDiagnostic
   count: number
 }
 
@@ -71,8 +71,8 @@ export interface DeduplicatedDiagnostic {
  * readonly because the pull never mutates the engine result it inspects.
  */
 export interface CompileResultView {
-  diagnostics: readonly NeoDiagnostic[]
-  compilerDiagnostics?: readonly NeoDiagnostic[]
+  diagnostics: readonly CoreDiagnostic[]
+  compilerDiagnostics?: readonly CoreDiagnostic[]
 }
 
 /**

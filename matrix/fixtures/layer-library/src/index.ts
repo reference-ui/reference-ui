@@ -2,7 +2,7 @@
  * Layer Library fixture.
  * Exports baseSystem for downstream layers[] consumers.
  *
- * Run `neo sync` in layer-library before using.
+ * Run `core sync` in layer-library before using.
  */
 export { baseSystem } from '@reference-ui/system/baseSystem'
 export { LightDarkDemo } from './components/LightDarkDemo'

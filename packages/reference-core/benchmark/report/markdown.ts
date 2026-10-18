@@ -1,4 +1,4 @@
-// Markdown readout for Neo benchmark reports.
+// Markdown readout for Core benchmark reports.
 // It takes one finished run record and emits the human text.
 // Readouts lead with the big three per scale — peak RSS, sync time, total bundle — beside the load.
 // result.json carries the same record for machines; there is no other rendering.

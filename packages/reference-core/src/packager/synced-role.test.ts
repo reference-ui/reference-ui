@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 function makeRoot(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'neo-synced-role-'))
+  const dir = mkdtempSync(join(tmpdir(), 'core-synced-role-'))
   tempDirs.push(dir)
   return dir
 }

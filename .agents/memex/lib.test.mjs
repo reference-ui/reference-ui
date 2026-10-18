@@ -12,7 +12,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   collectMarkdown,
-  collectNeo,
+  collectCore,
   collectRs,
   collectRsCases,
   matchGlob,
@@ -52,7 +52,7 @@ describe('text', () => {
   it('stems inflections but passes ids through', () => {
     assert.equal(stem('queries'), 'queri')
     assert.equal(stem('query'), 'queri')
-    assert.equal(stem('NEO-CHAIN-01'), 'NEO-CHAIN-01')
+    assert.equal(stem('CORE-CHAIN-01'), 'CORE-CHAIN-01')
   })
 
   it('drops single-char junk terms', () => {
@@ -207,24 +207,24 @@ describe('markdown collector', () => {
   })
 })
 
-describe('neo collector', () => {
+describe('core collector', () => {
   it('builds one doc per case dir from meta, readme, and specs', () => {
     const { dir, done } = fixture()
     try {
-      const cased = join(dir, 'fam', 'NEO-X-01')
+      const cased = join(dir, 'fam', 'CORE-X-01')
       mkdirSync(join(cased, 'specs'), { recursive: true })
       writeFileSync(
         join(cased, 'case.json'),
-        JSON.stringify({ id: 'NEO-X-01', name: 'X one' })
+        JSON.stringify({ id: 'CORE-X-01', name: 'X one' })
       )
       writeFileSync(join(cased, 'README.md'), '# X\nAbout x.\n')
       writeFileSync(join(cased, 'specs', 'a.spec.ts'), 'test(x)\n')
       mkdirSync(join(cased, 'specs', 'world'))
       writeFileSync(join(cased, 'specs', 'world', 'gen.spec.ts'), 'generated\n')
       writeFileSync(join(dir, 'fam', ' stray.json'), '{}')
-      const { docs } = collectNeo(join(dir, 'fam'), dir, 'cases')
+      const { docs } = collectCore(join(dir, 'fam'), dir, 'cases')
       assert.equal(docs.length, 1)
-      assert.equal(docs[0].id, 'NEO-X-01')
+      assert.equal(docs[0].id, 'CORE-X-01')
       assert.ok(docs[0].fields.text.includes('test(x)'))
       assert.ok(!docs[0].fields.text.includes('generated'))
       assert.equal(docs[0].payload.specs.length, 1)

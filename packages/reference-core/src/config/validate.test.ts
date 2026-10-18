@@ -1,6 +1,6 @@
-// Unit tests for the Neo config validator over the surviving fields.
+// Unit tests for the Core config validator over the surviving fields.
 // They take candidate configs and assert accept or typed rejection.
-// This file is a Neo-owned copy of the core validator tests trimmed with the surface.
+// This file is a core-owned copy of the retired reference-core validator tests trimmed with the surface.
 
 import { describe, expect, it } from 'vitest'
 import { validateConfig } from './validate.ts'
@@ -60,7 +60,7 @@ describe('validateConfig base fields', () => {
     ).toThrowError(/safe for CSS @layer/i)
   })
 
-  it('ignores unknown fields as core does today', () => {
+  it('ignores unknown fields as the retired reference-core does today', () => {
     // layers and strict are known fields now; only genuinely unknown fields
     // ride this test.
     const config = validateConfig({

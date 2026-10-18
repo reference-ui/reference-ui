@@ -4,7 +4,7 @@
 //! Leaves carry `value`, `light`, and `dark` strings. When `light` or `dark` is itself an object,
 //! it is a nested group rather than a mode slot. Unknown top-level fields and unsupported
 //! schema versions fail closed with explicit diagnostics. `extends` names upstream systems
-//! kept for wire compatibility; this crate does not resolve them, since Neo composes them.
+//! kept for wire compatibility; this crate does not resolve them, since Core composes them.
 
 use std::collections::BTreeMap;
 use std::error::Error;

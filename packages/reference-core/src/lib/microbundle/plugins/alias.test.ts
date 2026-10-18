@@ -1,6 +1,6 @@
-// Unit tests for the Neo alias plugin over exact id matching.
+// Unit tests for the Core alias plugin over exact id matching.
 // They take alias maps and assert resolve filters plus target paths.
-// This file is a Neo-owned copy of the core alias plugin tests.
+// This file is a core-owned copy of the retired reference-core alias plugin tests.
 
 import { describe, expect, it, vi } from 'vitest'
 import { aliasPlugin } from './alias.ts'

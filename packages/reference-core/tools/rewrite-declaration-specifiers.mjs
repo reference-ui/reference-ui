@@ -1,4 +1,4 @@
-// Declaration post-pass for the shipped neo package, run after the tsc emit and the twin layout.
+// Declaration post-pass for the shipped core package, run after the tsc emit and the twin layout.
 // tsc keeps the `.ts` names the source wrote in every emitted .d.ts, so a consumer reads
 // `from './config/types.ts'`. TypeScript still finds the .d.ts beside it, but tasty maps only
 // .js/.mjs/.cjs to a declaration and reports each `.ts` import as TST-W-UNRESOLVED-IMPORT.

@@ -1,6 +1,6 @@
 // Union label cases: they compile the vendored union-label fixtures with the
 // public tasty build and assert the API table's union type lines (`Union`,
-// widenings) plus literal value-set chips. Neo port of the core union
+// widenings) plus literal value-set chips. Core port of the retired reference-core union
 // display-label suite; the model decides the labels, so the cases pin them
 // without rendering React.
 
@@ -25,7 +25,7 @@ let api: TastyApi
 let outputDir: string
 
 beforeAll(async () => {
-  outputDir = mkdtempSync(join(tmpdir(), 'neo-union-labels-'))
+  outputDir = mkdtempSync(join(tmpdir(), 'core-union-labels-'))
   const built = await buildTasty({ rootDir: fixtureDir, include: ['**/*.ts'], outputDir })
   api = built.api
 }, 60000)

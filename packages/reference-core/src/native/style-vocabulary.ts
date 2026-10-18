@@ -1,4 +1,4 @@
-// Style-prop vocabulary for the MCP, read from Neo's committed primitives shelf.
+// Style-prop vocabulary for the MCP, read from Core's committed primitives shelf.
 // It takes the shelf's vocabulary.json and emits STYLE_PROP_NAMES, RESERVED_PROP_NAMES
 // and isStylePropName: the shelf's stylePropNames plus the font, weight and css props,
 // with condition arms recognised by the prefixes its conditionRule names. Reserved

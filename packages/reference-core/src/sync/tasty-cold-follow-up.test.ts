@@ -33,7 +33,7 @@ const LATER_SAVE = 'LaterProps\n'
 const AGAIN_SAVE = 'AgainProps\n'
 
 const CONFIG = [
-  "import { defineConfig } from '@reference-ui/neo'",
+  "import { defineConfig } from '@reference-ui/core'",
   '',
   'export default defineConfig({',
   "  name: 'cold-follow-up-test',",
@@ -43,7 +43,7 @@ const CONFIG = [
 ].join('\n')
 
 const TOKENS = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',
@@ -113,7 +113,7 @@ afterEach(async () => {
 })
 
 async function writeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-cold-follow-up-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-cold-follow-up-'))
   tempDirs.push(dir)
   await mkdir(join(dir, 'theme'), { recursive: true })
   await writeFile(join(dir, 'ui.config.ts'), CONFIG)

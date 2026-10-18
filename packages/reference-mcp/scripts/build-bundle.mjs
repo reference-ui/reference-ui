@@ -6,7 +6,7 @@
 // bare and /* subpath forms) — including @rspress/mdx-rs, whose per-platform
 // native bindings tsup's native-node-modules plugin choked on (the red-at-HEAD
 // cause); the bare specifier survives into dist and resolves from node_modules
-// at runtime. The neo-alias and icons-index-text plugins moved here verbatim
+// at runtime. The core-alias and icons-index-text plugins moved here verbatim
 // from tsup.config.ts. Run from the package dir:
 // node scripts/build-bundle.mjs [--watch]
 
@@ -17,35 +17,35 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(dirname(fileURLToPath(import.meta.url)))
-const neo = p => resolve(here, '../reference-neo/src', p)
+const core = p => resolve(here, '../reference-core/src', p)
 const STAGE_SUFFIX = '.__stage'
 
-// Specifier wiring: the virtual `@reference-ui/neo/*` ids resolve to Neo
+// Specifier wiring: the virtual `@reference-ui/core/*` ids resolve to Core
 // source files at build time (mirrors tsconfig paths). Aliased modules bundle
-// into dist (shipped installs carry no neo dependency); bare externals
+// into dist (shipped installs carry no core dependency); bare externals
 // (esbuild, fast-glob, @reference-ui/rust/*, node builtins) stay external.
 /** @type {Record<string, string>} */
-const NEO_ALIAS = {
-  '@reference-ui/neo/config/store': neo('config/store.ts'),
-  '@reference-ui/neo/config/errors': neo('config/errors.ts'),
-  '@reference-ui/neo/config/evaluate': neo('config/evaluate.ts'),
-  '@reference-ui/neo/config/validate': neo('config/validate.ts'),
-  '@reference-ui/neo/config/constants': neo('config/constants.ts'),
-  '@reference-ui/neo/config/types': neo('config/types.ts'),
-  '@reference-ui/neo/reference': neo('reference/api.ts'),
-  '@reference-ui/neo/fragments/runner': neo('collect/lib/runner.ts'),
-  '@reference-ui/neo/fragments/scanner': neo('collect/lib/scan/scanner.ts'),
-  '@reference-ui/neo/fragments/tokens': neo('collect/surface/tokens.ts'),
-  '@reference-ui/neo/system/base/fragments': neo('system/base/fragments.ts'),
-  '@reference-ui/neo/microbundle': neo('lib/microbundle/index.ts'),
-  '@reference-ui/neo/style-vocabulary': neo('native/style-vocabulary.ts'),
+const CORE_ALIAS = {
+  '@reference-ui/core/config/store': core('config/store.ts'),
+  '@reference-ui/core/config/errors': core('config/errors.ts'),
+  '@reference-ui/core/config/evaluate': core('config/evaluate.ts'),
+  '@reference-ui/core/config/validate': core('config/validate.ts'),
+  '@reference-ui/core/config/constants': core('config/constants.ts'),
+  '@reference-ui/core/config/types': core('config/types.ts'),
+  '@reference-ui/core/reference': core('reference/api.ts'),
+  '@reference-ui/core/fragments/runner': core('collect/lib/runner.ts'),
+  '@reference-ui/core/fragments/scanner': core('collect/lib/scan/scanner.ts'),
+  '@reference-ui/core/fragments/tokens': core('collect/surface/tokens.ts'),
+  '@reference-ui/core/system/base/fragments': core('system/base/fragments.ts'),
+  '@reference-ui/core/microbundle': core('lib/microbundle/index.ts'),
+  '@reference-ui/core/style-vocabulary': core('native/style-vocabulary.ts'),
 }
 
 /** @type {import('esbuild').Plugin} */
-const neoAlias = {
-  name: 'neo-alias',
+const coreAlias = {
+  name: 'core-alias',
   setup(pluginBuild) {
-    for (const [id, path] of Object.entries(NEO_ALIAS)) {
+    for (const [id, path] of Object.entries(CORE_ALIAS)) {
       const filter = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
       pluginBuild.onResolve({ filter }, () => ({ path }))
     }
@@ -135,9 +135,9 @@ async function main() {
       index: 'src/index.ts',
       cli: 'src/cli/index.ts',
       'mcp-child': 'src/child-process/entry.ts',
-      // Neo author entry as a real file: mcp-side esbuild alias maps (ui.config
+      // Core author entry as a real file: mcp-side esbuild alias maps (ui.config
       // bundling, token-fragment bundling) point at this artifact at runtime.
-      'neo-author': '../reference-neo/src/index.ts',
+      'core-author': '../reference-core/src/index.ts',
     },
     bundle: true,
     format: 'esm',
@@ -158,7 +158,7 @@ async function main() {
     mainFields: ['module', 'main'],
     legalComments: 'none',
     tsconfig: join(root, 'tsconfig.json'),
-    plugins: [neoAlias, iconsIndexText, stageRename],
+    plugins: [coreAlias, iconsIndexText, stageRename],
     external,
     outdir: stageDir,
     outExtension: { '.js': '.mjs' },

@@ -1,4 +1,4 @@
-// Unit tests for the Neo recipe() collector.
+// Unit tests for the Core recipe() collector.
 // They take recipe configs and assert collected fragments.
 // This file mirrors the collector unit shape of the tokens tests.
 

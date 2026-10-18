@@ -1,4 +1,4 @@
-// Unit tests for Neo config loads repeated in one process.
+// Unit tests for Core config loads repeated in one process.
 // They take a temp consumer whose config imports an upstream base system by bare
 // package specifier, change the upstream between two loads, and assert the second
 // load reads the current file. The upstream is linked into node_modules the way a
@@ -99,13 +99,13 @@ describe('config loads in one process', () => {
     expect(bundled).not.toContain('plain-value')
   })
 
-  it('leaves unresolvable and builtin imports external and keeps the neo alias', async () => {
+  it('leaves unresolvable and builtin imports external and keeps the core alias', async () => {
     const { app } = await makeConsumer()
     const configPath = join(app, 'ui.config.ts')
     await writeFile(
       configPath,
       [
-        "import { defineConfig } from '@reference-ui/neo'",
+        "import { defineConfig } from '@reference-ui/core'",
         "import { gone } from 'not-installed-anywhere'",
         "import { deep } from '@scope/missing/deep/path'",
         "import { sep } from 'node:path'",
@@ -121,7 +121,7 @@ describe('config loads in one process', () => {
     expect(bundled).toMatch(/from ['"]@scope\/missing\/deep\/path['"]/)
     expect(bundled).toMatch(/from ['"]node:path['"]/)
     // The defineConfig id still maps to the local entry instead of staying a bare import.
-    expect(bundled).not.toMatch(/from ['"]@reference-ui\/neo['"]/)
+    expect(bundled).not.toMatch(/from ['"]@reference-ui\/core['"]/)
   })
 })
 

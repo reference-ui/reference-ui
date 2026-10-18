@@ -1,4 +1,4 @@
-// Primitive component factory for Neo generated entries.
+// Primitive component factory for Core generated entries.
 // It takes a tag plus split, css, and layer wiring and emits a component.
 // Each render splits props, resolves style props through css(), and stamps
 // the layer scope plus color mode and variant attrs. Mined from core's

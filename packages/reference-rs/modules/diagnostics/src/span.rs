@@ -1,6 +1,6 @@
 //! Byte-offset spans and labeled underlines for rustc-grade diagnostic rendering.
 //! Producers record cheap facts only: the file plus byte offsets into the source they compiled, never line or
-//! column math. The wire carries those offsets verbatim while neo-side presentation resolves them to caret positions
+//! column math. The wire carries those offsets verbatim while core-side presentation resolves them to caret positions
 //! post-compile, lazily, and only for diagnostics actually shown. Labels name one underline each; the note under a
 //! label and every help line stay non-blank, so frames render deterministically from the typed shape.
 

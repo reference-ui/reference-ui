@@ -1,4 +1,4 @@
-import { isStylePropName as isVocabularyStylePropName } from '@reference-ui/neo/style-vocabulary'
+import { isStylePropName as isVocabularyStylePropName } from '@reference-ui/core/style-vocabulary'
 import { COLOR_PROP_KEYS } from './constants'
 import type { McpGetStylePropsInput } from './types'
 

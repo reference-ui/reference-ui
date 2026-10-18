@@ -1,4 +1,4 @@
-// The one production gate for the Neo runtime's dev-only diagnostics.
+// The one production gate for the Core runtime's dev-only diagnostics.
 // isProductionBuild() reads the literal `process.env.NODE_ENV`, the expression
 // consumer bundlers (Vite dev and build, webpack, esbuild define) rewrite
 // statically, so the css() miss and recipe missing-table warnings go quiet in a

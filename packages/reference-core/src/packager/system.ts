@@ -1,4 +1,4 @@
-// System leg of the Neo generated folder.
+// System leg of the Core generated folder.
 // It takes the publish input and emits the authoring entry, the evaluated
 // spec, the jsx artifact, the portable base system, and the package manifest.
 // The published base system is the BaseSystem shape the extends validator and

@@ -12,7 +12,7 @@ import {
   parseTypedDiagnostic,
   reportedSyncEntries,
 } from '../index.ts'
-import type { NeoDiagnostic, TypedDiagnostic } from '../index.ts'
+import type { CoreDiagnostic, TypedDiagnostic } from '../index.ts'
 
 /** Byte-identical to the Rust transport goldens in `diagnostics/src/transport.rs`. */
 const SINGLE_GOLDEN =
@@ -33,7 +33,7 @@ const SPAN_GOLDEN =
   '"labels":[{"span":{"start":240,"end":252},"message":"no such token path"}],' +
   '"help":["point the path at an existing token"]}'
 
-/** Neo-realistic golden: a located atomic warning with its rendering channel. */
+/** Core-realistic golden: a located atomic warning with its rendering channel. */
 const ATOMIC_GOLDEN =
   '{"severity":"warning","code":"ATM-W-UNKNOWN-COLOR",' +
   '"message":"unknown color `notacolor-xyz`",' +
@@ -106,12 +106,12 @@ describe('canonical order', () => {
 
 describe('legacy carries', () => {
   it('passes info telemetry and codeless stragglers through verbatim', () => {
-    const telemetry: NeoDiagnostic = {
+    const telemetry: CoreDiagnostic = {
       severity: 'info',
       code: 'ATM-I-HARVEST-SINK',
       message: 'sank a dynamic lookup',
     }
-    const codeless: NeoDiagnostic = { severity: 'warning', message: 'codeless engine string' }
+    const codeless: CoreDiagnostic = { severity: 'warning', message: 'codeless engine string' }
     expect(formatJsonDiagnostics([telemetry, codeless])).toBe(
       '[{"severity":"info","code":"ATM-I-HARVEST-SINK","message":"sank a dynamic lookup"},' +
         '{"severity":"warning","message":"codeless engine string"}]'
@@ -138,22 +138,22 @@ describe('legacy carries', () => {
 
 describe('reported set', () => {
   it('selects userspace warnings plus every compiler entry in channel order', () => {
-    const userspaceWarning: NeoDiagnostic = {
+    const userspaceWarning: CoreDiagnostic = {
       severity: 'warning',
       code: 'ATM-W-UNKNOWN-COLOR',
       message: 'no such color',
     }
-    const userspaceError: NeoDiagnostic = {
+    const userspaceError: CoreDiagnostic = {
       severity: 'error',
       code: 'ATM-E-UNKNOWN-TOKEN',
       message: 'refused',
     }
-    const compiler: NeoDiagnostic = {
+    const compiler: CoreDiagnostic = {
       severity: 'warning',
       code: 'ATM-W-DYNAMIC-IDENTIFIER',
       message: 'dynamic',
     }
-    const telemetry: NeoDiagnostic = {
+    const telemetry: CoreDiagnostic = {
       severity: 'info',
       code: 'ATM-I-HARVEST-SINK',
       message: 'sank',

@@ -1,4 +1,4 @@
-// Staging directory helper nested inside the Neo generated folder.
+// Staging directory helper nested inside the Core generated folder.
 // It takes a project root and emits the stage path one sync assembles
 // into before committing. The stage sits inside the live folder (never
 // beside it), so every commit rename stays on one volume and stays atomic

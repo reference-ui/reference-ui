@@ -1,4 +1,4 @@
-// End to end tests for Neo fragment evaluation over temp project trees.
+// End to end tests for Core fragment evaluation over temp project trees.
 // They take fixture author files and assert the merged spec plus provenance.
 // Upstream bundles thread through extends while local files win conflicts.
 
@@ -20,7 +20,7 @@ afterEach(async () => {
 })
 
 async function writeProject(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-fragments-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-fragments-'))
   tempDirs.push(dir)
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name)
@@ -35,7 +35,7 @@ function configWith(overrides: Partial<ReferenceUIConfig> = {}): ReferenceUIConf
 }
 
 const TOKENS_FILE = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',
@@ -47,7 +47,7 @@ const TOKENS_FILE = [
 ].join('\n')
 
 const MORE_FILE = [
-  "import { tokens, keyframes, font, globalCss } from '@reference-ui/neo'",
+  "import { tokens, keyframes, font, globalCss } from '@reference-ui/core'",
   '',
   'tokens({',
   '  spacing: {',
@@ -159,7 +159,7 @@ describe('evaluateFragments spec merge', () => {
 
 describe('evaluateFragments font weight tokens', () => {
   const FONTS_FILE = [
-    "import { font } from '@reference-ui/neo'",
+    "import { font } from '@reference-ui/core'",
     '',
     "font('sans', {",
     "  value: '\"Inter\", sans-serif',",
@@ -192,7 +192,7 @@ describe('evaluateFragments font weight tokens', () => {
     const dir = await writeProject({
       'theme/fonts.ts': FONTS_FILE,
       'theme/tokens.ts': [
-        "import { tokens } from '@reference-ui/neo'",
+        "import { tokens } from '@reference-ui/core'",
         '',
         'tokens({',
         '  fontWeights: {',
@@ -205,7 +205,7 @@ describe('evaluateFragments font weight tokens', () => {
 
     const spec = await evaluateFragments(dir, configWith())
 
-    // Core order: font tokens extend last, so the registry wins the
+    // Retired reference-core order: font tokens extend last, so the registry wins the
     // collision while the author-only leaf survives the deep merge.
     expect(spec.tokens).toEqual({
       fontWeights: {
@@ -278,7 +278,7 @@ describe('evaluateFragments provenance', () => {
 
 describe('evaluateFragments recipes', () => {
   const TONE_RECIPE_FILE = [
-    "import { recipe } from '@reference-ui/neo'",
+    "import { recipe } from '@reference-ui/core'",
     '',
     'recipe({',
     "  className: 'tone',",
@@ -334,7 +334,7 @@ describe('evaluateFragments recipes', () => {
 
   it('skips recipe fragments without a string className', async () => {
     const dir = await writeProject({
-      'theme/broken.ts': ["import { recipe } from '@reference-ui/neo'", '', 'recipe({})', ''].join(
+      'theme/broken.ts': ["import { recipe } from '@reference-ui/core'", '', 'recipe({})', ''].join(
         '\n'
       ),
     })

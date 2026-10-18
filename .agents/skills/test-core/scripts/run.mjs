@@ -4,7 +4,7 @@
  * test-core: Miniature Agent CLI & Pipeline Runner
  *
  * Not a component skill. This is the core/matrix verification runner
- * (`pnpm agent`) for matrix/* and the native package runners (packages/reference-core is retired).
+ * (`pnpm agent`) for matrix/* and the native package runners (core has its own runner: pnpm agentcore).
  *
  * Provides:
  * 1. Automatic macOS Darwin QoS Jailbreak (elevates child process from PRI 31 to PRI 46/47 via `taskpolicy -a`).
@@ -650,30 +650,30 @@ function getLatestSrcMtime(dir) {
   return latest
 }
 
-// Neo's compiled dist is an input to every lib build: lib `sync` runs the
-// shipped `ref` CLI, and neo's own freshness gate exits without a stat walk
+// Core's compiled dist is an input to every lib build: lib `sync` runs the
+// shipped `ref` CLI, and core's own freshness gate exits without a stat walk
 // when REF_PIPELINE_SKIP_DEPENDENCY_BUILDS is set — the explicit opt-out the
 // gated lib build below relies on to skip the icons dep leg. Invoke that gate
-// with SKIP cleared first, so a neo-src edit can never be baked stale into lib
+// with SKIP cleared first, so a core-src edit can never be baked stale into lib
 // output. Steady state is one stat walk (~45 ms).
-async function ensureNeoDist() {
-  const gate = path.join(repoRoot, 'packages/reference-neo/tools/ensure-dist.mjs')
+async function ensureCoreDist() {
+  const gate = path.join(repoRoot, 'packages/reference-core/tools/ensure-dist.mjs')
   const res = await runCommand('node', [gate], {
     env: { REF_PIPELINE_SKIP_DEPENDENCY_BUILDS: '' },
     skipQueue: true,
   })
   if (res.code !== 0) {
-    console.error('[agent] Error: Failed to ensure @reference-ui/neo dist freshness.')
+    console.error('[agent] Error: Failed to ensure @reference-ui/core dist freshness.')
     return false
   }
   return true
 }
 
 async function ensureLibBuild(options = {}) {
-  // Neo dist freshness is a precondition of the lib build, not a dependency of
+  // Core dist freshness is a precondition of the lib build, not a dependency of
   // the SKIP-gated leg: guarantee it before deciding what (if anything) to
-  // build so the mandated flows never test stale-neo lib output.
-  if (!(await ensureNeoDist())) return false
+  // build so the mandated flows never test stale-core lib output.
+  if (!(await ensureCoreDist())) return false
 
   const distPath = path.join(repoRoot, 'packages/reference-lib/dist/index.mjs')
   const distExists = fs.existsSync(distPath)
@@ -1626,7 +1626,7 @@ async function actionVitest(rawArgs = []) {
     // Checked before the file matcher, which would otherwise read 'core' as a test-name filter.
     if (['core', '@reference-ui/core'].includes(targetPackage.trim())) {
       console.error(
-        `[agent] Error: '${targetPackage}' is retired: packages/reference-core no longer exists. ` +
+        `[agent] Error: '${targetPackage}' has its own runner: use pnpm agentcore (packages/reference-core). ` +
           'Name a package (e.g. packages/reference-mcp) or a matrix suite (e.g. matrix/tests/mcp).'
       )
       process.exit(1)
@@ -1970,7 +1970,7 @@ Usage:
 
 Universal Execution Examples:
   agent run pnpm build
-  agent run pnpm --filter @reference-ui/core typecheck
+  agent run pnpm --filter @reference-ui/core build
 
 Do not use agent run pnpm pipeline test for matrix. Use agent test / agent test:matrix so the run ends with a PASSED/FAILED banner and a numeric exit code.
 

@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-// cli.ts — the agentneo CLI, agent-facing entry point over the neo harness.
+// cli.ts — the agentcore CLI, agent-facing entry point over the core harness.
 // Takes argv subcommands (list, search, run, q) and delegates to the case
 // discovery, runner, and quality modules. Emits greppable stdout lines plus
 // exit codes 0-3 (success, failure/usage, serve-only degrade, quality absent).
 //
-// agentneo: the agent-facing CLI over the neo test harness.
+// agentcore: the agent-facing CLI over the core test harness.
 //
 // Usage:
-//   agentneo list               one greppable line per case
-//   agentneo search <query>     substring filter over id, name, README text
-//   agentneo run [id-or-prefix]  serve world + run specs headless (exact id wins, else prefix; all if omitted)
-//   agentneo run --failed       rerun only cases recorded ok=false in the last-run log
-//   agentneo run --update-snapshots --confirm
+//   agentcore list               one greppable line per case
+//   agentcore search <query>     substring filter over id, name, README text
+//   agentcore run [id-or-prefix]  serve world + run specs headless (exact id wins, else prefix; all if omitted)
+//   agentcore run --failed       rerun only cases recorded ok=false in the last-run log
+//   agentcore run --update-snapshots --confirm
 //                               bless fresh screenshots as snapshot baselines (human-gated)
-//   agentneo q [paths...]       delegate to the quality gate
-//   agentneo status            pass/fail/degraded counts per group from the last-run log
+//   agentcore q [paths...]       delegate to the quality gate
+//   agentcore status            pass/fail/degraded counts per group from the last-run log
 //
 // Exit codes:
 //   0  success (list/search always; run when every spec passed)
@@ -22,8 +22,8 @@
 //   2  serve-only degrade: playwright/browsers not resolvable, world served but no spec ran
 //   3  quality gate not integrated yet (tools/quality/run.ts absent)
 
-import { bootstrapNeo } from './bootstrap.ts';
-import { listCases, scanCases, searchCases, matchCases, type NeoCase } from './cases.ts';
+import { bootstrapCore } from './bootstrap.ts';
+import { listCases, scanCases, searchCases, matchCases, type CoreCase } from './cases.ts';
 import { skipWarning } from './caseIndex.ts';
 import { runCase, type RunResult } from './runner.ts';
 import { checkTypes } from './typecheck.ts';
@@ -33,7 +33,7 @@ interface QualityGate {
   runQuality: (argv: string[]) => Promise<number>;
 }
 
-function printCase(c: NeoCase): void {
+function printCase(c: CoreCase): void {
   const desc = c.description ? `  ${c.description}` : '';
   console.log(`${c.id}  ${c.name}  ${c.folder}${desc}`);
 }
@@ -45,7 +45,7 @@ async function cmdList(): Promise<number> {
 
 async function cmdSearch(query: string | undefined): Promise<number> {
   if (!query) {
-    console.error('usage: agentneo search <query>');
+    console.error('usage: agentcore search <query>');
     return 1;
   }
   for (const c of searchCases(query)) printCase(c);
@@ -74,7 +74,7 @@ function applyRunArg(flags: RunFlags, arg: string): void {
       break;
   }
   if (arg.startsWith('--')) throw new Error(`unknown run flag: ${arg}`);
-  if (flags.id !== undefined) throw new Error('usage: agentneo run [id-or-prefix] [--failed] [--update-snapshots --confirm]');
+  if (flags.id !== undefined) throw new Error('usage: agentcore run [id-or-prefix] [--failed] [--update-snapshots --confirm]');
   flags.id = arg;
 }
 
@@ -84,9 +84,9 @@ function parseRunArgs(rest: string[]): RunFlags {
   return flags;
 }
 
-function selectRunCases(flags: RunFlags, log: LastRunLog | null): NeoCase[] {
+function selectRunCases(flags: RunFlags, log: LastRunLog | null): CoreCase[] {
   if (flags.failed && flags.id !== undefined) {
-    throw new Error('usage: agentneo run --failed takes no case id; drop the id or drop the flag.');
+    throw new Error('usage: agentcore run --failed takes no case id; drop the id or drop the flag.');
   }
   if (flags.failed) {
     if (!log) throw new Error(`no last-run log at ${LAST_RUN_FILE}; run the suite once before --failed.`);
@@ -108,7 +108,7 @@ function checkSnapshotGate(flags: RunFlags): void {
   }
 }
 
-function resolveRunPlan(rest: string[]): { flags: RunFlags; cases: NeoCase[] } {
+function resolveRunPlan(rest: string[]): { flags: RunFlags; cases: CoreCase[] } {
   const flags = parseRunArgs(rest);
   checkSnapshotGate(flags);
   const log = readLastRun();
@@ -124,7 +124,7 @@ function harnessFault(result: RunResult): boolean {
   return !result.ok && !result.degraded && !result.specFailed;
 }
 
-async function runSelected(cases: NeoCase[], flags: RunFlags): Promise<number> {
+async function runSelected(cases: CoreCase[], flags: RunFlags): Promise<number> {
   const entries: LastRunEntry[] = [];
   let degraded = false;
   let failed = false;
@@ -145,14 +145,14 @@ async function runSelected(cases: NeoCase[], flags: RunFlags): Promise<number> {
   }
   // Not strict: a broken folder must not fail a run after its cases have already run.
   const log = writeLastRun(entries, scanCases().cases.map((c) => c.id));
-  console.log(`[neo] last-run log: ${log.cases.length} cases at ${LAST_RUN_FILE}`);
+  console.log(`[core] last-run log: ${log.cases.length} cases at ${LAST_RUN_FILE}`);
   if (failed) return 1;
   if (degraded) return 2;
   return 0;
 }
 
 async function cmdRun(rest: string[]): Promise<number> {
-  let plan: { flags: RunFlags; cases: NeoCase[] };
+  let plan: { flags: RunFlags; cases: CoreCase[] };
   try {
     plan = resolveRunPlan(rest);
   } catch (err) {
@@ -163,14 +163,14 @@ async function cmdRun(rest: string[]): Promise<number> {
     console.log('no failed cases in the last run; nothing to rerun.');
     return 0;
   }
-  const boot = bootstrapNeo();
+  const boot = bootstrapCore();
   if (!boot.ok) {
-    console.log(`[neo] bootstrap failed: ${boot.message}`);
+    console.log(`[core] bootstrap failed: ${boot.message}`);
     return 1;
   }
   const types = await checkTypes();
   if (!types.ok) {
-    console.log('[neo] typecheck failed: refusing to run with red types.');
+    console.log('[core] typecheck failed: refusing to run with red types.');
     for (const line of types.lines) console.log(line);
     return 1;
   }
@@ -197,7 +197,7 @@ async function cmdQuality(rest: string[]): Promise<number> {
   } catch (err) {
     const code = (err as { code?: string } | null | undefined)?.code;
     if (code === 'ERR_MODULE_NOT_FOUND') {
-      console.error('quality gate not integrated yet: packages/reference-neo/tools/quality/run.ts is absent');
+      console.error('quality gate not integrated yet: packages/reference-core/tools/quality/run.ts is absent');
       return 3;
     }
     throw err;
@@ -222,7 +222,7 @@ try {
   else if (cmd === 'status') code = await cmdStatus();
   else if (cmd === 'q') code = await cmdQuality(rest);
   else {
-    console.error('usage: agentneo <list|search|run|status|q> [...]');
+    console.error('usage: agentcore <list|search|run|status|q> [...]');
     code = 1;
   }
 } catch (err) {

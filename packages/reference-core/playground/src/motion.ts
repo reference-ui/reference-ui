@@ -4,7 +4,7 @@
 // Frame values are plain CSS only; no token paths belong inside keyframes, so
 // every animated page pairs its animation with a _motionReduce twin that
 // parks it at none.
-import { keyframes } from '@reference-ui/neo'
+import { keyframes } from '@reference-ui/core'
 
 // Playground motion: the five keyframe sets the animation tokens name.
 // Frame values are plain CSS only (no token paths ride in keyframes); the

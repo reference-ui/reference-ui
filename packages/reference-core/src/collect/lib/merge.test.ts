@@ -1,4 +1,4 @@
-// Unit tests for the Neo token merge, leaf paths, and private stripping.
+// Unit tests for the Core token merge, leaf paths, and private stripping.
 // They take token trees and assert merged output: a leaf replaces the earlier leaf
 // whole, a group merges recursively, and the inputs stay untouched. They also pin
 // the provenance keys and the `_private` strip.

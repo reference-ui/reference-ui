@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Vendor tool for the tasty TypeScript declarations consumed by the Neo reference module.
+// Vendor tool for the tasty TypeScript declarations consumed by the Core reference module.
 // It takes the extensionless dist d.ts closure of @reference-ui/rust/tasty* and emits a
-// committed copy with explicit NodeNext specifiers, so neo typechecks without touching
+// committed copy with explicit NodeNext specifiers, so core typechecks without touching
 // reference-rs. Run it explicitly after an RS rebuild; --check verifies freshness.
 
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,16 +9,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const NEO_DIR = path.dirname(HERE);
-const VENDOR_DIR = path.join(NEO_DIR, 'src', 'native', 'generated', 'tasty');
+const CORE_DIR = path.dirname(HERE);
+const VENDOR_DIR = path.join(CORE_DIR, 'src', 'native', 'generated', 'tasty');
 const TOPS = ['tasty.d.ts', path.join('tasty', 'build.d.ts'), path.join('tasty', 'browser.d.ts')];
 const FROM_RE = /from(\s+)(['"])([^'"]+)\2/g;
 const IMPORT_RE = /import(\s*\(\s*)(['"])([^'"]+)\2(\s*\))/g;
-const REGEN_CMD = 'cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs';
+const REGEN_CMD = 'cd packages/reference-core && node tools/vendor-rust-tasty-dts.mjs';
 
 // Resolve the linked workspace RS package; the dist tree must already be built.
 function resolveRust() {
-  const pkgFile = path.join(NEO_DIR, 'node_modules', '@reference-ui', 'rust', 'package.json');
+  const pkgFile = path.join(CORE_DIR, 'node_modules', '@reference-ui', 'rust', 'package.json');
   if (!existsSync(pkgFile)) {
     throw new Error(`cannot find the linked @reference-ui/rust at ${pkgFile}; run pnpm install first.`);
   }
@@ -90,7 +90,7 @@ function headerFor(version, rel) {
   return [
     '/**',
     ' * Vendored tasty declaration file, mechanically copied from the reference-rs dist output.',
-    ' * It carries the exact upstream bytes with explicit NodeNext specifiers, so neo typechecks without touching reference-rs.',
+    ' * It carries the exact upstream bytes with explicit NodeNext specifiers, so core typechecks without touching reference-rs.',
     ' * Do not edit this copy; regenerate it with the vendor tool after an RS rebuild.',
     ` * @generated from @reference-ui/rust@${version} dist/${posix}`,
     ` * Regen: ${REGEN_CMD}`,

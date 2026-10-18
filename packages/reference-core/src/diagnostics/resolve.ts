@@ -1,4 +1,4 @@
-// Neo span resolution: byte offsets become caret positions above the cut.
+// Core span resolution: byte offsets become caret positions above the cut.
 // It takes source text plus the cheap spans the compiler recorded and emits
 // 1-based line and column pairs matching the native resolver exactly. All
 // locating happens here post-compile, lazily, and only for diagnostics

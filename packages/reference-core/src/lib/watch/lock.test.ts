@@ -20,7 +20,7 @@ afterEach(async () => {
 })
 
 async function makeTempProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-watch-lock-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-watch-lock-'))
   tempDirs.push(dir)
   return dir
 }

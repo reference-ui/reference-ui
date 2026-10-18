@@ -16,7 +16,7 @@ afterEach(async () => {
 })
 
 async function writeProject(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-diamond-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-diamond-'))
   tempDirs.push(dir)
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name)

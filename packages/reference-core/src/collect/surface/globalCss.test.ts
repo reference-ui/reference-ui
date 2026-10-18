@@ -1,4 +1,4 @@
-// Unit tests for the Neo globalCss() collector plus the JSON seam contract.
+// Unit tests for the Core globalCss() collector plus the JSON seam contract.
 // They take global rule maps and assert verbatim collection and strip behavior.
 // The JSON round-trip pins why no host-side undefined strip exists: the native
 // compile seam stringifies the spec, so undefined keys never reach the engine.

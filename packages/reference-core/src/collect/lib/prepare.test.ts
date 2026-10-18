@@ -1,7 +1,7 @@
-// Unit tests for the Neo fragment prepare flow over mocked scan and bundle.
+// Unit tests for the Core fragment prepare flow over mocked scan and bundle.
 // They take fake file lists and assert upstream filtering, prepare output,
 // plus merge-time private scoping over source-tagged token fragments.
-// This file adapts the core base fragments tests minus config templating.
+// This file adapts the retired reference-core base fragments tests minus config templating.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
@@ -163,17 +163,16 @@ describe('fragments prepare flow', () => {
     ])
   })
 
-  it('maps bootstrap fragment imports back to Neo source entries', async () => {
+  it('maps bootstrap fragment imports back to Core source entries', async () => {
     await importFragmentsModule()
     const { getFragmentBootstrapImportMap } = await import('./bootstrap.ts')
 
     const authorEntry = join(import.meta.dirname, '..', '..', 'index.ts')
     const reactEntry = join(import.meta.dirname, '..', '..', 'entry', 'react-unbound.ts')
     expect(getFragmentBootstrapImportMap()).toEqual({
-      '@reference-ui/neo': authorEntry,
-      '@reference-ui/neo/config': authorEntry,
-      '@reference-ui/system': authorEntry,
+      '@reference-ui/core': authorEntry,
       '@reference-ui/core/config': authorEntry,
+      '@reference-ui/system': authorEntry,
       '@reference-ui/cli/config': authorEntry,
       '@reference-ui/react': reactEntry,
     })
@@ -209,10 +208,9 @@ describe('fragments prepare output: native token', () => {
     expect(scanFragmentSourcesNative).toHaveBeenCalledWith({
       include: ['src/**/*.{ts,tsx}'],
       importFrom: [
-        '@reference-ui/neo',
-        '@reference-ui/neo/config',
-        '@reference-ui/system',
+        '@reference-ui/core',
         '@reference-ui/core/config',
+        '@reference-ui/system',
         '@reference-ui/cli/config',
       ],
       cwd: '/workspace/app',

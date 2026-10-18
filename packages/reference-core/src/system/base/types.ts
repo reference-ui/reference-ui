@@ -34,7 +34,7 @@ export interface FragmentNode {
 
 /**
  * Portable design-system artefact emitted by sync.
- * Neo-owned copy of the core BaseSystem shape (name plus fragment payload).
+ * core-owned copy of the retired reference-core BaseSystem shape (name plus fragment payload).
  */
 export interface BaseSystem {
   name: string

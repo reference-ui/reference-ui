@@ -1,7 +1,7 @@
-// Unit tests for the Neo config bundler over temp project trees.
+// Unit tests for the Core config bundler over temp project trees.
 // They take fixture configs and assert external handling (and the listed
 // external specifiers) plus dependency paths, including resolution of canon-base-relative metafile keys.
-// This file is a Neo-owned copy of the core bundler tests.
+// This file is a core-owned copy of the retired reference-core bundler tests.
 
 import { realpathSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
@@ -42,7 +42,7 @@ describe('bundleConfig', () => {
     expect(bundled).toMatch(/from ['"]nonexistent-package['"]/)
   })
 
-  it('lists the bare specifiers it keeps external, without the aliased Neo entry', async () => {
+  it('lists the bare specifiers it keeps external, without the aliased Core entry', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-bundle-'))
     tempDirs.push(dir)
 
@@ -50,7 +50,7 @@ describe('bundleConfig', () => {
     await writeFile(
       configPath,
       [
-        "import { defineConfig } from '@reference-ui/neo'",
+        "import { defineConfig } from '@reference-ui/core'",
         "import { baseSystem } from '@reference-ui/lib'",
         "import missingPkg from 'nonexistent-package'",
         '',
@@ -69,7 +69,7 @@ describe('bundleConfig', () => {
     expect(bundled.externalImports).toEqual(['@reference-ui/lib', 'nonexistent-package'])
   })
 
-  it('aliases Neo package ids to the local root barrel', async () => {
+  it('aliases Core package ids to the local root barrel', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'reference-ui-config-bundle-'))
     tempDirs.push(dir)
 
@@ -77,7 +77,7 @@ describe('bundleConfig', () => {
     await writeFile(
       configPath,
       [
-        "import { defineConfig } from '@reference-ui/neo'",
+        "import { defineConfig } from '@reference-ui/core'",
         '',
         'export default defineConfig({',
         "  name: 'demo',",

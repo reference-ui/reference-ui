@@ -1,13 +1,13 @@
-// ui.config loading for the mcp child (Neo load.ts shape).
+// ui.config loading for the mcp child (Core load.ts shape).
 // It takes a project root and emits the validated config plus dependencies.
-// Retargets Neo's evaluate/validate/errors seams; bundling goes through the
+// Retargets Core's evaluate/validate/errors seams; bundling goes through the
 // mcp-local bundle copy whose author entry resolves in dist.
 
-import type { ReferenceUIConfig } from '@reference-ui/neo/config/types'
-import { ConfigNotFoundError, LoadConfigError } from '@reference-ui/neo/config/errors'
+import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
+import { ConfigNotFoundError, LoadConfigError } from '@reference-ui/core/config/errors'
 import { bundleConfigWithDependencies } from './config-bundle'
-import { evaluateConfig } from '@reference-ui/neo/config/evaluate'
-import { validateConfig } from '@reference-ui/neo/config/validate'
+import { evaluateConfig } from '@reference-ui/core/config/evaluate'
+import { validateConfig } from '@reference-ui/core/config/validate'
 import { resolveRefConfigFile } from './paths'
 
 export interface LoadedUserConfig {

@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 
 /**
  * Independent layer fixture #2. Used together with `@fixtures/layer-library`

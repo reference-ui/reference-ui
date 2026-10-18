@@ -45,7 +45,7 @@ export function classifyProjectError(err: unknown): ProjectError {
 
   const msg = err instanceof Error ? err.message : String(err)
   const isMissing =
-    msg.includes('manifest.js') || msg.includes('neo sync') || msg.includes('ref sync')
+    msg.includes('manifest.js') || msg.includes('core sync') || msg.includes('ref sync')
   return {
     code: isMissing ? 'missing_artifacts' : 'build_failed',
     message: msg,

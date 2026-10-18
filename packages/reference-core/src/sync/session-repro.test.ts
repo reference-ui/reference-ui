@@ -199,7 +199,7 @@ async function repeatSignalsAreIgnored(): Promise<void> {
 async function ctrlCStopsSpinningFragment(): Promise<void> {
   const dir = await writeWorld(0)
   const spinner = join(dir, 'theme', 'loop.ts')
-  writeFileSync(spinner, "import { tokens } from '@reference-ui/neo'\nwhile (true) {}\n")
+  writeFileSync(spinner, "import { tokens } from '@reference-ui/core'\nwhile (true) {}\n")
   const run = spawnBin(['sync', dir], dir)
   await waitForFile(join(dir, '.reference-ui', 'sync.lock', 'owner.json'), 'the one-shot to take the lock')
   await sleep(1500)

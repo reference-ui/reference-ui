@@ -1,4 +1,4 @@
-// Filesystem layout for Neo generated packages.
+// Filesystem layout for Core generated packages.
 // It takes output roots plus package names and emits the dirs and entry paths the legs write to.
 // Every path in the generated folder derives here, so shells, bundles, and links can only agree on where a package lives.
 

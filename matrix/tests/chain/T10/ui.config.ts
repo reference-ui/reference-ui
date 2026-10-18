@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
 import { baseSystem as layerW } from '@fixtures/layer-library'
 

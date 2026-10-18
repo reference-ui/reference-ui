@@ -1,4 +1,4 @@
-// Authoring and runtime types of the Neo recipe runtime: the selections an author passes, the recipe config
+// Authoring and runtime types of the Core recipe runtime: the selections an author passes, the recipe config
 // they write, and the resolver a recipe() call returns. They are types only, shared by the resolver and the class
 // derivation, and recipe.ts re-exports them under their public names.
 

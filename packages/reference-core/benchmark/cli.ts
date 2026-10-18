@@ -1,4 +1,4 @@
-// Agent- and human-facing CLI over the Neo sync benchmark.
+// Agent- and human-facing CLI over the Core sync benchmark.
 // It takes optional scales plus overrides and emits one pinned report covering every scale.
 // Bench never runs inside the unit or case suites: no case.json, no *.test.ts, one explicit command.
 // Each scale generates a seeded repo, syncs it in fresh children, and all scales pin a single combined report.
@@ -35,9 +35,9 @@ interface ScaleContext {
 }
 
 const USAGE = [
-  'usage: bench:neo [--scale name[,name]] [--runs N] [--seed N]',
+  'usage: bench:core [--scale name[,name]] [--runs N] [--seed N]',
   '               [--files N] [--calls N] [--unique 0..1] [--mdx N] [--keep] [--json]',
-  '       bench:neo --list   (default suite: small,medium,enterprise; churn is opt-in)',
+  '       bench:core --list   (default suite: small,medium,enterprise; churn is opt-in)',
 ].join('\n')
 
 function parseNumberFlag(argv: string[], index: number, flag: string): number {
@@ -147,7 +147,7 @@ function cleanup(projectDir: string, keep: boolean): void {
 async function runScale(name: string, ctx: ScaleContext): Promise<ScaleResult> {
   const plan = resolvePlan(name, ctx.overrides)
   const runs = ctx.runs ?? plan.defaultRuns
-  const projectDir = mkdtempSync(join(tmpdir(), 'neo-bench-'))
+  const projectDir = mkdtempSync(join(tmpdir(), 'core-bench-'))
   try {
     const genStarted = performance.now()
     const generated = generateRepo(plan, projectDir)

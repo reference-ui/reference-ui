@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as extendLibrary2 } from '@fixtures/extend-library-2/baseSystem'
 
 /**

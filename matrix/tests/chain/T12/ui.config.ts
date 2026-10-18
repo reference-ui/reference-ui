@@ -1,4 +1,4 @@
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem as branchB } from '@fixtures/meta-extend-library/baseSystem'
 import { baseSystem as branchC } from '@fixtures/meta-extend-library-sibling/baseSystem'
 

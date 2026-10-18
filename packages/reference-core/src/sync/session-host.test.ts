@@ -53,7 +53,7 @@ interface Holder {
 }
 
 async function makeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-host-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-host-'))
   tempDirs.push(dir)
   return dir
 }

@@ -1,4 +1,4 @@
-// Layer scope plus color mode contexts for Neo primitives.
+// Layer scope plus color mode contexts for Core primitives.
 // It takes the system layer name and emits DOM attrs plus providers.
 // The scope carries the nearest owning primitive's layer name, so a primitive
 // stamps data-layer unless an ancestor of its own system already owns the scope
@@ -11,7 +11,7 @@ import * as React from 'react'
 
 /**
  * DOM attribute name used to scope and activate color mode tokens.
- * Neo-owned name: there is no panda in neo, so core's data-panda-theme
+ * core-owned name: there is no panda in core, so core's data-panda-theme
  * does not come across — sheets and primitives agree on data-color-mode.
  */
 export const DATA_COLOR_MODE_ATTR = 'data-color-mode'

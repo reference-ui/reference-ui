@@ -202,7 +202,7 @@ fn owned(host: &str, names: &[&str]) -> BTreeMap<String, BTreeSet<String>> {
 
 #[test]
 fn forwarded_under_its_own_name_is_not_owned() {
-    // The NEO-SYNC-15 Card: `id={id}` hands `id` to the primitive, so Card keeps nothing.
+    // The CORE-SYNC-15 Card: `id={id}` hands `id` to the primitive, so Card keeps nothing.
     let map = owned_map("owned-forwarded-card", "Card", CARD);
     assert!(map.is_empty(), "owned: {map:?}");
 }
@@ -299,7 +299,7 @@ fn the_local_name_is_not_the_prop_name() {
 
 #[test]
 fn data_attribute_reflection_keeps_the_prop_owned() {
-    // The NEO-CHAIN-14 Tile: `data-size={size}` shows `size` in the DOM under another name, so
+    // The CORE-CHAIN-14 Tile: `data-size={size}` shows `size` in the DOM under another name, so
     // `size` stays Tile's own prop and the owned set is published.
     let map = owned_map("owned-forwarded-mirror", "Tile", DOM_MIRROR);
     assert_eq!(map, owned("Tile", &["label", "size"]));

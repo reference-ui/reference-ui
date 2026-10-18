@@ -1,6 +1,6 @@
-// Neo-owned freshness gate for the shipped `ref` CLI: it guarantees
+// core-owned freshness gate for the shipped `ref` CLI: it guarantees
 // `dist/bin/ref.js` exists and is newer than every input the compiled bin is
-// built from, so no documented caller runs stale bytes. It takes the neo
+// built from, so no documented caller runs stale bytes. It takes the core
 // package root from its own module location, stats the source roots plus the
 // tsc project files, and rebuilds through `tools/build-bin.mjs` only when the
 // bin is missing or older. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` setting

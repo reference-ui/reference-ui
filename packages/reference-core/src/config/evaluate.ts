@@ -1,6 +1,6 @@
-// Evaluation for bundled Neo config code as an ESM module.
+// Evaluation for bundled Core config code as an ESM module.
 // It takes bundled code plus the source path and emits the raw config export, or a timeout error when the module never settles.
-// This module is a Neo-owned copy of the core config evaluator.
+// This module is a core-owned copy of the retired reference-core config evaluator.
 
 import { mkdir, mkdtemp, rm, rmdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -102,7 +102,7 @@ export async function evaluateConfig(
       // Non-empty or already gone: another eval still owns the root.
     }
     // Drop the output dir itself when the eval leaves it empty, so a
-    // config-load failure leaves no folder behind at all (NEO-SYNC-08).
+    // config-load failure leaves no folder behind at all (CORE-SYNC-08).
     try {
       await rmdir(getOutDirPath(dirname(configPath)))
     } catch {

@@ -304,7 +304,7 @@ export async function runDecomposeCommand(args, repoRoot) {
     console.log(USAGE)
     return 0
   }
-  const benchDir = path.join(repoRoot, 'packages', 'reference-neo', 'benchmark')
+  const benchDir = path.join(repoRoot, 'packages', 'reference-core', 'benchmark')
   try {
     const metas = {
       flame: loadMeta(options.flame, 'flame'),

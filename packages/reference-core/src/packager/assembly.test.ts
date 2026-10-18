@@ -15,7 +15,7 @@ afterEach(() => {
 })
 
 function makeProject(name: string): string {
-  const root = mkdtempSync(join(tmpdir(), 'neo-assembly-role-'))
+  const root = mkdtempSync(join(tmpdir(), 'core-assembly-role-'))
   tempDirs.push(root)
   const project = join(root, name)
   mkdirSync(join(project, '.reference-ui'), { recursive: true })

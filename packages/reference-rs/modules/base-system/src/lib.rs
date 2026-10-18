@@ -4,7 +4,7 @@
 //! font/breakpoint/keyframe tables apply, and which `staticCss` utilities to pre-emit.
 //! `lib_fixture()` builds the lib fixture via public `from_spec` with `profile: "reference-ui"`.
 //! `from_json` lowers a versioned `EvaluatedSystemSpec` and rejects unversioned or foreign dumps.
-//! `extends` is carried on the wire but not resolved here: composition lives in Neo.
+//! `extends` is carried on the wire but not resolved here: composition lives in Core.
 //! `jsxOwned` rides the same wire: the props each published component keeps for itself.
 
 mod breakpoints;

@@ -1,6 +1,6 @@
 // Fragment file discovery over glob roots plus import or call signals.
 // It takes scan options and emits absolute paths of matching source files.
-// This module is a Neo-owned copy of the core fragment scanner.
+// This module is a core-owned copy of the retired reference-core fragment scanner.
 
 import { readFileSync } from 'node:fs'
 import { extname } from 'node:path'
@@ -62,7 +62,7 @@ function matchesAnyPattern(content: string, patterns: DiscoveryPattern[]): boole
  * @example
  * await scanForFragments({
  *   include: ['src/(glob).{ts,tsx}'],
- *   importFrom: '@reference-ui/neo',
+ *   importFrom: '@reference-ui/core',
  * })
  */
 /**
@@ -173,7 +173,7 @@ function matchesCandidate(
  * @example
  * await scanForFragments({
  *   include: ['src/(glob).{ts,tsx}'],
- *   importFrom: '@reference-ui/neo',
+ *   importFrom: '@reference-ui/core',
  * })
  */
 export async function scanForFragments(options: ScanOptions): Promise<string[]> {

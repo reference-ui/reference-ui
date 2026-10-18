@@ -43,7 +43,6 @@ function resolveInstalledMcpChildPath(cwd: string): string {
     join(cwd, 'node_modules', '@reference-ui', 'mcp', 'dist', 'mcp-child.mjs'),
     join(process.cwd(), 'packages', 'reference-mcp', 'dist', 'mcp-child.mjs'),
     join(process.cwd(), 'node_modules', '@reference-ui', 'mcp', 'dist', 'mcp-child.mjs'),
-    join(cwd, 'node_modules', '@reference-ui', 'core', 'dist', 'cli', 'mcp-child.mjs'),
   ]
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate

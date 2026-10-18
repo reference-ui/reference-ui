@@ -1,4 +1,4 @@
-// Fragment author surface: the calls fragment files import from Neo.
+// Fragment author surface: the calls fragment files import from Core.
 // It takes nothing and re-exports the five collectors plus their shapes.
 // This barrel is the bootstrap alias target for fragment execution.
 

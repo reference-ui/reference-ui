@@ -40,7 +40,7 @@ export default defineConfig({
       { find: '@reference-ui/styled', replacement: styledRoot },
       { find: '@reference-ui/types/', replacement: `${typesRoot}/` },
       { find: '@reference-ui/types', replacement: resolve(typesRoot, 'types.mjs') },
-      // Landing Phase C (B5): system resolves to the generated entry (Neo
+      // Landing Phase C (B5): system resolves to the generated entry (Core
       // layout), never core src — the F6/F7 trap bypassed the generated folder.
       {
         find: '@reference-ui/system',

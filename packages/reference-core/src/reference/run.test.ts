@@ -1,7 +1,7 @@
 // Reference bridge run suite: it takes the mocked tasty rebuild plus the mocked
 // logging and reporter seams and emits the REF-07 pins — diagnostics reported
 // through the unified ref channel, structured complete returned, throw mapped
-// to a failed result. Neo port of the core run suite; the bus is gone, so
+// to a failed result. Core port of the retired reference-core run suite; the bus is gone, so
 // assertions read the return value, not emits.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'

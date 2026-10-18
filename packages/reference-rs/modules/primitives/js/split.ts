@@ -1,4 +1,4 @@
-// Style prop splitting for Neo primitives over compiled prop names.
+// Style prop splitting for Core primitives over compiled prop names.
 // It takes the artifact style prop list and emits a per-system splitter.
 // Reserved keys (className, children, colorMode, variant, css, ref) never
 // reach the DOM; known style props and condition arms (`_`, `&`, `@`

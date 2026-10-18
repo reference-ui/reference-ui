@@ -19,7 +19,7 @@ afterEach(async () => {
 })
 
 async function writeProject(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-sync-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-sync-'))
   tempDirs.push(dir)
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name)
@@ -31,7 +31,7 @@ async function writeProject(files: Record<string, string>): Promise<string> {
 
 function configFile(extra: string): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     '',
     'export default defineConfig({',
     "  name: 'sync-test',",
@@ -43,7 +43,7 @@ function configFile(extra: string): string {
 }
 
 const TOKENS_FILE = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',

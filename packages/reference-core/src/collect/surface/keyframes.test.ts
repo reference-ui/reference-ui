@@ -1,6 +1,6 @@
-// Unit tests for the Neo keyframes() collector plus file collection.
+// Unit tests for the Core keyframes() collector plus file collection.
 // They take keyframe maps and fixture files and assert collected fragments.
-// This file is a Neo-owned copy of the core keyframes tests.
+// This file is a core-owned copy of the retired reference-core keyframes tests.
 
 import { describe, expect, it, afterEach } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'

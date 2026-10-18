@@ -1,4 +1,4 @@
-// Export-map helpers for Neo package definitions.
+// Export-map helpers for Core package definitions.
 // They take a bundle name and emit the shared export pattern every bundled package manifest carries.
 // One helper, not four literals, so the '.'-plus-subpath shape can only drift in one place.
 

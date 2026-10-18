@@ -233,7 +233,7 @@ function showJsonDoc(doc) {
   }
   const p = doc.payload
   switch (doc.kind) {
-    case 'neo':
+    case 'core':
       return { ...base, family: p.family, related: p.related, specs: p.specs }
     case 'rs':
       return { ...base, related: p.related, suites: p.suites, caseIds: p.caseIds }

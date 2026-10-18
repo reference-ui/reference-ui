@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import fg from 'fast-glob'
-import { resolveRefConfigFile } from '../neo/paths'
+import { resolveRefConfigFile } from '../core/paths'
 import { getMcpTypesManifestPath } from '../pipeline/paths'
 import { GlobalProjectRegistry } from './project-registry'
 

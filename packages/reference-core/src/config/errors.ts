@@ -1,6 +1,6 @@
-// Config loading and validation errors for Neo.
+// Config loading and validation errors for Core.
 // It takes failure details and emits typed errors with actionable messages.
-// This module is a Neo-owned copy of the core config errors trimmed to the surviving fields.
+// This module is a core-owned copy of the retired reference-core config errors trimmed to the surviving fields.
 
 const PREFIX = 'reference-ui: '
 
@@ -17,7 +17,7 @@ export class ConfigNotFoundError extends ConfigError {
     super(
       `${PREFIX}No ui.config.ts or ui.config.js found in ${cwd}.\n` +
         `Create a ui.config.ts file with your configuration:\n\n` +
-        `  import { defineConfig } from '@reference-ui/neo'\n` +
+        `  import { defineConfig } from '@reference-ui/core'\n` +
         `  export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
     )
     this.cwd = cwd

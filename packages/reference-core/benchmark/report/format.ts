@@ -1,4 +1,4 @@
-// Shared number formatting for Neo benchmark readouts.
+// Shared number formatting for Core benchmark readouts.
 // It takes raw bytes, milliseconds, and samples and emits human strings.
 // The markdown readout and the JSON record both read from here, so a number never renders two ways.
 

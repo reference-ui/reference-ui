@@ -124,7 +124,7 @@ function Shell({ page }: { page: PageDef }): React.JSX.Element {
                 whiteSpace: 'nowrap',
               }}
             >
-              Neo playground
+              Core playground
             </span>
             <span
               style={{
@@ -136,7 +136,7 @@ function Shell({ page }: { page: PageDef }): React.JSX.Element {
                 fontWeight: 600,
               }}
             >
-              neo
+              core
             </span>
           </div>
           <div

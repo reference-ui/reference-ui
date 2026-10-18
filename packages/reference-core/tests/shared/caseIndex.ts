@@ -1,6 +1,6 @@
-// caseIndex.ts — the case-folder convention for the neo harness. A case folder is
-// named by its raw ID (NEO-<GROUP>-<nn>, with an optional one-letter variant such as
-// NEO-PLAY-B-01) and holds case.json {"id", "name"} plus a README.md whose first line
+// caseIndex.ts — the case-folder convention for the core harness. A case folder is
+// named by its raw ID (CORE-<GROUP>-<nn>, with an optional one-letter variant such as
+// CORE-PLAY-B-01) and holds case.json {"id", "name"} plus a README.md whose first line
 // is "# <ID> — <name>". Takes a case folder's path and emits convention problems as
 // plain messages, so scanCases in cases.ts can report every broken folder before a case loads. Mirrors
 // packages/reference-rs/testing/caseIndex.ts and adds the rule that name equals the claim.
@@ -10,8 +10,8 @@ import path from 'node:path';
 const CASE_INDEX_FILE = 'case.json';
 const CASE_README_FILE = 'README.md';
 
-/** A raw case ID: NEO-<GROUP>-<nn>, with an optional one-letter variant segment. */
-export const NEO_CASE_ID = /^NEO-[A-Z]+(?:-[A-Z])?-\d{2}$/;
+/** A raw case ID: CORE-<GROUP>-<nn>, with an optional one-letter variant segment. */
+export const CORE_CASE_ID = /^CORE-[A-Z]+(?:-[A-Z])?-\d{2}$/;
 
 // Any of these marks a folder as a case even when case.json is missing, so a
 // broken case cannot hide inside a group and be skipped without a word.
@@ -27,7 +27,7 @@ export type CaseIndexRead =
 
 /** A case folder is a case, or a broken one; any other folder is a group to descend into. */
 export function isCaseFolder(caseDir: string, folderName: string): boolean {
-  if (NEO_CASE_ID.test(folderName)) return true;
+  if (CORE_CASE_ID.test(folderName)) return true;
   return CASE_MARKERS.some((marker) => fs.existsSync(path.join(caseDir, marker)));
 }
 
@@ -105,7 +105,7 @@ export function selectsFolder(selector: string, folder: string): boolean {
 
 /** The one stderr line for a broken folder that a run does not select. */
 export function skipWarning(broken: BrokenCase): string {
-  return `warning: skipped broken case folder ${broken.folder}: ${broken.problems[0]} (agentneo list shows every problem)`;
+  return `warning: skipped broken case folder ${broken.folder}: ${broken.problems[0]} (agentcore list shows every problem)`;
 }
 
 /**
@@ -146,9 +146,9 @@ function headingProblems(folderName: string, id: string, claim: string, name: st
  */
 export function caseFolderProblems(folderName: string, caseDir: string): string[] {
   const read = readCaseIndex(caseDir);
-  const nameProblems = NEO_CASE_ID.test(folderName)
+  const nameProblems = CORE_CASE_ID.test(folderName)
     ? []
-    : ['folder is not named by a raw case ID (NEO-<GROUP>-<nn>)'];
+    : ['folder is not named by a raw case ID (CORE-<GROUP>-<nn>)'];
   return [
     ...nameProblems,
     ...caseIndexProblems(folderName, read),

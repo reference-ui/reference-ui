@@ -26,7 +26,7 @@ let scratchRoot = ''
 let outDir = ''
 
 async function buildFixture(): Promise<void> {
-  scratchRoot = mkdtempSync(join(tmpdir(), 'neo-ref-types-'))
+  scratchRoot = mkdtempSync(join(tmpdir(), 'core-ref-types-'))
   outDir = join(scratchRoot, '.reference-ui')
   mkdirSync(join(outDir, 'system'), { recursive: true })
   const styledDir = join(outDir, 'styled')

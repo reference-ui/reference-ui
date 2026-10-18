@@ -1,7 +1,7 @@
-// Package definition for Neo generated packages.
+// Package definition for Core generated packages.
 // It takes nothing and emits the declarative shape one generated package is described with.
 // The legs execute the description; sync never hand-writes a manifest.
-// Narrowed from the legacy port on purpose: copies are file-from-outDir only, because the react styles.css is Neo's sole asset.
+// Narrowed from the legacy port on purpose: copies are file-from-outDir only, because the react styles.css is Core's sole asset.
 
 export interface PackageCopySource {
   kind: 'file'

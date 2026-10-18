@@ -1,5 +1,5 @@
 /**
- * Orchestrates the Neo quality gate and reports a single numeric exit code. It takes argv paths, collects their files,
+ * Orchestrates the Core quality gate and reports a single numeric exit code. It takes argv paths, collects their files,
  * runs the tool tiers and the rule tiers, and prints the grouped findings with tips. The walk, the tool runners, the
  * rules and the reporting each live in a sibling module.
  */
@@ -51,14 +51,14 @@ async function runGate(ctx: GateCtx): Promise<number> {
   missingTool = tsc.missing ?? missingTool;
   const sorts = (a: Violation, b: Violation): number => (a.file < b.file ? -1 : a.file > b.file ? 1 : a.line - b.line);
   const groups: Array<[string, Violation[]]> = [
-    ['suppressions', errors.filter((v) => v.ruleId === 'neo/suppression').sort(sorts)],
-    ['errors', errors.filter((v) => v.ruleId !== 'neo/suppression').sort(sorts)],
+    ['suppressions', errors.filter((v) => v.ruleId === 'core/suppression').sort(sorts)],
+    ['errors', errors.filter((v) => v.ruleId !== 'core/suppression').sort(sorts)],
     ['warnings (non-failing)', warnings.sort(sorts)],
   ];
   for (const [title, vs] of groups) if (vs.length) printGroup(title, vs);
-  console.log(`[neo-quality] ${errors.length} errors, ${warnings.length} warnings, ${ctx.code.length} files in ${Date.now() - ctx.started}ms`);
+  console.log(`[core-quality] ${errors.length} errors, ${warnings.length} warnings, ${ctx.code.length} files in ${Date.now() - ctx.started}ms`);
   if (missingTool) {
-    console.log(`[neo-quality] tooling unavailable: ${missingTool} is not installed or did not run to completion; install dependencies and rerun (a killed process is named above).`);
+    console.log(`[core-quality] tooling unavailable: ${missingTool} is not installed or did not run to completion; install dependencies and rerun (a killed process is named above).`);
     return 2;
   }
   return errors.length ? 1 : 0;
@@ -79,14 +79,14 @@ export async function runQuality(argv: string[] = []): Promise<number> {
     try {
       measured = { result: measureFiles(code), missing: null };
     } catch (err) {
-      if (toolingCode(err) === 'NEO_TOOLING_MISSING') measured = { result: null, missing: 'typescript' };
+      if (toolingCode(err) === 'CORE_TOOLING_MISSING') measured = { result: null, missing: 'typescript' };
       else throw err;
     }
   }
   if (report) return runReport(measured, code, started);
   // A gate pointed at paths that yield no file inspected nothing; that must not read as a pass.
   if (paths.length > 0 && code.length === 0 && readmes.length === 0) {
-    console.log('[neo-quality] nothing to check: no code or README files under the given paths. A gate that inspects nothing does not pass.');
+    console.log('[core-quality] nothing to check: no code or README files under the given paths. A gate that inspects nothing does not pass.');
     return 1;
   }
   return runGate({ code, readmes, texts, measured, started });

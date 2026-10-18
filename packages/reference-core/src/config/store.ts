@@ -1,6 +1,6 @@
-// In-memory store for the active Neo config and project root.
+// In-memory store for the active Core config and project root.
 // It takes setConfig and setCwd calls and emits the current values to readers.
-// This module is a Neo-owned simplification of the core store with no worker machinery.
+// This module is a core-owned simplification of the retired reference-core store with no worker machinery.
 
 import type { ReferenceUIConfig } from './types.ts'
 import { DEFAULT_OUT_DIR } from './constants.ts'

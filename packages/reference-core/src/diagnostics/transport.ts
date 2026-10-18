@@ -1,4 +1,4 @@
-// Neo diagnostic transport: the pull/push seam across the native cut.
+// Core diagnostic transport: the pull/push seam across the native cut.
 // It takes engine payloads and emits validated typed diagnostics plus the
 // lenient legacy carries the compiler channel still needs. Typed values are
 // fail-closed (warn/err plus a matching code); info telemetry rides the
@@ -8,7 +8,7 @@ import type {
   CompileResultView,
   DiagnosticLabel,
   DiagnosticSpan,
-  NeoDiagnostic,
+  CoreDiagnostic,
   TastyDiagnosticView,
   TypedDiagnostic,
   TypedSeverity,
@@ -120,7 +120,7 @@ export function encodeBatch(diagnostics: TypedDiagnostic[]): string {
 // Whether the entry already satisfies the typed contract: warn/err severity,
 // a well-shaped code whose tag matches, and a non-blank message. Never
 // throws — unparseable entries simply read as legacy.
-export function isTypedDiagnostic(entry: NeoDiagnostic): entry is TypedDiagnostic {
+export function isTypedDiagnostic(entry: CoreDiagnostic): entry is TypedDiagnostic {
   if (entry.severity !== 'warning' && entry.severity !== 'error') return false
   if (entry.code === undefined) return false
   try {
@@ -136,12 +136,12 @@ export function isTypedDiagnostic(entry: NeoDiagnostic): entry is TypedDiagnosti
 // Split a channel into typed rows and legacy carries, each in first-seen
 // order. Info telemetry, codeless stragglers, and tag mismatches land in
 // legacy without blocking the typed rows beside them.
-export function partitionTyped(entries: readonly NeoDiagnostic[]): {
+export function partitionTyped(entries: readonly CoreDiagnostic[]): {
   typed: TypedDiagnostic[]
-  legacy: NeoDiagnostic[]
+  legacy: CoreDiagnostic[]
 } {
   const typed: TypedDiagnostic[] = []
-  const legacy: NeoDiagnostic[] = []
+  const legacy: CoreDiagnostic[] = []
   for (const entry of entries) {
     if (isTypedDiagnostic(entry)) typed.push(entry)
     else legacy.push(entry)
@@ -153,8 +153,8 @@ export function partitionTyped(entries: readonly NeoDiagnostic[]): {
 // plus the opt-in compiler backchannel, each defaulted to its own list so
 // reporters never touch the optional field themselves.
 export function pullSyncDiagnostics(result: CompileResultView): {
-  userspace: NeoDiagnostic[]
-  compiler: NeoDiagnostic[]
+  userspace: CoreDiagnostic[]
+  compiler: CoreDiagnostic[]
 } {
   return {
     userspace: [...result.diagnostics],
@@ -167,8 +167,8 @@ export function pullSyncDiagnostics(result: CompileResultView): {
 // location and rendering channel when present. Nothing invented, nothing
 // dropped — the ref channel rides the same typed contract as the userspace
 // and compiler channels.
-export function fromTastyDiagnostic(diagnostic: TastyDiagnosticView): NeoDiagnostic {
-  const entry: NeoDiagnostic = {
+export function fromTastyDiagnostic(diagnostic: TastyDiagnosticView): CoreDiagnostic {
+  const entry: CoreDiagnostic = {
     severity: diagnostic.level,
     code: diagnostic.code,
     message: diagnostic.message,

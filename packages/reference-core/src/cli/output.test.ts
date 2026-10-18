@@ -92,7 +92,7 @@ describe('cssSizeBytes', () => {
 })
 
 describe('refVersion', () => {
-  it('resolves the Neo package version', () => {
+  it('resolves the Core package version', () => {
     expect(refVersion()).toMatch(/^\d+\.\d+\.\d+/)
   })
 })

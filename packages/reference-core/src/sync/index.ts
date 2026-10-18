@@ -1,4 +1,4 @@
-// Sync: the module that regenerates the Neo generated folder.
+// Sync: the module that regenerates the Core generated folder.
 // It takes a project root and emits a fresh folder from config plus fragments.
 // Serial by construction: fragments, one native compile, publish. A function.
 
@@ -111,7 +111,7 @@ async function evaluateAndCompile(
   try {
     // The token merge's shadow warnings join the compile warnings they are reported with.
     const { spec, diagnostics: shadows } = await evaluatePreparedFragmentsDetailed(cwd, config, prepared)
-    // NEO-LAYER-04: the reset fragment rides the spec only when normalizeCss is
+    // CORE-LAYER-04: the reset fragment rides the spec only when normalizeCss is
     // not false; the engine prints reset-sourced fragments into @layer reset.
     applyNormalizeCss(spec, config.normalizeCss)
     // The request to the engine: it scans sourceRoot
@@ -272,7 +272,7 @@ function yieldToEventLoop(): Promise<void> {
  * window (identical bytes keep their mtime, the rest flips by atomic rename
  * over a backup, stale entries retire last), and the scope links land on the
  * complete folder. A failed sync rolls its changes back and keeps the
- * last-good outputs (NEO-SYNC-11 for a fresh world); a rollback that cannot restore
+ * last-good outputs (CORE-SYNC-11 for a fresh world); a rollback that cannot restore
  * a file keeps that file's last-good bytes in a `sync.rollback-*` dir beside the
  * stage and names it in the error. A sync that lost the lock
  * mid-commit stops without touching what the new holder wrote. A watch poke

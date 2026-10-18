@@ -1,6 +1,6 @@
-// In-memory esbuild bundling for Neo config and fragment sources.
+// In-memory esbuild bundling for Core config and fragment sources.
 // It takes an entry path plus overrides and emits bundled code with metafile.
-// This module is a Neo-owned copy of the core microbundle seam.
+// This module is a core-owned copy of the retired reference-core microbundle seam.
 
 import * as esbuild from 'esbuild'
 import { buildMicroBundleOptions } from './build-options.ts'

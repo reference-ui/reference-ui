@@ -1,6 +1,6 @@
 //! Round-trip tests proving the engine-owned StyleSurface reproduces the
 //! disk declaration surface. The engine surface is canon-global (873 props +
-//! 84 conditions for any spec), so the small neo fixture asserts containment
+//! 84 conditions for any spec), so the small core fixture asserts containment
 //! while full-size generated and real-tree fixtures assert exact equality.
 //! Takes BaseSystem fixtures and scratch declaration roots; emits coverage
 //! that a future typegen/canon drift surfaces as a red test, never silent
@@ -15,7 +15,7 @@ use shared::testing::ScratchWorkspace;
 use crate::hosts::engine_surface;
 use crate::BaseSystem;
 
-const NEO_REACT_D_MTS: &str = concat!(
+const CORE_REACT_D_MTS: &str = concat!(
     "import type { StyleConditionKey, StyleProps as NarrowStyleProps } from '@reference-ui/styled'\n",
     "export type StylePropName = \"color\" | \"fontSize\" | \"margin\"\n",
     "export type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {\n",
@@ -27,7 +27,7 @@ const NEO_REACT_D_MTS: &str = concat!(
     "export declare const Span: (props: unknown) => unknown\n",
 );
 
-const NEO_STYLED_INDEX_D_TS: &str = concat!(
+const CORE_STYLED_INDEX_D_TS: &str = concat!(
     "export type StyleConditionKey = '_hover' | '_focus'\n",
     "export type StyleProps = {\n",
     "  color?: string\n",
@@ -37,7 +37,7 @@ const NEO_STYLED_INDEX_D_TS: &str = concat!(
     "}\n",
 );
 
-const NEO_FIXTURE_NAMES: &[&str] = &[
+const CORE_FIXTURE_NAMES: &[&str] = &[
     "_focus",
     "_hover",
     "color",
@@ -48,14 +48,14 @@ const NEO_FIXTURE_NAMES: &[&str] = &[
     "weight",
 ];
 
-fn write_neo_decl_root(scratch: &ScratchWorkspace, root: &str) {
+fn write_core_decl_root(scratch: &ScratchWorkspace, root: &str) {
     scratch.write(
         &format!("{root}/.reference-ui/react/react.d.mts"),
-        NEO_REACT_D_MTS,
+        CORE_REACT_D_MTS,
     );
     scratch.write(
         &format!("{root}/.reference-ui/styled/types/index.d.ts"),
-        NEO_STYLED_INDEX_D_TS,
+        CORE_STYLED_INDEX_D_TS,
     );
 }
 
@@ -90,15 +90,15 @@ fn react_surface_template(prop_union: &str) -> String {
 
 #[test]
 fn fixture_names_are_contained_in_engine_surface() {
-    let scratch = ScratchWorkspace::new("surface-neo-containment");
-    write_neo_decl_root(&scratch, "declarations");
+    let scratch = ScratchWorkspace::new("surface-core-containment");
+    write_core_decl_root(&scratch, "declarations");
 
     let disk =
         styletrace::StyleSurface::from_declaration_root(&scratch.root().join("declarations"))
-            .expect("expected neo fixture surface to resolve");
+            .expect("expected core fixture surface to resolve");
     let engine = engine_surface(BaseSystem::lib_fixture());
 
-    let expected: BTreeSet<String> = NEO_FIXTURE_NAMES.iter().map(ToString::to_string).collect();
+    let expected: BTreeSet<String> = CORE_FIXTURE_NAMES.iter().map(ToString::to_string).collect();
     assert_eq!(disk.style_props, expected);
     for name in &expected {
         assert!(

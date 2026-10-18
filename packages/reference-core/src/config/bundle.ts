@@ -1,11 +1,11 @@
-// Bundling for Neo ui.config files via esbuild.
+// Bundling for Core ui.config files via esbuild.
 // It takes a config path and emits bundled code plus local dependency paths. A published base system
 // imported by bare specifier is inlined, so every load reads its current file, and its real path is a
 // watch input; all other packages stay external and are listed, so a slow evaluation can name them.
 // A failed bundle names the files it tried to import.
-// It began as a Neo-owned copy of the core config bundler with a Neo-local entry.
+// It began as a core-owned copy of the retired reference-core config bundler with a Core-local entry.
 
-import { microBundleWithResult, NEO_PACKAGE_ROOT, type MicroBundleResult } from '../lib/microbundle/index.ts'
+import { microBundleWithResult, CORE_PACKAGE_ROOT, type MicroBundleResult } from '../lib/microbundle/index.ts'
 import { CONFIG_EXTERNALS } from './constants.ts'
 import type * as esbuild from 'esbuild'
 import { existsSync, realpathSync } from 'node:fs'
@@ -31,7 +31,7 @@ const BASE_SYSTEM_FILE = /(?:^|[\\/])baseSystem\.m?js$/
 
 // Marks the nested resolve that learns where a bare specifier lands, so the
 // plugin steps aside for it instead of recursing into itself.
-const PROBE_FLAG = 'neoConfigBareProbe'
+const PROBE_FLAG = 'coreConfigBareProbe'
 
 // Relative specifiers: `./x`, `../x`, `.` and `..`. The plugin records them and lets esbuild resolve them.
 const RELATIVE_SPECIFIER = /^\.\.?(?:\/|$)/
@@ -74,7 +74,7 @@ interface ConfigImportRecord {
  */
 function configImportPlugin(record: ConfigImportRecord): esbuild.Plugin {
   return {
-    name: 'neo-config-imports',
+    name: 'core-config-imports',
     setup(build) {
       build.onResolve({ filter: RELATIVE_SPECIFIER }, (args) => {
         if (!args.resolveDir) return undefined
@@ -124,7 +124,7 @@ function normalizeConfigDependencyPaths(
     // Metafile inputs are relative to the canon base (absWorkingDir), not
     // the config dir; resolving them from configDir would silently corrupt
     // the watch dependency paths.
-    .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(NEO_PACKAGE_ROOT, inputPath)))
+    .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(CORE_PACKAGE_ROOT, inputPath)))
     .map(normalizePath)
     .filter((inputPath) => !inputPath.includes('/node_modules/'))
   // An inlined base system is watched at its real path, even inside node_modules.

@@ -247,7 +247,7 @@ function plantWarningProject(dir: string): void {
   writeFileSync(
     join(dir, 'ui.config.ts'),
     [
-      "import { defineConfig } from '@reference-ui/neo'",
+      "import { defineConfig } from '@reference-ui/core'",
       '',
       'export default defineConfig({',
       "  name: 'ref-bin-warn',",
@@ -260,7 +260,7 @@ function plantWarningProject(dir: string): void {
   writeFileSync(
     join(dir, 'theme', 'tokens.ts'),
     [
-      "import { tokens } from '@reference-ui/neo'",
+      "import { tokens } from '@reference-ui/core'",
       '',
       'tokens({',
       '  colors: {',
@@ -287,7 +287,7 @@ function plantDupSymbolProject(dir: string): void {
   writeFileSync(
     join(dir, 'ui.config.ts'),
     [
-      "import { defineConfig } from '@reference-ui/neo'",
+      "import { defineConfig } from '@reference-ui/core'",
       '',
       'export default defineConfig({',
       "  name: 'ref-bin-dup',",
@@ -300,7 +300,7 @@ function plantDupSymbolProject(dir: string): void {
   writeFileSync(
     join(dir, 'theme', 'tokens.ts'),
     [
-      "import { tokens } from '@reference-ui/neo'",
+      "import { tokens } from '@reference-ui/core'",
       '',
       'tokens({',
       '  colors: {',

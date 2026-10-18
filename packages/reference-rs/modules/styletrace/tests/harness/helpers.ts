@@ -187,10 +187,10 @@ export type CssVarKeys = never
   }
 }
 
-export async function createNeoSyncedWorkspaceFixture(): Promise<
+export async function createCoreSyncedWorkspaceFixture(): Promise<
   RuntimeFixture & { syncRootHint: string }
 > {
-  const fixture = await createRuntimeFixture('neo-synced', {
+  const fixture = await createRuntimeFixture('core-synced', {
     'consumer-app/src/index.tsx': `import { Div } from '@reference-ui/react'\n\nexport interface AppCardProps {\n  color?: string\n  title?: string\n}\n\nexport function AppCard({ title, ...styleProps }: AppCardProps) {\n  return <Div {...styleProps}>{title}</Div>\n}\n`,
     'consumer-app/.reference-ui/react/package.json': `{\n  "name": "@reference-ui/react",\n  "types": "./react.d.mts"\n}\n`,
     'consumer-app/.reference-ui/react/react.d.mts': `import type { StyleConditionKey, StyleProps as NarrowStyleProps } from '@reference-ui/styled'\nexport type StylePropName = "color" | "fontSize" | "margin"\nexport type StyleProps = Omit<NarrowStyleProps, 'font' | 'weight'> & {\n  [K in Exclude<StylePropName, keyof NarrowStyleProps> | 'font' | 'weight']?: unknown\n} & {\n  [K in StyleConditionKey]?: StyleProps\n}\nexport declare const Div: (props: unknown) => unknown\n`,

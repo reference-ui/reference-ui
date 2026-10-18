@@ -100,11 +100,11 @@ function checkSyncedProbe(outputLines, probeLines) {
 }
 
 // Layered override pass (step 7). lib's published base system is layered whole by one config, and the same base
-// wrapped in extendSystem by another. Each config is synced for real by the neo bin, and the sheet it serves is
+// wrapped in extendSystem by another. Each config is synced for real by the core bin, and the sheet it serves is
 // checked as text. Then one lib Button per colour mode is painted on three pages: the override sheet, the control
 // sheet, and lib's own prebuilt styles. The override is a light and a dark value on lib's default button background.
-const NEO_BIN = resolve(packageRoot, '..', 'reference-neo', 'dist', 'bin', 'ref.js')
-const NEO_ENSURE = resolve(packageRoot, '..', 'reference-neo', 'tools', 'ensure-dist.mjs')
+const CORE_BIN = resolve(packageRoot, '..', 'reference-core', 'dist', 'bin', 'ref.js')
+const CORE_ENSURE = resolve(packageRoot, '..', 'reference-core', 'tools', 'ensure-dist.mjs')
 const LAYER_OVERRIDE = { light: '#fde68a', dark: '#1e3a8a' }
 // ui.button.default.background: the token lib's default <Button> paints, light gray.100 and dark gray.700.
 const LAYER_TOKEN = '--colors-ui-button-default-background'
@@ -113,7 +113,7 @@ const LAYER_RULE = {
   dark: '[data-layer="reference-ui"][data-color-mode=dark]',
 }
 const LAYER_BASE_IMPORT = "import { baseSystem as libBaseSystem } from '@reference-ui/lib/baseSystem'"
-const OVERRIDE_CONFIG = `import { defineConfig, extendSystem } from '@reference-ui/neo'
+const OVERRIDE_CONFIG = `import { defineConfig, extendSystem } from '@reference-ui/core'
 ${LAYER_BASE_IMPORT}
 
 const branded = extendSystem(libBaseSystem, {
@@ -137,7 +137,7 @@ export default defineConfig({
   layers: [branded],
 })
 `
-const CONTROL_CONFIG = `import { defineConfig } from '@reference-ui/neo'
+const CONTROL_CONFIG = `import { defineConfig } from '@reference-ui/core'
 ${LAYER_BASE_IMPORT}
 
 export default defineConfig({
@@ -183,9 +183,9 @@ createRoot(document.getElementById('root') as HTMLElement).render(<Probe />)
 `
 }
 
-// One real sync of the scaffold through the neo bin. A failed sync throws with its own output, never a stale sheet.
+// One real sync of the scaffold through the core bin. A failed sync throws with its own output, never a stale sheet.
 function syncScaffold(dir) {
-  const result = spawnSync(process.execPath, [NEO_BIN, 'sync', '--quiet', dir], { cwd: dir, encoding: 'utf8' })
+  const result = spawnSync(process.execPath, [CORE_BIN, 'sync', '--quiet', dir], { cwd: dir, encoding: 'utf8' })
   if (result.status !== 0) {
     const output = `${result.stdout}${result.stderr}`.slice(-3000)
     throw new Error(`smoke: ref sync failed in the scaffold (exit ${result.status}): ${output}`)
@@ -243,7 +243,7 @@ function writeLayerPages(dir) {
 // Syncs the override config, then the control config. Each served sheet is copied beside the pages before the next
 // sync overwrites it. The scaffold's ui.config.ts is this pass's own: the template ships none.
 function prepareLayeredPass(dir) {
-  execFileSync(process.execPath, [NEO_ENSURE], { cwd: packageRoot, stdio: 'inherit' })
+  execFileSync(process.execPath, [CORE_ENSURE], { cwd: packageRoot, stdio: 'inherit' })
   const served = join(dir, '.reference-ui', 'styled', 'styles.css')
   const sheets = join(dir, 'src', 'sheets')
   mkdirSync(sheets, { recursive: true })
@@ -492,7 +492,7 @@ try {
   }
 
   // 7. Layered override through the real sync: extendSystem over lib's base
-  // system, synced by the neo bin. The served sheet is checked as text, then a
+  // system, synced by the core bin. The served sheet is checked as text, then a
   // lib Button is painted in light and dark. The dev server restarts first so
   // the new pages are served from a fresh dependency scan.
   step('layers: extendSystem through ref sync')

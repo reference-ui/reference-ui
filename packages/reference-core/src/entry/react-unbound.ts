@@ -1,5 +1,5 @@
 // Fragment-eval react surface backed by the unbound primitives roster.
-// It takes the live workspace primitives surface plus the Neo style runtime
+// It takes the live workspace primitives surface plus the Core style runtime
 // and emits every primitive unbound plus css and recipe. Fragment evaluation
 // never renders and unbound primitives throw on render, so the eval-safe
 // barrel contract holds by construction; the bound per-system bake arrives

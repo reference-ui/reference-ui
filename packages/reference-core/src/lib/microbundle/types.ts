@@ -1,6 +1,6 @@
-// Option and result shapes for the Neo microbundle seam.
+// Option and result shapes for the Core microbundle seam.
 // It takes nothing and emits the bundling contract esbuild builds honor.
-// This module is a Neo-owned copy of the core microbundle types.
+// This module is a core-owned copy of the retired reference-core microbundle types.
 
 import type * as esbuild from 'esbuild'
 

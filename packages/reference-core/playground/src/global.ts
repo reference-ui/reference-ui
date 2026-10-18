@@ -4,7 +4,7 @@
 // class name. Colours are hardcoded hex on purpose: this sheet is the
 // playground's floor and stays independent of the token set in src/tokens.ts.
 // The engine prints these as plain global selectors, state variants included.
-import { globalCss } from '@reference-ui/neo'
+import { globalCss } from '@reference-ui/core'
 
 globalCss({
   body: {

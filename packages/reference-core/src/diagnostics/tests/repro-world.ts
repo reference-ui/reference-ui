@@ -28,7 +28,7 @@ export function useReproCleanup(): void {
 }
 
 export async function writeProject(files: Record<string, string>): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-repro-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-repro-'))
   tempDirs.push(dir)
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name)
@@ -40,7 +40,7 @@ export async function writeProject(files: Record<string, string>): Promise<strin
 
 export function configFile(extra: string): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     '',
     'export default defineConfig({',
     "  name: 'repro-test',",
@@ -52,7 +52,7 @@ export function configFile(extra: string): string {
 }
 
 export const TOKENS_FILE = [
-  "import { tokens } from '@reference-ui/neo'",
+  "import { tokens } from '@reference-ui/core'",
   '',
   'tokens({',
   '  colors: {',

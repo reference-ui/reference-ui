@@ -2,8 +2,8 @@
  * Runtime helper staged into generated matrix consumers.
  *
  * This script waits for `ref sync --watch` to publish consumable output:
- * the generated system entry inside the out dir plus the scope links Neo
- * junctions into node_modules as the last step of a sync. Neo emits no
+ * the generated system entry inside the out dir plus the scope links Core
+ * junctions into node_modules as the last step of a sync. Core emits no
  * session sentinel, so readiness is the artifacts the tests consume.
  * Watch-process death is reported by the session runner's exit race;
  * this helper only polls, then fails loud on timeout.
@@ -28,7 +28,7 @@ function readPositiveIntEnv(name, fallback) {
   return fallback
 }
 
-// Neo publishes the sync folder first (system/system.mjs is the system
+// Core publishes the sync folder first (system/system.mjs is the system
 // leg entry) and junctions the node_modules scope links last, after the
 // runtime/react/types/reference-types legs. Both present means a complete
 // sync published; existsSync follows junctions, so a dangling link reads

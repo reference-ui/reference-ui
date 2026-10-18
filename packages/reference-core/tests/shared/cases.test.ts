@@ -22,6 +22,6 @@ describe('matchCases', () => {
   })
 
   it('unknown selector throws like getCase', () => {
-    expect(() => matchCases('NEO-NOPE-99')).toThrow('unknown case')
+    expect(() => matchCases('CORE-NOPE-99')).toThrow('unknown case')
   })
 })

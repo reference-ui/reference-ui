@@ -1,12 +1,12 @@
-// Exact-match module id aliasing for Neo esbuild bundles.
+// Exact-match module id aliasing for Core esbuild bundles.
 // It takes an id to path map and emits a resolve plugin honoring it.
-// This module is a Neo-owned copy of the core alias plugin.
+// This module is a core-owned copy of the retired reference-core alias plugin.
 
 import type * as esbuild from 'esbuild'
 
 /**
  * esbuild plugin that resolves given module ids to absolute paths.
- * Used when bundling config files so e.g. @reference-ui/neo → local entry.
+ * Used when bundling config files so e.g. @reference-ui/core → local entry.
  */
 export function aliasPlugin(alias: Record<string, string>): esbuild.Plugin {
   return {

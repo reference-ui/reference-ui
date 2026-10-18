@@ -1,4 +1,4 @@
-// Package-name helpers for Neo generated packages.
+// Package-name helpers for Core generated packages.
 // They take a scoped package name and emit the short dir name the folder layout uses.
 // Scopes never reach the filesystem: outDir holds react, styled, system, types, never the full ids.
 

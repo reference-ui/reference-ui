@@ -45,7 +45,7 @@ function sleep(ms: number): Promise<void> {
 
 function configFile(): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     '',
     'export default defineConfig({',
     "  name: 'steady-test',",
@@ -57,7 +57,7 @@ function configFile(): string {
 
 function tokensFile(): string {
   return [
-    "import { tokens } from '@reference-ui/neo'",
+    "import { tokens } from '@reference-ui/core'",
     '',
     'tokens({',
     '  colors: {',
@@ -83,7 +83,7 @@ function fillerFile(i: number): string {
 }
 
 async function writeWorld(fillers: number): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-steady-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-steady-'))
   tempDirs.push(dir)
   writeFileSync(join(dir, 'ui.config.ts'), configFile())
   mkdirSync(join(dir, 'theme'), { recursive: true })

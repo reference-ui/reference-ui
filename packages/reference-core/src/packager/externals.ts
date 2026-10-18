@@ -1,4 +1,4 @@
-// Externals policies for Neo packaging and shippable units.
+// Externals policies for Core packaging and shippable units.
 // It takes nothing and emits the three module lists bundlers leave alone.
 // The generated bundles externalize their host-provided edges; shippable units externalize nothing system-bound, so a packed fixture inlines its own runtime and resolves identically natively and hermetically.
 // This file imports nothing, so fixture build configs can import the shippable policy directly. The types placeholder below duplicates the postprocess literal on purpose (same call, both sides cited) to keep this file a leaf.

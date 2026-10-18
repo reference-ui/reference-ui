@@ -48,7 +48,7 @@ async function viteBundle(nodeEnv: 'production' | 'development'): Promise<string
 
 beforeAll(() => {
   // realpath: macOS tmpdir is a /var symlink, and Vite resolves real paths.
-  dir = realpathSync(mkdtempSync(join(tmpdir(), 'neo-env-gate-')))
+  dir = realpathSync(mkdtempSync(join(tmpdir(), 'core-env-gate-')))
   entry = join(dir, 'consumer.ts')
   writeFileSync(
     entry,

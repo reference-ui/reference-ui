@@ -1,6 +1,6 @@
-// Temp directory helpers nested under the Neo generated folder.
+// Temp directory helpers nested under the Core generated folder.
 // They take a project root or out dir and emit the hidden tmp path.
-// This module is a Neo-owned copy of the core tmp-dir seam.
+// This module is a core-owned copy of the retired reference-core tmp-dir seam.
 
 import { join, resolve } from 'node:path'
 import { DEFAULT_OUT_DIR } from '../../constants.ts'

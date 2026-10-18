@@ -1,11 +1,11 @@
-// React entry publishing for the Neo generated folder.
+// React entry publishing for the Core generated folder.
 // It takes the system name, the compiled style prop names, and the synced role, and emits the
 // react package: a minified bundled react.mjs plus its external map and standalone react.d.mts. React
-// stays external (like core's entry): bundling it would fork the dispatcher
+// stays external (like the retired reference-core's entry): bundling it would fork the dispatcher
 // for any consumer rendering through its own react-dom, so the bundle
 // imports 'react' and the consumer provides the copy. No react-dom edge:
 // consumers bring their own copy, and packages built on the entry import
-// clean where react-dom is absent (core contract).
+// clean where react-dom is absent (retired reference-core contract).
 // css()/recipe() bundle in pre-registered over this system's runtime-data;
 // styled stays data-only.
 // The synced stage sits one level deeper than the live folder the commit
@@ -103,7 +103,7 @@ export function stagedLoaderFor(stagedPath: string): esbuild.Loader {
   const loader = STAGED_LOADERS[ext]
   if (loader === undefined) {
     throw new Error(
-      `neo-live-map-paths: no staged loader for ${stagedPath} (extension "${ext}")`
+      `core-live-map-paths: no staged loader for ${stagedPath} (extension "${ext}")`
     )
   }
   return loader
@@ -125,7 +125,7 @@ export function liveMapPathPlugin(stageDir: string, liveDir: string): esbuild.Pl
     return join(liveDir, relative(stageDir, path))
   }
   return {
-    name: 'neo-live-map-paths',
+    name: 'core-live-map-paths',
     setup(build) {
       build.onResolve({ filter: /.*/ }, (args) => {
         // A relative specifier is joined against the importer's dir before the
@@ -173,7 +173,7 @@ export async function publishReactBundle(input: ReactPublishInput): Promise<void
 
   // Stable entry path under the output tmp dir: esbuild stamps the entry path
   // into the bundle as a module comment, so a random scratch name would make
-  // consecutive syncs differ by bytes (NEO-SYNC-06). Scoped per output dir, so
+  // consecutive syncs differ by bytes (CORE-SYNC-06). Scoped per output dir, so
   // concurrent syncs of different projects never share it.
   const entryPath = join(stageDir, 'tmp', 'react-entry.mts')
   mkdirSync(join(stageDir, 'tmp'), { recursive: true })

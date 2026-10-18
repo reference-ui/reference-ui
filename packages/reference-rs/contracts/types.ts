@@ -171,7 +171,7 @@ export type LogChannel = 'compiler' | 'proof'
 /**
  * Per-layer blocks of ONE system (D17 receive). Served `tokens`
  * rides N-API only; published entries carry `tokensPortable`.
- * Neo's system/base mirror stays field-identical to this.
+ * Core's system/base mirror stays field-identical to this.
  */
 export interface SystemStreams {
   name: string

@@ -1,4 +1,4 @@
-// Declaration leg of the Neo generated folder.
+// Declaration leg of the Core generated folder.
 // It takes the output dir, the evaluated spec, and the optional strict
 // categories, and emits the central styled declarations, the classic subpath
 // modules, and the typegen diagnostics. The react entry types arrive complete
@@ -9,7 +9,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
 import type { StrictCategory } from '../config/types.ts'
-import type { NeoDiagnostic } from '../diagnostics/types.ts'
+import type { CoreDiagnostic } from '../diagnostics/types.ts'
 import { BASE_SYSTEM_HEADER } from './constants.ts'
 
 /**
@@ -52,11 +52,11 @@ export async function publishTypesBundle(
   outDir: string,
   spec: EvaluatedSystemSpec,
   strict?: readonly StrictCategory[]
-): Promise<NeoDiagnostic[]> {
+): Promise<CoreDiagnostic[]> {
   const typegen = (await import('@reference-ui/rust/typegen')) as unknown as {
     emitDtsDetailed(options: { baseSystem: unknown; strict?: string[] }): {
       dts: string
-      diagnostics: NeoDiagnostic[]
+      diagnostics: CoreDiagnostic[]
     }
   }
   const typesDir = join(outDir, 'styled', 'types')

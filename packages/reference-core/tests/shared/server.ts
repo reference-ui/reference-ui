@@ -1,4 +1,4 @@
-// server.ts — one-case static file server for the neo harness. Takes a world
+// server.ts — one-case static file server for the core harness. Takes a world
 // directory root plus optional { host, port } (defaults: 127.0.0.1, ephemeral).
 // Emits a promise resolving to { host, port, url, stop } once the local HTTP
 // server is listening, so headless browsers can load worlds file servers block.
@@ -7,7 +7,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { getVendorReactCode } from './vendor-react.ts';
 
-const VENDOR_ROUTE = '/__neo__/react.mjs';
+const VENDOR_ROUTE = '/__core__/react.mjs';
 const IMPORTMAP_OPEN = '<script type="importmap">';
 
 // Map the external react specifiers onto the harness vendor bundle. Worlds

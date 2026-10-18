@@ -2,7 +2,7 @@
 //!
 //! Builds the queried JSON of responsive arrays and objects: holes bake to
 //! `null`, inline and const spreads splice in place, and `!` markers strip
-//! exactly where neo strips them — top-level scalars and responsive top
+//! exactly where core strips them — top-level scalars and responsive top
 //! leaves — while nested shapes stay byte-raw. Anything unprovable refuses
 //! the whole compound: a half-known query value is no expected key.
 
@@ -30,7 +30,7 @@ pub fn key_text(key: &PropertyKey<'_>, computed: bool) -> KeyText {
 
 /// The queried value of a responsive object (`width: { base, md }`): static
 /// keys with exact-or-hole leaves. Importance never escapes: leaf markers
-/// strip and the object itself is never important, exactly like neo's
+/// strip and the object itself is never important, exactly like core's
 /// `cleanResponsiveObject`.
 pub fn responsive_object_value(
     obj: &oxc_ast::ast::ObjectExpression<'_>,
@@ -148,7 +148,7 @@ fn structured_identifier(name: &str, scope: &ValueScope<'_>, split: bool) -> Opt
     }
 }
 
-/// A raw nested object: static keys with byte-raw leaves. Neo never strips
+/// A raw nested object: static keys with byte-raw leaves. Core never strips
 /// below the responsive top level, so nested strings keep `!` markers.
 fn raw_object(obj: &oxc_ast::ast::ObjectExpression<'_>, scope: &ValueScope<'_>) -> Option<Value> {
     let mut map = Map::new();

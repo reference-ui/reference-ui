@@ -1,5 +1,5 @@
 /**
- * The external tool tiers of the Neo quality gate: the two Biome passes (strict and warn-only) and the strict tsc
+ * The external tool tiers of the Core quality gate: the two Biome passes (strict and warn-only) and the strict tsc
  * project pass. Each runner shells out, maps the tool's diagnostics onto Violation records, and reports a missing or
  * killed tool as a tooling failure rather than as a clean run.
  */
@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execExitCode } from '../../tests/shared/exit-code.ts';
 import type { Violation } from './prose.ts';
-import { NEO_DIR } from './walk.ts';
+import { CORE_DIR } from './walk.ts';
 
 const HERE: string = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG: string = path.join(HERE, 'biome.json');
@@ -147,7 +147,7 @@ function parseTsc(out: string): Violation[] {
   for (const line of out.split('\n')) {
     const m = line.match(TSC_ERROR);
     if (!m) continue;
-    violations.push({ file: path.resolve(m[1]), line: Number(m[2]), ruleId: 'neo/tsc', severity: 2, message: `${m[3]}: ${m[4]}` });
+    violations.push({ file: path.resolve(m[1]), line: Number(m[2]), ruleId: 'core/tsc', severity: 2, message: `${m[3]}: ${m[4]}` });
   }
   return violations;
 }
@@ -161,7 +161,7 @@ export async function tscTier(code: string[]): Promise<{ errors: Violation[]; mi
   const bin = resolveBin('typescript', 'bin/tsc');
   if (!bin) return { errors: [], missing: 'typescript' };
   const wanted = new Set(tsFiles.map((f) => path.resolve(f)));
-  const r = await runCmd(process.execPath, [bin, '--noEmit', '-p', NEO_DIR], { ...process.env });
+  const r = await runCmd(process.execPath, [bin, '--noEmit', '-p', CORE_DIR], { ...process.env });
   const errors = parseTsc(`${r.out}\n${r.errOut}`).filter((v) => wanted.has(path.resolve(v.file)));
   if (r.code !== 0 && r.code !== 1) return { errors, missing: 'typescript' };
   return { errors, missing: null };

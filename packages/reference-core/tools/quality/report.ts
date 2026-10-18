@@ -1,5 +1,5 @@
 /**
- * The --report output of the Neo quality gate, which prints the complexity distribution and the Biome cognitive
+ * The --report output of the Core quality gate, which prints the complexity distribution and the Biome cognitive
  * summary, and the grouped printer the gate uses for its findings. A report run exits 0 unless the metrics tier is
  * unavailable, so a report never fails on its own findings.
  */
@@ -18,13 +18,13 @@ function topLabels<T>(items: T[], pick: (item: T) => number, labelOf: (item: T) 
 
 function reportMetric(title: string, values: number[], tops: string[]): void {
   if (!values.length) {
-    console.log(`[neo-quality] report ${title}: no data`);
+    console.log(`[core-quality] report ${title}: no data`);
     return;
   }
   const sorted = [...values].sort((a, b) => a - b);
   const at = (p: number): number => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1))];
-  console.log(`[neo-quality] report ${title}: p50 ${at(50)} p95 ${at(95)} max ${sorted[sorted.length - 1]}`);
-  console.log(`[neo-quality]   top: ${tops.join(', ')}`);
+  console.log(`[core-quality] report ${title}: p50 ${at(50)} p95 ${at(95)} max ${sorted[sorted.length - 1]}`);
+  console.log(`[core-quality]   top: ${tops.join(', ')}`);
 }
 
 function reportCognitive(cognitive: Violation[]): void {
@@ -35,7 +35,7 @@ function reportCognitive(cognitive: Violation[]): void {
     if (value > (best.get(key) ?? 0)) best.set(key, value);
   }
   if (!best.size) {
-    console.log('[neo-quality] report cognitive: no function above 12');
+    console.log('[core-quality] report cognitive: no function above 12');
     return;
   }
   const tops = [...best.entries()]
@@ -43,13 +43,13 @@ function reportCognitive(cognitive: Violation[]): void {
     .slice(0, 5)
     .map(([k, v]) => `${k}=${v}`);
   const max = [...best.values()].sort((a, b) => a - b).pop();
-  console.log(`[neo-quality] report cognitive (Biome, observes above 12 only): max ${max} across ${best.size} functions`);
-  console.log(`[neo-quality]   top: ${tops.join(', ')}`);
+  console.log(`[core-quality] report cognitive (Biome, observes above 12 only): max ${max} across ${best.size} functions`);
+  console.log(`[core-quality]   top: ${tops.join(', ')}`);
 }
 
 function reportTier(result: MetricsResult, cognitive: Violation[]): void {
   const fns: FunctionMetric[] = result.functions;
-  console.log(`[neo-quality] report: ${fns.length} functions, ${result.files.length} files`);
+  console.log(`[core-quality] report: ${fns.length} functions, ${result.files.length} files`);
   const fnLabel = (f: FunctionMetric): string => `${f.file}:${f.line} ${f.name}`;
   reportMetric('cyclomatic', fns.map((f) => f.cyclomatic), topLabels(fns, (f) => f.cyclomatic, fnLabel));
   reportMetric('params', fns.map((f) => f.params), topLabels(fns, (f) => f.params, fnLabel));
@@ -60,7 +60,7 @@ function reportTier(result: MetricsResult, cognitive: Violation[]): void {
 }
 
 export function printGroup(title: string, violations: Violation[]): void {
-  console.log(`[neo-quality] ${title} (${violations.length}):`);
+  console.log(`[core-quality] ${title} (${violations.length}):`);
   for (const v of violations) {
     console.log(`  ${v.severity === 2 ? 'error' : 'warn'} ${v.file}:${v.line} ${v.ruleId ?? 'unknown'} ${v.message}`);
     const tip = tipFor(v.ruleId);
@@ -70,16 +70,16 @@ export function printGroup(title: string, violations: Violation[]): void {
 
 export async function runReport(measured: Measured, code: string[], started: number): Promise<number> {
   if (!measured.result) {
-    console.log('[neo-quality] report unavailable: typescript is not installed; install dependencies and rerun.');
+    console.log('[core-quality] report unavailable: typescript is not installed; install dependencies and rerun.');
     return 2;
   }
   let cognitive: Violation[] = [];
   if (code.length) {
     const tier = await biomeTier(code);
     cognitive = tier.cognitive;
-    if (tier.missing) console.log('[neo-quality] report cognitive: skipped (biome is not installed).');
+    if (tier.missing) console.log('[core-quality] report cognitive: skipped (biome is not installed).');
   }
   reportTier(measured.result, cognitive);
-  console.log(`[neo-quality] report done in ${Date.now() - started}ms`);
+  console.log(`[core-quality] report done in ${Date.now() - started}ms`);
   return 0;
 }

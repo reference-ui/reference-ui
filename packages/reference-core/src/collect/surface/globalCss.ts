@@ -1,6 +1,6 @@
 // Author globalCss() call plus its fragment collector.
 // It takes global rule maps from fragment files and emits collected configs.
-// This module is a Neo-owned copy of the core globalCss collector with a local type.
+// This module is a core-owned copy of the retired reference-core globalCss collector with a local type.
 
 import { createFragmentFunction } from '../lib/collector.ts'
 

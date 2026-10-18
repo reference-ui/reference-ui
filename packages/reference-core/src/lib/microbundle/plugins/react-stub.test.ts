@@ -1,6 +1,6 @@
-// Unit tests for the Neo react-stub plugin over IIFE fragment bundles.
+// Unit tests for the Core react-stub plugin over IIFE fragment bundles.
 // They take react-importing sources and assert stubbed output without require shims.
-// This file is a Neo-owned copy of the core react-stub plugin tests.
+// This file is a core-owned copy of the retired reference-core react-stub plugin tests.
 
 import { describe, expect, it } from 'vitest'
 import * as esbuild from 'esbuild'

@@ -57,7 +57,7 @@ export const DEFAULT_ROWS: ReproRow[] = [
     files: {
       'theme/cq.ts': styleFile("export const cls = css({ r: { md: { p: '1r' } } })"),
       'theme/cq-globals.ts': [
-        "import { globalCss } from '@reference-ui/neo'",
+        "import { globalCss } from '@reference-ui/core'",
         '',
         "globalCss({ body: { color: 'red' } })",
         '',
@@ -85,7 +85,7 @@ export const DEFAULT_ROWS: ReproRow[] = [
     configExtra: '',
     files: {
       'theme/tokens.ts': [
-        "import { tokens } from '@reference-ui/neo'",
+        "import { tokens } from '@reference-ui/core'",
         '',
         'tokens({',
         '  colors: {',
@@ -121,7 +121,7 @@ export const DEFAULT_ROWS: ReproRow[] = [
     configExtra: '',
     files: {
       'theme/empty-rule.ts': [
-        "import { globalCss } from '@reference-ui/neo'",
+        "import { globalCss } from '@reference-ui/core'",
         '',
         "globalCss({ '@supports': { body: { color: 'gray' } } })",
         '',
@@ -135,7 +135,7 @@ export const DEFAULT_ROWS: ReproRow[] = [
     configExtra: '',
     files: {
       'theme/nested-cond.ts': [
-        "import { globalCss } from '@reference-ui/neo'",
+        "import { globalCss } from '@reference-ui/core'",
         '',
         "globalCss({ body: { color: { sm: ['red'] } } })",
         '',

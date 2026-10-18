@@ -18,7 +18,7 @@ afterEach(async () => {
 })
 
 async function projectWithTokens(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-include-check-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-include-check-'))
   tempDirs.push(dir)
   mkdirSync(join(dir, 'theme'), { recursive: true })
   writeFileSync(join(dir, 'theme', 'tokens.ts'), "export const x = 1\n")

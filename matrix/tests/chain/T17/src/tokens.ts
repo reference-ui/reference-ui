@@ -1,4 +1,4 @@
-import { tokens } from '@reference-ui/neo'
+import { tokens } from '@reference-ui/core'
 
 /**
  * T17 novel probe tokens. These are consumer-local: the icons/lib/fixture

@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import { traceBindings } from '../../js/index.js'
 import {
-  createNeoSyncedWorkspaceFixture,
+  createCoreSyncedWorkspaceFixture,
   createNodeBuiltinHelperFixture,
   createReactReexportFixture,
   createSyncedWorkspaceFixture,
@@ -58,8 +58,8 @@ describe('styletrace fixtures', () => {
     }
   })
 
-  it('traces Neo-shaped sync roots with no react/types or react/system', async () => {
-    const fixture = await createNeoSyncedWorkspaceFixture()
+  it('traces Core-shaped sync roots with no react/types or react/system', async () => {
+    const fixture = await createCoreSyncedWorkspaceFixture()
 
     try {
       await expect(

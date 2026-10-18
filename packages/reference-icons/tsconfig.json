@@ -13,7 +13,7 @@
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@reference-ui/neo": ["../reference-neo/src/author/index.ts"],
+      "@reference-ui/core": ["../reference-core/src/author/index.ts"],
       "@reference-ui/react": ["./.reference-ui/react"],
       "@reference-ui/system": ["./.reference-ui/system"],
       "@reference-ui/system/baseSystem": ["./.reference-ui/system/baseSystem.d.mts"]

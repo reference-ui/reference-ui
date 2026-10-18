@@ -1,4 +1,4 @@
-// Neo diagnostic reporting: how a sync answers the engine's report.
+// Core diagnostic reporting: how a sync answers the engine's report.
 // It takes result diagnostics and returns the reported count, printing
 // the deduped verbose list only under --verbose. Default mode stays
 // silent on stderr: the count folds into the CLI one-liner (sync line,
@@ -7,9 +7,9 @@
 // that have no line to ride. Warnings never throw, so a drifting sync
 // stays green and loud; errors throw with their codes and locations.
 import { dedupeDiagnostics, formatVerboseWarningLine, formatWarningSummary } from './format.ts'
-import type { DiagnosticReportOptions, NeoDiagnostic } from './types.ts'
+import type { DiagnosticReportOptions, CoreDiagnostic } from './types.ts'
 
-function diagnosticLocation(entry: NeoDiagnostic): string {
+function diagnosticLocation(entry: CoreDiagnostic): string {
   if (!entry.file) return ''
   if (entry.line === undefined) return ` (${entry.file})`
   if (entry.column === undefined) return ` (${entry.file}:${entry.line})`
@@ -18,11 +18,11 @@ function diagnosticLocation(entry: NeoDiagnostic): string {
 
 // The coded segment mirrors the verbose convention (`CODE: message`):
 // legacy codeless entries print no segment, never `undefined:`.
-function errorCodeSegment(entry: NeoDiagnostic): string {
+function errorCodeSegment(entry: CoreDiagnostic): string {
   return entry.code === undefined ? '' : `${entry.code}: `
 }
 
-export function throwOnErrorDiagnostics(diagnostics: NeoDiagnostic[]): void {
+export function throwOnErrorDiagnostics(diagnostics: CoreDiagnostic[]): void {
   const errors = diagnostics.filter(entry => entry.severity === 'error')
   if (errors.length === 0) return
   const lines = errors.map(entry => `- ${errorCodeSegment(entry)}${entry.message}${diagnosticLocation(entry)}`)
@@ -35,7 +35,7 @@ export function throwOnErrorDiagnostics(diagnostics: NeoDiagnostic[]): void {
 // under --verbose; by default the caller folds the returned count into its
 // own one-liner. Zero returns zero and prints nothing anywhere.
 export function reportWarningDiagnostics(
-  diagnostics: NeoDiagnostic[],
+  diagnostics: CoreDiagnostic[],
   options: DiagnosticReportOptions = {}
 ): number {
   const warnings = diagnostics.filter(entry => entry.severity === 'warning')
@@ -51,7 +51,7 @@ export function reportWarningDiagnostics(
 // behind the compiler tag so the two channels stay distinguishable in
 // one deduped list. Zero returns zero and prints nothing anywhere.
 export function reportCompilerDiagnostics(
-  entries: NeoDiagnostic[] | undefined,
+  entries: CoreDiagnostic[] | undefined,
   options: DiagnosticReportOptions = {}
 ): number {
   const list = entries ?? []
@@ -69,7 +69,7 @@ export function reportCompilerDiagnostics(
 // ride, so silence there would lose the warnings. Entries arrive typed
 // with stable codes and print with fix hints where known.
 export function reportRefDiagnostics(
-  entries: NeoDiagnostic[],
+  entries: CoreDiagnostic[],
   options: DiagnosticReportOptions & { fold?: boolean } = {}
 ): number {
   if (options.verbose === true && entries.length > 0) {
@@ -87,9 +87,9 @@ export function reportRefDiagnostics(
 // dedupe and the human lists. The one-shot caller appends the ref channel;
 // background ref landings report their own array.
 export function reportedSyncEntries(
-  diagnostics: NeoDiagnostic[],
-  compilerEntries: NeoDiagnostic[] | undefined,
-): NeoDiagnostic[] {
+  diagnostics: CoreDiagnostic[],
+  compilerEntries: CoreDiagnostic[] | undefined,
+): CoreDiagnostic[] {
   return [
     ...diagnostics.filter(entry => entry.severity === 'warning'),
     ...(compilerEntries ?? []),
@@ -103,8 +103,8 @@ export function reportedSyncEntries(
 // here. The stable codes ride the verbose lines so censuses count by
 // `rg -c`, not by prose.
 export function reportSyncDiagnostics(
-  diagnostics: NeoDiagnostic[],
-  compilerEntries: NeoDiagnostic[] | undefined,
+  diagnostics: CoreDiagnostic[],
+  compilerEntries: CoreDiagnostic[] | undefined,
   options: DiagnosticReportOptions = {}
 ): number {
   const warnings = diagnostics.filter(entry => entry.severity === 'warning')

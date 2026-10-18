@@ -134,7 +134,7 @@ async function landWarmBuild(key: string, lane: TastyRefreshLane): Promise<Refer
     return reportWarmBuild(state, reporting)
   } catch (reason) {
     const message = reason instanceof Error ? reason.message : String(reason)
-    if (!reporting.fold) console.error(`[neo] [ref] background tasty refresh failed: ${message}`)
+    if (!reporting.fold) console.error(`[core] [ref] background tasty refresh failed: ${message}`)
     return { status: 'failed', message }
   }
 }

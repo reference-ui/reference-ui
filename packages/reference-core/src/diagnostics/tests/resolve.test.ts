@@ -1,4 +1,4 @@
-// Unit pins for neo-side span resolution.
+// Unit pins for core-side span resolution.
 // They take source texts plus byte offsets and assert 1-based positions
 // matching the native resolver offset for offset, including emoji columns,
 // past-end and mid-character misses, and the cached resolver's laziness.

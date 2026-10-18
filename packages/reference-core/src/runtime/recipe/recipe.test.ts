@@ -1,4 +1,4 @@
-// Unit tests for the Neo recipe() runtime over registered tables.
+// Unit tests for the Core recipe() runtime over registered tables.
 // They take authored configs plus selections and assert resolved classes.
 // Registration is module state, so the suite registers once up front.
 

@@ -199,7 +199,7 @@ async function generateFlameRepo(ctx) {
   const plans = await import(benchModuleUrl(ctx.benchDir, 'generate/plans.ts'))
   const generators = await import(benchModuleUrl(ctx.benchDir, 'generate/generators/index.ts'))
   const plan = plans.resolvePlan(ctx.options.scale, {})
-  const dir = mkdtempSync(path.join(tmpdir(), 'neo-flame-'))
+  const dir = mkdtempSync(path.join(tmpdir(), 'core-flame-'))
   const generated = generators.generateRepo(plan, dir)
   console.log(`[agent-rs] flame repo: ${generated.styleFiles} files, ${generated.cssCalls} css() calls, seed ${plan.seed}`)
   return { dir, plan, generated }
@@ -216,7 +216,7 @@ async function recordFlameProfile(ctx, repo, evidenceDir) {
   mkdirSync(evidenceDir, { recursive: true })
   const profilePath = path.join(evidenceDir, 'profile.json.gz')
   const workerPath = path.join(ctx.benchDir, 'measure/worker.ts')
-  const runDir = mkdtempSync(path.join(tmpdir(), 'neo-flame-run-'))
+  const runDir = mkdtempSync(path.join(tmpdir(), 'core-flame-run-'))
   const v8Flags = v8AuxFlags(runDir)
   const nodeArgs = [...v8Flags, workerPath, repo.dir, String(WORKER_SAMPLE_MS)]
   const command = [
@@ -309,7 +309,7 @@ export async function runFlameCommand(args, repoRoot, rsDir) {
     console.error(`[agent-rs] ${err.message}`)
     return 1
   }
-  const benchDir = path.join(repoRoot, 'packages', 'reference-neo', 'benchmark')
+  const benchDir = path.join(repoRoot, 'packages', 'reference-core', 'benchmark')
   if (options.help) {
     printFlameHelp()
     return 0

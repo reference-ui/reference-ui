@@ -1,4 +1,4 @@
-// build.ts — per-world source build for the neo harness. Takes a world dir
+// build.ts — per-world source build for the core harness. Takes a world dir
 // and transpiles every src/**/*.ts(x) file into world/dist/ (gitignored).
 // Worlds are TypeScript-only: the served tree is always derived by this step,
 // never hand-written, so app sources and browser entries cannot drift.

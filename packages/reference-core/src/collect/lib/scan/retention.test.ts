@@ -72,7 +72,7 @@ const FIXTURE_FILES: Array<[string, string]> = [
   ['dist/nested.ts', cssFile('purple')],
   ['node_modules/pkg/index.ts', cssFile('pink')],
   ['src/data.json', '{"note": "not a source"}\n'],
-  ['theme/tokens.ts', `import '@reference-ui/neo'\n`],
+  ['theme/tokens.ts', `import '@reference-ui/core'\n`],
 ]
 
 function libSystemSpec(): EvaluatedSystemSpec {
@@ -107,8 +107,8 @@ function colorWants(result: TestCompileResult): string[] {
 function addUnretainedSignalFiles(root: string): { distFrag: string; jsonFrag: string } {
   const distFrag = join(root, 'dist', 'frag.ts')
   const jsonFrag = join(root, 'src', 'frag-data.json')
-  writeFileSync(distFrag, `import '@reference-ui/neo'\n${cssFile('teal')}`)
-  writeFileSync(jsonFrag, `{"note": "import '@reference-ui/neo'"}\n`)
+  writeFileSync(distFrag, `import '@reference-ui/core'\n${cssFile('teal')}`)
+  writeFileSync(jsonFrag, `{"note": "import '@reference-ui/core'"}\n`)
   return { distFrag, jsonFrag }
 }
 
@@ -169,7 +169,7 @@ describe('retention scan differential', () => {
       join('src', 't.d.ts'),
       join('theme', 'tokens.ts'),
     ])
-    // Matches emulate dot:false plus the d.ts exclusion: only the neo import.
+    // Matches emulate dot:false plus the d.ts exclusion: only the core import.
     expect(matches).toEqual([join(root, 'theme', 'tokens.ts')])
     expect(colorWants(fromRoot)).toEqual(['blue', 'green', 'orange', 'red'])
     expect(colorWants(fromFiles)).toEqual(['blue', 'green', 'orange', 'red'])

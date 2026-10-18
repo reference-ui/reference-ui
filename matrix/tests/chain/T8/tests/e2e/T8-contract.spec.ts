@@ -28,7 +28,7 @@ test.describe('T8 — same library in both extends and layers', () => {
   })
 
   // Documenting the current allow-and-duplicate policy at the assembled-CSS
-  // level. If/when reference-core moves to dedupe, update this assertion.
+  // level. If/when core moves to dedupe, update this assertion.
   test('upstream layer block appears at least once in the assembled stylesheet', async ({ page }) => {
     const cssBlocks = await page.evaluate(() => {
       return Array.from(document.styleSheets).flatMap((sheet) => {

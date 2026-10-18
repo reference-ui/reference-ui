@@ -12,7 +12,7 @@ import { scanForFragmentsNative, scanFragmentSourcesNative } from './native.ts'
 import {
   CSS_RED,
   NEEDLES,
-  NEO_IMPORT,
+  CORE_IMPORT,
   atomic,
   libSystemSpec,
   platformSep,
@@ -107,7 +107,7 @@ describe('native scan retain modes', () => {
     const files: Array<[string, string]> = [
       ['src/tokens.ts', `tokens({ colors: { brand: { value: '#7c3aed' } } })\n`],
       ['src/plain.ts', 'export const x = 1\n'],
-      ['src/frag.ts', NEO_IMPORT],
+      ['src/frag.ts', CORE_IMPORT],
     ]
     await withTree('f1-planner', files, async root => {
       // Planner discovery (function names, no importFrom) agrees exactly.
@@ -125,7 +125,7 @@ describe('native scan retain modes', () => {
       const mod = await atomic()
       const res = await mod.scan({
         paths: [join(root, 'src/tokens.ts'), join(root, 'src/frag.ts')],
-        needles: ['tokens', '@reference-ui/neo'],
+        needles: ['tokens', '@reference-ui/core'],
         cwd: root,
         sep: platformSep(),
         retain: false,
@@ -139,7 +139,7 @@ describe('native scan retain modes', () => {
   })
 
   it('(X1) the TS hatch forces the fallback bytes path', async () => {
-    await withTree('f1-hatch', [['src/a.ts', NEO_IMPORT]], async root => {
+    await withTree('f1-hatch', [['src/a.ts', CORE_IMPORT]], async root => {
       const options = { include: ['**/*'], importFrom: NEEDLES, cwd: root }
       const previous = process.env['REFERENCE_UI_SCAN_NATIVE']
       process.env['REFERENCE_UI_SCAN_NATIVE'] = '0'

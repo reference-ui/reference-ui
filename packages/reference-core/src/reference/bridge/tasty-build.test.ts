@@ -1,6 +1,6 @@
 // Reference tasty scan-options suite: it takes a scratch project with a staged
 // outDir and emits the scan-root pins — project root, config includes passed
-// through untouched, the neo decl closure appended only when present. Pure
+// through untouched, the core decl closure appended only when present. Pure
 // options, no tasty build; the probe proves the closure resolves for real.
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -15,7 +15,7 @@ const DECL_STYLE_PROPS = '.reference-ui/styled/types/style-props.d.ts'
 let scratchDirs: string[] = []
 
 function makeProject(withDecls: boolean): string {
-  const dir = mkdtempSync(join(tmpdir(), 'neo-tasty-scan-'))
+  const dir = mkdtempSync(join(tmpdir(), 'core-tasty-scan-'))
   scratchDirs.push(dir)
   if (withDecls) {
     const typesDir = join(dir, '.reference-ui', 'styled', 'types')
@@ -38,7 +38,7 @@ afterEach(() => {
 })
 
 describe('reference/bridge/tasty-build scan options', () => {
-  it('scans the project root with config includes plus the neo decl closure', () => {
+  it('scans the project root with config includes plus the core decl closure', () => {
     const project = makeProject(true)
 
     const options = buildReferenceTastyScanOptions(project, ['src/**/*.{ts,tsx}'])

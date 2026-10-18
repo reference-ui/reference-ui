@@ -1,18 +1,18 @@
-name: Neo Vendor
+name: Core Vendor
 
 on:
   push:
     paths:
       - packages/reference-rs/modules/primitives/**
-      - packages/reference-neo/tools/vendor-rust-primitives.mjs
-      - packages/reference-neo/src/native/generated/primitives/**
-      - .github/workflows/neo-vendor.yml
+      - packages/reference-core/tools/vendor-rust-primitives.mjs
+      - packages/reference-core/src/native/generated/primitives/**
+      - .github/workflows/core-vendor.yml
   pull_request:
     paths:
       - packages/reference-rs/modules/primitives/**
-      - packages/reference-neo/tools/vendor-rust-primitives.mjs
-      - packages/reference-neo/src/native/generated/primitives/**
-      - .github/workflows/neo-vendor.yml
+      - packages/reference-core/tools/vendor-rust-primitives.mjs
+      - packages/reference-core/src/native/generated/primitives/**
+      - .github/workflows/core-vendor.yml
   workflow_dispatch:
 
 permissions:
@@ -42,5 +42,5 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check vendored primitives are fresh
-        working-directory: packages/reference-neo
+        working-directory: packages/reference-core
         run: node tools/vendor-rust-primitives.mjs --check

@@ -1,13 +1,13 @@
-// Cross-project memory vendored from core's global registry (retired).
+// Cross-project memory vendored from the retired reference-core's global registry.
 // It takes project paths and emits registry reads plus last-active upserts.
-// Neo deliberately excludes this seam (no global registry by design), so
+// Core deliberately excludes this seam (no global registry by design), so
 // mcp owns the copy: same file, same entry shape, same sanitizing read.
 // Keeping the path identical preserves existing registries across cutover.
 
 import { existsSync, mkdirSync, readFileSync, renameSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { homedir } from 'node:os'
-import { resolveRefConfigFile } from '../neo/paths'
+import { resolveRefConfigFile } from '../core/paths'
 
 export interface ProjectEntry {
   configPath: string

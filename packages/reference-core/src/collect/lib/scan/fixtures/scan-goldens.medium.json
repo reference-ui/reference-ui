@@ -30,22 +30,22 @@
     "theme/tokens.ts"
   ],
   "retainedCount": 1276,
-  "manifestSha": "e0820a390dfc0b91c0d504151ea9a5662faba2530fa47b41bd956552242804ab",
+  "manifestSha": "d8043cb6aa90300e90830b3fe31ce730c0184072f0aeaeb183e7d4fa44689c5e",
   "manifestSample": [
-    [
-      "src/recipes/recipe0.ts",
-      "93510c7fcbe85858"
-    ],
-    [
-      "src/recipes/recipe1.ts",
-      "98cd15091f422439"
-    ],
-    [
-      "src/recipes/recipe10.ts",
-      "0f92364f80edb974"
-    ]
+    {
+      "path": "src/recipes/recipe0.ts",
+      "hash": "93510c7fcbe85858"
+    },
+    {
+      "path": "src/recipes/recipe1.ts",
+      "hash": "98cd15091f422439"
+    },
+    {
+      "path": "src/recipes/recipe10.ts",
+      "hash": "0f92364f80edb974"
+    }
   ],
-  "sourcesSha": "93ae06f0e4631a539edcb416c59921ae5303665f42cdcad0a2ae9593830b3e5c",
+  "sourcesSha": "4e11c51a47846f7cd5c863f9fd92233a56f489709b4c204c105837b56f0c3e64",
   "stylesheetSha": "03d209594ff026b0ea720ec918d23def6c3afe2a34091739f7237b6bc5cf2f3d",
   "stylesheetBytes": 348832,
   "portableSha": "7bdbb37b106a4f9e24907789bef08f9490a1bff288590506f7c980317ca1b8ab",

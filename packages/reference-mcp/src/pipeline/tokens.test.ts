@@ -141,7 +141,7 @@ describe('mcp token projection', () => {
 })
 
 describe('mcp upstream fragment linearization', () => {
-  // Two extends entries reach one shared base. Neo evaluates the base once, in the first branch that reaches it.
+  // Two extends entries reach one shared base. Core evaluates the base once, in the first branch that reaches it.
   const base = { name: 'base', bundle: ';/* base */' }
   const left = { name: 'left', bundle: ';/* left */' }
   const right = { name: 'right', bundle: ';/* right */' }

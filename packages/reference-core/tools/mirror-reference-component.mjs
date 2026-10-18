@@ -1,5 +1,5 @@
 // Mirrors the living Reference presentation set from reference-lib source into the
-// gitignored Neo browser-component mirror. It descends only into the living roots
+// gitignored Core browser-component mirror. It descends only into the living roots
 // (components and document), prepends @ts-nocheck plus a provenance header to each
 // file, and rewrites @reference-ui/types imports to the neighboring browser
 // adapter. It reads lib source from disk at mirror time, and that read is the
@@ -12,8 +12,8 @@ import { fileURLToPath } from 'node:url'
 const { setTimeout: delayTimeout } = globalThis
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
-const NEO_DIR = join(SCRIPT_DIR, '..')
-const REPO_DIR = join(NEO_DIR, '..', '..')
+const CORE_DIR = join(SCRIPT_DIR, '..')
+const REPO_DIR = join(CORE_DIR, '..', '..')
 const SOURCE_DIR = join(
   REPO_DIR,
   'packages',
@@ -22,18 +22,18 @@ const SOURCE_DIR = join(
   'components',
   'Reference'
 )
-const TARGET_DIR = join(NEO_DIR, 'src', 'reference', 'browser-component')
+const TARGET_DIR = join(CORE_DIR, 'src', 'reference', 'browser-component')
 const TYPES_ADAPTER_FILE = join(
-  NEO_DIR,
+  CORE_DIR,
   'src',
   'reference',
   'browser',
   'component-api.ts'
 )
-const LOCK_FILE = join(NEO_DIR, '.mirror-reference-component.lock')
+const LOCK_FILE = join(CORE_DIR, '.mirror-reference-component.lock')
 
 // Living roots from the port map: everything else under the lib source tree
-// (shell, fixtures, theme) stays in lib and is never mirrored into Neo.
+// (shell, fixtures, theme) stays in lib and is never mirrored into Core.
 const MIRROR_ROOTS = ['components', 'document']
 
 const GENERATED_README = `# Browser Component Mirror
@@ -47,11 +47,11 @@ Source of truth:
 
 These files are copied by:
 
-- packages/reference-neo/tools/mirror-reference-component.mjs
+- packages/reference-core/tools/mirror-reference-component.mjs
 
 Regenerate explicitly (no lifecycle magic):
 
-    cd packages/reference-neo && node tools/mirror-reference-component.mjs
+    cd packages/reference-core && node tools/mirror-reference-component.mjs
 
 This directory is gitignored. Do not edit files here directly.
 Edit the reference-lib source and re-run the mirror tool.
@@ -149,7 +149,7 @@ function addSourceComment(source, sourceOfTruth) {
     '',
     '/**',
     ` * Source of truth: ${sourceOfTruth}`,
-    ' * This file is mirrored into reference-neo by tools/mirror-reference-component.mjs.',
+    ' * This file is mirrored into reference-core by tools/mirror-reference-component.mjs.',
     ' * Edit the reference-lib source, not this copy.',
     ' */',
     '',

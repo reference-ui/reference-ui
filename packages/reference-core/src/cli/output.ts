@@ -110,12 +110,12 @@ export function cssSizeBytes(outDir: string): number {
   return fileSizeBytes(join(outDir, 'styled', 'styles.css'))
 }
 
-// One manifest read: the version when this dir is the Neo package itself,
+// One manifest read: the version when this dir is the Core package itself,
 // undefined for any other package.json, a torn file, or a miss.
 function readManifestVersion(dir: string): string | undefined {
   try {
     const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as { name?: unknown; version?: unknown }
-    if (manifest.name !== '@reference-ui/neo' || typeof manifest.version !== 'string') return undefined
+    if (manifest.name !== '@reference-ui/core' || typeof manifest.version !== 'string') return undefined
     return manifest.version
   } catch {
     return undefined
@@ -125,7 +125,7 @@ function readManifestVersion(dir: string): string | undefined {
 let cachedVersion: string | undefined
 
 // The CLI's own version for the boot header: climbs from this file to the
-// Neo package.json, so src, dist, and bundled layouts all resolve. Cached
+// Core package.json, so src, dist, and bundled layouts all resolve. Cached
 // after the first read; 0.0.0 when no manifest answers.
 export function refVersion(): string {
   if (cachedVersion !== undefined) return cachedVersion

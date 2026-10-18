@@ -26,8 +26,6 @@ function resolveInstalledMcpBinPath(cwd: string): string {
     join(cwd, 'node_modules', '@reference-ui', 'mcp', 'bin', 'mcp.mjs'),
     join(process.cwd(), 'packages', 'reference-mcp', 'bin', 'mcp.mjs'),
     join(process.cwd(), 'node_modules', '@reference-ui', 'mcp', 'bin', 'mcp.mjs'),
-    join(cwd, 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs'),
-    join(process.cwd(), 'node_modules', '@reference-ui', 'core', 'bin', 'mcp.mjs'),
   ]
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate

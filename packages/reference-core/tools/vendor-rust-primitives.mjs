@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Vendor tool for the RS-emitted primitive roster drawn through Neo's native seam.
+// Vendor tool for the RS-emitted primitive roster drawn through Core's native seam.
 // It takes the committed E1 vocabulary and E4 raw types from the linked @reference-ui/rust
-// module sources and emits the committed shelf under src/native/generated/primitives/, so Neo
+// module sources and emits the committed shelf under src/native/generated/primitives/, so Core
 // reads canon's roster and typegen's prop names without touching reference-rs. E1 copies
 // byte-exact since JSON carries no provenance header; E4 gains the header plus the tasty-style
 // NodeNext specifier rewrite, which passes its external imports through today and rewrites any
@@ -12,18 +12,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const NEO_DIR = path.dirname(HERE);
-const VENDOR_DIR = path.join(NEO_DIR, 'src', 'native', 'generated', 'primitives');
+const CORE_DIR = path.dirname(HERE);
+const VENDOR_DIR = path.join(CORE_DIR, 'src', 'native', 'generated', 'primitives');
 const E1 = 'vocabulary.json';
 const E4_TOP = 'primitives.d.ts';
 const FROM_RE = /from(\s+)(['"])([^'"]+)\2/g;
 const IMPORT_RE = /import(\s*\(\s*)(['"])([^'"]+)\2(\s*\))/g;
 const REGEN_CMD =
-  'pnpm --filter @reference-ui/rust run primitives && cd packages/reference-neo && node tools/vendor-rust-primitives.mjs';
+  'pnpm --filter @reference-ui/rust run primitives && cd packages/reference-core && node tools/vendor-rust-primitives.mjs';
 
 // Resolve the linked workspace RS package; the generator output must already exist.
 function resolveRust() {
-  const pkgFile = path.join(NEO_DIR, 'node_modules', '@reference-ui', 'rust', 'package.json');
+  const pkgFile = path.join(CORE_DIR, 'node_modules', '@reference-ui', 'rust', 'package.json');
   if (!existsSync(pkgFile)) {
     throw new Error(`cannot find the linked @reference-ui/rust at ${pkgFile}; run pnpm install first.`);
   }
@@ -97,7 +97,7 @@ function headerFor(version, rel) {
   return [
     '/**',
     ' * Vendored primitives declaration file, mechanically copied from the reference-rs generator output.',
-    ' * It carries the exact upstream bytes with explicit NodeNext specifiers, so neo typechecks without touching reference-rs.',
+    ' * It carries the exact upstream bytes with explicit NodeNext specifiers, so core typechecks without touching reference-rs.',
     ' * Do not edit this copy; regenerate it with the vendor tool after re-running the primitives generator.',
     ` * @generated from @reference-ui/rust@${version} modules/primitives/generated/${posix}`,
     ` * Regen: ${REGEN_CMD}`,

@@ -17,7 +17,7 @@ const requiredFiles = [
   resolve(distDir, 'theme/index.d.ts'),
 ]
 
-// Landing Phase C (B5): Neo layout asserts — styled/ is data-only
+// Landing Phase C (B5): Core layout asserts — styled/ is data-only
 // (runtime-data.mjs + styles.css + types), no Panda css/jsx/patterns dirs.
 // The tasty runtime tripwire: the packaged bundle's lazy `./tasty/runtime.js`
 // edge must materialize beside the runtime files (runtime.js statically

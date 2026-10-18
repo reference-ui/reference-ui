@@ -1,5 +1,5 @@
 import type { AtlasConfig } from '@reference-ui/rust/atlas'
-import type { ReferenceUIConfig } from '@reference-ui/neo/config/types'
+import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
 import { REFERENCE_UI_PRIMITIVE_NAMES } from './primitives'
 
 export interface McpAtlasSelectors {
@@ -8,9 +8,9 @@ export interface McpAtlasSelectors {
 }
 
 /**
- * Config as the MCP server reads it: Neo's shape plus the mcp-only fields
- * Neo leaves untyped (they pass through validation at runtime). Vendored
- * here because Neo deliberately drops the `mcp` surface from its types.
+ * Config as the MCP server reads it: Core's shape plus the mcp-only fields
+ * Core leaves untyped (they pass through validation at runtime). Vendored
+ * here because Core deliberately drops the `mcp` surface from its types.
  */
 export type McpAwareConfig = ReferenceUIConfig & {
   mcp?: McpAtlasSelectors

@@ -28,7 +28,7 @@ pub struct OwnedLookupKey {
 
 impl OwnedLookupKey {
     /// Serialize this expectation with the one runtime-key authority, so
-    /// analysis bytes equal plan bytes and neo `serializeLookupKey` bytes.
+    /// analysis bytes equal plan bytes and core `serializeLookupKey` bytes.
     pub fn lookup_key(&self) -> String {
         serialize_lookup_key(&LookupKey {
             system: &self.system,

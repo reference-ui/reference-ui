@@ -16,7 +16,7 @@ export async function runCli(argv: string[]): Promise<number> {
   const program = new Command()
   program
     .name('ref')
-    .description('the Neo host CLI for case worlds and consumer projects')
+    .description('the Core host CLI for case worlds and consumer projects')
     .addHelpText('after', () => `\n${USAGE}\n`)
   program.on('command:*', (operands: string[]) => {
     code = printUsageError(`unknown command: ${operands[0] ?? '(none)'}`)

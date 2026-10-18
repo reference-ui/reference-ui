@@ -1,4 +1,4 @@
-// Asset copier for Neo generated packages.
+// Asset copier for Core generated packages.
 // It takes the output dir, a package target dir, and the definition's copy list, and emits the declared files into the package.
 // Narrowed on purpose: file-from-outDir only, synchronous — the react styles.css is the sole asset, and sync already runs serial.
 

@@ -23,7 +23,7 @@ import { attachScanRetention, releaseRetention } from '../native/retention.ts'
 import { applyNormalizeCss } from './reset.ts'
 
 // The lib tree is data, never a dependency: this test reads its config and
-// sources from disk the way NEO-PARITY-03 censuses them. Absolute by
+// sources from disk the way CORE-PARITY-03 censuses them. Absolute by
 // construction — a relative project dir silently degrades sync (LOG-3.md).
 const LIB_DIR = fileURLToPath(new URL('../../../reference-lib', import.meta.url))
 const BARREL_NEGATION = '!src/index.ts'

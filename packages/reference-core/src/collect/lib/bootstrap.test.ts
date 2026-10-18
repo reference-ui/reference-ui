@@ -14,7 +14,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { bundleFragments } from './runner.ts'
 import { getFragmentBootstrapImportMap } from './bootstrap.ts'
 
-const PROBE_KEY = '__neoBootstrapAliasProbe'
+const PROBE_KEY = '__coreBootstrapAliasProbe'
 
 interface AliasProbe {
   css: string
@@ -33,7 +33,7 @@ function clearProbe(): void {
   delete (globalThis as unknown as Record<string, AliasProbe | undefined>)[PROBE_KEY]
 }
 
-let scratchRoot = mkdtempSync(join(tmpdir(), 'neo-bootstrap-alias-'))
+let scratchRoot = mkdtempSync(join(tmpdir(), 'core-bootstrap-alias-'))
 let bundle = ''
 
 async function buildProbeBundle(): Promise<string> {
@@ -41,7 +41,7 @@ async function buildProbeBundle(): Promise<string> {
   writeFileSync(
     probePath,
     `import { css, recipe, Div, Span } from '@reference-ui/react'\n` +
-      `globalThis.__neoBootstrapAliasProbe = { css: typeof css, recipe: typeof recipe, div: typeof Div, span: typeof Span, divName: Div.displayName, spanName: Span.displayName }\n`,
+      `globalThis.__coreBootstrapAliasProbe = { css: typeof css, recipe: typeof recipe, div: typeof Div, span: typeof Span, divName: Div.displayName, spanName: Span.displayName }\n`,
     'utf-8'
   )
   const bundles = await bundleFragments({

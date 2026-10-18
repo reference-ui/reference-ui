@@ -123,7 +123,7 @@ async function generateAllocRepo(ctx) {
   const plans = await import(benchModuleUrl(ctx.benchDir, 'generate/plans.ts'))
   const generators = await import(benchModuleUrl(ctx.benchDir, 'generate/generators/index.ts'))
   const plan = plans.resolvePlan(ctx.options.scale, {})
-  const dir = mkdtempSync(path.join(tmpdir(), 'neo-alloc-'))
+  const dir = mkdtempSync(path.join(tmpdir(), 'core-alloc-'))
   const generated = generators.generateRepo(plan, dir)
   console.log(`[agent-rs] alloc repo: ${generated.styleFiles} files, ${generated.cssCalls} css() calls, seed ${plan.seed}`)
   return { dir, plan, generated }
@@ -263,7 +263,7 @@ export async function runAllocCommand(args, repoRoot, rsDir) {
     console.error(`[agent-rs] ${err.message}`)
     return 1
   }
-  const benchDir = path.join(repoRoot, 'packages', 'reference-neo', 'benchmark')
+  const benchDir = path.join(repoRoot, 'packages', 'reference-core', 'benchmark')
   if (options.help) {
     printAllocHelp()
     return 0

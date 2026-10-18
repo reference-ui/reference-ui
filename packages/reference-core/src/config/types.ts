@@ -1,6 +1,6 @@
-// Public config surface for Neo ui.config files.
+// Public config surface for Core ui.config files.
 // It takes author options and emits the validated ReferenceUIConfig shape.
-// This module is a Neo-owned copy of the core config types trimmed to the surviving fields.
+// This module is a core-owned copy of the retired reference-core config types trimmed to the surviving fields.
 
 import type { BaseSystem } from '../system/base/types.ts'
 
@@ -22,7 +22,7 @@ export type StrictCategory = 'colors' | 'radii' | 'spacing'
 export interface ReferenceUIConfig {
   /**
    * Glob patterns for files to scan for fragment collection and atomic input.
-   * These roots feed the fragment scan; no codegen copy happens in Neo.
+   * These roots feed the fragment scan; no codegen copy happens in Core.
    *
    * @example
    * include: ['src/**\/*.{ts,tsx}', 'app/**\/*.{ts,tsx}']
@@ -102,7 +102,7 @@ export interface ReferenceUIConfig {
  *
  * @example
  * ```ts
- * import { defineConfig } from '@reference-ui/neo'
+ * import { defineConfig } from '@reference-ui/core'
  *
  * export default defineConfig({
  *   name: 'my-app',

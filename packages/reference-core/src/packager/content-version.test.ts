@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 function makeDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'neo-content-version-'))
+  const dir = mkdtempSync(join(tmpdir(), 'core-content-version-'))
   tempDirs.push(dir)
   return dir
 }
@@ -37,7 +37,7 @@ describe('contentVersion', () => {
   it('is the base, a dot, and a short hash that keeps a letter, so the prerelease stays valid semver', () => {
     const dir = makeDir()
     writeTree(dir, { 'index.mjs': 'export const x = 1\n' })
-    expect(contentVersion(GENERATED_VERSION, dir)).toMatch(/^0\.0\.0-neo\.(?=[0-9a-f]*[a-f])[0-9a-f]{12}$/)
+    expect(contentVersion(GENERATED_VERSION, dir)).toMatch(/^0\.0\.0-core\.(?=[0-9a-f]*[a-f])[0-9a-f]{12}$/)
   })
 
   it('is deterministic: equal bytes give the equal version', () => {

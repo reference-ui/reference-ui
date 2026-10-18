@@ -1,4 +1,4 @@
-// Unit tests for the Neo react entry generator.
+// Unit tests for the Core react entry generator.
 // They take system names plus prop lists and assert the emitted shapes.
 // The compile test shells the package tsc over emitted types plus a probe
 // and a styled stub, since the bound bake imports the styled graph.
@@ -22,7 +22,7 @@ afterEach(() => {
 
 function entrySource(): string {
   return generateReactEntrySource({
-    systemName: 'neo-prim',
+    systemName: 'core-prim',
     stylePropNames: NAMES,
     primitivesPath: '/abs/primitives.mjs',
   })
@@ -39,7 +39,7 @@ describe('generateReactEntrySource', () => {
       `import { configurePrimitives, ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode } from "/abs/primitives.mjs"`
     )
     expect(source).toContain(
-      `configurePrimitives({ layerName: "neo-prim", stylePropNames: ["backgroundColor","color","p"], css })`
+      `configurePrimitives({ layerName: "core-prim", stylePropNames: ["backgroundColor","color","p"], css })`
     )
     expect(source).toContain(
       'export { ColorModeContext, DocumentContext, Fragment, LayerScopeContext, createElement, useColorMode }'

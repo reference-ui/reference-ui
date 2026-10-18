@@ -1,4 +1,4 @@
-// React shell of the Neo generated folder.
+// React shell of the Core generated folder.
 // It takes the publish input and emits the final package manifest plus the stylesheet copy.
 // The manifest is final (the packager owns it); the react bundler only adds the bundle and declarations beside it.
 

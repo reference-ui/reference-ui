@@ -18,7 +18,7 @@ export {
 export { setupFocusVisible } from './core/theme/primitives/forms/focus-visible'
 import { setupFocusVisible as initFocusVisible } from './core/theme/primitives/forms/focus-visible'
 initFocusVisible()
-// Neo emits @reference-ui/types, so the Reference browser export below is kept
+// Core emits @reference-ui/types, so the Reference browser export below is kept
 // and the tsconfig exclude is dropped.
 export { Reference, ReferenceView, referenceBrowserTokenConfig } from './components/Reference/index'
 export * from './components/Slot/index'

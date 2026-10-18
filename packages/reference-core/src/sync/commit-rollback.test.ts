@@ -24,7 +24,7 @@ afterEach(async () => {
 })
 
 async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-commit-rollback-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-commit-rollback-'))
   tempDirs.push(dir)
   return dir
 }

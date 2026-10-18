@@ -1,15 +1,15 @@
-// ui.config bundling for mcp-side config loads (Neo bundle.ts shape).
+// ui.config bundling for mcp-side config loads (Core bundle.ts shape).
 // It takes a config path and emits bundled code plus local dependency paths.
-// Vendored (not retargeted) for one reason only: Neo resolves its author
+// Vendored (not retargeted) for one reason only: Core resolves its author
 // entry from `import.meta.url`, which breaks once bundled into mcp dist
-// Everything else delegates to Neo's microbundle seam, including the
+// Everything else delegates to Core's microbundle seam, including the
 // canon base that metafile keys resolve against.
 
 import { existsSync, realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { microBundleWithResult, NEO_PACKAGE_ROOT } from '@reference-ui/neo/microbundle'
-import { CONFIG_EXTERNALS } from '@reference-ui/neo/config/constants'
-import { getNeoAuthorImportMap } from './author-entry'
+import { microBundleWithResult, CORE_PACKAGE_ROOT } from '@reference-ui/core/microbundle'
+import { CONFIG_EXTERNALS } from '@reference-ui/core/config/constants'
+import { getCoreAuthorImportMap } from './author-entry'
 
 export interface BundleConfigOptions {
   /** Modules to leave as external (not bundled). */
@@ -30,7 +30,7 @@ function normalizeConfigDependencyPaths(configPath: string, inputPaths: readonly
         // Metafile inputs are relative to the canon base (absWorkingDir), not
         // the config dir; resolving them from configDir would silently corrupt
         // the watch dependency paths.
-        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(NEO_PACKAGE_ROOT, inputPath)))
+        .map((inputPath) => (inputPath.startsWith('/') ? inputPath : resolve(CORE_PACKAGE_ROOT, inputPath)))
         .map(normalizePath)
         .filter((inputPath) => !inputPath.includes('/node_modules/'))
         .concat(normalizePath(configPath)),
@@ -60,7 +60,7 @@ export async function bundleConfigWithDependencies(
     external: options.external ?? ['esbuild'],
     metafile: true,
     packages: 'external',
-    alias: getNeoAuthorImportMap([...CONFIG_EXTERNALS]),
+    alias: getCoreAuthorImportMap([...CONFIG_EXTERNALS]),
     tsconfigRaw: {
       compilerOptions: {},
     },

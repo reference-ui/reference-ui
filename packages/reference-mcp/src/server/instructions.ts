@@ -34,7 +34,7 @@ export function loadReferenceMcpInstructions(cwd: string): string {
         return content
       }
     }
-    // No core fallback: core is retired, and its instructions copy never
+    // No fallback to the retired reference-core: its instructions copy never
     // existed in-tree. The mcp-local candidates plus the constant suffice.
   } catch (error) {
     log.warn('[mcp] Failed to load instructions.md; using fallback instructions.', error)

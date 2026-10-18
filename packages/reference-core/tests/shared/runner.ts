@@ -1,4 +1,4 @@
-// runner.ts — headless spec executor for one neo case. Takes a case record
+// runner.ts — headless spec executor for one core case. Takes a case record
 // from cases.ts plus an optional artifacts dir override. Emits
 // { ok, degraded, artifacts, error? }: serves the world, runs every
 // *.spec.ts headless, and collects screenshot/a11y/trace artifacts. When
@@ -11,7 +11,7 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { startServer, type ServedWorld } from './server.ts';
 import { buildWorld } from './build.ts';
-import { ARTIFACTS_DIR, type NeoCase } from './cases.ts';
+import { ARTIFACTS_DIR, type CoreCase } from './cases.ts';
 import type { SpecPage } from './page.ts';
 import { makeSnap, type SnapFn } from './snapshots.ts';
 
@@ -35,7 +35,7 @@ export interface RunResult {
 export interface SpecContext {
   page: SpecPage;
   url: string;
-  case: NeoCase;
+  case: CoreCase;
   snap: SnapFn;
 }
 
@@ -121,7 +121,7 @@ async function loadWorld(page: SpecPage, world: ServedWorld): Promise<void> {
 
 // Executes every spec against the served world. A failing spec ends
 // the run with ok=false (never throws); only harness faults throw.
-async function executeSpecs(page: SpecPage, world: ServedWorld, c: NeoCase, snap: SnapFn): Promise<{ ok: boolean; failure: unknown; specFailed: boolean }> {
+async function executeSpecs(page: SpecPage, world: ServedWorld, c: CoreCase, snap: SnapFn): Promise<{ ok: boolean; failure: unknown; specFailed: boolean }> {
   const specs = specFiles(c.specsDir);
   if (specs.length === 0) {
     return { ok: false, failure: new Error(`no specs in ${c.specsDir}`), specFailed: false };
@@ -198,7 +198,7 @@ function caseOptsIntoSync(caseDir: string): boolean {
 // Runs the per-case sync loop for opted-in cases: regenerate the world's
 // .reference-ui folder fresh before serving. Returns an error string when
 // sync throws, null when the case skips sync or sync succeeds.
-async function runSyncHook(c: NeoCase): Promise<string | null> {
+async function runSyncHook(c: CoreCase): Promise<string | null> {
   if (!caseOptsIntoSync(c.dir)) return null;
   try {
     const { sync } = await import('../../src/sync/index.ts');
@@ -214,7 +214,7 @@ async function runSyncHook(c: NeoCase): Promise<string | null> {
 // One pre-serve step so runCase stays flat: build the world sources, then
 // regenerate the synced folder. Returns an error string when either phase
 // fails, null when the world is ready to serve.
-async function prepareWorld(c: NeoCase): Promise<string | null> {
+async function prepareWorld(c: CoreCase): Promise<string | null> {
   const built = await buildWorld(c.worldDir);
   if ('error' in built) return built.error;
   if (built.files.length > 0) console.log(`[${c.id}] world build: ${built.files.length} files → dist/`);
@@ -249,7 +249,7 @@ function preflightRoot(url: string): Promise<number | null> {
 // so an empty or missing world fails loud and fast instead of timing out
 // inside a spec. Either fault arrives as { error }, never a throw: the
 // caller returns it down the normal failure path with artifacts and log.
-async function serveWorld(c: NeoCase): Promise<{ world: ServedWorld } | { error: string }> {
+async function serveWorld(c: CoreCase): Promise<{ world: ServedWorld } | { error: string }> {
   let world: ServedWorld;
   try {
     world = await startServer(c.worldDir);
@@ -268,7 +268,7 @@ async function serveWorld(c: NeoCase): Promise<{ world: ServedWorld } | { error:
 interface BrowserRun {
   browser: Browser;
   world: ServedWorld;
-  c: NeoCase;
+  c: CoreCase;
   dir: string;
   artifacts: string[];
   snap: SnapFn;
@@ -301,7 +301,7 @@ async function runWithBrowser({ browser, world, c, dir, artifacts, snap }: Brows
 // degraded=true means Playwright/browsers were not resolvable: the world
 // was served but no spec executed (serve-only mode). Never throws for a
 // spec failure; that is ok=false.
-export async function runCase(c: NeoCase, { artifactsDir = ARTIFACTS_DIR, updateSnapshots = false }: RunOptions = {}): Promise<RunResult> {
+export async function runCase(c: CoreCase, { artifactsDir = ARTIFACTS_DIR, updateSnapshots = false }: RunOptions = {}): Promise<RunResult> {
   const dir = path.join(artifactsDir, c.id);
   fs.mkdirSync(dir, { recursive: true });
   const artifacts: string[] = [];

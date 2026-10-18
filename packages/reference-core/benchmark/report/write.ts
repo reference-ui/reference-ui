@@ -1,4 +1,4 @@
-// Pinned report writer for Neo sync benchmarks.
+// Pinned report writer for Core sync benchmarks.
 // It takes an already-resolved pin plus every finished scale and emits the folder.
 // Each pin holds result.json for machines and report.md for humans, nothing else.
 // The pin arrives resolved: this module never talks to git itself.

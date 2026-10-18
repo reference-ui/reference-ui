@@ -17,22 +17,22 @@ export { FRAGMENT_IMPORT_NEEDLES as NEEDLES } from '../../constants.ts'
 
 export const CSS_RED =
   "import { css } from '@reference-ui/react'\nexport const a = css({ color: 'red' })\n"
-export const NEO_IMPORT = `import '@reference-ui/neo'\n${CSS_RED}`
+export const CORE_IMPORT = `import '@reference-ui/core'\n${CSS_RED}`
 
-// Tricky tree: live, dotfile, d.ts (plain plus neo), IGNORE/extension decoys,
+// Tricky tree: live, dotfile, d.ts (plain plus core), IGNORE/extension decoys,
 // traps (noext, upper.TS), spaces, unicode, nesting.
 export const TRICKY_TREE: Array<[string, string]> = [
   ['src/ok.ts', CSS_RED],
   ['src/.hidden.ts', CSS_RED],
   ['src/t.d.ts', CSS_RED],
-  ['src/ref.ts', NEO_IMPORT],
-  ['src/.hidden-ref.ts', NEO_IMPORT],
-  ['src/t-ref.d.ts', NEO_IMPORT],
-  ['dist/frag.ts', NEO_IMPORT],
+  ['src/ref.ts', CORE_IMPORT],
+  ['src/.hidden-ref.ts', CORE_IMPORT],
+  ['src/t-ref.d.ts', CORE_IMPORT],
+  ['dist/frag.ts', CORE_IMPORT],
   ['node_modules/pkg/x.ts', CSS_RED],
   ['src/data.json', '{"note": "not a source"}\n'],
-  ['src/frag-data.json', `{"note": "import '@reference-ui/neo'"}\n`],
-  ['theme/tokens.ts', NEO_IMPORT],
+  ['src/frag-data.json', `{"note": "import '@reference-ui/core'"}\n`],
+  ['theme/tokens.ts', CORE_IMPORT],
   ['src/dist-backup/keep.ts', CSS_RED],
   ['dist.ts', CSS_RED],
   ['src/noext', CSS_RED],
@@ -42,7 +42,7 @@ export const TRICKY_TREE: Array<[string, string]> = [
   ['src/a/b/c/deep.ts', CSS_RED],
 ]
 
-// Neo importers past dot:false plus the d.ts exclusion, gated to
+// Core importers past dot:false plus the d.ts exclusion, gated to
 // JS-bundleable extensions; IGNORE/extension survivors (live, dotfiles,
 // d.ts; decoys and traps out). The json needle-carrier stays in the tree
 // as a trap but never matches: it cannot bundle as a fragment.

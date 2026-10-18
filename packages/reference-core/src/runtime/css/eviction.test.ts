@@ -1,4 +1,4 @@
-// Unit tests for the Neo alias-eviction mirror over constructed declarations.
+// Unit tests for the Core alias-eviction mirror over constructed declarations.
 // They take responsive-object plus alias queries and assert slot parsing,
 // merge eviction, conditioned-family isolation, and important interplay.
 // Slot grammar and declaration merge match the engine merge note exactly.

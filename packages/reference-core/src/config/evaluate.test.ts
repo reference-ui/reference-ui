@@ -1,6 +1,6 @@
-// Unit tests for the Neo config evaluator over in-memory ESM bundles.
+// Unit tests for the Core config evaluator over in-memory ESM bundles.
 // They take bundled code plus a source path and assert the evaluated export.
-// This file is a Neo-owned copy of the core evaluator tests.
+// This file is a core-owned copy of the retired reference-core evaluator tests.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'

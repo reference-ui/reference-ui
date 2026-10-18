@@ -1,4 +1,4 @@
-// Benchmark load plans for the Neo sync harness.
+// Benchmark load plans for the Core sync harness.
 // It takes scale names plus CLI overrides and emits resolved LoadPlans.
 // Each scale names a generator plus numeric knobs; overrides bend the knobs, never the generator.
 // Custom overrides turn any scale into an ad-hoc plan without touching code.

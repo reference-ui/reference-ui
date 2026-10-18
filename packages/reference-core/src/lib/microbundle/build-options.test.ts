@@ -1,13 +1,13 @@
-// Unit tests for the Neo build option defaults and overrides.
+// Unit tests for the Core build option defaults and overrides.
 // They take option bags and assert the esbuild config they produce, pin the
 // canonical absWorkingDir, and prove the emitted bytes are cwd-independent.
-// This file is a Neo-owned copy of the core build options tests.
+// This file is a core-owned copy of the retired reference-core build options tests.
 
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { buildMicroBundleOptions, NEO_PACKAGE_ROOT } from './build-options.ts'
+import { buildMicroBundleOptions, CORE_PACKAGE_ROOT } from './build-options.ts'
 import { DEFAULT_EXTERNALS } from './externals.ts'
 import { microBundleWithResult } from './microbundle.ts'
 
@@ -19,7 +19,7 @@ describe('buildMicroBundleOptions defaults', () => {
     const result = buildMicroBundleOptions(ENTRY_PATH, {})
 
     expect(result).toMatchObject({
-      absWorkingDir: NEO_PACKAGE_ROOT,
+      absWorkingDir: CORE_PACKAGE_ROOT,
       entryPoints: [ENTRY_PATH],
       bundle: true,
       format: 'esm',
@@ -42,19 +42,19 @@ describe('buildMicroBundleOptions defaults', () => {
 })
 
 describe('buildMicroBundleOptions cwd canon', () => {
-  it('pins absWorkingDir to the Neo package root', () => {
+  it('pins absWorkingDir to the Core package root', () => {
     const result = buildMicroBundleOptions(ENTRY_PATH, {})
 
-    expect(result.absWorkingDir).toBe(NEO_PACKAGE_ROOT)
-    expect(existsSync(join(NEO_PACKAGE_ROOT, 'package.json'))).toBe(true)
+    expect(result.absWorkingDir).toBe(CORE_PACKAGE_ROOT)
+    expect(existsSync(join(CORE_PACKAGE_ROOT, 'package.json'))).toBe(true)
     const manifest = JSON.parse(
-      readFileSync(join(NEO_PACKAGE_ROOT, 'package.json'), 'utf8')
+      readFileSync(join(CORE_PACKAGE_ROOT, 'package.json'), 'utf8')
     ) as { name?: string }
-    expect(manifest.name).toBe('@reference-ui/neo')
+    expect(manifest.name).toBe('@reference-ui/core')
   })
 
   it('ignores process.cwd(): the same entry emits identical bytes from two cwds', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'neo-cwd-canon-'))
+    const dir = mkdtempSync(join(tmpdir(), 'core-cwd-canon-'))
     const entry = join(dir, 'entry.ts')
     writeFileSync(entry, "import { helper } from './helper.ts'\nexport const value = helper\n")
     writeFileSync(join(dir, 'helper.ts'), "export const helper = 'canon'\n")

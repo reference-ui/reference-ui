@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { getOutDirPath } from '../neo/paths'
+import { getOutDirPath } from '../core/paths'
 
 export function getMcpDirPath(cwd: string): string {
   return join(getOutDirPath(cwd), 'mcp')

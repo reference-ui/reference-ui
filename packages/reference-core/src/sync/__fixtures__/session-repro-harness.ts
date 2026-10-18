@@ -79,7 +79,7 @@ function gateLines(dir: string): string[] {
 
 function configFile(gatedDir?: string): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     ...(gatedDir === undefined ? [] : gateLines(gatedDir)),
     '',
     'export default defineConfig({',
@@ -92,7 +92,7 @@ function configFile(gatedDir?: string): string {
 
 export function tokensFile(brand = BRAND): string {
   return [
-    "import { tokens } from '@reference-ui/neo'",
+    "import { tokens } from '@reference-ui/core'",
     '',
     'tokens({',
     '  colors: {',
@@ -117,7 +117,7 @@ function fillerFile(i: number): string {
 }
 
 export async function writeWorld(fillers: number, gated = false): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'neo-lock-'))
+  const dir = await mkdtemp(join(tmpdir(), 'core-lock-'))
   tempDirs.push(dir)
   writeFileSync(join(dir, 'ui.config.ts'), configFile(gated ? dir : undefined))
   mkdirSync(join(dir, 'theme'), { recursive: true })

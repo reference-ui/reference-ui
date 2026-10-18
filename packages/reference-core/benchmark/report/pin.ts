@@ -1,4 +1,4 @@
-// Report pin rule for Neo benchmark logs.
+// Report pin rule for Core benchmark logs.
 // It takes the benchmark directory and emits where this run must write.
 // Dirty trees overwrite reports/latest/; clean trees pin reports/<hash>/.
 // Report files never decide the pin, so leftover latest/ cannot block a hash folder.
@@ -41,7 +41,7 @@ function repoRoot(cwd: string): string | null {
 function isDirty(cwd: string): boolean {
   const root = repoRoot(cwd)
   if (!root) return true
-  const status = git(['status', '--porcelain', '--', ':!packages/reference-neo/benchmark/reports'], root)
+  const status = git(['status', '--porcelain', '--', ':!packages/reference-core/benchmark/reports'], root)
   if (status === null) return true
   return status.length > 0
 }

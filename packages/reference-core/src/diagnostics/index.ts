@@ -1,4 +1,4 @@
-// Barrel for the Neo-owned diagnostics module.
+// Barrel for the core-owned diagnostics module.
 // It takes nothing and re-exports the typed vocabulary, the native code
 // template, the warning hints, the pull/push transport, the warning
 // presentation, the span resolver, and the reporters.
@@ -46,7 +46,7 @@ export type {
   DiagnosticLabel,
   DiagnosticReportOptions,
   DiagnosticSpan,
-  NeoDiagnostic,
+  CoreDiagnostic,
   TastyDiagnosticView,
   TypedDiagnostic,
   TypedSeverity,

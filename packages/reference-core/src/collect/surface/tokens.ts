@@ -1,6 +1,6 @@
 // Author tokens() call plus its fragment collector.
 // It takes token trees from fragment files and emits collected configs.
-// This module is a Neo-owned copy of the core tokens collector.
+// This module is a core-owned copy of the retired reference-core tokens collector.
 
 import { createFragmentFunction } from '../lib/collector.ts'
 

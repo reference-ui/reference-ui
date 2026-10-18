@@ -1,6 +1,6 @@
-// Unit tests for the Neo font() collector plus file collection.
+// Unit tests for the Core font() collector plus file collection.
 // They take font options and fixture files and assert collected definitions.
-// This file is a Neo-owned copy of the core font tests.
+// This file is a core-owned copy of the retired reference-core font tests.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'

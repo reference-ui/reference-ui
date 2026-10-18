@@ -160,7 +160,7 @@ fn whole_props_forward_owns_nothing() {
     assert_eq!(names, vec!["Chart".to_string()]);
 
     // Declared `p` rides the whole-props spread into the primitive, so the
-    // §14 shadow keeps nothing and the call site mints (NEO-SITE-11).
+    // §14 shadow keeps nothing and the call site mints (CORE-SITE-11).
     assert!(!outcome.owned_props.contains_key("Chart"));
 }
 

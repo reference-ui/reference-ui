@@ -4,7 +4,7 @@
 
 export function globalFile(): string {
   return [
-    "import { globalCss } from '@reference-ui/neo'",
+    "import { globalCss } from '@reference-ui/core'",
     '',
     'globalCss({',
     "  ':root': { '--bench-root': '0.25rem', containerType: 'inline-size' },",

@@ -19,7 +19,7 @@ const spec: AtomicCaseSpec = {
     expect(sheet).not.toContain('watDown')
     // Non-bare custom widths: the Down and Between members drop with a
     // warning while their plans survive carrying the full object value,
-    // so the runtime namer must drop them too (NEO-NAMER-01).
+    // so the runtime namer must drop them too (CORE-NAMER-01).
     const colorPlan = result.stylePlans.find(
       p => p.prop === 'color' && (p.value as Record<string, string>)?.md === 'blue.500'
     )
@@ -46,7 +46,7 @@ const spec: AtomicCaseSpec = {
     ).toBe(true)
     // Range dispatch: the `aToxDown` member drops with no between
     // fallthrough while the plan survives carrying the full object
-    // value, so the runtime namer must drop it too (NEO-NAMER-01).
+    // value, so the runtime namer must drop it too (CORE-NAMER-01).
     const dispatchPlan = result.stylePlans.find(
       p =>
         p.prop === 'outlineColor' &&

@@ -3,7 +3,7 @@
 // the include glob over src/**/*.{ts,tsx} — the only two knobs this world
 // needs. The include glob is what bounds static extraction, so styles are
 // read from source and nowhere else.
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 
 export default defineConfig({
   name: 'playground',

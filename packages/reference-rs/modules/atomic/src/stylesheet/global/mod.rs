@@ -12,7 +12,7 @@ use base_system::BaseSystem;
 use walker::{format_global_rules, GlobalWalker};
 
 /// Source tag of the normalizeCss reset fragment. It mirrors `RESET_FRAGMENT_SOURCE` in
-/// `packages/reference-neo/src/sync/reset.ts`; keep the two in step, since a mismatch
+/// `packages/reference-core/src/sync/reset.ts`; keep the two in step, since a mismatch
 /// moves the real reset out of `@layer reset`.
 pub const RESET_FRAGMENT_SOURCE: &str = "normalizeCss/reset";
 

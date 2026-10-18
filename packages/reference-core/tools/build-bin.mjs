@@ -3,7 +3,7 @@
 // tsconfig, asserts the alias-literal set is exactly the known one, then
 // lays the esbuild-entry twins plus the runtime-read declaration asset
 // beside the emit, repoints the emitted declarations at shipped files
-// (guarded), and makes the bin executable. Run from the Neo package
+// (guarded), and makes the bin executable. Run from the Core package
 // directory: node tools/build-bin.mjs (also the prepack/prepublishOnly hook).
 
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
@@ -21,7 +21,7 @@ const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
 const DIST = join(PKG, 'dist')
 
 // Path-computing sources and the exact .ts/.tsx/.d.mts literals each may
-// carry on its resolve()/neoFilePath()/runtimeModulePath() call sites.
+// carry on its resolve()/coreFilePath()/runtimeModulePath() call sites.
 // These literals name esbuild entry files resolved from import.meta.url at
 // sync time; tsc emits .js/.jsx, so the build lays same-named twins
 // (transpiled content) at the computed paths. Any drift fails the build
@@ -55,7 +55,7 @@ const ASSETS = [
 
 function fail(message) {
   // A failed build must never leave a fresh-mtime partial dist behind: tsc
-  // emits per-file despite type errors, and the neo freshness gate would then
+  // emits per-file despite type errors, and the core freshness gate would then
   // see a fresh bin and skip the retry, serving failed-build bytes. Wipe dist
   // on every failure so the next gate run rebuilds.
   try {
@@ -89,7 +89,7 @@ function nonImportLiterals(source) {
     // Only path-computation call sites count: generated-output template
     // strings (package.json types legs, sheet pins) carry .d.ts legs that
     // are payload, not resolution, and must not trip the assertion.
-    if (!/(neoFilePath|runtimeModulePath|resolve)\(/.test(line)) continue
+    if (!/(coreFilePath|runtimeModulePath|resolve)\(/.test(line)) continue
     const code = line.split('//')[0]
     for (const match of code.matchAll(/['"]([\w.-]+\.tsx?|[\w.-]+\.d\.mts)['"]/g)) {
       found.push(match[1])

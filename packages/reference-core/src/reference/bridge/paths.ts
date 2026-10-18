@@ -1,5 +1,5 @@
 // Reference bridge paths: they take a project root and emit the tasty output
-// dir plus the manifest path inside it. Both live under the neo outDir beside
+// dir plus the manifest path inside it. Both live under the core outDir beside
 // the styled/react legs; the manifest path is what the types leg packages.
 
 import { join } from 'node:path'

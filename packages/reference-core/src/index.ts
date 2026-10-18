@@ -1,4 +1,4 @@
-// Public surface: the one entry behind the @reference-ui/neo id.
+// Public surface: the one entry behind the @reference-ui/core id.
 // It takes nothing and re-exports the config plus the collector calls authors touch.
 // Bundlers alias the id here and tsconfig paths point typechecking at the
 // same file, so every resolver agrees on what authors can import.

@@ -1,7 +1,7 @@
-// Package definitions for Neo generated packages.
+// Package definitions for Core generated packages.
 // They take nothing and emit the declarative set sync publishes: system, styled, react, types.
 // Values are transcribed from the legs verbatim — the definitions own them now, so manifests can only change here.
-// One assembly, no phase split: Neo's legs run as a single ordered chain, not event-gated runtime/final phases.
+// One assembly, no phase split: Core's legs run as a single ordered chain, not event-gated runtime/final phases.
 
 import type { PackageDefinition } from './package/index.ts'
 import { createBundleExports } from './package/index.ts'
@@ -18,7 +18,7 @@ const TYPES_RUNTIME_D_TS = './tasty/runtime.d.ts'
 export const SYSTEM_PACKAGE: PackageDefinition = {
   name: '@reference-ui/system',
   version: GENERATED_VERSION,
-  description: 'Neo generated design system',
+  description: 'Core generated design system',
   main: './system.mjs',
   types: './system.d.mts',
   exports: {
@@ -33,7 +33,7 @@ export const SYSTEM_PACKAGE: PackageDefinition = {
 export const STYLED_PACKAGE: PackageDefinition = {
   name: '@reference-ui/styled',
   version: GENERATED_VERSION,
-  description: 'Neo generated styled output',
+  description: 'Core generated styled output',
   main: './runtime-data.mjs',
   types: './index.d.ts',
   exports: {
@@ -52,7 +52,7 @@ export const STYLED_PACKAGE: PackageDefinition = {
 export const REACT_PACKAGE: PackageDefinition = {
   name: '@reference-ui/react',
   version: GENERATED_VERSION,
-  description: 'Neo generated React entry',
+  description: 'Core generated React entry',
   main: './react.mjs',
   types: './react.d.mts',
   exports: createBundleExports('react', { includeStyles: true }),
@@ -65,7 +65,7 @@ export const REACT_PACKAGE: PackageDefinition = {
 export const TYPES_PACKAGE: PackageDefinition = {
   name: '@reference-ui/types',
   version: GENERATED_VERSION,
-  description: 'Neo generated reference types entry',
+  description: 'Core generated reference types entry',
   main: './types.mjs',
   types: './types.d.mts',
   exports: {

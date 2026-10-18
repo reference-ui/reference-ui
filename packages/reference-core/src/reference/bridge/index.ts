@@ -1,6 +1,6 @@
 // Bridge barrel: it takes the scheduler, runner, tasty build, report, result,
 // payload, and path modules and emits the serial-phase surface sync wires.
-// No workers, no bus, no virtual copy — the buried core scaffolds stay buried.
+// No workers, no bus, no virtual copy — the buried retired reference-core scaffolds stay buried.
 
 export { createReferenceBuildReport, tastyDiagnosticToNative } from './build-report.ts'
 export { flushReferenceBuild, initReference, isReferenceBuildPending } from './init.ts'

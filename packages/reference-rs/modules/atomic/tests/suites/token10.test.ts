@@ -33,7 +33,7 @@ describe('ATM-TOKEN-10 spec rejection', () => {
       logs: ['proof'],
       baseSystem: {
         name: 'core-portable-system',
-        fragment: 'packages/reference-core/src/system/base/fragments/index.ts',
+        fragment: 'packages/reference-core/src/system/base/fragments.ts',
         jsxElements: ['styled.div'],
       } as unknown as EvaluatedSystemSpec,
       files: SOURCES,

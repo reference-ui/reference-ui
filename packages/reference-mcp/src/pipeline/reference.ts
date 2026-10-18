@@ -4,7 +4,7 @@ import {
   createReferenceDocument,
   createReferenceUiTastyApi,
   type ReferenceDocument,
-} from '@reference-ui/neo/reference'
+} from '@reference-ui/core/reference'
 import { formatReferenceWarning } from './warnings'
 
 export interface McpReferenceMemberData {

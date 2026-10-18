@@ -1,4 +1,4 @@
-// Barrel for the Neo-owned collect subsystem.
+// Barrel for the core-owned collect subsystem.
 // It takes nothing and re-exports author calls plus scan, bundle, and evaluation.
 // Sync drives prepare and evaluate while fragment files import the author calls.
 

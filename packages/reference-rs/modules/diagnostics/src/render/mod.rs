@@ -4,7 +4,7 @@
 //! underlines, labeled notes, and `= help:` lines. Rendering is byte-identical per input — the same
 //! diagnostic plus the same source always yields the same bytes — and total: anything unresolvable (no file,
 //! no spans, dangling offsets) reports `None` so the caller falls back to a one-liner instead of guessing.
-//! Columns count UTF-16 code units to match editor carets and the neo resolver; tabs print raw with no
+//! Columns count UTF-16 code units to match editor carets and the core resolver; tabs print raw with no
 //! expansion so bytes stay deterministic. Consecutive touched lines render back-to-back; each later run of
 //! lines opens its own arrow. Labels keep producer order; multi-line underlines note their first row only.
 

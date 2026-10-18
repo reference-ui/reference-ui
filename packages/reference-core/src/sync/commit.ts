@@ -1,4 +1,4 @@
-// Staged commit for the Neo generated folder. It takes a fully assembled staging dir plus the live out dir and emits the new folder with no missing-file window.
+// Staged commit for the Core generated folder. It takes a fully assembled staging dir plus the live out dir and emits the new folder with no missing-file window.
 // Identical bytes keep their mtime, changed files are linked into place over a backup of their old bytes, and stale entries retire last.
 // Every live change is journaled, so a failed commit rolls back to the last-good folder (backups a rollback cannot restore move to a sibling `sync.rollback-*` dir), and a superseded one stops without touching what the new lock holder owns.
 // Preserved paths (the session lock, the tasty dir) never commit or delete, and a writer temp beside one survives too, as does young evaluator scratch

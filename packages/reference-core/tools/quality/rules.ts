@@ -1,5 +1,5 @@
 /**
- * The per-file rule tiers of the Neo quality gate: the function and file metric thresholds, the suppression ban, and
+ * The per-file rule tiers of the Core quality gate: the function and file metric thresholds, the suppression ban, and
  * the header and README prose checks. Each rule takes the collected files or their measured metrics and returns
  * Violation records, so run.ts can merge them with the tool tiers.
  */
@@ -7,7 +7,7 @@ import path from 'node:path';
 import type { FileMetric, MetricsResult } from './metrics.ts';
 import { checkHeader, checkReadme, type Violation } from './prose.ts';
 import type { Severity } from './tools.ts';
-import { NEO_DIR, isGenerated } from './walk.ts';
+import { CORE_DIR, isGenerated } from './walk.ts';
 
 // Split so this file never contains the banned pragmas that it scans for.
 const BIOME_NEEDLE = 'biome-' + 'ignore';
@@ -21,10 +21,10 @@ export interface Measured {
 
 type FnMetricKey = 'cyclomatic' | 'params' | 'depth' | 'lines';
 const FN_TIERS: Array<[FnMetricKey, string, number, number | null]> = [
-  ['cyclomatic', 'neo/cyclomatic', 12, 8],
-  ['params', 'neo/params', 5, 4],
-  ['depth', 'neo/depth', 4, null],
-  ['lines', 'neo/function-lines', 120, 80],
+  ['cyclomatic', 'core/cyclomatic', 12, 8],
+  ['params', 'core/params', 5, 4],
+  ['depth', 'core/depth', 4, null],
+  ['lines', 'core/function-lines', 120, 80],
 ];
 
 function tierHit(value: number, fail: number, warn: number | null): Severity | 0 {
@@ -66,9 +66,9 @@ function fileMetricsViolations(files: FileMetric[], texts: Map<string, string | 
     (sev === 2 ? errors : warnings).push({
       file: row.file,
       line: 1,
-      ruleId: 'neo/file-lines',
+      ruleId: 'core/file-lines',
       severity: sev,
-      message: `neo/file-lines: ${row.lines} lines (${tierNote}).`,
+      message: `core/file-lines: ${row.lines} lines (${tierNote}).`,
     });
   }
 }
@@ -86,14 +86,14 @@ function scanSuppressions(files: string[], texts: Map<string, string | null>): V
     const lines = (texts.get(file) ?? '').split('\n');
     lines.forEach((line, idx) => {
       if (line.includes(BIOME_NEEDLE))
-        hits.push({ file, line: idx + 1, ruleId: 'neo/suppression', severity: 2, message: 'you-ignored-a-rule-we-set-up-dont: a suppression comment cannot land; fix the code instead.' });
+        hits.push({ file, line: idx + 1, ruleId: 'core/suppression', severity: 2, message: 'you-ignored-a-rule-we-set-up-dont: a suppression comment cannot land; fix the code instead.' });
       if (line.includes(TS_IGNORE))
-        hits.push({ file, line: idx + 1, ruleId: 'neo/suppression', severity: 2, message: 'you-ignored-a-rule-we-set-up-dont: a ts-ignore comment cannot land; fix the types instead.' });
+        hits.push({ file, line: idx + 1, ruleId: 'core/suppression', severity: 2, message: 'you-ignored-a-rule-we-set-up-dont: a ts-ignore comment cannot land; fix the types instead.' });
       if (bareExpectError(line))
         hits.push({
           file,
           line: idx + 1,
-          ruleId: 'neo/suppression',
+          ruleId: 'core/suppression',
           severity: 2,
           message: 'you-ignored-a-rule-we-set-up-dont: a bare ts-expect-error cannot land; justify it on the same line (10+ chars) or fix the types.',
         });
@@ -108,7 +108,7 @@ export function proseTier(code: string[], readmes: string[], texts: Map<string, 
     const v = checkHeader(f, texts.get(f));
     if (v) errors.push(v);
   }
-  const casesPrefix = path.join(NEO_DIR, 'tests', 'cases') + path.sep;
+  const casesPrefix = path.join(CORE_DIR, 'tests', 'cases') + path.sep;
   for (const f of readmes) {
     if (f.startsWith(casesPrefix)) continue; // case READMEs are never a failure: convention, not gate.
     const v = checkReadme(f, texts.get(f));

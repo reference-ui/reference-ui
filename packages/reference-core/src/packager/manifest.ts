@@ -1,4 +1,4 @@
-// Manifest writer for Neo generated packages.
+// Manifest writer for Core generated packages.
 // It takes a target dir plus a package definition and emits the package.json published beside each bundle.
 // The write is unconditional: the commit change-gates identical bytes at publish, so gating here would be dead code.
 

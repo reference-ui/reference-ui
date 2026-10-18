@@ -228,7 +228,7 @@ fn loads_real_reference_core_style_props() {
     }
 
     let names = collect_reference_style_prop_names(sync_root.as_path())
-        .expect("expected reference-core style props to resolve");
+        .expect("expected core style props to resolve");
 
     assert!(
         names.len() > 200,

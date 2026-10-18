@@ -212,14 +212,14 @@ function mergeFixtureIntoConsumerPackageJson(
   }
 
   if (fixture.scripts !== undefined) {
-    merged.scripts = rewriteNeoBinInvocations(fixture.scripts)
+    merged.scripts = rewriteCoreBinInvocations(fixture.scripts)
   }
 
   return `${JSON.stringify(merged, null, 2)}\n`
 }
 
-/** Without workspace hoisting, bare `neo` is often missing from PATH under `sh`. */
-function rewriteNeoBinInvocations(scripts: Record<string, string>): Record<string, string> {
+/** Without workspace hoisting, bare `core` is often missing from PATH under `sh`. */
+function rewriteCoreBinInvocations(scripts: Record<string, string>): Record<string, string> {
   const next: Record<string, string> = {}
 
   for (const [name, cmd] of Object.entries(scripts)) {

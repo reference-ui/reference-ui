@@ -68,7 +68,7 @@ function loadedOf(include: string[]): LoadedUserConfig {
 }
 
 function makeProject(): string {
-  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'neo-watch-run-')))
+  const dir = canonicalPath(mkdtempSync(join(tmpdir(), 'core-watch-run-')))
   tempDirs.push(dir)
   mkdirSync(join(dir, 'theme'), { recursive: true })
   writeFileSync(join(dir, 'theme', 'a.ts'), 'a')

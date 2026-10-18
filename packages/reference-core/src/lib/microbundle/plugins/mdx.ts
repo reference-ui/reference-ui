@@ -1,4 +1,4 @@
-// esbuild loader for `.mdx` fragment sources in Neo microbundle builds.
+// esbuild loader for `.mdx` fragment sources in Core microbundle builds.
 // It takes an `.mdx` entry and emits the `@rspress/mdx-rs`-compiled JSX module,
 // so sync can execute top-level collector calls (`font()`, `tokens()`, …) that
 // authors write in MDX. The MDX content component never runs during a build, so

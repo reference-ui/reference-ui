@@ -1,6 +1,6 @@
 //! The 148 CSS named colors plus `transparent` and `currentcolor`.
 //!
-//! Seeded from reference-core's `CSS_COLOR_KEYWORDS` set; this table is now the
+//! Seeded from the retired reference-core's `CSS_COLOR_KEYWORDS` set; this table is now the
 //! source of truth and the TS set is a future consumer. Entries are lowercase and
 //! lexicographically sorted for binary search; lookup folds case during the
 //! search without allocating, so `Red` and `RED` match. The five CSS-wide
