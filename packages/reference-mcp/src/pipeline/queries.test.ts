@@ -343,9 +343,11 @@ describe('mcp queries', () => {
     expect(propsResult?.props).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'expansion' }),
-        expect.objectContaining({ name: 'defaultValue' }),
+        expect.objectContaining({ name: 'value', optional: true }),
       ])
     )
+    // AccordionProps omits defaultValue; advertising it hands consumers a TS2322 (#16).
+    expect(propsResult?.props.map(prop => prop.name)).not.toContain('defaultValue')
   })
 
   it('excludes @reference-ui/lib components when useReferenceLibrary is false', () => {

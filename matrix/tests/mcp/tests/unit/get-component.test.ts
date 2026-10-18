@@ -93,9 +93,11 @@ describe('get_component', { timeout: MATRIX_MCP_TIMEOUT_MS }, () => {
     expect(component.props).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'expansion' }),
-        expect.objectContaining({ name: 'defaultValue' }),
+        expect.objectContaining({ name: 'value', optional: true }),
       ])
     )
+    // AccordionProps omits defaultValue; advertising it hands consumers a TS2322 (#16).
+    expect(component.props.map(prop => prop.name)).not.toContain('defaultValue')
     expect(component.anatomy).toEqual(
       expect.objectContaining({
         pattern: 'compound',

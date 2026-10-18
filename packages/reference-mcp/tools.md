@@ -161,7 +161,7 @@ Returns a compact, high-signal model for one component, including observed usage
     "usage": "unused",
     "usedWith": {},
     "examples": [
-      "<Accordion expansion=\"single\" defaultValue=\"item-1\">\n  <Accordion.Item id=\"item-1\">\n    <Accordion.Trigger>Section title</Accordion.Trigger>\n    <Accordion.Content>Section body text</Accordion.Content>\n  </Accordion.Item>\n</Accordion>"
+      "<Accordion expansion=\"single\">\n  <Accordion.Item id=\"item-1\">\n    <Accordion.Trigger>Section title</Accordion.Trigger>\n    <Accordion.Content>Section body text</Accordion.Content>\n  </Accordion.Item>\n</Accordion>"
     ],
     "anatomy": {
       "pattern": "compound",
@@ -194,7 +194,7 @@ Returns a compact, high-signal model for one component, including observed usage
         "optional": true
       }
     ],
-    "propSummary": { "total": 7, "observed": 0, "documented": 7, "style": 1, "returned": 7 },
+    "propSummary": { "total": 6, "observed": 0, "documented": 6, "style": 0, "returned": 6 },
     "styleProps": { "supported": true, "tool": "get_style_props" }
   }
   ```

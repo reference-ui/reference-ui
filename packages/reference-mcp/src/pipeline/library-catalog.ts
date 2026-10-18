@@ -73,18 +73,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "count": 0,
         "usage": "unused",
         "type": "string | string[] | null",
-        "description": "The controlled value of the expanded item(s).",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "string | string[] | null",
-        "description": "The initial value of the expanded item(s).",
+        "description": "Expanded item id(s): string | null in single mode, string[] in multiple mode. Omit it and the Accordion manages its own state, starting collapsed.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -214,20 +203,9 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "name": "value",
         "count": 0,
         "usage": "unused",
-        "type": "ISODate | DateRangeValue | null",
-        "description": "The controlled calendar date value.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "ISODate | DateRangeValue | null",
-        "description": "Default date value when uncontrolled.",
-        "optional": true,
+        "type": "ISODate | DateRangeValue | ISOMonth | ISOYear | null",
+        "description": "The controlled value for the current mode; null is the empty state.",
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -236,7 +214,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "name": "onChange",
         "count": 0,
         "usage": "unused",
-        "type": "(value: any) => void",
+        "type": "(value: ISODate | DateRangeValue | ISOMonth | ISOYear) => void",
         "description": "Event handler called when selected date changes.",
         "optional": true,
         "readonly": false,
@@ -249,7 +227,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "string",
         "description": "BCP 47 language tag for calendar localization (e.g. \"en-US\").",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -271,17 +249,6 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "string",
         "description": "Latest selectable ISO date (YYYY-MM-DD).",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "disabled",
-        "count": 0,
-        "usage": "unused",
-        "type": "boolean",
-        "description": "When true, disables date interaction.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -426,33 +393,88 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
     },
     "props": [
       {
-        "name": "items",
-        "count": 0,
-        "usage": "unused",
-        "type": "T[]",
-        "description": "Array of items displayed in combobox popup.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
         "name": "value",
         "count": 0,
         "usage": "unused",
+        "type": "string | null",
+        "description": "The controlled selected value; null is the empty state.",
+        "optional": false,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onChange",
+        "count": 0,
+        "usage": "unused",
+        "type": "(value: string | null) => void",
+        "description": "Handler called with every selection request; the parent owns the value.",
+        "optional": false,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "inputValue",
+        "count": 0,
+        "usage": "unused",
         "type": "string",
-        "description": "Selected item value.",
+        "description": "The controlled input text.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
       },
       {
-        "name": "onValueChange",
+        "name": "onInputValueChange",
         "count": 0,
         "usage": "unused",
         "type": "(value: string) => void",
-        "description": "Handler called when selection changes.",
+        "description": "Handler called when the input text changes.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "open",
+        "count": 0,
+        "usage": "unused",
+        "type": "boolean",
+        "description": "The controlled open state of the popup.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onOpen",
+        "count": 0,
+        "usage": "unused",
+        "type": "() => void",
+        "description": "Handler called when the popup requests to open.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onDismiss",
+        "count": 0,
+        "usage": "unused",
+        "type": "() => void",
+        "description": "Handler called when the popup requests to close.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "disabled",
+        "count": 0,
+        "usage": "unused",
+        "type": "boolean",
+        "description": "When true, disables the combobox.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -528,18 +550,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "string | null",
         "description": "Controlled ISO date string (YYYY-MM-DD).",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "string | null",
-        "description": "Default ISO date string.",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -550,7 +561,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "(value: string | null) => void",
         "description": "Handler called when date value changes.",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -561,7 +572,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "string",
         "description": "BCP 47 language tag for date formatting.",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -771,17 +782,6 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "styleProp": false
       },
       {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "string | string[] | null",
-        "description": "Default selected value.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
         "name": "onChange",
         "count": 0,
         "usage": "unused",
@@ -890,18 +890,29 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "count": 0,
         "usage": "unused",
         "type": "boolean",
-        "description": "The controlled open state of the menu.",
+        "description": "Nested menus only: the controlled open state of the submenu.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
       },
       {
-        "name": "onOpenChange",
+        "name": "onOpen",
         "count": 0,
         "usage": "unused",
-        "type": "(open: boolean) => void",
-        "description": "Event handler called when open state changes.",
+        "type": "() => void",
+        "description": "Nested menus only: handler called when the submenu requests to open.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onDismiss",
+        "count": 0,
+        "usage": "unused",
+        "type": "() => void",
+        "description": "Nested menus only: handler called when the submenu requests to close.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -971,18 +982,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "number | null",
         "description": "Controlled numeric value.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "number | null",
-        "description": "Default numeric value.",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -994,6 +994,17 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "type": "(value: number | null) => void",
         "description": "Handler called when value changes.",
         "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "locale",
+        "count": 0,
+        "usage": "unused",
+        "type": "string",
+        "description": "BCP 47 language tag for number formatting.",
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -1127,17 +1138,6 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "(open: boolean) => void",
         "description": "Handler called when open changes.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "placement",
-        "count": 0,
-        "usage": "unused",
-        "type": "string",
-        "description": "Placement relative to anchor.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -1325,7 +1325,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "boolean",
         "description": "Controls mounted/visible animation presence.",
-        "optional": true,
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -1450,23 +1450,23 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "styleProp": false
       },
       {
-        "name": "currentId",
+        "name": "typeahead",
         "count": 0,
         "usage": "unused",
-        "type": "string",
-        "description": "Controlled active item id.",
+        "type": "boolean",
+        "description": "When true, typing moves focus to the next item whose text matches.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
       },
       {
-        "name": "onCurrentIdChange",
+        "name": "children",
         "count": 0,
         "usage": "unused",
-        "type": "(id: string) => void",
-        "description": "Handler called when active focus changes.",
-        "optional": true,
+        "type": "React.ReactElement",
+        "description": "A single composite element; RovingFocus adds no wrapper node.",
+        "optional": false,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
@@ -1515,30 +1515,30 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "name": "value",
         "count": 0,
         "usage": "unused",
-        "type": "number[]",
-        "description": "Controlled array of slider thumb values.",
+        "type": "number | number[]",
+        "description": "The controlled thumb value: a number for one thumb, number[] for several.",
+        "optional": false,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onChange",
+        "count": 0,
+        "usage": "unused",
+        "type": "(value: number | number[]) => void",
+        "description": "Event handler called when the value changes.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
       },
       {
-        "name": "defaultValue",
+        "name": "onChangeEnd",
         "count": 0,
         "usage": "unused",
-        "type": "number[]",
-        "description": "Default array of thumb values.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "onValueChange",
-        "count": 0,
-        "usage": "unused",
-        "type": "(value: number[]) => void",
-        "description": "Event handler called when values change.",
+        "type": "(value: number | number[]) => void",
+        "description": "Event handler called when an interaction ends.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -1576,6 +1576,28 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "readonly": false,
         "origin": "documented",
         "styleProp": false
+      },
+      {
+        "name": "orientation",
+        "count": 0,
+        "usage": "unused",
+        "type": "'horizontal' | 'vertical'",
+        "description": "The orientation of the slider.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "disabled",
+        "count": 0,
+        "usage": "unused",
+        "type": "boolean",
+        "description": "When true, disables the slider.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
       }
     ]
   },
@@ -1595,23 +1617,8 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
     "examples": [
       "const {\n  Provider: MyComponentSlots,\n  useSlotRegistration,\n  useScanById,\n} = createSlotRootContext()\n\nfunction MyComponent({ children }: { children: React.ReactNode }) {\n  return (\n    <MyComponentSlots>\n      {children}\n      <MyComponentLayout />\n    </MyComponentSlots>\n  )\n}\n\nfunction MyComponentTitle({ children }: { children: React.ReactNode }) {\n  useSlotRegistration({\n    slotId: \"title\",\n    element: <H1>{children}</H1>,\n  })\n  return null\n}\n\nfunction MyComponentActions({ children }: { children: React.ReactNode }) {\n  useSlotRegistration({\n    slotId: \"actions\",\n    element: <Div>{children}</Div>,\n    meta: { align: \"end\" },\n  })\n  return null\n}\n\nfunction MyComponentLayout() {\n  const title = useScanById(\"title\")\n  const actions = useScanById(\"actions\")\n  return (\n    <Div>\n      <header>{title?.element}</header>\n      <footer>{actions?.element}</footer>\n    </Div>\n  )\n}\n\n<MyComponent>\n  <MyComponentActions>\n    <Button type=\"button\">OK</Button>\n  </MyComponentActions>\n  <MyComponentTitle>Confirm</MyComponentTitle>\n</MyComponent>"
     ],
-    "interface": {
-      "name": "SlotProps",
-      "source": "@reference-ui/lib"
-    },
-    "props": [
-      {
-        "name": "children",
-        "count": 0,
-        "usage": "unused",
-        "type": "React.ReactElement",
-        "description": "Single child element to which slotted props are merged.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      }
-    ]
+    "interface": null,
+    "props": []
   },
   {
     "name": "Splitter",
@@ -1659,6 +1666,28 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "'horizontal' | 'vertical'",
         "description": "Direction in which panels are split.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "value",
+        "count": 0,
+        "usage": "unused",
+        "type": "number[]",
+        "description": "The controlled panel sizes.",
+        "optional": false,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onChange",
+        "count": 0,
+        "usage": "unused",
+        "type": "(value: number[]) => void",
+        "description": "Event handler called when the panel sizes change.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -1829,18 +1858,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "count": 0,
         "usage": "unused",
         "type": "string",
-        "description": "The controlled active tab value.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "string",
-        "description": "The value of the tab that should be active by default.",
+        "description": "The active tab value. Omit it and Tabs manages its own state, starting on the first tab.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -1891,11 +1909,11 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "styleProp": false
       },
       {
-        "name": "disabled",
+        "name": "keepMounted",
         "count": 0,
         "usage": "unused",
         "type": "boolean",
-        "description": "When true, disables user interaction with tabs.",
+        "description": "When true, inactive panels stay mounted under native hidden.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -1931,34 +1949,8 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
       "<ReferenceLibrary\n  toaster={{\n    defaultPosition: \"bottom-end\",\n    defaultDuration: 5000,\n    limit: 4,\n  }}\n>\n  <App />\n</ReferenceLibrary>",
       "const ProjectSavedToast = toast.define({\n  duration: 4000,\n\n  render({ project }, { close }) {\n    return (\n      <div>\n        <span>{project.name} was saved</span>\n        <button type=\"button\" onClick={close}>\n          Dismiss\n        </button>\n      </div>\n    )\n  },\n})\n\ntoast.show(\n  ProjectSavedToast,\n  { project },\n  { announce: `${project.name} was saved` }\n)"
     ],
-    "interface": {
-      "name": "ToastProps",
-      "source": "@reference-ui/lib"
-    },
-    "props": [
-      {
-        "name": "title",
-        "count": 0,
-        "usage": "unused",
-        "type": "string",
-        "description": "Toast notification title.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "description",
-        "count": 0,
-        "usage": "unused",
-        "type": "string",
-        "description": "Secondary toast text.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      }
-    ]
+    "interface": null,
+    "props": []
   },
   {
     "name": "Tooltip",
@@ -2006,22 +1998,55 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
     },
     "props": [
       {
-        "name": "content",
+        "name": "open",
         "count": 0,
         "usage": "unused",
-        "type": "React.ReactNode",
-        "description": "Content rendered inside the tooltip popup.",
+        "type": "boolean",
+        "description": "The controlled open state of the tooltip.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
         "styleProp": false
       },
       {
-        "name": "delayDuration",
+        "name": "onOpen",
+        "count": 0,
+        "usage": "unused",
+        "type": "() => void",
+        "description": "Handler called when the tooltip requests to open.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "onDismiss",
+        "count": 0,
+        "usage": "unused",
+        "type": "() => void",
+        "description": "Handler called when the tooltip requests to close.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "openDelay",
         "count": 0,
         "usage": "unused",
         "type": "number",
-        "description": "Hover duration in ms before showing tooltip.",
+        "description": "Delay in ms before the tooltip opens.",
+        "optional": true,
+        "readonly": false,
+        "origin": "documented",
+        "styleProp": false
+      },
+      {
+        "name": "closeDelay",
+        "count": 0,
+        "usage": "unused",
+        "type": "number",
+        "description": "Delay in ms before the tooltip closes.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -2032,7 +2057,7 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "count": 0,
         "usage": "unused",
         "type": "React.ReactNode",
-        "description": "Trigger element wrapped by the tooltip.",
+        "description": "Tooltip.Trigger and Tooltip.Content elements.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
@@ -2090,17 +2115,6 @@ export const REFERENCE_UI_LIBRARY_COMPONENTS: McpComponent[] = [
         "usage": "unused",
         "type": "string | null",
         "description": "Selected item id.",
-        "optional": true,
-        "readonly": false,
-        "origin": "documented",
-        "styleProp": false
-      },
-      {
-        "name": "defaultValue",
-        "count": 0,
-        "usage": "unused",
-        "type": "string | null",
-        "description": "Default selected item id.",
         "optional": true,
         "readonly": false,
         "origin": "documented",
