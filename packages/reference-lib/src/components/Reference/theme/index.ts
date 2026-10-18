@@ -1,1 +1,0 @@
-export { referenceBrowserTokenConfig } from './tokens'

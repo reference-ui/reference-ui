@@ -1,0 +1,23 @@
+{
+  "source": "logs/responsive-object-metrics.json",
+  "url": "http://127.0.0.1:5173",
+  "syntax": "documented responsive objects: base/md",
+  "wide": {
+    "viewport": 1440,
+    "containerWidth": 1040,
+    "containerType": "inline-size",
+    "gridColumns": "325.328px 325.328px 325.344px",
+    "probePadding": "29px",
+    "canvasToken": "#f4f5f1",
+    "rootBackground": "rgb(244, 245, 241)"
+  },
+  "narrow": {
+    "viewport": 1440,
+    "containerWidth": 560,
+    "containerType": "inline-size",
+    "gridColumns": "520px",
+    "probePadding": "29px",
+    "canvasToken": "#f4f5f1",
+    "rootBackground": "rgb(244, 245, 241)"
+  }
+}

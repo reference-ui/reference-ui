@@ -1,0 +1,16 @@
+{
+  "name": "responsive-type-error",
+  "mode": "log",
+  "url": null,
+  "log": "logs/supervisor-responsive-repro.log",
+  "capturedAt": "2026-10-18T12:09:42.555Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "navigationError": null,
+  "screenshotError": null,
+  "console": [],
+  "pageErrors": [],
+  "failedRequests": []
+}

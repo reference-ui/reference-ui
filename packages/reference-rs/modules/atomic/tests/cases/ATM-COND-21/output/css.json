@@ -1,3 +1,0 @@
-{
-  "@supports (display: grid):color:blue.500": "@reference-ui/lib__[@supports_(display:_grid)]:c_blue.500"
-}

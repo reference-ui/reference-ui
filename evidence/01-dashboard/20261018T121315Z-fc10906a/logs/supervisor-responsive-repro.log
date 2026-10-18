@@ -1,0 +1,8 @@
+$ npm run typecheck (with documented object responsive repro under src/)
+
+> typecheck
+> tsc --noEmit
+
+src/__responsive_repro.tsx(6,50): error TS2353: Object literal may only specify known properties, and 'base' does not exist in type '(string | number | null)[] | { "@2xl"?: string | number | undefined; "@lg"?: string | number | undefined; "@md"?: string | number | undefined; "@sm"?: string | number | undefined; "@xl"?: string | number | undefined; ... 78 more ...; _visited?: string | ... 1 more ... | undefined; }'.
+
+Exit code: 2

@@ -1,7 +1,0 @@
-[
-  {
-    "severity": "warning",
-    "code": "ATM-W-MISSING-CONTAINER-ROOT",
-    "message": "@container condition emitted but no container root (container-type) is defined in globalCss"
-  }
-]
