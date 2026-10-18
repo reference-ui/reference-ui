@@ -1,0 +1,26 @@
+{
+  "url": "http://127.0.0.1:47207/repro-number.html",
+  "observations": [
+    {
+      "stage": "initial focus",
+      "input": "2",
+      "value": "2",
+      "callbacks": "[]",
+      "focused": true
+    },
+    {
+      "stage": "typed digit4; no blur or Enter",
+      "input": "4",
+      "value": "4",
+      "callbacks": "[4]",
+      "focused": true
+    },
+    {
+      "stage": "after blur",
+      "input": "4",
+      "value": "4",
+      "callbacks": "[4]",
+      "focused": false
+    }
+  ]
+}

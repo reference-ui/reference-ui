@@ -1,0 +1,25 @@
+NumberField documented commit timing; only public controlled onChange callback, no input focus/blur handlers.
+Select all and press key4; observe before blur/Enter/step.
+
+{
+  "url": "http://127.0.0.1:31703/repro-number-min.html",
+  "inputHasNoCustomFocusBlurHandlers": true,
+  "before": {
+    "input": "2",
+    "controlled": "2",
+    "calls": "[]",
+    "activeId": "number-min-input"
+  },
+  "afterKey": {
+    "input": "4",
+    "controlled": "4",
+    "calls": "[4]",
+    "activeId": "number-min-input"
+  },
+  "afterBlur": {
+    "input": "4",
+    "controlled": "4",
+    "calls": "[4]",
+    "activeId": "blur-target"
+  }
+}
