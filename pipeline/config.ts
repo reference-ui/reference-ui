@@ -40,6 +40,7 @@ export const REGISTRY_PACKAGE_NAMES = [
 	'@fixtures/meta-extend-library-sibling',
 	'@fixtures/layer-library',
 	'@fixtures/layer-library-2',
+	'@fixtures/primitive-named-library',
 ] as const
 
 // Workspace packages that are actually published as part of a release.
