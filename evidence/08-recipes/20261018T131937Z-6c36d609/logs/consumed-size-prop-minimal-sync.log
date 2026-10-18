@@ -1,0 +1,9 @@
+
+> sync
+> ref sync --verbose
+
+  ~/Developer/ref-sandbox/scenarios/08-recipes/repro/consumed-size-prop.tsx:8:42 ATM-W-UNKNOWN-TOKEN: `lg` is not a size token ×2 — use a size token or a CSS value
+
+  REF  v0.0.0  ready in 306 ms
+
+  ➜  CSS:       164.3 KB

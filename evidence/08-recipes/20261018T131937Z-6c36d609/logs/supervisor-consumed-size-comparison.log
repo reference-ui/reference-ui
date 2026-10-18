@@ -1,0 +1,19 @@
+Independent consumer-owned size prop reproduction
+LocalButton consumes size into data-size. It does not forward size to Button. The renamed buttonSize control is silent.
+
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/consumed-size-prop.tsx
+
+Exit 0
+
+$ npm run sync -- --verbose
+
+> sync
+> ref sync --verbose
+
+
+  REF  v0.0.0  ready in 267 ms
+
+  ➜  CSS:       164.3 KB
+  ~/Developer/ref-sandbox/scenarios/08-recipes/repro/consumed-size-prop.tsx:8:42 ATM-W-UNKNOWN-TOKEN: `lg` is not a size token ×2 — use a size token or a CSS value
+
+Exit 0

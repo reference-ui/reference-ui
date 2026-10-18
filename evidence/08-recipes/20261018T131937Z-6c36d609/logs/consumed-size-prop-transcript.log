@@ -1,0 +1,28 @@
+COMMAND TRANSCRIPT — consumer-owned size prop triggers style-token warning
+
+Expectation from docs/primitives.mdx: a prop read by the component for itself,
+such as size turned into data-size, stays the component's own prop.
+
+Minimal fixture: repro/consumed-size-prop.tsx contains LocalButton reading size
+and rendering Button data-size={size}; it never forwards a size style prop.
+The same data-size behavior using buttonSize is a passing control.
+
+Temporarily set ui.config.ts include to ['repro/consumed-size-prop.tsx'].
+$ npm run sync -- --verbose
+Exit: 0, but warning:
+
+repro/consumed-size-prop.tsx:8:42 ATM-W-UNKNOWN-TOKEN: `lg` is not a size token x2
+— use a size token or a CSS value
+
+REF v0.0.0 ready in 306 ms
+CSS: 164.3 KB
+
+No warning is emitted for the renamed buttonSize control.
+
+$ npm exec -- tsc --noEmit --strict --skipLibCheck \
+    --moduleResolution bundler --module esnext --target es2022 \
+    --jsx react-jsx repro/consumed-size-prop.tsx
+Exit: 0; no TypeScript diagnostics.
+
+Restored the demo include glob after the isolated sync. Original compiler log
+is preserved in logs/consumed-size-prop-minimal-sync.log.
