@@ -17,8 +17,9 @@ names `color` (a wrapper recorded as own pointed that warning the wrong way).
 `@reference-ui/lib__bg_red`.
 
 The spec compiles twice: the default request (no roster, no upstream; the
-goldens) and Core's request with the primitive roster (`jsxHosts: ['Button']`)
-and the upstream. Nothing is configured by the user. Siblings: ATM-SITE-96
+goldens, where the `Wrap` call site reports `ATM-W-EXTERNAL-UNBACKED` because
+nothing is composed to back it, ATM-SITE-100) and Core's request with the
+primitive roster (`jsxHosts: ['Button']`) and the upstream. Nothing is configured by the user. Siblings: ATM-SITE-96
 (direct package import), ATM-SITE-97 (barrel re-export), ATM-SITE-99 (published
 wrapper name).
 

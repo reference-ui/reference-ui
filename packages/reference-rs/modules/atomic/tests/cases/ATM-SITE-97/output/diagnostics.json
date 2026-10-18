@@ -1,10 +1,17 @@
 [
   {
     "severity": "warning",
-    "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`color: blue` has no compiled style plan; this lookup will emit no class",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <Button> will not paint: '@reference-ui/lib' styles it with its own system, and no system in `extends` or `layers` backs it",
+    "file": "input/src/Main.tsx",
+    "line": 6,
+    "column": 27,
+    "span": {
+      "start": 131,
+      "end": 154
+    },
     "help": [
-      "make the 'color: blue' lookup static so the plan can serve it"
+      "add the '@reference-ui/lib' baseSystem to `extends` or `layers` in ui.config"
     ]
   }
 ]

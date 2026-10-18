@@ -1,10 +1,17 @@
 [
   {
     "severity": "warning",
-    "code": "ATM-W-MISSING-STYLE-PLAN",
-    "message": "`p: 1r` has no compiled style plan; this lookup will emit no class",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <AcmeCard> will not paint: 'acme-ui' styles it with its own system, and no system in `extends` or `layers` backs it",
+    "file": "input/src/Acme.tsx",
+    "line": 7,
+    "column": 27,
+    "span": {
+      "start": 217,
+      "end": 236
+    },
     "help": [
-      "make the 'p: 1r' lookup static so the plan can serve it"
+      "add the 'acme-ui' baseSystem to `extends` or `layers` in ui.config"
     ]
   }
 ]

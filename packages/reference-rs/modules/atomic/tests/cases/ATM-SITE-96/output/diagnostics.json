@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <Button> will not paint: 'acme-ui' styles it with its own system, and no system in `extends` or `layers` backs it",
+    "file": "input/src/App.tsx",
+    "line": 13,
+    "column": 7,
+    "span": {
+      "start": 385,
+      "end": 408
+    },
+    "help": [
+      "add the 'acme-ui' baseSystem to `extends` or `layers` in ui.config"
+    ]
+  }
+]

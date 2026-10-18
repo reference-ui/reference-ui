@@ -16,8 +16,9 @@ nothing the package's runtime asks for. The `Button` from `@reference-ui/react`
 stays own under the same roster name and plans `@reference-ui/lib__bg_red`.
 
 The spec compiles twice: the default request (no roster, no upstream; the
-goldens) and Core's request with the roster and the upstream. Nothing is
-configured by the user. Siblings: ATM-SITE-97 (barrel re-export), ATM-SITE-98
+goldens, where the package tag reports `ATM-W-EXTERNAL-UNBACKED` because nothing
+is composed to back it, ATM-SITE-100) and Core's request with the roster and the
+upstream. Nothing is configured by the user. Siblings: ATM-SITE-97 (barrel re-export), ATM-SITE-98
 (`css` wrapper), ATM-SITE-99 (published wrapper name), ATM-SITE-95 (compiled
 package owned props), CORE-CHAIN-08 (fan-out across composed systems).
 

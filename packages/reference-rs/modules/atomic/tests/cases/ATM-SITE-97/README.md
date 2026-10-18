@@ -18,8 +18,9 @@ barrel's `Button` (`tracedJsxHosts: ['Button']`), and that traced name must not
 pull the package's `Button` back to own.
 
 The spec compiles twice: the default request (no roster, no upstream; the
-goldens) and Core's request with the primitive roster (`jsxHosts: ['Button']`)
-and the upstream. Nothing is configured by the user. Siblings: ATM-SITE-96
+goldens, where the package tag reports `ATM-W-EXTERNAL-UNBACKED` because nothing
+is composed to back it, ATM-SITE-100) and Core's request with the primitive
+roster (`jsxHosts: ['Button']`) and the upstream. Nothing is configured by the user. Siblings: ATM-SITE-96
 (direct package import), ATM-SITE-98 (`css` wrapper), ATM-SITE-99 (published
 wrapper name), ATM-SITE-56 (traced discovery).
 
