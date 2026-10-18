@@ -5,7 +5,8 @@
  * external component at the call site. The package's published roster arrives as
  * `jsxOwned` on the base system: `CodeIcon` keeps `size` and `variant` for itself.
  * `size="lg"` mints no want and no warning, `color` still extracts, and the
- * `Div size="2r"` control still folds. The owned map the gate read rides the result.
+ * `Div size="2r"` control still folds. With no upstream system composed, the styled
+ * icon carries the one `ATM-W-EXTERNAL-UNBACKED`. The owned map the gate read rides the result.
  */
 import { expect } from 'vitest'
 import {
@@ -25,7 +26,11 @@ const spec: AtomicCaseSpec = {
     expect(getWantsForProp(result, 'size')).toHaveLength(1)
     expect(hasWant(result, 'size', '2r')).toBe(true)
     expect(hasWant(result, 'size', 'lg')).toBe(false)
-    expect(result.diagnostics ?? []).toHaveLength(0)
+    // Owned `size` reports nothing. The case compiles standalone, so nothing
+    // backs the icon's `color`: the one line is that warning, once per tag.
+    const diagnostics = result.diagnostics ?? []
+    expect(diagnostics.map(line => line.code)).toEqual(['ATM-W-EXTERNAL-UNBACKED'])
+    expect(diagnostics[0]?.message).toContain("<CodeIcon> will not paint: 'icon-pkg'")
 
     // `color` is not in the roster, so the external tag's color still extracts.
     expect(hasWant(result, 'color', 'red')).toBe(true)

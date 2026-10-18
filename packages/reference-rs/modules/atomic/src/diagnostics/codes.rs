@@ -159,12 +159,18 @@ pub enum DiagnosticCode {
     /// token without braces. Printed verbatim; the warning offers the braced
     /// reference the author meant.
     UnbracedTokenRef,
+    /// `extract/jsx`: style props on a tag imported from an installed
+    /// package while no upstream system is composed. That package's runtime
+    /// mints classes under its own system name, which only a composed
+    /// baseSystem (`extends` / `layers`) backs; warned once per tag site,
+    /// default channel, and the props still extract.
+    ExternalUnbacked,
 }
 
 /// The code table: one row per variant, in enum declaration order.
 /// Both directions of the mapping read this table, so a code string can
 /// never drift between serialization and parsing. New codes append rows.
-const CODE_TABLE: [(DiagnosticCode, &str); 54] = [
+const CODE_TABLE: [(DiagnosticCode, &str); 55] = [
     (
         DiagnosticCode::DynamicExpression,
         "ATM-W-DYNAMIC-EXPRESSION",
@@ -279,6 +285,7 @@ const CODE_TABLE: [(DiagnosticCode, &str); 54] = [
     (DiagnosticCode::UnknownTone, "ATM-W-UNKNOWN-TONE"),
     (DiagnosticCode::UnknownToken, "ATM-W-UNKNOWN-TOKEN"),
     (DiagnosticCode::UnbracedTokenRef, "ATM-W-UNBRACED-TOKEN-REF"),
+    (DiagnosticCode::ExternalUnbacked, "ATM-W-EXTERNAL-UNBACKED"),
 ];
 
 // hints.test.ts reads the negative fixture `ATM-W-NOPE` out of this file, so the refusal

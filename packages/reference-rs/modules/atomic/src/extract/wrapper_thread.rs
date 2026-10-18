@@ -8,8 +8,9 @@
 //! then lowers threaded call-site values exactly as if written on the host.
 //! The forward target is judged by the same host gate as the JSX walk, so a
 //! wrapper around a package-bound tag (lib's `Button`) never threads: its
-//! call-site `css` takes the external path. Only a bare `css={param}`
-//! forward threads; anything fancier is out of evidence and stays unhandled.
+//! call-site `css` takes the external path, and the pass records that
+//! package so an unbacked call site can name it. Only a bare `css={param}`
+//! forward counts; anything fancier is out of evidence and stays unhandled.
 
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, Declaration, Expression, FormalParameters,
@@ -18,21 +19,29 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use super::jsx::{format_jsx_attribute_name, format_jsx_element_name};
-use super::provenance::HostGate;
+use super::provenance::{tag_root, HostGate, TagProvenance};
 
-/// Same-file wrapper tags whose `css` prop forwards into a host element.
+/// Same-file wrapper tags whose `css` prop forwards into a host element,
+/// plus those whose `css` forwards into a package-bound tag instead.
 #[derive(Default)]
 pub struct WrapperThreads {
     threaded: FxHashSet<Box<str>>,
+    package_forwards: FxHashMap<Box<str>, Box<str>>,
 }
 
 impl WrapperThreads {
     /// True when this tag threads its `css` prop into a host.
     pub fn threads_css(&self, tag: &str) -> bool {
         self.threaded.contains(tag)
+    }
+
+    /// The bare specifier of the package-bound tag this wrapper hands its
+    /// `css` prop to, when it threads into no host.
+    pub fn package_forward(&self, tag: &str) -> Option<&str> {
+        self.package_forwards.get(tag).map(|specifier| &**specifier)
     }
 }
 
@@ -44,12 +53,10 @@ impl WrapperThreads {
 pub fn collect(program: &Program<'_>, gate: HostGate<'_>) -> WrapperThreads {
     let mut scan = WrapperScan {
         gate,
-        threaded: FxHashSet::default(),
+        threads: WrapperThreads::default(),
     };
     scan.visit_program(program);
-    WrapperThreads {
-        threaded: scan.threaded,
-    }
+    scan.threads
 }
 
 /// True for component-like names: a leading uppercase letter.
@@ -60,7 +67,7 @@ fn is_component_name(name: &str) -> bool {
 /// Visitor recording every same-file component that threads `css`.
 struct WrapperScan<'a> {
     gate: HostGate<'a>,
-    threaded: FxHashSet<Box<str>>,
+    threads: WrapperThreads,
 }
 
 impl<'a> Visit<'a> for WrapperScan<'a> {
@@ -127,10 +134,13 @@ impl WrapperScan<'_> {
             gate: self.gate,
             bound,
             found: false,
+            package: None,
         };
         forward.visit_function_body(body);
         if forward.found {
-            self.threaded.insert(name.into());
+            self.threads.threaded.insert(name.into());
+        } else if let Some(specifier) = forward.package {
+            self.threads.package_forwards.insert(name.into(), specifier);
         }
     }
 }
@@ -175,12 +185,14 @@ fn binding_name<'a>(pattern: &'a BindingPattern<'a>) -> Option<&'a str> {
     }
 }
 
-/// Body scanner proving one `<Host css={param}>` forward. Nested functions
-/// never count: a forward inside them belongs to that scope, not this one.
+/// Body scanner proving one `<Host css={param}>` forward, or failing that,
+/// the first `<PackageTag css={param}>` one. Nested functions never count:
+/// a forward inside them belongs to that scope, not this one.
 struct ForwardScan<'a> {
     gate: HostGate<'a>,
     bound: FxHashSet<&'a str>,
     found: bool,
+    package: Option<Box<str>>,
 }
 
 impl<'a> Visit<'a> for ForwardScan<'a> {
@@ -189,21 +201,35 @@ impl<'a> Visit<'a> for ForwardScan<'a> {
     fn visit_arrow_function_expression(&mut self, _arrow: &ArrowFunctionExpression<'a>) {}
 
     fn visit_jsx_opening_element(&mut self, elem: &JSXOpeningElement<'a>) {
-        if !self.found && self.is_css_forward(elem) {
-            self.found = true;
+        if !self.found {
+            self.judge(elem);
         }
         walk::walk_jsx_opening_element(self, elem);
     }
 }
 
 impl ForwardScan<'_> {
-    /// True for `<Host css={param}>`: a gate-admitted host tag carrying a
-    /// bare `css` identifier bound from this component's `css` prop.
-    fn is_css_forward(&self, elem: &JSXOpeningElement<'_>) -> bool {
+    /// Record one opening element: a host forward proves the thread; a
+    /// package-bound forward is kept as the fallback verdict.
+    fn judge(&mut self, elem: &JSXOpeningElement<'_>) {
         let tag = format_jsx_element_name(&elem.name);
-        if !self.gate.admits(&tag) {
-            return false;
+        if self.gate.admits(&tag) {
+            self.found = self.forwards_css(elem);
+            return;
         }
+        if self.package.is_some() {
+            return;
+        }
+        if let TagProvenance::Package(specifier) = self.gate.bindings.provenance(tag_root(&tag)) {
+            if self.forwards_css(elem) {
+                self.package = Some(specifier.clone());
+            }
+        }
+    }
+
+    /// True when the element carries a bare `css` identifier bound from
+    /// this component's `css` prop.
+    fn forwards_css(&self, elem: &JSXOpeningElement<'_>) -> bool {
         elem.attributes.iter().any(|item| {
             let JSXAttributeItem::Attribute(attr) = item else {
                 return false;

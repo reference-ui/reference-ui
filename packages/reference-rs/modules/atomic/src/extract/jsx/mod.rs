@@ -3,7 +3,9 @@
 //! Scans JSX attributes against known style props and condition keys when the
 //! tag is a StyleProps host. Hosts come from styletrace names plus file-local
 //! `@reference-ui/react` / `@reference-ui/styled` component imports. The `r`
-//! prop object is walked through `resolve/r`, not as a scalar value.
+//! prop object is walked through `resolve/r`, not as a scalar value. A styled
+//! tag imported from an installed package lowers as external and reports
+//! `ATM-W-EXTERNAL-UNBACKED`, which assembly keeps only when nothing backs it.
 
 use attribute::{handle_attribute_value, handle_jsx_attribute};
 use canon::{is_condition_prop, is_known_style_prop};
@@ -26,6 +28,9 @@ mod bare_attr_tests;
 
 #[cfg(test)]
 mod external_tag_tests;
+
+#[cfg(test)]
+mod unbacked_tests;
 
 /// A JSX style-block prop site (`css`, `r`, or a condition prop) under walk.
 struct StyleAttr<'a> {
@@ -57,27 +62,61 @@ pub fn extract(opening: &JSXOpeningElement<'_>, ctx: &mut ExtractContext<'_>) {
             origin: Some(tag_name.as_str()),
             external,
         };
-        for item in &opening.attributes {
-            match item {
-                JSXAttributeItem::Attribute(attr) => {
-                    // <Div mt="2r" />  /  <BoltIcon color="red" />
-                    handle_jsx_attribute(attr, site, ctx);
-                }
-                JSXAttributeItem::SpreadAttribute(spread) => {
-                    // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
-                    // A spread bag names attributes, not style positions (§12).
-                    let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
-                    obj_ctx.bag = BagSemantics::JsxAttributes;
-                    crate::extract::expressions::walk_spread_argument(
-                        &mut obj_ctx,
-                        &spread.argument,
-                        &smallvec![],
-                    );
-                }
-            }
+        lower_attributes(opening, site, ctx);
+        if external && ctx.wants.len() > wants_at {
+            // Once per tag, and only when a style prop lowered (owned props
+            // and plain tags never do).
+            report_unbacked(opening, &tag_name, ctx);
         }
     }
     scope::apply_to_wants(&mut ctx.wants[wants_at..]);
+}
+
+/// Report `ATM-W-EXTERNAL-UNBACKED` when another package's runtime styles
+/// this external tag: its root is package-bound (`<BoltIcon color="red" />`
+/// from a package), or it is a same-file wrapper whose `css` prop, set
+/// here, forwards into a package-bound tag (`<Wrap css={{ … }} />`).
+fn report_unbacked(opening: &JSXOpeningElement<'_>, tag: &str, ctx: &mut ExtractContext<'_>) {
+    let forwarded = || ctx.css_forward_package(tag).filter(|_| sets_css(opening));
+    let Some(specifier) = ctx.bound_package(tag).or_else(forwarded) else {
+        return;
+    };
+    ctx.report_unbacked_external(opening.span, tag, specifier);
+}
+
+/// True when the tag carries a direct `css` attribute.
+fn sets_css(opening: &JSXOpeningElement<'_>) -> bool {
+    opening.attributes.iter().any(|item| match item {
+        JSXAttributeItem::Attribute(attr) => format_jsx_attribute_name(&attr.name) == "css",
+        JSXAttributeItem::SpreadAttribute(_) => false,
+    })
+}
+
+/// Lower every attribute and spread on an admitted tag through `site`.
+fn lower_attributes(
+    opening: &JSXOpeningElement<'_>,
+    site: TagSite<'_>,
+    ctx: &mut ExtractContext<'_>,
+) {
+    for item in &opening.attributes {
+        match item {
+            JSXAttributeItem::Attribute(attr) => {
+                // <Div mt="2r" />  /  <BoltIcon color="red" />
+                handle_jsx_attribute(attr, site, ctx);
+            }
+            JSXAttributeItem::SpreadAttribute(spread) => {
+                // <Div {...{ mt: '2r' }} />  /  <Div {...base} />
+                // A spread bag names attributes, not style positions (§12).
+                let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+                obj_ctx.bag = BagSemantics::JsxAttributes;
+                crate::extract::expressions::walk_spread_argument(
+                    &mut obj_ctx,
+                    &spread.argument,
+                    &smallvec![],
+                );
+            }
+        }
+    }
 }
 
 /// Resolve the tag gate: `Some(external)` when the attributes should lower,

@@ -27,6 +27,18 @@ project imports, same-file declarations and unbound names keep the host
 roster match. The same gate decides whether a same-file wrapper threads
 its `css` prop into a host.
 
+A package's classes paint only when the consumer composes that package's
+system (`extends` / `layers`): each composed upstream becomes a qualifier
+the external wants fan out under. With none composed, nothing can back
+them, so a package-bound tag that lowers a style want reports
+`ATM-W-EXTERNAL-UNBACKED` once, at the tag, naming the package (subpath
+dropped, `const` aliases followed) and the fix: compose its baseSystem.
+A same-file wrapper whose `css` prop forwards into a package-bound tag
+reports it at each call site that sets `css`. Extraction cannot see the
+composed systems, so assembly keeps the line only when there is no
+foreign qualifier. Own, project and unbound tags never report it, and
+neither does a tag whose props its owner keeps.
+
 ## Must not
 
 - Choose values (expressions).

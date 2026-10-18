@@ -250,4 +250,19 @@ export const DEFAULT_ROWS: ReproRow[] = [
     configExtra: '',
     files: { 'theme/ext.ts': styleFile("export const cls = css({ translateX: '10px' })") },
   },
+  {
+    // A package's tag styled with nothing in extends/layers to back it.
+    code: 'ATM-W-EXTERNAL-UNBACKED',
+    severity: 'warning',
+    channel: 'diagnostics',
+    configExtra: '',
+    files: {
+      'theme/icon.tsx': [
+        "import { CopyIcon } from 'acme-icons'",
+        '',
+        'export const el = <CopyIcon color="red" />',
+        '',
+      ].join('\n'),
+    },
+  },
 ]
