@@ -98,7 +98,7 @@ async function dietCompile(world: ScaleWorld) {
   const requested = resolveJsxElements(world.config)
   const request = buildCompileRequest({
     spec,
-    requested: requested.merged,
+    requested: requested.local,
     primitiveNames: ELEMENT_JSX_NAMES,
     sourceRoot: world.dir,
     declarationRoot: world.dir,

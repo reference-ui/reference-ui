@@ -1,8 +1,10 @@
 //! Explicit and traced JSX host resolution for StyleProps gating.
 //! Unions caller-supplied `jsxHosts` with engine-traced component names so
 //! configured hosts and discovered wrappers extract without a file-local
-//! import. Tracing runs against the engine-owned surface over the same
-//! include-scoped entries extraction compiles; per-file failures become
+//! import. A name an extended upstream publishes (`upstreamHosts`) leaves
+//! the configured roster: only this compile's trace or an own import admits
+//! a tag that spells it. Tracing runs against the engine-owned surface over
+//! the same include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets. Every path also unions the
 //! base system's declared `jsxOwned` into the owned props, so a published
 //! component with no source to trace still keeps its own prop names. Owned
@@ -32,6 +34,8 @@ mod surface;
 mod lane_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod upstream_tests;
 
 use diagnostics::convert_trace_diagnostic;
 use entries::entry_paths;
@@ -77,7 +81,7 @@ impl ResolvedHosts {
     pub(crate) fn declared(request: &CompileRequest) -> Self {
         let mut hosts = Self {
             traced: Vec::new(),
-            configured: request.jsx_hosts.clone().unwrap_or_default(),
+            configured: own_roster(request),
             owned_props: BTreeMap::new(),
             local_owned: LocalOwned::new(),
         };
@@ -99,6 +103,29 @@ impl ResolvedHosts {
                 .extend(names.iter().cloned());
         }
     }
+}
+
+/// The caller's host roster minus every name an upstream publishes. An
+/// upstream's component renders through that package's runtime and mints
+/// that system's classes, so its name alone never proves a tag own, even
+/// when it also spells a primitive or a configured name: the tag is own
+/// only through an own import or this compile's trace, else external.
+fn own_roster(request: &CompileRequest) -> Vec<String> {
+    let roster = request.jsx_hosts.as_deref().unwrap_or_default();
+    if request.upstream_hosts.is_empty() {
+        return roster.to_vec();
+    }
+    let upstream: FxHashSet<&str> = request
+        .upstream_hosts
+        .values()
+        .flatten()
+        .map(String::as_str)
+        .collect();
+    roster
+        .iter()
+        .filter(|name| !upstream.contains(name.as_str()))
+        .cloned()
+        .collect()
 }
 
 /// Owned props as the sorted, unique arrays `CompileResult` ships; a host
@@ -273,7 +300,7 @@ fn hosts_from(
         .collect();
     let mut hosts = ResolvedHosts {
         traced,
-        configured: request.jsx_hosts.clone().unwrap_or_default(),
+        configured: own_roster(request),
         owned_props: outcome.owned_props,
         local_owned: outcome.local_owned,
     };
