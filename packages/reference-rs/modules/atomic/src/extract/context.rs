@@ -123,7 +123,10 @@ impl<'a> ExtractContext<'a> {
     /// unless the root re-admits through its own const object literal (see
     /// `shadowed_member_admitted`), after which membership decides. A root
     /// bound to an installed package is never an own host, whatever its
-    /// name: `Button` from any package takes the external path.
+    /// name: `Button` from any package takes the external path. Names an
+    /// upstream publishes never reach the global roster (`upstreamHosts`), so
+    /// a local or unbound tag that spells one is own only through an own
+    /// import or this compile's trace.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
         if bindings::is_shadowed(self.shadowed, name) {
             // A shadowed plain tag is a host only through its alias chain;

@@ -56,6 +56,14 @@ pub struct CompileRequest {
     /// `upstreamSystems`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub upstream_systems: Vec<String>,
+    /// Component names each extended upstream system publishes, keyed by
+    /// system name. They are never own hosts: an upstream's component
+    /// renders through that package's runtime. A name here leaves the
+    /// `jsx_hosts` roster, so only an own import or this compile's trace
+    /// admits a tag that spells it. Absent from the wire when empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub upstream_hosts: BTreeMap<String, Vec<String>>,
+    /// The own host roster: the generated primitives plus configured names.
     #[serde(default)]
     pub jsx_hosts: Option<Vec<String>>,
     #[serde(default)]

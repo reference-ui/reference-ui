@@ -33,7 +33,7 @@ export async function prepareDiagWorld(dir: string): Promise<DiagWorld> {
     const requested = resolveJsxElements(config);
     const request = buildCompileRequest({
       spec,
-      requested: requested.merged,
+      requested: requested.local,
       primitiveNames: ELEMENT_JSX_NAMES,
       sourceRoot: dir,
       declarationRoot: dir,

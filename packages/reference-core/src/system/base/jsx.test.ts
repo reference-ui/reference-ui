@@ -4,13 +4,14 @@
 // configured with traced, and every list stays trimmed, deduped, and sorted.
 // Owned props flow through layers while roster names stay extends-only.
 // Primitives mirror the element vocabulary's jsx names, so downstream extends
-// consumers read the roster without tracing it.
+// consumers read the roster without tracing it. The request's upstream hosts
+// keep the same extends-only names grouped by the system that publishes them.
 
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { publishedJsxElements, resolveJsxElements } from './jsx.ts'
+import { publishedJsxElements, resolveJsxElements, upstreamJsxHosts } from './jsx.ts'
 
 interface ShelfElement {
   jsx: string
@@ -238,5 +239,27 @@ describe('publishedJsxElements', () => {
 
     expect(Object.keys(published)).toEqual(['primitives', 'upstream', 'local', 'merged', 'owned'])
     expect(published.owned).toEqual({ Tile: ['size'] })
+  })
+})
+
+describe('upstreamJsxHosts', () => {
+  it('groups extends names by system: trimmed, deduped, sorted, empties dropped', () => {
+    expect(
+      upstreamJsxHosts({
+        extends: [
+          { name: 'two', fragment: '', jsxElements: ['Panel', ' Card '] },
+          { name: 'one', fragment: '', jsxElements: ['Card'] },
+          { name: 'two', fragment: '', jsxElements: ['Card', 'Badge'] },
+          { name: 'bare', fragment: '' },
+          { name: 'empty', fragment: '', jsxElements: [] },
+        ],
+        layers: [{ name: 'layered', fragment: '', jsxElements: ['Icon'] }],
+        jsxElements: ['LocalPanel'],
+      })
+    ).toEqual({ one: ['Card'], two: ['Badge', 'Card', 'Panel'] })
+  })
+
+  it('is empty without extends', () => {
+    expect(upstreamJsxHosts({ jsxElements: ['LocalPanel'] })).toEqual({})
   })
 })

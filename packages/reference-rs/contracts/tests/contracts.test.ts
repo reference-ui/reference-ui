@@ -190,6 +190,18 @@ describe('F0: Frozen wire contract fixtures', () => {
     expect(request.include).toEqual(['**/*.{ts,tsx}'])
   })
 
+  it('carries upstream-published names apart from jsxHosts, keyed by system', () => {
+    const request: Pick<NativeCompileRequest, 'jsxHosts' | 'upstreamHosts'> = {
+      jsxHosts: ['Box', 'LocalPanel'],
+      upstreamHosts: { 'upstream-system': ['UpstreamCard'] },
+    }
+    expect(request.upstreamHosts).toEqual({ 'upstream-system': ['UpstreamCard'] })
+    expect(request.jsxHosts).not.toContain('UpstreamCard')
+
+    // The committed request stays silent: absent means no upstream publishes a name.
+    expect('upstreamHosts' in nativeCompileRequestJson).toBe(false)
+  })
+
   it('Negative compile request identifies illegal layers host', () => {
     expect(nativeCompileRequestLayersNegativeJson.jsxHosts).toContain('IllegalLayerHost')
   })

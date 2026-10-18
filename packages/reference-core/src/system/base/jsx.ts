@@ -101,6 +101,22 @@ export function publishedJsxElements(artifact: JsxElementsArtifact): PublishedJs
   return Object.keys(owned).length > 0 ? artifact : roster
 }
 
+/**
+ * The names each extended upstream publishes, keyed by system name: the compile request's
+ * `upstreamHosts`. The same extends-only source as the artifact's `upstream` bucket, kept by
+ * system so the engine can tell them from its own hosts. A system that publishes nothing has no key.
+ */
+export function upstreamJsxHosts(config: ExtendsCarrier): Record<string, string[]> {
+  const bySystem = new Map<string, string[]>()
+  for (const system of config.extends ?? []) {
+    bySystem.set(system.name, [...(bySystem.get(system.name) ?? []), ...(system.jsxElements ?? [])])
+  }
+  const entries = [...bySystem.keys()]
+    .sort()
+    .map(name => [name, uniqueSorted(bySystem.get(name) ?? [])] as const)
+  return Object.fromEntries(entries.filter(([, names]) => names.length > 0))
+}
+
 export function resolveJsxElements(
   config: ExtendsCarrier,
   traced: readonly string[] = [],

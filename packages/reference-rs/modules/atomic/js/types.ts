@@ -145,6 +145,16 @@ export interface CompileRequest {
    */
   upstreamContainerRoot?: boolean
   /**
+   * Upstream system names (extends then layers, own name excluded) that
+   * external wants are qualified under. Absent or empty means standalone.
+   */
+  upstreamSystems?: string[]
+  /**
+   * Component names each extended upstream publishes, keyed by system name.
+   * Never own hosts: a name here leaves the `jsxHosts` roster.
+   */
+  upstreamHosts?: Record<string, string[]>
+  /**
    * Glob scope (case ATM-SCAN-01) relative to `rootDir`: only
    * matching sources compile and the rest are skipped silently. Absent or
    * empty preserves the legacy scan-all behavior.

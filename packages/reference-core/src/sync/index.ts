@@ -29,7 +29,7 @@ import {
 } from '../collect/index.ts'
 import { hasUpstreamContainerRoot } from '../system/base/container-root.ts'
 import { portableFragmentOf, publishedFragmentNodes } from '../system/base/fragments.ts'
-import { resolveJsxElements } from '../system/base/jsx.ts'
+import { resolveJsxElements, upstreamJsxHosts } from '../system/base/jsx.ts'
 import { applyNormalizeCss } from './reset.ts'
 import { ELEMENT_JSX_NAMES } from '../native/element-vocabulary.ts'
 import { removeDirIfEmpty } from './clean.ts'
@@ -119,7 +119,9 @@ async function evaluateAndCompile(
     // project), scoped to the config include globs, and admits the configured
     // hosts plus every generated primitive without an import. The request
     // records what the author asked for: discovery reaches the publish below,
-    // never this list.
+    // never this list. The names an extended upstream publishes ride apart,
+    // by system (`upstreamHosts`): an upstream's component renders through its
+    // own runtime, so its name never admits a tag as the app's own host.
     const requested = resolveJsxElements(config)
     // The props every upstream (extends and layers) keeps for its components ride the spec, not the
     // request: a compiled package ships no source to trace, so the engine learns them here. They are
@@ -143,7 +145,7 @@ async function evaluateAndCompile(
     )
     const request = buildCompileRequest({
       spec,
-      requested: requested.merged,
+      requested: requested.local,
       primitiveNames: ELEMENT_JSX_NAMES,
       sourceRoot: cwd,
       declarationRoot: cwd,
@@ -153,6 +155,7 @@ async function evaluateAndCompile(
         hasUpstreamContainerRoot([...(config.extends ?? []), ...(config.layers ?? [])]) ||
         undefined,
       upstreamSystems,
+      upstreamHosts: upstreamJsxHosts(config),
     })
     attachScanRetention(request, prepared)
     markPhase('evalEnd')

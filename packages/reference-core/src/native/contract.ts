@@ -47,6 +47,13 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    * gains no key and the Rust default `[]` keeps the old path.
    */
   upstreamSystems?: string[]
+  /**
+   * The names each extended upstream publishes, keyed by system name. The
+   * engine drops them from the own roster: an upstream's component renders
+   * through that package's runtime. Carried structurally like `include`;
+   * undefined drops from the serialized request when no upstream names one.
+   */
+  upstreamHosts?: Record<string, string[]>
 }
 
 export interface NativeDiagnosticSpan {
