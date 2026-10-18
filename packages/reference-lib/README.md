@@ -8,7 +8,6 @@ Foundational design system package built on `@reference-ui/core`.
 - `@reference-ui/lib/baseSystem`: the design-system payload for downstream `extends: [baseSystem]` in `ui.config.ts` — a zero-import module; import this, not the component barrel
 - `@reference-ui/lib/theme`: the plain theme objects used to build that system
 - `@reference-ui/lib/styles.css`: the compiled stylesheet (import once at your app root)
-- `@reference-ui/lib/primitives`: layout/text primitives (`Div`, `Span`, `Button`, `Label`, …) plus `css`/`recipe`
 
 ## Consumer setup
 
@@ -19,14 +18,14 @@ npm install @reference-ui/lib react react-dom
 ```tsx
 // main.tsx — order matters: stylesheet first, then your app.
 import '@reference-ui/lib/styles.css'
-import { ReferenceLibrary } from '@reference-ui/lib'
-import { Div, Span, Button } from '@reference-ui/lib/primitives'
+import { ReferenceLibrary, Tabs } from '@reference-ui/lib'
 ```
 
 Notes:
 
-- No bundler aliases needed. (Older guides mention aliasing `@reference-ui/react` —
-  that was the unpublished codegen package; `@reference-ui/lib/primitives` replaces it.)
+- No bundler aliases needed.
+- Primitives such as `Div` and `Button` come from `@reference-ui/react`, which `ref sync`
+  generates in your app (see "Your tokens on lib props" below).
 - `react` is a peer dependency: the app owns the one React copy (required for hooks/SSR).
 - Styling your own values: the shipped CSS only contains rules for values used inside
   the library. App-only values (e.g. `maxW="140r"` when nothing in the lib uses `140r`)

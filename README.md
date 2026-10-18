@@ -40,19 +40,21 @@ Reference UI is a React component library with a typed design system. Its CSS is
    ref sync
    ```
 
-4. Import the stylesheet before your app code, then use a component.
+4. Import the generated stylesheet before your app code, then use a component. Primitives such as `Button` come from `@reference-ui/react`, which sync generates; components and icons come from `@reference-ui/lib`.
 
    ```tsx
    // main.tsx
-   import '@reference-ui/lib/styles.css'
-   import { ReferenceLibrary } from '@reference-ui/lib'
-   import { Button } from '@reference-ui/lib/primitives'
+   import '@reference-ui/react/styles.css'
+   import { ReferenceLibrary, SearchIcon } from '@reference-ui/lib'
+   import { Button } from '@reference-ui/react'
 
    // ReferenceLibrary mounts the toast host and live-region announcer.
    export function App() {
      return (
        <ReferenceLibrary>
-         <Button variant="primary">Save</Button>
+         <Button display="flex" alignItems="center" gap="2r">
+           <SearchIcon /> Search
+         </Button>
        </ReferenceLibrary>
      )
    }

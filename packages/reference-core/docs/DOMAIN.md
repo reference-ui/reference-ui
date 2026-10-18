@@ -70,12 +70,18 @@ this file in the same pass.
   `TESTS.md`, leaf cases.
 - **status words** — `open`, `in-progress`, `done`, `blocked-on-rs`,
   `approved-absence`, `retired`: the `TESTS.md` ledger states.
-- **host** — a JSX name whose style props extract: primitives carry
-  every tag, wrappers earn it by forwarding. (styletrace)
+- **host** — a JSX name whose style props extract under the app's own
+  system: primitives carry every tag, wrappers earn it by forwarding.
+  Ownership is by import provenance, never by name: a tag whose import
+  ends at an installed package (lib, icons, any third-party package) is
+  external even when it spells a host, and its style props are backed
+  under every composed system. (styletrace, atomic)
 - **traced** — discovered by StyleTrace inside `compile()`, per
   project, from the code — never declared. (styletrace)
-- **configured** — from `jsxElements`: the escape hatch for shapes
-  static tracing cannot infer. (styletrace)
+- **configured** — names in the `jsxElements` config field. Only Core
+  cases set it, and docs never ask users to: tracing and provenance
+  decide ownership. A configured name admits a project or unbound tag,
+  never a package import. (styletrace)
 - **owned** — a declared prop a component destructures and does not
   forward. It counts as forwarded, and stops being owned, only when
   it reaches an element under the same prop name: `name={name}`, or a
@@ -93,9 +99,10 @@ this file in the same pass.
   `jsxOwned` on the base system and the compile spec, `tracedJsxOwned`
   on the compile result, `owned` in the jsx artifact
   (`jsx-elements.json`). It flows through `extends` and `layers`;
-  roster names flow through `extends` only, so the engine knows a
-  layered component's own props without that component becoming a
-  host. (styletrace)
+  roster names flow through `extends` only, and reach the engine as
+  `upstreamHosts`, never as own hosts, so the engine knows a layered
+  component's own props without that component becoming a host.
+  (styletrace)
 - **compiler namer** — the Rust request-to-class function, run at
   compile time over extracted wants. The oracle behind every naming
   gate. (namer)

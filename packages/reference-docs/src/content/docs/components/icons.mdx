@@ -45,9 +45,20 @@ Icons render a `div` and accept its DOM props, such as `aria-label`.
 
 ## Styling
 
-Style props such as `margin` passed to an icon have no effect from your app.
-Use `size`, `variant`, `style`, or `className`, or wrap the icon in your own
-element:
+Icons take style props like any other component, and resolve them against
+your tokens:
+
+```tsx
+<CheckIcon marginLeft="3r" />
+```
+
+Style props on an icon compile when lib's `baseSystem` is in `extends` or
+`layers` in `ui.config.ts`, as `ref init` sets up; it carries the icons' own
+system. With nothing in either, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED` at
+the icon and the props do not paint.
+
+`size`, `variant`, `style` and `className` work either way, and so does
+wrapping the icon in your own element:
 
 ```tsx
 <Span marginLeft="3r">
