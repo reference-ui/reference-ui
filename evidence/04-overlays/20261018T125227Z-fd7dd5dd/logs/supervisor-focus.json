@@ -1,0 +1,32 @@
+{
+  "url": "http://127.0.0.1:29203/repro-focus.html",
+  "restoreFocusExplicitlyTrue": true,
+  "before": {
+    "id": "first-name",
+    "tag": "INPUT",
+    "triggerConnected": true,
+    "expanded": "true",
+    "inputMounted": true
+  },
+  "afterEscape": {
+    "id": "",
+    "tag": "BODY",
+    "triggerConnected": true,
+    "expanded": "false",
+    "inputMounted": false
+  },
+  "beforeClose": {
+    "id": "repro-close",
+    "tag": "BUTTON",
+    "triggerConnected": true,
+    "expanded": "true",
+    "inputMounted": true
+  },
+  "afterClose": {
+    "id": "",
+    "tag": "BODY",
+    "triggerConnected": true,
+    "expanded": "false",
+    "inputMounted": false
+  }
+}

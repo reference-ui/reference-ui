@@ -1,0 +1,33 @@
+{
+  "before": {
+    "activeId": "first-name",
+    "activeTag": "INPUT",
+    "expanded": "true",
+    "triggerConnected": true,
+    "url": "http://127.0.0.1:29203/repro-focus.html"
+  },
+  "afterEscapeDefault": {
+    "activeId": "",
+    "activeTag": "BODY",
+    "contentMounted": false,
+    "expanded": "false",
+    "triggerConnected": true,
+    "url": "http://127.0.0.1:29203/repro-focus.html"
+  },
+  "afterCloseDefault": {
+    "activeId": "",
+    "activeTag": "BODY",
+    "contentMounted": false,
+    "expanded": "false",
+    "triggerConnected": true,
+    "url": "http://127.0.0.1:29203/repro-focus.html"
+  },
+  "afterEscapeExplicitRestoreFocus": {
+    "activeId": "",
+    "activeTag": "BODY",
+    "contentMounted": false,
+    "expanded": "false",
+    "triggerConnected": true,
+    "url": "http://127.0.0.1:29203/repro-focus.html"
+  }
+}
