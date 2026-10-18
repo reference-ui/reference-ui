@@ -58,5 +58,9 @@ those core files reverted reproduces 154208/38004 exactly, CSS pins untouched.
 reverted reproduces 154217/38033 exactly, CSS pins untouched. The 154213/38023
 pin already read 154217/38033 before the split (+4/+10, likely the uncommitted
 reference-core runtime edits; not A/B'd here).
+2026-10-18 miss probe reads spaced hex escapes (issue #15, namer/miss.ts
+CLASS_TOKEN only) -> 154277/38048 (+22/+5): a digit-led system's selectors
+spell `.\30 1-app__...`; A/B with miss.ts reverted reproduces 154255/38043
+exactly, CSS pins untouched.
 Re-verify if acceptance moves bytes.
 ```

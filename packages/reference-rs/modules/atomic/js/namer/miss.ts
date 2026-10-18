@@ -13,8 +13,12 @@ export interface MissCandidate {
   message: string
 }
 
-/** Dot-class tokens with escapes intact, split from pseudo-classes. */
-const CLASS_TOKEN = /\.((?:\\.|[^.,:()[\]\s>+~])+)/g
+/**
+ * Dot-class tokens with escapes intact, split from pseudo-classes. A hex
+ * escape keeps its one terminating space (`.\30 1-app__p_2r` for a
+ * digit-led class), which is part of the escape, not a combinator.
+ */
+const CLASS_TOKEN = /\.((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[^.,:()[\]\s>+~])+)/g
 
 /** Hex-plus-tail escape body the unescaper decodes to a code point. */
 const ESCAPE_BODY = /\\([0-9a-fA-F]{1,6}\s?|.)/gs

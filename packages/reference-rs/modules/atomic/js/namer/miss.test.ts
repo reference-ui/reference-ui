@@ -1,6 +1,7 @@
 /**
  * Dev miss probe pins over a stubbed sheet: comma-bearing utilities such as
- * `repeat(3, 1fr)` must match their escaped selectors instead of warning.
+ * `repeat(3, 1fr)` and digit-led classes (`.\30 1-app__...`, whose hex
+ * escape ends in a space) must match their escaped selectors, not warn.
  * The stub fakes only the CSSOM surface miss.ts touches (styleSheets,
  * cssRules, selectorText, layer names), so no DOM library is needed; the
  * document-ready gate stays `complete` so candidates check immediately.
@@ -30,9 +31,12 @@ class CSSLayerBlockRule {
   }
 }
 
-/** One inline sheet holding the given top-level rules. */
-function stubSheet(rules: unknown[]): void {
-  const sheet = { href: null, cssRules: ruleList(rules) }
+/**
+ * One sheet holding the given top-level rules. The probe caches its class
+ * set per sheet list, so each test passes its own href to rescan.
+ */
+function stubSheet(rules: unknown[], href: string | null = null): void {
+  const sheet = { href, cssRules: ruleList(rules) }
   vi.stubGlobal('document', { readyState: 'complete', styleSheets: ruleList([sheet]) })
 }
 
@@ -73,5 +77,30 @@ describe('reportMissCandidates', () => {
     await flushChecks()
     expect(warn).toHaveBeenCalledTimes(1)
     expect(warn).toHaveBeenCalledWith('miss-absent')
+  })
+
+  it('matches digit-led classes through their spaced hex escapes', async () => {
+    // Chromium's selectorText spelling for a system named `01-dashboard`.
+    stubSheet(
+      [
+        new CSSLayerBlockRule('utilities', [
+          styleRule(String.raw`.\30 1-dashboard__p_7\.25r`),
+          styleRule(
+            String.raw`.\30 1-dashboard__hover\:c_red:is(:hover, [data-hover]) .\31 x`
+          ),
+        ]),
+      ],
+      '/digit-led.css'
+    )
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    reportMissCandidates([
+      { className: '01-dashboard__p_7.25r', message: 'miss-padding' },
+      { className: '01-dashboard__hover:c_red', message: 'miss-hover' },
+      { className: '1x', message: 'miss-descendant' },
+      { className: '0', message: 'miss-truncated' },
+    ])
+    await flushChecks()
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith('miss-truncated')
   })
 })

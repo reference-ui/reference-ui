@@ -67,8 +67,8 @@ export const EXPECTED_BYTES = {
   stylePlans: 3689,
   harvestWants: EXPECTED_NET_NEW,
   // react.mjs cells and the derived counts; per-landing evidence is in BYTE-PINS.md.
-  reactRaw: 154255,
-  reactGzip: 38043,
+  reactRaw: 154277,
+  reactGzip: 38048,
   fixtureRules: 3693,
   m500Rules: 33806,
 }
