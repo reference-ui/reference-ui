@@ -5,13 +5,16 @@
 //! every style-bearing attribute: literals predict exact lookups, `css` and
 //! condition blocks walk, and dynamic shapes become dynamic-slot facts. A
 //! capitalized non-host tag is an external component: its block is marked
-//! external and its exact keys target the composed foreign qualifiers only.
-//! Native `style` is excluded; lowercase DOM tags and attributes emit nothing.
+//! external and its exact keys target the composed foreign qualifiers only,
+//! unless it is a same-file wrapper threading `css` into a host, whose `css`
+//! predicts own as extraction lowers it. Native `style` is excluded;
+//! lowercase DOM tags and attributes emit nothing.
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use oxc_ast::ast::{
-    Expression, JSXAttributeItem, JSXAttributeValue, JSXOpeningElement, VariableDeclarationKind,
+    Expression, JSXAttribute, JSXAttributeItem, JSXAttributeValue, JSXOpeningElement,
+    VariableDeclarationKind,
 };
 use oxc_ast_visit::Visit;
 use oxc_span::Span;
@@ -27,11 +30,14 @@ use super::{is_shadowed, AnalysisCtx, AnalyzedSource};
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
 use crate::extract::provenance::{classify, tag_root};
+use crate::extract::wrapper_thread::WrapperThreads;
 use crate::extract::{ExtractBindings, HostGate, JsxHosts, OwnedProps, TagProvenance};
 
 use self::aliases::collect_ident_aliases;
+use self::threaded::collect_threads;
 
 mod aliases;
+mod threaded;
 mod visit;
 
 /// Expectations for the traced JSX surface: one walk per source. The import
@@ -58,6 +64,7 @@ pub fn expectations(
         bindings,
         provenance: source.bindings,
         aliases: collect_ident_aliases(source.program),
+        threads: collect_threads(ctx, source),
     };
     visitor.visit_program(source.program);
     visitor.facts
@@ -88,6 +95,8 @@ struct JsxVisitor<'a, 'b> {
     /// the one classifier both gates read.
     provenance: &'b ExtractBindings,
     aliases: FxHashMap<String, String>,
+    /// Same-file wrappers extraction threads `css` through.
+    threads: WrapperThreads,
 }
 
 impl<'a, 'b> JsxVisitor<'a, 'b> {
@@ -233,6 +242,9 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// Lower one opening element's attributes when the tag is admitted.
     fn handle_opening(&mut self, elem: &JSXOpeningElement<'_>) {
         let tag = format_element_name(&elem.name);
+        if self.lowers_threaded(&tag, elem) {
+            return;
+        }
         let Some(external) = self.tag_site(&tag) else {
             return;
         };
@@ -246,21 +258,25 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         }
     }
 
-    /// Lower one attribute: gated names map to inputs, element values and
-    /// empty containers emit nothing (they never query).
-    fn handle_attr(&mut self, tag: &str, external: bool, attr: &oxc_ast::ast::JSXAttribute<'_>) {
+    /// Lower one attribute when its name is a style position on this tag.
+    fn handle_attr(&mut self, tag: &str, external: bool, attr: &JSXAttribute<'_>) {
         let name = format_attribute_name(&attr.name);
         let gate = AttrGate {
             tag,
             owned: self.owned,
         };
-        if !is_style_attr(&gate, &name) {
-            return;
+        if is_style_attr(&gate, &name) {
+            self.walk_attr_value(external, &name, attr);
         }
+    }
+
+    /// Walk one admitted attribute's value as `name`: element values and
+    /// empty containers emit nothing (they never query).
+    fn walk_attr_value(&mut self, external: bool, name: &str, attr: &JSXAttribute<'_>) {
         let Some(value) = &attr.value else {
             walk_attr_input(
                 &mut self.walk_ctx(external),
-                &name,
+                name,
                 AttrInput::Bare,
                 attr.span,
             );
@@ -270,7 +286,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             JSXAttributeValue::StringLiteral(lit) => {
                 walk_attr_input(
                     &mut self.walk_ctx(external),
-                    &name,
+                    name,
                     AttrInput::Text(lit.value.as_str()),
                     lit.span,
                 );
@@ -279,7 +295,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
                 if let Some(expr) = container.expression.as_expression() {
                     walk_attr_input(
                         &mut self.walk_ctx(external),
-                        &name,
+                        name,
                         AttrInput::Expr(expr),
                         container.span,
                     );

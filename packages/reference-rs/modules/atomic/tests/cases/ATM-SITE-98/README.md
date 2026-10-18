@@ -14,7 +14,8 @@ lowers as an external want: with one composed upstream
 is no `@reference-ui/lib__c_blue` class, and no `ATM-W-MISSING-STYLE-PLAN`
 names `color` (a wrapper recorded as own pointed that warning the wrong way).
 `OwnWrap` forwards into an own host, so its call-site `css` stays own and plans
-`@reference-ui/lib__bg_red`.
+`@reference-ui/lib__bg_red`; the diagnostics analysis predicts it own too, so
+no `ATM-W-MISSING-STYLE-PLAN` names `bg` under the composed upstream.
 
 The spec compiles twice: the default request (no roster, no upstream; the
 goldens, where the `Wrap` call site reports `ATM-W-EXTERNAL-UNBACKED` because

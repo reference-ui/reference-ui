@@ -3,7 +3,8 @@
 //! predicting foreign keys by the shared provenance, `css`/condition
 //! lowering, spread bags, const-alias chains with their cycle/non-host
 //! refusals, and shadowed tags staying silent — including params and
-//! `let` rebinds over an alias name, mirroring the extract gate.
+//! `let` rebinds over an alias name, mirroring the extract gate, and
+//! same-file `css` wrappers predicting the block extraction lowers.
 
 use super::super::support::{
     analyze_source, analyze_source_external, analyze_source_hosted, dynamic_count, exact_keys,
@@ -249,4 +250,35 @@ fn shadowed_and_variant_attrs_emit_nothing() {
     assert!(facts.is_empty());
     let facts = analyze_source(&format!("{IMPORT} const el = <Div colorMode=\"dark\" />;"));
     assert!(facts.is_empty());
+}
+
+#[test]
+fn threaded_css_wrapper_predicts_own_keys_under_a_foreign_qualifier() {
+    // Extraction lowers a same-file wrapper's call-site `css` as if written
+    // on the host it forwards into, never external; the wrapper's sibling
+    // attributes are its own and predict nothing (ATM-SITE-98's `OwnWrap`).
+    let facts = analyze_source_external(&format!(
+        "{IMPORT} const Wrap = ({{ css }}: {{ css?: object }}) => <Div css={{css}} />;\
+         const el = <Wrap color=\"blue\" css={{{{ bg: 'red' }}}} />;"
+    ));
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["test",[],"bg","red",false]"#.to_string()]
+    );
+}
+
+#[test]
+fn css_wrapper_around_a_package_tag_predicts_foreign_keys() {
+    // A wrapper forwarding into a package-bound tag never threads, so its
+    // call-site `css` stays an external block, as extraction lowers it.
+    let facts = analyze_source_hosted(
+        "import { Button } from 'acme-ui';\
+         const Wrap = ({ css }: { css?: object }) => <Button css={css} />;\
+         const el = <Wrap css={{ bg: 'red' }} />;",
+        &["Button"],
+    );
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["foreign",[],"bg","red",false]"#.to_string()]
+    );
 }

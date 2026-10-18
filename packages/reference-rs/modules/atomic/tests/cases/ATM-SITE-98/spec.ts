@@ -1,10 +1,11 @@
 /**
  * `css` wrapper around a package tag (ATM-SITE-98). `Wrap` forwards its `css`
  * into lib's `Button`, so the call-site `css` is an external want that backs
- * `upstream__c_blue` under one composed upstream, with no own class and no
- * `ATM-W-MISSING-STYLE-PLAN` for `color`. `OwnWrap` forwards into Reference's
- * `Div`, so its call-site `css` stays own. The threading pre-pass and the JSX
- * walk share one verdict, with or without the primitive roster.
+ * `upstream__c_blue` under one composed upstream, with no own class.
+ * `OwnWrap` forwards into Reference's `Div`, so its call-site `css` stays own.
+ * The threading pre-pass, the JSX walk and the analysis mirror share one
+ * verdict, with or without the primitive roster, so no
+ * `ATM-W-MISSING-STYLE-PLAN` names either wrapper's `css`.
  */
 import path from 'node:path'
 import { expect } from 'vitest'
@@ -68,10 +69,9 @@ const spec: AtomicCaseSpec = {
     const painted = layerClassNames(composed.stylesheet, 'utilities')
     expect(painted.has('upstream__c_blue')).toBe(true)
     expect(painted.has('@reference-ui/lib__c_blue')).toBe(false)
-    // The claim is the package wrapper's `color`; the own wrapper's threaded
-    // `bg` is outside it.
-    const misses = composed.diagnostics.filter(d => d.code === 'ATM-W-MISSING-STYLE-PLAN')
-    expect(misses.filter(d => d.message.includes('`color'))).toEqual([])
+    // The analysis mirror predicts each wrapper's `css` as extraction lowers
+    // it, so neither wrapper reports a missing plan.
+    expect(composed.diagnostics.filter(d => d.code === 'ATM-W-MISSING-STYLE-PLAN')).toEqual([])
     expect(composed.diagnostics.filter(d => d.severity === 'error')).toEqual([])
   },
 }
