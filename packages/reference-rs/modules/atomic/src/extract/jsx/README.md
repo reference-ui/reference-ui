@@ -16,6 +16,11 @@ JSX with no hosts resolvable is a missing-graph error (ATM-SITE-13),
 once per file. Once any host is known, other tags (including local
 `<Foo mt="2r" />`) are skipped silently.
 
+A name imported from a package that ships its own runtime
+(`@reference-ui/lib`, its `/primitives`, `@reference-ui/icons`) is never
+an own host, even when it spells a primitive: `<Button>` from lib mints
+lib's class, so it takes the external path like any capitalized non-host.
+
 ## Must not
 
 - Choose values (expressions).

@@ -7,13 +7,15 @@
 //! virtual neutralize pass declares them as top-level `const` bindings, so
 //! they extract even though the declaration would otherwise read as a shadow.
 //! JSX hosts are the component names from the same packages; unknown `css`
-//! is not an extract site.
+//! is not an extract site; `foreign_runtime` keeps lib/icons off the hosts.
 
 use oxc_ast::ast::{
     Expression, ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
     ModuleExportName, Program, Statement, StaticMemberExpression,
 };
 use rustc_hash::FxHashSet;
+
+use super::foreign_runtime;
 
 /// Local names bound to Reference `css`, `recipe`, JSX hosts, and namespaces.
 #[derive(Debug, Default, Clone)]
@@ -24,6 +26,7 @@ pub struct ExtractBindings {
     namespaces: FxHashSet<String>,
     reexport_css_ns: FxHashSet<String>,
     reexport_recipe_ns: FxHashSet<String>,
+    foreign: FxHashSet<String>,
 }
 
 /// Where an identity walk starts: the importing file plus the project graph.
@@ -55,6 +58,11 @@ impl ExtractBindings {
     /// reference, so per-file setup never clones either set.
     pub fn jsx_hosts_ref(&self) -> &FxHashSet<String> {
         &self.jsx
+    }
+
+    /// True when `name` is a value import from a foreign-runtime package.
+    pub fn binds_foreign(&self, name: &str) -> bool {
+        self.foreign.contains(name)
     }
 
     /// Origin string when `callee` is a live Reference `css` binding.
@@ -203,12 +211,15 @@ fn record_import(bindings: &mut ExtractBindings, decl: &ImportDeclaration<'_>) {
     if decl.import_kind == ImportOrExportKind::Type {
         return;
     }
-    if !is_reference_package(decl.source.value.as_str()) {
-        return;
-    }
+    let source = decl.source.value.as_str();
     let Some(specifiers) = &decl.specifiers else {
         return;
     };
+    if foreign_runtime::record(&mut bindings.foreign, source, specifiers)
+        || !is_reference_package(source)
+    {
+        return;
+    }
     for spec in specifiers {
         record_specifier(bindings, spec);
     }

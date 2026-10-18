@@ -55,6 +55,12 @@ pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
 /// blocks materialize their per-target expectations. The own system is
 /// `"test"` and the foreign qualifier is `"foreign"`.
 pub(crate) fn analyze_source_external(source: &str) -> Vec<DiagnosticFact> {
+    analyze_source_hosted(source, &[])
+}
+
+/// [`analyze_source_external`] with `configured` admitted as host names, the
+/// way the primitive roster and an upstream's `jsxElements` arrive.
+pub(crate) fn analyze_source_hosted(source: &str, configured: &[&str]) -> Vec<DiagnosticFact> {
     let qualifiers = vec!["test".to_string(), "foreign".to_string()];
     let allocator = oxc_allocator::Allocator::default();
     let program = parse_for_test(&allocator, source);
@@ -62,7 +68,7 @@ pub(crate) fn analyze_source_external(source: &str) -> Vec<DiagnosticFact> {
         crate::extract::constants::collect_local_constants(&program, "test.ts", Some(source));
     let hosts = ResolvedHosts {
         traced: Vec::new(),
-        configured: Vec::new(),
+        configured: configured.iter().map(ToString::to_string).collect(),
         owned_props: BTreeMap::new(),
     };
     let analyzed = AnalyzedSource {
@@ -216,4 +222,3 @@ pub(crate) fn dynamic_count(facts: &[DiagnosticFact]) -> usize {
         .filter(|fact| matches!(fact, DiagnosticFact::DynamicSlot { .. }))
         .count()
 }
-

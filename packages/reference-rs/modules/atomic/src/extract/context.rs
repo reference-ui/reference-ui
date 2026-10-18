@@ -120,7 +120,9 @@ impl<'a> ExtractContext<'a> {
     /// member tag resolves through its root, so a locally bound root
     /// (`const Tabs = Other`) rebinds every `<Tabs.*>` use and gates it —
     /// unless the root re-admits through its own const object literal (see
-    /// `shadowed_member_admitted`), after which membership decides.
+    /// `shadowed_member_admitted`), after which membership decides. A root
+    /// imported from a foreign-runtime package is never an own host, so
+    /// `Button` from `@reference-ui/lib/primitives` takes the external path.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
         if bindings::is_shadowed(self.shadowed, name) {
             // A shadowed plain tag is a host only through its alias chain;
@@ -136,10 +138,19 @@ impl<'a> ExtractContext<'a> {
                 return false;
             }
         }
+        if self.binds_foreign(name) {
+            return false;
+        }
         if self.jsx_hosts.contains(name) {
             return true;
         }
         name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+    }
+
+    /// True when the tag's root is an unshadowed foreign-runtime import.
+    fn binds_foreign(&self, tag: &str) -> bool {
+        let root = tag.split('.').next().unwrap_or(tag);
+        !bindings::is_shadowed(self.shadowed, root) && self.bindings.binds_foreign(root)
     }
 
     /// True when a shadowed plain tag re-admits through a same-file const
@@ -161,6 +172,7 @@ impl<'a> ExtractContext<'a> {
             }
             let Some((decl, target)) = self.chain.alias_edge(&current, scope) else {
                 return !bindings::is_shadowed(self.shadowed, &current)
+                    && !self.bindings.binds_foreign(&current)
                     && self.jsx_hosts.contains(&current);
             };
             current = target;
@@ -190,7 +202,9 @@ impl<'a> ExtractContext<'a> {
         let Some(value) = entries.get(member).and_then(|prop| prop.ident.as_deref()) else {
             return false;
         };
-        !bindings::is_shadowed(self.shadowed, value) && self.jsx_hosts.contains(value)
+        !bindings::is_shadowed(self.shadowed, value)
+            && !self.bindings.binds_foreign(value)
+            && self.jsx_hosts.contains(value)
     }
 
     /// True when the host's own declaration owns this prop name (§14).

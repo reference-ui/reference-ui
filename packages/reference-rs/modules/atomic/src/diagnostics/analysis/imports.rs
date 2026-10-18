@@ -5,6 +5,8 @@
 //! member. Type-only imports bind nothing, default imports are not sites,
 //! and `recipe` imports are neither. Re-export tracing stays an extraction
 //! job, so a site analysis misses is silence, never a phantom expectation.
+//! Value imports from a foreign-runtime package (`@reference-ui/lib`,
+//! `@reference-ui/icons`) land in `foreign`: never own hosts, as in extract.
 
 use rustc_hash::FxHashSet;
 
@@ -14,6 +16,7 @@ pub struct FileBindings {
     pub css: FxHashSet<String>,
     pub jsx: FxHashSet<String>,
     pub namespaces: FxHashSet<String>,
+    pub foreign: FxHashSet<String>,
 }
 
 /// Scan one program's direct Reference imports into file-local bindings.
@@ -32,16 +35,38 @@ pub fn scan_imports(program: &oxc_ast::ast::Program<'_>) -> FileBindings {
 /// Record one import declaration's Reference bindings, if it carries any.
 fn record_import(bindings: &mut FileBindings, decl: &oxc_ast::ast::ImportDeclaration<'_>) {
     use oxc_ast::ast::ImportOrExportKind;
-    if decl.import_kind == ImportOrExportKind::Type
-        || !is_reference_package(decl.source.value.as_str())
-    {
+    let source = decl.source.value.as_str();
+    if decl.import_kind == ImportOrExportKind::Type {
         return;
     }
     let Some(specifiers) = &decl.specifiers else {
         return;
     };
+    if is_foreign_runtime_package(source) {
+        bindings
+            .foreign
+            .extend(specifiers.iter().filter_map(value_local));
+        return;
+    }
+    if !is_reference_package(source) {
+        return;
+    }
     for spec in specifiers {
         record_specifier(bindings, spec);
+    }
+}
+
+/// The local one specifier binds at runtime; type-only specifiers bind none.
+fn value_local(spec: &oxc_ast::ast::ImportDeclarationSpecifier<'_>) -> Option<String> {
+    use oxc_ast::ast::{ImportDeclarationSpecifier, ImportOrExportKind};
+    match spec {
+        ImportDeclarationSpecifier::ImportSpecifier(named) => {
+            (named.import_kind != ImportOrExportKind::Type).then(|| named.local.name.to_string())
+        }
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
+            Some(default.local.name.to_string())
+        }
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => Some(ns.local.name.to_string()),
     }
 }
 
@@ -102,6 +127,19 @@ fn is_reference_package(source: &str) -> bool {
     matches!(source, "@reference-ui/react" | "@reference-ui/styled")
 }
 
+/// True for a published package (or subpath) that renders through its own
+/// runtime. Duplicated on purpose, like the allowlist above. Drift watch:
+/// `extract::bindings::foreign::is_foreign_runtime_package`.
+fn is_foreign_runtime_package(source: &str) -> bool {
+    ["@reference-ui/lib", "@reference-ui/icons"]
+        .iter()
+        .any(|package| {
+            source
+                .strip_prefix(package)
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::support::parse_for_test;
@@ -125,5 +163,27 @@ mod tests {
         assert!(bindings.namespaces.contains("ui"));
         assert!(!bindings.css.contains("other"));
         assert!(!bindings.css.contains("tcss"));
+    }
+
+    #[test]
+    fn import_scan_keeps_foreign_runtime_names_off_the_hosts() {
+        let allocator = oxc_allocator::Allocator::default();
+        let program = parse_for_test(
+            &allocator,
+            "import { Button, type ButtonProps } from '@reference-ui/lib/primitives';\n\
+             import { Accordion } from '@reference-ui/lib';\n\
+             import * as icons from '@reference-ui/icons';\n\
+             import { Div } from '@reference-ui/library';",
+        );
+        let bindings = scan_imports(&program);
+        for name in ["Button", "Accordion", "icons"] {
+            assert!(bindings.foreign.contains(name), "{name} is foreign");
+            assert!(!bindings.jsx.contains(name), "{name} is not a host");
+        }
+        assert!(!bindings.foreign.contains("ButtonProps"));
+        assert!(
+            !bindings.foreign.contains("Div"),
+            "a lookalike scope is not foreign"
+        );
     }
 }

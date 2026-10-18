@@ -108,7 +108,8 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// member tag resolves through its root, so a locally bound root
     /// rebinds every use and gates it, mirroring the extract gate —
     /// unless the root re-admits through its own const object literal,
-    /// after which membership decides.
+    /// after which membership decides. A root imported from a
+    /// foreign-runtime package is never a host, mirroring the extract gate.
     fn allows_tag(&self, tag: &str) -> bool {
         if is_shadowed(&self.shadows, tag) {
             // A shadowed plain tag predicts only through its alias chain;
@@ -121,14 +122,19 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
                 return false;
             }
         }
-        if self.bindings.jsx.contains(tag) || self.hosts.contains(tag) {
-            return true;
-        }
-        if !tag.contains('.') {
-            return false;
-        }
-        let flat = tag.replace('.', "");
-        self.bindings.jsx.contains(&flat) || self.hosts.contains(&flat)
+        !self.binds_foreign(tag) && self.is_host_name(tag)
+    }
+
+    /// True when the tag, or its concatenated member spelling, names a host.
+    fn is_host_name(&self, tag: &str) -> bool {
+        let admits = |name: &str| self.bindings.jsx.contains(name) || self.hosts.contains(name);
+        admits(tag) || (tag.contains('.') && admits(&tag.replace('.', "")))
+    }
+
+    /// True when the tag's root is an unshadowed foreign-runtime import.
+    fn binds_foreign(&self, tag: &str) -> bool {
+        let root = tag.split('.').next().unwrap_or(tag);
+        !is_shadowed(&self.shadows, root) && self.bindings.foreign.contains(root)
     }
 
     /// True when a shadowed plain tag re-admits through the flat alias
@@ -151,6 +157,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
             }
             let Some(target) = self.aliases.get(current) else {
                 return !is_shadowed(&self.shadows, current)
+                    && !self.bindings.foreign.contains(current)
                     && (self.bindings.jsx.contains(current) || self.hosts.contains(current));
             };
             current = target;
@@ -190,7 +197,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         else {
             return false;
         };
-        if is_shadowed(&self.shadows, value) {
+        if is_shadowed(&self.shadows, value) || self.bindings.foreign.contains(value) {
             return false;
         }
         self.bindings.jsx.contains(value) || self.hosts.contains(value)

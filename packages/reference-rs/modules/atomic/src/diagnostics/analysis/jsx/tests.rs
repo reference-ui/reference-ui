@@ -4,7 +4,9 @@
 //! refusals, and shadowed tags staying silent — including params and
 //! `let` rebinds over an alias name, mirroring the extract gate.
 
-use super::super::support::{analyze_source, analyze_source_external, dynamic_count, exact_keys};
+use super::super::support::{
+    analyze_source, analyze_source_external, analyze_source_hosted, dynamic_count, exact_keys,
+};
 
 const IMPORT: &str = "import { Div } from '@reference-ui/react';";
 
@@ -22,6 +24,27 @@ fn external_tag_predicts_foreign_qualified_keys() {
     let facts = analyze_source_external(&format!(
         "{IMPORT} const el = <Div color=\"red\" />;"
     ));
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["test",[],"color","red",false]"#.to_string()]
+    );
+}
+
+#[test]
+fn foreign_runtime_import_predicts_foreign_keys_under_a_configured_name() {
+    // Issue #19: `Button` is a configured host, but lib's `/primitives`
+    // runtime mints the upstream qualifier, so the block targets it; the
+    // unimported spelling keeps the own-host prediction.
+    let lib = "import { Button } from '@reference-ui/lib/primitives';";
+    let facts = analyze_source_hosted(
+        &format!("{lib} const el = <Button color=\"red\" />;"),
+        &["Button"],
+    );
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["foreign",[],"color","red",false]"#.to_string()]
+    );
+    let facts = analyze_source_hosted("const el = <Button color=\"red\" />;", &["Button"]);
     assert_eq!(
         exact_keys(&facts),
         vec![r#"["test",[],"color","red",false]"#.to_string()]
