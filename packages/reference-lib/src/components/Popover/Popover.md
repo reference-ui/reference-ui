@@ -84,6 +84,14 @@ control, and leaving the last control advances relative to the Trigger's
 source position while requesting dismissal. This is not a trap; outside
 programmatic focus remains outside. Popover inherits that Overlay bridge.
 
+Popover runs no FocusLock, so Content returns focus itself. When Popover
+closes with focus inside Content (Escape, `Popover.Close`, a controlled
+close), focus moves to the `restoreFocus` target, the Trigger by default,
+on the close commit before Content exits. `restoreFocus={false}` leaves
+focus alone. Tab past the last control has already moved focus, so nothing
+moves; an outside press ends wherever the press puts focus. The return is
+not a keyboard visit, so an `openOnHover` Trigger does not reopen.
+
 ```tsx
 <Popover
   open={open}

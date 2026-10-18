@@ -3,12 +3,14 @@
  * role, chains pointer enter/leave and focus in/out with the intent
  * handlers so hovering or tabbing through the panel keeps it open,
  * registers an explicit `id` with the owning Popover so the Trigger's
- * `aria-controls` names this node, and renders nothing outside a Popover
- * subtree.
+ * `aria-controls` names this node, returns focus to `restoreFocus` (the
+ * Trigger by default) when closing with focus inside, and renders nothing
+ * outside a Popover subtree.
  */
 import * as React from 'react'
 import { Overlay, useOverlay, type OverlayContentProps } from '../../Overlay'
 import { PopoverContext } from '../context'
+import { useCloseRestore } from '../hooks'
 
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
@@ -23,6 +25,7 @@ export function PopoverContent({
   onPointerLeave,
   onFocus,
   onBlur,
+  restoreFocus,
   ...props
 }: PopoverContentProps) {
   const context = React.useContext(PopoverContext)
@@ -33,6 +36,15 @@ export function PopoverContent({
     if (id === undefined || !registerContentId) return
     return registerContentId(id)
   }, [id, registerContentId])
+
+  // Overlay's FocusLock owns restore only when isolating; Popover never is.
+  useCloseRestore({
+    isOpen: context?.isOpen ?? false,
+    restoreFocus,
+    contentRef: overlay?.contentRef,
+    triggerRef: overlay?.triggerRef,
+    returnFocus: context?.returnFocus,
+  })
 
   if (!context) return null
 

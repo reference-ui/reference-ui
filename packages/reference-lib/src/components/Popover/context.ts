@@ -27,6 +27,7 @@ export interface PopoverContextValue {
   ) => void
   onContentEnter: (event: React.PointerEvent<HTMLDivElement>) => void
   onContentLeave: (event: React.PointerEvent<HTMLDivElement>) => void
+  returnFocus: (target: HTMLElement) => void
 }
 
 export const PopoverContext = React.createContext<PopoverContextValue | null>(null)

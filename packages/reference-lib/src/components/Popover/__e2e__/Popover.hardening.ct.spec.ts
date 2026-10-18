@@ -1,8 +1,10 @@
 import type { ComponentProps } from 'react'
+import type { Page } from '@playwright/test'
 import { test, expect, pressTab } from '../../../../playwright/ct'
-import type { ContractHarness } from '../Popover.story'
+import type { ContractHarness, FocusReturn } from '../Popover.story'
 
 type ContractProps = ComponentProps<typeof ContractHarness>
+type FocusReturnProps = ComponentProps<typeof FocusReturn>
 
 test.describe('Popover controlled ownership and event contracts', () => {
   test('PO-CTRL-01: rejected opening keeps controlled DOM and uses current callbacks', async ({ mount, page }) => {
@@ -159,5 +161,87 @@ test.describe('Popover controlled ownership and event contracts', () => {
     await expect(trigger).toHaveAttribute('aria-controls', generatedId)
     await expect(page.locator(`[id="${generatedId}"]`)).toHaveCount(1)
     await expect(page.getByTestId('popover-contract-requests')).toHaveText('')
+  })
+})
+
+async function tabIntoReturnContent(page: Page) {
+  await pressTab(page)
+  await expect(page.getByTestId('popover-return-first')).toBeFocused()
+}
+
+async function openReturnFromKeyboard(page: Page) {
+  await page.getByTestId('popover-return-trigger').focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('popover-return-content')).toBeVisible()
+  await tabIntoReturnContent(page)
+}
+
+test.describe('Popover focus return', () => {
+  test('PO-FOCUS-02: Escape from a Content control returns focus to the Trigger', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn')
+    const trigger = page.getByTestId('popover-return-trigger')
+
+    await openReturnFromKeyboard(page)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('popover-return-content')).toHaveCount(0)
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(trigger).toBeFocused()
+  })
+
+  test('PO-FOCUS-03: keyboard Close returns focus to the Trigger', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn')
+    const trigger = page.getByTestId('popover-return-trigger')
+
+    await openReturnFromKeyboard(page)
+    await pressTab(page)
+    await pressTab(page)
+    await expect(page.getByTestId('popover-return-close')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('popover-return-content')).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+
+  test('PO-FOCUS-04: an explicit restoreFocus target receives focus on close', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn', { restore: 'after' } satisfies FocusReturnProps)
+
+    await openReturnFromKeyboard(page)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('popover-return-content')).toHaveCount(0)
+    await expect(page.getByTestId('popover-return-after')).toBeFocused()
+  })
+
+  test('PO-FOCUS-05: restoreFocus false leaves focus where the close put it', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn', { restore: 'off' } satisfies FocusReturnProps)
+
+    await openReturnFromKeyboard(page)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('popover-return-content')).toHaveCount(0)
+    await expect(page.getByTestId('popover-return-trigger')).not.toBeFocused()
+    await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true)
+  })
+
+  test('PO-FOCUS-06: a hover card returns focus to its Trigger without reopening', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn', { openOnHover: true } satisfies FocusReturnProps)
+    const trigger = page.getByTestId('popover-return-trigger')
+    const content = page.getByTestId('popover-return-content')
+
+    await trigger.focus()
+    await expect(content).toBeVisible()
+    await tabIntoReturnContent(page)
+    await page.keyboard.press('Escape')
+    await expect(content).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await page.waitForTimeout(400)
+    await expect(content).toHaveCount(0)
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('PO-FOCUS-07: an outside press from inside Content keeps the pressed control focused', async ({ mount, page }) => {
+    await mount('components/Popover/Popover/FocusReturn')
+
+    await openReturnFromKeyboard(page)
+    await page.getByTestId('popover-return-after').click()
+    await expect(page.getByTestId('popover-return-content')).toHaveCount(0)
+    await expect(page.getByTestId('popover-return-after')).toBeFocused()
   })
 })

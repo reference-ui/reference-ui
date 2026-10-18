@@ -297,3 +297,30 @@ export function ContractHarness({
     </div>
   )
 }
+
+interface FocusReturnProps {
+  restore?: 'default' | 'off' | 'after'
+  openOnHover?: boolean
+}
+
+export function FocusReturn({ restore = 'default', openOnHover = false }: FocusReturnProps) {
+  const afterRef = React.useRef<HTMLButtonElement>(null)
+  const restoreFocus = restore === 'off' ? false : restore === 'after' ? afterRef : undefined
+  return (
+    <div data-testid="popover-return-root">
+      <Popover openOnHover={openOnHover}>
+        <Popover.Trigger data-testid="popover-return-trigger">Open form</Popover.Trigger>
+        <Popover.Content
+          aria-label="Example form"
+          data-testid="popover-return-content"
+          restoreFocus={restoreFocus}
+        >
+          <input aria-label="First name" data-testid="popover-return-first" />
+          <input aria-label="Last name" data-testid="popover-return-last" />
+          <Popover.Close data-testid="popover-return-close">Close form</Popover.Close>
+        </Popover.Content>
+      </Popover>
+      <button type="button" ref={afterRef} data-testid="popover-return-after">After popover</button>
+    </div>
+  )
+}

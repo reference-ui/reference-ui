@@ -276,6 +276,48 @@
       "kind": "ct",
       "file": "__e2e__/Popover.hardening.ct.spec.ts",
       "title": "Popover controlled ownership and event contracts PO-LINK-01: explicit Content IDs remain the live Trigger control target after updates"
+    },
+    {
+      "id": "LIB-POPOVER-040",
+      "name": "Escape from a Popover Content control returns focus to the Trigger",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-02: Escape from a Content control returns focus to the Trigger"
+    },
+    {
+      "id": "LIB-POPOVER-041",
+      "name": "Keyboard Popover Close returns focus to the Trigger",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-03: keyboard Close returns focus to the Trigger"
+    },
+    {
+      "id": "LIB-POPOVER-042",
+      "name": "An explicit Popover restoreFocus target receives focus on close",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-04: an explicit restoreFocus target receives focus on close"
+    },
+    {
+      "id": "LIB-POPOVER-043",
+      "name": "Popover restoreFocus false leaves focus where the close put it",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-05: restoreFocus false leaves focus where the close put it"
+    },
+    {
+      "id": "LIB-POPOVER-044",
+      "name": "A hover-card Popover returns focus to its Trigger without reopening",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-06: a hover card returns focus to its Trigger without reopening"
+    },
+    {
+      "id": "LIB-POPOVER-045",
+      "name": "An outside press from inside Popover Content keeps the pressed control focused",
+      "kind": "ct",
+      "file": "__e2e__/Popover.hardening.ct.spec.ts",
+      "title": "Popover focus return PO-FOCUS-07: an outside press from inside Content keeps the pressed control focused"
     }
   ]
 }

@@ -65,6 +65,9 @@ Parts: `Popover.Trigger` (`button`), `Popover.Content` (`div`),
 - Escape and an outside press dismiss the popover.
 - Tab from an open Trigger moves into Content; tabbing past the last control
   leaves and dismisses. Focus is not trapped.
+- Closing with focus inside Content, by Escape or `Popover.Close`, returns
+  focus to the Trigger, or to the `restoreFocus` target. `restoreFocus={false}`
+  leaves focus where it is.
 - With `openOnHover`, the pointer can travel diagonally from trigger to
   content without closing it.
 - For text that only describes the trigger, use [Tooltip](/tooltip).

@@ -27,6 +27,7 @@ export interface HoverSession {
   hasLanded: boolean
   hoverOpenedAt: number
   fromPointer: boolean
+  returning: boolean
 }
 
 export interface PopoverIntentOptions {
@@ -62,6 +63,7 @@ function emptySession(): HoverSession {
     hasLanded: false,
     hoverOpenedAt: 0,
     fromPointer: false,
+    returning: false,
   }
 }
 
@@ -268,7 +270,7 @@ export function usePopoverIntent({
   const onTriggerFocus = React.useCallback(
     (event: React.FocusEvent<HTMLButtonElement>) => {
       if (!latest.current.openOnHover || event.defaultPrevented) return
-      if (session.current.fromPointer) return
+      if (session.current.fromPointer || session.current.returning) return
       if (latest.current.isOpen) {
         clearHoverTimer()
         return
@@ -277,6 +279,16 @@ export function usePopoverIntent({
     },
     [clearHoverTimer, openNow]
   )
+
+  // Focus returned on close is not a keyboard visit: it must not reopen.
+  const returnFocus = React.useCallback((target: HTMLElement) => {
+    session.current.returning = true
+    try {
+      target.focus({ preventScroll: true })
+    } finally {
+      session.current.returning = false
+    }
+  }, [])
 
   const onFocusInside = React.useCallback(() => {
     if (!latest.current.openOnHover) return
@@ -311,6 +323,7 @@ export function usePopoverIntent({
       onFocusLeave,
       onContentEnter,
       onContentLeave,
+      returnFocus,
     }),
     [
       isOpen,
@@ -327,6 +340,7 @@ export function usePopoverIntent({
       onFocusLeave,
       onContentEnter,
       onContentLeave,
+      returnFocus,
     ]
   )
 
