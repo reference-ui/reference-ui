@@ -1,10 +1,11 @@
 /**
  * Published wrapper name (ATM-SITE-99). `AcmeCard` from `acme-ui` is the name
- * the package publishes, so Core's roster carries it; the consumer's own traced
- * `AcmeCard` spells the same name. The package tag is external and backs
- * `upstream__p_1r` under one composed upstream, with no own class; the local
- * wrapper stays own (`@reference-ui/lib__p_2r`) by tracing alone, and the
- * roster entry flips neither verdict.
+ * the package publishes, so Core's request carries it in `upstreamHosts`, apart
+ * from the own roster; the consumer's own traced `AcmeCard` spells the same
+ * name. The package tag is external and backs `upstream__p_1r` under one
+ * composed upstream, with no own class; the local wrapper stays own
+ * (`@reference-ui/lib__p_2r`) by tracing alone, and the published name flips
+ * neither verdict.
  */
 import path from 'node:path'
 import { expect } from 'vitest'
@@ -21,14 +22,18 @@ import {
 const CASE = 'ATM-SITE-99'
 const OWN_P = { 'p:2r': '@reference-ui/lib__p_2r' }
 
-/** Core's request: the roster carries the upstream's published `AcmeCard`, one upstream is composed. */
+/**
+ * Core's request: the primitive roster in `jsxHosts`, one composed upstream,
+ * and the name it publishes (`AcmeCard`) apart in `upstreamHosts`.
+ */
 function compileComposed(): Promise<CompileResult> {
   const sourceRoot = path.resolve(getCaseInputDir(CASE))
   const request: NativeCompileRequest & { upstreamSystems: string[] } = {
     schemaVersion: 2,
     spec: LIB_SYSTEM_SPEC,
-    jsxHosts: ['AcmeCard'],
+    jsxHosts: ['Div'],
     upstreamSystems: ['upstream'],
+    upstreamHosts: { upstream: ['AcmeCard'] },
     sourceRoot,
     declarationRoot: sourceRoot,
     logs: ['proof'],

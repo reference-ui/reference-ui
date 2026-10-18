@@ -105,9 +105,11 @@ fn threaded_wrapper_css_is_not_external() {
     assert!(!threaded.external, "threaded css stays non-external");
 }
 
-/// Compile these files with `Button`, `Overlay.Content` and `AcmeCard`
-/// configured as hosts (the primitive roster plus an upstream's published
-/// `jsxElements`, flattened as core sends them) under one upstream.
+/// Compile these files with `Button`, `Overlay.Content` and `AcmeCard` on
+/// the `jsxHosts` roster under one upstream. Core sends an upstream's
+/// published names apart, in `upstreamHosts` (pinned in
+/// `hosts::upstream_tests`); listing them here pins that provenance alone
+/// makes a package-bound tag external, whatever the roster says.
 fn compile_hosted_files(files: &[(&str, &str)]) -> crate::CompileResult {
     let req = CompileRequest {
         files: Some(

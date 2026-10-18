@@ -63,7 +63,7 @@ pub(crate) fn analyze_source_external(source: &str) -> Vec<DiagnosticFact> {
 }
 
 /// [`analyze_source_external`] with `configured` admitted as host names, the
-/// way the primitive roster and an upstream's `jsxElements` arrive.
+/// way the primitive roster arrives in `jsxHosts`.
 pub(crate) fn analyze_source_hosted(source: &str, configured: &[&str]) -> Vec<DiagnosticFact> {
     let qualifiers = vec!["test".to_string(), "foreign".to_string()];
     let allocator = oxc_allocator::Allocator::default();
