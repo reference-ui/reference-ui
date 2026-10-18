@@ -1,0 +1,16 @@
+$ npm run sync (literal file include)
+
+> sync
+> ref sync
+
+
+  REF  v0.0.0  ready in 467 ms
+
+  ➜  CSS:       166.4 KB
+
+Exit 0
+
+$ ref sync --watch
+[ref] watch failed: ENOTDIR: not a directory, scandir '~/Developer/ref-sandbox/scenarios/06-theming/src/repro/main.tsx'
+
+Exit {"code":1,"signal":null}
