@@ -9,21 +9,21 @@ description: Install Reference UI and start building in minutes.
 
 # Getting started
 
-Reference UI is a small authoring surface for React: style props, primitives,
-tokens and CSS. A Rust engine compiles it at build time, so your app ships a
-plain stylesheet and no runtime style injection.
 
 ## Installation
 
-### 1. Install the packages
+### 1. Install and initialize
 
-Install the library and the `ref` CLI.
+Reference UI is both a library and a CLI. Install both, then initialize your
+project.
 
 <Install packages="@reference-ui/lib react react-dom" devPackages="@reference-ui/core" />
 
-### 2. Create the config file
+```bash
+npx ref init
+```
 
-Create `ui.config.ts` at the project root, next to `package.json`.
+`ref init` writes `ui.config.ts` at the project root, next to `package.json`.
 
 ```ts
 // ui.config.ts
@@ -37,13 +37,15 @@ export default defineConfig({
 })
 ```
 
-`name` identifies your design system. `include` lists the files the engine
-scans; change it if your source is not under `src/`. `extends` brings in the
-library's tokens. Import `baseSystem` from the `@reference-ui/lib/baseSystem`
-subpath, not from `@reference-ui/lib`: the full barrel evaluates thousands of
-icon modules on every sync.
+`name` identifies your design system; init takes it from the `name` in
+`package.json`, or uses `my-app` when that name is not valid. `include` lists
+the files the engine scans; change it if your source is not under `src/`.
+`extends` brings in the library's tokens. Import `baseSystem` from the
+`@reference-ui/lib/baseSystem` subpath, not from `@reference-ui/lib`: the full
+barrel evaluates thousands of icon modules on every sync. If a `ui.config`
+file already exists, init leaves it unchanged.
 
-### 3. Run sync
+### 2. Run sync
 
 Compile your styles and types from the project root.
 
@@ -64,7 +66,7 @@ Sync writes four generated packages to `.reference-ui/` (`system`, `styled`,
 `react` and `types`) and links them into `node_modules/@reference-ui/`. Add
 `.reference-ui` to `.gitignore`: sync regenerates it.
 
-### 4. Import the CSS file
+### 3. Import the CSS file
 
 Import the generated stylesheet once, before your app code.
 
@@ -73,7 +75,7 @@ Import the generated stylesheet once, before your app code.
 import '@reference-ui/react/styles.css'
 ```
 
-### 5. Start building
+### 4. Start building
 
 Render a primitive with style props.
 
@@ -122,20 +124,13 @@ package manager (npm, pnpm or yarn); the commands below use npm.
    npm install @reference-ui/lib react react-dom
    npm install --save-dev @reference-ui/core
 
-2. Create ui.config.ts at the project root (next to package.json):
-
-   import { defineConfig } from '@reference-ui/core'
-   import { baseSystem } from '@reference-ui/lib/baseSystem'
-
-   export default defineConfig({
-     name: 'my-app',
-     include: ['src/**/*.{ts,tsx}'],
-     extends: [baseSystem],
-   })
-
-   Replace 'my-app' with this project's package name. Adjust `include` so it covers every file that uses Reference UI style
-   props. Import baseSystem from '@reference-ui/lib/baseSystem', never from
-   '@reference-ui/lib'.
+2. Run `npx ref init` at the project root. It writes ui.config.ts next to
+   package.json, with `name` taken from package.json, `include` set to
+   'src/**/*.{ts,tsx}' and `extends: [baseSystem]`. Adjust `include` so it
+   covers every file that uses Reference UI style props. If a ui.config file
+   already exists, init changes nothing: keep that file, and check that its
+   `include` covers those files and its `extends` contains baseSystem,
+   imported from '@reference-ui/lib/baseSystem', never from '@reference-ui/lib'.
 
 3. Add `.reference-ui` to .gitignore.
 
