@@ -1,4 +1,4 @@
-// upstream.ts — the shared sync-and-wire helper for the layers cases (NEO-LAYERS-07, -08,
+// upstream.ts — the shared sync-and-wire helper for the layers cases (CORE-LAYERS-07, -08,
 // -13, -15). It takes a real upstream directory and a consumer world, syncs the upstream
 // for real, reads the baseSystem.mjs it published, rewrites the consumer ui.config.ts to
 // import and list each upstream under extends or layers, and restores the canonical
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { sync } from '../../../../src/sync/index.ts';
 
 const CONFIG_FILE = 'ui.config.ts';
-const CONFIG_IMPORT = "import { defineConfig } from '@reference-ui/neo'";
+const CONFIG_IMPORT = "import { defineConfig } from '@reference-ui/core'";
 const EMPTY_EXTENDS = 'extends: [],';
 
 /** One upstream the consumer imports: the binding name and the path to its baseSystem.mjs. */

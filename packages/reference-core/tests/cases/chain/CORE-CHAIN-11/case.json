@@ -1,0 +1,1 @@
+{"id": "CORE-CHAIN-11", "name": "a cycle reached through fragment names fails sync with a named error", "sync": true}

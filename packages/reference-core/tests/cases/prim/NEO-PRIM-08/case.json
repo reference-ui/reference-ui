@@ -1,1 +1,0 @@
-{"id": "NEO-PRIM-08", "name": "`id`, `aria-*`, `data-*`, handlers, and `ref` reach the element; style props never leak; `as` never polymorphs", "sync": true}

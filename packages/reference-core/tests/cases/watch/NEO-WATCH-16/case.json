@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-16", "name": "a wedged watch sync reports stuck on the next save, and SIGINT exits it within the shutdown bound with the lock released", "sync": true}

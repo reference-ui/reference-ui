@@ -1,0 +1,1 @@
+{"id": "CORE-LAYER-02", "name": "two systems nest under one `@layer <name>` package, a downstream utility beats the upstream-fed recipe, and portable tokens scope by `[data-layer]`", "sync": true}

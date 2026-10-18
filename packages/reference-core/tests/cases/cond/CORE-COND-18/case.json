@@ -1,0 +1,1 @@
+{"id": "CORE-COND-18", "name": "`& +` and `& ~` in `css()` paint following siblings only", "sync": true}

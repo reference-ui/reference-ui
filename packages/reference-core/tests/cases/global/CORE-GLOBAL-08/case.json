@@ -1,0 +1,1 @@
+{"id": "CORE-GLOBAL-08", "name": "`font()` emits `@font-face` with src lists, `size-adjust`, and `descent-override`", "sync": true}

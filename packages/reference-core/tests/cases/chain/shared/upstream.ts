@@ -1,4 +1,4 @@
-// upstream.ts — the shared sync-and-wire helper for the chain diamond cases (NEO-CHAIN-09, -10).
+// upstream.ts — the shared sync-and-wire helper for the chain diamond cases (CORE-CHAIN-09, -10).
 // It takes a real upstream or consumer directory, syncs it for real, and reads back what it published:
 // the base system and the evaluated spec. It rewrites a canonical ui.config.ts to import published base
 // systems and extend them in order, then restores the canonical spelling with a resync. It also reads a
@@ -9,7 +9,7 @@ import type { SpecPage } from '../../../shared/page.ts'
 import { sync } from '../../../../src/sync/index.ts'
 
 const CONFIG_FILE = 'ui.config.ts'
-const CONFIG_IMPORT = "import { defineConfig } from '@reference-ui/neo'"
+const CONFIG_IMPORT = "import { defineConfig } from '@reference-ui/core'"
 const EMPTY_EXTENDS = 'extends: [],'
 const OUT_DIR = '.reference-ui'
 

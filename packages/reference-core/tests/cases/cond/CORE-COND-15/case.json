@@ -1,0 +1,1 @@
+{"id": "CORE-COND-15", "name": "mixed `@supports` + `@container` + `&:hover` nests and gates", "sync": true}

@@ -6,7 +6,7 @@ custom properties in `@layer tokens`. Utilities and recipes consume
 them by name, by `{path}` ref, or by rhythm sugar (`4r`, `0.5r`).
 Colour leaves carry `{ light, dark }` and print as `data-color-mode`
 islands. This group owns `src/collect/surface/{tokens,font,keyframes}.ts`.
-Existing: `NEO-EDGE-02` (radii, done).
+Existing: `CORE-EDGE-02` (radii, done).
 
 ## Dialect
 
@@ -48,7 +48,7 @@ escaped literal; TOKEN-02 → RS-3). (`colorPalette` out), (`token()` out). as c
 - `colorPalette` virtual tokens: no lib author writes the
   `colorPalette` prop; the 1.6k atoms are staticCss noise pointing at
   vars the sheet never defines.
-- `token()` string helper: neither core nor lib exports it;
+- `token()` string helper: neither the retired reference-core nor lib exports it;
   `{path}` refs only.
 - Composite token objects (shadow/gradient/border/asset): lib declares
   zero `--shadows-`/`--gradients-` vars; authors write strings.
@@ -56,7 +56,7 @@ escaped literal; TOKEN-02 → RS-3). (`colorPalette` out), (`token()` out). as c
 - Panda `themes` JSON (`[data-panda-theme=<name>]` brand packs): brand
   packs are not colour mode; Reference colour mode is `data-color-mode`
   islands.
-- `:where(html)` token-layer spelling: Neo emits
+- `:where(html)` token-layer spelling: Core emits
   `:root,[data-color-mode=light]` / `[data-color-mode=dark]` (§4.4).
 - Hashed var names (`--jolVMp`) and `formatTokenName` (`$` prefixes):
   Panda opt-ins; Reference naming is dotted paths → `--kebab`.

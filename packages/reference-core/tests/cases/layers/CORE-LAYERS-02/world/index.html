@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href=".reference-ui/styled/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@reference-ui/react": "./.reference-ui/react/react.mjs"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="plain">unstyled sibling</div>
+    <div id="token-probe">consumer token probe</div>
+    <div id="up-utility" data-layer="core-layers2-up" class="core-layers2-up__c_upInk">upstream utility</div>
+    <div id="up-recipe" data-layer="core-layers2-up" class="core-layers2-up__layBadge_s_lg">upstream recipe</div>
+    <script type="module" src="./dist/src/app.js"></script>
+  </body>
+</html>

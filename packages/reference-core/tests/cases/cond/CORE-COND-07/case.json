@@ -1,0 +1,1 @@
+{"id": "CORE-COND-07", "name": "`\"&[data-state='open']\"` paints only the matching attribute and `_expanded` paints via its twin list", "sync": true}

@@ -1,0 +1,1 @@
+{"id": "CORE-LAYERS-07", "name": "a layer's token names never reach the consumer: colour, spacing, radius and font-size uses each warn at their use site and paint no layer value, a font family stays raw and silent, and extends resolves the same names", "sync": true}

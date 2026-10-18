@@ -1,0 +1,1 @@
+{"id": "CORE-STATIC-03", "name": "a runtime value outside the static set yields the MERGE-06 diagnostic, not a ghost, and an unsatisfiable `staticCss` request fails sync", "sync": true}

@@ -1,0 +1,1 @@
+{"id": "CORE-MERGE-04", "name": "borderBottom '1px solid' never clobbers borderColor with currentColor", "sync": true}

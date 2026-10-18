@@ -1,9 +1,9 @@
-# SITE — extraction shapes through Neo
+# SITE — extraction shapes through Core
 
 SITE proves the extract boundary end to end: which call sites and JSX
 shapes become utilities in a synced world, and which fail closed with a
 diagnostic and no ghost class. The engine (Atomic extract + styletrace)
-decides what is a site; Neo proves the decision paints — or provably
+decides what is a site; Core proves the decision paints — or provably
 paints nothing — in a browser. Host surface is small:
 `src/sync/compile-files.ts` (what gets scanned) and
 `src/sync/jsx-elements.ts` (which tag names are hosts).
@@ -29,11 +29,11 @@ cross-file), SITE-08 (styletrace + imports, never PascalCase),
 SITE-10/15 (import-bound identity), SITE-14 (css prop), LEAF-07 +
 FORBID-02 (dynamic warn-and-skip), COND-11 (string `@media` is an
 at-rule). ATM-SITE-13 is the empty-host-set fail-closed diagnostic
-(RS-5), proven by NEO-SITE-14; ATM-SITE-18 is the boolean
-`border` macro (RS-19), proven by NEO-SITE-13. ATM-SITE-53 is
+(RS-5), proven by CORE-SITE-14; ATM-SITE-18 is the boolean
+`border` macro (RS-19), proven by CORE-SITE-13. ATM-SITE-53 is
 scope-aware identifier resolution, proven by
-NEO-SITE-27. ATM-SITE-55 is re-export identity,
-proven by NEO-SITE-28.
+CORE-SITE-27. ATM-SITE-55 is re-export identity,
+proven by CORE-SITE-28.
 
 ## Decisions
 
@@ -48,25 +48,25 @@ list travels on the frozen request, not a private shape.
 - **Tagged templates** (`` css`…` ``): engine case only (ATM-SITE-12
   refuses: no wants, one located diagnostic on a live `css` binding —
   the no-silence sweep revoked the old "no diagnostic" note); no
-  dedicated browser case (NEO-SITE-24 covers the tag beside the arg
+  dedicated browser case (CORE-SITE-24 covers the tag beside the arg
   shapes) — the object form is the only author API.
-- **Vue/Svelte**: Panda extracts SFCs; Neo worlds are source TSX for
+- **Vue/Svelte**: Panda extracts SFCs; Core worlds are source TSX for
   React 19 only.
 - **Compiled JSX runtimes** (automatic-runtime helpers): worlds are
   source TSX, not bundled output.
-- **`importMap`**: Panda remaps `@pandacss/dev` outdir imports; Neo
+- **`importMap`**: Panda remaps `@pandacss/dev` outdir imports; Core
   scans Reference runtime imports only (no config field, deliberate).
-  Identity still follows consumer re-exports by binding (NEO-SITE-28) —
+  Identity still follows consumer re-exports by binding (CORE-SITE-28) —
   zero config, not a remap.
-- **`matchTag` / PascalCase guessing**: anti-goal; NEO-SITE-12 proves
+- **`matchTag` / PascalCase guessing**: anti-goal; CORE-SITE-12 proves
   the opposite (unlisted `<Random>` is not a host).
 - **`token()` inlining**: Panda parse-time hex eval; Reference authors
   write `{path}` refs (TOKEN group).
-- **`css.raw`**: Panda composition API; Neo has `css.object()` plus
+- **`css.raw`**: Panda composition API; Core has `css.object()` plus
   plain objects.
 - **Whole-object `css(styles)`**: passing an entire const object as the
   call argument emits nothing but diagnoses (ATM-SITE-50 /
-  NEO-SITE-24 claimed the old silent 0/0/0/0; RS-14 covers arms/member/
+  CORE-SITE-24 claimed the old silent 0/0/0/0; RS-14 covers arms/member/
   spread only). Authors inline, spread, or select members (SITE-01/02/03).
   Whole-object resolve rides the fold work.
 - **Element-access refusal**: reads (`map['k']`, `map[key]`, computed map
@@ -80,10 +80,10 @@ list travels on the frozen request, not a private shape.
 
 | Feature | Reason |
 | --- | --- |
-| `styled()` factory / `styled.div` | Neo primitives, not Panda factory |
+| `styled()` factory / `styled.div` | Core primitives, not Panda factory |
 | Patterns pack (`stack`, `box`, `cq`) | Not shipped |
-| `cva` / `sva` as author APIs | Neo `recipe()` (RECIPE group) |
+| `cva` / `sva` as author APIs | Core `recipe()` (RECIPE group) |
 | `syntax: 'template-literal'` | Refused by ATM-SITE-12 |
 | `jsxFramework` / `jsxStyleProps` modes | One React; explicit `jsxElements` list |
 | `strictTokens` / `strictPropertyValues` | Type-level, no browser case |
-| `staticCss` config | No Neo field (STATIC group covers pre-generated atoms) |
+| `staticCss` config | No Core field (STATIC group covers pre-generated atoms) |

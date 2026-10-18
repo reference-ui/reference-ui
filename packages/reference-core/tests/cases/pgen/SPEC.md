@@ -1,6 +1,6 @@
 # PGEN — the primitives test group
 
-The PGEN group proves the RS-emitted primitive shelf that Neo vendors through
+The PGEN group proves the RS-emitted primitive shelf that Core vendors through
 the native seam: the E1 element vocabulary as data, the E2 raw roster as a
 live module, and the E4 raw types as declarations. Two parity cases gate
 freshness at test time (roster names against canon, prop names against
@@ -43,28 +43,28 @@ Ids are append-only; never renumber.
 
 | id | name | status | proof or missing surface |
 | --- | --- | --- | --- |
-| NEO-PGEN-01 | html-flow renders | LIVE | 27 flow probes render own tag, paint sibling color plus css background, stamp markers |
-| NEO-PGEN-02 | html-text renders | LIVE | 22 text plus 7 single-letters render, holed array keeps 1r then paints 4r |
-| NEO-PGEN-03 | html-form renders | LIVE | form probes keep native behavior with style props applied, no key leakage |
-| NEO-PGEN-04 | html-table renders | LIVE | table probes nest inside a real table element, Caption paints |
-| NEO-PGEN-05 | html-media renders | LIVE | media probes carry native attrs, svg host styled over native child, voids childless |
-| NEO-PGEN-06 | html-interactive renders | LIVE | details toggles natively, dialog closed, hover plus dark arms paint |
-| NEO-PGEN-07 | svg-shapes render | DROPPED | namespace law: no SVG-namespace children ever, no deferred set |
-| NEO-PGEN-08 | svg-text renders | DROPPED | namespace law: Text stays native SVG, never a primitive |
-| NEO-PGEN-09 | svg-gradients render | DROPPED | namespace law: gradients stay native SVG, never primitives |
-| NEO-PGEN-10 | svg-containers render | DROPPED | namespace law: no F1 fold-in, the camelCase column is moot |
-| NEO-PGEN-11 | special-cased roster | LIVE | Obj Var Map render, override refs land, 109-export census, no pattern pack |
-| NEO-PGEN-12 | set parity with canon | LIVE | roster jsx equals E1 equals canon HTML partition at pinned 101, drift-injection trips |
-| NEO-PGEN-13 | prop parity with typegen | LIVE | E1 equals napi props equals E4 union plus alias probes and seam bind |
-| NEO-PGEN-14 | metadata plus passthrough | LIVE | variant plus colorMode stamp, passthrough lands, leak sweep empty |
-| NEO-PGEN-15 | style props valid everywhere | LIVE | bound entry: family probes assign, props-object plus css bogus keys fail TS2353 |
-| NEO-PGEN-16 | token unions real | LIVE | literals assign incl prefixed, mistype fails TS2322, hatch documented |
-| NEO-PGEN-17 | recipe variants | LIVE | bound entry: alias good assigns, bad fails TS2322; recipe call fails nested TS2353, bad value TS2322 |
-| NEO-PGEN-18 | conditions plus responsive | LIVE | arms and null-hole arrays assign, bare sm fails TS2353 |
-| NEO-PGEN-19 | refs plus elements | LIVE | hosts resolve with overrides, bare generic fails TS2314, cross-host fails TS2322 |
-| NEO-PGEN-20 | forbidden surface | LIVE | forbidden imports fail TS2305, as fails TS2353, E4 panda-clean |
-| NEO-PGEN-21 | svg props | DROPPED | namespace law: no SVG hosts beyond the svg element itself |
-| NEO-PGEN-22 | per-system narrow | LIVE | bound entry: system tokens assign, foreign token fails TS2322, css TS2353, variant never |
+| CORE-PGEN-01 | html-flow renders | LIVE | 27 flow probes render own tag, paint sibling color plus css background, stamp markers |
+| CORE-PGEN-02 | html-text renders | LIVE | 22 text plus 7 single-letters render, holed array keeps 1r then paints 4r |
+| CORE-PGEN-03 | html-form renders | LIVE | form probes keep native behavior with style props applied, no key leakage |
+| CORE-PGEN-04 | html-table renders | LIVE | table probes nest inside a real table element, Caption paints |
+| CORE-PGEN-05 | html-media renders | LIVE | media probes carry native attrs, svg host styled over native child, voids childless |
+| CORE-PGEN-06 | html-interactive renders | LIVE | details toggles natively, dialog closed, hover plus dark arms paint |
+| CORE-PGEN-07 | svg-shapes render | DROPPED | namespace law: no SVG-namespace children ever, no deferred set |
+| CORE-PGEN-08 | svg-text renders | DROPPED | namespace law: Text stays native SVG, never a primitive |
+| CORE-PGEN-09 | svg-gradients render | DROPPED | namespace law: gradients stay native SVG, never primitives |
+| CORE-PGEN-10 | svg-containers render | DROPPED | namespace law: no F1 fold-in, the camelCase column is moot |
+| CORE-PGEN-11 | special-cased roster | LIVE | Obj Var Map render, override refs land, 109-export census, no pattern pack |
+| CORE-PGEN-12 | set parity with canon | LIVE | roster jsx equals E1 equals canon HTML partition at pinned 101, drift-injection trips |
+| CORE-PGEN-13 | prop parity with typegen | LIVE | E1 equals napi props equals E4 union plus alias probes and seam bind |
+| CORE-PGEN-14 | metadata plus passthrough | LIVE | variant plus colorMode stamp, passthrough lands, leak sweep empty |
+| CORE-PGEN-15 | style props valid everywhere | LIVE | bound entry: family probes assign, props-object plus css bogus keys fail TS2353 |
+| CORE-PGEN-16 | token unions real | LIVE | literals assign incl prefixed, mistype fails TS2322, hatch documented |
+| CORE-PGEN-17 | recipe variants | LIVE | bound entry: alias good assigns, bad fails TS2322; recipe call fails nested TS2353, bad value TS2322 |
+| CORE-PGEN-18 | conditions plus responsive | LIVE | arms and null-hole arrays assign, bare sm fails TS2353 |
+| CORE-PGEN-19 | refs plus elements | LIVE | hosts resolve with overrides, bare generic fails TS2314, cross-host fails TS2322 |
+| CORE-PGEN-20 | forbidden surface | LIVE | forbidden imports fail TS2305, as fails TS2353, E4 panda-clean |
+| CORE-PGEN-21 | svg props | DROPPED | namespace law: no SVG hosts beyond the svg element itself |
+| CORE-PGEN-22 | per-system narrow | LIVE | bound entry: system tokens assign, foreign token fails TS2322, css TS2353, variant never |
 
 ## Re-anchors
 

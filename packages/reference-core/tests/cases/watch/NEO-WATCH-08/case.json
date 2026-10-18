@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-08", "name": "a watch resync whose types build fails reports the failure, then recovers on the next good save", "sync": true}

@@ -1,0 +1,1 @@
+{"id": "CORE-TOKEN-10", "name": "the `font()` registry emits `--fonts-*` and `--font-weights-*` and the `font: 'sans'` macro paints family + weight", "sync": true}

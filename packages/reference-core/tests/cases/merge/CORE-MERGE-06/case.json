@@ -1,0 +1,1 @@
+{"id": "CORE-MERGE-06", "name": "a runtime value with no compiled atom yields no class and exactly one dev diagnostic", "sync": true}

@@ -4,7 +4,7 @@
 the 90 `.ref-*` tag recipes (variants as `[data-variant]`, slots as
 `[data-slot]`, machine state as `:is()` dual selectors), `:has()` field
 compounds, and vendor pseudos — plus `@keyframes` and `@font-face`. The engine
-lowers all of it into `@layer global` of the single `styles.css`; Neo proves in
+lowers all of it into `@layer global` of the single `styles.css`; Core proves in
 a browser that it paints. Reset itself (Reference's own Andy Bell layer,
 `normalizeCss` flag) belongs to LAYER-04; this group proves what lives in
 `global` and that no Panda chrome leaks alongside it.
@@ -32,7 +32,7 @@ values). One row needs a reference-rs change: GLOBAL-08 waits on RS-2 (PLAN §5.
 
 ## Decisions
 
-(`styled/global.css` is not written; the one sheet is `styles.css`) and (Panda chrome and bugs are not parity) both land here in NEO-GLOBAL-09.
+(`styled/global.css` is not written; the one sheet is `styles.css`) and (Panda chrome and bugs are not parity) both land here in CORE-GLOBAL-09.
 Coverage-map row 11 is the input: `styled/global.css` is `covered-against-plan`
 (SYNC-01 asserts the stub forbids); SYNC-02 rewrites SYNC-01 while GLOBAL-09
 pins the absence from the stylesheet side (no file, no banner, no var dump).
@@ -42,8 +42,8 @@ pins the absence from the stylesheet side (no file, no banner, no var dump).
 - `--made-with-panda` banner and the `*` transform/filter var dump.
 - Panda's `@layer base` `global.css` file as a build artifact: it is a
   compiler contract read only by `demotePandaGlobalCssLayer`, never a runtime
-  import. Neo emits `@layer global` directly.
-- `@keyframes` in the tokens layer: Panda puts its 31 keyframes there; Neo
+  import. Core emits `@layer global` directly.
+- `@keyframes` in the tokens layer: Panda puts its 31 keyframes there; Core
   puts them in `global` per ATM-LAYER-05. Deliberate divergence, same paint.
 - Panda selector comma-merging (`body,.ref-div`): Rust walks one rule per node;
   cascade-equal, formatting differs.
@@ -57,7 +57,7 @@ pins the absence from the stylesheet side (no file, no banner, no var dump).
 | Feature | Reason |
 | --- | --- |
 | Panda `themes` JSON / `_themePrimary` | Brand packs, not colour mode |
-| `:where(html)` vars + `@property` (Panda global-vars tests) | Panda global-vars shape; Neo token vars live on `:root,[data-color-mode=…]` |
+| `:where(html)` vars + `@property` (Panda global-vars tests) | Panda global-vars shape; Core token vars live on `:root,[data-color-mode=…]` |
 | `@position-try` (Panda position-try tests) | Not in Reference authoring |
 | `divideX`/`divideY` in global hover | Pattern pack, out (corpus §5) |
 | Static colour/spacing cardinality | STATIC group, not globalCss |

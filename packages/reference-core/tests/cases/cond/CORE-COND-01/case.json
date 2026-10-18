@@ -1,0 +1,1 @@
+{"id": "CORE-COND-01", "name": "`_hover` matches both `:hover` and `[data-hover]` (one `:is()` wrap)", "sync": true}

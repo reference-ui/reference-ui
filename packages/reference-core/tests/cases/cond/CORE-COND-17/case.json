@@ -1,0 +1,1 @@
+{"id": "CORE-COND-17", "name": "`'&:not(:first-child), :only-child'` scopes the bare member to the class", "sync": true}

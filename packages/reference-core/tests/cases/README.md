@@ -8,15 +8,15 @@ extraction shapes, native primitives, and generated declarations — plus
 the parity group with its lib-shaped world and the harness group whose
 three cases prove the runner itself rather than the system.
 
-The `layers/` group (`NEO-LAYERS-NN`) covers the `layers` config surface:
+The `layers/` group (`CORE-LAYERS-NN`) covers the `layers` config surface:
 visual-only upstream systems, each synced for real. Selectors match an exact id
-or folder first, then an id prefix, so `agentneo run NEO-LAYER` also runs
-`NEO-LAYERS-*`; `agentneo run NEO-LAYER-` runs only the `NEO-LAYER-*` ids, and
-`agentneo run NEO-LAYERS` runs this group.
+or folder first, then an id prefix, so `agentcore run CORE-LAYER` also runs
+`CORE-LAYERS-*`; `agentcore run CORE-LAYER-` runs only the `CORE-LAYER-*` ids, and
+`agentcore run CORE-LAYERS` runs this group.
 
 Each group holds `SPEC.md` (behaviour, decisions, approved absences, the
 out-of-scope table) and `TESTS.md` (the case ledger: one row per id with
-a status word), plus leaf cases `NEO-<GROUP>-NN/`. Leaf shape: `case.json`
+a status word), plus leaf cases `CORE-<GROUP>-NN/`. Leaf shape: `case.json`
 (id, name, `"sync": true` to opt into the sync loop), `README.md` (first
 line is the claim), `world/` (TypeScript sources
 built to `dist/` and served over HTTP), `specs/` (default-export `run`:
@@ -26,5 +26,5 @@ alone).
 Discovery is recursive: any folder with a `case.json` is a case at any
 depth, and ids stay unique across groups. Status words: `open`,
 `in-progress`, `done`, `blocked-on-rs`, `approved-absence`, `retired`. A
-case folder exists only once its proof is green, so `agentneo run`
+case folder exists only once its proof is green, so `agentcore run`
 stays green at every merge.

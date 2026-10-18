@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-07", "name": "deleting the generated folder under a live watch re-asserts its lock, so a one-shot sync reports covered", "sync": true}

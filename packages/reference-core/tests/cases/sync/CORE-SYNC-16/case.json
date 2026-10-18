@@ -1,0 +1,1 @@
+{"id": "CORE-SYNC-16", "name": "`logs: ['compiler']` threads the opt-in through sync into the warning summary and the verbose compiler list", "sync": false}

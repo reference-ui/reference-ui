@@ -4,24 +4,24 @@
 
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| NEO-RECIPE-01 | Recipe variants resolve to closed classes (base, two axes, compound) | done | ATM-RECIPE-01, ATM-RECIPE-02, ATM-RECIPE-05 | `recipe.ts` | each selection paints its computed styles; compound fires only when both predicates hold | |
-| NEO-RECIPE-02 | `defaultVariants` apply when a variant is omitted | done | ATM-RECIPE-04 | `recipe.ts` | computed height from default size | Panda v1 recipe tests (defaults) |
-| NEO-RECIPE-03 | Boolean variants `true`/`false` select distinct classes | done | ATM-RECIPE-04 | `recipe.ts` | computed display for each | Panda v1 test "cva - boolean variant" |
-| NEO-RECIPE-04 | Compound variants emit after simple variants and require every predicate | done | ATM-RECIPE-05 | — | on/off combinations incl. hover+dark compound (deepens RECIPE-01) | Panda v1 static CSS tests; ATM-RECIPE-05 |
-| NEO-RECIPE-05 | `recipe(...).raw(props)` returns a style object that `css()` paints identically | done | ATM-RECIPE-02 | `recipe.ts` | computed equality of raw-fed vs class-fed nodes | Panda v1 cva generator (`raw: resolve`) |
-| NEO-RECIPE-06 | Class identity is `${system}__${className}`; duplicate `className` in one system fails sync | done | ATM-RECIPE-06 | `sync` | class prefix in DOM; `sync()` rejects on duplicate |  |
-| NEO-RECIPE-07 | A recipe defined as a non-object-literal fails sync with a located diagnostic | done | ATM-RECIPE-06 + RS-18 located diagnostics (no separate case by design) | — (no change: `sync` surfaces `file:line:column` via `diagnosticLocation`) | `sync()` rejects with the inline-literal refusal at `packages/reference-neo/tests/cases/recipe/NEO-RECIPE-07/world/src/app.ts:8:col`; no half-written folder; RECIPE-06 extended with the dup file:line:column | ATM-RECIPE-06 |
-| NEO-RECIPE-08 | Responsive variant value `{ base: 'solid', md: 'outline' }` switches at the container width | done | ATM-RECIPE-07 | `recipe.ts` | resize across `md` flips computed variant styles | Panda v1 recipe tests (responsive variant) |
-| NEO-RECIPE-09 | `_hover` inside a variant paints on the variant class, not a separate atom | done | ATM-RECIPE-02 | — | hover computed; utility count unchanged | Panda v1 recipe tests (solid hover) |
-| NEO-RECIPE-10 | Variant + `css()` utilities on the same node: utilities win via layer order | done | ATM-RECIPE-03, ATM-LAYER-04 | — | computed override | ATM-RECIPE-03, ATM-LAYER-04 (P2 #19) |
-| NEO-RECIPE-11 | ClassName-less `chipRecipe` emits paintable closed classes under the inferred `chip` stem | done | ATM-RECIPE-08 (RS-33) | — | inferred table resolves via the explicit-identity runtime path; both probes paint base + tone | ATM-RECIPE-08; reference-lib `SummaryChip.tsx` |
-| NEO-RECIPE-12 | One recipe class paints its `@media` variant branch and `@container` base branch together | done | none (P2 census; no engine gap) | — | wide+980 paints all four declarations; narrow+980 paints viewport-only | `[matrix]` `system-contract.spec.ts` conjunction; P-recipe-opt |
+| CORE-RECIPE-01 | Recipe variants resolve to closed classes (base, two axes, compound) | done | ATM-RECIPE-01, ATM-RECIPE-02, ATM-RECIPE-05 | `recipe.ts` | each selection paints its computed styles; compound fires only when both predicates hold | |
+| CORE-RECIPE-02 | `defaultVariants` apply when a variant is omitted | done | ATM-RECIPE-04 | `recipe.ts` | computed height from default size | Panda v1 recipe tests (defaults) |
+| CORE-RECIPE-03 | Boolean variants `true`/`false` select distinct classes | done | ATM-RECIPE-04 | `recipe.ts` | computed display for each | Panda v1 test "cva - boolean variant" |
+| CORE-RECIPE-04 | Compound variants emit after simple variants and require every predicate | done | ATM-RECIPE-05 | — | on/off combinations incl. hover+dark compound (deepens RECIPE-01) | Panda v1 static CSS tests; ATM-RECIPE-05 |
+| CORE-RECIPE-05 | `recipe(...).raw(props)` returns a style object that `css()` paints identically | done | ATM-RECIPE-02 | `recipe.ts` | computed equality of raw-fed vs class-fed nodes | Panda v1 cva generator (`raw: resolve`) |
+| CORE-RECIPE-06 | Class identity is `${system}__${className}`; duplicate `className` in one system fails sync | done | ATM-RECIPE-06 | `sync` | class prefix in DOM; `sync()` rejects on duplicate |  |
+| CORE-RECIPE-07 | A recipe defined as a non-object-literal fails sync with a located diagnostic | done | ATM-RECIPE-06 + RS-18 located diagnostics (no separate case by design) | — (no change: `sync` surfaces `file:line:column` via `diagnosticLocation`) | `sync()` rejects with the inline-literal refusal at `packages/reference-core/tests/cases/recipe/CORE-RECIPE-07/world/src/app.ts:8:col`; no half-written folder; RECIPE-06 extended with the dup file:line:column | ATM-RECIPE-06 |
+| CORE-RECIPE-08 | Responsive variant value `{ base: 'solid', md: 'outline' }` switches at the container width | done | ATM-RECIPE-07 | `recipe.ts` | resize across `md` flips computed variant styles | Panda v1 recipe tests (responsive variant) |
+| CORE-RECIPE-09 | `_hover` inside a variant paints on the variant class, not a separate atom | done | ATM-RECIPE-02 | — | hover computed; utility count unchanged | Panda v1 recipe tests (solid hover) |
+| CORE-RECIPE-10 | Variant + `css()` utilities on the same node: utilities win via layer order | done | ATM-RECIPE-03, ATM-LAYER-04 | — | computed override | ATM-RECIPE-03, ATM-LAYER-04 (P2 #19) |
+| CORE-RECIPE-11 | ClassName-less `chipRecipe` emits paintable closed classes under the inferred `chip` stem | done | ATM-RECIPE-08 (RS-33) | — | inferred table resolves via the explicit-identity runtime path; both probes paint base + tone | ATM-RECIPE-08; reference-lib `SummaryChip.tsx` |
+| CORE-RECIPE-12 | One recipe class paints its `@media` variant branch and `@container` base branch together | done | none (P2 census; no engine gap) | — | wide+980 paints all four declarations; narrow+980 paints viewport-only | `[matrix]` `system-contract.spec.ts` conjunction; P-recipe-opt |
 
 ## Reference-rs gaps
 
 **RS-33** is covered by reference-rs case ATM-RECIPE-08.
 
-First `neo sync` over `@reference-ui/lib` failed: `SummaryChip.tsx` calls
+First `core sync` over `@reference-ui/lib` failed: `SummaryChip.tsx` calls
 `const summaryChipRecipe = recipe({...})` with no `className` prop, which core
 admitted as `summaryChip` but the engine refused. Admission rule: an explicit
 non-empty string-literal prop wins; else a `<Name>Recipe` enclosing binding
@@ -34,14 +34,14 @@ the explicit-identity diagnostic at the object literal.
 - Expected: one table (`className: 'chip'`, full variant/default/combination
   maps, base + variant rules in `@layer recipes`) and two located
   explicit-identity errors; no utilities.
-- Waiting Neo case: NEO-RECIPE-11 (done).
+- Waiting Core case: CORE-RECIPE-11 (done).
 
 **RS-8** is covered by reference-rs case ATM-RECIPE-07.
 No ATM-RECIPE case covered responsive variant values: `grep -ri
 "responsive|ConditionalValue|breakpoint"` over all six case
 specs/READMEs, `atomic/src/recipes/`, and the SPEC RECIPE rows returns
 nothing, and `ConditionalValue` exists nowhere under
-`packages/reference-rs/modules/typegen/` or `packages/reference-neo/src/`.
+`packages/reference-rs/modules/typegen/` or `packages/reference-core/src/`.
 
 - Input: `recipe({ className: 'buttonStyle', variants: { variant: { solid:
   {...}, outline: {...} } } })` selected with `{ variant: { base: 'solid',
@@ -51,11 +51,11 @@ nothing, and `ConditionalValue` exists nowhere under
   {...} }` including the variant's condition descendants
   (`:is(:hover, [data-hover])`, `[data-disabled]`); runtime table carries
   the per-breakpoint selection so the host helper emits both classes.
-- Waiting Neo case: NEO-RECIPE-08 (done).
+- Waiting Core case: CORE-RECIPE-08 (done).
 
-**RS-18** (blocks NEO-RECIPE-07). Recipe
+**RS-18** (blocks CORE-RECIPE-07). Recipe
 error diagnostics carry no source location, so a failing `recipe()`
-call cannot be "located" the way the row claims (cf. NEO-SITE-06, whose
+call cannot be "located" the way the row claims (cf. CORE-SITE-06, whose
 located warning the spec pins to the world's `app.ts`, and the RS-3 /
 ATM-TOKEN-12 file+line+column precedent). Probed via
 `compileSync`: both the non-object-literal refusal and the duplicate
@@ -74,10 +74,10 @@ fail-closed half works (`sync()` rejects); only the location half gaps.
 - Should become: location fields on the three ATM-RECIPE-06 refusal
   diagnostics (missing/dynamic className, non-object arg, duplicate),
   golden update included,.
-- Waiting Neo case: NEO-RECIPE-07 (no case folder until the location
+- Waiting Core case: CORE-RECIPE-07 (no case folder until the location
   half lands; the rejection-message half is already proven by
-  NEO-RECIPE-06's duplicate-world probe).
+  CORE-RECIPE-06's duplicate-world probe).
 
-Both refusals carry `file`/`line`/`column` (located diagnostics, no case by design). NEO-RECIPE-07 done (located
-inline-literal refusal); NEO-RECIPE-06's spec extended with the dup
+Both refusals carry `file`/`line`/`column` (located diagnostics, no case by design). CORE-RECIPE-07 done (located
+inline-literal refusal); CORE-RECIPE-06's spec extended with the dup
 `file:line:column` assertion.

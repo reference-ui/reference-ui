@@ -1,5 +1,5 @@
 // Shared reference-case helpers: they take a case world plus a spec page and emit readiness, freshness, and text.
-// Every NEO-REF spec awaits tasty readiness or freshness explicitly (one-shot processes exit before the background
+// Every CORE-REF spec awaits tasty readiness or freshness explicitly (one-shot processes exit before the background
 // build fires, and resident ones land after), then queries the manifest or reads the rendered page.
 // Browser text reads poll for an anchor first, so assertions never race the async document load.
 import fs from 'node:fs'
@@ -137,7 +137,7 @@ export async function openReferencePage(
 }
 
 // Clicks every collapsed inherited-members toggle so deep members enter the rendered text.
-// Member order follows the generated decls, which differ between core and neo; expansion keeps the
+// Member order follows the generated decls, which differ between the retired reference-core and core; expansion keeps the
 // port coupled to membership (the reference parity) instead of declaration order (generator content).
 export async function expandInheritedSections(page: SpecPage): Promise<void> {
   await page.locator('body').evaluate((el) => {

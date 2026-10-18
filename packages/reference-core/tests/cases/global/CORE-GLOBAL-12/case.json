@@ -1,0 +1,1 @@
+{"id": "CORE-GLOBAL-12", "name": "`color-mix()` with token refs inside `globalCss` hover rules paints", "sync": true}

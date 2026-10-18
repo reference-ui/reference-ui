@@ -1,0 +1,1 @@
+{"id": "CORE-LAYER-03", "name": "`@keyframes` and `@font-face` print once in `@layer global` and the animation runs", "sync": true}

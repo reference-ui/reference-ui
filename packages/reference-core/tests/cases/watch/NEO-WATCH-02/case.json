@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-02", "name": "a watch started through a symlinked project root resyncs a new css() file", "sync": true}

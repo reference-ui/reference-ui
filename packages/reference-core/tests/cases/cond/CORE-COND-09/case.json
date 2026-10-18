@@ -1,0 +1,1 @@
+{"id": "CORE-COND-09", "name": "`'&:focus, &:hover'` splits into two selectors on one class", "sync": true}

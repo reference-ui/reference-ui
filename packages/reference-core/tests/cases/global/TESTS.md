@@ -2,19 +2,19 @@
 
 | id | claim | status | engine | host | proof | evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| NEO-GLOBAL-01 | Trace A: token ref + literal `:focus-visible` selector in `globalCss` paints | done | ATM-LAYER-03 | — | focus element; computed outline colour | reference-lib global-css Trace A (`base.ts` 9–13 → `global.css` 21–24) |
-| NEO-GLOBAL-02 | Trace B: rhythm aliases + `containerType` on `body` + `:root` var merge | done | ATM-LAYER-03, ATM-COND-16 | — | computed font-size; `container-type` | reference-lib global-css Trace B (`global.ts` 3–20) |
-| NEO-GLOBAL-03 | Trace C: nested `&` + `_hover`/`_disabled`/`_focusVisible` twins on a tag recipe (`.ref-button`) | done | ATM-LAYER-03, ATM-COND-10 | — | hover/focus/disabled twins | reference-lib global-css Trace C; styles-css L461–475; bare/&-descendant/:not()/hover-nest/class-append corners verified (F1/F2/F3/H8/H10), css() bare parents fold to COND-05 |
-| NEO-GLOBAL-04 | Trace D: `_before`/`_after` with token colour | done | ATM-LAYER-03 | — | `::before` computed | reference-lib global-css Trace D (`inline.ts` 60–69) |
-| NEO-GLOBAL-05 | Trace E: `undefined` entries strip; `_placeholder`; rhythm token vs calc | done | ATM-LAYER-03 | none (JSON seam drops `undefined`; colocated test pins it) | no `display` rule; placeholder colour | reference-lib global-css Trace E (`inputs.ts` 19–31) |
-| NEO-GLOBAL-06 | `'& ~ &'` under a comma selector becomes `:is()` siblings | done | ATM-LAYER-09 (RS-11) | — | second sibling margin | Panda v1 test "complex recursive nesting"; ATM-LAYER-09; single &~/&+ lower directly (E1/F4/H11), css() twins G3/G4 |
-| NEO-GLOBAL-07 | Nested `@media` inside `globalCss` (and `@container`) wraps the rule | done | ATM-COND-11 | — | matching query paints, far query holds, container flips across widths | Panda v1 test "nested at-rule"; nested-@supports top-level + in-selector print correctly (H4/H5) |
-| NEO-GLOBAL-08 | `font()` emits `@font-face` with `src` lists, `size-adjust`, `descent-override` | done | RS-2 is in place | `font.ts` (no change: fields already carried) | sheet text + `document.fonts` presence + computed families (loading not asserted) | reference-lib styles-css L1771–1801 (3 faces); Panda v1 global-fontface tests |
-| NEO-GLOBAL-09 | No `--made-with-panda`, no `*` transform/filter var dump, no `global.css` file | done | none | `publish.ts` (no change: SYNC-02 already omits it) | negative sheet + fs assertions | |
-| NEO-GLOBAL-10 | `:has()` selectors pass through and match | done | ATM-LAYER-03 | — | field bezel reacts to inner `aria-invalid` | reference-lib styles-css `:has(` ×8, L1044 |
-| NEO-GLOBAL-11 | Vendor pseudo-elements (`::-webkit-slider-thumb`, `::file-selector-button`) pass through unchanged | done | ATM-LAYER-03 | — | sheet text + computed where Chromium exposes it | reference-lib styles-css vendor family (L811–1200); world authors lowercase-w `webkitAppearance` (P18 spelling, hyphenates to `-webkit-appearance` verbatim) — hyphen-prefixed keys warn+drop under N12; genuinely-unknown keys still drop |
-| NEO-GLOBAL-12 | Colour mixes inside `globalCss` hover rules (`color-mix(in oklch, … 15.2%, …)`) paint | done | ATM-TOKEN-06 | — | hover computed | reference-lib styles-css L477–481; global-css Trace C |
-| NEO-GLOBAL-13 | Bare token names in `globalCss` resolve through the property's category and paint | done | ATM-LAYER-15 (RS-35) | — | card computes resolved radius/ring/ink/family; global layer prints `var()` forms | ATM-LAYER-15; reference-lib `global.ts`, `disclosure.ts`, `shared.ts` |
+| CORE-GLOBAL-01 | Trace A: token ref + literal `:focus-visible` selector in `globalCss` paints | done | ATM-LAYER-03 | — | focus element; computed outline colour | reference-lib global-css Trace A (`base.ts` 9–13 → `global.css` 21–24) |
+| CORE-GLOBAL-02 | Trace B: rhythm aliases + `containerType` on `body` + `:root` var merge | done | ATM-LAYER-03, ATM-COND-16 | — | computed font-size; `container-type` | reference-lib global-css Trace B (`global.ts` 3–20) |
+| CORE-GLOBAL-03 | Trace C: nested `&` + `_hover`/`_disabled`/`_focusVisible` twins on a tag recipe (`.ref-button`) | done | ATM-LAYER-03, ATM-COND-10 | — | hover/focus/disabled twins | reference-lib global-css Trace C; styles-css L461–475; bare/&-descendant/:not()/hover-nest/class-append corners verified (F1/F2/F3/H8/H10), css() bare parents fold to COND-05 |
+| CORE-GLOBAL-04 | Trace D: `_before`/`_after` with token colour | done | ATM-LAYER-03 | — | `::before` computed | reference-lib global-css Trace D (`inline.ts` 60–69) |
+| CORE-GLOBAL-05 | Trace E: `undefined` entries strip; `_placeholder`; rhythm token vs calc | done | ATM-LAYER-03 | none (JSON seam drops `undefined`; colocated test pins it) | no `display` rule; placeholder colour | reference-lib global-css Trace E (`inputs.ts` 19–31) |
+| CORE-GLOBAL-06 | `'& ~ &'` under a comma selector becomes `:is()` siblings | done | ATM-LAYER-09 (RS-11) | — | second sibling margin | Panda v1 test "complex recursive nesting"; ATM-LAYER-09; single &~/&+ lower directly (E1/F4/H11), css() twins G3/G4 |
+| CORE-GLOBAL-07 | Nested `@media` inside `globalCss` (and `@container`) wraps the rule | done | ATM-COND-11 | — | matching query paints, far query holds, container flips across widths | Panda v1 test "nested at-rule"; nested-@supports top-level + in-selector print correctly (H4/H5) |
+| CORE-GLOBAL-08 | `font()` emits `@font-face` with `src` lists, `size-adjust`, `descent-override` | done | RS-2 is in place | `font.ts` (no change: fields already carried) | sheet text + `document.fonts` presence + computed families (loading not asserted) | reference-lib styles-css L1771–1801 (3 faces); Panda v1 global-fontface tests |
+| CORE-GLOBAL-09 | No `--made-with-panda`, no `*` transform/filter var dump, no `global.css` file | done | none | `publish.ts` (no change: SYNC-02 already omits it) | negative sheet + fs assertions | |
+| CORE-GLOBAL-10 | `:has()` selectors pass through and match | done | ATM-LAYER-03 | — | field bezel reacts to inner `aria-invalid` | reference-lib styles-css `:has(` ×8, L1044 |
+| CORE-GLOBAL-11 | Vendor pseudo-elements (`::-webkit-slider-thumb`, `::file-selector-button`) pass through unchanged | done | ATM-LAYER-03 | — | sheet text + computed where Chromium exposes it | reference-lib styles-css vendor family (L811–1200); world authors lowercase-w `webkitAppearance` (P18 spelling, hyphenates to `-webkit-appearance` verbatim) — hyphen-prefixed keys warn+drop under N12; genuinely-unknown keys still drop |
+| CORE-GLOBAL-12 | Colour mixes inside `globalCss` hover rules (`color-mix(in oklch, … 15.2%, …)`) paint | done | ATM-TOKEN-06 | — | hover computed | reference-lib styles-css L477–481; global-css Trace C |
+| CORE-GLOBAL-13 | Bare token names in `globalCss` resolve through the property's category and paint | done | ATM-LAYER-15 (RS-35) | — | card computes resolved radius/ring/ink/family; global layer prints `var()` forms | ATM-LAYER-15; reference-lib `global.ts`, `disclosure.ts`, `shared.ts` |
 
 ## RS-35 — covered by ATM-LAYER-15
 
@@ -34,7 +34,7 @@ misses warn.
   fixtures.
 - Expected: `var(--fonts-sans)`, `var(--radii-md)`,
   `var(--colors-ui-focus-ring)`, verbatim `display: flex`, zero diagnostics.
-- Waiting Neo case: NEO-GLOBAL-13 (done).
+- Waiting Core case: CORE-GLOBAL-13 (done).
 
 ## RS-11 — covered by ATM-LAYER-09
 
@@ -52,7 +52,7 @@ cascade-wrong. Probes
 - Comma of simple selectors `.ref-a, .ref-b` + `'& .ref-kid'` emits
   `.ref-a, .ref-b .ref-kid` — the bare first member matches everything.
 
-Input style object (waiting case NEO-GLOBAL-06): `globalCss({ 'body > p,
+Input style object (waiting case CORE-GLOBAL-06): `globalCss({ 'body > p,
 body > ul': { margin: 0, '& ~ &': { marginTop: 10 } } })`, the panda shape.
 
 Expected CSS: per-member distribution with `:is()` around members that
@@ -63,7 +63,7 @@ margin-top: … }`. Comma members without a combinator distribute bare
 (`.ref-a .ref-kid, .ref-b .ref-kid`). Note the contrast: Panda's own
 snapshot wraps only the first member (`:is(body > p) ~ :is(body > p), body >
 ul ~ body > ul`) — the unwrapped second member is a Panda bug, not parity;
-Neo wraps every combinator member.
+Core wraps every combinator member.
 
 Suggested reference-rs case: ATM-LAYER-09 (global-walker family) — ATM-COND-14 already pins this contract for `css()` utilities, and
 its gauges pass here (only its golden is stale).
@@ -77,8 +77,8 @@ Current behaviour: a bare number in `globalCss` unitizes like `css()`.
 (Panda shape) emits `margin-top: 10px` with zero
 diagnostics. Unitless-stay props (`zIndex`, `lineHeight`, …) stay bare
 (Panda v1 test "unitless"), and so do custom props and a literal
-`0`. ATM-UNIT-03 asserts this; NEO-PARITY-01 probe P19 pins the unitized
-output live on the Neo side.
+`0`. ATM-UNIT-03 asserts this; CORE-PARITY-01 probe P19 pins the unitized
+output live on the Core side.
 
 ## RS-27 — top-level at-rules brace their inner selectors
 
@@ -89,8 +89,8 @@ block. `globalCss({ '@media (min-width: 640px)': { body: { … } } })` (Panda sh
 and valid at-rule keys raise no diagnostic. Stacked at-rules nest in author
 order, and nested at-rules are proven by GLOBAL-07. A bare at-rule key with
 no query, such as `@supports`, is refused with an "Empty at-rule query"
-diagnostic and is never printed. ATM-LAYER-12 asserts this; NEO-PARITY-01
-probe P20 pins the braced output live on the Neo side.
+diagnostic and is never printed. ATM-LAYER-12 asserts this; CORE-PARITY-01
+probe P20 pins the braced output live on the Core side.
 
 ## RS-28 — breakpoint keys + conditional values lower through @media
 
@@ -103,5 +103,5 @@ prints `width: 40px` bare for `base` and `width: 90px` under
 `@media (min-width: 1024px)` for `lg`, with zero diagnostics. An unknown
 conditional key such as `nope` refuses with an "Unknown conditional key"
 diagnostic and prints nothing, never a descendant selector. ATM-LAYER-13
-asserts this; NEO-PARITY-01 probe P21 pins the breakpoint lowering live on
-the Neo side.
+asserts this; CORE-PARITY-01 probe P21 pins the breakpoint lowering live on
+the Core side.

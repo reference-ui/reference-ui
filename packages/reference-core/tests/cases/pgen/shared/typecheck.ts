@@ -95,7 +95,7 @@ export interface TypecheckRequest {
 
 export async function typecheckFile(request: TypecheckRequest): Promise<TscResult> {
   const { tag, worldDir, paths, file, source } = request;
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `neo-${tag}-`));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `core-${tag}-`));
   try {
     const absolute: Record<string, string[]> = {};
     for (const [specifier, targets] of Object.entries(paths)) {

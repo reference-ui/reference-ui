@@ -29,7 +29,7 @@ folder.) Key leans: LAYER-02 (empty layers omitted, preamble always present),
 LAYER-03 (globalCss + token islands populate their layers), LAYER-04
 (utilities and their at-rule wrappers stay in `utilities`), LAYER-05/06
 (keyframes and font-faces print in `global`), LAYER-07 (shared at-rule
-grouping — cited for information, no dedicated Neo row), LAYER-08 (reset dump
+grouping — cited for information, no dedicated Core row), LAYER-08 (reset dump
 prints first in `reset`), RECIPE-03 (utilities layer follows recipes, so host
 overrides win). LAYER-02 once waited on RS-4 (base-system `BAS-EXTEND-*`
 fragment adoption). RS-4 is in place with BAS-EXTEND-01..05 ticked, and LAYER-02
@@ -54,10 +54,10 @@ parity: `--made-with-panda`, the `*` transform-var dump — see GLOBAL-09).
 wired the `layers` *config surface* (validated, merged after `extends`).
 LAYER-02 proves the two-system package nesting via RS-4 through `extends`; it
 does not author that surface. The surface is authored by `tests/cases/layers`
-(NEO-LAYERS-01 to -05 done; -06's bare-specifier legs stay red until the src
+(CORE-LAYERS-01 to -05 done; -06's bare-specifier legs stay red until the src
 fix lands). BAS-LAYER-01..04 in the reference-rs base-system SPEC stay
 unticked: they need `base_system` cargo unit tests, and base-system has no
-layers API yet, so Neo cases cannot tick them.
+layers API yet, so Core cases cannot tick them.
 
 ## Approved absences
 
@@ -74,7 +74,7 @@ layers API yet, so Neo cases cannot tick them.
 
 | Panda feature | Reason |
 | --- | --- |
-| Custom `CascadeLayers` config names | No config table in Neo; the six names are fixed. |
+| Custom `CascadeLayers` config names | No config table in Core; the six names are fixed. |
 | LightningCSS / Panda five-layer list | Their list lacks `global`; ours is six (atomic SPEC). |
 | Static recipe expansion (`staticCss` recipes) | Production spec always carries the default table; recipes compile from `recipe()` calls. |
 | `panda.config.ts` / `styled/global.css` as inputs | Panda machinery; forbidden paths (§4.1). |

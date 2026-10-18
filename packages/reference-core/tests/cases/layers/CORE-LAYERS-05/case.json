@@ -1,0 +1,1 @@
+{"id": "CORE-LAYERS-05", "name": "invalid `layers` config fails loudly at config load with the documented message", "sync": true}

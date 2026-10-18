@@ -1,0 +1,1 @@
+{"id": "CORE-STATIC-02", "name": "wildcard `*` expands a token category, and the overlapping static want dedups to one atom", "sync": true}

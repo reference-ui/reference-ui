@@ -23,15 +23,15 @@ All confirmed present (`ls` + README read:
 
 | Reference-rs case | Proves | Used by |
 | --- | --- | --- |
-| ATM-MERGE-01 | Both atoms in sheet; plan merge resolves last value | NEO-MERGE-01 |
-| ATM-MERGE-02 | Alias/duplicate keys collapse to last per slot | NEO-MERGE-02 |
-| ATM-MERGE-03 | `css([...])` is a merge list, `when: []`, no query wrap | NEO-MERGE-05 |
-| ATM-SHORT-01 | `borderBottom` → width+style, never `currentColor` | NEO-MERGE-03/04 |
-| ATM-SHORT-06 | Shorthand + longhand both emit, shorthand prints first | NEO-MERGE-03 |
-| ATM-ORDER-04 | Shorthand-before-longhand print order, either authorship | NEO-MERGE-03 |
-| ATM-LEAF-09 | `!` sets `important`, `!important` in declaration | NEO-MERGE-07 |
-| ATM-GHOST-02 | Runtime class-map spellings match sheet selectors | NEO-MERGE-06 |
-| ATM-LEAF-05/07/10 | `null` holes, dynamic-leaf keep, `!` spellings incl. quoted exclusion | NEO-MERGE-08 (slot `*`) |
+| ATM-MERGE-01 | Both atoms in sheet; plan merge resolves last value | CORE-MERGE-01 |
+| ATM-MERGE-02 | Alias/duplicate keys collapse to last per slot | CORE-MERGE-02 |
+| ATM-MERGE-03 | `css([...])` is a merge list, `when: []`, no query wrap | CORE-MERGE-05 |
+| ATM-SHORT-01 | `borderBottom` → width+style, never `currentColor` | CORE-MERGE-03/04 |
+| ATM-SHORT-06 | Shorthand + longhand both emit, shorthand prints first | CORE-MERGE-03 |
+| ATM-ORDER-04 | Shorthand-before-longhand print order, either authorship | CORE-MERGE-03 |
+| ATM-LEAF-09 | `!` sets `important`, `!important` in declaration | CORE-MERGE-07 |
+| ATM-GHOST-02 | Runtime class-map spellings match sheet selectors | CORE-MERGE-06 |
+| ATM-LEAF-05/07/10 | `null` holes, dynamic-leaf keep, `!` spellings incl. quoted exclusion | CORE-MERGE-08 (slot `*`) |
 
 Host: `src/runtime/css/plans.ts` (merge-only last-wins `mergeDeclarations` /
 `mergeStylePlans`, unit-pinned with `css.ts` by `css.test.ts` / `eviction.test.ts`) and `css.ts`
@@ -49,7 +49,7 @@ MERGE-07's ` !important` spelling are host work, not engine gaps: no RS rows.
 - Panda "more specific should always be last" (red-then-blue): same slot
   last-wins as MERGE-01; no separate case.
 - Panda `mergeProps` deep-merge/`textStyle`-replace/`__proto__` (host
-  plumbing): Neo merges by cascade slot, not object spread; outcome covered
+  plumbing): Core merges by cascade slot, not object spread; outcome covered
   by MERGE-01/02/05.
 - `walkObject` arrays-as-leaves / max-depth (`boxShadow: [a, b]`): Panda
   normalizer internals; Reference arrays are responsive (RESP group).
@@ -62,6 +62,6 @@ MERGE-07's ` !important` spelling are host work, not engine gaps: no RS rows.
 | --- | --- |
 | `sort-mq` / `sort-css` / `sort-style-rules` / `sort-at-rule` comparators | Panda plugin sort; ORDER/SHORT cases pin print order |
 | `hideFrom` / `hideBelow` | Panda-only utilities; no Reference helper (CSS group absence) |
-| Custom utilities sharing one className | No custom utilities in Neo |
+| Custom utilities sharing one className | No custom utilities in Core |
 | `token()` string helper | `{path}` refs only |
 | Slot/`sva` merge | Out |

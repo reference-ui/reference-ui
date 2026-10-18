@@ -1,0 +1,1 @@
+{"id": "CORE-STATIC-01", "name": "declared static values × conditions exist in the sheet with no call site, and runtime `css()` paints from them", "sync": true}

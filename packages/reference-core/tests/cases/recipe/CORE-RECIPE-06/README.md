@@ -1,0 +1,10 @@
+# CORE-RECIPE-06 — recipe class identity is `${system}__${className}`, and a duplicate fails sync
+
+The world defines one `badge` recipe with a size axis. The spec checks
+every emitted class carries the `core-recipe__badge` prefix in the sheet
+and the DOM, each selection paints, and a second world defining the same
+`className` twice fails `sync()` naming the duplicate.
+
+Evidence: ATM-RECIPE-06 (P2 #18).
+
+> Search terms: naming collision, redefinition, duplicate className, namespaced class, recipe/identity, recipe/duplicates, CORE-RECIPE-07, CORE-RECIPE-11

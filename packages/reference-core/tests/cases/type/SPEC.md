@@ -41,13 +41,13 @@ never bare `sm` (TYP-STYLE-03); recipe variants are plain unions, not
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
 root). (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
 Panda and typegen agree). (`strict` is wired: config → typegen, validated,
-narrowing JSX style props and css, proved for colours by NEO-TYPE-09 (token,
+narrowing JSX style props and css, proved for colours by CORE-TYPE-09 (token,
 toned and keyword colours assign; six off-token colours are rejected at their
 consumer line); lib component props are not promised to follow consumer
 strict; the hatch names stay absent).
 
 Coverage-map rows for this group: 2 (`system.mjs`+`.d.mts` → TYPE-05 with
-SYNC-12), 8 (41 packaged core type files → replaced by native `system.d.mts`,
+SYNC-12), 8 (41 packaged retired reference-core types files → replaced by native `system.d.mts`,
 Panda-shaped leftovers not reproduced), 14 (`styled/types/*.d.ts` → TYPE-01/
 02/03/06/07), 20 (`react/{entry,system,types}/` → TYPE-01 with
 PRIM-10; the single `index.d.mts` must become the named graph).
@@ -77,7 +77,7 @@ PRIM-10; the single `index.d.mts` must become the named graph).
 | Feature | Reason |
 | --- | --- |
 | Bare `sm`/`md`/`lg` as condition keys | TYP-STYLE-03 excludes viewport keys; container `@sm` + `_hover` only |
-| `ConditionalValue`-wrapped recipe variants | Panda `generate-recipe` shape; Neo prints plain optional unions |
+| `ConditionalValue`-wrapped recipe variants | Panda `generate-recipe` shape; Core prints plain optional unions |
 | `csstype.Properties` dump / `@reference-ui/styled` type re-export | TYP-STYLE-01: `SystemStyleObject` is owned |
 | Atomic class names (`.mt_2r`) in `.d.ts` | TYP-FORBID-01: engine internals, never public API |
 | `cva` alias, `css.raw` | `recipe` / `recipe().raw()` only |

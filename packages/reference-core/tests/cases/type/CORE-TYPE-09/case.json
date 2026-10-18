@@ -1,0 +1,1 @@
+{"id": "CORE-TYPE-09", "name": "strict colours reject off-token values on JSX, css() and the css prop", "sync": true}

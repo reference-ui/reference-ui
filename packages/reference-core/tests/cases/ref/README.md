@@ -1,21 +1,21 @@
-# NEO-REF — reference parity case group
+# CORE-REF — reference parity case group
 
-Proves the Objective 1 port is on par with core's reference behavior: the generated package shape, the
+Proves the Objective 1 port is on par with the retired reference-core's reference behavior: the generated package shape, the
 symbol queries, the full browser render contract, rename refresh, the runtime shell, the type-parameter
 projector, and the tasty deprioritization the perf law rests on. Worlds duplicate the small oracle fixture
 corpus per case on purpose — each world stays a self-contained fixture in the SYNC-world pattern.
 
-> Search terms: reference parity, NEO-REF, render contract, symbol queries, tasty deprioritization
+> Search terms: reference parity, CORE-REF, render contract, symbol queries, tasty deprioritization
 
 ## Cases
 
-- NEO-REF-01 — reference package shape: the generated types package, its legs, the live link, the imports.
-- NEO-REF-02 — reference symbol queries: local members, indexed access, StyleProps projection, extends, pins.
-- NEO-REF-03 — reference render contract: all 18 oracle browser tests ported as specs.
-- NEO-REF-04 — reference refresh after rename: manifest refresh plus browser update across the resync.
-- NEO-REF-05 — reference runtime shell: loading, error, degenerate, provider, and provider-required states.
-- NEO-REF-09 — reference type-parameter projector: the counts plus the scoped-miss mechanism.
-- NEO-REF-11 — tasty deprioritization proof: sync-complete before manifest-ready plus identical output.
+- CORE-REF-01 — reference package shape: the generated types package, its legs, the live link, the imports.
+- CORE-REF-02 — reference symbol queries: local members, indexed access, StyleProps projection, extends, pins.
+- CORE-REF-03 — reference render contract: all 18 oracle browser tests ported as specs.
+- CORE-REF-04 — reference refresh after rename: manifest refresh plus browser update across the resync.
+- CORE-REF-05 — reference runtime shell: loading, error, degenerate, provider, and provider-required states.
+- CORE-REF-09 — reference type-parameter projector: the counts plus the scoped-miss mechanism.
+- CORE-REF-11 — tasty deprioritization proof: sync-complete before manifest-ready plus identical output.
 
 REF-10 is the lib re-commission, proven outside cases by lib typecheck plus Book fixtures. REF-06, REF-07,
 and REF-08 are not cases: the `unionTypeLabel`, bridge `run`/`init`/`tasty-build`, and `reference-types`

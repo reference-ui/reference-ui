@@ -1,0 +1,1 @@
+{"id": "CORE-CSS-05", "name": "`null`, `false`, `undefined` leaves emit nothing and no ghost class", "sync": true}

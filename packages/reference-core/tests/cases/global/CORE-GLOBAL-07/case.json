@@ -1,0 +1,1 @@
+{"id": "CORE-GLOBAL-07", "name": "nested `@media` and `@container` inside `globalCss` wrap the rule and gate the paint", "sync": true}

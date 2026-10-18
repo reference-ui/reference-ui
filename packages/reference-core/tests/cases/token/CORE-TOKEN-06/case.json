@@ -1,0 +1,1 @@
+{"id": "CORE-TOKEN-06", "name": "semantic alias chains stay var() references, not inlined hex", "sync": true}

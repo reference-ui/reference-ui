@@ -42,7 +42,7 @@ lands, PRIM-01's `index.mjs` assert flips in that slice).
 
 - `Box`/`Flex`/`Grid` as components: Panda pattern pack, not lib
   primitives.
-- Polymorphic `as`: core never had it; each tag renders its own element.
+- Polymorphic `as`: the retired reference-core never had it; each tag renders its own element.
 - Panda `cx` / `splitCssProps`: replaced by `joinClassName` /
   `createPropSplitter` over compiled names.
 

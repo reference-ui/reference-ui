@@ -50,8 +50,8 @@ on it; MERGE-06 proves the diagnostic). `token()` is out.
 | `hideFrom` / `hideBelow` | Panda helper utilities; no lib author uses them and no `[dir]`/show-hide grammar exists in the sheet. An author needing one writes a plain condition. |
 | Custom utilities with shared class names | Panda's custom-utility tests let two shorthands share one class; Reference has no custom-utility registry, so there is nothing to share. |
 | `@scope` | Panda's stringify tests rewrite `&` under `@scope`; the dialect never emits `@scope` and the lib sheet has none. |
-| `token()` string helper |. Neither core nor lib exports it; `{path}` refs are the only ref spelling (TOKEN-01/12, CSS-06). |
-| Capital-W vendor keys (`Webkit*`) | Panda `hypenate-property` maps `WebkitBoxOrient` to the dashless non-property browsers drop; Neo drops them at compile instead (zero diagnostics either way). Author the lowercase-w spelling, which passes through hyphenated (P18). No lib/matrix author uses capital-W. |
+| `token()` string helper |. neither the retired reference-core nor lib exports it; `{path}` refs are the only ref spelling (TOKEN-01/12, CSS-06). |
+| Capital-W vendor keys (`Webkit*`) | Panda `hypenate-property` maps `WebkitBoxOrient` to the dashless non-property browsers drop; Core drops them at compile instead (zero diagnostics either way). Author the lowercase-w spelling, which passes through hyphenated (P18). No lib/matrix author uses capital-W. |
 | Numerics lower to px | Panda numeric→token lowering is not dialect: `mx: -2`→`-2px`, `padding: 4`→`4px`, recipe `'4'`→`4px`. Unitless and custom props stay bare (A2). |
 | No autoprefixer | Vendor properties print exactly as authored (C2 lowercase-w hyphenates, H10 `user-select` stays unprefixed); Panda's prefixed expectations are not parity. |
 
@@ -59,8 +59,8 @@ on it; MERGE-06 proves the diagnostic). `token()` is out.
 
 | Panda feature | Reason |
 | --- | --- |
-| `prefix` + hash class names, custom `toHash` | Config hooks; Neo class grammar is proven by CSS-07/09 without copying them. |
-| Encoder `fromJSON` wire format | Panda's `color]___[value:red` hashes; Neo uses the frozen `EvaluatedSystemSpec`. |
+| `prefix` + hash class names, custom `toHash` | Config hooks; Core class grammar is proven by CSS-07/09 without copying them. |
+| Encoder `fromJSON` wire format | Panda's `color]___[value:red` hashes; Core uses the frozen `EvaluatedSystemSpec`. |
 | Boolean `truncate` utility (`false` → empty CSS) | Panda-specific boolean utility; no lib equivalent. |
 | `textStyle` / `animationStyle` compositions layer | No `textStyles` keys in lib src; no `@layer compositions` in the sheet. |
 | `divideX`/`divideY` sibling selectors | Pattern pack output; out unless Reference ships gap utilities. |

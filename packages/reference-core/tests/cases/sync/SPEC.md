@@ -10,7 +10,7 @@ folder; every other group's worlds sync through it.
 The author writes `ui.config.ts` (`name`, `include`, `extends?`,
 `jsxElements?`, `normalizeCss?`, `debug?`) plus fragment sources
 (`tokens()`, `font()`, `keyframes()`, `globalCss()`).
-Unknown config keys pass through unvalidated (core parity). There is no
+Unknown config keys pass through unvalidated (retired reference-core parity). There is no
 author `outdir` field; output is always `.reference-ui/`.
 
 ## Reference-rs cases (all confirmed: folder + README present)
@@ -43,11 +43,11 @@ lockstep with SYNC-13.
 
 - `types/` fourth package (`@reference-ui/types`, 543 files, Tasty/Reference
   browser) — deferred (human). Caveat: 13 lib-src importers cannot
-  build under Neo until the later leg; the PARITY-02 census re-checks this.
+  build under Core until the later leg; the PARITY-02 census re-checks this.
 - `system/font-registry.json` — absent from §4.1; fold into SYNC-12 or record
   absence there (font data ships via `FontRegistry` types, not a JSON file).
-- `system/{entry,lib,system,types}/` packaged core types (41 files) — TYPE-05
-  covers the Neo replacement; Panda-shaped leftovers are not reproduced.
+- `system/{entry,lib,system,types}/` packaged retired reference-core types (41 files) — TYPE-05
+  covers the Core replacement; Panda-shaped leftovers are not reproduced.
 - `styled/tokens|themes|extensions/` — Panda unions/theme JSON; absent is
   correct, asserted by SYNC-02.
 - Panda bugs: `.size_md{width:md}`, leftover `{colors.ui.focus.ring}`

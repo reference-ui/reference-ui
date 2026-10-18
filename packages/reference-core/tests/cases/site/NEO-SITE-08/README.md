@@ -1,9 +1,0 @@
-# NEO-SITE-08 — logical `...(ok && extra)` with const `ok` lands `extra`
-
-The world calls `css({ color: 'red', ...(ok && extra) })` with const `ok`
-and a const `extra` object. The spec checks the sheet carries both the
-sibling and the spread utilities and the node paints both.
-
-Evidence: Panda v1 extractor tests (logical spreads); ATM-SITE-05.
-
-> Search terms: short-circuit, ampersand, guarded object, truthy gate, site/spread, NEO-SITE-03

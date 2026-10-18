@@ -1,0 +1,1 @@
+{"id": "CORE-SITE-06", "name": "Dynamic call value `color: pick()` mints no ghost and emits a located warning", "sync": true}

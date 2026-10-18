@@ -1,0 +1,1 @@
+{"id": "CORE-WATCH-17", "name": "a failed resync under --json prints one stdout diagnostics array that holds its failure", "sync": true}

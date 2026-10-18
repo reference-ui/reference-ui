@@ -1,0 +1,1 @@
+{"id": "CORE-SYNC-04", "name": "compile-request.json equals the frozen NativeCompileRequest sent to the engine", "sync": true}

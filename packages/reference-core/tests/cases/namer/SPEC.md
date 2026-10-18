@@ -23,10 +23,10 @@ and never looks up a per-atom row.
 
 | Reference-rs case | Proves | Used by |
 | --- | --- | --- |
-| ATM-SEAM-06 | The shipped artifact carries no per-atom row; the namer tables are present | NEO-NAMER-01 |
-| ATM-SEAM-07 | Artifact bytes are independent of atom count | NEO-NAMER-01 |
-| ATM-SEAM-08 | The runtime namer reproduces every namer golden | NEO-NAMER-01 |
-| ATM-NAME-08 | The class stem passes only through explicit lexical functions | NEO-NAMER-01/02 |
+| ATM-SEAM-06 | The shipped artifact carries no per-atom row; the namer tables are present | CORE-NAMER-01 |
+| ATM-SEAM-07 | Artifact bytes are independent of atom count | CORE-NAMER-01 |
+| ATM-SEAM-08 | The runtime namer reproduces every namer golden | CORE-NAMER-01 |
+| ATM-NAME-08 | The class stem passes only through explicit lexical functions | CORE-NAMER-01/02 |
 
 Host: the runtime namer (`@reference-ui/rust/namer`) behind `css()`, the
 rules-version check in `registerRuntimeData`, and the browser-dev miss

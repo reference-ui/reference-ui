@@ -1,0 +1,1 @@
+{"id": "CORE-CHAIN-10", "name": "a shared base is evaluated once, and E→[D] resolves exactly what D resolved", "sync": true}

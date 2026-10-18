@@ -1,0 +1,1 @@
+{"id": "CORE-COND-10", "name": "`':focus > &'` paints the child while the parent holds focus", "sync": true}

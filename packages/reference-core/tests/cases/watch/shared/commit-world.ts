@@ -1,4 +1,4 @@
-// commit-world.ts — shared harness for the NEO-WATCH-19..23 commit specs. It takes nothing and emits temp worlds
+// commit-world.ts — shared harness for the CORE-WATCH-19..23 commit specs. It takes nothing and emits temp worlds
 // (each spec makes its own under the OS temp dir, so a committed case world never changes), a spawned `ref` CLI
 // with its exit and output, the driver for the commit's test-only pause point (a sync armed with it stands still
 // inside its commit until the spec resumes it), and folder snapshots. A spec calls disposeWorld in its finally,
@@ -27,7 +27,7 @@ export { COMMIT_PAUSE_ENV }
 export const BRAND = '#7c3aed'
 export const REBRAND = '#0e5c3f'
 
-// The CLI entry, four levels above this shared folder: packages/reference-neo/bin/ref.ts.
+// The CLI entry, four levels above this shared folder: packages/reference-core/bin/ref.ts.
 const REF_BIN = fileURLToPath(new URL('../../../../bin/ref.ts', import.meta.url))
 // The pause is armed only by a spec that passes its variable itself: one in the runner's own environment never reaches a child.
 const ENV = { ...process.env, FORCE_COLOR: undefined, NO_COLOR: '1', [COMMIT_PAUSE_ENV]: undefined }
@@ -62,10 +62,10 @@ function write(path: string, body: string): void {
 
 function configSource(include: string[]): string {
   return [
-    "import { defineConfig } from '@reference-ui/neo'",
+    "import { defineConfig } from '@reference-ui/core'",
     '',
     'export default defineConfig({',
-    "  name: 'neo-watch-commit',",
+    "  name: 'core-watch-commit',",
     `  include: ${JSON.stringify(include)},`,
     '})',
     '',
@@ -74,7 +74,7 @@ function configSource(include: string[]): string {
 
 function tokensSource(brand: string): string {
   return [
-    "import { tokens } from '@reference-ui/neo'",
+    "import { tokens } from '@reference-ui/core'",
     '',
     'tokens({',
     '  colors: {',
@@ -92,7 +92,7 @@ function baseSource(): string {
 
 /** A fresh world under the OS temp dir: a config over theme/, the brand tokens, and one brand-colored css() module. */
 export function makeWorld(include: string[] = ['theme/**/*.{ts,tsx}']): string {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'neo-watch-commit-')))
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'core-watch-commit-')))
   write(join(dir, 'ui.config.ts'), configSource(include))
   write(join(dir, 'theme', 'tokens.ts'), tokensSource(BRAND))
   write(join(dir, 'theme', 'base.ts'), baseSource())

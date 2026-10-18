@@ -1,13 +1,13 @@
 # DIAG — every code is a findable repro
 
-Purpose: one indexed reference-neo case per live diagnostic code, code in
+Purpose: one indexed reference-core case per live diagnostic code, code in
 the name, reproducing it through the whole compiler — so
-`agentneo search <CODE>` lands on the repro and agents (human or
+`agentcore search <CODE>` lands on the repro and agents (human or
 otherwise) can audit the suite trivially. The diagnostic case index, made real.
 
 ## Contract
 
-- One leaf case per live code: `NEO-DIAG-NN`, name `<CODE> repro: …`.
+- One leaf case per live code: `CORE-DIAG-NN`, name `<CODE> repro: …`.
 - The world carries the registry's minimal fixture (byte-identical to the
   shared repro-suite row); the spec compiles the world through the real
   engine and asserts code + severity + non-blank message. A red case means
@@ -34,7 +34,7 @@ throw names the code.
 
 ## Typecheck policy
 
-Worlds typecheck under the package gate (`agentneo run` refuses on red
+Worlds typecheck under the package gate (`agentcore run` refuses on red
 types), so fixtures that are valid compiler input but invalid TS carry a
 `// @ts-nocheck` first line (undeclared names, refused call shapes,
 missing modules — all comments the native parsers never see). Fixtures

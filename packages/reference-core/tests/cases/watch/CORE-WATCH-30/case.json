@@ -1,0 +1,1 @@
+{"id": "CORE-WATCH-30", "name": "a watch whose include mixes an unrooted glob with a path outside the project root resyncs on an edit under that outside path", "sync": true}

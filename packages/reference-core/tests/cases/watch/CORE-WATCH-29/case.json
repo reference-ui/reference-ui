@@ -1,0 +1,1 @@
+{"id": "CORE-WATCH-29", "name": "a config whose top-level await never settles exits a one-shot 1 with a named evaluation-timeout line, and a watch reports it and keeps watching until the config is fixed", "sync": false}

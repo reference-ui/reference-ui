@@ -1,0 +1,15 @@
+# CORE-PARITY-02 — the 43-family census passes over the mini-lib sheet
+
+Evidence: reference-lib the provenance searches were re-run where the spec could not
+check them (importer counts live in PARITY-03).
+
+The world is the same mini-lib as PARITY-01 (identical sources, synced
+fresh for this case so the census never reads a sibling's folder). The
+node-side census checks all 43 families — F1–F37 plus T-A–T-F — against
+the synced sheet: present families print their markers, absent families
+cite the 159-entry checked-in union (verified verbatim against the SPEC
+§union table and grounded keyword-by-keyword in the owning group SPECs),
+and the known-unproven (b) table verifies empty — all six rows are done
+(TOKEN-13, COND-14/15, SITE-13/14, RECIPE-07).
+
+> Search terms: coverage, completeness, inventory, presence-check, all-families, F1-F37, family roster, parity/family-census, parity/sheet-markers, CORE-PARITY-01, CORE-PARITY-03

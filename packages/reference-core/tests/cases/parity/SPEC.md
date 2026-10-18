@@ -1,6 +1,6 @@
 # PARITY — the lib-shaped world
 
-PARITY proves Neo end to end against one world authored the way
+PARITY proves Core end to end against one world authored the way
 `packages/reference-lib/src` is: tokens with light/dark leaves, `font()`,
 `keyframes()`, ~8 `.ref-*` tag recipes via `globalCss()`, two `recipe()`s,
 primitives, a field bezel with `data-slot`, and one `container: true` region
@@ -53,7 +53,7 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 
 | Group | n | Absence union (approved ‖ out-of-scope) |
 | --- | ---: | --- |
-| sync | 5+5 | types/ fourth package · font-registry.json · packaged core types · styled/tokens\|themes\|extensions/ · Panda bugs ‖ panda.config + styled machinery · virtual/ · Vite/Webpack/CLI/session · mcp config · cva/css.raw |
+| sync | 5+5 | types/ fourth package · font-registry.json · packaged retired reference-core types · styled/tokens\|themes\|extensions/ · Panda bugs ‖ panda.config + styled machinery · virtual/ · Vite/Webpack/CLI/session · mcp config · cva/css.raw |
 | cond | 5+6 | rtl/_ltr/_rtl · @slot cartesian · custom conditions table · ★DELTA-1 forced-colors/@supports/(hover:hover) · ★DELTA-2 zero-count pseudos ‖ rtl wraps · @slot · conditions table · four-way dark · _themePrimary · hideFrom/hideBelow |
 | token | 16+8 | colorPalette virtual · token() string helper · composite objects · themes JSON · :where(html) · hashed vars · ★decimal slash opacity prints 0.33% · ★F3 /half · ★OOD bp-conditioned values · ★OOD osDark:highCon · ★OOD forced-colors islands · ★OOD token() fallbacks · ★OOD percent cssVar · leading-zero numerics · flat-nested token miss · slash diagnostic wording ‖ semanticTokens · @slot OR · DEFAULT · strict hatches · token.var · text/layer/animation styles · asset tokens · circular refs |
 | css | 7+6 | hideFrom/hideBelow · shared-class custom utils · @scope · token() · capital-W vendor keys · numerics lower to px · no autoprefixer ‖ prefix/hash · fromJSON wire · truncate · textStyle/animationStyle · divideX/Y · template-literal css |

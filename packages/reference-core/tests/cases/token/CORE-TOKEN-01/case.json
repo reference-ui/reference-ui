@@ -1,0 +1,1 @@
+{"id": "CORE-TOKEN-01", "name": "{colors.red.500} inside a multi-value border shorthand resolves to var(--colors-red-500)", "sync": true}

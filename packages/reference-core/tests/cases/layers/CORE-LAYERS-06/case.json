@@ -1,0 +1,1 @@
+{"id": "CORE-LAYERS-06", "name": "a changed layered or extended upstream lands on re-sync in the same process, by relative import and by bare specifier", "sync": true}

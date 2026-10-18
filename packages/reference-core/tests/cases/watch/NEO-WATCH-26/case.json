@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-26", "name": "five config loads that start together all resolve, so no one-shot loses its config to another's cleanup", "sync": false}

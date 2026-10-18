@@ -3,7 +3,7 @@
 Conditions are the `_`-prefixed keys (`_hover`, `_dark`), breakpoint keys
 (`sm`), and raw selector keys (`'& > p'`) inside style objects. The engine
 lowers them to `:is()` twin selectors, at-rules, and ancestor/descendant
-wraps; Neo proves in a browser that the painted result matches the claim.
+wraps; Core proves in a browser that the painted result matches the claim.
 This group owns no host behaviour beyond `src/runtime/css/**` (shared); most rows expect no host change.
 
 ## Dialect
@@ -30,7 +30,7 @@ COND-11 (media presets), COND-12 (unknown-condition warning), COND-13
 ## Decisions
 
 (colour-mode attribute `data-color-mode`; RS-7 done, proven by
-NEO-COND-04 alongside PRIM-07/TOKEN-05).
+CORE-COND-04 alongside PRIM-07/TOKEN-05).
 
 ## Approved absences
 
@@ -38,7 +38,7 @@ NEO-COND-04 alongside PRIM-07/TOKEN-05).
   bidi conditions. Revisit with a real author request.
 - Panda multi-block condition objects (`@slot` cartesian product):
   engine-internal composition test, not Reference dialect.
-- Config-defined custom conditions: Neo has no `conditions` table by
+- Config-defined custom conditions: Core has no `conditions` table by
   design; authors write raw `&`/at-rule keys instead.
 - DELTA-1: `forced-colors`, `@supports` condition keys, `(hover: hover)`
   MQs. Zero-count in the lib sheet (F11); `_print`/`_motionReduce`/`_osDark`
@@ -55,7 +55,7 @@ NEO-COND-04 alongside PRIM-07/TOKEN-05).
 | --- | --- |
 | `_rtl`/`_ltr` + `:where([dir=…], :dir(…))` wraps | No lib usage; absence above |
 | `@slot` multi-block cartesian conditions | Engine test shape, not author API |
-| Custom `conditions` table in config | No such table in Neo |
+| Custom `conditions` table in config | No such table in Core |
 | Four-way dark selectors (`.dark`, `[data-theme]`, self-class) | single `[data-color-mode=…]` ancestor wrap |
 | `_themePrimary` / Panda `themes` JSON | Brand packs, not colour mode |
 | `hideFrom` / `hideBelow` helpers | Panda helper utilities, not shipped |

@@ -1,0 +1,1 @@
+{"id": "CORE-RESP-05", "name": "mdDown, mdOnly, smToLg bind the query and never overlap at the boundary", "sync": true}

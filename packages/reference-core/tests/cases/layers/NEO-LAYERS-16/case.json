@@ -1,1 +1,0 @@
-{"id": "NEO-LAYERS-16", "name": "a layer-only token is not in the consumer's typed vocabulary under strict colours: its colour prop fails with TS2322 naming it, while the consumer's own token typechecks", "sync": true}

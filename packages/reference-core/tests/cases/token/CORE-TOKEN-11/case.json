@@ -1,0 +1,1 @@
+{"id": "CORE-TOKEN-11", "name": "keyframes() emits @keyframes in @layer global and animations tokens reference them", "sync": true}

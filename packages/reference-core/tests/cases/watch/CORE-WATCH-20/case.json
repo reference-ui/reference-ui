@@ -1,0 +1,1 @@
+{"id": "CORE-WATCH-20", "name": "--break-lock over a sync frozen mid-commit leaves the breaker exit 0 and the folder equal to a clean rebuild, and the displaced holder fails cleanly", "sync": false}

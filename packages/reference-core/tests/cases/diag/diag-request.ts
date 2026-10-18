@@ -1,4 +1,4 @@
-// diag-request.ts — existing-world request setup for the NEO-DIAG request cases.
+// diag-request.ts — existing-world request setup for the CORE-DIAG request cases.
 // It takes a case world dir and emits the built world plus its prepared
 // fragments and mutable compile request, so request-level specs can apply
 // the registry-documented mutation and compile for real. Mirrors

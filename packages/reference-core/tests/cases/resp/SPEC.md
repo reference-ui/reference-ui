@@ -48,13 +48,13 @@ All confirmed present under
 ## Decisions that apply
 
 - `@container (min-width: Npx)` stays; no `@media screen`
-  breakpoints. Neo proves the container-root requirement and the
+  breakpoints. Core proves the container-root requirement and the
   `container: true` macro; named ranges are proven, not invented.
 - Responsive arrays with `null` holes are in; typegen agrees on
   `Array<T | null>`.
-- `NEO-CSS-02` (responsive lowering parity) keeps its id and its
+- `CORE-CSS-02` (responsive lowering parity) keeps its id and its
   `css/` folder; RESP cross-references it instead of duplicating it.
-  NEO-RESP-09 extends it with a runtime/build-time class-equality claim.
+  CORE-RESP-09 extends it with a runtime/build-time class-equality claim.
 
 ## Approved absences
 
@@ -77,7 +77,7 @@ All confirmed present under
 | `@breakpoint` directive expansion (Panda v1 breakpoints tests) | Panda config macro; Reference authors write condition keys, the engine prints `@container` directly |
 | Viewport `@media` ranges / `mdDown` rem epsilon | Same range idea, different medium; RESP-05 proves the px-epsilon `@container` form the engine emits |
 | RTL × responsive combos | `_ltr`/`_rtl` are COND's approved absence (lib has 0 `[dir=rtl]`); no responsive axis to cross |
-| Named `@container pb (…)` via `containerNames` | Panda staticCss option shape; engine-side named queries are ATM-COND-16's golden, no Neo authoring surface exists |
+| Named `@container pb (…)` via `containerNames` | Panda staticCss option shape; engine-side named queries are ATM-COND-16's golden, no Core authoring surface exists |
 | `sort-mq` plugin ordering of `@media` (Panda v1 sort-mq tests) | Plugin internals; RESP-06 proves the equivalent `@container` order in the sheet + cascade |
 | Recipe responsive variants | RECIPE-08's row, not this group's |
 | `globalCss` nested responsive keys | GLOBAL's rows; RESP worlds use `css()`/StyleProps only |

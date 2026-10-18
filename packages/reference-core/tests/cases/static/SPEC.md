@@ -29,17 +29,17 @@ All confirmed present (`ls` + README read, each with
 
 | Reference-rs case | Proves | Used by |
 | --- | --- | --- |
-| ATM-STATIC-01 | `staticCss` is a third want source; wildcards + lists become utilities and runtime keys, so `bg={prop}` looks up | NEO-STATIC-01 |
-| ATM-STATIC-02 | Overlapping AST + static wants dedup to one atom / one class | NEO-STATIC-01/02 |
-| ATM-STATIC-03 | Conditions (`_hover`), non-color wildcards (`borderRadius: ['*']` over `radii`), and a warning for an unsatisfiable request (`unknownProp`) | NEO-STATIC-01/03 |
-| ATM-GHOST-02 | Runtime class-map `(when:)prop:value` spellings match sheet selectors | NEO-STATIC-03 (shared with MERGE-06) |
+| ATM-STATIC-01 | `staticCss` is a third want source; wildcards + lists become utilities and runtime keys, so `bg={prop}` looks up | CORE-STATIC-01 |
+| ATM-STATIC-02 | Overlapping AST + static wants dedup to one atom / one class | CORE-STATIC-01/02 |
+| ATM-STATIC-03 | Conditions (`_hover`), non-color wildcards (`borderRadius: ['*']` over `radii`), and a warning for an unsatisfiable request (`unknownProp`) | CORE-STATIC-01/03 |
+| ATM-GHOST-02 | Runtime class-map `(when:)prop:value` spellings match sheet selectors | CORE-STATIC-03 (shared with MERGE-06) |
 
 Host: `—` for all rows. No RS rows: every cited case exists and is green.
 
 ## 4. Decisions
 
 - Dynamic values → diagnostic, no ghost class. STATIC-03 is
-  the static-side proof and **pairs with NEO-MERGE-06** (the runtime-side
+  the static-side proof and **pairs with CORE-MERGE-06** (the runtime-side
   proof of the same rule): MERGE-06 shows a bare runtime value with no atom
   yields no class + one dev diagnostic; STATIC-03 shows the same for a
   value outside the declared static set, plus the sync-time diagnostic for
@@ -65,4 +65,4 @@ Host: `—` for all rows. No RS rows: every cited case exists and is green.
 | Arbitrary freeform condition strings in `staticCss` (`'.mobile &'`) | Not proven; STATIC-03 covers named conditions |
 | `sva` / slot anatomy in staticCss | Out |
 | `textStyles` / `layerStyles` statics | No first-class text/layer styles |
-| `prefix` + hash / custom `toHash` | Panda config hooks; Neo has its own class grammar |
+| `prefix` + hash / custom `toHash` | Panda config hooks; Core has its own class grammar |

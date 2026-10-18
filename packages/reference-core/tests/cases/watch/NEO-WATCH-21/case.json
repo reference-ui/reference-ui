@@ -1,1 +1,0 @@
-{"id": "NEO-WATCH-21", "name": "a generated directory replaced by a file heals on the next sync instead of failing with EEXIST on every run", "sync": false}
