@@ -55,7 +55,7 @@ Parts: `NumberField.Group` (the [Field](/field) bezel, `role="group"`),
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `number \| null` | — | Required. Controlled value; `null` is empty. |
-| `onChange` | `(value: number \| null) => void` | — | Called when an edit commits. |
+| `onChange` | `(value: number \| null) => void` | — | Called with each new number as you type, and again when the value commits. |
 | `locale` | `string` | — | Required. BCP 47 locale for parsing and display. |
 | `min` / `max` | `number` | — | Bounds. |
 | `step` | `number` | `1` (`0.01` for percent) | Step for arrows and steppers. |
@@ -71,5 +71,10 @@ Parts: `NumberField.Group` (the [Field](/field) bezel, `role="group"`),
 
 - Arrow Up and Down step by `step`; with Shift held they step by
   `10 × step`. Home and End go to `min` and `max`.
-- The value commits on blur, Enter, and each step, not on every keystroke.
+- While you type, each new number the text parses to goes to `onChange` as
+  typed, before any clamping. Partial text such as `-` sends nothing, and
+  clearing the input sends `null`.
+- Blur, Enter, and each step commit the value. A commit applies
+  `commitBehavior` and calls `onChange` when the result differs from
+  `value`; text that does not parse reverts.
 - There is no uncontrolled mode.

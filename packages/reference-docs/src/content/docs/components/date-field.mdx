@@ -54,7 +54,7 @@ DateField takes `input` props (`id`, `placeholder`, …) plus:
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `ISODate \| null` | — | Required. Controlled date; `null` is empty. |
-| `onChange` | `(value: ISODate \| null) => void` | — | Required. Called when an edit commits. |
+| `onChange` | `(value: ISODate \| null) => void` | — | Required. Called as soon as the typed text is a complete, valid date, and again when the value commits. |
 | `locale` | `string` | — | Required. BCP 47 locale for the text format. |
 | `min` / `max` | `ISODate` | — | Earliest and latest allowed dates. |
 | `isDateUnavailable` | `(date: ISODate) => boolean` | — | Marks dates that cannot be chosen. |
