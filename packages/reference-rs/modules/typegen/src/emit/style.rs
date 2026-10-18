@@ -30,8 +30,9 @@ const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
 const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const ANIMATION_VALUE: &str = "StylePropValue<AnimationToken | (string & {})>";
-const PROP_VALUE: &str =
-    "export type StylePropValue<T> = T | Array<T | null> | { [K in StyleConditionKey]?: T };\n";
+// `null | false | undefined` are holes runtime css() skips (`isHole`), so
+// `{ color: active && 'brand' }` never overrides an earlier value.
+const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey]?: T };\n";
 
 pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String {
     if system.breakpoints().is_empty() {

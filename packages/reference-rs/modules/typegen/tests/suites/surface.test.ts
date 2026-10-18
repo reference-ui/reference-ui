@@ -3,8 +3,9 @@
  * emitter. T1 builds its consumer programmatically from the canon dialect lists,
  * never hand-enumerated, and typechecks it against real emitDtsSync output for
  * the full style dump and a colors-only spec. T2 probes per-family values,
- * numerics, responsive arrays, nesting, selectors, and custom properties. T3
- * pins rejection of bogus keys with self-policing @ts-expect-error negatives.
+ * numerics, responsive arrays, hole values, nesting, selectors, and custom
+ * properties. T3 pins rejection of bogus keys with self-policing
+ * @ts-expect-error negatives.
  * T4 pins strict wrappers: colors narrow while Open keys stay open, and absent
  * categories emit no wrapper. The tsc harness lives in ../harness/tsc.ts.
  */
@@ -161,6 +162,27 @@ export const responsive: SystemStyleObject = {
   mt: ['4', null],
   color: ['blue.500', null],
 }
+`,
+      })
+    )
+  })
+
+  it('T2 null, false and undefined property values are holes', () => {
+    const dts = emitDtsSync({ baseSystem: fullSpec })
+    expectTscOk(
+      compile({
+        dts,
+        source: `import type { StyleProps, SystemStyleObject } from './styles'
+
+declare const active: boolean
+
+export const holes: SystemStyleObject = {
+  padding: null,
+  color: false,
+  margin: undefined,
+  _hover: { bg: null },
+}
+export const toggled: StyleProps = { color: active && 'blue.500' }
 `,
       })
     )

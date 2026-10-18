@@ -24,8 +24,8 @@ No Atomic cases: the engine is typegen `emitDtsDetailed`, verified present (`ls 
 tests/goldens/}` + README/SPEC/goldens read). It prints `.d.ts` strings from
 `BaseSystem` + canon and never touches `atomic` (TYP-FORBID-06). Leans:
 TYP-TOKEN-01..06 (category unions + `Tokens`), TYP-STYLE-02/03/04/05
-(`StyleProps`, `StyleConditionKey`, `StylePropValue<T> = T | Array<T | null> |
-condition map`, recursion without TS2589), TYP-RECIPE-01/02 (plain optional
+(`StyleProps`, `StyleConditionKey`, `StylePropValue<T> = T | null | false |
+undefined | Array<T | null> | condition map`, recursion without TS2589), TYP-RECIPE-01/02 (plain optional
 unions), TYP-FONT-01..03, TYP-STRICT-01..05 (callable via `emit_dts_with`,
 exposed as the `strict` config; hatch names stay absent),
 TYP-FORBID-01..06. Caveats, all settled engine contracts,

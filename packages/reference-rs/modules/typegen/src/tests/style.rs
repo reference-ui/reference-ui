@@ -19,8 +19,7 @@ const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
 const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const CUSTOM_PROPERTY_INDEX: &str = "  [K in `--${string}`]?: StylePropValue<string | number>;";
-const PROP_VALUE: &str =
-    "export type StylePropValue<T> = T | Array<T | null> | { [K in StyleConditionKey]?: T };";
+const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey]?: T };";
 const STYLE_PROPS_HEAD: &str = "export type StyleProps = FontProps & {";
 
 const COLOR_KEYS: &[&str] = &["bg", "background", "backgroundColor", "color"];
@@ -105,7 +104,7 @@ fn typ_style_03_filters_viewport_keys_from_style_condition_key() {
     );
     assert!(
         dts.contains(PROP_VALUE),
-        "TYP-STYLE-03: StylePropValue must allow T, arrays, and condition maps:\n{dts}"
+        "TYP-STYLE-03: StylePropValue must allow T, holes, arrays, and condition maps:\n{dts}"
     );
 }
 

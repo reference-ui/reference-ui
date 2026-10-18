@@ -11,7 +11,7 @@ The consumers are materialized at spec time because they cannot live in the
 repo: the harness pre-run typecheck resolves `@reference-ui/react` to the
 stable surface, whose wide records would accept the negative. The engine (`emitDtsSync` over this world's spec) prints `StyleConditionKey` with
 `_hover` and `@sm` but no bare viewport keys, plus
-`StylePropValue<T> = T | Array<T | null> | condition map`; no host change is
+`StylePropValue<T> = T | null | false | undefined | Array<T | null> | condition map`; no host change is
 needed.
 
 Evidence: typegen golden `styles.d.ts` (`StylePropValue`).
