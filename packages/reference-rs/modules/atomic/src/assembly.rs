@@ -69,6 +69,16 @@ pub(crate) fn qualifiers_for(own: &str, upstream: &[String]) -> Vec<String> {
     qualifiers
 }
 
+/// Keep `ATM-W-EXTERNAL-UNBACKED` only while nothing backs external wants.
+/// Extraction warns at every styled package tag because it cannot see the
+/// composed systems; with any foreign qualifier the fan-out backs those
+/// wants (the same `< 2` rule the plan build drops them by), so it is false.
+fn settle_unbacked(diagnostics: &mut Vec<Diagnostic>, qualifiers: &[String]) {
+    if qualifiers.len() > 1 {
+        diagnostics.retain(|line| line.code != DiagnosticCode::ExternalUnbacked);
+    }
+}
+
 impl AssembleCtx {
     /// Append static CSS wants before the atom set builds.
     pub(crate) fn append_static(&mut self, system: &BaseSystem) {
@@ -100,6 +110,7 @@ impl AssembleCtx {
             upstream_systems,
         } = self;
         let qualifiers = qualifiers_for(&system.name, &upstream_systems);
+        settle_unbacked(&mut diagnostics, &qualifiers);
         let scope = FinishScope {
             system,
             qualifiers: &qualifiers,

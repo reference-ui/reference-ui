@@ -14,6 +14,10 @@ it like a traced owned set: `<CodeIcon size="lg" />` mints no want and no `lg`
 warning, while `color` is not owned and still extracts as an external want.
 `<Div size="2r" />` is the control: the primitive still folds `size`.
 
+The case compiles standalone (no `upstreamSystems`), so no composed system backs
+the icon's `color`: the one diagnostic is `ATM-W-EXTERNAL-UNBACKED` at the tag,
+naming `icon-pkg`. The owned `size` adds nothing to it.
+
 The owned map the gate read rides the result as `tracedJsxOwned`, on the slim
 production wire as well as the proof channel.
 

@@ -51,6 +51,7 @@ const WARNING_HINTS: Record<string, string> = {
   'ATM-W-MISSING-STYLE-PLAN': 'make the lookup static so the plan can serve it',
   'ATM-W-RESPONSIVE-LEAF-IMPORTANT': 'drop the ! marker; per-leaf important is refused',
   'ATM-W-UNREALIZABLE-EXTENSION': 'drop the prop; the dialect has no served css form',
+  'ATM-W-EXTERNAL-UNBACKED': "add the package's baseSystem to `extends` or `layers`",
   'TST-W-PARSE-ERROR': 'fix the syntax error so the file parses cleanly',
   'TST-W-DUPLICATE-DECLARATION': 'merge the duplicate declarations or rename one',
   'TST-W-DUPLICATE-MEMBER': 'remove the duplicate member or rename one',
