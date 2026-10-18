@@ -7,7 +7,9 @@
 //! re-exports, local re-exports of imports, and star re-exports across
 //! project files with a cycle guard; a consumer declaration anywhere on the
 //! path ends the walk. Specifier probing here is relative-only and minimal —
-//! the Ph4 resolver (ATM-SITE-54) subsumes it when it lands.
+//! the Ph4 resolver (ATM-SITE-54) subsumes it when it lands. The origin walk
+//! (`origin`) reuses these maps to name where any import ends: Reference, a
+//! project declaration, or an installed package.
 
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -18,8 +20,11 @@ use rustc_hash::FxHashMap;
 use super::bindings::is_reference_package;
 use super::identity_map::{collect_map, parse_export_map, ExportMap, NamedTarget};
 
+mod alias;
+mod origin;
 mod paths;
 
+pub(crate) use origin::Origin;
 use paths::{candidates, dir_of, named_hop, normalize_path, strip_relative};
 
 /// One identity question: does `name` exported from `file` trace to Reference?
@@ -50,6 +55,8 @@ pub struct IdentityGraph<'s> {
     /// parse instead of re-parsing bytes. Missing positions (streamed,
     /// panicked, or never parsed) fall back to a fresh parse.
     programs: Option<&'s FxHashMap<usize, &'s Program<'s>>>,
+    /// Memoized `tsconfig` alias probes for the origin walk.
+    aliases: alias::AliasMemo,
 }
 
 impl<'s> IdentityGraph<'s> {
@@ -99,6 +106,7 @@ impl<'s> IdentityGraph<'s> {
             index,
             memo: RefCell::new(FxHashMap::default()),
             programs,
+            aliases: alias::AliasMemo::default(),
         }
     }
 

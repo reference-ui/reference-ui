@@ -1,4 +1,4 @@
-//! File-local Reference import bindings for extract-site gating.
+//! File-local import bindings for extract-site gating.
 //!
 //! Records which local names were imported from `@reference-ui/react` or
 //! `@reference-ui/styled`. `css()` / `recipe()` extract only when the callee is
@@ -7,17 +7,20 @@
 //! virtual neutralize pass declares them as top-level `const` bindings, so
 //! they extract even though the declaration would otherwise read as a shadow.
 //! JSX hosts are the component names from the same packages; unknown `css`
-//! is not an extract site; `foreign_runtime` keeps lib/icons off the hosts.
+//! is not an extract site. Every value import also records its provenance
+//! (`provenance`), so a package-bound tag is never an own host.
 
-use oxc_ast::ast::{
-    Expression, ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-    ModuleExportName, Program, Statement, StaticMemberExpression,
-};
-use rustc_hash::FxHashSet;
+use oxc_ast::ast::{Expression, ModuleExportName, Program, StaticMemberExpression};
+use rustc_hash::{FxHashMap, FxHashSet};
 
-use super::foreign_runtime;
+use super::provenance::{TagProvenance, UNBOUND};
 
-/// Local names bound to Reference `css`, `recipe`, JSX hosts, and namespaces.
+// A child module kept beside this file: `bindings/` is gitignored for ts-rs output.
+#[path = "binding_imports.rs"]
+mod collect;
+
+/// Local names bound to Reference `css`, `recipe`, JSX hosts, and namespaces,
+/// plus the provenance of every value import local.
 #[derive(Debug, Default, Clone)]
 pub struct ExtractBindings {
     css: FxHashSet<String>,
@@ -26,7 +29,7 @@ pub struct ExtractBindings {
     namespaces: FxHashSet<String>,
     reexport_css_ns: FxHashSet<String>,
     reexport_recipe_ns: FxHashSet<String>,
-    foreign: FxHashSet<String>,
+    provenance: FxHashMap<String, TagProvenance>,
 }
 
 /// Where an identity walk starts: the importing file plus the project graph.
@@ -44,15 +47,6 @@ impl IdentityCtx<'_, '_> {
 }
 
 impl ExtractBindings {
-    /// Record a walked import under its Reference origin; a miss records nothing.
-    fn record_traced(&mut self, local: &str, origin: Option<String>) {
-        if let Some(exported) = origin {
-            record_named(self, local, exported);
-        }
-    }
-}
-
-impl ExtractBindings {
     /// Borrow the component names imported from Reference packages. The
     /// extract context unions this with the compile-global hosts by
     /// reference, so per-file setup never clones either set.
@@ -60,9 +54,14 @@ impl ExtractBindings {
         &self.jsx
     }
 
-    /// True when `name` is a value import from a foreign-runtime package.
-    pub fn binds_foreign(&self, name: &str) -> bool {
-        self.foreign.contains(name)
+    /// The provenance of an import local; `Unbound` when no import binds it.
+    pub fn provenance(&self, local: &str) -> &TagProvenance {
+        self.provenance.get(local).unwrap_or(&UNBOUND)
+    }
+
+    /// True when `local` is a value import that ends at an installed package.
+    pub fn binds_package(&self, local: &str) -> bool {
+        matches!(self.provenance.get(local), Some(TagProvenance::Package(_)))
     }
 
     /// Origin string when `callee` is a live Reference `css` binding.
@@ -94,107 +93,21 @@ impl ExtractBindings {
     }
 }
 
-/// Collect Reference import bindings from a parsed program. Does not walk calls.
+/// Collect import bindings from a parsed program, with no project graph:
+/// non-Reference imports classify by their specifier's spelling alone.
 pub fn collect_bindings(program: &Program<'_>) -> ExtractBindings {
-    let mut bindings = ExtractBindings::default();
-    for stmt in &program.body {
-        let Statement::ImportDeclaration(decl) = stmt else {
-            continue;
-        };
-        record_import(&mut bindings, decl);
-    }
-    bindings
+    collect::collect(program, None)
 }
 
 /// Collect bindings with project identity: direct Reference imports plus
-/// names that trace to a Reference export through consumer re-exports.
+/// names that trace to a Reference export through consumer re-exports, and
+/// every other import's provenance through the same project walk.
 pub fn collect_bindings_with_identity(
     program: &Program<'_>,
     file: &str,
     graph: &super::identity::IdentityGraph<'_>,
 ) -> ExtractBindings {
-    let mut bindings = collect_bindings(program);
-    let ctx = IdentityCtx { file, graph };
-    for stmt in &program.body {
-        let Statement::ImportDeclaration(decl) = stmt else {
-            continue;
-        };
-        extend_identity(&mut bindings, decl, &ctx);
-    }
-    bindings
-}
-
-/// Record identity carried through a non-Reference import, if the walk proves it.
-fn extend_identity(
-    bindings: &mut ExtractBindings,
-    decl: &ImportDeclaration<'_>,
-    ctx: &IdentityCtx<'_, '_>,
-) {
-    if decl.import_kind == ImportOrExportKind::Type {
-        return;
-    }
-    let source = decl.source.value.as_str();
-    if is_reference_package(source) {
-        return;
-    }
-    let Some(specifiers) = &decl.specifiers else {
-        return;
-    };
-    for spec in specifiers {
-        extend_specifier(bindings, spec, source, ctx);
-    }
-}
-
-/// One non-Reference specifier through the identity walk: named and default
-/// imports record by Reference origin; namespaces record live members eagerly.
-fn extend_specifier(
-    bindings: &mut ExtractBindings,
-    spec: &ImportDeclarationSpecifier<'_>,
-    source: &str,
-    ctx: &IdentityCtx<'_, '_>,
-) {
-    match spec {
-        ImportDeclarationSpecifier::ImportSpecifier(named) => {
-            if named.import_kind == ImportOrExportKind::Type {
-                return;
-            }
-            let origin = ctx.trace_named(source, &imported_name(&named.imported));
-            bindings.record_traced(named.local.name.as_str(), origin);
-        }
-        ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
-            let origin = ctx.trace_named(source, "default");
-            bindings.record_traced(default.local.name.as_str(), origin);
-        }
-        ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
-            extend_namespace(bindings, ns.local.name.as_str(), source, ctx);
-        }
-    }
-}
-
-/// A namespace over a wrapper: `ui.css` is live exactly when the wrapper
-/// exports `css` from Reference's `css` (same for `recipe`).
-fn extend_namespace(
-    bindings: &mut ExtractBindings,
-    local: &str,
-    source: &str,
-    ctx: &IdentityCtx<'_, '_>,
-) {
-    if ctx
-        .graph
-        .trace_reference_export(ctx.file, source, "css")
-        .as_deref()
-        == Some("css")
-    {
-        bindings.reexport_css_ns.insert(local.to_string());
-    }
-    if ctx
-        .graph
-        .trace_reference_export(ctx.file, source, "recipe")
-        .as_deref()
-        == Some("recipe")
-    {
-        bindings.reexport_recipe_ns.insert(local.to_string());
-    }
+    collect::collect(program, Some(&IdentityCtx { file, graph }))
 }
 
 pub(crate) fn is_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
@@ -205,57 +118,6 @@ pub(crate) fn is_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
 /// scope holds a wrapper's own definition, so only deeper scopes veto.
 pub(crate) fn is_inner_shadowed(shadowed: &[FxHashSet<String>], name: &str) -> bool {
     shadowed.iter().skip(1).any(|scope| scope.contains(name))
-}
-
-fn record_import(bindings: &mut ExtractBindings, decl: &ImportDeclaration<'_>) {
-    if decl.import_kind == ImportOrExportKind::Type {
-        return;
-    }
-    let source = decl.source.value.as_str();
-    let Some(specifiers) = &decl.specifiers else {
-        return;
-    };
-    if foreign_runtime::record(&mut bindings.foreign, source, specifiers)
-        || !is_reference_package(source)
-    {
-        return;
-    }
-    for spec in specifiers {
-        record_specifier(bindings, spec);
-    }
-}
-
-fn record_specifier(bindings: &mut ExtractBindings, spec: &ImportDeclarationSpecifier<'_>) {
-    match spec {
-        ImportDeclarationSpecifier::ImportSpecifier(named) => {
-            if named.import_kind == ImportOrExportKind::Type {
-                return;
-            }
-            record_named(
-                bindings,
-                named.local.name.as_str(),
-                imported_name(&named.imported),
-            );
-        }
-        ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns) => {
-            bindings.namespaces.insert(ns.local.name.to_string());
-        }
-        ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => {}
-    }
-}
-
-fn record_named(bindings: &mut ExtractBindings, local: &str, imported: String) {
-    match imported.as_str() {
-        "css" | "__reference_ui_css" => {
-            bindings.css.insert(local.to_string());
-        }
-        "recipe" | "__reference_ui_recipe" => {
-            bindings.recipe.insert(local.to_string());
-        }
-        _ => {
-            bindings.jsx.insert(local.to_string());
-        }
-    }
 }
 
 pub(crate) fn imported_name(name: &ModuleExportName<'_>) -> String {

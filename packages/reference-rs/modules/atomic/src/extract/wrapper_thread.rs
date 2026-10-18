@@ -6,8 +6,10 @@
 //! call-site value (`<Rows css={shared} />`) would otherwise extract
 //! nothing. The pre-pass records these wrappers once per file; the JSX walk
 //! then lowers threaded call-site values exactly as if written on the host.
-//! Only a bare `css={param}` forward threads; anything fancier is out of
-//! evidence and stays unhandled.
+//! The forward target is judged by the same host gate as the JSX walk, so a
+//! wrapper around a package-bound tag (lib's `Button`) never threads: its
+//! call-site `css` takes the external path. Only a bare `css={param}`
+//! forward threads; anything fancier is out of evidence and stays unhandled.
 
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, Declaration, Expression, FormalParameters,
@@ -19,7 +21,7 @@ use oxc_syntax::scope::ScopeFlags;
 use rustc_hash::FxHashSet;
 
 use super::jsx::{format_jsx_attribute_name, format_jsx_element_name};
-use super::jsx_hosts::JsxHosts;
+use super::provenance::HostGate;
 
 /// Same-file wrapper tags whose `css` prop forwards into a host element.
 #[derive(Default)]
@@ -39,9 +41,9 @@ impl WrapperThreads {
 /// and whose body renders `<Host css={param}>` on a host. Nested functions
 /// never count; default-exported functions never count (their call-site
 /// tag is the importer's name, which this pass cannot resolve).
-pub fn collect(program: &Program<'_>, hosts: JsxHosts<'_>) -> WrapperThreads {
+pub fn collect(program: &Program<'_>, gate: HostGate<'_>) -> WrapperThreads {
     let mut scan = WrapperScan {
-        hosts,
+        gate,
         threaded: FxHashSet::default(),
     };
     scan.visit_program(program);
@@ -57,7 +59,7 @@ fn is_component_name(name: &str) -> bool {
 
 /// Visitor recording every same-file component that threads `css`.
 struct WrapperScan<'a> {
-    hosts: JsxHosts<'a>,
+    gate: HostGate<'a>,
     threaded: FxHashSet<Box<str>>,
 }
 
@@ -122,7 +124,7 @@ impl WrapperScan<'_> {
             return;
         }
         let mut forward = ForwardScan {
-            hosts: self.hosts,
+            gate: self.gate,
             bound,
             found: false,
         };
@@ -176,7 +178,7 @@ fn binding_name<'a>(pattern: &'a BindingPattern<'a>) -> Option<&'a str> {
 /// Body scanner proving one `<Host css={param}>` forward. Nested functions
 /// never count: a forward inside them belongs to that scope, not this one.
 struct ForwardScan<'a> {
-    hosts: JsxHosts<'a>,
+    gate: HostGate<'a>,
     bound: FxHashSet<&'a str>,
     found: bool,
 }
@@ -195,11 +197,11 @@ impl<'a> Visit<'a> for ForwardScan<'a> {
 }
 
 impl ForwardScan<'_> {
-    /// True for `<Host css={param}>`: a host tag carrying a bare `css`
-    /// identifier bound from this component's `css` prop.
+    /// True for `<Host css={param}>`: a gate-admitted host tag carrying a
+    /// bare `css` identifier bound from this component's `css` prop.
     fn is_css_forward(&self, elem: &JSXOpeningElement<'_>) -> bool {
         let tag = format_jsx_element_name(&elem.name);
-        if !self.hosts.contains(&tag) {
+        if !self.gate.admits(&tag) {
             return false;
         }
         elem.attributes.iter().any(|item| {

@@ -5,8 +5,10 @@
 //! fills Recipe IR (`ctx.recipes`) and must not pollute the utility list.
 //! `ExtractContext` is the session those passes share. Call extract is
 //! import-bound; JSX extract consults styletrace names plus Reference
-//! component imports and fails closed when no host is known: an empty host
-//! set plus style-bearing JSX is a missing-graph error, never a scan.
+//! component imports, gated by each tag root's import provenance (a
+//! package-bound root is never an own host), and fails closed when no host
+//! is known: an empty host set plus style-bearing JSX is a missing-graph
+//! error, never a scan.
 
 pub mod bindings;
 pub mod constants;
@@ -14,13 +16,13 @@ pub mod context;
 pub mod css;
 pub mod expressions;
 pub mod fold;
-mod foreign_runtime;
 pub mod harvest;
 pub mod identity;
 pub mod identity_map;
 pub mod jsx;
 pub mod jsx_hosts;
 pub mod owned_props;
+pub mod provenance;
 pub mod recipes;
 pub mod resolver;
 pub mod scope;
@@ -41,6 +43,7 @@ pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBind
 pub use context::{ExtractConfig, ExtractContext, ExtractSinks};
 pub use jsx_hosts::JsxHosts;
 pub use owned_props::{LocalOwned, OwnedMap, OwnedProps};
+pub use provenance::{HostGate, TagProvenance};
 pub use visitor::ExtractVisitor;
 
 /// Extract all style wants and diagnostics from a parsed AST program with provided context.
@@ -54,7 +57,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
         shadowed: &[],
     };
     let mut visitor = ExtractVisitor::new(ctx.file, ctx.source, config);
-    visitor.wrapper_threads = wrapper_thread::collect(program, ctx.jsx_hosts);
+    visitor.wrapper_threads = wrapper_thread::collect(program, ctx.host_gate());
     visitor.visit_program(program);
     ctx.wants.extend(visitor.wants);
     ctx.recipes.extend(visitor.recipes);

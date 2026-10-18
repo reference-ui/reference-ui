@@ -1,8 +1,9 @@
 //! Cargo tests for import-bound `css()` and styletrace-gated JSX extract.
 //! Virtual sources have no disk graph; these cases prove fail-closed callee
 //! shadowing and that untraced PascalCase becomes an external component once a
-//! Reference host is in scope (G0 §D/C8). Seam stations `ATM-SITE-07` / `08` /
-//! `10` are the committed proof (updated for the external-tag contract).
+//! Reference host is in scope (G0 §D/C8). A package-bound root is never a
+//! host, but a scope binding outranks the import. Seam stations `ATM-SITE-07`
+//! / `08` / `10` are the committed proof (updated for the external-tag contract).
 
 use crate::{compile, CompileRequest, VirtualSource};
 
@@ -163,10 +164,7 @@ fn test_untraced_capital_tag_is_external_when_a_host_is_known() {
         .wants
         .iter()
         .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
-    assert!(res
-        .wants
-        .iter()
-        .any(|w| &*w.prop == "color" && w.external));
+    assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.external));
     assert!(res.diagnostics.is_empty());
 }
 
@@ -236,9 +234,7 @@ fn test_bound_member_root_through_const_object_extracts() {
         .iter()
         .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
     assert!(
-        res.wants
-            .iter()
-            .any(|w| &*w.prop == "p" && w.external),
+        res.wants.iter().any(|w| &*w.prop == "p" && w.external),
         "the unconfigured member twin is external, not a host: {:?}",
         res.wants
     );
@@ -263,6 +259,27 @@ fn test_namespace_spelled_member_collects_against_dotted_host() {
         .iter()
         .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r"));
     assert!(res.diagnostics.is_empty());
+}
+
+#[test]
+fn test_package_bound_root_gates_by_provenance_not_name() {
+    // A package namespace spelling a configured dotted host is external;
+    // an inner declaration shadowing a package import re-admits through
+    // its alias chain, because the scope binding outranks the import.
+    let res = compile_with_hosts(
+        r#"
+        import * as Tabs from 'acme-tabs';
+        import { Button } from 'acme-ui';
+        import { Div } from '@reference-ui/react';
+        export function App() {
+            const Button = Div;
+            return <><Tabs.Panel mt="2r" /><Button p="4r" /></>;
+        }
+        "#,
+        &["Tabs.Panel"],
+    );
+    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.external));
+    assert!(res.wants.iter().any(|w| &*w.prop == "p" && !w.external));
 }
 
 #[test]

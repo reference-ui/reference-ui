@@ -16,10 +16,16 @@ JSX with no hosts resolvable is a missing-graph error (ATM-SITE-13),
 once per file. Once any host is known, other tags (including local
 `<Foo mt="2r" />`) are skipped silently.
 
-A name imported from a package that ships its own runtime
-(`@reference-ui/lib`, its `/primitives`, `@reference-ui/icons`) is never
-an own host, even when it spells a primitive: `<Button>` from lib mints
-lib's class, so it takes the external path like any capitalized non-host.
+Ownership comes from the tag root's provenance, not its name. A root
+whose import ends at an installed package (directly, or through project
+barrels and `tsconfig` aliases) is never an own host, even when it spells
+a primitive or an upstream's published wrapper: `<Button>` from
+`@reference-ui/lib`, `acme-ui` or any other package renders through that
+package's bundled runtime and mints its class, so it takes the external
+path like any capitalized non-host. Reference imports are own by proof;
+project imports, same-file declarations and unbound names keep the host
+roster match. The same gate decides whether a same-file wrapper threads
+its `css` prop into a host.
 
 ## Must not
 
