@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:32983",
+  "computed": {
+    "padding": "29px",
+    "className": "ref-div 01-dashboard__p_7.25r",
+    "text": "Static synced padding"
+  },
+  "warning": "[reference-ui] css(): no compiled class for `padding: \"7.25r\"` (class 01-dashboard__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32983/node_modules/.vite/deps/react-dom_client.js?v=aad56c6b:20522:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+  "allMessages": [
+    "[vite] connecting...",
+    "[vite] connected.",
+    "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[reference-ui] css(): no compiled class for `padding: \"7.25r\"` (class 01-dashboard__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32983/node_modules/.vite/deps/react-dom_client.js?v=aad56c6b:20522:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}

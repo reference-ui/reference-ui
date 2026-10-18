@@ -1,0 +1,10 @@
+Captured browser console warning from http://127.0.0.1:5173
+
+[reference-ui] css(): no compiled class for `padding: "7.25r"` (class 01-dashboard__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=1af7f8fe:20522:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.
+
+Computed browser style for the same [data-testid="sync-probe"] element:
+{
+  "padding": "29px",
+  "className": "ref-div 01-dashboard__mt_4r 01-dashboard__p_7.25r 01-dashboard__bg_forestSoft 01-dashboard__bd-w_1px 01-dashboard__border-style_solid 01-dashboard__bd-c_hairline 01-dashboard__rounded_card 01-dashboard__d_flex 01-dashboard__flex-dir_column 01-dashboard__md:flex-dir_row 01-dashboard__ai_flex-start 01-dashboard__md:ai_center 01-dashboard__gap_3r",
+  "text": "Watch probeThis panel carries a literal 7.25r padding. Change that value while the sync watcher runs and Reference UI emits a fresh app-only rule without a restart."
+}

@@ -1,0 +1,11 @@
+$ npm run sync && npm run dev
+$ Inspect the same generated Div in the development browser
+
+[reference-ui] css(): no compiled class for `padding: "7.25r"` (class 01-dashboard__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32983/node_modules/.vite/deps/react-dom_client.js?v=aad56c6b:20522:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.
+
+Computed style of that element:
+{
+  "padding": "29px",
+  "className": "ref-div 01-dashboard__p_7.25r",
+  "text": "Static synced padding"
+}
