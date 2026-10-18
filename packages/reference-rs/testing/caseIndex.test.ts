@@ -15,7 +15,7 @@ import {
   strayCaseFolders,
 } from './caseIndex.js'
 
-const ATOMIC_CASE = /^(ATM-[A-Z]+-\d{2})$/
+const ATOMIC_CASE = /^(ATM-[A-Z]+-\d{2,3})$/
 
 describe('case.json convention', () => {
   let root = ''
@@ -85,8 +85,8 @@ describe('case.json convention', () => {
 
 describe('case folder names', () => {
   it('flags folders whose names are not raw case IDs and keeps the rest', () => {
-    const names = ['ATM-TOKEN-06', 'stray-folder', 'ATM-TOKEN-6', 'ATM-SITE-01']
-    expect(strayCaseFolders(names, ATOMIC_CASE)).toEqual(['stray-folder', 'ATM-TOKEN-6'])
+    const names = ['ATM-TOKEN-06', 'stray-folder', 'ATM-TOKEN-6', 'ATM-SITE-01', 'ATM-SITE-100', 'ATM-SITE-1000']
+    expect(strayCaseFolders(names, ATOMIC_CASE)).toEqual(['stray-folder', 'ATM-TOKEN-6', 'ATM-SITE-1000'])
   })
 })
 

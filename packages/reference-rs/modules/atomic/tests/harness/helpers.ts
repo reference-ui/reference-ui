@@ -46,7 +46,7 @@ export { layerBody, layerClassNames } from './css-layers.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const CASES_DIR = path.resolve(__dirname, '..', 'cases')
-export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2})$/
+export const CASE_FOLDER = /^(ATM-[A-Z]+-\d{2,3})$/
 export { LAYER_PREAMBLE, LIB_PACKAGE_OPEN, ROOT_DEFAULT_BLOCK } from './package-layers.js'
 
 /** Frozen lib spec for cases without their own baseSystem; the seam validates it. */
