@@ -6,7 +6,7 @@ import { CheckIcon, ContentCopyIcon } from '@reference-ui/lib'
  * The shared look of every code panel: fenced blocks (`CodeBlock`) and the
  * package-manager `Install` block. A hairline border on a fill one shade off
  * the page, a small radius, and a copy button that appears on hover (and
- * always on touch screens, which have no hover).
+ * always on touch screens, which have no hover: see `docs-syntax.css`).
  */
 
 export const panelFrame = css({
@@ -60,7 +60,6 @@ const copyButton = css({
     outlineColor: 'docsRing',
     outlineOffset: '2px',
   },
-  '@media (hover: none)': { opacity: '1' },
 })
 
 type CopyButtonProps = {

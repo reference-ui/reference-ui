@@ -17,11 +17,21 @@ source is shown as a static, highlighted fenced block.
 
 Flat and quiet, in the spirit of shadcn/ui:
 
-- One grayscale ramp; separation comes from tone and rhythm, not rules.
+- One grayscale ramp; separation comes from tone and rhythm, not rules. The
+  one hue is `docsAccent` (blue), kept to code panels.
 - No heading dividers — vertical space carries the typographic hierarchy.
-- Code panels are borderless fills with a hairline `md` radius; a copy action
-  sits top-right and a centered "View Code" reveal appears only when the source
-  is tall.
+- Page header: the H1 title, then the frontmatter `description` as a muted
+  one-line lead. Any page with a `description` gets it.
+- Tutorials use numbered step headings (`### 1. Install the packages`): step
+  heading, one short sentence, then the code panel.
+- Code panels have a 1px `docsBorder` hairline on a fill one shade off the page
+  (darker in dark mode) and an `md` radius. Highlighted lines
+  (```` ```tsx {4,8-10} ````) are full-width rows tinted with the accent. A
+  copy action sits top-right; a centered "View Code" reveal appears only when
+  the source is tall and has no highlighted lines.
+- `<Install packages="…" dev devPackages="…" />` renders npm / yarn / pnpm /
+  bun tabs over the install command; the selected tab is underlined in the
+  accent, and the choice is shared by every block and remembered.
 - Live examples sit in a flat `Preview` frame; the outline is a right-hand
   (`>=1280px`) table of contents read back from the rendered headings.
 - Border radii stay small (`md`/`sm`); avoid `full` except where a shape is
@@ -31,7 +41,8 @@ Flat and quiet, in the spirit of shadcn/ui:
 
 - Docs live in `src/content/docs/**/*.mdx`. Only `.mdx` is collected; other
   extensions are ignored.
-- Frontmatter contract: `title`, `section`, `order`, `slug`.
+- Frontmatter contract: `title`, `section`, `order`, `slug`, and an optional
+  `description` (the page header's lead).
 - `src/collections/` owns schema, transforms, and slug-to-module lookup.
 - Vite owns MDX module loading; content-collections owns metadata only.
 

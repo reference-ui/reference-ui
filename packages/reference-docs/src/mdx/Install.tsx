@@ -96,8 +96,8 @@ const tab = css({
 
 const command = css({ color: 'docsAccent' })
 
-// Centres the 28px copy button in the 40px tab row.
-const TAB_ROW_COPY = { top: '0.375rem' }
+// Centres the 28px copy button in the 40px tab row, where it stays visible.
+const TAB_ROW_COPY = { top: '0.375rem', opacity: 1 }
 
 type InstallProps = {
   /** Space-separated package names. */

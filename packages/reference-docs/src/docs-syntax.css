@@ -1,4 +1,4 @@
-/* Build-time syntax highlighting (rehype-pretty-code + shiki).
+/* Code panels and build-time syntax highlighting (rehype-pretty-code + shiki).
    Shiki writes both themes as CSS variables on each token; we select the
    active one here, following the docs root's data-color-mode. */
 
@@ -44,4 +44,12 @@ pre[data-theme] span {
   font-style: var(--shiki-dark-font-style);
   font-weight: var(--shiki-dark-font-weight);
   text-decoration: var(--shiki-dark-text-decoration);
+}
+
+/* Touch screens have no hover, so the panel's copy button stays visible. The
+   style-prop API has no media-query key, hence plain CSS. */
+@media (hover: none) {
+  button[data-copy] {
+    opacity: 1;
+  }
 }

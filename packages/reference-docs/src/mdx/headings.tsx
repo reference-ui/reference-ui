@@ -27,7 +27,7 @@ const headingHover = css({
 
 /** A first step straight under its section heading sits closer to it. */
 const stepAfterSection = css({
-  'h2 + &': { marginTop: '6r' },
+  '&:is(h2 + *)': { marginTop: '6r' },
 })
 
 /** MDX native props minus legacy string-refs, which neo primitives don't take. */

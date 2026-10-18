@@ -49,10 +49,13 @@ packages/reference-docs/
       diagrams/               private /diagram gallery (routed, not collected)
     mdx/
       components.tsx          MDX -> docs visual system element mapping
-      CodeBlock.tsx           flat fenced block: copy + "View Code" reveal
+      headings.tsx            page header (title + lead) and section/step headings
+      codePanel.tsx           shared code panel look + copy button
+      CodeBlock.tsx           fenced block: line highlights + "View Code" reveal
+      Install.tsx             npm / yarn / pnpm / bun install tabs
       Preview.tsx             flat specimen frame for live examples
     shared/
-      providers/              cross-cutting React context
+      providers/              cross-cutting React context (theme, page meta)
     main.tsx
     docs-theme.fragments.ts
     docs-syntax.css
