@@ -5,8 +5,6 @@
 //! [`extract_program`] with the resolved imports, so the tree never crosses
 //! a thread. Shard outputs commit in input order through [`FileOut::commit`].
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -16,7 +14,7 @@ use crate::extract::resolver::ResolvedExport;
 use crate::extract::scope::{ImportLookup, ScopeChain};
 use crate::extract::{
     collect_bindings_with_identity, ExtractBindings, ExtractConfig, ExtractContext,
-    ExtractSinks, JsxHosts,
+    ExtractSinks, JsxHosts, OwnedProps,
 };
 use crate::recipes::Recipe;
 use crate::runtime::AuthoredDeclaration;
@@ -109,7 +107,7 @@ fn extract_parsed_program(
         breakpoints: session.breakpoints,
         bindings: &bindings,
         jsx_hosts,
-        owned_props: session.owned_props,
+        owned_props: session.hosts.owned_for(path),
         shadowed: &[],
     };
     let sinks = ExtractSinks {
@@ -150,7 +148,7 @@ pub(crate) struct ExtractIn<'a> {
     pub bindings: &'a ExtractBindings,
     pub breakpoints: &'a BreakpointScale,
     pub traced: &'a FxHashSet<String>,
-    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub owned_props: OwnedProps<'a>,
 }
 
 /// Walk one program the caller already parsed, into owned products.

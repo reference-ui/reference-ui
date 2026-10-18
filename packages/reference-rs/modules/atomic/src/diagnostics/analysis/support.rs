@@ -35,6 +35,7 @@ pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
         traced: Vec::new(),
         configured: Vec::new(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let analyzed = AnalyzedSource {
         path: "test.ts",
@@ -70,6 +71,7 @@ pub(crate) fn analyze_source_hosted(source: &str, configured: &[&str]) -> Vec<Di
         traced: Vec::new(),
         configured: configured.iter().map(ToString::to_string).collect(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let analyzed = AnalyzedSource {
         path: "test.ts",

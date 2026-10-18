@@ -88,7 +88,7 @@ fn run_parse_serial(
         identity,
         breakpoints: request.base_system.breakpoints(),
         traced_jsx: &traced_jsx,
-        owned_props: &hosts.owned_props,
+        hosts: &hosts,
         wants: sinks.wants,
         recipes: sinks.recipes,
         diagnostics: sinks.diagnostics,

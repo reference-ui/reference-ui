@@ -28,6 +28,7 @@ use rustc_hash::FxHashSet;
 use crate::diagnostics::DiagnosticFact;
 use crate::diagnostics::SourceId;
 use crate::extract::constants::LocalConstants;
+use crate::extract::LocalOwned;
 use crate::hosts::ResolvedHosts;
 
 /// One compile input offered to analysis: path, text, and the borrowed parse
@@ -107,12 +108,13 @@ pub struct AnalyzedSource<'a> {
 }
 
 /// The per-compile context both surfaces share: host names, host-owned
-/// props, const values, the system name, the composed-system qualifier list,
+/// props (exported, and each file's own components by path), const values, the system name, the composed-system qualifier list,
 /// and the exact runtime style-prop set that decides responsive-value vs
 /// condition positions.
 pub struct AnalysisCtx<'a> {
     pub hosts: FxHashSet<String>,
     pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub local_owned: &'a LocalOwned,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
     pub qualifiers: &'a [String],
@@ -150,6 +152,7 @@ pub(crate) fn context<'a>(
     AnalysisCtx {
         hosts: names,
         owned_props: &hosts.owned_props,
+        local_owned: &hosts.local_owned,
         constants,
         system,
         qualifiers,

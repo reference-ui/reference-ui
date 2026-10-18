@@ -7,7 +7,6 @@
 //! plain identifier bindings; destructured patterns stay unshadowed.
 
 use std::cell::Cell;
-use std::collections::{BTreeMap, BTreeSet};
 
 use oxc_ast::ast::{
     BindingPattern, CallExpression, ExportDefaultDeclaration, FormalParameters, JSXOpeningElement,
@@ -30,6 +29,7 @@ use super::css;
 use super::harvest;
 use super::jsx;
 use super::jsx_hosts::JsxHosts;
+use super::owned_props::OwnedProps;
 use super::recipes;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{ScopeChain, ScopeId, ROOT_SCOPE};
@@ -43,7 +43,7 @@ pub struct ExtractVisitor<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
-    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub owned_props: OwnedProps<'a>,
     pub wrapper_threads: WrapperThreads,
     pub shadows: Vec<FxHashSet<String>>,
     pub scope_stack: Vec<ScopeId>,

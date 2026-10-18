@@ -219,6 +219,7 @@ fn analyze_with_panic(contents: &[&str], panicked: Option<usize>) -> Vec<Diagnos
         traced: Vec::new(),
         configured: Vec::new(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let parse = CompileParse {
         sources: &sources,

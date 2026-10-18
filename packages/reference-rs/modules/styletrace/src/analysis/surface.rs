@@ -88,6 +88,10 @@ pub struct TraceOutcome {
     /// Each export name that declares props to the prop names its declaration
     /// keeps for itself (§14), traced or not, unioned with the input surface's seeds.
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
+    /// Each parsed module to the owned props of the components it declares, by
+    /// local name, exported or not. A same-file call site reads its own
+    /// components here; the names never leave their file.
+    pub local_owned: BTreeMap<PathBuf, BTreeMap<String, BTreeSet<String>>>,
 }
 
 /// Caller-held module inputs for one entry-listed trace: staged bytes by
@@ -259,13 +263,9 @@ impl SurfaceTraceSession<'_> {
     ) -> TraceOutcome {
         let mut diagnostics = Vec::new();
         self.parse_missing(entries, &mut modules, &mut diagnostics);
-        let (bindings, mut owned_props) = self.walk(modules, &mut diagnostics);
-        union_surface_props(&self.surface.owned_props, &mut owned_props);
-        TraceOutcome {
-            bindings,
-            diagnostics,
-            owned_props,
-        }
+        let mut outcome = self.walk(modules, diagnostics);
+        union_surface_props(&self.surface.owned_props, &mut outcome.owned_props);
+        outcome
     }
 
     /// Parse entries the caller did not fold, recording one diagnostic per failure.
@@ -298,8 +298,8 @@ impl SurfaceTraceSession<'_> {
     fn walk(
         &self,
         modules: BTreeMap<PathBuf, TraceModule>,
-        diagnostics: &mut Vec<StyletraceDiagnostic>,
-    ) -> (Vec<TracedBinding>, BTreeMap<String, BTreeSet<String>>) {
+        mut diagnostics: Vec<StyletraceDiagnostic>,
+    ) -> TraceOutcome {
         let mut analyzer = StyleTraceAnalyzer::new(
             modules,
             self.surface.clone(),
@@ -311,12 +311,17 @@ impl SurfaceTraceSession<'_> {
         let bindings = match analyzer.collect_exported_bindings(self.source_root) {
             Ok(bindings) => bindings,
             Err(error) => {
-                push_skipped(diagnostics, None, error.to_string());
+                push_skipped(&mut diagnostics, None, error.to_string());
                 Vec::new()
             }
         };
         diagnostics.extend(analyzer.take_diagnostics());
-        (bindings, analyzer.take_owned_props())
+        TraceOutcome {
+            bindings,
+            diagnostics,
+            owned_props: analyzer.take_owned_props(),
+            local_owned: analyzer.local_owned_props(),
+        }
     }
 }
 

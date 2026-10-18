@@ -13,6 +13,7 @@ fn analysis_predicts_nothing_for_no_sources() {
         traced: Vec::new(),
         configured: Vec::new(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let constants = LocalConstants::new();
     let input = AnalysisInput {
@@ -38,6 +39,7 @@ fn sources_keep_input_order_as_source_ids() {
         traced: Vec::new(),
         configured: Vec::new(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let input = AnalysisInput {
         sources: vec![
@@ -76,6 +78,7 @@ fn for_compile_filters_panicked_sources() {
         traced: Vec::new(),
         configured: Vec::new(),
         owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
     };
     let constants = LocalConstants::new();
     let parse = CompileParse {

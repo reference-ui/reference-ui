@@ -249,3 +249,63 @@ fn declared_owned_props_union_with_traced_ones_on_both_paths() {
         assert!(!props.contains(&"size"), "size is owned: {props:?}");
     }
 }
+
+/// Issue #23: a same-file component that turns `size` into `data-size`. It is
+/// not exported, so no export name carries its owned props.
+const LOCAL_OWNER: &str = "import { Button } from '@reference-ui/react'\nfunction LocalButton({ size }: { size: 'sm' | 'lg' }) {\n  return <Button data-size={size}>x</Button>\n}\nexport const example = <LocalButton size=\"lg\" />\n";
+/// Another file whose imported `LocalButton` forwards `size` as a style prop.
+const FORWARDING_BUTTON: &str = "import { Div } from '@reference-ui/react'\nexport function LocalButton(props: { size?: string }) {\n  return <Div {...props} />\n}\n";
+const FORWARDING_APP: &str = "import { LocalButton } from './Forwarding'\nexport const app = <LocalButton size=\"2r\" />\n";
+
+/// Serial and lane results for one tree, with proof logs so wants are kept.
+fn both_paths(tree: &Tree) -> [CompileResult; 2] {
+    let proof = |files: Vec<VirtualSource>| {
+        let mut proof = request(tree, files);
+        proof.logs = Some(vec!["proof".to_string()]);
+        proof
+    };
+    let serial = compile_serial(&proof(Vec::new()));
+    let lanes = compile_lanes(&proof(fillers(tree)));
+    assert_same_verdict(&serial, &lanes);
+    [serial, lanes]
+}
+
+/// Files that mint a `size` want.
+fn sized_files(result: &CompileResult) -> Vec<&str> {
+    result
+        .wants
+        .iter()
+        .filter(|want| &*want.prop == "size")
+        .filter_map(|want| want.file.as_deref())
+        .collect()
+}
+
+/// A same-file component's own prop is never a style at its call sites, on
+/// either path: no want, and no size-token warning for its `lg`.
+#[test]
+fn same_file_component_owns_its_consumed_props_on_both_paths() {
+    let tree = Tree::new("local-owned");
+    tree.write("src/Local.tsx", LOCAL_OWNER);
+    for result in both_paths(&tree) {
+        assert!(sized_files(&result).is_empty(), "{:?}", result.wants);
+        let unknown = result
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.code == DiagnosticCode::UnknownToken);
+        assert_eq!(unknown.count(), 0, "{:?}", result.diagnostics);
+    }
+}
+
+/// The shadow stays in its file: an imported component of the same name
+/// elsewhere still forwards `size` as a style.
+#[test]
+fn same_file_owned_props_stay_in_their_file() {
+    let tree = Tree::new("local-owned-scope");
+    tree.write("src/Local.tsx", LOCAL_OWNER);
+    tree.write("src/Forwarding.tsx", FORWARDING_BUTTON);
+    tree.write("src/App.tsx", FORWARDING_APP);
+    let app = tree.path("src/App.tsx");
+    for result in both_paths(&tree) {
+        assert_eq!(sized_files(&result), vec![app.as_str()], "{:?}", result.wants);
+    }
+}

@@ -20,6 +20,7 @@ pub mod identity;
 pub mod identity_map;
 pub mod jsx;
 pub mod jsx_hosts;
+pub mod owned_props;
 pub mod recipes;
 pub mod resolver;
 pub mod scope;
@@ -30,8 +31,6 @@ pub(crate) mod suggest;
 #[cfg(test)]
 mod tests;
 
-use std::collections::BTreeMap;
-
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit as _;
 use rustc_hash::FxHashSet;
@@ -41,6 +40,7 @@ use base_system::BreakpointScale;
 pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
 pub use context::{ExtractConfig, ExtractContext, ExtractSinks};
 pub use jsx_hosts::JsxHosts;
+pub use owned_props::{LocalOwned, OwnedMap, OwnedProps};
 pub use visitor::ExtractVisitor;
 
 /// Extract all style wants and diagnostics from a parsed AST program with provided context.
@@ -89,13 +89,16 @@ pub fn extract(
         local: bindings.jsx_hosts_ref(),
         global: &no_global,
     };
-    let owned_props = BTreeMap::new();
+    let no_owned = OwnedMap::new();
     let config = ExtractConfig {
         chain,
         breakpoints,
         bindings: &bindings,
         jsx_hosts,
-        owned_props: &owned_props,
+        owned_props: OwnedProps {
+            global: &no_owned,
+            local: None,
+        },
         shadowed: &[],
     };
     let mut ctx = ExtractContext::new(file, None, config, sinks);

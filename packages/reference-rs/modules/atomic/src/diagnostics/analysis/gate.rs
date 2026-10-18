@@ -6,15 +6,15 @@
 //! attributes stay silent. Both the JSX visitor and the spread-bag walker
 //! gate through here so attribute filtering agrees everywhere.
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use canon::{is_condition_prop, is_known_style_prop};
 
-/// The host gate one JSX attribute consults: the tag plus the host-owned
-/// prop map. Owned names are the host's own props, never styles.
+use crate::extract::OwnedProps;
+
+/// The host gate one JSX attribute consults: the tag plus the owned props
+/// its file reads. Owned names are the host's own props, never styles.
 pub struct AttrGate<'a> {
     pub tag: &'a str,
-    pub owned: &'a BTreeMap<String, BTreeSet<String>>,
+    pub owned: OwnedProps<'a>,
 }
 
 /// True for attribute names that carry styles on this host.
@@ -28,14 +28,5 @@ pub fn is_style_attr(gate: &AttrGate<'_>, name: &str) -> bool {
 /// True when the host's own declaration owns this prop name. Member tags
 /// match concatenated hosts, mirroring the tag gate.
 fn host_owns(gate: &AttrGate<'_>, name: &str) -> bool {
-    if let Some(owned) = gate.owned.get(gate.tag) {
-        if owned.contains(name) {
-            return true;
-        }
-    }
-    gate.tag.contains('.')
-        && gate
-            .owned
-            .get(&gate.tag.replace('.', ""))
-            .is_some_and(|owned| owned.contains(name))
+    gate.owned.owns(gate.tag, name)
 }

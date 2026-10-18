@@ -7,8 +7,6 @@
 //! only. Native `style` is excluded: it never uses the runtime style-plan
 //! lookup. Lowercase DOM tags and attributes emit nothing.
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use oxc_ast::ast::{
@@ -27,6 +25,7 @@ use super::object::{Site, WalkCtx};
 use super::{is_shadowed, AnalysisCtx, AnalyzedSource};
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
+use crate::extract::OwnedProps;
 
 use self::aliases::collect_ident_aliases;
 
@@ -49,7 +48,7 @@ pub fn expectations(
         style_props: &ctx.style_props,
         constants: ctx.constants,
         hosts: &ctx.hosts,
-        owned: ctx.owned_props,
+        owned: OwnedProps::for_file(ctx.owned_props, ctx.local_owned, source.path),
         shadows: Vec::new(),
         opaque: Vec::new(),
         decl_kind: VariableDeclarationKind::Var,
@@ -70,7 +69,7 @@ struct JsxVisitor<'a, 'b> {
     style_props: &'a FxHashSet<String>,
     constants: &'a LocalConstants,
     hosts: &'a FxHashSet<String>,
-    owned: &'a BTreeMap<String, BTreeSet<String>>,
+    owned: OwnedProps<'a>,
     shadows: Vec<FxHashSet<String>>,
     /// Per-scope names bound by anything but a const declarator: params,
     /// `let`/`var` declarators, and function/class declarations. The alias

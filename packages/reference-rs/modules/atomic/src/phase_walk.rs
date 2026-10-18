@@ -118,7 +118,7 @@ fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
             bindings: &bindings,
             breakpoints: shared.breakpoints,
             traced: &published.traced,
-            owned_props: &published.hosts.owned_props,
+            owned_props: published.hosts.owned_for(path),
         },
     );
     let analysis = match published.source_ids.get(index).copied().flatten() {

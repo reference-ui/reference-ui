@@ -5,7 +5,9 @@
 //! include-scoped entries extraction compiles; per-file failures become
 //! located warnings, never silent empty sets. Every path also unions the
 //! base system's declared `jsxOwned` into the owned props, so a published
-//! component with no source to trace still keeps its own prop names.
+//! component with no source to trace still keeps its own prop names. Owned
+//! props of components a module never exports stay keyed by that module's
+//! path, so only its own call sites read them.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -19,6 +21,7 @@ use styletrace::{
 
 use crate::{
     diagnostics::{DiagnosticFact, DiagnosticSink, DiagnosticsSession, Policy},
+    extract::{LocalOwned, OwnedProps},
     BaseSystem, CompileRequest, Diagnostic,
 };
 
@@ -42,6 +45,9 @@ pub struct ResolvedHosts {
     pub configured: Vec<String>,
     /// Each export name that declares props to the prop names it keeps for itself (§14), traced or not.
     pub owned_props: BTreeMap<String, BTreeSet<String>>,
+    /// Each traced module path to the owned props of the components it declares, by local name,
+    /// exported or not. Only that file's call sites read them.
+    pub local_owned: LocalOwned,
 }
 
 /// The inputs `resolve` reads beside the request: the compile's collected sources, the main-phase
@@ -53,6 +59,11 @@ pub struct ResolveInputs<'a> {
 }
 
 impl ResolvedHosts {
+    /// The owned props the file at `path` reads: every export's plus its own components'.
+    pub fn owned_for(&self, path: &str) -> OwnedProps<'_> {
+        OwnedProps::for_file(&self.owned_props, &self.local_owned, path)
+    }
+
     /// Sorted union gating extraction.
     pub fn hosts(&self) -> FxHashSet<String> {
         let mut hosts = FxHashSet::default();
@@ -68,6 +79,7 @@ impl ResolvedHosts {
             traced: Vec::new(),
             configured: request.jsx_hosts.clone().unwrap_or_default(),
             owned_props: BTreeMap::new(),
+            local_owned: LocalOwned::new(),
         };
         hosts.union_declared_owned(&request.base_system);
         hosts
@@ -263,6 +275,7 @@ fn hosts_from(
         traced,
         configured: request.jsx_hosts.clone().unwrap_or_default(),
         owned_props: outcome.owned_props,
+        local_owned: outcome.local_owned,
     };
     hosts.union_declared_owned(&request.base_system);
     (hosts, diagnostics)

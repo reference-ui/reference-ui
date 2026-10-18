@@ -20,6 +20,13 @@ own, never as styles. Both sources are unioned as sets into the owned map on eve
 lane-folded, configured-only, vacant), the extraction gate reads it by tag
 name, and the compile result reports the union as `tracedJsxOwned`.
 
+A component its module never exports has no export name to key, so the trace
+also reports each module's own components' owned props by path and local
+name. Extraction and analysis read them only for that file, beside the
+global map: a local `LocalButton` that turns `size` into `data-size` owns
+`size` at its own call sites without shadowing a same-named component that
+another file imports.
+
 A source that is not on disk is never traced: it cannot be an entry, and no
 import edge resolves to it. Serial and lane folds share that rule
 (`on_disk_source`), so a virtual wrapper adds no traced host on either path;

@@ -59,7 +59,7 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use diagnostics::DiagnosticSink;
 use lanes::{Lanes, WorkKind};
@@ -72,7 +72,7 @@ struct ParseSession<'a> {
     identity: extract::identity::IdentityGraph<'a>,
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a FxHashSet<String>,
-    owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    hosts: &'a hosts::ResolvedHosts,
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,

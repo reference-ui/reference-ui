@@ -6,7 +6,6 @@ use super::super::support::{dynamic_count, exact_keys, parse_for_test};
 use super::*;
 use crate::diagnostics::{DiagnosticFact, SourceId, StyleSurfaceKind};
 use rustc_hash::FxHashSet;
-use std::collections::{BTreeMap, BTreeSet};
 
 // Walker-level: visitors shadow top-level declarators end to end.
 fn walk_bag_const(source: &str) -> Vec<DiagnosticFact> {
@@ -17,10 +16,13 @@ fn walk_bag_const(source: &str) -> Vec<DiagnosticFact> {
     let bag = constants.get_object("bag").expect("const bag");
     let style_props: FxHashSet<String> = ["mt"].into_iter().map(str::to_string).collect();
     let shadows: Vec<FxHashSet<String>> = Vec::new();
-    let owned: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let owned = crate::extract::OwnedMap::new();
     let gate = AttrGate {
         tag: "Div",
-        owned: &owned,
+        owned: crate::extract::OwnedProps {
+            global: &owned,
+            local: None,
+        },
     };
     let mut facts = Vec::new();
     let mut walk = WalkCtx {

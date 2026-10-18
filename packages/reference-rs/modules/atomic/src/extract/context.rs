@@ -13,8 +13,6 @@ mod walks;
 
 pub use walks::WalkSite;
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use oxc_span::Span;
 use rustc_hash::FxHashSet;
 
@@ -26,6 +24,7 @@ use base_system::BreakpointScale;
 use super::bindings::{self, ExtractBindings};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
+use super::owned_props::OwnedProps;
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{BindingInit, BindingKind, Lookup, ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 use super::wrapper_thread::WrapperThreads;
@@ -36,7 +35,7 @@ pub struct ExtractConfig<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
-    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub owned_props: OwnedProps<'a>,
     pub shadowed: &'a [FxHashSet<String>],
 }
 
@@ -62,7 +61,7 @@ pub struct ExtractContext<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
-    pub owned_props: &'a BTreeMap<String, BTreeSet<String>>,
+    pub owned_props: OwnedProps<'a>,
     pub wrapper_threads: Option<&'a WrapperThreads>,
     pub shadowed: &'a [FxHashSet<String>],
     pub recipe_binding: Option<&'a str>,
@@ -210,18 +209,10 @@ impl<'a> ExtractContext<'a> {
     /// True when the host's own declaration owns this prop name (§14).
     /// Owned names shadow style props on that host, so the JSX check
     /// consults this before any macro or style-prop test. Member tags
-    /// match concatenated hosts, mirroring [`Self::allows_jsx_tag`].
+    /// match concatenated hosts, mirroring [`Self::allows_jsx_tag`], and
+    /// this file's own components answer beside the exported ones.
     pub fn host_owns(&self, tag: &str, name: &str) -> bool {
-        if let Some(owned) = self.owned_props.get(tag) {
-            if owned.contains(name) {
-                return true;
-            }
-        }
-        tag.contains('.')
-            && self
-                .owned_props
-                .get(&tag.replace('.', ""))
-                .is_some_and(|owned| owned.contains(name))
+        self.owned_props.owns(tag, name)
     }
 
     /// True when the tag threads `css` into a host (inner rebinds veto).
