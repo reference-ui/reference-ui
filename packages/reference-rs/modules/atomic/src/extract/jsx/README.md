@@ -9,12 +9,15 @@ import { Div } from '@reference-ui/react'
 ```
 
 String attrs, expression containers, boolean props, spreads, `r={{…}}`,
-and a `css={…}` attr are all JSX. Tags extract when they are in the
-styletrace name set or imported from `@reference-ui/react` /
-`@reference-ui/styled`. An empty host set admits nothing: style-bearing
-JSX with no hosts resolvable is a missing-graph error (ATM-SITE-13),
-once per file. Once any host is known, other tags (including local
-`<Foo mt="2r" />`) are skipped silently.
+and a `css={…}` attr are all JSX. A tag lowers one of three ways. An own
+host (a styletrace name, or a component imported from
+`@reference-ui/react` / `@reference-ui/styled`) lowers its wants under
+the app's system. Any other capitalized tag, a local `<Foo mt="2r" />`
+or a package's `<Button>`, is an external component: its wants lower
+with `external: true` and the consumer backs them under every composed
+system. Lowercase tags that are not hosts are skipped silently. An empty
+host set admits nothing: style-bearing JSX with no hosts resolvable is a
+missing-graph error (ATM-SITE-13), once per file.
 
 Ownership comes from the tag root's provenance, not its name. A root
 whose import ends at an installed package (directly, or through project

@@ -57,8 +57,9 @@ export interface BaseSystem {
 
 /**
  * The config surface the roster join reads: upstream extends and layers plus
- * the local escape hatch. Layers feed only the owned prop map; the roster
- * names come from extends. ReferenceUIConfig satisfies it structurally, so the
+ * the local `jsxElements` field. Layers feed only the owned prop map; the
+ * roster names come from extends and reach the engine apart from the own
+ * hosts (`upstreamHosts`). ReferenceUIConfig satisfies it structurally, so the
  * join takes this instead of the config type and no config↔base cycle forms.
  */
 export interface ExtendsCarrier {

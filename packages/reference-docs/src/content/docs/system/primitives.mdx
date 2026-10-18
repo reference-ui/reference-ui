@@ -96,21 +96,19 @@ overriding each other.
 
 A component that forwards style props to a primitive works as a style host
 too, so `<Card padding="4r" />` compiles when `Card` passes its props to a
-`Div`. The compiler finds these wrappers itself. For a component it cannot
-trace, such as a generated one, list its name in `jsxElements` in
-`ui.config.ts`:
-
-```ts
-export default defineConfig({
-  name: 'my-app',
-  include: ['src/**/*.{ts,tsx}'],
-  jsxElements: ['Chart'],
-})
-```
+`Div`. The compiler finds these wrappers itself: it follows the props through
+spreads, other wrappers, re-exports and barrel files. There is nothing to
+register.
 
 A prop the component reads for itself and does not pass on, such as a `size`
 it turns into `data-size`, stays the component's own prop and is never
 treated as a style prop.
+
+Components you import from a package, such as those in `@reference-ui/lib`,
+take style props too. They render with the package's own system, so their
+style props compile when that package's `baseSystem` is in `extends` or
+`layers`. With nothing in either, `ref sync` warns `ATM-W-EXTERNAL-UNBACKED`
+at the component.
 
 ## Types
 

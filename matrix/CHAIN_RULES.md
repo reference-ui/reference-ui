@@ -23,7 +23,7 @@ In practice that boundary is made from five distinct surfaces:
 - `fragment`: the portable config-time fragment bundle used by `extends`
 - `fragments`: the named fragment nodes (`{ name, bundle }`), upstream first and its own last, that `extends` linearizes by first occurrence
 - `streams`: the portable per-system stylesheet blocks used by `layers` and other downstream CSS consumers (D17 cutover: the structured payload replaces the old `css` string, which stays dead)
-- `jsxElements`: published host metadata (discovered ∪ configured names); the config field is an escape hatch, not a registry
+- `jsxElements`: published host metadata (traced names, plus any configured). Downstream these names reach the engine as `upstreamHosts`, never as own hosts: a tag imported from the package is external by provenance. No fixture configures the field; ownership comes from tracing and provenance alone
 
 The important rule is simple:
 
