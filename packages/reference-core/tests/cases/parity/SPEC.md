@@ -65,7 +65,7 @@ P-DELTA-4. `(b)` blocked rows are known-unproven and never appear here.
 | prim | 3+5 | Box/Flex/Grid · as · cx/splitCssProps ‖ styled()/factory · pattern fns · data-panda-theme/data-theme · liquid/forwardRef · sva on primitives |
 | static | 4+5 | static recipes · static slots/patterns · colorPalette wildcards · named container statics ‖ cache/memo/bench · freeform condition strings · sva statics · text/layer statics · prefix/hash |
 | layer | 6+4 | empty base/recipes bodies · recipes._base/slots inner · compositions layer · banner+var-dump · colorPalette atoms · ★F7 scoped reset ‖ custom layer names · LightningCSS five-layer · static recipe expansion · panda.config/global.css inputs |
-| type | 6+6 | strict hatches · pattern+factory types · recipes d.ts + tokens.mjs/token() · styled global.d.ts · TokenCategory/ColorPalette unions · text/layer/animation+asset+formatTokenName+hashed ‖ bare sm keys · ConditionalValue variants · csstype dump · atomic names in d.ts · cva/css.raw · token.var/globalVars |
+| type | 6+6 | strict hatches · pattern+factory types · recipes d.ts + tokens.mjs/token() · styled global.d.ts · TokenCategory/ColorPalette unions · text/layer/animation+asset+formatTokenName+hashed ‖ @sm breakpoint keys · ConditionalValue variants · csstype dump · atomic names in d.ts · cva/css.raw · token.var/globalVars |
 | ★ parity-owned | 1 | P-DELTA-4: boolean leaks (`.focus_true`, `.isolation_true`, …) + dotted passthroughs (`background: ui.panel.background`) — parity-owned extension of the rule that Panda bugs are not parity |
 
 Group union: 158 entries (78 approved + 80 out-of-scope, incl. 10

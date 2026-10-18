@@ -37,7 +37,8 @@ describe('typegen native seam', () => {
     expect(dts).toContain('export type ButtonVariantProps =')
     expect(dts).toContain('export type ButtonCompoundVariant =')
     expect(dts).toContain('export type StyleConditionKey =')
-    expect(dts).toContain("'@sm'")
+    expect(dts).toContain("export type BreakpointKey = ")
+    expect(dts).not.toContain("'@sm'")
     expect(dts).toContain('export type SystemStyleObject = StyleProps &')
   })
 

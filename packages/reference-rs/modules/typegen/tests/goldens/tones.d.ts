@@ -17,9 +17,10 @@ export interface Tokens {
 
 export interface FontRegistry {}
 
-export type StyleConditionKey = '@2xl' | '@lg' | '@md' | '@sm' | '@xl' | '_active' | '_after' | '_autofill' | '_backdrop' | '_before' | '_checked' | '_closed' | '_current' | '_currentPage' | '_currentStep' | '_dark' | '_default' | '_disabled' | '_dragging' | '_empty' | '_enabled' | '_even' | '_expanded' | '_file' | '_first' | '_firstOfType' | '_focus' | '_focusVisible' | '_focusWithin' | '_fullscreen' | '_grabbed' | '_groupActive' | '_groupChecked' | '_groupDisabled' | '_groupExpanded' | '_groupFocus' | '_groupFocusVisible' | '_groupHover' | '_groupInvalid' | '_highContrast' | '_hover' | '_indeterminate' | '_invalid' | '_landscape' | '_last' | '_lastOfType' | '_lessContrast' | '_light' | '_loading' | '_ltr' | '_marker' | '_moreContrast' | '_motionReduce' | '_motionSafe' | '_odd' | '_only' | '_onlyOfType' | '_open' | '_optional' | '_osDark' | '_osLight' | '_peerActive' | '_peerChecked' | '_peerDisabled' | '_peerExpanded' | '_peerFocus' | '_peerFocusVisible' | '_peerHover' | '_peerInvalid' | '_placeholder' | '_placeholderShown' | '_portrait' | '_print' | '_readOnly' | '_readWrite' | '_required' | '_rtl' | '_selected' | '_selection' | '_target' | '_userInvalid' | '_userValid' | '_valid' | '_visited';
+export type StyleConditionKey = '_active' | '_after' | '_autofill' | '_backdrop' | '_before' | '_checked' | '_closed' | '_current' | '_currentPage' | '_currentStep' | '_dark' | '_default' | '_disabled' | '_dragging' | '_empty' | '_enabled' | '_even' | '_expanded' | '_file' | '_first' | '_firstOfType' | '_focus' | '_focusVisible' | '_focusWithin' | '_fullscreen' | '_grabbed' | '_groupActive' | '_groupChecked' | '_groupDisabled' | '_groupExpanded' | '_groupFocus' | '_groupFocusVisible' | '_groupHover' | '_groupInvalid' | '_highContrast' | '_hover' | '_indeterminate' | '_invalid' | '_landscape' | '_last' | '_lastOfType' | '_lessContrast' | '_light' | '_loading' | '_ltr' | '_marker' | '_moreContrast' | '_motionReduce' | '_motionSafe' | '_odd' | '_only' | '_onlyOfType' | '_open' | '_optional' | '_osDark' | '_osLight' | '_peerActive' | '_peerChecked' | '_peerDisabled' | '_peerExpanded' | '_peerFocus' | '_peerFocusVisible' | '_peerHover' | '_peerInvalid' | '_placeholder' | '_placeholderShown' | '_portrait' | '_print' | '_readOnly' | '_readWrite' | '_required' | '_rtl' | '_selected' | '_selection' | '_target' | '_userInvalid' | '_userValid' | '_valid' | '_visited';
+export type BreakpointKey = '2xl' | '2xlDown' | '2xlOnly' | 'base' | 'lg' | 'lgDown' | 'lgOnly' | 'lgTo2xl' | 'lgToXl' | 'md' | 'mdDown' | 'mdOnly' | 'mdTo2xl' | 'mdToLg' | 'mdToXl' | 'sm' | 'smDown' | 'smOnly' | 'smTo2xl' | 'smToLg' | 'smToMd' | 'smToXl' | 'xl' | 'xlDown' | 'xlOnly' | 'xlTo2xl';
 
-export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey]?: T };
+export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey | BreakpointKey]?: T };
 
 type StringKey<T> = Extract<keyof T, string>;
 
@@ -1448,7 +1449,7 @@ export type StyleProps = FontProps & {
 };
 
 export type SystemStyleObject = StyleProps & {
-  [K in StyleConditionKey]?: SystemStyleObject;
+  [K in StyleConditionKey | BreakpointKey]?: SystemStyleObject;
 } & {
   [K in `&${string}`]?: SystemStyleObject;
 };

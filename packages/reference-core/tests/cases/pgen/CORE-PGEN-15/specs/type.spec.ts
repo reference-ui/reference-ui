@@ -54,7 +54,7 @@ function readWorldTsconfig(worldDir: string): Record<string, string[]> {
 const POSITIVE = `import type { AProps, DetailsProps, DivProps, ImgProps, InputProps, SpanProps, TableProps } from '@reference-ui/react'
 
 const flow: DivProps = { color: 'brand', css: { marginTop: '4px' }, _hover: { color: 'ink' } }
-const text: SpanProps = { color: 'ink', css: { color: 'brand' }, '@sm': { color: 'paper' } }
+const text: SpanProps = { color: 'ink', css: { color: 'brand', md: { color: 'paper' } }, _active: { color: 'paper' } }
 const form: InputProps = { backgroundColor: 'paper', _focus: { color: 'brand' } }
 const table: TableProps = { width: '100%', _first: { color: 'ink' } }
 const media: ImgProps = { opacity: '1', _hover: { opacity: '0.8' } }

@@ -167,7 +167,7 @@ export const UNION: UnionEntry[] = [
   { id: 'type-a4', group: 'type', kind: 'approved', label: 'styled global.d.ts', key: 'global.d.ts' },
   { id: 'type-a5', group: 'type', kind: 'approved', label: 'TokenCategory/ColorPalette unions', key: '`TokenCategory`' },
   { id: 'type-a6', group: 'type', kind: 'approved', label: 'text/layer/animation+asset+formatTokenName+hashed', key: '`formatTokenName`' },
-  { id: 'type-o1', group: 'type', kind: 'oos', label: 'bare sm keys', key: 'Bare `sm`' },
+  { id: 'type-o1', group: 'type', kind: 'oos', label: '@sm breakpoint keys', key: '`@sm`/`@md` breakpoint keys' },
   { id: 'type-o2', group: 'type', kind: 'oos', label: 'ConditionalValue variants', key: '`ConditionalValue`-wrapped' },
   { id: 'type-o3', group: 'type', kind: 'oos', label: 'csstype dump', key: '`csstype.Properties`' },
   { id: 'type-o4', group: 'type', kind: 'oos', label: 'atomic names in d.ts', key: 'Atomic class names' },

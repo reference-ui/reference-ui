@@ -81,7 +81,7 @@ pub(crate) fn run(
     }
     let published = Mutex::new(None);
     let breakpoints = request.base_system.breakpoints();
-    let surface = hosts::engine_surface(&request.base_system);
+    let surface = hosts::engine_surface();
     let trace_root = hosts::trace_root(request);
     let shared = Shared {
         request,

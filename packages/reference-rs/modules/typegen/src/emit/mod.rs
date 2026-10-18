@@ -9,6 +9,7 @@
 //! `never`. The token catalog omits breakpoints, fonts, and SystemStyleObject.
 //! Strict wrappers are printer options, not dump fields.
 
+mod breakpoints;
 mod fonts;
 mod props;
 mod recipes;

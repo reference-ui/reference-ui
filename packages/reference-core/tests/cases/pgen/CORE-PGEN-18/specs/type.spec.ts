@@ -15,29 +15,30 @@ interface SpecInput {
   case: CoreCase;
 }
 
-// Condition arms, a breakpoint arm, and a responsive array with a null hole
-// all assign, and bare sm is absent from the key set at the type level.
+// Condition arms, a base/md breakpoint object, and a responsive array with a
+// null hole all assign, and bare sm is absent from the prop keys at the type
+// level: breakpoints key values and css blocks, never a primitive's props.
 // Materialized into a temp dir at spec time because it cannot live in the
 // repo: the harness pre-run typecheck resolves @reference-ui/react to the
 // stable surface, while this consumer proves the vendored E4.
 const POSITIVE = `import type { StyleProps } from '@pgen/primitives'
 
-const arms: StyleProps = { _hover: { color: 'brand' }, '@sm': { color: 'ink' } }
+const arms: StyleProps = { _hover: { color: 'brand' }, padding: { base: '2r', md: '4r' } }
 const responsive: StyleProps = { padding: [null, '4r'] }
 type HasBareSm = 'sm' extends keyof StyleProps ? true : false
 const bareSmAbsent: HasBareSm = false
 export const probes = { arms, responsive, bareSmAbsent }
 `;
 
-// Bare sm is not a condition key (@sm only), so a bare-sm keyed object
-// is rejected with TS2353. Same temp-dir materialization as the positive file.
+// Bare sm is not a prop (the compiler and the splitter read it as an element
+// attribute), so a bare-sm keyed props object is rejected with TS2353. Same temp-dir materialization as the positive file.
 const NEGATIVE = `import type { StyleProps } from '@pgen/primitives'
 
 const bad: StyleProps = { sm: { color: 'brand' } }
 export { bad }
 `;
 
-// After sync, condition and breakpoint arms plus null-hole arrays assign
+// After sync, condition arms, breakpoint objects and null-hole arrays assign
 // against the vendored E4 with bare sm absent from the keys, a bare-sm keyed
 // object fails with TS2353, and the same world paints its brand root.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {

@@ -12,7 +12,7 @@ use super::ts::quote_literal;
 use std::collections::BTreeSet;
 
 const SYSTEM_STYLE_OBJECT: &str = r#"export type SystemStyleObject = StyleProps & {
-  [K in StyleConditionKey]?: SystemStyleObject;
+  [K in StyleConditionKey | BreakpointKey]?: SystemStyleObject;
 } & {
   [K in `&${string}`]?: SystemStyleObject;
 };

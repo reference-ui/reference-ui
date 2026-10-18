@@ -33,9 +33,11 @@ that lists a valid `compoundVariants` row also prints `ButtonCompoundVariant`
 with the same optional axis unions plus a `css` declaration map. Fonts
 become a quoted `FontRegistry` whose weight keys are dump map keys (`bold`),
 not CSS numbers (`700`). A dump that declares breakpoints plus color or spacing
-tokens also prints `StyleConditionKey`, `StylePropValue<T>`, discriminated
+tokens also prints `StyleConditionKey` (named conditions), `BreakpointKey`
+(`base`, bare scale names such as `md`, and their `Down` / `Only` / `To`
+ranges, never `@md`), `StylePropValue<T>`, discriminated
 `FontProps`, `StyleProps = FontProps & { … }` with dialect `container` /
-recursive `r`, and recursive `SystemStyleObject` (condition keys plus
+recursive `r`, and recursive `SystemStyleObject` (condition and breakpoint keys plus
 `&${string}` selectors). Radius keys from canon (`borderRadius` and other
 `*Radius` names, never Panda `rounded*`) print when the dump has a `radii`
 category. Font-less StyleProps still emit `FontRegistry {}` so

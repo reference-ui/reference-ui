@@ -19,25 +19,31 @@ interface SpecInput {
 
 const MAX_LINES = 40;
 
-// _hover and @sm nest as conditions, a responsive array carries a null hole,
-// and deep pseudo/selector nesting stays inside the recursion budget.
+// _hover and bare breakpoint keys nest as conditions, base/md objects and
+// ranges assign as the Responsive page writes them (on css objects and on a
+// primitive's props), a responsive array carries a null hole, and deep
+// pseudo/selector nesting stays inside the recursion budget.
 // Materialized into a temp dir at spec time because it cannot live in the
 // repo: the harness pre-run typecheck resolves @reference-ui/react to the
 // stable surface, whose wide records would accept the negative.
-const POSITIVE = `import type { SystemStyleObject } from '@reference-ui/react'
+const POSITIVE = `import type { DivProps, SystemStyleObject } from '@reference-ui/react'
 
 const hover: SystemStyleObject = { _hover: { color: 'brand' } }
-const atSm: SystemStyleObject = { '@sm': { p: 'sm' } }
+const blocks: SystemStyleObject = { md: { p: 'sm' }, sm: { lg: { color: 'brand' } } }
+const ranges: SystemStyleObject = { mdDown: { p: 'sm' }, mdOnly: { p: 'sm' }, smToLg: { p: 'sm' } }
+const keyed: SystemStyleObject = { gridTemplateColumns: { base: '1fr', md: 'repeat(3, 1fr)' } }
+const grid: DivProps = { display: 'grid', gridTemplateColumns: { base: '1fr', md: 'repeat(3, 1fr)' } }
 const holes: SystemStyleObject = { p: [null, '4r'] }
 const nested: SystemStyleObject = { _hover: { _dark: { '& > span': { color: 'ink' } } } }
-export const probe = { hover, atSm, holes, nested }
+export const probe = { hover, blocks, ranges, keyed, grid, holes, nested }
 `;
 
-// Bare sm is a viewport key, not a container condition, so it is not a known
-// property of SystemStyleObject. Same temp-dir materialization as above.
+// Breakpoints are bare names. The compiler reads an @-prefixed key as an
+// at-rule or selector, so '@sm' is not a known property of SystemStyleObject.
+// Same temp-dir materialization as above.
 const NEGATIVE = `import type { SystemStyleObject } from '@reference-ui/react'
 
-const bad: SystemStyleObject = { sm: { color: 'brand' } }
+const bad: SystemStyleObject = { '@sm': { color: 'brand' } }
 export { bad }
 `;
 
@@ -148,9 +154,9 @@ async function typecheckFile(
   }
 }
 
-// After sync, the generated declarations accept _hover/@sm conditions plus
-// null-hole responsive arrays, reject bare sm, and the same world paints its
-// brand probe.
+// After sync, the generated declarations accept _hover and bare breakpoint
+// keys, base/md objects and null-hole responsive arrays, reject '@sm', and the
+// same world paints its brand probe.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const paths = readWorldTsconfig(c.worldDir);
   const outDir = path.join(c.worldDir, '.reference-ui');
@@ -166,7 +172,7 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
   );
 
   const negative = await typecheckFile(c.worldDir, paths, 'negative.ts', NEGATIVE);
-  assert.notEqual(negative.code, 0, 'bare sm is rejected as a condition key');
+  assert.notEqual(negative.code, 0, "'@sm' is rejected as a breakpoint key");
   assert.ok(
     negative.text.includes('TS2353'),
     `rejection carries TS2353:\n${capped(negative.text).join('\n')}`,

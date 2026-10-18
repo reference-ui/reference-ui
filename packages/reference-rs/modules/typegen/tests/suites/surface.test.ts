@@ -197,11 +197,53 @@ export const toggled: StyleProps = { color: active && 'blue.500' }
 
 export const nested: SystemStyleObject = {
   _hover: { color: 'blue.500' },
-  '@sm': { p: '2' },
+  sm: { p: '2' },
   '& > span': { color: 'red' },
 }
 `,
       })
+    )
+  })
+
+  it('T2 breakpoint objects, blocks, and ranges as the Responsive page writes them', () => {
+    const dts = emitDtsSync({ baseSystem: fullSpec })
+    expectTscOk(
+      compile({
+        dts,
+        source: `import type { StyleProps, SystemStyleObject } from './styles'
+
+export const grid: StyleProps = {
+  display: 'grid',
+  gridTemplateColumns: { base: '1fr', md: 'repeat(3, 1fr)' },
+  padding: { base: '2', md: '4', xl: '4' },
+}
+export const blocks: SystemStyleObject = {
+  gridTemplateColumns: '1fr',
+  md: { gridTemplateColumns: 'repeat(2, 1fr)' },
+  lg: { gridTemplateColumns: 'repeat(3, 1fr)' },
+  sm: { md: { color: 'blue.500' } },
+  mdDown: { p: '1' },
+  mdOnly: { p: '2' },
+  smToLg: { p: '4' },
+  lgTo2xl: { p: '4' },
+}
+`,
+      })
+    )
+  })
+
+  it('T3 an @-prefixed breakpoint key is rejected', () => {
+    const dts = emitDtsSync({ baseSystem: fullSpec })
+    expectKeyRejected(
+      dts,
+      `import type { SystemStyleObject } from './styles'
+
+export const bad: SystemStyleObject = {
+  // @ts-expect-error: breakpoints are bare names; atomic reads '@md' as a selector (TS2353)
+  '@md': { p: '2' },
+}
+`,
+      /TS2353/
     )
   })
 

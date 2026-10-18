@@ -1,13 +1,12 @@
 //! Round-trip tests proving the engine-owned StyleSurface reproduces the
 //! disk declaration surface. The engine surface is canon-global (873 props +
-//! 84 conditions for any spec), so the small core fixture asserts containment
+//! 79 named conditions for any spec), so the small core fixture asserts containment
 //! while full-size generated and real-tree fixtures assert exact equality.
 //! Takes BaseSystem fixtures and scratch declaration roots; emits coverage
 //! that a future typegen/canon drift surfaces as a red test, never silent
 //! host loss.
 
 use std::collections::BTreeSet;
-use std::fs;
 use std::path::PathBuf;
 
 use shared::testing::ScratchWorkspace;
@@ -96,7 +95,7 @@ fn fixture_names_are_contained_in_engine_surface() {
     let disk =
         styletrace::StyleSurface::from_declaration_root(&scratch.root().join("declarations"))
             .expect("expected core fixture surface to resolve");
-    let engine = engine_surface(BaseSystem::lib_fixture());
+    let engine = engine_surface();
 
     let expected: BTreeSet<String> = CORE_FIXTURE_NAMES.iter().map(ToString::to_string).collect();
     assert_eq!(disk.style_props, expected);
@@ -121,9 +120,8 @@ fn fixture_names_are_contained_in_engine_surface() {
 
 #[test]
 fn typegen_surface_round_trips_through_declarations() {
-    let system = BaseSystem::lib_fixture().clone();
-    let engine = engine_surface(&system);
-    let styled_index = typegen::emit_dts(&system);
+    let engine = engine_surface();
+    let styled_index = typegen::emit_dts(BaseSystem::lib_fixture());
     assert!(
         styled_index.contains("export type StyleConditionKey = "),
         "typegen must print the condition union"
@@ -162,14 +160,7 @@ fn real_tree_surface_matches_engine_surface() {
     if !lib_root.join(".reference-ui").exists() {
         return;
     }
-    let spec_path = lib_root
-        .join(".reference-ui")
-        .join("system")
-        .join("evaluated-system.json");
-    let spec_json = fs::read_to_string(&spec_path).expect("expected evaluated-system.json to read");
-    let system = BaseSystem::from_json(&spec_json).expect("expected lib spec to lower");
-
-    let engine = engine_surface(&system);
+    let engine = engine_surface();
     let disk = styletrace::StyleSurface::from_declaration_root(&lib_root)
         .expect("expected lib surface to resolve");
     assert_eq!(

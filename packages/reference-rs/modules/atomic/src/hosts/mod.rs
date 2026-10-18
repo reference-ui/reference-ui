@@ -151,7 +151,7 @@ pub fn resolve(
     let Some(opened) = open_trace(request, sources, failed) else {
         return configured_only(request);
     };
-    let surface = engine_surface(&request.base_system);
+    let surface = engine_surface();
     let inputs = TraceSources {
         staged: &opened.staged,
         programs,

@@ -30,8 +30,9 @@ unions), TYP-FONT-01..03, TYP-STRICT-01..05 (callable via `emit_dts_with`,
 exposed as the `strict` config; hatch names stay absent),
 TYP-FORBID-01..06. Caveats, all settled engine contracts,
 no RS: open mode keeps `Token | (string & {})` (TYP-STRICT-04), so TYPE-02
-asserts at a `ColorToken`-typed position; `StyleConditionKey` carries `@sm`,
-never bare `sm` (TYP-STYLE-03); recipe variants are plain unions, not
+asserts at a `ColorToken`-typed position; `StyleConditionKey` carries named
+conditions and `BreakpointKey` carries bare `base`/`sm`/ranges, never `@sm`
+(TYP-STYLE-03); recipe variants are plain unions, not
 `ConditionalValue`-wrapped (TYP-RECIPE-01).
 
 ## Decisions
@@ -39,8 +40,9 @@ never bare `sm` (TYP-STYLE-03); recipe variants are plain unions, not
 (TYPE-01 targets `react/react.d.mts` + `./styles.css` names). (TYPE-05:
 `defineConfig`, `tokens`, `font`, `keyframes`, `globalCss`,
 `getRhythm`, `baseSystem` + config types; `getRhythm` is pure over the rhythm
-root). (TYPE-04: container-first `@sm` plus `Array<T | null>` holes —
-Panda and typegen agree). (`strict` is wired: config → typegen, validated,
+root). (TYPE-04: bare container breakpoints (`md`, `mdDown`, `{ base, md }`)
+plus `Array<T | null>` holes, matching the compiler and the Responsive page;
+`@sm` is rejected because the compiler reads it as a selector). (`strict` is wired: config → typegen, validated,
 narrowing JSX style props and css, proved for colours by CORE-TYPE-09 (token,
 toned and keyword colours assign; six off-token colours are rejected at their
 consumer line); lib component props are not promised to follow consumer
@@ -76,7 +78,7 @@ PRIM-10; the single `index.d.mts` must become the named graph).
 
 | Feature | Reason |
 | --- | --- |
-| Bare `sm`/`md`/`lg` as condition keys | TYP-STYLE-03 excludes viewport keys; container `@sm` + `_hover` only |
+| `@sm`/`@md` breakpoint keys | Panda's container spelling; the compiler reads `@md` as a selector, so breakpoints are bare (`md`, TYP-STYLE-03) |
 | `ConditionalValue`-wrapped recipe variants | Panda `generate-recipe` shape; Core prints plain optional unions |
 | `csstype.Properties` dump / `@reference-ui/styled` type re-export | TYP-STYLE-01: `SystemStyleObject` is owned |
 | Atomic class names (`.mt_2r`) in `.d.ts` | TYP-FORBID-01: engine internals, never public API |

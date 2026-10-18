@@ -25,7 +25,8 @@ fn typ_native_01_accepts_root_evaluated_system_spec() {
     assert!(dts.contains("export type ButtonVariantProps"));
     assert!(dts.contains("export type ButtonCompoundVariant"));
     assert!(dts.contains("export type StyleConditionKey = "));
-    assert!(dts.contains("@sm"));
+    assert!(dts.contains("export type BreakpointKey = "));
+    assert!(!dts.contains("'@sm'"));
     assert!(dts.contains("_hover"));
     assert!(dts.contains("export type StyleProps = FontProps & {"));
     assert!(dts.contains("export type SystemStyleObject = StyleProps & {"));

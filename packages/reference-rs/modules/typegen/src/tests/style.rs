@@ -1,9 +1,9 @@
 //! TYP-STYLE-02/03/04/06: StyleProps narrowing, conditions, dialect mix-in, open keys.
 //! STYLE-02 inspects color and spacing keys on a dump that reuses catalog
-//! tokens plus `sm`/`md`/`lg` breakpoints. STYLE-03 asserts `StyleConditionKey`
-//! on that same emit: named conditions and `@${bp}`, never a bare viewport
-//! member (RadiusToken may still contain `'sm'`, so pins read the alias
-//! line). STYLE-04 omits raw CSS `font`/`weight`/`container`/`r`, replaces
+//! tokens plus `sm`/`md`/`lg` breakpoints. STYLE-03 asserts on that same emit
+//! that `StyleConditionKey` holds named conditions only and `BreakpointKey`
+//! holds `base`, the bare scale names and their ranges, never `@${bp}`
+//! (RadiusToken may still contain `'sm'`, so pins read the alias line). STYLE-04 omits raw CSS `font`/`weight`/`container`/`r`, replaces
 //! them with dialect `container`/`r`, and intersects `FontProps`. STYLE-05
 //! prints recursive SystemStyleObject on this dump; proof is tsc, not these
 //! string contains. STYLE-06 pins open keys plus the custom-property index
@@ -19,7 +19,7 @@ const CONTAINER_VALUE: &str = "StylePropValue<string | boolean>";
 const RHYTHM_VALUE: &str = "StylePropValue<Record<string | number, StyleProps>>";
 const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const CUSTOM_PROPERTY_INDEX: &str = "  [K in `--${string}`]?: StylePropValue<string | number>;";
-const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey]?: T };";
+const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey | BreakpointKey]?: T };";
 const STYLE_PROPS_HEAD: &str = "export type StyleProps = FontProps & {";
 
 const COLOR_KEYS: &[&str] = &["bg", "background", "backgroundColor", "color"];
@@ -74,37 +74,43 @@ fn typ_style_02_narrows_style_props_with_aliases_and_tokens() {
     );
 }
 
-/// TYP-STYLE-03 — StyleConditionKey is named + `@bp`, never a viewport member.
+/// TYP-STYLE-03 — named conditions and bare breakpoint keys, never `@bp`.
 #[test]
-fn typ_style_03_filters_viewport_keys_from_style_condition_key() {
+fn typ_style_03_prints_bare_breakpoint_keys_beside_named_conditions() {
     let dts = style_dts();
-    let lits = condition_lits(&dts);
-    for needle in [
-        "'_hover'",
-        "'_focusVisible'",
-        "'_dark'",
-        "'_light'",
-        "'@sm'",
-        "'@md'",
-    ] {
+    let named = union_lits(&dts, "StyleConditionKey");
+    for needle in ["'_hover'", "'_focusVisible'", "'_dark'", "'_light'"] {
         assert!(
-            lits.contains(needle),
-            "TYP-STYLE-03: StyleConditionKey missing {needle} in {lits:?}"
-        );
-    }
-    for forbidden in ["'sm'", "'md'", "'lg'", "'smToMd'"] {
-        assert!(
-            !lits.contains(forbidden),
-            "TYP-STYLE-03: StyleConditionKey must not contain viewport member {forbidden}: {lits:?}"
+            named.contains(needle),
+            "TYP-STYLE-03: StyleConditionKey missing {needle} in {named:?}"
         );
     }
     assert!(
-        !canon::is_condition("sm"),
-        "TYP-STYLE-03: bare sm is not a condition key"
+        named.iter().all(|lit| lit.starts_with("'_")),
+        "TYP-STYLE-03: StyleConditionKey carries named conditions only: {named:?}"
+    );
+    let breakpoints = union_lits(&dts, "BreakpointKey");
+    for needle in [
+        "'base'", "'sm'", "'md'", "'lg'", "'mdDown'", "'mdOnly'", "'smToLg'", "'smToMd'",
+    ] {
+        assert!(
+            breakpoints.contains(needle),
+            "TYP-STYLE-03: BreakpointKey missing {needle} in {breakpoints:?}"
+        );
+    }
+    for forbidden in ["'baseDown'", "'mdToSm'", "'baseToMd'"] {
+        assert!(
+            !breakpoints.contains(forbidden),
+            "TYP-STYLE-03: BreakpointKey must not contain {forbidden}: {breakpoints:?}"
+        );
+    }
+    assert!(
+        !dts.contains("'@sm'") && !dts.contains("'@md'"),
+        "TYP-STYLE-03: atomic reads `@md` as a selector, so no `@bp` key prints:\n{dts}"
     );
     assert!(
         dts.contains(PROP_VALUE),
-        "TYP-STYLE-03: StylePropValue must allow T, holes, arrays, and condition maps:\n{dts}"
+        "TYP-STYLE-03: StylePropValue must allow T, holes, arrays, and keyed maps:\n{dts}"
     );
 }
 
@@ -113,16 +119,16 @@ fn assert_prop(dts: &str, name: &str, value: &str) {
     assert!(dts.contains(&line), "missing `{line}` in:\n{dts}");
 }
 
-fn condition_lits(dts: &str) -> BTreeSet<&str> {
-    let prefix = "export type StyleConditionKey = ";
+fn union_lits<'a>(dts: &'a str, alias: &str) -> BTreeSet<&'a str> {
+    let prefix = format!("export type {alias} = ");
     let start = dts
-        .find(prefix)
-        .unwrap_or_else(|| panic!("TYP-STYLE-03: missing StyleConditionKey in:\n{dts}"));
+        .find(&prefix)
+        .unwrap_or_else(|| panic!("TYP-STYLE-03: missing {alias} in:\n{dts}"));
     let rest = &dts[start + prefix.len()..];
     let end = rest
         .find(";\n")
         .or_else(|| rest.find(';'))
-        .unwrap_or_else(|| panic!("TYP-STYLE-03: unterminated StyleConditionKey in:\n{dts}"));
+        .unwrap_or_else(|| panic!("TYP-STYLE-03: unterminated {alias} in:\n{dts}"));
     rest[..end].split(" | ").map(str::trim).collect()
 }
 

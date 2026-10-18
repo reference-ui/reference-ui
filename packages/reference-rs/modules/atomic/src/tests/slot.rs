@@ -39,7 +39,7 @@ fn record_success_completes() {
     let (path, content) = styling_source();
     let parsed = crate::parse_source(&path, &content, &alloc);
     assert!(!parsed.panicked);
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     let mut file = OwnedFile::blank();
     phase_lane::record(
         &mut file,
@@ -58,7 +58,7 @@ fn record_panicked_fails_fast() {
     let (path, content) = styling_source();
     let mut parsed = crate::parse_source(&path, &content, &alloc);
     parsed.panicked = true;
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     let mut file = OwnedFile::blank();
     phase_lane::record(
         &mut file,
@@ -77,7 +77,7 @@ fn panic_at_each_stage_leaves_partial() {
     let alloc = Allocator::default();
     let (path, content) = styling_source();
     let parsed = crate::parse_source(&path, &content, &alloc);
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     for stage in RecordStage::all() {
         let mut file = OwnedFile::blank();
         phase_lane::set_panic_at_stage(Some(stage));
@@ -101,7 +101,7 @@ fn poisoned_lock_reclaims_with_diagnostic() {
     let alloc = Allocator::default();
     let (path, content) = styling_source();
     let parsed = crate::parse_source(&path, &content, &alloc);
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     for stage in RecordStage::all() {
         let mutex = Mutex::new(OwnedFile::blank());
         phase_lane::set_panic_at_stage(Some(stage));
@@ -155,7 +155,7 @@ fn poison_after_complete_refuses() {
     let alloc = Allocator::default();
     let (path, content) = styling_source();
     let parsed = crate::parse_source(&path, &content, &alloc);
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     let mutex = Mutex::new(OwnedFile::blank());
     {
         let mut guard = mutex.lock().unwrap();
@@ -179,7 +179,7 @@ fn poison_after_complete_refuses() {
 /// Every panicked input refuses; none merges constants or records.
 #[test]
 fn all_panicked_inputs_refuse() {
-    let surface = crate::hosts::engine_surface(crate::BaseSystem::lib_fixture());
+    let surface = crate::hosts::engine_surface();
     let mut files = Vec::new();
     for index in 0..3 {
         let alloc = Allocator::default();

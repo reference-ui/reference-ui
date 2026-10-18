@@ -1,8 +1,9 @@
-//! Prints StyleProps, StylePropValue, StyleConditionKey, FontProps mix-in,
-//! and recursive SystemStyleObject from an assembled `PropDefs`. The key set
-//! mirrors the runtime-accepted set from `build_style_prop_names` (every
-//! canonical name plus every alias plus reference props, minus
-//! `variant`/`colorMode`): keys follow the compiler, values follow the token
+//! Prints StyleProps, StylePropValue, StyleConditionKey, BreakpointKey, the
+//! FontProps mix-in, and recursive SystemStyleObject from an assembled
+//! `PropDefs`. The key set mirrors the runtime-accepted set from
+//! `build_style_prop_names` (every canonical name plus every alias plus
+//! reference props, minus `variant`/`colorMode`): keys follow the compiler,
+//! breakpoint keys follow atomic's `when` lowering, values follow the token
 //! spec. Color, spacing, and radius keys keep their token unions with the
 //! `(string & {})` hatch; color values also carry `TonedColorToken` so
 //! `bg="blue.500/medium"` typechecks. `animation` takes `AnimationToken` only
@@ -14,6 +15,7 @@
 //! prints as `BaseStyleProps`, so the nested `r` value (which names `StyleProps`)
 //! is narrowed too.
 
+use super::breakpoints::breakpoint_keys;
 use super::fonts;
 use super::props::{PropDefs, PropKind};
 use super::strict::{self, StrictKeys};
@@ -32,7 +34,7 @@ const OPEN_VALUE: &str = "StylePropValue<string | number>";
 const ANIMATION_VALUE: &str = "StylePropValue<AnimationToken | (string & {})>";
 // `null | false | undefined` are holes runtime css() skips (`isHole`), so
 // `{ color: active && 'brand' }` never overrides an earlier value.
-const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey]?: T };\n";
+const PROP_VALUE: &str = "export type StylePropValue<T> = T | null | false | undefined | Array<T | null> | { [K in StyleConditionKey | BreakpointKey]?: T };\n";
 
 pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String {
     if system.breakpoints().is_empty() {
@@ -46,7 +48,8 @@ pub(super) fn style_types(system: &BaseSystem, options: &EmitOptions) -> String 
     // so `animation` may name it only then; an absent alias would be undefined.
     let animations = has_category(system, "animations");
     let mut out = String::new();
-    push_condition_key(&mut out, &defs.condition_keys(system));
+    push_key_union(&mut out, "StyleConditionKey", &defs.condition_keys());
+    push_key_union(&mut out, "BreakpointKey", &breakpoint_keys(system));
     out.push('\n');
     out.push_str(PROP_VALUE);
     out.push('\n');
@@ -93,8 +96,10 @@ fn keys_of(props: &BTreeMap<&'static str, PropKind>, kind: PropKind) -> BTreeSet
         .collect()
 }
 
-fn push_condition_key(out: &mut String, keys: &BTreeSet<String>) {
-    out.push_str("export type StyleConditionKey = ");
+fn push_key_union(out: &mut String, name: &str, keys: &BTreeSet<String>) {
+    out.push_str("export type ");
+    out.push_str(name);
+    out.push_str(" = ");
     out.push_str(&join_union(keys));
     out.push_str(";\n");
 }

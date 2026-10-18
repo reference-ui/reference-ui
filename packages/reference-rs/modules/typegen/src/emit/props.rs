@@ -2,10 +2,9 @@
 //! domains, condition keys, aliases, and dialect keys. `PropDefs::collect`
 //! builds the system-independent definition once from canon tables; the style
 //! printer and the napi vocabulary share it, so the names typegen prints are
-//! the names it reports. Breakpoint `@…` condition keys join at print time
-//! from the system; everything else here is constant per binary.
+//! the names it reports. Breakpoint keys are system-specific and print as their
+//! own union (`breakpoints.rs`); everything here is constant per binary.
 
-use base_system::BaseSystem;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -24,7 +23,7 @@ pub(super) enum PropKind {
 }
 
 /// Assembled StyleProps vocabulary. `props` is the exact printed key set;
-/// `conditions` the named conditions (breakpoints join at print time);
+/// `conditions` the named conditions (breakpoints print separately);
 /// `aliases` the full alias-to-canonical map; `dialect` the canon
 /// Reference-only props, including the reserved and font-owned members
 /// that never land in `props`.
@@ -38,7 +37,7 @@ pub(super) struct PropDefs {
 /// JSON view of `PropDefs` for `primitives_vocabulary()`. `props` is the
 /// sorted key array downstream generators read; `domains` adds the value
 /// domain per key; `conditions` carries named conditions only (no
-/// system-specific `@…` breakpoint keys).
+/// system-specific breakpoint keys).
 #[derive(Serialize)]
 pub(super) struct Vocabulary<'a> {
     props: Vec<&'a str>,
@@ -62,16 +61,8 @@ impl PropDefs {
         &self.props
     }
 
-    pub(super) fn condition_keys(&self, system: &BaseSystem) -> BTreeSet<String> {
-        let mut keys: BTreeSet<String> =
-            self.conditions.iter().map(ToString::to_string).collect();
-        for name in system.breakpoints().names() {
-            if name == "base" {
-                continue;
-            }
-            keys.insert(format!("@{name}"));
-        }
-        keys
+    pub(super) fn condition_keys(&self) -> BTreeSet<String> {
+        self.conditions.iter().map(ToString::to_string).collect()
     }
 
     pub(super) fn vocabulary(&self) -> Vocabulary<'_> {
