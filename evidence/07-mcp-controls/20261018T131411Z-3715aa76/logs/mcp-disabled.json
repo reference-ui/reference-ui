@@ -1,0 +1,357 @@
+{
+  "phase": "disabled",
+  "transport": "stdio",
+  "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+  "checks": [
+    {
+      "name": "list_projects",
+      "args": {
+        "scanPath": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "maxDepth": 1
+      },
+      "elapsedMs": 3,
+      "isError": false,
+      "result": {
+        "ownProjects": [
+          {
+            "path": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+            "configPath": "~/Developer/ref-sandbox/scenarios/07-mcp-controls/ui.config.ts",
+            "source": "cwd",
+            "hasArtifacts": true,
+            "isDefault": true
+          }
+        ],
+        "omittedProjectsCount": 5,
+        "activeProjectIsOwn": true,
+        "sanitizedStaleCount": 0
+      }
+    },
+    {
+      "name": "select_project",
+      "args": {
+        "path": "~/Developer/ref-sandbox/scenarios/07-mcp-controls"
+      },
+      "elapsedMs": 105,
+      "isError": false,
+      "result": {
+        "status": "active",
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "configPath": "~/Developer/ref-sandbox/scenarios/07-mcp-controls/ui.config.ts",
+        "atlasStatus": "ready",
+        "componentsCount": 3
+      }
+    },
+    {
+      "name": "list_components",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "query": "McpControlStatus",
+        "limit": 5
+      },
+      "elapsedMs": 1,
+      "isError": false,
+      "result": {
+        "activeProject": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "components": []
+      }
+    },
+    {
+      "name": "get_tokens",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "query": "mcpSentinel",
+        "limit": 5
+      },
+      "elapsedMs": 1,
+      "isError": false,
+      "result": {
+        "activeProject": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "tokens": [
+          {
+            "path": "colors.mcpSentinel",
+            "category": "colors",
+            "value": "#173b63"
+          }
+        ],
+        "total": 1,
+        "returned": 1,
+        "compressed": false
+      }
+    },
+    {
+      "name": "list_components",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "query": "Switch",
+        "limit": 5
+      },
+      "elapsedMs": 0,
+      "isError": false,
+      "result": {
+        "activeProject": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "components": []
+      }
+    },
+    {
+      "name": "get_component",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "name": "Switch"
+      },
+      "elapsedMs": 1,
+      "isError": true,
+      "result": {
+        "text": "Component 'Switch' is part of @reference-ui/lib, but 'use_reference_library' is disabled in ui.config."
+      }
+    },
+    {
+      "name": "list_icons",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/07-mcp-controls",
+        "query": "settings",
+        "limit": 2
+      },
+      "elapsedMs": 1,
+      "isError": false,
+      "result": {
+        "enabled": false,
+        "notice": "Reference Icons are disabled in ui.config (use_reference_icons: false). Use the project's custom icon system.",
+        "total": 0,
+        "returned": 0,
+        "icons": []
+      }
+    }
+  ],
+  "server": {
+    "name": "reference-ui",
+    "title": "Reference UI",
+    "version": "0.0.3",
+    "description": "Atlas- and generated-types-backed component intelligence for Reference UI projects."
+  },
+  "tools": [
+    {
+      "name": "list_projects",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scanPath": {
+            "description": "Optional directory to scan for Reference UI projects (e.g. '~/Developer'). Defaults to workspace and global registry.",
+            "type": "string"
+          },
+          "maxDepth": {
+            "description": "Max directory traversal depth when scanPath is provided.",
+            "default": 3,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "select_project",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "description": "Relative or absolute filesystem path to the project directory where ui.config.* resides. Pass path or project.",
+            "type": "string",
+            "minLength": 1
+          },
+          "project": {
+            "description": "Alias for path: relative or absolute filesystem path to the project directory where ui.config.* resides. Pass path or project.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "list_components",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 100
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "get_component",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "get_component_props",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "includeUnused": {
+            "type": "boolean"
+          },
+          "includeStyleProps": {
+            "type": "boolean"
+          },
+          "query": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 500
+          },
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "get_component_examples",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "get_style_props",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "includeProps": {
+            "type": "boolean"
+          },
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory. The guide is shared, so this does not change the result.",
+            "type": "string"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "get_tokens",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 1000
+          },
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "list_icons",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "description": "Optional relative or absolute filesystem path to target project directory.",
+            "type": "string"
+          },
+          "query": {
+            "description": "Search query, natural language sentence, or comma-separated icon needs (e.g. \"trash\", \"gear\", \"I need icons for user settings, shopping cart, and trash\").",
+            "type": "string"
+          },
+          "demands": {
+            "description": "Optional explicit list of icon demands to search in batch in a single tool call (e.g. [\"user profile\", \"trash\", \"settings\"]).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "category": {
+            "description": "Optional category filter (e.g. \"action\", \"navigation\", \"editor\", \"content\", \"device\").",
+            "type": "string"
+          },
+          "limit": {
+            "description": "Maximum number of icons to return (default: 25).",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 100
+          },
+          "verbose": {
+            "description": "Set to true to include import statements and JSX usage examples in results (default: false).",
+            "type": "boolean"
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  ]
+}

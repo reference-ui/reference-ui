@@ -1,0 +1,5 @@
+
+> typecheck
+> tsc --noEmit
+
+ui.config.ts(8,3): error TS2353: Object literal may only specify known properties, and 'use_reference_library' does not exist in type 'ReferenceUIConfig'.

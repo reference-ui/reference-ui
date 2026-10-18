@@ -1,0 +1,8 @@
+Reference UI MCP configuration controls — consumer typecheck
+Documentation: docs/mcp.md, Customization Tiers (ui.config.ts)
+Expected: documented false flags accepted by typed defineConfig.
+Runtime check: sync succeeds; MCP guards library and icons correctly.
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 repro/config-controls.ts
+repro/config-controls.ts(7,3): error TS2353: Object literal may only specify known properties, and 'use_reference_library' does not exist in type 'ReferenceUIConfig'.
+repro/config-controls.ts(13,3): error TS2353: Object literal may only specify known properties, and 'use_reference_icons' does not exist in type 'ReferenceUIConfig'.
+Exit status: 2
