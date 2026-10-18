@@ -28,6 +28,11 @@ pnpm --filter @reference-ui/reference-docs exec tsc --noEmit
 pnpm --filter @reference-ui/reference-docs exec vite build
 ```
 
+On a fresh checkout run `pnpm bootstrap` from the repository root before the
+gate: its type tier checks against lib's build output and the docs' synced
+`@reference-ui/*` packages. `pnpm --filter @reference-ui/reference-docs run sync`
+refreshes the synced packages on their own.
+
 Content lives in `src/content/docs/**/*.mdx`; only `.mdx` is collected, so
 frontmatter (`title`, `section`, `order`, `slug`) is the contract.
 

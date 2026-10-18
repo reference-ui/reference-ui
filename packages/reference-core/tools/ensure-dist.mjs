@@ -3,7 +3,9 @@
 // built from, so no documented caller runs stale bytes. It takes the core
 // package root from its own module location, stats the source roots plus the
 // tsc project files, and rebuilds through `tools/build-bin.mjs` only when the
-// bin is missing or older. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` setting
+// bin is missing or older. Before a rebuild it fills the two generated inputs a
+// fresh checkout lacks: the `@reference-ui/rust` JS bindings and the gitignored
+// browser-component mirror. A `REF_PIPELINE_SKIP_DEPENDENCY_BUILDS` setting
 // exits immediately for CI opt-out, and steady state exits silently after one
 // stat walk.
 
@@ -15,6 +17,12 @@ import { fileURLToPath } from 'node:url'
 const PKG = dirname(dirname(fileURLToPath(import.meta.url)))
 const BIN = join(PKG, 'dist', 'bin', 'ref.js')
 const BUILD = join(PKG, 'tools', 'build-bin.mjs')
+const MIRROR = join(PKG, 'src', 'reference', 'browser-component')
+const MIRROR_TOOL = join(PKG, 'tools', 'mirror-reference-component.mjs')
+const RUST_PKG = join(PKG, '..', 'reference-rs')
+// The rust JS build writes its root declaration entrypoints last, so this file
+// marks a finished build; the native build alone also creates dist/.
+const RUST_BINDINGS = join(RUST_PKG, 'dist', 'index.d.ts')
 const SKIP_ENV = 'REF_PIPELINE_SKIP_DEPENDENCY_BUILDS'
 
 // tsc emits only src and bin; the project files and the build script decide
@@ -55,13 +63,30 @@ function newestInputMtime() {
   return newest
 }
 
-function build() {
-  const result = spawnSync(process.execPath, [BUILD], { cwd: PKG, stdio: 'inherit' })
+function run(label, command, args, cwd) {
+  const result = spawnSync(command, args, { cwd, stdio: 'inherit' })
   if (result.error) {
-    console.error(`[ensure-dist] build failed: ${result.error.message}`)
+    console.error(`[ensure-dist] ${label} failed: ${result.error.message}`)
     process.exit(1)
   }
   if (result.status !== 0) process.exit(result.status ?? 1)
+}
+
+// Each input keeps its owning tool: the gate only fills one that is missing
+// and never refreshes it.
+function fillMissingInputs() {
+  if (!existsSync(RUST_BINDINGS)) {
+    console.log('[ensure-dist] building the @reference-ui/rust JS bindings the bin typechecks against')
+    run('rust bindings build', 'pnpm', ['run', 'build:js'], RUST_PKG)
+  }
+  if (!existsSync(MIRROR) || readdirSync(MIRROR).length === 0) {
+    run('reference component mirror', process.execPath, [MIRROR_TOOL], PKG)
+  }
+}
+
+function build() {
+  fillMissingInputs()
+  run('build', process.execPath, [BUILD], PKG)
 }
 
 if (!process.env[SKIP_ENV]) {

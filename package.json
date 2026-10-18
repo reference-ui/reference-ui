@@ -9,6 +9,7 @@
   },
   "scripts": {
     "setup:local": "bash ./pipeline/setup/local.sh",
+    "bootstrap": "pnpm --filter @reference-ui/rust run build && pnpm --filter @reference-ui/lib run build && pnpm --filter @reference-ui/reference-docs run sync",
     "pipeline": "pnpm --dir pipeline exec tsx src/cli.ts",
     "dev": "node scripts/dev.mjs",
     "dev:docs": "pnpm --filter @reference-ui/reference-docs run dev",

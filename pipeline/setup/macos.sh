@@ -66,7 +66,8 @@ require_rustup() {
   fi
 
   warn 'rustup is required for local rust builds and release packaging.'
-  warn 'Install Rust with rustup first, then rerun pnpm setup:local.'
+  warn "Install it with: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  warn 'Then rerun pnpm setup:local.'
   exit 1
 }
 

@@ -24,6 +24,10 @@ The run takes a lock file, wipes the mirror directory first, and reports how
 many files it wrote. The mirror directory itself is gitignored; the tool that
 fills it is the checked-in artifact.
 
+The dist gate (`tools/ensure-dist.mjs`) also runs it when the mirror directory
+is missing, so a fresh checkout can build the bin; the gate never regenerates a
+mirror that exists.
+
 ## Tasty declaration vendor
 
 The vendor script copies the reachable `@reference-ui/rust` tasty declaration
@@ -112,8 +116,12 @@ cd packages/reference-core && node tools/build-bin.mjs
 ```
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
-build). Direct-source invocations (`node bin/ref.ts`, the CLI specs) keep
-working without it — only the installed-shim shape needs the emit.
+build). The dev and build scripts reach it through `tools/ensure-dist.mjs`,
+which rebuilds only when the bin is missing or older than its inputs, and
+first builds the `@reference-ui/rust` JS bindings (`build:js`, no Rust
+toolchain needed) when a fresh checkout has none. Direct-source invocations
+(`node bin/ref.ts`, the CLI specs) keep working without it — only the
+installed-shim shape needs the emit.
 
 ## Quality gate
 
