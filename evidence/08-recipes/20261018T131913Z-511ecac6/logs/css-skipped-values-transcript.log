@@ -1,0 +1,21 @@
+COMMAND TRANSCRIPT — documented css() object skips rejected by TypeScript
+
+Expectation from docs/css.mdx: null, false and undefined inside a style object
+are skipped. Whole-object skips and undefined values compile successfully.
+
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 repro/css-skipped-values.ts
+Exit: 2
+
+repro/css-skipped-values.ts(5,51): error TS2345: Argument of type '{ padding: null; }' is not assignable to parameter of type 'CssStyles | CssStyles[]'.
+  Types of property 'padding' are incompatible.
+    Type 'null' is not assignable to type 'StylePropValue<string & {}> | undefined'.
+repro/css-skipped-values.ts(6,52): error TS2345: Argument of type '{ padding: boolean; }' is not assignable to parameter of type 'CssStyles | CssStyles[]'.
+  Types of property 'padding' are incompatible.
+    Type 'boolean' is not assignable to type 'StylePropValue<string & {}> | undefined'.
+
+Passing controls in the same fixture: undefined object property, null/false/
+undefined whole arguments, and ordinary later-object merging.
+
+Runtime: original demo built successfully. Browser computed merged-probe as
+brand rgb(36, 91, 219), padding 20px, background rgb(255, 255, 255), proving
+null/false do skip at runtime. Logs: browser-checks-initial.json, build.log.

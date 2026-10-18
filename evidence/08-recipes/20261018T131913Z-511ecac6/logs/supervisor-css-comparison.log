@@ -1,0 +1,16 @@
+Independent css() consumer typecheck
+Valid value/whole-input skip controls:
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 repro/supervisor-css-valid.ts
+
+Exit 0
+
+Documented per-property null/false skip fixture:
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 repro/css-skipped-values.ts
+repro/css-skipped-values.ts(5,51): error TS2345: Argument of type '{ padding: null; }' is not assignable to parameter of type 'CssStyles | CssStyles[]'.
+  Types of property 'padding' are incompatible.
+    Type 'null' is not assignable to type 'StylePropValue<string & {}> | undefined'.
+repro/css-skipped-values.ts(6,52): error TS2345: Argument of type '{ padding: boolean; }' is not assignable to parameter of type 'CssStyles | CssStyles[]'.
+  Types of property 'padding' are incompatible.
+    Type 'boolean' is not assignable to type 'StylePropValue<string & {}> | undefined'.
+
+Exit 2
