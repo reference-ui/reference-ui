@@ -1,0 +1,59 @@
+{
+  "url": "http://127.0.0.1:20625/library-token-repro.html",
+  "styles": {
+    "generated-button": {
+      "tag": "BUTTON",
+      "className": "ref-button signal-studio__bg_studio.brand signal-studio__c_white signal-studio__p_studio.gap signal-studio__rounded_studio.control",
+      "layer": null,
+      "background": "rgb(15, 118, 110)",
+      "color": "rgb(255, 255, 255)",
+      "padding": "16px",
+      "borderRadius": "10px",
+      "brandVariable": "#0f766e"
+    },
+    "library-button": {
+      "tag": "BUTTON",
+      "className": "ref-button reference-ui__bg_studio.brand reference-ui__c_white reference-ui__p_studio.gap reference-ui__rounded_studio.control",
+      "layer": "reference-ui",
+      "background": "oklch(0.966 0.0026 268)",
+      "color": "oklch(0.1304 0.0243 265.94)",
+      "padding": "3px 14px",
+      "borderRadius": "6.4px",
+      "brandVariable": "#0f766e"
+    }
+  },
+  "messages": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `bg: \"studio.brand\"` (class reference-ui__bg_studio.brand, called at yo (http://127.0.0.1:20625/node_modules/.vite/deps/chunk-CBH37XCS.js?v=d73be273:929:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `color: \"white\"` (class reference-ui__c_white, called at yo (http://127.0.0.1:20625/node_modules/.vite/deps/chunk-CBH37XCS.js?v=d73be273:929:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `padding: \"studio.gap\"` (class reference-ui__p_studio.gap, called at yo (http://127.0.0.1:20625/node_modules/.vite/deps/chunk-CBH37XCS.js?v=d73be273:929:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderRadius: \"studio.control\"` (class reference-ui__rounded_studio.control, called at yo (http://127.0.0.1:20625/node_modules/.vite/deps/chunk-CBH37XCS.js?v=d73be273:929:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ]
+}

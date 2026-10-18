@@ -1,0 +1,36 @@
+{
+  "unaliased": {
+    "url": "http://127.0.0.1:40658/library-token-repro.html",
+    "generated": {
+      "background": "rgb(15, 118, 110)",
+      "color": "rgb(255, 255, 255)",
+      "padding": "16px",
+      "radius": "10px",
+      "className": "ref-button signal-studio__bg_studio.brand signal-studio__c_white signal-studio__p_studio.gap signal-studio__rounded_studio.control"
+    },
+    "library": {
+      "background": "oklch(0.966 0.0026 268)",
+      "color": "oklch(0.1304 0.0243 265.94)",
+      "padding": "3px 14px",
+      "radius": "6.4px",
+      "className": "ref-button reference-ui__bg_studio.brand reference-ui__c_white reference-ui__p_studio.gap reference-ui__rounded_studio.control"
+    }
+  },
+  "aliased": {
+    "url": "http://127.0.0.1:52916/library-token-repro.html",
+    "generated": {
+      "background": "rgb(15, 118, 110)",
+      "color": "rgb(255, 255, 255)",
+      "padding": "16px",
+      "radius": "10px",
+      "className": "ref-button signal-studio__bg_studio.brand signal-studio__c_white signal-studio__p_studio.gap signal-studio__rounded_studio.control"
+    },
+    "library": {
+      "background": "rgb(15, 118, 110)",
+      "color": "rgb(255, 255, 255)",
+      "padding": "16px",
+      "radius": "10px",
+      "className": "ref-button reference-ui__bg_studio.brand reference-ui__c_white reference-ui__p_studio.gap reference-ui__rounded_studio.control"
+    }
+  }
+}
