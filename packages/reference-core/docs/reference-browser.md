@@ -10,9 +10,9 @@ Truth flows one way: lib source → explicit mirror tool → gitignored
 mirror → types-bundle leg → generated `@reference-ui/types` →
 consumer. Never reverse; never hand-edit the mirror.
 
-- **Model** (`src/reference/browser-model/`, neo-owned): shapes
+- **Model** (`src/reference/browser-model/`, core-owned): shapes
   tasty symbols into serializable `ReferenceDocument` values. UI-free.
-- **Runtime** (`src/reference/browser/`, neo-owned): loads symbol
+- **Runtime** (`src/reference/browser/`, core-owned): loads symbol
   graphs through the tasty browser runtime, exposes the provider,
   hooks, and shell factory. No presentation imports.
 - **Adapter** (`browser/component-api.ts`): the narrow
@@ -98,10 +98,10 @@ defaults in document headers; JSDoc renders beyond `@param`
 
 ## Current Boundary
 
-Some outputs are polished as far as neo can take them with the
+Some outputs are polished as far as core can take them with the
 data tasty emits today.
 
-Neo-side wins (improve here): declared and intermediate type
+Core-side wins (improve here): declared and intermediate type
 expression rendering, structured type preservation, member
 summary quality, JSDoc display, richer inherited-member,
 intersection, discriminated-union, and generic presentation.
@@ -125,7 +125,7 @@ libraries need it.
 
 Every new resolution pass follows the same loop:
 
-1. add a focused fixture to the `NEO-REF` case group
+1. add a focused fixture to the `CORE-REF` case group
 2. add a browser-level spec against visible text in the real
    `Reference` component
 3. improve the model until the output is useful

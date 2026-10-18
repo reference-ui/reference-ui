@@ -1,6 +1,6 @@
 ---
 name: test-component
-description: Component verification skill for @reference-ui/lib only. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Switch React 17/18/19 locally with --react (Vite aliases, no pipeline). Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified. If packages/reference-neo, packages/reference-rs, the matrix or the pipeline was modified, hand off to the matching runner (agent-neo, agent-rs or test-core, the pipeline runner and not a skill) — do not use this skill for them.
+description: Component verification skill for @reference-ui/lib only. Runs colocated Vitest unit tests first, then Playwright CT in __e2e__ with video, screenshots, and visual snapshots. Switch React 17/18/19 locally with --react (Vite aliases, no pipeline). Snapshot baseline updates require genuine styling changes and explicit human verification (--confirm). Activates whenever a component's logic, behavior, interactions, presence, visual drift, or motion needs to be verified. If packages/reference-core, packages/reference-rs, the matrix or the pipeline was modified, hand off to the matching runner (agent-core, agent-rs or test-core, the pipeline runner and not a skill) — do not use this skill for them.
 ---
 
 # Component Testing Skill (`test-component`)
@@ -11,9 +11,9 @@ Use this skill whenever you need to **verify whether a component passes logic, b
 
 ### Scope: `@reference-ui/lib` only
 
-This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-neo`, `packages/reference-rs`, matrix packages, or the pipeline.
+This skill covers colocated Vitest + Playwright CT for components in `packages/reference-lib`. It does **not** cover `packages/reference-core`, `packages/reference-rs`, matrix packages, or the pipeline.
 
-If you modified `packages/reference-neo` (sync, packager, runtime, bundler plugins, …), follow **agent-neo** (`.agents/skills/agent-neo/SKILL.md`). If you modified `packages/reference-mcp` (MCP) or a matrix or pipeline contract, **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the matrix and pipeline verification harness. `pnpm agentct` will not prove a Neo or matrix change.
+If you modified `packages/reference-core` (sync, packager, runtime, bundler plugins, …), follow **agent-core** (`.agents/skills/agent-core/SKILL.md`). If you modified `packages/reference-mcp` (MCP) or a matrix or pipeline contract, **stop here** and follow **test-core** (`.agents/skills/test-core/SKILL.md`). That is the pipeline runner (`pnpm agent`). It is **not a skill** — it is the matrix and pipeline verification harness. `pnpm agentct` will not prove a Core or matrix change.
 
 ---
 
@@ -148,7 +148,7 @@ Matrix tests switch React via **test-core** (`pnpm agent` / Dagger). CT does **n
 - Visual snapshots (`snap()`) run **only on React 19**. 17/18 are behavioral. `snap()` is a no-op off 19, so specs stay identical.
 - Do not pass `--update-snapshots` with `--react 17`, `18`, or `all`. The runner refuses.
 
-If the change that forced a React/host tweak lives in `packages/reference-neo`, prove it with agent-neo (`pnpm agentneo`), or with test-core (`pnpm agent`) when a matrix contract is involved, not this loop.
+If the change that forced a React/host tweak lives in `packages/reference-core`, prove it with agent-core (`pnpm agentcore`), or with test-core (`pnpm agent`) when a matrix contract is involved, not this loop.
 
 Human pairing: `pnpm playbook` opens the Playwright UI.
 
@@ -327,14 +327,14 @@ Native Playwright UI with live story rendering, locators, and time-travel.
 
 Memex is the one agent CLI over every collection
 (`.agents/memex/README.md`): component declarations live in `components`,
-neo cases in `cases`, and RS module surfaces in `surfaces`. Component entries
+core cases in `cases`, and RS module surfaces in `surfaces`. Component entries
 index registered manifest declarations, not executed verdicts. Use component
-entries to select evidence and neo entries to find related behavior coverage.
+entries to select evidence and core entries to find related behavior coverage.
 
 ```bash
 node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
 node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
-node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                      # full doc + related
+node .agents/memex/cli.mjs show cases:CORE-CHAIN-01                      # full doc + related
 node .agents/memex/cli.mjs search 'focus' --in components                # registered declarations
 node .agents/memex/cli.mjs show components:LIB-FIELD-026                # manifest metadata, not a verdict
 ```

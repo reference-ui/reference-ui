@@ -26,7 +26,7 @@ Every error code earns one repro test that drives a minimal world through
 the whole compiler and asserts the code with its severity. The repro suite
 is the living side of the code registry: add the row when you mint the
 code, and the suite fails loudly if the fixture ever stops reproducing it.
-Codes Neo mints in TypeScript live in `codes.ts`, the one table the registry self-check reads beside the Rust `codes.rs` tables.
+Codes Core mints in TypeScript live in `codes.ts`, the one table the registry self-check reads beside the Rust `codes.rs` tables.
 
 Agents read the same rows as canonical JSON. `formatJsonDiagnostics`
 renders the reported set as one array on one line — typed rows in template

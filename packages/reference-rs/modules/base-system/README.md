@@ -21,7 +21,7 @@ it empty so AtomSet stays small. `layers` is not here yet. `jsxOwned` maps a
 component name to the sorted prop names it keeps for itself (omitted when
 empty); `from_json` keeps it, and atomic seeds its host gate from it.
 
-Extends composition lives in Neo: see packages/reference-neo/src/system/base/SPEC.md (E1–E15).
+Extends composition lives in Core: see packages/reference-core/src/system/base/SPEC.md (E1–E15).
 
 `lib_fixture()` loads the committed lib spec (`src/lib_fixture/lib.json`)
 through `from_json`, then overlays host/Panda conditions, the standard

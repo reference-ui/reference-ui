@@ -5,5 +5,5 @@ when the system defines no author `:root` and the input uses zero rhythm
 values: the default is unconditional (CONTINUITY-01), so rhythm
 rules can never dangle. The default block is the only `--spacing-root`
 definition here. Contract: [SPEC.md](../../../SPEC.md).
-Siblings: `ATM-ROOT-02` (author override wins); `NEO-CHAIN-07` (the
+Siblings: `ATM-ROOT-02` (author override wins); `CORE-CHAIN-07` (the
 extends-chain winner plus rhythm paint against the effective root).

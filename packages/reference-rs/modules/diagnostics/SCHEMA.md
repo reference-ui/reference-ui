@@ -9,7 +9,7 @@ document is law, and renames or reshapes break loudly in the goldens below.
 ## The value
 
 A batch is a JSON array of diagnostics; a single diagnostic is one object.
-The napi transport, the js mirrors, and the Neo CLI all emit the compact
+The napi transport, the js mirrors, and the Core CLI all emit the compact
 form — one batch on one line, UTF-8, no trailing newline inside the encoded
 string (printers add it). Parsers accept any JSON whitespace, so the
 pretty-printed case goldens (`output/diagnostics.json`) carry the same
@@ -42,7 +42,7 @@ objects as `{start, end}` and labels as `{span, message}`. Absent optionals
 are omitted (never `null`), unknown keys are stripped, and empty `labels`
 or `help` lists are dropped as absent, exactly like the Rust struct. The
 same diagnostic therefore encodes to byte-identical JSON from Rust, the
-template js mirror, and the Neo transport, regardless of construction order.
+template js mirror, and the Core transport, regardless of construction order.
 
 ## Examples
 
@@ -71,11 +71,11 @@ A batch wraps rows in an array:
 ```
 
 Every example above is pinned verbatim: `src/transport.rs` (Rust),
-`js/index.test.ts` (template mirror), and the Neo `json.test.ts` contract
+`js/index.test.ts` (template mirror), and the Core `json.test.ts` contract
 all assert these exact bytes, so any drift between the schema, the
 encoders, and the CLI fails loudly on at least one side.
 
-## Legacy carries (Neo side only)
+## Legacy carries (Core side only)
 
 `ref sync --json` concatenates the reported set — userspace warnings, the
 opt-in compiler backchannel, the reference tasty channel — in first-seen

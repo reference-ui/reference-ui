@@ -24,7 +24,7 @@ developer to boot it. Single instance only.
 2. If **not running**, start it in a managed background session:
    `pnpm dev:lib > /tmp/devlib.log 2>&1`
 3. Wait for :5000 to return 200 (poll ~5s, up to ~3 min — startup pays
-   two Neo syncs plus Vite), then proceed.
+   two Core syncs plus Vite), then proceed.
 4. If the server dies mid-loop, restart it and re-run. Report the flap;
    do not ask for permission.
 

@@ -9,7 +9,7 @@ imports it, so the tag is external.
 
 What the compiled package cannot say, its published roster does. The base system
 carries `jsxOwned: { "CodeIcon": ["size", "variant"] }` (`input/baseSystem.json`),
-the way Neo hands an upstream's owned props to a consumer compile. The gate reads
+the way Core hands an upstream's owned props to a consumer compile. The gate reads
 it like a traced owned set: `<CodeIcon size="lg" />` mints no want and no `lg`
 warning, while `color` is not owned and still extracts as an external want.
 `<Div size="2r" />` is the control: the primitive still folds `size`.

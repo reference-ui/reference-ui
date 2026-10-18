@@ -12,7 +12,7 @@ calls.
 
 Moved whole from `src/sync/`: legacy kept watch
 top-level because it held its own piscina worker plus its own event
-bus, and neither force exists in Neo — parcel subscribe direct, no bus — so lib/ stands. The picomatch type seam rides along
+bus, and neither force exists in Core — parcel subscribe direct, no bus — so lib/ stands. The picomatch type seam rides along
 because only the watcher matches globs.
 
 ## What it owns
@@ -89,13 +89,13 @@ nothing; the re-assert publishes again.
 ## Consumers
 
 - the CLI watch runner, via `watchSync`
-- the NEO-SYNC-14 resync case and the NEO-WATCH-01 live-edit→paint
+- the CORE-SYNC-14 resync case and the CORE-WATCH-01 live-edit→paint
   loop case, via `watchSync`
-- the NEO-WATCH-13 case (the failed-scope path, via `watchSync`) and the
-  NEO-WATCH-14 and -15 cases (the dropped-batch and boot-window paths,
+- the CORE-WATCH-13 case (the failed-scope path, via `watchSync`) and the
+  CORE-WATCH-14 and -15 cases (the dropped-batch and boot-window paths,
   via the spawned `ref sync --watch`)
 
-Every parcel subscription in Neo routes through here; nothing outside
+Every parcel subscription in Core routes through here; nothing outside
 this module touches the watcher backend or the matcher. The module
 stays whole until a second consumer of its internals appears — that,
 a worker pool, or an event bus is the trigger to split it out.

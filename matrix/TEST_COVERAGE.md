@@ -4,7 +4,7 @@ Matrix exists to answer ONE question: launch Reference UI, release it,
 someone installs from npm into a fresh environment, and layers and
 extends work. Matrix keeps exactly what can't be proved in local tests
 or in one set of environments. Everything provable natively lives in
-Neo cases (`packages/reference-neo/tests/cases/`) or Rust seam tests.
+Core cases (`packages/reference-core/tests/cases/`) or Rust seam tests.
 
 ## The kept gate
 
@@ -60,57 +60,57 @@ preserved). Topology semantics: `CHAIN.md`. Composition contract:
 ## Coverage homes for the retired suites
 
 Every behavior below is covered EXACTLY once (one-coverage-home).
-PORT = new Neo case authored for it; DROP = pre-existing Neo/RS
+PORT = new Core case authored for it; DROP = pre-existing Core/RS
 coverage; DROP* = retired-by-design legacy machinery with no home.
 
 ### Chain (stays in matrix, not ported)
 
 The 11 tiers in the gate above are the coverage home for chain behavior
 (packed-boundary proof over installed fixtures — what native
-tests can't show). The `NEO-CHAIN-01..05` tier ports were deleted
-as duplicates (one home = matrix). Kept alongside: `NEO-CHAIN-06`
+tests can't show). The `CORE-CHAIN-01..05` tier ports were deleted
+as duplicates (one home = matrix). Kept alongside: `CORE-CHAIN-06`
 (publisher-shape pin, no tier source — tiers re-cover the
 scenario e2e, CHAIN-06 pins it fast) and pre-existing
-`NEO-SYNC-10` (single-hop adopt). Still uncovered: T4 (parallel
+`CORE-SYNC-10` (single-hop adopt). Still uncovered: T4 (parallel
 extends) and T5 (parallel layers) have no tiers, and depth-3
 chains have no tier.
 
-### Lifecycle (PORT → new `NEO-CLI-*` / `NEO-WATCH-01`)
+### Lifecycle (PORT → new `CORE-CLI-*` / `CORE-WATCH-01`)
 
-| Neo case | Deleted matrix source |
+| Core case | Deleted matrix source |
 |---|---|
-| `NEO-CLI-01` one-shot lifecycle (idempotent re-sync, stale rewrite, SIGTERM recovery, clean-restore) | `distro` CLI-lifecycle core (~L280-446; virtual-mirror legs retired, skip stays skipped, types with TYPE) |
-| `NEO-CLI-02` resident `--watch` flag path (boot, resync, shutdown) | No matrix source — closes the native gap |
-| `NEO-WATCH-01` live-edit→paint loop + `NEO-SYNC-14` node-side watch | `watch-contract` all 3 tests (webpack leg retired) |
+| `CORE-CLI-01` one-shot lifecycle (idempotent re-sync, stale rewrite, SIGTERM recovery, clean-restore) | `distro` CLI-lifecycle core (~L280-446; virtual-mirror legs retired, skip stays skipped, types with TYPE) |
+| `CORE-CLI-02` resident `--watch` flag path (boot, resync, shutdown) | No matrix source — closes the native gap |
+| `CORE-WATCH-01` live-edit→paint loop + `CORE-SYNC-14` node-side watch | `watch-contract` all 3 tests (webpack leg retired) |
 
 `distro` and `watch` suites are fully released (deleted outright):
 their install dimension is re-proven by every kept tier's setup phase.
 
-### Micro-ports (PORT → existing Neo groups)
+### Micro-ports (PORT → existing Core groups)
 
-| Neo case | Deleted matrix source |
+| Core case | Deleted matrix source |
 |---|---|
-| `NEO-PRIM-13` category-prefixed `colors.*` values + no-raw-leak pin | `primitives` L247 |
-| `NEO-CSS-15` viewport media probes (840px halves) | `css` L277-302 |
-| `NEO-COND-18` `& +` / `& ~` siblings in `css()` | `css-selectors` L65-75 |
-| `NEO-PRIM-14` portal island (re-targeted, no Panda spelling) | `color-mode` L96-112 |
-| `NEO-RESP-10` 8-leg viewport contract | `responsive` viewport-contract, whole file |
-| `NEO-PRIM-15` corner-pair radius shorthands (12 corners) | `spacing` L143-175 (`box.d.ts` NOT ported) |
-| `NEO-RECIPE-12` media+container conjunction on one class | `recipe` L265-274 |
+| `CORE-PRIM-13` category-prefixed `colors.*` values + no-raw-leak pin | `primitives` L247 |
+| `CORE-CSS-15` viewport media probes (840px halves) | `css` L277-302 |
+| `CORE-COND-18` `& +` / `& ~` siblings in `css()` | `css-selectors` L65-75 |
+| `CORE-PRIM-14` portal island (re-targeted, no Panda spelling) | `color-mode` L96-112 |
+| `CORE-RESP-10` 8-leg viewport contract | `responsive` viewport-contract, whole file |
+| `CORE-PRIM-15` corner-pair radius shorthands (12 corners) | `spacing` L143-175 (`box.d.ts` NOT ported) |
+| `CORE-RECIPE-12` media+container conjunction on one class | `recipe` L265-274 |
 
-Declined: typescript strict-wrapper (no Neo `strict` surface;
-`NEO-TYPE-02` is the equivalent home).
+Declined: typescript strict-wrapper (no Core `strict` surface;
+`CORE-TYPE-02` is the equivalent home).
 
 ### DROPs (pre-existing homes, suite deleted)
 
 - `recipe` / `primitives` / `system` / `tokens` rests → RECIPE / PRIM / SYNC / CSS / TOKEN / RESP / MERGE / PARITY cases.
-- `reference` (both files) → `NEO-REF` 26/26.
-- `css` / `css-selectors` / `color-mode` / `font` / `responsive` / `spacing` rests → Neo css-family cases (Panda-theme spellings NOT ported — recorded divergence).
+- `reference` (both files) → `CORE-REF` 26/26.
+- `css` / `css-selectors` / `color-mode` / `font` / `responsive` / `spacing` rests → Core css-family cases (Panda-theme spellings NOT ported — recorded divergence).
 - `distro` rest → SYNC / TYPE cases.
 - `session` (all 3) → retired sidecar, no home.
-- `typescript` → `NEO-TYPE-01..04`.
+- `typescript` → `CORE-TYPE-01..04`.
 - `virtual` (all) → no-mirror design, no home.
-- `playwright` (both) → `NEO-SYNC-01` / `NEO-SMOKE-01` / `NEO-PLAY-B-01`.
+- `playwright` (both) → `CORE-SYNC-01` / `CORE-SMOKE-01` / `CORE-PLAY-B-01`.
 
 ### DROP* (retired with the cutover, no home needed)
 
@@ -123,5 +123,5 @@ generated-output, virtual-output pins, retired `strict` /
 
 Grep `matrix/tests` for residual assertions of ported/dropped
 behavior — zero hits or the commit doesn't land. Every PORT row
-shows a Neo id plus its deleted matrix file; every DROP row shows
+shows a Core id plus its deleted matrix file; every DROP row shows
 the pre-existing home; every KEEP row shows the file.

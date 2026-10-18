@@ -8,7 +8,7 @@ Repository-wide conventions, dev server policies, and visual verification instru
 
 `view-story`, `test-component` and `ux-designer` are **skills** (component workflows for `@reference-ui/lib`).
 
-**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for the kept matrix suites (`matrix/*`) and the pipeline. `packages/reference-core` was retired in `b2c666a73`; its work now lives in Neo and reference-rs (see the table). Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a loop to work through.
+**`test-core` is not a skill.** It is the pipeline runner (`pnpm agent`) for the kept matrix suites (`matrix/*`) and the pipeline. The old `reference-core` package was retired in `b2c666a73`; its work now lives in `packages/reference-core` (`@reference-ui/core`) and reference-rs (see the table). Docs live at `.agents/skills/test-core/SKILL.md` so agents can find the CLI — treat it as infrastructure, not a loop to work through.
 
 | You changed | Use |
 | --- | --- |
@@ -16,13 +16,13 @@ Repository-wide conventions, dev server policies, and visual verification instru
 | `@reference-ui/lib` component logic / CT / snapshots | `test-component` skill (`pnpm agentct`) |
 | `@reference-ui/lib` component UX sign-off (look, feel, accessibility) | `ux-designer` skill (judge with `view-story`) |
 | `packages/reference-rs` (Rust crates, N-API, system compiler) | `agent-rs` skill (`pnpm agentrs`) |
-| packages/reference-neo (TypeScript above the cut: fragments, publish, runtime) | agent-neo skill (pnpm agentneo) |
+| packages/reference-core (TypeScript above the cut: fragments, publish, runtime) | agent-core skill (pnpm agentcore) |
 | `packages/reference-docs` (docs app: MDX content, shell, examples) | **agent-docs** skill (`pnpm agentdocs`) |
 | `matrix/*` (kept chain and MCP suites), `packages/reference-mcp`, `pipeline/*`, hermetic bundler contracts | **test-core** (`pnpm agent`) |
-| Neo sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:neo`) |
+| Core sync perf / memory / bundle size at scale | `benchmark` skill (`pnpm bench:core`) |
 | Past hunts, verdicts, cases, evidence (agent memory) | Memex (`node .agents/memex/cli.mjs`, `.agents/memex/README.md`) |
 
-If a lib-component task also modified `matrix/*`, `pipeline/*` or `packages/reference-mcp`, finish `test-component` for the component, then **switch to test-core** for that proof. `pnpm agentct` does not cover them. Neo and reference-rs changes go to `agent-neo` / `agent-rs` (table above).
+If a lib-component task also modified `matrix/*`, `pipeline/*` or `packages/reference-mcp`, finish `test-component` for the component, then **switch to test-core** for that proof. `pnpm agentct` does not cover them. Core and reference-rs changes go to `agent-core` / `agent-rs` (table above).
 
 ---
 
@@ -168,17 +168,17 @@ pnpm agentrs                                                 # bare command runs
 
 ---
 
-## 5. Neo Runtime Workflow (agent-neo, pnpm agentneo)
+## 5. Core Runtime Workflow (agent-core, pnpm agentcore)
 
-Follow `.agents/skills/agent-neo/SKILL.md` whenever you work in `packages/reference-neo`.
+Follow `.agents/skills/agent-core/SKILL.md` whenever you work in `packages/reference-core`.
 
-Neo is the code word for the runtime portion of reference-rs — TypeScript above the cut (fragments, publish, runtime), Rust below. Neo is not a fork of core and never touches lib; its loop is cases plus Playwright in `packages/reference-neo/tests`, with no matrix and no Dagger in the inner loop.
+Core is the runtime portion of reference-rs: TypeScript above the cut (fragments, publish, runtime), Rust below. It never touches lib; its loop is cases plus Playwright in `packages/reference-core/tests`, with no matrix and no Dagger in the inner loop.
 
 ```bash
-pnpm agentneo list            # all cases: id, name, folder, README first line
-pnpm agentneo search <query>  # find cases by id, name, or README text
-pnpm agentneo run [case-id]   # run one case, or all cases when omitted
-pnpm agentneo q [paths]       # Biome quality gate (section 6 of the skill)
+pnpm agentcore list            # all cases: id, name, folder, README first line
+pnpm agentcore search <query>  # find cases by id, name, or README text
+pnpm agentcore run [case-id]   # run one case, or all cases when omitted
+pnpm agentcore q [paths]       # Biome quality gate (section 6 of the skill)
 ```
 
 See the skill for Playwright policy, scope discipline, gate limits, and the retirement clause.
@@ -202,13 +202,13 @@ The gate's fail line is cognitive complexity 20, `any` banned, file length 500, 
 
 ## 7. Test Case Convention
 
-Every case-driven suite uses one shape, for Neo, reference-rs and any new module.
-A case is a folder named by its raw ID (`ATM-TOKEN-06`, `NEO-TYPE-09`) that holds:
+Every case-driven suite uses one shape, for Core, reference-rs and any new module.
+A case is a folder named by its raw ID (`ATM-TOKEN-06`, `CORE-TYPE-09`) that holds:
 
 - `case.json`: the index entry, `{"id": "ATM-TOKEN-06", "name": "<one-line claim>"}`.
 - `README.md`: first line `# <ID> — <one-line claim>`, the claim the same text as `case.json`'s `name`.
-- The runnable part and its inputs and outputs. reference-rs: `spec.ts` (`{ id, verify }`), `input/`, `output/`. Neo: `specs/` and `world/`.
+- The runnable part and its inputs and outputs. reference-rs: `spec.ts` (`{ id, verify }`), `input/`, `output/`. Core: `specs/` and `world/`.
 
-The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Neo's runner enforces the same rules in `packages/reference-neo/tests/shared/caseIndex.ts`, and also requires case.json `name` to equal the README claim: `listCases()` runs that check, so `pnpm agentneo list`, `search` and `run` all fail on a broken case folder. Memex indexes `case.json`: Neo cases in `cases`, reference-rs cases in `rs-cases`.
+The reference-rs runner (`packages/reference-rs/testing`) fails any folder under `cases/` that is not named by a raw ID, and any case whose `case.json` is missing or whose id differs from its folder name, or whose README first line is not that heading. Core's runner enforces the same rules in `packages/reference-core/tests/shared/caseIndex.ts`, and also requires case.json `name` to equal the README claim: `listCases()` runs that check, so `pnpm agentcore list`, `search` and `run` all fail on a broken case folder. Memex indexes `case.json`: Core cases in `cases`, reference-rs cases in `rs-cases`.
 
 

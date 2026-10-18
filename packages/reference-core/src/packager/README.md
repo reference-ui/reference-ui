@@ -57,7 +57,7 @@ touching the filesystem. The legacy layer-name injection has no
 counterpart here: the system name bakes in at generation, so no
 placeholder exists to inject. The legacy worker lifecycle, the
 TypeScript declaration fan-out, and the build-copy install mode
-were all deliberately left behind: Neo's typegen plus a single
+were all deliberately left behind: Core's typegen plus a single
 declaration leg cover types, and junctions carry every install.
 Write-if-changed gating came back, but in the commit instead of
 the legs: legs write the stage unconditionally, and the commit

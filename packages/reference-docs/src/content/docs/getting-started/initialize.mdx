@@ -6,12 +6,6 @@ slug: initialize
 description: Install Reference UI and start building in minutes.
 ---
 
-{/*
-TODO: the `ref` CLI ships in `@reference-ui/neo`, which is not yet published
-to npm. The commands below use that package name; confirm it, and the
-version to pin, before release. There is no `init` scaffold command yet, so
-setup is the steps below.
-*/}
 
 # Getting started
 
@@ -23,10 +17,9 @@ plain stylesheet and no runtime style injection.
 
 ### 1. Install the packages
 
-Install the library and React, and the `ref` CLI as a dev dependency. React
-is a peer dependency, so your app supplies the one copy.
+Install the library and the `ref` CLI.
 
-<Install packages="@reference-ui/lib react react-dom" devPackages="@reference-ui/neo" />
+<Install packages="@reference-ui/lib react react-dom" devPackages="@reference-ui/core" />
 
 ### 2. Create the config file
 
@@ -34,7 +27,7 @@ Create `ui.config.ts` at the project root, next to `package.json`.
 
 ```ts
 // ui.config.ts
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 
 export default defineConfig({
@@ -127,11 +120,11 @@ package manager (npm, pnpm or yarn); the commands below use npm.
 
 1. Install the packages:
    npm install @reference-ui/lib react react-dom
-   npm install --save-dev @reference-ui/neo
+   npm install --save-dev @reference-ui/core
 
 2. Create ui.config.ts at the project root (next to package.json):
 
-   import { defineConfig } from '@reference-ui/neo'
+   import { defineConfig } from '@reference-ui/core'
    import { baseSystem } from '@reference-ui/lib/baseSystem'
 
    export default defineConfig({

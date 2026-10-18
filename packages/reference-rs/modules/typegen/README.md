@@ -66,7 +66,7 @@ API.
 - Emit runtime token JS (`tokens.mjs`, `token(`)
 - Depend on `atomic`
 - Dump all of `csstype.Properties` or import `@reference-ui/styled`
-- Host-wire the printer into the packager (`packages/reference-neo/src/packager`)
+- Host-wire the printer into the packager (`packages/reference-core/src/packager`)
 
 We author `css()`; we still generate the unions. The **input** is the base
 system either way.

@@ -24,7 +24,7 @@ Reference UI is a React component library with a typed design system. Its CSS is
 
    ```ts
    // ui.config.ts
-   import { defineConfig } from '@reference-ui/neo'
+   import { defineConfig } from '@reference-ui/core'
    import { baseSystem } from '@reference-ui/lib/baseSystem'
 
    export default defineConfig({
@@ -71,7 +71,7 @@ Package READMEs: [`@reference-ui/lib`](packages/reference-lib/README.md), [`@ref
 - `packages/reference-lib`: `@reference-ui/lib`, the React component library
 - `packages/reference-icons`: `@reference-ui/icons`, the icon package
 - `packages/reference-rs`: `@reference-ui/rust`, the Rust compiler and native bindings
-- `packages/reference-neo`: the `ref` CLI and sync pipeline (private workspace package)
+- `packages/reference-core`: the `ref` CLI and sync pipeline (private workspace package)
 - `packages/reference-mcp`: `@reference-ui/mcp`, the MCP server
 - `packages/reference-docs`: the documentation site (private workspace package)
 - `matrix/`: consumer-style fixture projects and the kept matrix test suites

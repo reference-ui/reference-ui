@@ -11,7 +11,7 @@ The docs live under `.agents/skills/test-core` only so agents can find the runne
 
 Use `test-core` when you changed any of:
 
-- hermetic React and bundler contracts under `matrix/*` and `pipeline/*` (the Neo runtime they drive is proven by agent-neo, in `packages/reference-neo`)
+- hermetic React and bundler contracts under `matrix/*` and `pipeline/*` (the Core runtime they drive is proven by agent-core, in `packages/reference-core`)
 - `packages/reference-mcp` (the MCP server; its unit tests run with `pnpm agent vt packages/reference-mcp`, its matrix suite is `matrix/tests/mcp`)
 - `matrix/*` packages
 - pipeline / Dagger / hermetic React + bundler contracts
@@ -52,7 +52,7 @@ pnpm agent vitest lib -t "Dialog"
 pnpm agent vitest -t "Overlay"
 pnpm agent vt packages/reference-lib/src/components/Dialog/__tests__/Dialog.test.tsx
 
-# 4. Fast 4-Phase Component Verification (lib, after the Neo or reference-rs proof is already green):
+# 4. Fast 4-Phase Component Verification (lib, after the Core or reference-rs proof is already green):
 # (Runs typecheck -> vitest -> build -> targeted Playwright E2E spec in one command)
 pnpm agent verify Toast
 pnpm agent verify Combobox
@@ -63,7 +63,7 @@ pnpm agent verify:all --packages=@matrix/lib  # targeted matrix
 pnpm agent verify:all --no-fail-fast          # runs matrix even if CT fails
 
 # 6. Full Hermetic Matrix Tests (Dagger containers across React versions & bundlers):
-# This is the default proof after a Neo or reference-rs change that the matrix consumes.
+# This is the default proof after a Core or reference-rs change that the matrix consumes.
 pnpm agent test --packages=@matrix/lib
 pnpm agent test matrix --packages=@matrix/tokens
 pnpm agent test:matrix  # Full matrix run across all variants (--full)
@@ -78,12 +78,12 @@ pnpm agent clean
 pnpm agent setup --packages=@matrix/distro --sync
 ```
 
-### After a Neo or reference-rs change
+### After a Core or reference-rs change
 
-1. Prove the owning package first: `pnpm agentneo run` for `packages/reference-neo`, `pnpm agentrs v` and `pnpm agentrs c` for `packages/reference-rs`.
+1. Prove the owning package first: `pnpm agentcore run` for `packages/reference-core`, `pnpm agentrs v` and `pnpm agentrs c` for `packages/reference-rs`.
 2. Rebuild what the matrix consumes (`pnpm agent` auto-builds `@reference-ui/lib` dist when Playwright needs it; pass `--build` to force).
 3. Run the matrix package(s) that cover the surface you touched, e.g. `@matrix/virtual`, `@matrix/session`, `@matrix/mcp`, `@matrix/typescript`, `@matrix/distro`, `@matrix/system`, `@matrix/playwright`.
-4. Do not stop at `pnpm agentct`. Component CT does not exercise Neo or reference-rs.
+4. Do not stop at `pnpm agentct`. Component CT does not exercise Core or reference-rs.
 
 ### Process Lifecycle, Signal Control & Pass Signaling
 
@@ -134,15 +134,15 @@ When multiple processes request matrix tests or component verifications at the s
 ## 4. Memex (`cases` + `surfaces` collections)
 
 Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): neo cases live in `cases`, RS module
-surfaces in `surfaces`. Use it to find **which neo cases / RS
+(`.agents/memex/README.md`): core cases live in `cases`, RS module
+surfaces in `surfaces`. Use it to find **which core cases / RS
 surfaces cover a changed surface** when scoping verification, instead of
 grepping.
 
 ```bash
 node .agents/memex/cli.mjs search "<query>" [--limit=N] [--json]       # all collections, hits labeled
 node .agents/memex/cli.mjs search "<query>" --in surfaces [--limit=N]  # RS surfaces only
-node .agents/memex/cli.mjs show cases:NEO-CHAIN-01                      # full doc + related
+node .agents/memex/cli.mjs show cases:CORE-CHAIN-01                      # full doc + related
 ```
 
 Terms are stemmed (`queries` matches `query`) and typo-tolerant

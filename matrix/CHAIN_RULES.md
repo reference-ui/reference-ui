@@ -126,7 +126,7 @@ Practical consequence:
 
 Reference UI's Panda extension layer deep-merges fragment contributions, but the effective conflict rule is still "later writer wins on the same leaf path".
 
-Claims and the cases that prove them: [extends SPEC](../packages/reference-neo/src/system/base/SPEC.md).
+Claims and the cases that prove them: [extends SPEC](../packages/reference-core/src/system/base/SPEC.md).
 
 ### Stylesheet assembly order
 
@@ -192,7 +192,7 @@ So for diamond shapes the rule is:
 - a branch's override survives in either order, unless a later system writes that path itself (E3, E5)
 - a cycle reached through a fragment name is rejected with a named error (E7)
 
-T7 and T12 pin the composed app's adoption; NEO-CHAIN-02, -09, and -10 pin the diamond's dedupe through real and
+T7 and T12 pin the composed app's adoption; CORE-CHAIN-02, -09, and -10 pin the diamond's dedupe through real and
 stand-in syncs.
 
 ---

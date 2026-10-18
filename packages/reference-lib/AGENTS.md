@@ -67,7 +67,7 @@ finalProps = merge(inputDefaults, rootInputProps, explicitInputProps, managedMac
 
 Component logic and CT: follow the **`test-component`** skill (`pnpm agentct <Component>`).
 
-Matrix Playwright/Vitest for lib contracts: use **test-core** (`pnpm agent`), not raw subshells. test-core is the pipeline runner, **not a skill**. The retired core package's work now lives in `packages/reference-neo` and `packages/reference-rs`, and `pnpm agentct` covers only lib components.
+Matrix Playwright/Vitest for lib contracts: use **test-core** (`pnpm agent`), not raw subshells. test-core is the pipeline runner, **not a skill**. The retired core package's work now lives in `packages/reference-core` and `packages/reference-rs`, and `pnpm agentct` covers only lib components.
 
 ```bash
 # Component CT (test-component):

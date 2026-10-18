@@ -5,7 +5,7 @@ evaluation, merging. Scan walks the project's include globs and keeps
 every file whose imports mention a fragment needle; the native scan
 does the same walk engine-side and the differential batteries pin the
 two to identical selection on every tree. Each matched file bundles
-to a self-contained IIFE with the author ids aliased back at Neo
+to a self-contained IIFE with the author ids aliased back at Core
 source — at collection time no generated package exists yet, so the
 bootstrap import map is the one lie the pipeline tells on purpose.
 Preparation gathers upstream portable bundles, local IIFEs, and the

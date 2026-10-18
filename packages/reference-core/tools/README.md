@@ -1,23 +1,23 @@
-# Neo tools
+# Core tools
 
-Small checked-in utilities that support the Neo package. Each tool runs by an
+Small checked-in utilities that support the Core package. Each tool runs by an
 explicit documented command; nothing here hooks into install or build lifecycles.
 
 ## Reference component mirror
 
 The mirror script copies the living Reference presentation set out of
 reference-lib source and into the gitignored browser-component mirror under the
-Neo reference module. Only the two living roots cross the seam; the lib-owned
+Core reference module. Only the two living roots cross the seam; the lib-owned
 shell, fixtures, and theme stay behind. Every copied file gains a provenance
 header naming its lib source, and package type imports are rewritten to the
-neighboring browser adapter so the mirror compiles against Neo runtime types.
+neighboring browser adapter so the mirror compiles against Core runtime types.
 Consumer-resolved design-system imports pass through untouched, exactly as the
-core copy tool leaves them.
+retired reference-core copy tool leaves them.
 
-Run it from the Neo package directory whenever the lib source moves:
+Run it from the Core package directory whenever the lib source moves:
 
 ```sh
-cd packages/reference-neo && node tools/mirror-reference-component.mjs
+cd packages/reference-core && node tools/mirror-reference-component.mjs
 ```
 
 The run takes a lock file, wipes the mirror directory first, and reports how
@@ -30,7 +30,7 @@ The vendor script copies the reachable `@reference-ui/rust` tasty declaration
 closure out of the built RS dist and into the committed
 `src/native/generated/tasty/` tree. Only specifier strings move: every extensionless
 relative import becomes its explicit NodeNext form, so the vendored tree
-typechecks under neo's module resolution while the RS source tree stays
+typechecks under core's module resolution while the RS source tree stays
 untouched. Every copied file gains a provenance header pinning the RS version
 and the regen command; nothing is hand-mimicked, so the copy cannot drift from
 the upstream surface it shadows. The package tsconfig maps the three tasty
@@ -45,12 +45,12 @@ the package typecheck loudly instead of drifting silently. No regen step
 exists or is needed for the template: no RS rebuild means no action, and
 if tsc ever names a tasty import there, update the import list.
 
-Run it from the Neo package directory after an RS rebuild, and use `--check`
+Run it from the Core package directory after an RS rebuild, and use `--check`
 to verify the committed tree is fresh:
 
 ```sh
-cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs
-cd packages/reference-neo && node tools/vendor-rust-tasty-dts.mjs --check
+cd packages/reference-core && node tools/vendor-rust-tasty-dts.mjs
+cd packages/reference-core && node tools/vendor-rust-tasty-dts.mjs --check
 ```
 
 The run wipes the generated tasty directory first and reports how many files it wrote
@@ -69,12 +69,12 @@ The executable roster and its runtime trio are deliberately not copied: they shi
 live through the `@reference-ui/rust/primitives` subpath, so the shelf holds data
 and types only and can never drift from the code that renders.
 
-Run it from the Neo package directory after re-running the primitives generator,
+Run it from the Core package directory after re-running the primitives generator,
 and use `--check` to verify the committed shelf is fresh:
 
 ```sh
-pnpm --filter @reference-ui/rust run primitives && cd packages/reference-neo && node tools/vendor-rust-primitives.mjs
-cd packages/reference-neo && node tools/vendor-rust-primitives.mjs --check
+pnpm --filter @reference-ui/rust run primitives && cd packages/reference-core && node tools/vendor-rust-primitives.mjs
+cd packages/reference-core && node tools/vendor-rust-primitives.mjs --check
 ```
 
 The run writes the shelf in place (the authored shelf README is not a payload and
@@ -104,11 +104,11 @@ alias-literal set is exactly the known one (drift fails loudly), and makes
 `./runtime` export at the emit; `prepack`/`prepublishOnly` run the build,
 and `files` carries `dist` only.
 
-Run it from the Neo package directory after pulling or editing neo
+Run it from the Core package directory after pulling or editing core
 sources, and before any `.bin/ref` invocation in a fresh checkout:
 
 ```sh
-cd packages/reference-neo && node tools/build-bin.mjs
+cd packages/reference-core && node tools/build-bin.mjs
 ```
 
 The run is idempotent and typechecks as it emits (tsc errors fail the
@@ -117,5 +117,5 @@ working without it — only the installed-shim shape needs the emit.
 
 ## Quality gate
 
-The quality directory holds the agentneo quality-gate implementation; its own
+The quality directory holds the agentcore quality-gate implementation; its own
 README describes the checks.

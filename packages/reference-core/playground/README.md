@@ -1,7 +1,7 @@
 # Playground
 
 The expendable mess-around loop. One synced React app for trying combinations
-fast and screenshotting — then formalising what you find as a Neo case. It is
+fast and screenshotting — then formalising what you find as a Core case. It is
 not tests: nothing here asserts about the system. But the package typegate
 covers playground sources, so keep it green — delete it before letting it rot.
 

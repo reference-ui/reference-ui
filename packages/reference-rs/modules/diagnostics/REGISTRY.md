@@ -34,7 +34,7 @@ consumers never break on codes minted after they shipped.
 | `STT`     | styletrace  | Live: 5-code table in `modules/styletrace/src/diagnostics/codes.rs`; per-file skips, the class-component and unresolved-HOC-argument warnings, plus the scan and surface refusals |
 | `TGN`     | typegen     | Live: 9-code table in `modules/typegen/src/diagnostics/codes.rs`; printer skips plus the spec refusal |
 | `CAN`     | canon       | Reserved, unminted                                     |
-| `BSS`     | base-system | Live: 2-code, minted in Neo's `packages/reference-neo/src/diagnostics/codes.ts` (the collect step's token shadow, the config loader's slow evaluation); no Rust table |
+| `BSS`     | base-system | Live: 2-code, minted in Core's `packages/reference-core/src/diagnostics/codes.ts` (the collect step's token shadow, the config loader's slow evaluation); no Rust table |
 | `MGP`     | module-graph| Reserved, unminted                                     |
 
 Rules:
@@ -93,7 +93,7 @@ with their registry row.
 ## Inventory
 
 Atomic rows are the aligned `ATM` vocabulary: every warn/err code parses in
-the template and pins a whole-compiler repro in Neo's `repro.test.ts`; the
+the template and pins a whole-compiler repro in Core's `repro.test.ts`; the
 four `-I-` rows stay module-local until the template grows an info level.
 
 | Code | Meaning | Raised in |
@@ -181,8 +181,8 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `TGN-W-EMPTY-FONT-FAMILY` | A font family declaring no weights; omitted from the registry | `modules/typegen/src/diagnostics/collect.rs` |
 | `TGN-E-INVALID-BASE-SYSTEM` | The baseSystem spec failed contract validation; the request is refused as a coded throw | `modules/typegen/native.rs` |
 | `TGN-W-DUPLICATE-RECIPE-STEM` | A recipe whose PascalCase stem collides with an earlier recipe; the loser is omitted | `modules/typegen/src/diagnostics/collect.rs` |
-| `BSS-W-TOKEN-SHADOW` | A local token leaf replaces a different upstream value; one warning per path, naming the path, the upstream system and both values | `packages/reference-neo/src/collect/lib/shadow.ts` |
-| `BSS-W-SLOW-CONFIG` | Evaluating ui.config (where base systems are imported) took over 750 ms; names the `@reference-ui/lib` barrel and its `/baseSystem` subpath fix, else the config's package imports | `packages/reference-neo/src/config/slow-evaluation.ts` |
+| `BSS-W-TOKEN-SHADOW` | A local token leaf replaces a different upstream value; one warning per path, naming the path, the upstream system and both values | `packages/reference-core/src/collect/lib/shadow.ts` |
+| `BSS-W-SLOW-CONFIG` | Evaluating ui.config (where base systems are imported) took over 750 ms; names the `@reference-ui/lib` barrel and its `/baseSystem` subpath fix, else the config's package imports | `packages/reference-core/src/config/slow-evaluation.ts` |
 
 Tasty emit invariants (emitted-id hashing, artifact serialization) throw
 plain internal errors without codes: they are unreachable failure classes

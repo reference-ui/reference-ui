@@ -1,9 +1,9 @@
 # Portal Color Mode Protocol
 
 **Type**: Architecture contract. Documentation only.  
-**Owner**: `Portal` in `@reference-ui/lib`, backed by the primitive compiler in `@reference-ui/neo`.  
+**Owner**: `Portal` in `@reference-ui/lib`, backed by the primitive compiler in `@reference-ui/core`.  
 **Scope**: `@reference-ui/lib` (Portal surfaces). Overlay is a consumer of Portal, not the place the contract is enforced.  
-**Canonical attribute**: `data-color-mode` (Neo `DATA_COLOR_MODE_ATTR`, `packages/reference-rs/modules/primitives/js/context.ts:17`). Retired attribute names are never emitted or read.
+**Canonical attribute**: `data-color-mode` (Core `DATA_COLOR_MODE_ATTR`, `packages/reference-rs/modules/primitives/js/context.ts:17`). Retired attribute names are never emitted or read.
 
 ---
 
@@ -60,7 +60,7 @@ That is a Portal invariant. Overlay cannot be the owner.
 
 The compiler and Portal implement the protocol. The machinery is the only path: Overlay-side patches that duplicate it are not used.
 
-### 2.1 Primitive runtime (`@reference-ui/neo`)
+### 2.1 Primitive runtime (`@reference-ui/core`)
 
 Every HTML primitive resolves context through `usePrimitiveContext(colorMode, variant, layerName)` (`packages/reference-rs/modules/primitives/js/context.ts:182`):
 
@@ -98,9 +98,9 @@ Unit proofs:
 
 If those tests pass and Overlay still needs a private surface, Overlay is compensating for something Portal should own, or Overlay is wrapping a non-primitive host that skips the compiler.
 
-### 2.3 Color-mode contract (Neo cases)
+### 2.3 Color-mode contract (Core cases)
 
-The in-tree contract for **non-portaled** islands lives in Neo cases: `NEO-PRIM-07` (`colorMode` prop stamps, and nested islands repaint), `NEO-COND-04` (`_dark` / `_light` flip with the attribute), `NEO-TOKEN-05` (sheet islands), and `NEO-PRIM-14` (portaled island). Portal must not fork that contract. Portal only re-establishes it after teleportation.
+The in-tree contract for **non-portaled** islands lives in Core cases: `CORE-PRIM-07` (`colorMode` prop stamps, and nested islands repaint), `CORE-COND-04` (`_dark` / `_light` flip with the attribute), `CORE-TOKEN-05` (sheet islands), and `CORE-PRIM-14` (portaled island). Portal must not fork that contract. Portal only re-establishes it after teleportation.
 
 ### 2.4 Overlay as a consumer
 
@@ -129,9 +129,9 @@ Overlay sets no `colorMode` internally; an authored `colorMode` on Content passe
 
 ### Law 1 — One physical attribute
 
-The only color-mode DOM attribute is `data-color-mode` (`DATA_COLOR_MODE_ATTR`, Neo `packages/reference-rs/modules/primitives/js/context.ts:17`).
+The only color-mode DOM attribute is `data-color-mode` (`DATA_COLOR_MODE_ATTR`, Core `packages/reference-rs/modules/primitives/js/context.ts:17`).
 
-The Neo engine emits `[data-color-mode]` selectors in sheets (`NEO-TOKEN-05`) and stamps the same attribute on primitives (`NEO-PRIM-07`). The Panda-era name is retired: it is never emitted and never read (`NEO-PARITY-04` pins its absence from the generated folder; `NEO-PRIM-14` pins zero occurrences around the portal island). `data-theme` is Toast chrome only, never color mode. Readers honor no aliases; writers emit one name.
+The Core engine emits `[data-color-mode]` selectors in sheets (`CORE-TOKEN-05`) and stamps the same attribute on primitives (`CORE-PRIM-07`). The Panda-era name is retired: it is never emitted and never read (`CORE-PARITY-04` pins its absence from the generated folder; `CORE-PRIM-14` pins zero occurrences around the portal island). `data-theme` is Toast chrome only, never color mode. Readers honor no aliases; writers emit one name.
 
 ### Law 2 — One logical context, provided by primitives
 
@@ -199,7 +199,7 @@ If a consumer places `<Overlay>` *outside* the island and only the trigger is in
 | `Toast` | Not today | None. Its host sits under `ReferenceLibrary`, so mount that inside the app's `colorMode` root. If it later portals, use `Portal`. |
 | `FocusLock` / `Presence` | Wrap Overlay hosts | Remain wrapper-free / cloneElement. Must not insert a non-primitive host above the first themed primitive in a way that blocks the Portal reset. |
 | Book / Docs | App roots | Explicit `colorMode={'light' \| 'dark'}` on the root primitive. Book also stamps `data-color-mode` on `<html>`; Docs does not stamp `<html>`. |
-| Neo island cases | In-tree and portaled | `NEO-PRIM-07` / `COND-04` / `TOKEN-05` keep the CSS island contract; `NEO-PRIM-14` is the portaled case. Overlay tests are not the source of truth. |
+| Core island cases | In-tree and portaled | `CORE-PRIM-07` / `COND-04` / `TOKEN-05` keep the CSS island contract; `CORE-PRIM-14` is the portaled case. Overlay tests are not the source of truth. |
 
 ---
 
@@ -210,7 +210,7 @@ Do not reintroduce these, and do not replace them with equivalent workarounds in
 - `OverlayPortaledSurface` or any Overlay-local theme wrapper.
 - Defaulting an unresolved mode to `'dark'` or `'light'`. It hides a missing `colorMode="light"`, and the tokens are light-first.
 - DOM walks for theme, such as `el.closest('[data-color-mode], [data-theme]')`.
-- A second attribute name. Book stamps only `data-color-mode`, `readDocumentColorMode` reads only `DATA_COLOR_MODE_ATTR`, and Neo has no aliases.
+- A second attribute name. Book stamps only `data-color-mode`, `readDocumentColorMode` reads only `DATA_COLOR_MODE_ATTR`, and Core has no aliases.
 - `colorMode={isDark ? 'dark' : undefined}`. The standing rule covers any future form of it.
 - A public `<ColorModeProvider>`. It violates library Law 3.
 - A Portal host `Div`, or a Radix-style wrapper, added so attributes can be placed on it.
@@ -229,7 +229,7 @@ Bare `<Portal>{children}</Portal>` is supported for app content. The contract is
 
 ### 6.2 Owner document
 
-`readDocumentColorMode(doc?: Document | null)` takes the document, `DocumentContext` carries it through the tree, and Portal provides the destination document (`packages/reference-rs/modules/primitives/js/context.ts:56-59,119`). The global `document` is only the fallback when no document is provided, which is correct for same-origin iframes. The reader is designed once, in Neo.
+`readDocumentColorMode(doc?: Document | null)` takes the document, `DocumentContext` carries it through the tree, and Portal provides the destination document (`packages/reference-rs/modules/primitives/js/context.ts:56-59,119`). The global `document` is only the fallback when no document is provided, which is correct for same-origin iframes. The reader is designed once, in Core.
 
 ### 6.3 Nested portals
 
@@ -247,7 +247,7 @@ Live toggling without React state is not supported. The app contract is to stamp
 
 ## 7. Proof
 
-Theme proofs live with Portal and the Neo island cases, not with Overlay:
+Theme proofs live with Portal and the Core island cases, not with Overlay:
 
 | ID | Claim |
 | :--- | :--- |
@@ -258,7 +258,7 @@ Theme proofs live with Portal and the Neo island cases, not with Overlay:
 | `PT-THEME-05` | Island: light app, `colorMode="dark"` ancestor. An Overlay or Popover opened from inside the island is dark. (Story fixture in `Portal.story.tsx`.) |
 | `PT-THEME-06` | Theme toggle on the Book or app root while an overlay is open updates the portaled surface without a remount. |
 | `OV-THEME-01/02` | Overlay consumer proofs (dark anchored dialog, and light). |
-| `NEO-PRIM-14` | The portaled island case at the engine level (second-root shape, zero retired-attribute pin). Overlay internals are not duplicated here. |
+| `CORE-PRIM-14` | The portaled island case at the engine level (second-root shape, zero retired-attribute pin). Overlay internals are not duplicated here. |
 
 Contrast assertions: not `rgb(255, 255, 255)` when dark. WCAG 4.5:1 on portaled text is optional and not yet asserted.
 

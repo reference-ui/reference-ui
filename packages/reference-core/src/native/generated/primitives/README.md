@@ -1,6 +1,6 @@
 # generated/primitives
 
-This shelf is Neo's committed copy of the RS-emitted primitive roster: the element
+This shelf is Core's committed copy of the RS-emitted primitive roster: the element
 vocabulary as data plus the raw system-unbound component types. Its source of truth
 is the primitives generator in reference-rs, which joins canon's tag tables with
 typegen's prop definitions and prints committed artifacts; nothing on this shelf is
@@ -17,11 +17,11 @@ apart from the provenance header this shelf stamps.
 What does not live here is deliberate. The executable roster and its runtime trio ship
 live from the workspace package and are never copied, so this shelf cannot drift from
 the code that renders. The per-system bake — layer name, splitter list, css binding —
-stays Neo-side at publish time, since only sync sees the system being built.
+stays Core-side at publish time, since only sync sees the system being built.
 
 Freshness has three layers, and this shelf is the middle one. The vendor tool keeps
 the bytes equal to the generator output and fails loudly otherwise; the case parity
 cases fail on semantic drift against the live canon and typegen tables; the RS golden
 pins the generator output itself. When the generator moves, re-run it, re-run the
-vendor tool from the Neo package directory, and let the quality gate confirm the
+vendor tool from the Core package directory, and let the quality gate confirm the
 shelf is fresh before anything else lands.

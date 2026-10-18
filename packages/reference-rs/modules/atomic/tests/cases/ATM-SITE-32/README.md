@@ -5,4 +5,4 @@ shape so the fold table cannot regress extraction into an interpreter.
 `Math.random`, `.map`/`.reduce` chains, async calls, loops, rest params,
 nested unknown calls, spread args, and `f?.()` each warn and skip while
 the static sibling extracts. The blanket net is HAVE; these
-are the tripwires. Browser paint arm: NEO-SITE-21.
+are the tripwires. Browser paint arm: CORE-SITE-21.

@@ -1,4 +1,4 @@
-# Neo Domain Language
+# Core Domain Language
 
 Living doc. The names that build up the runtime — not every
 identifier, just the load-bearing ones. When a name changes, update
@@ -7,7 +7,7 @@ this file in the same pass.
 ## Current
 
 - **case** — one leaf folder under `tests/cases/`: an id, a
-  description, a world, specs asserting an outcome. The unit of Neo
+  description, a world, specs asserting an outcome. The unit of Core
   verification.
 - **world** — a case's little source tree, served over local HTTP
   during a run.
@@ -17,10 +17,10 @@ this file in the same pass.
 - **artifact** — run output kept under
   `tests/.artifacts/<case-id>/`: screenshot, accessibility snapshot,
   trace/video on failure.
-- **gate** — the structural quality check (`agentneo q`). It fails.
-- **run / list / search / q / report** — the `agentneo` verbs: list
+- **gate** — the structural quality check (`agentcore q`). It fails.
+- **run / list / search / q / report** — the `agentcore` verbs: list
   the catalog, find cases, execute, gate, show tuning data.
-- **above / below the cut** — Neo is TypeScript above (collect,
+- **above / below the cut** — Core is TypeScript above (collect,
   publish, runtime); reference-rs is Rust below (atomic, typegen,
   styletrace).
 - **collect** — the collection subsystem (`src/collect/`): scan,
@@ -49,9 +49,9 @@ this file in the same pass.
   external) plus the baseSystem pair. The fixture build configs
   import the externals policy from the packager; they never mirror
   it.
-- **Neo** — the code word for this runtime rebuild. Retires if
-  promoted to core.
-- **author surface** — the one entry behind the `@reference-ui/neo`
+- **Core** — this runtime: TypeScript above the cut (fragments, publish,
+  runtime), Rust below. The package is `@reference-ui/core`.
+- **author surface** — the one entry behind the `@reference-ui/core`
   id (`src/index.ts`): config plus the collector calls, factories
   excluded. Bundlers alias the id here; tsconfig paths point
   typechecking at the same file, so every resolver agrees on what
@@ -61,10 +61,10 @@ this file in the same pass.
   run; pages reference it, never `src/`.
 - **data-layer / data-color-mode / data-variant** — the DOM
   attributes primitives stamp: system name, active color mode,
-  variant. Neo-owned names; sheets and primitives agree on them.
+  variant. Core-owned names; sheets and primitives agree on them.
   `data-color-mode` is the single
   colour-mode attribute — `colorMode` prop in JSX, same concept on
-  the DOM. `data-theme` is Toast chrome (lib), never Neo colour
+  the DOM. `data-theme` is Toast chrome (lib), never Core colour
   mode; `data-panda-theme` stays retired.
 - **group** — one feature family under `tests/cases/`: `SPEC.md`,
   `TESTS.md`, leaf cases.
@@ -113,7 +113,7 @@ this file in the same pass.
   (namer)
 - **namer golden** — a Rust-generated `input → output` file for one
   procedure or lexical function. The runtime namer reproduces it.
-  (namer; an rs golden, not a Neo proof)
+  (namer; an rs golden, not a Core proof)
 - **benchmark** — the synthetic-load harness (`benchmark/`): seeded
   repos at named scales, one pinned report per revision with peak RSS,
   sync time, and bundle size. Never a case, never in a suite. (bench)
@@ -140,12 +140,12 @@ this file in the same pass.
 ## Retired (do not revive)
 
 - **panda-isms** — `data-panda-theme`, panda naming, panda seams.
-  There is no panda in neo: copies from core get renamed at the
+  There is no panda in core: copies from the retired reference-core get renamed at the
   boundary, never carried across verbatim.
-- **station** — the compiler-loop word (rs-shaped). Neo tests cases,
+- **station** — the compiler-loop word (rs-shaped). Core tests cases,
   not stations.
 - **goldens / --update-goldens** — rs proves compilers with goldens;
-  Neo proves CSS with cases and human-gated snapshots.
+  Core proves CSS with cases and human-gated snapshots.
 - **bubble** — cute and confusing. The thing is a server.
 - **data-theme as colour mode** — retired: colour mode is `data-color-mode`. (`data-theme`
-  survives only as Toast chrome in lib, which is not Neo's.)
+  survives only as Toast chrome in lib, which is not Core's.)

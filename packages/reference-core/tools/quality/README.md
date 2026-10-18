@@ -1,6 +1,6 @@
-# Neo quality gate
+# Core quality gate
 
-This gate keeps Neo's TypeScript small enough to analyze, honest about failure,
+This gate keeps Core's TypeScript small enough to analyze, honest about failure,
 and free of silenced diagnostics. It mirrors the agent-rs stance for Rust, adapted
 to a runtime where the compiler, the linter, and the build scripts all speak
 JavaScript. Structural quality only: the gate never formats, prettifies, or
@@ -10,7 +10,7 @@ reorders code. Formatting is a later commit-hook decision, not a correctness bar
 
 Three layers share the work, and none reimplements another. Biome owns lint rules:
 the recommended correctness and suspicious sets, the `any` ban, cognitive
-complexity, and the import boundary against core and lib paths. The strict
+complexity, and the import boundary against lib paths. The strict
 `tsc` pass owns type errors the linter cannot see. The
 metrics counter owns the numeric thresholds Biome lacks: McCabe branches,
 parameter counts, control depth, and line counts. A small prose check rides along
@@ -68,11 +68,11 @@ per metric, and exits 0, so threshold tuning stays measured instead of vibes.
 
 Before the linter runs, the gate shells out to the primitives vendor tool with
 `--check`. A stale, missing, or extra file on the vendored shelf fails the gate
-with a `neo/vendor-fresh` error naming the file, because vendored bytes that
+with a `core/vendor-fresh` error naming the file, because vendored bytes that
 drifted from the generator output mean the tree cannot land no matter what the
 slower tiers say. The check runs on every invocation, scoped or not: freshness is
 a package invariant, and the tool answers in milliseconds from local files. When
-it fires, re-run the RS generator, then the vendor tool from the Neo package
+it fires, re-run the RS generator, then the vendor tool from the Core package
 directory, and rerun the gate; the shelf is never hand-edited.
 
 ## Suppressions are their own failure
@@ -85,12 +85,12 @@ fail. The scanner reads raw lines, so it also catches pragmas hiding in comments
 about pragmas: gate sources split every needle they scan for. A dump cannot land
 by switching the gate off.
 
-## The boundary: Neo never imports core or lib
+## The boundary: Core never imports lib
 
 One Biome rule outside the recommended sets is enabled as an error:
-`noRestrictedImports` rejects every specifier that reaches the core or lib
+`noRestrictedImports` rejects every specifier that reaches the lib
 paths, whether scoped package imports, bare names, or relative paths that walk
-across. Neo copies solved code into Neo-owned modules; it never imports across
+across. Core copies solved code into core-owned modules; it never imports across
 the boundary. The rule covers static imports, re-exports, and dynamic imports
 alike, with a fix tip pointing at the copy-instead policy.
 

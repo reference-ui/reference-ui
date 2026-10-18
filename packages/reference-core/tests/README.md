@@ -11,13 +11,13 @@ Usage in `../docs/TESTING.md`.
 - `shared/` — the harness itself: case discovery and search, the
   per-case HTTP server (the browser blocks `file://`, so one always
   runs), headless runs with artifact dumps, and the
-  `agentneo` CLI (`list` / `search` / `run` / `q`). Borrows the
+  `agentcore` CLI (`list` / `search` / `run` / `q`). Borrows the
   `agentct` shape; warm server plus queue slots land as the case
   count grows. Mechanism lives here; execution policy lives in the
-  `agent-neo` skill.
+  `agent-core` skill.
 - `.artifacts/` — per-case run output (gitignored). Never committed.
 
 Unit tests colocate with the code they cover in `src/`. Lib-shaped,
 not rs-shaped: cases and snapshots, no goldens, no `--update-goldens`.
-Neo is the runtime, not the compiler. Cases are not matrix packages;
+Core is the runtime, not the compiler. Cases are not matrix packages;
 they do not install from Verdaccio.

@@ -6,7 +6,7 @@ Rust owns the compiler. This directory is path normalization, one native
 call, and the request/result types. Same thickness as `js/atlas`.
 
 ```
-Neo sync
+Core sync
         │
         ▼
 js/index.ts  →  N-API compileSystem  →  atomic crate

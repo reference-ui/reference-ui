@@ -228,11 +228,11 @@ flowchart TD
 ## 6. Memex (`cases`, `rs-cases` + `surfaces` collections)
 
 Memex is the one agent CLI over every collection
-(`.agents/memex/README.md`): neo cases live in `cases`, RS cases in
+(`.agents/memex/README.md`): core cases live in `cases`, RS cases in
 `rs-cases`, RS module surfaces in `surfaces`. Use it to find **module surfaces by feature**
-instead of grepping — it also surfaces the neo cases that prove a surface.
+instead of grepping — it also surfaces the core cases that prove a surface.
 Surface docs overlap by design (several modules can claim one concern);
-adjudicate ownership via each doc's `related:` links plus the neo case's
+adjudicate ownership via each doc's `related:` links plus the core case's
 `Raised in:` source line, not rank alone.
 
 ```bash

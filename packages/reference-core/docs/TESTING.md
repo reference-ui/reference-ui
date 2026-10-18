@@ -1,7 +1,7 @@
-# Testing Neo
+# Testing Core
 
-How the Neo harness runs, what a case is, and where proof lives. The
-`agentneo` CLI is live and green; this file describes the contract it
+How the Core harness runs, what a case is, and where proof lives. The
+`agentcore` CLI is live and green; this file describes the contract it
 implements.
 
 ## Commands
@@ -9,13 +9,13 @@ implements.
 From the repository root:
 
 ```bash
-pnpm agentneo list              # every case: id, name, folder, README line
-pnpm agentneo search <query>    # filter over id, name, README text
-pnpm agentneo run [case-id]     # serve the world, run the spec headless, print artifacts
-pnpm agentneo run --failed      # rerun only cases recorded ok=false in the last-run log
-pnpm agentneo run --update-snapshots --confirm
+pnpm agentcore list              # every case: id, name, folder, README line
+pnpm agentcore search <query>    # filter over id, name, README text
+pnpm agentcore run [case-id]     # serve the world, run the spec headless, print artifacts
+pnpm agentcore run --failed      # rerun only cases recorded ok=false in the last-run log
+pnpm agentcore run --update-snapshots --confirm
                                 # bless fresh screenshots as snapshot baselines (human-gated)
-pnpm agentneo q [paths...]      # structural quality gate over Neo TypeScript
+pnpm agentcore q [paths...]      # structural quality gate over Core TypeScript
 ```
 
 Output is human-readable; parse the terminal, never `--json`. Exit
@@ -54,7 +54,7 @@ One leaf folder per case under `tests/cases/` — groups nest, so any
 folder with a `case.json` is a case at any depth, and ids must be unique
 across groups (duplicates fail loud):
 
-- `case.json` — the discriminator: assigned id (`NEO-<GROUP>-<nn>`)
+- `case.json` — the discriminator: assigned id (`CORE-<GROUP>-<nn>`)
   plus name. A folder with one is a case.
 - `README.md` — the standard description. `list` and `search` pick up
   its first line when present. Missing or long is never a failure.
@@ -91,12 +91,12 @@ of that approval).
 
 ## Quality gate
 
-`pnpm agentneo q` runs the structural gate: Biome lint plus strict
+`pnpm agentcore q` runs the structural gate: Biome lint plus strict
 `tsc` plus numeric thresholds (fail: cyclomatic 12, cognitive 20,
 params 5, function 120 lines, file 500 lines, depth 4; loud warn line
 below each), the suppression ban (`biome-ignore` and `@ts-ignore`
 fail; bare `@ts-expect-error` fails), and non-negotiable type safety
-(`any` banned). `pnpm agentneo q --report` prints the complexity
+(`any` banned). `pnpm agentcore q --report` prints the complexity
 distribution for tuning. Each violation prints with a fix tip. No
 formatting rules.
 
@@ -109,7 +109,7 @@ is cosmetic Playwright plumbing, never a fault.
 
 ## Conventions
 
-- IDs assigned, `NEO-<GROUP>-<nn>`, greppable in `list`.
+- IDs assigned, `CORE-<GROUP>-<nn>`, greppable in `list`.
 - React 19 only. No runtime switching, no matrix in this loop.
 - Keep cases small worlds with one assertion each. A case that needs
   three paragraphs of setup is two cases.

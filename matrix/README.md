@@ -11,7 +11,7 @@ packages.
 Kept suites live at `matrix/tests/`. For local IDE readiness, use
 `pnpm pipeline setup --sync` from the repo root. That runs the
 pipeline-managed matrix setup, installs workspace dependencies, and
-runs `neo sync` in each matrix package so generated packages and
+runs `core sync` in each matrix package so generated packages and
 types are present.
 
 ## Status snapshot
@@ -22,7 +22,7 @@ set of environments (see `TEST_COVERAGE.md` for the coverage index):
 - Kept gate: `tests/chain/T2` (sole `layers:` prover), `tests/chain/T8`
   (policy proof), `tests/mcp` (the whole MCP standard, 19 files)
 - Everything provable natively moved OUT: behavior and browser
-  coverage lives in Neo cases (`packages/reference-neo/tests/cases/`),
+  coverage lives in Core cases (`packages/reference-core/tests/cases/`),
   compiler units in Rust seam tests
 
 The kept packages follow the same ownership pattern as before:

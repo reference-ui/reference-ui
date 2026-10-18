@@ -26,8 +26,8 @@ Two audiences, two result fields, one switch:
 Silence is a valid result: no exact absent key, no userspace warning.
 An exact key emitted because of another file, site, or harvest still
 counts as present (incidental-coverage rule) — runtime paints, so
-diagnostics stays silent. Neo prints userspace warnings as one collapsed
-`[neo] sync warning …` call and the opt-in list as `[neo] compiler …`.
+diagnostics stays silent. Core prints userspace warnings as one collapsed
+`[core] sync warning …` call and the opt-in list as `[core] compiler …`.
 
 ## How a compile flows
 
@@ -82,7 +82,7 @@ Every code the compiler can emit, with the channel that carries it and the
 minimal authored shape that raises it. `default` is `CompileResult.diagnostics`;
 `compiler` is the opt-in `compilerDiagnostics` backchannel (`logs: ['compiler']`).
 The shared registry (`modules/diagnostics/REGISTRY.md`) is the deliberate home
-for meanings and raise sites; Neo's `repro.test.ts` pins one whole-compiler
+for meanings and raise sites; Core's `repro.test.ts` pins one whole-compiler
 repro per warn/err row. Codes are wire contract: never rename, never remove.
 
 | Code | Channel | Trigger |

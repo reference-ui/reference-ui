@@ -1,6 +1,6 @@
 # @reference-ui/lib
 
-Foundational design system package built on `@reference-ui/neo`.
+Foundational design system package built on `@reference-ui/core`.
 
 ## Exports
 
@@ -66,7 +66,7 @@ To rebrand a layered lib, wrap it in `extendSystem` in your own module:
 
 ```ts
 // src/system/lib.ts
-import { extendSystem } from '@reference-ui/neo'
+import { extendSystem } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 
 export const brandedLib = extendSystem(baseSystem, {
@@ -84,7 +84,7 @@ export const brandedLib = extendSystem(baseSystem, {
 
 ```ts
 // ui.config.ts
-import { defineConfig } from '@reference-ui/neo'
+import { defineConfig } from '@reference-ui/core'
 import { brandedLib } from './src/system/lib'
 
 export default defineConfig({

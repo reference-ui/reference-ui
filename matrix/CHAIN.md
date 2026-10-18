@@ -1,8 +1,8 @@
 # CHAIN — topology sketches
 
 > All 12 tiers are live matrix provers at `matrix/tests/chain/T*`. Chain stays in one place to test
-> between-packages / between-environments composition; the Neo
-> `NEO-CHAIN-01..05` tier ports were deleted as duplicates — one
+> between-packages / between-environments composition; the Core
+> `CORE-CHAIN-01..05` tier ports were deleted as duplicates — one
 > home is matrix. T4/T5 still have no tiers. The execution-order
 > list at the end records the original build-out order.
 

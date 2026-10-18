@@ -31,7 +31,7 @@ guess a missing union or wrapper, and no producer invents a code outside the tab
 
 Positions: every warning is request-level and carries no file. Proof: the exact wire
 bytes in `diagnostics/mod.rs` plus the collector rows in `src/tests/diagnostics.rs`;
-whole-compiler repros: Neo's `repro.test.ts` typegen suite.
+whole-compiler repros: Core's `repro.test.ts` typegen suite.
 
 ## ERROR CODES
 
@@ -39,7 +39,7 @@ Every code the printer can emit, with the minimal authored shape that raises
 it. Warnings ride `DetailedEmit.diagnostics` (siblings kept); the error refuses
 the request as a coded throw. The shared registry
 (`modules/diagnostics/REGISTRY.md`) is the deliberate home for meanings and
-raise sites; Neo's `repro.test.ts` pins one whole-compiler repro per row.
+raise sites; Core's `repro.test.ts` pins one whole-compiler repro per row.
 Codes are wire contract: never rename, never remove.
 
 | Code | Severity | Trigger |

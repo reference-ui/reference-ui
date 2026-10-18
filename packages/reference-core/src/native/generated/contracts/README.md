@@ -2,7 +2,7 @@
 
 This shelf is reserved for the vendored wire-format declarations: a
 committed copy of the RS dist contracts closure, shadowing the live
-`node_modules` entries Neo typechecks against today. It is empty on
+`node_modules` entries Core typechecks against today. It is empty on
 purpose — nothing here yet is generated, and no shim pretends otherwise.
 
 The future shape mirrors the tasty shelf: a second vendor tool with its

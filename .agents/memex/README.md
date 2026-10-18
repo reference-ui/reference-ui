@@ -18,7 +18,7 @@ Unknown, repeated, or misplaced flags are rejected, never swallowed.
 node .agents/memex/cli.mjs search                                  # list collections
 node .agents/memex/cli.mjs search --in cases                      # roster of one collection
 node .agents/memex/cli.mjs search "namer" --in cases              # ranked hits, labeled
-node .agents/memex/cli.mjs show cases:NEO-NAMER-01
+node .agents/memex/cli.mjs show cases:CORE-NAMER-01
 node .agents/memex/cli.mjs show packages/reference-rs/modules/tasty/README.md
 ```
 
@@ -32,7 +32,7 @@ never across invocations or collections.
 
 | Name       | Kind     | Source                                                             | Owner            |
 | ---------- | -------- | ------------------------------------------------------------------ | ---------------- |
-| `cases`    | neo      | `packages/reference-neo/tests/cases` (case.json + README + specs)  | agent-neo skill  |
+| `cases`    | core      | `packages/reference-core/tests/cases` (case.json + README + specs)  | agent-core skill  |
 | `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
 | `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
 | `rs-cases` | rs-case  | `packages/reference-rs/modules/*/tests/cases` (case.json + README + spec.ts) | agent-rs skill |
@@ -68,8 +68,8 @@ errors — a passed flag never silently does nothing.
 
 | Form            | Example                       | Resolves?                           |
 | --------------- | ----------------------------- | ----------------------------------- |
-| `collection:id` | `show cases:NEO-NAMER-01`     | always                              |
-| bare id         | `show NEO-NAMER-01`           | when unique across collections      |
+| `collection:id` | `show cases:CORE-NAMER-01`     | always                              |
+| bare id         | `show CORE-NAMER-01`           | when unique across collections      |
 | `rs:` ref       | `show rs:tasty`               | to `surfaces:rs:tasty`              |
 | module slug     | `show tasty`                  | to `surfaces:rs:tasty`              |
 | basename        | `show summary.md`             | unique → doc; many → candidate list |
@@ -83,7 +83,7 @@ errors — a passed flag never silently does nothing.
 - `search --in <coll> --json`: `{collection, total, returned, docs[]}`.
 - bare `search --json`: the complete collections array.
 - `show … --json`: `{ref, text}` plus the doc's structured fields
-  (neo: family, related, specs; rs: related, suites, caseIds; rs-case: module, related, specs).
+  (core: family, related, specs; rs: related, suites, caseIds; rs-case: module, related, specs).
 - misses with `--json`: `{error}`; ambiguous ids: `{ref, candidates[]}`
   — both exit 1, so branch on the shape, not the code. Other errors
   with `--json`: `{error}` on stdout with the usual exit code.
@@ -112,7 +112,7 @@ the max per field across collections.
 ```
 
 Kinds are memex built-ins: `markdown` (.md plus small .json sidecars),
-`neo` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `rs-case` (one doc per reference-rs case). New markdown knowledge needs only a manifest —
+`core` (one doc per case), `component` (one doc per lib case), `rs` (one doc per module), `rs-case` (one doc per reference-rs case). New markdown knowledge needs only a manifest —
 no code, no CLI change.
 
 ## The graph

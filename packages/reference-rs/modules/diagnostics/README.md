@@ -48,7 +48,7 @@ exactly one place: the code is always present, always documented.
 - Presentation is a shared util, display stays with consumers: the frame
   renderer (`src/render.rs`, mirrored in `js/render.ts`) turns spans, labels,
   and help into deterministic code frames, capped so the first N diagnostics
-  get frames and the rest stay one-liners — but the CLI and Neo own when and
+  get frames and the rest stay one-liners — but the CLI and Core own when and
   where frames print. No info level: `-I-` is reserved and rejected;
   module-local telemetry (atomic's `ATM-I-*`) stays module-local.
 - Suggestions are gated: `suggest_for_code` fires only for the

@@ -24,7 +24,7 @@ guess a missing type or package, and no producer invents a code outside the tabl
 Positions: component diagnostics carry the display source as `file` (e.g.
 `./components/BrokenCard.tsx`); package and scan failures are request-level and
 carry no file. Proof cases: `ATL-PROP-01`, `ATL-TYPE-01`, `ATL-BAR-01`
-(`tests/cases/`); whole-compiler repros: Neo's `repro.test.ts` atlas suite.
+(`tests/cases/`); whole-compiler repros: Core's `repro.test.ts` atlas suite.
 
 ## ERROR CODES
 
@@ -32,7 +32,7 @@ Every code the analyzer can emit, with the minimal authored shape that raises
 it. All four ride `AtlasAnalysisResult.diagnostics` (warnings continue with a
 fallback, the error refuses the analysis). The shared registry
 (`modules/diagnostics/REGISTRY.md`) is the deliberate home for meanings and
-raise sites; Neo's `repro.test.ts` pins one whole-compiler repro per row.
+raise sites; Core's `repro.test.ts` pins one whole-compiler repro per row.
 Codes are wire contract: never rename, never remove.
 
 | Code | Severity | Trigger |

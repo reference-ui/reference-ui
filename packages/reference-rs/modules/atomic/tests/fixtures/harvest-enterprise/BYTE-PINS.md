@@ -41,7 +41,7 @@ strip from it; A/B with the tsup-built dist reproduces 159077/39933
 exactly. 2026-10-10 F2 diagnostic miss-message change -> 153469/37738
 (+12/+3): the css() miss message carries the class name and the call
 site, react.mjs-only with all CSS pins green. 2026-10-13 data-layer stamp
-follows the ancestor's system (0b124ea85, NEO-LAYERS-09) -> 153626/37786
+follows the ancestor's system (0b124ea85, CORE-LAYERS-09) -> 153626/37786
 (+157/+48): the context.ts stamp rule, react.mjs-only; A/B with only that
 file reverted reproduces 153469/37738 exactly, CSS pins untouched.
 2026-10-15 recipe dev-warn (3eefd6318) and namer weight fallback
@@ -52,11 +52,11 @@ give 153716/37805 (+492/+199), lower.ts at dc35f0c6a gives 154118/37986
 2026-10-15 runtime prod gate -> 154213/38023 (+5/+19): runtime/env.ts
 replaces the typeof-process guard and the packager keeps
 process.env.NODE_ENV unbaked for the consumer's bundler; A/B with only
-those neo files reverted reproduces 154208/38004 exactly, CSS pins untouched.
+those core files reverted reproduces 154208/38004 exactly, CSS pins untouched.
 2026-10-16 readDocumentColorMode split into document and attribute helpers
 (98f0e48dc, context.ts only) -> 154255/38043 (+38/+10); A/B with the split
 reverted reproduces 154217/38033 exactly, CSS pins untouched. The 154213/38023
 pin already read 154217/38033 before the split (+4/+10, likely the uncommitted
-reference-neo runtime edits; not A/B'd here).
+reference-core runtime edits; not A/B'd here).
 Re-verify if acceptance moves bytes.
 ```

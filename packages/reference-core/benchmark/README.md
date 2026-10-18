@@ -1,4 +1,4 @@
-# Neo Benchmark
+# Core Benchmark
 
 Synthetic-load harness for `sync()`: how much memory, how much time, how big
 a bundle — for a tiny product all the way to a large messy app.
@@ -65,7 +65,7 @@ the default suite runs small, medium, enterprise.
 ## What it is not
 
 Bench is not a test and never runs in a suite. It has no `case.json`, so
-`agentneo run` cannot see it; it has no `*.test.ts`, so Vitest cannot see
+`agentcore run` cannot see it; it has no `*.test.ts`, so Vitest cannot see
 it either. It runs only by explicit command, one invocation at a time, and
 it is never gated. Its reports are the committed log, not scratch: hash
 pins land in git beside the code they measured.
@@ -73,13 +73,13 @@ pins land in git beside the code they measured.
 ## Commands
 
 ```bash
-pnpm bench:neo                        # default suite, one pinned report
-pnpm bench:neo -- --scale small       # one rung only
-pnpm bench:neo -- --scale small,medium --runs 3
-pnpm bench:neo -- --scale churn       # opt-in uniqueness stress
-pnpm bench:neo -- --list              # show the named scales
-pnpm bench:neo -- --scale medium --files 50 --calls 4 --runs 1 --keep
-pnpm bench:neo -- --scale small --mdx 120 --runs 3   # MDX-inclusive load
+pnpm bench:core                        # default suite, one pinned report
+pnpm bench:core -- --scale small       # one rung only
+pnpm bench:core -- --scale small,medium --runs 3
+pnpm bench:core -- --scale churn       # opt-in uniqueness stress
+pnpm bench:core -- --list              # show the named scales
+pnpm bench:core -- --scale medium --files 50 --calls 4 --runs 1 --keep
+pnpm bench:core -- --scale small --mdx 120 --runs 3   # MDX-inclusive load
 ```
 
 Each run syncs in a fresh child process, so every RSS sample starts from a

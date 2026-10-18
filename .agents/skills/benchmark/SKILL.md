@@ -1,36 +1,36 @@
 ---
 name: benchmark
-description: Agent-first runner for Neo sync benchmarks. Invokes pnpm bench:neo over seeded synthetic repos, reads the pinned machine JSON, and reports peak RSS, sync time, and bundle size per scale. Activate when asked how sync performs, how much memory it uses, or how big its output gets at any scale.
+description: Agent-first runner for Core sync benchmarks. Invokes pnpm bench:core over seeded synthetic repos, reads the pinned machine JSON, and reports peak RSS, sync time, and bundle size per scale. Activate when asked how sync performs, how much memory it uses, or how big its output gets at any scale.
 ---
 
 # Benchmark Runner (`benchmark`)
 
-Use this skill whenever you need **numbers for Neo `sync()` under synthetic load**: peak memory, sync time, bundle size — from a tiny product to a large messy app.
+Use this skill whenever you need **numbers for Core `sync()` under synthetic load**: peak memory, sync time, bundle size — from a tiny product to a large messy app.
 
-`benchmark` is the **agent-first** face of `packages/reference-neo/benchmark/`. You invoke the CLI, read `result.json`, and report the numbers.
+`benchmark` is the **agent-first** face of `packages/reference-core/benchmark/`. You invoke the CLI, read `result.json`, and report the numbers.
 
 ## Scope: benchmark module only
 
 This skill covers running benchmarks and interpreting their output. It does **not** cover changing sync, the engine, or any component. If the numbers send you back to code:
 
-- `packages/reference-neo` runtime work → `agent-neo` skill (`pnpm agentneo`)
+- `packages/reference-core` runtime work → `agent-core` skill (`pnpm agentcore`)
 - `packages/reference-rs` engine work → `agent-rs` skill (`pnpm agentrs`)
 
 ## Commands
 
 ```bash
-pnpm bench:neo                        # default suite (small,medium,enterprise), one pinned report
-pnpm bench:neo -- --scale small       # one rung only (comma-separated subsets ok)
-pnpm bench:neo -- --scale churn       # opt-in uniqueness stress (not in the default suite)
-pnpm bench:neo -- --scale medium --runs 1 --json   # agent probe: machine JSON to stdout
-pnpm bench:neo -- --list              # show the named scales
+pnpm bench:core                        # default suite (small,medium,enterprise), one pinned report
+pnpm bench:core -- --scale small       # one rung only (comma-separated subsets ok)
+pnpm bench:core -- --scale churn       # opt-in uniqueness stress (not in the default suite)
+pnpm bench:core -- --scale medium --runs 1 --json   # agent probe: machine JSON to stdout
+pnpm bench:core -- --list              # show the named scales
 ```
 
 `--json` prints the full run record (same object as `result.json`) to stdout after the human readout. Prefer it when you need numbers in-chat; read `result.json` from disk when you need to diff two runs.
 
 ## Output contract
 
-Each invocation pins one folder under `packages/reference-neo/benchmark/reports/`:
+Each invocation pins one folder under `packages/reference-core/benchmark/reports/`:
 
 - `reports/<hash>/` — clean tree, one folder per measured commit (re-runs overwrite)
 - `reports/latest/` — dirty tree or no checkout, overwritten every run

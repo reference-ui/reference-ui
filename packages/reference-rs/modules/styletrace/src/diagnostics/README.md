@@ -26,7 +26,7 @@ surface or file, and no producer invents a code outside the table.
 Positions: per-file skips carry the file path; the residual and both refusals are
 request-level and carry no file. Proof stations: `STT-NEG-02`
 (`tests/cases/`, names only) plus `tests/suites/detailed.test.ts` (exact wire bytes);
-whole-compiler repros: Neo's `repro.test.ts` styletrace suite.
+whole-compiler repros: Core's `repro.test.ts` styletrace suite.
 
 ## ERROR CODES
 
@@ -34,7 +34,7 @@ Every code the tracer can emit, with the minimal authored shape that raises
 it. The warning rides `TraceOutcome.diagnostics` (siblings kept); both errors
 refuse the request as coded throws, mirroring the tasty scan channel. The shared
 registry (`modules/diagnostics/REGISTRY.md`) is the deliberate home for meanings
-and raise sites; Neo's `repro.test.ts` pins one whole-compiler repro per row.
+and raise sites; Core's `repro.test.ts` pins one whole-compiler repro per row.
 Codes are wire contract: never rename, never remove.
 
 | Code | Severity | Trigger |

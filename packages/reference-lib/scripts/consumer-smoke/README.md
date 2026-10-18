@@ -25,9 +25,9 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
    override value. Then a lib `Button` is painted on three pages (the override
    sheet, the control sheet, and lib's own `styles.css`): computed
    `background-color` in light and dark, the `data-layer="reference-ui"` stamp,
-   and zero console errors. This proof lives here because a Neo case world cannot
-   host lib: `@reference-ui/lib` is not linked into `packages/reference-neo`, and
-   Neo never touches reference-lib.
+   and zero console errors. This proof lives here because a Core case world cannot
+   host lib: `@reference-ui/lib` is not linked into `packages/reference-core`, and
+   Core never touches reference-lib.
 
 Run locally (from anywhere in the repo):
 

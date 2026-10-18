@@ -1,6 +1,6 @@
 # `src/` — the host
 
-Neo's TypeScript: everything above the cut. Authors write fragments and
+Core's TypeScript: everything above the cut. Authors write fragments and
 style calls; this tree evaluates them once, compiles through Rust,
 publishes the generated folder, and serves the runtime that paints in the
 browser.
@@ -24,7 +24,7 @@ style props from DOM props and stamps the layer, color-mode, and variant
 attributes, plus the generator that writes the `react` entry (its stable
 surface also types worlds under the pre-run check). `entry/` holds the unbound
 React entry and its type files. `index.ts` is the single entry behind the
-`@reference-ui/neo` id that fragment files and configs import, and
+`@reference-ui/core` id that fragment files and configs import, and
 `system-surface.d.ts` is the stable type surface for the generated
 `@reference-ui/system` entry. `reference/` is the S6 reference API that Node
 consumers such as MCP use to build documents without the browser runtime.
@@ -32,11 +32,11 @@ consumers such as MCP use to build documents without the browser runtime.
 Around them: `cli/` is the `ref` command layer, `diagnostics/` formats and
 reports errors, `native/` is the bridge to the Rust compiler, `packager/`
 writes the generated packages, and `system/` holds the base system. `lib/`
-carries Neo-owned seams (`paths/`, `symlink/`, `watch/`) and `microbundle/`,
+carries core-owned seams (`paths/`, `symlink/`, `watch/`) and `microbundle/`,
 which builds the esbuild bundles for configs and fragments. `constants.ts`
 holds the one layout name they share.
 
-Refusals (from the Neo README): no style lowering in TS, no second
+Refusals (from the Core README): no style lowering in TS, no second
 Atomic, no second `EvaluatedSystemSpec` (wire format lives in
 `reference-rs/contracts/`), no thread-pool opera — fragments, one native
 compile, publish. A function.

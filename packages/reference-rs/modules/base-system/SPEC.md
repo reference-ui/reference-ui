@@ -12,7 +12,7 @@ Verify path: In-memory fixture construction (no sync worker, no packager, no bun
 
 `base-system` is the portable design-system definition artefact for Reference UI. It takes the evaluated fragment JSON emitted by TypeScript (`tokens()`, `font()`, `keyframes()`, `globalCss()`, declared recipes, and condition/breakpoint maps) — the `BaseSystemSpec` — and deserializes it into a pure, immutable in-memory query engine. It emits authoritative answers to the five canonical questions asked by downstream consumers: custom property variable names, raw token CSS values across light and dark modes, declared recipe variant schemas, keyframes/fonts/globals, and conditions/breakpoints for `modules/atomic`, alongside token existence and category membership for `modules/typegen`. It must not evaluate author JavaScript, bundle modules, parse TSX, run an OXC walker, perform file I/O, print atomic utility classes (such as `.mt_2r`), synthesize runtime `css()` or `recipe()` code, or permit `layers` CSS tokens to leak into the queryable token dictionary.
 
-Extends composition lives in Neo: see packages/reference-neo/src/system/base/SPEC.md (E1–E15).
+Extends composition lives in Core: see packages/reference-core/src/system/base/SPEC.md (E1–E15).
 
 ---
 
@@ -55,7 +55,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 | `pandacss_codegen::artifacts::types` | lives in `typegen` | `.d.ts` / TS AST in this crate | Pure data. |
 | Utility class names in types | — | `.mt_2r` in declarations | Users author StyleProps. |
 | `pandacss_extractor` static token evaluator | lives in `atomic` | Parsing TSX / folding `token()` | This crate answers queries. |
-| `@pandacss/dev` `defineConfig({ presets })` | Neo, not this crate | Deep object mutation / prototype inheritance | Deterministic merge, `_private` stripping, in Neo's fragment path. |
+| `@pandacss/dev` `defineConfig({ presets })` | Core, not this crate | Deep object mutation / prototype inheritance | Deterministic merge, `_private` stripping, in Core's fragment path. |
 | `@layer` multi-package sheet assembly | `BAS-LAYER-01`–`04` | Importing layered tokens into the local dictionary | `layers` is CSS-only. |
 
 ---
@@ -255,7 +255,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 1. **P0 — In-Memory Artefact & Deserialization (`BAS-DUMP-01` .. `05`):** Define the serializable/deserializable data model so evaluated fragment JSON dumps hydrate cleanly into memory.
 2. **P0 — The Five Canonical Query Contracts (`BAS-ASK-01` .. `06`):** Implement the query methods required by `modules/atomic` and `modules/typegen`, answering token existence, CSS variable naming, light/dark values, keyframes/fonts/globals, recipes, and conditions.
 3. **P1 — Token Dictionary & Normalization (`BAS-TOKEN-01` .. `08`):** Implement dot-path normalization, CSS custom property prefixing (`--colors-*`), literal value preservation, and semantic light/dark storage.
-4. **Retired — Extends (former P1):** upstream merge moved out of this crate into Neo; see the pointer in section 1.
+4. **Retired — Extends (former P1):** upstream merge moved out of this crate into Core; see the pointer in section 1.
 5. **P1 — Layer Isolation (`BAS-LAYER-01` .. `04`):** Implement CSS-only attachment for upstream systems, ensuring tokens from layered dependencies stay strictly out of local token queries and types.
 6. **P2 — Recipes, Fonts, Keyframes & Globals (`BAS-RECIPE-01` .. `04`, `BAS-FONT-01` .. `05`, `BAS-MOTION-01` .. `03`, `BAS-GLOBAL-01` .. `03`) — DONE:** Schema storage and iteration for `recipe()` tables, font-face descriptors, animation keyframes, and global CSS rule blocks is complete.
 
@@ -264,7 +264,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 ## 7. "Do Not" / Tripwires
 
 1. **Do not execute author JavaScript or parse TSX in `base-system`.**
-   `packages/reference-neo/src/collect` already executes author files in Node.js and dumps pure JSON. A native fragment evaluator is forbidden.
+   `packages/reference-core/src/collect` already executes author files in Node.js and dumps pure JSON. A native fragment evaluator is forbidden.
 2. **Do not emit CSS class names, utility atoms, or `.mt_2r`.**
    This crate owns the design-system *definition*, not the *stylesheet compiler*. Class generation belongs solely to `modules/atomic`.
 3. **Do not generate TypeScript types or `.d.ts` files.**
@@ -272,7 +272,7 @@ those jobs. Vendor crates below are example call sites, not our API.
 4. **Do not leak `layers` tokens into queryable dictionaries or TypeScript types.**
    `layers` provides precompiled CSS for component rendering without expanding the authoring contract. If `bg="isolatedToken"` typechecks or resolves as a token from a layered system, Matrix T1–T13 fails.
 5. **Do not resolve `extends` in `base-system`.**
-   Upstream composition and `_private` stripping live in Neo's fragment path. A resolver here would duplicate that merge and drift from it.
+   Upstream composition and `_private` stripping live in Core's fragment path. A resolver here would duplicate that merge and drift from it.
 6. **Do not perform file I/O, glob walking, or directory scans.**
    `base-system` is an in-memory data structure. File discovery and micro-bundling are host pipeline responsibilities in TypeScript.
 7. **Do not grow a second config dialect.**
@@ -280,6 +280,6 @@ those jobs. Vendor crates below are example call sites, not our API.
 8. **Do not allocate strings or take locks on hot lookup paths.**
    `is_token`, `get_token_css_var`, and `get_condition` are called millions of times during batch TSX extraction. Lookups must borrow slices in $O(1)$ time without mutex contention.
 9. **Do not synthesize runtime `css()` or `recipe()` closures.**
-   Runtime functions are authored TypeScript in `packages/reference-neo/src/runtime`.
+   Runtime functions are authored TypeScript in `packages/reference-core/src/runtime`.
 10. **Do not treat `BaseSystem` as a mutable global singleton.**
     Every `BaseSystem` instance must be an immutable, self-contained value that can be constructed, extended, and queried concurrently across threads.

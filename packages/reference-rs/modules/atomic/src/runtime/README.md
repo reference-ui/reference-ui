@@ -10,7 +10,7 @@ with. One algorithm, two implementations, one gate: the compiler namer
 (`stylesheet::name` + `PlanBuilder`, the oracle) and the runtime namer,
 its JS mirror beside this crate (`js/namer/`, shipped as
 `@reference-ui/rust/namer`), held byte-equal by the namer goldens
-(`ATM-SEAM-08`) and the differential gate (`NEO-NAMER-01`).
+(`ATM-SEAM-08`) and the differential gate (`CORE-NAMER-01`).
 `compile()` returns `CssRuntime` as data. The `css()` helper itself is
 authored TypeScript. Do not generate a `css.js`.
 

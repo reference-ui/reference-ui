@@ -6,11 +6,11 @@ bench load. New files only; zero engine edits, zero bench edits.
 ## One command
 
 ```bash
-node packages/reference-neo/benchmark/deepsee/cli.ts all --scale enterprise
-node packages/reference-neo/benchmark/deepsee/cli.ts all --scale medium   # iteration
-node packages/reference-neo/benchmark/deepsee/cli.ts burndown --scale small
-node packages/reference-neo/benchmark/deepsee/cli.ts rss --scale medium
-node packages/reference-neo/benchmark/deepsee/cli.ts bundle --dir <synced .reference-ui>
+node packages/reference-core/benchmark/deepsee/cli.ts all --scale enterprise
+node packages/reference-core/benchmark/deepsee/cli.ts all --scale medium   # iteration
+node packages/reference-core/benchmark/deepsee/cli.ts burndown --scale small
+node packages/reference-core/benchmark/deepsee/cli.ts rss --scale medium
+node packages/reference-core/benchmark/deepsee/cli.ts bundle --dir <synced .reference-ui>
 ```
 
 `all` runs ONE sampled sync, then derives all three reports off that run.

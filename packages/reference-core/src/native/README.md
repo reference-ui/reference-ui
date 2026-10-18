@@ -11,12 +11,12 @@ Seam table — which Rust surface each direction crosses:
 
 | Direction | Surface | Notes |
 |---|---|---|
-| Neo → Rust | frozen compile request | six keys; retention token or in-memory files carry the scan |
-| Neo → Rust | upstream owned props | `jsxOwned` on the spec, from extends and layers; set only when non-empty; atomic seeds its host gate from it |
-| Rust → Neo | compiled bundle | stylesheet, portable sheet, runtime artifact, diagnostics |
-| Rust → Neo | traced hosts | StyleTrace discovery joins the roster at publish |
-| Rust → Neo | traced owned props | `tracedJsxOwned`, the map the gate read (the spec's set plus StyleTrace's); joins `owned` in the jsx artifact at publish, omitted there when empty |
-| Neo → Rust | retention release | error-path-only; never on the happy path |
+| Core → Rust | frozen compile request | six keys; retention token or in-memory files carry the scan |
+| Core → Rust | upstream owned props | `jsxOwned` on the spec, from extends and layers; set only when non-empty; atomic seeds its host gate from it |
+| Rust → Core | compiled bundle | stylesheet, portable sheet, runtime artifact, diagnostics |
+| Rust → Core | traced hosts | StyleTrace discovery joins the roster at publish |
+| Rust → Core | traced owned props | `tracedJsxOwned`, the map the gate read (the spec's set plus StyleTrace's); joins `owned` in the jsx artifact at publish, omitted there when empty |
+| Core → Rust | retention release | error-path-only; never on the happy path |
 
 The generated shelf holds committed codegen from Rust: vendored
 declaration closures the package typechecks against without touching

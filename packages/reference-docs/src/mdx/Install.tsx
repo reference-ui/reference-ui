@@ -8,8 +8,8 @@ import { CopyButton, panelCode, panelFrame, panelSurface } from './codePanel'
  * is remembered across visits.
  *
  *   <Install packages="@reference-ui/lib react react-dom" />
- *   <Install packages="@reference-ui/neo" dev />
- *   <Install packages="@reference-ui/lib" devPackages="@reference-ui/neo" />
+ *   <Install packages="@reference-ui/core" dev />
+ *   <Install packages="@reference-ui/lib" devPackages="@reference-ui/core" />
  */
 
 const MANAGERS = ['npm', 'yarn', 'pnpm', 'bun'] as const

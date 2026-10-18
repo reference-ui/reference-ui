@@ -2,7 +2,7 @@
 
 Everything the cases share: `case.json` discovery and search, the
 isolated per-case HTTP server, headless runs, artifact plumbing. This
-folder IS the harness, and it ships its own CLI (`agentneo`):
+folder IS the harness, and it ships its own CLI (`agentcore`):
 
 ```text
 list / search <query> / run [case-id] / q [paths...]
@@ -37,8 +37,8 @@ Proven constraints the code designs around: the browser blocks
 `file://`, so worlds are always served over local HTTP; screenshots
 and artifacts must land under the workspace (`tests/.artifacts/`).
 
-Mechanism lives here. Policy lives in the `agent-neo` skill: how the
+Mechanism lives here. Policy lives in the `agent-core` skill: how the
 CLI gets executed — concurrency, gating, QoS — so that many agents
-can test Neo at once, at near-full capacity, without bogging down the
+can test Core at once, at near-full capacity, without bogging down the
 machine. That seamless multi-agent performance is the skill's job;
 this folder's job is to be drivable.

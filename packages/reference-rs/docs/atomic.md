@@ -39,7 +39,7 @@ fragment evaluator is Panda v2. Do not.
 
 Bottom-up: build the Rust engines, verify them inside `reference-rs`, then
 worry about host integration. The live wire from atomic CSS into
-the Neo collector already exists at codegen (`@reference-ui/rust/atomic`, called from `packages/reference-neo/src/collect/lib/scan/native.ts`). We
+the Core collector already exists at codegen (`@reference-ui/rust/atomic`, called from `packages/reference-core/src/collect/lib/scan/native.ts`). We
 emulate one seam cleanly and move the rest slowly.
 
 ---
@@ -152,7 +152,7 @@ stays TypeScript.
 
 Rust does not execute these functions.
 
-Home: `packages/reference-neo/src/collect` (the surface calls and the collector).
+Home: `packages/reference-core/src/collect` (the surface calls and the collector).
 
 ### Runtime — authored TypeScript, not generated
 

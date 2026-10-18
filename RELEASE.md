@@ -25,7 +25,7 @@ tick it when its check passes.
 
 - [ ] Fresh clone in CI runs every suite green. Gitignored fixtures were
       partly tracked on 2026-10-14; confirm styletrace sync-root,
-      ATM-SITE-16/54/58 and NEO-DIAG-56/57.
+      ATM-SITE-16/54/58 and CORE-DIAG-56/57.
 - [ ] `docs.yml` artifact path fixed.
 - [ ] npm-tarball fallback for unbuildable explicit targets.
 - [ ] GitHub Actions and repo settings configured.
@@ -37,18 +37,18 @@ tick it when its check passes.
 
 - [ ] `@reference-ui/rust`: publish with all 13 subpath exports; 0.0.42 has
       6 and lacks `./atomic`, `./namer`, `./system`, `./typegen`,
-      `./diagnostics`, `./primitives` and `./contracts`, which Neo imports.
+      `./diagnostics`, `./primitives` and `./contracts`, which Core imports.
       Bump the version (0.0.42 is already on the registry).
 - [ ] `@reference-ui/icons`: republish (0.0.43 ships broken declarations),
       bump lib's icons pin, and drop the lib smoke's `SIBLING_OWNED_PREFIXES`
       tolerance.
-- [ ] Neo's public package: pick the published name (`@reference-ui/neo` is
+- [ ] Core's public package: pick the published name (`@reference-ui/core` is
       `private`, 0.0.0) and make every README's `defineConfig` /
       `extendSystem` import match.
 - [ ] `@reference-ui/lib`.
 - [x] Before publishing, reproduce whether the content-version stamps in
       `.reference-ui/{system,types}/package.json` match a recompute of their
-      dirs (see neo `src/packager/content-version.ts`). On 2026-10-15 react's
+      dirs (see core `src/packager/content-version.ts`). On 2026-10-15 react's
       matched and system's and types' did not; suspects are stray files in
       those dirs (compile-request.json, evaluated-system.json,
       jsx-elements.json, a stale system.mjs). Fix before any version ships.
@@ -69,14 +69,14 @@ tick it when its check passes.
 - [x] Dev warnings may print in production. Lib's "not production" check reads
       `globalThis.process`; a browser bundle with no `process` shim may count
       as development, so Slider, Splitter, Tabs and the four new out-of-range
-      warnings could reach real users' consoles. Neo's `isProductionBuild`
+      warnings could reach real users' consoles. Core's `isProductionBuild`
       (runtime `css()` misses and the new recipe missing-table warning) has the
       same `typeof process` gap. One shared helper, proven in a production build.
 - [x] Listbox: an uncontrolled `selection="multiple"` Listbox with options
       never settles, because it made a new `[]` every render.
 - [x] A user `ui.config` that imports the `@reference-ui/lib` barrel pays
       ~1.5s of config evaluation on every sync; only in-repo configs are
-      guarded (neo `src/config/base-system-import.test.ts`). Document the
+      guarded (core `src/config/base-system-import.test.ts`). Document the
       `@reference-ui/lib/baseSystem` subpath, or warn when config eval is slow.
 - [x] Atlas undercounts usage (non-blocking). Its JSX walker skips class
       bodies, optional-chain calls, `throw`, template literals and `new`
