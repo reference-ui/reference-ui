@@ -94,6 +94,40 @@ export interface ReferenceUIConfig {
    * JS infrastructure logger and never implies this channel.
    */
   logs?: LogChannel[]
+
+  /**
+   * Atlas selectors for the MCP server's component inventory. Read by
+   * `@reference-ui/mcp`; Core passes them through and never reads them.
+   */
+  mcp?: ReferenceUIMcpConfig
+
+  /**
+   * Let the MCP server present `@reference-ui/lib` components to coding agents.
+   * Read by `@reference-ui/mcp`; `use_reference_library` is the same flag.
+   * @default true
+   */
+  useReferenceLibrary?: boolean
+  use_reference_library?: boolean
+
+  /**
+   * Let the MCP server list `@reference-ui/icons` through `list_icons`.
+   * Set to false when the project uses its own icons. Read by
+   * `@reference-ui/mcp`; `use_reference_icons` is the same flag.
+   * @default true
+   */
+  useReferenceIcons?: boolean
+  use_reference_icons?: boolean
+}
+
+/**
+ * MCP-only selectors, separate from the top-level `include` that feeds sync.
+ */
+export interface ReferenceUIMcpConfig {
+  /** Atlas include selectors for the MCP component inventory. */
+  include?: string[]
+
+  /** Atlas exclude selectors for the MCP component inventory. */
+  exclude?: string[]
 }
 
 /**

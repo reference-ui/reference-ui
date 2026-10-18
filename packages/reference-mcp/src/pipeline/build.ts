@@ -2,9 +2,10 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { analyzeDetailed } from '@reference-ui/rust/atlas'
 import { getConfig } from '@reference-ui/core/config/store'
+import type { ReferenceUIConfig } from '@reference-ui/core/config/types'
 import { log } from '../server/logger'
 import { joinMcpComponentWithReference } from './join'
-import { getAtlasMcpConfig, type McpAwareConfig } from './config'
+import { getAtlasMcpConfig } from './config'
 import { createReferenceApi, loadMcpReferenceData } from './reference'
 import { readMcpArtifact, writeMcpArtifact } from './artifact'
 import { getMcpModelPath, getMcpTypesManifestPath } from './paths'
@@ -47,7 +48,7 @@ export async function generateMcpArtifact(
 
   log.debug('mcp', 'Building MCP model', { cwd, manifestPath })
 
-  const config = getConfig() as McpAwareConfig | undefined
+  const config = getConfig()
   const atlas = await loadMcpAtlas(cwd)
   return generateMcpArtifactFromAtlas({
     cwd,
@@ -107,7 +108,7 @@ export async function generateMcpArtifactFromAtlas(input: {
   atlas: Awaited<ReturnType<typeof analyzeDetailed>>
   tokens?: McpBuildArtifact['tokens']
   primitiveComponents?: McpBuildArtifact['components']
-  config?: McpAwareConfig
+  config?: ReferenceUIConfig
 }): Promise<McpBuildArtifact> {
   const { cwd, manifestPath, atlas, tokens = [], primitiveComponents = [], config } = input
   const useReferenceLibrary = config
@@ -181,7 +182,7 @@ export async function generateMcpArtifactFromAtlas(input: {
 
 async function loadMcpTokensSafely(
   cwd: string,
-  config: McpAwareConfig | undefined
+  config: ReferenceUIConfig | undefined
 ): Promise<McpBuildArtifact['tokens']> {
   if (!config) return []
 

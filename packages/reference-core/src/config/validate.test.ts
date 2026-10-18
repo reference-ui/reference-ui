@@ -3,6 +3,7 @@
 // This file is a core-owned copy of the retired reference-core validator tests trimmed with the surface.
 
 import { describe, expect, it } from 'vitest'
+import { defineConfig } from './types.ts'
 import { validateConfig } from './validate.ts'
 
 const SYSTEM_NAME = 'my-system'
@@ -61,17 +62,34 @@ describe('validateConfig base fields', () => {
   })
 
   it('ignores unknown fields as the retired reference-core does today', () => {
-    // layers and strict are known fields now; only genuinely unknown fields
-    // ride this test.
+    // layers, strict and the MCP fields are known fields now; only genuinely
+    // unknown fields ride this test.
     const config = validateConfig({
       name: SYSTEM_NAME,
       include: DEFAULT_INCLUDE,
       skipTypescript: true,
-      mcp: { include: ['src/**'] },
     })
 
     expect(config.name).toBe(SYSTEM_NAME)
     expect(config.include).toEqual(DEFAULT_INCLUDE)
+  })
+})
+
+describe('validateConfig MCP fields', () => {
+  it('types and passes through the ui.config fields the MCP server reads', () => {
+    // defineConfig is the typed guard: the package typecheck fails if any of
+    // these documented fields leaves ReferenceUIConfig.
+    const authored = defineConfig({
+      name: SYSTEM_NAME,
+      include: DEFAULT_INCLUDE,
+      mcp: { include: ['src/**'], exclude: ['src/internal/**'] },
+      use_reference_library: false,
+      use_reference_icons: false,
+      useReferenceLibrary: false,
+      useReferenceIcons: false,
+    })
+
+    expect(validateConfig(authored)).toEqual(authored)
   })
 })
 
