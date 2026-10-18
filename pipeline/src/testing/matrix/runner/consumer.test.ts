@@ -78,8 +78,8 @@ describe('matrix runner consumer helpers', () => {
         {
           absoluteTarballPath: '/tmp/core.tgz',
           packageName: '@reference-ui/core',
-          specifier: 'file:.matrix-tarballs/reference-ui-core-0.0.41-corehash1.tgz',
-          stagedFileName: 'reference-ui-core-0.0.41-corehash1.tgz',
+          specifier: 'file:.matrix-tarballs/reference-ui-core-0.0.41-corehash.tgz',
+          stagedFileName: 'reference-ui-core-0.0.41-corehash.tgz',
         },
         {
           absoluteTarballPath: '/tmp/lib.tgz',
