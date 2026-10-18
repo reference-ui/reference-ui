@@ -14,7 +14,7 @@ otherwise. Code anchors are `file:function`, with no line numbers. The case
 ledger is `TESTS.md`. Claims LC-46 and up were added after the first baseline
 and sit in the group they belong to, so their numbers are not in table order.
 A claim stays `in-progress` while a Known open item breaks its text. Counts:
-63 claims, 60 done, 0 in-progress, 3 open, 0
+65 claims, 62 done, 0 in-progress, 3 open, 0
 approved-absence (the absences are listed at the end).
 
 ## A. Staged publish and commit
@@ -136,6 +136,7 @@ one caveat on debounce.
 | LC-62 | an include glob that matches no file warns by name, in verbose and `--json` output, and the sync still exits 0 | done | CORE-WATCH-23; `sync/include-check.test.ts` "warns once, naming only the dead positive patterns"; "reads a single dead include as one pattern, and points at the config to fix"; "stays silent when every include reaches a file" | `sync/include-check.ts:includeMatchDiagnostics` |
 | LC-63 | a dangling symlink under include warns once by name, and the sync still builds CSS and types | done | CORE-WATCH-24 (a one-shot `ref sync --json` exits 0, the sheet and the tasty types carry the world, exactly one warning names the link); `sync/include-check.test.ts` "warns once per dangling link under include, naming the link and its missing target"; "stays silent for a link whose target exists, a link a negation drops, and a link outside include"; `scanner/workspace/tests/dangling_links.rs` "scan_workspace_skips_a_dangling_symlink_under_include"; "scan_workspace_still_fails_a_symlink_loop_under_include" | `sync/include-check.ts:danglingLinkDiagnostics`, `reference-rs` `scanner/workspace/file_discovery.rs:is_dangling_link` |
 | LC-64 | a rooted include prefix outside the project root keeps its own watch root when an unrooted glob is also included, so an edit there resyncs | done | CORE-WATCH-30 (an include of `**/*.tsx` and `../shared/**`: an edit to `../shared/colors.tsx` beside the world resyncs the sheet); `lib/watch/match.test.ts` "keeps a rooted prefix outside the root when an unrooted include is also present" | `lib/watch/match.ts:deriveWatchRoots` |
+| LC-65 | an include entry that is an exact file path, with no glob, is watched through the directory holding it, so the watch boots on the include a one-shot accepts and an edit to that file resyncs | done | CORE-WATCH-31 (an include of `theme/base.ts` and `theme/tokens.ts`: `watchSync()` boots, and an edit to `theme/base.ts` resyncs the sheet); `lib/watch/match.test.ts` "watches the directory holding an exact file include, never the file itself"; "scans exact file includes without walking into the files as directories" | `lib/watch/match.ts:staticPrefix` |
 
 ## Known open
 
@@ -153,4 +154,4 @@ Items 1 to 4 closed with CORE-WATCH-26 to 29. The rest keep their numbers, which
 - out of scope: Windows. The poke and signal legs are POSIX-only (`it.skipIf(!POSIX)`), so no claim covers win32.
 - out of scope, other groups: the normalizeCss reset injection (`sync/reset.ts`, CORE-LAYER-04) and the bench phase marks (`sync/phases.ts`) carry no lifecycle claim.
 - CORE-WATCH-09 to 23 are in place. CORE-WATCH-24 and 25 cover the dangling-link and symlinked-target fixes (LC-63, LC-30).
-- CORE-WATCH-26 to 29 are in place with the config-side lifecycle fixes. CORE-WATCH-30 and up are unassigned.
+- CORE-WATCH-26 to 29 are in place with the config-side lifecycle fixes. CORE-WATCH-30 and 31 cover the watch-root fixes (LC-64, LC-65). CORE-WATCH-32 and up are unassigned.

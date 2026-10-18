@@ -102,6 +102,12 @@ describe('watch roots', () => {
     const shared = join(dirname(root), 'shared')
     expect(deriveWatchRoots(root, ['**/*.tsx', '../shared/**']).sort()).toEqual([root, shared].sort())
   })
+
+  it('watches the directory holding an exact file include, never the file itself', () => {
+    const root = makeTree({ 'src/repro/main.tsx': 'm', 'tokens.ts': 't' })
+    expect(deriveWatchRoots(root, ['src/repro/main.tsx'])).toEqual([join(root, 'src', 'repro')])
+    expect(deriveWatchRoots(root, ['tokens.ts'])).toEqual([root])
+  })
 })
 
 describe('match snapshot', () => {
@@ -132,6 +138,13 @@ describe('match snapshot', () => {
     const snapshot = scanMatches(root, ['theme/**/*.ts'])
     expect(snapshot.targetDirs.get(join(root, 'shared', 'empty'))).toBe('theme/linkdir')
     expect(snapshot.linkDirs).toContain(join(root, 'shared', 'empty'))
+  })
+
+  it('scans exact file includes without walking into the files as directories', () => {
+    const root = makeTree({ 'src/repro/main.tsx': 'm', 'src/repro/tokens.ts': 't' })
+    const snapshot = scanMatches(root, ['src/repro/main.tsx', 'src/repro/tokens.ts'])
+    expect(snapshot.dirs).toEqual(new Set(['src', 'src/repro']))
+    expect(snapshot.targetDirs.size).toBe(0)
   })
 
   it('skips a dangling symlink without failing the scan', () => {

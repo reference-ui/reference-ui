@@ -37,6 +37,7 @@ not yet committed; `open` means no case or test proves the claim.
 | CORE-WATCH-28 | a bare-specifier upstream that re-syncs through node_modules resyncs the downstream watch, linked or installed | done | none | node | `specs/bare-upstream.spec.ts`: a linked and an installed upstream, each re-synced alone | SPEC LC-28 |
 | CORE-WATCH-29 | a config whose top-level await never settles exits a one-shot 1 with a named evaluation-timeout line, and a watch reports it and keeps watching until the config is fixed | done | none | node | `specs/config-timeout.spec.ts`: a one-shot CLI leg and a watch leg | SPEC LC-07 |
 | CORE-WATCH-30 | a watch whose include mixes an unrooted glob with a path outside the project root resyncs on an edit under that outside path | done | none | node | `specs/outside-root-edit.spec.ts`: an edit to `../shared/colors.tsx` beside the world resyncs the sheet | SPEC LC-64 |
+| CORE-WATCH-31 | a watch whose include lists exact file paths boots and resyncs on an edit to one of them | done | none | node | `specs/exact-file-include.spec.ts`: an include of `theme/base.ts` and `theme/tokens.ts` boots the watch, and an edit to `theme/base.ts` resyncs the sheet | SPEC LC-65 |
 
 A row lands with its case folder.
 

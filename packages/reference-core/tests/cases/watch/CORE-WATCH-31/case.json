@@ -1,0 +1,1 @@
+{"id": "CORE-WATCH-31", "name": "a watch whose include lists exact file paths boots and resyncs on an edit to one of them", "sync": true}

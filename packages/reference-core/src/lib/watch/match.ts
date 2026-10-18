@@ -55,10 +55,12 @@ function normalizePattern(value: string): string {
 }
 
 // The leading static directories of one include glob: `theme/**` watches
-// `theme`. A pattern with no static head watches the project root.
+// `theme`. The last segment names the matched files, never a directory, so an
+// exact path `src/main.tsx` watches `src`. A pattern with no static head
+// watches the project root.
 function staticPrefix(pattern: string): string | undefined {
   const prefix: string[] = []
-  for (const segment of normalizePattern(pattern.trim()).split('/').filter(Boolean)) {
+  for (const segment of normalizePattern(pattern.trim()).split('/').filter(Boolean).slice(0, -1)) {
     if (GLOB_MAGIC.test(segment)) break
     prefix.push(segment)
   }
