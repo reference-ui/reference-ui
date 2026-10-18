@@ -1,6 +1,7 @@
 import { useParams } from '@tanstack/react-router'
 import { Div } from '@reference-ui/react'
-import { slugToModule } from '../collections/runtime'
+import { docs, slugToModule } from '../collections/runtime'
+import { DocMetaContext } from '../shared/providers/DocMetaContext'
 
 export function DocPage({ slug: fixedSlug }: { slug?: string } = {}) {
   const params = useParams({ strict: false })
@@ -14,5 +15,9 @@ export function DocPage({ slug: fixedSlug }: { slug?: string } = {}) {
       </Div>
     )
   }
-  return <Doc />
+  return (
+    <DocMetaContext.Provider value={docs.find(doc => doc.slug === slug)}>
+      <Doc />
+    </DocMetaContext.Provider>
+  )
 }

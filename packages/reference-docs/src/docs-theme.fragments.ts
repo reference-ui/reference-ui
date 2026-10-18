@@ -7,7 +7,8 @@ import { tokens } from '@reference-ui/system'
  * A single grayscale ramp — no tinted chrome. Surfaces, borders, and the
  * sidebar/topbar all resolve to the page background; separation is hairlines
  * only. `docsHighlight` is the one near-contrast step used for brand, links,
- * and the active nav state, and it is still gray.
+ * and the active nav state, and it is still gray. `docsAccent` (blue) is the
+ * one hue, kept to code panels: highlighted lines and the selected tab.
  */
 tokens({
   colors: {
@@ -66,6 +67,21 @@ tokens({
     docsBlockquoteBorder: {
       value: '{colors.gray.300}',
       dark: '{colors.gray.700}',
+    },
+    // Code panels: a hairline border on a fill a shade off the page (darker
+    // in dark mode), with the one accent hue for highlighted lines and the
+    // selected package-manager tab.
+    docsCodeBg: {
+      value: '{colors.gray.50}',
+      dark: 'color-mix(in oklch, var(--colors-gray-950) 70%, black)',
+    },
+    docsAccent: {
+      value: '{colors.blue.600}',
+      dark: '{colors.blue.400}',
+    },
+    docsLineHighlightBg: {
+      value: 'color-mix(in oklch, var(--colors-blue-600) 10%, transparent)',
+      dark: 'color-mix(in oklch, var(--colors-blue-400) 17%, transparent)',
     },
     docsRing: {
       value: '{colors.gray.400}',

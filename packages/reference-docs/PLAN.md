@@ -20,7 +20,7 @@ behaviour (gaps are `TODO`).
 
 Sections appear in this order. Type is the skill's document type.
 
-### 1. Getting Started (tutorial)
+### 1. Overview (tutorial)
 
 | Page | Type | Notes |
 | --- | --- | --- |

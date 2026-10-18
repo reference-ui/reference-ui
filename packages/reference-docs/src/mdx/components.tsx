@@ -1,9 +1,4 @@
-import {
-  isValidElement,
-  type AnchorHTMLAttributes,
-  type JSX,
-  type ReactNode,
-} from 'react'
+import type { AnchorHTMLAttributes } from 'react'
 import type { MDXComponents } from 'mdx/types'
 import { Link } from '@tanstack/react-router'
 import {
@@ -11,9 +6,6 @@ import {
   Blockquote,
   Code,
   Div,
-  H1,
-  H2,
-  H3,
   Hr,
   Li,
   Ol,
@@ -23,6 +15,8 @@ import {
   css,
 } from '@reference-ui/react'
 import { CodeBlock } from './CodeBlock'
+import { MdxH1, MdxH2, MdxH3, type MdxProps } from './headings'
+import { Install } from './Install'
 
 const linkClass = css({
   color: 'docsHighlight',
@@ -35,55 +29,6 @@ const linkClass = css({
     textDecorationColor: 'currentColor',
   },
 })
-
-const headingAnchor = css({
-  marginLeft: '2r',
-  color: 'docsMuted',
-  fontWeight: '400',
-  textDecoration: 'none',
-  opacity: '0',
-  transition: 'opacity 0.15s ease, color 0.15s ease',
-  _hover: { color: 'docsText' },
-  _focusVisible: { outline: 'none', color: 'docsText' },
-})
-
-const headingHover = css({
-  _hover: { '& > a': { opacity: '1' } },
-  _focusWithin: { '& > a': { opacity: '1' } },
-})
-
-/** MDX native props minus legacy string-refs, which neo primitives don't take. */
-type MdxProps<T extends keyof JSX.IntrinsicElements> = Omit<JSX.IntrinsicElements[T], 'ref'>
-
-function toText(node: ReactNode): string {
-  if (node === null || node === undefined || typeof node === 'boolean') return ''
-  if (typeof node === 'string' || typeof node === 'number') return String(node)
-  if (Array.isArray(node)) return node.map(toText).join('')
-  if (isValidElement(node)) return toText((node.props as { children?: ReactNode }).children)
-  return ''
-}
-
-function slugify(text: string): string {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-}
-
-function Anchor({ id }: { id: string }) {
-  return (
-    <a
-      href={`#${id}`}
-      className={headingAnchor}
-      aria-label="Link to this section"
-      tabIndex={-1}
-    >
-      #
-    </a>
-  )
-}
 
 function MdxLink({ href = '', children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) {
   if (href === '' || /^(https?:|mailto:)/.test(href)) {
@@ -156,63 +101,6 @@ const tdClass = css({
 // Every mapping is a capitalised component so the object reads as a compound
 // component to React Fast Refresh. Lowercase keys stay on the map; the values
 // carry the component identity.
-function MdxH1(props: MdxProps<'h1'>) {
-  return (
-    <H1
-      color="docsText"
-      fontSize="8r"
-      letterSpacing="-0.025em"
-      lineHeight="1.12"
-      marginTop="0"
-      marginBottom="5r"
-      scrollMarginTop="20r"
-      {...props}
-    />
-  )
-}
-
-function MdxH2({ children, ...props }: MdxProps<'h2'>) {
-  const id = slugify(toText(children))
-  return (
-    <H2
-      id={id}
-      className={headingHover}
-      color="docsText"
-      fontSize="6r"
-      letterSpacing="-0.02em"
-      lineHeight="1.25"
-      marginTop="12r"
-      marginBottom="4r"
-      scrollMarginTop="20r"
-      {...props}
-    >
-      {children}
-      <Anchor id={id} />
-    </H2>
-  )
-}
-
-function MdxH3({ children, ...props }: MdxProps<'h3'>) {
-  const id = slugify(toText(children))
-  return (
-    <H3
-      id={id}
-      className={headingHover}
-      color="docsText"
-      fontSize="5r"
-      letterSpacing="-0.01em"
-      lineHeight="1.3"
-      marginTop="8r"
-      marginBottom="3r"
-      scrollMarginTop="20r"
-      {...props}
-    >
-      {children}
-      <Anchor id={id} />
-    </H3>
-  )
-}
-
 function MdxP(props: MdxProps<'p'>) {
   return (
     <P
@@ -323,4 +211,5 @@ export const mdxComponents = {
   td: MdxTd,
   code: MdxCode,
   pre: CodeBlock,
+  Install,
 } satisfies MDXComponents

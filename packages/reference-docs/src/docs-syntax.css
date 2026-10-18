@@ -6,9 +6,13 @@
   margin: 0;
 }
 
-/* The system styles every <code> as an inline pill; fenced blocks opt out. */
+/* The system styles every <code> as an inline pill; fenced blocks opt out.
+   Lines carry the panel's side padding, and the code grid is at least as wide
+   as its longest line, so a highlighted line tints the full row even when the
+   panel scrolls sideways. */
 pre code {
   display: grid;
+  min-width: max-content;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -16,12 +20,19 @@ pre code {
   color: inherit;
 }
 
-pre[data-theme] code {
-  display: grid;
+pre code [data-line] {
+  min-height: 1.5em;
+  padding: 0 1rem;
 }
 
-pre[data-theme] code [data-line] {
-  min-height: 1.5em;
+/* ```tsx {4,8-10} */
+pre[data-theme] code [data-highlighted-line] {
+  background: var(--colors-docs-line-highlight-bg);
+}
+
+pre[data-theme] [data-highlighted-chars] {
+  border-radius: 0.2rem;
+  background: var(--colors-docs-line-highlight-bg);
 }
 
 pre[data-theme] span {

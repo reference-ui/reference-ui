@@ -11,6 +11,7 @@ export const docsCollection = defineCollection({
     section: z.string(),
     order: z.number(),
     slug: z.string(),
+    description: z.string().optional(),
   }),
   transform: ({ _meta, ...doc }) => ({
     ...doc,

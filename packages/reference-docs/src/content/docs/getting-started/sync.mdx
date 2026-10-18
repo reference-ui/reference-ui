@@ -1,27 +1,19 @@
 ---
 title: Sync
-section: Getting Started
+section: Overview
 order: 2
 slug: sync
+description: Compile your styles and types, once or in watch mode.
 ---
 
 # Sync
 
-`ref sync` compiles your styles. Run it once before you build, or keep it
-running in watch mode while you develop, so every style value you write gets
-a CSS rule and every token gets a type.
-
-This page assumes you finished [Initialize](/initialize): the packages are
-installed and `ui.config.ts` is at your project root.
-
-## What sync does
-
-Sync reads `ui.config.ts` and every source file its `include` globs match. It
-evaluates your token, font, keyframe and global CSS definitions in Node, then
-hands the result to the Rust engine, which compiles the stylesheet and the
-types. Sync writes everything to `.reference-ui/` and links each generated
-package into `node_modules/@reference-ui/`, so your code imports them like
-any other package.
+`ref sync` reads `ui.config.ts` and every source file its `include` globs
+match, evaluates your token, font, keyframe and global CSS definitions in
+Node, and hands the result to the Rust engine. The engine compiles the
+stylesheet and the types. Sync writes them to `.reference-ui/` and links each
+generated package into `node_modules/@reference-ui/`, so your code imports
+them like any other package.
 
 | Generated package | What you use it for |
 | --- | --- |
@@ -33,15 +25,18 @@ any other package.
 The engine compiles only the values it finds in your source. A style value
 you add after the last sync has no CSS rule until the next sync.
 
-## Step 1: run sync once
+## Usage
 
-From the directory that holds `ui.config.ts`:
+Run sync from the directory that holds `ui.config.ts`. This assumes you
+finished [Getting started](/initialize).
+
+### 1. Run sync once
+
+Sync prints a ready line and the size of the compiled stylesheet.
 
 ```bash
 npx ref sync
 ```
-
-Expected result: a ready line and the size of the compiled stylesheet.
 
 ```text
   REF  v0.0.0  ready in 840 ms
@@ -49,19 +44,17 @@ Expected result: a ready line and the size of the compiled stylesheet.
   ➜  CSS:       41.2 KB
 ```
 
-If sync found warnings, the block adds a `Warnings:` row with the count. Run
-`npx ref sync --verbose` to list each warning with its location and a fix
-hint.
-
-To sync a project from another directory, pass its path:
+If sync found warnings, the block adds a `Warnings:` row with the count;
+`npx ref sync --verbose` lists each one with its location and a fix hint. To
+sync a project from another directory, pass its path:
 `npx ref sync ./apps/web`.
 
-## Step 2: run sync before every build
+### 2. Sync before every build
 
 Add sync to your build script so a production build never ships a stale
-stylesheet:
+stylesheet.
 
-```json
+```json {4}
 {
   "scripts": {
     "sync": "ref sync",
@@ -73,25 +66,29 @@ stylesheet:
 Run sync again after you install or upgrade `@reference-ui/lib`: its tokens
 and types come into your project through sync.
 
-## Step 3: run sync in watch mode during development
+### 3. Watch during development
+
+Watch mode syncs once, prints the ready block with a `Watch: on` row, and
+stays running.
 
 ```bash
 npx ref sync --watch
 ```
 
-Watch mode syncs once, prints the ready block with a `Watch: on` row, and
-stays running. It resyncs when a file the `include` globs match changes, and
-when `ui.config.ts` or a file it imports changes. Each resync prints one line:
+It resyncs when a file the `include` globs match changes, and when
+`ui.config.ts` or a file it imports changes. Each resync prints one line:
 
 ```text
 ⎔ ref sync ⫶ 38 ms ⫶ 41.3 KB
 ```
 
-Reference UI has no bundler plugin. Run watch mode next to your dev server
-instead, for example with the `concurrently` package. The Reference UI docs
-site runs its dev server this way:
+### 4. Run it next to your dev server
 
-```json
+Reference UI has no bundler plugin. Run watch mode beside your dev server,
+for example with the `concurrently` package, as the Reference UI docs site
+does.
+
+```json {3}
 {
   "scripts": {
     "dev": "ref sync && concurrently --kill-others \"ref sync --watch\" \"vite\""
@@ -112,7 +109,7 @@ server starts and resolves their imports. Stop watch mode with Ctrl+C.
 To start from scratch, `npx ref clean` removes `.reference-ui/` and the links
 sync made. Run `npx ref sync` afterwards.
 
-## Sync options
+## Options
 
 | Option | Effect |
 | --- | --- |
@@ -142,6 +139,33 @@ or add the files it should reach.
 session`**: a watch session already owns this project, so the one-off sync
 hands the work to it and exits 0. This is expected when your dev script is
 running.
+
+**`the lock is held by pid <pid> on host <host>`**: another machine is
+syncing the same `.reference-ui/` folder over a shared filesystem. Stop that
+sync, or rerun with `--break-lock`.
+
+**`BSS-W-SLOW-CONFIG`**: `ui.config.ts` took over 750 ms to evaluate, usually
+because it imports `@reference-ui/lib` instead of
+`@reference-ui/lib/baseSystem`. Change the import to the subpath the warning
+names.
+
+## Common failures
+
+**`No ui.config.ts or ui.config.js found in <dir>`**: sync looks for
+`ui.config.ts`, `ui.config.js` or `ui.config.mjs` in the directory it runs
+in, not in parent directories. Run sync from the project root, or pass the
+root as `[dir]`.
+
+**`Config must have a non-empty 'name'`** or **`Config must have an 'include'
+array`**: add both `name` and `include` to `defineConfig`.
+
+**`include matched no files: '<pattern>'`**: a warning, not an error. Sync
+skips the pattern, so nothing under it is compiled. Fix the glob, or add the
+files it should reach.
+
+**`[ref] already watching this project (pid <pid>) — using the running
+session`**: a watch session already owns this project, so the one-off sync
+hands the work to it and exits 0. Expected while your dev script runs.
 
 **`the lock is held by pid <pid> on host <host>`**: another machine is
 syncing the same `.reference-ui/` folder over a shared filesystem. Stop that
