@@ -1,10 +1,11 @@
 //! Pins the analysis entry point: an empty input predicts nothing, source ids follow input order,
-//! compile-time analysis drops panicked sources, and an end-to-end fixture predicts both the style
-//! and JSX surfaces. Helpers parse fixture sources in place so each test names the contract it
-//! checks.
+//! compile-time analysis drops panicked sources, an end-to-end fixture predicts both the style
+//! and JSX surfaces, and package-bound tags predict what extraction compiles on both walks.
+//! Helpers parse fixture sources in place so each test names the contract it checks.
 
 use super::support::{analyze_source, parse_for_test};
 use super::*;
+use crate::diagnostics::DiagnosticCode;
 use crate::extract::constants::LocalConstants;
 
 #[test]
@@ -35,6 +36,7 @@ fn sources_keep_input_order_as_source_ids() {
     let second = parse_for_test(&allocator, second_src);
     let constants =
         crate::extract::constants::collect_local_constants(&first, "a.ts", Some(first_src));
+    let bindings = crate::extract::collect_bindings(&first);
     let hosts = ResolvedHosts {
         traced: Vec::new(),
         configured: Vec::new(),
@@ -47,11 +49,13 @@ fn sources_keep_input_order_as_source_ids() {
                 path: "a.ts",
                 content: first_src,
                 program: &first,
+                bindings: &bindings,
             },
             AnalyzedSource {
                 path: "b.ts",
                 content: second_src,
                 program: &second,
+                bindings: &bindings,
             },
         ],
         hosts: &hosts,
@@ -81,9 +85,11 @@ fn for_compile_filters_panicked_sources() {
         local_owned: BTreeMap::new(),
     };
     let constants = LocalConstants::new();
+    let bindings = vec![ExtractBindings::default()];
     let parse = CompileParse {
         sources: &sources,
         parsed: &parsed,
+        bindings: &bindings,
     };
     let scope = AnalysisScope::new(&hosts, &constants, "test", &[]);
     let input = AnalysisInput::for_compile(&parse, scope);
@@ -105,4 +111,96 @@ fn parse_raw<'a>(
 fn end_to_end_fixture_predicts_both_surfaces() {
     let facts = analyze_source("import { css, Div } from '@reference-ui/react'; css({ color: 'red' }); const el = <Div mt=\"2r\" />;");
     assert_eq!(facts.len(), 2);
+}
+
+/// Compile `files` with `Button` hosted (as the primitive roster sends it)
+/// under one upstream, on the serial walk or on forced lanes, keeping the
+/// compiler and proof channels.
+fn compile_hosted(files: &[(&str, &str)], lanes: bool) -> crate::CompileResult {
+    let request = crate::CompileRequest {
+        files: Some(
+            files
+                .iter()
+                .map(|(path, content)| crate::VirtualSource {
+                    path: (*path).into(),
+                    content: (*content).into(),
+                })
+                .collect(),
+        ),
+        base_system: crate::BaseSystem::lib_fixture().clone(),
+        jsx_hosts: Some(vec!["Button".into()]),
+        upstream_systems: vec!["upstream".into()],
+        logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
+        ..Default::default()
+    };
+    if lanes {
+        let before = crate::lanes::entered_spawns();
+        crate::lanes::force_lane_count(Some(4));
+        let result = crate::compile(&request);
+        crate::lanes::force_lane_count(None);
+        assert!(crate::lanes::entered_spawns() > before, "the lanes ran");
+        return result.expect("lane compile succeeds");
+    }
+    let _hold = crate::lanes::hold_force_serial();
+    crate::compile(&request).expect("serial compile succeeds")
+}
+
+/// Every diagnostic code a compile reported, default and compiler channels.
+fn reported_codes(result: &crate::CompileResult) -> Vec<DiagnosticCode> {
+    let compiler = result.compiler_diagnostics.iter().flatten();
+    result
+        .diagnostics
+        .iter()
+        .chain(compiler)
+        .map(|diagnostic| diagnostic.code)
+        .collect()
+}
+
+/// A primitive-named tag from a third-party package, and lib's `Button`
+/// reached through a project barrel, both compile external (the package's
+/// runtime mints the upstream class). Analysis reads the same provenance, so
+/// proof predicts the upstream key and raises no missing-plan warning, on
+/// the serial walk and on the lanes alike.
+#[test]
+fn package_tags_raise_no_false_missing_plan_on_either_walk() {
+    let files = [
+        (
+            "src/acme.tsx",
+            "import { Button } from 'acme-ui';\
+             export const acme = <Button color=\"blue\" />;",
+        ),
+        (
+            "src/ui/index.ts",
+            "export { Button } from '@reference-ui/lib/primitives';",
+        ),
+        (
+            "src/main.tsx",
+            "import { Button } from './ui';\
+             export const lib = <Button bg=\"red\" />;",
+        ),
+    ];
+    for lanes in [false, true] {
+        let result = compile_hosted(&files, lanes);
+        let classes: Vec<&str> = result
+            .style_plans
+            .iter()
+            .flat_map(|plan| plan.declarations.iter())
+            .map(|decl| decl.class_name.as_str())
+            .collect();
+        assert!(
+            classes.contains(&"upstream__c_blue"),
+            "lanes={lanes}: {classes:?}"
+        );
+        assert!(
+            classes.contains(&"upstream__bg_red"),
+            "lanes={lanes}: {classes:?}"
+        );
+        let codes = reported_codes(&result);
+        assert!(
+            !codes.contains(&DiagnosticCode::MissingStylePlan),
+            "lanes={lanes}: {:?} / {:?}",
+            result.diagnostics,
+            result.compiler_diagnostics
+        );
+    }
 }

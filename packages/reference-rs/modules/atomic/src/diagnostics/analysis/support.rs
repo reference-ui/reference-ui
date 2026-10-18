@@ -25,7 +25,8 @@ pub(crate) fn parse_for_test<'a>(
 }
 
 /// Analyze one inline source end to end: parse, collect the file's const
-/// values, and run both surfaces with empty hosts.
+/// values and bindings (spelling-only provenance, no project graph), and
+/// run both surfaces with empty hosts.
 pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
     let allocator = oxc_allocator::Allocator::default();
     let program = parse_for_test(&allocator, source);
@@ -37,10 +38,12 @@ pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
         owned_props: BTreeMap::new(),
         local_owned: BTreeMap::new(),
     };
+    let bindings = crate::extract::collect_bindings(&program);
     let analyzed = AnalyzedSource {
         path: "test.ts",
         content: source,
         program: &program,
+        bindings: &bindings,
     };
     let input = AnalysisInput {
         sources: vec![analyzed],
@@ -73,10 +76,12 @@ pub(crate) fn analyze_source_hosted(source: &str, configured: &[&str]) -> Vec<Di
         owned_props: BTreeMap::new(),
         local_owned: BTreeMap::new(),
     };
+    let bindings = crate::extract::collect_bindings(&program);
     let analyzed = AnalyzedSource {
         path: "test.ts",
         content: source,
         program: &program,
+        bindings: &bindings,
     };
     let input = AnalysisInput {
         sources: vec![analyzed],

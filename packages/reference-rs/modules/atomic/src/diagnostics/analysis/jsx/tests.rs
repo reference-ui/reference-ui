@@ -1,5 +1,6 @@
 //! Traced JSX surface expectations: host gating, aliases, and shadows.
-//! Pins literal prediction through file-local imports, `css`/condition
+//! Pins literal prediction through file-local imports, package-bound tags
+//! predicting foreign keys by the shared provenance, `css`/condition
 //! lowering, spread bags, const-alias chains with their cycle/non-host
 //! refusals, and shadowed tags staying silent — including params and
 //! `let` rebinds over an alias name, mirroring the extract gate.
@@ -31,23 +32,40 @@ fn external_tag_predicts_foreign_qualified_keys() {
 }
 
 #[test]
-fn foreign_runtime_import_predicts_foreign_keys_under_a_configured_name() {
-    // Issue #19: `Button` is a configured host, but lib's `/primitives`
-    // runtime mints the upstream qualifier, so the block targets it; the
+fn package_import_predicts_foreign_keys_under_a_configured_name() {
+    // Issue #19: `Button` is a configured host, but a package's bundled
+    // runtime mints its own qualifier, so the block targets the foreign one.
+    // Lib (`/primitives` included) is a package like any other; the
     // unimported spelling keeps the own-host prediction.
-    let lib = "import { Button } from '@reference-ui/lib/primitives';";
+    for package in ["@reference-ui/lib/primitives", "acme-ui"] {
+        let facts = analyze_source_hosted(
+            &format!("import {{ Button }} from '{package}'; const el = <Button color=\"red\" />;"),
+            &["Button"],
+        );
+        assert_eq!(
+            exact_keys(&facts),
+            vec![r#"["foreign",[],"color","red",false]"#.to_string()],
+            "{package}"
+        );
+    }
+    let facts = analyze_source_hosted("const el = <Button color=\"red\" />;", &["Button"]);
+    assert_eq!(
+        exact_keys(&facts),
+        vec![r#"["test",[],"color","red",false]"#.to_string()]
+    );
+}
+
+#[test]
+fn alias_of_package_import_predicts_foreign_keys() {
+    // The alias chain ends at the package's `Button`: never an own host,
+    // exactly as the extract gate's chain end decides.
     let facts = analyze_source_hosted(
-        &format!("{lib} const el = <Button color=\"red\" />;"),
+        "import { Button } from 'acme-ui'; const Alias = Button; const el = <Alias color=\"red\" />;",
         &["Button"],
     );
     assert_eq!(
         exact_keys(&facts),
         vec![r#"["foreign",[],"color","red",false]"#.to_string()]
-    );
-    let facts = analyze_source_hosted("const el = <Button color=\"red\" />;", &["Button"]);
-    assert_eq!(
-        exact_keys(&facts),
-        vec![r#"["test",[],"color","red",false]"#.to_string()]
     );
 }
 

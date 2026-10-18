@@ -221,9 +221,14 @@ fn analyze_with_panic(contents: &[&str], panicked: Option<usize>) -> Vec<Diagnos
         owned_props: BTreeMap::new(),
         local_owned: BTreeMap::new(),
     };
+    let bindings: Vec<_> = parsed
+        .iter()
+        .map(|ret| crate::extract::collect_bindings(&ret.program))
+        .collect();
     let parse = CompileParse {
         sources: &sources,
         parsed: &parsed,
+        bindings: &bindings,
     };
     let scope = AnalysisScope::new(&hosts, &constants, "test", &[]);
     let input = AnalysisInput::for_compile(&parse, scope);

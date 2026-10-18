@@ -1,11 +1,12 @@
 //! Traced JSX style surface analysis. Finds StyleProps hosts through the
 //! file-local component imports plus the traced and configured host names,
-//! then lowers every style-bearing attribute: literals predict exact lookups,
-//! `css` and condition blocks walk, and dynamic shapes become dynamic-slot
-//! facts. A capitalized non-host tag is an external component: its block is
-//! marked external and its exact keys target the composed foreign qualifiers
-//! only. Native `style` is excluded: it never uses the runtime style-plan
-//! lookup. Lowercase DOM tags and attributes emit nothing.
+//! gated by extraction's own `HostGate` over the file's shared provenance, so
+//! a package-bound root is never an own host here either. It then lowers
+//! every style-bearing attribute: literals predict exact lookups, `css` and
+//! condition blocks walk, and dynamic shapes become dynamic-slot facts. A
+//! capitalized non-host tag is an external component: its block is marked
+//! external and its exact keys target the composed foreign qualifiers only.
+//! Native `style` is excluded; lowercase DOM tags and attributes emit nothing.
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -25,7 +26,8 @@ use super::object::{Site, WalkCtx};
 use super::{is_shadowed, AnalysisCtx, AnalyzedSource};
 use crate::diagnostics::{DiagnosticFact, DynamicShape, SourceId, StyleSurfaceKind};
 use crate::extract::constants::LocalConstants;
-use crate::extract::OwnedProps;
+use crate::extract::provenance::{classify, tag_root};
+use crate::extract::{ExtractBindings, HostGate, JsxHosts, OwnedProps, TagProvenance};
 
 use self::aliases::collect_ident_aliases;
 
@@ -33,7 +35,8 @@ mod aliases;
 mod visit;
 
 /// Expectations for the traced JSX surface: one walk per source. The import
-/// bindings arrive scanned: both surfaces share one scan per source.
+/// bindings arrive scanned (both surfaces share one scan per source), and
+/// the tag provenance is the source's, collected once with extraction.
 pub fn expectations(
     ctx: &AnalysisCtx<'_>,
     source_id: SourceId,
@@ -53,6 +56,7 @@ pub fn expectations(
         opaque: Vec::new(),
         decl_kind: VariableDeclarationKind::Var,
         bindings,
+        provenance: source.bindings,
         aliases: collect_ident_aliases(source.program),
     };
     visitor.visit_program(source.program);
@@ -80,6 +84,9 @@ struct JsxVisitor<'a, 'b> {
     /// opaque/const split of identifier declarators.
     decl_kind: VariableDeclarationKind,
     bindings: &'b FileBindings,
+    /// Where each import local ends, as extraction classified this file:
+    /// the one classifier both gates read.
+    provenance: &'b ExtractBindings,
     aliases: FxHashMap<String, String>,
 }
 
@@ -107,8 +114,8 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
     /// member tag resolves through its root, so a locally bound root
     /// rebinds every use and gates it, mirroring the extract gate —
     /// unless the root re-admits through its own const object literal,
-    /// after which membership decides. A root imported from a
-    /// foreign-runtime package is never a host, mirroring the extract gate.
+    /// after which membership decides. A root bound to an installed
+    /// package is never a host, by the same provenance extraction reads.
     fn allows_tag(&self, tag: &str) -> bool {
         if is_shadowed(&self.shadows, tag) {
             // A shadowed plain tag predicts only through its alias chain;
@@ -121,19 +128,28 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
                 return false;
             }
         }
-        !self.binds_foreign(tag) && self.is_host_name(tag)
+        !self.binds_package(tag) && self.host_gate().names_host(tag)
     }
 
-    /// True when the tag, or its concatenated member spelling, names a host.
-    fn is_host_name(&self, tag: &str) -> bool {
-        let admits = |name: &str| self.bindings.jsx.contains(name) || self.hosts.contains(name);
-        admits(tag) || (tag.contains('.') && admits(&tag.replace('.', "")))
+    /// Extraction's scope-free host gate over this file's Reference imports,
+    /// the traced and configured hosts, and the shared provenance.
+    fn host_gate(&self) -> HostGate<'_> {
+        HostGate {
+            hosts: JsxHosts {
+                local: &self.bindings.jsx,
+                global: self.hosts,
+            },
+            bindings: self.provenance,
+        }
     }
 
-    /// True when the tag's root is an unshadowed foreign-runtime import.
-    fn binds_foreign(&self, tag: &str) -> bool {
-        let root = tag.split('.').next().unwrap_or(tag);
-        !is_shadowed(&self.shadows, root) && self.bindings.foreign.contains(root)
+    /// True when the tag's root is an unshadowed package-bound import, by
+    /// the classifier extraction's `tag_provenance` calls.
+    fn binds_package(&self, tag: &str) -> bool {
+        matches!(
+            classify(self.provenance, &self.shadows, tag_root(tag)),
+            TagProvenance::Package(_)
+        )
     }
 
     /// True when a shadowed plain tag re-admits through the flat alias
@@ -155,9 +171,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
                 return false;
             }
             let Some(target) = self.aliases.get(current) else {
-                return !is_shadowed(&self.shadows, current)
-                    && !self.bindings.foreign.contains(current)
-                    && (self.bindings.jsx.contains(current) || self.hosts.contains(current));
+                return !is_shadowed(&self.shadows, current) && self.host_gate().admits(current);
             };
             current = target;
         }
@@ -196,10 +210,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         else {
             return false;
         };
-        if is_shadowed(&self.shadows, value) || self.bindings.foreign.contains(value) {
-            return false;
-        }
-        self.bindings.jsx.contains(value) || self.hosts.contains(value)
+        !is_shadowed(&self.shadows, value) && self.host_gate().admits(value)
     }
 
     /// Resolve the tag to its block verdict: `Some(false)` when the tag is a
@@ -212,7 +223,7 @@ impl<'a, 'b> JsxVisitor<'a, 'b> {
         if self.allows_tag(tag) {
             return Some(false);
         }
-        let graph_resolved = !self.bindings.jsx.is_empty() || !self.hosts.is_empty();
+        let graph_resolved = !self.host_gate().hosts.is_empty();
         if graph_resolved && crate::extract::jsx::is_external_tag(tag) {
             return Some(true);
         }

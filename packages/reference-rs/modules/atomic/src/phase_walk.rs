@@ -90,6 +90,7 @@ struct WalkEnv<'a> {
 }
 
 /// One retained file: extract when it styles, and record analysis under its source id.
+/// Both read the one set of bindings collected here, so they classify every tag alike.
 fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
     let shared = env.shared;
     let published = env.published;
@@ -127,6 +128,7 @@ fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
                 path,
                 content,
                 program: &parsed.program,
+                bindings: &bindings,
             };
             analysis::source_facts(env.ctx, SourceId(id), &source)
         }

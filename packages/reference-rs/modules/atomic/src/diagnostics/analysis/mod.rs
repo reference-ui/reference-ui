@@ -1,11 +1,12 @@
 //! Independent AST analysis entry: what exact plans will runtime request?
 //!
-//! Diagnostics borrows the compiler's parsed programs (no second parse) and
-//! the resolved host surface, then predicts the exact runtime queries implied
-//! by source; proof later compares those expectations against what the
-//! compiler actually emitted. It never infers success from extraction's
-//! wants. The `css()` and JSX surfaces walk here; conditions, values, and
-//! blocks are the shared helpers both surfaces consult.
+//! Diagnostics borrows the compiler's parsed programs (no second parse), each
+//! file's import provenance (collected once, shared with extraction), and the
+//! resolved host surface, then predicts the exact runtime queries implied by
+//! source; proof later compares those expectations against what the compiler
+//! actually emitted. It never infers success from extraction's wants. The
+//! `css()` and JSX surfaces walk here; conditions, values, and blocks are the
+//! shared helpers both surfaces consult.
 
 pub mod block;
 pub mod conditions;
@@ -28,7 +29,7 @@ use rustc_hash::FxHashSet;
 use crate::diagnostics::DiagnosticFact;
 use crate::diagnostics::SourceId;
 use crate::extract::constants::LocalConstants;
-use crate::extract::LocalOwned;
+use crate::extract::{ExtractBindings, LocalOwned};
 use crate::hosts::ResolvedHosts;
 
 /// One compile input offered to analysis: path, text, and the borrowed parse
@@ -43,11 +44,12 @@ pub struct AnalysisInput<'a> {
     pub qualifiers: &'a [String],
 }
 
-/// The borrowed compile inputs analysis walks: collected sources plus
-/// their parses, in matching order.
+/// The borrowed compile inputs analysis walks: collected sources, their
+/// parses, and each file's collected bindings, in matching order.
 pub struct CompileParse<'a> {
     pub sources: &'a [(String, String)],
     pub parsed: &'a [oxc_parser::ParserReturn<'a>],
+    pub bindings: &'a [ExtractBindings],
 }
 
 /// The per-compile frame `AnalysisInput::for_compile` borrows beside the parses:
@@ -83,11 +85,13 @@ impl<'a> AnalysisInput<'a> {
             .sources
             .iter()
             .zip(parse.parsed.iter())
-            .filter(|(_, ret)| !ret.panicked)
-            .map(|((path, content), ret)| AnalyzedSource {
+            .zip(parse.bindings.iter())
+            .filter(|((_, ret), _)| !ret.panicked)
+            .map(|(((path, content), ret), bindings)| AnalyzedSource {
                 path,
                 content,
                 program: &ret.program,
+                bindings,
             })
             .collect();
         Self {
@@ -100,11 +104,14 @@ impl<'a> AnalysisInput<'a> {
     }
 }
 
-/// A single parsed source within an [`AnalysisInput`].
+/// A single parsed source within an [`AnalysisInput`], with the bindings
+/// extraction collected for the same program: the JSX gate reads their
+/// provenance, so analysis and extraction classify every tag root alike.
 pub struct AnalyzedSource<'a> {
     pub path: &'a str,
     pub content: &'a str,
     pub program: &'a oxc_ast::ast::Program<'a>,
+    pub bindings: &'a ExtractBindings,
 }
 
 /// The per-compile context both surfaces share: host names, host-owned
@@ -161,7 +168,8 @@ pub(crate) fn context<'a>(
 }
 
 /// The facts one unskipped source predicts: each surface runs only when
-/// its bytes are present, and the import scan runs once for both.
+/// its bytes are present, and the import scan runs once for both. The JSX
+/// surface also reads the source's shared provenance.
 pub(crate) fn source_facts(
     ctx: &AnalysisCtx<'_>,
     source_id: SourceId,
