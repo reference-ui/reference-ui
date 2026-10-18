@@ -1,0 +1,16 @@
+{
+  "name": "mcp-accordion-type-error",
+  "mode": "log",
+  "url": null,
+  "log": "logs/supervisor-mcp-contract.log",
+  "capturedAt": "2026-10-18T12:20:15.202Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "navigationError": null,
+  "screenshotError": null,
+  "console": [],
+  "pageErrors": [],
+  "failedRequests": []
+}

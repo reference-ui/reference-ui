@@ -1,0 +1,2 @@
+logs/mcp-accordion-contract.tsx(14,38): error TS2322: Type '{ defaultValue: string; }' is not assignable to type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.
+  Property 'defaultValue' does not exist on type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.

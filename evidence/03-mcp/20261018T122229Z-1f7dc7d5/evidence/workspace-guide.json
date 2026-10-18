@@ -1,0 +1,721 @@
+{
+  "name": "workspace-guide",
+  "mode": "url",
+  "url": "http://127.0.0.1:32439/",
+  "log": null,
+  "capturedAt": "2026-10-18T12:18:38.417Z",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "navigationError": null,
+  "screenshotError": null,
+  "console": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting...",
+      "location": {
+        "url": "http://127.0.0.1:32439/@vite/client",
+        "line": 732,
+        "column": 8,
+        "lineNumber": 732,
+        "columnNumber": 8
+      }
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected.",
+      "location": {
+        "url": "http://127.0.0.1:32439/@vite/client",
+        "line": 826,
+        "column": 11,
+        "lineNumber": 826,
+        "columnNumber": 11
+      }
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477",
+        "line": 22164,
+        "column": 53,
+        "lineNumber": 22164,
+        "columnNumber": 53
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `minHeight: \"100vh\"` (class 03-mcp__min-h_100vh, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `bg: \"workspace.canvas\"` (class 03-mcp__bg_workspace.canvas, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `color: \"workspace.ink\"` (class 03-mcp__c_workspace.ink, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `padding: \"6r\"` (class 03-mcp__p_6r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `display: \"flex\"` (class 03-mcp__d_flex, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `justifyContent: \"center\"` (class 03-mcp__jc_center, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `boxSizing: \"border-box\"` (class 03-mcp__bx-sz_border-box, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `width: \"100%\"` (class 03-mcp__w_100%, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `maxWidth: \"168r\"` (class 03-mcp__max-w_168r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `display: \"grid\"` (class 03-mcp__d_grid, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `gap: \"8r\"` (class 03-mcp__gap_8r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `alignContent: \"start\"` (class 03-mcp__ac_start, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `gap: \"4r\"` (class 03-mcp__gap_4r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `alignItems: \"center\"` (class 03-mcp__ai_center, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `justifyContent: \"space-between\"` (class 03-mcp__jc_space-between, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `gap: \"3r\"` (class 03-mcp__gap_3r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `flexWrap: \"wrap\"` (class 03-mcp__flex-wrap_wrap, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `display: \"inline-flex\"` (class 03-mcp__d_inline-flex, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `gap: \"2r\"` (class 03-mcp__gap_2r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `color: \"workspace.muted\"` (class 03-mcp__c_workspace.muted, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontSize: \"2.5r\"` (class 03-mcp__fs_2.5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontWeight: \"700\"` (class 03-mcp__font-weight_700, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `letterSpacing: \"0.12em\"` (class 03-mcp__tracking_0.12em, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `textTransform: \"uppercase\"` (class 03-mcp__text-transform_uppercase, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `gap: \"1.5r\"` (class 03-mcp__gap_1.5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `paddingInline: \"2.5r\"` (class 03-mcp__px_2.5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `paddingBlock: \"1r\"` (class 03-mcp__py_1r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `bg: \"workspace.statusSoft\"` (class 03-mcp__bg_workspace.statusSoft, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `color: \"workspace.status\"` (class 03-mcp__c_workspace.status, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderRadius: \"999px\"` (class 03-mcp__rounded_999px, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontWeight: \"600\"` (class 03-mcp__font-weight_600, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `letterSpacing: \"0.02em\"` (class 03-mcp__tracking_0.02em, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `width: \"1.5r\"` (class 03-mcp__w_1.5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `height: \"1.5r\"` (class 03-mcp__h_1.5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `bg: \"workspace.status\"` (class 03-mcp__bg_workspace.status, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `margin: \"0\"` (class 03-mcp__m_0, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `maxWidth: \"140r\"` (class 03-mcp__max-w_140r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontSize: \"11r\"` (class 03-mcp__fs_11r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontWeight: \"650\"` (class 03-mcp__font-weight_650, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `lineHeight: \"1.08\"` (class 03-mcp__leading_1.08, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `letterSpacing: \"-0.03em\"` (class 03-mcp__tracking_-0.03em, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `maxWidth: \"120r\"` (class 03-mcp__max-w_120r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontSize: \"4r\"` (class 03-mcp__fs_4r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `lineHeight: \"1.65\"` (class 03-mcp__leading_1.65, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontSize: \"5r\"` (class 03-mcp__fs_5r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `letterSpacing: \"-0.01em\"` (class 03-mcp__tracking_-0.01em, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `bg: \"workspace.surface\"` (class 03-mcp__bg_workspace.surface, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderWidth: \"1px\"` (class 03-mcp__bd-w_1px, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderStyle: \"solid\"` (class 03-mcp__border-style_solid, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderColor: \"workspace.line\"` (class 03-mcp__bd-c_workspace.line, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `borderRadius: \"card\"` (class 03-mcp__rounded_card, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `overflow: \"hidden\"` (class 03-mcp__ov_hidden, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `paddingX: \"5r\"` (class reference-ui__px_5r, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `paddingY: \"4r\"` (class reference-ui__py_4r, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `textAlign: \"left\"` (class reference-ui__ta_left, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `color: \"workspace.ink\"` (class reference-ui__c_workspace.ink, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `_hover > bg: \"workspace.accentSoft\"` (class reference-ui__hover:bg_workspace.accentSoft, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `_open > bg: \"workspace.accentSoft\"` (class reference-ui__open:bg_workspace.accentSoft, called at yo (http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476:1249:11)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/node_modules/.vite/deps/@reference-ui_lib.js?v=705c2476",
+        "line": 1002,
+        "column": 67,
+        "lineNumber": 1002,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `fontSize: \"2.75r\"` (class 03-mcp__fs_2.75r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[reference-ui] css(): no compiled class for `lineHeight: \"1.6\"` (class 03-mcp__leading_1.6, called at Object.react_stack_bottom_frame (http://127.0.0.1:32439/node_modules/.vite/deps/react-dom_client.js?v=e112e477:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing.",
+      "location": {
+        "url": "http://127.0.0.1:32439/.reference-ui/react/react.mjs",
+        "line": 659,
+        "column": 67,
+        "lineNumber": 659,
+        "columnNumber": 67
+      }
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:32439/favicon.ico",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": []
+}
