@@ -5,6 +5,7 @@
 // pinned usage block the bin tests assert.
 import { Command } from 'commander'
 import { registerCleanCommand } from './clean.ts'
+import { registerInitCommand } from './init.ts'
 import { USAGE, printUsageError } from './output.ts'
 import { registerSyncCommand } from './sync.ts'
 
@@ -21,6 +22,7 @@ export async function runCli(argv: string[]): Promise<number> {
   program.on('command:*', (operands: string[]) => {
     code = printUsageError(`unknown command: ${operands[0] ?? '(none)'}`)
   })
+  registerInitCommand(program, report)
   registerSyncCommand(program, report)
   registerCleanCommand(program, report)
   await program.parseAsync(argv, { from: 'user' })

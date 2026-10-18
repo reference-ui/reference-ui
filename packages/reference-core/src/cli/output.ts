@@ -23,7 +23,7 @@ import type { NativeDiagnostic } from '../native/contract.ts'
 export { dedupeDiagnostics, formatJsonDiagnostics, formatVerboseWarningLine, formatWarningSummary, reportedSyncEntries }
 export type { DeduplicatedDiagnostic }
 
-export const USAGE = 'usage: ref <sync|clean> [dir]\n       ref sync --watch [dir]'
+export const USAGE = 'usage: ref <init|sync|clean> [dir]\n       ref sync --watch [dir]'
 
 const GLYPH = '⎔'
 const SEPARATOR = '⫶'
@@ -85,6 +85,13 @@ export function formatSyncLine(elapsedMs: number, bytes: number, warnings = 0): 
   const folded = Math.max(0, Math.floor(warnings))
   if (folded === 0) return `${glyph} ${command} ${sep} ${elapsed} ${sep} ${size}`
   return `${glyph} ${command} ${sep} ${elapsed} ${sep} ${size} ${sep} ${formatWarningSummary(folded)}`
+}
+
+// The init success report: glyph + command + the file written, then the
+// next step on an arrow row. Pure over the path, so the tests pin it.
+export function formatInitLines(configPath: string): string {
+  const head = `${paint(GLYPH, CYAN)} ${paint('ref init', BOLD)} ${paint(SEPARATOR, FAINT)} wrote ${configPath}`
+  return `${head}\n${paint(ARROW, BLUE)}  next: ${paint('ref sync', BOLD)}`
 }
 
 // The fold rule, stated once: verbose already lists every warning above,

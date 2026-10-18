@@ -15,10 +15,8 @@ export class ConfigNotFoundError extends ConfigError {
   readonly cwd: string
   constructor(cwd: string) {
     super(
-      `${PREFIX}No ui.config.ts or ui.config.js found in ${cwd}.\n` +
-        `Create a ui.config.ts file with your configuration:\n\n` +
-        `  import { defineConfig } from '@reference-ui/core'\n` +
-        `  export default defineConfig({ include: ['src/**/*.{ts,tsx}'] })`
+      `${PREFIX}No ui.config.ts, ui.config.js or ui.config.mjs found in ${cwd}.\n` +
+        `Run \`npx ref init\` there to write a default ui.config.ts.`
     )
     this.cwd = cwd
   }

@@ -1,11 +1,11 @@
 // Unit tests for the ref bin over temp projects plus arg handling.
 // They take temp dirs with fake generated output and assert clean removes
-// exactly that output, plus warning fixtures proving sync folds warnings
+// exactly that output, init writes the default config without overwriting, plus warning fixtures proving sync folds warnings
 // into the boot block by default and lists them structured under --verbose,
 // plus json diagnostics proving the canonical stdout array.
 // Deep sync behavior stays proven live in case worlds.
 import { execFile } from 'node:child_process';
-import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -64,14 +64,14 @@ describe('ref bin', () => {
     const dir = await makeTempDir();
     const run = await runBin(['--help'], dir);
     expect(run.code).toBe(0);
-    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <init|sync|clean> [dir]');
   });
 
   it('rejects an unknown command with usage and exit 1', async () => {
     const dir = await makeTempDir();
     const run = await runBin(['frobnicate'], dir);
     expect(run.code).toBe(1);
-    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <init|sync|clean> [dir]');
     expect(run.stdout).toContain('unknown command: frobnicate');
   });
 
@@ -116,8 +116,90 @@ describe('ref bin', () => {
     const dir = await makeTempDir();
     const run = await runBin(['clean', '--watch', dir], dir);
     expect(run.code).toBe(1);
-    expect(run.stdout).toContain('usage: ref <sync|clean> [dir]');
+    expect(run.stdout).toContain('usage: ref <init|sync|clean> [dir]');
     expect(run.stdout).toContain('clean takes no --watch');
+  });
+});
+
+function expectedConfig(name: string): string {
+  return [
+    "import { defineConfig } from '@reference-ui/core'",
+    "import { baseSystem } from '@reference-ui/lib/baseSystem'",
+    '',
+    'export default defineConfig({',
+    `  name: '${name}',`,
+    "  include: ['src/**/*.{ts,tsx}'],",
+    '  extends: [baseSystem],',
+    '})',
+    '',
+  ].join('\n');
+}
+
+describe('ref bin init', () => {
+  it('writes the default config named my-app in an empty dir', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['init', dir], dir);
+    expect(run.code).toBe(0);
+    expect(readFileSync(join(dir, 'ui.config.ts'), 'utf8')).toBe(expectedConfig('my-app'));
+    expect(run.stdout).toContain(`ref init ⫶ wrote ${join(dir, 'ui.config.ts')}`);
+    expect(run.stdout).toContain('next: ref sync');
+  });
+
+  it('defaults the dir to cwd', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['init'], dir);
+    expect(run.code).toBe(0);
+    expect(existsSync(join(dir, 'ui.config.ts'))).toBe(true);
+  });
+
+  it('names the config from package.json', async () => {
+    const dir = await makeTempDir();
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'acme-web' }));
+    const run = await runBin(['init', dir], dir);
+    expect(run.code).toBe(0);
+    expect(readFileSync(join(dir, 'ui.config.ts'), 'utf8')).toBe(expectedConfig('acme-web'));
+  });
+
+  it('escapes a single quote in the package name', async () => {
+    const dir = await makeTempDir();
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: "o'brien" }));
+    const run = await runBin(['init', dir], dir);
+    expect(run.code).toBe(0);
+    expect(readFileSync(join(dir, 'ui.config.ts'), 'utf8')).toBe(expectedConfig("o\\'brien"));
+  });
+
+  it.each([
+    ['an unsafe name', JSON.stringify({ name: 'bad"name' })],
+    ['an empty name', JSON.stringify({ name: '  ' })],
+    ['a non-string name', JSON.stringify({ name: 42 })],
+    ['no name', JSON.stringify({ version: '1.0.0' })],
+    ['a torn manifest', '{ not json'],
+  ])('falls back to my-app for %s', async (_label, manifest) => {
+    const dir = await makeTempDir();
+    writeFileSync(join(dir, 'package.json'), manifest);
+    const run = await runBin(['init', dir], dir);
+    expect(run.code).toBe(0);
+    expect(readFileSync(join(dir, 'ui.config.ts'), 'utf8')).toBe(expectedConfig('my-app'));
+  });
+
+  it.each(['ui.config.ts', 'ui.config.js', 'ui.config.mjs'])('refuses to touch an existing %s', async (file) => {
+    const dir = await makeTempDir();
+    const original = 'export default { keep: true }\n';
+    writeFileSync(join(dir, file), original);
+    const run = await runBin(['init', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout).toContain(`[ref] init failed: ${join(dir, file)} already exists; nothing written`);
+    expect(readFileSync(join(dir, file), 'utf8')).toBe(original);
+    expect(readdirSync(dir)).toEqual([file]);
+  });
+
+  it('init rejects --watch with usage and exit 1', async () => {
+    const dir = await makeTempDir();
+    const run = await runBin(['init', '--watch', dir], dir);
+    expect(run.code).toBe(1);
+    expect(run.stdout).toContain('usage: ref <init|sync|clean> [dir]');
+    expect(run.stdout).toContain('init takes no --watch');
+    expect(existsSync(join(dir, 'ui.config.ts'))).toBe(false);
   });
 });
 

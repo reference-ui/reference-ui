@@ -1,10 +1,10 @@
 // Unit tests for the Core config error surface.
 // They take a constructed cause and assert the LoadConfigError message, with
 // focus on the upstream-sync hint appended for Reference UI module-resolution
-// misses. No filesystem or resolver work: causes are built in-place.
+// misses, plus the ConfigNotFoundError pointer to ref init. No filesystem or resolver work: causes are built in-place.
 
 import { describe, expect, it } from 'vitest'
-import { LoadConfigError } from './errors.ts'
+import { ConfigNotFoundError, LoadConfigError } from './errors.ts'
 
 interface CodedError extends Error {
   code?: string
@@ -59,5 +59,15 @@ describe('LoadConfigError', () => {
   it('stays quiet for unrelated failures and non-Reference misses', () => {
     expect(new LoadConfigError('/repo/ui.config.ts', new Error('syntax error')).message).not.toContain('Run sync')
     expect(new LoadConfigError('/repo/ui.config.ts', moduleNotFound('lodash')).message).not.toContain('Run sync')
+  })
+})
+
+describe('ConfigNotFoundError', () => {
+  it('names every discovered filename and points to ref init', () => {
+    const error = new ConfigNotFoundError('/repo')
+    expect(error.message).toBe(
+      'reference-ui: No ui.config.ts, ui.config.js or ui.config.mjs found in /repo.\n' +
+        'Run `npx ref init` there to write a default ui.config.ts.'
+    )
   })
 })
