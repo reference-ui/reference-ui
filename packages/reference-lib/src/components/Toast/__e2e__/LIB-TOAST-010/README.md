@@ -1,0 +1,3 @@
+# LIB-TOAST-010 — Toast Gate 6 TO-TIME-04: Toast should pause remaining time while the pointer stays over the stack
+
+Browser case for Toast. Declaration: `Toast.ct.spec.ts` — `Toast Gate 6 TO-TIME-04: Toast should pause remaining time while the pointer stays over the stack`.
