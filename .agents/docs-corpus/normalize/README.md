@@ -1,26 +1,26 @@
-# .agents/docs-corpus/normalize
+# docs-corpus normalizer
 
-Turns each `vendor/docs/<source>` clone into plain Markdown that Memex reads as the `docs-corpus` collection, plus the search index Memex loads for it. The tool is tracked here; the clones it reads and the output it writes under `vendor/docs/` are gitignored.
+Turns each vendored source clone into plain Markdown that Memex reads as the `docs-corpus` collection, plus the search index Memex loads for it. The tool is tracked here; the clones it reads and the output it writes are gitignored vendor state.
 
 ## Run
 
     node .agents/docs-corpus/normalize/normalize.mjs [source...]
 
-No source runs every `adapters/*.mjs`. Each source is built, then swapped into `_normalized/<source>/` in one step, so Memex sees the old folder or the new one. Runs for different sources can go in parallel; never run the same source twice at once. A run prints a row per source (pages, sections, unresolved components) and a total.
+No source runs every adapter. Each source is built, then swapped into the normalized output in one step, so Memex sees the old folder or the new one. Runs for different sources can go in parallel; never run the same source twice at once. A run prints a row per source (pages, sections, unresolved components) and a total.
 
-## Output (`vendor/docs/_normalized/`)
+## Output (normalized corpus)
 
-- `<source>/<slug>.md`: a page. Frontmatter, then `# <title>`, the description, and the converted body.
-- `<source>/<slug>.sections/<heading>.md`: a section (see Sections). Its id is `<source>:<slug>#<heading>`. A page's sections sit in a folder named for it, so a child page can never share a file with a parent's section.
-- `<source>/pages.jsonl`: that source's page index, one row per page.
-- `pages.jsonl`: every source index concatenated in source order, rebuilt at the end of every run.
-- `docs-corpus.index.json` and `docs-corpus.records.json`: the search index Memex loads for `docs-corpus`, written at the end of every run (`.agents/memex/persist.mjs`). Without them Memex indexes live, which is slower but gives the same results.
+- A page doc per live page: frontmatter, then `# <title>`, the description, and the converted body.
+- A section doc per headed section (see Sections), with id `<source>:<slug>#<heading>`. Sections nest under their page, so a child page never shares a file with a parent's section.
+- A per-source page index, one row per page.
+- A combined page index over every source in source order, rebuilt at the end of every run.
+- The search index Memex loads for `docs-corpus`, written at the end of every run via the memex persist helper. Without it Memex indexes live, which is slower but gives the same results.
 
-Page frontmatter: `id`, `source`, `title`, `description`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. Section frontmatter: `id`, `source`, `title` (`Page › H2 › H3`), `heading`, `page`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. `repo`, `commit` and `license` come from the page when it overrides them, and otherwise from the source's `manifest.json` row.
+Page frontmatter: `id`, `source`, `title`, `description`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. Section frontmatter: `id`, `source`, `title` (`Page › H2 › H3`), `heading`, `page`, `url`, `section`, `order`, `type`, `concepts`, `path`, `repo`, `commit`, `license`. `repo`, `commit` and `license` come from the page when it overrides them, and otherwise from the source's manifest row.
 
 ## Adapter contract
 
-An adapter is `adapters/<source>.mjs`. Nothing else here needs editing.
+An adapter is one module per source. Nothing else here needs editing.
 
     export default {
       source: '<source>',
@@ -30,7 +30,7 @@ An adapter is `adapters/<source>.mjs`. Nothing else here needs editing.
     }
     export const components = { /* optional hooks, see Component hooks */ }
 
-- `entry`: the source's `manifest.json` row. Read it; never write that file.
+- `entry`: the source's manifest row. Read it; never write that file.
 - `root`: the absolute path of the clone. Demo imports and hooks may read only inside it.
 - `siteUrl`: the site's origin with no trailing slash, or `''`. Root-relative links (`/docs/x`) become `siteUrl/docs/x`; without it they stay as written.
 - `report`: lines printed under the source's row.
@@ -68,7 +68,7 @@ Fenced code is never converted. Everything outside it:
       },
     }
 
-- `props`: the attributes. A `{...}` value arrives as its source text; `stringList(props.groups)` (from `lib/mdx.mjs`) reads a string array. A bare attribute is `true`.
+- `props`: the attributes. A `{...}` value arrives as its source text; `stringList(props.groups)` reads a string array. A bare attribute is `true`.
 - `children`: the element's content as Markdown, blank runs collapsed (`''` if none).
 - `ctx`: `{ file, siteUrl, readImport, root, inline }`. `inline` is true when the element sits inside a sentence; its return value goes into the sentence as it is. `readImport(absPath)` returns the text of a file inside `root`, or `null`.
 - Return Markdown (several lines are fine), or `null` to leave the marker with the children kept. A throw fails the run and names the component.
@@ -79,16 +79,16 @@ Fenced code is never converted. Everything outside it:
 - The page splits at its H2 headings. Text before the first H2 (the intro) belongs to the page doc alone and gets no section file. A page with no H2 has no sections.
 - An H2 section over 400 words splits at its H3s. The text before its first H3 stays under the H2 entry; each H3 is its own entry, titled `Page › H2 › H3`. H4 and deeper stay inside their parent.
 - Heading slugs are unique per page (`-2`, `-3`, and so on). A section's `url` is its page's URL, with no anchor.
-- A heading's text is plain: a link keeps its label and drops its target (`plainHeading` in `lib/sections.mjs`). So `[Light and Dark Mode](#light-and-dark-mode)` titles its section "Light and Dark Mode", and the slug is unchanged.
+- A heading's text is plain: a link keeps its label and drops its target (via `plainHeading`). So `[Light and Dark Mode](#light-and-dark-mode)` titles its section "Light and Dark Mode", and the slug is unchanged.
 
 ## Eval
 
-`node .agents/docs-corpus/normalize/eval/eval.mjs` runs `eval/queries.json` (39 entries over 32 search intents) against `search --in docs-corpus`. The default is faceted, how a writer searches: each entry's `libs` item is checked per library (`--source <s> --limit 3`), and each intent gets one `--per-source 1` check on its first phrasing. `--strict` runs the old check instead: each entry's `expect` regexes against the top 10 of an unfiltered search. Both print a PASS or FAIL line per entry, the misses, and the latency over every CLI call. `EVAL_TOP=10` prints a full first page; `EVAL_CLI=<path>` scores another Memex copy. Regexes match hit ids; `(#|$)` accepts the named page or one of its sections.
+`node .agents/docs-corpus/normalize/eval/eval.mjs` runs the eval query list (39 entries over 32 search intents) against `search --in docs-corpus`. The default is faceted, how a writer searches: each entry's `libs` item is checked per library (`--source <s> --limit 3`), and each intent gets one `--per-source 1` check on its first phrasing. `--strict` runs the old check instead: each entry's `expect` regexes against the top 10 of an unfiltered search. Both print a PASS or FAIL line per entry, the misses, and the latency over every CLI call. `EVAL_TOP=10` prints a full first page; `EVAL_CLI=<path>` scores another Memex copy. Regexes match hit ids; `(#|$)` accepts the named page or one of its sections.
 
 ## Concepts
 
-`concepts.json` maps each concept to keywords. A concept applies when a keyword appears in the heading text (title, description, headings), or appears in the prose at least `max(3, words/300)` times. Fenced code never counts. Tune by editing keyword lists only.
+The concept map pairs each concept with keywords. A concept applies when a keyword appears in the heading text (title, description, headings), or appears in the prose at least `max(3, words/300)` times. Fenced code never counts. Tune by editing keyword lists only.
 
 ## Failures and recovery
 
-Each source is written in one swap through `vendor/docs/_staging/`, which holds sources in progress and is cleared after each swap. A run that fails part-way leaves the sources it already finished in place; the rest keep their last good output. The combined index and the search index are rebuilt at the end of every run that completes, so the next complete run heals any gap. A crashed run can leave a stale folder in `_staging`; it is safe to delete.
+Each source is written in one swap through a staging area, which holds sources in progress and is cleared after each swap. A run that fails part-way leaves the sources it already finished in place; the rest keep their last good output. The combined index and the search index are rebuilt at the end of every run that completes, so the next complete run heals any gap. A crashed run can leave a stale staging folder; it is safe to delete.

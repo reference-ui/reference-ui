@@ -60,17 +60,17 @@ Reference UI is a React component library with a typed design system. Its CSS is
    }
    ```
 
-To have lib's style props reject values outside your tokens, name the categories you want enforced (such as `colors`, `radii` and `spacing`) under `strict` in `ui.config.ts`. The [lib README](packages/reference-lib/README.md) covers the details.
+To have lib's style props reject values outside your tokens, name the categories you want enforced (such as `colors`, `radii` and `spacing`) under `strict` in `ui.config.ts`. The `@reference-ui/lib` readme covers the details — `memex search` finds it.
 
 ## Documentation
 
-The documentation site lives in [`packages/reference-docs`](packages/reference-docs/). After the one-time setup under [Development](#development), serve it locally with `pnpm dev:docs`, then open http://localhost:5174.
+The documentation site lives in `@reference-ui/reference-docs`. After the one-time setup under [Development](#development), serve it locally with `pnpm dev:docs`, then open http://localhost:5174.
 
-Package READMEs: [`@reference-ui/lib`](packages/reference-lib/README.md), [`@reference-ui/icons`](packages/reference-icons/README.md), [`@reference-ui/mcp`](packages/reference-mcp/README.md).
+Package readmes: `@reference-ui/lib`, `@reference-ui/icons`, `@reference-ui/mcp` — `memex search` resolves each.
 
 ## Development
 
-You need Node 24, pnpm (`corepack enable` picks up the version the repository pins) and a Rust toolchain from [rustup](https://rustup.rs). `ref sync` runs on the native compiler in `packages/reference-rs`, and a checkout builds it from source.
+You need Node 24, pnpm (`corepack enable` picks up the version the repository pins) and a Rust toolchain from [rustup](https://rustup.rs). `ref sync` runs on the native compiler in `@reference-ui/rust`, and a checkout builds it from source.
 
 ```bash
 pnpm install         # from the repository root
@@ -82,7 +82,7 @@ pnpm test:rs         # Rust workspace tests and native binding tests
 pnpm pipeline test   # matrix suites through the Dagger pipeline (needs Docker)
 ```
 
-Run `pnpm bootstrap` once after cloning, and again after pulling changes to `packages/reference-rs` or `packages/reference-lib`: `ref sync` and the docs site read their built output, not their source.
+Run `pnpm bootstrap` once after cloning, and again after pulling changes to `@reference-ui/rust` or `@reference-ui/lib`: `ref sync` and the docs site read their built output, not their source.
 
 ## License
 

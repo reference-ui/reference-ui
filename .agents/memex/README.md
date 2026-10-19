@@ -19,7 +19,7 @@ node .agents/memex/cli.mjs search                                  # list collec
 node .agents/memex/cli.mjs search --in cases                      # roster of one collection
 node .agents/memex/cli.mjs search "namer" --in cases              # ranked hits, labeled
 node .agents/memex/cli.mjs show cases:CORE-NAMER-01
-node .agents/memex/cli.mjs show packages/reference-rs/modules/tasty/README.md
+node .agents/memex/cli.mjs show <file-path>
 ```
 
 Every hit is labeled `collection:id`, and every label pipes back into
@@ -30,14 +30,14 @@ never across invocations or collections.
 
 ## Collections
 
-| Name       | Kind     | Source                                                             | Owner            |
-| ---------- | -------- | ------------------------------------------------------------------ | ---------------- |
-| `cases`    | core      | `packages/reference-core/tests/cases` (case.json + README + specs)  | agent-core skill  |
-| `components` | component | `packages/reference-lib/src/components/*/case.json` (exact test declarations) | test-component skill |
-| `surfaces` | rs       | `packages/reference-rs/modules` (README + suite/case inventory)    | agent-rs skill   |
-| `rs-cases` | rs-case  | `packages/reference-rs/modules/*/tests/cases` (case.json + README + spec.ts) | agent-rs skill |
-| `graph`    | system   | built in: every README.md + every file-top header                  | memex itself     |
-| `docs-corpus` | markdown | `vendor/docs/_normalized` (built by `.agents/docs-corpus/normalize`; targeted only: `--in docs-corpus`) | .agents/docs-corpus/normalize |
+| Name          | Kind      | Source                                                        | Owner                |
+| ------------- | --------- | ------------------------------------------------------------- | -------------------- |
+| `cases`       | core      | Core runtime cases with their specs                           | agent-core skill     |
+| `components`  | component | Lib component case declarations (exact test inventory)        | test-component skill |
+| `surfaces`    | rs        | Reference-rs module inventory with suite and case counts      | agent-rs skill       |
+| `rs-cases`    | rs-case   | Reference-rs cases with their specs                           | agent-rs skill       |
+| `graph`       | system    | built in: every readme plus every file-top header             | memex itself         |
+| `docs-corpus` | markdown  | Normalized vendor corpus (built by the docs-corpus normalizer; targeted only: `--in docs-corpus`) | docs-corpus normalizer |
 
 Global `search` ranks the manifest collections with a prior for
 authoritative docs (surfaces ×3, cases ×2, rs-cases ×2) over evidence logs. The
@@ -83,9 +83,9 @@ errors — a passed flag never silently does nothing.
 | bare id         | `show CORE-NAMER-01`           | when unique across collections      |
 | `rs:` ref       | `show rs:tasty`               | to `surfaces:rs:tasty`              |
 | module slug     | `show tasty`                  | to `surfaces:rs:tasty`              |
-| basename        | `show summary.md`             | unique → doc; many → candidate list |
-| repo path       | `show packages/…/identity.rs` | chain walk                          |
-| directory       | `show packages/…/atlas`       | its README                          |
+| basename        | `show overview`               | unique → doc; many → candidate list |
+| repo path       | `show <file-path>`            | chain walk                          |
+| directory       | `show <dir-path>`             | its readme                          |
 
 ## JSON shapes
 
@@ -102,7 +102,7 @@ errors — a passed flag never silently does nothing.
 
 ## Manifests (for collection owners)
 
-A manifest collection is one JSON file in `collections/`: name,
+A manifest collection is one JSON manifest: name,
 description, owner, kind, roots, and field weights. Frontmatter is
 optional everywhere — a doc with none still indexes, and a missing
 field just doesn't score. Weights name MiniSearch field boosts;
@@ -115,7 +115,7 @@ the max per field across collections.
   "description": "Meeting notes.",
   "owner": "no owning skill",
   "kind": "markdown",
-  "roots": ["docs/notes"],
+  "roots": ["meeting-notes"],
   "include": ["*.md"],
   "id": "basename",
   "weights": { "title": 3, "tags": 2 }
@@ -142,10 +142,10 @@ no code, no CLI change.
 ## The graph
 
 No manifest, no setup: the file-header convention is the schema. Every
-`README.md` is a doc; every code file (`.rs`, `.ts`, `.js`, `.mjs`,
+readme is a doc; every code file (`.rs`, `.ts`, `.js`, `.mjs`,
 `.sh`, …) whose top block is a `//!`, `//`, `/**`, or `#` comment
 contributes its header. Deps, build output, VCS, and hidden state dirs
-are never walked (`.agents` excepted).
+are never walked (agent tooling excepted).
 
 `show <path> [--up N]` prints the file's own header (full content for
 markdown) plus each ancestor README up N levels — the default walks to
@@ -157,7 +157,7 @@ Memex is the read path. Agents write markdown (READMEs, notes) and Memex reads i
 
 ## Dependencies
 
-One: `minisearch`, resolved from the workspace root install (see root
-`package.json`). If it ever goes missing, Memex fails fast with the fix
+One: `minisearch`, resolved from the workspace root install (see the
+root manifest). If it ever goes missing, Memex fails fast with the fix
 instead of a stack trace. The day Memex wants a second dependency is
 the day it becomes a real package; until then it stays bare scripts.
