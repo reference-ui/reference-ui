@@ -59,9 +59,13 @@ per-tag props + const declarations in today's react-types shape with the
 per-world bake removed, the `PrimitiveProps<T>` generic, contexts, and
 `useColorMode`. The `css`/`recipe` declarations are appended by Core, not printed here. The roster module (`generated/primitives.mjs`) is the runnable roster: 101 unbound
 components plus the `configurePrimitives` seam, importing the authored trio
-from the `js/` home. The vocabulary and the primitive types vendor to `native/generated/primitives/`
-(`vendor-rust-primitives.mjs`); the roster module and the trio travel as live sources (typegen precedent —
+from the `js/` home. The vocabulary and the primitive types vendor to `src/native/generated/primitives/`
+in reference-core (`tools/vendor-rust-primitives.mjs`); the roster module and the trio travel as live sources (typegen precedent —
 bundled at sync time, never copied). Core's per-system emitter calls the seam
 instead of string-building entries, and the PGEN case renders through the
 bound roster. The committed outputs are their own goldens: the test suite
 rebuilds all three artifacts in memory and fails on any byte drift.
+
+> Up: [@reference-ui/rust](../../README.md)
+
+> Search terms: primitive roster, vocabulary, configurePrimitives, factory, splitter, primitives/generator, rs:canon, rs:typegen

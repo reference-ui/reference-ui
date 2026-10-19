@@ -8,7 +8,10 @@ Tasty turns a TypeScript workspace into Rust-owned metadata artifacts, then lets
 
 ### `@reference-ui/rust`
 
-Lower-level **native** surface: the dynamic loader, dispatch helpers (`requireNative`, `callNativeJson`), and diagnostics (`getReferenceNative`, `loadReferenceNative`, path resolution). No Tasty calls live here.
+Host entrypoint: the dynamic loader, native dispatch helpers
+(`requireNative`, `callNativeJson`), and platform diagnostics
+(`getReferenceNative`, `loadReferenceNative`, path resolution, etc.).
+It exposes no tasty functions; generation goes through `./tasty/build` below.
 
 ### `@reference-ui/rust/tasty`
 
@@ -23,7 +26,7 @@ Tasty **runtime** API (consumes emitted JS artifacts; generation still uses the 
 
 ### `@reference-ui/rust/tasty/build`
 
-Node helpers that scan, write files under an output directory, and return a `TastyApi` — see `modules/tasty/js/build.ts` for `buildTasty`, sessions, and diagnostics.
+Node helpers that call the native `scanAndEmitModules` export, write files under an output directory, and return a `TastyApi` — see `modules/tasty/js/build.ts` for `buildTasty`, sessions, and diagnostics.
 
 ### `@reference-ui/rust/tasty/browser`
 
@@ -114,6 +117,8 @@ After `createTastyApi({ manifestPath })` and `await api.ready()`:
 
 Including: `dedupeTastyMembers`, `getTastyMemberDefaultValue`, `getTastyMemberId`, `getTastyJsDocParamDescriptions`, `getTastyCallableParameters`, `parseTastyParamTag`, `normalizeTastyInlineValue`, plus semantic/display helpers exported from `modules/tasty/js/index.ts`.
 
+Example:
+
 ```ts
 import {
   createTastyApi,
@@ -165,6 +170,6 @@ Tasty does not model every TypeScript construct as full semantic structure. It m
 ## Testing
 
 - Case tests (bundle shape and goldens): `packages/reference-rs/modules/tasty/tests/cases/<ID>/spec.ts`, run by `packages/reference-rs/modules/tasty/tests/suites/cases.test.ts`
-- Runtime API tests: `packages/reference-rs/modules/tasty/js/index.test.ts`, `js/utilities.test.ts`, `js/build.test.ts`
+- Runtime API tests: `packages/reference-rs/modules/tasty/js/index.test.ts`, `modules/tasty/js/utilities.test.ts`, `modules/tasty/js/build.test.ts`
 
 For the Rust-side pipeline and types, see [tasty-rs.md](./tasty-rs.md).

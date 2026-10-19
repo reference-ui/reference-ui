@@ -1,6 +1,6 @@
 /**
  * JS bundle step for @reference-ui/rust: raw
- * esbuild over the 12 tsup-parity entries, ESM-only, no dts or splitting. It
+ * esbuild over the 12 published entries, ESM-only, no dts or splitting. It
  * takes the package checkout and emits staged .mjs outputs, cleaning stale JS
  * from dist/ only after a successful build and renaming each output in
  * atomically, so a failed build never leaves a half-empty dist/. Only react

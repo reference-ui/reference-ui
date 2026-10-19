@@ -38,9 +38,10 @@ computed values. Rust consumes the dump; it does not run the files. A native
 fragment evaluator is Panda v2. Do not.
 
 Bottom-up: build the Rust engines, verify them inside `reference-rs`, then
-worry about host integration. The live wire from atomic CSS into
-the Core collector already exists at codegen (`@reference-ui/rust/atomic`, called from `packages/reference-core/src/collect/lib/scan/native.ts`). We
-emulate one seam cleanly and move the rest slowly.
+worry about host integration. The live wire from atomic into Core is
+`@reference-ui/rust/atomic`: Core calls `scan()` from
+`packages/reference-core/src/collect/lib/scan/native.ts` and `compile()`
+from `packages/reference-core/src/native/compile.ts`.
 
 ---
 
@@ -70,8 +71,9 @@ Tokens, fonts, keyframes, globals, declared recipes. What `extends` / `layers`
 pass around.
 
 Atomic asks: is `n300` a token, what's the CSS value, what recipes exist.
-Typegen asks the same questions for unions. `compile()` does not take one yet.
-That is the missing contract.
+Typegen asks the same questions for unions. `compile()` takes the base
+system with the request (legacy `{ baseSystem }` or the frozen
+`{ schemaVersion: 2, spec }`).
 
 Verify: `pnpm agentrs c base_system`.
 
@@ -87,9 +89,9 @@ Outputs: `styles.css`, class map, recipe tables.
 
 Does not collect `tokens()`. Does not emit `StyleProps`. Does not own `Div`.
 
-The live wire stays: core still `import { compileSync } from
-'@reference-ui/rust/system'`. Canonical subpath is `@reference-ui/rust/atomic`.
-N-API remains `compileSystem`.
+Core imports `{ compile, scan }` from `@reference-ui/rust/atomic`.
+`@reference-ui/rust/system` remains a pack-level alias of the same atomic
+entry, unused by Core. N-API remains `compileSystem`.
 
 Verify: `pnpm agentrs c atomic` and `pnpm agentrs v atomic`.
 
@@ -136,8 +138,8 @@ core for now.
 ### types — from typegen, given a base system + canon
 
 Token unions, `StyleProps`, recipe variants, font registry. Users never write
-`.mt_2r` in these files. Today `SystemStyleObject` still aliases Panda. That
-is the leftover to kill.
+`.mt_2r` in these files. `SystemStyleObject` is the recursive condition /
+breakpoint object typegen prints; no Panda alias remains.
 
 ---
 
@@ -176,23 +178,9 @@ props (canon knows which keys are style), call `css()`, and stamp
 
 ---
 
-## Implementation order
+## Standing order
 
-Do not skip to integration. Each step is provable in `reference-rs`.
-
-1. **Canon** — dictionary is the lookup everyone else uses. Refine join,
-   dialect (`r`, `container`, `font`, `weight`), fail-closed tests.
-2. **Base system artefact** — typed dump atomic and typegen can both read.
-   Still produced by fragments in JS.
-3. **Atomic consumes a base system** — `@layer tokens`, honest token vs raw
-   CSS, `staticCss` as a third want source. Goldens, then Panda v1
-   differential.
-4. **Typegen** — unions from the same artefact. Kill the Panda
-   `SystemStyleObject` alias.
-5. **Recipes / empty layers** — closed classes, variant table, reset / global
-   / keyframes bodies.
-6. **Host wiring** — core sync behind a flag. Panda still runs. Then matrix.
-   Then cut `@pandacss/*`.
-
-Do not rename N-API or move the core import in the same diff as `compile()`
-taking a base system. The folder rename is done; the live wire is the alias.
+Canon → base system → atomic / typegen → host wiring. Each module is
+provable inside `reference-rs` (`pnpm agentrs c <crate>`); the host wiring
+is live (Core `scan()` + `compile()` from `@reference-ui/rust/atomic`).
+Per-module READMEs carry current verification.

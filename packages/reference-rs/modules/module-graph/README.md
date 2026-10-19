@@ -36,3 +36,7 @@ declared, shared by the Reference UI compilers.
 
 It takes a parsed `oxc` `&Program`, never owns an AST, and produces no
 diagnostics: `Refused` values are data that consumers word.
+
+> Up: [@reference-ui/rust](../../README.md)
+
+> Search terms: specifier ladder, module resolution, export walk, binding origin, ModuleKey, ModuleRecord, BindingWalk, rs:atomic, rs:styletrace
