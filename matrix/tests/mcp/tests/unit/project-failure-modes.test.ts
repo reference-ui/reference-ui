@@ -1,3 +1,9 @@
+/**
+ * MCP standard suite: project failure modes & fault isolation. Connects a client to the shared matrix MCP server
+ * (booted once by `global-setup.ts`) and asserts the tool contract end to end
+ * over mock projects from `./helpers`.
+ */
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { mkdirSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'

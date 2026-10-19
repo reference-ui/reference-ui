@@ -1,6 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/extend-library/baseSystem'
-
 /**
  * T8 — Same library extended and layered.
  *
@@ -17,6 +14,10 @@ import { baseSystem } from '@fixtures/extend-library/baseSystem'
  * The contract test verifies the app boots and the upstream component still
  * resolves correctly.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from '@fixtures/extend-library/baseSystem'
+
 export default defineConfig({
   name: 'chain-t8',
   include: ['src/**/*.{ts,tsx}'],

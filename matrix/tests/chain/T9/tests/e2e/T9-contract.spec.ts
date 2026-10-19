@@ -1,3 +1,9 @@
+/**
+ * Chain T9 browser contract. Renders the chain-t9 root in Playwright and proves
+ * the first extend-library DemoComponent resolves its tokens. The end-to-end proof of the T9 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const fixtureDemoBgRgb = 'rgb(15, 23, 42)'

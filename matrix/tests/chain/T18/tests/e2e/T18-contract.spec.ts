@@ -1,3 +1,10 @@
+/**
+ * Chain T18 browser contract. Renders the chain-t18 root and every probe in
+ * Playwright, then proves the probe tokens are absent from every published
+ * sheet (the novelty check). End-to-end proof of the T18 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test, type Page } from '@playwright/test'
 import { baseSystem as iconsBaseSystem } from '@reference-ui/icons/baseSystem'
 import { baseSystem as libBaseSystem } from '@reference-ui/lib/baseSystem'

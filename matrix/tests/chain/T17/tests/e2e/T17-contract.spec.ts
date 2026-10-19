@@ -1,3 +1,9 @@
+/**
+ * Chain T17 browser contract. Renders the chain-t17 root in Playwright and proves
+ * every probe is visible through the prebuilt paths. The end-to-end proof of the T17 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 import { baseSystem as iconsBaseSystem } from '@reference-ui/icons/baseSystem'
 import { baseSystem as libBaseSystem } from '@reference-ui/lib/baseSystem'

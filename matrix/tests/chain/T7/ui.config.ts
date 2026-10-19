@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
-import { baseSystem as metaExtendSibling } from '@fixtures/meta-extend-library-sibling/baseSystem'
-
 /**
  * T7 — Diamond. App extends two libraries that both extend the same base.
  *
@@ -14,6 +10,11 @@ import { baseSystem as metaExtendSibling } from '@fixtures/meta-extend-library-s
  * guaranteed; we only assert that the composed app boots and that all token
  * adoptions resolve.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as metaExtend } from '@fixtures/meta-extend-library/baseSystem'
+import { baseSystem as metaExtendSibling } from '@fixtures/meta-extend-library-sibling/baseSystem'
+
 export default defineConfig({
   name: 'chain-t7',
   include: ['src/**/*.{ts,tsx}'],

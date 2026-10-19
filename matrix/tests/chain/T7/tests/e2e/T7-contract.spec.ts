@@ -1,3 +1,9 @@
+/**
+ * Chain T7 browser contract. Renders the chain-t7 root in Playwright and proves
+ * both diamond branches render their components. The end-to-end proof of the T7 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const metaExtendBgRgb = 'rgb(49, 46, 129)'

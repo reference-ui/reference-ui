@@ -1,42 +1,17 @@
 # Reference UI Matrix
 
-This folder is the top-level home for the next generation of Reference UI matrix tests.
+Consumer-style proving ground for what local tests and a single environment
+cannot cover: multi-package `extends`/`layers` topologies and the MCP tool
+surface, each run across bundlers and React runtimes by the Dagger pipeline.
 
-The intent is to separate matrix scenario ownership from the older fixture-driven test layout.
+`fixtures/` holds the shared `@fixtures/*` packages the suites consume as
+packed dependencies. `tests/chain/` holds the chain suites (T1–T18), each a
+small app with a `ui.config.ts` topology, Playwright contract specs in
+`tests/e2e`, and node-side runtime suites in `tests/unit`. `tests/mcp/`
+holds the MCP standard suite: 19 unit files against one shared server.
 
-Chain fixtures live at `matrix/fixtures/` (flat, `@fixtures/*` names
-preserved) because the kept chain suites consume them as packed
-packages.
-
-Kept suites live at `matrix/tests/`. For local IDE readiness, use
-`pnpm pipeline setup --sync` from the repo root. That runs the
-pipeline-managed matrix setup, installs workspace dependencies, and
-runs `core sync` in each matrix package so generated packages and
-types are present.
-
-## Status snapshot
-
-Matrix keeps exactly what can't be proved in local tests or in one
-set of environments (see `TEST_COVERAGE.md` for the coverage index):
-
-- Kept gate: `tests/chain/T2` (sole `layers:` prover), `tests/chain/T8`
-  (policy proof), `tests/mcp` (the whole MCP standard, 19 files)
-- Everything provable natively moved OUT: behavior and browser
-  coverage lives in Core cases (`packages/reference-core/tests/cases/`),
-  compiler units in Rust seam tests
-
-The kept packages follow the same ownership pattern as before:
-
-- browser-first packages keep real-style assertions in `tests/e2e`
-- filesystem and pipeline contracts stay in `tests/unit`
-- packages are kept narrow so concerns do not collapse back into a single kitchen-sink suite
-
-## Purpose
-
-This directory exists to make the matrix itself a clear top-level concept.
-
-That means:
-
-- the pipeline can evolve around a dedicated matrix surface
-- install-focused and TypeScript-focused coverage can grow independently
-
+`CHAIN.md` and `CHAIN_RULES.md` define the chain model and policy;
+`TEST_COVERAGE.md` is the coverage index. For local IDE readiness, run
+`pnpm pipeline setup --sync` from the repo root: it installs workspace
+dependencies and runs `core sync` in each matrix package so generated
+packages and types are present.

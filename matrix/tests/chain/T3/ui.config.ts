@@ -1,7 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as extendSystem } from '@fixtures/extend-library/baseSystem'
-import { baseSystem as layerSystem } from '@fixtures/layer-library'
-
 /**
  * T3 — Extend one library + layer another (hybrid).
  *
@@ -16,6 +12,11 @@ import { baseSystem as layerSystem } from '@fixtures/layer-library'
  * - Final assembled stylesheet order: extend-library CSS, then layer-library CSS,
  *   then the local chain-t3 layer.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as extendSystem } from '@fixtures/extend-library/baseSystem'
+import { baseSystem as layerSystem } from '@fixtures/layer-library'
+
 export default defineConfig({
   name: 'chain-t3',
   include: ['src/**/*.{ts,tsx}'],

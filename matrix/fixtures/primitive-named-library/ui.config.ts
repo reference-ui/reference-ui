@@ -1,5 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-
 /**
  * Primitive-named library fixture: a third-party package built on Reference UI.
  *
@@ -12,6 +10,9 @@ import { defineConfig } from '@reference-ui/core'
  * There is deliberately NO `jsxElements` list: `Tile` and `Chip` reach the
  * published `jsxElements` / `jsxOwned` by tracing alone.
  */
+
+import { defineConfig } from '@reference-ui/core'
+
 export default defineConfig({
   name: 'primitive-named-library',
   include: ['src/**/*.{ts,tsx}'],

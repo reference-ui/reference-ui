@@ -1,3 +1,9 @@
+/**
+ * Chain T2 browser contract. Renders the chain-t2 root in Playwright and proves
+ * the LayerPrivateDemo component is visible. The end-to-end proof of the T2 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const layerPrivateAccentRgb = 'rgb(99, 102, 241)'

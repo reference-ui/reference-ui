@@ -1,3 +1,9 @@
+/**
+ * MCP artifact cache-key suite. Builds throwaway project fixtures in tmp dirs
+ * and asserts `computeMcpArtifactCacheKey` over them. Pure unit coverage with
+ * no server; the only suite here that never connects to the shared server.
+ */
+
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

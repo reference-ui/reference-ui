@@ -1,3 +1,10 @@
+/**
+ * Sync config for the MCP matrix package. Extends the lib `baseSystem` plus
+ * `@fixtures/extend-library`, whose `colors._private` subtree lets the
+ * tool suites prove private tokens never leak to downstream consumers.
+ * The `mcp` key scopes tool file access to `src`, excluding build output and tests.
+ */
+
 import { defineConfig } from '@reference-ui/core'
 import { baseSystem } from '@reference-ui/lib/baseSystem'
 import { baseSystem as extendLibrary } from '@fixtures/extend-library/baseSystem'

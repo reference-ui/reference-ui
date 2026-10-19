@@ -68,17 +68,6 @@ The documentation site lives in [`packages/reference-docs`](packages/reference-d
 
 Package READMEs: [`@reference-ui/lib`](packages/reference-lib/README.md), [`@reference-ui/icons`](packages/reference-icons/README.md), [`@reference-ui/mcp`](packages/reference-mcp/README.md).
 
-## Repository layout
-
-- `packages/reference-lib`: `@reference-ui/lib`, the React component library
-- `packages/reference-icons`: `@reference-ui/icons`, the icon package
-- `packages/reference-rs`: `@reference-ui/rust`, the Rust compiler and native bindings
-- `packages/reference-core`: the `ref` CLI and sync pipeline (private workspace package)
-- `packages/reference-mcp`: `@reference-ui/mcp`, the MCP server
-- `packages/reference-docs`: the documentation site (private workspace package)
-- `matrix/`: consumer-style fixture projects and the kept matrix test suites
-- `pipeline/`: the Dagger pipeline that builds the workspace and runs the matrix suites
-
 ## Development
 
 You need Node 24, pnpm (`corepack enable` picks up the version the repository pins) and a Rust toolchain from [rustup](https://rustup.rs). `ref sync` runs on the native compiler in `packages/reference-rs`, and a checkout builds it from source.

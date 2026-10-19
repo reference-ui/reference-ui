@@ -1,8 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
-import { baseSystem as iconsSystem } from '@reference-ui/icons/baseSystem'
-import { baseSystem as primitiveNamedSystem } from '@fixtures/primitive-named-library/baseSystem'
-
 /**
  * T18 — Ownership: a tag imported from a package is never an own host.
  *
@@ -27,6 +22,12 @@ import { baseSystem as primitiveNamedSystem } from '@fixtures/primitive-named-li
  * Novel probe tokens live in `src/tokens.ts`, one per probe, so no probe's
  * rule can back another probe's class by coincidence.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem as libSystem } from '@reference-ui/lib/baseSystem'
+import { baseSystem as iconsSystem } from '@reference-ui/icons/baseSystem'
+import { baseSystem as primitiveNamedSystem } from '@fixtures/primitive-named-library/baseSystem'
+
 export default defineConfig({
   name: 'chain-t18',
   include: ['src/**/*.{ts,tsx}'],

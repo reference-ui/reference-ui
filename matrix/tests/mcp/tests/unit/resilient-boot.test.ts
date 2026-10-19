@@ -1,3 +1,9 @@
+/**
+ * MCP standard suite: resilient boot (empty / non-project directory). Connects a client to the shared matrix MCP server
+ * (booted once by `global-setup.ts`) and asserts the tool contract end to end
+ * over mock projects from `./helpers`.
+ */
+
 import { afterAll, describe, expect, it } from 'vitest'
 import { mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'

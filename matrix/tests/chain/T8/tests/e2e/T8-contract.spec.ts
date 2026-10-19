@@ -1,3 +1,9 @@
+/**
+ * Chain T8 browser contract. Renders the chain-t8 root in Playwright and proves
+ * the upstream DemoComponent renders correctly even when duplicated. The end-to-end proof of the T8 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const fixtureDemoBgRgb = 'rgb(15, 23, 42)'

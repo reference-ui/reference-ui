@@ -1,3 +1,9 @@
+/**
+ * Chain T11 browser contract. Renders the chain-t11 root in Playwright and proves
+ * the chain 1 endpoint and the shared base both contribute. The end-to-end proof of the T11 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const metaExtendBgRgb = 'rgb(49, 46, 129)'

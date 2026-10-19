@@ -1,3 +1,9 @@
+/**
+ * Chain T10 browser contract. Renders the chain-t10 root in Playwright and proves
+ * the extend-chain MetaExtendDemo resolves both local and transitive tokens. The end-to-end proof of the T10 topology declared
+ * in `../ui.config.ts`.
+ */
+
 import { expect, test } from '@playwright/test'
 
 const metaExtendBgRgb = 'rgb(49, 46, 129)'

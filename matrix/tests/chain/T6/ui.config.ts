@@ -1,6 +1,3 @@
-import { defineConfig } from '@reference-ui/core'
-import { baseSystem } from '@fixtures/meta-extend-library/baseSystem'
-
 /**
  * T6 — Chain. App extends only B; B already extends A.
  *
@@ -11,6 +8,10 @@ import { baseSystem } from '@fixtures/meta-extend-library/baseSystem'
  *   extend-library's contributions, so the app sees BOTH metaExtendBg
  *   (local) and fixtureDemoAccent (transitive) in its token namespace.
  */
+
+import { defineConfig } from '@reference-ui/core'
+import { baseSystem } from '@fixtures/meta-extend-library/baseSystem'
+
 export default defineConfig({
   name: 'chain-t6',
   include: ['src/**/*.{ts,tsx}'],
