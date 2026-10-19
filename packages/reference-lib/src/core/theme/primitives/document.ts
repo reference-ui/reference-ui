@@ -1,3 +1,6 @@
+// Document primitive styles: sectioning elements, span, hr, dialog.
+// It takes nothing and emits the globalCss map; Span inherits color so it stays legible
+// on dark or colored surfaces with zero overrides.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText, focusRingStyles } from './shared'
 

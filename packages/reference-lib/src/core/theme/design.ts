@@ -1,5 +1,6 @@
-// High-level `design` sketch (same `light` / `dark` color refs as `ui` where they overlap; duplicated
-// here so the token tree stays under `design.*` without import/reference merge quirks).
+// High-level `design` semantic sketch: background, primary, accent, text, and status
+// colors with light/dark refs. Values duplicate the `ui` element tokens where they overlap
+// so the tree stays under `design.*` without import/reference merge quirks.
 
 import { tokens } from '@reference-ui/system'
 

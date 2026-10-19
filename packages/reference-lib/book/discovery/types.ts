@@ -1,3 +1,6 @@
+// Shared Book discovery types.
+// They take nothing and emit the story, module, manifest, category, viewport, and
+// ready-state shapes the shell, canvas, and loaders pass around.
 import type * as React from 'react'
 
 export interface BookStory {

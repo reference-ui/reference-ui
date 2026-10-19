@@ -1,3 +1,6 @@
+// Book manifest: the story catalog the shell navigates.
+// It takes the story loader map and emits manifest entries (id, title, category) plus
+// lookup by id or name and grouping by category.
 import { storyLoaders } from './glob'
 import type { BookManifestEntry, BookCategory } from './types'
 

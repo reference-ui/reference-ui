@@ -1,3 +1,5 @@
+// Meter primitive styles: progress and meter bars with engine pseudo-elements.
+// It takes nothing and emits the globalCss map for the gauge elements.
 import { globalCss } from '@reference-ui/system'
 import { trackBackground } from '../shared'
 

@@ -1,3 +1,5 @@
+// Paced animation tokens: shorthand values per keyframe family and speed.
+// They take nothing and emit names like `spin.fast` resolving to full animation values.
 import { tokens } from '@reference-ui/system'
 
 export const animationTokens = {

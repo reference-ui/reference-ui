@@ -1,3 +1,6 @@
+// Book Vite config: serves the story app on :5000 against Book's own sync output.
+// It takes book/.reference-ui plus the workspace icons source and emits the aliased,
+// perf-instrumented dev server. ensure-port.mjs reclaims the strict port first.
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

@@ -1,3 +1,5 @@
+// Measure barrel: layout-measurement primitives for overlay geometry and useMeasure.
+// It takes nothing and emits the rect, frame, settle, poll, and observer helpers.
 export { MEASUREMENT_SETTLE_TIMEOUT_MS, MAX_IDLE_FRAMES } from './constants'
 export { rectsDiffer, readClientRect, snapshotRects, RECT_JITTER_EPSILON, type RectLike } from './rects'
 export { createFrameScheduler, type FrameClock, type FrameScheduler, type FrameCallback } from './frame'

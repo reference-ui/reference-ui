@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+// Vitest tests for useMeasure under happy-dom with a tracking ResizeObserver.
+// They take mounted probes and assert rect delivery, settle timing, pause, and retarget.
 import * as React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

@@ -1,3 +1,5 @@
+// Inline primitive styles: links, marks, abbreviations, edits.
+// It takes nothing and emits the globalCss map for the inline elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography, focusRingStyles } from '../shared'
 

@@ -1,18 +1,11 @@
-// Probe: drives the scaffolded bare-Vite consumer app in dev mode
-// (dev React is REQUIRED: element.ref removal warnings and the Splitter dev
-// diagnostics only fire outside production builds).
-//
-// Asserts, in order: every barrel component mounted (each mount isolated by
-// an error boundary that renders MOUNT-FAILED), the six stale-dist
-// behaviors of CURRENT src, zero unexpected console errors/pageerrors, and
-// zero `no compiled class` paint-nothing warnings.
-//
-// Two intentional-error categories exist. (1) allowlisted: the
-// degenerate Splitter fails fast with `[Reference UI Splitter]` by design;
-// the probe asserts that diagnostic fired AND excludes it from the
-// zero-errors gate. (2) known-open: errors matching the element.ref
-// signature are counted separately — the gate still exits 1 (the noise
-// must fail the gate) but names the owner instead of burying it.
+// Probe: drives the scaffolded bare-Vite consumer app in dev mode (dev React is
+// REQUIRED: element.ref removal warnings and the Splitter dev diagnostics only fire
+// outside production builds). It asserts, in order: every barrel component mounted
+// (each mount isolated by an error boundary rendering MOUNT-FAILED), the B-11
+// stale-dist behaviors of CURRENT src, zero unexpected console errors/pageerrors, and
+// zero `no compiled class` paint-nothing warnings. The degenerate Splitter diagnostic
+// is allowlisted after a positive assertion it fired; element.ref noise is counted
+// separately but still fails the gate.
 import { chromium } from '@playwright/test'
 
 const url = process.argv[2]

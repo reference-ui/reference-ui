@@ -1,3 +1,5 @@
+// List primitive styles: ordered, unordered, menu, and description lists.
+// It takes nothing and emits the globalCss map for the list elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography, blockText } from '../shared'
 

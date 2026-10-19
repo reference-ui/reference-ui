@@ -1,3 +1,6 @@
+// Story module loading and normalization for Book.
+// It takes a manifest entry and emits the loaded module with its normalized story list,
+// cached per entry id. Default and named exports both become stories.
 import * as React from 'react'
 import { storyLoaders } from './glob'
 import type { BookManifestEntry, BookLoadedEntry, BookModule, BookStory } from './types'

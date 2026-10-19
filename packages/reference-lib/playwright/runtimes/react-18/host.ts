@@ -1,3 +1,5 @@
+// React 18 CT host: createRoot behind the `ct-host` contract.
+// It takes a container element and emits the Host, rendering synchronously via flushSync.
 import * as React from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot, type Root } from 'react-dom/client'

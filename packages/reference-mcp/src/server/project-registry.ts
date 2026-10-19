@@ -1,8 +1,7 @@
-// Cross-project memory vendored from the retired reference-core's global registry.
+// Cross-project memory: the global project registry.
 // It takes project paths and emits registry reads plus last-active upserts.
-// Core deliberately excludes this seam (no global registry by design), so
-// mcp owns the copy: same file, same entry shape, same sanitizing read.
-// Keeping the path identical preserves existing registries across cutover.
+// Core excludes this seam by design (no global registry), so mcp owns the file;
+// keeping the path stable preserves existing registries across upgrades.
 
 import { existsSync, mkdirSync, readFileSync, renameSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'

@@ -1,3 +1,6 @@
+// Book perf record and live-status shapes.
+// They take nothing and emit the JSONL record plus the shell status types the plugin,
+// the client, and the report pass around.
 export interface BookPerfRecord {
   t: string
   file?: string

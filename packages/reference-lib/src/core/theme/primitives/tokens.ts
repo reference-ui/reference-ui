@@ -1,3 +1,5 @@
+// UI color tokens scoped to primitive surfaces (`colors.ui.<scope>.*`).
+// It takes nothing and emits the per-element semantic colors the style groups read.
 import { tokens } from '@reference-ui/system'
 
 /**

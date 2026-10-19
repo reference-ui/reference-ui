@@ -1,3 +1,6 @@
+// axe-core scanning for CT suites with page-skeleton rules disabled.
+// It takes a Playwright page plus options and emits the scan results; stories mount into
+// a bare gallery document, so landmarks and headings stay application-owned.
 import { expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import type { AxeResults, Result } from 'axe-core'

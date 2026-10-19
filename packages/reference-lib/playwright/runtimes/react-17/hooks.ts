@@ -1,4 +1,6 @@
 // @ts-nocheck — CJS React 17 has no types at this pin path.
+// React 17 hook backfills for the CT runtime: useId plus useSyncExternalStore.
+// They take the pinned CJS React and emit lifetime-stable hook implementations.
 import * as React from './node_modules/react/index.js'
 
 let count = 0

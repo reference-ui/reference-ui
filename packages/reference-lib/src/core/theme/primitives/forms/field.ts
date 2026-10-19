@@ -1,3 +1,6 @@
+// Field bezel styles: the wrapping surface nested controls surrender recipes into.
+// It takes nothing and emits the globalCss map keyed on [data-reference-field], with
+// invalid, warning, readonly, and disabled states following :has() on the control.
 import {
   baseTypography,
   controlSize,

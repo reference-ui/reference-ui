@@ -1,3 +1,5 @@
+// Base color ramps: oklch palette steps every semantic token references.
+// It takes nothing and emits the `colors.*` token tree, from slate through rose.
 import { tokens } from '@reference-ui/system'
 
 export const colors = {

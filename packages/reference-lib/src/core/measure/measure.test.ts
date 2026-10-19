@@ -1,3 +1,6 @@
+// Vitest tests for the measure primitives: rects, frames, settle, poll, observers.
+// They take the pure factories with fake clocks and assert differ, settle, sleep, and
+// CPU-budget behavior without a browser.
 import { describe, expect, it, vi } from 'vitest'
 import {
   createDirtyPoll,

@@ -1,3 +1,5 @@
+// Slide keyframes: directional slides in and the slide-out variants.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const slideKeyframes = {

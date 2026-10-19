@@ -1,3 +1,6 @@
+// Text-input primitive styles: text-likes, select, textarea, file, color, range.
+// It takes nothing and emits the globalCss map, arming focus-visible tracking for the
+// file's controls.
 import { globalCss } from '@reference-ui/system'
 import { setupFocusVisible } from './focus-visible'
 import {

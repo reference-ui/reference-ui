@@ -1,3 +1,6 @@
+// CT gallery browser entry: resolves story ids and mounts them for tests.
+// It takes `path/Name` story ids over window.mount and emits the story under StrictMode
+// in dark mode, stamping the React version for the harness to read.
 import * as React from 'react'
 import { createHost } from 'ct-host'
 import '@reference-ui/react/styles.css'

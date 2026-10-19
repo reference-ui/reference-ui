@@ -1,3 +1,5 @@
+// Form base primitive styles: fieldset grid, legend, and label.
+// It takes nothing and emits the globalCss map for the form scaffolding elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from '../shared'
 

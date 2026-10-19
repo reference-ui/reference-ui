@@ -7,7 +7,7 @@ The public design and freeze gates live in
 internal state uses Zustand plus `src/core/hooks`
 ([`src/core/hooks/hooks.md`](./src/core/hooks/hooks.md)). Every runtime primitive is indexed by `src/components/<Name>/case.json`, which `pnpm agentct check` validates. Where a component has a `TESTS.md`, it is the case catalog (setup / action / assert). A case is proven when a passing test title contains its ID (`pnpm agentct <Name> --e2e`). `TESTS.md` checkboxes mean specified, not proven.
 Implementation lives in this package. Black-box proof lives in each component's `__e2e__` suite (`pnpm agentct <Name> --e2e`) and in the kept chain suites under `matrix/tests/chain` (T2 and T8 are examples).
-Cosmos is for looking; Playwright is for asserting.
+Book is for looking; Playwright is for asserting.
 
 In this document, **freeze** means “the current falsifiable design decision,”
 not “treat existing prose as gospel.” Before manufacture, vendor regressions,
@@ -31,7 +31,7 @@ primitive, an internal kernel, native HTML, or a documented composition.
 | High-level component contract | `src/components/<Name>/<Name>.md` |
 | Case index (checked by `pnpm agentct check`) | `src/components/<Name>/case.json` |
 | Case catalog (setup / action / assert) | `src/components/<Name>/TESTS.md` (not present for Overlay, Popover, Toast, Tooltip) |
-| Visual exploration | this package's Cosmos fixtures |
+| Visual exploration | this package's Book stories (`src/components/**/*.book.tsx`, served by `pnpm dev:lib`) |
 | Public-API browser proof | `src/components/<Name>/__e2e__/*.spec.ts` (`pnpm agentct <Name> --e2e`); kept chain suites in `matrix/tests/chain/T*` |
 | Pure model proof | colocated `*.test.ts(x)` beside the code, e.g. `src/components/FocusLock/catalog/*.test.ts` |
 | Consumer fixtures | `matrix/fixtures/<name>/` |
@@ -41,20 +41,22 @@ importing `packages/reference-lib/src/...` does not prove the public API.
 
 ## Contract index
 
-The current design pass contains **1,552 tagged behavior cases** plus **89
-composition gates** across 24 top-level components: **1,641 stable case IDs**
+The current design pass contains **1,332 tagged behavior cases** plus **78
+composition gates** across 26 top-level components: **1,410 stable case IDs**
 in total. Four NumberField cases and two DateField cases are required manual
-release gates; the other 1,635 are automated contracts. Components may carry more than three
+release gates; the other 1,404 are automated contracts. Components may carry more than three
 composition gates when ownership boundaries require distinct proof:
 
 - **Foundation:** [ReferenceLibrary](./src/components/ReferenceLibrary/TESTS.md),
   [Portal](./src/components/Portal/TESTS.md),
+  [Announcer](./src/components/Announcer/TESTS.md),
   [Overlay](./src/components/Overlay/case.json),
   [Popover](./src/components/Popover/case.json),
   [Toast](./src/components/Toast/case.json)
 - **ARIA widgets:** [Listbox](./src/components/Listbox/TESTS.md),
   [Combobox](./src/components/Combobox/TESTS.md),
   [Menu](./src/components/Menu/TESTS.md),
+  [Menubar](./src/components/Menubar/TESTS.md),
   [Tabs](./src/components/Tabs/TESTS.md),
   [Slider](./src/components/Slider/TESTS.md),
   [Switch](./src/components/Switch/TESTS.md),
@@ -376,9 +378,10 @@ matrix/fixtures/         consumer fixture libraries
 
 ```json
 {
-  "name": "lib",
+  "name": "chain-t8",
+  "refSync": { "mode": "watch-ready" },
   "bundlers": ["vite7"],
-  "react": ["react19", "react18", "react17"]
+  "react": "react19"
 }
 ```
 
@@ -480,7 +483,7 @@ to reinterpret, omit, or weaken it.
 
 ## Test-derived API decision ledger
 
-The vendor pass left the inventory at 24 components after Field joined as
+The vendor pass left the inventory at 26 components after Field joined as
 visual chrome: wrapping inputs in a box is unavoidable, and generated
 Input recipes must surrender standalone chrome inside that box without
 Field copying `aria-invalid`. DateField remains in on the same grounds as
@@ -592,7 +595,7 @@ pnpm agentct Overlay --e2e
 Run one contract by stable ID:
 
 ```bash
-pnpm agentct Overlay "OV-ESC-01"
+pnpm agentct Overlay -g "OV-ESC-01"
 ```
 
 Run each primitive's browser proof in turn:
@@ -658,7 +661,7 @@ This order follows behavior dependencies, not visual complexity.
 ## Do not
 
 - Do not test components through compiler fixtures or source imports.
-- Do not put proof in Cosmos.
+- Do not put proof in Book stories.
 - Do not copy the same layer, focus, roving, Presence, or positioning matrix
   into every consumer.
 - Do not use snapshots for interaction contracts.

@@ -1,14 +1,9 @@
-// Bundle step for @reference-ui/mcp: raw
-// esbuild, ESM-only, no dts/splitting, sourcemaps on. It takes the 4 tsup
-// entries and emits staged .mjs outputs, renaming each into dist/ atomically
-// so a rebuild during a live dev server never 404s.
-// Externals are computed from this package's package.json (dependencies,
-// bare and /* subpath forms) — including @rspress/mdx-rs, whose per-platform
-// native bindings tsup's native-node-modules plugin choked on (the red-at-HEAD
-// cause); the bare specifier survives into dist and resolves from node_modules
-// at runtime. The core-alias and icons-index-text plugins moved here verbatim
-// from tsup.config.ts. Run from the package dir:
-// node scripts/build-bundle.mjs [--watch]
+// Bundle step for @reference-ui/mcp: raw esbuild, ESM-only, no dts/splitting,
+// sourcemaps on. It takes the 4 entries (index, cli, mcp-child, core-author) and emits
+// staged .mjs outputs, renaming each into dist/ atomically so a rebuild during a live
+// dev server never 404s. Externals come from this package's manifest (bare and /*
+// subpath forms); native per-platform bindings stay a bare specifier resolved from
+// node_modules at runtime. Run from the package dir: node scripts/build-bundle.mjs [--watch]
 
 import { build, context } from 'esbuild'
 import { readFile } from 'node:fs/promises'

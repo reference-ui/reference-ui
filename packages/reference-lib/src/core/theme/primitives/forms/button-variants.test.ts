@@ -1,3 +1,6 @@
+// Vitest tests for button variants, file upload, and the slider single source of truth.
+// They take the style maps and assert variant palettes, focus-ring parity, and the
+// shared slider track and thumb values.
 import { describe, it, expect } from 'vitest'
 import { buttonPrimitiveStyles } from './button'
 import { inputPrimitiveStyles } from './inputs'

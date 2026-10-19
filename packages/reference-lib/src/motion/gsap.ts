@@ -1,3 +1,6 @@
+// Shared gsap instance plus motion policy for collapse tweens.
+// It takes nothing and emits the normalized gsap export, the 0.32s collapse duration
+// (zero under prefers-reduced-motion), and the finite-tween filter Presence reads.
 import type { gsap as GSAPStatic } from 'gsap'
 import gsapPkg from 'gsap'
 

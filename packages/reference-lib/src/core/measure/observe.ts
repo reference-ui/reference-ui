@@ -1,3 +1,6 @@
+// ResizeObserver wiring for element measurement.
+// It takes an element and emits observation on the border box (matching
+// getBoundingClientRect), using the element's own document observer.
 /** ResizeObserver box that matches `getBoundingClientRect` (border box). */
 export const RESIZE_OBSERVER_BOX = 'border-box' as const
 

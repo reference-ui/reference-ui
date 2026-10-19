@@ -1,3 +1,5 @@
+// Code primitive styles: inline code pill, kbd, pre, samp.
+// It takes nothing and emits the globalCss map for the code elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from '../shared'
 

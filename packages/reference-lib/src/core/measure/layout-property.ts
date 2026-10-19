@@ -1,3 +1,5 @@
+// Layout-affecting CSS properties: transitions here move or resize layout, not paint.
+// It takes a property name and emits whether geometry owners must re-measure.
 /** CSS properties whose transitions move or resize layout, not paint. */
 export const LAYOUT_PROPERTIES = [
   'width',

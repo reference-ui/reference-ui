@@ -18,14 +18,18 @@ behaviour (gaps are `TODO`).
 
 ## Structure
 
-Sections appear in this order. Type is the skill's document type.
+Sections appear in this order: Guides, MCP, System, Foundations, Components
+(`SECTION_ORDER` in `src/collections/runtime.ts`). Type is the skill's document type.
 
-### 1. Overview (tutorial)
+### 1. Guides (tutorial)
 
 | Page | Type | Notes |
 | --- | --- | --- |
-| Initialize | tutorial | `npx` path, plus a copyable install prompt for an AI agent. TODO for now. |
-| Sync | tutorial | `ref sync`. TODO for now. |
+| Getting started (`initialize` slug) | tutorial | `npx` path, plus a copyable install prompt for an AI agent. |
+| Sync | tutorial | `ref sync`; lives in System. |
+
+Guides also holds the how-to pages (theming, dark mode, SSR, existing app, and
+more); MCP holds the MCP setup, configuration, and tools pages.
 
 ### 2. System
 
@@ -88,7 +92,7 @@ Made where the owner's outline was silent; confirm or overturn.
 - [x] System pages.
 - [x] Foundations pages.
 - [x] Getting Started pages.
-- [x] Component catalog (first draft: overview + 27 pages).
+- [x] Component catalog (first draft: overview + 29 pages).
 
 ## Open questions for the owner (first draft, 2026-10-17)
 

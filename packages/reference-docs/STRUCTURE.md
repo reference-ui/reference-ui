@@ -15,51 +15,10 @@ docs-only helpers get mixed together.
 
 ## Actual Layout
 
-```text
-packages/reference-docs/
-  DOCS.md
-  STRUCTURE.md
-  vite.config.ts
-  ui.config.ts
-  src/
-    app/
-      router.tsx          route tree and app entry wiring
-      DocLayout.tsx       shell: sidebar rail + scrolling content column
-      DocHeader.tsx       floating header (menu, brand, repo link, theme)
-      DocSidebar.tsx      full-height navigation rail (shared DocNav)
-      DocMobileNav.tsx    off-canvas navigation for small viewports
-      DocToc.tsx          right-hand "On this page" outline (>=1280px)
-      DocPageNav.tsx      previous / next article pager
-      Brand.tsx           product wordmark
-      IconButton.tsx      shared square icon button
-      controlSurface.ts   frosted surface for floating controls
-      icons.tsx           GitHub brand mark (the one Material glyph we lack)
-      DocPage.tsx         slug -> MDX module rendering
-      ErrorBoundary.tsx   render-error fallback
-      ThemeToggle.tsx     light/dark switch
-    collections/
-      content-collections.ts  config entrypoint (must live here, see below)
-      docs.ts                 collection schema + transform
-      index.ts                content-collections config
-      runtime.ts              slug lookup for the Vite MDX runtime
-    components/
-      diagram/                shared Diagram kit (canvas, panel, arrow, tokens)
-    content/
-      docs/...                all .mdx pages, grouped by section
-      diagrams/               private /diagram gallery (routed, not collected)
-    mdx/
-      components.tsx          MDX -> docs visual system element mapping
-      headings.tsx            page header (title + lead) and section/step headings
-      codePanel.tsx           shared code panel look + copy button
-      CodeBlock.tsx           fenced block: line highlights + "View Code" reveal
-      Install.tsx             npm / yarn / pnpm / bun install tabs
-      Preview.tsx             flat specimen frame for live examples
-    shared/
-      providers/              cross-cutting React context (theme, page meta)
-    main.tsx
-    docs-theme.fragments.ts
-    docs-syntax.css
-```
+Top-level directories under `src/`: `app/` (shell), `collections/` (content
+plumbing), `components/` (shared UI kits), `content/` (MDX pages plus the
+private diagram gallery), `mdx/` (rendering policy), `shared/` (cross-cutting
+context). File headers describe each module; Memex indexes the package map.
 
 ### `src/app` (shell chrome)
 

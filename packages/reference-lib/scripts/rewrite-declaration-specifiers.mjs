@@ -1,20 +1,9 @@
-// Repoints the specifiers in lib's emitted declarations at files that ship in
-// the tarball. tsc keeps the names the source wrote: `@reference-ui/react`,
-// `@reference-ui/styled`, `@reference-ui/types`, and relative `.reference-ui/`
-// paths. None of those resolve for a consumer (only dist/ and the baseSystem
-// payload are in `files`), so skipLibCheck: false fails on every component.
-// Each one moves to the copy materialize-runtime writes under
-// dist/runtime/reference-ui/. A guarded specifier with no shipped target fails
-// the build instead of shipping a declaration that cannot resolve.
-//
-// A name ships when both readers find a file for it. TypeScript reads `.mjs` as
-// `.d.mts` and `.js` as `.d.ts`; tasty reads a `.js` or `.mjs` name as a `.d.ts`
-// beside it, or as the file itself. declarationSpecifierProblems checks every
-// relative specifier left in a shipped declaration against that rule.
-//
-// node16 and nodenext also require an extension on every relative specifier, so an
-// extensionless one (`./types`, `../core/theme/index`) takes the extension of the
-// declaration it names: `.js` for `.d.ts`, `.mjs` for `.d.mts`, `.cjs` for `.d.cts`.
+// Repoints the specifiers in lib's emitted declarations at files that ship in the
+// tarball. tsc keeps the names the source wrote, which no consumer resolves (only
+// dist/ plus the baseSystem payload are in `files`), so each one moves to the copy
+// materialize-runtime writes under dist/runtime/reference-ui/, and a guarded specifier
+// with no shipped target fails the build. Extensionless relative specifiers take the
+// extension of the declaration they name (`.js` for `.d.ts`, `.mjs` for `.d.mts`).
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, posix, relative, resolve, sep } from 'node:path'
 

@@ -1,3 +1,5 @@
+// CT React-major selection.
+// It takes CT_REACT and emits the resolved major (default 19) plus the majors list.
 export const majors = ['17', '18', '19'] as const
 
 export type Major = (typeof majors)[number]

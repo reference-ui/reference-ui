@@ -1,3 +1,6 @@
+// Settled detector: a rect sample counts as settled after a quiet window.
+// It takes samples plus an optional settle clock and emits the settled flag and
+// onSettled callback once samples stop changing.
 import { MEASUREMENT_SETTLE_TIMEOUT_MS } from './constants'
 import { rectsDiffer, type RectLike } from './rects'
 

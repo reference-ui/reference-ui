@@ -1,3 +1,6 @@
+// Form primitive styles: the merged map over every forms/ group.
+// It takes the eight group maps and emits formPrimitiveStyles, the one spread
+// baseSystem consumes for form elements.
 import { buttonPrimitiveStyles } from './forms/button'
 import { checkboxPrimitiveStyles } from './forms/checkbox'
 import { fieldSurfaceStyles } from './forms/field'

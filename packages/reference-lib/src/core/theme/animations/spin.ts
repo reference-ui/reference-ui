@@ -1,3 +1,5 @@
+// Spin keyframes: spin, spinReverse, and the fixed rotate steps.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const spinKeyframes = {

@@ -1,3 +1,5 @@
+// Heading primitive styles: h1-h6 scale with rhythm margins.
+// It takes nothing and emits the globalCss map for the heading elements.
 import { globalCss } from '@reference-ui/system'
 import { baseTypography } from '../shared'
 

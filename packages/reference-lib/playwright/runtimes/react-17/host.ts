@@ -1,3 +1,5 @@
+// React 17 CT host: legacy render/unmount behind the `ct-host` contract.
+// It takes a container element and emits the Host, rendering through ReactDOM.render.
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 

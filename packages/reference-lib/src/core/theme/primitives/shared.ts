@@ -1,3 +1,5 @@
+// Shared primitive recipes: type, focus ring, controls, track, thumb, icon sizes.
+// Every element style group spreads these instead of restating them.
 export const baseTypography = {
   fontFamily: 'sans',
   letterSpacing: '-0.01em',

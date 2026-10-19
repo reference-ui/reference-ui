@@ -1,6 +1,6 @@
 # @reference-ui/lib Component Manufacturing & Architecture Rules
 
-Master engineering standards and strict architectural invariants for all 24 components in `@reference-ui/lib`.
+Master engineering standards and strict architectural invariants for all components in `@reference-ui/lib`.
 
 ---
 
@@ -53,7 +53,7 @@ finalProps = merge(inputDefaults, rootInputProps, explicitInputProps, managedMac
 ### Law 6: Separation of Testing Concerns
 - **Unit Tests (`vitest`)**: Colocated next to the source they cover (`src/components/<Component>/*.test.ts(x)`). Pure logic, algorithms, SSR markup, parsing, token merge. Do **not** emulate pointer/keyboard/DOM interaction in Vitest when a real browser test would be more honest.
 - **Component Tests (`playwright` CT)**: `src/components/<Component>/__e2e__/<Component>.ct.spec.ts`. Real browser. Interactions, presence, video, visual snapshots. Run via `pnpm agentct <Component>` (unit first, then e2e on React 19). Pin 17/18/19 with `pnpm agentct <Component> --e2e --react 18` (`@ct-runtime` packages, no pipeline).
-- **Matrix Contract Tests (`playwright`)**: Execute in real browsers (`src/components/<Name>/__e2e__/`, run with `pnpm agentct <Name> --e2e`). Cross-bundler/runtime DOM, focus, pointer/touch, keyboard, APG, and accessibility trees (`role`, `aria-*`, `data-*`).
+- **Matrix Contract Tests (`playwright`)**: the kept chain suites in `matrix/tests/chain/T*`, run with `pnpm agent pw chain/T*` (test-core, not `agentct`). Cross-bundler/runtime DOM, focus, pointer/touch, keyboard, APG, and accessibility trees (`role`, `aria-*`, `data-*`).
 
 ### Law 7: Accessibility & Platform Primacy
 - Conformance with W3C WAI-ARIA Authoring Practices (APG) is mandatory.

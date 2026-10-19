@@ -1,3 +1,5 @@
+// Scale keyframes: scaleIn, scaleOut, scaleUp, scaleDown.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const scaleKeyframes = {

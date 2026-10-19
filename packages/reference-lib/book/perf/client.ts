@@ -1,3 +1,6 @@
+// Book live/updating/error status shared between HMR listeners and the shell.
+// It takes Vite HMR events plus story-load timings and emits the subscribed status,
+// mirrored onto `data-book-ready` for Playwright capture waits.
 import * as React from 'react'
 import type { BookPerfRecord, BookStatusInfo } from './types'
 

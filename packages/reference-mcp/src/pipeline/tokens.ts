@@ -1,11 +1,7 @@
-// MCP token surface re-expressed onto Core fragment evaluation (row 10).
-// It takes a project root plus config and emits flattened MCP tokens.
-// Collection mirrors the retired reference-core's tokens/load flow — scan fragment files,
-// bundle against the author entry, evaluate the tokens collector, flatten —
-// but every seam is Core's: the scanner, runner, and tokens collector are
-// bundled Core modules, and `_private` keeps the retired reference-core's boundary semantics
-// (stripped from upstream fragments, visible on local ones) because Core
-// tags fragments with the same source property and literal.
+// MCP token surface over Core fragment evaluation.
+// It takes a project root plus config and emits flattened MCP tokens: scan fragment
+// files, bundle against the author entry, evaluate the tokens collector, flatten.
+// `_private` names stay stripped from upstream fragments and visible on local ones.
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'

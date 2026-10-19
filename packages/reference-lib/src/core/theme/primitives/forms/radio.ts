@@ -1,3 +1,5 @@
+// Radio primitive styles: appearance-none disc with checked dot.
+// It takes nothing and emits the globalCss map for radio inputs.
 import { globalCss } from '@reference-ui/system'
 import { focusRingStyles } from '../shared'
 

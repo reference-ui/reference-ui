@@ -1,3 +1,5 @@
+// Attention keyframes: ping, pulse, shake, flash, glow, heartbeat, shimmer.
+// They take nothing and emit the keyframes map animationTokens paces.
 import { keyframes } from '@reference-ui/system'
 
 export const attentionKeyframes = {
