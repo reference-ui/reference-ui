@@ -1,6 +1,17 @@
 import { globalCss } from '@reference-ui/system'
 import { focusRingStyles } from '../shared'
 
+// Monochrome, matching Checkbox and Radio. Off is a quiet neutral track (the
+// radio's off surface, a step off the page) under a light thumb; on is the
+// checkbox's checked fill under the checkbox's tick colour, so the thumb flips
+// to contrast with the bright track. Hover nudges the off track one small step
+// toward the foreground; the on track already sits at the foreground.
+const offTrack = '{colors.ui.radio.track.background}'
+const offHover = `color-mix(in oklch, ${offTrack}, {colors.design.foreground} 10%)`
+const onTrack = '{colors.ui.checkbox.checked.fill}'
+const offThumb = '{colors.gray.50}'
+const onThumb = '{colors.ui.checkbox.tick.stroke}'
+
 export const switchPrimitiveStyles = {
   '.ref-button[data-reference-switch]': {
     ...focusRingStyles,
@@ -17,14 +28,14 @@ export const switchPrimitiveStyles = {
     borderWidth: '0',
     borderStyle: 'none',
     borderRadius: 'full',
-    backgroundColor: '{colors.gray.300}',
+    backgroundColor: offTrack,
     color: 'transparent',
     fontSize: '0',
     lineHeight: '0',
     cursor: 'pointer',
     userSelect: 'none',
     _hover: {
-      backgroundColor: '{colors.gray.400}',
+      backgroundColor: offHover,
     },
     _active: {
       boxShadow: 'none',
@@ -37,9 +48,9 @@ export const switchPrimitiveStyles = {
   },
 
   '.ref-button[data-reference-switch][data-state="checked"]': {
-    backgroundColor: '{colors.ui.checkbox.checked.fill}',
+    backgroundColor: onTrack,
     _hover: {
-      backgroundColor: '{colors.ui.checkbox.checked.fill}',
+      backgroundColor: onTrack,
     },
   },
 
@@ -49,7 +60,7 @@ export const switchPrimitiveStyles = {
     height: '5r',
     flexShrink: 0,
     borderRadius: 'full',
-    backgroundColor: '{colors.ui.checkbox.tick.stroke}',
+    backgroundColor: offThumb,
     boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
     transform: 'translateX(0)',
     transitionProperty: 'transform',
@@ -59,6 +70,7 @@ export const switchPrimitiveStyles = {
   },
 
   '[data-reference-switch-thumb][data-state="checked"]': {
+    backgroundColor: onThumb,
     transform: 'translateX(1.25rem)',
   },
 } as const
