@@ -2,7 +2,7 @@
  * Meta library that extends `@fixtures/extend-library-2`.
  *
  * Together with `@fixtures/meta-extend-library`, this lets the chain matrix
- * model two parallel extend-chains landing in one app boundary (T16, T18).
+ * model two parallel extend-chains landing in one app boundary (T11, T13).
  */
 
 import { defineConfig } from '@reference-ui/core'

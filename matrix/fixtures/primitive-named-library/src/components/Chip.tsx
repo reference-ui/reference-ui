@@ -1,3 +1,7 @@
+/**
+ * `Chip`: the wrapper that owns `size` (consumed as inline padding, the
+ * icons shape), published with `size` in `jsxOwned` by tracing alone.
+ */
 import * as React from 'react'
 import { Div } from '@reference-ui/react'
 import type { DivProps } from '@reference-ui/react'

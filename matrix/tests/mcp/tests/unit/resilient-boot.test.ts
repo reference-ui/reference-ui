@@ -1,7 +1,8 @@
 /**
- * MCP standard suite: resilient boot (empty / non-project directory). Connects a client to the shared matrix MCP server
- * (booted once by `global-setup.ts`) and asserts the tool contract end to end
- * over mock projects from `./helpers`.
+ * MCP standard suite: resilient boot (empty / non-project directory). Boots
+ * its own isolated MCP server with cwd and HOME pointed at an empty tmp
+ * dir, and asserts the server starts in resilient mode serving universal
+ * primitives.
  */
 
 import { afterAll, describe, expect, it } from 'vitest'

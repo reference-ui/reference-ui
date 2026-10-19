@@ -1,3 +1,8 @@
+/**
+ * Extend-library demo component. Registers the `fixtureDemo*` tokens plus a
+ * `_private.brand` branch that resolves locally but is stripped downstream,
+ * and renders the `fixture-demo` swatches chain tiers assert on.
+ */
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

@@ -4,7 +4,8 @@ Reusable fixture library for `layers`-based tests.
 
 ## Exports
 
-- `@fixtures/layer-library`: exports `baseSystem` and `LightDarkDemo`
+- `@fixtures/layer-library`: exports `baseSystem`, `LightDarkDemo`, and
+  `LayerPrivateDemo`
 
 ## Usage
 

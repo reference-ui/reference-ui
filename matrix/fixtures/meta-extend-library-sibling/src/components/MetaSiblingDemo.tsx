@@ -1,3 +1,8 @@
+/**
+ * Meta-sibling demo component. Registers the disjoint `metaSibling*` tokens
+ * and renders them alongside the shared base's `fixtureDemoAccent`, proving
+ * both diamond siblings contributed without clashing (T7, T12).
+ */
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

@@ -1,6 +1,7 @@
 # @fixtures/aliased-host-library
 
-Prebuilt fixture package for chain T16: a library whose components render
+Prebuilt fixture package for chain T16 (topology reused by T17): a
+library whose components render
 style props on an **aliased host** (`const BadgeShell = Div as …`) behind a
 `forwardRef` factory — the `@reference-ui/icons` `createIcon` shape in
 miniature.

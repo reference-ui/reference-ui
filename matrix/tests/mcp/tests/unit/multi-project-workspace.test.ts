@@ -1,7 +1,8 @@
 /**
- * MCP standard suite: multi-project workspace & switching. Connects a client to the shared matrix MCP server
- * (booted once by `global-setup.ts`) and asserts the tool contract end to end
- * over mock projects from `./helpers`.
+ * MCP standard suite: multi-project workspace & switching. Boots its own
+ * isolated MCP server in a tmp dir — this suite needs its own cwd/registry
+ * state — and asserts the workspace contract end to end over mock projects
+ * from `./helpers`.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

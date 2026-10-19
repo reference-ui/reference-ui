@@ -1,9 +1,8 @@
 /**
- * MCP server/client lifecycle helpers for matrix tests.
- *
- * Global setup starts the installed MCP CLI from the synthetic consumer
- * server once. Test files then connect independent clients to the shared HTTP
- * endpoint so Vitest file parallelism can stay enabled.
+ * MCP server/client lifecycle helpers for matrix tests. Spawns the installed
+ * MCP CLI over HTTP (`startMcpServer`), connects SDK clients to it, and
+ * stops both. Global setup boots the shared server once; suites that need
+ * isolated cwd/HOME/registry state start their own per file.
  */
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'

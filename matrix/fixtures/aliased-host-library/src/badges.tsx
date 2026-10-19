@@ -1,3 +1,8 @@
+/**
+ * The fixture's generated icons: `CheckBadge` and `CopyBadge`, `forwardRef`
+ * products of the `createBadge` factory over the aliased shell. What chain
+ * T16 (and T17) render to pin alias host detection.
+ */
 import { createBadge } from './shell'
 
 /**

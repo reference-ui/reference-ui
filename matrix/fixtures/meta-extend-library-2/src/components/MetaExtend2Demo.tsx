@@ -1,3 +1,8 @@
+/**
+ * Meta-extend-2 demo component. Registers the `metaExtend2*` tokens and
+ * renders them alongside the transitive `secondaryDemoAccent` from
+ * extend-library-2, the second leg of the parallel-chains pair (T11, T13).
+ */
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

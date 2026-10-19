@@ -1,3 +1,8 @@
+/**
+ * Layer-library light/dark demo. Registers `lightDarkDemoBg/Text` tokens
+ * with dark-mode overrides and renders side-by-side panels, proving layered
+ * styles travel with their color-mode variants.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

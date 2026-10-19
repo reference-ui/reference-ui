@@ -1,6 +1,7 @@
 /**
  * extend-library-2 tokens. Disjoint from extend-library so that parallel
- * `extends[]` adoption (T11, T16, T18) can be observed independently.
+ * `extends[]` adoption (T9; T11, T13 through meta-extend-library-2) can be
+ * observed independently.
  */
 
 export const secondaryDemoBg = '#064e3b'

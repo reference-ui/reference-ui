@@ -1,7 +1,7 @@
 /**
- * MCP standard suite: get_component_props. Connects a client to the shared matrix MCP server
- * (booted once by `global-setup.ts`) and asserts the tool contract end to end
- * over mock projects from `./helpers`.
+ * MCP standard suite: get_component_props. Connects a client to the shared
+ * matrix MCP server (booted once by `global-setup.ts`) and asserts the tool
+ * contract end to end.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

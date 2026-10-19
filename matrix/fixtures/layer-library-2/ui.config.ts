@@ -1,6 +1,6 @@
 /**
  * Independent layer fixture #2. Used together with `@fixtures/layer-library`
- * for tests that need multiple `layers[]` entries (T11, T18).
+ * for tests that need multiple `layers[]` entries (T9).
  */
 
 import { defineConfig } from '@reference-ui/core'

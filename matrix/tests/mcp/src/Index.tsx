@@ -1,3 +1,8 @@
+/**
+ * Showcase page for the MCP matrix fixture app. Composes the demo components
+ * into the `Index` entrypoint the `get_component` family observes; rendered
+ * by `main.tsx`, re-exported for the tool suites through `src/index.ts`.
+ */
 import { ComponentShowcase, FeatureCard, HeroBanner, PrimaryAction } from './components'
 
 export function Index() {

@@ -1,3 +1,8 @@
+/**
+ * Meta-extend demo component. Registers the `metaExtend*` tokens and renders
+ * them alongside the transitive `fixtureDemoAccent` from extend-library,
+ * proving local and upstream tokens are both visible through one extend.
+ */
 import * as React from 'react'
 import { css } from '@reference-ui/react'
 import { tokens } from '@reference-ui/system'

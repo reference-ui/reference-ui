@@ -2,7 +2,7 @@
  * Extend Library fixture.
  * Exports baseSystem for downstream extends[] consumers.
  *
- * Run `core sync` in extend-library before using.
+ * Run `ref sync` in extend-library before using.
  */
 export { baseSystem } from '../.reference-ui/system/baseSystem.mjs'
 export { DemoComponent } from './components/DemoComponent'

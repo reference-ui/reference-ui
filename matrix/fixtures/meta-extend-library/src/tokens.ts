@@ -1,6 +1,6 @@
 /**
  * Meta-extend-library tokens. This library extends extend-library, so its
- * baseSystem will republish extend-library's tokens AND these new ones.
+ * baseSystem republishes extend-library's tokens AND these new ones.
  */
 
 export const metaExtendBg = '#312e81'
