@@ -5,8 +5,8 @@
  * window and cold after it, and Escape dismisses once without closing a
  * parent Overlay.
  */
-import { test, expect, snap, pressTab } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap, pressTab } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator } from '@playwright/test'
 
 async function expectAnchoredTop(trigger: Locator, content: Locator) {

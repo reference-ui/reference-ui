@@ -4,8 +4,8 @@
  * areas. Mounts the story logs and asserts controlled relationships,
  * active-descendant discipline, and one-request commits in a real browser.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
-import { expectNoAxeViolations } from '../../../../playwright/axe'
+import { test, expect, snap } from '../../../../../playwright/ct'
+import { expectNoAxeViolations } from '../../../../../playwright/axe'
 import type { Locator, Page } from '@playwright/test'
 
 async function expectAnchoredBottomStart(trigger: Locator, content: Locator) {

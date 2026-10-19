@@ -2,7 +2,7 @@
  * Uncontrolled switch lifecycle contracts run against browser activation under StrictMode.
  * They cover default initialization, instance isolation, remounts and cancellation ordering.
  */
-import { test, expect } from '../../../../playwright/ct'
+import { test, expect } from '../../../../../playwright/ct'
 
 test('SW-LIFECYCLE-01: uncontrolled instances retain their own state across default changes and reset on remount', async ({ mount, page }) => {
   await mount('components/Switch/Switch.contracts/UncontrolledLifecycleFixture')

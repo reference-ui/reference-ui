@@ -5,7 +5,7 @@
  * until the owner updates, and unmount cancels delayed opening so remount
  * starts a fresh session.
  */
-import { test, expect, pressTab } from '../../../../playwright/ct'
+import { test, expect, pressTab } from '../../../../../playwright/ct'
 
 test.describe('Tooltip consumer and lifecycle contracts', () => {
   test('TT-CONTRACT-01: authored descriptions survive open and close with one live tooltip reference', async ({ mount, page }) => {

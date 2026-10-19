@@ -4,7 +4,7 @@
  * reopen races, nested coordination (including born-closed and mid-exit
  * children), and coordinated multi-part completion.
  */
-import { test, expect, snap } from '../../../../playwright/ct'
+import { test, expect, snap } from '../../../../../playwright/ct'
 
 test.describe('Presence', () => {
   test.beforeEach(async ({ mount }) => {
