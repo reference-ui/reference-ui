@@ -1,0 +1,11 @@
+{
+  "name": "core-layers4-up",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./.reference-ui/react/react.d.mts",
+      "import": "./.reference-ui/react/react.mjs"
+    },
+    "./baseSystem": "./.reference-ui/system/baseSystem.mjs"
+  }
+}
