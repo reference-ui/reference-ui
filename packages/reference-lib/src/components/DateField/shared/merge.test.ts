@@ -1,3 +1,7 @@
+/**
+ * Prop-merge proof: part-resolution merging across root and explicit
+ * props. Pure merge decisions; the slot layouts consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import { mergeClassNames, mergeStyles } from './merge'
 

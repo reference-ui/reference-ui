@@ -1,4 +1,9 @@
-/** Combobox hooks: session, registry, authority, active, open, virtual, bridge, sources, text, commits, resolver, announcements, input/trigger wiring. */
+/**
+ * Combobox hooks: session, registry, authority, active, open, virtual,
+ * bridge, sources, text, commits, resolver, announcements, and input and
+ * trigger wiring. Re-exports the bindings the root composes; no logic
+ * lives here.
+ */
 export { useComboboxSession } from './use-combobox-session'
 export type { ComboboxSession } from './use-combobox-session'
 export { useComboboxRegistry } from './use-combobox-registry'

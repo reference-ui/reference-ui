@@ -1,4 +1,8 @@
-/** Identity-collection proof: fragment traversal, id diagnostics, authority warns. */
+/**
+ * Identity-collection proof: fragment traversal, id diagnostics, and
+ * authority warns. Renders authored children in happy-dom; the root
+ * contract pins how violations surface to applications.
+ */
 import * as React from 'react'
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { collectItemIds } from './collect'

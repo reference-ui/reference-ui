@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for eligibility: focusable versus sequentially tabbable. */
+/**
+ * Eligibility proof: focusable versus sequentially tabbable. Runs in
+ * happy-dom against real elements; catalog assembly consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { isElementFocusable, isElementTabbable, tabIndexValue } from './eligibility'
 

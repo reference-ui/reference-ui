@@ -1,3 +1,7 @@
+/**
+ * Range-span proof: blocked-date detection across a candidate span.
+ * Pure predicate with no DOM; range completion consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { rangeSpanHasBlockedDate } from './span'
 

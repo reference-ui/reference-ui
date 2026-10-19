@@ -1,3 +1,9 @@
+/**
+ * Menubar browser proofs: row rendering, controlled open, keyboard
+ * moves, switching, escape, and focus rows. Mounts the story fixtures
+ * and asserts one-value coordination with trigger restore in a real
+ * browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 import { expectNoAxeViolations } from '../../../../playwright/axe'
 import type { Page } from '@playwright/test'

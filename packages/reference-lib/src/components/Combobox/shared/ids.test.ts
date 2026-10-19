@@ -1,3 +1,7 @@
+/**
+ * Combobox id proof: generated ids and their uniqueness guarantees. Pure
+ * naming decisions; the parts and registry consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import { sanitizeComboboxId, sanitizeIdSegment } from './ids'
 

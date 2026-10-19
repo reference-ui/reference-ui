@@ -1,3 +1,7 @@
+/**
+ * Prop-gate proof: fail-closed validation of Calendar props. Pure gate
+ * with no DOM; the root runs it before any hook resolves state.
+ */
 import { describe, expect, it } from 'vitest'
 import type { CalendarProps } from '../types'
 import { validateCalendarProps } from './validate'

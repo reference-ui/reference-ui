@@ -1,3 +1,9 @@
+/**
+ * Announcer CT fixtures: the manual-AT mirror plus probe, lifecycle,
+ * StrictMode, Overlay-exemption, election, and multi-document harnesses.
+ * The live regions stay visually hidden; readouts mirror their text so
+ * each interaction proves an AT-observable insertion. Mounted by CT.
+ */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { createRoot } from 'react-dom/client'

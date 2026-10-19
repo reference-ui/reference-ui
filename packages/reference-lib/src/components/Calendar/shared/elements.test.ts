@@ -1,3 +1,7 @@
+/**
+ * Element-slot proof: authored-part detection and slot plumbing. Pins
+ * the element reads part resolution builds on.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { describeRendererNode, isPartElement } from './elements'

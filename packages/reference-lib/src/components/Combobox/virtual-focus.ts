@@ -1,10 +1,9 @@
-import type { VirtualFocusItem } from '../Listbox'
-
 /**
  * Pure virtual-focus helpers (#5). Navigation validation, logical search,
  * and duplicate detection live here so unit tests pin them without a
  * browser; Combobox.tsx owns refs, pending timing, and diagnostics.
  */
+import type { VirtualFocusItem } from '../Listbox'
 
 /** First duplicated logical value, or null when values are unique. */
 export function findDuplicateValue(items: readonly VirtualFocusItem[]): string | null {

@@ -1,6 +1,10 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest'
-/** Catalog assembly proof, moved verbatim from the root during the refactor. */
+/**
+ * Catalog-assembly proof: tabbable candidates in document order. Runs in
+ * happy-dom against real elements; eligibility and traversal prove out
+ * beside it.
+ */
 import { getTabbableCandidates } from './candidates'
 import { isElementTabbable } from './eligibility'
 import { findFocusableProximity } from '../restore/proximity'

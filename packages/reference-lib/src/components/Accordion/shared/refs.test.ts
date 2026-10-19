@@ -1,4 +1,8 @@
-/** Ref-fanout proof for composeRefs: object refs, function-ref cleanups, gaps. */
+/**
+ * Ref-fanout proof for composeRefs: object refs, function-ref cleanups,
+ * and gaps. Runs against plain ref objects in happy-dom; the root proves
+ * the composed host wiring.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { composeRefs } from './refs'
 

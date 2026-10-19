@@ -18,16 +18,7 @@ validates and searches logical items. Navigation steps mounted arrows.
 Shared holds the diagnostic and id hygiene. Pure decisions carry
 colocated unit tests; browser behavior proves out in CT.
 
-| Module | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Input, Trigger, Popover, Option, VirtualItem |
-| [`hooks/`](./hooks) | Session, registry, authority, active, open, virtual, text, commits, resolver |
-| [`authored.ts`](./authored.ts) | Authored-children scan and adapter guards |
-| [`autocomplete.ts`](./autocomplete.ts) | Inline-completion decisions |
-| [`virtual-focus.ts`](./virtual-focus.ts) | Logical validation, search, stepping |
-| [`navigation/`](./navigation) | Mounted arrow stepping and commit guard |
-| [`shared/`](./shared) | Diagnostic and id hygiene |
-| [`combobox-context.ts`](./combobox-context.ts) | Shared scope (the Law 3 allowance) |
-
 `combobox-context.ts` keeps its path because Listbox and Tree import the
 shared scope directly; its name is the exception that proves the shape.
+
+Up: [components](../components.md).

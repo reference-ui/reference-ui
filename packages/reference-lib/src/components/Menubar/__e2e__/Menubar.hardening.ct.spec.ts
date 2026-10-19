@@ -1,3 +1,8 @@
+/**
+ * Menubar consumer and lifecycle contracts in the browser. Cancellation
+ * ordering, silent programmatic updates, and live registry dynamics
+ * must hold without stale emissions or inherited intent.
+ */
 import { test, expect } from '../../../../playwright/ct'
 import type { ComponentProps } from 'react'
 import type { ContractHarness } from '../Menubar.story'

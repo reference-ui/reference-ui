@@ -1,3 +1,9 @@
+/**
+ * FocusLock browser proofs: composition gates across init, tab loop,
+ * reclaim, shards, catalog, nesting, restore, and DOM rows. Mounts the
+ * fixture lab and asserts containment, arbitration, and restoration in
+ * a real browser.
+ */
 import { test, expect, snap } from '../../../../playwright/ct'
 
 // Landing-sequence engine scope: `engineOf` sniffs the Playwright project

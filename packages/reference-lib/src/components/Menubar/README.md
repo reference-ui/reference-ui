@@ -18,9 +18,4 @@ pure function of keys and ordered values. Shared holds the dev diagnostic
 every part warns through. Pure moves carry colocated unit tests; mounted
 behavior proves out in colocated Vitest and CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Menu scope, Trigger, Content |
-| [`hooks/`](./hooks) | Bar state: value, registry, adjacency |
-| [`nav/`](./nav) | Pure arrow/adjacency move computation |
-| [`shared/`](./shared) | Dev warning channel |
+Up: [components](../components.md).

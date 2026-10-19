@@ -20,11 +20,4 @@ geometry. Parts render the root, nested scope, trigger, content, and
 every item kind. Pure decisions carry colocated unit tests; mounted
 behavior proves out in colocated Vitest and CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Root, nested, trigger, content, items |
-| [`hooks/`](./hooks) | Entry keys, levels, focus/press/travel effects |
-| [`levels/`](./levels) | Entry cell, intent state, tree orderings |
-| [`focus/`](./focus) | Restore, item discovery, owning-root reads |
-| [`intent/`](./intent) | Pointer grace-polygon geometry |
-| [`shared/`](./shared) | Pointer capability, dev warning channel |
+Up: [components](../components.md).

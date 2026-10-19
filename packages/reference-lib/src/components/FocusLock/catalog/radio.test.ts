@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for named-radio collapsing against collected group state. */
+/**
+ * Named-radio proof: collapsing radio groups against collected state.
+ * Runs in happy-dom against real inputs; the catalog consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { collectRadioState, includeRadio } from './radio'
 

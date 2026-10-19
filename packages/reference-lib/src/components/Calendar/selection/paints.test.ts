@@ -1,3 +1,7 @@
+/**
+ * Collection-paint proof: range paint over the month/year collections.
+ * Pure paint resolution with no DOM; the collection parts render it.
+ */
 import { describe, expect, it } from 'vitest'
 import { monthRangePaint, yearRangePaint } from './paints'
 

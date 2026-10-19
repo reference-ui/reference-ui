@@ -1,3 +1,10 @@
+/**
+ * Accordion CT fixtures: the controlled contract harness plus one story
+ * per proof area — single/multiple expansion, header traversal and its
+ * boundaries, disabled and content keys, dynamic order, tab sequence,
+ * nesting, presence, FAQ/settings compositions, and find-in-page swaps.
+ * Mounted by the e2e specs; not a public API.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { ReferenceLibrary } from '../ReferenceLibrary'

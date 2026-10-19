@@ -17,13 +17,7 @@ alias, and unfold. Shared holds the prop merging and caret restore
 both machines ask. Pure decisions carry colocated unit tests; browser
 behavior proves out in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`engine/`](./engine) | Locale parse/format, constraints, stepping |
-| [`slots/`](./slots) | Shared part registry for both hosts |
-| [`hooks/`](./hooks) | Edit session, range draft, form observers |
-| [`parts/`](./parts) | Registrars, Calendar alias, layouts, picker layers |
-| [`shared/`](./shared) | Prop merging, caret restore |
-
 Two roots, not one: `DateField.tsx` and `DateFieldRange.tsx` are sibling
 hosts over the same engine, slots, and shared helpers. The deep import of Calendar's date kernel is internal to the Calendar and DateField pair, not a public contract.
+
+Up: [components](../components.md).

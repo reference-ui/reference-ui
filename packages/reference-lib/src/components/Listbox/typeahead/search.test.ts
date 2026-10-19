@@ -1,3 +1,7 @@
+/**
+ * Typeahead proof: buffer advance and wrapping match order. Pure search
+ * with no DOM; the typeahead hook consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   advanceTypeaheadQuery,

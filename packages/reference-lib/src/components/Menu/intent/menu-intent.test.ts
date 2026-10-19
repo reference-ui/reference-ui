@@ -1,3 +1,7 @@
+/**
+ * Intent-polygon proof: grace geometry across submenu travel. Pure
+ * geometry with no DOM; the travel effect consumes it.
+ */
 import { describe, it, expect } from 'vitest'
 import {
   evaluateSubmenuIntent,

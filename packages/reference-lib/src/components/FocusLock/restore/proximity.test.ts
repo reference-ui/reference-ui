@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
-/** Isolation proof for proximity restore: right, left, subtree, ancestor. */
+/**
+ * Proximity proof: right, left, subtree, and ancestor fallback. Runs in
+ * happy-dom against real nodes; restore ranking consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { findFocusableProximity } from './proximity'
 

@@ -1,3 +1,8 @@
+/**
+ * Keyboard-move proof: day-grid arrows, Home/End, and page moves with
+ * bounds and unavailable-day handling. Pure move resolution without
+ * touching selection; browser focus proves out in CT.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   resolveArrowTarget,

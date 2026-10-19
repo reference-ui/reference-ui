@@ -1,4 +1,7 @@
-/** Isolation proof for nextLockId: unique lock-N tokens across calls. */
+/**
+ * Lock-id proof: unique lock-N tokens across calls. Pure counter with no
+ * DOM; sessions label themselves from it.
+ */
 import { describe, expect, it } from 'vitest'
 import { nextLockId } from './ids'
 

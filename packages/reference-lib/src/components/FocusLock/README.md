@@ -18,16 +18,9 @@ decides each Tab step and reclaim landing. Restore decides where deactivation
 returns focus. Shared holds the nameless element plumbing all of them ask.
 Pure decisions carry colocated unit tests; browser behavior proves out in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`hooks/`](./hooks) | Session, memory, restore, activation, containment |
-| [`catalog/`](./catalog) | Tabbable candidate catalog and ordering |
-| [`stack/`](./stack) | Nested-lock arbitration per document |
-| [`containment/`](./containment) | Tab loop and reclaim-landing decisions |
-| [`restore/`](./restore) | Origin capture, proximity, restore ranking |
-| [`shared/`](./shared) | Focus, membership, targets, refs, ids |
-
 There is no `parts/` — the lock has one transparent rendering, owned by the
 root — and no `context.ts`: with no compound parts, there is no subtree to
 scope. Cross-component consumers (Toast's focus restore) import the domain
 folders directly; no compatibility re-exports live at root.
+
+Up: [components](../components.md).

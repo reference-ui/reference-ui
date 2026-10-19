@@ -1,3 +1,8 @@
+/**
+ * Calendar Book gallery: single date, range, Monday-first, and
+ * constrained panes with self-managed state. Manual visual stories
+ * only; the contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { Calendar, type DateRangeValue } from './index'

@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/**
+ * Level-registry proof: descendant orderings and deepest-first closing.
+ * Pins the tree walks dismissal and nesting both rely on.
+ */
 import { describe, expect, it } from 'vitest'
 import type { MenuLevelValue, SubmenuRegistration } from '../context'
 import {

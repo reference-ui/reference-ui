@@ -1,3 +1,7 @@
+/**
+ * Announcer diagnostic proof: prefixed warnings, once per message shape.
+ * Pins the dev channel every runtime module warns through.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { announcerDiagnostic } from './warn'
 

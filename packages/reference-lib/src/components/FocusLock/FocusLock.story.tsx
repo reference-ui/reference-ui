@@ -1,3 +1,8 @@
+/**
+ * FocusLock CT fixture: one switchable lab mounting MiniLock plus the
+ * catalog, shadow, shard, stack, restore, and tab-order probes CT drives
+ * by test id. Mounted by the browser spec; not a public API.
+ */
 import * as React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { FocusLock } from './FocusLock'

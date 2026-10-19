@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Menu mounted proof: trigger keys, focus restore, hydration, nesting,
+ * choice ordering, and the link-item matrix. Runs in happy-dom with real
+ * trees; levels, travel, and dismissal prove out in CT.
+ */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'

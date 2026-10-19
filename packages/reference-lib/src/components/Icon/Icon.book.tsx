@@ -1,3 +1,8 @@
+/**
+ * Icon Book gallery: the full @reference-ui/icons set plus button-height
+ * scale and batch probes. Renders every exported icon with size and color
+ * controls; no component implementation lives here.
+ */
 import * as React from 'react'
 import { Div, Span, Button, Input, P, H3, H4 } from '@reference-ui/react'
 import * as AllIcons from '@reference-ui/icons'

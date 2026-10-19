@@ -1,4 +1,10 @@
 // @vitest-environment happy-dom
+/**
+ * Calendar contract: rendering and selection, the fail-closed prop gate,
+ * locale/grid/availability, month/year views, and out-of-range values.
+ * Runs in happy-dom with real roots; keyboard and commit discipline
+ * prove out in CT.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'

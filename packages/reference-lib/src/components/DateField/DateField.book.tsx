@@ -1,3 +1,8 @@
+/**
+ * DateField Book gallery: atomic input, folded picker, and picker-bound
+ * fields with self-managed state. Manual visual stories only; the
+ * contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Span } from '@reference-ui/react'
 import { DateField } from './index'

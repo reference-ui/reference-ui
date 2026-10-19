@@ -1,3 +1,7 @@
+/**
+ * Entry-intent proof: the planted first/last strategy cell. Pure cell
+ * semantics with no DOM; the root consumes it once per open.
+ */
 import { describe, expect, it } from 'vitest'
 import { UNCONSUMED, consumeMenuEntryIntent, setMenuEntryIntent } from './entry'
 

@@ -1,3 +1,8 @@
+/**
+ * Multi-toggle proof: computeNextMultipleSelection across toggles,
+ * unknowns, and collection order. Pure reducer with no DOM; the
+ * selection hook consumes it.
+ */
 import { describe, expect, it } from 'vitest'
 import { computeNextMultipleSelection } from './multiple'
 

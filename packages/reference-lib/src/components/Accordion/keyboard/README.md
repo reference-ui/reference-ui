@@ -6,3 +6,5 @@ Home lands first, and End lands last. Traversal computes the indices
 over enabled stops; scope decides which buttons belong to this root
 (its own expanded-state buttons, never content-bound or nested ones)
 and which key sources to ignore.
+
+Up: [Accordion](../README.md).

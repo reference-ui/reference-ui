@@ -1,3 +1,8 @@
+/**
+ * Menu CT fixtures: basic and parity menus, submenus, links, choices,
+ * adjacent and shadow probes, RTL, dynamics, and a context menu. Mounted
+ * by the e2e spec; not a public API.
+ */
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { Div, Span } from '@reference-ui/react'

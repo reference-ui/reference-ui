@@ -1,4 +1,8 @@
-/** Isolation proof: exiting-content lockdown, force-mount interactivity, author pass-through. */
+/**
+ * Isolation proof: exiting-content lockdown, force-mount interactivity,
+ * and author pass-through. Pure state decisions with no DOM; the
+ * isolation hook applies them.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveContentIsolation } from './state'
 

@@ -1,4 +1,8 @@
-/** Traversal-math proof: wrap-around arrows, disabled skips, Home/End landings. */
+/**
+ * Traversal-math proof: wrap-around arrows, disabled skips, and Home/End
+ * landings. Pure index computation over enabled stops; header scope and
+ * browser focus prove out in the sibling and CT suites.
+ */
 import { describe, expect, it } from 'vitest'
 import {
   findNextEnabledIndex,

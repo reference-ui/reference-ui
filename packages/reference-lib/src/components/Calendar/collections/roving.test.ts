@@ -1,3 +1,7 @@
+/**
+ * Collection-roving proof: month/year rover movement and edge behavior.
+ * Pure index decisions with no DOM; mounted roving proves out in CT.
+ */
 import { describe, expect, it } from 'vitest'
 import { computePreferredCell, nearestEnabledCell, type RovingCell } from './roving'
 

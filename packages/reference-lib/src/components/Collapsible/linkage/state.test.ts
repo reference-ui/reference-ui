@@ -1,4 +1,8 @@
-/** Linkage proof: aria-controls across mount/exit, border collapse, style merge. */
+/**
+ * Linkage proof: aria-controls across mount/exit, border collapse, and
+ * style merge. Pure addressing decisions with no DOM; the parts render
+ * from their result.
+ */
 import { describe, expect, it } from 'vitest'
 import { resolveTriggerLinkage, resolveTriggerStyle } from './state'
 

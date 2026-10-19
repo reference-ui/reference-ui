@@ -1,3 +1,7 @@
+/**
+ * Menubar-nav proof: pure arrow and adjacency move computation. No DOM;
+ * the state hook answers from its result.
+ */
 import { describe, expect, it } from 'vitest'
 import { adjacentMenubarValue, menubarArrowDirection } from './menubar-nav'
 

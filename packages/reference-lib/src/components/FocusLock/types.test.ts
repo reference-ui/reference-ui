@@ -1,3 +1,7 @@
+/**
+ * FocusLock type proof: the documented child shape and focus option
+ * unions. Compile-time only; runtime child validation proves out in CT.
+ */
 import type * as React from 'react'
 import { describe, expectTypeOf, it } from 'vitest'
 import type { FocusLockProps, FocusTarget } from './FocusLock'

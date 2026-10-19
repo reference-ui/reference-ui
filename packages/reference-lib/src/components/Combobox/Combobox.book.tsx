@@ -1,3 +1,8 @@
+/**
+ * Combobox Book gallery: searchable, sectioned, described, and
+ * select-only pickers with self-managed state. Manual visual stories
+ * only; the contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Button, Div, Span } from '@reference-ui/react'
 import { KeyboardArrowDownIcon } from '@reference-ui/icons'

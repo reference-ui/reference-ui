@@ -1,3 +1,7 @@
+/**
+ * Virtual-focus proof: logical validation, search, and windowed stepping.
+ * Pure helpers with no DOM; virtual grids consume them.
+ */
 import { describe, expect, it } from 'vitest'
 import type { VirtualFocusItem } from '../Listbox'
 import {

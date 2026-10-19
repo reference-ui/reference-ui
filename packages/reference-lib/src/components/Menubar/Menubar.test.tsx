@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Menubar mounted proof: open coordination, duplicate and default value
+ * handling, hydration, and trigger switching. Runs in happy-dom with
+ * real bars; menu switching and escape prove out in CT.
+ */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'

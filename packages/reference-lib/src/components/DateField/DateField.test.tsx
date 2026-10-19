@@ -1,3 +1,8 @@
+/**
+ * DateField guard proof: required locale, value, and onChange plus
+ * constraint-bound validation and out-of-range display. Failure-first
+ * contracts with no browser; mounted behavior proves out in CT.
+ */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'

@@ -1,4 +1,8 @@
-/** Item-detection proof: known identities, disclosure duck-typing, host rejects. */
+/**
+ * Item-detection proof: known identities, disclosure duck-typing, and
+ * host rejects. Pure element reads with no mount; collection order proves
+ * out in the sibling collect suite.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { isItemElement } from './match'

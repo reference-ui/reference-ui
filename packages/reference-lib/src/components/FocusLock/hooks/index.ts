@@ -1,4 +1,8 @@
-/** FocusLock hooks: session, memory, restore, activation, containment. */
+/**
+ * FocusLock hooks: session, memory, restore, activation, and containment.
+ * Re-exports the bindings the root composes in effect order; no logic
+ * lives here.
+ */
 export { useLockSession } from './use-lock-session'
 export type { FocusLockSession } from './use-lock-session'
 export { useShards } from './use-shards'

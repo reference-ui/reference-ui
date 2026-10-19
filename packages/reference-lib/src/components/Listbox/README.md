@@ -18,16 +18,8 @@ Shared tells the option's own events apart from in-row interactivity.
 Pure decisions carry colocated unit tests; browser behavior proves out
 in CT.
 
-| Folder | Role |
-| :--- | :--- |
-| [`parts/`](./parts) | Option row, Section, Header, Empty |
-| [`hooks/`](./hooks) | Session, registry, focus, selection, navigation, typeahead, option wiring |
-| [`selection/`](./selection) | Multi-toggle reducer |
-| [`virtual/`](./virtual) | Adapter validation contract |
-| [`typeahead/`](./typeahead) | Buffer advance and wrapping match order |
-| [`navigation/`](./navigation) | Arrow-target index resolution |
-| [`shared/`](./shared) | Interactive-descendant press guard and dev warn channel |
-
 `context.ts` scopes the private option subtree (the Law 3 allowance):
 options read selection, focus, registration, typeahead, and navigation
 from it, and read the Combobox context directly when nested.
+
+Up: [components](../components.md).

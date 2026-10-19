@@ -1,3 +1,8 @@
+/**
+ * Field type proof: role and validity ARIA stay omitted from the public
+ * props. Compile-time only; runtime stripping proves out beside it and
+ * in CT.
+ */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { Field, type FieldProps } from './index'

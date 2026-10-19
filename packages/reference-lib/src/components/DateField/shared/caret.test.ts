@@ -1,3 +1,7 @@
+/**
+ * Caret-restore proof: restoreCaretAt across segments and edits. Pins
+ * the offsets the edit machines apply after each commit.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import { restoreCaretAt } from './caret'
 

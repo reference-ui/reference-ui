@@ -1,4 +1,8 @@
-/** Isolation proof for assignRef: function, object, and absent refs. */
+/**
+ * Ref-assignment proof for assignRef: function, object, and absent refs.
+ * Runs against plain ref objects; the composed hook proves the host
+ * wiring.
+ */
 import type * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { assignRef } from './refs'

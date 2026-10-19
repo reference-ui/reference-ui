@@ -1,3 +1,8 @@
+/**
+ * Calendar public barrel: the compound root plus the curated ISO kit.
+ * Re-exports the root module, then the Gregorian date, week, and grid
+ * helpers by name — the only dates/ members that leave this component.
+ */
 export * from './Calendar'
 // Gregorian ISO kit (ported verbatim from b19c73bee; see dates/iso.ts).
 // Curated — NOT `export *` — so only the names listed here leave dates/iso.ts.

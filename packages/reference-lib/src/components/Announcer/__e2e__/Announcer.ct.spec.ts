@@ -1,3 +1,8 @@
+/**
+ * Announcer browser proofs: API routing, live-region DOM, live speech,
+ * lifecycle replay, and Overlay exemption rows. Mounts the story
+ * fixtures and asserts AT-observable insertions, never toast visuals.
+ */
 import type { Page } from '@playwright/test'
 import { test, expect } from '../../../../playwright/ct'
 

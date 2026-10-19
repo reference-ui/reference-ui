@@ -1,3 +1,8 @@
+/**
+ * Menu Book gallery: standard dropdown, trigger variants, nested
+ * submenu, and link items with self-managed state. Manual visual
+ * stories only; the contract fixtures CT mounts live in the story file.
+ */
 import * as React from 'react'
 import { Div, Span, H3, H4, P } from '@reference-ui/react'
 import { KeyboardArrowDownIcon } from '@reference-ui/icons'

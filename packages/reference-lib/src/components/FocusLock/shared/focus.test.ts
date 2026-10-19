@@ -1,5 +1,9 @@
 // @vitest-environment happy-dom
-/** Isolation proof for deepActiveElement and safeFocus across shadow roots. */
+/**
+ * Deep-focus proof: deepActiveElement and safeFocus across shadow roots.
+ * Runs in happy-dom against real trees; containment and restore consume
+ * them.
+ */
 import { describe, expect, it } from 'vitest'
 import { deepActiveElement, safeFocus } from './focus'
 

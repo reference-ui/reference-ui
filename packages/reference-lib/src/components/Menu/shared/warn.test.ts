@@ -1,3 +1,7 @@
+/**
+ * Menu diagnostic proof: devWarn shape and channel. Pins the warning
+ * every Menu module reports through.
+ */
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { devWarn } from './warn'
 

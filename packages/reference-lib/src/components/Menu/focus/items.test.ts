@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/**
+ * Item-discovery proof: single-level scoping, first/edge moves, and the
+ * pointer-open roving mirror. Runs in happy-dom against real menus;
+ * entry focus consumes it.
+ */
 import type * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import {

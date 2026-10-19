@@ -1,3 +1,8 @@
+/**
+ * Active-step proof: stepActiveValue and mountedValue across enabled,
+ * disabled, and absent options. Pure stepping with no DOM; the keyboard
+ * hooks consume it.
+ */
 import { describe, expect, it, vi } from 'vitest'
 import type { ComboboxOptionEntry } from '../combobox-context'
 import { mountedValue, stepActiveValue } from './step'
