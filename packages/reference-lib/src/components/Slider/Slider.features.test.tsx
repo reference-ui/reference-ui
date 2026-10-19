@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Mounted proof for the Slider FEATURES pins: required value with no
+ * uncontrolled props, mount-order thumb binding (SD-DYNAMIC-01),
+ * modified-arrow pass-through (SD-KEY-07), and the `data-dragging`
+ * session markers on Root and active Thumb (SD-POINTER-07). */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

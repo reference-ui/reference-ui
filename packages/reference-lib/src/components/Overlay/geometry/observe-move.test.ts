@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for `observeMove`, the layout-shift detector behind living
+ * position: zero-size boxes register no observer, shifts past 0.5px
+ * fire `onMove`, and teardown disconnects observers and clears pending
+ * offscreen timeouts. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { observeMove } from './observe-move'
 

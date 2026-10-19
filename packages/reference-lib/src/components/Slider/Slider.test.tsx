@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Geometry and visual-parity proof for Slider: horizontal and vertical
+ * track chrome, bottom-to-top range fill, and direction-sized thumbs
+ * hold DSP fader-cap parity. Interaction sessions pin down in the
+ * patches, features, and tail suites. */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

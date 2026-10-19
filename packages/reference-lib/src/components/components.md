@@ -484,10 +484,11 @@ type OverlayIsolation =
     }
 
 type OverlayAnchor =
-  | Element
-  | DOMRect
-  | { getBoundingClientRect(): DOMRect }
+  | HTMLElement
+  | { getBoundingClientRect(): DOMRect } // virtual anchor
+  | React.RefObject<HTMLElement | null>
   | { x: number; y: number; width?: number; height?: number }
+  | null
 
 type FocusTarget =
   | React.RefObject<HTMLElement | null>
@@ -710,7 +711,7 @@ interface PopoverArrowProps extends OverlayArrowProps {}
 
 Toast provides the infrastructure for transient application content without prescribing its appearance or meaning.
 
-Reference UI manages mounting, queueing, stacking, timing, dismissal, accessible announcements, and coordination with other interface elements. It does not include semantic variants such as `success`, `error`, or `loading`. Applications define those concepts themselves.
+Reference UI manages mounting, queueing, stacking, timing, dismissal, accessible announcements, and coordination with other interface elements. The callable ships Sonner-vocabulary entries — `message`, `custom`, the `success`/`error`/`warning`/`info`/`loading` type stamps, `promise` rewriting, and generation-guarded `define` — over one record core; applications define richer notification concepts themselves with `toast.define()`.
 
 Timers pause while pointer or keyboard focus is inside a toast and while a
 modal Overlay is the top layer. Focused toast content restores the prior safe
@@ -777,7 +778,7 @@ interface ToastControls {
 }
 ```
 
-Definitions can replace one another while preserving the identity of an existing toast. This allows applications to model any lifecycle without Reference UI defining concepts such as loading or success.
+Definitions can replace one another while preserving the identity of an existing toast. This allows applications to model any lifecycle — a pending upload becoming its completion — on top of the built-in type stamps rather than around them.
 
 ```tsx
 const UploadingToast = toast.define({
@@ -866,6 +867,34 @@ interface ToastOptions {
   announce?: string
   document?: Document
 }
+
+toast(
+  message: React.ReactNode,
+  options?: DefaultToastOptions
+): ToastId
+
+toast.message(
+  message: React.ReactNode,
+  options?: DefaultToastOptions
+): ToastId
+
+toast.custom(
+  render: (id: ToastId) => React.ReactNode,
+  options?: ToastOptions
+): ToastId
+
+toast.success(
+  message: React.ReactNode,
+  options?: DefaultToastOptions
+): ToastId
+// toast.error, toast.warning, toast.info: same shape, other type stamp.
+// toast.loading pins duration: false until it is updated or dismissed.
+
+toast.promise<T>(
+  promise: Promise<T> | (() => Promise<T>),
+  data: PromiseData<T>, // loading/success/error, each static or derived
+  options?: ToastOptions
+): Promise<T> & { unwrap: () => Promise<T> }
 
 toast.define<Props>(
   definition: ToastDefinition<Props>
@@ -1046,24 +1075,33 @@ children. Labels and form serialization stay application HTML.
 ```
 
 ```ts
-interface SwitchProps
-  extends Omit<
-    ReferencePartProps<"button">,
-    "onChange" | "type" | "role" | "aria-checked" | "aria-pressed"
-  > {
-  checked: boolean
-  onChange?: (checked: boolean) => void
+type SwitchProps = Omit<
+  ReferencePartProps<"button">,
+  | "onChange"
+  | "type"
+  | "role"
+  | "aria-checked"
+  | "aria-pressed"
+  | "data-state"
+  | "data-disabled"
+> & {
+  checked?: boolean
+  defaultChecked?: boolean
+  onChange?: (
+    checked: boolean,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => void
   disabled?: boolean
 }
 
-interface SwitchThumbProps
-  extends ReferencePartProps<"span"> {}
+type SwitchThumbProps = ReferencePartProps<"span">
 ```
 
 `Switch` renders `button[type=button][role=switch]`. Authored `Switch.Thumb`
 replaces the default thumb `span`. StyleProps on `Switch` do not leak onto
-the thumb. `checked` is required and controlled. `onChange` requests the
-opposite boolean. There is no mixed state, hidden form control, or geometry
+the thumb. `checked` is controlled-or-uncontrolled (`defaultChecked` seeds
+the latter). `onChange` requests the opposite boolean with the click event.
+There is no mixed state, hidden form control, or geometry
 custom property. A wrapping `<label>` is valid at either specificity.
 
 ### NumberField
@@ -1102,9 +1140,11 @@ generated hidden input carrying the
 canonical controlled number. Input may hold a localized partial/dirty string,
 but `onChange(number | null)` remains the only durable state request.
 
-`commitBehavior="snap"` uses one `step` lattice and preserves finite non-grid
-bounds; `"validate"` keeps finite underflow, overflow, and step mismatch while
-publishing managed invalid state. Arrow and stepper actions use `step`; Shift
+`commitBehavior` defaults to `"none"`: clamp at commit, never snap, no
+managed invalid state. `"snap"` uses one `step` lattice and preserves finite
+non-grid bounds; `"validate"` keeps finite underflow, overflow, and step
+mismatch while publishing managed invalid state and reporting attempts
+through `onInvalidCommit`. Arrow and stepper actions use `step`; Shift
 uses `10 * step`. Wheel stepping, alternate step scales, parser overrides,
 translated fallback labels, uncontrolled values, and a public raw-text state
 are deliberately absent. Exact managed native/ARIA omissions are specified in
@@ -1120,7 +1160,11 @@ interface NumberFieldProps
   min?: number
   max?: number
   step?: number
-  commitBehavior?: "snap" | "validate"
+  commitBehavior?: "snap" | "validate" | "none"
+  onInvalidCommit?: (
+    attempted: number,
+    reason: "off-step" | "out-of-range"
+  ) => void
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
@@ -1531,8 +1575,9 @@ interface RovingFocusItemProps extends ReferenceSlotPartProps {
 ```
 
 `orientation="both"` is the picker-grid case: arrows move in two dimensions.
-Omitted behavior is horizontal, non-looping, and typeahead-off; Listbox and
-Menu turn typeahead on. Tabs leave it off.
+Omitted behavior is horizontal, non-looping, and typeahead-off; Menu turns
+typeahead on and Tabs leave it off. Listbox does not take this prop — it
+runs its own typeahead kernel over a local roving hook.
 
 ### Transparent part merge rules
 

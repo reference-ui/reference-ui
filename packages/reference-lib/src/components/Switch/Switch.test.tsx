@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Environment proof for Switch: hydration without mismatch, one
+ * registration under StrictMode replay (SW-ENV-01/02), the click event
+ * as the second `onChange` argument (FEATURES-05), and exactly one
+ * thumb for Fragment-wrapped and HOC-forwarded shapes. */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'

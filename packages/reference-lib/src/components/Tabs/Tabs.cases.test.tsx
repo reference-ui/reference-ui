@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Mounted proof for the Tabs SELECT cases: pointer press requests
+ * exactly once with focus (TB-SELECT-01), rejected requests retain
+ * controlled selection (TB-SELECT-02), preventDefault cancels, and the
+ * press-then-click path dedupes (TB-SELECT-05/06/08). */
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'

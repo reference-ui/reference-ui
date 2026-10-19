@@ -1,4 +1,7 @@
 // @vitest-environment happy-dom
+/** Unit proof for the registry kernel ordering: null entries stay live
+ * so unmeasured tabs keep order, connected sorts by live document
+ * position, detached drops, and identical entries stay stable. */
 import { describe, expect, it } from 'vitest'
 import { byDocumentPosition, isLiveElement } from './order'
 

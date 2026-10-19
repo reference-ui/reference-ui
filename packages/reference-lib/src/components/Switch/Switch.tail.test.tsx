@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Composition proof for Switch: StyleProps stay isolated between track
+ * and authored Thumb (SW-DOM-08), a settings row composes a
+ * low-specificity labelled Switch (SW-COMP-01), and activation plus
+ * labeling stay local inside an open ShadowRoot (SW-ENV-03). */
 import * as React from 'react'
 import { describe, expect, it } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

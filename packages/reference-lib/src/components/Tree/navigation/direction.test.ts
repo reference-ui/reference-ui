@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for Tree's reading-direction resolution: the first
+ * `[dir]` hit wins in light DOM, shadow hosts climb to their hit, and
+ * `document.dir` is the last fallback. The keyboard hook mirrors
+ * expand/collapse on the answer. */
 import { describe, expect, it } from 'vitest'
 import { resolveIsRtl } from './direction'
 

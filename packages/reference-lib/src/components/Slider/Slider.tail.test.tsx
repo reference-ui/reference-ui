@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Mounted proof for the Slider SD-DOM behavior contracts: form
+ * inertness, global and neighbor ARIA bounds, consumer DOM-prop and
+ * naming preservation across drag and disable, and value stability
+ * while disabled. Pure math pins down in `math/` and `interaction/`. */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

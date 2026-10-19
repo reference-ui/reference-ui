@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Proof for the MyTabs system-variant demo (TB-SYS-01): custom variant
+ * names type through the author recipe and the open kernel prop,
+ * render through author classes over the kernel base, and override
+ * built-ins through `css()` composition. */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

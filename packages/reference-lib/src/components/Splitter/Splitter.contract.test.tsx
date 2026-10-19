@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Contract proof for Splitter: resize-callback, constraint, and
+ * controlled types survive the v1 API (SP-TYPE-01), and server renders
+ * emit safe fallback geometry and separator ARIA — measured strings
+ * unconstrained, no warnings, no layout reads — before client
+ * registration resolves order (SP-ENV-01). */
 import * as React from 'react'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'

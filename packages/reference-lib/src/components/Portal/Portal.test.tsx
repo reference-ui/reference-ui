@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Component proof for Portal and layer-scope inheritance: the scope
+ * reset re-anchors `data-layer` at the destination, container swaps
+ * replace exactly once, null-resolving destinations wait without a
+ * transient body copy, and SSR emits no portal markup before the mount
+ * gate attaches exactly one body child (PT-ENV-01/02). */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createRoot, hydrateRoot, type Root } from 'react-dom/client'

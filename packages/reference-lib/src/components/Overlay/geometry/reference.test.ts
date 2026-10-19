@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Unit proof for `resolveReference`: edge sheets resolve null, explicit
+ * element anchors beat the trigger, virtual rects, points, and ref
+ * objects all resolve, and a Field bezel around the trigger lifts to
+ * the reference. Pure over DOM nodes; no positioning runs here. */
 import { describe, expect, it } from 'vitest'
 import { resolveReference } from './reference'
 

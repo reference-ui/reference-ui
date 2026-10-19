@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+/** Mounted regression pins for Slider keyboard sessions: horizontal
+ * arrows reverse under inherited RTL while vertical semantics stay put
+ * (SD-KEY-02/03), page steps snap with one callback per keydown
+ * (SD-KEY-04), and repeats collapse to one interaction ending on
+ * keyup (SD-END-02). */
 import * as React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRoot, type Root } from 'react-dom/client'

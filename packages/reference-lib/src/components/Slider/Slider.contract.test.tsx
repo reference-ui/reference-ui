@@ -1,4 +1,8 @@
 // @vitest-environment happy-dom
+/** Contract proof for Slider: behavior-prop types survive the shared
+ * StyleProps surface (SD-TYPE-01), server renders carry value-derived
+ * ARIA without layout reads (SD-ENV-01), and out-of-range values clamp
+ * ARIA to the feasible window with a naming dev warning. */
 import * as React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
