@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-060",
+  "name": "Calendar CT CA-KEY-01/05: arrows move by day and week, landing on unavailable days and stopping at bounds without wrapping"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-031",
+  "name": "DateField re-targets DF-COMP-04: DateField picker composes inside an open ShadowRoot"
+}

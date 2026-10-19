@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-094",
+  "name": "Calendar custom days + week start firstDayOfWeek overrides the locale default in both directions"
+}

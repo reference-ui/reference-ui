@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-061",
+  "name": "DateField.Range (FEATURES #2) DF-RANGE-04: typed inversion is preserved until Calendar completion normalizes"
+}

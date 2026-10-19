@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PORTAL-021",
+  "name": "Portal ShadowRoot event contract (FEATURES #1, PORTAL-OWNS) PT-ENV-03: ShadowRoot destination resolves after attach with no transient body copy"
+}

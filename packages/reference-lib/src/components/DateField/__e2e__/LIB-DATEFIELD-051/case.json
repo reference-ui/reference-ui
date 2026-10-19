@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-051",
+  "name": "DateField engine DF-BND-03: isDateUnavailable rejects typed dates exactly like min/max"
+}

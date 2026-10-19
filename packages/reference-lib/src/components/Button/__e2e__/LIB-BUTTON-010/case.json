@@ -1,0 +1,4 @@
+{
+  "id": "LIB-BUTTON-010",
+  "name": "Button Component BT-DIS-01: Disabled buttons do not fire clicks and show disabled styles"
+}

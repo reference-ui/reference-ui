@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-012",
+  "name": "DateField re-targets DF-DOM-01: childless DateField resolves directly to one visible text input"
+}

@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PORTAL-023",
+  "name": "Portal ShadowRoot event contract (FEATURES #1, PORTAL-OWNS) PT-COMP-03: Shadow composition preserves context and one logical React event sequence"
+}

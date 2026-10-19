@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-105",
+  "name": "Calendar day parts (FEATURES #5) CA-DAY-11: a renderer returning a foreign element diagnoses without cloning managed props"
+}

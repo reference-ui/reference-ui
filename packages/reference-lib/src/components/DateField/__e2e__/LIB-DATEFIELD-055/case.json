@@ -1,0 +1,4 @@
+{
+  "id": "LIB-DATEFIELD-055",
+  "name": "DateField stepping DF-KEY-07: a caret on a separator steps the nearest numeric segment"
+}

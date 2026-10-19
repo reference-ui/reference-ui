@@ -1,0 +1,4 @@
+{
+  "id": "LIB-PORTAL-024",
+  "name": "Portal ShadowRoot event contract (FEATURES #1, PORTAL-OWNS) PT-SHADOW-01: Switching destination into a ShadowRoot keeps React events firing"
+}

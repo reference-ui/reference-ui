@@ -1,0 +1,4 @@
+{
+  "id": "LIB-CALENDAR-096",
+  "name": "Calendar day parts (FEATURES #5) CA-DAY-02: the Day render state carries exactly ten fields for single, today, outside, and disabled dates"
+}
