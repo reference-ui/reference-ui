@@ -56,8 +56,16 @@ system may be named in both (`validateSharedBaseSystems`).
   first position in the expansion, and the order statement lists it once. The published
   payload keeps the full expansion, so a consumer dedupes at print as well. Pinned by
   CORE-LAYERS-11, which keeps the statement and the paints unchanged.
-- With upstreams, token scopes are disjoint. Each system declares its tokens on its own
-  `[data-layer]` stamps, and own also on the document (`:root`, `body`). Own's bare
+- With upstreams, each system declares its tokens on its own `[data-layer]` stamps and on the
+  stamps of every system it extends, and own also on the document (`:root`, `body`). Under
+  `extends` the app's token values therefore win inside the package's components, its own styles
+  and the app's alike, because the own block ranks last; under `layers` the package is never named
+  and keeps its own values. The extends closure is read from the fragment nodes a system evaluates
+  (`src/system/base/extended.ts`) and reaches the engine as `extendedSystems`. A package-only public
+  token paints the package's value either way, and a `_private` one is never in the app's
+  vocabulary. A stamp names the package that renders an element, not the one that composed it, so
+  under `layers: [b]` with b extending a, every a element takes b's values. Pinned by
+  CORE-LAYERS-19 (direct, light and dark) and CORE-LAYERS-20 (a chain). Own's bare
   `[data-color-mode=dark]` rule goes, so an upstream's layered root, which primitives stamp
   with `data-color-mode`, keeps the upstream's values. Standalone output is unchanged
   (`TokenScope::Isolated` in `system_layers/scope.rs`). Pinned by CORE-LAYERS-10, which reads

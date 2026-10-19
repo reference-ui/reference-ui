@@ -12,28 +12,36 @@ import type { BaseSystem } from './types.ts'
 const NAME = 'reference-ui'
 const ICONS = 'reference-icons'
 const DEFAULT_INCLUDE = ['src/**/*.{ts,tsx}']
-// The engine's Portable selectors, spelled out from atomic/src/stylesheet/system_layers/scope.rs.
-const PORTABLE_LIGHT = '[data-layer="reference-ui"], [data-layer="reference-ui"][data-color-mode=light]'
-const PORTABLE_DARK = '[data-layer="reference-ui"][data-color-mode=dark]'
+// The engine's Portable selectors, spelled out from atomic/src/stylesheet/system_layers/scope.rs. BASE
+// extends icons (its fragments carry the icons node), so its own token block claims the icons stamps
+// after its own; a base that only layers icons claims its own stamps alone.
+const OWN_LIGHT = '[data-layer="reference-ui"], [data-layer="reference-ui"][data-color-mode=light]'
+const OWN_DARK = '[data-layer="reference-ui"][data-color-mode=dark]'
+const PORTABLE_LIGHT = `${OWN_LIGHT}, [data-layer="reference-icons"], [data-layer="reference-icons"][data-color-mode=light]`
+const PORTABLE_DARK = `${OWN_DARK}, [data-layer="reference-icons"][data-color-mode=dark]`
 
-// The own entry's tokens as the engine prints them: a light rule, then a dark rule. `brand.soft` has no
-// dark value, so the base prints no dark rule for it; `brand.ink` and `brand.accent` do.
-const OWN_TOKENS = [
-  '@layer tokens {',
-  `  ${PORTABLE_LIGHT} {`,
-  '    --colors-brand-ink: #1f2937;',
-  '    --colors-brand-soft: #e5e7eb;',
-  '    --colors-brand-accent: #0d9488;',
-  '    --colors-gray-900: #111827;',
-  '    --colors-text-primary: var(--colors-gray-900);',
-  '  }',
-  `  ${PORTABLE_DARK} {`,
-  '    --colors-brand-ink: #e5e7eb;',
-  '    --colors-brand-accent: #5eead4;',
-  '  }',
-  '}',
-  '',
-].join('\n')
+// The own entry's tokens as the engine prints them under one stamp list: a light rule, then a dark rule.
+// `brand.soft` has no dark value, so the base prints no dark rule for it; `brand.ink` and `brand.accent` do.
+function ownTokensUnder(light: string, dark: string): string {
+  return [
+    '@layer tokens {',
+    `  ${light} {`,
+    '    --colors-brand-ink: #1f2937;',
+    '    --colors-brand-soft: #e5e7eb;',
+    '    --colors-brand-accent: #0d9488;',
+    '    --colors-gray-900: #111827;',
+    '    --colors-text-primary: var(--colors-gray-900);',
+    '  }',
+    `  ${dark} {`,
+    '    --colors-brand-ink: #e5e7eb;',
+    '    --colors-brand-accent: #5eead4;',
+    '  }',
+    '}',
+    '',
+  ].join('\n')
+}
+
+const OWN_TOKENS = ownTokensUnder(PORTABLE_LIGHT, PORTABLE_DARK)
 
 const ICON_TOKENS = [
   '@layer tokens {',
@@ -150,6 +158,36 @@ describe('extendSystem: the override block', () => {
     })
   })
 
+})
+
+describe('extendSystem: the claimed stamps', () => {
+  // The same base had it layered icons: icons still ships a stream entry, but no fragment node.
+  const LAYERED: BaseSystem = {
+    ...BASE,
+    fragments: BASE.fragments?.filter((node) => node.name === NAME),
+    streams: [
+      { name: ICONS, preamble: '@layer reset;\n', tokensPortable: ICON_TOKENS },
+      { name: NAME, preamble: '@layer reset, tokens;\n', tokensPortable: ownTokensUnder(OWN_LIGHT, OWN_DARK) },
+    ],
+  }
+
+  it('claims only its own stamps when the base layers its upstream', () => {
+    const next = extendSystem(LAYERED, { tokens: { colors: { brand: { ink: { value: '#0f766e', dark: '#5eead4' } } } } })
+    const appended = (next.streams?.[1]?.tokensPortable ?? '').slice(ownTokensUnder(OWN_LIGHT, OWN_DARK).length)
+
+    expect(selectorLines(appended)).toEqual([`  ${OWN_LIGHT} {`, `  ${OWN_DARK} {`])
+  })
+
+  it('still finds the dark rule of a base published before it claimed extended stamps', () => {
+    const legacy: BaseSystem = {
+      ...BASE,
+      streams: [BASE.streams?.[0] ?? { name: ICONS, preamble: '' }, { ...LAYERED.streams?.[1], name: NAME, preamble: '' }],
+    }
+    const next = extendSystem(legacy, { tokens: { colors: { brand: { ink: { value: '#ff0000' } } } } })
+    const appended = (next.streams?.[1]?.tokensPortable ?? '').slice(ownTokensUnder(OWN_LIGHT, OWN_DARK).length)
+
+    expect(declsUnder(appended, PORTABLE_DARK)).toEqual({ '--colors-brand-ink': '#ff0000' })
+  })
 })
 
 describe('extendSystem: the untouched entries', () => {

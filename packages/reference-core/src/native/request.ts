@@ -39,6 +39,12 @@ export interface CompileRequestInput {
    */
   upstreamSystems?: string[]
   /**
+   * The upstream systems whose tokens the vocabulary carries (the extends
+   * closure): the engine's token layer also claims their stamps. Set only
+   * when non-empty, so the CORE-SYNC-04 pin stays byte-identical.
+   */
+  extendedSystems?: string[]
+  /**
    * The names each extended upstream publishes, by system name. They stay
    * out of `jsxHosts`: an upstream's component is never an own host. Set
    * only when one names a component, so the CORE-SYNC-04 pin stays byte-identical.
@@ -69,6 +75,7 @@ export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRe
     // Arrays are truthy: `|| undefined` would keep the key present-empty and
     // break the CORE-SYNC-04 byte-diff, so length-gate instead.
     upstreamSystems: input.upstreamSystems?.length ? [...input.upstreamSystems] : undefined,
+    extendedSystems: input.extendedSystems?.length ? [...input.extendedSystems] : undefined,
     upstreamHosts: upstreamHostsField(input.upstreamHosts),
   }
 }

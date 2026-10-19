@@ -48,6 +48,14 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    */
   upstreamSystems?: string[]
   /**
+   * The upstream systems whose tokens this compile's vocabulary carries: the
+   * extends closure, never a layered system. The engine's own token layer also
+   * declares on their [data-layer] stamps, so this system's token values win
+   * inside their components. Carried structurally like `include`; undefined
+   * drops from the serialized request when nothing is extended.
+   */
+  extendedSystems?: string[]
+  /**
    * The names each extended upstream publishes, keyed by system name. The
    * engine drops them from the own roster: an upstream's component renders
    * through that package's runtime. Carried structurally like `include`;
