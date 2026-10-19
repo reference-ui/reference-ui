@@ -2,7 +2,7 @@
 
 `@reference-ui/mcp` is project-aware Model Context Protocol intelligence for Reference UI workspaces: token-efficient tools for AI coding assistants to discover, inspect, and style components, read design tokens, and search icons.
 
-Tool input schemas and output contracts: [tools.md](./tools.md). Agent instructions: [instructions.md](./instructions.md).
+Tool input schemas and output contracts live in the sibling tools note. Agent instructions live in the sibling instructions note.
 
 ## Customization tiers (`ui.config.ts`)
 
@@ -28,7 +28,7 @@ Projects shape their component and asset surface with boolean flags in `ui.confi
 
 ## Running
 
-Run `ref sync` once after installation or package updates, then start the server. It runs in the CLI process (`ref-mcp`, stdio or HTTP) — not in the sync worker pool — with shared catalog and query helpers in `src/pipeline/`.
+Run `ref sync` once after installation or package updates, then start the server. It runs in the CLI process (`ref-mcp`, stdio or HTTP) — not in the sync worker pool — with shared catalog and query helpers.
 
 ```shell
 # Stdio transport (for IDEs and AI agent configs):
@@ -38,4 +38,4 @@ pnpm exec ref-mcp
 pnpm exec ref-mcp --http --port 3000
 ```
 
-Part of [Reference UI](../../../README.md).
+Part of Reference UI.
