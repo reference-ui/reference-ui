@@ -10,9 +10,10 @@ The spec checks `system/jsx-elements.json` pins the 101 generated primitives
 beside `{ upstream: [], local: ['Card'], merged: ['Card'] }`, `baseSystem.jsxElements`
 is `['Card']`, `compile-request.json` keeps its six frozen keys with
 `jsxHosts` at primitives only (discovery is not in the request), the sheet
-carries exactly the Card-site utility with no `Random` ghost, `#card` paints
-4px of padding, both probes stay classless, and a second sync leaves the
-discovery artifacts byte-equal.
+carries the Card-site utility and `Random`'s `color`, which lowers under own
+as a component nobody traces (styling plan S3) though nothing mints its
+class, `#card` paints 4px of padding, both probes stay classless, and a
+second sync leaves the discovery artifacts byte-equal.
 
 Evidence: ATM-SITE-56 (engine twin: same Card/Random/Label world at
 the seam; frozen request). Siblings: CORE-SYNC-04 (request

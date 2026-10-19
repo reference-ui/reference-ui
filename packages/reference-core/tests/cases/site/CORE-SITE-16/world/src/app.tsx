@@ -1,7 +1,7 @@
 // Entry for the CORE-SITE-16 world. It takes the page root and emits two
 // namespaced panels: NS.Panel matches the configured NSPanel host so its
-// style props compile, while Other.Panel has no host so its backdrop stays
-// uncompiled and the browser proves the gate by painting nothing.
+// style props compile as a host's, while Other.Panel has no host, so it
+// lowers under own as project code and, being Div underneath, paints too.
 import { createRoot } from 'react-dom/client'
 import { Div } from '@reference-ui/react'
 
