@@ -3,14 +3,15 @@
  * site's nav logic in `website/src/lib/docs.ts`: docs group by their frontmatter
  * `category`, groups sort with `CATEGORIES_ORDER` first and the rest by name,
  * and pages sort by `GETTING_STARTED_PRIORITY` or by title. The live sidebar
- * labels each group with that raw category, so it is the `section`. The live
- * sitemap lists the same 65 docs URLs. The header tabs (Docs | Blog | Changelog)
- * link the blog and the changelog, so both are included with types `blog` and
- * `changelog`. The site's components have no source in the clone: demos are
- * inlined from `components/react/src/examples/`. Props tables come from the Ark UI
- * types of the component a page links to in its frontmatter (`links.ark`), laid out
- * as the Ark adapter lays out a part; a bare `<PropsTable />` is the Root part. Every
- * other element that the site builds from data outside the clone becomes a note.
+ * labels each group with that raw category, so it is the `section`, and the
+ * live sitemap lists the same 65 docs URLs. The header tabs
+ * (Docs | Blog | Changelog) link the blog and the changelog, so both are
+ * included with types `blog` and `changelog`. The site's components have no
+ * source in the clone: demos are inlined from `components/react/src/examples/`.
+ * Props tables come from the Ark UI types of the component a page links to in
+ * its frontmatter (`links.ark`), laid out as the Ark adapter lays out a part;
+ * a bare `<PropsTable />` is the Root part, and every other element the site
+ * builds from data outside the clone becomes a note.
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'

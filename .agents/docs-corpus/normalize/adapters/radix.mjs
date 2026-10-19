@@ -3,16 +3,16 @@
  * clone. The page list, titles, sections and order come from the three docs
  * nav configs (utils/themesRoutes.ts, primitivesRoutes.ts, colorsRoutes.ts);
  * the live docs sidebars list the same 121 pages. Bodies are read from
- * data/<slug>.mdx. Props data and code strings are lifted by
- * radix/jsx.mjs before the runner converts the page, and the component
- * hooks below render them. Demos come from components/demos. ThemesPropsTable
- * tables are read as text from the radix-ui/themes source clone (themes-src) by
+ * data/<slug>.mdx; demos come from components/demos. Props data and code
+ * strings are lifted by radix/jsx.mjs before the runner converts the page,
+ * and the component hooks below render them. ThemesPropsTable tables are read
+ * as text from the radix-ui/themes source clone (themes-src) by
  * radix/themes-props.mjs; a name it cannot resolve stays a note.
  *
- * Not docs, so excluded: the 15 case studies (the live site links them only
- * from its header's Case studies index, not from a docs page or the nav), and
- * the interactive pages /colors/custom and /themes/playground (no MDX in the clone).
- * Included outside the nav: blog/themes-3, which the live Themes Releases page links.
+ * Excluded as not docs: the 15 case studies (the live site links them only
+ * from its header's Case studies index) and the interactive pages
+ * /colors/custom and /themes/playground (no MDX in the clone); included
+ * outside the nav is blog/themes-3, which the live Themes Releases page links.
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'

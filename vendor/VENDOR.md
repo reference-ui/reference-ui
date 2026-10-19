@@ -6,9 +6,7 @@ Lift: algorithms, edge cases, tests. Leave: visual CSS, public React context
 contracts, `as` props, semantic variants, framework glue. Shared internal
 state uses Zustand as a direct dependency, not a vendored clone.
 
-```bash
-bash vendor/clone.sh
-```
+The clones are untracked checkouts beside this file, pinned to the revisions below.
 
 ## Surveyed revisions
 

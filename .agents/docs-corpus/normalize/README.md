@@ -71,7 +71,7 @@ Fenced code is never converted. Everything outside it:
 - `props`: the attributes. A `{...}` value arrives as its source text; `stringList(props.groups)` (from `lib/mdx.mjs`) reads a string array. A bare attribute is `true`.
 - `children`: the element's content as Markdown, blank runs collapsed (`''` if none).
 - `ctx`: `{ file, siteUrl, readImport, root, inline }`. `inline` is true when the element sits inside a sentence; its return value goes into the sentence as it is. `readImport(absPath)` returns the text of a file inside `root`, or `null`.
-- Return Markdown (several lines are fine), or `null` to leave the marker with the children kept. A throw fails the run and names the file and component.
+- Return Markdown (several lines are fine), or `null` to leave the marker with the children kept. A throw fails the run and names the component.
 - Hooks run before demo imports and the built-in renderers. `components` may be a named export or a property of the default export.
 
 ## Sections
