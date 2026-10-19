@@ -85,6 +85,9 @@ packages/reference-core/playground/.captures/
 # Claude Code agent sandboxes (isolation: "worktree").
 /.claude/worktrees/
 
+# Agent working plans and run reports: local only.
+/.claude/plans/
+
 # Agent measurement evidence (agent-rs flame/alloc/counters bundles): local only.
 /.agents/rs-evidence/
 .playwright-cli/
