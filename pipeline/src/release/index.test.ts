@@ -1,3 +1,8 @@
+/**
+ * Unit tests for release plan creation and formatting.
+ *
+ * Covers dependency ordering, materialization checks, and support gates.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

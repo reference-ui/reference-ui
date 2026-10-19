@@ -1,3 +1,8 @@
+/**
+ * Unit tests for build input hashing.
+ *
+ * Covers missing tracked files and symlink targets so fingerprint skips stay deterministic.
+ */
 import assert from 'node:assert/strict'
 import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

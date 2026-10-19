@@ -4,6 +4,8 @@
  * This folder owns both package.json shapes used by matrix testing:
  * - the monorepo fixture package.json managed by pipeline for local commands
  * - the synthetic consumer package.json generated inside Dagger
+ *
+ * Both shapes share centrally pinned versions so fixtures and consumers install the same graph.
  */
 
 import { relative, resolve } from 'node:path'

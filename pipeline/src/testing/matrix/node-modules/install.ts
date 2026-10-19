@@ -1,3 +1,10 @@
+/**
+ * Command builders for matrix consumer node_modules install and cache hydration.
+ *
+ * Takes cache keys plus container paths and emits the shell commands that probe
+ * warm caches, install with pnpm, and copy between shared-seed and fixture-local
+ * volumes. Builds strings only; the Dagger runner owns execution.
+ */
 import { randomUUID } from 'node:crypto'
 import {
   MATRIX_INSTALL_CACHE_KEY_ENV_VAR,

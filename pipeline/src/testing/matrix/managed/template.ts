@@ -1,3 +1,10 @@
+/**
+ * Liquid rendering helpers shared by every managed config generator.
+ *
+ * Takes template URLs plus JSON-ready values and emits rendered file sources
+ * stamped with the managed-generated notice. Owns the single Liquid engine so
+ * template syntax and escaping stay uniform across generators.
+ */
 import { readFileSync } from 'node:fs'
 import { Liquid } from 'liquidjs'
 

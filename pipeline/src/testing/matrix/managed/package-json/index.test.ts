@@ -1,3 +1,8 @@
+/**
+ * Unit tests for managed package.json generation.
+ *
+ * Covers fixture manifests, consumer manifests, and Playwright pin rewriting.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

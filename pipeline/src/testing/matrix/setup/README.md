@@ -1,26 +1,13 @@
 # Matrix Setup
 
-This folder owns the setup step for matrix fixtures.
+Materializes the pipeline-managed files of each matrix fixture: manifests plus generated runtime files such as bundler config, the HTML shell, and the React browser entrypoint. Optionally installs workspace dependencies and runs each package's sync script for IDE-ready local usage.
 
-Setup is the same conceptual step used in both places:
+```sh
+pnpm pipeline setup --sync                              # all matrix packages
+pnpm pipeline setup --sync --packages=@matrix/playwright # targeted
+pnpm pipeline setup --no-install                        # generate files only
+```
 
-- locally, when a developer runs the matrix fixture setup command
-- inside pipeline-managed environment creation, before the isolated test run
+The same step runs inside pipeline-managed environment creation before isolated test runs.
 
-Its job is to materialize the managed parts of each matrix fixture package and,
-optionally, install the workspace dependencies needed to work with those
-fixtures locally.
-
-Managed here means package manifests plus pipeline-owned runtime files like
-bundler config (`vite.config.ts`, `index.html`) and React browser entrypoints
-(`src/main.tsx`).
-
-For IDE-ready local usage, run setup with sync enabled so each selected matrix
-package also materializes its generated Reference UI output after install.
-
-- repo-wide: `pnpm matrix:setup`
-- targeted: `pnpm pipeline setup --sync --packages=@matrix/playwright`
-
-## Tests
-
-- `pnpm --dir pipeline exec tsx --test src/testing/matrix/setup/index.test.ts`
+Parent: [matrix/README.md](../README.md).

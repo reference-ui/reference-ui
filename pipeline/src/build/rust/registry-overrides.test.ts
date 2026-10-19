@@ -1,3 +1,8 @@
+/**
+ * Unit tests for prepared Rust hash augmentation.
+ *
+ * Covers pass-through without augmentation and stable derived hashes with it.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

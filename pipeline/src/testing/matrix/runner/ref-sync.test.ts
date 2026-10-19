@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix ref sync strategy helpers.
+ *
+ * Covers mode selection, watch-runner commands, and timing-marker parsing.
+ */
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import { describe, it } from 'node:test'

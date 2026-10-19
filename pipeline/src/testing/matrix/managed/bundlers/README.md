@@ -1,5 +1,5 @@
-`bundlers/` owns the matrix fixtures' managed bundler surfaces.
+# Managed Matrix Bundlers
 
-Each supported bundler version lives in its own folder, such as `vite7/`, and
-defines both the generated config files and the bundler-owned dependency
-versions that `setup` writes into fixture packages.
+Managed bundler surfaces for matrix fixtures: generated configs, HTML shells, and bundler-owned dev dependency versions that setup writes into fixture packages. Each supported bundler version owns its leaf module: [vite7/](vite7/) and [webpack5/](webpack5/).
+
+Parent: [managed/README.md](../README.md).

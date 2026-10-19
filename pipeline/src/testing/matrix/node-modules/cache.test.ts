@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix install cache keys.
+ *
+ * Covers graph-based reuse, isolation splits, and shared-seed keys.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

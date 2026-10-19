@@ -1,3 +1,8 @@
+/**
+ * Unit tests for managed React runtime profiles.
+ *
+ * Covers dependency surfaces and main.tsx entrypoints per runtime.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

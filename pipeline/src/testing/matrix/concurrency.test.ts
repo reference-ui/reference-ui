@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix worker-count resolution.
+ *
+ * Covers Docker CPU caps, host fallback, and invalid input normalization.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { resolveMatrixPackageConcurrency } from './concurrency.js'

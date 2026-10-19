@@ -1,3 +1,8 @@
+/**
+ * Unit tests for the registry cross-process mutex.
+ *
+ * Covers sequential sections, nested acquisition, and release on throw.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { withRegistryLock } from './lock.js'

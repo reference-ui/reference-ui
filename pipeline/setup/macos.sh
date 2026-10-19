@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# macOS bootstrap for pipeline prerequisites.
+#
+# Installs Xcode Command Line Tools, Dagger, Colima, and the Docker CLI, then
+# starts Colima when it is not running. Accepts --dry-run to print without executing.
 
 set -euo pipefail
 

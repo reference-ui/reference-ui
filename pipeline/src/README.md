@@ -1,67 +1,15 @@
-# Pipeline Source Layout
+# Pipeline Source
 
-This folder is the high-level source layout for the Dagger pipeline.
+Execution graph for build, test, and release. `cli.ts` is the `pnpm pipeline` command tree; each subfolder owns one stage and hands artifacts to the next through the pipeline-local registry.
 
-The rough category split is:
+## Boundaries
 
-- `build/` — build packages and produce the artifacts we want to test or release
-- `release/` — release and publish workflows for the packages we ship
-- `registry/` — private pipeline registry infrastructure for packaged artifacts
-- `testing/` — containerized testing flows, including matrix, distribution, and unit testing
+- `build/` creates artifacts and pushes them into the local registry. Nothing else builds artifacts for the first time.
+- `registry/` stores and serves packed tarballs plus a manifest; testing and release consume from it.
+- `testing/` owns containerized test environments and orchestration. Test files, fixtures, and assertions stay in the packages under test.
+- `release/` gates promotion from the local registry to npm. Changesets authors intent (`pnpm changeset`); the pipeline executes versioning, staging, and publish.
+- `dev/` materializes registry-backed local dev workspaces; `clean/` wipes pipeline-managed state; `lib/` holds shared terminal and runtime helpers.
 
-These categories are meant to absorb the responsibilities that used to be spread across GitHub Actions, ad hoc scripts, and package-local glue. In this repo, **GitHub Actions is limited to docs** (`.github/workflows/docs.yml`, which reuses `.github/workflows/rust-compile.yml` for Linux bindings used by the docs build). Everything else—build, test, release—should go through the pipeline.
+Commands outside `pnpm pipeline` are thin aliases or helpers: `pnpm release`, `pnpm setup:local`, and small conditional wrappers under `pipeline/scripts/`.
 
-Remaining helper scripts include things like `pipeline/scripts/run-if-env-absent.mjs` where packages need small conditional wrappers.
-
-## Why This Exists
-
-The goal of the pipeline is to reduce reliance on one-off scripts and the current GitHub Actions wiring.
-
-Dagger is intended to become the place where we define:
-
-- how packages are built
-- how pipeline-local package artifacts are stored and consumed
-- how releases are verified and published
-- how tests run inside reproducible containerized environments
-
-That should give us a delivery path that is easier to reason about locally, more reliable in CI, and closer to the real environments our users depend on.
-
-The rough direction is:
-
-- GitHub Actions stays a thin layer for **docs publish** only
-- Dagger is the actual execution graph for build, test, and release
-- local execution matches the same pipeline commands your CI should run
-- CI outside GitHub should call the same pipeline definition rather than re-implementing it
-
-## Expected Shape
-
-As the pipeline grows, this folder should become the main home for the actual delivery graph:
-
-- build stages
-- release stages
-- test environments and orchestration
-- shared helpers that support those flows
-
-The intent is not to move test assertions into the pipeline.
-
-Instead:
-
-- the pipeline should own environment orchestration
-- the existing packages should keep owning their domain logic and tests
-
-## Mapping From Today
-
-At a high level, the current system maps into this layout like this:
-
-- `build/`
-	- native compilation for **docs** still uses `.github/workflows/rust-compile.yml` as a callable workflow from the docs workflow; full multi-target native builds for release belong in the pipeline / your CI
-	- fixture/package build caching is handled inside the pipeline by `buildWorkspaceArtifacts` (input-hash skip in `pipeline/src/build/`)
-- `release/`
-	- release planning, tarball staging, and npm publish live in `pipeline/src/release/` and are invoked via `pnpm pipeline release`
-- `registry/`
-	- pipeline-local registry for packed artifacts consumed by testing and release
-- `testing/`
-	- Dagger-backed matrix runs live in `pipeline/src/testing/matrix/` (`pnpm pipeline test`)
-	- matrix fixtures and package-local tests live under `matrix/*`
-
-The intent is to keep execution logic in `pipeline/src` and package scripts, not in duplicated workflow YAML.
+Parent: [pipeline/README.md](../README.md).

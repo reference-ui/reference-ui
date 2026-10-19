@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix execution planning.
+ *
+ * Covers default selection, --react pinning, --full expansion, and job fanout.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import type { MatrixWorkspacePackage } from '../discovery/index.js'

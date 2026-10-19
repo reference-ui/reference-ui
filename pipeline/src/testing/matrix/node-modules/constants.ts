@@ -1,3 +1,10 @@
+/**
+ * Cache keys, marker paths, and volume mounts for matrix node_modules hydration.
+ *
+ * Centralises the env vars and container paths the cache probe, install, and
+ * shared-seed commands agree on. Imported by both the command builders and the
+ * runner so a rename breaks loudly at compile time.
+ */
 import { CONSUMER_DIR_IN_CONTAINER } from '../../../../config.js'
 
 // Cache-key env var for the fixture-local /consumer/node_modules volume.

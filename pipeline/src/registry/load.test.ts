@@ -1,3 +1,8 @@
+/**
+ * Unit tests for registry publish skip logic.
+ *
+ * Covers loaded-state matches, registry rebuilds, and hash drift.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 

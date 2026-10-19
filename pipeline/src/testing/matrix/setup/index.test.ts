@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix fixture setup generation.
+ *
+ * Covers package.json delegation, runner configs, and fixture-owned exceptions.
+ */
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'

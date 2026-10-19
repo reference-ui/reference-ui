@@ -1,3 +1,8 @@
+/**
+ * Unit tests for the managed bundler facade.
+ *
+ * Covers dependency surfaces plus Vite and webpack source generation.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

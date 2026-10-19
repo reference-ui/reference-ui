@@ -1,3 +1,8 @@
+/**
+ * Unit tests for matrix container selection helpers.
+ *
+ * Covers Playwright version parsing and image choice per fixture.
+ */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {

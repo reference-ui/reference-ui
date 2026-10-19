@@ -1,3 +1,10 @@
+/**
+ * Central pipeline configuration: workspace roots, managed registry coordinates,
+ * consumer workdir, and matrix execution policy.
+ *
+ * Registry, build, and matrix flows all read these constants instead of
+ * hardcoding paths, ports, or resource gates.
+ */
 // Folders in the workspace that contain packages.
 export const WORKSPACE_PACKAGE_ROOTS = ['packages', 'matrix'] as const
 
