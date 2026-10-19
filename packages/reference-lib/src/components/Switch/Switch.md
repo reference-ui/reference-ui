@@ -90,8 +90,11 @@ name computation.
 Root owns `type`, `role`, `aria-checked`, and the absence of `aria-pressed`.
 `aria-checked` is `"true"` or `"false"`. Both parts publish
 `data-state="checked" | "unchecked"` and `data-disabled` when disabled.
-Applications style thumb travel against `data-state`; Switch does not set
-transforms or publish geometry custom properties.
+Every thumb, default or authored, carries an inline `transform`
+(`translateX(1.25rem)` when checked, `translateX(0)` otherwise) and a 200ms
+`transition`. An authored `Switch.Thumb`'s `style` can override either; a
+`data-state` stylesheet rule loses to them unless it is `!important`. Switch
+publishes no geometry custom properties.
 
 Unprevented native `click` — including Space, Enter, and a click that lands
 on Thumb — requests the opposite boolean once, delivered as

@@ -62,7 +62,6 @@ Menubar is `RovingFocus` over always-visible Menu triggers — a documented comp
 ```ts
 interface MenuProps
   extends Omit<ReferencePartProps<"div">, "onOpen"> {
-  orientation?: "vertical" | "horizontal"
   open?: boolean
   onOpen?: () => void
   onDismiss?: () => void
@@ -76,7 +75,11 @@ interface MenuItemBaseProps
   closeOnSelect?: boolean
 }
 
-interface MenuItemProps extends MenuItemBaseProps {}
+interface MenuItemProps extends Omit<MenuItemBaseProps, "closeOnSelect"> {
+  closeOnClick?: boolean
+  /** @deprecated Use closeOnClick instead */
+  closeOnSelect?: boolean
+}
 
 interface MenuCheckboxItemProps
   extends Omit<MenuItemBaseProps, "onChange"> {
@@ -126,7 +129,7 @@ Separator renders `div[role=separator]`.
 
 `open` / `onOpen` / `onDismiss` apply only to nested Menu. Omitted nested
 `open` is controlled false. Root open state lives on the wrapping Popover.
-Omitted root orientation is vertical; every `Menu.Content` is vertical.
+Every menu level is vertical, root and `Menu.Content` alike.
 Nesting is recursive: `Menu.Content` may contain another nested Menu.
 
 Root trigger keys reach the Menu through `useMenuTriggerKeys()`, spread
@@ -142,8 +145,8 @@ Plant only on closed→open transitions — a repeated source gesture batches
 dismiss+reopen without unmounting, so planting then would leak into the
 next unrelated open. An outside contextmenu dismisses the tree once without
 preventing the native menu; inside context presses stay open. (The current
-recipe composes Overlay-direct with a virtual `anchor`; Popover does not
-yet pass `anchor` through.)
+recipe composes Overlay-direct with a virtual `anchor`; Popover forwards
+`anchor` to Overlay too.)
 
 Submenu direction (open/close keys, default placement, intent fallback)
 reads the root trigger: menu content portals to `document.body` and loses
@@ -151,8 +154,9 @@ the author's `dir` context. Travel inside an open descendant keeps every
 ancestor open; a rejected hover-close requests once per away episode.
 
 An Item's consumer `onSelect` receives the cancelable native event first.
-Plain Item defaults `closeOnSelect=true`; CheckboxItem and RadioItem default
-it false. An unprevented command requests dismissal; checkbox activation
+Plain Item defaults `closeOnClick=true`, and the deprecated `closeOnSelect`
+alias wins when set. CheckboxItem and RadioItem default `closeOnSelect` to
+false. An unprevented command requests dismissal; checkbox activation
 requests the opposite boolean (`mixed` becomes true), and radio activation
 requests its value. Controlled checked/value ARIA changes only after parent
 props change. Choice items publish `aria-checked="true"|"false"|"mixed"` as

@@ -9,7 +9,7 @@ looping, optional typeahead, optional two-dimensional movement.
 Does not add a wrapper node. Slots keyboard behaviour onto a single composite child. Each `RovingFocus.Item` slots `tabindex` onto its child.
 
 ```tsx
-<RovingFocus orientation="horizontal" loop>
+<RovingFocus.Root orientation="horizontal" loop>
   <Div role="toolbar" aria-label="Formatting">
     <RovingFocus.Item>
       <Button>Bold</Button>
@@ -21,11 +21,11 @@ Does not add a wrapper node. Slots keyboard behaviour onto a single composite ch
       <Button>Underline</Button>
     </RovingFocus.Item>
   </Div>
-</RovingFocus>
+</RovingFocus.Root>
 ```
 
 ```tsx
-<RovingFocus orientation="both" typeahead>
+<RovingFocus.Root orientation="both" typeahead>
   <Div role="grid" aria-label="Emoji">
     {cells.map((cell) => (
       <RovingFocus.Item key={cell.id}>
@@ -33,7 +33,7 @@ Does not add a wrapper node. Slots keyboard behaviour onto a single composite ch
       </RovingFocus.Item>
     ))}
   </Div>
-</RovingFocus>
+</RovingFocus.Root>
 ```
 
 `orientation="both"` moves in two dimensions. Omitted behavior is horizontal,

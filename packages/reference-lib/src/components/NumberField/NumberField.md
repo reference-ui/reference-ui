@@ -207,9 +207,13 @@ results before publishing DOM state or callbacks.
   advisory `onInvalidCommit` alongside `onChange`.
 - `disabled`, `readOnly`, `required`, and `invalid` default to `false`.
 - Increment and Decrement are optional. Each renders
-  `button[type=button][tabindex=-1]` and requires a nonempty authored
-  `aria-label` or `aria-labelledby`; NumberField has no English fallback or
-  translation bundle.
+  `button[type=button][tabindex=-1]`. A consumer-authored stepper needs a
+  nonempty `aria-label` or a resolving `aria-labelledby`; without one it is
+  not rendered, and no English name is invented for it. Omitting `children`
+  renders a default Group whose steppers carry component-authored English
+  names, `aria-label="Decrement"` and `aria-label="Increment"`. Those names
+  are fixed strings that do not follow `locale`. There is no translation
+  bundle, so applications in other languages author their own steppers.
 - Input defaults to `autoComplete="off"`, `autoCorrect="off"`, and
   `spellCheck={false}`. Explicit native values for these props win.
 - Input's managed `inputMode` is derived from the accepted grammar and commit
