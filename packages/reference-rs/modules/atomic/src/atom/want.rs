@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
-use super::AtomValue;
+use super::{AtomValue, Backing};
 use crate::diagnostics::{byte_span, DiagnosticLocation};
 use diagnostics::ByteSpan;
 
@@ -16,11 +16,11 @@ pub struct Want {
     pub value: AtomValue,
     pub when: SmallVec<[Box<str>; 2]>,
     pub important: bool,
-    /// True when the want was authored on an external (capitalized non-host)
-    /// JSX tag; false for every own/standalone site. Absent from the wire
-    /// when false so the own path serializes byte-identically.
-    #[serde(default, skip_serializing_if = "crate::atom::is_false")]
-    pub external: bool,
+    /// The systems this want lowers under: `Own` for every own/standalone
+    /// site, the rendering systems for a tag another system renders. Absent
+    /// from the wire when own so the own path serializes byte-identically.
+    #[serde(default, skip_serializing_if = "Backing::is_own")]
+    pub backing: Backing,
     pub origin: Option<Box<str>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file: Option<Box<str>>,
@@ -39,7 +39,7 @@ impl Want {
             value,
             when: SmallVec::new(),
             important: false,
-            external: false,
+            backing: Backing::Own,
             origin: None,
             file: None,
             line: None,

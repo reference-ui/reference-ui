@@ -212,7 +212,7 @@ fn plan_call_entry(
             prop: key.to_string(),
             value: planned,
             important: walk.important || important,
-            external: walk.external,
+            backing: walk.backing.clone(),
         });
     }
 }

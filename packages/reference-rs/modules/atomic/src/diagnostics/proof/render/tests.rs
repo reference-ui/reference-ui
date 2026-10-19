@@ -60,7 +60,7 @@ fn condition_reject(key: OwnedLookupKey) -> (DiagnosticFact, Diagnostic) {
             })),
         },
         suggestion: Some("_hover".into()),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_resolve(&report);
     (DiagnosticFact::from(report), line)
@@ -80,7 +80,7 @@ fn invalid_reject(value: &str, key: OwnedLookupKey) -> (DiagnosticFact, Diagnost
             )),
         },
         suggestion: None,
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_resolve(&report);
     (DiagnosticFact::from(report), line)
@@ -90,7 +90,7 @@ fn exact(key: OwnedLookupKey) -> DiagnosticFact {
     DiagnosticFact::ExactLookupExpected {
         site: site(),
         key,
-        external: false,
+        backing: crate::atom::Backing::Own,
     }
 }
 
@@ -102,7 +102,7 @@ fn absent_expected_key_replaces_its_legacy_line() {
     render_session(
         &[exact(key), fact],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics.len(), 1);
@@ -128,7 +128,7 @@ fn present_expected_key_drops_its_legacy_line() {
     render_session(
         &[exact(key), fact],
         &plans,
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert!(diagnostics.is_empty());
@@ -138,7 +138,7 @@ fn present_expected_key_drops_its_legacy_line() {
 fn rejection_without_an_expectation_keeps_its_line() {
     let (fact, line) = condition_reject(key("color", serde_json::json!("red")));
     let mut diagnostics = vec![line.clone()];
-    render_session(&[fact], &[], RenderScope::new("lib", &[]), &mut diagnostics);
+    render_session(&[fact], &[], RenderScope::new("lib"), &mut diagnostics);
     assert_eq!(diagnostics, vec![line]);
 }
 
@@ -149,7 +149,7 @@ fn causeless_miss_warns_once_per_key() {
     render_session(
         &[exact(key.clone()), exact(key)],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics.len(), 1);
@@ -172,7 +172,7 @@ fn duplicate_exact_with_reordered_object_keys_warns_once() {
     render_session(
         &[exact(first), exact(second)],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics.len(), 1);
@@ -188,7 +188,7 @@ fn duplicate_expected_keys_still_join_rejections() {
     render_session(
         &[exact(first), exact(second), fact],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics.len(), 1);
@@ -213,14 +213,14 @@ fn spelling_divergence_at_one_position_warns_once() {
             )),
         },
         suggestion: None,
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_resolve(&report);
     let mut diagnostics = vec![line.clone()];
     render_session(
         &[exact(exact_key), DiagnosticFact::from(report)],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics, vec![line]);
@@ -234,7 +234,7 @@ fn false_refusals_never_reach_userspace() {
     render_session(
         &[exact(key), fact],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics, vec![line]);
@@ -249,7 +249,7 @@ fn unknown_props_defer_to_extracts_jurisdiction() {
             exact(key("_hover", serde_json::json!("red"))),
         ],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert!(diagnostics.is_empty());
@@ -264,7 +264,7 @@ fn hole_valued_expectations_never_warn() {
             exact(key("color", serde_json::Value::Null)),
         ],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert!(diagnostics.is_empty());
@@ -278,7 +278,7 @@ fn true_refusals_prove_their_miss() {
     render_session(
         &[exact(key), fact],
         &[],
-        RenderScope::new("lib", &[]),
+        RenderScope::new("lib"),
         &mut diagnostics,
     );
     assert_eq!(diagnostics.len(), 1);

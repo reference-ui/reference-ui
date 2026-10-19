@@ -66,16 +66,44 @@ this file in the same pass.
   colour-mode attribute — `colorMode` prop in JSX, same concept on
   the DOM. `data-theme` is Toast chrome (lib), never Core colour
   mode; `data-panda-theme` stays retired.
+- **stamp** — a `data-layer` attribute on an element, naming the
+  system that renders it. Token values are scoped by stamps: each
+  system's token rule declares on its own stamps and on its
+  **extended systems'**.
+- **extended systems** — the extends closure of a system: the
+  composed systems whose fragments it evaluates, so whose public
+  tokens its vocabulary carries (`extendedSystemNames`). A layered
+  system is never one. On the compile request they ride as
+  `extendedSystems`; the engine's token rule claims their stamps, so
+  under `extends` the app's token values win inside their components.
+  (atomic)
 - **group** — one feature family under `tests/cases/`: `SPEC.md`,
   `TESTS.md`, leaf cases.
 - **status words** — `open`, `in-progress`, `done`, `blocked-on-rs`,
   `approved-absence`, `retired`: the `TESTS.md` ledger states.
-- **host** — a JSX name whose style props extract: primitives carry
-  every tag, wrappers earn it by forwarding. (styletrace)
+- **host** — a JSX name whose style props extract under the app's own
+  system: primitives carry every tag, wrappers earn it by forwarding.
+  Ownership follows the import to where it lands on disk, never the
+  name: a tag whose import ends at a package that published a system
+  (lib, icons, any package built on Reference UI) is **external** even
+  when it spells a host. A workspace package the same sync compiles, or
+  one that renders this project's generated `@reference-ui/react`, is
+  the app's own. (styletrace, atomic)
+- **external** — a tag that renders through another package's runtime,
+  which mints its class under that package's system. Its style props
+  resolve in the app's vocabulary and are backed under the systems the
+  package renders through (its published `streams`) that the app
+  composes, never under any other. When none is composed, sync warns
+  `ATM-W-EXTERNAL-UNBACKED` at the tag, naming the package, its system
+  and `<package>/baseSystem`. A tag from a package not built on
+  Reference UI is not a Reference component: nothing backs it and
+  nothing warns. (atomic)
 - **traced** — discovered by StyleTrace inside `compile()`, per
   project, from the code — never declared. (styletrace)
-- **configured** — from `jsxElements`: the escape hatch for shapes
-  static tracing cannot infer. (styletrace)
+- **configured** — names in the `jsxElements` config field. Only Core
+  cases set it, and docs never ask users to: tracing and provenance
+  decide ownership. A configured name admits a project or unbound tag,
+  never a package import. (styletrace)
 - **owned** — a declared prop a component destructures and does not
   forward. It counts as forwarded, and stops being owned, only when
   it reaches an element under the same prop name: `name={name}`, or a
@@ -93,9 +121,10 @@ this file in the same pass.
   `jsxOwned` on the base system and the compile spec, `tracedJsxOwned`
   on the compile result, `owned` in the jsx artifact
   (`jsx-elements.json`). It flows through `extends` and `layers`;
-  roster names flow through `extends` only, so the engine knows a
-  layered component's own props without that component becoming a
-  host. (styletrace)
+  roster names flow through `extends` only, and reach the engine as
+  `upstreamHosts`, never as own hosts, so the engine knows a layered
+  component's own props without that component becoming a host.
+  (styletrace)
 - **compiler namer** — the Rust request-to-class function, run at
   compile time over extracted wants. The oracle behind every naming
   gate. (namer)

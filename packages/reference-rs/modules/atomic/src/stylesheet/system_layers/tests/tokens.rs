@@ -238,7 +238,7 @@ fn unterminated_brace_in_token_value_stays_raw_and_warns() {
 }
 
 /// Tokens of `custom_system` printed under one scope, for the selector assertions.
-fn tokens_under(scope: TokenScope) -> String {
+fn tokens_under(scope: TokenScope<'_>) -> String {
     let mut out = String::new();
     let mut diagnostics = Vec::new();
     append_tokens(&mut out, &custom_system(), scope, &mut diagnostics);
@@ -258,7 +258,7 @@ fn token_scope_root_prints_root_and_bare_color_mode_selectors() {
 
 #[test]
 fn token_scope_portable_names_only_the_system_data_layer() {
-    let css = tokens_under(TokenScope::Portable);
+    let css = tokens_under(TokenScope::Portable { extended: &[] });
     assert!(
         css.contains(
             "  [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light] {\n"
@@ -274,7 +274,7 @@ fn token_scope_portable_names_only_the_system_data_layer() {
 
 #[test]
 fn token_scope_isolated_adds_own_layer_and_never_prints_bare_dark() {
-    let css = tokens_under(TokenScope::Isolated);
+    let css = tokens_under(TokenScope::Isolated { extended: &[] });
     assert!(
         css.contains(
             "  :root, :root[data-color-mode=light], body[data-color-mode=light], [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light] {\n"
@@ -288,4 +288,64 @@ fn token_scope_isolated_adds_own_layer_and_never_prints_bare_dark() {
         "{css}"
     );
     assert!(!css.contains("\n  [data-color-mode=dark] {"), "{css}");
+}
+
+/// The systems the extended-stamp tests name: an upstream chain, outermost last.
+fn extended_chain() -> Vec<String> {
+    vec!["base".to_string(), "mid".to_string()]
+}
+
+#[test]
+fn token_scope_portable_claims_each_extended_stamp_after_its_own() {
+    let extended = extended_chain();
+    let css = tokens_under(TokenScope::Portable {
+        extended: &extended,
+    });
+    assert!(
+        css.contains(
+            "  [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light], [data-layer=\"base\"], [data-layer=\"base\"][data-color-mode=light], [data-layer=\"mid\"], [data-layer=\"mid\"][data-color-mode=light] {\n"
+        ),
+        "{css}"
+    );
+    assert!(
+        css.contains(
+            "  [data-layer=\"custom\"][data-color-mode=dark], [data-layer=\"base\"][data-color-mode=dark], [data-layer=\"mid\"][data-color-mode=dark] {\n"
+        ),
+        "{css}"
+    );
+    assert!(!css.contains(":root"), "{css}");
+}
+
+#[test]
+fn token_scope_isolated_claims_each_extended_stamp_and_keeps_the_document() {
+    let extended = extended_chain();
+    let css = tokens_under(TokenScope::Isolated {
+        extended: &extended,
+    });
+    assert!(
+        css.contains(
+            "  :root, :root[data-color-mode=light], body[data-color-mode=light], [data-layer=\"custom\"], [data-layer=\"custom\"][data-color-mode=light], [data-layer=\"base\"], [data-layer=\"base\"][data-color-mode=light], [data-layer=\"mid\"], [data-layer=\"mid\"][data-color-mode=light] {\n"
+        ),
+        "{css}"
+    );
+    assert!(
+        css.contains(
+            "  :root[data-color-mode=dark], body[data-color-mode=dark], [data-layer=\"custom\"][data-color-mode=dark], [data-layer=\"base\"][data-color-mode=dark], [data-layer=\"mid\"][data-color-mode=dark] {\n"
+        ),
+        "{css}"
+    );
+}
+
+#[test]
+fn own_token_scope_is_root_alone_and_isolated_with_its_extended_list_under_upstreams() {
+    let extended = extended_chain();
+    let alone = vec!["custom".to_string()];
+    assert_eq!(own_token_scope(&alone, &extended), TokenScope::Root);
+    let composed = vec!["custom".to_string(), "base".to_string(), "mid".to_string()];
+    assert_eq!(
+        own_token_scope(&composed, &extended),
+        TokenScope::Isolated {
+            extended: &extended
+        }
+    );
 }

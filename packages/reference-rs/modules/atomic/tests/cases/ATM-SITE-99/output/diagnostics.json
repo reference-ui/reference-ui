@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <AcmeCard> will not paint: 'acme-ui' renders through its own system 'acme', and no system in `extends` or `layers` backs it",
+    "file": "input/src/Acme.tsx",
+    "line": 7,
+    "column": 27,
+    "span": {
+      "start": 217,
+      "end": 236
+    },
+    "help": [
+      "add 'acme-ui/baseSystem' to `extends` or `layers` in ui.config"
+    ]
+  }
+]

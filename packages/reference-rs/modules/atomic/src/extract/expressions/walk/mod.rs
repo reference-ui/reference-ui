@@ -23,8 +23,10 @@ use smallvec::SmallVec;
 use super::literal::{
     extract_template_literal, push_bool_want, push_number_want, push_string_want,
 };
-use crate::atom::Want;
-use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticsSession, ExtractDetail, LineIndex};
+use crate::atom::{Backing, Want};
+use crate::diagnostics::{
+    Diagnostic, DiagnosticCode, DiagnosticsSession, ExtractDetail, LineIndex,
+};
 use crate::extract::harvest::Sink;
 use crate::extract::scope::Scoped;
 use base_system::BreakpointScale;
@@ -34,7 +36,8 @@ pub struct ExpressionWalk<'a> {
     pub prop: &'a str,
     pub origin: Option<&'a str>,
     pub important: bool,
-    pub external: bool,
+    /// The systems the leaf wants lower under.
+    pub backing: &'a Backing,
     pub file: &'a str,
     pub source: Option<&'a str>,
     pub line_index: Option<&'a LineIndex>,

@@ -48,7 +48,7 @@ fn harvest_pair() -> (DiagnosticFact, Diagnostic) {
         when: Vec::new(),
         minted: 2,
         offered: Vec::new(),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_harvest(&report);
     (DiagnosticFact::from(report), line)
@@ -84,7 +84,7 @@ fn invalid_pair(value: &str) -> (DiagnosticFact, Diagnostic) {
             )),
         },
         suggestion: None,
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_resolve(&report);
     (DiagnosticFact::from(report), line)
@@ -101,7 +101,7 @@ fn passthrough_pair() -> (DiagnosticFact, Diagnostic) {
             })),
         },
         suggestion: Some("_hover".into()),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let line = Policy::render_resolve(&report);
     (DiagnosticFact::from(report), line)
@@ -233,7 +233,7 @@ fn analysis_facts_render_fresh_without_stripping() {
     let exact = DiagnosticFact::ExactLookupExpected {
         site: site(),
         key: key(),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let dynamic = DiagnosticFact::DynamicSlot {
         site: site(),
@@ -255,7 +255,7 @@ fn unrequested_backchannel_leaves_default_untouched_by_analysis() {
     let exact = DiagnosticFact::ExactLookupExpected {
         site: site(),
         key: key(),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let dynamic = DiagnosticFact::DynamicSlot {
         site: site(),
@@ -275,7 +275,7 @@ fn empty_default_and_unrequested_backchannel_render_nothing() {
     let exact = DiagnosticFact::ExactLookupExpected {
         site: site(),
         key: key(),
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let facts = vec![funnel_fact, false_fact, exact];
     let channels = DiagnosticChannels::partition(&facts, Vec::new(), &catalog(), false);

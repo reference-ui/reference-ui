@@ -1,7 +1,8 @@
 // layered-container.spec.ts — spec for CORE-LAYERS-04, the container-root and
 // upstream-qualifier case. Takes { page, url, case } with the consumer world
-// synced standalone. It syncs the upstream for real, then runs three legs over
-// the same consumer (standalone, layers, extends), checking the sync diagnostics,
+// synced standalone. It syncs the upstream for real, links it into the world's
+// node_modules as the package the probe imports, then runs three legs over the
+// same consumer (standalone, layers, extends), checking the sync diagnostics,
 // the compile request, the served sheet, the published system and the computed
 // paint of each. Emits nothing on success; throws naming the leg and the
 // assertion that failed.
@@ -199,14 +200,26 @@ async function runLeg(
   await assertPaint(page, url, bucket);
 }
 
-// Syncs the upstream for real, runs the three legs, and restores the canonical
-// config with a heal sync in a finally, so the tree is canonical whatever the run does.
+// Links the synced upstream into world/node_modules under its package name, the
+// way an installed package sits, so the probe's import resolves to its directory.
+function linkUpstream(worldDir: string, upDir: string): string {
+  const link = path.join(worldDir, 'node_modules', UP);
+  fs.rmSync(link, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(link), { recursive: true });
+  fs.symlinkSync(path.relative(path.dirname(link), upDir), link, 'dir');
+  return link;
+}
+
+// Syncs the upstream for real, links it, runs the three legs, and restores the
+// canonical config with a heal sync in a finally, so the tree is canonical
+// whatever the run does. The link goes too, so the typecheck never sees it.
 export default async function run(input: SpecInput): Promise<void> {
   const configPath = path.join(input.case.worldDir, 'ui.config.ts');
   const canonical = fs.readFileSync(configPath, 'utf8');
   const upDir = path.join(input.case.dir, 'upstreams', 'up');
   await sync(upDir);
   assertUpstreamPublishes(upDir);
+  const link = linkUpstream(input.case.worldDir, upDir);
   try {
     for (const bucket of BUCKETS) {
       try {
@@ -217,6 +230,7 @@ export default async function run(input: SpecInput): Promise<void> {
       }
     }
   } finally {
+    fs.rmSync(link, { force: true });
     fs.writeFileSync(configPath, canonical, 'utf8');
     await sync(input.case.worldDir);
   }

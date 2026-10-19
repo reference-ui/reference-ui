@@ -9,7 +9,8 @@
 //! (atomic's orders first); [`ExtensionPolicy::Declarations`] prefers
 //! declarations (tasty's tables verbatim). [`RootEntryPolicy`] orders a package's
 //! `exports` against its declarations, root and conditions alike, source-first by default.
-//! Absolute specifiers miss in every policy, as they do in all three legacy ladders.
+//! [`SpecifierLadder::resolve_located`] also names the package directory a
+//! `node_modules` hit came through. Absolute specifiers miss in every policy.
 
 mod memo;
 mod package;
@@ -139,35 +140,49 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     /// Relative specifiers join; bare ones try `tsconfig` bases then ancestor
     /// `node_modules`. Every hit canonicalizes so symlinks share one key.
     pub fn resolve(&self, from: &ModuleKey, specifier: &str) -> Result<ModuleKey, Unresolved> {
+        self.hit(from, specifier)
+            .map(|hit| ModuleKey::new(&hit.file))
+    }
+
+    /// Resolve like [`Self::resolve`], and name the package directory a
+    /// `node_modules` hit came through, canonicalized, so a caller can read
+    /// what that package ships beside its entry. Relative and `tsconfig`
+    /// hits carry no directory; the probes are the same as `resolve`'s.
+    pub fn resolve_located(
+        &self,
+        from: &ModuleKey,
+        specifier: &str,
+    ) -> Result<Resolution, Unresolved> {
+        let hit = self.hit(from, specifier)?;
+        Ok(Resolution {
+            key: ModuleKey::new(&hit.file),
+            package_dir: hit.package_dir.and_then(|dir| self.fs.canonicalize(&dir)),
+        })
+    }
+
+    /// The one probe order behind both resolvers: relative joins, bare
+    /// specifiers through `tsconfig` then `node_modules`, absolute misses.
+    fn hit(&self, from: &ModuleKey, specifier: &str) -> Result<Hit, Unresolved> {
         // './tokens' from /proj/src/app.ts  →  /proj/src/tokens.ts
-        if specifier.starts_with('.') {
-            self.resolve_relative(from, specifier)
+        let found = if specifier.starts_with('.') {
+            self.probe_hit(&join_relative(from.as_str(), specifier))
+                .map(Hit::file)
         } else if specifier.is_empty() || specifier.starts_with('/') {
-            Err(self.miss(from, specifier))
+            None
         } else {
-            self.resolve_bare(from, specifier)
-        }
+            self.bare_hit(from, specifier)
+        };
+        found.ok_or_else(|| self.miss(from, specifier))
     }
 
-    /// Resolve a relative specifier: join, probe, canonicalize.
-    fn resolve_relative(&self, from: &ModuleKey, specifier: &str) -> Result<ModuleKey, Unresolved> {
-        let joined = join_relative(from.as_str(), specifier);
-        self.probe_hit(&joined)
-            .map(|hit| ModuleKey::new(&hit))
-            .ok_or_else(|| self.miss(from, specifier))
-    }
-
-    /// Resolve a bare specifier: `tsconfig` bases when followed, then
-    /// `node_modules`.
-    fn resolve_bare(&self, from: &ModuleKey, specifier: &str) -> Result<ModuleKey, Unresolved> {
+    /// A bare specifier: `tsconfig` bases when followed, then `node_modules`.
+    fn bare_hit(&self, from: &ModuleKey, specifier: &str) -> Option<Hit> {
         if self.tsconfig == TsconfigPolicy::Follow {
-            if let Some(hit) = self.tsconfig_hit(from, specifier) {
-                return Ok(ModuleKey::new(&hit));
+            if let Some(file) = self.tsconfig_hit(from, specifier) {
+                return Some(Hit::file(file));
             }
         }
         self.node_hit(from, specifier)
-            .map(|hit| ModuleKey::new(&hit))
-            .ok_or_else(|| self.miss(from, specifier))
     }
 
     /// First `tsconfig`-mapped base that probes to a file, if any.
@@ -183,8 +198,9 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
     /// First ancestor `node_modules` package that resolves, nearest first.
     /// The `@types` fallback request is loop-invariant, so it builds once;
     /// the `roots` and package-dir scratch buffers regrow per level instead
-    /// of allocating per probe. Same levels, same probes, same order.
-    fn node_hit(&self, from: &ModuleKey, specifier: &str) -> Option<String> {
+    /// of allocating per probe. Same levels, same probes, same order. The
+    /// hit hands back the package-dir buffer itself, so naming it is free.
+    fn node_hit(&self, from: &ModuleKey, specifier: &str) -> Option<Hit> {
         let (package, subpath) = package::split_bare(specifier)?;
         let request = NodeRequest { package, subpath };
         let fallback = if request.subpath == "." {
@@ -201,12 +217,12 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
             roots.clear();
             roots.push_str(dir);
             roots.push_str("/node_modules");
-            if let Some(hit) = self.package_hit(&roots, &request, &mut pkg_dir) {
-                return Some(hit);
+            if let Some(file) = self.package_hit(&roots, &request, &mut pkg_dir) {
+                return Some(Hit::package(file, pkg_dir));
             }
             if let Some(shadow) = fallback.as_ref() {
-                if let Some(hit) = self.package_hit(&roots, shadow, &mut pkg_dir) {
-                    return Some(hit);
+                if let Some(file) = self.package_hit(&roots, shadow, &mut pkg_dir) {
+                    return Some(Hit::package(file, pkg_dir));
                 }
             }
         }
@@ -306,4 +322,43 @@ impl<'f, F: FileSystem> SpecifierLadder<'f, F> {
 struct NodeRequest {
     package: String,
     subpath: String,
+}
+
+/// A resolved specifier: its canonical key, plus the canonical package
+/// directory a `node_modules` hit came through (`None` for relative and
+/// `tsconfig` hits).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Resolution {
+    pub key: ModuleKey,
+    pub package_dir: Option<String>,
+}
+
+/// One raw hit: the canonical file, plus the package dir as probed.
+struct Hit {
+    file: String,
+    package_dir: Option<String>,
+}
+
+impl Hit {
+    fn file(file: String) -> Self {
+        let package_dir = None;
+        Self { file, package_dir }
+    }
+
+    fn package(file: String, dir: String) -> Self {
+        let package_dir = Some(dir);
+        Self { file, package_dir }
+    }
+}
+
+/// The ordered `exports` targets a manifest maps `subpath` to, source-first:
+/// exact keys, then `*` patterns, conditions in [`RootEntryPolicy::SourceFirst`]
+/// order. Paths stay as authored (`./dist/x.mjs`); nothing touches disk.
+pub fn package_export_targets(manifest: &str, subpath: &str) -> Vec<String> {
+    package::export_targets(manifest, subpath, RootEntryPolicy::SourceFirst)
+}
+
+/// A manifest's root entry targets, source-first (`exports` ".", `module`, `main`, `types`).
+pub fn package_root_targets(manifest: &str) -> Vec<String> {
+    package::root_targets(manifest, RootEntryPolicy::SourceFirst)
 }

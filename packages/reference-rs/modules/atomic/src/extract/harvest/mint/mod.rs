@@ -95,7 +95,7 @@ pub fn mint(ctx: MintCtx<'_>) {
             when: sink.when.iter().cloned().collect(),
             minted: minted.count,
             offered: minted.offered,
-            external: sink.external,
+            backing: sink.backing.clone(),
         };
         let diagnostic = Policy::render_harvest(&report);
         session.report(DiagnosticFact::from(report));
@@ -152,7 +152,7 @@ fn mint_sink(
                 value.clone(),
                 sink.when.clone(),
                 false,
-                sink.external,
+                sink.backing.clone(),
             );
             if !state.seen.insert(twin) {
                 continue;
@@ -176,14 +176,14 @@ fn push_harvested(
     let mut want = Want::new(sink.prop.clone(), AtomValue::String(value.into()))
         .with_when(sink.when.clone())
         .with_origin(Some(HARVEST_ORIGIN));
-    want.external = sink.external;
+    want.backing = sink.backing.clone();
     wants.push(want);
     authored.push(AuthoredDeclaration {
         when: sink.when.iter().map(|w| w.to_string()).collect(),
         prop: sink.prop.to_string(),
         value: serde_json::Value::String(value.to_string()),
         important: false,
-        external: sink.external,
+        backing: sink.backing.clone(),
     });
 }
 

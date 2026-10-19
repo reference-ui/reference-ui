@@ -21,7 +21,7 @@ pub(crate) fn build_keyed(
     diet: bool,
     guard: &PoolGuard,
 ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
-    let work = first_seen(builder.system, builder.qualifiers, decls);
+    let work = first_seen(builder.system, decls);
     let ctx = PlanCtx {
         builder,
         decls,
@@ -33,18 +33,18 @@ pub(crate) fn build_keyed(
     commit(builder, decls, resolved, diet)
 }
 
-/// Indexes of the first declaration for each `(external, own-key)` identity, in
-/// decl order. External declarations with no foreign qualifier emit nothing, so
-/// they never resolve. The marker keeps an own declaration and an external one
-/// with identical identity from collapsing into a single plan.
-fn first_seen(system: &str, qualifiers: &[String], decls: &[AuthoredDeclaration]) -> Vec<usize> {
+/// Indexes of the first declaration for each `(backing, own-key)` identity, in
+/// decl order. A declaration whose backing names no system emits nothing, so
+/// it never resolves. The backing keeps an own declaration and a foreign one
+/// (or two foreign ones another system set renders) from collapsing into one plan.
+fn first_seen(system: &str, decls: &[AuthoredDeclaration]) -> Vec<usize> {
     let mut seen = FxHashSet::with_capacity_and_hasher(decls.len(), FxBuildHasher);
     let mut work = Vec::new();
     for (index, decl) in decls.iter().enumerate() {
-        if decl.external && qualifiers.len() < 2 {
+        if decl.backing.targets(system).next().is_none() {
             continue;
         }
-        if seen.insert((decl.external, decl.lookup_key(system))) {
+        if seen.insert((&decl.backing, decl.lookup_key(system))) {
             work.push(index);
         }
     }
@@ -128,7 +128,7 @@ fn commit(
             continue;
         };
         absorb_diagnostics(builder, detached.diagnostics);
-        for (system, key) in fresh_targets(builder.system, builder.qualifiers, decl, &seen) {
+        for (system, key) in fresh_targets(builder.system, decl, &seen) {
             let plan = plan_for_system(decl, &detached.resolved, &system, diet);
             if plan.declarations.is_empty() {
                 seen.insert(key);
@@ -140,9 +140,9 @@ fn commit(
         }
         insert_resolved(
             detached.resolved,
-            decl.external,
+            &decl.backing,
             builder.atom_set,
-            builder.external_atom_set,
+            builder.foreign,
         );
     }
     (plans, keys)

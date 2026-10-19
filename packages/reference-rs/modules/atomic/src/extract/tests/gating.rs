@@ -1,8 +1,10 @@
 //! Cargo tests for import-bound `css()` and styletrace-gated JSX extract.
 //! Virtual sources have no disk graph; these cases prove fail-closed callee
-//! shadowing and that untraced PascalCase becomes an external component once a
-//! Reference host is in scope (G0 §D/C8). Seam stations `ATM-SITE-07` / `08` /
-//! `10` are the committed proof (updated for the external-tag contract).
+//! shadowing and that untraced PascalCase lowers as a component once a
+//! Reference host is in scope (G0 §D/C8): a project or unbound one under own,
+//! since its spelling no longer decides what backs it (styling plan S3). A
+//! package-bound root is never a host, but a scope binding outranks the
+//! import. Seam stations `ATM-SITE-07` / `08` / `10` are the committed proof.
 
 use crate::{compile, CompileRequest, VirtualSource};
 
@@ -143,10 +145,10 @@ fn test_styleless_hostless_file_stays_silent() {
 }
 
 #[test]
-fn test_untraced_capital_tag_is_external_when_a_host_is_known() {
-    // A capitalized non-host tag is an external component: its style props
-    // extract as external wants (G0 §D/C8), while the host tag collects
-    // normally and no diagnostics fire.
+fn test_untraced_capital_tag_lowers_under_own_when_a_host_is_known() {
+    // A capitalized non-host tag is a component (G0 §D/C8): a same-file one
+    // nobody traces lowers under own beside the host tag (styling plan S3),
+    // and no diagnostics fire.
     let res = compile_code(
         r#"
         import { Div } from '@reference-ui/react';
@@ -162,11 +164,11 @@ fn test_untraced_capital_tag_is_external_when_a_host_is_known() {
     assert!(res
         .wants
         .iter()
-        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && w.backing.is_own()));
     assert!(res
         .wants
         .iter()
-        .any(|w| &*w.prop == "color" && w.external));
+        .any(|w| &*w.prop == "color" && w.backing.is_own()));
     assert!(res.diagnostics.is_empty());
 }
 
@@ -185,10 +187,11 @@ fn compile_with_hosts(code: &str, hosts: &[&str]) -> crate::CompileResult {
 }
 
 #[test]
-fn test_shadowed_member_root_is_external_not_host() {
+fn test_shadowed_member_root_is_a_project_component_not_host() {
     // A locally bound `Tabs` rebinds `<Tabs.Panel>` away from the traced
     // host, so the use site must not collect onto the wrong component; under
-    // G0 §D/C8 it is an external component, so every want is external.
+    // G0 §D/C8 it is a project component nobody traces, so every want lowers
+    // under own (styling plan S3), never under a composed system.
     let res = compile_with_hosts(
         r#"
         import { Tabs } from './tabs';
@@ -201,8 +204,8 @@ fn test_shadowed_member_root_is_external_not_host() {
         &["Tabs.Panel"],
     );
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
-        "shadowed member root is external, never a host: {:?}",
+        !res.wants.is_empty() && res.wants.iter().all(|w| w.backing.is_own()),
+        "shadowed member root is a project component: {:?}",
         res.wants
     );
     assert!(res.diagnostics.is_empty());
@@ -213,8 +216,8 @@ fn test_bound_member_root_through_const_object_extracts() {
     // A shadowed root re-admits through its own const object literal when
     // the member value is an admitted host: `NS.Panel` extracts under the
     // configured `NSPanel`, while the unconfigured `Other.Panel` twin —
-    // admitted past the shadow but matching no host — is an external
-    // component (G0 §D/C8), so its want is external.
+    // admitted past the shadow but matching no host — is a project component
+    // nobody traces (G0 §D/C8), so its want lowers under own (S3).
     let res = compile_with_hosts(
         r#"
         import { Div } from '@reference-ui/react';
@@ -234,12 +237,12 @@ fn test_bound_member_root_through_const_object_extracts() {
     assert!(res
         .wants
         .iter()
-        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && w.backing.is_own()));
     assert!(
         res.wants
             .iter()
-            .any(|w| &*w.prop == "p" && w.external),
-        "the unconfigured member twin is external, not a host: {:?}",
+            .any(|w| &*w.prop == "p" && w.backing.is_own()),
+        "the unconfigured member twin lowers under own: {:?}",
         res.wants
     );
     assert!(res.diagnostics.is_empty());
@@ -266,11 +269,41 @@ fn test_namespace_spelled_member_collects_against_dotted_host() {
 }
 
 #[test]
-fn test_renamed_namespace_member_is_external_not_host() {
+fn test_package_bound_root_gates_by_provenance_not_name() {
+    // A package namespace spelling a configured dotted host is never a host:
+    // `acme-tabs` resolves nowhere, so it is not built on Reference UI and
+    // lowers nothing; an inner declaration shadowing a package import
+    // re-admits through its alias chain, because the scope binding outranks
+    // the import.
+    let res = compile_with_hosts(
+        r#"
+        import * as Tabs from 'acme-tabs';
+        import { Button } from 'acme-ui';
+        import { Div } from '@reference-ui/react';
+        export function App() {
+            const Button = Div;
+            return <><Tabs.Panel mt="2r" /><Button p="4r" /></>;
+        }
+        "#,
+        &["Tabs.Panel"],
+    );
+    assert!(
+        res.wants.iter().all(|w| &*w.prop != "mt"),
+        "{:?}",
+        res.wants
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "p" && w.backing.is_own()));
+}
+
+#[test]
+fn test_renamed_namespace_member_is_a_project_component_not_host() {
     // Deferred boundary: atomic matches member tags literally and does no
     // import-aware remap, so `<UI.Panel>` never resolves to `Tabs.Panel`.
-    // Under G0 §D/C8 it is an external component — external wants, never a
-    // misattributed host, and diagnostic-free.
+    // Under G0 §D/C8 it is a project component nobody traces — own wants
+    // (S3), never a misattributed host, and diagnostic-free.
     let res = compile_with_hosts(
         r#"
         import * as UI from './tabs';
@@ -281,8 +314,8 @@ fn test_renamed_namespace_member_is_external_not_host() {
         &["Tabs.Panel"],
     );
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
-        "renamed namespace member is external: {:?}",
+        !res.wants.is_empty() && res.wants.iter().all(|w| w.backing.is_own()),
+        "renamed namespace member lowers under own: {:?}",
         res.wants
     );
     assert!(res.diagnostics.is_empty());

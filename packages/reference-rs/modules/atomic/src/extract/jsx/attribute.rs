@@ -39,7 +39,7 @@ pub(super) fn handle_jsx_attribute(
                 WalkSite {
                     origin: site.origin,
                     important: false,
-                    external: site.external,
+                    backing: site.backing,
                 },
             );
             let span = Some(attr.name.span());
@@ -49,7 +49,7 @@ pub(super) fn handle_jsx_attribute(
                 prop: name,
                 value: serde_json::Value::Bool(true),
                 important: false,
-                external: site.external,
+                backing: site.backing.clone(),
             });
         }
         return;
@@ -109,7 +109,7 @@ fn handle_attribute_string(
             WalkSite {
                 origin: site.origin,
                 important: false,
-                external: site.external,
+                backing: site.backing,
             },
         );
         crate::extract::expressions::literal::push_string_want(&mut expr_ctx, lit, &smallvec![]);
@@ -120,7 +120,7 @@ fn handle_attribute_string(
             prop: name.to_string(),
             value: serde_json::Value::String(clean.to_string()),
             important: imp,
-            external: site.external,
+            backing: site.backing.clone(),
         });
     }
 }
@@ -144,7 +144,7 @@ fn dispatch_attribute_expression(
     let attr = StyleAttr {
         prop: name,
         origin: site.origin,
-        external: site.external,
+        backing: site.backing,
     };
     if name == "css" {
         // <Div css={{ color: 'red', _hover: { bg: 'n200' } }} />
@@ -168,7 +168,7 @@ fn dispatch_attribute_expression(
             WalkSite {
                 origin: site.origin,
                 important: false,
-                external: site.external,
+                backing: site.backing,
             },
         );
         crate::extract::expressions::walk_expression(&mut expr_ctx, expr, &smallvec![]);
@@ -178,7 +178,7 @@ fn dispatch_attribute_expression(
                 prop: name.to_string(),
                 value: val,
                 important: imp,
-                external: site.external,
+                backing: site.backing.clone(),
             });
         }
     }

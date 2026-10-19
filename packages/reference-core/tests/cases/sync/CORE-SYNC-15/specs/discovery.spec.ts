@@ -33,9 +33,9 @@ interface CompileRequest {
 
 // Discovery reaches the publish, never the request: the jsx artifact pins
 // local/merged to the traced Card, the portable system carries it, the
-// frozen request holds primitives only, the sheet mints exactly the Card
-// utility, the card paints, the probes stay classless, and a resync moves
-// no discovery byte.
+// frozen request holds primitives only, the sheet mints the Card utility
+// and Random's untraced color under own (styling plan S3), the card paints,
+// the probes stay classless, and a resync moves no discovery byte.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const outDir = path.join(c.worldDir, '.reference-ui');
 
@@ -86,9 +86,9 @@ export default async function run({ page, case: c }: SpecInput): Promise<void> {
 
   const styles = fs.readFileSync(path.join(outDir, 'styled', 'styles.css'), 'utf8');
   assert.ok(styles.includes('.core-sync15__p_1r {'), 'sheet carries the Card padding utility');
-  assert.ok(!styles.includes('c_red'), 'no Random color ghost reaches the sheet');
+  assert.ok(styles.includes('.core-sync15__c_red {'), 'Random color lowers under own');
   const utilityCount = styles.match(/\.core-sync15__/g)?.length ?? 0;
-  assert.equal(utilityCount, 1, `sheet carries exactly the Card utility, got ${utilityCount}`);
+  assert.equal(utilityCount, 2, `sheet carries the Card and Random utilities, got ${utilityCount}`);
 
   const card = page.locator('#card');
   await card.waitFor();

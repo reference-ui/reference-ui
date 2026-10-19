@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-96", "name": "A primitive-named tag imported from an installed package is external, so its style props back the package's qualifier, never the app's"}

@@ -1,10 +1,10 @@
 //! Cross-module extract tests and their shared compile helpers.
 //!
 //! Each submodule pins one behavior family across the extract passes —
-//! branches, calls, gating, identity, responsive shapes, selections, site
-//! plans, staleness — compiling tiny virtual programs end to end. The
-//! helpers below build those programs and filter the compiler channel,
-//! so submodules assert on wants, sinks, and diagnostics alike.
+//! branches, calls, gating, identity, package origins, provenance, responsive shapes,
+//! selections, site plans, staleness — compiling tiny virtual programs end
+//! to end. The helpers below build those programs and filter the compiler
+//! channel, so submodules assert on wants, sinks, and diagnostics alike.
 
 mod alias_hosts;
 mod branches;
@@ -12,6 +12,8 @@ mod calls;
 mod gating;
 mod identity;
 mod identity_terminal;
+mod package_origin;
+mod provenance;
 mod responsive;
 mod selection;
 mod site_plan;

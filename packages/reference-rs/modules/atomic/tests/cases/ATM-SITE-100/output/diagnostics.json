@@ -1,0 +1,32 @@
+[
+  {
+    "severity": "warning",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <Button> will not paint: '@reference-ui/lib' renders through its own system 'reference-ui', and no system in `extends` or `layers` backs it",
+    "file": "input/src/App.tsx",
+    "line": 13,
+    "column": 7,
+    "span": {
+      "start": 388,
+      "end": 418
+    },
+    "help": [
+      "add '@reference-ui/lib/baseSystem' to `extends` or `layers` in ui.config"
+    ]
+  },
+  {
+    "severity": "warning",
+    "code": "ATM-W-EXTERNAL-UNBACKED",
+    "message": "style props on <AcmeCard> will not paint: 'acme-ui' renders through its own system 'acme', and no system in `extends` or `layers` backs it",
+    "file": "input/src/App.tsx",
+    "line": 14,
+    "column": 7,
+    "span": {
+      "start": 425,
+      "end": 446
+    },
+    "help": [
+      "add 'acme-ui/baseSystem' to `extends` or `layers` in ui.config"
+    ]
+  }
+]

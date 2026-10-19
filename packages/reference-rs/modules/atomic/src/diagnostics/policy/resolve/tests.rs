@@ -21,7 +21,7 @@ fn report_with_suggestion(outcome: ResolveOutcome, suggestion: Option<Box<str>>)
         key: None,
         outcome,
         suggestion,
-        external: false,
+        backing: crate::atom::Backing::Own,
     }
 }
 

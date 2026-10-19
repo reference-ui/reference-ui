@@ -151,6 +151,7 @@ four `-I-` rows stay module-local until the template grows an info level.
 | `ATM-W-UNKNOWN-TONE` | A named tone that is undeclared or whose value is not a usable percentage | `modules/atomic/src/resolve/tokens/mod.rs` |
 | `ATM-W-UNKNOWN-TOKEN` | A bare identifier on a spacing, radius, size or font-size prop that names no token in that category and is no CSS keyword the prop accepts | `modules/atomic/src/resolve/tokens/bare_name.rs` |
 | `ATM-W-UNBRACED-TOKEN-REF` | A whole token value that names another token without braces; printed verbatim, with the braced reference suggested | `modules/atomic/src/stylesheet/system_layers/mod.rs` |
+| `ATM-W-EXTERNAL-UNBACKED` | Style props on a tag imported from a package that published a system, while none of the systems it renders through is in `extends` or `layers` (other composed systems do not count): that package's runtime mints classes under its own system, so nothing backs them; once per tag, naming the package, its system and the fix (`<package>/baseSystem` in `extends` or `layers`), or naming the package when its published system cannot be read | `modules/atomic/src/extract/context/diagnostics.rs` |
 | `RS-W-EXAMPLE-TOKEN` | Template test/doc placeholder; never shipped | `modules/diagnostics` tests |
 | `RS-E-EXAMPLE-BOOM` | Template test/doc placeholder; never shipped | `modules/diagnostics` tests |
 | `TST-W-PARSE-ERROR` | A file failed to parse; extraction keeps the recoverable shells | `modules/tasty/src/ast/extract/pipeline.rs` |

@@ -1,4 +1,4 @@
-//! Plan assembly for one compile: `PlanBuilder` borrows the own and external atom sets and the diagnostics sink through `PlanSinks`.
+//! Plan assembly for one compile: `PlanBuilder` borrows the own atom set, the foreign groups and the diagnostics sink through `PlanSinks`.
 //! `build`, `build_diet`, and `build_with_keys` walk declarations in order, deduplicating canonical keys so each plan is emitted once per target system.
 //! `resolve_detached` resolves one declaration on private placeholder sets, the entry point the parallel plan pool uses on its workers.
 
@@ -7,19 +7,19 @@ use rustc_hash::{FxBuildHasher, FxHashSet};
 use serde_json::Value;
 
 use super::{fresh_targets, insert_resolved, plan_for_system, AuthoredDeclaration, DetachedDecl};
-use crate::atom::{AtomSet, AtomValue};
+use crate::atom::{AtomSet, AtomValue, ForeignAtoms};
 use crate::diagnostics::Diagnostic;
 use crate::lanes::{Lanes, WorkKind};
 use crate::runtime::plan::RuntimeStylePlan;
 use crate::runtime::values::{json_to_atom_value, RefusalSite, RefuseR};
 
 /// The mutable sinks one plan build writes into, bundled so `PlanBuilder::new`
-/// takes them as a single argument beside the system, base system, and qualifiers.
+/// takes them as a single argument beside the system and base system.
 pub struct PlanSinks<'a> {
     /// Own-declaration atoms; plan resolution merges into this set in place.
     pub atom_set: &'a mut AtomSet,
-    /// External-declaration atoms, kept apart from the own set.
-    pub external_atom_set: &'a mut AtomSet,
+    /// Atoms of declarations other systems render, grouped by backing system.
+    pub foreign: &'a mut ForeignAtoms,
     /// Diagnostics raised while resolving the declarations.
     pub diagnostics: &'a mut Vec<Diagnostic>,
 }
@@ -28,32 +28,22 @@ pub struct PlanSinks<'a> {
 pub struct PlanBuilder<'a> {
     pub system: &'a str,
     pub base_system: &'a BaseSystem,
-    /// Atoms from own (non-external) declarations. Shared with the want-derived
+    /// Atoms from own declarations. Shared with the want-derived
     /// own set; plan resolution merges into it in place.
     pub atom_set: &'a mut AtomSet,
-    /// Atoms from external declarations, keyed apart from the own set so the
-    /// two partitions stay distinct for counts and grouped emission.
-    pub external_atom_set: &'a mut AtomSet,
-    /// Composed-system qualifier list, own first (`[own, …foreign]`). Own
-    /// declarations target only `system`; external declarations expand once
-    /// per foreign qualifier.
-    pub qualifiers: &'a [String],
+    /// Atoms of declarations other systems render, kept apart from the own
+    /// set and grouped by the systems each declaration's backing names.
+    pub foreign: &'a mut ForeignAtoms,
     pub diagnostics: &'a mut Vec<Diagnostic>,
 }
 
 impl<'a> PlanBuilder<'a> {
-    pub fn new(
-        system: &'a str,
-        base_system: &'a BaseSystem,
-        qualifiers: &'a [String],
-        sinks: PlanSinks<'a>,
-    ) -> Self {
+    pub fn new(system: &'a str, base_system: &'a BaseSystem, sinks: PlanSinks<'a>) -> Self {
         Self {
             system,
             base_system,
             atom_set: sinks.atom_set,
-            external_atom_set: sinks.external_atom_set,
-            qualifiers,
+            foreign: sinks.foreign,
             diagnostics: sinks.diagnostics,
         }
     }
@@ -141,16 +131,16 @@ impl<'a> PlanBuilder<'a> {
 
     /// Resolve one declaration and expand it into plans plus canonical keys
     /// for every fresh target system. Own declarations target only the own
-    /// system; external declarations target every foreign qualifier. Atoms
-    /// route to the own or external set by `decl.external`. An all-seen decl
-    /// resolves nothing, matching the single-key skip.
+    /// system; any other targets each system its backing names. Atoms route
+    /// to the own set or those foreign groups by `decl.backing`. An all-seen
+    /// decl resolves nothing, matching the single-key skip.
     fn expand_decl(
         &mut self,
         decl: &AuthoredDeclaration,
         diet: bool,
         seen: &mut FxHashSet<String>,
     ) -> (Vec<RuntimeStylePlan>, Vec<String>) {
-        let fresh = fresh_targets(self.system, self.qualifiers, decl, seen);
+        let fresh = fresh_targets(self.system, decl, seen);
         if fresh.is_empty() {
             return (Vec::new(), Vec::new());
         }
@@ -170,12 +160,12 @@ impl<'a> PlanBuilder<'a> {
                 plans.push(plan);
             }
         }
-        insert_resolved(resolved, decl.external, self.atom_set, self.external_atom_set);
+        insert_resolved(resolved, &decl.backing, self.atom_set, self.foreign);
         (plans, keys)
     }
 
     /// Resolve one declaration on private placeholder atom sets. The caller
-    /// expands the resolved atoms and routes them by `decl.external`.
+    /// expands the resolved atoms and routes them by `decl.backing`.
     pub(crate) fn resolve_detached(
         system: &str,
         base_system: &BaseSystem,
@@ -183,15 +173,14 @@ impl<'a> PlanBuilder<'a> {
         diet: bool,
     ) -> DetachedDecl {
         let mut atom_set = AtomSet::new();
-        let mut external_atom_set = AtomSet::new();
+        let mut foreign = ForeignAtoms::new();
         let mut diagnostics = Vec::new();
         let resolved = {
             let mut builder = PlanBuilder {
                 system,
                 base_system,
                 atom_set: &mut atom_set,
-                external_atom_set: &mut external_atom_set,
-                qualifiers: &[],
+                foreign: &mut foreign,
                 diagnostics: &mut diagnostics,
             };
             builder.resolve_entry(decl, diet)

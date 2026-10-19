@@ -61,20 +61,26 @@ pub(crate) fn walk_retained(shared: &Shared<'_>, indices: &[usize], parsed: &[Pa
     let Some(published) = phase_parallel::load_published(shared) else {
         return;
     };
-    let identity = IdentityGraph::from_shared(shared.sources, &published.maps);
+    // The own root tells this compile's generated runtime from a package's.
+    let root = crate::hosts::trace_root(shared.request);
+    let identity = IdentityGraph::from_shared(shared.sources, &published.maps)
+        .with_root(root.as_deref().and_then(std::path::Path::to_str));
     // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls.
-    let qualifiers = crate::assembly::qualifiers_for(shared.system, &shared.request.upstream_systems);
+    let qualifiers =
+        crate::assembly::qualifiers_for(shared.system, &shared.request.upstream_systems);
+    let composed = crate::extract::Composed::new(&qualifiers, &shared.request.upstream_hosts);
     let ctx = analysis::context(
         &published.hosts,
         published.constants.as_ref(),
         shared.system,
-        &qualifiers,
+        &composed,
     );
     let env = WalkEnv {
         shared,
         published: &published,
         identity: &identity,
         ctx: &ctx,
+        composed: &composed,
     };
     for (&index, parsed) in indices.iter().zip(parsed.iter()) {
         walk_one(&env, index, parsed);
@@ -87,9 +93,11 @@ struct WalkEnv<'a> {
     published: &'a Published,
     identity: &'a IdentityGraph<'a>,
     ctx: &'a analysis::AnalysisCtx<'a>,
+    composed: &'a crate::extract::Composed<'a>,
 }
 
 /// One retained file: extract when it styles, and record analysis under its source id.
+/// Both read the one set of bindings collected here, so they classify every tag alike.
 fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
     let shared = env.shared;
     let published = env.published;
@@ -119,6 +127,7 @@ fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
             breakpoints: shared.breakpoints,
             traced: &published.traced,
             owned_props: published.hosts.owned_for(path),
+            composed: env.composed,
         },
     );
     let analysis = match published.source_ids.get(index).copied().flatten() {
@@ -127,6 +136,7 @@ fn walk_one(env: &WalkEnv<'_>, index: usize, parsed: &ParserReturn<'_>) {
                 path,
                 content,
                 program: &parsed.program,
+                bindings: &bindings,
             };
             analysis::source_facts(env.ctx, SourceId(id), &source)
         }

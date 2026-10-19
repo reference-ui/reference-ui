@@ -8,6 +8,7 @@
 use canon::ValueKind;
 use smallvec::SmallVec;
 
+use crate::atom::Backing;
 use crate::diagnostics::DiagnosticCode;
 use diagnostics::ByteSpan;
 
@@ -34,9 +35,9 @@ pub struct Sink {
     pub line: Option<u32>,
     pub column: Option<u32>,
     pub span: Option<ByteSpan>,
-    /// True when the refused site was an external component; minted wants
-    /// inherit it so they emit foreign-qualified classes.
-    pub external: bool,
+    /// The systems the refused site lowers under; minted wants inherit it
+    /// so they emit under the same systems.
+    pub backing: Backing,
 }
 
 /// The refused site a sink is recorded from (the hook's context struct).
@@ -47,7 +48,7 @@ pub struct SinkSite<'a> {
     pub line: Option<u32>,
     pub column: Option<u32>,
     pub span: Option<ByteSpan>,
-    pub external: bool,
+    pub backing: &'a Backing,
 }
 
 impl Sink {
@@ -69,7 +70,7 @@ impl Sink {
             line: site.line,
             column: site.column,
             span: site.span,
-            external: site.external,
+            backing: site.backing.clone(),
         })
     }
 }
@@ -130,7 +131,7 @@ mod tests {
             line: None,
             column: None,
             span: None,
-            external: false,
+            backing: &crate::atom::backing::OWN,
         })
     }
 

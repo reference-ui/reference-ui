@@ -1,6 +1,6 @@
 // Sync generated-package proofs over temp projects with the native compiler.
 // They take fixture configs plus author files and assert the runtime leg,
-// the importable base system, the node_modules links, the content-version
+// the importable base system (an upstream's names still published), the node_modules links, the content-version
 // stamps recomputing equal, and the loud missing-config failure. Every run compiles for real: no stubs stand
 // between sync and the engine.
 
@@ -149,5 +149,30 @@ describe('sync generated packages', () => {
     const dir = await writeProject({ 'theme/tokens.ts': TOKENS_FILE })
 
     await expect(sync(dir)).rejects.toBeInstanceOf(ConfigNotFoundError)
+  })
+})
+
+describe('sync upstream hosts', () => {
+  it('publishes upstream names in jsxElements while the request sends them apart', async () => {
+    const dir = await writeProject({
+      'ui.config.ts': configFile(
+        "  extends: [{ name: 'upstream', fragment: '', jsxElements: ['UpstreamCard'] }],\n  jsxElements: ['LocalPanel'],"
+      ),
+      'theme/tokens.ts': TOKENS_FILE,
+    })
+
+    await sync(dir)
+
+    // Downstream extends keep their fuel: the published roster is the merged one.
+    const mod = (await import(pathToFileURL(outFile(dir, 'system/baseSystem.mjs')).href)) as {
+      baseSystem: { jsxElements: string[] }
+    }
+    expect(mod.baseSystem.jsxElements).toEqual(['LocalPanel', 'UpstreamCard'])
+    const request = JSON.parse(readFileSync(outFile(dir, 'system/compile-request.json'), 'utf-8')) as {
+      jsxHosts: string[]
+      upstreamHosts?: Record<string, string[]>
+    }
+    expect(request.jsxHosts).not.toContain('UpstreamCard')
+    expect(request.upstreamHosts).toEqual({ upstream: ['UpstreamCard'] })
   })
 })

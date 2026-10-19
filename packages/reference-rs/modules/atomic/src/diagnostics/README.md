@@ -33,12 +33,16 @@ diagnostics stays silent. Core prints userspace warnings as one collapsed
 
 1. `atomic::compile` parses each input once and builds a
    `DiagnosticsSession` plus the borrowed `AnalysisInput` (programs,
-   host surface, constants, system name) after host resolution.
+   each file's import bindings, host surface, constants, system name)
+   after host resolution.
 2. `analysis/` walks the borrowed programs independently: for each
    runtime style slot it records an `ExactLookupExpected` (every key
    component statically known) or a `DynamicSlot`, never inferring
    success from extraction's wants. Holes (`null`/`undefined`/`false`
    in leaf position) record nothing — runtime queries nothing there.
+   Whether a JSX tag is an own host or a package's component is the one
+   verdict extraction also reads: the file's bindings are collected once
+   and both gates consult their provenance, so they cannot disagree.
 3. Extract, harvest, resolve, and hosts report typed `DiagnosticFact`
    values through the `adapters/` (producers send data, never prose).
 4. Assembly hands over the final emitted-key set; `proof/` joins
@@ -140,6 +144,7 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 | `ATM-W-UNKNOWN-TONE` | default | `css({ color: 'blue.500/mediun' })` |
 | `ATM-W-UNKNOWN-TOKEN` | default | `css({ p: 'upGap' })` |
 | `ATM-W-UNBRACED-TOKEN-REF` | default | `tokens({ colors: { accent: { value: 'gray.900' } } })` |
+| `ATM-W-EXTERNAL-UNBACKED` | default | `import { Button } from 'acme-ui'; <Button color="red" />` while acme's published system is in neither `extends` nor `layers` |
 
 ## Must not
 
@@ -149,6 +154,8 @@ repro per warn/err row. Codes are wire contract: never rename, never remove.
 - Re-parse a source (`analysis` borrows `&parsed`; the StyleTrace
   dependency-boundary parse is grandfathered, not a second parse).
 - Share extraction success/wants as evidence a plan exists.
+- Classify where an import ends a second time: the JSX gate reads the
+  provenance on the file's shared bindings, never its own package list.
 - Rename a code once a golden pins it; extend the table instead.
 - Emit a diagnostic without a code; the constructors require one.
 - Alias `debug: true` to the compiler channel.

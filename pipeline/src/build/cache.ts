@@ -7,7 +7,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, readlinkSync, statSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { relative, resolve } from 'node:path'
 import type { WorkspacePackage } from './types.js'
@@ -76,17 +76,26 @@ export function hashPackageInputFiles(options: {
   const parts: (string | Buffer)[] = [packageName, packageVersion]
 
   for (const relativePath of hashInputs) {
-    const absolutePath = resolve(rootDir, relativePath)
     parts.push(relativePath)
-    if (existsSync(absolutePath)) {
-      parts.push('present')
-      parts.push(readFileSync(absolutePath))
-    } else {
-      parts.push('missing')
-    }
+    parts.push(...inputFileParts(resolve(rootDir, relativePath)))
   }
 
   return hashContent(parts)
+}
+
+// One tracked input's hash parts: a file's bytes, or the target of a symlink
+// that does not land on a file (git tracks a link to a directory, such as a
+// case fixture's node_modules link, as the link itself), or its absence.
+function inputFileParts(absolutePath: string): (string | Buffer)[] {
+  const link = lstatSync(absolutePath, { throwIfNoEntry: false })
+  if (link === undefined) {
+    return ['missing']
+  }
+  const target = statSync(absolutePath, { throwIfNoEntry: false })
+  if (link.isSymbolicLink() && !target?.isFile()) {
+    return ['symlink', readlinkSync(absolutePath)]
+  }
+  return ['present', readFileSync(absolutePath)]
 }
 
 function computeOwnPackageHash(pkg: WorkspacePackage): string {

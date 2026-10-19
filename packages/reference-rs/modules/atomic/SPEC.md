@@ -20,12 +20,12 @@ Audit: 2026-09-15. Folder name equals SPEC ID. Combined cases were split (`ATM-C
 
 | Metric | Count |
 | :--- | :--- |
-| Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes a required `BaseSystem` (`packages/reference-rs/modules/atomic/src/types.rs:42`); `lib_fixture()` is test-only. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates on traced names plus `@reference-ui/react` imports. `css()` / `recipe()` extract only from those imports. |
-| Total contract claims (`- [x]` / `- [ ]` lines) | 238 |
-| Named `[x]` proven | 236 |
+| Engine | Functional pipeline (extract → atom → stylesheet + class map). `compile()` takes a required `BaseSystem` (`packages/reference-rs/modules/atomic/src/types.rs:42`); `lib_fixture()` is test-only. `staticCss` is a third want source. `src/recipes` emits closed `recipe()` classes in `@layer recipes` plus a variant table on `CompileResult`. JSX extract calls styletrace and gates hosts on traced names plus `@reference-ui/react` imports; a non-host component tag backs under the runtime its import lands in: own, the published systems of a Reference package the consumer composes, or nothing for a package not built on Reference UI (`ATM-SITE-96`..`105`). `css()` / `recipe()` extract only from those imports. |
+| Total contract claims (`- [x]` / `- [ ]` lines) | 255 |
+| Named `[x]` proven | 253 |
 | Remaining `[ ]` | 2 (`ATM-GHOST-04`, `ATM-PERF-01`) |
 | Cargo `#[test]` | 455 (internal; not ticks) |
-| Case folders | 264 (`tests/cases/<ATM-*>`, 35 without a claim line; 0 red — audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
+| Case folders | 283 (`tests/cases/<ATM-*>`, 37 without a claim line; 0 red — audit re-pointed 52 specs + rewrote 56 channel-moved goldens) |
 
 A tick means a case folder exists and is green. It does **not** mean the
 case proves the whole written claim. A 2026-09-15 read of all 73 `spec.ts`
@@ -67,7 +67,7 @@ Two structural causes, both of which the new areas are designed to close:
 | Area | Meaning | Total | Proven `[x]` | Remaining `[ ]` |
 | :--- | :--- | :--- | :--- | :--- |
 | `GHOST` | Zero ghost class invariants & injective namer (P0) | 5 | 4 | 1 |
-| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports) | 68 | 68 | 0 |
+| `SITE` | Style extraction sites (JSX, calls, spreads, constants, imports, package backing) | 85 | 85 | 0 |
 | `LEAF` | AST leaf literal extraction & branch flattening | 11 | 11 | 0 |
 | `WANT` | Raw styling intention IR (`Want`) & serialization | 2 | 2 | 0 |
 | `ATOM` | Atom representation, values, hashing, & `AtomSet` | 5 | 5 | 0 |
@@ -89,7 +89,7 @@ Two structural causes, both of which the new areas are designed to close:
 | `SEAM` | Rust ⇄ N-API artifact parity | 6 | 6 | 0 |
 | `SCAN` | Include scoping of the source-root scan | 1 | 1 | 0 |
 | `PERF` | Time, memory, & scale budgets | 1 | 0 | 1 |
-| **Total** | | **238** | **236** | **2** |
+| **Total** | | **255** | **253** | **2** |
 
 `ORDER` and `VALID` are P0 alongside `GHOST`. A ghost class and a class whose
 rule loses the cascade are the same bug from the author's chair: the style does
@@ -250,11 +250,11 @@ compiler contract.
   **Top-level local constants and style objects must be indexed and resolved at style extraction sites.**
   Case `ATM-SITE-06`. `const theme = { primary: 'n300' }` resolves at `color={theme.primary}` and `css({ color: theme.primary })`.
 - [x] `ATM-SITE-07` `[reference]` `[seam]` —
-  **Non-style attributes and hallucinated component primitives must be ignored during AST traversal.**
-  Case `ATM-SITE-07`. `id` / `onClick` / `tabIndex` / `aria-label` never become wants and produce no diagnostics. Unrecognized PascalCase (`<Foo color="red" />`) without StyleProps is skipped without error.
+  **Non-style DOM attributes are ignored and an untraced component lowers under own.**
+  Case `ATM-SITE-07`. `id` / `onClick` / `tabIndex` / `aria-label` never become wants and produce no diagnostics. An unrecognized PascalCase `<Foo color="red" />` that nobody traces is not a host, but it is a component, and a component renders the own runtime if it forwards its style props at all (styling plan S3): `color` lowers under own as `@reference-ui/lib__c_red`, without error or diagnostic.
 - [x] `ATM-SITE-08` `[forbidden]` `[seam]` —
   **Style extraction must rely exclusively on styletrace and canon rather than guessing PascalCase tags or config name arrays.**
-  Case `ATM-SITE-08`. `compile()` calls `styletrace::trace_style_jsx_names`. Tags extract when they are in that set or imported from `@reference-ui/react` / `@reference-ui/styled`. Local `<Foo mt="4r" />` does not extract. Honest subset: without synced `.reference-ui` primitive declarations, styletrace does not list `Div` as a traced export; file-local Reference imports are the host evidence this case can provide. Not a PascalCase regex or config jsx name array.
+  Case `ATM-SITE-08`. `compile()` calls `styletrace::trace_style_jsx_names`. Tags are hosts when they are in that set or imported from `@reference-ui/react` / `@reference-ui/styled`. Local `<Foo mt="4r" color="red" />` is not a host, and no PascalCase match makes it one; as a component nobody traces, its props lower under own (styling plan S3) with no diagnostic. Honest subset: without synced `.reference-ui` primitive declarations, styletrace does not list `Div` as a traced export; file-local Reference imports are the host evidence this case can provide. Not a PascalCase regex or config jsx name array.
 - [x] `ATM-SITE-09` `[reference]` `[seam]` —
   **Boolean style attributes (`<Div border />`) must extract as `AtomValue::Bool(true)`.**
   Case `ATM-SITE-09`. `attr.value` absent + `is_known_style_prop`.
@@ -269,7 +269,7 @@ compiler contract.
   Compile ``css`color: red;` `` and `` styled.div`padding: 1rem` ``. Assert no wants are produced; a tag on a live `css` binding emits one located `tagged template is not a css() site; use css({...})` diagnostic (no-silence sweep), while a non-`css` tag stays silent. This is a named refusal rather than an accident of the walker: the object form is the only surface, so a template literal must never be parsed as CSS text.
 - [x] `ATM-SITE-13` `[reference]` `[seam]` —
   **Styletrace gating must fail closed: an unavailable primitive graph is a diagnostic, not a licence to extract every tag.**
-  Compile a project whose `styletrace::trace_style_jsx_names` call yields no names and whose sources import nothing from `@reference-ui/react`. Assert that a local `<Foo mt="4r" />` produces no wants and that a diagnostic reports the missing primitive graph. Assert the empty-project case still compiles clean. Case `ATM-SITE-13`. Landing this resolved the **contradiction between `ATM-SITE-01` and `ATM-SITE-08`**: `allows_jsx_tag` no longer treats an empty host set as "scan every tag"; style-bearing JSX with no hosts resolvable is a missing-graph error once per file, and unknown tags under a known graph stay silent. Every case input that relied on the fallback now declares its primitive imports (outputs identical modulo import lines).
+  Compile a project whose `styletrace::trace_style_jsx_names` call yields no names and whose sources import nothing from `@reference-ui/react`. Assert that a local `<Foo mt="4r" />` produces no wants and that a diagnostic reports the missing primitive graph. Assert the empty-project case still compiles clean. Case `ATM-SITE-13`. Landing this resolved the **contradiction between `ATM-SITE-01` and `ATM-SITE-08`**: `allows_jsx_tag` no longer treats an empty host set as "scan every tag"; style-bearing JSX with no hosts resolvable is a missing-graph error once per file, and unknown tags under a known graph raise no diagnostic (a DOM tag lowers nothing; since styling plan S3 a component nobody traces lowers under own, `ATM-SITE-07`). Every case input that relied on the fallback now declares its primitive imports (outputs identical modulo import lines).
 
 - [x] `ATM-SITE-14` `[reference]` `[seam]` —
   **The `css={{ … }}` JSX attribute must extract the same wants as a `css()` call.**
@@ -298,7 +298,7 @@ compiler contract.
   Case `ATM-SITE-21`. Compile `<Div _hover={on ? { bg: 'n200' } : { bg: 'n300' }} />` beside the nested Tabs shape (`guard ? (line ? { color, borderColor } : { color, bg }) : undefined`) and a `css={pick ? {...} : {...}}` control. Assert every arm's leaves emit hover/plain utilities with zero diagnostics, and the `undefined` arm stays silent.
 - [x] `ATM-SITE-22` `[reference]` `[seam]` —
   **Member-expression tags must match concatenated hosts.**
-  Case `ATM-SITE-22`. Compile `<Overlay.Content minW="40r" bg="red" />` with `OverlayContent` hosted beside unhosted `<Accordion.Content p="4r" />`. Assert the member's leaves emit utilities (`min-width: calc(40 * var(--spacing-root))`) with zero diagnostics, and the unhosted member stays silent.
+  Case `ATM-SITE-22`. Compile `<Overlay.Content minW="40r" bg="red" />` with `OverlayContent` hosted beside unhosted `<Accordion.Content p="4r" />`. Assert the member's leaves emit utilities (`min-width: calc(40 * var(--spacing-root))`) with zero diagnostics. The unhosted member is not a host; as an unbound component nobody publishes it lowers under own (styling plan S3), so `p` mints `@reference-ui/lib__p_4r`, also with no diagnostic.
 - [x] `ATM-SITE-23` `[reference]` `[seam]` —
   **Const-bound ternaries and logicals must extract every literal leaf with one plan per leaf.**
   Case `ATM-SITE-23`. Compile the `BookShell.tsx` chrome shape (`const subtleBorder = isDark ? 'gray.800' : 'gray.200'` in a component body feeding `borderBottomColor={subtleBorder}`) beside top-level ternary, nested ternary, and logical `css()` controls plus a fully dynamic identifier. Assert one want and one runtime plan per leaf (both gray arms, all four call colors), `border-bottom-color` utilities for every shade, and exactly the fail-closed `unknownToken` warning.
@@ -328,7 +328,43 @@ compiler contract.
   Case `ATM-SITE-94`. `CodeIcon = createIcon(Outline, Filled, 'CodeIcon')` is a `forwardRef` product over an inner function that pulls `size` out by name and spreads `rest` into an `IconShell` (`Div as unknown as …`). Assert `<CodeIcon size="lg" p="2r" />` mints no `size` want and no warning, `p` extracts, and the `Div size="2r"` control still folds.
 - [x] `ATM-SITE-95` `[reference]` `[seam]` — **[owned props, compiled icon package]**
   **A compiled package's icon keeps its `size` for itself when the base system publishes it as owned, so the consumer's call site mints no rule and no warning.**
-  Case `ATM-SITE-95`. `icon-pkg` ships compiled dist with no generics and no JSX, and `CodeIcon` is a `createIcon` product that consumes `size`. The consumer imports it, so the tag is external. `input/baseSystem.json` carries `jsxOwned: { CodeIcon: ['size', 'variant'] }`, the roster companion `@reference-ui/icons` publishes. Assert `<CodeIcon size="lg" color="red" />` mints no `size` want, the `<Div size="2r" />` control still folds, and the sheet carries no diagnostics.
+  Case `ATM-SITE-95`. `icon-pkg` ships compiled dist with no generics and no JSX and publishes its system, `icons`, at `.reference-ui/system/baseSystem.mjs`; `CodeIcon` is a `createIcon` product that consumes `size`. The consumer imports it, so the tag renders the package's runtime. `input/baseSystem.json` carries `jsxOwned: { CodeIcon: ['size', 'variant'] }`, the roster companion `@reference-ui/icons` publishes. Assert `<CodeIcon size="lg" color="red" />` mints no `size` want, the `<Div size="2r" />` control still folds, and the only diagnostic is the standalone compile's `ATM-W-EXTERNAL-UNBACKED` for the icon's `color`, naming `icon-pkg` and `icons`.
+- [x] `ATM-SITE-96` `[reference]` `[seam]` — **[ownership by provenance, package primitive name]**
+  **A primitive-named tag imported from an installed package is external, so its style props back the package's qualifier, never the app's.**
+  Case `ATM-SITE-96`. `acme-ui` is installed in the case (`input/node_modules/acme-ui`) and publishes its system, `acme`, at `.reference-ui/system/baseSystem.mjs`. `App.tsx` renders its `<Button color="blue" />` beside Reference's own `Button` (aliased `OwnButton`) with `bg="red"`. Assert the package tag's `color` backs under the system the package renders through and the own tag's `bg` under own. Standalone nothing composes `acme`, so `color` backs under no system, `css.json` holds only `@reference-ui/lib__bg_red`, and the golden carries one `ATM-W-EXTERNAL-UNBACKED` at the package tag naming `acme-ui` and `acme`. Under Core's request (`jsxHosts: ['Button']`, `upstreamSystems: ['reference-ui', 'acme']`) the roster name flips nothing: `color` plans and paints `acme__c_blue` alone, no `@reference-ui/lib__c_blue` or `reference-ui__c_blue` exists, and no diagnostic emits.
+- [x] `ATM-SITE-97` `[reference]` `[seam]` — **[ownership by provenance, barrel re-export]**
+  **A project barrel carries its terminal binding: a re-exported package `Button` is external, a re-exported Reference `Button` stays own.**
+  Case `ATM-SITE-97`. `src/ui/index.ts` re-exports `Button` from `@reference-ui/lib/primitives`, an installed package whose published streams name `reference-icons` and `reference-ui`; `src/own/index.ts` re-exports it from `@reference-ui/react`. `Main.tsx` renders the first with `color="blue"`, `Page.tsx` the second with `bg="red"`. Assert the identity walk surfaces the bare hop, so `color` backs under the package's systems and `bg` under own, with or without the roster, and the traced own `Button` (`tracedJsxHosts: ['Button']`) never pulls the package's back to own. Under `upstreamSystems: ['reference-ui', 'acme']` `color` plans and paints `reference-ui__c_blue` only: no own class, nothing under `acme`, nothing under the uncomposed `reference-icons`. The standalone golden carries one `ATM-W-EXTERNAL-UNBACKED` naming `@reference-ui/lib` (subpath dropped) and `reference-ui`, and no `ATM-W-MISSING-STYLE-PLAN`: the analysis mirror reads the same provenance.
+- [x] `ATM-SITE-98` `[reference]` `[seam]` — **[ownership by provenance, `css` wrapper]**
+  **A same-file `css` wrapper around a package tag threads external, so the call-site `css` backs the package's qualifier.**
+  Case `ATM-SITE-98`. `Wrap = ({ css }) => <Button css={css} />` forwards into lib's `Button` (`@reference-ui/lib/primitives`, installed with its published system) and `OwnWrap` forwards into Reference's `Div`; the call sites write `css={{ color: 'blue' }}` and `css={{ bg: 'red' }}`. Assert the threading pre-pass reads the host gate, so `Wrap`'s `color` backs under the package's systems and `OwnWrap`'s `bg` under own. Under `upstreamSystems: ['reference-ui', 'acme']` `color` plans and paints `reference-ui__c_blue` only, with no own class and nothing under `acme`, and no `ATM-W-MISSING-STYLE-PLAN` names either value because the analysis mirror predicts each wrapper's `css` as extraction lowers it. The standalone golden carries one `ATM-W-EXTERNAL-UNBACKED` at the `Wrap` call site naming `@reference-ui/lib`.
+- [x] `ATM-SITE-99` `[reference]` `[seam]` — **[ownership by provenance, published wrapper name]**
+  **A package's published wrapper name is external at its import, while a traced local wrapper spelling the same name stays own.**
+  Case `ATM-SITE-99`. `Acme.tsx` renders `<AcmeCard p="1r" />` from `acme-ui` (installed, system `acme`); `Local.tsx` renders the app's own `AcmeCard` (forwards `StyleProps` into `Div`) with `p="2r"`. Assert `tracedJsxHosts` is `['AcmeCard']`, `1r` backs under the package's system and `2r` under own. Under Core's request, which sends the published name apart in `upstreamHosts: { acme: ['AcmeCard'] }` beside the primitive roster and `upstreamSystems: ['reference-ui', 'acme']`, the verdicts hold: `1r` plans and paints `acme__p_1r` only (no `reference-ui__p_1r`, no `@reference-ui/lib__p_1r`) and `2r` plans `@reference-ui/lib__p_2r`. The standalone golden carries one `ATM-W-EXTERNAL-UNBACKED` naming `acme-ui` and `acme`.
+- [x] `ATM-SITE-100` `[reference]` `[seam]` — **[ownership by provenance, `ATM-W-EXTERNAL-UNBACKED`]**
+  **Style props on a package tag with no composed system to back them warn once per tag, naming the package and the fix.**
+  Case `ATM-SITE-100`. `App.tsx` renders `<Button color="blue" p="2r" />` from `@reference-ui/lib` (system `reference-ui`, streaming icons too) and `<AcmeCard bg="red" />` and `<AcmeCard title="Plain" />` from `acme-ui` (system `acme`), both installed, inside an own `<Div p="1r">`, with no upstream composed. Assert exactly two `ATM-W-EXTERNAL-UNBACKED` warnings, at lines 13 and 14 (two props on one tag still warn once), each naming its package and the system it renders through, with help to add `<package>/baseSystem` to `extends` or `layers`; the unstyled tag stays silent, and the slim `logs: []` request carries the same warnings (default channel). Composing lib only (`upstreamSystems: ['reference-ui']`, plan gap 2) backs lib's tag (`reference-ui__c_blue`, `reference-ui__p_2r`) and keeps acme's warning, with acme's `bg` backed under no system, never under lib's. Composing `acme` too backs `acme__bg_red`, and no warning remains.
+- [x] `ATM-SITE-101` `[reference]` `[seam]` — **[package backing, monorepo workspace package]**
+  **A workspace package this sync compiles, imported by its bare name through its `node_modules` link, is own; once it publishes a system of its own, its tags back under that system.**
+  Case `ATM-SITE-101` (plan gap 1). The input is a pnpm workspace: `apps/web/src/App.tsx` imports `Card` from `@acme/ui`, `packages/ui` names itself `@acme/ui` with `main: ./src/index.ts`, and `node_modules/@acme/ui` links to it; `Card` forwards into `Div`. Assert the bare specifier is followed to where it lands, a compile source, so the trace admits `Card` (`tracedJsxHosts: ['Card']`) and `<Card bg="red" />` backs under own as `@reference-ui/lib__bg_red` with zero diagnostics; composing lib changes nothing and backs nothing under `reference-ui`. Twin: the same tree with `packages/ui/.reference-ui/system/baseSystem.mjs` naming `acme` (built in a scratch copy at verify time). The package's own system is the evidence that it renders its own runtime, so composing lib only backs `bg` under no system and warns once naming `@acme/ui`, `acme` and `@acme/ui/baseSystem`, and composing `acme` too backs `acme__bg_red` alone with no warning.
+- [x] `ATM-SITE-102` `[reference]` `[seam]` — **[package backing, runtime-borrowing workspace package]**
+  **A workspace package with no system of its own, whose `@reference-ui/react` resolves to this project's generated runtime, renders through that runtime, so its tags are own.**
+  Case `ATM-SITE-102`. `@acme/panel` is linked at `node_modules/@acme/panel` with `main` at its built `dist/index.mjs` and its source in the include set; it publishes no system, and from its directory `@reference-ui/react` resolves to this project's `.reference-ui/react`. Assert the bare specifier lands in `dist`, outside the compile sources, so the walk reads the package directory, finds the borrowed runtime and binds `Panel` as project code: the trace admits it (`tracedJsxHosts: ['Panel']`) and `<Panel bg="red" />` backs under own as `@reference-ui/lib__bg_red` with zero diagnostics, standalone and with lib composed (nothing under `reference-ui`).
+- [x] `ATM-SITE-103` `[reference]` `[seam]` — **[package backing, package not built on Reference UI]**
+  **A component tag from a package not built on Reference UI is not a Reference component: its style-named props mint no want, no class and no diagnostic.**
+  Case `ATM-SITE-103` (owner ruling, styling plan §11.2). `App.tsx` renders `<Heart color="red" size={16} />` from `lucide-react`, installed with no published system and no `@reference-ui/react`, and `<Sparkline color="blue" p="2r" />` from `chart-kit`, which nothing installs. Assert both are foreign: the only want is the `<Div p="1r">` control's, `css.json` holds only `@reference-ui/lib__p_1r`, and no diagnostic emits, standalone and with lib composed.
+- [x] `ATM-SITE-104` `[reference]` `[seam]` — **[package backing, two published streams]**
+  **A tag from a package whose published streams name two systems backs one rule under each composed stream system, and nothing under any other composed system.**
+  Case `ATM-SITE-104`. The installed `@reference-ui/lib` publishes its system through `exports["./baseSystem"]`: name `reference-ui`, streams `[reference-icons, reference-ui]`, the shape lib's real sheet carries. `App.tsx` writes `<BoltIcon color="red" />` beside an own `<Div p="1r">`. Assert that under `upstreamSystems: ['reference-icons', 'reference-ui', 'acme']` `color` backs under `reference-icons+reference-ui`, one plan and one painted rule each in its own `/* foreign <system> */` group, and nothing under `acme`; with icons not composed it backs under `reference-ui` only; standalone it backs nowhere and warns once (`ATM-W-EXTERNAL-UNBACKED`, naming `@reference-ui/lib` and `reference-ui`).
+- [x] `ATM-SITE-105` `[reference]` `[seam]` — **[package backing, untraced and unbound tags]**
+  **A styled component tag no trace admits backs under own unless a package or a composed upstream renders it: project, runtime-borrowing and unbound tags are own, an upstream's published name is that upstream's.**
+  Case `ATM-SITE-105` (styling plan S3). `App.tsx` writes `<Badge bg="red" />` (a `withTone(Div)` product the trace cannot see through), `<Panel bg="blue" />` from a dist-only workspace package that borrows the own runtime, and the unbound `<UpstreamCard p="2r" />` and `<Mystery color="green" />` (names an MDX components map or a global provides), beside a `<Div p="1r">` control. Assert `tracedJsxHosts` is empty and every want backs under own standalone, with zero diagnostics. Under Core's request (`upstreamSystems: ['reference-ui', 'acme']`, `upstreamHosts: { acme: ['UpstreamCard'] }`) the published name backs under `acme` alone (`acme__p_2r`), the other three stay own, nothing is painted under `reference-ui`, and nothing warns.
+- [x] `ATM-SITE-106` `[reference]` `[seam]` — **[package backing, first sync]**
+  **A built workspace package that imports `@reference-ui/react` is own on the first sync, before the runtime it borrows is generated: a link that points nowhere yet, or none at all, is where this sync puts the runtime.**
+  Case `ATM-SITE-106`. `@acme/panel` is linked at `node_modules/@acme/panel` with `main` at its built `dist/index.mjs`, outside the compile sources, which imports `Div` from `@reference-ui/react`; it publishes no system. The project has not synced: `.reference-ui` does not exist, the committed tree links `node_modules/@reference-ui/react` to it anyway (a link that points nowhere), and a twin built at verify time has no `@reference-ui` scope at all. `App.tsx` writes `<Panel bg="red" />` beside a `<Div p="1r">` control. Assert `bg` backs under own as `@reference-ui/lib__bg_red` with zero diagnostics in both trees, and under Core's request (`upstreamSystems: ['reference-ui']`) nothing is painted under `reference-ui`. The verdict reads no generated output: the own root's `node_modules` is where the sync links its runtime, and a nearer link is read by its target (`extract/own_runtime.rs`).
+- [x] `ATM-SITE-107` `[reference]` `[seam]` — **[package backing, linked package not built on Reference UI]**
+  **A linked workspace package not built on Reference UI is silent even where this project's runtime resolves from it: a linked directory is own code only when it imports `@reference-ui/react` or lies in the include set.**
+  Case `ATM-SITE-107` (owner ruling, styling plan §11.2). `@acme/icons` (a plain icon package, `<StarIcon color size>`) and `@acme/panel` (forwards into `Div` from `@reference-ui/react`) are linked into `node_modules` with built `dist` entries outside the compile sources and no published system; the project's generated runtime is linked, so `@reference-ui/react` resolves to it from both. `App.tsx` writes `<StarIcon color="red" size={16} />` and `<Panel bg="blue" />` beside a `<Div p="1r">` control. Assert the site wants are exactly `bg:blue` and `p:1r`, both own, the icon's props mint no want, plan, class or diagnostic, and the same holds under Core's request (`upstreamSystems: ['reference-ui']`). A linked directory is own code only when the include set reaches into it or it uses `@reference-ui/react` (manifest dependency or a root entry import) and that lands on this runtime.
 - [x] `ATM-SITE-28` `[reference]` `[seam]`
   **A `let`/`var` with any assignment must drop to a diagnostic naming the write; unmutated `let`/`var` keep resolving.**
   Case `ATM-SITE-28`. Compile `let color = 'red'; color = 'blue'; css({ color })` beside `+=` compound, `++` update, member-root (`theme.primary = …`), and for-of-head write controls. Assert each mutated use yields zero wants plus one `Dynamic mutated binding '…'` warning naming the write (`reassigned at file:line:col`) — never the stale init. Assert unmutated `let`/`var` controls and unmutated `export let` (cross-file via `tokens.ts`) resolve exactly like `const` with zero diagnostics, and that a mutated `export let` drops the same way. Const/member/spread resolution is otherwise unchanged; wants and authored plans stay 1:1 because the strip lives in the index both walkers read (`extract/constants/mutate/`). Cross-file mutation poison is name-wide (fail-closed: over-drops, never stale-resolves) until the binding walk exists.
@@ -940,7 +976,7 @@ compiler contract.
   Compile one representative case through `atomic::compile` in Rust and through `compileSystem` from TypeScript, and assert the `stylesheet`, `css.classes`, `diagnostics`, and `recipes` are deep-equal. Assert the TS types in `js/types.ts` match the serde shape rather than drifting: `CssRuntime.classes` is optional in TS but always present in Rust, and `wants`/`recipes` are likewise optional on one side only. This is the repo's own unimplemented gate C (`README.md`), and without it Cargo tests and Vitest cases can disagree indefinitely — each proving a different engine.
 - [x] `ATM-SEAM-02` `[reference]` `[seam]` —
   **`compile()` must accept the frozen `NativeCompileRequest` and emit the same CSS as the legacy shape for the same spec.**
-  Case `ATM-SEAM-02`. The frozen `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape compiles the same input tree as legacy `{ baseSystem, rootDir }` and produces byte-identical `stylesheet`, `streams`, `css.classes`, `diagnostics`, and `atomCount`. `jsxHosts` unions into the JSX host set (`src/hosts.rs`), so a configured host extracts without a file-local import; `declarationRoot` threads to styletrace as the sync-root hint; `include` scopes both shapes to matching sources (`ATM-SCAN-01`). A non-`2` `schemaVersion` fails closed with an error diagnostic. The legacy shape still compiles — the case golden is the legacy compile.
+  Case `ATM-SEAM-02`. The frozen `{ schemaVersion: 2, spec, jsxHosts, sourceRoot, declarationRoot, include? }` shape compiles the same input tree as legacy `{ baseSystem, rootDir }` and produces byte-identical `stylesheet`, `streams`, `css.classes`, `diagnostics`, and `atomCount`. `jsxHosts` unions into the JSX host set (`src/hosts.rs`), so a configured host extracts without a file-local import; unconfigured, the same unbound tag lowers under own as a component nobody publishes (styling plan S3), so admitting it changes no byte of the sheet; `declarationRoot` threads to styletrace as the sync-root hint; `include` scopes both shapes to matching sources (`ATM-SCAN-01`). A non-`2` `schemaVersion` fails closed with an error diagnostic. The legacy shape still compiles — the case golden is the legacy compile.
 - [x] `ATM-SEAM-03` `[reference]` `[seam]` —
   **Every want must emit a runtime style plan, including wants that arrive through ternary arms, member access, and identifier spreads.**
   Case `ATM-SEAM-03` (unblocks CORE-SITE-01/02/03). `css({ color: flag ? 'cherry' : 'ocean' })` emits one plan per arm; `css({ color: theme.primary })` emits the member plan; `css({ bg: 'amber', ...rest })` emits the spread plan beside its literal sibling. Authored capture (`ast_to_json_values`) mirrors `walk_expression` leaf-for-leaf, and identifier-spread unpack pushes authored entries alongside wants, so `css()` and JSX resolve every leaf through the plan index (`createStylePlanIndex` + `mergeStylePlans` returns each leaf's `css.classes` entry, never `''`). `null`, `undefined`, and `void` leaves stay omitted on both sides. Whole-object `css(styles)` is out of scope: it yields no wants at all, a separate gap.
@@ -998,6 +1034,7 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-20` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-20/` |
 | `ATM-SITE-21` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-21/` |
 | `ATM-SITE-22` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-22/` |
+| `ATM-SITE-23` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-23/` |
 | `ATM-SITE-24` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-24/` |
 | `ATM-SITE-25` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-25/` |
 | `ATM-SITE-26` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-26/` |
@@ -1029,6 +1066,9 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-53` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-53/` |
 | `ATM-SITE-54` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-54/` |
 | `ATM-SITE-55` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-55/` |
+| `ATM-SITE-56` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-56/` |
+| `ATM-SITE-57` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-57/` |
+| `ATM-SITE-58` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-58/` |
 | `ATM-SITE-60` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-60/` |
 | `ATM-SITE-61` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-61/` |
 | `ATM-SITE-63` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-63/` |
@@ -1051,6 +1091,27 @@ cover `ATM-GHOST-01`, `ATM-LAYER-01`, `ATM-FORBID-06`, `ATM-ORDER-05`,
 | `ATM-SITE-84` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-84/` |
 | `ATM-SITE-85` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-85/` |
 | `ATM-SITE-86` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-86/` |
+| `ATM-SITE-87` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-87/` |
+| `ATM-SITE-88` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-88/` |
+| `ATM-SITE-89` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-89/` |
+| `ATM-SITE-90` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-90/` |
+| `ATM-SITE-91` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-91/` |
+| `ATM-SITE-92` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-92/` |
+| `ATM-SITE-93` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-93/` |
+| `ATM-SITE-94` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-94/` |
+| `ATM-SITE-95` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-95/` |
+| `ATM-SITE-96` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-96/` |
+| `ATM-SITE-97` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-97/` |
+| `ATM-SITE-98` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-98/` |
+| `ATM-SITE-99` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-99/` |
+| `ATM-SITE-100` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-100/` |
+| `ATM-SITE-101` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-101/` |
+| `ATM-SITE-102` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-102/` |
+| `ATM-SITE-103` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-103/` |
+| `ATM-SITE-104` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-104/` |
+| `ATM-SITE-105` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-105/` |
+| `ATM-SITE-106` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-106/` |
+| `ATM-SITE-107` | `[x]` | `[seam]` | `tests/cases/ATM-SITE-107/` |
 | `ATM-LEAF-01` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-01/` |
 | `ATM-LEAF-02` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-02/` |
 | `ATM-LEAF-03` | `[x]` | `[seam]` | `tests/cases/ATM-LEAF-03/` |
@@ -1309,7 +1370,7 @@ The following architectural constraints are strictly enforced across the `atomic
 5. **DO NOT synthesize `currentColor` for omitted shorthand components (`ATM-SHORT-01`)**:
    Never supply a default color when decomposing composite shorthands like `borderBottom="3px solid"`. Emitting `currentColor` creates a catastrophic cascade reset that destroys independent `borderColor` styling.
 6. **DO NOT guess JSX tags using PascalCase or regex (`ATM-SITE-08`)**:
-   Never guess that an arbitrary PascalCase element is a styled component. Styleprop-bearing primitives are authoritatively identified via `styletrace` and `canon`.
+   Never guess that an arbitrary PascalCase element is a styled component. Styleprop-bearing primitives are authoritatively identified via `styletrace` and `canon`. Capitalisation only tells a component from a DOM tag (`is_component_tag`): a component that is not a host lowers under the runtime its import lands in, never under a system its name suggests (`ATM-SITE-96`, `ATM-SITE-105`).
 7. **DO NOT split `atomic` into 12 micro-crates**:
    Follow the module layout within the single `atomic` crate. Panda's process split (`pandacss_extractor`, `pandacss_encoder`, `pandacss_utility`, …) is the example of the work, not a crate layout to copy.
 8. **DO NOT collect `tokens()` or emit `StyleProps` interfaces**:

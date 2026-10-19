@@ -1,8 +1,8 @@
 /**
  * Parse-failure isolation (ATM-SITE-57). One unparsable file under
  * include yields exactly one located trace warning naming the file while
- * siblings still trace and configured hosts still gate; the compile itself
- * does not fail.
+ * siblings still trace and configured hosts still extract; the compile itself
+ * does not fail. Unconfigured, ConfiguredHost lowers under own (styling plan S3).
  */
 import path from 'node:path'
 import { expect } from 'vitest'

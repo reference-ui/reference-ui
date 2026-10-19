@@ -2,7 +2,7 @@ import { tokens } from '@reference-ui/core'
 
 /**
  * T17 novel probe tokens. These are consumer-local: the icons/lib/fixture
- * packages never compiled them, so the classes the fan-out backs here cannot
+ * packages never compiled them, so the classes the consumer backs here cannot
  * be coincidental package-shipped hits. The spec proves that absence against
  * each published sheet.
  */

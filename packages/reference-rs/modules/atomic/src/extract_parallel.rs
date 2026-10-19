@@ -1,21 +1,19 @@
 //! Per-file style extract, serial or from a program the caller already holds.
 //!
-//! Small compiles walk each retained program on the caller. The parallel
-//! phase parses on the worker that will walk the file and calls
-//! [`extract_program`] with the resolved imports, so the tree never crosses
-//! a thread. Shard outputs commit in input order through [`FileOut::commit`].
+//! Small compiles collect each styling file's bindings once ([`styling_files`]),
+//! which analysis reads before the caller walks each retained program with them.
+//! The parallel phase parses on the worker that will walk the file and calls
+//! [`extract_program`] with the resolved imports, so the tree never crosses a
+//! thread. Shard outputs commit in input order through [`FileOut::commit`].
 
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::extract::harvest::Sink;
 use crate::extract::recipes::selection::{RecipeBinding, TentativeSelection};
-use crate::extract::resolver::ResolvedExport;
 use crate::extract::scope::{ImportLookup, ScopeChain};
-use crate::extract::{
-    collect_bindings_with_identity, ExtractBindings, ExtractConfig, ExtractContext,
-    ExtractSinks, JsxHosts, OwnedProps,
-};
+use crate::extract::{collect_bindings_with_identity, harvest::Sink, identity::IdentityGraph};
+use crate::extract::{resolver::ResolvedExport, Composed, ExtractBindings, ExtractConfig};
+use crate::extract::{ExtractContext, ExtractSinks, JsxHosts, OwnedProps};
 use crate::recipes::Recipe;
 use crate::runtime::AuthoredDeclaration;
 use crate::stream::SourceSlot;
@@ -36,78 +34,87 @@ pub(crate) struct FileOut {
     tentative: Vec<TentativeSelection>,
 }
 
-/// Extract every styling file on the caller, in source order.
+/// One styling file of the serial walk: its retained program plus the
+/// bindings collected for it once, which analysis and extraction both read.
+pub(crate) struct StylingFile<'p> {
+    pub program: &'p Program<'p>,
+    pub bindings: ExtractBindings,
+}
+
+/// Each source's styling file by index (`None` for every other source): the
+/// identity walk runs once per file, before analysis, as it does on the lanes.
+pub(crate) fn styling_files<'p>(
+    sources: &[(String, String)],
+    parsed: &'p [oxc_parser::ParserReturn<'p>],
+    slots: &[SourceSlot],
+    identity: &IdentityGraph<'_>,
+) -> Vec<Option<StylingFile<'p>>> {
+    sources
+        .iter()
+        .enumerate()
+        .map(|(index, (path, content))| {
+            let program = styling_program(slots, parsed, index, content)?;
+            let bindings = collect_bindings_with_identity(program, path, identity);
+            Some(StylingFile { program, bindings })
+        })
+        .collect()
+}
+
+/// Extract every styling file on the caller, in source order. Serial, used
+/// for small compiles and as the one-thread behavior.
 pub(crate) fn extract_all(
     session: &mut ParseSession<'_>,
     sources: &[(String, String)],
-    parsed: &[oxc_parser::ParserReturn<'_>],
-    slots: &[SourceSlot],
+    files: &[Option<StylingFile<'_>>],
 ) {
-    extract_serial(session, sources, parsed, slots);
+    for ((path, content), file) in sources.iter().zip(files) {
+        if let Some(file) = file {
+            extract_parsed_program(session, path, content, file);
+        }
+    }
 }
 
-/// True when a retained, unpanicked, styling file still has its parse.
-fn is_styling(slots: &[SourceSlot], index: usize, content: &str) -> bool {
-    !slots[index].panicked
-        && !slots[index].streamed
-        && slots[index].parsed.is_some()
-        && !styling_skip(content)
-}
-
-/// The retained program for a styling file, when this index is one.
+/// The retained program for a styling file: unpanicked, retained with its
+/// parse, and not styling-free. `None` for any other index.
 fn styling_program<'a>(
     slots: &[SourceSlot],
     parsed: &'a [oxc_parser::ParserReturn<'a>],
     index: usize,
     content: &str,
 ) -> Option<&'a Program<'a>> {
-    if !is_styling(slots, index, content) {
+    let slot = &slots[index];
+    if slot.panicked || slot.streamed || styling_skip(content) {
         return None;
     }
-    let position = slots[index].parsed?;
-    Some(&parsed[position].program)
+    Some(&parsed[slot.parsed?].program)
 }
 
-/// Serial extract, used for small compiles and as the one-thread behavior.
-fn extract_serial(
-    session: &mut ParseSession<'_>,
-    sources: &[(String, String)],
-    parsed: &[oxc_parser::ParserReturn<'_>],
-    slots: &[SourceSlot],
-) {
-    for (index, (path, content)) in sources.iter().enumerate() {
-        let Some(program) = styling_program(slots, parsed, index, content) else {
-            continue;
-        };
-        extract_parsed_program(session, path, content, program);
-    }
-}
-
-/// Walk one already-parsed program into the shared session.
+/// Walk one already-parsed program into the shared session, with the
+/// bindings analysis already read for it.
 fn extract_parsed_program(
     session: &mut ParseSession<'_>,
     path: &str,
     content: &str,
-    program: &Program<'_>,
+    file: &StylingFile<'_>,
 ) {
-    let table = extract::scope::collect(program, session.constants);
+    let table = extract::scope::collect(file.program, session.constants);
     let values = session.resolver.resolve_file_imports(path, &table.import_refs());
     let lookup = ImportLookup::Binding {
         values: &values,
         fallback: session.constants,
     };
     let chain = ScopeChain::new(&table, lookup);
-    let bindings = collect_bindings_with_identity(program, path, &session.identity);
     let jsx_hosts = JsxHosts {
-        local: bindings.jsx_hosts_ref(),
+        local: file.bindings.jsx_hosts_ref(),
         global: session.traced_jsx,
     };
     let config = ExtractConfig {
         chain,
         breakpoints: session.breakpoints,
-        bindings: &bindings,
+        bindings: &file.bindings,
         jsx_hosts,
         owned_props: session.hosts.owned_for(path),
+        composed: session.composed,
         shadowed: &[],
     };
     let sinks = ExtractSinks {
@@ -121,7 +128,7 @@ fn extract_parsed_program(
         tentative: session.tentative,
     };
     let mut ctx = ExtractContext::new(path, Some(content), config, sinks);
-    extract::extract_with_context(program, &mut ctx);
+    extract::extract_with_context(file.program, &mut ctx);
 }
 
 /// Split `len` items into strided shards, one per worker. Lane `k` owns
@@ -149,6 +156,7 @@ pub(crate) struct ExtractIn<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub traced: &'a FxHashSet<String>,
     pub owned_props: OwnedProps<'a>,
+    pub composed: &'a Composed<'a>,
 }
 
 /// Walk one program the caller already parsed, into owned products.
@@ -170,6 +178,7 @@ pub(crate) fn extract_program(program: &Program<'_>, input: &ExtractIn<'_>) -> F
         bindings: input.bindings,
         jsx_hosts,
         owned_props: input.owned_props,
+        composed: input.composed,
         shadowed: &[],
     };
     let mut facts = DiagnosticsSession::new();

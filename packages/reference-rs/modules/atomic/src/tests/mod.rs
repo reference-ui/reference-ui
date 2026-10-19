@@ -4,6 +4,7 @@
 //! canary tests return early when the gitignored sync output is absent.
 
 mod gates;
+pub(crate) mod packages;
 mod parallel_panic;
 mod seed;
 mod slot;

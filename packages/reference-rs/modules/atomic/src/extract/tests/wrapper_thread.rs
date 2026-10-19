@@ -132,11 +132,12 @@ fn test_arrow_wrapper_prop_threading_emits() {
     assert!(has_last_child_utility(&res), "arrow-threaded css mints the utility");
 }
 
-/// A same-file component that never forwards `css` is not threaded, so under
-/// the external-tag contract (G0 §D/C8) its `css` block extracts as external
-/// wants — never host wants, and never via the wrapper fallback.
+/// A same-file component that never forwards `css` is not threaded, so it is
+/// a project component nobody traces (G0 §D/C8): every attribute lowers under
+/// own (styling plan S3), its sibling `p` included, which the wrapper
+/// fallback (`css` only) would never lower.
 #[test]
-fn test_non_forwarding_wrapper_is_external_not_host() {
+fn test_non_forwarding_wrapper_is_a_component_not_threaded() {
     let res = compile_code(
         r#"
         import { Div } from '@reference-ui/react';
@@ -144,15 +145,17 @@ fn test_non_forwarding_wrapper_is_external_not_host() {
         function Widget({ css }: { css?: Record<string, unknown> }) {
             return <Div>static</Div>;
         }
-        export const el = <Widget css={shared} />;
+        export const el = <Widget css={shared} p="1r" />;
         "#,
     );
+    let lowered: Vec<_> = res
+        .wants
+        .iter()
+        .map(|w| (&*w.prop, w.backing.is_own()))
+        .collect();
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
-        "non-forwarding wrapper extracts only external wants: {:?}",
-        res.wants
-            .iter()
-            .map(|w| (&w.prop, w.value.to_string(), w.external))
-            .collect::<Vec<_>>()
+        lowered.contains(&("color", true)) && lowered.contains(&("p", true)),
+        "non-forwarding wrapper lowers every attribute under own: {lowered:?}"
     );
+    assert!(lowered.iter().all(|(_, own)| *own), "{lowered:?}");
 }

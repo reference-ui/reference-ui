@@ -79,7 +79,7 @@ export async function compileWorld(dir: string): Promise<NativeCompileResult> {
     const requested = resolveJsxElements(config)
     const request = buildCompileRequest({
       spec,
-      requested: requested.merged,
+      requested: requested.local,
       primitiveNames: ELEMENT_JSX_NAMES,
       sourceRoot: dir,
       declarationRoot: dir,
@@ -125,7 +125,7 @@ export async function prepareCustomWorld(
   const requested = resolveJsxElements(config)
   const request = buildCompileRequest({
     spec,
-    requested: requested.merged,
+    requested: requested.local,
     primitiveNames: ELEMENT_JSX_NAMES,
     sourceRoot: dir,
     declarationRoot: dir,

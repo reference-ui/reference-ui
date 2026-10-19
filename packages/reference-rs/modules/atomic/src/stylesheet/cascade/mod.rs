@@ -9,7 +9,7 @@
 
 use std::cmp::Ordering;
 
-use crate::atom::{Atom, AtomSet, When, WhenKind};
+use crate::atom::{Atom, AtomSet, ForeignAtoms, When, WhenKind};
 use canon::{property_cascade_rank, to_css_declaration_property};
 use rustc_hash::FxHashMap;
 
@@ -118,42 +118,55 @@ pub(crate) fn write_utilities(out: &mut String, atom_set: &AtomSet, system: &str
     write_ranked(out, atom_set, &prefix);
 }
 
-/// Emit the own group, then one delimited group per foreign qualifier.
+/// Emit the own group, then one delimited group per system a foreign atom names.
 ///
 /// `qualifiers` is own-first: `qualifiers[0]` is the compiling system, so the own
-/// group is byte-identical to a flat `write_utilities` call by construction. An
-/// empty external set short-circuits to that flat path, so no-external bytes are
-/// untouched. Otherwise the external set is ranked **once** and replayed under
-/// each foreign qualifier's `SelectorPrefix`; the groups are N, one per
-/// qualifier, each wrapped in `/* foreign <q> */` … `/* end foreign <q> */`
-/// markers. The markers let a downstream compose strip a foreign group whole:
-/// foreign rules are consumer-local (resolved with the consumer's tokens), so a
-/// published entry must contribute own-qualified rules only. A foreign group is
-/// uniformly non-empty whenever the external set is, so there is no per-group
-/// emptiness check.
+/// group is byte-identical to a flat `write_utilities` call by construction. With
+/// no foreign group to print this is that flat path, so no-foreign bytes are
+/// untouched. Otherwise each group the atoms themselves name prints under its
+/// system's `SelectorPrefix`, wrapped in `/* foreign <q> */` … `/* end foreign <q> */`
+/// markers: groups the composed qualifiers name first, in qualifier order, then
+/// any other in the order a want first named it. The markers let a downstream
+/// compose strip a foreign group whole: foreign rules are consumer-local (resolved
+/// with the consumer's tokens), so a published entry must contribute own-qualified
+/// rules only. Only non-empty groups print.
 pub(crate) fn write_utilities_grouped(
     out: &mut String,
     own: &AtomSet,
-    external: &AtomSet,
+    foreign: &ForeignAtoms,
     qualifiers: &[String],
 ) {
     debug_assert!(
         !qualifiers.is_empty(),
         "grouped emission requires an own-first qualifier list"
     );
-    if external.is_empty() {
+    if !foreign.prints() {
         return write_utilities(out, own, &qualifiers[0]);
     }
     write_ranked(out, own, &name::SelectorPrefix::for_system(&qualifiers[0]));
-    let ranked = rank_atoms(external);
-    for qualifier in qualifiers.iter().skip(1) {
-        write_foreign_group(out, &ranked, qualifier);
+    for (system, atoms) in ordered_groups(foreign, &qualifiers[1..]) {
+        write_foreign_group(out, &rank_atoms(atoms), system);
     }
 }
 
+/// Foreign groups in print order: those `composed` names in its order, then
+/// the rest in first-named order.
+fn ordered_groups<'a>(
+    foreign: &'a ForeignAtoms,
+    composed: &'a [String],
+) -> impl Iterator<Item = (&'a str, &'a AtomSet)> {
+    let named = composed
+        .iter()
+        .filter_map(|system| foreign.group(system).map(|atoms| (system.as_str(), atoms)))
+        .filter(|(_, atoms)| !atoms.is_empty());
+    let rest = foreign
+        .groups()
+        .filter(|(system, _)| !composed.iter().any(|name| name == system));
+    named.chain(rest)
+}
 
 /// Rank every atom in `atom_set` by `CascadeKey`, with the authored-when
-/// tiebreak. Grouped emission ranks the external set once and replays it.
+/// tiebreak. Grouped emission ranks each foreign group on its own.
 fn rank_atoms<'a>(atom_set: &'a AtomSet) -> Vec<(&'a Atom, CascadeKey<'a>)> {
     let mut ranks: FxHashMap<&'a str, u8> = FxHashMap::default();
     let mut ranked: Vec<(&'a Atom, CascadeKey<'a>)> = atom_set

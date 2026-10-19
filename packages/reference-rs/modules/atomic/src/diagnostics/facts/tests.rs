@@ -1,5 +1,5 @@
-//! Pins the fact vocabulary: sinks collect facts in order, target-system ownership splits own from
-//! external blocks, lookup keys serialize their five-tuple canonically, and resolve outcomes tell a
+//! Pins the fact vocabulary: sinks collect facts in order, a block's backing targets the own system
+//! or exactly the systems it names, lookup keys serialize their five-tuple canonically, and resolve outcomes tell a
 //! drop from a passthrough. Fixtures build sites and owned keys by hand so each test isolates one
 //! fact shape.
 
@@ -37,7 +37,7 @@ fn vec_sink_collects_facts_in_order() {
     sink.report(DiagnosticFact::ExactLookupExpected {
         site: site(),
         key: key(),
-        external: false,
+        backing: crate::atom::Backing::Own,
     });
     assert_eq!(sink.len(), 2);
     assert!(matches!(sink[0], DiagnosticFact::DynamicSlot { .. }));
@@ -48,24 +48,18 @@ fn vec_sink_collects_facts_in_order() {
 }
 
 #[test]
-fn target_systems_is_own_only_for_own_blocks() {
-    let qualifiers = vec!["own".to_string(), "icons".to_string()];
-    let own: Vec<&str> = target_systems(false, "own", &qualifiers).collect();
+fn own_backing_targets_the_own_system_only() {
+    let own: Vec<&str> = crate::atom::Backing::Own.targets("own").collect();
     assert_eq!(own, vec!["own"]);
-    // An empty qualifier list still yields the own system only.
-    let bare: Vec<&str> = target_systems(false, "own", &[]).collect();
-    assert_eq!(bare, vec!["own"]);
 }
 
 #[test]
-fn target_systems_is_foreign_only_for_external_blocks() {
-    let qualifiers = vec!["own".to_string(), "icons".to_string(), "bench".to_string()];
-    let foreign: Vec<&str> = target_systems(true, "own", &qualifiers).collect();
+fn foreign_backing_targets_exactly_its_systems() {
+    let backing = crate::atom::Backing::systems(["icons", "bench"]);
+    let foreign: Vec<&str> = backing.targets("own").collect();
     assert_eq!(foreign, vec!["icons", "bench"]);
-    // With no foreign qualifier there is nothing to target.
-    let lone = vec!["own".to_string()];
-    let bare: Vec<&str> = target_systems(true, "own", &lone).collect();
-    assert!(bare.is_empty());
+    // A backing that names no system has nothing to target.
+    assert_eq!(crate::atom::Backing::none().targets("own").count(), 0);
 }
 
 #[test]

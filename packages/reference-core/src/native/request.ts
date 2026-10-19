@@ -1,6 +1,7 @@
 // Native request assembly: the one builder for the frozen compile request.
-// It takes the spec, the resolved roster, the primitive names, the roots,
-// and the scope, and emits the six-key request every compile call shares.
+// It takes the spec, the own roster, the primitive names, the roots, the
+// scope and what the upstreams publish, and emits the six-key request every
+// compile call shares, plus optional upstream keys only when they say something.
 // One home, so the CORE-SYNC-04 pin never drifts across call sites again.
 
 import type { EvaluatedSystemSpec } from '@reference-ui/rust/contracts'
@@ -18,6 +19,7 @@ export function uniqueSorted(names: readonly string[]): string[] {
  */
 export interface CompileRequestInput {
   spec: EvaluatedSystemSpec
+  /** The app's own configured names (the roster's `local` bucket), never an upstream's. */
   requested: string[]
   primitiveNames: readonly string[]
   sourceRoot: string
@@ -36,6 +38,28 @@ export interface CompileRequestInput {
    * serialized request otherwise and the CORE-SYNC-04 pin stays byte-identical.
    */
   upstreamSystems?: string[]
+  /**
+   * The upstream systems whose tokens the vocabulary carries (the extends
+   * closure): the engine's token layer also claims their stamps. Set only
+   * when non-empty, so the CORE-SYNC-04 pin stays byte-identical.
+   */
+  extendedSystems?: string[]
+  /**
+   * The names each extended upstream publishes, by system name. They stay
+   * out of `jsxHosts`: an upstream's component is never an own host. Set
+   * only when one names a component, so the CORE-SYNC-04 pin stays byte-identical.
+   */
+  upstreamHosts?: Record<string, string[]>
+}
+
+// A copy of the map without the systems that name nothing, or undefined when none names a component.
+function upstreamHostsField(
+  hosts: Record<string, string[]> | undefined
+): Record<string, string[]> | undefined {
+  const entries = Object.entries(hosts ?? {}).filter(([, names]) => names.length > 0)
+  return entries.length > 0
+    ? Object.fromEntries(entries.map(([system, names]) => [system, [...names]]))
+    : undefined
 }
 
 export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRequest {
@@ -51,5 +75,7 @@ export function buildCompileRequest(input: CompileRequestInput): ScopedCompileRe
     // Arrays are truthy: `|| undefined` would keep the key present-empty and
     // break the CORE-SYNC-04 byte-diff, so length-gate instead.
     upstreamSystems: input.upstreamSystems?.length ? [...input.upstreamSystems] : undefined,
+    extendedSystems: input.extendedSystems?.length ? [...input.extendedSystems] : undefined,
+    upstreamHosts: upstreamHostsField(input.upstreamHosts),
   }
 }

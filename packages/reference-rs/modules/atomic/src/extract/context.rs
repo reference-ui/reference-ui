@@ -1,7 +1,8 @@
 //! The shared extraction session and its host gating.
 //!
 //! `ExtractContext` is the session the `jsx`, `css`, and `recipe` passes
-//! share: it answers host membership (`allows_jsx_tag`, `host_owns`),
+//! share: it answers host membership by provenance and roster
+//! (`allows_jsx_tag`, `tag_provenance`, `host_owns`),
 //! reports located diagnostics, and mints the `ObjectWalk` /
 //! `ExpressionWalk` contexts that lower expressions into wants.
 //! `ExtractConfig` carries the borrowed inputs and `ExtractSinks` the
@@ -21,10 +22,12 @@ use crate::diagnostics::{Diagnostic, DiagnosticsSession, LineIndex};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 
+use super::backing::Composed;
 use super::bindings::{self, ExtractBindings};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
 use super::owned_props::OwnedProps;
+use super::provenance::{self, HostGate, TagProvenance};
 use super::recipes::selection::{RecipeBinding, TentativeSelection};
 use super::scope::{BindingInit, BindingKind, Lookup, ScopeChain, ScopeId, Scoped, ROOT_SCOPE};
 use super::wrapper_thread::WrapperThreads;
@@ -36,6 +39,8 @@ pub struct ExtractConfig<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: OwnedProps<'a>,
+    /// What this compile composes: the systems a non-own tag may back under.
+    pub composed: &'a Composed<'a>,
     pub shadowed: &'a [FxHashSet<String>],
 }
 
@@ -62,6 +67,7 @@ pub struct ExtractContext<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: OwnedProps<'a>,
+    pub composed: &'a Composed<'a>,
     pub wrapper_threads: Option<&'a WrapperThreads>,
     pub shadowed: &'a [FxHashSet<String>],
     pub recipe_binding: Option<&'a str>,
@@ -95,6 +101,7 @@ impl<'a> ExtractContext<'a> {
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
             owned_props: config.owned_props,
+            composed: config.composed,
             wrapper_threads: None,
             shadowed: config.shadowed,
             recipe_binding: None,
@@ -120,8 +127,11 @@ impl<'a> ExtractContext<'a> {
     /// (`const Tabs = Other`) rebinds every `<Tabs.*>` use and gates it —
     /// unless the root re-admits through its own const object literal (see
     /// `shadowed_member_admitted`), after which membership decides. A root
-    /// imported from a foreign-runtime package is never an own host, so
-    /// `Button` from `@reference-ui/lib/primitives` takes the external path.
+    /// bound to an installed package is never an own host, whatever its
+    /// name: `Button` from any package takes the external path. Names an
+    /// upstream publishes never reach the global roster (`upstreamHosts`), so
+    /// a local or unbound tag that spells one is own only through an own
+    /// import or this compile's trace.
     pub fn allows_jsx_tag(&self, name: &str) -> bool {
         if bindings::is_shadowed(self.shadowed, name) {
             // A shadowed plain tag is a host only through its alias chain;
@@ -137,19 +147,25 @@ impl<'a> ExtractContext<'a> {
                 return false;
             }
         }
-        if self.binds_foreign(name) {
-            return false;
-        }
-        if self.jsx_hosts.contains(name) {
-            return true;
-        }
-        name.contains('.') && self.jsx_hosts.contains(&name.replace('.', ""))
+        !self.binds_package(name) && self.host_gate().names_host(name)
     }
 
-    /// True when the tag's root is an unshadowed foreign-runtime import.
-    fn binds_foreign(&self, tag: &str) -> bool {
-        let root = tag.split('.').next().unwrap_or(tag);
-        !bindings::is_shadowed(self.shadowed, root) && self.bindings.binds_foreign(root)
+    /// The provenance of a tag's root here: a scope binding outranks any import.
+    pub fn tag_provenance(&self, tag: &str) -> &'a TagProvenance {
+        provenance::classify(self.bindings, self.shadowed, provenance::tag_root(tag))
+    }
+
+    /// True when the tag's root is an unshadowed package-bound import.
+    fn binds_package(&self, tag: &str) -> bool {
+        matches!(self.tag_provenance(tag), TagProvenance::Package(_))
+    }
+
+    /// The scope-free host gate over this file's roster and provenance.
+    pub fn host_gate(&self) -> HostGate<'a> {
+        HostGate {
+            hosts: self.jsx_hosts,
+            bindings: self.bindings,
+        }
     }
 
     /// True when a shadowed plain tag re-admits through a same-file const
@@ -171,8 +187,7 @@ impl<'a> ExtractContext<'a> {
             }
             let Some((decl, target)) = self.chain.alias_edge(&current, scope) else {
                 return !bindings::is_shadowed(self.shadowed, &current)
-                    && !self.bindings.binds_foreign(&current)
-                    && self.jsx_hosts.contains(&current);
+                    && self.host_gate().admits(&current);
             };
             current = target;
             scope = decl;
@@ -201,9 +216,7 @@ impl<'a> ExtractContext<'a> {
         let Some(value) = entries.get(member).and_then(|prop| prop.ident.as_deref()) else {
             return false;
         };
-        !bindings::is_shadowed(self.shadowed, value)
-            && !self.bindings.binds_foreign(value)
-            && self.jsx_hosts.contains(value)
+        !bindings::is_shadowed(self.shadowed, value) && self.host_gate().admits(value)
     }
 
     /// True when the host's own declaration owns this prop name (§14).

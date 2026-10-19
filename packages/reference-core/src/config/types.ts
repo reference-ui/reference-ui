@@ -60,9 +60,10 @@ export interface ReferenceUIConfig {
   strict?: readonly StrictCategory[]
 
   /**
-   * Escape hatch for JSX element names that static tracing cannot infer.
-   * Hosts are discovered by StyleTrace per compile; list here only generated
-   * component surfaces and member spellings (e.g. `NSPanel` for `<NS.Panel>`).
+   * Component names admitted as the app's own style hosts by name. Not needed:
+   * StyleTrace finds every component that forwards style props, and import
+   * provenance decides ownership. A name here admits only a project or
+   * unbound tag; a component imported from a package is never own.
    */
   jsxElements?: string[]
 

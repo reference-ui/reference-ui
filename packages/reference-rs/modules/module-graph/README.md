@@ -10,7 +10,9 @@ declared, shared by the Reference UI compilers.
   `TsconfigPolicy::Follow`), then each ancestor `node_modules`: `exports` or
   entry fields, the direct path, a root's `@types` twin. Bases probe the literal
   file, then extensions and indexes; `.js` tries source siblings first. Hits
-  canonicalize, so symlinks share a key.
+  canonicalize, so symlinks share a key. `resolve_located` probes the same
+  way and also names the canonical package directory a `node_modules` hit came
+  through, so a caller can read what that package ships beside its entry.
 - **Policies** (`ExtensionPolicy`): `Source` probes sources first (value
   compilers); `Declarations` probes declarations first (type scanners).
   `RootEntryPolicy` orders a package's entries against its declarations:

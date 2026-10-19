@@ -36,7 +36,7 @@ pub(super) fn walk_r_attr(
     }
     match expr {
         Expression::ObjectExpression(obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.backing);
             crate::extract::expressions::walk_r_object(&mut obj_ctx, obj, &smallvec![]);
         }
         Expression::ConditionalExpression(cond) => {
@@ -65,7 +65,7 @@ pub(super) fn walk_style_attr(
     }
     match expr {
         Expression::ObjectExpression(obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.backing);
             crate::extract::expressions::walk_style_object(&mut obj_ctx, obj, when);
         }
         Expression::ArrayExpression(arr) => walk_style_attr_array(arr, site, ctx, when),
@@ -114,7 +114,7 @@ fn lower_block_attr(
 ) {
     match resolve_block_target(ctx.scoped(), expr) {
         BlockLookup::Hit(name, obj) => {
-            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.backing);
             lower_const_object(
                 &mut obj_ctx,
                 obj,
@@ -289,7 +289,7 @@ fn lower_attr_const(
     // Literal leaves skip silently, like string-head args.
     for element in elements {
         if let ConstArrayElement::Object(map) = element {
-            let mut obj_ctx = ctx.object_walk(site.origin, false, site.external);
+            let mut obj_ctx = ctx.object_walk(site.origin, false, site.backing);
             lower_array_object(&mut obj_ctx, map, spread);
         }
     }

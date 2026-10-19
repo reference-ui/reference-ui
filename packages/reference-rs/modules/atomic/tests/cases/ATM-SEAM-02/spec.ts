@@ -2,6 +2,8 @@
  * Frozen request parity case. The frozen NativeCompileRequest shape must
  * compile the same sources to byte-identical artifacts as the legacy shape,
  * while jsxHosts admits a configured host that file-local imports do not list.
+ * Unconfigured, the unbound tag still lowers under own (styling plan S3), so
+ * the hosted sheet equals the legacy one.
  */
 import path from 'node:path'
 import { expect } from 'vitest'
@@ -42,7 +44,8 @@ const spec: AtomicCaseSpec = {
     const hosted = await compile({ ...frozenBase, jsxHosts: ['ConfiguredHost'] })
     expect(hasWant(hosted, 'mt', '4r')).toBe(true)
     expect(hosted.stylesheet).toContain('mt_4r')
-    expect(result.stylesheet).not.toContain('mt_4r')
+    expect(result.stylesheet).toContain('mt_4r')
+    expect(hosted.stylesheet).toBe(result.stylesheet)
 
     const badVersion = await compile({
       ...frozenBase,

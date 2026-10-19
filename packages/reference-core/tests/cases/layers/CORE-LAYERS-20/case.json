@@ -1,0 +1,1 @@
+{"id": "CORE-LAYERS-20", "name": "through a chain where b extends a, an app that extends b paints its own token value inside a's and b's components, and an app that layers b paints b's value inside both", "sync": true}

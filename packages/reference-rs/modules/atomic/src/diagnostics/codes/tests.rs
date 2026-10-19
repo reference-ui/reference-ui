@@ -76,6 +76,7 @@ fn every_variant_appears_exactly_once() {
         DiagnosticCode::UnknownTone,
         DiagnosticCode::UnknownToken,
         DiagnosticCode::UnbracedTokenRef,
+        DiagnosticCode::ExternalUnbacked,
     ] {
         assert!(variants.contains(&code), "missing table row: {code:?}");
     }

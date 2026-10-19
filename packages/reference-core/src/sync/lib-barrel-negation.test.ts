@@ -59,7 +59,7 @@ async function fingerprintInclude(config: ReferenceUIConfig, include: string[]):
   const requested = resolveJsxElements(variant)
   const request = buildCompileRequest({
     spec,
-    requested: requested.merged,
+    requested: requested.local,
     primitiveNames: ELEMENT_JSX_NAMES,
     sourceRoot: LIB_DIR,
     declarationRoot: LIB_DIR,

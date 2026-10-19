@@ -1,12 +1,15 @@
-# chain-t17 — Fan-out: style prebuilt components with consumer style props
+# chain-t17 — Style prebuilt components with consumer style props
 
-Prover for the fan-out contract: a **named style
-prop** passed to an **external (prebuilt) component** always paints. The
-consumer compile keeps the prop on the capitalized non-host JSX tag, resolves
-it against the **consumer's** tokens, and emits the deterministic
-`<system>__<stem>` class the foreign runtime mints — one group per composed
-system — into its own utilities block. T16 stays **frozen** as the
-default-path regression; T17 pins the new contract.
+Prover for the consumer-style-prop contract (first written as the fan-out
+contract): a **named style prop** passed to a **prebuilt component** from a
+composed package always paints. The consumer compile keeps the prop on the
+package's tag, resolves it against the **consumer's** tokens, and emits the
+deterministic `<system>__<stem>` class the package's runtime mints into its own
+utilities block, one `/* foreign <system> */` group for each system the package
+renders through (its published streams that the app composes). Which package
+renders a tag comes from where its import lands, not from its name
+(styling-across-packages plan §3). T16 stays **frozen** as the default-path
+regression; T17 pins this contract.
 
 ## Topology
 
@@ -18,7 +21,11 @@ default-path regression; T17 pins the new contract.
 
 Identical to T16, so the icons arrive **transitively** through lib's `layers`
 (the docs topology). Icons therefore qualify under `reference-icons`, lib's
-parts under `reference-ui`, and the fixture under `aliased-host-library`.
+parts under `reference-ui`, and the fixture under `aliased-host-library`. A tag
+imported from lib backs under both of lib's published streams,
+`reference-icons` and `reference-ui`, because the engine reads lib's streams
+rather than its re-exports; that is why `<Field padding>` also adds
+`reference-icons__p_t17ProbeGap` (contract 7).
 
 ## Probes
 
@@ -54,7 +61,7 @@ at 41%, serialised by Chromium as `color(srgb 0.717647 0.00784314 0.2 / 0.41)`.
    rule. No `reference-icons__` rule originates from lib's own entry (pins the
    C-T16 composition strip). `publishedIconsRuleCount` exact-equality is retired
    **in T17 only**.
-8. A consumer tone resolves against the consumer's tokens through fan-out: the
+8. A consumer tone resolves against the consumer's tokens in the consumer compile: the
    `color` probe paints the ink at the line amount, and its rule references
    `--tones-t17-probe-tone-line` and never `--tones-t17-probe-tone-surface`.
 

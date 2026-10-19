@@ -38,6 +38,8 @@ struct ParseView<'a> {
     retained: &'a [usize],
     constants: &'a extract::constants::LocalConstants,
     errors: &'a [Vec<(String, Option<u32>)>],
+    /// What the compile composes: analysis and extraction read the same facts.
+    composed: &'a extract::Composed<'a>,
 }
 
 /// Serial parse path: retains one parse per source the streaming gate keeps, streams the
@@ -61,6 +63,10 @@ fn run_parse_serial(
     drop(_parse);
     let (constants, transient) = merge_constants(sources, &parsed, &mut slots);
     let stream::TransientOut { staged, errors } = transient;
+    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls, so analysis,
+    // extraction and assembly cannot diverge on what is composed.
+    let qualifiers = assembly::qualifiers_for(&request.base_system.name, &request.upstream_systems);
+    let composed = extract::Composed::new(&qualifiers, &request.upstream_hosts);
     let view = ParseView {
         request,
         sources,
@@ -69,6 +75,7 @@ fn run_parse_serial(
         retained: &retained,
         constants: &constants,
         errors: &errors,
+        composed: &composed,
     };
     #[cfg(feature = "alloc-trace")]
     let _graphs = crate::alloc_trace::PhaseGuard::enter("graphs");
@@ -76,12 +83,17 @@ fn run_parse_serial(
     let live = stream::live_retained_sources(sources, &parsed, &retained, &slots);
     let mut graph = extract::resolver::ValueGraph::new(sources, &live, staged, &constants);
     let (identity_programs, trace_programs) = reuse_programs(&view);
-    let identity = extract::identity::IdentityGraph::with_programs(sources, &identity_programs);
+    let root = crate::hosts::trace_root(request);
+    let identity = extract::identity::IdentityGraph::with_programs(sources, &identity_programs)
+        .with_root(root.as_deref().and_then(std::path::Path::to_str));
     #[cfg(feature = "alloc-trace")]
     drop(_graphs);
     let (hosts, traced_jsx) =
         resolve_hosts(&view, &trace_programs, sinks.session, sinks.diagnostics);
-    analyze_parse(&view, &hosts, sinks.session, sinks.diagnostics);
+    // One set of bindings per styling file: analysis and extraction both read it.
+    let files = extract_parallel::styling_files(sources, &parsed, &slots, &identity);
+    analyze_parse(&view, &files, &hosts, sinks.session);
+    stream::report_parse_errors(sources, &errors, sinks.diagnostics);
     let extract_session = ParseSession {
         constants: &constants,
         resolver: &mut graph,
@@ -89,6 +101,7 @@ fn run_parse_serial(
         breakpoints: request.base_system.breakpoints(),
         traced_jsx: &traced_jsx,
         hosts: &hosts,
+        composed: &composed,
         wants: sinks.wants,
         recipes: sinks.recipes,
         diagnostics: sinks.diagnostics,
@@ -99,7 +112,7 @@ fn run_parse_serial(
         recipe_bindings: sinks.recipe_bindings,
         selections: sinks.selections,
     };
-    extract_walk(extract_session, &view);
+    extract_walk(extract_session, &view, &files);
     // The pool is kept to the end of the compile, as the sequential walk held it.
     let _pool = harvest_walk(&view, sinks);
     (unpanicked, hosts)
@@ -188,18 +201,20 @@ fn resolve_hosts(
 }
 
 /// Independent diagnostics analysis over the unpanicked sources, reporting its facts into
-/// the compile session, then the parse errors the constants pass recorded.
+/// the compile session. Each styling file brings the bindings extraction will walk with.
 fn analyze_parse(
     view: &ParseView<'_>,
+    files: &[Option<extract_parallel::StylingFile<'_>>],
     hosts: &hosts::ResolvedHosts,
     session: &mut diagnostics::DiagnosticsSession,
-    diagnostics: &mut Vec<Diagnostic>,
 ) {
     #[cfg(feature = "alloc-trace")]
     let _analysis = crate::alloc_trace::PhaseGuard::enter("analysis");
-    // Streamed programs are shared from one empty parse the content gate provably skips.
+    // Streamed programs are shared from one empty parse the content gate provably skips;
+    // so are empty bindings, for every source that is no styling file.
     let dummy_allocator = Allocator::default();
     let dummy = parse_source("streamed.ts", "", &dummy_allocator);
+    let no_bindings = extract::ExtractBindings::default();
     let analyzed: Vec<diagnostics::analysis::AnalyzedSource<'_>> = view
         .sources
         .iter()
@@ -210,37 +225,38 @@ fn analyze_parse(
                 Some(position) if !view.slots[i].streamed => &view.parsed[position].program,
                 _ => &dummy.program,
             };
+            let bindings = files[i]
+                .as_ref()
+                .map_or(&no_bindings, |file| &file.bindings);
             diagnostics::analysis::AnalyzedSource {
                 path,
                 content,
                 program,
+                bindings,
             }
         })
         .collect();
-    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls, called
-    // here too so analysis and assembly cannot diverge.
-    let qualifiers = assembly::qualifiers_for(
-        &view.request.base_system.name,
-        &view.request.upstream_systems,
-    );
     let analysis = diagnostics::analysis::AnalysisInput {
         sources: analyzed,
         hosts,
         constants: view.constants,
         system: &view.request.base_system.name,
-        qualifiers: &qualifiers,
+        composed: view.composed,
     };
     report_analysis_expectations(&analysis, session);
-    stream::report_parse_errors(view.sources, view.errors, diagnostics);
 }
 
-/// Extraction over every retained parse, then recipe selection over the bindings it
+/// Extraction over every styling file, then recipe selection over the bindings it
 /// collected. The session is dropped inside the phase, so the identity graph is released
 /// where the sequential walk released it.
-fn extract_walk(mut session: ParseSession<'_>, view: &ParseView<'_>) {
+fn extract_walk(
+    mut session: ParseSession<'_>,
+    view: &ParseView<'_>,
+    files: &[Option<extract_parallel::StylingFile<'_>>],
+) {
     #[cfg(feature = "alloc-trace")]
     let _extract = crate::alloc_trace::PhaseGuard::enter("extract");
-    extract_parallel::extract_all(&mut session, view.sources, view.parsed, view.slots);
+    extract_parallel::extract_all(&mut session, view.sources, files);
     resolve_recipe_selections(&mut session);
     drop(session);
 }

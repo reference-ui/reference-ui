@@ -21,8 +21,9 @@ fn test_streams_concatenate_to_paired_single_builds() {
     let streams = build_stylesheet_streams(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },
@@ -38,8 +39,9 @@ fn test_streams_concatenate_to_paired_single_builds() {
         build_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },
@@ -51,8 +53,9 @@ fn test_streams_concatenate_to_paired_single_builds() {
         build_portable_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },
@@ -94,8 +97,9 @@ fn test_dual_build_matches_paired_single_builds() {
     let (streams, sheet, portable) = build_stylesheets_with(
         &SheetInput {
             own: &set,
-            external: &AtomSet::new(),
+            foreign: &crate::atom::ForeignAtoms::new(),
             qualifiers: &own_qualifiers(system),
+            extended: &[],
             system,
             recipes: &[],
         },
@@ -111,8 +115,9 @@ fn test_dual_build_matches_paired_single_builds() {
         build_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },
@@ -124,8 +129,9 @@ fn test_dual_build_matches_paired_single_builds() {
         build_portable_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },
@@ -154,8 +160,9 @@ fn test_streams_serialize_to_ten_wire_keys() {
     let streams = build_stylesheet_streams(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
+        extended: &[],
         system,
         recipes: &[],
     },

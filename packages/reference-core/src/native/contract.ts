@@ -41,12 +41,29 @@ export interface ScopedCompileRequest extends NativeCompileRequest {
    */
   retentionToken?: number
   /**
-   * Upstream system names (extends then layers, self excluded) the engine
-   * qualifies external wants against. Carried structurally like `include`:
-   * undefined drops from the serialized request, so a no-upstream compile
-   * gains no key and the Rust default `[]` keeps the old path.
+   * Upstream system names (extends then layers, self excluded): the composed
+   * systems. The engine backs a package tag's style props under those the
+   * package renders through, and warns when there are none. Carried
+   * structurally like `include`: undefined drops from the serialized request,
+   * so a no-upstream compile gains no key and the Rust default `[]` keeps the
+   * old path.
    */
   upstreamSystems?: string[]
+  /**
+   * The upstream systems whose tokens this compile's vocabulary carries: the
+   * extends closure, never a layered system. The engine's own token layer also
+   * declares on their [data-layer] stamps, so this system's token values win
+   * inside their components. Carried structurally like `include`; undefined
+   * drops from the serialized request when nothing is extended.
+   */
+  extendedSystems?: string[]
+  /**
+   * The names each extended upstream publishes, keyed by system name. The
+   * engine drops them from the own roster: an upstream's component renders
+   * through that package's runtime. Carried structurally like `include`;
+   * undefined drops from the serialized request when no upstream names one.
+   */
+  upstreamHosts?: Record<string, string[]>
 }
 
 export interface NativeDiagnosticSpan {

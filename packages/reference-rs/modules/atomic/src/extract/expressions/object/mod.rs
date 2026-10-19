@@ -53,9 +53,9 @@ pub enum BagSemantics {
 pub struct ObjectWalk<'a> {
     pub origin: Option<&'a str>,
     pub important: bool,
-    /// True when this object was authored on an external component; child
-    /// expression walks and authored plans inherit it.
-    pub external: bool,
+    /// The systems this object's styles lower under; child expression walks
+    /// and authored plans inherit it.
+    pub backing: &'a crate::atom::Backing,
     pub file: &'a str,
     pub source: Option<&'a str>,
     pub line_index: Option<&'a LineIndex>,
@@ -78,7 +78,7 @@ impl<'a> ObjectWalk<'a> {
             prop,
             origin: self.origin,
             important: self.important,
-            external: self.external,
+            backing: self.backing,
             file: self.file,
             source: self.source,
             line_index: self.line_index,
@@ -292,7 +292,7 @@ fn handle_known_style_prop(
                 prop: key.to_string(),
                 value: val,
                 important: ctx.important || imp,
-                external: ctx.external,
+                backing: ctx.backing.clone(),
             });
         }
     }

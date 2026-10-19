@@ -1,7 +1,7 @@
 // antihost.spec.ts — spec for CORE-SITE-12, the anti-host case. Takes
 // { page, case } from the runner with the world freshly synced and the page
-// already navigated to it. Emits nothing on success; throws naming any
-// minted ghost utility, any classed probe, or the unpainted control.
+// already navigated to it. Emits nothing on success; throws naming a
+// lowercase ghost utility, any classed probe, or the unpainted control.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,18 +14,20 @@ interface SpecInput {
 }
 
 // Hosts come from imports plus jsxElements, never PascalCase guessing and
-// never lowercase tags: the sheet carries only the control utility, both
-// probes stay classless and unpainted, and the control paints its margin.
+// never lowercase tags: both probes stay classless and unpainted, and the
+// control paints its margin. A lowercase tag never lowers; Random, a
+// component nobody traces, lowers under own (styling plan S3), so its rule
+// reaches the sheet though nothing mints its class.
 export default async function run({ page, case: c }: SpecInput): Promise<void> {
   const styles = fs.readFileSync(
     path.join(c.worldDir, '.reference-ui/styled/styles.css'),
     'utf8',
   );
   assert.ok(styles.includes('.core-site-12__mt_8px {'), 'sheet carries the control utility');
-  assert.ok(!styles.includes('fs_12px'), 'no Random font-size ghost reaches the sheet');
+  assert.ok(styles.includes('.core-site-12__fs_12px {'), 'Random font-size lowers under own');
   assert.ok(!styles.includes('c_red'), 'no lowercase color ghost reaches the sheet');
   const utilityCount = styles.match(/\.core-site-12__/g)?.length ?? 0;
-  assert.equal(utilityCount, 1, `sheet carries only the control utility, got ${utilityCount}`);
+  assert.equal(utilityCount, 2, `sheet carries the control and Random utilities, got ${utilityCount}`);
 
   for (const id of ['random', 'lower']) {
     const probe = page.locator(`#${id}`);

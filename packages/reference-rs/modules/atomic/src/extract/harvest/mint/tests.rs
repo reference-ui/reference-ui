@@ -19,7 +19,7 @@ fn sink_for(prop: &str) -> Sink {
         line: None,
         column: None,
         span: None,
-        external: false,
+        backing: &crate::atom::backing::OWN,
     })
     .expect("known style prop sinks")
 }

@@ -21,7 +21,7 @@ import {
 } from '../../src/probe'
 
 /**
- * T17 — fan-out contract: consuming prebuilt components with style props.
+ * T17 — consuming prebuilt components with consumer style props.
  *
  * Re-sync / re-materialize order this suite assumes (G1 §3 amendment ii):
  * rebuild the Rust binding → `ref sync` icons → `ref sync` lib →
@@ -35,9 +35,9 @@ import {
  * consumer compile legitimately adds its own foreign-qualified icons rules.
  */
 
-/** The `reference-icons__p_t17ProbeGap` rule the external `<Field>` fan-out adds
- *  to the icons qualifier (every external want fans out to every composed
- *  system). It is a consumer-owned foreign stem, not an icons-canonical rule. */
+/** The `reference-icons__p_t17ProbeGap` rule lib's `<Field>` adds to the icons
+ *  qualifier (a lib tag backs under every stream lib publishes, icons among
+ *  them). It is a consumer-owned foreign stem, not an icons-canonical rule. */
 const T17_FIELD_ICONS_CLASS = `${T17_ICONS_PREFIX}p_${T17_PROBE_SPACING_TOKEN}`
 
 const expectedProbeIconsClasses = [...T17_PROBE_ICON_CLASSES, T17_FIELD_ICONS_CLASS]
@@ -88,7 +88,8 @@ test.describe('T17 — style prebuilt components with consumer style props', () 
 
   test('probe token and value are absent from every published sheet (novelty)', () => {
     // If a probe stem/value already shipped inside icons/lib/fixture, a green
-    // paint could be a coincidental hit instead of fan-out, so assert absence.
+    // paint could be a coincidental hit instead of the consumer's rule, so
+    // assert absence.
     const publishedText = [
       streamUtilities(iconsBaseSystem as SystemLike),
       streamUtilities(libBaseSystem as SystemLike),

@@ -21,7 +21,7 @@ pub mod unit;
 use base_system::BaseSystem;
 use smallvec::SmallVec;
 
-use crate::atom::{Atom, AtomValue, CssValue, Want, When};
+use crate::atom::{Atom, AtomValue, Backing, CssValue, Want, When};
 use crate::diagnostics::adapters::resolve::ResolveReport;
 use crate::diagnostics::{
     DeclarationDetail, Diagnostic, DiagnosticCode, DiagnosticFact, DiagnosticLocation,
@@ -43,12 +43,12 @@ pub struct ResolveSession<'a, 'w> {
 /// importance, carried so refusals can name the exact runtime lookup key.
 /// The stack is borrowed from the live want: it cannot change mid-resolve,
 /// so every read sees the same bytes the old per-want clone carried. The
-/// `external` marker rides along so a refusal on an external component
-/// block joins against foreign-qualified plans.
+/// want's backing rides along so a refusal on another system's component
+/// joins against the plans of the systems it names.
 pub struct WantContext<'w> {
     pub when: &'w [Box<str>],
     pub important: bool,
-    pub external: bool,
+    pub backing: &'w Backing,
 }
 
 impl<'a, 'w> ResolveSession<'a, 'w> {
@@ -58,13 +58,16 @@ impl<'a, 'w> ResolveSession<'a, 'w> {
     /// live system is in reach, so both renders share one ranking.
     pub fn emit(&mut self, key: Option<OwnedLookupKey>, outcome: ResolveOutcome) {
         let suggestion = suggest::suggestion_for_outcome(&outcome, self.system);
-        let external = self.want.as_ref().is_some_and(|want| want.external);
+        let backing = self
+            .want
+            .as_ref()
+            .map_or(Backing::Own, |want| want.backing.clone());
         let report = ResolveReport {
             location: self.location.clone(),
             key,
             outcome,
             suggestion,
-            external,
+            backing,
         };
         let diagnostic = Policy::render_resolve(&report);
         if let Some(sink) = self.sink.as_deref_mut() {
@@ -151,7 +154,7 @@ pub fn resolve_want_with(want: &Want, session: &mut ResolveSession<'_, '_>) -> V
         want: Some(WantContext {
             when: want.when.as_slice(),
             important: want.important,
-            external: want.external,
+            backing: &want.backing,
         }),
     };
     let session = &mut inner;

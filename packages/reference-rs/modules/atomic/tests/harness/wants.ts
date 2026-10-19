@@ -1,7 +1,8 @@
 /**
  * Want matchers for the atomic case helpers: whether a compile result carries a want with a given
- * prop, value and condition path, and the site, harvest and per-prop slices of its wants. Takes a
- * `CompileResult` and returns a boolean or a want list. Wants with `origin: 'harvest'` were minted
+ * prop, value and condition path, the site, harvest and per-prop slices of its wants, and each
+ * prop's want verdicts by backing. Takes a `CompileResult` and returns a boolean, a want list or
+ * verdict strings. Wants with `origin: 'harvest'` were minted
  * onto refused dynamic sinks, so the site slice leaves them out.
  */
 import type { CompileResult } from '../../js/types.js'
@@ -53,4 +54,20 @@ export function harvestWants(
   result: CompileResult
 ): NonNullable<CompileResult['wants']> {
   return (result.wants ?? []).filter(w => w.origin === 'harvest')
+}
+
+/**
+ * Each want of `prop` as `<value> <backing>`, sorted: `own` for the compiling system, the systems
+ * a non-own want backs under joined by `+`, or `unbacked` when nothing composed backs it.
+ */
+export function wantBackings(result: CompileResult, prop: string): string[] {
+  return getWantsForProp(result, prop)
+    .map(w => {
+      const value = (w.value as { String: string }).String
+      if (w.backing === undefined) {
+        return `${value} own`
+      }
+      return `${value} ${w.backing.length > 0 ? w.backing.join('+') : 'unbacked'}`
+    })
+    .sort()
 }

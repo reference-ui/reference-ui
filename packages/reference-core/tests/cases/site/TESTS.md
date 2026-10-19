@@ -13,11 +13,11 @@
 | CORE-SITE-09 | String `@media (min-width: 400px)` key is an at-rule, not a selector | done | ATM-COND-11 | — | `setViewportSize` | ATM-COND-11 |
 | CORE-SITE-10 | `css={{}}` on a primitive equals `css()` | done | ATM-SITE-14 | — | class equality | ATM-SITE-14 |
 | CORE-SITE-11 | Configured `jsxElements: ['Chart']` makes `<Chart p="1r">` a host | done | ATM-SITE-08 | `jsx-elements.ts` (+ RS-1 frozen `jsxHosts`) | computed | Core config |
-| CORE-SITE-12 | Unlisted PascalCase `<Random fontSize>` and lowercase `<div color>` are **not** hosts | done | ATM-SITE-08 | — | no utilities | anti-goal in Panda v1 output tests |
+| CORE-SITE-12 | Unlisted PascalCase `<Random fontSize>` and lowercase `<div color>` are **not** hosts | done | ATM-SITE-08, ATM-SITE-07 | — | both probes classless and unpainted; no lowercase utility; `Random`'s `fontSize` lowers under own as a component nobody traces (styling plan S3), a rule nothing mints, beside the control utility | anti-goal in Panda v1 output tests |
 | CORE-SITE-13 | Boolean attr `<Div border />` compiles the boolean macro form | done | ATM-SITE-09 + ATM-SITE-18 (RS-19) | — (no change: engine lowers `border: true` to width + style utilities with one plan) | computed 1px solid border; both classes on the probe; bare control | ATM-SITE-09, SITE-18 |
 | CORE-SITE-14 | With no hosts resolvable, the hostless tag yields zero utilities, and the emptied-hosts recompile fails closed with the located SITE-13 diagnostic | done | ATM-SITE-13 (RS-5) | — (no change: SITE-06 frozen-recompile precedent) | zero sheet utilities; recompile carries the located `no StyleProps hosts resolvable` error + zero wants/plans | ATM-SITE-13 |
 | CORE-SITE-15 | Object ternary arms in a `_hover` prop: both arms compile, the hovered arm paints | done | ATM-SITE-21 (RS-34) | — | twin paints via `data-hover`; real hover paints; sheet carries exactly the two arm atoms | ATM-SITE-21; reference-lib `Tabs.tsx` |
-| CORE-SITE-16 | Member tags (`<NS.Panel />`) extract under concatenated hosts; unhosted twins stay silent | done | ATM-SITE-22 (RS-36) | — | member paints both props; twin transparent; sheet carries exactly the member utilities | ATM-SITE-22; reference-lib `Menu.tsx`, `Showcase.book.tsx` |
+| CORE-SITE-16 | Member tags (`<NS.Panel />`) extract under concatenated hosts; an unhosted twin is no host and lowers under own | done | ATM-SITE-22 (RS-36) | — | member paints both props; the twin, project code nobody traces and `Div` underneath, lowers its `bg` under own (styling plan S3) and paints its backdrop; sheet carries the member's two utilities and the twin's one | ATM-SITE-22; reference-lib `Menu.tsx`, `Showcase.book.tsx` |
 | CORE-SITE-17 | Component-body const ternary feeding `borderBottomColor` extracts both arms; dark paints ink, light reload paints mist | done | ATM-SITE-23 (RS-37) | — | computed both themes; sheet carries exactly the two arm atoms | ATM-SITE-23; reference-lib `BookShell.tsx` chrome dividers |
 | CORE-SITE-27 | Param shadowing a cross-file const: `function Card({ color })` over `a.ts`'s `export const color` diagnoses and paints nothing; an unshadowed imported const still paints | done | ATM-SITE-53 | — | no utility + located warning; twin paints | Panda v2 scope tests |
 | CORE-SITE-20 | Wrapped `css()` args (`as const`, parens, `satisfies`, `!`, `.ts` `<T>`) paint exactly like the bare arg with zero diagnostics | done | ATM-SITE-26 | — | computed every wrap; sheet carries each utility; recompile carries zero diagnostics | /07; Panda v2 call tests |
@@ -89,6 +89,10 @@ gate; shadowing still compares the full dotted name.
   (`min-width: calc(40 * var(--spacing-root))`) with zero diagnostics; the
   unhosted member stays silent.
 - Waiting Core case: CORE-SITE-16 (done).
+
+Since styling plan S3 the unhosted member is still no host, but as a
+component nobody traces it lowers under own, with no diagnostic; ATM-SITE-22
+and CORE-SITE-16 pin that.
 
 **RS-10** (runtime plans for every want): wants whose value reaches the call
 through a ternary arm, a member access, or an identifier spread each get a

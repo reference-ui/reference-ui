@@ -6,7 +6,7 @@ const Other = { Panel: Div }
 
 export const a = <NS.Panel minW="40r" bg="red" />
 
-// Same-file twin with no configured host: stays silent.
+// Same-file twin with no configured host: no host, so it lowers under own.
 export const b = <Other.Panel p="4r" />
 
 // Declaration order never matters: use-before-declare resolves the same.

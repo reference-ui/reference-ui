@@ -73,6 +73,7 @@ struct ParseSession<'a> {
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a FxHashSet<String>,
     hosts: &'a hosts::ResolvedHosts,
+    composed: &'a extract::Composed<'a>,
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,
@@ -150,6 +151,7 @@ pub fn compile(request: &CompileRequest) -> Result<CompileResult, String> {
         selections,
         upstream_container_root: request.upstream_container_root,
         upstream_systems: request.upstream_systems.clone(),
+        extended_systems: request.extended_systems.clone(),
     };
     assembly.append_static(system);
     let mut result = assembly.finish(system, &mut diag_session);

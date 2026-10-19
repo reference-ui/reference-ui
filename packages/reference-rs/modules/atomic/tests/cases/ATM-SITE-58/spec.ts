@@ -4,7 +4,8 @@
  * fixture's `@reference-ui/react` self-link dangles exactly as in-sync wipe
  * (no `.reference-ui` dir); the tracer must resolve the surface-type names
  * from the engine surface. `tracedJsxHosts` carries both names, both use
- * sites extract, and the bare-div antihost stays silent.
+ * sites extract, and the untraced bare-div antihost lowers under own
+ * (styling plan S3) without a diagnostic.
  */
 import { expect } from 'vitest'
 import {
@@ -37,7 +38,7 @@ const spec: AtomicCaseSpec = {
     for (const warning of warnings) {
       expect(warning.message).toContain('spread')
     }
-    expect(Object.keys(result.css?.classes ?? {})).toHaveLength(2)
+    expect(Object.keys(result.css?.classes ?? {})).toEqual(['color:red.500', 'mt:2r', 'mt:4r'])
   },
 }
 

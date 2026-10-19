@@ -1,0 +1,1 @@
+{"id": "ATM-SITE-107", "name": "A linked workspace package not built on Reference UI is silent even where this project's runtime resolves from it: a linked directory is own code only when it imports @reference-ui/react or lies in the include set"}

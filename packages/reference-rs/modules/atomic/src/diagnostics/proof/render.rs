@@ -21,21 +21,21 @@ use super::plans::emitted_keys;
 use super::plans::{is_hole_value, same_position};
 use super::rejects::{collect as collect_reject, Reject};
 use super::sinks::Sinks;
+use crate::atom::Backing;
 use crate::runtime::RuntimeStylePlan;
 use canon::is_known_style_prop;
 
-/// The composed-system frame a render joins against: the compile's own system
-/// name and its qualifier list (`[own, …foreign]`). External facts expand their
-/// keys across the foreign tail.
+/// The frame a render joins against: the compile's own system name. Facts
+/// recorded on another system's component carry their own backing, so each
+/// expands its key across exactly the systems that backing names.
 #[derive(Clone, Copy)]
 pub struct RenderScope<'a> {
     system: &'a str,
-    qualifiers: &'a [String],
 }
 
 impl<'a> RenderScope<'a> {
-    pub fn new(system: &'a str, qualifiers: &'a [String]) -> Self {
-        Self { system, qualifiers }
+    pub fn new(system: &'a str) -> Self {
+        Self { system }
     }
 }
 
@@ -48,7 +48,7 @@ pub fn render_session(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     render_with(
-        Proof::collect(facts, emitted_keys(plans), scope.qualifiers),
+        Proof::collect(facts, emitted_keys(plans)),
         facts,
         scope,
         diagnostics,
@@ -63,12 +63,7 @@ pub fn render_session_with_keys(
     scope: RenderScope<'_>,
     diagnostics: &mut Vec<Diagnostic>,
 ) {
-    render_with(
-        Proof::collect(facts, emitted, scope.qualifiers),
-        facts,
-        scope,
-        diagnostics,
-    );
+    render_with(Proof::collect(facts, emitted), facts, scope, diagnostics);
 }
 
 /// Run the partitioned join inputs against the covered-sink render.
@@ -81,7 +76,7 @@ fn render_with(
     let sinks = Sinks::collect(facts);
     proof.render_rejects(diagnostics);
     proof.render_causeless(diagnostics);
-    sinks.render_covered(scope.system, scope.qualifiers, &proof.emitted, diagnostics);
+    sinks.render_covered(scope.system, &proof.emitted, diagnostics);
 }
 
 /// The dictionary answer for one prop, memoized per session: the answer
@@ -98,7 +93,7 @@ struct KeyedRejection<'a> {
     location: &'a DiagnosticLocation,
     key: &'a OwnedLookupKey,
     outcome: &'a ResolveOutcome,
-    external: bool,
+    backing: &'a Backing,
 }
 
 /// The partitioned join inputs: expectations and keyed rejections.
@@ -114,11 +109,7 @@ impl<'a> Proof<'a> {
     /// The expectation set builds only when rejections exist to join
     /// against it: with no rejections the join loop is vacuous and the set
     /// is never consulted, so building it is pure waste.
-    fn collect(
-        facts: &'a [DiagnosticFact],
-        emitted: BTreeSet<String>,
-        qualifiers: &[String],
-    ) -> Self {
+    fn collect(facts: &'a [DiagnosticFact], emitted: BTreeSet<String>) -> Self {
         let mut proof = Self {
             emitted,
             exacts: Vec::new(),
@@ -127,7 +118,7 @@ impl<'a> Proof<'a> {
         };
         let mut memo = SerialMemo::new();
         for fact in facts {
-            proof.collect_one(fact, qualifiers, &mut memo);
+            proof.collect_one(fact, &mut memo);
         }
         if !proof.rejects.is_empty() {
             proof.build_exact_set();
@@ -138,51 +129,43 @@ impl<'a> Proof<'a> {
     /// Sort one session fact into the join inputs it feeds: expectations
     /// collect their serials, keyed resolve outcomes collect rejections,
     /// every other fact family belongs to a different render.
-    fn collect_one(
-        &mut self,
-        fact: &'a DiagnosticFact,
-        qualifiers: &[String],
-        memo: &mut SerialMemo<'a>,
-    ) {
+    fn collect_one(&mut self, fact: &'a DiagnosticFact, memo: &mut SerialMemo<'a>) {
         match fact {
             DiagnosticFact::ExactLookupExpected { key, .. } => self.collect_exact(key, memo),
             DiagnosticFact::ResolveOutcome {
                 location,
                 key: Some(key),
                 outcome,
-                external,
+                backing,
                 ..
-            } => self.collect_reject(
-                KeyedRejection {
-                    location,
-                    key,
-                    outcome,
-                    external: *external,
-                },
-                qualifiers,
-            ),
+            } => self.collect_reject(KeyedRejection {
+                location,
+                key,
+                outcome,
+                backing,
+            }),
             _ => {}
         }
     }
 
     /// Collect one keyed rejection at each applicable system: an own
-    /// rejection joins on its own key; an external rejection re-targets the
-    /// key across the foreign qualifiers (its resolver key is own-system, so
-    /// only the qualifier list can place it against the foreign plans).
-    fn collect_reject(&mut self, rejection: KeyedRejection<'a>, qualifiers: &[String]) {
+    /// rejection joins on its own key; any other re-targets the key across
+    /// the systems its backing names (its resolver key is own-system, so
+    /// only the backing can place it against those systems' plans).
+    fn collect_reject(&mut self, rejection: KeyedRejection<'a>) {
         let KeyedRejection {
             location,
             key,
             outcome,
-            external,
+            backing,
         } = rejection;
-        if !external {
+        if backing.is_own() {
             collect_reject(&mut self.rejects, location, key, outcome);
             return;
         }
-        for system in crate::diagnostics::target_systems(true, &key.system, qualifiers) {
+        for system in backing.named() {
             let retargeted = OwnedLookupKey {
-                system: system.into(),
+                system: system.clone(),
                 ..key.clone()
             };
             collect_reject(&mut self.rejects, location, &retargeted, outcome);

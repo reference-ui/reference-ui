@@ -97,7 +97,7 @@ fn push_entry_leaves(
                     prop: key.to_string(),
                     value: json,
                     important: leaf_important,
-                    external: ctx.external,
+                    backing: ctx.backing.clone(),
                 });
             }
         }

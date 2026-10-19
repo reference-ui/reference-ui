@@ -4,7 +4,8 @@
 // every style prop it forwards is qualified with the package's system name
 // (`core-chain8-up`) and never the consumer's. The consumer never scans this
 // file — it lives outside the `src/**` extraction glob, exactly like a real
-// prebuilt dist — so a style prop on it can only paint through fan-out.
+// prebuilt dist — so a style prop on it paints only when the consumer compile
+// backs it under the package's system.
 import { createElement, Div } from '../upstream/.reference-ui/react/react.mjs'
 
 export function Badge({ children, ...rest }) {

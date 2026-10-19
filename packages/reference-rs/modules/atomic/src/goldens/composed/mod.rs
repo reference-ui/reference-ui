@@ -239,14 +239,13 @@ fn integer_case(
 fn build_output(system: &BaseSystem, name: &str, decl: &AuthoredDeclaration) -> Value {
     let mut atom_set = AtomSet::new();
     let mut diagnostics = Vec::new();
-    let mut external_atom_set = AtomSet::new();
+    let mut foreign = crate::atom::ForeignAtoms::new();
     let mut builder = PlanBuilder::new(
         name,
         system,
-        &[],
         PlanSinks {
             atom_set: &mut atom_set,
-            external_atom_set: &mut external_atom_set,
+            foreign: &mut foreign,
             diagnostics: &mut diagnostics,
         },
     );

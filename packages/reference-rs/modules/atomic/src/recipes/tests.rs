@@ -12,7 +12,7 @@ fn want(prop: &str, value: &str, when: &[&str]) -> Want {
         value: AtomValue::String(value.into()),
         when: when.iter().map(|key| (*key).into()).collect(),
         important: false,
-        external: false,
+        backing: crate::atom::Backing::Own,
         origin: None,
         file: None,
         line: None,

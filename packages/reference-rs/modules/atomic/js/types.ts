@@ -45,12 +45,14 @@ export interface Want {
   when: string[]
   important: boolean
   /**
-   * True when the want was authored on an external (capitalized non-host) JSX
-   * tag. Absent on the wire when false, so the own path serializes unchanged.
-   * External wants resolve into the separate partition and stay out of the own
-   * css map, so `atomCount` (own + external) exceeds the emitted class count.
+   * The systems the want lowers under, when another system renders the tag it
+   * was written on: one rule per named system, in composed order, and none when
+   * nothing this compile composes backs it. Absent on the wire for an own want,
+   * so the own path serializes unchanged. Backed wants resolve into the foreign
+   * partition and stay out of the own css map, so `atomCount` (own + foreign)
+   * exceeds the emitted class count.
    */
-  external?: boolean
+  backing?: string[]
   origin?: string
   file?: string
   line?: number
@@ -144,6 +146,23 @@ export interface CompileRequest {
    * the check reads local global CSS only.
    */
   upstreamContainerRoot?: boolean
+  /**
+   * Upstream system names (extends then layers, own name excluded) that
+   * a non-own tag may back under. Absent or empty means standalone.
+   */
+  upstreamSystems?: string[]
+  /**
+   * The upstream systems whose tokens this compile's vocabulary carries (the
+   * extends closure, never a layered system). The own token layer also
+   * declares on their `[data-layer]` stamps, so this system's token values win
+   * inside their components. Names outside `upstreamSystems` are ignored.
+   */
+  extendedSystems?: string[]
+  /**
+   * Component names each extended upstream publishes, keyed by system name.
+   * Never own hosts: a name here leaves the `jsxHosts` roster.
+   */
+  upstreamHosts?: Record<string, string[]>
   /**
    * Glob scope (case ATM-SCAN-01) relative to `rootDir`: only
    * matching sources compile and the rest are skipped silently. Absent or
