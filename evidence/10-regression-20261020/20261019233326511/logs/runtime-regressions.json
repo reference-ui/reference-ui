@@ -1,0 +1,157 @@
+[
+  {
+    "phase": "general-browser",
+    "outcome": {
+      "code": 1,
+      "signal": null
+    },
+    "result": {
+      "url": "http://127.0.0.1:32494",
+      "checks": [
+        {
+          "issue": 14,
+          "name": "responsive object runtime",
+          "passed": true,
+          "actual": {
+            "wide": 3,
+            "narrow": 1
+          }
+        },
+        {
+          "issue": 15,
+          "name": "static style paints without false warning",
+          "passed": false,
+          "actual": {
+            "padding": "29px",
+            "warnings": [
+              {
+                "type": "warning",
+                "text": "[reference-ui] css(): no compiled class for `padding: \"7.25r\"` (class 10-regression-20261020__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32494/node_modules/.vite/deps/react-dom_client.js?v=3abb2c8b:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."
+              }
+            ]
+          }
+        },
+        {
+          "issue": 17,
+          "name": "focus: Escape restores surviving trigger",
+          "passed": false,
+          "actual": {
+            "before": "first-name",
+            "after": {
+              "id": "",
+              "tag": "BODY",
+              "expanded": "false"
+            }
+          }
+        },
+        {
+          "issue": 17,
+          "name": "focus: Close restores trigger",
+          "passed": false,
+          "actual": {
+            "afterClose": ""
+          }
+        },
+        {
+          "issue": 17,
+          "name": "focus-default: Escape restores surviving trigger",
+          "passed": false,
+          "actual": {
+            "before": "first-name",
+            "after": {
+              "id": "",
+              "tag": "BODY",
+              "expanded": "false"
+            }
+          }
+        },
+        {
+          "issue": 17,
+          "name": "focus-default: Close restores trigger",
+          "passed": false,
+          "actual": {
+            "afterClose": ""
+          }
+        },
+        {
+          "issue": 18,
+          "name": "new docs explicitly describe live parsed onChange",
+          "passed": true,
+          "actual": {
+            "value": "4",
+            "calls": "[4]",
+            "focus": "number-min-input"
+          }
+        },
+        {
+          "issue": 18,
+          "name": "bounds apply on commit as documented",
+          "passed": true,
+          "actual": {
+            "draft": {
+              "value": "99",
+              "calls": "[4,9,99]",
+              "focus": "number-min-input"
+            },
+            "committed": {
+              "value": "12",
+              "calls": "[4,9,99,12]",
+              "focus": "blur-target"
+            }
+          }
+        }
+      ],
+      "pageErrors": [],
+      "passed": false
+    }
+  },
+  {
+    "issue": 19,
+    "passed": true,
+    "bindings": {
+      "unaliased": {
+        "url": "http://127.0.0.1:49367/library.html",
+        "metrics": {
+          "generated": {
+            "background": "rgb(15, 118, 110)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "16px",
+            "radius": "10px"
+          },
+          "library": {
+            "background": "rgb(15, 118, 110)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "16px",
+            "radius": "10px"
+          }
+        }
+      },
+      "aliased": {
+        "url": "http://127.0.0.1:39506/library.html",
+        "metrics": {
+          "generated": {
+            "background": "rgb(15, 118, 110)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "16px",
+            "radius": "10px"
+          },
+          "library": {
+            "background": "rgb(15, 118, 110)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "16px",
+            "radius": "10px"
+          }
+        }
+      }
+    }
+  },
+  {
+    "issue": 20,
+    "passed": true,
+    "url": "http://127.0.0.1:58757/literal.html",
+    "before": "29px",
+    "after": "33px",
+    "watchAlive": true,
+    "output": "\n  REF  v0.0.0  ready in 159 ms\n\n  ➜  CSS:       164.4 KB\n  ➜  Watch:     on\n⎔ ref sync ⫶ 1099 ms ⫶ 164.4 KB\n⎔ ref sync ⫶ 736 ms ⫶ 164.4 KB\n"
+  }
+]

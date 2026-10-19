@@ -1,0 +1,11 @@
+$ npm run sync -- --verbose
+
+> sync
+> ref sync --verbose
+
+
+  REF  v0.0.0  ready in 239 ms
+
+  ➜  CSS:       164.3 KB
+
+Exit 0

@@ -1,0 +1,27 @@
+Fresh consumer regression verification — 20 October 2026
+Snapshot: 20261019232141179-11099
+Source checkout: 735a426578b172d0d38340c78731893e96b48a68, dirty=true; existing outputs captured without rebuilding.
+
+Issue #15: static style paints without false warning
+{"padding":"29px","warnings":[{"type":"warning","text":"[reference-ui] css(): no compiled class for `padding: \"7.25r\"` (class 10-regression-20261020__p_7.25r, called at Object.react_stack_bottom_frame (http://127.0.0.1:32494/node_modules/.vite/deps/react-dom_client.js?v=3abb2c8b:20259:20)). Add a static call site or staticCss entry; miss class emitted but unbacked, paints nothing."}]}
+
+Issue #17: focus: Escape restores surviving trigger
+{"before":"first-name","after":{"id":"","tag":"BODY","expanded":"false"}}
+
+Issue #17: focus: Close restores trigger
+{"afterClose":""}
+
+Issue #17: focus-default: Escape restores surviving trigger
+{"before":"first-name","after":{"id":"","tag":"BODY","expanded":"false"}}
+
+Issue #17: focus-default: Close restores trigger
+{"afterClose":""}
+
+Issue #16: MCP still advertises unsupported Accordion.defaultValue
+{"advertised":true,"metadata":[{"name":"defaultValue","count":0,"usage":"unused","type":"string | string[] | null","description":"The initial value of the expanded item(s).","optional":true,"readonly":false,"origin":"documented","styleProp":false}],"baselineTypeExit":0,"defaultValueTypeExit":2}
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/accordion-default-value.tsx
+repro/accordion-default-value.tsx(2,36): error TS2322: Type '{ defaultValue: string; }' is not assignable to type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.
+  Property 'defaultValue' does not exist on type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.
+
+Exit 2
+

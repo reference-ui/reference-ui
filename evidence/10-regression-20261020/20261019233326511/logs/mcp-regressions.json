@@ -1,0 +1,236 @@
+[
+  {
+    "issue": 16,
+    "passed": false,
+    "advertisedDefaultValue": true,
+    "defaultValueTypeExit": 2,
+    "baselineTypeExit": 0,
+    "component": {
+      "name": "get_component",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "name": "Accordion"
+      },
+      "isError": false,
+      "result": {
+        "activeProject": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "name": "Accordion",
+        "kind": "component",
+        "source": "@reference-ui/lib",
+        "description": "Coordinates a collection of Collapsibles: single/multiple expansion and optional keyboard traversal between headers.",
+        "count": 0,
+        "usage": "unused",
+        "usageSemantics": {
+          "count": "Number of resolved JSX opening-element occurrences in the analyzed files.",
+          "usage": "Relative usage bucket derived from count using the same Reference UI usage thresholds across component tools."
+        },
+        "usedWith": {},
+        "examples": [
+          "<Accordion expansion=\"single\" value={value} onChange={setValue}>\n  <Collapsible id=\"billing\">\n    <Collapsible.Trigger>Billing</Collapsible.Trigger>\n    <Collapsible.Content>{children}</Collapsible.Content>\n  </Collapsible>\n  <Collapsible id=\"team\">\n    <Collapsible.Trigger>Team</Collapsible.Trigger>\n    <Collapsible.Content>{children}</Collapsible.Content>\n  </Collapsible>\n</Accordion>"
+        ],
+        "anatomy": {
+          "pattern": "compound",
+          "root": "Accordion",
+          "parts": [
+            {
+              "name": "Accordion.Item",
+              "tag": "<Accordion.Item>",
+              "requiredProps": []
+            },
+            {
+              "name": "Accordion.Trigger",
+              "tag": "<Accordion.Trigger>",
+              "requiredProps": []
+            },
+            {
+              "name": "Accordion.Content",
+              "tag": "<Accordion.Content>",
+              "requiredProps": []
+            }
+          ]
+        },
+        "interface": {
+          "name": "AccordionProps",
+          "source": "@reference-ui/lib"
+        },
+        "props": [
+          {
+            "name": "children",
+            "count": 0,
+            "usage": "unused",
+            "type": "React.ReactNode",
+            "description": "Accordion.Item or Collapsible elements.",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "defaultValue",
+            "count": 0,
+            "usage": "unused",
+            "type": "string | string[] | null",
+            "description": "The initial value of the expanded item(s).",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "disabled",
+            "count": 0,
+            "usage": "unused",
+            "type": "boolean",
+            "description": "When true, prevents user from interacting with any accordion item.",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "expansion",
+            "count": 0,
+            "usage": "unused",
+            "type": "'single' | 'multiple'",
+            "description": "Determines whether one or multiple items can be opened simultaneously.",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "keyboard",
+            "count": 0,
+            "usage": "unused",
+            "type": "'headers' | 'none' | 'arrows'",
+            "description": "Keyboard navigation behavior across accordion headers.",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "onChange",
+            "count": 0,
+            "usage": "unused",
+            "type": "(value: string | string[] | null) => void",
+            "description": "Event handler called when the expanded state changes.",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          },
+          {
+            "name": "value",
+            "count": 0,
+            "usage": "unused",
+            "type": "string | string[] | null",
+            "description": "The controlled value of the expanded item(s).",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          }
+        ],
+        "propSummary": {
+          "total": 7,
+          "observed": 0,
+          "documented": 7,
+          "style": 0,
+          "returned": 7
+        },
+        "styleProps": {
+          "supported": false,
+          "observed": [],
+          "tool": "get_style_props",
+          "note": "No StyleProps surface was detected for this component."
+        }
+      }
+    },
+    "props": {
+      "name": "get_component_props",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "name": "Accordion",
+        "includeStyleProps": false,
+        "query": "defaultValue",
+        "limit": 50
+      },
+      "isError": false,
+      "result": {
+        "activeProject": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "name": "Accordion",
+        "kind": "component",
+        "source": "@reference-ui/lib",
+        "count": 0,
+        "usage": "unused",
+        "usageSemantics": {
+          "count": "Number of resolved JSX opening-element occurrences in the analyzed files.",
+          "usage": "Relative usage bucket derived from count using the same Reference UI usage thresholds across component tools."
+        },
+        "interface": {
+          "name": "AccordionProps",
+          "source": "@reference-ui/lib"
+        },
+        "props": [
+          {
+            "name": "defaultValue",
+            "count": 0,
+            "usage": "unused",
+            "type": "string | string[] | null",
+            "description": "The initial value of the expanded item(s).",
+            "optional": true,
+            "readonly": false,
+            "origin": "documented",
+            "styleProp": false
+          }
+        ],
+        "propSummary": {
+          "total": 7,
+          "observed": 0,
+          "documented": 7,
+          "style": 0,
+          "returned": 1
+        },
+        "styleProps": {
+          "supported": false,
+          "observed": [],
+          "tool": "get_style_props",
+          "note": "No StyleProps surface was detected for this component."
+        }
+      }
+    }
+  },
+  {
+    "issue": 21,
+    "passed": true,
+    "library": {
+      "name": "get_component",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "name": "Switch"
+      },
+      "isError": true,
+      "result": {
+        "text": "Component 'Switch' is part of @reference-ui/lib, but 'use_reference_library' is disabled in ui.config."
+      }
+    },
+    "icons": {
+      "name": "list_icons",
+      "args": {
+        "project": "~/Developer/ref-sandbox/scenarios/10-regression-20261020",
+        "query": "settings",
+        "limit": 2
+      },
+      "isError": false,
+      "result": {
+        "enabled": false,
+        "notice": "Reference Icons are disabled in ui.config (use_reference_icons: false). Use the project's custom icon system.",
+        "total": 0,
+        "returned": 0,
+        "icons": []
+      }
+    },
+    "review": "Expected library-disabled guard may carry MCP isError=true; the documented clear disabled notice is present, and icons return enabled:false. Configuration typechecking passed separately."
+  }
+]

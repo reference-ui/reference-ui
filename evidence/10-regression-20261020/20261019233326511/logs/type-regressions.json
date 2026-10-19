@@ -1,0 +1,57 @@
+[
+  {
+    "issue": 14,
+    "passed": true,
+    "command": "npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/responsive.tsx",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "issue": 21,
+    "passed": true,
+    "command": "npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/config-controls.ts",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "issue": 22,
+    "passed": true,
+    "command": "npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/css-skipped-values.ts",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "issue": 16,
+    "baseline": {
+      "exit": 0,
+      "output": ""
+    },
+    "defaultValue": {
+      "exit": 2,
+      "output": "repro/accordion-default-value.tsx(2,36): error TS2322: Type '{ defaultValue: string; }' is not assignable to type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.\n  Property 'defaultValue' does not exist on type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.\n"
+    },
+    "metadataCheckPending": true
+  },
+  {
+    "issue": 23,
+    "passed": true,
+    "typed": {
+      "exit": 0,
+      "output": ""
+    },
+    "compiled": {
+      "exit": 0,
+      "output": "\n> sync\n> ref sync --verbose\n\n\n  REF  v0.0.0  ready in 239 ms\n\n  ➜  CSS:       164.3 KB\n"
+    }
+  },
+  {
+    "check": "restored-sync",
+    "passed": true
+  },
+  {
+    "check": "app-typecheck",
+    "passed": true,
+    "exit": 0,
+    "output": "\n> typecheck\n> tsc --noEmit\n\n"
+  }
+]

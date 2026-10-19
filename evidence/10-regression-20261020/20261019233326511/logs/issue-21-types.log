@@ -1,0 +1,3 @@
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/config-controls.ts
+
+Exit 0

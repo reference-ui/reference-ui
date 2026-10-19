@@ -1,0 +1,9 @@
+### Typing and committing
+
+While you type, each new number the text parses to goes to `onChange` as
+typed, before bounds or step apply. Partial text such as `-` sends nothing,
+and clearing the input sends `null`.
+
+Blur, Enter and each step commit the value. Text that doesn't parse
+reverts, and the field is marked invalid until the next edit.
+

@@ -1,0 +1,5 @@
+$ npm exec -- tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --module esnext --target es2022 --jsx react-jsx repro/accordion-default-value.tsx
+repro/accordion-default-value.tsx(2,36): error TS2322: Type '{ defaultValue: string; }' is not assignable to type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.
+  Property 'defaultValue' does not exist on type 'IntrinsicAttributes & AccordionProps & RefAttributes<HTMLDivElement>'.
+
+Exit 2
