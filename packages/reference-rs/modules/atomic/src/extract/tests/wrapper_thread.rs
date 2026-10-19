@@ -148,11 +148,11 @@ fn test_non_forwarding_wrapper_is_external_not_host() {
         "#,
     );
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
+        !res.wants.is_empty() && res.wants.iter().all(|w| !w.backing.is_own()),
         "non-forwarding wrapper extracts only external wants: {:?}",
         res.wants
             .iter()
-            .map(|w| (&w.prop, w.value.to_string(), w.external))
+            .map(|w| (&w.prop, w.value.to_string(), !w.backing.is_own()))
             .collect::<Vec<_>>()
     );
 }

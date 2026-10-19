@@ -45,12 +45,13 @@ pub(crate) fn analyze_source(source: &str) -> Vec<DiagnosticFact> {
         program: &program,
         bindings: &bindings,
     };
+    let composed = crate::extract::Composed::standalone();
     let input = AnalysisInput {
         sources: vec![analyzed],
         hosts: &hosts,
         constants: &constants,
         system: "test",
-        qualifiers: &[],
+        composed: &composed,
     };
     super::analyze(&input)
 }
@@ -83,12 +84,59 @@ pub(crate) fn analyze_source_hosted(source: &str, configured: &[&str]) -> Vec<Di
         program: &program,
         bindings: &bindings,
     };
+    let upstream_hosts = std::collections::BTreeMap::new();
+    let composed = crate::extract::Composed::new(&qualifiers, &upstream_hosts);
     let input = AnalysisInput {
         sources: vec![analyzed],
         hosts: &hosts,
         constants: &constants,
         system: "test",
-        qualifiers: &qualifiers,
+        composed: &composed,
+    };
+    super::analyze(&input)
+}
+
+/// Analyze `src/test.tsx` of a scratch app with installed packages, its
+/// imports resolved on disk as compile resolves them, with `configured` on the
+/// host roster and `upstream` composed (the own system is `"test"`).
+pub(crate) fn analyze_installed(
+    app: &crate::tests::packages::PackageApp,
+    source: &str,
+    configured: &[&str],
+    upstream: &[&str],
+) -> Vec<DiagnosticFact> {
+    app.write("src/test.tsx", source);
+    let path = app.path("src/test.tsx");
+    let sources = vec![(path.clone(), source.to_string())];
+    let graph = crate::extract::identity::IdentityGraph::new(&sources);
+    let allocator = oxc_allocator::Allocator::default();
+    let program = parse_for_test(&allocator, source);
+    let constants =
+        crate::extract::constants::collect_local_constants(&program, &path, Some(source));
+    let hosts = ResolvedHosts {
+        traced: Vec::new(),
+        configured: configured.iter().map(ToString::to_string).collect(),
+        owned_props: BTreeMap::new(),
+        local_owned: BTreeMap::new(),
+    };
+    let bindings = crate::extract::collect_bindings_with_identity(&program, &path, &graph);
+    let qualifiers: Vec<String> = std::iter::once("test")
+        .chain(upstream.iter().copied())
+        .map(ToString::to_string)
+        .collect();
+    let upstream_hosts = BTreeMap::new();
+    let composed = crate::extract::Composed::new(&qualifiers, &upstream_hosts);
+    let input = AnalysisInput {
+        sources: vec![AnalyzedSource {
+            path: &path,
+            content: source,
+            program: &program,
+            bindings: &bindings,
+        }],
+        hosts: &hosts,
+        constants: &constants,
+        system: "test",
+        composed: &composed,
     };
     super::analyze(&input)
 }
@@ -201,8 +249,7 @@ pub(crate) fn walk_first_object(
         source: SourceId(0),
         surface,
         system: "test",
-        external: false,
-        qualifiers: &[],
+        backing: &crate::atom::backing::OWN,
         style_props: &style,
         constants: &constants,
         shadows: &shadows,

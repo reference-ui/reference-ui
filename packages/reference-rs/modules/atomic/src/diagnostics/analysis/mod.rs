@@ -29,19 +29,19 @@ use rustc_hash::FxHashSet;
 use crate::diagnostics::DiagnosticFact;
 use crate::diagnostics::SourceId;
 use crate::extract::constants::LocalConstants;
-use crate::extract::{ExtractBindings, LocalOwned};
+use crate::extract::{Composed, ExtractBindings, LocalOwned};
 use crate::hosts::ResolvedHosts;
 
 /// One compile input offered to analysis: path, text, and the borrowed parse
 /// owned by `atomic::compile`, plus the resolved host surface, the shared
-/// const values, the compiling system name for expected keys, and the
-/// composed-system qualifier list (`[own, …foreign]`) external blocks target.
+/// const values, the compiling system name for expected keys, and what the
+/// compile composes, which decides the systems a non-own tag's keys target.
 pub struct AnalysisInput<'a> {
     pub sources: Vec<AnalyzedSource<'a>>,
     pub hosts: &'a ResolvedHosts,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
-    pub qualifiers: &'a [String],
+    pub composed: &'a Composed<'a>,
 }
 
 /// The borrowed compile inputs analysis walks: collected sources, their
@@ -53,12 +53,12 @@ pub struct CompileParse<'a> {
 }
 
 /// The per-compile frame `AnalysisInput::for_compile` borrows beside the parses:
-/// host resolution, const values, and the composed-system name and qualifiers.
+/// host resolution, const values, the compiling system name and what it composes.
 pub struct AnalysisScope<'a> {
     hosts: &'a ResolvedHosts,
     constants: &'a LocalConstants,
     system: &'a str,
-    qualifiers: &'a [String],
+    composed: &'a Composed<'a>,
 }
 
 impl<'a> AnalysisScope<'a> {
@@ -66,13 +66,13 @@ impl<'a> AnalysisScope<'a> {
         hosts: &'a ResolvedHosts,
         constants: &'a LocalConstants,
         system: &'a str,
-        qualifiers: &'a [String],
+        composed: &'a Composed<'a>,
     ) -> Self {
         Self {
             hosts,
             constants,
             system,
-            qualifiers,
+            composed,
         }
     }
 }
@@ -99,7 +99,7 @@ impl<'a> AnalysisInput<'a> {
             hosts: scope.hosts,
             constants: scope.constants,
             system: scope.system,
-            qualifiers: scope.qualifiers,
+            composed: scope.composed,
         }
     }
 }
@@ -115,8 +115,8 @@ pub struct AnalyzedSource<'a> {
 }
 
 /// The per-compile context both surfaces share: host names, host-owned
-/// props (exported, and each file's own components by path), const values, the system name, the composed-system qualifier list,
-/// and the exact runtime style-prop set that decides responsive-value vs
+/// props (exported, and each file's own components by path), const values, the system name, what
+/// the compile composes, and the exact runtime style-prop set that decides responsive-value vs
 /// condition positions.
 pub struct AnalysisCtx<'a> {
     pub hosts: FxHashSet<String>,
@@ -124,14 +124,14 @@ pub struct AnalysisCtx<'a> {
     pub local_owned: &'a LocalOwned,
     pub constants: &'a LocalConstants,
     pub system: &'a str,
-    pub qualifiers: &'a [String],
+    pub composed: &'a Composed<'a>,
     pub style_props: FxHashSet<String>,
 }
 
 /// Predict exact expected lookups plus dynamic-shape facts for every source.
 /// Sources keep their input order and each becomes one [`SourceId`] by index.
 pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
-    let ctx = context(input.hosts, input.constants, input.system, input.qualifiers);
+    let ctx = context(input.hosts, input.constants, input.system, input.composed);
     let mut facts = Vec::new();
     for (index, source) in input.sources.iter().enumerate() {
         let source_id = SourceId(index as u32);
@@ -145,13 +145,13 @@ pub fn analyze(input: &AnalysisInput<'_>) -> Vec<DiagnosticFact> {
     facts
 }
 
-/// Hosts, constants, system name, and qualifiers shared by every per-file
-/// analysis.
+/// Hosts, constants, system name, and the composed facts shared by every
+/// per-file analysis.
 pub(crate) fn context<'a>(
     hosts: &'a ResolvedHosts,
     constants: &'a LocalConstants,
     system: &'a str,
-    qualifiers: &'a [String],
+    composed: &'a Composed<'a>,
 ) -> AnalysisCtx<'a> {
     let mut names = FxHashSet::default();
     names.extend(hosts.traced.iter().cloned());
@@ -162,7 +162,7 @@ pub(crate) fn context<'a>(
         local_owned: &hosts.local_owned,
         constants,
         system,
-        qualifiers,
+        composed,
         style_props: crate::runtime::get_style_prop_names().into_iter().collect(),
     }
 }

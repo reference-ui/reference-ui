@@ -44,7 +44,7 @@ fn warn_help_carries_help_on_the_line_and_the_fact() {
         let mut ctx = ObjectWalk {
             origin: None,
             important: false,
-            external: false,
+            backing: &crate::atom::backing::OWN,
             file: "t.ts",
             source: Some(code),
             line_index: None,

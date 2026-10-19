@@ -35,7 +35,7 @@ impl<'a> ExpressionWalk<'a> {
             .with_important(self.important || important)
             .with_origin(self.origin)
             .with_oxc_span(span);
-        want.external = self.external;
+        want.backing = self.backing.clone();
         want.file = Some(self.file.into());
         if let Some(position) = self.span_position(span) {
             want.line = Some(position.0);
@@ -166,7 +166,7 @@ impl<'a> ExpressionWalk<'a> {
                 line,
                 column,
                 span: Some(byte_span(span)),
-                external: self.external,
+                backing: self.backing,
             }) {
                 self.sinks.push(sink);
                 sink_recorded = true;

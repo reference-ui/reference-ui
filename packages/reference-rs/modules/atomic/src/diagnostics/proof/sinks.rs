@@ -14,6 +14,7 @@ use super::super::{
     Policy,
 };
 use super::lines::remove_line;
+use crate::atom::Backing;
 
 /// One harvest sink outcome, ready for coverage proof.
 struct Harvest<'a> {
@@ -22,7 +23,7 @@ struct Harvest<'a> {
     when: &'a [Box<str>],
     minted: usize,
     offered: &'a [Box<str>],
-    external: bool,
+    backing: &'a Backing,
     legacy_message: String,
 }
 
@@ -55,7 +56,7 @@ impl<'a> Sinks<'a> {
                 when,
                 minted,
                 offered,
-                external,
+                backing,
             } = fact
             {
                 sinks.harvests.push(Harvest {
@@ -64,7 +65,7 @@ impl<'a> Sinks<'a> {
                     when: when.as_slice(),
                     minted: *minted,
                     offered: offered.as_slice(),
-                    external: *external,
+                    backing,
                     legacy_message: harvest_sentence(location, prop, when, *minted),
                 });
             } else if let DiagnosticFact::ExtractOutcome {
@@ -115,13 +116,12 @@ impl<'a> Sinks<'a> {
     }
 
     /// Silence covered sinks: drop the sink's info line plus every
-    /// recorded funnel line on it. All other sinks keep everything. An
-    /// external sink's offered values are covered by foreign-qualified
-    /// plans, so its keys expand across the foreign qualifiers.
+    /// recorded funnel line on it. All other sinks keep everything. A sink
+    /// on another system's component is covered by those systems' plans, so
+    /// its keys expand across the systems its backing names.
     pub fn render_covered(
         &self,
         system: &str,
-        qualifiers: &[String],
         emitted: &BTreeSet<String>,
         diagnostics: &mut Vec<Diagnostic>,
     ) {
@@ -129,7 +129,7 @@ impl<'a> Sinks<'a> {
             if harvest.minted != 0 || harvest.offered.is_empty() {
                 continue;
             }
-            if !self.sink_covered(system, qualifiers, emitted, harvest) {
+            if !self.sink_covered(system, emitted, harvest) {
                 continue;
             }
             remove_line(
@@ -156,18 +156,18 @@ impl<'a> Sinks<'a> {
         }
     }
 
-    /// True when every value the pool offered this sink is a final plan. An
-    /// external sink is covered when each offered value is planned under any
-    /// applicable foreign qualifier; an own sink checks its own system.
+    /// True when every value the pool offered this sink is a final plan. A
+    /// sink on another system's component is covered when each offered value
+    /// is planned under any system its backing names; an own sink checks its
+    /// own system.
     fn sink_covered(
         &self,
         system: &str,
-        qualifiers: &[String],
         emitted: &BTreeSet<String>,
         harvest: &Harvest<'_>,
     ) -> bool {
         harvest.offered.iter().all(|value| {
-            crate::diagnostics::target_systems(harvest.external, system, qualifiers).any(|target| {
+            harvest.backing.targets(system).any(|target| {
                 let key = OwnedLookupKey {
                     system: target.into(),
                     when: harvest.when.to_vec(),
@@ -195,7 +195,7 @@ fn harvest_sentence(
         when: when.to_vec(),
         minted,
         offered: Vec::new(),
-        external: false,
+        backing: Backing::Own,
     };
     Policy::render_harvest(&report).message
 }
@@ -234,21 +234,22 @@ mod tests {
             when: Vec::new(),
             minted,
             offered: offered.iter().map(|value| (*value).into()).collect(),
-            external: false,
+            backing: Backing::Own,
         };
         let line = Policy::render_harvest(&report);
         (DiagnosticFact::from(report), line)
     }
 
-    /// One external-tag harvest sink (its offered values join foreign plans).
-    fn external_harvest_sink(offered: &[&str]) -> (DiagnosticFact, Diagnostic) {
+    /// One harvest sink on a tag `backing` renders (its offered values join
+    /// those systems' plans).
+    fn foreign_harvest_sink(offered: &[&str], backing: Backing) -> (DiagnosticFact, Diagnostic) {
         let report = HarvestReport {
             location: located(),
             prop: "color".into(),
             when: Vec::new(),
             minted: 0,
             offered: offered.iter().map(|value| (*value).into()).collect(),
-            external: true,
+            backing,
         };
         let line = Policy::render_harvest(&report);
         (DiagnosticFact::from(report), line)
@@ -276,34 +277,48 @@ mod tests {
         let mut diagnostics = vec![funnel_line, harvest_line];
         let emitted = emitted_keys(&[plan("color", serde_json::json!("red"))]);
         let facts = vec![harvest_fact, funnel_fact];
-        Sinks::collect(&facts).render_covered("lib", &[], &emitted, &mut diagnostics);
+        Sinks::collect(&facts).render_covered("lib", &emitted, &mut diagnostics);
         assert!(diagnostics.is_empty());
     }
 
     #[test]
-    fn external_sink_is_covered_by_foreign_qualified_plan() {
-        let (harvest_fact, harvest_line) = external_harvest_sink(&["red"]);
+    fn foreign_sink_is_covered_by_its_backing_systems_plan() {
+        let (harvest_fact, harvest_line) =
+            foreign_harvest_sink(&["red"], Backing::systems(["icons"]));
         let mut diagnostics = vec![harvest_line];
         let foreign_plan = RuntimeStylePlan {
             system: "icons".to_string(),
             ..plan("color", serde_json::json!("red"))
         };
         let emitted = emitted_keys(&[foreign_plan]);
-        Sinks::collect(&[harvest_fact]).render_covered(
-            "lib",
-            &["lib".to_string(), "icons".to_string()],
-            &emitted,
-            &mut diagnostics,
+        Sinks::collect(&[harvest_fact]).render_covered("lib", &emitted, &mut diagnostics);
+        assert!(
+            diagnostics.is_empty(),
+            "the backing system's plan covers the sink"
         );
-        assert!(diagnostics.is_empty(), "the foreign plan covers the sink");
     }
 
     #[test]
-    fn external_sink_stays_visible_without_a_foreign_qualifier() {
-        let (harvest_fact, harvest_line) = external_harvest_sink(&["red"]);
+    fn foreign_sink_ignores_plans_of_systems_its_backing_does_not_name() {
+        let (harvest_fact, harvest_line) =
+            foreign_harvest_sink(&["red"], Backing::systems(["acme"]));
+        let mut diagnostics = vec![harvest_line.clone()];
+        let other = RuntimeStylePlan {
+            system: "icons".to_string(),
+            ..plan("color", serde_json::json!("red"))
+        };
+        let emitted = emitted_keys(&[plan("color", serde_json::json!("red")), other]);
+        Sinks::collect(&[harvest_fact]).render_covered("lib", &emitted, &mut diagnostics);
+        assert_eq!(diagnostics, vec![harvest_line]);
+    }
+
+    #[test]
+    fn unbacked_sink_stays_visible() {
+        let (harvest_fact, harvest_line) =
+            foreign_harvest_sink(&["red"], Backing::systems(Vec::<&str>::new()));
         let mut diagnostics = vec![harvest_line.clone()];
         let emitted = emitted_keys(&[plan("color", serde_json::json!("red"))]);
-        Sinks::collect(&[harvest_fact]).render_covered("lib", &[], &emitted, &mut diagnostics);
+        Sinks::collect(&[harvest_fact]).render_covered("lib", &emitted, &mut diagnostics);
         assert_eq!(diagnostics, vec![harvest_line]);
     }
 
@@ -321,7 +336,7 @@ mod tests {
         ];
         let emitted = emitted_keys(&[plan("color", serde_json::json!("red"))]);
         let facts = vec![vacuous_fact, uncovered_fact, minting_fact, funnel_fact];
-        Sinks::collect(&facts).render_covered("lib", &[], &emitted, &mut diagnostics);
+        Sinks::collect(&facts).render_covered("lib", &emitted, &mut diagnostics);
         assert_eq!(diagnostics.len(), 4);
         assert!(diagnostics.contains(&funnel_line));
     }

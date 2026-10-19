@@ -33,7 +33,7 @@ fn has_want(res: &crate::CompileResult, prop: &str, value: &str) -> bool {
 /// under G0 §D/C8, so it yields external wants instead of silence. True when
 /// the result carries wants and every one is external (no host re-admission).
 fn only_external(res: &crate::CompileResult) -> bool {
-    !res.wants.is_empty() && res.wants.iter().all(|w| w.external)
+    !res.wants.is_empty() && res.wants.iter().all(|w| !w.backing.is_own())
 }
 
 const IMPORT_DIV: &str = "import { Div } from '@reference-ui/react';";

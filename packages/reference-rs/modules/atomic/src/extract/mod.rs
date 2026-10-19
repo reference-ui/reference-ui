@@ -10,6 +10,7 @@
 //! is known: an empty host set plus style-bearing JSX is a missing-graph
 //! error, never a scan.
 
+pub mod backing;
 pub mod bindings;
 pub mod constants;
 pub mod context;
@@ -40,6 +41,7 @@ use rustc_hash::FxHashSet;
 
 use base_system::BreakpointScale;
 
+pub use backing::Composed;
 pub use bindings::{collect_bindings, collect_bindings_with_identity, ExtractBindings};
 pub use context::{ExtractConfig, ExtractContext, ExtractSinks};
 pub use jsx_hosts::JsxHosts;
@@ -56,6 +58,7 @@ pub fn extract_with_context(program: &Program<'_>, ctx: &mut ExtractContext<'_>)
         bindings: ctx.bindings,
         jsx_hosts: ctx.jsx_hosts,
         owned_props: ctx.owned_props,
+        composed: ctx.composed,
         shadowed: &[],
     };
     let mut visitor = ExtractVisitor::new(ctx.file, ctx.source, config);
@@ -95,6 +98,7 @@ pub fn extract(
         global: &no_global,
     };
     let no_owned = OwnedMap::new();
+    let composed = Composed::standalone();
     let config = ExtractConfig {
         chain,
         breakpoints,
@@ -104,6 +108,7 @@ pub fn extract(
             global: &no_owned,
             local: None,
         },
+        composed: &composed,
         shadowed: &[],
     };
     let mut ctx = ExtractContext::new(file, None, config, sinks);

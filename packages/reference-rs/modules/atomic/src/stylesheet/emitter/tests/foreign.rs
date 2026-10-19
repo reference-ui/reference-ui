@@ -1,12 +1,13 @@
 //! Foreign utility grouping on both sheets and the guard that drops an empty utilities block.
-//! Foreign rules print only under a foreign qualifier, so these cases pin both the grouped output and the flat fallback.
+//! Foreign rules print only under the systems their backing names, so these cases pin both the
+//! grouped output and the flat fallback.
 
 use super::*;
-use crate::atom::CssValue;
+use crate::atom::{Backing, CssValue, ForeignAtoms};
 use smallvec::smallvec;
 
 /// Grouped emission rides both sheets: the own group prints as before and each
-/// foreign qualifier contributes one appended group, and the portable sheet
+/// backing system contributes one appended group, and the portable sheet
 /// agrees with the grouped single-build exactly.
 #[test]
 fn test_grouped_foreign_rules_ride_both_sheets() {
@@ -24,8 +25,8 @@ fn test_grouped_foreign_rules_ride_both_sheets() {
     );
     let mut own = AtomSet::new();
     own.insert(own_atom.clone());
-    let mut external = AtomSet::new();
-    external.insert(ext_atom.clone());
+    let mut external = ForeignAtoms::new();
+    external.insert(ext_atom.clone(), &Backing::systems(["alpha"]));
 
     let system = BaseSystem::lib_fixture();
     let qualifiers = vec![system.name.clone(), "alpha".to_string()];
@@ -34,7 +35,7 @@ fn test_grouped_foreign_rules_ride_both_sheets() {
     let (streams, sheet, portable) = build_stylesheets_with(
         &SheetInput {
             own: &own,
-            external: &external,
+            foreign: &external,
             qualifiers: &qualifiers,
             extended: &[],
             system,
@@ -62,7 +63,7 @@ fn test_grouped_foreign_rules_ride_both_sheets() {
         build_portable_stylesheet_with(
         &SheetInput {
         own: &own,
-        external: &external,
+        foreign: &external,
         qualifiers: &qualifiers,
         extended: &[],
         system,
@@ -73,24 +74,25 @@ fn test_grouped_foreign_rules_ride_both_sheets() {
     );
 }
 
-/// No empty blocks: an external set with no foreign qualifier prints nothing,
-/// and an empty own set never opens an empty `@layer utilities`.
+/// No empty blocks: a foreign atom nothing backs prints nothing, and an empty
+/// own set never opens an empty `@layer utilities`.
 #[test]
-fn test_no_empty_utilities_block_without_foreign_qualifier() {
-    let mut external = AtomSet::new();
-    external.insert(Atom::new(
+fn test_no_empty_utilities_block_without_a_backing_system() {
+    let pad = Atom::new(
         "padding".into(),
         CssValue::String("2r".into()),
         smallvec![],
         false,
-    ));
+    );
+    let mut unbacked = ForeignAtoms::new();
+    unbacked.insert(pad.clone(), &Backing::none());
     let system = BaseSystem::lib_fixture();
     let own = AtomSet::new();
-    let no_foreign = vec![system.name.clone()];
+    let no_foreign = vec![system.name.clone(), "alpha".to_string()];
     let css = build_stylesheet_with(
         &SheetInput {
         own: &own,
-        external: &external,
+        foreign: &unbacked,
         qualifiers: &no_foreign,
         extended: &[],
         system,
@@ -100,12 +102,14 @@ fn test_no_empty_utilities_block_without_foreign_qualifier() {
     );
     assert!(!css.contains("@layer utilities"), "{css}");
 
-    // With a foreign qualifier the block appears and carries the foreign rule.
+    // Backed under a system the block appears and carries the foreign rule.
+    let mut external = ForeignAtoms::new();
+    external.insert(pad, &Backing::systems(["alpha"]));
     let with_foreign = vec![system.name.clone(), "alpha".to_string()];
     let css = build_stylesheet_with(
         &SheetInput {
         own: &own,
-        external: &external,
+        foreign: &external,
         qualifiers: &with_foreign,
         extended: &[],
         system,

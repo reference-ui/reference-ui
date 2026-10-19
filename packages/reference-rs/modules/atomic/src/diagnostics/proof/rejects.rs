@@ -44,7 +44,7 @@ pub fn collect<'a>(
         outcome: outcome.clone(),
         // Proof re-derives the legacy sentence only; help never joins.
         suggestion: None,
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     rejects.push(Reject {
         location,

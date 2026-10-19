@@ -14,7 +14,7 @@ mod streams;
 pub use streams::{StylesheetStreams, build_stylesheet_streams};
 use super::name;
 use super::system_layers::{append_portable_system_layers, append_system_layers, own_token_scope};
-use crate::atom::{Atom, AtomSet, WhenKind};
+use crate::atom::{Atom, AtomSet, ForeignAtoms, WhenKind};
 use crate::recipes::CompiledRecipe;
 use crate::resolve::conditions::nest_selector_condition;
 use base_system::BaseSystem;
@@ -27,14 +27,15 @@ fn extract_at_rules(atom: &Atom) -> Vec<String> {
     at_rule_wraps(atom).map(str::to_string).collect()
 }
 
-/// Shared inputs for every sheet builder: the own and foreign atom sets, the
-/// composed qualifier list (own first), the extended systems whose stamps the
-/// token layer also claims, the base system, and the closed recipe classes.
-/// Borrowed fields make the struct `Copy`, so builders take it by reference.
+/// Shared inputs for every sheet builder: the own atom set, the foreign atoms
+/// grouped by the systems that back them, the composed qualifier list (own
+/// first), the extended systems whose stamps the token layer also claims, the
+/// base system, and the closed recipe classes. Borrowed fields make the struct
+/// `Copy`, so builders take it by reference.
 #[derive(Clone, Copy)]
 pub struct SheetInput<'a> {
     pub own: &'a AtomSet,
-    pub external: &'a AtomSet,
+    pub foreign: &'a ForeignAtoms,
     pub qualifiers: &'a [String],
     /// Upstreams this system extends, in qualifier order: its token values win in their components.
     pub extended: &'a [String],
@@ -52,7 +53,7 @@ pub fn build_stylesheet(
     build_stylesheet_with(
         &SheetInput {
             own: atom_set,
-            external: &AtomSet::new(),
+            foreign: &ForeignAtoms::new(),
             qualifiers: &qualifiers,
             extended: &[],
             system,
@@ -63,10 +64,10 @@ pub fn build_stylesheet(
 }
 
 /// Same as `build_stylesheet`, with closed recipe classes in `@layer recipes`
-/// and grouped foreign utility rules for the `external` set.
+/// and one marked utility group per system the foreign atoms name.
 ///
-/// `qualifiers` is own-first (`qualifiers[0]` is `system.name`); an empty
-/// `external` set reprints the flat single-set bytes exactly.
+/// `qualifiers` is own-first (`qualifiers[0]` is `system.name`) and orders the
+/// groups; with no foreign group to print the flat single-set bytes reprint exactly.
 ///
 /// Named systems nest the six layers inside their package layer so composed
 /// output keeps utilities above global; unnamed systems stay flat. Both shapes
@@ -77,7 +78,7 @@ pub fn build_stylesheet_with(
 ) -> String {
     let SheetInput {
         own,
-        external,
+        foreign,
         qualifiers,
         extended,
         system,
@@ -87,7 +88,7 @@ pub fn build_stylesheet_with(
     let scope = own_token_scope(qualifiers, extended);
     append_system_layers(&mut inner, system, scope, diagnostics);
     append_recipes_layer(&mut inner, recipes);
-    append_utilities_layer(&mut inner, own, external, qualifiers);
+    append_utilities_layer(&mut inner, own, foreign, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))
 }
 
@@ -98,7 +99,7 @@ pub fn build_portable_stylesheet_with(
 ) -> String {
     let SheetInput {
         own,
-        external,
+        foreign,
         qualifiers,
         extended,
         system,
@@ -107,7 +108,7 @@ pub fn build_portable_stylesheet_with(
     let mut inner = LAYER_PREAMBLE.to_string();
     append_portable_system_layers(&mut inner, system, extended, diagnostics);
     append_recipes_layer(&mut inner, recipes);
-    append_utilities_layer(&mut inner, own, external, qualifiers);
+    append_utilities_layer(&mut inner, own, foreign, qualifiers);
     prepend_root_default(&wrap_package_layer(&system.name, &inner))
 }
 
@@ -145,17 +146,15 @@ pub fn build_stylesheets_with(
 fn append_utilities_layer(
     out: &mut String,
     own: &AtomSet,
-    external: &AtomSet,
+    foreign: &ForeignAtoms,
     qualifiers: &[String],
 ) {
-    // A foreign set only prints under a foreign qualifier; with an empty own set
-    // and no foreign qualifier the layer would be an empty block, so skip it.
-    let prints_foreign = !external.is_empty() && qualifiers.len() > 1;
-    if own.is_empty() && !prints_foreign {
+    // With no own rule and no foreign group the layer would be an empty block.
+    if own.is_empty() && !foreign.prints() {
         return;
     }
     out.push_str("@layer utilities {\n");
-    write_utilities_grouped(out, own, external, qualifiers);
+    write_utilities_grouped(out, own, foreign, qualifiers);
     out.push_str("}\n");
 }
 

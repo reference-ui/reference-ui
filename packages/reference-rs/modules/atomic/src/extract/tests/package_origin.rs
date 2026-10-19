@@ -4,7 +4,8 @@
 //! into `node_modules`) and asks the origin walk where one import ends: a
 //! workspace package whose source this compile includes continues the walk
 //! (`Local`, gap 1), unless that package published a system of its own; an
-//! installed package without one is foreign; a linked package borrowing
+//! installed package without one is foreign; one whose entry is not built
+//! yet still keeps the system it published; a linked package borrowing
 //! this compile's own runtime is `Local`. The compile probe replays the
 //! plan's gap-1 tree end to end: the traced wrapper backs under own.
 
@@ -147,6 +148,29 @@ fn installed_and_unresolved_packages_are_foreign() {
     );
 }
 
+/// A workspace package whose `exports` point at a `dist` not built yet
+/// resolves to no file, but its directory is installed and published a
+/// system: the verdict still reads it, so its tags keep their system.
+#[test]
+fn an_installed_package_with_no_built_entry_keeps_its_system() {
+    let repo = Repo::new("origin-unbuilt");
+    repo.write(
+        "packages/kit/package.json",
+        r#"{"name":"@acme/kit","exports":{".":"./dist/index.mjs"}}"#,
+    );
+    repo.write(
+        "packages/kit/.reference-ui/system/baseSystem.mjs",
+        "export const baseSystem = { \"name\": \"kit\" }\n",
+    );
+    repo.link("node_modules/@acme/kit", "packages/kit");
+    let origin = repo.origin("@acme/kit/sub", "Tile", None);
+    assert_eq!(published_name(&origin).as_deref(), Some("kit"), "{origin:?}");
+    let Origin::Package(tag) = origin else {
+        unreachable!("published is a package");
+    };
+    assert_eq!(tag.dir.as_deref(), Some(repo.path("packages/kit").as_str()));
+}
+
 #[test]
 fn a_linked_package_borrowing_the_own_runtime_is_local() {
     let repo = Repo::new("origin-borrowed");
@@ -183,8 +207,15 @@ fn gap_one_workspace_wrapper_backs_under_own() {
     };
     let result = compile(&request).expect("compile succeeds");
     assert!(result.traced_jsx_hosts.contains(&"Card".to_string()));
-    let bg: Vec<_> = result.wants.iter().filter(|want| &*want.prop == "bg").collect();
-    assert!(!bg.is_empty() && bg.iter().all(|want| !want.external), "{bg:?}");
+    let bg: Vec<_> = result
+        .wants
+        .iter()
+        .filter(|want| &*want.prop == "bg")
+        .collect();
+    assert!(
+        !bg.is_empty() && bg.iter().all(|want| want.backing.is_own()),
+        "{bg:?}"
+    );
     let classes: Vec<_> = result
         .style_plans
         .iter()
@@ -200,6 +231,13 @@ fn gap_one_workspace_wrapper_backs_under_own() {
 
     repo.publish_ui();
     let twin = compile(&request).expect("compile succeeds");
-    let bg: Vec<_> = twin.wants.iter().filter(|want| &*want.prop == "bg").collect();
-    assert!(!bg.is_empty() && bg.iter().all(|want| want.external), "{bg:?}");
+    let bg: Vec<_> = twin
+        .wants
+        .iter()
+        .filter(|want| &*want.prop == "bg")
+        .collect();
+    assert!(
+        !bg.is_empty() && bg.iter().all(|want| !want.backing.is_own()),
+        "{bg:?}"
+    );
 }

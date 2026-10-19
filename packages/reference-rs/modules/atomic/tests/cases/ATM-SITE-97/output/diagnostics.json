@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-EXTERNAL-UNBACKED",
-    "message": "style props on <Button> will not paint: '@reference-ui/lib' styles it with its own system, and no system in `extends` or `layers` backs it",
+    "message": "style props on <Button> will not paint: '@reference-ui/lib' renders through its own system 'reference-ui', and no system in `extends` or `layers` backs it",
     "file": "input/src/Main.tsx",
     "line": 6,
     "column": 27,
@@ -11,7 +11,7 @@
       "end": 154
     },
     "help": [
-      "add the '@reference-ui/lib' baseSystem to `extends` or `layers` in ui.config"
+      "add '@reference-ui/lib/baseSystem' to `extends` or `layers` in ui.config"
     ]
   }
 ]

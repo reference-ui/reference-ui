@@ -38,6 +38,8 @@ struct ParseView<'a> {
     retained: &'a [usize],
     constants: &'a extract::constants::LocalConstants,
     errors: &'a [Vec<(String, Option<u32>)>],
+    /// What the compile composes: analysis and extraction read the same facts.
+    composed: &'a extract::Composed<'a>,
 }
 
 /// Serial parse path: retains one parse per source the streaming gate keeps, streams the
@@ -61,6 +63,10 @@ fn run_parse_serial(
     drop(_parse);
     let (constants, transient) = merge_constants(sources, &parsed, &mut slots);
     let stream::TransientOut { staged, errors } = transient;
+    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls, so analysis,
+    // extraction and assembly cannot diverge on what is composed.
+    let qualifiers = assembly::qualifiers_for(&request.base_system.name, &request.upstream_systems);
+    let composed = extract::Composed::new(&qualifiers, &request.upstream_hosts);
     let view = ParseView {
         request,
         sources,
@@ -69,6 +75,7 @@ fn run_parse_serial(
         retained: &retained,
         constants: &constants,
         errors: &errors,
+        composed: &composed,
     };
     #[cfg(feature = "alloc-trace")]
     let _graphs = crate::alloc_trace::PhaseGuard::enter("graphs");
@@ -94,6 +101,7 @@ fn run_parse_serial(
         breakpoints: request.base_system.breakpoints(),
         traced_jsx: &traced_jsx,
         hosts: &hosts,
+        composed: &composed,
         wants: sinks.wants,
         recipes: sinks.recipes,
         diagnostics: sinks.diagnostics,
@@ -228,18 +236,12 @@ fn analyze_parse(
             }
         })
         .collect();
-    // Qualifier plumbing (G0 §E/R1): the same helper `finish` calls, called
-    // here too so analysis and assembly cannot diverge.
-    let qualifiers = assembly::qualifiers_for(
-        &view.request.base_system.name,
-        &view.request.upstream_systems,
-    );
     let analysis = diagnostics::analysis::AnalysisInput {
         sources: analyzed,
         hosts,
         constants: view.constants,
         system: &view.request.base_system.name,
-        qualifiers: &qualifiers,
+        composed: view.composed,
     };
     report_analysis_expectations(&analysis, session);
 }

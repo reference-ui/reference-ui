@@ -2,7 +2,8 @@
  * Compiled-icon (ATM-SITE-95): the docs icon path. `icon-pkg` ships compiled
  * dist only (`dist/*.mjs`, jsx-runtime calls, no generics), the way `@reference-ui/icons`
  * does, so no source or declaration names what `CodeIcon` consumes and the tag stays an
- * external component at the call site. The package's published roster arrives as
+ * external component at the call site; it publishes its system (`icons`) the way icons does,
+ * so it is a Reference package. The package's published roster arrives as
  * `jsxOwned` on the base system: `CodeIcon` keeps `size` and `variant` for itself.
  * `size="lg"` mints no want and no warning, `color` still extracts, and the
  * `Div size="2r"` control still folds. With no upstream system composed, the styled

@@ -89,14 +89,14 @@ fn render_producer(fact: &DiagnosticFact) -> Option<Diagnostic> {
             when,
             minted,
             offered,
-            external,
+            backing,
         } => Some(Policy::render_harvest(&HarvestReport {
             location: location.clone(),
             prop: prop.clone(),
             when: when.clone(),
             minted: *minted,
             offered: offered.clone(),
-            external: *external,
+            backing: backing.clone(),
         })),
         _ => None,
     }
@@ -110,7 +110,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         key,
         outcome,
         suggestion,
-        external,
+        backing,
     } = fact
     else {
         return None;
@@ -123,7 +123,7 @@ fn render_resolve_refusal(fact: &DiagnosticFact) -> Option<Diagnostic> {
         key: key.clone(),
         outcome: outcome.clone(),
         suggestion: suggestion.clone(),
-        external: *external,
+        backing: backing.clone(),
     }))
 }
 

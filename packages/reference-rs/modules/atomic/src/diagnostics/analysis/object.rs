@@ -17,7 +17,7 @@ use super::conditions::{is_style_value_position, static_key, KeyClass};
 use super::is_shadowed;
 use super::structured::responsive_object_value;
 use super::values::{classify_value, unwrap_value, ValueClass, ValueScope};
-use crate::atom::AtomValue;
+use crate::atom::{AtomValue, Backing};
 use crate::diagnostics::{
     DiagnosticFact, DynamicShape, OwnedLookupKey, SourceId, SourceSite, StyleSurfaceKind,
 };
@@ -25,16 +25,15 @@ use crate::extract::constants::LocalConstants;
 
 /// The shared walk state for one style object: the fact sink plus the
 /// identities (source, surface, system) and the name truth (style props,
-/// const values, shadows) every entry consults. `external` marks a block on
-/// an external component; `qualifiers` is the composed-system list whose
-/// foreign tail an external block's exact keys target.
+/// const values, shadows) every entry consults. `backing` names the systems
+/// the block lowers under: own, or those that render another system's tag,
+/// whose exact keys target exactly those systems.
 pub struct WalkCtx<'a> {
     pub facts: &'a mut Vec<DiagnosticFact>,
     pub source: SourceId,
     pub surface: StyleSurfaceKind,
     pub system: &'a str,
-    pub external: bool,
-    pub qualifiers: &'a [String],
+    pub backing: &'a Backing,
     pub style_props: &'a FxHashSet<String>,
     pub constants: &'a LocalConstants,
     pub shadows: &'a [FxHashSet<String>],
@@ -70,10 +69,10 @@ impl WalkCtx<'_> {
         }
     }
 
-    /// Record one exact expected lookup at `site`, one fact per applicable
-    /// system: an own block targets `[own]`; an external block targets the
-    /// foreign qualifiers only. The push order is own-then-foreign, so the
-    /// own path keeps the single-fact shape byte for byte.
+    /// Record one exact expected lookup at `site`, one fact per system the
+    /// block's backing targets: an own block targets `[own]`; another
+    /// system's block targets the systems it names, and none when nothing
+    /// backs it. The own path keeps the single-fact shape byte for byte.
     pub fn expect(&mut self, site: Site<'_>, value: serde_json::Value, important: bool) {
         let source = SourceSite {
             source: self.source,
@@ -82,7 +81,7 @@ impl WalkCtx<'_> {
             prop: site.prop.into(),
             when: site.when.to_vec(),
         };
-        if !self.external {
+        if self.backing.is_own() {
             let key = OwnedLookupKey {
                 system: self.system.into(),
                 when: site.when.to_vec(),
@@ -93,13 +92,13 @@ impl WalkCtx<'_> {
             self.facts.push(DiagnosticFact::ExactLookupExpected {
                 site: source,
                 key,
-                external: false,
+                backing: Backing::Own,
             });
             return;
         }
-        for system in crate::diagnostics::target_systems(true, self.system, self.qualifiers) {
+        for system in self.backing.named() {
             let key = OwnedLookupKey {
-                system: system.into(),
+                system: system.clone(),
                 when: site.when.to_vec(),
                 prop: site.prop.into(),
                 value: value.clone(),
@@ -108,7 +107,7 @@ impl WalkCtx<'_> {
             self.facts.push(DiagnosticFact::ExactLookupExpected {
                 site: source.clone(),
                 key,
-                external: true,
+                backing: self.backing.clone(),
             });
         }
     }

@@ -2,8 +2,8 @@
 //! Connects pre-expansion authored inputs to post-resolution cascade declarations.
 //! Computes opaque cascade slots for property-condition pairings and applies system segments to class names.
 //! Deduplicates identical authored intentions and collects resulting atomic utilities into the AtomSet.
-//! Own declarations target the compiling system; external declarations expand once per
-//! foreign qualifier, routing their atoms into the separate external set.
+//! Own declarations target the compiling system; a declaration another system renders expands
+//! once per system its backing names, routing its atoms into those systems' foreign groups.
 
 mod plan_builder;
 mod resolve;
@@ -18,7 +18,7 @@ use serde_json::Value;
 
 use super::plan::{RecipeRuntimeTable, RuntimeDeclaration, RuntimeStylePlan};
 use super::serializer::{serialize_lookup_key, LookupKey};
-use crate::atom::{Atom, AtomSet};
+use crate::atom::{Atom, AtomSet, Backing, ForeignAtoms};
 use crate::diagnostics::Diagnostic;
 use crate::stylesheet::name::class_name_with_system;
 
@@ -30,11 +30,11 @@ pub struct AuthoredDeclaration {
     pub prop: String,
     pub value: Value,
     pub important: bool,
-    /// True when the declaration was authored on an external component; the
-    /// runtime builder routes these to foreign-qualifier plans. Absent from
-    /// the wire when false so the own path stays byte-identical.
-    #[serde(default, skip_serializing_if = "crate::atom::is_false")]
-    pub external: bool,
+    /// The systems the declaration lowers under: `Own` for the compiling
+    /// system, else one plan per named system. Absent from the wire when own
+    /// so the own path stays byte-identical.
+    #[serde(default, skip_serializing_if = "Backing::is_own")]
+    pub backing: Backing,
 }
 
 impl AuthoredDeclaration {
@@ -84,31 +84,20 @@ pub(crate) struct DetachedDecl {
 }
 
 /// Fresh `(system, key)` plan targets for one declaration: the own system for
-/// own declarations, every foreign qualifier for external ones, skipping keys
+/// own declarations, each system its backing names otherwise, skipping keys
 /// already in `seen`. Empty means the declaration contributes nothing.
 pub(super) fn fresh_targets(
     system: &str,
-    qualifiers: &[String],
     decl: &AuthoredDeclaration,
     seen: &FxHashSet<String>,
 ) -> Vec<(String, String)> {
-    if decl.external {
-        qualifiers
-            .iter()
-            .skip(1)
-            .filter_map(|qualifier| {
-                let key = decl.lookup_key(qualifier);
-                (!seen.contains(&key)).then(|| (qualifier.clone(), key))
-            })
-            .collect()
-    } else {
-        let key = decl.lookup_key(system);
-        if seen.contains(&key) {
-            Vec::new()
-        } else {
-            vec![(system.to_string(), key)]
-        }
-    }
+    decl.backing
+        .targets(system)
+        .filter_map(|target| {
+            let key = decl.lookup_key(target);
+            (!seen.contains(&key)).then(|| (target.to_string(), key))
+        })
+        .collect()
 }
 
 /// Expand one declaration's resolved atoms for one target system into a plan.
@@ -141,16 +130,20 @@ pub(super) fn plan_for_system(
     }
 }
 
-/// Move one declaration's resolved atoms into the partition its marker selects.
+/// Move one declaration's resolved atoms into the set its backing selects:
+/// the own set, or each named system's foreign group.
 pub(super) fn insert_resolved(
     resolved: Vec<ResolvedAtom>,
-    external: bool,
+    backing: &Backing,
     atom_set: &mut AtomSet,
-    external_atom_set: &mut AtomSet,
+    foreign: &mut ForeignAtoms,
 ) {
-    let target = if external { external_atom_set } else { atom_set };
     for resolved in resolved {
-        target.insert(resolved.atom);
+        if backing.is_own() {
+            atom_set.insert(resolved.atom);
+        } else {
+            foreign.insert(resolved.atom, backing);
+        }
     }
 }
 

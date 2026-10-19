@@ -22,6 +22,7 @@ use crate::diagnostics::{Diagnostic, DiagnosticsSession, LineIndex};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 
+use super::backing::Composed;
 use super::bindings::{self, ExtractBindings};
 use super::harvest;
 use super::jsx_hosts::JsxHosts;
@@ -38,6 +39,8 @@ pub struct ExtractConfig<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: OwnedProps<'a>,
+    /// What this compile composes: the systems a non-own tag may back under.
+    pub composed: &'a Composed<'a>,
     pub shadowed: &'a [FxHashSet<String>],
 }
 
@@ -64,6 +67,7 @@ pub struct ExtractContext<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: OwnedProps<'a>,
+    pub composed: &'a Composed<'a>,
     pub wrapper_threads: Option<&'a WrapperThreads>,
     pub shadowed: &'a [FxHashSet<String>],
     pub recipe_binding: Option<&'a str>,
@@ -97,6 +101,7 @@ impl<'a> ExtractContext<'a> {
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
             owned_props: config.owned_props,
+            composed: config.composed,
             wrapper_threads: None,
             shadowed: config.shadowed,
             recipe_binding: None,

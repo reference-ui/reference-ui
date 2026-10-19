@@ -9,15 +9,11 @@
 use oxc_ast::ast::Program;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::extract::harvest::Sink;
-use crate::extract::identity::IdentityGraph;
 use crate::extract::recipes::selection::{RecipeBinding, TentativeSelection};
-use crate::extract::resolver::ResolvedExport;
 use crate::extract::scope::{ImportLookup, ScopeChain};
-use crate::extract::{
-    collect_bindings_with_identity, ExtractBindings, ExtractConfig, ExtractContext,
-    ExtractSinks, JsxHosts, OwnedProps,
-};
+use crate::extract::{collect_bindings_with_identity, harvest::Sink, identity::IdentityGraph};
+use crate::extract::{resolver::ResolvedExport, Composed, ExtractBindings, ExtractConfig};
+use crate::extract::{ExtractContext, ExtractSinks, JsxHosts, OwnedProps};
 use crate::recipes::Recipe;
 use crate::runtime::AuthoredDeclaration;
 use crate::stream::SourceSlot;
@@ -118,6 +114,7 @@ fn extract_parsed_program(
         bindings: &file.bindings,
         jsx_hosts,
         owned_props: session.hosts.owned_for(path),
+        composed: session.composed,
         shadowed: &[],
     };
     let sinks = ExtractSinks {
@@ -159,6 +156,7 @@ pub(crate) struct ExtractIn<'a> {
     pub breakpoints: &'a BreakpointScale,
     pub traced: &'a FxHashSet<String>,
     pub owned_props: OwnedProps<'a>,
+    pub composed: &'a Composed<'a>,
 }
 
 /// Walk one program the caller already parsed, into owned products.
@@ -180,6 +178,7 @@ pub(crate) fn extract_program(program: &Program<'_>, input: &ExtractIn<'_>) -> F
         bindings: input.bindings,
         jsx_hosts,
         owned_props: input.owned_props,
+        composed: input.composed,
         shadowed: &[],
     };
     let mut facts = DiagnosticsSession::new();

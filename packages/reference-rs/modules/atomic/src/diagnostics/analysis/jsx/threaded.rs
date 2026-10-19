@@ -1,6 +1,6 @@
 //! Same-file `css` wrappers for the JSX mirror. Extraction lowers a wrapper's
-//! call-site `css` as if written on the host it forwards into (own, never
-//! external), and ignores every other attribute on it. The mirror reads the
+//! call-site `css` as if written on the host it forwards into (always own),
+//! and ignores every other attribute on it. The mirror reads the
 //! same wrapper set, collected by extraction's own pre-pass over the same host
 //! gate, and predicts that one block the same way, so a composed foreign
 //! qualifier never turns an own wrapper's `css` into a phantom foreign lookup.
@@ -36,7 +36,7 @@ pub(super) fn collect_threads(
 
 impl JsxVisitor<'_, '_> {
     /// Lower a threaded wrapper the way extraction does, after the host
-    /// gate and before the external one. True when the tag threads (handled,
+    /// gate and before the non-host one. True when the tag threads (handled,
     /// even with no `css` attribute).
     pub(super) fn lowers_threaded(&mut self, tag: &str, elem: &JSXOpeningElement<'_>) -> bool {
         if self.allows_tag(tag) || !self.threads_css(tag) {
@@ -48,7 +48,7 @@ impl JsxVisitor<'_, '_> {
                 continue;
             };
             if attr.value.is_some() && format_attribute_name(&attr.name) == "css" {
-                self.walk_attr_value(false, "css", attr);
+                self.walk_attr_value(&crate::atom::backing::OWN, "css", attr);
             }
         }
         true

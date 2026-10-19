@@ -1,14 +1,18 @@
 //! Traced JSX surface expectations: host gating, aliases, and shadows.
 //! Pins literal prediction through file-local imports, package-bound tags
-//! predicting foreign keys by the shared provenance, `css`/condition
+//! predicting keys under exactly the systems extraction backs them under (on
+//! disk: a published package's composed systems, nothing when none is
+//! composed or the package is not built on Reference UI), `css`/condition
 //! lowering, spread bags, const-alias chains with their cycle/non-host
 //! refusals, and shadowed tags staying silent — including params and
 //! `let` rebinds over an alias name, mirroring the extract gate, and
 //! same-file `css` wrappers predicting the block extraction lowers.
 
 use super::super::support::{
-    analyze_source, analyze_source_external, analyze_source_hosted, dynamic_count, exact_keys,
+    analyze_installed, analyze_source, analyze_source_external, analyze_source_hosted,
+    dynamic_count, exact_keys,
 };
+use crate::tests::packages::PackageApp;
 
 const IMPORT: &str = "import { Div } from '@reference-ui/react';";
 
@@ -33,21 +37,28 @@ fn external_tag_predicts_foreign_qualified_keys() {
 }
 
 #[test]
-fn package_import_predicts_foreign_keys_under_a_configured_name() {
+fn package_import_predicts_its_system_keys_under_a_configured_name() {
     // Issue #19: `Button` is a configured host, but a package's bundled
-    // runtime mints its own qualifier, so the block targets the foreign one.
-    // Lib (`/primitives` included) is a package like any other; the
-    // unimported spelling keeps the own-host prediction.
-    for package in ["@reference-ui/lib/primitives", "acme-ui"] {
-        let facts = analyze_source_hosted(
+    // runtime mints its own systems' classes, so the block targets those
+    // systems this compile composes, never another composed one. Lib
+    // (`/primitives` included) is a package like any other; the unimported
+    // spelling keeps the own-host prediction.
+    let app = PackageApp::new("mirror-configured");
+    let cases = [
+        (
+            "@reference-ui/lib/primitives",
+            r#"["reference-ui",[],"color","red",false]"#,
+        ),
+        ("acme-ui", r#"["acme",[],"color","red",false]"#),
+    ];
+    for (package, key) in cases {
+        let facts = analyze_installed(
+            &app,
             &format!("import {{ Button }} from '{package}'; const el = <Button color=\"red\" />;"),
             &["Button"],
+            &["reference-ui", "acme"],
         );
-        assert_eq!(
-            exact_keys(&facts),
-            vec![r#"["foreign",[],"color","red",false]"#.to_string()],
-            "{package}"
-        );
+        assert_eq!(exact_keys(&facts), vec![key.to_string()], "{package}");
     }
     let facts = analyze_source_hosted("const el = <Button color=\"red\" />;", &["Button"]);
     assert_eq!(
@@ -57,16 +68,35 @@ fn package_import_predicts_foreign_keys_under_a_configured_name() {
 }
 
 #[test]
-fn alias_of_package_import_predicts_foreign_keys() {
+fn unbacked_and_foreign_package_tags_predict_nothing() {
+    // Nothing composed backs acme (gap 2), and `lucide` and an uninstalled
+    // spelling are not built on Reference UI: none of them predicts a key,
+    // exactly as extraction lowers none of them under any system.
+    let app = PackageApp::new("mirror-unbacked");
+    for package in ["acme-ui", "lucide", "not-installed"] {
+        let facts = analyze_installed(
+            &app,
+            &format!("import {{ Button }} from '{package}'; const el = <Button color=\"red\" />;"),
+            &["Button"],
+            &["reference-ui"],
+        );
+        assert!(exact_keys(&facts).is_empty(), "{package}: {facts:?}");
+    }
+}
+
+#[test]
+fn alias_of_package_import_predicts_its_system_keys() {
     // The alias chain ends at the package's `Button`: never an own host,
     // exactly as the extract gate's chain end decides.
-    let facts = analyze_source_hosted(
+    let facts = analyze_installed(
+        &PackageApp::new("mirror-alias"),
         "import { Button } from 'acme-ui'; const Alias = Button; const el = <Alias color=\"red\" />;",
         &["Button"],
+        &["acme"],
     );
     assert_eq!(
         exact_keys(&facts),
-        vec![r#"["foreign",[],"color","red",false]"#.to_string()]
+        vec![r#"["acme",[],"color","red",false]"#.to_string()]
     );
 }
 
@@ -268,17 +298,19 @@ fn threaded_css_wrapper_predicts_own_keys_under_a_foreign_qualifier() {
 }
 
 #[test]
-fn css_wrapper_around_a_package_tag_predicts_foreign_keys() {
+fn css_wrapper_around_a_package_tag_predicts_its_system_keys() {
     // A wrapper forwarding into a package-bound tag never threads, so its
-    // call-site `css` stays an external block, as extraction lowers it.
-    let facts = analyze_source_hosted(
+    // call-site `css` targets the package's systems, as extraction lowers it.
+    let facts = analyze_installed(
+        &PackageApp::new("mirror-wrapper"),
         "import { Button } from 'acme-ui';\
          const Wrap = ({ css }: { css?: object }) => <Button css={css} />;\
          const el = <Wrap css={{ bg: 'red' }} />;",
         &["Button"],
+        &["reference-ui", "acme"],
     );
     assert_eq!(
         exact_keys(&facts),
-        vec![r#"["foreign",[],"bg","red",false]"#.to_string()]
+        vec![r#"["acme",[],"bg","red",false]"#.to_string()]
     );
 }

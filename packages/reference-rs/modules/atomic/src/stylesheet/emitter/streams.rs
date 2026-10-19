@@ -12,7 +12,7 @@ use super::super::global::append_reset_css;
 use super::super::layers::{LAYER_PREAMBLE, wrap_package_layer};
 use super::super::root_default::append_root_default;
 use super::super::system_layers::{append_global, append_tokens, own_token_scope, TokenScope};
-use crate::atom::AtomSet;
+use crate::atom::{AtomSet, ForeignAtoms};
 use crate::recipes::CompiledRecipe;
 
 /// One captured chunk per layer block, plus the package name the wrap prints.
@@ -110,7 +110,7 @@ pub fn build_stylesheet_streams(
 ) -> StylesheetStreams {
     let SheetInput {
         own,
-        external,
+        foreign,
         qualifiers,
         extended,
         system,
@@ -154,7 +154,7 @@ pub fn build_stylesheet_streams(
         tokens,
         tokens_portable,
         recipes: recipes_layer(recipes),
-        utilities: utilities_layer(own, external, qualifiers),
+        utilities: utilities_layer(own, foreign, qualifiers),
         package: system.name.clone(),
     }
 }
@@ -168,18 +168,17 @@ fn recipes_layer(recipes: &[CompiledRecipe]) -> String {
 
 /// Capture `@layer utilities {…}`; empty when nothing would print (no own rule
 /// and no foreign group).
-fn utilities_layer(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> String {
-    let mut out = String::with_capacity(utilities_capacity(own, external, qualifiers));
-    super::append_utilities_layer(&mut out, own, external, qualifiers);
+fn utilities_layer(own: &AtomSet, foreign: &ForeignAtoms, qualifiers: &[String]) -> String {
+    let mut out = String::with_capacity(utilities_capacity(own, foreign));
+    super::append_utilities_layer(&mut out, own, foreign, qualifiers);
     out
 }
 
-/// Pre-size the utilities buffer: the own rules once plus the external rules
-/// once per foreign qualifier, ~128 bytes per rule covering selector,
+/// Pre-size the utilities buffer: the own rules once plus each foreign rule
+/// once per group that prints it, ~128 bytes per rule covering selector,
 /// declaration, indent, and wrap lines with room to spare, so the pushes below
 /// never regrow. Overshoot is one transient allocation.
-fn utilities_capacity(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> usize {
-    let foreign = qualifiers.len().saturating_sub(1);
-    let rules = own.len().saturating_add(external.len().saturating_mul(foreign));
+fn utilities_capacity(own: &AtomSet, foreign: &ForeignAtoms) -> usize {
+    let rules = own.len().saturating_add(foreign.printed_len());
     rules.saturating_mul(128).saturating_add(1024)
 }

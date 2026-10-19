@@ -1,5 +1,6 @@
 //! Diagnostic reporting for the extraction session: located warnings, info, the once-per-file
-//! missing-graph error, and the unbacked-package warning. Each warning or info lands in two
+//! missing-graph error, and the unbacked-package warning, which names the package, its system
+//! and the `<package>/baseSystem` fix. Each warning or info lands in two
 //! places: the located `Diagnostic` the compile result carries, and a session note that the
 //! compiler re-renders with its help text; the two userspace reports push the line alone.
 //! Locations come from the span through the file's source text, so a missing source degrades to
@@ -16,7 +17,9 @@ use crate::diagnostics::{
 };
 
 use super::ExtractContext;
+use crate::extract::backing::{Unbacked, UnbackedReason};
 use crate::extract::bindings;
+use crate::extract::package_system::{package_name, PackageTag};
 use crate::extract::provenance::{self, TagProvenance};
 
 impl<'a> ExtractContext<'a> {
@@ -116,13 +119,17 @@ impl<'a> ExtractContext<'a> {
         );
     }
 
-    /// Warn that style props on a tag the `specifier` package styles may have
-    /// nothing to back them. That package's runtime mints classes under its own
-    /// system name, which only a composed baseSystem backs. Extraction cannot see
-    /// the composed systems, so assembly drops the line once any foreign qualifier
-    /// exists. Pushed with no session note: it rides the default channel only.
-    pub fn report_unbacked_external(&mut self, span: Span, tag: &str, specifier: &str) {
-        let package = package_name(specifier);
+    /// Warn that style props on a tag another package renders will not paint:
+    /// that package's runtime mints classes under its own systems, and none of
+    /// them is composed here (or its published system cannot be read). Pushed
+    /// with no session note: it rides the default channel only.
+    pub(crate) fn report_unbacked_external(
+        &mut self,
+        span: Span,
+        tag: &str,
+        unbacked: &Unbacked<'_>,
+    ) {
+        let package = package_name(&unbacked.package.specifier);
         let (line, column) = self
             .source
             .and_then(|source| line_col(source, span.start))
@@ -133,38 +140,33 @@ impl<'a> ExtractContext<'a> {
             column,
             span: Some(byte_span(span)),
         };
-        let message = format!(
-            "style props on <{tag}> will not paint: '{package}' styles it with its own system, and no system in `extends` or `layers` backs it"
-        );
-        let help = vec![format!(
-            "add the '{package}' baseSystem to `extends` or `layers` in ui.config"
-        )];
+        let (message, help) = unbacked_text(tag, package, unbacked.reason);
         self.diagnostics.push(Policy::attach_help(
             location.warning(DiagnosticCode::ExternalUnbacked, message),
-            help,
+            vec![help],
         ));
     }
 
     /// The package a same-file wrapper hands its `css` prop to, when it
     /// threads into no host; an inner rebinding of the tag vetoes it.
-    pub(crate) fn css_forward_package(&self, tag: &str) -> Option<&'a str> {
+    pub(crate) fn css_forward_package(&self, tag: &str) -> Option<&'a PackageTag> {
         if bindings::is_inner_shadowed(self.shadowed, tag) {
             return None;
         }
         self.wrapper_threads?.package_forward(tag)
     }
 
-    /// The bare specifier a tag's root ends at, following same-file `const`
-    /// aliases (`const Primary = Button`) with a cycle guard, or `None` when
-    /// the root is not package-bound.
-    pub(crate) fn bound_package(&self, tag: &str) -> Option<&'a str> {
+    /// The package a tag's root ends at, following same-file `const` aliases
+    /// (`const Primary = Button`) with a cycle guard, or `None` when the root
+    /// is not package-bound.
+    pub(crate) fn bound_package(&self, tag: &str) -> Option<&'a PackageTag> {
         let mut current = provenance::tag_root(tag).to_string();
         let mut scope = self.scope;
         let mut seen = FxHashSet::default();
         while seen.insert(current.clone()) {
             let Some((decl, target)) = self.chain.alias_edge(&current, scope) else {
                 return match provenance::classify(self.bindings, self.shadowed, &current) {
-                    TagProvenance::Package(package) => Some(&package.specifier),
+                    TagProvenance::Package(package) => Some(package),
                     _ => None,
                 };
             };
@@ -175,28 +177,23 @@ impl<'a> ExtractContext<'a> {
     }
 }
 
-/// The npm package a bare specifier names, without its subpath:
-/// `@reference-ui/lib/primitives` is `@reference-ui/lib`, `acme-ui/button` is `acme-ui`.
-fn package_name(specifier: &str) -> &str {
-    let slashes = if specifier.starts_with('@') { 2 } else { 1 };
-    match specifier.match_indices('/').nth(slashes - 1) {
-        Some((end, _)) => &specifier[..end],
-        None => specifier,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::package_name;
-
-    #[test]
-    fn package_name_drops_the_subpath_only() {
-        assert_eq!(
-            package_name("@reference-ui/lib/primitives"),
-            "@reference-ui/lib"
-        );
-        assert_eq!(package_name("@reference-ui/icons"), "@reference-ui/icons");
-        assert_eq!(package_name("acme-ui/button"), "acme-ui");
-        assert_eq!(package_name("acme-ui"), "acme-ui");
+/// The unbacked warning's message and help. A package whose systems are not
+/// composed names its own system and the `<package>/baseSystem` fix; one whose
+/// published system cannot be read names the file.
+fn unbacked_text(tag: &str, package: &str, reason: UnbackedReason<'_>) -> (String, String) {
+    match reason {
+        UnbackedReason::NotComposed(names) => (
+            format!(
+                "style props on <{tag}> will not paint: '{package}' renders through its own system '{}', and no system in `extends` or `layers` backs it",
+                names.name
+            ),
+            format!("add '{package}/baseSystem' to `extends` or `layers` in ui.config"),
+        ),
+        UnbackedReason::Unreadable(why) => (
+            format!(
+                "style props on <{tag}> will not paint: the system '{package}' publishes cannot be read ({why})"
+            ),
+            format!("run `ref sync` in '{package}' and publish the baseSystem it writes"),
+        ),
     }
 }

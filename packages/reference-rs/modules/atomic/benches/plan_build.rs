@@ -78,7 +78,7 @@ fn decls() -> Vec<AuthoredDeclaration> {
             prop: row.prop.to_string(),
             value: row.value,
             important: row.important,
-            external: false,
+            backing: atomic::atom::Backing::Own,
         })
         .collect()
 }
@@ -91,14 +91,13 @@ fn full(criterion: &mut Criterion) {
         b.iter(|| {
             let mut atoms = AtomSet::new();
             let mut diagnostics = Vec::new();
-            let mut external = AtomSet::new();
+            let mut foreign = atomic::atom::ForeignAtoms::new();
             let mut builder = PlanBuilder::new(
                 &system.name,
                 system,
-                &[],
                 PlanSinks {
                     atom_set: &mut atoms,
-                    external_atom_set: &mut external,
+                    foreign: &mut foreign,
                     diagnostics: &mut diagnostics,
                 },
             );
@@ -115,14 +114,13 @@ fn diet(criterion: &mut Criterion) {
         b.iter(|| {
             let mut atoms = AtomSet::new();
             let mut diagnostics = Vec::new();
-            let mut external = AtomSet::new();
+            let mut foreign = atomic::atom::ForeignAtoms::new();
             let mut builder = PlanBuilder::new(
                 &system.name,
                 system,
-                &[],
                 PlanSinks {
                     atom_set: &mut atoms,
-                    external_atom_set: &mut external,
+                    foreign: &mut foreign,
                     diagnostics: &mut diagnostics,
                 },
             );

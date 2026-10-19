@@ -51,7 +51,7 @@ fn test_named_system_nests_internal_layers_in_package() {
     let portable = build_portable_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(BaseSystem::lib_fixture()),
         extended: &[],
         system: BaseSystem::lib_fixture(),
@@ -105,7 +105,7 @@ fn test_utility_selectors_carry_system_segment() {
     let portable = build_portable_stylesheet_with(
         &SheetInput {
         own: &set,
-        external: &AtomSet::new(),
+        foreign: &crate::atom::ForeignAtoms::new(),
         qualifiers: &own_qualifiers(system),
         extended: &[],
         system,
@@ -128,26 +128,25 @@ fn test_every_plan_class_name_matches_a_stylesheet_selector() {
             prop: "color".to_string(),
             value: json!("blue.600"),
             important: false,
-            external: false,
+            backing: crate::atom::Backing::Own,
         },
         AuthoredDeclaration {
             when: vec!["_hover".to_string()],
             prop: "color".to_string(),
             value: json!("red.500"),
             important: false,
-            external: false,
+            backing: crate::atom::Backing::Own,
         },
     ];
     let mut atom_set = AtomSet::new();
     let mut diagnostics = Vec::new();
-    let mut external_atom_set = AtomSet::new();
+    let mut foreign = crate::atom::ForeignAtoms::new();
     let mut builder = PlanBuilder::new(
         &system.name,
         system,
-        &[],
         PlanSinks {
             atom_set: &mut atom_set,
-            external_atom_set: &mut external_atom_set,
+            foreign: &mut foreign,
             diagnostics: &mut diagnostics,
         },
     );

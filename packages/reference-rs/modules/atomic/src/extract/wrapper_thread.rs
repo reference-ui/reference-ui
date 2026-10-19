@@ -7,9 +7,9 @@
 //! nothing. The pre-pass records these wrappers once per file; the JSX walk
 //! then lowers threaded call-site values exactly as if written on the host.
 //! The forward target is judged by the same host gate as the JSX walk, so a
-//! wrapper around a package-bound tag (lib's `Button`) never threads: its
-//! call-site `css` takes the external path, and the pass records that
-//! package so an unbacked call site can name it. Only a bare `css={param}`
+//! wrapper around a package-bound tag (lib's `Button`) never threads: the pass
+//! records that package instead, so the call site backs under the systems the
+//! package renders through, and an unbacked call site can name it. Only a bare `css={param}`
 //! forward counts; anything fancier is out of evidence and stays unhandled.
 
 use oxc_ast::ast::{
@@ -22,6 +22,7 @@ use oxc_syntax::scope::ScopeFlags;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use super::jsx::{format_jsx_attribute_name, format_jsx_element_name};
+use super::package_system::PackageTag;
 use super::provenance::{tag_root, HostGate, TagProvenance};
 
 /// Same-file wrapper tags whose `css` prop forwards into a host element,
@@ -29,7 +30,7 @@ use super::provenance::{tag_root, HostGate, TagProvenance};
 #[derive(Default)]
 pub struct WrapperThreads {
     threaded: FxHashSet<Box<str>>,
-    package_forwards: FxHashMap<Box<str>, Box<str>>,
+    package_forwards: FxHashMap<Box<str>, PackageTag>,
 }
 
 impl WrapperThreads {
@@ -38,10 +39,10 @@ impl WrapperThreads {
         self.threaded.contains(tag)
     }
 
-    /// The bare specifier of the package-bound tag this wrapper hands its
-    /// `css` prop to, when it threads into no host.
-    pub fn package_forward(&self, tag: &str) -> Option<&str> {
-        self.package_forwards.get(tag).map(|specifier| &**specifier)
+    /// The package of the package-bound tag this wrapper hands its `css`
+    /// prop to, when it threads into no host.
+    pub fn package_forward(&self, tag: &str) -> Option<&PackageTag> {
+        self.package_forwards.get(tag)
     }
 }
 
@@ -139,8 +140,8 @@ impl WrapperScan<'_> {
         forward.visit_function_body(body);
         if forward.found {
             self.threads.threaded.insert(name.into());
-        } else if let Some(specifier) = forward.package {
-            self.threads.package_forwards.insert(name.into(), specifier);
+        } else if let Some(package) = forward.package {
+            self.threads.package_forwards.insert(name.into(), package);
         }
     }
 }
@@ -192,7 +193,7 @@ struct ForwardScan<'a> {
     gate: HostGate<'a>,
     bound: FxHashSet<&'a str>,
     found: bool,
-    package: Option<Box<str>>,
+    package: Option<PackageTag>,
 }
 
 impl<'a> Visit<'a> for ForwardScan<'a> {
@@ -222,7 +223,7 @@ impl ForwardScan<'_> {
         }
         if let TagProvenance::Package(package) = self.gate.bindings.provenance(tag_root(&tag)) {
             if self.forwards_css(elem) {
-                self.package = Some(package.specifier.clone());
+                self.package = Some(package.clone());
             }
         }
     }

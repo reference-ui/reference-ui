@@ -4,6 +4,7 @@
 //! that reason is a userspace warning. Existing `ATM-E-*` pass through.
 
 use super::super::{DiagnosticFact, DiagnosticLocation, OwnedLookupKey, ResolveOutcome};
+use crate::atom::Backing;
 
 /// What resolve did with one authored declaration, ready to report. The key
 /// travels when a want context is in hand; the outcome always does, carrying
@@ -16,9 +17,9 @@ pub struct ResolveReport {
     pub key: Option<OwnedLookupKey>,
     pub outcome: ResolveOutcome,
     pub suggestion: Option<Box<str>>,
-    /// True when the rejected declaration sat on an external component
-    /// block: its key joins against foreign-qualified plans.
-    pub external: bool,
+    /// The systems the rejected declaration would have planned under: its
+    /// key joins against those systems' plans.
+    pub backing: Backing,
 }
 
 impl From<ResolveReport> for DiagnosticFact {
@@ -28,7 +29,7 @@ impl From<ResolveReport> for DiagnosticFact {
             key: report.key,
             outcome: report.outcome,
             suggestion: report.suggestion,
-            external: report.external,
+            backing: report.backing,
         }
     }
 }
@@ -52,7 +53,7 @@ mod tests {
                 )),
             },
             suggestion: Some("_hover".into()),
-            external: false,
+            backing: Backing::Own,
         };
         let fact = DiagnosticFact::from(report);
         let DiagnosticFact::ResolveOutcome { outcome, suggestion, .. } = fact else {

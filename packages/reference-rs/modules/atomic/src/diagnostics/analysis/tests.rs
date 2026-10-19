@@ -22,7 +22,7 @@ fn analysis_predicts_nothing_for_no_sources() {
         hosts: &hosts,
         constants: &constants,
         system: "test",
-        qualifiers: &[],
+        composed: &crate::extract::Composed::standalone(),
     };
     assert!(analyze(&input).is_empty());
 }
@@ -61,7 +61,7 @@ fn sources_keep_input_order_as_source_ids() {
         hosts: &hosts,
         constants: &constants,
         system: "test",
-        qualifiers: &[],
+        composed: &crate::extract::Composed::standalone(),
     };
     let ids: Vec<SourceId> = analyze(&input)
         .iter()
@@ -91,7 +91,8 @@ fn for_compile_filters_panicked_sources() {
         parsed: &parsed,
         bindings: &bindings,
     };
-    let scope = AnalysisScope::new(&hosts, &constants, "test", &[]);
+    let composed = crate::extract::Composed::standalone();
+    let scope = AnalysisScope::new(&hosts, &constants, "test", &composed);
     let input = AnalysisInput::for_compile(&parse, scope);
     assert_eq!(input.sources.len(), 1);
     assert_eq!(input.sources[0].path, "a.ts");
@@ -113,26 +114,16 @@ fn end_to_end_fixture_predicts_both_surfaces() {
     assert_eq!(facts.len(), 2);
 }
 
-/// Compile `files` with `Button` hosted (as the primitive roster sends it)
-/// under one upstream, on the serial walk or on forced lanes, keeping the
-/// compiler and proof channels.
-fn compile_hosted(files: &[(&str, &str)], lanes: bool) -> crate::CompileResult {
-    let request = crate::CompileRequest {
-        files: Some(
-            files
-                .iter()
-                .map(|(path, content)| crate::VirtualSource {
-                    path: (*path).into(),
-                    content: (*content).into(),
-                })
-                .collect(),
-        ),
-        base_system: crate::BaseSystem::lib_fixture().clone(),
-        jsx_hosts: Some(vec!["Button".into()]),
-        upstream_systems: vec!["upstream".into()],
-        logs: Some(vec!["compiler".to_string(), "proof".to_string()]),
-        ..Default::default()
-    };
+/// Compile `files` in a scratch app with installed packages, `Button` hosted
+/// (as the primitive roster sends it) and `upstream` composed, on the serial
+/// walk or on forced lanes, keeping the compiler and proof channels.
+fn compile_hosted(
+    app: &crate::tests::packages::PackageApp,
+    files: &[(&str, &str)],
+    upstream: &[&str],
+    lanes: bool,
+) -> crate::CompileResult {
+    let request = app.request(files, upstream);
     if lanes {
         let before = crate::lanes::entered_spawns();
         crate::lanes::force_lane_count(Some(4));
@@ -157,10 +148,11 @@ fn reported_codes(result: &crate::CompileResult) -> Vec<DiagnosticCode> {
 }
 
 /// A primitive-named tag from a third-party package, and lib's `Button`
-/// reached through a project barrel, both compile external (the package's
-/// runtime mints the upstream class). Analysis reads the same provenance, so
-/// proof predicts the upstream key and raises no missing-plan warning, on
-/// the serial walk and on the lanes alike.
+/// reached through a project barrel, both back under their package's system
+/// (the package's runtime mints that class), never another composed one.
+/// Analysis reads the same provenance and the same composed systems, so proof
+/// predicts exactly those keys and raises no missing-plan warning, on the
+/// serial walk and on the lanes alike, composed or not.
 #[test]
 fn package_tags_raise_no_false_missing_plan_on_either_walk() {
     let files = [
@@ -179,28 +171,32 @@ fn package_tags_raise_no_false_missing_plan_on_either_walk() {
              export const lib = <Button bg=\"red\" />;",
         ),
     ];
-    for lanes in [false, true] {
-        let result = compile_hosted(&files, lanes);
-        let classes: Vec<&str> = result
-            .style_plans
-            .iter()
-            .flat_map(|plan| plan.declarations.iter())
-            .map(|decl| decl.class_name.as_str())
-            .collect();
-        assert!(
-            classes.contains(&"upstream__c_blue"),
-            "lanes={lanes}: {classes:?}"
-        );
-        assert!(
-            classes.contains(&"upstream__bg_red"),
-            "lanes={lanes}: {classes:?}"
-        );
-        let codes = reported_codes(&result);
-        assert!(
-            !codes.contains(&DiagnosticCode::MissingStylePlan),
-            "lanes={lanes}: {:?} / {:?}",
-            result.diagnostics,
-            result.compiler_diagnostics
-        );
+    let app = crate::tests::packages::PackageApp::new("analysis-package-tags");
+    let legs: [(&[&str], &[&str]); 2] = [
+        (
+            &["reference-ui", "acme"],
+            &["acme__c_blue", "reference-ui__bg_red"],
+        ),
+        (&["reference-ui"], &["reference-ui__bg_red"]),
+    ];
+    for (upstream, expected) in legs {
+        for lanes in [false, true] {
+            let result = compile_hosted(&app, &files, upstream, lanes);
+            let mut classes: Vec<&str> = result
+                .style_plans
+                .iter()
+                .flat_map(|plan| plan.declarations.iter())
+                .map(|decl| decl.class_name.as_str())
+                .collect();
+            classes.sort_unstable();
+            assert_eq!(classes, expected, "lanes={lanes} upstream={upstream:?}");
+            let codes = reported_codes(&result);
+            assert!(
+                !codes.contains(&DiagnosticCode::MissingStylePlan),
+                "lanes={lanes}: {:?} / {:?}",
+                result.diagnostics,
+                result.compiler_diagnostics
+            );
+        }
     }
 }

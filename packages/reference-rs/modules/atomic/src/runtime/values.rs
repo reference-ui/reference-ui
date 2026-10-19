@@ -93,7 +93,7 @@ fn refuse_r_multiplier(site: RefusalSite<'_>, spelling: &str, refuse: &mut Refus
     let context = WantContext {
         when: when.as_slice(),
         important: site.important,
-        external: false,
+        backing: &crate::atom::backing::OWN,
     };
     let report = ResolveReport {
         location: DiagnosticLocation::default(),
@@ -113,7 +113,7 @@ fn refuse_r_multiplier(site: RefusalSite<'_>, spelling: &str, refuse: &mut Refus
             )),
         },
         suggestion: None,
-        external: false,
+        backing: crate::atom::Backing::Own,
     };
     let diagnostic = Policy::render_resolve(&report);
     if !is_duplicate(refuse.diagnostics, &diagnostic) {

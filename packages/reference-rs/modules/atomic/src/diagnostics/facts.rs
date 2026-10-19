@@ -11,6 +11,7 @@
 //! onto this protocol; session facts render into proof.
 
 use super::{Diagnostic, DiagnosticCode, DiagnosticLocation, DiagnosticSeverity};
+use crate::atom::Backing;
 use crate::diagnostics::SourceSite;
 use crate::extract::fold::ElementRefusal;
 use crate::runtime::serializer::{serialize_lookup_key, LookupKey};
@@ -38,30 +39,6 @@ impl OwnedLookupKey {
             important: self.important,
         })
     }
-}
-
-/// The systems one block's exact key targets. An own block resolves to
-/// `[own]`; an external block resolves to `qualifiers[1..]` — the foreign
-/// qualifiers only, matching the one-plan-per-foreign-qualifier emission.
-/// This is the single expansion rule shared by expectations (analysis),
-/// rejections, and sink coverage, so the join uses per-target keys on both
-/// sides and grows no second canonicalizer. Nothing is allocated: the own
-/// target is yielded as a once-iterator and the foreign targets slice the
-/// borrowed qualifier list.
-pub fn target_systems<'a>(
-    external: bool,
-    own: &'a str,
-    qualifiers: &'a [String],
-) -> impl Iterator<Item = &'a str> {
-    // Own blocks target only the own system; external blocks target the
-    // foreign qualifiers. The `skip` length for the own case is the whole
-    // list, so the foreign half is empty.
-    let own_target = std::iter::once(own).take(usize::from(!external));
-    let foreign = qualifiers
-        .iter()
-        .skip(if external { 1 } else { qualifiers.len() })
-        .map(String::as_str);
-    own_target.chain(foreign)
 }
 
 /// Which part of a runtime lookup key is statically unknown. A dynamic slot
@@ -231,13 +208,13 @@ pub enum DiagnosticFact {
     /// dependency-built lines (host traces) and, later, fatal pass-throughs.
     ExistingDiagnostic(Diagnostic),
     /// Analysis predicts runtime will request exactly this key here. One
-    /// fact lands per applicable system (see [`target_systems`]); `external`
-    /// marks a fact recorded on an external component block, whose `key`
-    /// then carries a foreign qualifier.
+    /// fact lands per system the block's `backing` targets
+    /// ([`Backing::targets`]); a block another system renders carries that
+    /// backing, and its `key` then names one of those systems.
     ExactLookupExpected {
         site: SourceSite,
         key: OwnedLookupKey,
-        external: bool,
+        backing: Backing,
     },
     /// A runtime style slot whose key is not statically known.
     DynamicSlot {
@@ -265,27 +242,27 @@ pub enum DiagnosticFact {
     },
     /// How many net-new pairs harvest minted onto one located sink, plus
     /// every kind-accepted pool value (pre-twin-skip) for coverage proof.
-    /// `external` marks a sink on an external component: its offered values
-    /// join against foreign-qualified plans.
+    /// `backing` names the systems a sink on another system's component
+    /// lowers under: its offered values join against those systems' plans.
     HarvestOutcome {
         location: DiagnosticLocation,
         prop: Box<str>,
         when: Vec<Box<str>>,
         minted: usize,
         offered: Vec<Box<str>>,
-        external: bool,
+        backing: Backing,
     },
     /// What resolve did with one authored declaration: the exact key when a
     /// want context is in hand, the outcome always. The precomputed
     /// did-you-mean suggestion rides along so the compiler re-render keeps
-    /// the pushed line's help byte for byte. `external` marks a rejection on
-    /// an external component block, whose join target is foreign.
+    /// the pushed line's help byte for byte. `backing` names the systems a
+    /// rejection on another system's component would have planned under.
     ResolveOutcome {
         location: DiagnosticLocation,
         key: Option<OwnedLookupKey>,
         outcome: ResolveOutcome,
         suggestion: Option<Box<str>>,
-        external: bool,
+        backing: Backing,
     },
     /// One skipped host trace: a file-only line with a dependency message.
     HostOutcome {

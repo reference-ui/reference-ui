@@ -4,7 +4,7 @@
 
 use super::*;
 use super::width::parse_milli_px;
-use crate::atom::CssValue;
+use crate::atom::{Backing, CssValue};
 use crate::resolve::conditions::{lower_when, LoweredWhen};
 use base_system::BaseSystem;
 use smallvec::SmallVec;
@@ -172,14 +172,24 @@ fn dual_at_rules_nest_in_author_order() {
     );
 }
 
-fn grouped_sheet(own: &AtomSet, external: &AtomSet, qualifiers: &[String]) -> String {
+fn grouped_sheet(own: &AtomSet, foreign: &ForeignAtoms, qualifiers: &[String]) -> String {
     let mut out = String::new();
-    write_utilities_grouped(&mut out, own, external, qualifiers);
+    write_utilities_grouped(&mut out, own, foreign, qualifiers);
     out
 }
 
-/// Oracle (G0 §K/T04): an empty external set reprints the flat `write_utilities`
-/// bytes exactly, so the default path cannot drift.
+/// Foreign atoms, each filed under the systems its backing names.
+fn foreign(entries: &[(&Atom, &[&str])]) -> ForeignAtoms {
+    let mut foreign = ForeignAtoms::new();
+    for (atom, systems) in entries {
+        foreign.insert((*atom).clone(), &Backing::systems(systems.iter().copied()));
+    }
+    foreign
+}
+
+/// Oracle (G0 §K/T04): no foreign group reprints the flat `write_utilities`
+/// bytes exactly, so the default path cannot drift; neither does a foreign
+/// atom nothing backs.
 #[test]
 fn grouped_empty_external_is_byte_identical_to_flat_write_utilities() {
     let mut set = AtomSet::new();
@@ -194,14 +204,22 @@ fn grouped_empty_external_is_byte_identical_to_flat_write_utilities() {
     let system = "@reference-ui/lib";
     let mut flat = String::new();
     write_utilities(&mut flat, &set, system);
-    let grouped = grouped_sheet(&set, &AtomSet::new(), &[system.to_string()]);
-    assert_eq!(grouped, flat, "empty external must reprint the flat bytes");
+    let qualifiers = [system.to_string(), "alpha".to_string()];
+    let grouped = grouped_sheet(&set, &ForeignAtoms::new(), &qualifiers);
+    assert_eq!(
+        grouped, flat,
+        "no foreign group must reprint the flat bytes"
+    );
+    let unbacked = foreign(&[(&atom("padding", "9r", &[]), &[])]);
+    let grouped = grouped_sheet(&set, &unbacked, &qualifiers);
+    assert_eq!(grouped, flat, "an unbacked atom prints nowhere");
 }
 
-/// Grouped emission: own first, then one appended group per foreign qualifier,
-/// each carrying the whole external set under `SelectorPrefix::for_system(q)`.
+/// Grouped emission: own first, then one appended group per system the foreign
+/// atoms name, in qualifier order, each carrying exactly the atoms backed under
+/// it; a composed system no atom names prints no group.
 #[test]
-fn grouped_emits_own_then_one_group_per_foreign_qualifier() {
+fn grouped_emits_own_then_one_group_per_backing_system() {
     let own_color = atom("color", "red", &[]);
     let own_display = atom("display", "flex", &[]);
     let ext_pad = atom("padding", "2r", &[]);
@@ -210,12 +228,13 @@ fn grouped_emits_own_then_one_group_per_foreign_qualifier() {
     let mut own = AtomSet::new();
     own.insert(own_color.clone());
     own.insert(own_display);
-    let mut external = AtomSet::new();
-    external.insert(ext_pad.clone());
-    external.insert(ext_mt.clone());
+    let foreign = foreign(&[(&ext_pad, &["beta", "alpha"]), (&ext_mt, &["alpha"])]);
 
-    let qualifiers = vec!["lib".to_string(), "alpha".to_string(), "beta".to_string()];
-    let css = grouped_sheet(&own, &external, &qualifiers);
+    let qualifiers: Vec<String> = ["lib", "alpha", "gamma", "beta"]
+        .iter()
+        .map(ToString::to_string)
+        .collect();
+    let css = grouped_sheet(&own, &foreign, &qualifiers);
 
     let own_sel = name::selector_with_system(&own_color, "lib");
     let alpha_sel = name::selector_with_system(&ext_pad, "alpha");
@@ -224,14 +243,26 @@ fn grouped_emits_own_then_one_group_per_foreign_qualifier() {
     let alpha_at = css.find(&alpha_sel).expect("alpha rule");
     let beta_at = css.find(&beta_sel).expect("beta rule");
     assert!(own_at < alpha_at, "own group precedes foreign:\n{css}");
-    assert!(alpha_at < beta_at, "qualifier order:\n{css}");
+    assert!(
+        alpha_at < beta_at,
+        "qualifier order, not backing order:\n{css}"
+    );
 
-    for qualifier in ["alpha", "beta"] {
-        let pad = name::selector_with_system(&ext_pad, qualifier);
-        let mt = name::selector_with_system(&ext_mt, qualifier);
-        assert_eq!(css.matches(&pad).count(), 1, "one pad rule for {qualifier}");
-        assert_eq!(css.matches(&mt).count(), 1, "one mt rule for {qualifier}");
-    }
+    let mt = |system: &str| {
+        css.matches(&name::selector_with_system(&ext_mt, system))
+            .count()
+    };
+    assert_eq!(
+        (mt("alpha"), mt("beta")),
+        (1, 0),
+        "mt backs under alpha only:\n{css}"
+    );
+    assert_eq!(css.matches(&alpha_sel).count(), 1);
+    assert_eq!(css.matches(&beta_sel).count(), 1);
+    assert!(
+        !css.contains("/* foreign gamma */"),
+        "no atom names gamma:\n{css}"
+    );
     assert_eq!(css.matches(&own_sel).count(), 1, "own rule prints once");
     assert_eq!(
         css.matches(&name::selector_with_system(&ext_pad, "lib"))
@@ -239,6 +270,19 @@ fn grouped_emits_own_then_one_group_per_foreign_qualifier() {
         0,
         "external never rides the own prefix"
     );
+}
+
+/// A system the atoms name but no qualifier lists still prints, after the
+/// composed groups: the atoms decide the groups, the qualifiers their order.
+#[test]
+fn grouped_prints_an_uncomposed_backing_system_last() {
+    let ext_pad = atom("padding", "2r", &[]);
+    let foreign = foreign(&[(&ext_pad, &["zeta", "alpha"])]);
+    let qualifiers = vec!["lib".to_string(), "alpha".to_string()];
+    let css = grouped_sheet(&AtomSet::new(), &foreign, &qualifiers);
+    let alpha_at = css.find("/* foreign alpha */").expect("alpha group");
+    let zeta_at = css.find("/* foreign zeta */").expect("zeta group");
+    assert!(alpha_at < zeta_at, "{css}");
 }
 
 /// Foreign groups carry open/close sentinels so a downstream compose can strip
@@ -249,8 +293,7 @@ fn grouped_foreign_groups_are_sentinel_delimited() {
     let ext_pad = atom("padding", "2r", &[]);
     let mut own = AtomSet::new();
     own.insert(own_color);
-    let mut external = AtomSet::new();
-    external.insert(ext_pad.clone());
+    let external = foreign(&[(&ext_pad, &["alpha"])]);
 
     let qualifiers = vec!["lib".to_string(), "alpha".to_string()];
     let css = grouped_sheet(&own, &external, &qualifiers);
@@ -263,6 +306,9 @@ fn grouped_foreign_groups_are_sentinel_delimited() {
     let pad_at = css.find(&pad).expect("alpha rule");
     assert!(open < pad_at && pad_at < close, "rule inside markers:\n{css}");
 
-    let flat = grouped_sheet(&own, &AtomSet::new(), &["lib".to_string()]);
-    assert!(!flat.contains("/* foreign"), "no markers without external:\n{flat}");
+    let flat = grouped_sheet(&own, &ForeignAtoms::new(), &["lib".to_string()]);
+    assert!(
+        !flat.contains("/* foreign"),
+        "no markers without external:\n{flat}"
+    );
 }

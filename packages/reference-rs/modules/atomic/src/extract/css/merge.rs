@@ -110,7 +110,7 @@ fn lower_merge_const(
     let name = spread_base_name(arg).unwrap_or("array");
     for element in elements {
         if let ConstArrayElement::Object(map) = element {
-            let mut obj_ctx = ctx.object_walk(origin, false, false);
+            let mut obj_ctx = ctx.object_walk(origin, false, &crate::atom::backing::OWN);
             lower_array_object(
                 &mut obj_ctx,
                 map,

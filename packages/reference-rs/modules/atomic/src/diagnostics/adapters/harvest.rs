@@ -4,6 +4,7 @@
 //! report no fact, exactly as they emit no info today.
 
 use super::super::{DiagnosticFact, DiagnosticLocation};
+use crate::atom::Backing;
 
 /// What harvest minted onto one sink, ready to report as a fact.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,9 +16,9 @@ pub struct HarvestReport {
     /// Every kind-accepted pool value (pre-twin-skip), in acceptance order.
     /// Proof joins these against final plans; wording never reads them.
     pub offered: Vec<Box<str>>,
-    /// True when the sink sat on an external component block: its offered
-    /// values join against foreign-qualified plans.
-    pub external: bool,
+    /// The systems the sink's minted wants lower under: its offered values
+    /// join against those systems' plans.
+    pub backing: Backing,
 }
 
 impl From<HarvestReport> for DiagnosticFact {
@@ -28,7 +29,7 @@ impl From<HarvestReport> for DiagnosticFact {
             when: report.when,
             minted: report.minted,
             offered: report.offered,
-            external: report.external,
+            backing: report.backing,
         }
     }
 }
@@ -50,7 +51,7 @@ mod tests {
             when: vec!["_hover".into()],
             minted: 3,
             offered: vec!["red".into(), "blue".into()],
-            external: false,
+            backing: Backing::Own,
         };
         let fact = DiagnosticFact::from(report);
         assert!(matches!(

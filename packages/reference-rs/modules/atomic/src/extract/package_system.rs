@@ -167,6 +167,16 @@ pub(crate) fn installed_dir(path: &str) -> Option<&str> {
     Some(&path[..start + len])
 }
 
+/// The npm package a bare specifier names, without its subpath:
+/// `@reference-ui/lib/primitives` is `@reference-ui/lib`, `acme-ui/button` is `acme-ui`.
+pub(crate) fn package_name(specifier: &str) -> &str {
+    let slashes = if specifier.starts_with('@') { 2 } else { 1 };
+    match specifier.match_indices('/').nth(slashes - 1) {
+        Some((end, _)) => &specifier[..end],
+        None => specifier,
+    }
+}
+
 /// The system file a package directory publishes: its `exports["./baseSystem"]`
 /// target (declarations skipped), else Core's conventional path.
 fn published_file<F: FileSystem>(fs: &F, dir: &str) -> Option<String> {
@@ -219,7 +229,7 @@ type PublishedMemo = Mutex<FxHashMap<Box<str>, (Option<SystemTime>, Arc<Publishe
 static PUBLISHED: OnceLock<PublishedMemo> = OnceLock::new();
 
 /// The published system at `path`, shared until the file's mtime moves.
-fn published(path: &str) -> Arc<PublishedSystem> {
+pub(crate) fn published(path: &str) -> Arc<PublishedSystem> {
     let stamp = std::fs::metadata(path).and_then(|meta| meta.modified()).ok();
     let memo = PUBLISHED.get_or_init(PublishedMemo::default);
     let mut map = memo.lock().unwrap_or_else(PoisonError::into_inner);

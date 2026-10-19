@@ -2,7 +2,7 @@
   {
     "severity": "warning",
     "code": "ATM-W-EXTERNAL-UNBACKED",
-    "message": "style props on <CodeIcon> will not paint: 'icon-pkg' styles it with its own system, and no system in `extends` or `layers` backs it",
+    "message": "style props on <CodeIcon> will not paint: 'icon-pkg' renders through its own system 'icons', and no system in `extends` or `layers` backs it",
     "file": "input/src/App.tsx",
     "line": 7,
     "column": 7,
@@ -11,7 +11,7 @@
       "end": 161
     },
     "help": [
-      "add the 'icon-pkg' baseSystem to `extends` or `layers` in ui.config"
+      "add 'icon-pkg/baseSystem' to `extends` or `layers` in ui.config"
     ]
   }
 ]

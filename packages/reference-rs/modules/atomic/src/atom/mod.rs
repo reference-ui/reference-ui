@@ -4,7 +4,9 @@
 //! Resolve is the boundary: authored condition strings become `When`. Serves as the
 //! intermediate representation between AST traversal and final stylesheet generation.
 
+pub mod backing;
 pub mod decl;
+pub mod foreign;
 pub mod set;
 pub mod value;
 pub mod want;
@@ -13,15 +15,10 @@ pub mod when;
 #[cfg(test)]
 mod tests;
 
+pub use backing::Backing;
 pub use decl::Atom;
+pub use foreign::ForeignAtoms;
 pub use set::AtomSet;
 pub use value::{AtomValue, CssValue};
 pub use want::Want;
 pub use when::{When, WhenKind};
-
-/// Serde skip predicate for the `external` marker: the field is absent from
-/// the wire whenever it is false, so the default (own) path stays
-/// byte-identical. Shared by `Want` and `AuthoredDeclaration`.
-pub(crate) fn is_false(value: &bool) -> bool {
-    !*value
-}

@@ -163,8 +163,11 @@ fn test_untraced_capital_tag_is_external_when_a_host_is_known() {
     assert!(res
         .wants
         .iter()
-        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
-    assert!(res.wants.iter().any(|w| &*w.prop == "color" && w.external));
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && w.backing.is_own()));
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "color" && !w.backing.is_own()));
     assert!(res.diagnostics.is_empty());
 }
 
@@ -199,7 +202,7 @@ fn test_shadowed_member_root_is_external_not_host() {
         &["Tabs.Panel"],
     );
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
+        !res.wants.is_empty() && res.wants.iter().all(|w| !w.backing.is_own()),
         "shadowed member root is external, never a host: {:?}",
         res.wants
     );
@@ -232,9 +235,11 @@ fn test_bound_member_root_through_const_object_extracts() {
     assert!(res
         .wants
         .iter()
-        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && !w.external));
+        .any(|w| &*w.prop == "mt" && w.value.to_string() == "2r" && w.backing.is_own()));
     assert!(
-        res.wants.iter().any(|w| &*w.prop == "p" && w.external),
+        res.wants
+            .iter()
+            .any(|w| &*w.prop == "p" && !w.backing.is_own()),
         "the unconfigured member twin is external, not a host: {:?}",
         res.wants
     );
@@ -263,9 +268,11 @@ fn test_namespace_spelled_member_collects_against_dotted_host() {
 
 #[test]
 fn test_package_bound_root_gates_by_provenance_not_name() {
-    // A package namespace spelling a configured dotted host is external;
-    // an inner declaration shadowing a package import re-admits through
-    // its alias chain, because the scope binding outranks the import.
+    // A package namespace spelling a configured dotted host is never a host:
+    // `acme-tabs` resolves nowhere, so it is not built on Reference UI and
+    // lowers nothing; an inner declaration shadowing a package import
+    // re-admits through its alias chain, because the scope binding outranks
+    // the import.
     let res = compile_with_hosts(
         r#"
         import * as Tabs from 'acme-tabs';
@@ -278,8 +285,15 @@ fn test_package_bound_root_gates_by_provenance_not_name() {
         "#,
         &["Tabs.Panel"],
     );
-    assert!(res.wants.iter().any(|w| &*w.prop == "mt" && w.external));
-    assert!(res.wants.iter().any(|w| &*w.prop == "p" && !w.external));
+    assert!(
+        res.wants.iter().all(|w| &*w.prop != "mt"),
+        "{:?}",
+        res.wants
+    );
+    assert!(res
+        .wants
+        .iter()
+        .any(|w| &*w.prop == "p" && w.backing.is_own()));
 }
 
 #[test]
@@ -298,7 +312,7 @@ fn test_renamed_namespace_member_is_external_not_host() {
         &["Tabs.Panel"],
     );
     assert!(
-        !res.wants.is_empty() && res.wants.iter().all(|w| w.external),
+        !res.wants.is_empty() && res.wants.iter().all(|w| !w.backing.is_own()),
         "renamed namespace member is external: {:?}",
         res.wants
     );

@@ -40,7 +40,7 @@ export type {
   RecipeMatch,
 } from '../../js/types.js'
 
-export { getWantsForProp, harvestWants, hasWant, siteWants } from './wants.js'
+export { getWantsForProp, harvestWants, hasWant, siteWants, wantBackings } from './wants.js'
 export { layerBody, layerClassNames } from './css-layers.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -184,11 +184,11 @@ function namerIsInjective(result: CompileResult, context: StationContext): void 
     ).not.toBe(atoms)
     return
   }
-  // Fan-out partition (G0 §J/D6): external wants resolve but stay out of the
-  // own css map until grouped emission, while `atomCount` counts own + external.
-  // The strict coverage identity holds only when no external want is present;
-  // otherwise every emitted (own) class name must still be distinct.
-  const hasExternal = (result.wants ?? []).some(want => want.external === true)
+  // Foreign partition (G0 §J/D6): wants another system renders resolve but stay
+  // out of the own css map, while `atomCount` counts own + foreign. The strict
+  // coverage identity holds only when no such want is present; otherwise every
+  // emitted (own) class name must still be distinct.
+  const hasExternal = (result.wants ?? []).some(want => want.backing !== undefined)
   if (hasExternal) {
     expect(
       distinct,

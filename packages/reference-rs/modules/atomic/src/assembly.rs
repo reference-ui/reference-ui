@@ -1,12 +1,13 @@
 //! Assembly of the compile's filled sinks into the artifact bundle.
 //! Takes the wants, recipes, diagnostics, and authored declarations that
 //! extraction filled, appends static CSS, then builds the atom set, runtime
-//! plans, stylesheets, and runtime map. Wants partition into own and external
-//! sets by the external marker, both resolved with the consumer `BaseSystem`;
-//! the proof map stays own-only while the utilities layer emits the own group
-//! plus one appended group per foreign qualifier, and the token layer claims the
-//! stamps of every extended qualifier. The portable sheet shares the printed
-//! suffix and sinks its own system-layer diagnostics so warnings surface once.
+//! plans, stylesheets, and runtime map. Wants partition by backing into the own
+//! set and the foreign groups each want's backing names, all resolved with the
+//! consumer `BaseSystem`; the proof map stays own-only while the utilities layer
+//! emits the own group plus one appended group per system the foreign atoms
+//! name, and the token layer claims the stamps of every extended qualifier. The
+//! portable sheet shares the printed suffix and sinks its own system-layer
+//! diagnostics so warnings surface once.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -85,16 +86,6 @@ pub(crate) fn extended_for(qualifiers: &[String], extended: &[String]) -> Vec<St
         .collect()
 }
 
-/// Keep `ATM-W-EXTERNAL-UNBACKED` only while nothing backs external wants.
-/// Extraction warns at every styled package tag because it cannot see the
-/// composed systems; with any foreign qualifier the fan-out backs those
-/// wants (the same `< 2` rule the plan build drops them by), so it is false.
-fn settle_unbacked(diagnostics: &mut Vec<Diagnostic>, qualifiers: &[String]) {
-    if qualifiers.len() > 1 {
-        diagnostics.retain(|line| line.code != DiagnosticCode::ExternalUnbacked);
-    }
-}
-
 impl AssembleCtx {
     /// Append static CSS wants before the atom set builds.
     pub(crate) fn append_static(&mut self, system: &BaseSystem) {
@@ -128,7 +119,6 @@ impl AssembleCtx {
         } = self;
         let qualifiers = qualifiers_for(&system.name, &upstream_systems);
         let extended = extended_for(&qualifiers, &extended_systems);
-        settle_unbacked(&mut diagnostics, &qualifiers);
         let scope = FinishScope {
             system,
             qualifiers: &qualifiers,
@@ -147,9 +137,9 @@ impl AssembleCtx {
         let plans = build_plan_stage(&scope, &mut atoms, &authored, &mut diagnostics);
         let runtime = runtime_artifact(system, &compiled_recipes);
 
-        // Own + external atoms both count (G0 D6/§J); the proof css map stays
-        // own-only while the sheets group foreign rules per qualifier (T04).
-        let atom_count = atoms.own.len() + atoms.external.len();
+        // Own + foreign atoms both count (G0 D6/§J); the proof css map stays
+        // own-only while the sheets group foreign rules per backing system (T04).
+        let atom_count = atoms.own.len() + atoms.foreign.len();
         let css = proof.then(|| build_css_runtime(&atoms.own, &system.name));
         let (streams, stylesheet, portable_stylesheet) =
             build_sheets(&scope, &atoms, &compiled_recipes, &mut diagnostics);
@@ -184,8 +174,8 @@ impl AssembleCtx {
 }
 
 /// The borrowed inputs every finish stage reads: the consumer system, the composed
-/// qualifier list and its extended subset, the proof switch, and whether an upstream
-/// already roots the page.
+/// qualifier list (token scope and group order) and its extended subset, the proof
+/// switch, and whether an upstream already roots the page.
 struct FinishScope<'a> {
     system: &'a BaseSystem,
     qualifiers: &'a [String],
@@ -194,11 +184,11 @@ struct FinishScope<'a> {
     upstream_container_root: bool,
 }
 
-/// The own and external atom sets one compile builds, kept together for the stages
-/// that read both.
+/// The own atom set and the foreign groups one compile builds, kept together for the
+/// stages that read both.
 struct AtomSets {
     own: AtomSet,
-    external: AtomSet,
+    foreign: crate::atom::ForeignAtoms,
 }
 
 /// The plans the authored declarations produce, plus the emitted-key set a diet build
@@ -226,13 +216,13 @@ impl PlanStage {
             Some(emitted) => crate::diagnostics::proof::render::render_session_with_keys(
                 sink.facts(),
                 emitted,
-                RenderScope::new(&scope.system.name, scope.qualifiers),
+                RenderScope::new(&scope.system.name),
                 diagnostics,
             ),
             None => crate::diagnostics::proof::render::render_session(
                 sink.facts(),
                 &style_plans,
-                RenderScope::new(&scope.system.name, scope.qualifiers),
+                RenderScope::new(&scope.system.name),
                 diagnostics,
             ),
         };
@@ -240,7 +230,7 @@ impl PlanStage {
     }
 }
 
-/// Own and external atom sets from the filled wants. The resolve facts go to the
+/// The own set and foreign groups from the filled wants. The resolve facts go to the
 /// diagnostics and the sink, in the order the stages always reported them.
 fn build_atoms(
     wants: &[crate::atom::Want],
@@ -248,8 +238,8 @@ fn build_atoms(
     diagnostics: &mut Vec<Diagnostic>,
     sink: &mut DiagnosticsSession,
 ) -> AtomSets {
-    let (own, external) = build_atom_sets(wants, system, diagnostics, Some(&mut *sink));
-    AtomSets { own, external }
+    let (own, foreign) = build_atom_sets(wants, system, diagnostics, Some(&mut *sink));
+    AtomSets { own, foreign }
 }
 
 /// Container-root check over the own group. The upstream signal arrives through the scope.
@@ -267,8 +257,9 @@ fn check_root(
     resolve::conditions::check_container_root(&root_input, diagnostics, Some(&mut *sink));
 }
 
-/// Build the plans for the authored declarations. The plan builder borrows both atom
-/// sets and the diagnostics only for its own run, so the sheets read the sets after it.
+/// Build the plans for the authored declarations. The plan builder borrows the own set,
+/// the foreign groups and the diagnostics only for its own run, so the sheets read them
+/// after it.
 /// Plans stay unconditional: the render joins verdicts against them, and the
 /// diagnostics sweep killed proof-gating here (the "no compiled style plan" prefix rides
 /// render_session output). On `!proof` the diet path carries placeholder declarations
@@ -283,10 +274,9 @@ fn build_plan_stage(
     let mut plan_builder = runtime::PlanBuilder::new(
         &scope.system.name,
         scope.system,
-        scope.qualifiers,
         runtime::PlanSinks {
             atom_set: &mut atoms.own,
-            external_atom_set: &mut atoms.external,
+            foreign: &mut atoms.foreign,
             diagnostics,
         },
     );
@@ -312,7 +302,7 @@ fn runtime_artifact(
     }
 }
 
-/// Build the own and external stylesheets. The portable diagnostics sink here so global
+/// Build the served and portable stylesheets. The portable diagnostics sink here so global
 /// warnings surface once, as before.
 fn build_sheets(
     scope: &FinishScope<'_>,
@@ -323,7 +313,7 @@ fn build_sheets(
     let mut portable_sink = Vec::new();
     let input = stylesheet::SheetInput {
         own: &atoms.own,
-        external: &atoms.external,
+        foreign: &atoms.foreign,
         qualifiers: scope.qualifiers,
         extended: scope.extended,
         system: scope.system,

@@ -33,7 +33,7 @@ pub(crate) fn build_sinks() -> Vec<Sink> {
             line: None,
             column: None,
             span: None,
-            external: false,
+            backing: &atomic::atom::backing::OWN,
         };
         assert!(Sink::for_site(site).is_none(), "{prop} records no sink");
     }
@@ -49,7 +49,7 @@ pub(crate) fn build_sinks() -> Vec<Sink> {
                 line: None,
                 column: None,
                 span: None,
-                external: false,
+                backing: &atomic::atom::backing::OWN,
             };
             Sink::for_site(site).expect("designed hole records a sink")
         })

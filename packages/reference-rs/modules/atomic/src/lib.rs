@@ -73,6 +73,7 @@ struct ParseSession<'a> {
     breakpoints: &'a BreakpointScale,
     traced_jsx: &'a FxHashSet<String>,
     hosts: &'a hosts::ResolvedHosts,
+    composed: &'a extract::Composed<'a>,
     wants: &'a mut Vec<Want>,
     recipes: &'a mut Vec<recipes::Recipe>,
     diagnostics: &'a mut Vec<Diagnostic>,

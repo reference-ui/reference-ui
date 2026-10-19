@@ -234,7 +234,7 @@ mod tests {
                 key: Some(key()),
                 outcome: invalid_reject("true"),
                 suggestion: None,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -246,7 +246,7 @@ mod tests {
                     }),
                 },
                 suggestion: None,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
@@ -258,7 +258,7 @@ mod tests {
                     )),
                 },
                 suggestion: None,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::HostOutcome {
                 file: None,
@@ -276,7 +276,7 @@ mod tests {
             DiagnosticFact::ExactLookupExpected {
                 site: site(),
                 key: key(),
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::DynamicSlot {
                 site: site(),
@@ -305,14 +305,14 @@ mod tests {
                 when: Vec::new(),
                 minted: 2,
                 offered: Vec::new(),
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             DiagnosticFact::ResolveOutcome {
                 location: DiagnosticLocation::default(),
                 key: Some(key()),
                 outcome: invalid_reject("false"),
                 suggestion: None,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
         ];
         for fact in &facts {

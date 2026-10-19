@@ -1,9 +1,10 @@
-//! Build helpers for assembly: partition the wants into own and external atom sets,
-//! lower each set into its atoms, resolve the recipes against the consumer system, and
+//! Build helpers for assembly: partition the wants into the own atom set and the foreign groups
+//! their backing names, lower each partition into its atoms, resolve the recipes against the consumer system, and
 //! emit the css runtime map. Each helper reads the filled sinks and the consumer
 //! `BaseSystem` and returns its product, so the stage order stays in `finish`.
 
 use super::*;
+use crate::atom::{Atom, ForeignAtoms};
 
 /// Build plans plus the carried emitted-key set. Proof builds full plans
 /// and no keys (render re-serializes as today); `!proof` builds diet plans
@@ -22,70 +23,107 @@ pub(super) fn build_plans(
     }
 }
 
-/// Partition wants by the external marker, then resolve each partition into
-/// its own atom set with the consumer `BaseSystem`. Every want resolves with
-/// the same system; the partition only decides which set an atom lands in.
-/// The pooled guard runs per partition, so an empty external partition makes
-/// the own decision byte-identical to the pre-partition single-set call.
+/// Partition wants by backing, then resolve each partition with the consumer
+/// `BaseSystem`: own wants into the own set, every other want into the foreign
+/// groups its backing names. Every want resolves with the same system; the
+/// partition only decides where an atom lands. The pooled guard runs per
+/// partition, so an empty foreign partition makes the own decision
+/// byte-identical to the pre-partition single-set call.
 pub(super) fn build_atom_sets(
     wants: &[crate::atom::Want],
     system: &BaseSystem,
     diagnostics: &mut Vec<Diagnostic>,
     mut sink: Option<&mut DiagnosticsSession>,
-) -> (AtomSet, AtomSet) {
-    let (own_wants, external_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
-        wants.iter().partition(|want| !want.external);
-    let own = build_atom_set(&own_wants, system, diagnostics, sink.as_deref_mut());
-    let external = build_atom_set(&external_wants, system, diagnostics, sink);
-    (own, external)
-}
-
-/// Resolve one partition's wants into an atom set, reporting resolve facts.
-fn build_atom_set(
-    wants: &[&crate::atom::Want],
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-    mut sink: Option<&mut DiagnosticsSession>,
-) -> AtomSet {
-    if let Some(pooled) = build_atom_set_pooled(wants, system, diagnostics, &mut sink) {
-        return pooled;
+) -> (AtomSet, ForeignAtoms) {
+    let (own_wants, foreign_wants): (Vec<&crate::atom::Want>, Vec<&crate::atom::Want>) =
+        wants.iter().partition(|want| want.backing.is_own());
+    let mut own = AtomSet::new();
+    PartitionSession {
+        system,
+        diagnostics: &mut *diagnostics,
+        sink: sink.as_deref_mut(),
     }
-    let mut atom_set = AtomSet::new();
-    let mut session = resolve::ResolveSession {
+    .resolve_into(&own_wants, &mut own);
+    let mut foreign = ForeignAtoms::new();
+    PartitionSession {
         system,
         diagnostics,
-        location: DiagnosticLocation::default(),
         sink,
-        want: None,
-    };
-    for &want in wants {
-        for atom in resolve::resolve_want_with(want, &mut session) {
-            atom_set.insert(atom);
-        }
     }
-    atom_set
+    .resolve_into(&foreign_wants, &mut foreign);
+    (own, foreign)
 }
 
-/// Resolve one partition's wants on the tail pool, committing atoms in input
-/// order. Returns `None` when the lane guard declines so the caller runs serial.
-fn build_atom_set_pooled(
-    wants: &[&crate::atom::Want],
-    system: &BaseSystem,
-    diagnostics: &mut Vec<Diagnostic>,
-    sink: &mut Option<&mut DiagnosticsSession>,
-) -> Option<AtomSet> {
-    let guard = Lanes::Auto.guard(WorkKind::TailWants, wants.len())?;
-    let mut atom_set = AtomSet::new();
-    for item in crate::resolve_pool::resolve_wants(wants, system, &guard) {
-        if let Some(slot) = sink.as_deref_mut() {
-            slot.extend_facts(item.facts);
-        }
-        diagnostics.extend(item.diagnostics);
-        for atom in item.atoms {
-            atom_set.insert(atom);
+/// Where one partition's resolved atoms land: the own set takes them as they
+/// come; the foreign groups file each under its want's backing systems.
+trait AtomTarget {
+    fn take(&mut self, want: &crate::atom::Want, atom: Atom);
+}
+
+impl AtomTarget for AtomSet {
+    fn take(&mut self, _want: &crate::atom::Want, atom: Atom) {
+        self.insert(atom);
+    }
+}
+
+impl AtomTarget for ForeignAtoms {
+    fn take(&mut self, want: &crate::atom::Want, atom: Atom) {
+        self.insert(atom, &want.backing);
+    }
+}
+
+/// The resolve inputs one partition shares: the consumer system and the sinks
+/// its facts report into.
+struct PartitionSession<'a, 's> {
+    system: &'a BaseSystem,
+    diagnostics: &'a mut Vec<Diagnostic>,
+    sink: Option<&'s mut DiagnosticsSession>,
+}
+
+impl PartitionSession<'_, '_> {
+    /// Resolve one partition's wants into `target`, reporting resolve facts in
+    /// want order: on the tail pool when the lane guard admits, else serially.
+    fn resolve_into<T: AtomTarget>(&mut self, wants: &[&crate::atom::Want], target: &mut T) {
+        match Lanes::Auto.guard(WorkKind::TailWants, wants.len()) {
+            Some(guard) => self.resolve_pooled(wants, &guard, target),
+            None => self.resolve_serial(wants, target),
         }
     }
-    Some(atom_set)
+
+    /// Resolve on the tail pool, committing facts and atoms in want order.
+    fn resolve_pooled<T: AtomTarget>(
+        &mut self,
+        wants: &[&crate::atom::Want],
+        guard: &crate::lanes::PoolGuard,
+        target: &mut T,
+    ) {
+        let resolved = crate::resolve_pool::resolve_wants(wants, self.system, guard);
+        for (&want, item) in wants.iter().zip(resolved) {
+            if let Some(slot) = self.sink.as_deref_mut() {
+                slot.extend_facts(item.facts);
+            }
+            self.diagnostics.extend(item.diagnostics);
+            for atom in item.atoms {
+                target.take(want, atom);
+            }
+        }
+    }
+
+    /// Resolve serially through one resolve session.
+    fn resolve_serial<T: AtomTarget>(&mut self, wants: &[&crate::atom::Want], target: &mut T) {
+        let mut session = resolve::ResolveSession {
+            system: self.system,
+            diagnostics: &mut *self.diagnostics,
+            location: DiagnosticLocation::default(),
+            sink: self.sink.as_deref_mut(),
+            want: None,
+        };
+        for &want in wants {
+            for atom in resolve::resolve_want_with(want, &mut session) {
+                target.take(want, atom);
+            }
+        }
+    }
 }
 
 /// Recipe definitions plus the observed selections gating their emission.

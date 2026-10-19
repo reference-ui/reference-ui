@@ -185,7 +185,7 @@ fn lower_block_arg(
     match resolve_block_target(ctx.scoped(), expr) {
         BlockLookup::Hit(name, obj) => {
             emit_import_residue(ctx, &name, expr.span());
-            let mut obj_ctx = ctx.object_walk(origin, false, false);
+            let mut obj_ctx = ctx.object_walk(origin, false, &crate::atom::backing::OWN);
             lower_const_object(
                 &mut obj_ctx,
                 obj,
@@ -274,7 +274,7 @@ fn walk_object_expr(
     origin: Option<&str>,
     ctx: &mut ExtractContext<'_>,
 ) {
-    let mut obj_ctx = ctx.object_walk(origin, false, false);
+    let mut obj_ctx = ctx.object_walk(origin, false, &crate::atom::backing::OWN);
     walk_style_object(&mut obj_ctx, obj, &smallvec![]);
 }
 

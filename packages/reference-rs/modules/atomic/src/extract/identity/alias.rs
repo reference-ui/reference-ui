@@ -19,7 +19,10 @@ use module_graph::{
 use rustc_hash::FxHashMap;
 
 use super::paths::{dir_of, normalize_path};
-use crate::extract::package_system::{dir_verdict, installed_dir, DirVerdict, OwnRoot};
+use crate::extract::package_system::{
+    dir_verdict, installed_dir, package_name, DirVerdict, OwnRoot,
+};
+use crate::extract::provenance::names_package;
 
 /// Where a bare specifier lands, if anywhere.
 #[derive(Debug, Clone)]
@@ -125,7 +128,7 @@ impl super::IdentityGraph<'_> {
         let ladder = SpecifierLadder::new(&fs, ExtensionPolicy::Source)
             .with_tsconfig(TsconfigPolicy::Follow);
         let Ok(hit) = ladder.resolve_located(&ModuleKey::new(from_file), specifier) else {
-            return BareHit::Miss;
+            return self.unbuilt_package(&fs, from_file, specifier);
         };
         let path = hit.key.as_str();
         let source = fs.position(path).map(|at| self.sources[at].0.clone());
@@ -142,6 +145,37 @@ impl super::IdentityGraph<'_> {
                 dir: dir.into(),
                 verdict,
             },
+        }
+    }
+
+    /// A bare specifier whose package is installed but whose entry resolves to
+    /// no file (a workspace package whose `dist` is not built yet) still names
+    /// that directory, so its published system is not lost to a missing build.
+    /// Nothing installed under the name is a miss.
+    fn unbuilt_package(&self, fs: &ProjectFs<'_>, from_file: &str, specifier: &str) -> BareHit {
+        if !names_package(specifier) {
+            return BareHit::Miss;
+        }
+        let name = package_name(specifier);
+        let from = ModuleKey::new(from_file);
+        let mut dir = dir_of(from.as_str());
+        let found = loop {
+            let candidate = format!("{dir}/node_modules/{name}");
+            if fs.is_dir(&candidate) {
+                break fs.canonicalize(&candidate);
+            }
+            match dir.rsplit_once('/') {
+                Some((parent, _)) => dir = parent,
+                None => break None,
+            }
+        };
+        let Some(dir) = found else {
+            return BareHit::Miss;
+        };
+        let verdict = self.dir_verdict(fs, &dir);
+        BareHit::Package {
+            dir: dir.into(),
+            verdict,
         }
     }
 

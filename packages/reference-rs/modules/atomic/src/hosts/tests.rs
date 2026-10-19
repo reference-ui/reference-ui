@@ -35,7 +35,7 @@ fn test_explicit_hosts_admit_unimported_tags() {
     // Unconfigured, the capital tag is an external component (G0 §D/C8):
     // its want is external, never a host want.
     assert!(
-        !gated.wants.is_empty() && gated.wants.iter().all(|w| w.external),
+        !gated.wants.is_empty() && gated.wants.iter().all(|w| !w.backing.is_own()),
         "unconfigured tag is external, not a host: {:?}",
         gated.wants
     );
@@ -47,7 +47,7 @@ fn test_explicit_hosts_admit_unimported_tags() {
         admitted
             .wants
             .iter()
-            .any(|w| &*w.prop == "mt" && !w.external),
+            .any(|w| &*w.prop == "mt" && w.backing.is_own()),
         "a configured host collects a host want"
     );
     assert!(admitted.stylesheet.contains("mt_4r"));

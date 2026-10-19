@@ -2,7 +2,8 @@
 //! A request's `upstreamHosts` names the components each extended upstream
 //! publishes; those names leave the configured roster even when the caller
 //! also lists them in `jsxHosts`, so an unbound tag that spells one takes the
-//! external path and backs the upstream class. A wrapper this compile traces
+//! external path and backs the publishing upstream's class, and no other
+//! composed system's. A wrapper this compile traces
 //! under the same name stays own, and an empty map keeps the wire and the
 //! roster unchanged. The analysis mirror reads the same roster, so it stays
 //! silent where extraction goes external.
@@ -95,11 +96,16 @@ fn unbound_tag_spelling_a_published_name_is_external() {
     let published = compile(&request).expect("compile succeeds");
     assert_eq!(mt_classes(&published), names(&["upstream__mt_4r"]));
     assert!(
-        published.wants.iter().all(|want| want.external),
+        published.wants.iter().all(|want| !want.backing.is_own()),
         "{:?}",
         published.wants
     );
     assert!(silent(&roster_only) && silent(&published), "{published:?}");
+
+    // A second composed system that does not publish the name never backs it.
+    request.upstream_systems = names(&["other", "upstream"]);
+    let beside = compile(&request).expect("compile succeeds");
+    assert_eq!(mt_classes(&beside), names(&["upstream__mt_4r"]));
 }
 
 #[test]

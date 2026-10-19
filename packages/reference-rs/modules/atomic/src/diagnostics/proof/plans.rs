@@ -117,7 +117,7 @@ mod tests {
             prop: "width".to_string(),
             value: serde_json::json!({"md": "60px", "base": "50px"}),
             important: true,
-            external: false,
+            backing: crate::atom::Backing::Own,
         };
         let plan = RuntimeStylePlan {
             system: "lib".to_string(),
@@ -141,7 +141,7 @@ mod tests {
                 prop: "color".to_string(),
                 value: serde_json::json!("red.500"),
                 important: false,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             // Exact duplicate: dedupes to no second plan and no second key.
             AuthoredDeclaration {
@@ -149,14 +149,14 @@ mod tests {
                 prop: "color".to_string(),
                 value: serde_json::json!("red.500"),
                 important: false,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             AuthoredDeclaration {
                 when: vec!["_hover".to_string()],
                 prop: "width".to_string(),
                 value: serde_json::json!({"md": "60px", "base": "50px"}),
                 important: true,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
             // Unknown prop resolves zero atoms: no plan and no key.
             AuthoredDeclaration {
@@ -164,7 +164,7 @@ mod tests {
                 prop: "fooBar".to_string(),
                 value: serde_json::json!("x"),
                 important: false,
-                external: false,
+                backing: crate::atom::Backing::Own,
             },
         ]
     }
@@ -177,14 +177,13 @@ mod tests {
         let decls = keyed_fixture_decls();
         let mut atom_set = AtomSet::new();
         let mut diagnostics = Vec::new();
-        let mut external_atom_set = AtomSet::new();
+        let mut foreign = crate::atom::ForeignAtoms::new();
         let mut builder = PlanBuilder::new(
             "lib",
             system,
-            &[],
             PlanSinks {
                 atom_set: &mut atom_set,
-                external_atom_set: &mut external_atom_set,
+                foreign: &mut foreign,
                 diagnostics: &mut diagnostics,
             },
         );
@@ -206,14 +205,13 @@ mod tests {
         let decls = keyed_fixture_decls();
         let mut diet_set = AtomSet::new();
         let mut diet_diagnostics = Vec::new();
-        let mut diet_external = AtomSet::new();
+        let mut diet_foreign = crate::atom::ForeignAtoms::new();
         let mut diet_builder = PlanBuilder::new(
             "lib",
             system,
-            &[],
             PlanSinks {
                 atom_set: &mut diet_set,
-                external_atom_set: &mut diet_external,
+                foreign: &mut diet_foreign,
                 diagnostics: &mut diet_diagnostics,
             },
         );
@@ -234,14 +232,13 @@ mod tests {
         // Inserts restored (LEAF-11 hole): diet and full feed identical sets.
         let mut full_set = AtomSet::new();
         let mut full_diagnostics = Vec::new();
-        let mut full_external = AtomSet::new();
+        let mut full_foreign = crate::atom::ForeignAtoms::new();
         let mut full_builder = PlanBuilder::new(
             "lib",
             system,
-            &[],
             PlanSinks {
                 atom_set: &mut full_set,
-                external_atom_set: &mut full_external,
+                foreign: &mut full_foreign,
                 diagnostics: &mut full_diagnostics,
             },
         );

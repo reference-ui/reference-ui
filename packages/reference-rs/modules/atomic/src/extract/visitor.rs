@@ -23,6 +23,7 @@ use crate::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticsSession};
 use crate::recipes::Recipe;
 use base_system::BreakpointScale;
 
+use super::backing::Composed;
 use super::bindings::ExtractBindings;
 use super::context::{ExtractConfig, ExtractContext, ExtractSinks};
 use super::css;
@@ -44,6 +45,7 @@ pub struct ExtractVisitor<'a> {
     pub bindings: &'a ExtractBindings,
     pub jsx_hosts: JsxHosts<'a>,
     pub owned_props: OwnedProps<'a>,
+    pub composed: &'a Composed<'a>,
     pub wrapper_threads: WrapperThreads,
     pub shadows: Vec<FxHashSet<String>>,
     pub scope_stack: Vec<ScopeId>,
@@ -72,6 +74,7 @@ impl<'a> ExtractVisitor<'a> {
             bindings: config.bindings,
             jsx_hosts: config.jsx_hosts,
             owned_props: config.owned_props,
+            composed: config.composed,
             wrapper_threads: WrapperThreads::default(),
             shadows: Vec::new(),
             scope_stack: Vec::new(),
@@ -193,6 +196,7 @@ fn visitor_context<'a, 'v: 'a>(visitor: &'a mut ExtractVisitor<'v>) -> ExtractCo
         bindings: visitor.bindings,
         jsx_hosts: visitor.jsx_hosts,
         owned_props: visitor.owned_props,
+        composed: visitor.composed,
         shadowed: &visitor.shadows,
     };
     let sinks = ExtractSinks {

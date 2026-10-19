@@ -4,8 +4,10 @@ The docs icon path. `icon-pkg` ships compiled dist only (`dist/*.mjs`, no generi
 `jsx()` calls from react/jsx-runtime), the way `@reference-ui/icons` does, so the
 trace reads no declaration for `CodeIcon` and finds no host in it
 (`tracedJsxHosts` stays empty). `CodeIcon` is a `createIcon` product whose inner
-forwardRef destructures `size` and `variant` and consumes them. The consumer
-imports it, so the tag is external.
+forwardRef destructures `size` and `variant` and consumes them. Like icons, the
+package publishes its system (`icons`, at `.reference-ui/system/baseSystem.mjs`),
+so it is a Reference package whose runtime renders the tag. The consumer imports
+it, so the tag is external.
 
 What the compiled package cannot say, its published roster does. The base system
 carries `jsxOwned: { "CodeIcon": ["size", "variant"] }` (`input/baseSystem.json`),
@@ -16,7 +18,7 @@ warning, while `color` is not owned and still extracts as an external want.
 
 The case compiles standalone (no `upstreamSystems`), so no composed system backs
 the icon's `color`: the one diagnostic is `ATM-W-EXTERNAL-UNBACKED` at the tag,
-naming `icon-pkg`. The owned `size` adds nothing to it.
+naming `icon-pkg` and its system `icons`. The owned `size` adds nothing to it.
 
 The owned map the gate read rides the result as `tracedJsxOwned`, on the slim
 production wire as well as the proof channel.
