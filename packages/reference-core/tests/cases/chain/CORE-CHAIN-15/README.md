@@ -37,8 +37,8 @@ Reference UI and lowered nothing, and the four probes failed the same way.
 
 Evidence: `ATM-SITE-96` (direct package import), `ATM-SITE-97` (barrel), `ATM-SITE-98` (`css` wrapper) and
 `ATM-SITE-99` (upstream-published name) pin the same verdicts inside one compile; the request's `upstreamHosts` keeps the
-published `Tile` apart from the app's own hosts. Siblings: CORE-CHAIN-08 (prebuilt fan-out, non-host name), CORE-CHAIN-14
-(real upstream sync), CORE-CHAIN-16 (the same shapes with the package not composed: the unbacked warning),
-CORE-CHAIN-17 (a workspace package, own or composed).
+published `Tile` apart from the app's own hosts. Siblings: CORE-CHAIN-08 (a prebuilt package component, backed under
+its published system), CORE-CHAIN-14 (real upstream sync), CORE-CHAIN-16 (the same shapes with the package not
+composed: the unbacked warning), CORE-CHAIN-17 (a workspace package, own or composed).
 
-> Search terms: component ownership, provenance, package import, installed package, node_modules link, workspace install, importmap scope, published system, primitive name, Button, published jsxElements, upstreamHosts, barrel re-export, css wrapper, fan-out, external style props, prebuilt dist, bound react.mjs, foreign qualifier, no compiled class, CORE-CHAIN-08, CORE-CHAIN-14, CORE-CHAIN-16, ATM-SITE-96, ATM-SITE-97, ATM-SITE-98, ATM-SITE-99, CORE-CHAIN-17
+> Search terms: component ownership, provenance, package import, installed package, node_modules link, workspace install, importmap scope, published system, primitive name, Button, published jsxElements, upstreamHosts, barrel re-export, css wrapper, package backing, external style props, prebuilt dist, bound react.mjs, foreign qualifier, no compiled class, CORE-CHAIN-08, CORE-CHAIN-14, CORE-CHAIN-16, ATM-SITE-96, ATM-SITE-97, ATM-SITE-98, ATM-SITE-99, CORE-CHAIN-17

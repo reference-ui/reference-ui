@@ -9,7 +9,7 @@ One row per case. Status words: `open`, `in-progress`, `done`,
 - CORE-CHAIN-04 parallel direct extends — `done` — ports T9 extends legs; T4 topology.
 - CORE-CHAIN-05 depth-three chain — `done` — new coverage; no matrix source.
 - CORE-CHAIN-06 real upstream sync output — `done` — structural: extends a genuinely synced upstream package; no matrix source.
-- CORE-CHAIN-08 prebuilt dist fan-out probe — `done` — structural: consumes a prebuilt package component fixture bound to a foreign `react.mjs` and styles it with a consumer-only token. Green after the fan-out engine (class `core-chain8-up__c_chain8Ink` backed); the local `Div` control isolates the miss to the prebuilt path.
+- CORE-CHAIN-08 style props on a real prebuilt dist, not a same-scope stand-in — `done` — structural: consumes a prebuilt package component fixture bound to a foreign `react.mjs` and styles it with a consumer-only token. The synced upstream is installed as `@fixture/prebuilt` in `world/node_modules`, so the app's sync reads the system it published and backs `core-chain8-up__c_chain8Ink` under that system only; the local `Div` control isolates any miss to the prebuilt path.
 - CORE-CHAIN-09 a branch's override survives in either order — `done` — structural: real-sync diamond; the fragment list linearizes by first occurrence (E1, E2, E5); no matrix source.
 - CORE-CHAIN-10 a shared base is evaluated once — `done` — structural: real-sync diamond; the shared base is one node in the published list (E2, E6); no matrix source.
 - CORE-CHAIN-11 a cycle reached through fragment names fails sync with a named error — `done` — structural: a stand-in whose fragment names reach the app; the rejected sync leaves the published system byte-identical (E7); no matrix source.

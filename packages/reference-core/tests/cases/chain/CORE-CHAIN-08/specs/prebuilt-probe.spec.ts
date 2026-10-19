@@ -1,6 +1,6 @@
-// prebuilt-probe.spec.ts — spec for CORE-CHAIN-08, the prebuilt-dist fan-out
-// case. Takes { page, url, case } with the world synced standalone, syncs a
-// real upstream package into a materialized bound react.mjs, installs it as
+// prebuilt-probe.spec.ts — spec for CORE-CHAIN-08, the prebuilt-dist package
+// backing case. Takes { page, url, case } with the world synced standalone,
+// syncs a real upstream package into a materialized bound react.mjs, installs it as
 // `@fixture/prebuilt` in the world's node_modules, rewrites the consumer config
 // to extend it, re-syncs, then asserts a consumer-only token paints on the
 // prebuilt component fixture with zero runtime misses. Emits nothing on
@@ -81,7 +81,7 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
 
     // Positive control: the same consumer token resolves and paints in the
     // consumer's own scope. Green here beside a red badge isolates the miss to
-    // the prebuilt path — it is fan-out polarity, not token resolution.
+    // the prebuilt path — it is backing polarity, not token resolution.
     const local = page.locator('#chain8-local');
     await local.waitFor();
     const localColor = await local.evaluate((el) => getComputedStyle(el).color);
@@ -90,10 +90,10 @@ export default async function run({ page, url, case: c }: SpecInput): Promise<vo
     const badge = page.locator('[data-testid="chain8-badge"]');
     await badge.waitFor();
 
-    // RED pre-fan-out: the prebuilt runtime mints
-    // `core-chain8-up__c_chain8Ink` but the consumer compile dropped the style
-    // prop on the capitalized non-host tag, so no rule backs it and the
-    // computed colour falls back to the inherited value. The class and the
+    // RED when the consumer compile drops the style prop or backs it under
+    // any system but the package's: the prebuilt runtime mints
+    // `core-chain8-up__c_chain8Ink`, no rule backs it, and the computed
+    // colour falls back to the inherited value. The class and the
     // miss count ride the message so the polarity failure names its cause.
     const { color, className } = await badge.evaluate((el) => ({
       color: getComputedStyle(el).color,

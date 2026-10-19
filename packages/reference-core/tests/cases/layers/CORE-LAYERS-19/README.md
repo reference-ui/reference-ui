@@ -5,13 +5,18 @@ package with `extends`, the app's token values win, including inside that packag
 it with `layers`, the package keeps its own token values. `guides/share.mdx` and `guides/theming.mdx` promise the
 same.
 
-The world follows CORE-CHAIN-15's prebuilt shape. `upstream/` is a real package, acme (`core-layers19-acme`). Its
+The world keeps the prebuilt importmap shape: the page reaches acme through its importmap, and nothing installs it in
+`world/node_modules`. `upstream/` is a real package, acme (`core-layers19-acme`). Its
 tokens define `brand` (`#be185d`, dark `#f9a8d4`), the public `acmeOnly` (`#1d4ed8`, dark `#93c5fd`) and the private
 `_private.seal` (`#7c3aed`, dark `#c4b5fd`). Its `src/Badge.tsx` declares two components: `Badge`, a `Span` that
 styles itself with `bg="brand"`, `color="acmeOnly"` and `borderColor="_private.seal"`, and `Plain`, a `Span` that
 forwards what its caller writes. `prebuilt/acme.mjs` stands for acme's dist: it renders both through acme's bound
 `react.mjs`, so every element stamps `data-layer="core-layers19-acme"`. The app (`core-layers19`) defines `brand`
 too (`#15803d`, dark `#86efac`) and renders an own `Div bg="brand"` control, `<Badge>`, and `<Plain bg="brand">`.
+Since acme is not installed, the app's sync cannot follow `@fixture/layers19` to a directory and lowers nothing for
+`<Plain bg="brand">` (an import that lands nowhere is not a Reference package, ATM-SITE-103). The class acme's runtime
+mints for it, `core-layers19-acme__bg_brand`, is backed by acme's own published rule for Badge's `bg="brand"`. The
+probe reads token scope, which `data-layer` decides whichever block prints the rule.
 
 The spec syncs acme through the real `sync()`, then composes it twice, re-syncing the app each time: first under
 `extends`, then under `layers`. Each composition loads the page with html `data-color-mode` light, then dark.
@@ -49,6 +54,7 @@ Evidence: `packages/reference-rs/modules/atomic/src/stylesheet/system_layers/sco
 `packages/reference-core/src/system/base/extended.ts` (the extends closure), `src/sync/index.ts` (the request field),
 `packages/reference-rs/modules/primitives/js/context.ts` (the stamp rule). Siblings: CORE-LAYERS-20 (nested
 composition), CORE-LAYERS-10 (consumer content inside a layered component), CORE-LAYERS-17 (extendSystem on a
-layered package), CORE-CHAIN-15 (the prebuilt package shape), CORE-SYNC-17 (`_private` strip under extends).
+layered package), CORE-CHAIN-15 (an installed package's components, composed), CORE-SYNC-17 (`_private` strip
+under extends).
 
 > Search terms: token scope, token override, extends, layers, data-layer, package component, app token wins, brand, package-only token, _private, dark mode, extendedSystems, owner ruling, theming, share, CORE-LAYERS-10, CORE-LAYERS-17, CORE-LAYERS-20, CORE-CHAIN-15, CORE-SYNC-17
