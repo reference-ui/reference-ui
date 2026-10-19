@@ -7,4 +7,4 @@ layouts unfold the registered slots into managed inputs, triggers, and
 picker dialogs: the Part-Resolution Law runs per field, managed state
 and accessibility always winning while authored handlers run first.
 
-Up: [DateField](../README.md).
+Up: DateField.

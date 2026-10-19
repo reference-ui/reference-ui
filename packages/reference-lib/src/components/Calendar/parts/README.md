@@ -8,4 +8,4 @@ selection, availability, and navigation decisions live in the domain
 folders and arrive through hooks. The Grid is the largest part: it owns
 focus, preview, keyboard, and activation for the whole day table.
 
-Up: [Calendar](../README.md).
+Up: Calendar.

@@ -7,4 +7,4 @@ roving button with Menu keyboard entry and cross-trigger moves;
 switching. Parts read bar state from context and never own it — the
 hooks decide, the parts render.
 
-Up: [Menubar](../README.md).
+Up: Menubar.

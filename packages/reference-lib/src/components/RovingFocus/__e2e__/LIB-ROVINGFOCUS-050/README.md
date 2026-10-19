@@ -2,4 +2,4 @@
 
 RovingFocus nesting RF-NEST-02: unsupported inner keys bubble to the outer composite.
 
-Execution: `./RovingFocus.ct.spec.ts` (single `test` under `test.describe('RovingFocus nesting')`, split verbatim from `__e2e__/RovingFocus.ct.spec.ts`).
+Execution: single `test` under `test.describe('RovingFocus nesting')`, split verbatim from the shared component spec.

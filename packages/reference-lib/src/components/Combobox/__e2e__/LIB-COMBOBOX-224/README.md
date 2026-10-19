@@ -3,4 +3,4 @@
 Mounts the story fixtures with touch enabled and injects trusted touch
 sequences via CDP Input.dispatchTouchEvent in a real browser.
 
-Spec: Combobox.touch.ct.spec.ts. No visual baselines.
+Spec: the Combobox touch spec. No visual baselines.

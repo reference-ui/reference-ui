@@ -9,4 +9,4 @@ per-endpoint events; the form observers watch submit and reset for
 both; and caret restoration replays each step's caret request before
 paint. The roots call their machine and render the slotted hosts.
 
-Up: [DateField](../README.md).
+Up: DateField.

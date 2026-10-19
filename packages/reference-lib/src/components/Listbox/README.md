@@ -5,7 +5,7 @@ typeahead, and a virtualization contract for windowed rows. It also
 serves as the Combobox dropdown body: nested in a Combobox it yields
 commit authority, renders check slots, and follows the active option.
 
-Contract: [Listbox.md](./Listbox.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Listbox contract. Cases: the Listbox test catalog.
 
 The root is composition only: a session hook owns every ref and state
 cell, behavior hooks add registry, roving focus, selection, navigation,
@@ -18,8 +18,8 @@ Shared tells the option's own events apart from in-row interactivity.
 Pure decisions carry colocated unit tests; browser behavior proves out
 in CT.
 
-`context.ts` scopes the private option subtree (the Law 3 allowance):
+`context` scopes the private option subtree (the Law 3 allowance):
 options read selection, focus, registration, typeahead, and navigation
 from it, and read the Combobox context directly when nested.
 
-Up: [components](../components.md).
+Up: components.

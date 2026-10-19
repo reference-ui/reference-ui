@@ -8,4 +8,4 @@ mapping on the container itself for pointer-opened menus. Owning-root
 reads run id and focus discovery against a shadow-hosted node's own
 root instead of the document. Unit-tested in happy-dom.
 
-Up: [Menu](../README.md).
+Up: Menu.

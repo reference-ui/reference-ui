@@ -5,4 +5,4 @@ for the Part-Resolution Law, and the caret restore keeping repeated
 segment steps in place. Small, total, and each proven in colocated
 unit tests.
 
-Up: [DateField](../README.md).
+Up: DateField.

@@ -10,4 +10,4 @@ owns the roving tab target and its repair effect. The root calls its six
 in their original order and renders the slotted parts; the Grid part
 owns grid focus.
 
-Up: [Calendar](../README.md).
+Up: Calendar.

@@ -3,4 +3,4 @@
 Mounts the story logs and asserts controlled relationships, active-descendant
 discipline, and one-request commits in a real browser.
 
-Spec: Combobox.ct.spec.ts. Visual baselines: __snapshots__/ (7 PNGs).
+Spec: the Combobox component spec. Visual baselines: the snapshots directory (7 PNGs).

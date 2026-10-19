@@ -7,14 +7,14 @@ fans into the internal handle plus the forwarded ref, and one `Button`
 carries the managed switch role, `aria-checked`, and state markers that
 consumer props can never override.
 
-Contract: [Switch.md](./Switch.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Switch contract. Cases: the Switch test catalog.
 
 Beneath the root, each problem owns a folder. `hooks/` resolves the
 controlled/uncontrolled split and tracks thumb presence; `thumb/` answers
 whether a thumb was authored, seeded statically and repaired structurally;
-`parts/` paints the knob both shapes share; `context.ts` wires the resolved
+`parts/` paints the knob both shapes share; `context` wires the resolved
 state to every thumb without prop drilling; `shared/` holds the nameless
 ref and effect plumbing all of them ask. Pure decisions carry colocated
 unit tests; browser behavior proves out in CT.
 
-Up: [Components](../components.md).
+Up: Components.

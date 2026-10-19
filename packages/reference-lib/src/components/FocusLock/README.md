@@ -5,7 +5,7 @@ restores where it came from when the lock releases. The root renders no node
 of its own — it slots behavior onto one authored child — while Overlay owns
 when locks activate and what counts as a shard.
 
-Contract: [FocusLock.md](./FocusLock.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the FocusLock contract. Cases: the FocusLock test catalog.
 
 The root is composition only: a session hook owns every ref, memory and
 restore wrap pure decisions into stable callbacks, and two effects run in
@@ -19,8 +19,8 @@ returns focus. Shared holds the nameless element plumbing all of them ask.
 Pure decisions carry colocated unit tests; browser behavior proves out in CT.
 
 There is no `parts/` — the lock has one transparent rendering, owned by the
-root — and no `context.ts`: with no compound parts, there is no subtree to
+root — and no `context`: with no compound parts, there is no subtree to
 scope. Cross-component consumers (Toast's focus restore) import the domain
 folders directly; no compatibility re-exports live at root.
 
-Up: [components](../components.md).
+Up: components.

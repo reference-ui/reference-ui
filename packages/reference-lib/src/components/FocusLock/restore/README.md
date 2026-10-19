@@ -7,4 +7,4 @@ origin over proximity over default — while never stealing focus the
 application already moved deliberately. Timing (restore after Presence, once)
 stays with the owner; this folder only answers *where*.
 
-Up: [FocusLock](../README.md).
+Up: FocusLock.

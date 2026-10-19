@@ -4,4 +4,4 @@ Renders the fixtures to pin authoritative checked and disabled exposure, a
 single onChange per activation, label association, form non-serialization,
 RTL-checked rendering, and an accessibility-clean sweep.
 
-Spec: Switch.ct.spec.ts. Visual baselines: __snapshots__/ (7 PNGs).
+Spec: the Switch component spec. Visual baselines: the snapshots directory (7 PNGs).

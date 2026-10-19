@@ -1,6 +1,6 @@
 # hooks
 
-Root and Content lifecycle, composed by `Overlay.tsx` and `parts/Content`.
+Root and Content lifecycle, composed by `Overlay` and the Content part.
 One hook owns controlled/uncontrolled open state, one enforces the
 single-instance part registry (mixed edge-plus-anchor is a dev
 diagnostic), one pushes and pops the document layer stack, one publishes

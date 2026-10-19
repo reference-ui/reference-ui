@@ -2,4 +2,4 @@
 
 RovingFocus instance lifetime RF-LIFETIME-01: remount resets one root search and current item while the surviving sibling retains both.
 
-Execution: `./RovingFocus.hardening.ct.spec.ts` (single `test` under `test.describe('RovingFocus instance lifetime')`, split verbatim from `__e2e__/RovingFocus.hardening.ct.spec.ts`).
+Execution: single `test` under `test.describe('RovingFocus instance lifetime')`, split verbatim from the shared component spec.

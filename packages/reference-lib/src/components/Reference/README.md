@@ -7,10 +7,10 @@ loading/error/empty states. `ReferenceView` is the provider-less half
 for hosts that already install the runtime.
 
 The root holds the two public components plus the status states;
-`document/` renders whole documents by kind, `components/` renders
+`document/` renders whole documents by kind, components render
 member rows, lists, and frames, `theme/` carries the browser token
 config, and `fixtures/` hosts the Book cases proving the browser against
 sample interfaces, aliases, and StyleProps extensions. Server rendering
 pins through the colocated SSR suite.
 
-Up: [Components](../components.md).
+Up: Components.

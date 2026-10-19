@@ -7,7 +7,7 @@ form observers) with an optional picker popover, and both unfold their
 compound parts through one shared slot registry. The roots are
 composition only: guards, one machine hook, and the slotted host.
 
-Contract: [DateField.md](./DateField.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the DateField contract. Cases: the DateField test catalog.
 
 Beneath the hooks, each problem owns a folder. The engine parses and
 formats locale text and steps segments. The slots registry carries
@@ -17,7 +17,7 @@ alias, and unfold. Shared holds the prop merging and caret restore
 both machines ask. Pure decisions carry colocated unit tests; browser
 behavior proves out in CT.
 
-Two roots, not one: `DateField.tsx` and `DateFieldRange.tsx` are sibling
+Two roots, not one: `DateField` and `DateFieldRange` are sibling
 hosts over the same engine, slots, and shared helpers. The deep import of Calendar's date kernel is internal to the Calendar and DateField pair, not a public contract.
 
-Up: [components](../components.md).
+Up: components.

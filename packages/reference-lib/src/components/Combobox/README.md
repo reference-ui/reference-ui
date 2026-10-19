@@ -6,7 +6,7 @@ virtual grid, and single-authority resolution across all three. Text
 sessions support inline completion, custom values, and committed-text
 revert; status routes through the shared announcer.
 
-Contract: [Combobox.md](./Combobox.md). Cases: [TESTS.md](./TESTS.md).
+Contract: the Combobox contract. Cases: the Combobox test catalog.
 
 The root is composition only: a session hook owns every ref and state
 cell, behavior hooks add registry, authority, active, open, virtual,
@@ -18,7 +18,7 @@ validates and searches logical items. Navigation steps mounted arrows.
 Shared holds the diagnostic and id hygiene. Pure decisions carry
 colocated unit tests; browser behavior proves out in CT.
 
-`combobox-context.ts` keeps its path because Listbox and Tree import the
+`combobox-context` keeps its path because Listbox and Tree import the
 shared scope directly; its name is the exception that proves the shape.
 
-Up: [components](../components.md).
+Up: components.

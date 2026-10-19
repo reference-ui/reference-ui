@@ -6,8 +6,8 @@ on user-driven selection changes in both modes. Selection, focus, and
 the RovingFocus tab stop move together in automatic mode; manual mode
 lets arrows rove while only explicit activation selects.
 
-Contract: [Tabs.md](./Tabs.md). Features: [FEATURES.md](./FEATURES.md).
-Cases: [TESTS.md](./TESTS.md).
+Contract: the Tabs contract. Features: the Tabs feature catalog.
+Cases: the Tabs test catalog.
 
 The root is composition only: hooks own the identity registry, tab
 ordering, value state, structural diagnostics, and the two focus trails
@@ -22,4 +22,4 @@ diagnostic. Examples carries the userland system-variant demo. Pure
 decisions carry colocated unit tests; mounted behavior proves out in
 colocated Vitest and CT.
 
-Up: [Components](../components.md).
+Up: Components.

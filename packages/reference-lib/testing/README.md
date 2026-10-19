@@ -1,6 +1,6 @@
 # Component cases
 
-Every directory under `src/components` has a colocated `case.json`. The catalog
+Every component directory has a colocated manifest. The catalog
 indexes executable unit and browser declarations, not the component's design
 notes. `pnpm agentct check` validates the entire catalog without starting a
 browser; a conforming index does not mean its tests have passed.
@@ -30,7 +30,7 @@ Each manifest has this shape:
       "id": "LIB-BUTTON-001",
       "name": "A readable name for the behavior being asserted",
       "kind": "ct",
-      "file": "__e2e__/Button.ct.spec.ts",
+      "file": "<component-relative spec path>",
       "title": "Exact suite title Exact test declaration title"
     }
   ]
@@ -53,7 +53,7 @@ machine-readable. A search with no matches returns an empty list and a nonzero
 exit. Listing and searching are catalog-only: they never start the daemon or a
 browser.
 
-`public` directories are reexported by `src/index.ts`. `support` directories
+`public` directories are reexported by the package index. `support` directories
 exercise primitives or shared implementation outside their own directory.
 `internal` directories are Book fixtures or development surfaces; the description
 explains that purpose. Only internal directories may have no cases. They remain
@@ -149,4 +149,4 @@ report completeness, exact component targeting, and artifact isolation. Componen
 verification continues to use `pnpm agentct`; core or matrix changes continue to
 use `pnpm agent`.
 
-Part of [Reference UI](../../../README.md), via the [lib package](../README.md).
+Part of Reference UI, via the lib package.

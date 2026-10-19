@@ -4,4 +4,4 @@ Renders the story fixtures to pin instant removal, CSS transition and
 animation retention, reopen races, nested coordination (including born-closed
 and mid-exit children), and coordinated multi-part completion.
 
-Spec: Presence.ct.spec.ts. Visual baselines: __snapshots__/ (12 PNGs).
+Spec: the Presence component spec. Visual baselines: the snapshots directory (12 PNGs).

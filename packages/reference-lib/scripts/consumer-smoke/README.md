@@ -7,7 +7,7 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
 2. `pnpm pack` — the real tarball, not a source link.
 3. `tsc --noEmit` in the scaffold — the exports map (incl. `./primitives`
    types and `./styles.css`) resolves for a real consumer (B-13). A second
-   pass (`tsconfig.lib-types.json`: `skipLibCheck: false`, `types: []`) must
+   pass (the lib-types config: `skipLibCheck: false`, `types: []`) must
    be clean for lib's own declarations and the app, which is what a consumer
    with `skipLibCheck: false` sees. Errors under `@reference-ui/icons` are
    counted and named, not gated, until icons ships self-contained types.
@@ -16,8 +16,8 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
 5. `vite dev` + Playwright probe — mounts every barrel component, runs the
    B-11 behavioral assertions against current `src`, asserts zero
    unexpected console errors and zero `no compiled class` warnings.
-6. Layered override through a real `ref sync` (`layers-probe.mjs`). The
-   scaffold's `ui.config.ts` layers `extendSystem(libBaseSystem, { tokens })`,
+6. Layered override through a real `ref sync` (the layers probe). The
+   scaffold's `ui.config` layers `extendSystem(libBaseSystem, { tokens })`,
    overriding `ui.button.default.background` (the token lib's default `<Button>`
    paints) with a light and a dark value. The served sheet must print the
    override under `[data-layer="reference-ui"]`, light and dark. A control sheet,
@@ -26,7 +26,7 @@ a temp dir (no workspace aliases, no tribal setup), and proves the artifact:
    sheet, the control sheet, and lib's own `styles.css`): computed
    `background-color` in light and dark, the `data-layer="reference-ui"` stamp,
    and zero console errors. This proof lives here because a Core case world cannot
-   host lib: `@reference-ui/lib` is not linked into `packages/reference-core`, and
+   host lib: `@reference-ui/lib` is not linked into `@reference-ui/core`, and
    Core never touches reference-lib.
 
 Run locally (from anywhere in the repo):

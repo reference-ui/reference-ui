@@ -6,6 +6,6 @@ with no wrapper node. Settle, pause, idle reads, and the scale, loop,
 document, hidden, and StrictMode edges prove out in the browser spec
 against the single story fixture.
 
-Cases: [case.json](./case.json). Fixture: [Measure.story](./Measure.story.tsx).
+Cases: the Measure case catalog. Fixture: `Measure.story`.
 
-Up: [components](../components.md).
+Up: components.
